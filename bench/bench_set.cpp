@@ -10,6 +10,7 @@
 
 #include "boost/container/set.hpp"
 #include "boost/container/flat_set.hpp"
+#include "boost/container/allocator.hpp"
 #include <set>
 #include <vector>
 #include <iostream>
@@ -22,9 +23,9 @@ using boost::timer::cpu_times;
 using boost::timer::nanosecond_type;
 
 #ifdef NDEBUG
-static const std::size_t N = 5000;
-#else
 static const std::size_t N = 500;
+#else
+static const std::size_t N = 50;
 #endif
 
 void compare_times(cpu_times time_numerator, cpu_times time_denominator){
@@ -334,15 +335,18 @@ int main()
 {
    //set vs std::set
    launch_tests< boost::container::set<int> , std::set<int> >
-      ("boost::container::set<int>", "std::set<int>");/*
+      ("boost::container::set<int>", "std::set<int>");
+   //set vs set<..., allocator_v2>
+   launch_tests< boost::container::set<int> , boost::container::set<int, std::less<int>, boost::container::allocator<int> > >
+      ("boost::container::set<int>", "boost::container::set<int, ..., boost::container::allocator<int>" );
    //multiset vs std::set
    launch_tests< boost::container::multiset<int> , std::multiset<int> >
-      ("boost::container::multiset<int>", "std::multiset<int>");*/
+      ("boost::container::multiset<int>", "std::multiset<int>");
    //flat_set vs set
-   //launch_tests< boost::container::flat_set<int> , boost::container::set<int> >
-      //("boost::container::flat_set<int>", "boost::container::set<int>");
+   launch_tests< boost::container::flat_set<int> , boost::container::set<int> >
+      ("boost::container::flat_set<int>", "boost::container::set<int>");
    //flat_multiset vs multiset
-   //launch_tests< boost::container::flat_multiset<int> , boost::container::multiset<int> >
-      //("boost::container::flat_multiset<int>", "boost::container::multiset<int>");
-   return 1;
+   launch_tests< boost::container::flat_multiset<int> , boost::container::multiset<int> >
+      ("boost::container::flat_multiset<int>", "boost::container::multiset<int>");
+   return 0;
 }

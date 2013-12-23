@@ -10,13 +10,14 @@
 #ifndef BOOST_CONTAINER_VARRAY_HPP
 #define BOOST_CONTAINER_VARRAY_HPP
 
-#if (defined _MSC_VER)
+#if defined(_MSC_VER)
 #  pragma once
 #endif
 
 #include <boost/container/detail/config_begin.hpp>
 
 #include "detail/varray.hpp"
+#include <boost/move/move.hpp>
 
 namespace boost { namespace container {
 

@@ -1,6 +1,6 @@
 ////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2004-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2004-2013. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -29,13 +29,82 @@ template<class MyBoostSet
         ,class MyStdSet
         ,class MyBoostMultiSet
         ,class MyStdMultiSet>
+int set_test_copyable(boost::container::container_detail::false_type)
+{  return 0; }
+
+template<class MyBoostSet
+        ,class MyStdSet
+        ,class MyBoostMultiSet
+        ,class MyStdMultiSet>
+int set_test_copyable(boost::container::container_detail::true_type)
+{
+   typedef typename MyBoostSet::value_type IntType;
+   const int max = 100;
+
+   BOOST_TRY{
+      MyBoostSet *boostset = new MyBoostSet;
+      MyStdSet *stdset = new MyStdSet;
+      MyBoostMultiSet *boostmultiset = new MyBoostMultiSet;
+      MyStdMultiSet *stdmultiset = new MyStdMultiSet;
+
+      for(int i = 0; i < max; ++i){
+         IntType move_me(i);
+         boostset->insert(boost::move(move_me));
+         stdset->insert(i);
+         IntType move_me2(i);
+         boostmultiset->insert(boost::move(move_me2));
+         stdmultiset->insert(i);
+      }
+      if(!CheckEqualContainers(boostset, stdset)) return 1;
+      if(!CheckEqualContainers(boostmultiset, stdmultiset)) return 1;
+
+      {
+         //Now, test copy constructor
+         MyBoostSet boostsetcopy(*boostset);
+         MyStdSet stdsetcopy(*stdset);
+
+         if(!CheckEqualContainers(&boostsetcopy, &stdsetcopy))
+            return 1;
+
+         MyBoostMultiSet boostmsetcopy(*boostmultiset);
+         MyStdMultiSet stdmsetcopy(*stdmultiset);
+
+         if(!CheckEqualContainers(&boostmsetcopy, &stdmsetcopy))
+            return 1;
+
+         //And now assignment
+         boostsetcopy  = *boostset;
+         stdsetcopy  = *stdset;
+
+         if(!CheckEqualContainers(&boostsetcopy, &stdsetcopy))
+            return 1;
+
+         boostmsetcopy = *boostmultiset;
+         stdmsetcopy = *stdmultiset;
+        
+         if(!CheckEqualContainers(&boostmsetcopy, &stdmsetcopy))
+            return 1;
+      }
+      delete boostset;
+      delete boostmultiset;
+   }
+   BOOST_CATCH(...){
+      BOOST_RETHROW;
+   }
+   BOOST_CATCH_END
+   return 0;
+}
+
+
+template<class MyBoostSet
+        ,class MyStdSet
+        ,class MyBoostMultiSet
+        ,class MyStdMultiSet>
 int set_test ()
 {
    typedef typename MyBoostSet::value_type IntType;
    const int max = 100;
 
-   //Shared memory allocator must be always be initialized
-   //since it has no default constructor
    MyBoostSet *boostset = new MyBoostSet;
    MyStdSet *stdset = new MyStdSet;
    MyBoostMultiSet *boostmultiset = new MyBoostMultiSet;
@@ -431,71 +500,12 @@ int set_test ()
    delete stdset;
    delete boostmultiset;
    delete stdmultiset;
-   return 0;
-}
 
-template<class MyBoostSet
-        ,class MyStdSet
-        ,class MyBoostMultiSet
-        ,class MyStdMultiSet>
-int set_test_copyable ()
-{
-   typedef typename MyBoostSet::value_type IntType;
-   const int max = 100;
-
-   BOOST_TRY{
-      //Shared memory allocator must be always be initialized
-      //since it has no default constructor
-      MyBoostSet *boostset = new MyBoostSet;
-      MyStdSet *stdset = new MyStdSet;
-      MyBoostMultiSet *boostmultiset = new MyBoostMultiSet;
-      MyStdMultiSet *stdmultiset = new MyStdMultiSet;
-
-      for(int i = 0; i < max; ++i){
-         IntType move_me(i);
-         boostset->insert(boost::move(move_me));
-         stdset->insert(i);
-         IntType move_me2(i);
-         boostmultiset->insert(boost::move(move_me2));
-         stdmultiset->insert(i);
-      }
-      if(!CheckEqualContainers(boostset, stdset)) return 1;
-      if(!CheckEqualContainers(boostmultiset, stdmultiset)) return 1;
-
-      {
-         //Now, test copy constructor
-         MyBoostSet boostsetcopy(*boostset);
-         MyStdSet stdsetcopy(*stdset);
-
-         if(!CheckEqualContainers(&boostsetcopy, &stdsetcopy))
-            return 1;
-
-         MyBoostMultiSet boostmsetcopy(*boostmultiset);
-         MyStdMultiSet stdmsetcopy(*stdmultiset);
-
-         if(!CheckEqualContainers(&boostmsetcopy, &stdmsetcopy))
-            return 1;
-
-         //And now assignment
-         boostsetcopy  = *boostset;
-         stdsetcopy  = *stdset;
-
-         if(!CheckEqualContainers(&boostsetcopy, &stdsetcopy))
-            return 1;
-
-         boostmsetcopy = *boostmultiset;
-         stdmsetcopy = *stdmultiset;
-        
-         if(!CheckEqualContainers(&boostmsetcopy, &stdmsetcopy))
-            return 1;
-      }
-      delete boostset;
-      delete boostmultiset;
+   if(set_test_copyable<MyBoostSet, MyStdSet, MyBoostMultiSet, MyStdMultiSet>
+      (container_detail::bool_<boost::container::test::is_copyable<IntType>::value>())){
+      return 1;
    }
-   BOOST_CATCH(...){
-      BOOST_RETHROW;
-   }
-   BOOST_CATCH_END
+
    return 0;
 }
 

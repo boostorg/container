@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -34,7 +34,7 @@
 namespace boost {
 namespace container {
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 // Forward declarations of operators == and <, needed for friend declarations.
 template <class Key, class T, class Compare, class Allocator>
 class flat_map;
@@ -63,7 +63,7 @@ static D force_copy(S s)
 }  //namespace container_detail{
 
 
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! A flat_map is a kind of associative container that supports unique keys (contains at
 //! most one of each key value) and provides for fast retrieval of values of another
@@ -95,7 +95,7 @@ template <class Key, class T, class Compare, class Allocator>
 #endif
 class flat_map
 {
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(flat_map)
    //This is the tree that we should store if pair was movable
@@ -129,7 +129,7 @@ class flat_map
          <typename allocator_traits<Allocator>::pointer>::reverse_iterator          reverse_iterator_impl;
    typedef typename container_detail::get_flat_tree_iterators
          <typename allocator_traits<Allocator>::pointer>::const_reverse_iterator    const_reverse_iterator_impl;
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
 
@@ -842,7 +842,7 @@ class flat_map
    std::pair<const_iterator,const_iterator> equal_range(const key_type& x) const
       {  return container_detail::force_copy<std::pair<const_iterator,const_iterator> >(m_flat_tree.equal_range(x)); }
 
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    template <class K1, class T1, class C1, class A1>
    friend bool operator== (const flat_map<K1, T1, C1, A1>&,
                            const flat_map<K1, T1, C1, A1>&);
@@ -872,7 +872,7 @@ class flat_map
       }
       return (*i).second;
    }
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
 template <class Key, class T, class Compare, class Allocator>
@@ -910,7 +910,7 @@ inline void swap(flat_map<Key,T,Compare,Allocator>& x,
                  flat_map<Key,T,Compare,Allocator>& y)
    {  x.swap(y);  }
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }  //namespace container {
 
@@ -935,7 +935,7 @@ inline bool operator==(const flat_multimap<Key,T,Compare,Allocator>& x,
 template <class Key, class T, class Compare, class Allocator>
 inline bool operator<(const flat_multimap<Key,T,Compare,Allocator>& x,
                       const flat_multimap<Key,T,Compare,Allocator>& y);
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! A flat_multimap is a kind of associative container that supports equivalent keys
 //! (possibly containing multiple copies of the same key value) and provides for
@@ -967,7 +967,7 @@ template <class Key, class T, class Compare, class Allocator>
 #endif
 class flat_multimap
 {
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(flat_multimap)
    typedef container_detail::flat_tree<Key,
@@ -999,7 +999,7 @@ class flat_multimap
          <typename allocator_traits<Allocator>::pointer>::reverse_iterator          reverse_iterator_impl;
    typedef typename container_detail::get_flat_tree_iterators
          <typename allocator_traits<Allocator>::pointer>::const_reverse_iterator    const_reverse_iterator_impl;
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
 
@@ -1637,7 +1637,7 @@ class flat_multimap
    std::pair<const_iterator,const_iterator> equal_range(const key_type& x) const
       {  return container_detail::force_copy<std::pair<const_iterator,const_iterator> >(m_flat_tree.equal_range(x));   }
 
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    template <class K1, class T1, class C1, class A1>
    friend bool operator== (const flat_multimap<K1, T1, C1, A1>& x,
                            const flat_multimap<K1, T1, C1, A1>& y);
@@ -1645,7 +1645,7 @@ class flat_multimap
    template <class K1, class T1, class C1, class A1>
    friend bool operator< (const flat_multimap<K1, T1, C1, A1>& x,
                           const flat_multimap<K1, T1, C1, A1>& y);
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
 template <class Key, class T, class Compare, class Allocator>
@@ -1684,7 +1684,7 @@ inline void swap(flat_multimap<Key,T,Compare,Allocator>& x, flat_multimap<Key,T,
 
 }}
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 namespace boost {
 
@@ -1698,7 +1698,7 @@ struct has_trivial_destructor_after_move< boost::container::flat_multimap<K, T, 
 
 }  //namespace boost {
 
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 #include <boost/container/detail/config_end.hpp>
 

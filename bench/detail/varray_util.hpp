@@ -566,13 +566,6 @@ template <typename DisableTrivialInit, typename I, typename P>
 inline
 void construct(DisableTrivialInit const&, I pos, BOOST_RV_REF(P) p)
 {
-    typedef typename
-    ::boost::mpl::and_<
-        is_corresponding_value<I, P>,
-        ::boost::has_trivial_copy<P>
-    >::type
-    use_memcpy;
-
     typedef typename boost::iterator_value<I>::type V;
     new (static_cast<void*>(boost::addressof(*pos))) V(::boost::move(p));                      // may throw
 }

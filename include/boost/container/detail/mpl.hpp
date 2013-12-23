@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012.
+// (C) Copyright Ion Gaztanaga 2005-2013.
 //
 // Distributed under the Boost Software License, Version 1.0.
 // (See accompanying file LICENSE_1_0.txt or copy at
@@ -16,6 +16,9 @@
 #if defined(_MSC_VER)
 #  pragma once
 #endif
+
+#include <boost/container/detail/config_begin.hpp>
+#include <boost/container/detail/workaround.hpp>
 
 #include <cstddef>
 
@@ -155,6 +158,8 @@ template <> struct unvoid<const void> { struct type { }; };
 }  //namespace container_detail {
 }  //namespace container {
 }  //namespace boost {
+
+#include <boost/container/detail/config_end.hpp>
 
 #endif   //#ifndef BOOST_CONTAINER_CONTAINER_DETAIL_MPL_HPP
 

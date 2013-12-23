@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2008-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2008-2013. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -47,18 +47,18 @@
 #include <memory>
 #include <new> //placement new
 
-///@cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 #include <boost/container/vector.hpp>
 
 //#define STABLE_VECTOR_ENABLE_INVARIANT_CHECKING
 
-///@endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 namespace boost {
 namespace container {
 
-///@cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 namespace stable_vector_detail{
 
@@ -393,7 +393,7 @@ struct index_traits
 
 #endif   //#if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! Originally developed by Joaquin M. Lopez Munoz, stable_vector is a std::vector
 //! drop-in replacement implemented as a node container, offering iterator and reference
@@ -433,7 +433,7 @@ template <class T, class Allocator>
 #endif
 class stable_vector
 {
-   ///@cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    typedef allocator_traits<Allocator>                allocator_traits_type;
    typedef boost::intrusive::
       pointer_traits
@@ -504,7 +504,7 @@ class stable_vector
    typedef stable_vector_detail::iterator
       < typename allocator_traits<Allocator>::pointer
       , false>                                           const_iterator_impl;
-   ///@endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    public:
 
    //////////////////////////////////////////////
@@ -526,7 +526,7 @@ class stable_vector
    typedef BOOST_CONTAINER_IMPDEF(std::reverse_iterator<iterator>)                     reverse_iterator;
    typedef BOOST_CONTAINER_IMPDEF(std::reverse_iterator<const_iterator>)               const_reverse_iterator;
 
-   ///@cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(stable_vector)
    static const size_type ExtraPointers = index_traits_type::ExtraPointers;
@@ -536,7 +536,7 @@ class stable_vector
 
    class push_back_rollback;
    friend class push_back_rollback;
-   ///@endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
    //////////////////////////////////////////////
@@ -1510,7 +1510,7 @@ class stable_vector
    void clear() BOOST_CONTAINER_NOEXCEPT
    {   this->erase(this->cbegin(),this->cend()); }
 
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    private:
 
@@ -1836,7 +1836,7 @@ class stable_vector
    const node_allocator_type &priv_node_alloc() const  { return internal_data;  }
 
    index_type                           index;
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
 template <typename T,typename Allocator>
@@ -1883,11 +1883,11 @@ void swap(stable_vector<T,Allocator>& x,stable_vector<T,Allocator>& y)
    x.swap(y);
 }
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 #undef STABLE_VECTOR_CHECK_INVARIANT
 
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 /*
 

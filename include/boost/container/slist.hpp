@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2004-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2004-2013. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -48,7 +48,7 @@
 namespace boost {
 namespace container {
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 template <class T, class Allocator>
 class slist;
@@ -106,7 +106,7 @@ struct intrusive_slist_type
 
 }  //namespace container_detail {
 
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! An slist is a singly linked list: a list where each element is linked to the next
 //! element, but not to the previous element. That is, it is a Sequence that
@@ -149,7 +149,7 @@ class slist
    : protected container_detail::node_alloc_holder
       <Allocator, typename container_detail::intrusive_slist_type<Allocator>::type>
 {
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    typedef typename
       container_detail::intrusive_slist_type<Allocator>::type           Icont;
    typedef container_detail::node_alloc_holder<Allocator, Icont>        AllocHolder;
@@ -195,7 +195,7 @@ class slist
    BOOST_COPYABLE_AND_MOVABLE(slist)
    typedef container_detail::iterator<typename Icont::iterator, false>  iterator_impl;
    typedef container_detail::iterator<typename Icont::iterator, true >  const_iterator_impl;
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
    //////////////////////////////////////////////
@@ -1423,7 +1423,7 @@ class slist
    void splice(const_iterator p, BOOST_RV_REF(slist) x, const_iterator first, const_iterator last) BOOST_CONTAINER_NOEXCEPT
    {  this->splice(p, static_cast<slist&>(x), first, last);  }
 
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
 
    void priv_push_front (const T &x)  
@@ -1505,7 +1505,7 @@ class slist
 
       const value_type &m_ref;
    };
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
 template <class T, class Allocator>
@@ -1561,7 +1561,7 @@ inline void swap(slist<T,Allocator>& x, slist<T,Allocator>& y)
 
 }}
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 namespace boost {
 
@@ -1574,14 +1574,14 @@ struct has_trivial_destructor_after_move<boost::container::slist<T, Allocator> >
 
 namespace container {
 
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }} //namespace boost{  namespace container {
 
 // Specialization of insert_iterator so that insertions will be constant
 // time rather than linear time.
 
-///@cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //Ummm, I don't like to define things in namespace std, but
 //there is no other way
@@ -1620,7 +1620,7 @@ class insert_iterator<boost::container::slist<T, Allocator> >
 
 }  //namespace std;
 
-///@endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 #include <boost/container/detail/config_end.hpp>
 

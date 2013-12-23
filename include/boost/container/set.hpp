@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -35,7 +35,7 @@
 namespace boost {
 namespace container {
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 // Forward declarations of operators < and ==, needed for friend declaration.
 template <class Key, class Compare, class Allocator>
 inline bool operator==(const set<Key,Compare,Allocator>& x,
@@ -44,7 +44,7 @@ inline bool operator==(const set<Key,Compare,Allocator>& x,
 template <class Key, class Compare, class Allocator>
 inline bool operator<(const set<Key,Compare,Allocator>& x,
                       const set<Key,Compare,Allocator>& y);
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! A set is a kind of associative container that supports unique keys (contains at
 //! most one of each key value) and provides for fast retrieval of the keys themselves.
@@ -60,13 +60,13 @@ template <class Key, class Compare, class Allocator>
 #endif
 class set
 {
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(set)
    typedef container_detail::rbtree<Key, Key,
                      container_detail::identity<Key>, Compare, Allocator> tree_t;
    tree_t m_tree;  // red-black tree representing set
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
    //////////////////////////////////////////////
@@ -600,7 +600,7 @@ class set
    std::pair<const_iterator, const_iterator> equal_range(const key_type& x) const
    {  return m_tree.equal_range(x); }
 
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    template <class K1, class C1, class A1>
    friend bool operator== (const set<K1,C1,A1>&, const set<K1,C1,A1>&);
 
@@ -615,7 +615,7 @@ class set
    template <class KeyType>
    iterator priv_insert(const_iterator p, BOOST_FWD_REF(KeyType) x)
    {  return m_tree.insert_unique(p, ::boost::forward<KeyType>(x)); }
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
 template <class Key, class Compare, class Allocator>
@@ -652,7 +652,7 @@ template <class Key, class Compare, class Allocator>
 inline void swap(set<Key,Compare,Allocator>& x, set<Key,Compare,Allocator>& y)
 {  x.swap(y);  }
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }  //namespace container {
 
@@ -675,7 +675,7 @@ inline bool operator==(const multiset<Key,Compare,Allocator>& x,
 template <class Key, class Compare, class Allocator>
 inline bool operator<(const multiset<Key,Compare,Allocator>& x,
                       const multiset<Key,Compare,Allocator>& y);
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! A multiset is a kind of associative container that supports equivalent keys
 //! (possibly contains multiple copies of the same key value) and provides for
@@ -691,13 +691,13 @@ template <class Key, class Compare, class Allocator>
 #endif
 class multiset
 {
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(multiset)
    typedef container_detail::rbtree<Key, Key,
                      container_detail::identity<Key>, Compare, Allocator> tree_t;
    tree_t m_tree;  // red-black tree representing multiset
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
 
@@ -1221,7 +1221,7 @@ class multiset
    std::pair<const_iterator, const_iterator> equal_range(const key_type& x) const
    {  return m_tree.equal_range(x); }
 
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    template <class K1, class C1, class A1>
    friend bool operator== (const multiset<K1,C1,A1>&,
                            const multiset<K1,C1,A1>&);
@@ -1237,7 +1237,7 @@ class multiset
    iterator priv_insert(const_iterator p, BOOST_FWD_REF(KeyType) x)
    {  return m_tree.insert_equal(p, ::boost::forward<KeyType>(x)); }
 
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
 template <class Key, class Compare, class Allocator>
@@ -1274,7 +1274,7 @@ template <class Key, class Compare, class Allocator>
 inline void swap(multiset<Key,Compare,Allocator>& x, multiset<Key,Compare,Allocator>& y)
 {  x.swap(y);  }
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }  //namespace container {
 
@@ -1288,7 +1288,7 @@ struct has_trivial_destructor_after_move<boost::container::multiset<Key, C, Allo
 
 namespace container {
 
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }}
 

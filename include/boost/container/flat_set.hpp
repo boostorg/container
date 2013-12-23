@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -31,7 +31,7 @@
 namespace boost {
 namespace container {
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 // Forward declarations of operators < and ==, needed for friend declaration.
 
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -48,7 +48,7 @@ inline bool operator==(const flat_set<Key,Compare,Allocator>& x,
 template <class Key, class Compare, class Allocator>
 inline bool operator<(const flat_set<Key,Compare,Allocator>& x,
                       const flat_set<Key,Compare,Allocator>& y);
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! flat_set is a Sorted Associative Container that stores objects of type Key.
 //! It is also a Unique Associative Container, meaning that no two elements are the same.
@@ -68,12 +68,12 @@ template <class Key, class Compare, class Allocator>
 #endif
 class flat_set
 {
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(flat_set)
    typedef container_detail::flat_tree<Key, Key, container_detail::identity<Key>, Compare, Allocator> tree_t;
    tree_t m_flat_tree;  // flat tree representing flat_set
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
    //////////////////////////////////////////////
@@ -678,7 +678,7 @@ class flat_set
    std::pair<iterator,iterator> equal_range(const key_type& x)
       {  return m_flat_tree.equal_range(x); }
 
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    template <class K1, class C1, class A1>
    friend bool operator== (const flat_set<K1,C1,A1>&, const flat_set<K1,C1,A1>&);
 
@@ -693,7 +693,7 @@ class flat_set
    template<class KeyType>
    iterator priv_insert(const_iterator p, BOOST_FWD_REF(KeyType) x)
    {  return m_flat_tree.insert_unique(p, ::boost::forward<KeyType>(x)); }
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
 template <class Key, class Compare, class Allocator>
@@ -730,7 +730,7 @@ template <class Key, class Compare, class Allocator>
 inline void swap(flat_set<Key,Compare,Allocator>& x, flat_set<Key,Compare,Allocator>& y)
    {  x.swap(y);  }
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }  //namespace container {
 
@@ -760,7 +760,7 @@ inline bool operator==(const flat_multiset<Key,Compare,Allocator>& x,
 template <class Key, class Compare, class Allocator>
 inline bool operator<(const flat_multiset<Key,Compare,Allocator>& x,
                       const flat_multiset<Key,Compare,Allocator>& y);
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! flat_multiset is a Sorted Associative Container that stores objects of type Key.
 //!
@@ -781,12 +781,12 @@ template <class Key, class Compare, class Allocator>
 #endif
 class flat_multiset
 {
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(flat_multiset)
    typedef container_detail::flat_tree<Key, Key, container_detail::identity<Key>, Compare, Allocator> tree_t;
    tree_t m_flat_tree;  // flat tree representing flat_multiset
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
    //////////////////////////////////////////////
@@ -1353,7 +1353,7 @@ class flat_multiset
    std::pair<iterator,iterator> equal_range(const key_type& x)
       {  return m_flat_tree.equal_range(x); }
 
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    template <class K1, class C1, class A1>
    friend bool operator== (const flat_multiset<K1,C1,A1>&,
                            const flat_multiset<K1,C1,A1>&);
@@ -1368,7 +1368,7 @@ class flat_multiset
    template <class KeyType>
    iterator priv_insert(const_iterator p, BOOST_FWD_REF(KeyType) x)
    {  return m_flat_tree.insert_equal(p, ::boost::forward<KeyType>(x)); }
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
 template <class Key, class Compare, class Allocator>
@@ -1405,7 +1405,7 @@ template <class Key, class Compare, class Allocator>
 inline void swap(flat_multiset<Key,Compare,Allocator>& x, flat_multiset<Key,Compare,Allocator>& y)
    {  x.swap(y);  }
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }  //namespace container {
 
@@ -1419,7 +1419,7 @@ struct has_trivial_destructor_after_move<boost::container::flat_multiset<Key, C,
 
 namespace container {
 
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }}
 

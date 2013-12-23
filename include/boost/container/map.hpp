@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -39,7 +39,7 @@
 namespace boost {
 namespace container {
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 // Forward declarations of operators == and <, needed for friend declarations.
 template <class Key, class T, class Compare, class Allocator>
 inline bool operator==(const map<Key,T,Compare,Allocator>& x,
@@ -48,7 +48,7 @@ inline bool operator==(const map<Key,T,Compare,Allocator>& x,
 template <class Key, class T, class Compare, class Allocator>
 inline bool operator<(const map<Key,T,Compare,Allocator>& x,
                       const map<Key,T,Compare,Allocator>& y);
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! A map is a kind of associative container that supports unique keys (contains at
 //! most one of each key value) and provides for fast retrieval of values of another
@@ -69,7 +69,7 @@ template <class Key, class T, class Compare, class Allocator>
 #endif
 class map
 {
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(map)
 
@@ -81,7 +81,7 @@ class map
       < Key, value_type_impl, Compare, container_detail::select1st<value_type_impl>
       >  value_compare_impl;
    tree_t m_tree;  // red-black tree representing map
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
    //////////////////////////////////////////////
@@ -755,7 +755,7 @@ class map
    std::pair<const_iterator,const_iterator> equal_range(const key_type& x) const
    {  return m_tree.equal_range(x); }
 
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    template <class K1, class T1, class C1, class A1>
    friend bool operator== (const map<K1, T1, C1, A1>&,
                            const map<K1, T1, C1, A1>&);
@@ -790,7 +790,7 @@ class map
       return (*i).second;
    }
 
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
 template <class Key, class T, class Compare, class Allocator>
@@ -827,7 +827,7 @@ template <class Key, class T, class Compare, class Allocator>
 inline void swap(map<Key,T,Compare,Allocator>& x, map<Key,T,Compare,Allocator>& y)
    {  x.swap(y);  }
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 // Forward declaration of operators < and ==, needed for friend declaration.
 
@@ -851,7 +851,7 @@ struct has_trivial_destructor_after_move<boost::container::map<K, T, C, Allocato
 
 namespace container {
 
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! A multimap is a kind of associative container that supports equivalent keys
 //! (possibly containing multiple copies of the same key value) and provides for
@@ -873,7 +873,7 @@ template <class Key, class T, class Compare, class Allocator>
 #endif
 class multimap
 {
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(multimap)
 
@@ -885,7 +885,7 @@ class multimap
       < Key, value_type_impl, Compare, container_detail::select1st<value_type_impl>
       >  value_compare_impl;
    tree_t m_tree;  // red-black tree representing map
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
    //////////////////////////////////////////////
@@ -1463,7 +1463,7 @@ class multimap
    std::pair<const_iterator,const_iterator> equal_range(const key_type& x) const
    {  return m_tree.equal_range(x);   }
 
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    template <class K1, class T1, class C1, class A1>
    friend bool operator== (const multimap<K1, T1, C1, A1>& x,
                            const multimap<K1, T1, C1, A1>& y);
@@ -1471,7 +1471,7 @@ class multimap
    template <class K1, class T1, class C1, class A1>
    friend bool operator< (const multimap<K1, T1, C1, A1>& x,
                           const multimap<K1, T1, C1, A1>& y);
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
 template <class Key, class T, class Compare, class Allocator>
@@ -1508,7 +1508,7 @@ template <class Key, class T, class Compare, class Allocator>
 inline void swap(multimap<Key,T,Compare,Allocator>& x, multimap<Key,T,Compare,Allocator>& y)
 {  x.swap(y);  }
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }  //namespace container {
 
@@ -1522,7 +1522,7 @@ struct has_trivial_destructor_after_move<boost::container::multimap<K, T, C, All
 
 namespace container {
 
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }}
 

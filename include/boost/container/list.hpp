@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -47,7 +47,7 @@
 namespace boost {
 namespace container {
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 namespace container_detail {
 
 template<class VoidPointer>
@@ -99,7 +99,7 @@ struct intrusive_list_type
 };
 
 }  //namespace container_detail {
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! A list is a doubly linked list. That is, it is a Sequence that supports both
 //! forward and backward traversal, and (amortized) constant time insertion and
@@ -120,7 +120,7 @@ class list
    : protected container_detail::node_alloc_holder
       <Allocator, typename container_detail::intrusive_list_type<Allocator>::type>
 {
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    typedef typename
       container_detail::intrusive_list_type<Allocator>::type Icont;
    typedef container_detail::node_alloc_holder<Allocator, Icont>  AllocHolder;
@@ -167,7 +167,7 @@ class list
 
    typedef container_detail::iterator<typename Icont::iterator, false>  iterator_impl;
    typedef container_detail::iterator<typename Icont::iterator, true>   const_iterator_impl;
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
    //////////////////////////////////////////////
@@ -1216,7 +1216,7 @@ class list
    void reverse() BOOST_CONTAINER_NOEXCEPT
    {  this->icont().reverse(); }   
 
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
 
    bool priv_try_shrink(size_type new_size)
@@ -1303,7 +1303,7 @@ class list
       bool operator()(const value_type &a, const value_type &b) const
          {  return a == b;  }
    };
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 };
 
@@ -1362,7 +1362,7 @@ inline void swap(list<T, Allocator>& x, list<T, Allocator>& y)
   x.swap(y);
 }
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }  //namespace container {
 
@@ -1375,7 +1375,7 @@ struct has_trivial_destructor_after_move<boost::container::list<T, Allocator> >
 
 namespace container {
 
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }}
 

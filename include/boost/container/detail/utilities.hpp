@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -11,8 +11,9 @@
 #ifndef BOOST_CONTAINER_DETAIL_UTILITIES_HPP
 #define BOOST_CONTAINER_DETAIL_UTILITIES_HPP
 
-#include "config_begin.hpp"
-#include "workaround.hpp"
+#include <boost/container/detail/config_begin.hpp>
+#include <boost/container/detail/workaround.hpp>
+
 #include <cstdio>
 #include <cstring> //for ::memcpy
 #include <boost/type_traits/is_fundamental.hpp>
@@ -110,18 +111,37 @@ template<class T>
 const T &min_value(const T &a, const T &b)
 {  return a < b ? a : b;   }
 
-template <class SizeType>
-SizeType
-   get_next_capacity(const SizeType max_size
-                    ,const SizeType capacity
-                    ,const SizeType n)
+enum NextCapacityOption { NextCapacityDouble, NextCapacity60Percent };
+
+template<class SizeType, NextCapacityOption Option>
+struct next_capacity_calculator;
+
+template<class SizeType>
+struct next_capacity_calculator<SizeType, NextCapacityDouble>
 {
-   const SizeType remaining = max_size - capacity;
-   if ( remaining < n )
-      boost::container::throw_length_error("get_next_capacity, allocator's max_size reached");
-   const SizeType additional = max_value(n, capacity);
-   return ( remaining < additional ) ? max_size : ( capacity + additional );
-   #if 0 //Alternative for 50% grow
+   static SizeType get(const SizeType max_size
+                     ,const SizeType capacity
+                     ,const SizeType n)
+   {
+      const SizeType remaining = max_size - capacity;
+      if ( remaining < n )
+         boost::container::throw_length_error("get_next_capacity, allocator's max_size reached");
+      const SizeType additional = max_value(n, capacity);
+      return ( remaining < additional ) ? max_size : ( capacity + additional );
+   }
+};
+
+
+template<class SizeType>
+struct next_capacity_calculator<SizeType, NextCapacity60Percent>
+{
+   static SizeType get(const SizeType max_size
+                     ,const SizeType capacity
+                     ,const SizeType n)
+   {
+      const SizeType remaining = max_size - capacity;
+      if ( remaining < n )
+         boost::container::throw_length_error("get_next_capacity, allocator's max_size reached");
       const SizeType m3 = max_size/3;
 
       if (capacity < m3)
@@ -130,8 +150,8 @@ SizeType
       if (capacity < m3*2)
          return capacity + max_value((capacity+1)/2, n);
       return max_size;
-   #endif
-}
+   }
+};
 
 template <class T>
 inline T* to_raw_pointer(T* p)

@@ -10,7 +10,7 @@
 #ifndef BOOST_CONTAINER_DETAIL_VARRAY_HPP
 #define BOOST_CONTAINER_DETAIL_VARRAY_HPP
 
-#if (defined _MSC_VER)
+#if defined(_MSC_VER)
 #  pragma once
 #endif
 
@@ -19,8 +19,8 @@
 #include <boost/container/detail/preprocessor.hpp>
 
 #include "varray_util.hpp"
-#include "varray_concept.hpp"
-#include <boost/iterator/iterator_concepts.hpp>
+//#include "varray_concept.hpp"
+//#include <boost/iterator/iterator_concepts.hpp>
 
 #ifndef BOOST_NO_EXCEPTIONS
 #include <stdexcept>
@@ -229,7 +229,7 @@ class varray
         (varray)
     );
 
-    BOOST_CONCEPT_ASSERT((concept::VArrayStrategy<Strategy>));
+    //BOOST_CONCEPT_ASSERT((concept::VArrayStrategy<Strategy>));
 
     typedef boost::aligned_storage<
         sizeof(Value[Capacity]),
@@ -353,7 +353,7 @@ public:
     varray(Iterator first, Iterator last)
         : m_size(0)
     {
-        BOOST_CONCEPT_ASSERT((boost_concepts::ForwardTraversal<Iterator>)); // Make sure you passed a ForwardIterator
+        //BOOST_CONCEPT_ASSERT((boost_concepts::ForwardTraversal<Iterator>)); // Make sure you passed a ForwardIterator
         
         this->assign(first, last);                                                    // may throw
     }
@@ -890,7 +890,7 @@ public:
     template <typename Iterator>
     iterator insert(iterator position, Iterator first, Iterator last)
     {
-        BOOST_CONCEPT_ASSERT((boost_concepts::ForwardTraversal<Iterator>)); // Make sure you passed a ForwardIterator
+        //BOOST_CONCEPT_ASSERT((boost_concepts::ForwardTraversal<Iterator>)); // Make sure you passed a ForwardIterator
 
         typedef typename boost::iterator_traversal<Iterator>::type traversal;
         this->insert_dispatch(position, first, last, traversal());
@@ -975,7 +975,7 @@ public:
     template <typename Iterator>
     void assign(Iterator first, Iterator last)
     {
-        BOOST_CONCEPT_ASSERT((boost_concepts::ForwardTraversal<Iterator>)); // Make sure you passed a ForwardIterator
+        //BOOST_CONCEPT_ASSERT((boost_concepts::ForwardTraversal<Iterator>)); // Make sure you passed a ForwardIterator
 
         typedef typename boost::iterator_traversal<Iterator>::type traversal;
         this->assign_dispatch(first, last, traversal());                            // may throw
@@ -1728,7 +1728,7 @@ private:
     template <typename Iterator>
     void insert_dispatch(iterator position, Iterator first, Iterator last, boost::random_access_traversal_tag const&)
     {
-        BOOST_CONCEPT_ASSERT((boost_concepts::RandomAccessTraversal<Iterator>)); // Make sure you passed a RandomAccessIterator
+        //BOOST_CONCEPT_ASSERT((boost_concepts::RandomAccessTraversal<Iterator>)); // Make sure you passed a RandomAccessIterator
         
         errh::check_iterator_end_eq(*this, position);
         
@@ -2015,7 +2015,7 @@ public:
     void insert(iterator, Iterator first, Iterator last)
     {
         // TODO - add MPL_ASSERT, check if Iterator is really an iterator
-        typedef typename boost::iterator_traversal<Iterator>::type traversal;
+        //typedef typename boost::iterator_traversal<Iterator>::type traversal;
         errh::check_capacity(*this, std::distance(first, last));                    // may throw
     }
 
@@ -2039,7 +2039,7 @@ public:
     void assign(Iterator first, Iterator last)
     {
         // TODO - add MPL_ASSERT, check if Iterator is really an iterator
-        typedef typename boost::iterator_traversal<Iterator>::type traversal;
+        //typedef typename boost::iterator_traversal<Iterator>::type traversal;
         errh::check_capacity(*this, std::distance(first, last));                    // may throw
     }
 
