@@ -1510,8 +1510,28 @@ class stable_vector
    void clear() BOOST_CONTAINER_NOEXCEPT
    {   this->erase(this->cbegin(),this->cend()); }
 
-   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+   friend bool operator==(const stable_vector& x,const stable_vector& y)
+   {  return x.size()==y.size()&&std::equal(x.begin(),x.end(),y.begin());  }
 
+   friend bool operator< (const stable_vector& x,const stable_vector& y)
+   {  return std::lexicographical_compare(x.begin(),x.end(),y.begin(),y.end());  }
+
+   friend bool operator!=(const stable_vector& x,const stable_vector& y)
+   {  return !(x==y);  }
+
+   friend bool operator> (const stable_vector& x,const stable_vector& y)
+   {  return y<x; }
+
+   friend bool operator>=(const stable_vector& x,const stable_vector& y)
+   {  return !(x<y);  }
+
+   friend bool operator<=(const stable_vector& x,const stable_vector& y)
+   {  return !(x>y);  }
+
+   friend void swap(stable_vector& x,stable_vector& y)
+   {  x.swap(y);  }
+
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
 
    class insert_rollback
@@ -1838,50 +1858,6 @@ class stable_vector
    index_type                           index;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
-
-template <typename T,typename Allocator>
-bool operator==(const stable_vector<T,Allocator>& x,const stable_vector<T,Allocator>& y)
-{
-   return x.size()==y.size()&&std::equal(x.begin(),x.end(),y.begin());
-}
-
-template <typename T,typename Allocator>
-bool operator< (const stable_vector<T,Allocator>& x,const stable_vector<T,Allocator>& y)
-{
-   return std::lexicographical_compare(x.begin(),x.end(),y.begin(),y.end());
-}
-
-template <typename T,typename Allocator>
-bool operator!=(const stable_vector<T,Allocator>& x,const stable_vector<T,Allocator>& y)
-{
-   return !(x==y);
-}
-
-template <typename T,typename Allocator>
-bool operator> (const stable_vector<T,Allocator>& x,const stable_vector<T,Allocator>& y)
-{
-   return y<x;
-}
-
-template <typename T,typename Allocator>
-bool operator>=(const stable_vector<T,Allocator>& x,const stable_vector<T,Allocator>& y)
-{
-   return !(x<y);
-}
-
-template <typename T,typename Allocator>
-bool operator<=(const stable_vector<T,Allocator>& x,const stable_vector<T,Allocator>& y)
-{
-   return !(x>y);
-}
-
-// specialized algorithms:
-
-template <typename T, typename Allocator>
-void swap(stable_vector<T,Allocator>& x,stable_vector<T,Allocator>& y)
-{
-   x.swap(y);
-}
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 

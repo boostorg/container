@@ -31,25 +31,6 @@
 namespace boost {
 namespace container {
 
-#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-// Forward declarations of operators < and ==, needed for friend declaration.
-
-#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class Key, class Compare = std::less<Key>, class Allocator = std::allocator<Key> >
-#else
-template <class Key, class Compare, class Allocator>
-#endif
-class flat_set;
-
-template <class Key, class Compare, class Allocator>
-inline bool operator==(const flat_set<Key,Compare,Allocator>& x,
-                       const flat_set<Key,Compare,Allocator>& y);
-
-template <class Key, class Compare, class Allocator>
-inline bool operator<(const flat_set<Key,Compare,Allocator>& x,
-                      const flat_set<Key,Compare,Allocator>& y);
-#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-
 //! flat_set is a Sorted Associative Container that stores objects of type Key.
 //! It is also a Unique Associative Container, meaning that no two elements are the same.
 //!
@@ -678,13 +659,28 @@ class flat_set
    std::pair<iterator,iterator> equal_range(const key_type& x)
       {  return m_flat_tree.equal_range(x); }
 
+   friend bool operator==(const flat_set& x, const flat_set& y)
+      {  return x.m_flat_tree == y.m_flat_tree;  }
+
+   friend bool operator<(const flat_set& x, const flat_set& y)
+      {  return x.m_flat_tree < y.m_flat_tree;   }
+
+   friend bool operator!=(const flat_set& x, const flat_set& y)
+      {  return !(x == y);   }
+
+   friend bool operator>(const flat_set& x, const flat_set& y)
+      {  return y < x; }
+
+   friend bool operator<=(const flat_set& x, const flat_set& y)
+      {  return !(y < x); }
+
+   friend bool operator>=(const flat_set& x, const flat_set& y)
+      {  return !(x < y);  }
+
+   friend void swap(flat_set& x, flat_set& y)
+      {  x.swap(y);  }
+
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   template <class K1, class C1, class A1>
-   friend bool operator== (const flat_set<K1,C1,A1>&, const flat_set<K1,C1,A1>&);
-
-   template <class K1, class C1, class A1>
-   friend bool operator< (const flat_set<K1,C1,A1>&, const flat_set<K1,C1,A1>&);
-
    private:
    template<class KeyType>
    std::pair<iterator, bool> priv_insert(BOOST_FWD_REF(KeyType) x)
@@ -695,40 +691,6 @@ class flat_set
    {  return m_flat_tree.insert_unique(p, ::boost::forward<KeyType>(x)); }
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
-
-template <class Key, class Compare, class Allocator>
-inline bool operator==(const flat_set<Key,Compare,Allocator>& x,
-                       const flat_set<Key,Compare,Allocator>& y)
-   {  return x.m_flat_tree == y.m_flat_tree;  }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator<(const flat_set<Key,Compare,Allocator>& x,
-                      const flat_set<Key,Compare,Allocator>& y)
-   {  return x.m_flat_tree < y.m_flat_tree;   }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator!=(const flat_set<Key,Compare,Allocator>& x,
-                       const flat_set<Key,Compare,Allocator>& y)
-   {  return !(x == y);   }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator>(const flat_set<Key,Compare,Allocator>& x,
-                      const flat_set<Key,Compare,Allocator>& y)
-   {  return y < x; }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator<=(const flat_set<Key,Compare,Allocator>& x,
-                       const flat_set<Key,Compare,Allocator>& y)
-   {  return !(y < x); }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator>=(const flat_set<Key,Compare,Allocator>& x,
-                       const flat_set<Key,Compare,Allocator>& y)
-   {  return !(x < y);  }
-
-template <class Key, class Compare, class Allocator>
-inline void swap(flat_set<Key,Compare,Allocator>& x, flat_set<Key,Compare,Allocator>& y)
-   {  x.swap(y);  }
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -744,22 +706,6 @@ struct has_trivial_destructor_after_move<boost::container::flat_set<Key, C, Allo
 
 namespace container {
 
-// Forward declaration of operators < and ==, needed for friend declaration.
-
-#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class Key, class Compare = std::less<Key>, class Allocator = std::allocator<Key> >
-#else
-template <class Key, class Compare, class Allocator>
-#endif
-class flat_multiset;
-
-template <class Key, class Compare, class Allocator>
-inline bool operator==(const flat_multiset<Key,Compare,Allocator>& x,
-                       const flat_multiset<Key,Compare,Allocator>& y);
-
-template <class Key, class Compare, class Allocator>
-inline bool operator<(const flat_multiset<Key,Compare,Allocator>& x,
-                      const flat_multiset<Key,Compare,Allocator>& y);
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! flat_multiset is a Sorted Associative Container that stores objects of type Key.
@@ -1353,13 +1299,28 @@ class flat_multiset
    std::pair<iterator,iterator> equal_range(const key_type& x)
       {  return m_flat_tree.equal_range(x); }
 
+   friend bool operator==(const flat_multiset& x, const flat_multiset& y)
+      {  return x.m_flat_tree == y.m_flat_tree;  }
+
+   friend bool operator<(const flat_multiset& x, const flat_multiset& y)
+      {  return x.m_flat_tree < y.m_flat_tree;   }
+
+   friend bool operator!=(const flat_multiset& x, const flat_multiset& y)
+      {  return !(x == y);  }
+
+   friend bool operator>(const flat_multiset& x, const flat_multiset& y)
+      {  return y < x;  }
+
+   friend bool operator<=(const flat_multiset& x, const flat_multiset& y)
+      {  return !(y < x);  }
+
+   friend bool operator>=(const flat_multiset& x, const flat_multiset& y)
+      {  return !(x < y);  }
+
+   friend void swap(flat_multiset& x, flat_multiset& y)
+      {  x.swap(y);  }
+
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   template <class K1, class C1, class A1>
-   friend bool operator== (const flat_multiset<K1,C1,A1>&,
-                           const flat_multiset<K1,C1,A1>&);
-   template <class K1, class C1, class A1>
-   friend bool operator< (const flat_multiset<K1,C1,A1>&,
-                          const flat_multiset<K1,C1,A1>&);
    private:
    template <class KeyType>
    iterator priv_insert(BOOST_FWD_REF(KeyType) x)
@@ -1370,40 +1331,6 @@ class flat_multiset
    {  return m_flat_tree.insert_equal(p, ::boost::forward<KeyType>(x)); }
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
-
-template <class Key, class Compare, class Allocator>
-inline bool operator==(const flat_multiset<Key,Compare,Allocator>& x,
-                       const flat_multiset<Key,Compare,Allocator>& y)
-   {  return x.m_flat_tree == y.m_flat_tree;  }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator<(const flat_multiset<Key,Compare,Allocator>& x,
-                      const flat_multiset<Key,Compare,Allocator>& y)
-   {  return x.m_flat_tree < y.m_flat_tree;   }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator!=(const flat_multiset<Key,Compare,Allocator>& x,
-                       const flat_multiset<Key,Compare,Allocator>& y)
-   {  return !(x == y);  }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator>(const flat_multiset<Key,Compare,Allocator>& x,
-                      const flat_multiset<Key,Compare,Allocator>& y)
-   {  return y < x;  }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator<=(const flat_multiset<Key,Compare,Allocator>& x,
-                       const flat_multiset<Key,Compare,Allocator>& y)
-   {  return !(y < x);  }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator>=(const flat_multiset<Key,Compare,Allocator>& x,
-                       const flat_multiset<Key,Compare,Allocator>& y)
-{  return !(x < y);  }
-
-template <class Key, class Compare, class Allocator>
-inline void swap(flat_multiset<Key,Compare,Allocator>& x, flat_multiset<Key,Compare,Allocator>& y)
-   {  x.swap(y);  }
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 

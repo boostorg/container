@@ -35,17 +35,6 @@
 namespace boost {
 namespace container {
 
-#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-// Forward declarations of operators < and ==, needed for friend declaration.
-template <class Key, class Compare, class Allocator>
-inline bool operator==(const set<Key,Compare,Allocator>& x,
-                       const set<Key,Compare,Allocator>& y);
-
-template <class Key, class Compare, class Allocator>
-inline bool operator<(const set<Key,Compare,Allocator>& x,
-                      const set<Key,Compare,Allocator>& y);
-#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-
 //! A set is a kind of associative container that supports unique keys (contains at
 //! most one of each key value) and provides for fast retrieval of the keys themselves.
 //! Class set supports bidirectional iterators.
@@ -56,15 +45,15 @@ inline bool operator<(const set<Key,Compare,Allocator>& x,
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class Key, class Compare = std::less<Key>, class Allocator = std::allocator<Key> >
 #else
-template <class Key, class Compare, class Allocator>
+template <class Key, class Compare, class Allocator, tree_type tree_type_value>
 #endif
 class set
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(set)
-   typedef container_detail::rbtree<Key, Key,
-                     container_detail::identity<Key>, Compare, Allocator> tree_t;
+   typedef container_detail::tree
+      < Key, Key, container_detail::identity<Key>, Compare, Allocator, tree_type_value> tree_t;
    tree_t m_tree;  // red-black tree representing set
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -600,13 +589,28 @@ class set
    std::pair<const_iterator, const_iterator> equal_range(const key_type& x) const
    {  return m_tree.equal_range(x); }
 
+   friend bool operator==(const set& x, const set& y)
+   {  return x.m_tree == y.m_tree;  }
+
+   friend bool operator<(const set& x, const set& y)
+   {  return x.m_tree < y.m_tree;   }
+
+   friend bool operator!=(const set& x, const set& y)
+   {  return !(x == y);   }
+
+   friend bool operator>(const set& x, const set& y)
+   {  return y < x; }
+
+   friend bool operator<=(const set& x, const set& y)
+   {  return !(y < x); }
+
+   friend bool operator>=(const set& x, const set& y)
+   {  return !(x < y);  }
+
+   friend void swap(set& x, set& y)
+   {  x.swap(y);  }
+
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   template <class K1, class C1, class A1>
-   friend bool operator== (const set<K1,C1,A1>&, const set<K1,C1,A1>&);
-
-   template <class K1, class C1, class A1>
-   friend bool operator< (const set<K1,C1,A1>&, const set<K1,C1,A1>&);
-
    private:
    template <class KeyType>
    std::pair<iterator, bool> priv_insert(BOOST_FWD_REF(KeyType) x)
@@ -617,40 +621,6 @@ class set
    {  return m_tree.insert_unique(p, ::boost::forward<KeyType>(x)); }
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
-
-template <class Key, class Compare, class Allocator>
-inline bool operator==(const set<Key,Compare,Allocator>& x,
-                       const set<Key,Compare,Allocator>& y)
-{  return x.m_tree == y.m_tree;  }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator<(const set<Key,Compare,Allocator>& x,
-                      const set<Key,Compare,Allocator>& y)
-{  return x.m_tree < y.m_tree;   }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator!=(const set<Key,Compare,Allocator>& x,
-                       const set<Key,Compare,Allocator>& y)
-{  return !(x == y);   }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator>(const set<Key,Compare,Allocator>& x,
-                      const set<Key,Compare,Allocator>& y)
-{  return y < x; }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator<=(const set<Key,Compare,Allocator>& x,
-                       const set<Key,Compare,Allocator>& y)
-{  return !(y < x); }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator>=(const set<Key,Compare,Allocator>& x,
-                       const set<Key,Compare,Allocator>& y)
-{  return !(x < y);  }
-
-template <class Key, class Compare, class Allocator>
-inline void swap(set<Key,Compare,Allocator>& x, set<Key,Compare,Allocator>& y)
-{  x.swap(y);  }
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -666,15 +636,6 @@ struct has_trivial_destructor_after_move<boost::container::set<Key, C, Allocator
 
 namespace container {
 
-// Forward declaration of operators < and ==, needed for friend declaration.
-
-template <class Key, class Compare, class Allocator>
-inline bool operator==(const multiset<Key,Compare,Allocator>& x,
-                       const multiset<Key,Compare,Allocator>& y);
-
-template <class Key, class Compare, class Allocator>
-inline bool operator<(const multiset<Key,Compare,Allocator>& x,
-                      const multiset<Key,Compare,Allocator>& y);
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! A multiset is a kind of associative container that supports equivalent keys
@@ -687,15 +648,15 @@ inline bool operator<(const multiset<Key,Compare,Allocator>& x,
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class Key, class Compare = std::less<Key>, class Allocator = std::allocator<Key> >
 #else
-template <class Key, class Compare, class Allocator>
+template <class Key, class Compare, class Allocator, tree_type tree_type_value>
 #endif
 class multiset
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(multiset)
-   typedef container_detail::rbtree<Key, Key,
-                     container_detail::identity<Key>, Compare, Allocator> tree_t;
+   typedef container_detail::tree
+      <Key, Key,container_detail::identity<Key>, Compare, Allocator, tree_type_value> tree_t;
    tree_t m_tree;  // red-black tree representing multiset
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -1221,13 +1182,28 @@ class multiset
    std::pair<const_iterator, const_iterator> equal_range(const key_type& x) const
    {  return m_tree.equal_range(x); }
 
+   friend bool operator==(const multiset& x, const multiset& y)
+   {  return x.m_tree == y.m_tree;  }
+
+   friend bool operator<(const multiset& x, const multiset& y)
+   {  return x.m_tree < y.m_tree;   }
+
+   friend bool operator!=(const multiset& x, const multiset& y)
+   {  return !(x == y);  }
+
+   friend bool operator>(const multiset& x, const multiset& y)
+   {  return y < x;  }
+
+   friend bool operator<=(const multiset& x, const multiset& y)
+   {  return !(y < x);  }
+
+   friend bool operator>=(const multiset& x, const multiset& y)
+   {  return !(x < y);  }
+
+   friend void swap(multiset& x, multiset& y)
+   {  x.swap(y);  }
+
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   template <class K1, class C1, class A1>
-   friend bool operator== (const multiset<K1,C1,A1>&,
-                           const multiset<K1,C1,A1>&);
-   template <class K1, class C1, class A1>
-   friend bool operator< (const multiset<K1,C1,A1>&,
-                          const multiset<K1,C1,A1>&);
    private:
    template <class KeyType>
    iterator priv_insert(BOOST_FWD_REF(KeyType) x)
@@ -1239,40 +1215,6 @@ class multiset
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
-
-template <class Key, class Compare, class Allocator>
-inline bool operator==(const multiset<Key,Compare,Allocator>& x,
-                       const multiset<Key,Compare,Allocator>& y)
-{  return x.m_tree == y.m_tree;  }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator<(const multiset<Key,Compare,Allocator>& x,
-                      const multiset<Key,Compare,Allocator>& y)
-{  return x.m_tree < y.m_tree;   }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator!=(const multiset<Key,Compare,Allocator>& x,
-                       const multiset<Key,Compare,Allocator>& y)
-{  return !(x == y);  }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator>(const multiset<Key,Compare,Allocator>& x,
-                      const multiset<Key,Compare,Allocator>& y)
-{  return y < x;  }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator<=(const multiset<Key,Compare,Allocator>& x,
-                       const multiset<Key,Compare,Allocator>& y)
-{  return !(y < x);  }
-
-template <class Key, class Compare, class Allocator>
-inline bool operator>=(const multiset<Key,Compare,Allocator>& x,
-                       const multiset<Key,Compare,Allocator>& y)
-{  return !(x < y);  }
-
-template <class Key, class Compare, class Allocator>
-inline void swap(multiset<Key,Compare,Allocator>& x, multiset<Key,Compare,Allocator>& y)
-{  x.swap(y);  }
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 

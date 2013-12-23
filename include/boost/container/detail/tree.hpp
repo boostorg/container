@@ -15,11 +15,6 @@
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/container_fwd.hpp>
 
-#include <boost/move/utility.hpp>
-#include <boost/intrusive/pointer_traits.hpp>
-#include <boost/type_traits/has_trivial_destructor.hpp>
-#include <boost/detail/no_exceptions_support.hpp>
-#include <boost/intrusive/rbtree.hpp>
 #include <boost/container/detail/utilities.hpp>
 #include <boost/container/detail/iterators.hpp>
 #include <boost/container/detail/algorithms.hpp>
@@ -28,7 +23,17 @@
 #include <boost/container/detail/pair.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/allocator_traits.hpp>
+//
+#include <boost/intrusive/pointer_traits.hpp>
+#include <boost/intrusive/rbtree.hpp>
+#include <boost/intrusive/avltree.hpp>
+#include <boost/intrusive/splaytree.hpp>
+#include <boost/intrusive/sgtree.hpp>
+//
+#include <boost/move/utility.hpp>
+#include <boost/type_traits/has_trivial_destructor.hpp>
 #include <boost/detail/no_exceptions_support.hpp>
+//
 #ifndef BOOST_CONTAINER_PERFECT_FORWARDING
 #include <boost/container/detail/preprocessor.hpp>
 #endif
@@ -86,7 +91,7 @@ struct tree_value_compare
 };
 
 template<class VoidPointer>
-struct rbtree_hook
+struct intrusive_tree_hook
 {
    typedef typename container_detail::bi::make_set_base_hook
       < container_detail::bi::void_pointer<VoidPointer>
@@ -112,20 +117,20 @@ struct rbtree_internal_data_type< std::pair<T1, T2> >
 
 //The node to be store in the tree
 template <class T, class VoidPointer>
-struct rbtree_node
-   :  public rbtree_hook<VoidPointer>::type
+struct tree_node
+   :  public intrusive_tree_hook<VoidPointer>::type
 {
    private:
-   //BOOST_COPYABLE_AND_MOVABLE(rbtree_node)
-   rbtree_node();
+   //BOOST_COPYABLE_AND_MOVABLE(tree_node)
+   tree_node();
 
    public:
-   typedef typename rbtree_hook<VoidPointer>::type hook_type;
+   typedef typename intrusive_tree_hook<VoidPointer>::type hook_type;
 
    typedef T value_type;
    typedef typename rbtree_internal_data_type<T>::type internal_type;
 
-   typedef rbtree_node<T, VoidPointer> node_type;
+   typedef tree_node<T, VoidPointer> node_type;
 
    T &get_data()
    {
@@ -210,8 +215,11 @@ class push_back_functor
 
 namespace container_detail {
 
+template<class A, class ValueCompare, boost::container::tree_type tree_type_value>
+struct intrusive_tree_type;
+
 template<class A, class ValueCompare>
-struct intrusive_rbtree_type
+struct intrusive_tree_type<A, ValueCompare, boost::container::red_black_tree>
 {
    typedef typename boost::container::
       allocator_traits<A>::value_type              value_type;
@@ -219,13 +227,13 @@ struct intrusive_rbtree_type
       allocator_traits<A>::void_pointer            void_pointer;
    typedef typename boost::container::
       allocator_traits<A>::size_type               size_type;
-   typedef typename container_detail::rbtree_node
+   typedef typename container_detail::tree_node
          <value_type, void_pointer>                node_type;
    typedef node_compare<ValueCompare, node_type>   node_compare_type;
    typedef typename container_detail::bi::make_rbtree
       <node_type
       ,container_detail::bi::compare<node_compare_type>
-      ,container_detail::bi::base_hook<typename rbtree_hook<void_pointer>::type>
+      ,container_detail::bi::base_hook<typename intrusive_tree_hook<void_pointer>::type>
       ,container_detail::bi::constant_time_size<true>
       ,container_detail::bi::size_type<size_type>
       >::type                                      container_type;
@@ -237,25 +245,25 @@ struct intrusive_rbtree_type
 namespace container_detail {
 
 template <class Key, class Value, class KeyOfValue,
-          class KeyCompare, class A>
-class rbtree
+          class KeyCompare, class A,
+          boost::container::tree_type tree_type_value>
+class tree
    : protected container_detail::node_alloc_holder
       < A
-      , typename container_detail::intrusive_rbtree_type
-         <A, tree_value_compare<Key, Value, KeyCompare, KeyOfValue> 
-         >::type
-      , tree_value_compare<Key, Value, KeyCompare, KeyOfValue> 
+      , typename container_detail::intrusive_tree_type
+         < A, tree_value_compare<Key, Value, KeyCompare, KeyOfValue> 
+         , tree_type_value>::type
       >
 {
    typedef tree_value_compare
             <Key, Value, KeyCompare, KeyOfValue>            ValComp;
-   typedef typename container_detail::intrusive_rbtree_type
-         < A, ValComp>::type                                Icont;
+   typedef typename container_detail::intrusive_tree_type
+         < A, ValComp, tree_type_value>::type               Icont;
    typedef container_detail::node_alloc_holder 
-      <A, Icont, ValComp>                                   AllocHolder;
+      <A, Icont>                                            AllocHolder;
    typedef typename AllocHolder::NodePtr                    NodePtr;
-   typedef rbtree < Key, Value, KeyOfValue
-                  , KeyCompare, A>                          ThisType;
+   typedef tree < Key, Value, KeyOfValue
+                , KeyCompare, A, tree_type_value>           ThisType;
    typedef typename AllocHolder::NodeAlloc                  NodeAlloc;
    typedef typename AllocHolder::ValAlloc                   ValAlloc;
    typedef typename AllocHolder::Node                       Node;
@@ -342,7 +350,7 @@ class rbtree
       Icont &m_icont;
    };
 
-   BOOST_COPYABLE_AND_MOVABLE(rbtree)
+   BOOST_COPYABLE_AND_MOVABLE(tree)
 
    public:
 
@@ -409,20 +417,20 @@ class rbtree
    typedef std::reverse_iterator<iterator>        reverse_iterator;
    typedef std::reverse_iterator<const_iterator>  const_reverse_iterator;
 
-   rbtree()
+   tree()
       : AllocHolder(ValComp(key_compare()))
    {}
 
-   explicit rbtree(const key_compare& comp, const allocator_type& a = allocator_type())
+   explicit tree(const key_compare& comp, const allocator_type& a = allocator_type())
       : AllocHolder(a, ValComp(comp))
    {}
 
-   explicit rbtree(const allocator_type& a)
+   explicit tree(const allocator_type& a)
       : AllocHolder(a)
    {}
 
    template <class InputIterator>
-   rbtree(bool unique_insertion, InputIterator first, InputIterator last, const key_compare& comp,
+   tree(bool unique_insertion, InputIterator first, InputIterator last, const key_compare& comp,
           const allocator_type& a
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
       , typename container_detail::enable_if_c
@@ -450,7 +458,7 @@ class rbtree
    }
 
    template <class InputIterator>
-   rbtree(bool unique_insertion, InputIterator first, InputIterator last, const key_compare& comp,
+   tree(bool unique_insertion, InputIterator first, InputIterator last, const key_compare& comp,
           const allocator_type& a
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
       , typename container_detail::enable_if_c
@@ -479,7 +487,7 @@ class rbtree
    }
 
    template <class InputIterator>
-   rbtree( ordered_range_t, InputIterator first, InputIterator last
+   tree( ordered_range_t, InputIterator first, InputIterator last
          , const key_compare& comp = key_compare(), const allocator_type& a = allocator_type()
          #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
          , typename container_detail::enable_if_c
@@ -496,7 +504,7 @@ class rbtree
    }
 
    template <class InputIterator>
-   rbtree( ordered_range_t, InputIterator first, InputIterator last
+   tree( ordered_range_t, InputIterator first, InputIterator last
          , const key_compare& comp = key_compare(), const allocator_type& a = allocator_type()
          #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
          , typename container_detail::enable_if_c
@@ -513,25 +521,25 @@ class rbtree
          , container_detail::push_back_functor<Node, Icont>(this->icont()));
    }
 
-   rbtree(const rbtree& x)
+   tree(const tree& x)
       :  AllocHolder(x, x.value_comp())
    {
       this->icont().clone_from
          (x.icont(), typename AllocHolder::cloner(*this), Destroyer(this->node_alloc()));
    }
 
-   rbtree(BOOST_RV_REF(rbtree) x)
+   tree(BOOST_RV_REF(tree) x)
       :  AllocHolder(::boost::move(static_cast<AllocHolder&>(x)), x.value_comp())
    {}
 
-   rbtree(const rbtree& x, const allocator_type &a)
+   tree(const tree& x, const allocator_type &a)
       :  AllocHolder(a, x.value_comp())
    {
       this->icont().clone_from
          (x.icont(), typename AllocHolder::cloner(*this), Destroyer(this->node_alloc()));
    }
 
-   rbtree(BOOST_RV_REF(rbtree) x, const allocator_type &a)
+   tree(BOOST_RV_REF(tree) x, const allocator_type &a)
       :  AllocHolder(a, x.value_comp())
    {
       if(this->node_alloc() == x.node_alloc()){
@@ -543,10 +551,10 @@ class rbtree
       }
    }
 
-   ~rbtree()
+   ~tree()
    {} //AllocHolder clears the tree
 
-   rbtree& operator=(BOOST_COPY_ASSIGN_REF(rbtree) x)
+   tree& operator=(BOOST_COPY_ASSIGN_REF(tree) x)
    {
       if (&x != this){
          NodeAlloc &this_alloc     = this->get_stored_allocator();
@@ -577,7 +585,7 @@ class rbtree
       return *this;
    }
 
-   rbtree& operator=(BOOST_RV_REF(rbtree) x)
+   tree& operator=(BOOST_RV_REF(tree) x)
    {
       if (&x != this){
          NodeAlloc &this_alloc = this->get_stored_allocator();
@@ -1001,69 +1009,28 @@ class rbtree
       return std::pair<const_iterator,const_iterator>
          (const_iterator(ret.first), const_iterator(ret.second));
    }
+
+   friend bool operator==(const tree& x, const tree& y)
+   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
+
+   friend bool operator<(const tree& x, const tree& y)
+   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+
+   friend bool operator!=(const tree& x, const tree& y)
+   {  return !(x == y);  }
+
+   friend bool operator>(const tree& x, const tree& y)
+   {  return y < x;  }
+
+   friend bool operator<=(const tree& x, const tree& y)
+   {  return !(y < x);  }
+
+   friend bool operator>=(const tree& x, const tree& y)
+   {  return !(x < y);  }
+
+   friend void swap(tree& x, tree& y)
+   {  x.swap(y);  }
 };
-
-template <class Key, class Value, class KeyOfValue,
-          class KeyCompare, class A>
-inline bool
-operator==(const rbtree<Key,Value,KeyOfValue,KeyCompare,A>& x,
-           const rbtree<Key,Value,KeyOfValue,KeyCompare,A>& y)
-{
-  return x.size() == y.size() &&
-         std::equal(x.begin(), x.end(), y.begin());
-}
-
-template <class Key, class Value, class KeyOfValue,
-          class KeyCompare, class A>
-inline bool
-operator<(const rbtree<Key,Value,KeyOfValue,KeyCompare,A>& x,
-          const rbtree<Key,Value,KeyOfValue,KeyCompare,A>& y)
-{
-  return std::lexicographical_compare(x.begin(), x.end(),
-                                      y.begin(), y.end());
-}
-
-template <class Key, class Value, class KeyOfValue,
-          class KeyCompare, class A>
-inline bool
-operator!=(const rbtree<Key,Value,KeyOfValue,KeyCompare,A>& x,
-           const rbtree<Key,Value,KeyOfValue,KeyCompare,A>& y) {
-  return !(x == y);
-}
-
-template <class Key, class Value, class KeyOfValue,
-          class KeyCompare, class A>
-inline bool
-operator>(const rbtree<Key,Value,KeyOfValue,KeyCompare,A>& x,
-          const rbtree<Key,Value,KeyOfValue,KeyCompare,A>& y) {
-  return y < x;
-}
-
-template <class Key, class Value, class KeyOfValue,
-          class KeyCompare, class A>
-inline bool
-operator<=(const rbtree<Key,Value,KeyOfValue,KeyCompare,A>& x,
-           const rbtree<Key,Value,KeyOfValue,KeyCompare,A>& y) {
-  return !(y < x);
-}
-
-template <class Key, class Value, class KeyOfValue,
-          class KeyCompare, class A>
-inline bool
-operator>=(const rbtree<Key,Value,KeyOfValue,KeyCompare,A>& x,
-           const rbtree<Key,Value,KeyOfValue,KeyCompare,A>& y) {
-  return !(x < y);
-}
-
-
-template <class Key, class Value, class KeyOfValue,
-          class KeyCompare, class A>
-inline void
-swap(rbtree<Key,Value,KeyOfValue,KeyCompare,A>& x,
-     rbtree<Key,Value,KeyOfValue,KeyCompare,A>& y)
-{
-  x.swap(y);
-}
 
 } //namespace container_detail {
 } //namespace container {
@@ -1073,7 +1040,7 @@ swap(rbtree<Key,Value,KeyOfValue,KeyCompare,A>& x,
 template <class K, class V, class KOV,
 class C, class A>
 struct has_trivial_destructor_after_move
-   <boost::container::container_detail::rbtree<K, V, KOV, C, A> >
+   <boost::container::container_detail::tree<K, V, KOV, C, A> >
 {
    static const bool value = has_trivial_destructor_after_move<A>::value && has_trivial_destructor_after_move<C>::value;
 };

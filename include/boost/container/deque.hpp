@@ -1537,6 +1537,27 @@ class deque : protected deque_base<Allocator>
       this->members_.m_finish = this->members_.m_start;
    }
 
+   friend bool operator==(const deque& x, const deque& y)
+   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
+   
+   friend bool operator!=(const deque& x, const deque& y)
+   {  return !(x == y);   }
+
+   friend bool operator<(const deque& x, const deque& y)
+   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end()); }
+
+   friend bool operator>(const deque& x, const deque& y)
+   {  return y < x; }
+
+   friend bool operator>=(const deque& x, const deque& y)
+   {  return !(x < y); }
+
+   friend bool operator<=(const deque& x, const deque& y)
+   {  return !(y < x); }
+
+   friend void swap(deque& x, deque& y)
+   {  x.swap(y);  }
+
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
 
@@ -1938,39 +1959,6 @@ class deque : protected deque_base<Allocator>
    }
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
-
-// Nonmember functions.
-template <class T, class Allocator>
-inline bool operator==(const deque<T, Allocator>& x, const deque<T, Allocator>& y) BOOST_CONTAINER_NOEXCEPT
-{
-   return x.size() == y.size() && equal(x.begin(), x.end(), y.begin());
-}
-
-template <class T, class Allocator>
-inline bool operator<(const deque<T, Allocator>& x, const deque<T, Allocator>& y) BOOST_CONTAINER_NOEXCEPT
-{
-   return lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());
-}
-
-template <class T, class Allocator>
-inline bool operator!=(const deque<T, Allocator>& x, const deque<T, Allocator>& y) BOOST_CONTAINER_NOEXCEPT
-   {  return !(x == y);   }
-
-template <class T, class Allocator>
-inline bool operator>(const deque<T, Allocator>& x, const deque<T, Allocator>& y) BOOST_CONTAINER_NOEXCEPT
-   {  return y < x; }
-
-template <class T, class Allocator>
-inline bool operator>=(const deque<T, Allocator>& x, const deque<T, Allocator>& y) BOOST_CONTAINER_NOEXCEPT
-   {  return !(x < y); }
-
-template <class T, class Allocator>
-inline bool operator<=(const deque<T, Allocator>& x, const deque<T, Allocator>& y) BOOST_CONTAINER_NOEXCEPT
-   {  return !(y < x); }
-
-template <class T, class Allocator>
-inline void swap(deque<T, Allocator>& x, deque<T, Allocator>& y)
-{  x.swap(y);  }
 
 }}
 

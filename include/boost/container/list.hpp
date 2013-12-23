@@ -1214,7 +1214,42 @@ class list
    //!
    //! <b>Note</b>: Iterators and references are not invalidated
    void reverse() BOOST_CONTAINER_NOEXCEPT
-   {  this->icont().reverse(); }   
+   {  this->icont().reverse(); }
+
+   friend bool operator==(const list& x, const list& y)
+   {
+      if(x.size() != y.size()){
+         return false;
+      }
+      typedef typename list::const_iterator const_iterator;
+      const_iterator end1 = x.end();
+
+      const_iterator i1 = x.begin();
+      const_iterator i2 = y.begin();
+      while (i1 != end1 && *i1 == *i2) {
+         ++i1;
+         ++i2;
+      }
+      return i1 == end1;
+   }
+
+   friend bool operator<(const list& x, const list& y)
+   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end()); }
+   
+   friend bool operator!=(const list& x, const list& y)
+   {  return !(x == y); }
+   
+   friend bool operator>(const list& x, const list& y)
+   {  return y < x;  }
+
+   friend bool operator<=(const list& x, const list& y)
+   {  return !(y < x);  }
+
+   friend bool operator>=(const list& x, const list& y)
+   {  return !(x < y);  }
+   
+   friend void swap(list& x, list& y)
+   {  x.swap(y);  }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
@@ -1306,61 +1341,6 @@ class list
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 };
-
-template <class T, class Allocator>
-inline bool operator==(const list<T,Allocator>& x, const list<T,Allocator>& y)
-{
-   if(x.size() != y.size()){
-      return false;
-   }
-   typedef typename list<T,Allocator>::const_iterator const_iterator;
-   const_iterator end1 = x.end();
-
-   const_iterator i1 = x.begin();
-   const_iterator i2 = y.begin();
-   while (i1 != end1 && *i1 == *i2) {
-      ++i1;
-      ++i2;
-   }
-   return i1 == end1;
-}
-
-template <class T, class Allocator>
-inline bool operator<(const list<T,Allocator>& x,
-                      const list<T,Allocator>& y)
-{
-  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());
-}
-
-template <class T, class Allocator>
-inline bool operator!=(const list<T,Allocator>& x, const list<T,Allocator>& y)
-{
-  return !(x == y);
-}
-
-template <class T, class Allocator>
-inline bool operator>(const list<T,Allocator>& x, const list<T,Allocator>& y)
-{
-  return y < x;
-}
-
-template <class T, class Allocator>
-inline bool operator<=(const list<T,Allocator>& x, const list<T,Allocator>& y)
-{
-  return !(y < x);
-}
-
-template <class T, class Allocator>
-inline bool operator>=(const list<T,Allocator>& x, const list<T,Allocator>& y)
-{
-  return !(x < y);
-}
-
-template <class T, class Allocator>
-inline void swap(list<T, Allocator>& x, list<T, Allocator>& y)
-{
-  x.swap(y);
-}
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 

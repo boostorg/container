@@ -35,17 +35,6 @@ namespace boost {
 namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-// Forward declarations of operators == and <, needed for friend declarations.
-template <class Key, class T, class Compare, class Allocator>
-class flat_map;
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator==(const flat_map<Key,T,Compare,Allocator>& x,
-                       const flat_map<Key,T,Compare,Allocator>& y);
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator<(const flat_map<Key,T,Compare,Allocator>& x,
-                      const flat_map<Key,T,Compare,Allocator>& y);
 
 namespace container_detail{
 
@@ -61,7 +50,6 @@ static D force_copy(S s)
 }
 
 }  //namespace container_detail{
-
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -842,14 +830,28 @@ class flat_map
    std::pair<const_iterator,const_iterator> equal_range(const key_type& x) const
       {  return container_detail::force_copy<std::pair<const_iterator,const_iterator> >(m_flat_tree.equal_range(x)); }
 
-   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   template <class K1, class T1, class C1, class A1>
-   friend bool operator== (const flat_map<K1, T1, C1, A1>&,
-                           const flat_map<K1, T1, C1, A1>&);
-   template <class K1, class T1, class C1, class A1>
-   friend bool operator< (const flat_map<K1, T1, C1, A1>&,
-                           const flat_map<K1, T1, C1, A1>&);
+   friend bool operator==(const flat_map& x, const flat_map& y)
+      {  return x.m_flat_tree == y.m_flat_tree;  }
 
+   friend bool operator<(const flat_map& x, const flat_map& y)
+      {  return x.m_flat_tree < y.m_flat_tree;   }
+
+   friend bool operator!=(const flat_map& x, const flat_map& y)
+      {  return !(x == y); }
+
+   friend bool operator>(const flat_map& x, const flat_map& y)
+      {  return y < x;  }
+
+   friend bool operator<=(const flat_map& x, const flat_map& y)
+      {  return !(y < x);  }
+
+   friend bool operator>=(const flat_map& x, const flat_map& y)
+      {  return !(x < y);  }
+
+   friend void swap(flat_map& x, flat_map& y)
+      {  x.swap(y);  }
+
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    mapped_type &priv_subscript(const key_type& k)
    {
@@ -875,41 +877,6 @@ class flat_map
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator==(const flat_map<Key,T,Compare,Allocator>& x,
-                       const flat_map<Key,T,Compare,Allocator>& y)
-   {  return x.m_flat_tree == y.m_flat_tree;  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator<(const flat_map<Key,T,Compare,Allocator>& x,
-                      const flat_map<Key,T,Compare,Allocator>& y)
-   {  return x.m_flat_tree < y.m_flat_tree;   }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator!=(const flat_map<Key,T,Compare,Allocator>& x,
-                       const flat_map<Key,T,Compare,Allocator>& y)
-   {  return !(x == y); }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator>(const flat_map<Key,T,Compare,Allocator>& x,
-                      const flat_map<Key,T,Compare,Allocator>& y)
-   {  return y < x;  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator<=(const flat_map<Key,T,Compare,Allocator>& x,
-                       const flat_map<Key,T,Compare,Allocator>& y)
-   {  return !(y < x);  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator>=(const flat_map<Key,T,Compare,Allocator>& x,
-                       const flat_map<Key,T,Compare,Allocator>& y)
-   {  return !(x < y);  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline void swap(flat_map<Key,T,Compare,Allocator>& x,
-                 flat_map<Key,T,Compare,Allocator>& y)
-   {  x.swap(y);  }
-
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }  //namespace container {
@@ -924,17 +891,6 @@ struct has_trivial_destructor_after_move<boost::container::flat_map<K, T, C, All
 
 namespace container {
 
-// Forward declaration of operators < and ==, needed for friend declaration.
-template <class Key, class T, class Compare, class Allocator>
-class flat_multimap;
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator==(const flat_multimap<Key,T,Compare,Allocator>& x,
-                       const flat_multimap<Key,T,Compare,Allocator>& y);
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator<(const flat_multimap<Key,T,Compare,Allocator>& x,
-                      const flat_multimap<Key,T,Compare,Allocator>& y);
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! A flat_multimap is a kind of associative container that supports equivalent keys
@@ -1637,50 +1593,27 @@ class flat_multimap
    std::pair<const_iterator,const_iterator> equal_range(const key_type& x) const
       {  return container_detail::force_copy<std::pair<const_iterator,const_iterator> >(m_flat_tree.equal_range(x));   }
 
-   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   template <class K1, class T1, class C1, class A1>
-   friend bool operator== (const flat_multimap<K1, T1, C1, A1>& x,
-                           const flat_multimap<K1, T1, C1, A1>& y);
+   friend bool operator==(const flat_multimap& x, const flat_multimap& y)
+      {  return x.m_flat_tree == y.m_flat_tree;  }
 
-   template <class K1, class T1, class C1, class A1>
-   friend bool operator< (const flat_multimap<K1, T1, C1, A1>& x,
-                          const flat_multimap<K1, T1, C1, A1>& y);
-   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+   friend bool operator<(const flat_multimap& x, const flat_multimap& y)
+      {  return x.m_flat_tree < y.m_flat_tree;   }
+
+   friend bool operator!=(const flat_multimap& x, const flat_multimap& y)
+      {  return !(x == y);  }
+
+   friend bool operator>(const flat_multimap& x, const flat_multimap& y)
+      {  return y < x;  }
+
+   friend bool operator<=(const flat_multimap& x, const flat_multimap& y)
+      {  return !(y < x);  }
+
+   friend bool operator>=(const flat_multimap& x, const flat_multimap& y)
+      {  return !(x < y);  }
+
+   friend void swap(flat_multimap& x, flat_multimap& y)
+      {  x.swap(y);  }
 };
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator==(const flat_multimap<Key,T,Compare,Allocator>& x,
-                       const flat_multimap<Key,T,Compare,Allocator>& y)
-   {  return x.m_flat_tree == y.m_flat_tree;  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator<(const flat_multimap<Key,T,Compare,Allocator>& x,
-                      const flat_multimap<Key,T,Compare,Allocator>& y)
-   {  return x.m_flat_tree < y.m_flat_tree;   }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator!=(const flat_multimap<Key,T,Compare,Allocator>& x,
-                       const flat_multimap<Key,T,Compare,Allocator>& y)
-   {  return !(x == y);  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator>(const flat_multimap<Key,T,Compare,Allocator>& x,
-                      const flat_multimap<Key,T,Compare,Allocator>& y)
-   {  return y < x;  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator<=(const flat_multimap<Key,T,Compare,Allocator>& x,
-                       const flat_multimap<Key,T,Compare,Allocator>& y)
-   {  return !(y < x);  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator>=(const flat_multimap<Key,T,Compare,Allocator>& x,
-                       const flat_multimap<Key,T,Compare,Allocator>& y)
-   {  return !(x < y);  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline void swap(flat_multimap<Key,T,Compare,Allocator>& x, flat_multimap<Key,T,Compare,Allocator>& y)
-   {  x.swap(y);  }
 
 }}
 

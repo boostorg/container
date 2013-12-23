@@ -1580,10 +1580,32 @@ class vector
 
    //Absolutely experimental. This function might change, disappear or simply crash!
    template<class BiDirPosConstIt, class BiDirSkipConstIt, class BiDirValueIt>
-   void insert_ordered_at(size_type element_count, BiDirPosConstIt last_position_it, BiDirSkipConstIt last_skip_it, BiDirValueIt last_value_it)
+   void insert_ordered_at( size_type element_count, BiDirPosConstIt last_position_it
+                         , BiDirSkipConstIt last_skip_it, BiDirValueIt last_value_it)
    {
       this->priv_insert_ordered_at(element_count, last_position_it, true, last_skip_it, last_value_it);
    }
+
+   friend bool operator==(const vector& x, const vector& y)
+   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
+
+   friend bool operator!=(const vector& x, const vector& y)
+   {  return !(x == y); }
+
+   friend bool operator<(const vector& x, const vector& y)
+   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+
+   friend bool operator>(const vector& x, const vector& y)
+   {  return y < x;  }
+
+   friend bool operator<=(const vector& x, const vector& y)
+   {  return !(y < x);  }
+
+   friend bool operator>=(const vector& x, const vector& y)
+   {  return !(x < y);  }
+
+   friend void swap(vector& x, vector& y)
+   {  x.swap(y);  }
 
    private:
 
@@ -1906,7 +1928,6 @@ class vector
          ( new_buf, new_cap, raw_pos, n, insert_range_proxy);
       return iterator(this->m_holder.start() + n_pos);
    }
-
 
    template <class InsertionProxy>
    iterator priv_forward_range_insert_no_capacity
@@ -2634,33 +2655,6 @@ class vector
    #endif
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
-
-template <class T, class Allocator>
-inline bool
-operator==(const vector<T, Allocator>& x, const vector<T, Allocator>& y)
-{
-   //Check first size and each element if needed
-   return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());
-}
-
-template <class T, class Allocator>
-inline bool
-operator!=(const vector<T, Allocator>& x, const vector<T, Allocator>& y)
-{
-   //Check first size and each element if needed
-  return x.size() != y.size() || !std::equal(x.begin(), x.end(), y.begin());
-}
-
-template <class T, class Allocator>
-inline bool
-operator<(const vector<T, Allocator>& x, const vector<T, Allocator>& y)
-{
-   return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());
-}
-
-template <class T, class Allocator>
-inline void swap(vector<T, Allocator>& x, vector<T, Allocator>& y)
-{  x.swap(y);  }
 
 }}
 

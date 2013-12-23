@@ -72,6 +72,16 @@ namespace bi = boost::intrusive;
 namespace boost {
 namespace container {
 
+//! Enumeration used to configure ordered associative containers
+//! with a concrete tree implementation.
+enum tree_type
+{
+   red_black_tree,
+   avl_tree,
+   scapegoat_tree,
+   splay_tree
+};
+
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 template <class T
@@ -99,24 +109,28 @@ class slist;
 
 template <class Key
          ,class Compare  = std::less<Key>
-         ,class Allocator = std::allocator<Key> >
+         ,class Allocator = std::allocator<Key>
+         ,tree_type = red_black_tree >
 class set;
 
 template <class Key
          ,class Compare  = std::less<Key>
-         ,class Allocator = std::allocator<Key> >
+         ,class Allocator = std::allocator<Key>
+         ,tree_type = red_black_tree >
 class multiset;
 
 template <class Key
          ,class T
          ,class Compare  = std::less<Key>
-         ,class Allocator = std::allocator<std::pair<const Key, T> > >
+         ,class Allocator = std::allocator<std::pair<const Key, T> >
+         ,tree_type = red_black_tree >
 class map;
 
 template <class Key
          ,class T
          ,class Compare  = std::less<Key>
-         ,class Allocator = std::allocator<std::pair<const Key, T> > >
+         ,class Allocator = std::allocator<std::pair<const Key, T> >
+         ,tree_type = red_black_tree >
 class multimap;
 
 template <class Key
@@ -223,7 +237,6 @@ struct value_init_t
 //! Value used to tag that the inserted values
 //! should be value initialized
 static const value_init_t value_init = value_init_t();
-
 
 namespace container_detail_really_deep_namespace {
 

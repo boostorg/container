@@ -745,6 +745,32 @@ class flat_tree
    void reserve(size_type cnt)      
    { this->m_data.m_vect.reserve(cnt);   }
 
+   friend bool operator==(const flat_tree& x, const flat_tree& y)
+   {
+      return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());
+   }
+
+   friend bool operator<(const flat_tree& x, const flat_tree& y)
+   {
+      return std::lexicographical_compare(x.begin(), x.end(),
+                                          y.begin(), y.end());
+   }
+
+   friend bool operator!=(const flat_tree& x, const flat_tree& y)
+      {  return !(x == y); }
+
+   friend bool operator>(const flat_tree& x, const flat_tree& y)
+      {  return y < x;  }
+
+   friend bool operator<=(const flat_tree& x, const flat_tree& y)
+      {  return !(y < x);  }
+
+   friend bool operator>=(const flat_tree& x, const flat_tree& y)
+      {  return !(x < y);  }
+
+   friend void swap(flat_tree& x, flat_tree& y)
+      {  x.swap(y);  }
+
    private:
    struct insert_commit_data
    {
@@ -949,62 +975,6 @@ class flat_tree
       }
    }
 };
-
-template <class Key, class Value, class KeyOfValue,
-          class Compare, class A>
-inline bool
-operator==(const flat_tree<Key,Value,KeyOfValue,Compare,A>& x,
-           const flat_tree<Key,Value,KeyOfValue,Compare,A>& y)
-{
-  return x.size() == y.size() &&
-         std::equal(x.begin(), x.end(), y.begin());
-}
-
-template <class Key, class Value, class KeyOfValue,
-          class Compare, class A>
-inline bool
-operator<(const flat_tree<Key,Value,KeyOfValue,Compare,A>& x,
-          const flat_tree<Key,Value,KeyOfValue,Compare,A>& y)
-{
-  return std::lexicographical_compare(x.begin(), x.end(),
-                                      y.begin(), y.end());
-}
-
-template <class Key, class Value, class KeyOfValue,
-          class Compare, class A>
-inline bool
-operator!=(const flat_tree<Key,Value,KeyOfValue,Compare,A>& x,
-           const flat_tree<Key,Value,KeyOfValue,Compare,A>& y)
-   {  return !(x == y); }
-
-template <class Key, class Value, class KeyOfValue,
-          class Compare, class A>
-inline bool
-operator>(const flat_tree<Key,Value,KeyOfValue,Compare,A>& x,
-          const flat_tree<Key,Value,KeyOfValue,Compare,A>& y)
-   {  return y < x;  }
-
-template <class Key, class Value, class KeyOfValue,
-          class Compare, class A>
-inline bool
-operator<=(const flat_tree<Key,Value,KeyOfValue,Compare,A>& x,
-           const flat_tree<Key,Value,KeyOfValue,Compare,A>& y)
-   {  return !(y < x);  }
-
-template <class Key, class Value, class KeyOfValue,
-          class Compare, class A>
-inline bool
-operator>=(const flat_tree<Key,Value,KeyOfValue,Compare,A>& x,
-           const flat_tree<Key,Value,KeyOfValue,Compare,A>& y)
-   {  return !(x < y);  }
-
-
-template <class Key, class Value, class KeyOfValue,
-          class Compare, class A>
-inline void
-swap(flat_tree<Key,Value,KeyOfValue,Compare,A>& x,
-     flat_tree<Key,Value,KeyOfValue,Compare,A>& y)
-   {  x.swap(y);  }
 
 }  //namespace container_detail {
 

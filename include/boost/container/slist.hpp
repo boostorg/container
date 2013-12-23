@@ -1423,6 +1423,44 @@ class slist
    void splice(const_iterator p, BOOST_RV_REF(slist) x, const_iterator first, const_iterator last) BOOST_CONTAINER_NOEXCEPT
    {  this->splice(p, static_cast<slist&>(x), first, last);  }
 
+   friend bool operator==(const slist& x, const slist& y)
+   {
+      if(x.size() != y.size()){
+         return false;
+      }
+      typedef typename slist<T,Allocator>::const_iterator const_iterator;
+      const_iterator end1 = x.end();
+
+      const_iterator i1 = x.begin();
+      const_iterator i2 = y.begin();
+      while (i1 != end1 && *i1 == *i2){
+         ++i1;
+         ++i2;
+      }
+      return i1 == end1;
+   }
+
+   friend bool operator<(const slist& x, const slist& y)
+   {
+      return std::lexicographical_compare
+         (x.begin(), x.end(), y.begin(), y.end());
+   }
+
+   friend bool operator!=(const slist& x, const slist& y)
+      {  return !(x == y);   }
+
+   friend bool operator>(const slist& x, const slist& y)
+      {  return y < x; }
+
+   friend bool operator<=(const slist& x, const slist& y)
+      {  return !(y < x); }
+
+   friend bool operator>=(const slist& x, const slist& y)
+      {  return !(x < y); }
+   
+   friend void swap(slist& x, slist& y)
+      {  x.swap(y);  }
+
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
 
@@ -1507,57 +1545,6 @@ class slist
    };
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
-
-template <class T, class Allocator>
-inline bool
-operator==(const slist<T,Allocator>& x, const slist<T,Allocator>& y)
-{
-   if(x.size() != y.size()){
-      return false;
-   }
-   typedef typename slist<T,Allocator>::const_iterator const_iterator;
-   const_iterator end1 = x.end();
-
-   const_iterator i1 = x.begin();
-   const_iterator i2 = y.begin();
-   while (i1 != end1 && *i1 == *i2){
-      ++i1;
-      ++i2;
-   }
-   return i1 == end1;
-}
-
-template <class T, class Allocator>
-inline bool
-operator<(const slist<T,Allocator>& sL1, const slist<T,Allocator>& sL2)
-{
-   return std::lexicographical_compare
-      (sL1.begin(), sL1.end(), sL2.begin(), sL2.end());
-}
-
-template <class T, class Allocator>
-inline bool
-operator!=(const slist<T,Allocator>& sL1, const slist<T,Allocator>& sL2)
-   {  return !(sL1 == sL2);   }
-
-template <class T, class Allocator>
-inline bool
-operator>(const slist<T,Allocator>& sL1, const slist<T,Allocator>& sL2)
-   {  return sL2 < sL1; }
-
-template <class T, class Allocator>
-inline bool
-operator<=(const slist<T,Allocator>& sL1, const slist<T,Allocator>& sL2)
-   {  return !(sL2 < sL1); }
-
-template <class T, class Allocator>
-inline bool
-operator>=(const slist<T,Allocator>& sL1, const slist<T,Allocator>& sL2)
-   {  return !(sL1 < sL2); }
-
-template <class T, class Allocator>
-inline void swap(slist<T,Allocator>& x, slist<T,Allocator>& y)
-   {  x.swap(y);  }
 
 }}
 

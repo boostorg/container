@@ -39,17 +39,6 @@
 namespace boost {
 namespace container {
 
-#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-// Forward declarations of operators == and <, needed for friend declarations.
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator==(const map<Key,T,Compare,Allocator>& x,
-                       const map<Key,T,Compare,Allocator>& y);
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator<(const map<Key,T,Compare,Allocator>& x,
-                      const map<Key,T,Compare,Allocator>& y);
-#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-
 //! A map is a kind of associative container that supports unique keys (contains at
 //! most one of each key value) and provides for fast retrieval of values of another
 //! type T based on the keys. The map class supports bidirectional iterators.
@@ -65,7 +54,7 @@ inline bool operator<(const map<Key,T,Compare,Allocator>& x,
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class Key, class T, class Compare = std::less<Key>, class Allocator = std::allocator< std::pair< const Key, T> > >
 #else
-template <class Key, class T, class Compare, class Allocator>
+template <class Key, class T, class Compare, class Allocator, tree_type tree_type_value>
 #endif
 class map
 {
@@ -74,8 +63,8 @@ class map
    BOOST_COPYABLE_AND_MOVABLE(map)
 
    typedef std::pair<const Key, T>  value_type_impl;
-   typedef container_detail::rbtree
-      <Key, value_type_impl, container_detail::select1st<value_type_impl>, Compare, Allocator> tree_t;
+   typedef container_detail::tree
+      <Key, value_type_impl, container_detail::select1st<value_type_impl>, Compare, Allocator, tree_type_value> tree_t;
    typedef container_detail::pair <Key, T> movable_value_type_impl;
    typedef container_detail::tree_value_compare
       < Key, value_type_impl, Compare, container_detail::select1st<value_type_impl>
@@ -755,13 +744,28 @@ class map
    std::pair<const_iterator,const_iterator> equal_range(const key_type& x) const
    {  return m_tree.equal_range(x); }
 
+   friend bool operator==(const map& x, const map& y)
+      {  return x.m_tree == y.m_tree;  }
+
+   friend bool operator<(const map& x, const map& y)
+      {  return x.m_tree < y.m_tree;   }
+
+   friend bool operator!=(const map& x, const map& y)
+      {  return !(x == y); }
+
+   friend bool operator>(const map& x, const map& y)
+      {  return y < x;  }
+
+   friend bool operator<=(const map& x, const map& y)
+      {  return !(y < x);  }
+
+   friend bool operator>=(const map& x, const map& y)
+      {  return !(x < y);  }
+
+   friend void swap(map& x, map& y)
+      {  x.swap(y);  }
+
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   template <class K1, class T1, class C1, class A1>
-   friend bool operator== (const map<K1, T1, C1, A1>&,
-                           const map<K1, T1, C1, A1>&);
-   template <class K1, class T1, class C1, class A1>
-   friend bool operator< (const map<K1, T1, C1, A1>&,
-                          const map<K1, T1, C1, A1>&);
    private:
    mapped_type& priv_subscript(const key_type &k)
    {
@@ -793,51 +797,8 @@ class map
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator==(const map<Key,T,Compare,Allocator>& x,
-                       const map<Key,T,Compare,Allocator>& y)
-   {  return x.m_tree == y.m_tree;  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator<(const map<Key,T,Compare,Allocator>& x,
-                      const map<Key,T,Compare,Allocator>& y)
-   {  return x.m_tree < y.m_tree;   }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator!=(const map<Key,T,Compare,Allocator>& x,
-                       const map<Key,T,Compare,Allocator>& y)
-   {  return !(x == y); }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator>(const map<Key,T,Compare,Allocator>& x,
-                      const map<Key,T,Compare,Allocator>& y)
-   {  return y < x;  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator<=(const map<Key,T,Compare,Allocator>& x,
-                       const map<Key,T,Compare,Allocator>& y)
-   {  return !(y < x);  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator>=(const map<Key,T,Compare,Allocator>& x,
-                       const map<Key,T,Compare,Allocator>& y)
-   {  return !(x < y);  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline void swap(map<Key,T,Compare,Allocator>& x, map<Key,T,Compare,Allocator>& y)
-   {  x.swap(y);  }
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-
-// Forward declaration of operators < and ==, needed for friend declaration.
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator==(const multimap<Key,T,Compare,Allocator>& x,
-                       const multimap<Key,T,Compare,Allocator>& y);
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator<(const multimap<Key,T,Compare,Allocator>& x,
-                      const multimap<Key,T,Compare,Allocator>& y);
 
 }  //namespace container {
 
@@ -869,7 +830,7 @@ namespace container {
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class Key, class T, class Compare = std::less<Key>, class Allocator = std::allocator< std::pair< const Key, T> > >
 #else
-template <class Key, class T, class Compare, class Allocator>
+template <class Key, class T, class Compare, class Allocator, tree_type tree_type_value>
 #endif
 class multimap
 {
@@ -878,8 +839,8 @@ class multimap
    BOOST_COPYABLE_AND_MOVABLE(multimap)
 
    typedef std::pair<const Key, T>  value_type_impl;
-   typedef container_detail::rbtree
-      <Key, value_type_impl, container_detail::select1st<value_type_impl>, Compare, Allocator> tree_t;
+   typedef container_detail::tree
+      <Key, value_type_impl, container_detail::select1st<value_type_impl>, Compare, Allocator, tree_type_value> tree_t;
    typedef container_detail::pair <Key, T> movable_value_type_impl;
    typedef container_detail::tree_value_compare
       < Key, value_type_impl, Compare, container_detail::select1st<value_type_impl>
@@ -1463,50 +1424,27 @@ class multimap
    std::pair<const_iterator,const_iterator> equal_range(const key_type& x) const
    {  return m_tree.equal_range(x);   }
 
-   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   template <class K1, class T1, class C1, class A1>
-   friend bool operator== (const multimap<K1, T1, C1, A1>& x,
-                           const multimap<K1, T1, C1, A1>& y);
+   friend bool operator==(const multimap& x, const multimap& y)
+   {  return x.m_tree == y.m_tree;  }
+   
+   friend bool operator<(const multimap& x, const multimap& y)
+   {  return x.m_tree < y.m_tree;   }
 
-   template <class K1, class T1, class C1, class A1>
-   friend bool operator< (const multimap<K1, T1, C1, A1>& x,
-                          const multimap<K1, T1, C1, A1>& y);
-   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+   friend bool operator!=(const multimap& x, const multimap& y)
+   {  return !(x == y);  }
+
+   friend bool operator>(const multimap& x, const multimap& y)
+   {  return y < x;  }
+
+   friend bool operator<=(const multimap& x, const multimap& y)
+   {  return !(y < x);  }
+
+   friend bool operator>=(const multimap& x, const multimap& y)
+   {  return !(x < y);  }
+
+   friend void swap(multimap& x, multimap& y)
+   {  x.swap(y);  }
 };
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator==(const multimap<Key,T,Compare,Allocator>& x,
-                       const multimap<Key,T,Compare,Allocator>& y)
-{  return x.m_tree == y.m_tree;  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator<(const multimap<Key,T,Compare,Allocator>& x,
-                      const multimap<Key,T,Compare,Allocator>& y)
-{  return x.m_tree < y.m_tree;   }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator!=(const multimap<Key,T,Compare,Allocator>& x,
-                       const multimap<Key,T,Compare,Allocator>& y)
-{  return !(x == y);  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator>(const multimap<Key,T,Compare,Allocator>& x,
-                      const multimap<Key,T,Compare,Allocator>& y)
-{  return y < x;  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator<=(const multimap<Key,T,Compare,Allocator>& x,
-                       const multimap<Key,T,Compare,Allocator>& y)
-{  return !(y < x);  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline bool operator>=(const multimap<Key,T,Compare,Allocator>& x,
-                       const multimap<Key,T,Compare,Allocator>& y)
-{  return !(x < y);  }
-
-template <class Key, class T, class Compare, class Allocator>
-inline void swap(multimap<Key,T,Compare,Allocator>& x, multimap<Key,T,Compare,Allocator>& y)
-{  x.swap(y);  }
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
