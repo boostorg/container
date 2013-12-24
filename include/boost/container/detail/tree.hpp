@@ -294,6 +294,36 @@ class RecyclingCloner
    intrusive_container &m_icont;
 };
 
+template<class KeyValueCompare, class Node>
+//where KeyValueCompare is tree_value_compare<Key, Value, KeyCompare, KeyOfValue>
+struct key_node_compare
+   :  private KeyValueCompare
+{
+   explicit key_node_compare(const KeyValueCompare &comp)
+      :  KeyValueCompare(comp)
+   {}
+
+   template<class T>
+   struct is_node
+   {
+      static const bool value = is_same<T, Node>::value;
+   };
+
+   template<class T>
+   typename enable_if_c<is_node<T>::value, const typename KeyValueCompare::value_type &>::type
+      key_forward(const T &node) const
+   {  return node.get_data();  }
+
+   template<class T>
+   typename enable_if_c<!is_node<T>::value, const T &>::type
+      key_forward(const T &key) const
+   {  return key; }
+
+   template<class KeyType, class KeyType2>
+   bool operator()(const KeyType &key1, const KeyType2 &key2) const
+   {  return KeyValueCompare::operator()(this->key_forward(key1), this->key_forward(key2));  }
+};
+
 template <class Key, class Value, class KeyOfValue,
           class KeyCompare, class A,
           boost::container::tree_type tree_type_value>
@@ -301,7 +331,7 @@ class tree
    : protected container_detail::node_alloc_holder
       < A
       , typename container_detail::intrusive_tree_type
-         < A, tree_value_compare<Key, Value, KeyCompare, KeyOfValue> 
+         < A, tree_value_compare<Key, Value, KeyCompare, KeyOfValue> //ValComp
          , tree_type_value>::type
       >
 {
@@ -354,36 +384,7 @@ class tree
 
    private:
 
-   template<class KeyValueCompare>
-   struct key_node_compare
-      :  private KeyValueCompare
-   {
-      key_node_compare(const KeyValueCompare &comp)
-         :  KeyValueCompare(comp)
-      {}
-
-      template<class T>
-      struct is_node
-      {
-         static const bool value = is_same<T, Node>::value;
-      };
-
-      template<class T>
-      typename enable_if_c<is_node<T>::value, const value_type &>::type
-         key_forward(const T &node) const
-      {  return node.get_data();  }
-
-      template<class T>
-      typename enable_if_c<!is_node<T>::value, const T &>::type
-         key_forward(const T &key) const
-      {  return key; }
-
-      template<class KeyType, class KeyType2>
-      bool operator()(const KeyType &key1, const KeyType2 &key2) const
-      {  return KeyValueCompare::operator()(this->key_forward(key1), this->key_forward(key2));  }
-   };
-
-   typedef key_node_compare<value_compare>  KeyNodeCompare;
+   typedef key_node_compare<value_compare, Node>  KeyNodeCompare;
 
    public:
    typedef container_detail::iterator<iiterator, false>  iterator;
