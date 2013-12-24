@@ -164,31 +164,31 @@ void test_move()
 }
 
 template<class T, class A>
-class flat_tree_propagate_test_wrapper
-   : public container_detail::flat_tree<T, T, container_detail::identity<T>, std::less<T>, A>
+class flat_set_propagate_test_wrapper
+   : public boost::container::flat_set<T, std::less<T>, A>
 {
-   BOOST_COPYABLE_AND_MOVABLE(flat_tree_propagate_test_wrapper)
-   typedef container_detail::flat_tree<T, T, container_detail::identity<T>, std::less<T>, A> Base;
+   BOOST_COPYABLE_AND_MOVABLE(flat_set_propagate_test_wrapper)
+   typedef boost::container::flat_set<T, std::less<T>, A> Base;
    public:
-   flat_tree_propagate_test_wrapper()
+   flat_set_propagate_test_wrapper()
       : Base()
    {}
 
-   flat_tree_propagate_test_wrapper(const flat_tree_propagate_test_wrapper &x)
+   flat_set_propagate_test_wrapper(const flat_set_propagate_test_wrapper &x)
       : Base(x)
    {}
 
-   flat_tree_propagate_test_wrapper(BOOST_RV_REF(flat_tree_propagate_test_wrapper) x)
+   flat_set_propagate_test_wrapper(BOOST_RV_REF(flat_set_propagate_test_wrapper) x)
       : Base(boost::move(static_cast<Base&>(x)))
    {}
 
-   flat_tree_propagate_test_wrapper &operator=(BOOST_COPY_ASSIGN_REF(flat_tree_propagate_test_wrapper) x)
+   flat_set_propagate_test_wrapper &operator=(BOOST_COPY_ASSIGN_REF(flat_set_propagate_test_wrapper) x)
    {  this->Base::operator=(x);  return *this; }
 
-   flat_tree_propagate_test_wrapper &operator=(BOOST_RV_REF(flat_tree_propagate_test_wrapper) x)
+   flat_set_propagate_test_wrapper &operator=(BOOST_RV_REF(flat_set_propagate_test_wrapper) x)
    {  this->Base::operator=(boost::move(static_cast<Base&>(x)));  return *this; }
 
-   void swap(flat_tree_propagate_test_wrapper &x)
+   void swap(flat_set_propagate_test_wrapper &x)
    {  this->Base::swap(x);  }
 };
 
@@ -404,7 +404,7 @@ int main()
       return 1;
    if(!boost::container::test::test_emplace<flat_multiset<test::EmplaceInt>, SetOptions>())
       return 1;
-   if(!boost::container::test::test_propagate_allocator<flat_tree_propagate_test_wrapper>())
+   if(!boost::container::test::test_propagate_allocator<flat_set_propagate_test_wrapper>())
       return 1;
 
    return 0;

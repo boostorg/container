@@ -187,31 +187,37 @@ void test_move()
 }
 
 template<class T, class A>
-class flat_tree_propagate_test_wrapper
-   : public container_detail::flat_tree<T, T, container_detail::identity<T>, std::less<T>, A>
+class flat_map_propagate_test_wrapper
+   : public boost::container::flat_map
+      < T, T, std::less<T>
+      , typename boost::container::allocator_traits<A>::template
+         portable_rebind_alloc< std::pair<T, T> >::type>
 {
-   BOOST_COPYABLE_AND_MOVABLE(flat_tree_propagate_test_wrapper)
-   typedef container_detail::flat_tree<T, T, container_detail::identity<T>, std::less<T>, A> Base;
+   BOOST_COPYABLE_AND_MOVABLE(flat_map_propagate_test_wrapper)
+   typedef boost::container::flat_map
+      < T, T, std::less<T>
+      , typename boost::container::allocator_traits<A>::template
+         portable_rebind_alloc< std::pair<T, T> >::type> Base;
    public:
-   flat_tree_propagate_test_wrapper()
+   flat_map_propagate_test_wrapper()
       : Base()
    {}
 
-   flat_tree_propagate_test_wrapper(const flat_tree_propagate_test_wrapper &x)
+   flat_map_propagate_test_wrapper(const flat_map_propagate_test_wrapper &x)
       : Base(x)
    {}
 
-   flat_tree_propagate_test_wrapper(BOOST_RV_REF(flat_tree_propagate_test_wrapper) x)
+   flat_map_propagate_test_wrapper(BOOST_RV_REF(flat_map_propagate_test_wrapper) x)
       : Base(boost::move(static_cast<Base&>(x)))
    {}
 
-   flat_tree_propagate_test_wrapper &operator=(BOOST_COPY_ASSIGN_REF(flat_tree_propagate_test_wrapper) x)
+   flat_map_propagate_test_wrapper &operator=(BOOST_COPY_ASSIGN_REF(flat_map_propagate_test_wrapper) x)
    {  this->Base::operator=(x);  return *this; }
 
-   flat_tree_propagate_test_wrapper &operator=(BOOST_RV_REF(flat_tree_propagate_test_wrapper) x)
+   flat_map_propagate_test_wrapper &operator=(BOOST_RV_REF(flat_map_propagate_test_wrapper) x)
    {  this->Base::operator=(boost::move(static_cast<Base&>(x)));  return *this; }
 
-   void swap(flat_tree_propagate_test_wrapper &x)
+   void swap(flat_map_propagate_test_wrapper &x)
    {  this->Base::swap(x);  }
 };
 
@@ -429,7 +435,7 @@ int main()
       return 1;
    if(!boost::container::test::test_emplace<flat_multimap<test::EmplaceInt, test::EmplaceInt>, MapOptions>())
       return 1;
-   if(!boost::container::test::test_propagate_allocator<flat_tree_propagate_test_wrapper>())
+   if(!boost::container::test::test_propagate_allocator<flat_map_propagate_test_wrapper>())
       return 1;
 
    return 0;

@@ -156,7 +156,11 @@ class flat_map
    //!
    //! <b>Complexity</b>: Constant.
    flat_map()
-      : m_flat_tree() {}
+      : m_flat_tree()
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Constructs an empty flat_map using the specified
    //! comparison object and allocator.
@@ -164,14 +168,20 @@ class flat_map
    //! <b>Complexity</b>: Constant.
    explicit flat_map(const Compare& comp, const allocator_type& a = allocator_type())
       : m_flat_tree(comp, container_detail::force<impl_allocator_type>(a))
-   {}
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Constructs an empty flat_map using the specified allocator.
    //!
    //! <b>Complexity</b>: Constant.
    explicit flat_map(const allocator_type& a)
       : m_flat_tree(container_detail::force<impl_allocator_type>(a))
-   {}
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Constructs an empty flat_map using the specified comparison object and
    //! allocator, and inserts elements from the range [first ,last ).
@@ -182,7 +192,10 @@ class flat_map
    flat_map(InputIterator first, InputIterator last, const Compare& comp = Compare(),
          const allocator_type& a = allocator_type())
       : m_flat_tree(true, first, last, comp, container_detail::force<impl_allocator_type>(a))
-   {}
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Constructs an empty flat_map using the specified comparison object and
    //! allocator, and inserts elements from the ordered unique range [first ,last). This function
@@ -198,13 +211,20 @@ class flat_map
    flat_map( ordered_unique_range_t, InputIterator first, InputIterator last
            , const Compare& comp = Compare(), const allocator_type& a = allocator_type())
       : m_flat_tree(ordered_range, first, last, comp, a)
-   {}
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Copy constructs a flat_map.
    //!
    //! <b>Complexity</b>: Linear in x.size().
    flat_map(const flat_map& x)
-      : m_flat_tree(x.m_flat_tree) {}
+      : m_flat_tree(x.m_flat_tree)
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Move constructs a flat_map.
    //!   Constructs *this using x's resources.
@@ -214,14 +234,20 @@ class flat_map
    //! <b>Postcondition</b>: x is emptied.
    flat_map(BOOST_RV_REF(flat_map) x)
       : m_flat_tree(boost::move(x.m_flat_tree))
-   {}
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Copy constructs a flat_map using the specified allocator.
    //!
    //! <b>Complexity</b>: Linear in x.size().
    flat_map(const flat_map& x, const allocator_type &a)
       : m_flat_tree(x.m_flat_tree, a)
-   {}
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Move constructs a flat_map using the specified allocator.
    //!   Constructs *this using x's resources.
@@ -229,7 +255,10 @@ class flat_map
    //! <b>Complexity</b>: Constant if x.get_allocator() == a, linear otherwise.
    flat_map(BOOST_RV_REF(flat_map) x, const allocator_type &a)
       : m_flat_tree(boost::move(x.m_flat_tree), a)
-   {}
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Makes *this a copy of x.
    //!
@@ -993,7 +1022,11 @@ class flat_multimap
    //!
    //! <b>Complexity</b>: Constant.
    flat_multimap()
-      : m_flat_tree() {}
+      : m_flat_tree()
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Constructs an empty flat_multimap using the specified comparison
    //!   object and allocator.
@@ -1002,14 +1035,20 @@ class flat_multimap
    explicit flat_multimap(const Compare& comp,
                           const allocator_type& a = allocator_type())
       : m_flat_tree(comp, container_detail::force<impl_allocator_type>(a))
-   {}
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Constructs an empty flat_multimap using the specified allocator.
    //!
    //! <b>Complexity</b>: Constant.
    explicit flat_multimap(const allocator_type& a)
       : m_flat_tree(container_detail::force<impl_allocator_type>(a))
-   {}
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Constructs an empty flat_multimap using the specified comparison object
    //!   and allocator, and inserts elements from the range [first ,last ).
@@ -1021,7 +1060,10 @@ class flat_multimap
             const Compare& comp        = Compare(),
             const allocator_type& a = allocator_type())
       : m_flat_tree(false, first, last, comp, container_detail::force<impl_allocator_type>(a))
-   {}
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Constructs an empty flat_multimap using the specified comparison object and
    //! allocator, and inserts elements from the ordered range [first ,last). This function
@@ -1037,13 +1079,20 @@ class flat_multimap
             const Compare& comp        = Compare(),
             const allocator_type& a = allocator_type())
       : m_flat_tree(ordered_range, first, last, comp, a)
-   {}
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Copy constructs a flat_multimap.
    //!
    //! <b>Complexity</b>: Linear in x.size().
    flat_multimap(const flat_multimap& x)
-      : m_flat_tree(x.m_flat_tree) { }
+      : m_flat_tree(x.m_flat_tree)
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Move constructs a flat_multimap. Constructs *this using x's resources.
    //!
@@ -1052,14 +1101,20 @@ class flat_multimap
    //! <b>Postcondition</b>: x is emptied.
    flat_multimap(BOOST_RV_REF(flat_multimap) x)
       : m_flat_tree(boost::move(x.m_flat_tree))
-   {}
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Copy constructs a flat_multimap using the specified allocator.
    //!
    //! <b>Complexity</b>: Linear in x.size().
    flat_multimap(const flat_multimap& x, const allocator_type &a)
       : m_flat_tree(x.m_flat_tree, a)
-   {}
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Move constructs a flat_multimap using the specified allocator.
    //!                 Constructs *this using x's resources.
@@ -1067,7 +1122,10 @@ class flat_multimap
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    flat_multimap(BOOST_RV_REF(flat_multimap) x, const allocator_type &a)
       : m_flat_tree(boost::move(x.m_flat_tree), a)
-   { }
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
 
    //! <b>Effects</b>: Makes *this a copy of x.
    //!

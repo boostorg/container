@@ -144,31 +144,31 @@ void test_move()
 }
 
 template<class T, class A>
-class tree_propagate_test_wrapper
-   : public container_detail::tree<T, T, container_detail::identity<T>, std::less<T>, A, red_black_tree>
+class set_propagate_test_wrapper
+   : public boost::container::set<T, std::less<T>, A, red_black_tree>
 {
-   BOOST_COPYABLE_AND_MOVABLE(tree_propagate_test_wrapper)
-   typedef container_detail::tree<T, T, container_detail::identity<T>, std::less<T>, A, red_black_tree> Base;
+   BOOST_COPYABLE_AND_MOVABLE(set_propagate_test_wrapper)
+   typedef boost::container::set<T, std::less<T>, A, red_black_tree> Base;
    public:
-   tree_propagate_test_wrapper()
+   set_propagate_test_wrapper()
       : Base()
    {}
 
-   tree_propagate_test_wrapper(const tree_propagate_test_wrapper &x)
+   set_propagate_test_wrapper(const set_propagate_test_wrapper &x)
       : Base(x)
    {}
 
-   tree_propagate_test_wrapper(BOOST_RV_REF(tree_propagate_test_wrapper) x)
+   set_propagate_test_wrapper(BOOST_RV_REF(set_propagate_test_wrapper) x)
       : Base(boost::move(static_cast<Base&>(x)))
    {}
 
-   tree_propagate_test_wrapper &operator=(BOOST_COPY_ASSIGN_REF(tree_propagate_test_wrapper) x)
+   set_propagate_test_wrapper &operator=(BOOST_COPY_ASSIGN_REF(set_propagate_test_wrapper) x)
    {  this->Base::operator=(x);  return *this; }
 
-   tree_propagate_test_wrapper &operator=(BOOST_RV_REF(tree_propagate_test_wrapper) x)
+   set_propagate_test_wrapper &operator=(BOOST_RV_REF(set_propagate_test_wrapper) x)
    {  this->Base::operator=(boost::move(static_cast<Base&>(x)));  return *this; }
 
-   void swap(tree_propagate_test_wrapper &x)
+   void swap(set_propagate_test_wrapper &x)
    {  this->Base::swap(x);  }
 };
 
@@ -291,7 +291,7 @@ int main ()
       return 1;
    if(!boost::container::test::test_emplace<multiset<test::EmplaceInt>, SetOptions>())
       return 1;
-   if(!boost::container::test::test_propagate_allocator<tree_propagate_test_wrapper>())
+   if(!boost::container::test::test_propagate_allocator<set_propagate_test_wrapper>())
       return 1;
 
    return 0;
