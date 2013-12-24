@@ -103,13 +103,13 @@ struct intrusive_tree_hook
 //This trait is used to type-pun std::pair because in C++03
 //compilers std::pair is useless for C++11 features
 template<class T>
-struct rbtree_internal_data_type
+struct tree_internal_data_type
 {
    typedef T type;
 };
 
 template<class T1, class T2>
-struct rbtree_internal_data_type< std::pair<T1, T2> >
+struct tree_internal_data_type< std::pair<T1, T2> >
 {
    typedef pair<T1, T2> type;
 };
@@ -128,7 +128,7 @@ struct tree_node
    typedef typename intrusive_tree_hook<VoidPointer>::type hook_type;
 
    typedef T value_type;
-   typedef typename rbtree_internal_data_type<T>::type internal_type;
+   typedef typename tree_internal_data_type<T>::type internal_type;
 
    typedef tree_node<T, VoidPointer> node_type;
 
@@ -244,6 +244,56 @@ struct intrusive_tree_type<A, ValueCompare, boost::container::red_black_tree>
 
 namespace container_detail {
 
+//This functor will be used with Intrusive clone functions to obtain
+//already allocated nodes from a intrusive container instead of
+//allocating new ones. When the intrusive container runs out of nodes
+//the node holder is used instead.
+template<class AllocHolder, bool DoMove>
+class RecyclingCloner
+{
+   typedef typename AllocHolder::intrusive_container  intrusive_container;
+   typedef typename AllocHolder::Node                 node_type;
+   typedef typename AllocHolder::NodePtr              node_ptr_type;
+
+   public:
+   RecyclingCloner(AllocHolder &holder, intrusive_container &itree)
+      :  m_holder(holder), m_icont(itree)
+   {}
+
+   static void do_assign(node_ptr_type &p, const node_type &other, bool_<true>)
+   {  p->do_assign(other.m_data);   }
+
+   static void do_assign(node_ptr_type &p, const node_type &other, bool_<false>)
+   {  p->do_move_assign(const_cast<node_type &>(other).m_data);   }   
+
+   node_ptr_type operator()(const node_type &other) const
+   {
+      if(node_ptr_type p = m_icont.unlink_leftmost_without_rebalance()){
+         //First recycle a node (this can't throw)
+         BOOST_TRY{
+            //This can throw
+            this->do_assign(p, other, bool_<DoMove>());
+            return p;
+         }
+         BOOST_CATCH(...){
+            //If there is an exception destroy the whole source
+            m_holder.destroy_node(p);
+            while((p = m_icont.unlink_leftmost_without_rebalance())){
+               m_holder.destroy_node(p);
+            }
+            BOOST_RETHROW
+         }
+         BOOST_CATCH_END
+      }
+      else{
+         return m_holder.create_node(other.m_data);
+      }
+   }
+
+   AllocHolder &m_holder;
+   intrusive_container &m_icont;
+};
+
 template <class Key, class Value, class KeyOfValue,
           class KeyCompare, class A,
           boost::container::tree_type tree_type_value>
@@ -274,82 +324,6 @@ class tree
    typedef typename AllocHolder::allocator_v2               allocator_v2;
    typedef typename AllocHolder::alloc_version              alloc_version;
 
-   class RecyclingCloner;
-   friend class RecyclingCloner;
-
-   class RecyclingCloner
-   {
-      public:
-      RecyclingCloner(AllocHolder &holder, Icont &irbtree)
-         :  m_holder(holder), m_icont(irbtree)
-      {}
-
-      NodePtr operator()(const Node &other) const
-      {
-         if(NodePtr p = m_icont.unlink_leftmost_without_rebalance()){
-            //First recycle a node (this can't throw)
-            BOOST_TRY{
-               //This can throw
-               p->do_assign(other.m_data);
-               return p;
-            }
-            BOOST_CATCH(...){
-               //If there is an exception destroy the whole source
-               m_holder.destroy_node(p);
-               while((p = m_icont.unlink_leftmost_without_rebalance())){
-                  m_holder.destroy_node(p);
-               }
-               BOOST_RETHROW
-            }
-            BOOST_CATCH_END
-         }
-         else{
-            return m_holder.create_node(other.m_data);
-         }
-      }
-
-      AllocHolder &m_holder;
-      Icont &m_icont;
-   };
-
-   class RecyclingMoveCloner;
-   friend class RecyclingMoveCloner;
-
-   class RecyclingMoveCloner
-   {
-      public:
-      RecyclingMoveCloner(AllocHolder &holder, Icont &irbtree)
-         :  m_holder(holder), m_icont(irbtree)
-      {}
-
-      NodePtr operator()(const Node &other) const
-      {
-         if(NodePtr p = m_icont.unlink_leftmost_without_rebalance()){
-            //First recycle a node (this can't throw)
-            BOOST_TRY{
-               //This can throw
-               p->do_move_assign(const_cast<Node &>(other).m_data);
-               return p;
-            }
-            BOOST_CATCH(...){
-               //If there is an exception destroy the whole source
-               m_holder.destroy_node(p);
-               while((p = m_icont.unlink_leftmost_without_rebalance())){
-                  m_holder.destroy_node(p);
-               }
-               BOOST_RETHROW
-            }
-            BOOST_CATCH_END
-         }
-         else{
-            return m_holder.create_node(other.m_data);
-         }
-      }
-
-      AllocHolder &m_holder;
-      Icont &m_icont;
-   };
-
    BOOST_COPYABLE_AND_MOVABLE(tree)
 
    public:
@@ -371,11 +345,11 @@ class tree
       allocator_traits<A>::size_type                  size_type;
    typedef typename boost::container::
       allocator_traits<A>::difference_type            difference_type;
-   typedef difference_type                            rbtree_difference_type;
-   typedef pointer                                    rbtree_pointer;
-   typedef const_pointer                              rbtree_const_pointer;
-   typedef reference                                  rbtree_reference;
-   typedef const_reference                            rbtree_const_reference;
+   typedef difference_type                            tree_difference_type;
+   typedef pointer                                    tree_pointer;
+   typedef const_pointer                              tree_const_pointer;
+   typedef reference                                  tree_reference;
+   typedef const_reference                            tree_const_reference;
    typedef NodeAlloc                                  stored_allocator_type;
 
    private:
@@ -573,7 +547,7 @@ class tree
          //Now recreate the source tree reusing nodes stored by other_tree
          this->icont().clone_from
             (x.icont()
-            , RecyclingCloner(*this, other_tree)
+            , RecyclingCloner<AllocHolder, false>(*this, other_tree)
             , Destroyer(this->node_alloc()));
 
          //If there are remaining nodes, destroy them
@@ -608,7 +582,7 @@ class tree
             //Now recreate the source tree reusing nodes stored by other_tree
             this->icont().clone_from
                (x.icont()
-               , RecyclingMoveCloner(*this, other_tree)
+               , RecyclingCloner<AllocHolder, true>(*this, other_tree)
                , Destroyer(this->node_alloc()));
 
             //If there are remaining nodes, destroy them

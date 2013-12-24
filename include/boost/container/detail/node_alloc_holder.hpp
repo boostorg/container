@@ -88,6 +88,7 @@ struct node_alloc_holder
 
    typedef allocator_traits<A>                                    allocator_traits_type;
    typedef typename allocator_traits_type::value_type             value_type;
+   typedef ICont                                                  intrusive_container;
    typedef typename ICont::value_type                             Node;
    typedef typename allocator_traits_type::template
       portable_rebind_alloc<Node>::type                           NodeAlloc;
