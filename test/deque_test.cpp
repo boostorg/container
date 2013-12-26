@@ -365,39 +365,48 @@ int main ()
       d.resize(1);
    }
 
-   {
-      if(test_cont_variants< std::allocator<void> >()){
-         std::cerr << "test_cont_variants< std::allocator<void> > failed" << std::endl;
-         return 1;
-      }
-
-      if(test_cont_variants< allocator<void> >()){
-         std::cerr << "test_cont_variants< allocator<void> > failed" << std::endl;
-         return 1;
-      }
-
-      if(test_cont_variants< node_allocator<void> >()){
-         std::cerr << "test_cont_variants< node_allocator<void> > failed" << std::endl;
-         return 1;
-      }
-
-      if(test_cont_variants< adaptive_pool<void> >()){
-         std::cerr << "test_cont_variants< adaptive_pool<void> > failed" << std::endl;
-         return 1;
-      }
-
-      if(!test::default_init_test< deque<int, test::default_init_allocator<int> > >()){
-         std::cerr << "Default init test failed" << std::endl;
-         return 1;
-      }
+   ////////////////////////////////////
+   //    Allocator implementations
+   ////////////////////////////////////
+   //       std:allocator
+   if(test_cont_variants< std::allocator<void> >()){
+      std::cerr << "test_cont_variants< std::allocator<void> > failed" << std::endl;
+      return 1;
+   }
+   //       boost::container::allocator
+   if(test_cont_variants< allocator<void> >()){
+      std::cerr << "test_cont_variants< allocator<void> > failed" << std::endl;
+      return 1;
+   }
+   //       boost::container::node_allocator
+   if(test_cont_variants< node_allocator<void> >()){
+      std::cerr << "test_cont_variants< node_allocator<void> > failed" << std::endl;
+      return 1;
+   }
+   //       boost::container::adaptive_pool
+   if(test_cont_variants< adaptive_pool<void> >()){
+      std::cerr << "test_cont_variants< adaptive_pool<void> > failed" << std::endl;
+      return 1;
+   }
+   ////////////////////////////////////
+   //    Default init test
+   ////////////////////////////////////
+   if(!test::default_init_test< deque<int, test::default_init_allocator<int> > >()){
+      std::cerr << "Default init test failed" << std::endl;
+      return 1;
    }
 
+   ////////////////////////////////////
+   //    Emplace testing
+   ////////////////////////////////////
    const test::EmplaceOptions Options = (test::EmplaceOptions)(test::EMPLACE_BACK | test::EMPLACE_FRONT | test::EMPLACE_BEFORE);
 
    if(!boost::container::test::test_emplace
       < deque<test::EmplaceInt>, Options>())
       return 1;
-
+   ////////////////////////////////////
+   //    Allocator propagation testing
+   ////////////////////////////////////
    if(!boost::container::test::test_propagate_allocator<deque>())
       return 1;
 

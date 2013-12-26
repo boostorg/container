@@ -128,31 +128,41 @@ int main ()
       move_assign.swap(original);
    }
 
+   ////////////////////////////////////
+   //    Testing allocator implementations
+   ////////////////////////////////////
+   //       std:allocator
    if(test_cont_variants< std::allocator<void> >()){
       std::cerr << "test_cont_variants< std::allocator<void> > failed" << std::endl;
       return 1;
    }
-
+   //       boost::container::allocator
    if(test_cont_variants< allocator<void> >()){
       std::cerr << "test_cont_variants< allocator<void> > failed" << std::endl;
       return 1;
    }
-
+   //       boost::container::node_allocator
    if(test_cont_variants< node_allocator<void> >()){
       std::cerr << "test_cont_variants< node_allocator<void> > failed" << std::endl;
       return 1;
    }
-
+   //       boost::container::adaptive_pool
    if(test_cont_variants< adaptive_pool<void> >()){
       std::cerr << "test_cont_variants< adaptive_pool<void> > failed" << std::endl;
       return 1;
    }
 
+   ////////////////////////////////////
+   //    Emplace testing
+   ////////////////////////////////////
    const test::EmplaceOptions Options = (test::EmplaceOptions)(test::EMPLACE_BACK | test::EMPLACE_FRONT | test::EMPLACE_BEFORE);
 
    if(!boost::container::test::test_emplace<list<test::EmplaceInt>, Options>())
       return 1;
 
+   ////////////////////////////////////
+   //    Allocator propagation testing
+   ////////////////////////////////////
    if(!boost::container::test::test_propagate_allocator<list>())
       return 1;
 

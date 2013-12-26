@@ -405,36 +405,50 @@ int main()
       test_move<flat_multimap<recursive_flat_multimap, recursive_flat_multimap> >();
    }
 
+   ////////////////////////////////////
+   //    Ordered insertion test
+   ////////////////////////////////////
    if(!flat_tree_ordered_insertion_test()){
       return 1;
    }
 
+   ////////////////////////////////////
+   //    Testing allocator implementations
+   ////////////////////////////////////
+   //       std::allocator
    if(test_map_variants< std::allocator<void> >()){
       std::cerr << "test_map_variants< std::allocator<void> > failed" << std::endl;
       return 1;
    }
-
+   //       boost::container::allocator
    if(test_map_variants< allocator<void> >()){
       std::cerr << "test_map_variants< allocator<void> > failed" << std::endl;
       return 1;
    }
-
+   //       boost::container::node_allocator
    if(test_map_variants< node_allocator<void> >()){
       std::cerr << "test_map_variants< node_allocator<void> > failed" << std::endl;
       return 1;
    }
-
+   //       boost::container::adaptive_pool
    if(test_map_variants< adaptive_pool<void> >()){
       std::cerr << "test_map_variants< adaptive_pool<void> > failed" << std::endl;
       return 1;
    }
 
+   ////////////////////////////////////
+   //    Emplace testing
+   ////////////////////////////////////
    const test::EmplaceOptions MapOptions = (test::EmplaceOptions)(test::EMPLACE_HINT_PAIR | test::EMPLACE_ASSOC_PAIR);
 
    if(!boost::container::test::test_emplace<flat_map<test::EmplaceInt, test::EmplaceInt>, MapOptions>())
       return 1;
    if(!boost::container::test::test_emplace<flat_multimap<test::EmplaceInt, test::EmplaceInt>, MapOptions>())
       return 1;
+
+   ////////////////////////////////////
+   //    Allocator propagation testing
+   ////////////////////////////////////
    if(!boost::container::test::test_propagate_allocator<flat_map_propagate_test_wrapper>())
       return 1;
 

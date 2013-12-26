@@ -471,12 +471,21 @@ int main()
       return 1;
    }
 
+   ////////////////////////////////////
+   //    Backwards expansion test
+   ////////////////////////////////////
    if(!test_expand_bwd())
       return 1;
 
+   ////////////////////////////////////
+   //    Allocator propagation testing
+   ////////////////////////////////////
    if(!boost::container::test::test_propagate_allocator<string_propagate_test_wrapper>())
       return 1;
 
+   ////////////////////////////////////
+   //    Default init test
+   ////////////////////////////////////
    if(!test::default_init_test< basic_string<char, std::char_traits<char>, test::default_init_allocator<char> > >()){
       std::cerr << "Default init test failed" << std::endl;
       return 1;
