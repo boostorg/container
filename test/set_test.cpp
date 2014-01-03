@@ -145,10 +145,12 @@ void test_move()
 
 template<class T, class A>
 class set_propagate_test_wrapper
-   : public boost::container::set<T, std::less<T>, A, red_black_tree>
+   : public boost::container::set<T, std::less<T>, A
+      //tree_assoc_defaults 
+      >
 {
    BOOST_COPYABLE_AND_MOVABLE(set_propagate_test_wrapper)
-   typedef boost::container::set<T, std::less<T>, A, red_black_tree> Base;
+   typedef boost::container::set<T, std::less<T>, A > Base;
    public:
    set_propagate_test_wrapper()
       : Base()
@@ -172,7 +174,7 @@ class set_propagate_test_wrapper
    {  this->Base::swap(x);  }
 };
 
-template<class VoidAllocator>
+template<class VoidAllocator, boost::container::tree_type_enum tree_type_value>
 struct GetAllocatorSet
 {
    template<class ValueType>
@@ -182,28 +184,34 @@ struct GetAllocatorSet
                   , std::less<ValueType>
                   , typename allocator_traits<VoidAllocator>
                      ::template portable_rebind_alloc<ValueType>::type
+                  , typename boost::container::tree_assoc_options
+                        < boost::container::tree_type<tree_type_value>
+                        >::type
                   > set_type;
 
       typedef multiset < ValueType
                   , std::less<ValueType>
                   , typename allocator_traits<VoidAllocator>
                      ::template portable_rebind_alloc<ValueType>::type
+                  , typename boost::container::tree_assoc_options
+                        < boost::container::tree_type<tree_type_value>
+                        >::type
                   > multiset_type;
    };
 };
 
-template<class VoidAllocator>
+template<class VoidAllocator, boost::container::tree_type_enum tree_type_value>
 int test_set_variants()
 {
-   typedef typename GetAllocatorSet<VoidAllocator>::template apply<int>::set_type MySet;
-   typedef typename GetAllocatorSet<VoidAllocator>::template apply<test::movable_int>::set_type MyMoveSet;
-   typedef typename GetAllocatorSet<VoidAllocator>::template apply<test::movable_and_copyable_int>::set_type MyCopyMoveSet;
-   typedef typename GetAllocatorSet<VoidAllocator>::template apply<test::copyable_int>::set_type MyCopySet;
+   typedef typename GetAllocatorSet<VoidAllocator, tree_type_value>::template apply<int>::set_type MySet;
+   typedef typename GetAllocatorSet<VoidAllocator, tree_type_value>::template apply<test::movable_int>::set_type MyMoveSet;
+   typedef typename GetAllocatorSet<VoidAllocator, tree_type_value>::template apply<test::movable_and_copyable_int>::set_type MyCopyMoveSet;
+   typedef typename GetAllocatorSet<VoidAllocator, tree_type_value>::template apply<test::copyable_int>::set_type MyCopySet;
 
-   typedef typename GetAllocatorSet<VoidAllocator>::template apply<int>::multiset_type MyMultiSet;
-   typedef typename GetAllocatorSet<VoidAllocator>::template apply<test::movable_int>::multiset_type MyMoveMultiSet;
-   typedef typename GetAllocatorSet<VoidAllocator>::template apply<test::movable_and_copyable_int>::multiset_type MyCopyMoveMultiSet;
-   typedef typename GetAllocatorSet<VoidAllocator>::template apply<test::copyable_int>::multiset_type MyCopyMultiSet;
+   typedef typename GetAllocatorSet<VoidAllocator, tree_type_value>::template apply<int>::multiset_type MyMultiSet;
+   typedef typename GetAllocatorSet<VoidAllocator, tree_type_value>::template apply<test::movable_int>::multiset_type MyMoveMultiSet;
+   typedef typename GetAllocatorSet<VoidAllocator, tree_type_value>::template apply<test::movable_and_copyable_int>::multiset_type MyCopyMoveMultiSet;
+   typedef typename GetAllocatorSet<VoidAllocator, tree_type_value>::template apply<test::copyable_int>::multiset_type MyCopyMultiSet;
 
    typedef std::set<int>                                          MyStdSet;
    typedef std::multiset<int>                                     MyStdMultiSet;
@@ -266,34 +274,95 @@ int main ()
       test_move<multiset<recursive_multiset> >();
    }
 
-   if(test_set_variants< std::allocator<void> >()){
+   ////////////////////////////////////
+   //    Testing allocator implementations
+   ////////////////////////////////////
+   //       std:allocator
+   if(test_set_variants< std::allocator<void>, red_black_tree >()){
       std::cerr << "test_set_variants< std::allocator<void> > failed" << std::endl;
       return 1;
    }
-
-   if(test_set_variants< allocator<void> >()){
+   //       boost::container::allocator
+   if(test_set_variants< allocator<void>, red_black_tree>()){
       std::cerr << "test_set_variants< allocator<void> > failed" << std::endl;
       return 1;
    }
-
-   if(test_set_variants< node_allocator<void> >()){
+   //       boost::container::node_allocator
+   if(test_set_variants< node_allocator<void>, red_black_tree>()){
       std::cerr << "test_set_variants< node_allocator<void> > failed" << std::endl;
       return 1;
    }
-
-   if(test_set_variants< adaptive_pool<void> >()){
+   //       boost::container::adaptive_pool
+   if(test_set_variants< adaptive_pool<void>, red_black_tree>()){
       std::cerr << "test_set_variants< adaptive_pool<void> > failed" << std::endl;
       return 1;
    }
 
+   ////////////////////////////////////
+   //    Tree implementations
+   ////////////////////////////////////
+   //       AVL
+   if(test_set_variants< std::allocator<void>, avl_tree >()){
+      std::cerr << "test_set_variants< std::allocator<void>, avl_tree > failed" << std::endl;
+      return 1;
+   }
+   //    SCAPEGOAT TREE
+   if(test_set_variants< std::allocator<void>, scapegoat_tree >()){
+      std::cerr << "test_set_variants< std::allocator<void>, scapegoat_tree > failed" << std::endl;
+      return 1;
+   }
+   //    SPLAY TREE
+   if(test_set_variants< std::allocator<void>, splay_tree >()){
+      std::cerr << "test_set_variants< std::allocator<void>, splay_tree > failed" << std::endl;
+      return 1;
+   }
+
+   ////////////////////////////////////
+   //    Emplace testing
+   ////////////////////////////////////
    const test::EmplaceOptions SetOptions = (test::EmplaceOptions)(test::EMPLACE_HINT | test::EMPLACE_ASSOC);
    if(!boost::container::test::test_emplace<set<test::EmplaceInt>, SetOptions>())
       return 1;
    if(!boost::container::test::test_emplace<multiset<test::EmplaceInt>, SetOptions>())
       return 1;
+
+   ////////////////////////////////////
+   //    Allocator propagation testing
+   ////////////////////////////////////
    if(!boost::container::test::test_propagate_allocator<set_propagate_test_wrapper>())
       return 1;
 
+   ////////////////////////////////////
+   //    Test optimize_size option
+   ////////////////////////////////////
+   //
+   // set
+   //
+   typedef set< int*, std::less<int*>, std::allocator<int*>
+              , tree_assoc_options< optimize_size<false>, tree_type<red_black_tree> >::type > rbset_size_optimized_no;
+   typedef set< int*, std::less<int*>, std::allocator<int*>
+              , tree_assoc_options< optimize_size<true>, tree_type<red_black_tree>  >::type > rbset_size_optimized_yes;
+   BOOST_STATIC_ASSERT(sizeof(rbset_size_optimized_yes) < sizeof(rbset_size_optimized_no));
+
+   typedef set< int*, std::less<int*>, std::allocator<int*>
+              , tree_assoc_options< optimize_size<false>, tree_type<avl_tree> >::type > avlset_size_optimized_no;
+   typedef set< int*, std::less<int*>, std::allocator<int*>
+              , tree_assoc_options< optimize_size<true>, tree_type<avl_tree>  >::type > avlset_size_optimized_yes;
+   BOOST_STATIC_ASSERT(sizeof(avlset_size_optimized_yes) < sizeof(avlset_size_optimized_no));
+   //
+   // multiset
+   //
+   typedef multiset< int*, std::less<int*>, std::allocator<int*>
+                   , tree_assoc_options< optimize_size<false>, tree_type<red_black_tree> >::type > rbmset_size_optimized_no;
+   typedef multiset< int*, std::less<int*>, std::allocator<int*>
+                   , tree_assoc_options< optimize_size<true>, tree_type<red_black_tree>  >::type > rbmset_size_optimized_yes;
+   BOOST_STATIC_ASSERT(sizeof(rbmset_size_optimized_yes) < sizeof(rbmset_size_optimized_no));
+
+   typedef multiset< int*, std::less<int*>, std::allocator<int*>
+                   , tree_assoc_options< optimize_size<false>, tree_type<avl_tree> >::type > avlmset_size_optimized_no;
+   typedef multiset< int*, std::less<int*>, std::allocator<int*>
+                   , tree_assoc_options< optimize_size<true>, tree_type<avl_tree>  >::type > avlmset_size_optimized_yes;
+   BOOST_STATIC_ASSERT(sizeof(avlmset_size_optimized_yes) < sizeof(avlmset_size_optimized_no));
    return 0;
 }
 

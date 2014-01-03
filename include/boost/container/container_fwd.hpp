@@ -16,7 +16,7 @@
 #endif
 
 //! \file
-//! This header file forward declares the following classes:
+//! This header file forward declares the following containers:
 //!   - boost::container::vector
 //!   - boost::container::stable_vector
 //!   - boost::container::static_vector
@@ -33,11 +33,13 @@
 //!   - boost::container::basic_string
 //!   - boost::container::string
 //!   - boost::container::wstring
+//!
+//! It forward declares the following allocators:
 //!   - boost::container::allocator
 //!   - boost::container::node_allocator
 //!   - boost::container::adaptive_pool
 //!
-//! and defines the following types:
+//! And finally it defines the following types
 
 //////////////////////////////////////////////////////////////////////////////
 //                        Standard predeclarations
@@ -74,7 +76,7 @@ namespace container {
 
 //! Enumeration used to configure ordered associative containers
 //! with a concrete tree implementation.
-enum tree_type
+enum tree_type_enum
 {
    red_black_tree,
    avl_tree,
@@ -107,30 +109,35 @@ template <class T
          ,class Allocator = std::allocator<T> >
 class slist;
 
+template<tree_type_enum TreeType, bool OptimizeSize>
+struct tree_opt;
+
+typedef tree_opt<red_black_tree, true> tree_assoc_defaults;
+
 template <class Key
          ,class Compare  = std::less<Key>
          ,class Allocator = std::allocator<Key>
-         ,tree_type = red_black_tree >
+         ,class Options = tree_assoc_defaults >
 class set;
 
 template <class Key
          ,class Compare  = std::less<Key>
          ,class Allocator = std::allocator<Key>
-         ,tree_type = red_black_tree >
+         ,class Options = tree_assoc_defaults >
 class multiset;
 
 template <class Key
          ,class T
          ,class Compare  = std::less<Key>
          ,class Allocator = std::allocator<std::pair<const Key, T> >
-         ,tree_type = red_black_tree >
+         ,class Options = tree_assoc_defaults >
 class map;
 
 template <class Key
          ,class T
          ,class Compare  = std::less<Key>
          ,class Allocator = std::allocator<std::pair<const Key, T> >
-         ,tree_type = red_black_tree >
+         ,class Options = tree_assoc_defaults >
 class multimap;
 
 template <class Key
@@ -197,6 +204,13 @@ template
    , std::size_t NodesPerBlock = NodeAlloc_nodes_per_block
    , std::size_t Version = 2>
 class node_allocator;
+
+#else
+
+//! Default options for tree-based associative containers
+//!   - tree_type<red_black_tree>
+//!   - optimize_size<true>
+typedef implementation_defined tree_assoc_defaults;
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 

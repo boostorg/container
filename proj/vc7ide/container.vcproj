@@ -129,6 +129,9 @@
 				RelativePath="..\..\..\..\boost\container\node_allocator.hpp">
 			</File>
 			<File
+				RelativePath="..\..\..\..\boost\container\options.hpp">
+			</File>
+			<File
 				RelativePath="..\..\..\..\boost\container\scoped_allocator.hpp">
 			</File>
 			<File

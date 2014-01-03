@@ -35,6 +35,8 @@
 namespace boost {
 namespace container {
 
+#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 //! A set is a kind of associative container that supports unique keys (contains at
 //! most one of each key value) and provides for fast retrieval of the keys themselves.
 //! Class set supports bidirectional iterators.
@@ -42,10 +44,14 @@ namespace container {
 //! A set satisfies all of the requirements of a container and of a reversible container
 //! , and of an associative container. A set also provides most operations described in
 //! for unique keys.
-#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class Key, class Compare = std::less<Key>, class Allocator = std::allocator<Key> >
+//!
+//! \tparam Key is the type to be inserted in the set, which is also the key_type
+//! \tparam Compare is the comparison functor used to order keys
+//! \tparam Allocator is the allocator to be used to allocate memory for this container
+//! \tparam SetOptions is an packed option type generated using using boost::container::tree_assoc_options.
+template <class Key, class Compare = std::less<Key>, class Allocator = std::allocator<Key>, class SetOptions = tree_assoc_defaults >
 #else
-template <class Key, class Compare, class Allocator, tree_type tree_type_value>
+template <class Key, class Compare, class Allocator, class SetOptions>
 #endif
 class set
 {
@@ -53,7 +59,7 @@ class set
    private:
    BOOST_COPYABLE_AND_MOVABLE(set)
    typedef container_detail::tree
-      < Key, Key, container_detail::identity<Key>, Compare, Allocator, tree_type_value> tree_t;
+      < Key, Key, container_detail::identity<Key>, Compare, Allocator, SetOptions> tree_t;
    tree_t m_tree;  // red-black tree representing set
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -589,24 +595,51 @@ class set
    std::pair<const_iterator, const_iterator> equal_range(const key_type& x) const
    {  return m_tree.equal_range(x); }
 
+   //! <b>Effects</b>: Rebalances the tree. It's a no-op for Red-Black and AVL trees.
+   //!
+   //! <b>Complexity</b>: Linear
+   void rebalance()
+   {  return m_tree.rebalance(); }
+
+   //! <b>Effects</b>: Returns true if x and y are equal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const set& x, const set& y)
-   {  return x.m_tree == y.m_tree;  }
+   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
 
-   friend bool operator<(const set& x, const set& y)
-   {  return x.m_tree < y.m_tree;   }
-
+   //! <b>Effects</b>: Returns true if x and y are unequal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator!=(const set& x, const set& y)
-   {  return !(x == y);   }
+   {  return !(x == y); }
 
+   //! <b>Effects</b>: Returns true if x is less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator<(const set& x, const set& y)
+   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+
+   //! <b>Effects</b>: Returns true if x is greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>(const set& x, const set& y)
-   {  return y < x; }
+   {  return y < x;  }
 
+   //! <b>Effects</b>: Returns true if x is equal or less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<=(const set& x, const set& y)
-   {  return !(y < x); }
+   {  return !(y < x);  }
 
+   //! <b>Effects</b>: Returns true if x is equal or greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>=(const set& x, const set& y)
    {  return !(x < y);  }
 
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Complexity</b>: Constant.
    friend void swap(set& x, set& y)
    {  x.swap(y);  }
 
@@ -628,8 +661,8 @@ class set
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class Key, class C, class Allocator>
-struct has_trivial_destructor_after_move<boost::container::set<Key, C, Allocator> >
+template <class Key, class C, class SetOptions, class Allocator>
+struct has_trivial_destructor_after_move<boost::container::set<Key, C, Allocator, SetOptions> >
 {
    static const bool value = has_trivial_destructor_after_move<Allocator>::value && has_trivial_destructor_after_move<C>::value;
 };
@@ -638,6 +671,8 @@ namespace container {
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
+#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 //! A multiset is a kind of associative container that supports equivalent keys
 //! (possibly contains multiple copies of the same key value) and provides for
 //! fast retrieval of the keys themselves. Class multiset supports bidirectional iterators.
@@ -645,10 +680,14 @@ namespace container {
 //! A multiset satisfies all of the requirements of a container and of a reversible
 //! container, and of an associative container). multiset also provides most operations
 //! described for duplicate keys.
-#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class Key, class Compare = std::less<Key>, class Allocator = std::allocator<Key> >
+//!
+//! \tparam Key is the type to be inserted in the set, which is also the key_type
+//! \tparam Compare is the comparison functor used to order keys
+//! \tparam Allocator is the allocator to be used to allocate memory for this container
+//! \tparam MultiSetOptions is an packed option type generated using using boost::container::tree_assoc_options.
+template <class Key, class Compare = std::less<Key>, class Allocator = std::allocator<Key>, class MultiSetOptions = tree_assoc_defaults >
 #else
-template <class Key, class Compare, class Allocator, tree_type tree_type_value>
+template <class Key, class Compare, class Allocator, class MultiSetOptions>
 #endif
 class multiset
 {
@@ -656,7 +695,7 @@ class multiset
    private:
    BOOST_COPYABLE_AND_MOVABLE(multiset)
    typedef container_detail::tree
-      <Key, Key,container_detail::identity<Key>, Compare, Allocator, tree_type_value> tree_t;
+      <Key, Key,container_detail::identity<Key>, Compare, Allocator, MultiSetOptions> tree_t;
    tree_t m_tree;  // red-black tree representing multiset
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -1182,24 +1221,51 @@ class multiset
    std::pair<const_iterator, const_iterator> equal_range(const key_type& x) const
    {  return m_tree.equal_range(x); }
 
+   //! <b>Effects</b>: Rebalances the tree. It's a no-op for Red-Black and AVL trees.
+   //!
+   //! <b>Complexity</b>: Linear
+   void rebalance()
+   {  return m_tree.rebalance(); }
+
+   //! <b>Effects</b>: Returns true if x and y are equal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const multiset& x, const multiset& y)
-   {  return x.m_tree == y.m_tree;  }
+   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
 
-   friend bool operator<(const multiset& x, const multiset& y)
-   {  return x.m_tree < y.m_tree;   }
-
+   //! <b>Effects</b>: Returns true if x and y are unequal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator!=(const multiset& x, const multiset& y)
-   {  return !(x == y);  }
+   {  return !(x == y); }
 
+   //! <b>Effects</b>: Returns true if x is less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator<(const multiset& x, const multiset& y)
+   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+
+   //! <b>Effects</b>: Returns true if x is greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>(const multiset& x, const multiset& y)
    {  return y < x;  }
 
+   //! <b>Effects</b>: Returns true if x is equal or less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<=(const multiset& x, const multiset& y)
    {  return !(y < x);  }
 
+   //! <b>Effects</b>: Returns true if x is equal or greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>=(const multiset& x, const multiset& y)
    {  return !(x < y);  }
 
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Complexity</b>: Constant.
    friend void swap(multiset& x, multiset& y)
    {  x.swap(y);  }
 
@@ -1222,8 +1288,8 @@ class multiset
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class Key, class C, class Allocator>
-struct has_trivial_destructor_after_move<boost::container::multiset<Key, C, Allocator> >
+template <class Key, class C, class Allocator, class MultiSetOptions>
+struct has_trivial_destructor_after_move<boost::container::multiset<Key, C, Allocator, MultiSetOptions> >
 {
    static const bool value = has_trivial_destructor_after_move<Allocator>::value && has_trivial_destructor_after_move<C>::value;
 };

@@ -1423,6 +1423,9 @@ class slist
    void splice(const_iterator p, BOOST_RV_REF(slist) x, const_iterator first, const_iterator last) BOOST_CONTAINER_NOEXCEPT
    {  this->splice(p, static_cast<slist&>(x), first, last);  }
 
+   //! <b>Effects</b>: Returns true if x and y are equal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const slist& x, const slist& y)
    {
       if(x.size() != y.size()){
@@ -1440,26 +1443,41 @@ class slist
       return i1 == end1;
    }
 
-   friend bool operator<(const slist& x, const slist& y)
-   {
-      return std::lexicographical_compare
-         (x.begin(), x.end(), y.begin(), y.end());
-   }
-
+   //! <b>Effects</b>: Returns true if x and y are unequal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator!=(const slist& x, const slist& y)
-      {  return !(x == y);   }
+   {  return !(x == y); }
 
+   //! <b>Effects</b>: Returns true if x is less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator<(const slist& x, const slist& y)
+   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+
+   //! <b>Effects</b>: Returns true if x is greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>(const slist& x, const slist& y)
-      {  return y < x; }
+   {  return y < x;  }
 
+   //! <b>Effects</b>: Returns true if x is equal or less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<=(const slist& x, const slist& y)
-      {  return !(y < x); }
+   {  return !(y < x);  }
 
+   //! <b>Effects</b>: Returns true if x is equal or greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>=(const slist& x, const slist& y)
-      {  return !(x < y); }
-   
+   {  return !(x < y);  }
+
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Complexity</b>: Constant.
    friend void swap(slist& x, slist& y)
-      {  x.swap(y);  }
+   {  x.swap(y);  }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:

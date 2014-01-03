@@ -23,6 +23,13 @@
 #include <boost/move/utility.hpp>
 #include <string>
 
+#include <boost/intrusive/detail/has_member_function_callable_with.hpp>
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_FUNCNAME rebalance
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_BEGIN namespace boost { namespace container { namespace test {
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_END   }}}
+#define BOOST_PP_ITERATION_PARAMS_1 (3, (0, 0, <boost/intrusive/detail/has_member_function_callable_with.hpp>))
+#include BOOST_PP_ITERATE()
+
 template<class T1, class T2, class T3, class T4>
 bool operator ==(std::pair<T1, T2> &p1, std::pair<T1, T2> &p2)
 {
@@ -32,6 +39,16 @@ bool operator ==(std::pair<T1, T2> &p1, std::pair<T1, T2> &p2)
 namespace boost{
 namespace container {
 namespace test{
+
+template<class C>
+void map_test_rebalanceable(C &, boost::container::container_detail::false_type)
+{}
+
+template<class C>
+void map_test_rebalanceable(C &c, boost::container::container_detail::true_type)
+{
+   c.rebalance();
+}
 
 template<class MyBoostMap
         ,class MyStdMap
@@ -501,6 +518,19 @@ int map_test()
                return 1;
             if(!CheckEqualPairContainers(boostmultimap, stdmultimap))
                return 1;
+
+            map_test_rebalanceable(*boostmap
+               , container_detail::bool_<has_member_function_callable_with_rebalance<MyBoostMap>::value>());
+            if(!CheckEqualContainers(boostmap, stdmap)){
+               std::cout << "Error in boostmap->rebalance()" << std::endl;
+               return 1;
+            }
+            map_test_rebalanceable(*boostmultimap
+               , container_detail::bool_<has_member_function_callable_with_rebalance<MyBoostMultiMap>::value>());
+            if(!CheckEqualContainers(boostmultimap, stdmultimap)){
+               std::cout << "Error in boostmultimap->rebalance()" << std::endl;
+               return 1;
+            }
          }
 
          //Compare count with std containers

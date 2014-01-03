@@ -21,9 +21,27 @@
 #include <boost/move/iterator.hpp>
 #include <string>
 
+#include <boost/intrusive/detail/has_member_function_callable_with.hpp>
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_FUNCNAME rebalance
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_BEGIN namespace boost { namespace container { namespace test {
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_END   }}}
+#define BOOST_PP_ITERATION_PARAMS_1 (3, (0, 0, <boost/intrusive/detail/has_member_function_callable_with.hpp>))
+#include BOOST_PP_ITERATE()
+
+
 namespace boost{
 namespace container {
 namespace test{
+
+template<class C>
+void set_test_rebalanceable(C &, boost::container::container_detail::false_type)
+{}
+
+template<class C>
+void set_test_rebalanceable(C &c, boost::container::container_detail::true_type)
+{
+   c.rebalance();
+}
 
 template<class MyBoostSet
         ,class MyStdSet
@@ -457,6 +475,18 @@ int set_test ()
       }
       if(!CheckEqualContainers(boostmultiset, stdmultiset)){
          std::cout << "Error in boostmultiset->insert(boostmultiset->lower_bound(move_me2), boost::move(move_me2))" << std::endl;
+         return 1;
+      }
+      set_test_rebalanceable(*boostset
+         , container_detail::bool_<has_member_function_callable_with_rebalance<MyBoostSet>::value>());
+      if(!CheckEqualContainers(boostset, stdset)){
+         std::cout << "Error in boostset->rebalance()" << std::endl;
+         return 1;
+      }
+      set_test_rebalanceable(*boostmultiset
+         , container_detail::bool_<has_member_function_callable_with_rebalance<MyBoostMultiSet>::value>());
+      if(!CheckEqualContainers(boostmultiset, stdmultiset)){
+         std::cout << "Error in boostmultiset->rebalance()" << std::endl;
          return 1;
       }
       }

@@ -290,6 +290,15 @@ template<class BoostClass, class StdClass>
 void launch_tests(const char *BoostContName, const char *StdContName)
 {
    try {
+      std::cout << "**********************************************" << '\n';
+      std::cout << "**********************************************" << '\n';
+      std::cout << "**********************************************" << '\n';
+      std::cout << '\n';
+      std::cout << BoostContName << " .VS " <<  StdContName         << '\n';
+      std::cout << '\n';
+      std::cout << "**********************************************" << '\n';
+      std::cout << "**********************************************" << '\n';
+      std::cout << "**********************************************" << '\n' << std::endl;
       fill_ranges();
       {
          std::cout << "Construct benchmark:" << BoostContName << std::endl;
@@ -333,20 +342,36 @@ void launch_tests(const char *BoostContName, const char *StdContName)
 
 int main()
 {
+   using namespace boost::container;
    //set vs std::set
-   launch_tests< boost::container::set<int> , std::set<int> >
-      ("boost::container::set<int>", "std::set<int>");
+   launch_tests< set<int> , std::set<int> >
+      ("set<int>", "std::set<int>");
+   //set(RB) vs set(AVL)
+   launch_tests< set<int>, set<int, std::less<int>, std::allocator<int>, tree_assoc_options< tree_type<avl_tree> >::type > >
+      ("set<int>(RB)", "set<int>(AVL)");
+   //set(RB) vs set(SG)
+   launch_tests< set<int>, set<int, std::less<int>, std::allocator<int>, tree_assoc_options< tree_type<scapegoat_tree> >::type > >
+      ("set<int>(RB)", "set<int>(SG)");
+   launch_tests< set<int>, set<int, std::less<int>, std::allocator<int>, tree_assoc_options< tree_type<splay_tree> >::type > >
+      ("set<int>(RB)", "set<int>(SP)");
+   //set(sizeopt) vs set(!sizeopt)
+   launch_tests< set<int>, set<int, std::less<int>, std::allocator<int>, tree_assoc_options< optimize_size<false> >::type > >
+      ("set<int>(sizeopt=true)", "set<int>(sizeopt=false)");
+   //set(AVL,sizeopt) vs set(AVL,!sizeopt)
+   launch_tests< set<int, std::less<int>, std::allocator<int>, tree_assoc_options< tree_type<avl_tree> >::type >
+               , set<int, std::less<int>, std::allocator<int>, tree_assoc_options< tree_type<avl_tree>, optimize_size<false> >::type > >
+      ("set<int>(AVL,sizeopt=true)", "set<int>(AVL,sizeopt=false)");
    //set vs set<..., allocator_v2>
-   launch_tests< boost::container::set<int> , boost::container::set<int, std::less<int>, boost::container::allocator<int> > >
-      ("boost::container::set<int>", "boost::container::set<int, ..., boost::container::allocator<int>" );
+   launch_tests< set<int> , set<int, std::less<int>, allocator<int> > >
+      ("set<int>", "set<int, ..., allocator<int>" );
    //multiset vs std::set
-   launch_tests< boost::container::multiset<int> , std::multiset<int> >
-      ("boost::container::multiset<int>", "std::multiset<int>");
+   launch_tests< multiset<int> , std::multiset<int> >
+      ("multiset<int>", "std::multiset<int>");
    //flat_set vs set
-   launch_tests< boost::container::flat_set<int> , boost::container::set<int> >
-      ("boost::container::flat_set<int>", "boost::container::set<int>");
+   launch_tests< flat_set<int> , set<int> >
+      ("flat_set<int>", "set<int>");
    //flat_multiset vs multiset
-   launch_tests< boost::container::flat_multiset<int> , boost::container::multiset<int> >
-      ("boost::container::flat_multiset<int>", "boost::container::multiset<int>");
+   launch_tests< flat_multiset<int> , multiset<int> >
+      ("flat_multiset<int>", "multiset<int>");
    return 0;
 }

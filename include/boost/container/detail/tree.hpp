@@ -23,6 +23,8 @@
 #include <boost/container/detail/pair.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/allocator_traits.hpp>
+#include <boost/container/options.hpp>
+
 //
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/intrusive/rbtree.hpp>
@@ -90,13 +92,44 @@ struct tree_value_compare
    {  return key_compare::operator()(this->key_forward(key1), this->key_forward(key2));  }
 };
 
-template<class VoidPointer>
-struct intrusive_tree_hook
+template<class VoidPointer, boost::container::tree_type_enum tree_type_value, bool OptimizeSize>
+struct intrusive_tree_hook;
+
+template<class VoidPointer, bool OptimizeSize>
+struct intrusive_tree_hook<VoidPointer, boost::container::red_black_tree, OptimizeSize>
 {
    typedef typename container_detail::bi::make_set_base_hook
       < container_detail::bi::void_pointer<VoidPointer>
       , container_detail::bi::link_mode<container_detail::bi::normal_link>
-      , container_detail::bi::optimize_size<true>
+      , container_detail::bi::optimize_size<OptimizeSize>
+      >::type  type;
+};
+
+template<class VoidPointer, bool OptimizeSize>
+struct intrusive_tree_hook<VoidPointer, boost::container::avl_tree, OptimizeSize>
+{
+   typedef typename container_detail::bi::make_avl_set_base_hook
+      < container_detail::bi::void_pointer<VoidPointer>
+      , container_detail::bi::link_mode<container_detail::bi::normal_link>
+      , container_detail::bi::optimize_size<OptimizeSize>
+      >::type  type;
+};
+
+template<class VoidPointer, bool OptimizeSize>
+struct intrusive_tree_hook<VoidPointer, boost::container::scapegoat_tree, OptimizeSize>
+{
+   typedef typename container_detail::bi::make_bs_set_base_hook
+      < container_detail::bi::void_pointer<VoidPointer>
+      , container_detail::bi::link_mode<container_detail::bi::normal_link>
+      >::type  type;
+};
+
+template<class VoidPointer, bool OptimizeSize>
+struct intrusive_tree_hook<VoidPointer, boost::container::splay_tree, OptimizeSize>
+{
+   typedef typename container_detail::bi::make_bs_set_base_hook
+      < container_detail::bi::void_pointer<VoidPointer>
+      , container_detail::bi::link_mode<container_detail::bi::normal_link>
       >::type  type;
 };
 
@@ -114,23 +147,23 @@ struct tree_internal_data_type< std::pair<T1, T2> >
    typedef pair<T1, T2> type;
 };
 
-
 //The node to be store in the tree
-template <class T, class VoidPointer>
+template <class T, class VoidPointer, boost::container::tree_type_enum tree_type_value, bool OptimizeSize>
 struct tree_node
-   :  public intrusive_tree_hook<VoidPointer>::type
+   :  public intrusive_tree_hook<VoidPointer, tree_type_value, OptimizeSize>::type
 {
    private:
    //BOOST_COPYABLE_AND_MOVABLE(tree_node)
    tree_node();
 
    public:
-   typedef typename intrusive_tree_hook<VoidPointer>::type hook_type;
-
+   typedef typename intrusive_tree_hook
+      <VoidPointer, tree_type_value, OptimizeSize>::type hook_type;
    typedef T value_type;
-   typedef typename tree_internal_data_type<T>::type internal_type;
+   typedef typename tree_internal_data_type<T>::type     internal_type;
 
-   typedef tree_node<T, VoidPointer> node_type;
+   typedef tree_node< T, VoidPointer
+                    , tree_type_value, OptimizeSize>     node_type;
 
    T &get_data()
    {
@@ -215,12 +248,67 @@ class push_back_functor
 
 namespace container_detail {
 
-template<class A, class ValueCompare, boost::container::tree_type tree_type_value>
-struct intrusive_tree_type;
+template< class NodeType, class NodeCompareType
+        , class SizeType,  class HookType
+        , boost::container::tree_type_enum tree_type_value>
+struct intrusive_tree_dispatch;
 
-template<class A, class ValueCompare>
-struct intrusive_tree_type<A, ValueCompare, boost::container::red_black_tree>
+template<class NodeType, class NodeCompareType, class SizeType, class HookType>
+struct intrusive_tree_dispatch
+   <NodeType, NodeCompareType, SizeType, HookType, boost::container::red_black_tree>
 {
+   typedef typename container_detail::bi::make_rbtree
+      <NodeType
+      ,container_detail::bi::compare<NodeCompareType>
+      ,container_detail::bi::base_hook<HookType>
+      ,container_detail::bi::constant_time_size<true>
+      ,container_detail::bi::size_type<SizeType>
+      >::type  type;
+};
+
+template<class NodeType, class NodeCompareType, class SizeType, class HookType>
+struct intrusive_tree_dispatch
+   <NodeType, NodeCompareType, SizeType, HookType, boost::container::avl_tree>
+{
+   typedef typename container_detail::bi::make_avltree
+      <NodeType
+      ,container_detail::bi::compare<NodeCompareType>
+      ,container_detail::bi::base_hook<HookType>
+      ,container_detail::bi::constant_time_size<true>
+      ,container_detail::bi::size_type<SizeType>
+      >::type  type;
+};
+
+template<class NodeType, class NodeCompareType, class SizeType, class HookType>
+struct intrusive_tree_dispatch
+   <NodeType, NodeCompareType, SizeType, HookType, boost::container::scapegoat_tree>
+{
+   typedef typename container_detail::bi::make_sgtree
+      <NodeType
+      ,container_detail::bi::compare<NodeCompareType>
+      ,container_detail::bi::base_hook<HookType>
+      ,container_detail::bi::constant_time_size<true>
+      ,container_detail::bi::size_type<SizeType>
+      >::type  type;
+};
+
+template<class NodeType, class NodeCompareType, class SizeType, class HookType>
+struct intrusive_tree_dispatch
+   <NodeType, NodeCompareType, SizeType, HookType, boost::container::splay_tree>
+{
+   typedef typename container_detail::bi::make_splaytree
+      <NodeType
+      ,container_detail::bi::compare<NodeCompareType>
+      ,container_detail::bi::base_hook<HookType>
+      ,container_detail::bi::constant_time_size<true>
+      ,container_detail::bi::size_type<SizeType>
+      >::type  type;
+};
+
+template<class A, class ValueCompare, boost::container::tree_type_enum tree_type_value, bool OptimizeSize>
+struct intrusive_tree_type
+{
+   private:
    typedef typename boost::container::
       allocator_traits<A>::value_type              value_type;
    typedef typename boost::container::
@@ -228,16 +316,49 @@ struct intrusive_tree_type<A, ValueCompare, boost::container::red_black_tree>
    typedef typename boost::container::
       allocator_traits<A>::size_type               size_type;
    typedef typename container_detail::tree_node
-         <value_type, void_pointer>                node_type;
+         < value_type, void_pointer
+         , tree_type_value, OptimizeSize>          node_type;
    typedef node_compare<ValueCompare, node_type>   node_compare_type;
-   typedef typename container_detail::bi::make_rbtree
-      <node_type
-      ,container_detail::bi::compare<node_compare_type>
-      ,container_detail::bi::base_hook<typename intrusive_tree_hook<void_pointer>::type>
-      ,container_detail::bi::constant_time_size<true>
-      ,container_detail::bi::size_type<size_type>
-      >::type                                      container_type;
-   typedef container_type                          type ;
+   //Deducing the hook type from node_type (e.g. node_type::hook_type) would
+   //provoke an early instantiation of node_type that could ruin recursive
+   //tree definitions, so retype the complete type to avoid any problem.
+   typedef typename intrusive_tree_hook
+      <void_pointer, tree_type_value
+      , OptimizeSize>::type                        hook_type;
+   public:
+   typedef typename intrusive_tree_dispatch
+      < node_type, node_compare_type
+      , size_type, hook_type
+      , tree_type_value>::type                     type;
+};
+
+//Trait to detect manually rebalanceable tree types
+template<boost::container::tree_type_enum tree_type_value>
+struct is_manually_balanceable
+{  static const bool value = true;  };
+
+template<>  struct is_manually_balanceable<red_black_tree>
+{  static const bool value = false; };
+
+template<>  struct is_manually_balanceable<avl_tree>
+{  static const bool value = false; };
+
+//Proxy traits to implement different operations depending on the
+//is_manually_balanceable<>::value
+template< boost::container::tree_type_enum tree_type_value
+        , bool IsManuallyRebalanceable = is_manually_balanceable<tree_type_value>::value>
+struct intrusive_tree_proxy
+{
+   template<class Icont>
+   static void rebalance(Icont &)   {}
+};
+
+template<boost::container::tree_type_enum tree_type_value>
+struct intrusive_tree_proxy<tree_type_value, true>
+{
+   template<class Icont>
+   static void rebalance(Icont &c)
+   {  c.rebalance(); }
 };
 
 }  //namespace container_detail {
@@ -326,24 +447,25 @@ struct key_node_compare
 
 template <class Key, class Value, class KeyOfValue,
           class KeyCompare, class A,
-          boost::container::tree_type tree_type_value>
+          class Options>
 class tree
    : protected container_detail::node_alloc_holder
       < A
       , typename container_detail::intrusive_tree_type
          < A, tree_value_compare<Key, Value, KeyCompare, KeyOfValue> //ValComp
-         , tree_type_value>::type
+         , Options::tree_type, Options::optimize_size>::type
       >
 {
    typedef tree_value_compare
             <Key, Value, KeyCompare, KeyOfValue>            ValComp;
    typedef typename container_detail::intrusive_tree_type
-         < A, ValComp, tree_type_value>::type               Icont;
+         < A, ValComp, Options::tree_type
+         , Options::optimize_size>::type                    Icont;
    typedef container_detail::node_alloc_holder 
       <A, Icont>                                            AllocHolder;
    typedef typename AllocHolder::NodePtr                    NodePtr;
    typedef tree < Key, Value, KeyOfValue
-                , KeyCompare, A, tree_type_value>           ThisType;
+                , KeyCompare, A, Options>                   ThisType;
    typedef typename AllocHolder::NodeAlloc                  NodeAlloc;
    typedef typename AllocHolder::ValAlloc                   ValAlloc;
    typedef typename AllocHolder::Node                       Node;
@@ -353,6 +475,7 @@ class tree
    typedef typename AllocHolder::allocator_v1               allocator_v1;
    typedef typename AllocHolder::allocator_v2               allocator_v2;
    typedef typename AllocHolder::alloc_version              alloc_version;
+   typedef intrusive_tree_proxy<Options::tree_type>         intrusive_tree_proxy_t;
 
    BOOST_COPYABLE_AND_MOVABLE(tree)
 
@@ -984,6 +1107,9 @@ class tree
       return std::pair<const_iterator,const_iterator>
          (const_iterator(ret.first), const_iterator(ret.second));
    }
+
+   void rebalance()
+   {  intrusive_tree_proxy_t::rebalance(this->icont());   }
 
    friend bool operator==(const tree& x, const tree& y)
    {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
