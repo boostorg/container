@@ -1537,24 +1537,45 @@ class deque : protected deque_base<Allocator>
       this->members_.m_finish = this->members_.m_start;
    }
 
+   //! <b>Effects</b>: Returns true if x and y are equal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const deque& x, const deque& y)
    {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
-   
+
+   //! <b>Effects</b>: Returns true if x and y are unequal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator!=(const deque& x, const deque& y)
-   {  return !(x == y);   }
+   {  return !(x == y); }
 
+   //! <b>Effects</b>: Returns true if x is less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<(const deque& x, const deque& y)
-   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end()); }
+   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
 
+   //! <b>Effects</b>: Returns true if x is greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>(const deque& x, const deque& y)
-   {  return y < x; }
+   {  return y < x;  }
 
-   friend bool operator>=(const deque& x, const deque& y)
-   {  return !(x < y); }
-
+   //! <b>Effects</b>: Returns true if x is equal or less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<=(const deque& x, const deque& y)
-   {  return !(y < x); }
+   {  return !(y < x);  }
 
+   //! <b>Effects</b>: Returns true if x is equal or greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator>=(const deque& x, const deque& y)
+   {  return !(x < y);  }
+
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Complexity</b>: Constant.
    friend void swap(deque& x, deque& y)
    {  x.swap(y);  }
 

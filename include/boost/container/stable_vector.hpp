@@ -1510,25 +1510,46 @@ class stable_vector
    void clear() BOOST_CONTAINER_NOEXCEPT
    {   this->erase(this->cbegin(),this->cend()); }
 
-   friend bool operator==(const stable_vector& x,const stable_vector& y)
-   {  return x.size()==y.size()&&std::equal(x.begin(),x.end(),y.begin());  }
+   //! <b>Effects</b>: Returns true if x and y are equal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator==(const stable_vector& x, const stable_vector& y)
+   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
 
-   friend bool operator< (const stable_vector& x,const stable_vector& y)
-   {  return std::lexicographical_compare(x.begin(),x.end(),y.begin(),y.end());  }
+   //! <b>Effects</b>: Returns true if x and y are unequal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator!=(const stable_vector& x, const stable_vector& y)
+   {  return !(x == y); }
 
-   friend bool operator!=(const stable_vector& x,const stable_vector& y)
-   {  return !(x==y);  }
+   //! <b>Effects</b>: Returns true if x is less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator<(const stable_vector& x, const stable_vector& y)
+   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
 
-   friend bool operator> (const stable_vector& x,const stable_vector& y)
-   {  return y<x; }
+   //! <b>Effects</b>: Returns true if x is greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator>(const stable_vector& x, const stable_vector& y)
+   {  return y < x;  }
 
-   friend bool operator>=(const stable_vector& x,const stable_vector& y)
-   {  return !(x<y);  }
+   //! <b>Effects</b>: Returns true if x is equal or less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator<=(const stable_vector& x, const stable_vector& y)
+   {  return !(y < x);  }
 
-   friend bool operator<=(const stable_vector& x,const stable_vector& y)
-   {  return !(x>y);  }
+   //! <b>Effects</b>: Returns true if x is equal or greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator>=(const stable_vector& x, const stable_vector& y)
+   {  return !(x < y);  }
 
-   friend void swap(stable_vector& x,stable_vector& y)
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Complexity</b>: Constant.
+   friend void swap(stable_vector& x, stable_vector& y)
    {  x.swap(y);  }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

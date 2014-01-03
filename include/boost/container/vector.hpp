@@ -1564,9 +1564,51 @@ class vector
    //!
    //! <b>Throws</b>: Nothing.
    //!
-   //! <b>Complexity</b>: Linear to the number of elements in the vector.
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    void clear() BOOST_CONTAINER_NOEXCEPT
    {  this->priv_destroy_all();  }
+
+   //! <b>Effects</b>: Returns true if x and y are equal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator==(const vector& x, const vector& y)
+   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
+
+   //! <b>Effects</b>: Returns true if x and y are unequal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator!=(const vector& x, const vector& y)
+   {  return !(x == y); }
+
+   //! <b>Effects</b>: Returns true if x is less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator<(const vector& x, const vector& y)
+   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+
+   //! <b>Effects</b>: Returns true if x is greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator>(const vector& x, const vector& y)
+   {  return y < x;  }
+
+   //! <b>Effects</b>: Returns true if x is equal or less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator<=(const vector& x, const vector& y)
+   {  return !(y < x);  }
+
+   //! <b>Effects</b>: Returns true if x is equal or greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator>=(const vector& x, const vector& y)
+   {  return !(x < y);  }
+
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Complexity</b>: Constant.
+   friend void swap(vector& x, vector& y)
+   {  x.swap(y);  }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -1585,27 +1627,6 @@ class vector
    {
       this->priv_insert_ordered_at(element_count, last_position_it, true, last_skip_it, last_value_it);
    }
-
-   friend bool operator==(const vector& x, const vector& y)
-   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
-
-   friend bool operator!=(const vector& x, const vector& y)
-   {  return !(x == y); }
-
-   friend bool operator<(const vector& x, const vector& y)
-   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
-
-   friend bool operator>(const vector& x, const vector& y)
-   {  return y < x;  }
-
-   friend bool operator<=(const vector& x, const vector& y)
-   {  return !(y < x);  }
-
-   friend bool operator>=(const vector& x, const vector& y)
-   {  return !(x < y);  }
-
-   friend void swap(vector& x, vector& y)
-   {  x.swap(y);  }
 
    private:
 

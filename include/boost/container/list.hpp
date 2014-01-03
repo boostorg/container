@@ -1216,6 +1216,9 @@ class list
    void reverse() BOOST_CONTAINER_NOEXCEPT
    {  this->icont().reverse(); }
 
+   //! <b>Effects</b>: Returns true if x and y are equal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const list& x, const list& y)
    {
       if(x.size() != y.size()){
@@ -1233,21 +1236,39 @@ class list
       return i1 == end1;
    }
 
-   friend bool operator<(const list& x, const list& y)
-   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end()); }
-   
+   //! <b>Effects</b>: Returns true if x and y are unequal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator!=(const list& x, const list& y)
    {  return !(x == y); }
-   
+
+   //! <b>Effects</b>: Returns true if x is less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator<(const list& x, const list& y)
+   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+
+   //! <b>Effects</b>: Returns true if x is greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>(const list& x, const list& y)
    {  return y < x;  }
 
+   //! <b>Effects</b>: Returns true if x is equal or less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<=(const list& x, const list& y)
    {  return !(y < x);  }
 
+   //! <b>Effects</b>: Returns true if x is equal or greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>=(const list& x, const list& y)
    {  return !(x < y);  }
-   
+
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Complexity</b>: Constant.
    friend void swap(list& x, list& y)
    {  x.swap(y);  }
 

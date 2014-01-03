@@ -659,26 +659,47 @@ class flat_set
    std::pair<iterator,iterator> equal_range(const key_type& x)
       {  return m_flat_tree.equal_range(x); }
 
+   //! <b>Effects</b>: Returns true if x and y are equal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const flat_set& x, const flat_set& y)
-      {  return x.m_flat_tree == y.m_flat_tree;  }
+   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
 
-   friend bool operator<(const flat_set& x, const flat_set& y)
-      {  return x.m_flat_tree < y.m_flat_tree;   }
-
+   //! <b>Effects</b>: Returns true if x and y are unequal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator!=(const flat_set& x, const flat_set& y)
-      {  return !(x == y);   }
+   {  return !(x == y); }
 
+   //! <b>Effects</b>: Returns true if x is less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator<(const flat_set& x, const flat_set& y)
+   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+
+   //! <b>Effects</b>: Returns true if x is greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>(const flat_set& x, const flat_set& y)
-      {  return y < x; }
+   {  return y < x;  }
 
+   //! <b>Effects</b>: Returns true if x is equal or less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<=(const flat_set& x, const flat_set& y)
-      {  return !(y < x); }
+   {  return !(y < x);  }
 
+   //! <b>Effects</b>: Returns true if x is equal or greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>=(const flat_set& x, const flat_set& y)
-      {  return !(x < y);  }
+   {  return !(x < y);  }
 
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Complexity</b>: Constant.
    friend void swap(flat_set& x, flat_set& y)
-      {  x.swap(y);  }
+   {  x.swap(y);  }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
@@ -1299,26 +1320,47 @@ class flat_multiset
    std::pair<iterator,iterator> equal_range(const key_type& x)
       {  return m_flat_tree.equal_range(x); }
 
+   //! <b>Effects</b>: Returns true if x and y are equal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const flat_multiset& x, const flat_multiset& y)
-      {  return x.m_flat_tree == y.m_flat_tree;  }
+   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
 
-   friend bool operator<(const flat_multiset& x, const flat_multiset& y)
-      {  return x.m_flat_tree < y.m_flat_tree;   }
-
+   //! <b>Effects</b>: Returns true if x and y are unequal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator!=(const flat_multiset& x, const flat_multiset& y)
-      {  return !(x == y);  }
+   {  return !(x == y); }
 
+   //! <b>Effects</b>: Returns true if x is less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator<(const flat_multiset& x, const flat_multiset& y)
+   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+
+   //! <b>Effects</b>: Returns true if x is greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>(const flat_multiset& x, const flat_multiset& y)
-      {  return y < x;  }
+   {  return y < x;  }
 
+   //! <b>Effects</b>: Returns true if x is equal or less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<=(const flat_multiset& x, const flat_multiset& y)
-      {  return !(y < x);  }
+   {  return !(y < x);  }
 
+   //! <b>Effects</b>: Returns true if x is equal or greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>=(const flat_multiset& x, const flat_multiset& y)
-      {  return !(x < y);  }
+   {  return !(x < y);  }
 
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Complexity</b>: Constant.
    friend void swap(flat_multiset& x, flat_multiset& y)
-      {  x.swap(y);  }
+   {  x.swap(y);  }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
