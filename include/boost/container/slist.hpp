@@ -313,7 +313,7 @@ class slist
          this->icont().swap(x.icont());
       }
       else{
-         this->insert(this->cbegin(), x.begin(), x.end());
+         this->insert_after(this->cbefore_begin(), x.begin(), x.end());
       }
    }
 
@@ -1465,10 +1465,10 @@ class slist
    private:
 
    void priv_push_front (const T &x)  
-   {  this->insert(this->cbegin(), x);  }
+   {  this->insert_after(this->cbefore_begin(), x);  }
 
    void priv_push_front (BOOST_RV_REF(T) x)
-   {  this->insert(this->cbegin(), ::boost::move(x));  }
+   {  this->insert_after(this->cbefore_begin(), ::boost::move(x));  }
 
    bool priv_try_shrink(size_type new_size, const_iterator &last_pos)
    {
