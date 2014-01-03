@@ -76,6 +76,12 @@ static D force_copy(S s)
 //! pointing to elements that come after (their keys are bigger) the erased element.
 //!
 //! This container provides random-access iterators.
+//!
+//! \tparam Key is the key_type of the map
+//! \tparam Value is the <code>mapped_type</code>
+//! \tparam Compare is the ordering function for Keys (e.g. <i>std::less<Key></i>).
+//! \tparam Allocator is the allocator to allocate the <code>value_type</code>s
+//!   (e.g. <i>allocator< std::pair<Key, T> > </i>).
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class Key, class T, class Compare = std::less<Key>, class Allocator = std::allocator< std::pair< Key, T> > >
 #else
@@ -966,6 +972,12 @@ namespace container {
 //! pointing to elements that come after (their keys are bigger) the erased element.
 //!
 //! This container provides random-access iterators.
+//!
+//! \tparam Key is the key_type of the map
+//! \tparam Value is the <code>mapped_type</code>
+//! \tparam Compare is the ordering function for Keys (e.g. <i>std::less<Key></i>).
+//! \tparam Allocator is the allocator to allocate the <code>value_type</code>s
+//!   (e.g. <i>allocator< std::pair<Key, T> > </i>).
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class Key, class T, class Compare = std::less<Key>, class Allocator = std::allocator< std::pair< Key, T> > >
 #else
