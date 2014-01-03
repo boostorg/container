@@ -105,6 +105,59 @@ template class flat_multiset
    , node_allocator<test::movable_and_copyable_int>
    >;
 
+namespace container_detail {
+
+//Instantiate base class as previous instantiations don't instantiate inherited members
+template class flat_tree
+   < test::movable_and_copyable_int
+   , test::movable_and_copyable_int
+   , identity<test::movable_and_copyable_int>
+   , std::less<test::movable_and_copyable_int>
+   , test::dummy_test_allocator<test::movable_and_copyable_int>
+   >;
+
+template class flat_tree
+   < test::movable_and_copyable_int
+   , test::movable_and_copyable_int
+   , identity<test::movable_and_copyable_int>
+   , std::less<test::movable_and_copyable_int>
+   , test::simple_allocator<test::movable_and_copyable_int>
+   >;
+
+template class flat_tree
+   < test::movable_and_copyable_int
+   , test::movable_and_copyable_int
+   , identity<test::movable_and_copyable_int>
+   , std::less<test::movable_and_copyable_int>
+   , std::allocator<test::movable_and_copyable_int>
+   >;
+
+template class flat_tree
+   < test::movable_and_copyable_int
+   , test::movable_and_copyable_int
+   , identity<test::movable_and_copyable_int>
+   , std::less<test::movable_and_copyable_int>
+   , allocator<test::movable_and_copyable_int>
+   >;
+
+template class flat_tree
+   < test::movable_and_copyable_int
+   , test::movable_and_copyable_int
+   , identity<test::movable_and_copyable_int>
+   , std::less<test::movable_and_copyable_int>
+   , adaptive_pool<test::movable_and_copyable_int>
+   >;
+
+template class flat_tree
+   < test::movable_and_copyable_int
+   , test::movable_and_copyable_int
+   , identity<test::movable_and_copyable_int>
+   , std::less<test::movable_and_copyable_int>
+   , node_allocator<test::movable_and_copyable_int>
+   >;
+
+}  //container_detail {
+
 //As flat container iterators are typedefs for vector::[const_]iterator,
 //no need to explicit instantiate them
 

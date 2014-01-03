@@ -270,6 +270,9 @@ class flat_tree
    Compare key_comp() const
    { return this->m_data.get_comp(); }
 
+   value_compare value_comp() const
+   { return this->m_data; }
+
    allocator_type get_allocator() const
    { return this->m_data.m_vect.get_allocator(); }
 
@@ -526,7 +529,7 @@ class flat_tree
       this->reserve(this->size()+len);
       const const_iterator b(this->cbegin());
       const_iterator pos(b);
-      const value_compare &value_comp = this->m_data;
+      const value_compare &val_cmp = this->m_data;
       skips[0u] = 0u;
       //Loop in burst sizes
       while(len){
@@ -539,7 +542,7 @@ class flat_tree
             --len;
             pos = const_cast<const flat_tree&>(*this).priv_lower_bound(pos, ce, KeyOfValue()(val));
             //Check if already present
-            if(pos != ce && !value_comp(val, *pos)){
+            if(pos != ce && !val_cmp(val, *pos)){
                if(unique_burst > 0){
                   ++skips[unique_burst-1];
                }
@@ -790,10 +793,10 @@ class flat_tree
       //         insert val before upper_bound(val)
       //   else
       //      insert val before lower_bound(val)
-      const value_compare &value_comp = this->m_data;
+      const value_compare &val_cmp = this->m_data;
 
-      if(pos == this->cend() || !value_comp(*pos, val)){
-         if (pos == this->cbegin() || !value_comp(val, pos[-1])){
+      if(pos == this->cend() || !val_cmp(*pos, val)){
+         if (pos == this->cbegin() || !val_cmp(val, pos[-1])){
             data.position = pos;
          }
          else{
@@ -810,9 +813,9 @@ class flat_tree
    bool priv_insert_unique_prepare
       (const_iterator b, const_iterator e, const value_type& val, insert_commit_data &commit_data)
    {
-      const value_compare &value_comp  = this->m_data;
+      const value_compare &val_cmp  = this->m_data;
       commit_data.position = this->priv_lower_bound(b, e, KeyOfValue()(val));
-      return commit_data.position == e || value_comp(val, *commit_data.position);
+      return commit_data.position == e || val_cmp(val, *commit_data.position);
    }
 
    bool priv_insert_unique_prepare
@@ -833,9 +836,9 @@ class flat_tree
       //   insert val after pos
       //else
       //   insert val before lower_bound(val)
-      const value_compare &value_comp = this->m_data;
+      const value_compare &val_cmp = this->m_data;
       const const_iterator cend_it = this->cend();
-      if(pos == cend_it || value_comp(val, *pos)){ //Check if val should go before end
+      if(pos == cend_it || val_cmp(val, *pos)){ //Check if val should go before end
          const const_iterator cbeg = this->cbegin();
          commit_data.position = pos;
          if(pos == cbeg){  //If container is empty then insert it in the beginning
@@ -843,10 +846,10 @@ class flat_tree
          }
          const_iterator prev(pos);
          --prev;
-         if(value_comp(*prev, val)){   //If previous element was less, then it should go between prev and pos
+         if(val_cmp(*prev, val)){   //If previous element was less, then it should go between prev and pos
             return true;
          }
-         else if(!value_comp(val, *prev)){   //If previous was equal then insertion should fail
+         else if(!val_cmp(val, *prev)){   //If previous was equal then insertion should fail
             commit_data.position = prev;
             return false;
          }
