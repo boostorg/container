@@ -82,8 +82,10 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
    cpu_timer timer;
    timer.resume();
 
+   #ifndef NDEBUG
    typedef bc::container_detail::integral_constant
       <unsigned, bc::container_detail::version<Allocator>::value> alloc_version;
+   #endif
 
    for(unsigned int r = 0; r != num_iterations; ++r){
       bc::vector<MyInt, IntAllocator> v(num_elements);
