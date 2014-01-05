@@ -92,14 +92,14 @@ class flat_set
    //
    //////////////////////////////////////////////
 
-   //! <b>Effects</b>: Default constructs an empty flat_set.
+   //! <b>Effects</b>: Default constructs an empty container.
    //!
    //! <b>Complexity</b>: Constant.
    explicit flat_set()
       : base_t()
    {}
 
-   //! <b>Effects</b>: Constructs an empty flat_set using the specified
+   //! <b>Effects</b>: Constructs an empty container using the specified
    //! comparison object and allocator.
    //!
    //! <b>Complexity</b>: Constant.
@@ -108,14 +108,14 @@ class flat_set
       : base_t(comp, a)
    {}
 
-   //! <b>Effects</b>: Constructs an empty flat_set using the specified allocator.
+   //! <b>Effects</b>: Constructs an empty container using the specified allocator.
    //!
    //! <b>Complexity</b>: Constant.
    explicit flat_set(const allocator_type& a)
       : base_t(a)
    {}
 
-   //! <b>Effects</b>: Constructs an empty set using the specified comparison object and
+   //! <b>Effects</b>: Constructs an empty container using the specified comparison object and
    //! allocator, and inserts elements from the range [first ,last ).
    //!
    //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
@@ -127,7 +127,7 @@ class flat_set
       : base_t(true, first, last, comp, a)
    {}
 
-   //! <b>Effects</b>: Constructs an empty flat_set using the specified comparison object and
+   //! <b>Effects</b>: Constructs an empty container using the specified comparison object and
    //! allocator, and inserts elements from the ordered unique range [first ,last). This function
    //! is more efficient than the normal range creation for ordered ranges.
    //!
@@ -144,31 +144,31 @@ class flat_set
       : base_t(ordered_range, first, last, comp, a)
    {}
 
-   //! <b>Effects</b>: Copy constructs a set.
+   //! <b>Effects</b>: Copy constructs the container.
    //!
    //! <b>Complexity</b>: Linear in x.size().
    flat_set(const flat_set& x)
       : base_t(static_cast<const base_t&>(x))
    {}
 
-   //! <b>Effects</b>: Move constructs a set. Constructs *this using x's resources.
+   //! <b>Effects</b>: Move constructs thecontainer. Constructs *this using mx's resources.
    //!
    //! <b>Complexity</b>: Constant.
    //!
-   //! <b>Postcondition</b>: x is emptied.
+   //! <b>Postcondition</b>: mx is emptied.
    flat_set(BOOST_RV_REF(flat_set) mx)
       : base_t(boost::move(static_cast<base_t&>(mx)))
    {}
 
-   //! <b>Effects</b>: Copy constructs a set using the specified allocator.
+   //! <b>Effects</b>: Copy constructs a container using the specified allocator.
    //!
    //! <b>Complexity</b>: Linear in x.size().
    flat_set(const flat_set& x, const allocator_type &a)
       : base_t(static_cast<const base_t&>(x), a)
    {}
 
-   //! <b>Effects</b>: Move constructs a set using the specified allocator.
-   //!                 Constructs *this using x's resources.
+   //! <b>Effects</b>: Move constructs a container using the specified allocator.
+   //!                 Constructs *this using mx's resources.
    //!
    //! <b>Complexity</b>: Constant if a == mx.get_allocator(), linear otherwise
    flat_set(BOOST_RV_REF(flat_set) mx, const allocator_type &a)
@@ -179,9 +179,9 @@ class flat_set
    //!
    //! <b>Complexity</b>: Linear in x.size().
    flat_set& operator=(BOOST_COPY_ASSIGN_REF(flat_set) x)
-   {  return static_cast<flat_set&>(this->base_t::operator=(x));  }
+   {  return static_cast<flat_set&>(this->base_t::operator=(static_cast<const base_t&>(x)));  }
 
-   //! <b>Effects</b>: Makes *this a copy of the previous value of xx.
+   //! <b>Effects</b>: Makes *this a copy of the previous value of mx.
    //!
    //! <b>Complexity</b>: Linear in x.size().
    flat_set& operator=(BOOST_RV_REF(flat_set) mx)
@@ -690,7 +690,7 @@ namespace container {
 //!
 //! This container provides random-access iterators.
 //!
-//! \tparam Key is the type to be inserted in the set, which is also the key_type
+//! \tparam Key is the type to be inserted in the multiset, which is also the key_type
 //! \tparam Compare is the comparison functor used to order keys
 //! \tparam Allocator is the allocator to be used to allocate memory for this container
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -732,29 +732,23 @@ class flat_multiset
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                   reverse_iterator;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)             const_reverse_iterator;
 
-   //! <b>Effects</b>: Default constructs an empty flat_multiset.
-   //!
-   //! <b>Complexity</b>: Constant.
+   //! @copydoc ::boost::container::flat_set::flat_set()
    explicit flat_multiset()
       : base_t()
    {}
 
-   //! <b>Effects</b>: Constructs an empty flat_multiset using the specified
-   //! comparison object and allocator.
-   //!
-   //! <b>Complexity</b>: Constant.
+   //! @copydoc ::boost::container::flat_set::flat_set(const Compare&, const allocator_type&)
    explicit flat_multiset(const Compare& comp,
                           const allocator_type& a = allocator_type())
       : base_t(comp, a)
    {}
 
-   //! <b>Effects</b>: Constructs an empty flat_multiset using the specified allocator.
-   //!
-   //! <b>Complexity</b>: Constant.
+   //! @copydoc ::boost::container::flat_set::flat_set(const allocator_type&)
    explicit flat_multiset(const allocator_type& a)
       : base_t(a)
    {}
 
+   //! @copydoc ::boost::container::flat_set::flat_set(InputIterator, InputIterator, const Compare& comp, const allocator_type&)
    template <class InputIterator>
    flat_multiset(InputIterator first, InputIterator last,
                  const Compare& comp        = Compare(),
@@ -778,46 +772,31 @@ class flat_multiset
       : base_t(ordered_range, first, last, comp, a)
    {}
 
-   //! <b>Effects</b>: Copy constructs a flat_multiset.
-   //!
-   //! <b>Complexity</b>: Linear in x.size().
+   //! @copydoc ::boost::container::flat_set::flat_set(const flat_set &)
    flat_multiset(const flat_multiset& x)
       : base_t(static_cast<const base_t&>(x))
    {}
 
-   //! <b>Effects</b>: Move constructs a flat_multiset. Constructs *this using x's resources.
-   //!
-   //! <b>Complexity</b>: Constant.
-   //!
-   //! <b>Postcondition</b>: x is emptied.
+   //! @copydoc ::boost::container::flat_set(flat_set &&)
    flat_multiset(BOOST_RV_REF(flat_multiset) mx)
       : base_t(boost::move(static_cast<base_t&>(mx)))
    {}
 
-   //! <b>Effects</b>: Copy constructs a flat_multiset using the specified allocator.
-   //!
-   //! <b>Complexity</b>: Linear in x.size().
+   //! @copydoc ::boost::container::flat_set(const flat_set &, const allocator_type &)
    flat_multiset(const flat_multiset& x, const allocator_type &a)
       : base_t(static_cast<const base_t&>(x), a)
    {}
 
-   //! <b>Effects</b>: Move constructs a flat_multiset using the specified allocator.
-   //!                 Constructs *this using x's resources.
-   //!
-   //! <b>Complexity</b>: Constant if a == mx.get_allocator(), linear otherwise
+   //! @copydoc ::boost::container::flat_set(flat_set &&, const allocator_type &)
    flat_multiset(BOOST_RV_REF(flat_multiset) mx, const allocator_type &a)
       : base_t(boost::move(static_cast<base_t&>(mx)), a)
    {}
 
-   //! <b>Effects</b>: Makes *this a copy of x.
-   //!
-   //! <b>Complexity</b>: Linear in x.size().
+   //! @copydoc ::boost::container::flat_set::operator=(const flat_set &)
    flat_multiset& operator=(BOOST_COPY_ASSIGN_REF(flat_multiset) x)
-   {  return static_cast<flat_multiset&>(this->base_t::operator=(x));  }
+   {  return static_cast<flat_multiset&>(this->base_t::operator=(static_cast<const base_t&>(x)));  }
 
-   //! <b>Effects</b>: Makes *this a copy of x.
-   //!
-   //! <b>Complexity</b>: Linear in x.size().
+   //! @copydoc ::boost::container::flat_set::operator=(flat_set &&)
    flat_multiset& operator=(BOOST_RV_REF(flat_multiset) mx)
    {  return static_cast<flat_multiset&>(this->base_t::operator=(boost::move(static_cast<base_t&>(mx))));  }
 
@@ -1067,49 +1046,42 @@ class flat_multiset
    //! @copydoc ::boost::container::flat_set::equal_range(const key_type& )
    std::pair<iterator,iterator> equal_range(const key_type& x);
 
-   #endif
-
    //! <b>Effects</b>: Returns true if x and y are equal
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   friend bool operator==(const flat_multiset& x, const flat_multiset& y)
-   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
+   friend bool operator==(const flat_multiset& x, const flat_multiset& y);
 
    //! <b>Effects</b>: Returns true if x and y are unequal
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   friend bool operator!=(const flat_multiset& x, const flat_multiset& y)
-   {  return !(x == y); }
+   friend bool operator!=(const flat_multiset& x, const flat_multiset& y);
 
    //! <b>Effects</b>: Returns true if x is less than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   friend bool operator<(const flat_multiset& x, const flat_multiset& y)
-   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+   friend bool operator<(const flat_multiset& x, const flat_multiset& y);
 
    //! <b>Effects</b>: Returns true if x is greater than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   friend bool operator>(const flat_multiset& x, const flat_multiset& y)
-   {  return y < x;  }
+   friend bool operator>(const flat_multiset& x, const flat_multiset& y);
 
    //! <b>Effects</b>: Returns true if x is equal or less than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   friend bool operator<=(const flat_multiset& x, const flat_multiset& y)
-   {  return !(y < x);  }
+   friend bool operator<=(const flat_multiset& x, const flat_multiset& y);
 
    //! <b>Effects</b>: Returns true if x is equal or greater than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   friend bool operator>=(const flat_multiset& x, const flat_multiset& y)
-   {  return !(x < y);  }
+   friend bool operator>=(const flat_multiset& x, const flat_multiset& y);
 
    //! <b>Effects</b>: x.swap(y)
    //!
    //! <b>Complexity</b>: Constant.
-   friend void swap(flat_multiset& x, flat_multiset& y)
-   {  x.swap(y);  }
+   friend void swap(flat_multiset& x, flat_multiset& y);
+
+   #endif   //#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
