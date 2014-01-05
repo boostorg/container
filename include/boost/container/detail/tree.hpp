@@ -447,7 +447,7 @@ struct key_node_compare
 
 template <class Key, class Value, class KeyOfValue,
           class KeyCompare, class A,
-          class Options>
+          class Options = tree_assoc_defaults>
 class tree
    : protected container_detail::node_alloc_holder
       < A

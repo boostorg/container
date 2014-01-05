@@ -126,6 +126,64 @@ template class multimap
       < std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
    >;
 
+namespace container_detail {
+
+template class tree
+   < const test::movable_and_copyable_int
+   , std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int>
+   , container_detail::select1st< std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , std::less<test::movable_and_copyable_int>
+   , test::dummy_test_allocator
+      < std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , tree_assoc_defaults >;
+
+template class tree
+   < const test::movable_and_copyable_int
+   , std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int>
+   , container_detail::select1st< std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , std::less<test::movable_and_copyable_int>
+   , test::simple_allocator
+      < std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , tree_assoc_defaults >;
+
+template class tree
+   < const test::movable_and_copyable_int
+   , std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int>
+   , container_detail::select1st< std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , std::less<test::movable_and_copyable_int>
+   , std::allocator
+      < std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , tree_assoc_defaults >;
+
+template class tree
+   < const test::movable_and_copyable_int
+   , std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int>
+   , container_detail::select1st< std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , std::less<test::movable_and_copyable_int>
+   , allocator
+      < std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , tree_assoc_defaults >;
+
+template class tree
+   < const test::movable_and_copyable_int
+   , std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int>
+   , container_detail::select1st< std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , std::less<test::movable_and_copyable_int>
+   , adaptive_pool
+      < std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , tree_assoc_defaults >;
+
+template class tree
+   < const test::movable_and_copyable_int
+   , std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int>
+   , container_detail::select1st< std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , std::less<test::movable_and_copyable_int>
+   , node_allocator
+      < std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , tree_assoc_defaults >;
+
+}  //container_detail {
+
 }} //boost::container
 
 class recursive_map
