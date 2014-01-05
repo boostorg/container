@@ -46,11 +46,7 @@ namespace boost {
 namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class T, class Allocator = std::allocator<T> >
-#else
 template <class T, class Allocator>
-#endif
 class deque;
 
 template <class T>
@@ -467,9 +463,12 @@ class deque_base
 };
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
-//! Deque class
-//!
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
+//! A double-ended queue is a sequence that supports random access to elements, constant time insertion
+//! and removal of elements at the end of the sequence, and linear time insertion and removal of elements in the middle.
+//!
+//! \tparam T The type of object that is stored in the deque
+//! \tparam Allocator The allocator used for all internal memory management
 template <class T, class Allocator = std::allocator<T> >
 #else
 template <class T, class Allocator>

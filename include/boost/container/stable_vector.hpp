@@ -426,6 +426,9 @@ struct index_traits
 //!
 //! Exception safety: As stable_vector does not internally copy elements around, some
 //! operations provide stronger exception safety guarantees than in std::vector.
+//!
+//! \tparam T The type of object that is stored in the stable_vector
+//! \tparam Allocator The allocator used for all internal memory management
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class T, class Allocator = std::allocator<T> >
 #else

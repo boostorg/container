@@ -140,6 +140,9 @@ struct intrusive_slist_type
 //! possible. If you find that insert_after and erase_after aren't adequate for your
 //! needs, and that you often need to use insert and erase in the middle of the list,
 //! then you should probably use list instead of slist.
+//!
+//! \tparam T The type of object that is stored in the list
+//! \tparam Allocator The allocator used for all internal memory management
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class T, class Allocator = std::allocator<T> >
 #else

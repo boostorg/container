@@ -527,8 +527,9 @@ struct vector_alloc_holder<Allocator, container_detail::integral_constant<unsign
 //! time insertion and removal of elements at the end, and linear time insertion
 //! and removal of elements at the beginning or in the middle. The number of
 //! elements in a vector may vary dynamically; memory management is automatic.
-//! boost::container::vector is similar to std::vector but it's compatible
-//! with shared memory and memory mapped files.
+//!
+//! \tparam T The type of object that is stored in the vector
+//! \tparam Allocator The allocator used for all internal memory management
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class T, class Allocator = std::allocator<T> >
 #else

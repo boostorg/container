@@ -111,6 +111,9 @@ struct intrusive_list_type
 //! after a list operation than it did before), but the iterators themselves will
 //! not be invalidated or made to point to different elements unless that invalidation
 //! or mutation is explicit.
+//!
+//! \tparam T The type of object that is stored in the list
+//! \tparam Allocator The allocator used for all internal memory management
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class T, class Allocator = std::allocator<T> >
 #else

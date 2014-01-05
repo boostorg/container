@@ -468,6 +468,10 @@ class basic_string_base
 //! end(), rbegin(), rend(), operator[], c_str(), and data() do not invalidate iterators.
 //! In this implementation, iterators are only invalidated by member functions that
 //! explicitly change the string's contents.
+//!
+//! \tparam CharT The type of character it contains.
+//! \tparam Traits The Character Traits type, which encapsulates basic character operations
+//! \tparam Allocator The allocator, used for internal memory management.
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class CharT, class Traits = std::char_traits<CharT>, class Allocator = std::allocator<CharT> >
 #else
