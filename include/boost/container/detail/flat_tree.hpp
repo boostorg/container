@@ -717,6 +717,7 @@ class flat_tree
       return i;
    }
 
+   // set operations:
    size_type count(const key_type& k) const
    {
       std::pair<const_iterator, const_iterator> p = this->equal_range(k);
@@ -875,7 +876,7 @@ class flat_tree
    }
 
    template <class RanIt>
-   RanIt priv_lower_bound(RanIt first, RanIt last,
+   RanIt priv_lower_bound(RanIt first, const RanIt last,
                           const key_type & key) const
    {
       const Compare &key_cmp = this->m_data.get_comp();
@@ -884,24 +885,23 @@ class flat_tree
       RanIt middle;
 
       while (len) {
-         size_type half = len >> 1;
+         size_type step = len >> 1;
          middle = first;
-         middle += half;
+         middle += step;
 
          if (key_cmp(key_extract(*middle), key)) {
-            ++middle;
-            first = middle;
-            len = len - half - 1;
+            first = ++middle;
+            len -= step + 1;
          }
-         else
-            len = half;
+         else{
+            len = step;
+         }
       }
       return first;
    }
 
-
    template <class RanIt>
-   RanIt priv_upper_bound(RanIt first, RanIt last,
+   RanIt priv_upper_bound(RanIt first, const RanIt last,
                           const key_type & key) const
    {
       const Compare &key_cmp = this->m_data.get_comp();
@@ -910,16 +910,16 @@ class flat_tree
       RanIt middle;
 
       while (len) {
-         size_type half = len >> 1;
+         size_type step = len >> 1;
          middle = first;
-         middle += half;
+         middle += step;
 
          if (key_cmp(key, key_extract(*middle))) {
-            len = half;
+            len = step;
          }
          else{
             first = ++middle;
-            len = len - half - 1; 
+            len -= step + 1;
          }
       }
       return first;
@@ -935,24 +935,24 @@ class flat_tree
       RanIt middle;
 
       while (len) {
-         size_type half = len >> 1;
+         size_type step = len >> 1;
          middle = first;
-         middle += half;
+         middle += step;
 
          if (key_cmp(key_extract(*middle), key)){
-            first = middle;
-            ++first;
-            len = len - half - 1;
+            first = ++middle;
+            len -= step + 1;
          }
          else if (key_cmp(key, key_extract(*middle))){
-            len = half;
+            len = step;
          }
          else {
             //Middle is equal to key
             last = first;
             last += len;
-            first = this->priv_lower_bound(first, middle, key);
-            return std::pair<RanIt, RanIt> (first, this->priv_upper_bound(++middle, last, key));
+            return std::pair<RanIt, RanIt>
+               ( this->priv_lower_bound(first, middle, key)
+               , this->priv_upper_bound(++middle, last, key));
          }
       }
       return std::pair<RanIt, RanIt>(first, first);

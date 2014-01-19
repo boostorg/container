@@ -508,7 +508,6 @@ int set_test ()
       typename MyBoostSet::iterator bs_b = boostset->begin();
       typename MyBoostSet::iterator bs_e = boostset->end();
       typename MyStdSet::iterator ss_b   = stdset->begin();
-      typename MyStdSet::iterator ss_e   = stdset->end();
 
       std::size_t i = 0;
       while(bs_b != bs_e){
@@ -555,7 +554,6 @@ int set_test ()
       typename MyBoostMultiSet::iterator bm_b = boostmultiset->begin();
       typename MyBoostMultiSet::iterator bm_e = boostmultiset->end();
       typename MyStdMultiSet::iterator sm_b   = stdmultiset->begin();
-      typename MyStdMultiSet::iterator sm_e   = stdmultiset->end();
 
       while(bm_b != bm_e){
          typename MyBoostMultiSet::iterator bm_i;

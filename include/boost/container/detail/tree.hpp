@@ -287,7 +287,7 @@ struct intrusive_tree_dispatch
       <NodeType
       ,container_detail::bi::compare<NodeCompareType>
       ,container_detail::bi::base_hook<HookType>
-      ,container_detail::bi::constant_time_size<true>
+      ,container_detail::bi::floating_point<true>
       ,container_detail::bi::size_type<SizeType>
       >::type  type;
 };

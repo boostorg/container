@@ -506,7 +506,13 @@ class set
    //!
    //! <b>Complexity</b>: log(size())+count(k)
    size_type count(const key_type& x) const
-   {  return static_cast<size_type>(this->find(x) != this->cend());  }
+   {  return static_cast<size_type>(this->base_t::find(x) != this->base_t::cend());  }
+
+   //! <b>Returns</b>: The number of elements with key equivalent to x.
+   //!
+   //! <b>Complexity</b>: log(size())+count(k)
+   size_type count(const key_type& x)
+   {  return static_cast<size_type>(this->base_t::find(x) != this->base_t::end());  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 

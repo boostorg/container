@@ -575,7 +575,7 @@ class flat_set
    //!
    //! <b>Complexity</b>: log(size())+count(k)
    size_type count(const key_type& x) const
-      {  return static_cast<size_type>(this->find(x) != this->cend());  }
+   {  return static_cast<size_type>(this->base_t::find(x) != this->base_t::cend());  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //! <b>Returns</b>: An iterator pointing to the first element with key not less
@@ -602,15 +602,34 @@ class flat_set
    //! <b>Complexity</b>: Logarithmic
    const_iterator upper_bound(const key_type& x) const;
 
-   //! <b>Effects</b>: Equivalent to std::make_pair(this->lower_bound(k), this->upper_bound(k)).
-   //!
-   //! <b>Complexity</b>: Logarithmic
-   std::pair<const_iterator, const_iterator> equal_range(const key_type& x) const;
+   #endif   //   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
 
    //! <b>Effects</b>: Equivalent to std::make_pair(this->lower_bound(k), this->upper_bound(k)).
    //!
    //! <b>Complexity</b>: Logarithmic
-   std::pair<iterator,iterator> equal_range(const key_type& x);
+   std::pair<const_iterator, const_iterator> equal_range(const key_type& x) const
+   {
+      const_iterator lb = this->lower_bound(x), ub(lb);
+      if(lb != this->cend() && static_cast<difference_type>(!this->key_comp()(x, *lb))){
+         ++ub;
+      }
+      return std::pair<const_iterator, const_iterator>(lb, ub);
+   }
+
+   //! <b>Effects</b>: Equivalent to std::make_pair(this->lower_bound(k), this->upper_bound(k)).
+   //!
+   //! <b>Complexity</b>: Logarithmic
+   std::pair<iterator,iterator> equal_range(const key_type& x)
+   {
+      iterator lb = this->lower_bound(x), ub(lb);
+      if(lb != this->end() && static_cast<difference_type>(!this->key_comp()(x, *lb))){
+         ++ub;
+      }
+      return std::pair<iterator, iterator>(lb, ub);
+   }
+
+   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Effects</b>: Returns true if x and y are equal
    //!
