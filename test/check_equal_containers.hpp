@@ -30,6 +30,23 @@ bool CheckEqual( const T1 &t1, const T2 &t2
                   >::type* = 0)
 {  return t1 == t2;  }
 
+
+template<class T1, class T2, class C1, class C2>
+bool CheckEqualIt( const T1 &i1, const T2 &i2, const C1 &c1, const C2 &c2 )
+{
+   bool c1end = i1 == c1.end();
+   bool c2end = i2 == c2.end();
+   if( c1end != c2end ){
+      return false;
+   }
+   else if(c1end){
+      return true;
+   }
+   else{
+      return CheckEqual(*i1, *i2);
+   }
+}
+
 template< class Pair1, class Pair2>
 bool CheckEqual( const Pair1 &pair1, const Pair2 &pair2
                , typename boost::container::container_detail::enable_if_c

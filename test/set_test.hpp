@@ -441,54 +441,54 @@ int set_test ()
          }
       }
       {
-      IntType move_me(i);
-      boostset->insert(boostset->upper_bound(move_me), boost::move(move_me));
-      stdset->insert(stdset->upper_bound(i), i);
-      //PrintContainers(boostset, stdset);
-      IntType move_me2(i);
-      boostmultiset->insert(boostmultiset->upper_bound(move_me2), boost::move(move_me2));
-      stdmultiset->insert(stdmultiset->upper_bound(i), i);
-      //PrintContainers(boostmultiset, stdmultiset);
-      if(!CheckEqualContainers(boostset, stdset)){
-         std::cout << "Error in boostset->insert(boostset->upper_bound(move_me), boost::move(move_me))" << std::endl;
-         return 1;
-      }
-      if(!CheckEqualContainers(boostmultiset, stdmultiset)){
-         std::cout << "Error in boostmultiset->insert(boostmultiset->upper_bound(move_me2), boost::move(move_me2))" << std::endl;
-         return 1;
-      }
+         IntType move_me(i);
+         boostset->insert(boostset->upper_bound(move_me), boost::move(move_me));
+         stdset->insert(stdset->upper_bound(i), i);
+         //PrintContainers(boostset, stdset);
+         IntType move_me2(i);
+         boostmultiset->insert(boostmultiset->upper_bound(move_me2), boost::move(move_me2));
+         stdmultiset->insert(stdmultiset->upper_bound(i), i);
+         //PrintContainers(boostmultiset, stdmultiset);
+         if(!CheckEqualContainers(boostset, stdset)){
+            std::cout << "Error in boostset->insert(boostset->upper_bound(move_me), boost::move(move_me))" << std::endl;
+            return 1;
+         }
+         if(!CheckEqualContainers(boostmultiset, stdmultiset)){
+            std::cout << "Error in boostmultiset->insert(boostmultiset->upper_bound(move_me2), boost::move(move_me2))" << std::endl;
+            return 1;
+         }
 
       }
       {
-      IntType move_me(i);
-      IntType move_me2(i);
-      boostset->insert(boostset->lower_bound(move_me), boost::move(move_me2));
-      stdset->insert(stdset->lower_bound(i), i);
-      //PrintContainers(boostset, stdset);
-      move_me2 = i;
-      boostmultiset->insert(boostmultiset->lower_bound(move_me2), boost::move(move_me2));
-      stdmultiset->insert(stdmultiset->lower_bound(i), i);
-      //PrintContainers(boostmultiset, stdmultiset);
-      if(!CheckEqualContainers(boostset, stdset)){
-         std::cout << "Error in boostset->insert(boostset->lower_bound(move_me), boost::move(move_me2))" << std::endl;
-         return 1;
-      }
-      if(!CheckEqualContainers(boostmultiset, stdmultiset)){
-         std::cout << "Error in boostmultiset->insert(boostmultiset->lower_bound(move_me2), boost::move(move_me2))" << std::endl;
-         return 1;
-      }
-      set_test_rebalanceable(*boostset
-         , container_detail::bool_<has_member_function_callable_with_rebalance<MyBoostSet>::value>());
-      if(!CheckEqualContainers(boostset, stdset)){
-         std::cout << "Error in boostset->rebalance()" << std::endl;
-         return 1;
-      }
-      set_test_rebalanceable(*boostmultiset
-         , container_detail::bool_<has_member_function_callable_with_rebalance<MyBoostMultiSet>::value>());
-      if(!CheckEqualContainers(boostmultiset, stdmultiset)){
-         std::cout << "Error in boostmultiset->rebalance()" << std::endl;
-         return 1;
-      }
+         IntType move_me(i);
+         IntType move_me2(i);
+         boostset->insert(boostset->lower_bound(move_me), boost::move(move_me2));
+         stdset->insert(stdset->lower_bound(i), i);
+         //PrintContainers(boostset, stdset);
+         move_me2 = i;
+         boostmultiset->insert(boostmultiset->lower_bound(move_me2), boost::move(move_me2));
+         stdmultiset->insert(stdmultiset->lower_bound(i), i);
+         //PrintContainers(boostmultiset, stdmultiset);
+         if(!CheckEqualContainers(boostset, stdset)){
+            std::cout << "Error in boostset->insert(boostset->lower_bound(move_me), boost::move(move_me2))" << std::endl;
+            return 1;
+         }
+         if(!CheckEqualContainers(boostmultiset, stdmultiset)){
+            std::cout << "Error in boostmultiset->insert(boostmultiset->lower_bound(move_me2), boost::move(move_me2))" << std::endl;
+            return 1;
+         }
+         set_test_rebalanceable(*boostset
+            , container_detail::bool_<has_member_function_callable_with_rebalance<MyBoostSet>::value>());
+         if(!CheckEqualContainers(boostset, stdset)){
+            std::cout << "Error in boostset->rebalance()" << std::endl;
+            return 1;
+         }
+         set_test_rebalanceable(*boostmultiset
+            , container_detail::bool_<has_member_function_callable_with_rebalance<MyBoostMultiSet>::value>());
+         if(!CheckEqualContainers(boostmultiset, stdmultiset)){
+            std::cout << "Error in boostmultiset->rebalance()" << std::endl;
+            return 1;
+         }
       }
    }
 
@@ -500,6 +500,99 @@ int set_test ()
       }
       if(boostmultiset->count(count_me) != stdmultiset->count(i)){
          return -1;
+      }
+   }
+
+   //Compare find/lower_bound/upper_bound in set
+   {
+      typename MyBoostSet::iterator bs_b = boostset->begin();
+      typename MyBoostSet::iterator bs_e = boostset->end();
+      typename MyStdSet::iterator ss_b   = stdset->begin();
+      typename MyStdSet::iterator ss_e   = stdset->end();
+
+      std::size_t i = 0;
+      while(bs_b != bs_e){
+         ++i;
+         typename MyBoostSet::iterator bs_i;
+         typename MyStdSet::iterator ss_i;
+         //find
+         bs_i = boostset->find(*bs_b);
+         ss_i = stdset->find(*ss_b);
+         if(!CheckEqualIt(bs_i, ss_i, *boostset, *stdset)){
+            return -1;
+         }
+         //lower bound
+         bs_i = boostset->lower_bound(*bs_b);
+         ss_i = stdset->lower_bound(*ss_b);
+         if(!CheckEqualIt(bs_i, ss_i, *boostset, *stdset)){
+            return -1;
+         }
+         //upper bound
+         bs_i = boostset->upper_bound(*bs_b);
+         ss_i = stdset->upper_bound(*ss_b);
+         if(!CheckEqualIt(bs_i, ss_i, *boostset, *stdset)){
+            return -1;
+         }
+         //equal range
+         std::pair<typename MyBoostSet::iterator
+                  ,typename MyBoostSet::iterator> bs_ip;
+         std::pair<typename MyStdSet::iterator
+                  ,typename MyStdSet::iterator>   ss_ip;
+         bs_ip = boostset->equal_range(*bs_b);
+         ss_ip = stdset->equal_range(*ss_b);
+         if(!CheckEqualIt(bs_ip.first, ss_ip.first, *boostset, *stdset)){
+            return -1;
+         }
+         if(!CheckEqualIt(bs_ip.second, ss_ip.second, *boostset, *stdset)){
+            return -1;
+         }
+         ++bs_b;
+         ++ss_b;
+      }
+   }
+   //Compare find/lower_bound/upper_bound in multiset
+   {
+      typename MyBoostMultiSet::iterator bm_b = boostmultiset->begin();
+      typename MyBoostMultiSet::iterator bm_e = boostmultiset->end();
+      typename MyStdMultiSet::iterator sm_b   = stdmultiset->begin();
+      typename MyStdMultiSet::iterator sm_e   = stdmultiset->end();
+
+      while(bm_b != bm_e){
+         typename MyBoostMultiSet::iterator bm_i;
+         typename MyStdMultiSet::iterator sm_i;
+         //find
+         bm_i = boostmultiset->find(*bm_b);
+         sm_i = stdmultiset->find(*sm_b);
+         if(!CheckEqualIt(bm_i, sm_i, *boostmultiset, *stdmultiset)){
+            return -1;
+         }
+         //lower bound
+         bm_i = boostmultiset->lower_bound(*bm_b);
+         sm_i = stdmultiset->lower_bound(*sm_b);
+         if(!CheckEqualIt(bm_i, sm_i, *boostmultiset, *stdmultiset)){
+            return -1;
+         }
+         //upper bound
+         bm_i = boostmultiset->upper_bound(*bm_b);
+         sm_i = stdmultiset->upper_bound(*sm_b);
+         if(!CheckEqualIt(bm_i, sm_i, *boostmultiset, *stdmultiset)){
+            return -1;
+         }
+         //equal range
+         std::pair<typename MyBoostMultiSet::iterator
+                  ,typename MyBoostMultiSet::iterator> bm_ip;
+         std::pair<typename MyStdMultiSet::iterator
+                  ,typename MyStdMultiSet::iterator>   sm_ip;
+         bm_ip = boostmultiset->equal_range(*bm_b);
+         sm_ip = stdmultiset->equal_range(*sm_b);
+         if(!CheckEqualIt(bm_ip.first, sm_ip.first, *boostmultiset, *stdmultiset)){
+            return -1;
+         }
+         if(!CheckEqualIt(bm_ip.second, sm_ip.second, *boostmultiset, *stdmultiset)){
+            return -1;
+         }
+         ++bm_b;
+         ++sm_b;
       }
    }
 
