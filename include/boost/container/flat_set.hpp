@@ -604,30 +604,17 @@ class flat_set
 
    #endif   //   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-
    //! <b>Effects</b>: Equivalent to std::make_pair(this->lower_bound(k), this->upper_bound(k)).
    //!
    //! <b>Complexity</b>: Logarithmic
    std::pair<const_iterator, const_iterator> equal_range(const key_type& x) const
-   {
-      const_iterator lb = this->lower_bound(x), ub(lb);
-      if(lb != this->cend() && static_cast<difference_type>(!this->key_comp()(x, *lb))){
-         ++ub;
-      }
-      return std::pair<const_iterator, const_iterator>(lb, ub);
-   }
+   {  return this->base_t::lower_bound_range(x);  }
 
    //! <b>Effects</b>: Equivalent to std::make_pair(this->lower_bound(k), this->upper_bound(k)).
    //!
    //! <b>Complexity</b>: Logarithmic
    std::pair<iterator,iterator> equal_range(const key_type& x)
-   {
-      iterator lb = this->lower_bound(x), ub(lb);
-      if(lb != this->end() && static_cast<difference_type>(!this->key_comp()(x, *lb))){
-         ++ub;
-      }
-      return std::pair<iterator, iterator>(lb, ub);
-   }
+   {  return this->base_t::lower_bound_range(x);  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 

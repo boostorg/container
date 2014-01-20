@@ -540,6 +540,22 @@ class set
    //! <b>Complexity</b>: Logarithmic
    const_iterator upper_bound(const key_type& x) const;
 
+   #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+   //! <b>Effects</b>: Equivalent to std::make_pair(this->lower_bound(k), this->upper_bound(k)).
+   //!
+   //! <b>Complexity</b>: Logarithmic
+   std::pair<iterator,iterator> equal_range(const key_type& x)
+   {  return this->base_t::lower_bound_range(x);  }
+
+   //! <b>Effects</b>: Equivalent to std::make_pair(this->lower_bound(k), this->upper_bound(k)).
+   //!
+   //! <b>Complexity</b>: Logarithmic
+   std::pair<const_iterator, const_iterator> equal_range(const key_type& x) const
+   {  return this->base_t::lower_bound_range(x);  }
+
+   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
    //! <b>Effects</b>: Equivalent to std::make_pair(this->lower_bound(k), this->upper_bound(k)).
    //!
    //! <b>Complexity</b>: Logarithmic

@@ -229,6 +229,27 @@ cpu_times insert_time(vector<typename C::value_type> &unique_range, vector<typen
    return total_time.elapsed();
 }
 
+template<typename Iterator>
+bool check_not_end(vector<Iterator> &iterators, Iterator itend, std::size_t number_of_ends = 0)
+{
+   std::size_t end_count = 0;
+   for(std::size_t i = 0, max = iterators.size(); i != max; ++i){
+      if(iterators[i] == itend && (++end_count > number_of_ends) )
+         return false;
+   }
+   return true;
+}
+
+template<typename Iterator>
+bool check_all_not_empty(vector< std::pair<Iterator, Iterator > > &iterator_pairs)
+{
+   for(std::size_t i = 0, max = iterator_pairs.size(); i != max; ++i){
+      if(iterator_pairs[i].first == iterator_pairs[i].second)
+         return false;
+   }
+   return true;
+}
+
 template<typename C>
 cpu_times search_time(vector<typename C::value_type> &unique_range, const char *RangeType)
 {
@@ -239,72 +260,68 @@ cpu_times search_time(vector<typename C::value_type> &unique_range, const char *
    cpu_timer total_time;
    total_time.resume();
 
+   vector<typename C::iterator> v_it(N);
+   vector< std::pair<typename C::iterator, typename C::iterator> > v_itp(N);
+
    for(std::size_t i = 0; i != N; ++i){
       //Find
       {
-         std::size_t found = 0;
          find_timer.resume();
          for(std::size_t rep = 0; rep != 2; ++rep)
          for(std::size_t i = 0, max = unique_range.size(); i != max; ++i){
-            found += static_cast<std::size_t>(c.end() != c.find(unique_range[i]));
+            v_it[i] = c.find(unique_range[i]);
          }
          find_timer.stop();
-         if(found/2 != c.size()){
+         if(!check_not_end(v_it, c.end())){
             std::cout << "ERROR! find all elements not found" << std::endl;
          }
       }
       //Lower
       {
-         std::size_t found = 0;
          lower_timer.resume();
          for(std::size_t rep = 0; rep != 2; ++rep)
          for(std::size_t i = 0, max = unique_range.size(); i != max; ++i){
-            found += static_cast<std::size_t>(c.end() != c.lower_bound(unique_range[i]));
+            v_it[i] = c.lower_bound(unique_range[i]);
          }
          lower_timer.stop();
-         if(found/2 != c.size()){
+         if(!check_not_end(v_it, c.end())){
             std::cout << "ERROR! lower_bound all elements not found" << std::endl;
          }
       }
       //Upper
       {
-         std::size_t found = 0;
          upper_timer.resume();
          for(std::size_t rep = 0; rep != 2; ++rep)
          for(std::size_t i = 0, max = unique_range.size(); i != max; ++i){
-            found += static_cast<std::size_t>(c.end() != c.upper_bound(unique_range[i]));
+            v_it[i] = c.upper_bound(unique_range[i]);
          }
          upper_timer.stop();
-         if(found/2 != (c.size()-1)){
+         if(!check_not_end(v_it, c.end(), 1u)){
             std::cout << "ERROR! upper_bound all elements not found" << std::endl;
          }
       }
       //Equal
       {
-         std::size_t found = 0;
-         std::pair<typename C::iterator,typename C::iterator> ret;
          equal_range_timer.resume();
          for(std::size_t rep = 0; rep != 2; ++rep)
          for(std::size_t i = 0, max = unique_range.size(); i != max; ++i){
-            ret = c.equal_range(unique_range[i]);
-            found += static_cast<std::size_t>(ret.first != ret.second);
+            v_itp[i] = c.equal_range(unique_range[i]);
          }
          equal_range_timer.stop();
-         if(found/2 != c.size()){
+         if(!check_all_not_empty(v_itp)){
             std::cout << "ERROR! equal_range all elements not found" << std::endl;
          }
       }
       //Count
       {
-         std::size_t found = 0;
-         std::pair<typename C::iterator,typename C::iterator> ret;
+         std::size_t count = 0;
          count_timer.resume();
          for(std::size_t rep = 0; rep != 2; ++rep)
          for(std::size_t i = 0, max = unique_range.size(); i != max; ++i){
-            found += static_cast<std::size_t>(c.count(unique_range[i]));
+            count += c.count(unique_range[i]);
          }
          count_timer.stop();
-         if(found/2 != c.size()){
+         if(count/2 != c.size()){
             std::cout << "ERROR! count all elements not found" << std::endl;
          }
       }

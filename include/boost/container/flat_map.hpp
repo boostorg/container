@@ -857,13 +857,13 @@ class flat_map
    //!
    //! <b>Complexity</b>: Logarithmic
    std::pair<iterator,iterator> equal_range(const key_type& x)
-      {  return container_detail::force_copy<std::pair<iterator,iterator> >(m_flat_tree.equal_range(x)); }
+      {  return container_detail::force_copy<std::pair<iterator,iterator> >(m_flat_tree.lower_bound_range(x)); }
 
    //! <b>Effects</b>: Equivalent to std::make_pair(this->lower_bound(k), this->upper_bound(k)).
    //!
    //! <b>Complexity</b>: Logarithmic
    std::pair<const_iterator,const_iterator> equal_range(const key_type& x) const
-      {  return container_detail::force_copy<std::pair<const_iterator,const_iterator> >(m_flat_tree.equal_range(x)); }
+      {  return container_detail::force_copy<std::pair<const_iterator,const_iterator> >(m_flat_tree.lower_bound_range(x)); }
 
    //! <b>Effects</b>: Returns true if x and y are equal
    //!

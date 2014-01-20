@@ -1071,7 +1071,8 @@ class tree
    void clear()
    {  AllocHolder::clear(alloc_version());  }
 
-   // set operations:
+   // search operations. Const and non-const overloads even if no iterator is returned
+   // so splay implementations can to their rebalancing when searching in non-const versions
    iterator find(const key_type& k)
    {  return iterator(this->icont().find(k, KeyNodeCompare(value_comp())));  }
 
@@ -1104,6 +1105,21 @@ class tree
    {
       std::pair<iiterator, iiterator> ret =
          this->non_const_icont().equal_range(k, KeyNodeCompare(value_comp()));
+      return std::pair<const_iterator,const_iterator>
+         (const_iterator(ret.first), const_iterator(ret.second));
+   }
+
+   std::pair<iterator,iterator> lower_bound_range(const key_type& k)
+   {
+      std::pair<iiterator, iiterator> ret =
+         this->icont().lower_bound_range(k, KeyNodeCompare(value_comp()));
+      return std::pair<iterator,iterator>(iterator(ret.first), iterator(ret.second));
+   }
+
+   std::pair<const_iterator, const_iterator> lower_bound_range(const key_type& k) const
+   {
+      std::pair<iiterator, iiterator> ret =
+         this->non_const_icont().lower_bound_range(k, KeyNodeCompare(value_comp()));
       return std::pair<const_iterator,const_iterator>
          (const_iterator(ret.first), const_iterator(ret.second));
    }

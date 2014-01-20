@@ -743,6 +743,12 @@ class flat_tree
    std::pair<const_iterator, const_iterator> equal_range(const key_type& k) const
    {  return this->priv_equal_range(this->cbegin(), this->cend(), k);  }
 
+   std::pair<iterator, iterator> lower_bound_range(const key_type& k)
+   {  return this->priv_lower_bound_range(this->begin(), this->end(), k);  }
+
+   std::pair<const_iterator, const_iterator> lower_bound_range(const key_type& k) const
+   {  return this->priv_lower_bound_range(this->cbegin(), this->cend(), k);  }
+
    size_type capacity() const          
    { return this->m_data.m_vect.capacity(); }
 
@@ -956,6 +962,18 @@ class flat_tree
          }
       }
       return std::pair<RanIt, RanIt>(first, first);
+   }
+
+   template<class RanIt>
+   std::pair<RanIt, RanIt> priv_lower_bound_range(RanIt first, RanIt last, const key_type& k) const
+   {
+      const Compare &key_cmp = this->m_data.get_comp();
+      KeyOfValue key_extract;
+      RanIt lb(this->priv_lower_bound(first, last, k)), ub(lb);
+      if(lb != last && static_cast<difference_type>(!key_cmp(k, key_extract(*lb)))){
+         ++ub;
+      }
+      return std::pair<RanIt, RanIt>(lb, ub);
    }
 
    template<class InIt>
