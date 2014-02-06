@@ -30,8 +30,6 @@
 #include <boost/detail/no_exceptions_support.hpp>
 #include <boost/assert.hpp>
 #include <cstddef>
-#include <functional>   //std::unary_function
-
 
 namespace boost {
 namespace container {
@@ -252,8 +250,10 @@ class private_node_pool_impl
    };
 
    struct is_between
-      :  std::unary_function<typename free_nodes_t::value_type, bool>
    {
+	   typedef typename free_nodes_t::value_type argument_type;
+	   typedef bool                              result_type;
+
       is_between(const void *addr, std::size_t size)
          :  beg_(static_cast<const char *>(addr)), end_(beg_+size)
       {}

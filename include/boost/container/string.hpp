@@ -492,19 +492,22 @@ class basic_string
 
    template <class Tr>
    struct Eq_traits
-      : public std::binary_function<typename Tr::char_type,
-                                    typename Tr::char_type,
-                                    bool>
    {
-      bool operator()(const typename Tr::char_type& x,
-                      const typename Tr::char_type& y) const
+      //Compatibility with std::binary_function
+	   typedef typename Tr::char_type   first_argument_type;
+	   typedef typename Tr::char_type   second_argument_type;
+	   typedef bool   result_type;
+
+      bool operator()(const first_argument_type& x, const second_argument_type& y) const
          { return Tr::eq(x, y); }
    };
 
    template <class Tr>
    struct Not_within_traits
-      : public std::unary_function<typename Tr::char_type, bool>
    {
+	   typedef typename Tr::char_type   argument_type;
+	   typedef bool                     result_type;
+
       typedef const typename Tr::char_type* Pointer;
       const Pointer m_first;
       const Pointer m_last;

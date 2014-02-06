@@ -352,7 +352,7 @@ struct vector_alloc_holder
    size_type next_capacity(size_type additional_objects) const
    {
       return next_capacity_calculator
-         <size_type, /*NextCapacityDouble*/NextCapacity60Percent>::
+         <size_type, NextCapacityDouble/*NextCapacity60Percent*/>::
             get( allocator_traits_type::max_size(this->alloc())
                , this->m_capacity, additional_objects );
    }
