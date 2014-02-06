@@ -31,4 +31,4 @@ rule test_all
    return $(all_rules) ;
 }
 
-test-suite container_test : [ test_all r ] ;
+test-suite container_bench : [ test_all r ] ;
