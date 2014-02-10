@@ -15,7 +15,7 @@ project boost/container
 CPP_SOURCES = alloc_lib ;
 
 lib boost_container
-   : $(CPP_SOURCES).cpp
+   : $(CPP_SOURCES).c
    : <link>shared:<define>BOOST_CONTAINER_DYN_LINK=1
      <link>static:<define>BOOST_CONTAINER_STATIC_LINK=1
    ;
