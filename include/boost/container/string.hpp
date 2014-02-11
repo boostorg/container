@@ -1248,6 +1248,20 @@ class basic_string
    {  return this->assign(cvalue_iterator(c, n), cvalue_iterator()); }
 
    //! <b>Effects</b>: Equivalent to assign(basic_string(first, last)).
+ 	//!
+ 	//! <b>Returns</b>: *this
+ 	basic_string& assign(const CharT* first, const CharT* last) 
+ 	{ 
+ 	   size_type n = static_cast<size_type>(last - first);
+ 	   this->reserve(n); 
+ 	   CharT* ptr = container_detail::to_raw_pointer(this->priv_addr()); 
+ 	   Traits::copy(ptr, first, n); 
+ 	   this->priv_construct_null(ptr + n); 
+ 	   this->priv_size(n); 
+ 	   return *this; 
+ 	} 
+
+   //! <b>Effects</b>: Equivalent to assign(basic_string(first, last)).
    //!
    //! <b>Returns</b>: *this
    template <class InputIter>
