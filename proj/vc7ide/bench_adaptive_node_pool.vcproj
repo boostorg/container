@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.10"
-	Name="tree_test"
-	ProjectGUID="{58CCE183-6092-48FE-A4F7-BA0D3A792606}"
+	Name="bench_adaptive_node_pool"
+	ProjectGUID="{C8AD2618-79EB-8612-42FE-2A3AC9667A13}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -13,14 +13,14 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="../../Bin/Win32/Debug"
-			IntermediateDirectory="Debug/tree_test"
+			IntermediateDirectory="Debug/bench_adaptive_node_pool"
 			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../../../.."
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;BOOST_DATE_TIME_NO_LIB"
+				PreprocessorDefinitions="BOOST_CONTAINER_NO_LIB"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -34,12 +34,12 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib"
-				OutputFile="$(OutDir)/tree_test_d.exe"
+				AdditionalDependencies="alloc_lib.lib"
+				OutputFile="$(OutDir)/bench_adaptive_node_pool_d.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../../../../stage/lib"
+				AdditionalLibraryDirectories="../../bin/debug;../../../../stage/lib"
 				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile="$(OutDir)/tree_test.pdb"
+				ProgramDatabaseFile="$(OutDir)/bench_adaptive_node_pool.pdb"
 				SubSystem="1"
 				TargetMachine="1"
 				FixedBaseAddress="1"/>
@@ -67,13 +67,13 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="../../Bin/Win32/Release"
-			IntermediateDirectory="Release/tree_test"
+			IntermediateDirectory="Release/bench_adaptive_node_pool"
 			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="../../../.."
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;BOOST_DATE_TIME_NO_LIB"
+				PreprocessorDefinitions="WIN32;NDEBUG;BOOST_CONTAINER_NO_LIB"
 				RuntimeLibrary="2"
 				TreatWChar_tAsBuiltInType="TRUE"
 				ForceConformanceInForLoopScope="FALSE"
@@ -85,10 +85,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib"
-				OutputFile="$(OutDir)/tree_test.exe"
+				AdditionalDependencies="winmm.lib alloc_lib.lib"
+				OutputFile="$(OutDir)/bench_adaptive_node_pool.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../../../../stage/lib"
+				AdditionalLibraryDirectories="../../bin/release;../../../../stage/lib"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -122,15 +122,10 @@
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
+			UniqueIdentifier="{818563C3-6640-0A65-55CB-202E5BAD7FAF}">
 			<File
-				RelativePath="..\..\test\tree_test.cpp">
+				RelativePath="..\..\bench\bench_adaptive_node_pool.cpp">
 			</File>
-		</Filter>
-		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 		</Filter>
 	</Files>
 	<Globals>

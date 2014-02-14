@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2004-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2004-2013. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -23,6 +23,7 @@
 #include "expand_bwd_test_allocator.hpp"
 #include "expand_bwd_test_template.hpp"
 #include "propagate_allocator_test.hpp"
+#include "default_init_test.hpp"
 
 using namespace boost::container;
 
@@ -137,7 +138,6 @@ int string_test()
 
    const int MaxSize = 100;
 
-   //Create shared memory
    {
       BoostStringVector *boostStringVect = new BoostStringVector;
       StdStringVector *stdStringVect = new StdStringVector;
@@ -471,11 +471,30 @@ int main()
       return 1;
    }
 
+   ////////////////////////////////////
+   //    Backwards expansion test
+   ////////////////////////////////////
    if(!test_expand_bwd())
       return 1;
 
+   ////////////////////////////////////
+   //    Allocator propagation testing
+   ////////////////////////////////////
    if(!boost::container::test::test_propagate_allocator<string_propagate_test_wrapper>())
       return 1;
+
+   ////////////////////////////////////
+   //    Default init test
+   ////////////////////////////////////
+   if(!test::default_init_test< basic_string<char, std::char_traits<char>, test::default_init_allocator<char> > >()){
+      std::cerr << "Default init test failed" << std::endl;
+      return 1;
+   }
+
+   if(!test::default_init_test< basic_string<wchar_t, std::char_traits<wchar_t>, test::default_init_allocator<wchar_t> > >()){
+      std::cerr << "Default init test failed" << std::endl;
+      return 1;
+   }
 
    return 0;
 }

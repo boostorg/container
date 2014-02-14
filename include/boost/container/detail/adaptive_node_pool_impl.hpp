@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -15,9 +15,10 @@
 #  pragma once
 #endif
 
-#include "config_begin.hpp"
-#include <boost/container/container_fwd.hpp>
+#include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
+
+#include <boost/container/container_fwd.hpp>
 #include <boost/container/detail/utilities.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/intrusive/set.hpp>

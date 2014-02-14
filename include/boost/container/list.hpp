@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -47,7 +47,7 @@
 namespace boost {
 namespace container {
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 namespace container_detail {
 
 template<class VoidPointer>
@@ -99,7 +99,7 @@ struct intrusive_list_type
 };
 
 }  //namespace container_detail {
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! A list is a doubly linked list. That is, it is a Sequence that supports both
 //! forward and backward traversal, and (amortized) constant time insertion and
@@ -111,6 +111,9 @@ struct intrusive_list_type
 //! after a list operation than it did before), but the iterators themselves will
 //! not be invalidated or made to point to different elements unless that invalidation
 //! or mutation is explicit.
+//!
+//! \tparam T The type of object that is stored in the list
+//! \tparam Allocator The allocator used for all internal memory management
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class T, class Allocator = std::allocator<T> >
 #else
@@ -120,7 +123,7 @@ class list
    : protected container_detail::node_alloc_holder
       <Allocator, typename container_detail::intrusive_list_type<Allocator>::type>
 {
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    typedef typename
       container_detail::intrusive_list_type<Allocator>::type Icont;
    typedef container_detail::node_alloc_holder<Allocator, Icont>  AllocHolder;
@@ -167,7 +170,7 @@ class list
 
    typedef container_detail::iterator<typename Icont::iterator, false>  iterator_impl;
    typedef container_detail::iterator<typename Icont::iterator, true>   const_iterator_impl;
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
    //////////////////////////////////////////////
@@ -1214,9 +1217,65 @@ class list
    //!
    //! <b>Note</b>: Iterators and references are not invalidated
    void reverse() BOOST_CONTAINER_NOEXCEPT
-   {  this->icont().reverse(); }   
+   {  this->icont().reverse(); }
 
-   /// @cond
+   //! <b>Effects</b>: Returns true if x and y are equal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator==(const list& x, const list& y)
+   {
+      if(x.size() != y.size()){
+         return false;
+      }
+      typedef typename list::const_iterator const_iterator;
+      const_iterator end1 = x.end();
+
+      const_iterator i1 = x.begin();
+      const_iterator i2 = y.begin();
+      while (i1 != end1 && *i1 == *i2) {
+         ++i1;
+         ++i2;
+      }
+      return i1 == end1;
+   }
+
+   //! <b>Effects</b>: Returns true if x and y are unequal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator!=(const list& x, const list& y)
+   {  return !(x == y); }
+
+   //! <b>Effects</b>: Returns true if x is less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator<(const list& x, const list& y)
+   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+
+   //! <b>Effects</b>: Returns true if x is greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator>(const list& x, const list& y)
+   {  return y < x;  }
+
+   //! <b>Effects</b>: Returns true if x is equal or less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator<=(const list& x, const list& y)
+   {  return !(y < x);  }
+
+   //! <b>Effects</b>: Returns true if x is equal or greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator>=(const list& x, const list& y)
+   {  return !(x < y);  }
+
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Complexity</b>: Constant.
+   friend void swap(list& x, list& y)
+   {  x.swap(y);  }
+
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
 
    bool priv_try_shrink(size_type new_size)
@@ -1303,66 +1362,11 @@ class list
       bool operator()(const value_type &a, const value_type &b) const
          {  return a == b;  }
    };
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 };
 
-template <class T, class Allocator>
-inline bool operator==(const list<T,Allocator>& x, const list<T,Allocator>& y)
-{
-   if(x.size() != y.size()){
-      return false;
-   }
-   typedef typename list<T,Allocator>::const_iterator const_iterator;
-   const_iterator end1 = x.end();
-
-   const_iterator i1 = x.begin();
-   const_iterator i2 = y.begin();
-   while (i1 != end1 && *i1 == *i2) {
-      ++i1;
-      ++i2;
-   }
-   return i1 == end1;
-}
-
-template <class T, class Allocator>
-inline bool operator<(const list<T,Allocator>& x,
-                      const list<T,Allocator>& y)
-{
-  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());
-}
-
-template <class T, class Allocator>
-inline bool operator!=(const list<T,Allocator>& x, const list<T,Allocator>& y)
-{
-  return !(x == y);
-}
-
-template <class T, class Allocator>
-inline bool operator>(const list<T,Allocator>& x, const list<T,Allocator>& y)
-{
-  return y < x;
-}
-
-template <class T, class Allocator>
-inline bool operator<=(const list<T,Allocator>& x, const list<T,Allocator>& y)
-{
-  return !(y < x);
-}
-
-template <class T, class Allocator>
-inline bool operator>=(const list<T,Allocator>& x, const list<T,Allocator>& y)
-{
-  return !(x < y);
-}
-
-template <class T, class Allocator>
-inline void swap(list<T, Allocator>& x, list<T, Allocator>& y)
-{
-  x.swap(y);
-}
-
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }  //namespace container {
 
@@ -1375,7 +1379,7 @@ struct has_trivial_destructor_after_move<boost::container::list<T, Allocator> >
 
 namespace container {
 
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }}
 

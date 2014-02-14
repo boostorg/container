@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////
 //
 // (C) Copyright Stephen Cleary 2000.
-// (C) Copyright Ion Gaztanaga 2007-2012.
+// (C) Copyright Ion Gaztanaga 2007-2013.
 //
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
@@ -16,7 +16,9 @@
 #ifndef BOOST_CONTAINER_DETAIL_MATH_FUNCTIONS_HPP
 #define BOOST_CONTAINER_DETAIL_MATH_FUNCTIONS_HPP
 
-#include "config_begin.hpp"
+#include <boost/container/detail/config_begin.hpp>
+#include <boost/container/detail/workaround.hpp>
+
 #include <climits>
 #include <boost/static_assert.hpp>
 

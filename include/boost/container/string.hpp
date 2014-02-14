@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -52,7 +52,7 @@
 namespace boost {
 namespace container {
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 namespace container_detail {
 // ------------------------------------------------------------
 // Class basic_string_base. 
@@ -268,7 +268,12 @@ class basic_string_base
    }
 
    size_type next_capacity(size_type additional_objects) const
-   {  return get_next_capacity(allocator_traits_type::max_size(this->alloc()), this->priv_storage(), additional_objects);  }
+   {
+      return next_capacity_calculator
+         <size_type, NextCapacityDouble /*NextCapacity60Percent*/>::
+            get( allocator_traits_type::max_size(this->alloc())
+               , this->priv_storage(), additional_objects );
+   }
 
    void deallocate(pointer p, size_type n)
    { 
@@ -433,7 +438,7 @@ class basic_string_base
 
 }  //namespace container_detail {
 
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! The basic_string class represents a Sequence of characters. It contains all the
 //! usual operations of a Sequence, and, additionally, it contains standard string
@@ -463,6 +468,10 @@ class basic_string_base
 //! end(), rbegin(), rend(), operator[], c_str(), and data() do not invalidate iterators.
 //! In this implementation, iterators are only invalidated by member functions that
 //! explicitly change the string's contents.
+//!
+//! \tparam CharT The type of character it contains.
+//! \tparam Traits The Character Traits type, which encapsulates basic character operations
+//! \tparam Allocator The allocator, used for internal memory management.
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class CharT, class Traits = std::char_traits<CharT>, class Allocator = std::allocator<CharT> >
 #else
@@ -471,7 +480,7 @@ template <class CharT, class Traits, class Allocator>
 class basic_string
    :  private container_detail::basic_string_base<Allocator>
 {
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    typedef allocator_traits<Allocator> allocator_traits_type;
    BOOST_COPYABLE_AND_MOVABLE(basic_string)
@@ -483,19 +492,22 @@ class basic_string
 
    template <class Tr>
    struct Eq_traits
-      : public std::binary_function<typename Tr::char_type,
-                                    typename Tr::char_type,
-                                    bool>
    {
-      bool operator()(const typename Tr::char_type& x,
-                      const typename Tr::char_type& y) const
+      //Compatibility with std::binary_function
+	   typedef typename Tr::char_type   first_argument_type;
+	   typedef typename Tr::char_type   second_argument_type;
+	   typedef bool   result_type;
+
+      bool operator()(const first_argument_type& x, const second_argument_type& y) const
          { return Tr::eq(x, y); }
    };
 
    template <class Tr>
    struct Not_within_traits
-      : public std::unary_function<typename Tr::char_type, bool>
    {
+	   typedef typename Tr::char_type   argument_type;
+	   typedef bool                     result_type;
+
       typedef const typename Tr::char_type* Pointer;
       const Pointer m_first;
       const Pointer m_last;
@@ -509,7 +521,7 @@ class basic_string
                         std::bind1st(Eq_traits<Tr>(), x)) == m_last;
       }
    };
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
    //////////////////////////////////////////////
@@ -533,14 +545,14 @@ class basic_string
    typedef BOOST_CONTAINER_IMPDEF(std::reverse_iterator<const_iterator>)               const_reverse_iterator;
    static const size_type npos = size_type(-1);
 
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    typedef constant_iterator<CharT, difference_type> cvalue_iterator;
    typedef typename base_t::allocator_v1  allocator_v1;
    typedef typename base_t::allocator_v2  allocator_v2;
    typedef typename base_t::alloc_version  alloc_version;
    typedef ::boost::intrusive::pointer_traits<pointer> pointer_traits;
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:                         // Constructor, destructor, assignment.
    //////////////////////////////////////////////
@@ -548,7 +560,7 @@ class basic_string
    //          construct/copy/destroy
    //
    //////////////////////////////////////////////
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    struct reserve_t {};
 
    basic_string(reserve_t, size_type n,
@@ -559,7 +571,7 @@ class basic_string
               , n + 1)
    { this->priv_terminate_string(); }
 
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    //! <b>Effects</b>: Default constructs a basic_string.
    //!
@@ -666,6 +678,15 @@ class basic_string
    {
       this->priv_terminate_string();
       this->assign(n, c);
+   }
+
+   //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
+   //!   and is initialized by n default-initialized characters.
+   basic_string(size_type n, default_init_t, const allocator_type& a = allocator_type())
+      : base_t(a, n + 1)
+   {
+      this->priv_size(n);
+      this->priv_terminate_string();
    }
 
    //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
@@ -945,6 +966,26 @@ class basic_string
    void resize(size_type n)
    { resize(n, CharT()); }
 
+
+   //! <b>Effects</b>: Inserts or erases elements at the end such that
+   //!   the size becomes n. New elements are uninitialized.
+   //!
+   //! <b>Throws</b>: If memory allocation throws
+   //!
+   //! <b>Complexity</b>: Linear to the difference between size() and new_size.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   void resize(size_type n, default_init_t)
+   {
+      if (n <= this->size())
+         this->erase(this->begin() + n, this->end());
+      else{
+         this->priv_reserve(n, false);
+         this->priv_size(n);
+         this->priv_terminate_string();
+      }
+   }
+
    //! <b>Effects</b>: Number of elements for which memory has been allocated.
    //!   capacity() is always greater than or equal to size().
    //!
@@ -961,29 +1002,7 @@ class basic_string
    //!
    //! <b>Throws</b>: If memory allocation allocation throws
    void reserve(size_type res_arg)
-   {
-      if (res_arg > this->max_size()){
-         throw_length_error("basic_string::reserve max_size() exceeded");
-      }
-
-      if (this->capacity() < res_arg){
-         size_type n = container_detail::max_value(res_arg, this->size()) + 1;
-         size_type new_cap = this->next_capacity(n);
-         pointer new_start = this->allocation_command
-            (allocate_new, n, new_cap, new_cap).first;
-         size_type new_length = 0;
-
-         const pointer addr = this->priv_addr();
-         new_length += priv_uninitialized_copy
-            (addr, addr + this->priv_size(), new_start);
-         this->priv_construct_null(new_start + new_length);
-         this->deallocate_block();
-         this->is_short(false);
-         this->priv_long_addr(new_start);
-         this->priv_long_size(new_length);
-         this->priv_storage(new_cap);
-      }
-   }
+   {  this->priv_reserve(res_arg);  }
 
    //! <b>Effects</b>: Tries to deallocate the excess of memory created
    //!   with previous allocations. The size of the string is unchanged
@@ -1227,6 +1246,20 @@ class basic_string
    //! <b>Returns</b>: *this
    basic_string& assign(size_type n, CharT c)
    {  return this->assign(cvalue_iterator(c, n), cvalue_iterator()); }
+
+   //! <b>Effects</b>: Equivalent to assign(basic_string(first, last)).
+ 	//!
+ 	//! <b>Returns</b>: *this
+ 	basic_string& assign(const CharT* first, const CharT* last) 
+ 	{ 
+ 	   size_type n = static_cast<size_type>(last - first);
+ 	   this->reserve(n); 
+ 	   CharT* ptr = container_detail::to_raw_pointer(this->priv_addr()); 
+ 	   Traits::copy(ptr, first, n); 
+ 	   this->priv_construct_null(ptr + n); 
+ 	   this->priv_size(n); 
+ 	   return *this; 
+ 	} 
 
    //! <b>Effects</b>: Equivalent to assign(basic_string(first, last)).
    //!
@@ -2296,8 +2329,35 @@ class basic_string
    int compare(size_type pos1, size_type n1, const CharT* s) const
    {  return this->compare(pos1, n1, s, Traits::length(s)); }
 
-   /// @cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
+   void priv_reserve(size_type res_arg, const bool null_terminate = true)
+   {
+      if (res_arg > this->max_size()){
+         throw_length_error("basic_string::reserve max_size() exceeded");
+      }
+
+      if (this->capacity() < res_arg){
+         size_type n = container_detail::max_value(res_arg, this->size()) + 1;
+         size_type new_cap = this->next_capacity(n);
+         pointer new_start = this->allocation_command
+            (allocate_new, n, new_cap, new_cap).first;
+         size_type new_length = 0;
+
+         const pointer addr = this->priv_addr();
+         new_length += priv_uninitialized_copy
+            (addr, addr + this->priv_size(), new_start);
+         if(null_terminate){
+            this->priv_construct_null(new_start + new_length);
+         }
+         this->deallocate_block();
+         this->is_short(false);
+         this->priv_long_addr(new_start);
+         this->priv_long_size(new_length);
+         this->priv_storage(new_cap);
+      }
+   }
+
    static int s_compare(const_pointer f1, const_pointer l1,
                         const_pointer f2, const_pointer l2)
    {
@@ -2431,8 +2491,10 @@ class basic_string
       return this->priv_replace(first, last, f, l, Category());
    }
 
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
+
+#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //!Typedef for a basic_string of
 //!narrow characters
@@ -2449,6 +2511,8 @@ typedef basic_string
    ,std::char_traits<wchar_t>
    ,std::allocator<wchar_t> >
 wstring;
+
+#endif
 
 // ------------------------------------------------------------
 // Non-member functions.
@@ -2663,7 +2727,7 @@ template <class CharT, class Traits, class Allocator>
 inline void swap(basic_string<CharT,Traits,Allocator>& x, basic_string<CharT,Traits,Allocator>& y)
 {  x.swap(y);  }
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 // I/O. 
 namespace container_detail {
 
@@ -2683,7 +2747,7 @@ string_fill(std::basic_ostream<CharT, Traits>& os,
 }
 
 }  //namespace container_detail {
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 template <class CharT, class Traits, class Allocator>
 std::basic_ostream<CharT, Traits>&
@@ -2814,7 +2878,7 @@ inline std::size_t hash_value(basic_string<Ch, std::char_traits<Ch>, Allocator> 
 
 }}
 
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 namespace boost {
 
@@ -2827,7 +2891,7 @@ struct has_trivial_destructor_after_move<boost::container::basic_string<C, T, Al
 
 }
 
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 #include <boost/container/detail/config_end.hpp>
 

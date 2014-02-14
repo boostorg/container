@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2008-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2008-2013. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -47,18 +47,18 @@
 #include <memory>
 #include <new> //placement new
 
-///@cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 #include <boost/container/vector.hpp>
 
 //#define STABLE_VECTOR_ENABLE_INVARIANT_CHECKING
 
-///@endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 namespace boost {
 namespace container {
 
-///@cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 namespace stable_vector_detail{
 
@@ -393,7 +393,7 @@ struct index_traits
 
 #endif   //#if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! Originally developed by Joaquin M. Lopez Munoz, stable_vector is a std::vector
 //! drop-in replacement implemented as a node container, offering iterator and reference
@@ -426,6 +426,9 @@ struct index_traits
 //!
 //! Exception safety: As stable_vector does not internally copy elements around, some
 //! operations provide stronger exception safety guarantees than in std::vector.
+//!
+//! \tparam T The type of object that is stored in the stable_vector
+//! \tparam Allocator The allocator used for all internal memory management
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class T, class Allocator = std::allocator<T> >
 #else
@@ -433,7 +436,7 @@ template <class T, class Allocator>
 #endif
 class stable_vector
 {
-   ///@cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    typedef allocator_traits<Allocator>                allocator_traits_type;
    typedef boost::intrusive::
       pointer_traits
@@ -504,7 +507,7 @@ class stable_vector
    typedef stable_vector_detail::iterator
       < typename allocator_traits<Allocator>::pointer
       , false>                                           const_iterator_impl;
-   ///@endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    public:
 
    //////////////////////////////////////////////
@@ -526,7 +529,7 @@ class stable_vector
    typedef BOOST_CONTAINER_IMPDEF(std::reverse_iterator<iterator>)                     reverse_iterator;
    typedef BOOST_CONTAINER_IMPDEF(std::reverse_iterator<const_iterator>)               const_reverse_iterator;
 
-   ///@cond
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(stable_vector)
    static const size_type ExtraPointers = index_traits_type::ExtraPointers;
@@ -536,7 +539,7 @@ class stable_vector
 
    class push_back_rollback;
    friend class push_back_rollback;
-   ///@endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
    //////////////////////////////////////////////
@@ -1510,8 +1513,49 @@ class stable_vector
    void clear() BOOST_CONTAINER_NOEXCEPT
    {   this->erase(this->cbegin(),this->cend()); }
 
-   /// @cond
+   //! <b>Effects</b>: Returns true if x and y are equal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator==(const stable_vector& x, const stable_vector& y)
+   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
 
+   //! <b>Effects</b>: Returns true if x and y are unequal
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator!=(const stable_vector& x, const stable_vector& y)
+   {  return !(x == y); }
+
+   //! <b>Effects</b>: Returns true if x is less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator<(const stable_vector& x, const stable_vector& y)
+   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+
+   //! <b>Effects</b>: Returns true if x is greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator>(const stable_vector& x, const stable_vector& y)
+   {  return y < x;  }
+
+   //! <b>Effects</b>: Returns true if x is equal or less than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator<=(const stable_vector& x, const stable_vector& y)
+   {  return !(y < x);  }
+
+   //! <b>Effects</b>: Returns true if x is equal or greater than y
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in the container.
+   friend bool operator>=(const stable_vector& x, const stable_vector& y)
+   {  return !(x < y);  }
+
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Complexity</b>: Constant.
+   friend void swap(stable_vector& x, stable_vector& y)
+   {  x.swap(y);  }
+
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
 
    class insert_rollback
@@ -1836,58 +1880,14 @@ class stable_vector
    const node_allocator_type &priv_node_alloc() const  { return internal_data;  }
 
    index_type                           index;
-   /// @endcond
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
-template <typename T,typename Allocator>
-bool operator==(const stable_vector<T,Allocator>& x,const stable_vector<T,Allocator>& y)
-{
-   return x.size()==y.size()&&std::equal(x.begin(),x.end(),y.begin());
-}
-
-template <typename T,typename Allocator>
-bool operator< (const stable_vector<T,Allocator>& x,const stable_vector<T,Allocator>& y)
-{
-   return std::lexicographical_compare(x.begin(),x.end(),y.begin(),y.end());
-}
-
-template <typename T,typename Allocator>
-bool operator!=(const stable_vector<T,Allocator>& x,const stable_vector<T,Allocator>& y)
-{
-   return !(x==y);
-}
-
-template <typename T,typename Allocator>
-bool operator> (const stable_vector<T,Allocator>& x,const stable_vector<T,Allocator>& y)
-{
-   return y<x;
-}
-
-template <typename T,typename Allocator>
-bool operator>=(const stable_vector<T,Allocator>& x,const stable_vector<T,Allocator>& y)
-{
-   return !(x<y);
-}
-
-template <typename T,typename Allocator>
-bool operator<=(const stable_vector<T,Allocator>& x,const stable_vector<T,Allocator>& y)
-{
-   return !(x>y);
-}
-
-// specialized algorithms:
-
-template <typename T, typename Allocator>
-void swap(stable_vector<T,Allocator>& x,stable_vector<T,Allocator>& y)
-{
-   x.swap(y);
-}
-
-/// @cond
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 #undef STABLE_VECTOR_CHECK_INVARIANT
 
-/// @endcond
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 /*
 

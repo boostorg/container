@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.10"
-	Name="flat_tree_test"
-	ProjectGUID="{58CCE183-6092-48FE-A4F7-BA0D3A792637}"
+	Name="bench_alloc_shrink_to_fit"
+	ProjectGUID="{C7C283A2-7BF8-8612-42FE-B9D26A0793A1}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -13,16 +13,14 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="../../Bin/Win32/Debug"
-			IntermediateDirectory="Debug/flat_tree_test"
+			IntermediateDirectory="Debug/bench_alloc_shrink_to_fit"
 			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../../../.."
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;BOOST_DATE_TIME_NO_LIB"
-				GeneratePreprocessedFile="0"
-				KeepComments="FALSE"
+				PreprocessorDefinitions="BOOST_CONTAINER_NO_LIB"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -36,12 +34,12 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib"
-				OutputFile="$(OutDir)/flat_tree_test_d.exe"
+				AdditionalDependencies="alloc_lib.lib"
+				OutputFile="$(OutDir)/bench_alloc_shrink_to_fit_d.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../../../../stage/lib"
+				AdditionalLibraryDirectories="../../bin/debug;../../../../stage/lib"
 				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile="$(OutDir)/flat_tree_test.pdb"
+				ProgramDatabaseFile="$(OutDir)/bench_alloc_shrink_to_fit.pdb"
 				SubSystem="1"
 				TargetMachine="1"
 				FixedBaseAddress="1"/>
@@ -69,13 +67,13 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="../../Bin/Win32/Release"
-			IntermediateDirectory="Release/flat_tree_test"
+			IntermediateDirectory="Release/bench_alloc_shrink_to_fit"
 			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="../../../.."
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;BOOST_DATE_TIME_NO_LIB"
+				PreprocessorDefinitions="WIN32;NDEBUG;BOOST_CONTAINER_NO_LIB"
 				RuntimeLibrary="2"
 				TreatWChar_tAsBuiltInType="TRUE"
 				ForceConformanceInForLoopScope="FALSE"
@@ -87,10 +85,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib"
-				OutputFile="$(OutDir)/flat_tree_test.exe"
+				AdditionalDependencies="winmm.lib alloc_lib.lib"
+				OutputFile="$(OutDir)/bench_alloc_shrink_to_fit.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../../../../stage/lib"
+				AdditionalLibraryDirectories="../../bin/release;../../../../stage/lib"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -124,15 +122,10 @@
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
+			UniqueIdentifier="{D1217F85-BC56-6640-05A6-247AF7A2A58F}">
 			<File
-				RelativePath="..\..\test\flat_tree_test.cpp">
+				RelativePath="..\..\bench\bench_alloc_shrink_to_fit.cpp">
 			</File>
-		</Filter>
-		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 		</Filter>
 	</Files>
 	<Globals>

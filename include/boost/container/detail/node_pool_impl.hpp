@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -15,9 +15,10 @@
 #  pragma once
 #endif
 
-#include "config_begin.hpp"
-#include <boost/container/container_fwd.hpp>
+#include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
+
+#include <boost/container/container_fwd.hpp>
 #include <boost/container/detail/utilities.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/intrusive/set.hpp>
@@ -29,8 +30,6 @@
 #include <boost/detail/no_exceptions_support.hpp>
 #include <boost/assert.hpp>
 #include <cstddef>
-#include <functional>   //std::unary_function
-
 
 namespace boost {
 namespace container {
@@ -251,8 +250,10 @@ class private_node_pool_impl
    };
 
    struct is_between
-      :  std::unary_function<typename free_nodes_t::value_type, bool>
    {
+	   typedef typename free_nodes_t::value_type argument_type;
+	   typedef bool                              result_type;
+
       is_between(const void *addr, std::size_t size)
          :  beg_(static_cast<const char *>(addr)), end_(beg_+size)
       {}

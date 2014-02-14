@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2012.
+// (C) Copyright Ion Gaztanaga 2005-2013.
 //
 // Distributed under the Boost Software License, Version 1.0.
 // (See accompanying file LICENSE_1_0.txt or copy at
@@ -16,6 +16,9 @@
 #if defined(_MSC_VER)
 #  pragma once
 #endif
+
+#include <boost/container/detail/config_begin.hpp>
+#include <boost/container/detail/workaround.hpp>
 
 #include <cstddef>
 
@@ -110,8 +113,10 @@ struct if_
 
 template <class Pair>
 struct select1st
-//   : public std::unary_function<Pair, typename Pair::first_type>
 {
+	typedef Pair                        argument_type;
+	typedef typename Pair::first_type   result_type;
+
    template<class OtherPair>
    const typename Pair::first_type& operator()(const OtherPair& x) const
    {  return x.first;   }
@@ -123,8 +128,10 @@ struct select1st
 // identity is an extension: it is not part of the standard.
 template <class T>
 struct identity
-//   : public std::unary_function<T,T>
 {
+	typedef T   argument_type;
+	typedef T   result_type;
+
    typedef T type;
    const T& operator()(const T& x) const
    { return x; }
@@ -155,6 +162,8 @@ template <> struct unvoid<const void> { struct type { }; };
 }  //namespace container_detail {
 }  //namespace container {
 }  //namespace boost {
+
+#include <boost/container/detail/config_end.hpp>
 
 #endif   //#ifndef BOOST_CONTAINER_CONTAINER_DETAIL_MPL_HPP
 
