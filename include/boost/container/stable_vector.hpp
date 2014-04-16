@@ -573,7 +573,7 @@ class stable_vector
    //! <b>Effects</b>: Constructs a stable_vector that will use a copy of allocator a
    //!   and inserts n value initialized values.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or copy constructor
+   //! <b>Throws</b>: If allocator_type's default constructor
    //!   throws or T's default or copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
@@ -589,7 +589,7 @@ class stable_vector
    //! <b>Effects</b>: Constructs a stable_vector that will use a copy of allocator a
    //!   and inserts n default initialized values.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or copy constructor
+   //! <b>Throws</b>: If allocator_type's default constructor
    //!   throws or T's default or copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
@@ -607,7 +607,7 @@ class stable_vector
    //! <b>Effects</b>: Constructs a stable_vector that will use a copy of allocator a
    //!   and inserts n copies of value.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or copy constructor
+   //! <b>Throws</b>: If allocator_type's default constructor
    //!   throws or T's default or copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
@@ -623,8 +623,8 @@ class stable_vector
    //! <b>Effects</b>: Constructs a stable_vector that will use a copy of allocator a
    //!   and inserts a copy of the range [first, last) in the stable_vector.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or copy constructor
-   //!   throws or T's constructor taking an dereferenced InIt throws.
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's constructor taking a dereferenced InIt throws.
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
    template <class InputIterator>
@@ -983,7 +983,7 @@ class stable_vector
    //! <b>Effects</b>: Inserts or erases elements at the end such that
    //!   the size becomes n. New elements are value initialized.
    //!
-   //! <b>Throws</b>: If memory allocation throws, or T's default constructor throws.
+   //! <b>Throws</b>: If memory allocation throws, or T's value initialization throws.
    //!
    //! <b>Complexity</b>: Linear to the difference between size() and new_size.
    void resize(size_type n)
@@ -999,7 +999,7 @@ class stable_vector
    //! <b>Effects</b>: Inserts or erases elements at the end such that
    //!   the size becomes n. New elements are default initialized.
    //!
-   //! <b>Throws</b>: If memory allocation throws, or T's default constructor throws.
+   //! <b>Throws</b>: If memory allocation throws, or T's default initialization throws.
    //!
    //! <b>Complexity</b>: Linear to the difference between size() and new_size.
    //!

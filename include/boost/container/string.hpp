@@ -592,7 +592,7 @@ class basic_string
    //!
    //! <b>Postcondition</b>: x == *this.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor throws.
+   //! <b>Throws</b>: If allocator_type's default constructor or allocation throws.
    basic_string(const basic_string& s)
       :  base_t(allocator_traits_type::select_on_container_copy_construction(s.alloc()))
    {
@@ -735,9 +735,13 @@ class basic_string
 
    //! <b>Effects</b>: Move constructor. Moves mx's resources to *this.
    //!
-   //! <b>Throws</b>: If allocator_type's copy constructor throws.
+   //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
+   //!   is true, when allocator_type's move assignment throws.
+   //!   If allocator_traits_type::propagate_on_container_move_assignment
+   //!   is false, when allocator_type's allocation throws.
    //!
-   //! <b>Complexity</b>: Constant.
+   //! <b>Complexity</b>: Constant if allocator_traits_type::propagate_on_container_move_assignment.
+   //!   is true, linear otherwise
    basic_string& operator=(BOOST_RV_REF(basic_string) x) BOOST_CONTAINER_NOEXCEPT
    {
       if (&x != this){

@@ -621,7 +621,7 @@ class vector
    //!   and inserts n value initialized values.
    //!
    //! <b>Throws</b>: If allocator_type's default constructor or allocation
-   //!   throws or T's default constructor throws.
+   //!   throws or T's value initialization throws.
    //!
    //! <b>Complexity</b>: Linear to n.
    explicit vector(size_type n)
@@ -635,7 +635,7 @@ class vector
    //!   and inserts n default initialized values.
    //!
    //! <b>Throws</b>: If allocator_type's default constructor or allocation
-   //!   throws or T's default constructor throws.
+   //!   throws or T's default initialization throws.
    //!
    //! <b>Complexity</b>: Linear to n.
    //!
@@ -679,7 +679,7 @@ class vector
    //!   and inserts a copy of the range [first, last) in the vector.
    //!
    //! <b>Throws</b>: If allocator_type's default constructor or allocation
-   //!   throws or T's constructor taking an dereferenced InIt throws.
+   //!   throws or T's constructor taking a dereferenced InIt throws.
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
    template <class InIt>
@@ -691,7 +691,7 @@ class vector
    //!   and inserts a copy of the range [first, last) in the vector.
    //!
    //! <b>Throws</b>: If allocator_type's default constructor or allocation
-   //!   throws or T's constructor taking an dereferenced InIt throws.
+   //!   throws or T's constructor taking a dereferenced InIt throws.
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
    template <class InIt>
@@ -1117,7 +1117,7 @@ class vector
    //! <b>Effects</b>: Inserts or erases elements at the end such that
    //!   the size becomes n. New elements are value initialized.
    //!
-   //! <b>Throws</b>: If memory allocation throws, or T's constructor throws.
+   //! <b>Throws</b>: If memory allocation throws, or T's copy/move or value initialization throws.
    //!
    //! <b>Complexity</b>: Linear to the difference between size() and new_size.
    void resize(size_type new_size)
@@ -1126,7 +1126,7 @@ class vector
    //! <b>Effects</b>: Inserts or erases elements at the end such that
    //!   the size becomes n. New elements are value initialized.
    //!
-   //! <b>Throws</b>: If memory allocation throws, or T's constructor throws.
+   //! <b>Throws</b>: If memory allocation throws, or T's copy/move or default initialization throws.
    //!
    //! <b>Complexity</b>: Linear to the difference between size() and new_size.
    //!
@@ -1137,7 +1137,7 @@ class vector
    //! <b>Effects</b>: Inserts or erases elements at the end such that
    //!   the size becomes n. New elements are copy constructed from x.
    //!
-   //! <b>Throws</b>: If memory allocation throws, or T's copy constructor throws.
+   //! <b>Throws</b>: If memory allocation throws, or T's copy/move constructor throws.
    //!
    //! <b>Complexity</b>: Linear to the difference between size() and new_size.
    void resize(size_type new_size, const T& x)
@@ -1303,7 +1303,7 @@ class vector
    //!   std::forward<Args>(args)... in the end of the vector.
    //!
    //! <b>Throws</b>: If memory allocation throws or the in-place constructor throws or
-   //!   T's move constructor throws.
+   //!   T's copy/move constructor throws.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    template<class ...Args>
@@ -1328,7 +1328,7 @@ class vector
    //!   std::forward<Args>(args)... before position
    //!
    //! <b>Throws</b>: If memory allocation throws or the in-place constructor throws or
-   //!   T's move constructor/assignment throws.
+   //!   T's copy/move constructor/assignment throws.
    //!
    //! <b>Complexity</b>: If position is end(), amortized constant time
    //!   Linear time otherwise.
@@ -1389,10 +1389,10 @@ class vector
    void push_back(const T &x);
 
    //! <b>Effects</b>: Constructs a new element in the end of the vector
-   //!   and moves the resources of mx to this new element.
+   //!   and moves the resources of x to this new element.
    //!
    //! <b>Throws</b>: If memory allocation throws or
-   //!   T's move constructor throws.
+   //!   T's copy/move constructor throws.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    void push_back(T &&x);
@@ -1430,7 +1430,7 @@ class vector
    //!
    //! <b>Returns</b>: an iterator to the first inserted element or p if n is 0.
    //!
-   //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
+   //! <b>Throws</b>: If memory allocation throws or T's copy/move constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
    iterator insert(const_iterator p, size_type n, const T& x)
@@ -1550,7 +1550,7 @@ class vector
 
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
-   //! <b>Throws</b>: If T's move constructor throws.
+   //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear
    //!

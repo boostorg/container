@@ -69,17 +69,31 @@ struct disable_if : public enable_if_c<!Cond::value, T> {};
 template <bool B, class T = void>
 struct disable_if_c : public enable_if_c<!B, T> {};
 
+#if defined(_MSC_VER) && (_MSC_VER >= 1400)
+
+template <class T, class U>
+struct is_convertible
+{
+   static const bool value = __is_convertible_to(T, U);
+};
+
+#else
+
 template <class T, class U>
 class is_convertible
 {
    typedef char true_t;
    class false_t { char dummy[2]; };
-   static true_t dispatch(U);
+   //use any_conversion as first parameter since in MSVC
+   //overaligned types can't go through ellipsis
    static false_t dispatch(...);
-   static T trigger();
+   static true_t  dispatch(U);
+   static T &trigger();
    public:
-   enum { value = sizeof(dispatch(trigger())) == sizeof(true_t) };
+   static const bool value = sizeof(dispatch(trigger())) == sizeof(true_t);
 };
+
+#endif
 
 template<
       bool C

@@ -541,8 +541,8 @@ class deque : protected deque_base<Allocator>
    //! <b>Effects</b>: Constructs a deque that will use a copy of allocator a
    //!   and inserts n value initialized values.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or copy constructor
-   //!   throws or T's default or copy constructor throws.
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's value initialization or copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
    explicit deque(size_type n)
@@ -556,8 +556,8 @@ class deque : protected deque_base<Allocator>
    //! <b>Effects</b>: Constructs a deque that will use a copy of allocator a
    //!   and inserts n default initialized values.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or copy constructor
-   //!   throws or T's default or copy constructor throws.
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's default initialization or copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
    //!
@@ -573,8 +573,8 @@ class deque : protected deque_base<Allocator>
    //! <b>Effects</b>: Constructs a deque that will use a copy of allocator a
    //!   and inserts n copies of value.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or copy constructor
-   //!   throws or T's default or copy constructor throws.
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
    deque(size_type n, const value_type& value,
@@ -585,8 +585,8 @@ class deque : protected deque_base<Allocator>
    //! <b>Effects</b>: Constructs a deque that will use a copy of allocator a
    //!   and inserts a copy of the range [first, last) in the deque.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or copy constructor
-   //!   throws or T's constructor taking an dereferenced InIt throws.
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's constructor taking a dereferenced InIt throws.
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
    template <class InIt>

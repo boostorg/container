@@ -335,32 +335,7 @@ class adaptive_pool
    //!instance can be deallocated by another instance
    friend bool operator!=(const adaptive_pool &, const adaptive_pool &) BOOST_CONTAINER_NOEXCEPT
    {  return false;   }
-/*
-   //!Returns address of mutable object.
-   //!Never throws
-   pointer address(reference value) const
-   {  return pointer(boost::addressof(value));  }
 
-   //!Returns address of non mutable object.
-   //!Never throws
-   const_pointer address(const_reference value) const
-   {  return const_pointer(boost::addressof(value));  }
-
-   //!Default construct an object. 
-   //!Throws if T's default constructor throws
-   void construct(const pointer &ptr)
-   {  new(ptr) value_type;  }
-
-   //!Construct a copy of the passed object. 
-   //!Throws if T's copy constructor throws
-   void construct(pointer ptr, const_reference t)
-   {  new(ptr) value_type(t);  }
-
-   //!Destroys object. Throws if object's
-   //!destructor throws
-   void destroy(const pointer &ptr)
-   {  (void)ptr;  BOOST_ASSERT(ptr); (*ptr).~value_type();  }
-*/
    private:
    std::pair<pointer, bool> priv_allocation_command 
       (allocation_type command,   std::size_t limit_size
