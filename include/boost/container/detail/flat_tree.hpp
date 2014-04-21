@@ -549,7 +549,9 @@ class flat_tree
             pos = const_cast<const flat_tree&>(*this).priv_lower_bound(pos, ce, KeyOfValue()(val));
             //Check if already present
 			   if (pos != ce && !val_cmp(val, *pos)){
-               skips[unique_burst-1] += static_cast<size_type>(unique_burst > 0);
+               if(unique_burst > 0){
+                  ++skips[unique_burst-1];
+               }
                continue;
             }
 
