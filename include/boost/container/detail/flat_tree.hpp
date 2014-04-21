@@ -481,14 +481,17 @@ class flat_tree
          const const_iterator ce(this->cend());
          len -= burst;
          for(size_type i = 0; i != burst; ++i){
-            //Get the insertion position for each key
-            pos = const_cast<const flat_tree&>(*this).priv_upper_bound(pos, ce, KeyOfValue()(*first));
+            //Get the insertion position for each key, use std::iterator_traits<BidirIt>::value_type
+            //because it can be different from container::value_type
+            //(e.g. conversion between std::pair<A, B> -> boost::container::pair<A, B>
+            const typename std::iterator_traits<BidirIt>::value_type & val = *first;
+            pos = const_cast<const flat_tree&>(*this).priv_upper_bound(pos, ce, KeyOfValue()(val));
             positions[i] = static_cast<size_type>(pos - b);
             ++first;
          }
          //Insert all in a single step in the precalculated positions
          this->m_data.m_vect.insert_ordered_at(burst, positions + burst, first);
-         //Next search position updated
+         //Next search position updated, iterator still valid because we've preserved the vector
          pos += burst;
       }
    }
@@ -537,15 +540,16 @@ class flat_tree
          size_type unique_burst = 0u;
          const const_iterator ce(this->cend());
          while(unique_burst < burst && len > 0){
-            //Get the insertion position for each key
-            const value_type & val = *first++;
+            //Get the insertion position for each key, use std::iterator_traits<BidirIt>::value_type
+            //because it can be different from container::value_type
+            //(e.g. conversion between std::pair<A, B> -> boost::container::pair<A, B>
+            const typename std::iterator_traits<BidirIt>::value_type & val = *first;
+            ++first;
             --len;
             pos = const_cast<const flat_tree&>(*this).priv_lower_bound(pos, ce, KeyOfValue()(val));
             //Check if already present
-            if(pos != ce && !val_cmp(val, *pos)){
-               if(unique_burst > 0){
-                  ++skips[unique_burst-1];
-               }
+			   if (pos != ce && !val_cmp(val, *pos)){
+               skips[unique_burst-1] += static_cast<size_type>(unique_burst > 0);
                continue;
             }
 
@@ -556,7 +560,7 @@ class flat_tree
          if(unique_burst){
             //Insert all in a single step in the precalculated positions
             this->m_data.m_vect.insert_ordered_at(unique_burst, positions + unique_burst, skips + unique_burst, first);
-            //Next search position updated
+            //Next search position updated, iterator still valid because we've preserved the vector
             pos += unique_burst;
          }
       }
