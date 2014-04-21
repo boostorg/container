@@ -135,6 +135,7 @@ class flat_map
    typedef Key                                                                      key_type;
    typedef T                                                                        mapped_type;
    typedef std::pair<Key, T>                                                        value_type;
+   typedef ::boost::container::allocator_traits<Allocator>                          allocator_traits_type;
    typedef typename boost::container::allocator_traits<Allocator>::pointer          pointer;
    typedef typename boost::container::allocator_traits<Allocator>::const_pointer    const_pointer;
    typedef typename boost::container::allocator_traits<Allocator>::reference        reference;
@@ -275,11 +276,15 @@ class flat_map
    //! <b>Effects</b>: Move constructs a flat_map.
    //!   Constructs *this using x's resources.
    //!
-   //! <b>Complexity</b>: Construct.
+   //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
+   //!   is false and (allocation throws or value_type's move constructor throws)
    //!
-   //! <b>Postcondition</b>: x is emptied.
-   flat_map& operator=(BOOST_RV_REF(flat_map) mx)
-   {  m_flat_tree = boost::move(mx.m_flat_tree);   return *this;  }
+   //! <b>Complexity</b>: Constant if allocator_traits_type::
+   //!   propagate_on_container_move_assignment is true or
+   //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
+   flat_map& operator=(BOOST_RV_REF(flat_map) x)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment)
+   {  m_flat_tree = boost::move(x.m_flat_tree);   return *this;  }
 
    //! <b>Effects</b>: Returns a copy of the Allocator that
    //!   was passed to the object's constructor.
@@ -1029,6 +1034,7 @@ class flat_multimap
    typedef Key                                                                      key_type;
    typedef T                                                                        mapped_type;
    typedef std::pair<Key, T>                                                        value_type;
+   typedef ::boost::container::allocator_traits<Allocator>                          allocator_traits_type;
    typedef typename boost::container::allocator_traits<Allocator>::pointer          pointer;
    typedef typename boost::container::allocator_traits<Allocator>::const_pointer    const_pointer;
    typedef typename boost::container::allocator_traits<Allocator>::reference        reference;
@@ -1169,8 +1175,9 @@ class flat_multimap
    //! <b>Effects</b>: this->swap(x.get()).
    //!
    //! <b>Complexity</b>: Constant.
-   flat_multimap& operator=(BOOST_RV_REF(flat_multimap) mx)
-      {  m_flat_tree = boost::move(mx.m_flat_tree);   return *this;  }
+   flat_multimap& operator=(BOOST_RV_REF(flat_multimap) x)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment)
+      {  m_flat_tree = boost::move(x.m_flat_tree);   return *this;  }
 
    //! <b>Effects</b>: Returns a copy of the Allocator that
    //!   was passed to the object's constructor.

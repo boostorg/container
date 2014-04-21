@@ -65,7 +65,7 @@ template <class Pointer, bool IsConst>
 class vec_iterator
 {
    public:
-	typedef std::random_access_iterator_tag                                          iterator_category;
+   typedef std::random_access_iterator_tag                                          iterator_category;
    typedef typename boost::intrusive::pointer_traits<Pointer>::element_type         value_type;
    typedef typename boost::intrusive::pointer_traits<Pointer>::difference_type      difference_type;
    typedef typename if_c
@@ -256,10 +256,7 @@ struct vector_value_traits
 
 //!This struct deallocates and allocated memory
 template < class Allocator
-         , class AllocatorVersion = container_detail::integral_constant
-            < unsigned
-            , boost::container::container_detail::version<Allocator>::value
-            >
+         , class AllocatorVersion = typename container_detail::version<Allocator>::type
          >
 struct vector_alloc_holder
    : public Allocator
@@ -370,8 +367,8 @@ struct vector_alloc_holder
 
    void move_from_empty(vector_alloc_holder &x) BOOST_CONTAINER_NOEXCEPT
    {
+      //this->m_size was previously initialized
       this->m_start     = x.m_start;
-      this->m_size      = x.m_size;
       this->m_capacity  = x.m_capacity;
       x.m_start = pointer();
       x.m_size = x.m_capacity = 0;
@@ -538,9 +535,8 @@ template <class T, class Allocator>
 class vector
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   typedef container_detail::integral_constant
-      <unsigned, boost::container::container_detail::version
-         <Allocator>::value >                               alloc_version;
+
+   typedef typename container_detail::version<Allocator>::type alloc_version;
    boost::container::container_detail::vector_alloc_holder
       <Allocator, alloc_version>                            m_holder;
    typedef allocator_traits<Allocator>                      allocator_traits_type;
@@ -717,27 +713,30 @@ class vector
          , x.size(), container_detail::to_raw_pointer(this->m_holder.start()));
    }
 
-   //! <b>Effects</b>: Move constructor. Moves mx's resources to *this.
+   //! <b>Effects</b>: Move constructor. Moves x's resources to *this.
    //!
    //! <b>Throws</b>: Nothing
    //!
    //! <b>Complexity</b>: Constant.
-   vector(BOOST_RV_REF(vector) mx) BOOST_CONTAINER_NOEXCEPT
-      :  m_holder(boost::move(mx.m_holder))
+   vector(BOOST_RV_REF(vector) x) BOOST_CONTAINER_NOEXCEPT
+      :  m_holder(boost::move(x.m_holder))
    {}
 
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-   //! <b>Effects</b>: Move constructor. Moves mx's resources to *this.
+   //! <b>Effects</b>: Move constructor. Moves x's resources to *this.
    //!
    //! <b>Throws</b>: If T's move constructor or allocation throws
    //!
    //! <b>Complexity</b>: Linear.
    //!
-   //! <b>Note</b>: Non-standard extension
+   //! <b>Note</b>: Non-standard extension to support static_vector
    template<class OtherAllocator>
-   vector(BOOST_RV_REF_BEG vector<T, OtherAllocator> BOOST_RV_REF_END mx)
-      :  m_holder(boost::move(mx.m_holder))
+   vector(BOOST_RV_REF_BEG vector<T, OtherAllocator> BOOST_RV_REF_END x
+         , typename container_detail::enable_if_c
+            < container_detail::is_version<OtherAllocator, 0>::value>::type * = 0
+         )
+      :  m_holder(boost::move(x.m_holder))
    {}
 
    #endif   //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -759,25 +758,24 @@ class vector
    }
 
    //! <b>Effects</b>: Move constructor using the specified allocator.
-   //!                 Moves mx's resources to *this if a == allocator_type().
+   //!                 Moves x's resources to *this if a == allocator_type().
    //!                 Otherwise copies values from x to *this.
    //!
    //! <b>Throws</b>: If allocation or T's copy constructor throws.
    //!
-   //! <b>Complexity</b>: Constant if a == mx.get_allocator(), linear otherwise.
-   vector(BOOST_RV_REF(vector) mx, const allocator_type &a)
-      :  m_holder(a)
+   //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
+   vector(BOOST_RV_REF(vector) x, const allocator_type &a)
+      :  m_holder(container_detail::uninitialized_size, a, x.size())
    {
-      if(mx.m_holder.alloc() == a){
-         this->m_holder.move_from_empty(mx.m_holder);
+      if(x.m_holder.alloc() == a){
+         this->m_holder.move_from_empty(x.m_holder);
       }
       else{
-         const size_type n = mx.size();
+         const size_type n = x.size();
          this->m_holder.first_allocation_same_allocator_type(n);
          ::boost::container::uninitialized_move_alloc_n_source
-            ( this->m_holder.alloc(), container_detail::to_raw_pointer(mx.m_holder.start())
+            ( this->m_holder.alloc(), container_detail::to_raw_pointer(x.m_holder.start())
             , n, container_detail::to_raw_pointer(this->m_holder.start()));
-         this->m_holder.m_size = n;
       }
    }
 
@@ -805,30 +803,32 @@ class vector
    vector& operator=(BOOST_COPY_ASSIGN_REF(vector) x)
    {
       if (&x != this){
-         this->priv_copy_assign(x, alloc_version());
+         this->priv_copy_assign(x);
       }
       return *this;
    }
 
-   //! <b>Effects</b>: Move assignment. All mx's values are transferred to *this.
+   //! <b>Effects</b>: Move assignment. All x's values are transferred to *this.
    //!
    //! <b>Postcondition</b>: x.empty(). *this contains a the elements x had
    //!   before the function.
    //!
-   //! <b>Throws</b>: Nothing
+   //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
+   //!   is false and (allocation throws or value_type's move constructor throws)
    //!
-   //! <b>Complexity</b>: Linear.
+   //! <b>Complexity</b>: Constant if allocator_traits_type::
+   //!   propagate_on_container_move_assignment is true or
+   //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    vector& operator=(BOOST_RV_REF(vector) x)
-      //iG BOOST_CONTAINER_NOEXCEPT_IF(!allocator_type::propagate_on_container_move_assignment::value || is_nothrow_move_assignable<allocator_type>::value);)
-      BOOST_CONTAINER_NOEXCEPT
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment)
    {
-      this->priv_move_assign(boost::move(x), alloc_version());
+      this->priv_move_assign(boost::move(x));
       return *this;
    }
 
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-   //! <b>Effects</b>: Move assignment. All mx's values are transferred to *this.
+   //! <b>Effects</b>: Move assignment. All x's values are transferred to *this.
    //!
    //! <b>Postcondition</b>: x.empty(). *this contains a the elements x had
    //!   before the function.
@@ -836,10 +836,37 @@ class vector
    //! <b>Throws</b>: If move constructor/assignment of T throws or allocation throws
    //!
    //! <b>Complexity</b>: Linear.
-   template<class OtherAllocator, class OtherAllocatorVersion>
-   vector& operator=(BOOST_RV_REF_BEG vector<OtherAllocator, OtherAllocatorVersion> BOOST_RV_REF_END x)
+   //!
+   //! <b>Note</b>: Non-standard extension to support static_vector
+   template<class OtherAllocator>
+   typename container_detail::enable_if_c
+                           < container_detail::is_version<OtherAllocator, 0>::value &&
+                            !container_detail::is_same<OtherAllocator, allocator_type>::value
+                           , vector& >::type
+      operator=(BOOST_RV_REF_BEG vector<value_type, OtherAllocator> BOOST_RV_REF_END x)
    {
-      this->priv_move_assign(boost::move(x), alloc_version());
+      this->priv_move_assign(boost::move(x));
+      return *this;
+   }
+
+   //! <b>Effects</b>: Copy assignment. All x's values are copied to *this.
+   //!
+   //! <b>Postcondition</b>: x.empty(). *this contains a the elements x had
+   //!   before the function.
+   //!
+   //! <b>Throws</b>: If move constructor/assignment of T throws or allocation throws
+   //!
+   //! <b>Complexity</b>: Linear.
+   //!
+   //! <b>Note</b>: Non-standard extension to support static_vector
+   template<class OtherAllocator>
+   typename container_detail::enable_if_c
+                           < container_detail::is_version<OtherAllocator, 0>::value &&
+                            !container_detail::is_same<OtherAllocator, allocator_type>::value
+                           , vector& >::type
+      operator=(const vector<value_type, OtherAllocator> &x)
+   {
+      this->priv_copy_assign(x);
       return *this;
    }
 
@@ -898,7 +925,7 @@ class vector
       #endif
       )
    {
-      //For Fwd iterators the standard only requires EmplaceConstructible and assignble from *first
+      //For Fwd iterators the standard only requires EmplaceConstructible and assignable from *first
       //so we can't do any backwards allocation
       const size_type input_sz = static_cast<size_type>(std::distance(first, last));
       const size_type old_capacity = this->capacity();
@@ -1124,7 +1151,7 @@ class vector
    {  this->priv_resize(new_size, value_init);  }
 
    //! <b>Effects</b>: Inserts or erases elements at the end such that
-   //!   the size becomes n. New elements are value initialized.
+   //!   the size becomes n. New elements are default initialized.
    //!
    //! <b>Throws</b>: If memory allocation throws, or T's copy/move or default initialization throws.
    //!
@@ -1413,7 +1440,7 @@ class vector
 
    //! <b>Requires</b>: position must be a valid iterator of *this.
    //!
-   //! <b>Effects</b>: Insert a new element before position with mx's resources.
+   //! <b>Effects</b>: Insert a new element before position with x's resources.
    //!
    //! <b>Throws</b>: If memory allocation throws.
    //!
@@ -1537,7 +1564,7 @@ class vector
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   void swap(vector& x) BOOST_CONTAINER_NOEXCEPT_IF((!container_detail::is_same<alloc_version, allocator_v0>::value))
+   void swap(vector& x) BOOST_CONTAINER_NOEXCEPT_IF((!container_detail::is_version<Allocator, 0>::value))
    {
       //Just swap internals in case of !allocator_v0. Otherwise, deep swap
       this->m_holder.swap(x.m_holder);
@@ -1554,9 +1581,13 @@ class vector
    //!
    //! <b>Complexity</b>: Linear
    //!
-   //! <b>Note</b>: non-standard extension.
+   //! <b>Note</b>: Non-standard extension to support static_vector
    template<class OtherAllocator>
-   void swap(vector<T, OtherAllocator> & x)
+   void swap(vector<T, OtherAllocator> & x
+            , typename container_detail::enable_if_c
+                     < container_detail::is_version<OtherAllocator, 0>::value &&
+                      !container_detail::is_same<OtherAllocator, allocator_type>::value >::type * = 0
+            )
    {  this->m_holder.swap(x.m_holder); }
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -1631,36 +1662,15 @@ class vector
 
    private:
 
-   template<class OtherAllocator, class AllocVersion>
+   template<class OtherAllocator>
    void priv_move_assign(BOOST_RV_REF_BEG vector<T, OtherAllocator> BOOST_RV_REF_END x
-      , AllocVersion
       , typename container_detail::enable_if_c
-         < container_detail::is_same<AllocVersion, allocator_v0>::value &&
-           !container_detail::is_same<OtherAllocator, allocator_type>::value
-         >::type * = 0)
+         < container_detail::is_version<OtherAllocator, 0>::value >::type * = 0)
    {
-      if(this->capacity() < x.size()){
+      if(!container_detail::is_same<OtherAllocator, allocator_type>::value &&
+          this->capacity() < x.size()){
          throw_bad_alloc();
       }
-      this->priv_move_assign_impl(boost::move(x), AllocVersion());
-   }
-
-   template<class OtherAllocator, class AllocVersion>
-   void priv_move_assign(BOOST_RV_REF_BEG vector<T, OtherAllocator> BOOST_RV_REF_END x
-      , AllocVersion
-      , typename container_detail::enable_if_c
-         < !container_detail::is_same<AllocVersion, allocator_v0>::value ||
-           container_detail::is_same<OtherAllocator, allocator_type>::value
-         >::type * = 0)
-   {  this->priv_move_assign_impl(boost::move(x), AllocVersion());   }
-
-   template<class OtherAllocator, class AllocVersion>
-   void priv_move_assign_impl(BOOST_RV_REF_BEG vector<T, OtherAllocator> BOOST_RV_REF_END x
-      , AllocVersion
-      , typename container_detail::enable_if_c
-         < container_detail::is_same<AllocVersion, allocator_v0>::value
-         >::type * = 0)
-   {
       T* const this_start  = container_detail::to_raw_pointer(m_holder.start());
       T* const other_start = container_detail::to_raw_pointer(x.m_holder.start());
       const size_type this_sz  = m_holder.m_size;
@@ -1669,40 +1679,46 @@ class vector
       this->m_holder.m_size = other_sz;
    }
 
-   template<class OtherAllocator, class AllocVersion>
-   void priv_move_assign_impl(BOOST_RV_REF_BEG vector<T, OtherAllocator> BOOST_RV_REF_END x
-      , AllocVersion
+   template<class OtherAllocator>
+   void priv_move_assign(BOOST_RV_REF_BEG vector<T, OtherAllocator> BOOST_RV_REF_END x
       , typename container_detail::enable_if_c
-         < !container_detail::is_same<AllocVersion, allocator_v0>::value
-         >::type * = 0)
+         < !container_detail::is_version<OtherAllocator, 0>::value &&
+           container_detail::is_same<OtherAllocator, allocator_type>::value>::type * = 0)
    {
       //for move constructor, no aliasing (&x != this) is assummed.
+      BOOST_ASSERT(this != &x);
       allocator_type &this_alloc = this->m_holder.alloc();
       allocator_type &x_alloc    = x.m_holder.alloc();
-      //If allocators are equal we can just swap pointers
-      if(this_alloc == x_alloc){
+      const bool propagate_alloc = allocator_traits_type::
+            propagate_on_container_move_assignment::value;
+      container_detail::bool_<propagate_alloc> flag;
+      const bool allocators_equal = this_alloc == x_alloc; (void)allocators_equal;
+      //Resources can be transferred if both allocators are
+      //going to be equal after this function (either propagated or already equal)
+      if(propagate_alloc || allocators_equal){
          //Destroy objects but retain memory in case x reuses it in the future
          this->clear();
-         this->m_holder.swap(x.m_holder);
          //Move allocator if needed
-         container_detail::bool_<allocator_traits_type::
-            propagate_on_container_move_assignment::value> flag;
          container_detail::move_alloc(this_alloc, x_alloc, flag);
+         //Nothrow swap
+         this->m_holder.swap(x.m_holder);
       }
-      //If unequal allocators, then do a one by one move
+      //Else do a one by one move
       else{
-         //TO-DO: optimize this
-         this->assign( boost::make_move_iterator(container_detail::to_raw_pointer(x.m_holder.start()))
-                     , boost::make_move_iterator(container_detail::to_raw_pointer(x.m_holder.start() + x.m_holder.m_size)));
+         this->assign( boost::make_move_iterator(x.begin())
+                     , boost::make_move_iterator(x.end()));
       }
    }
 
-   template<class AllocVersion>
-   void priv_copy_assign(const vector &x, AllocVersion
+   template<class OtherAllocator>
+   void priv_copy_assign(const vector<T, OtherAllocator> &x
       , typename container_detail::enable_if_c
-         < container_detail::is_same<AllocVersion, allocator_v0>::value
-         >::type * = 0)
+         < container_detail::is_version<OtherAllocator, 0>::value >::type * = 0)
    {
+      if(!container_detail::is_same<OtherAllocator, allocator_type>::value &&
+         this->capacity() < x.size()){
+         throw_bad_alloc();
+      }
       T* const this_start  = container_detail::to_raw_pointer(m_holder.start());
       T* const other_start = container_detail::to_raw_pointer(x.m_holder.start());
       const size_type this_sz  = m_holder.m_size;
@@ -1711,11 +1727,11 @@ class vector
       this->m_holder.m_size = other_sz;
    }
 
-   template<class AllocVersion>
-   void priv_copy_assign(const vector &x, AllocVersion
+   template<class OtherAllocator>
+   void priv_copy_assign(const vector<T, OtherAllocator> &x
       , typename container_detail::enable_if_c
-         < !container_detail::is_same<AllocVersion, allocator_v0>::value
-         >::type * = 0)
+         < !container_detail::is_version<OtherAllocator, 0>::value &&
+           container_detail::is_same<OtherAllocator, allocator_type>::value >::type * = 0)
    {
       allocator_type &this_alloc     = this->m_holder.alloc();
       const allocator_type &x_alloc  = x.m_holder.alloc();

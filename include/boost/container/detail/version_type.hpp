@@ -81,7 +81,13 @@ struct version<T, true>
 template <class T>
 struct version
    : public container_detail::integral_constant<unsigned, impl::version<T>::value>
+{};
+
+template<class T, unsigned N>
+struct is_version
 {
+   static const bool value =
+      is_same< typename version<T>::type, integral_constant<unsigned, N> >::value;
 };
 
 }  //namespace container_detail {

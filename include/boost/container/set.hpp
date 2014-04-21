@@ -76,6 +76,7 @@ class set
    typedef Key                                                                         value_type;
    typedef Compare                                                                     key_compare;
    typedef Compare                                                                     value_compare;
+   typedef ::boost::container::allocator_traits<Allocator>                             allocator_traits_type;
    typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
    typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
    typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
@@ -184,8 +185,14 @@ class set
 
    //! <b>Effects</b>: this->swap(x.get()).
    //!
-   //! <b>Complexity</b>: Constant.
+   //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
+   //!   is false and (allocation throws or value_type's move constructor throws)
+   //!
+   //! <b>Complexity</b>: Constant if allocator_traits_type::
+   //!   propagate_on_container_move_assignment is true or
+   //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    set& operator=(BOOST_RV_REF(set) x)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment)
    {  return static_cast<set&>(this->base_t::operator=(boost::move(static_cast<base_t&>(x))));  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -678,6 +685,7 @@ class multiset
    typedef Key                                                                         value_type;
    typedef Compare                                                                     key_compare;
    typedef Compare                                                                     value_compare;
+   typedef ::boost::container::allocator_traits<Allocator>                             allocator_traits_type;
    typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
    typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
    typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
