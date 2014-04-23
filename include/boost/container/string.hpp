@@ -742,7 +742,7 @@ class basic_string
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    basic_string& operator=(BOOST_RV_REF(basic_string) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
    {
       //for move constructor, no aliasing (&x != this) is assummed.
       BOOST_ASSERT(this != &x);

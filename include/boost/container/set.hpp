@@ -192,7 +192,7 @@ class set
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    set& operator=(BOOST_RV_REF(set) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
    {  return static_cast<set&>(this->base_t::operator=(boost::move(static_cast<base_t&>(x))));  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)

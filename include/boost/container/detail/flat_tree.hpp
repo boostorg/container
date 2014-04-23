@@ -476,23 +476,35 @@ class flat_tree
       const const_iterator b(this->cbegin());
       const_iterator pos(b);
       //Loop in burst sizes
-      while(len){
-         const size_type burst = len < BurstSize ? len : BurstSize;
+      bool back_insert = false;
+      while(len && !back_insert){
+         size_type burst = len < BurstSize ? len : BurstSize;
          const const_iterator ce(this->cend());
-         len -= burst;
          for(size_type i = 0; i != burst; ++i){
             //Get the insertion position for each key, use std::iterator_traits<BidirIt>::value_type
             //because it can be different from container::value_type
             //(e.g. conversion between std::pair<A, B> -> boost::container::pair<A, B>
             const typename std::iterator_traits<BidirIt>::value_type & val = *first;
             pos = const_cast<const flat_tree&>(*this).priv_upper_bound(pos, ce, KeyOfValue()(val));
-            positions[i] = static_cast<size_type>(pos - b);
-            ++first;
+            if(pos == this->cend()){   //this element and the remaining should be back inserted
+               burst = i;
+               back_insert = true;
+               break;
+            }
+            else{
+               positions[i] = static_cast<size_type>(pos - b);
+               ++first;
+               --len;
+            }
          }
          //Insert all in a single step in the precalculated positions
          this->m_data.m_vect.insert_ordered_at(burst, positions + burst, first);
          //Next search position updated, iterator still valid because we've preserved the vector
          pos += burst;
+      }
+      if(first != last){
+         //The remaining range should be back inserted
+         this->m_data.m_vect.insert(this->m_data.m_vect.cend(), len, first, last);
       }
    }
 
@@ -535,7 +547,8 @@ class flat_tree
       const value_compare &val_cmp = this->m_data;
       skips[0u] = 0u;
       //Loop in burst sizes
-      while(len){
+      bool back_insert = false;
+      while(len && !back_insert){
          const size_type burst = len < BurstSize ? len : BurstSize;
          size_type unique_burst = 0u;
          const const_iterator ce(this->cend());
@@ -544,20 +557,25 @@ class flat_tree
             //because it can be different from container::value_type
             //(e.g. conversion between std::pair<A, B> -> boost::container::pair<A, B>
             const typename std::iterator_traits<BidirIt>::value_type & val = *first;
-            ++first;
-            --len;
             pos = const_cast<const flat_tree&>(*this).priv_lower_bound(pos, ce, KeyOfValue()(val));
             //Check if already present
-			   if (pos != ce && !val_cmp(val, *pos)){
-               if(unique_burst > 0){
-                  ++skips[unique_burst-1];
+			   if (pos != ce){
+               ++first;
+               --len;
+               if(!val_cmp(val, *pos)){
+                  if(unique_burst > 0){
+                     ++skips[unique_burst-1];
+                  }
+                  continue;
                }
-               continue;
+               //If not present, calculate position
+               positions[unique_burst] = static_cast<size_type>(pos - b);
+               skips[unique_burst++] = 0u;
             }
-
-            //If not present, calculate position
-            positions[unique_burst] = static_cast<size_type>(pos - b);
-            skips[unique_burst++] = 0u;
+            else{ //this element and the remaining should be back inserted
+               back_insert = true;
+               break;
+            }
          }
          if(unique_burst){
             //Insert all in a single step in the precalculated positions
@@ -565,6 +583,10 @@ class flat_tree
             //Next search position updated, iterator still valid because we've preserved the vector
             pos += unique_burst;
          }
+      }
+      if(first != last){
+         //The remaining range should be back inserted
+         this->m_data.m_vect.insert(this->m_data.m_vect.cend(), len, first, last);
       }
    }
 

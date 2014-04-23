@@ -820,7 +820,7 @@ class vector
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    vector& operator=(BOOST_RV_REF(vector) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
    {
       this->priv_move_assign(boost::move(x));
       return *this;
@@ -1509,6 +1509,32 @@ class vector
    }
    #endif
 
+   //! <b>Requires</b>: p must be a valid iterator of *this. num, must
+   //!   be equal to std::distance(first, last)
+   //!
+   //! <b>Effects</b>: Insert a copy of the [first, last) range before pos.
+   //!
+   //! <b>Returns</b>: an iterator to the first inserted element or pos if first == last.
+   //!
+   //! <b>Throws</b>: If memory allocation throws, T's constructor from a
+   //!   dereferenced InpIt throws or T's copy/move constructor/assignment throws.
+   //!
+   //! <b>Complexity</b>: Linear to std::distance [first, last).
+   //!
+   //! <b>Note</b>: This function avoids a linear operation to calculate std::distance[first, last)
+   //!   for forward and bidirectional iterators, and a one by one insertion for input iterators. This is a
+   //!   a non-standard extension.
+   #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   template <class InIt>
+   iterator insert(const_iterator pos, size_type num, InIt first, InIt last)
+   {
+      BOOST_ASSERT(container_detail::is_input_iterator<InIt>::value ||
+                   num == static_cast<size_type>(std::distance(first, last)));
+      container_detail::insert_range_proxy<Allocator, InIt, T*> proxy(first);
+      return this->priv_forward_range_insert(vector_iterator_get_ptr(pos), num, proxy, alloc_version());
+   }
+   #endif
+
    //! <b>Effects</b>: Removes the last element from the vector.
    //!
    //! <b>Throws</b>: Nothing.
@@ -1649,7 +1675,7 @@ class vector
    void insert_ordered_at(size_type element_count, BiDirPosConstIt last_position_it, BiDirValueIt last_value_it)
    {
       const size_type *dummy = 0;
-      this->priv_insert_ordered_at(element_count, last_position_it, false, &dummy[0], last_value_it);
+      this->priv_insert_ordered_at(element_count, last_position_it, false, dummy, last_value_it);
    }
 
    //Absolutely experimental. This function might change, disappear or simply crash!
