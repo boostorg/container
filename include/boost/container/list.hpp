@@ -344,7 +344,7 @@ class list
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    list& operator=(BOOST_RV_REF(list) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
    {
       BOOST_ASSERT(this != &x);
       NodeAlloc &this_alloc = this->node_alloc();

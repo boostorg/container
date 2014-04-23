@@ -189,7 +189,7 @@ class flat_set
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    flat_set& operator=(BOOST_RV_REF(flat_set) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
    {  return static_cast<flat_set&>(this->base_t::operator=(boost::move(static_cast<base_t&>(x))));  }
 
    #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -810,7 +810,7 @@ class flat_multiset
 
    //! @copydoc ::boost::container::flat_set::operator=(flat_set &&)
    flat_multiset& operator=(BOOST_RV_REF(flat_multiset) mx)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
    {  return static_cast<flat_multiset&>(this->base_t::operator=(boost::move(static_cast<base_t&>(mx))));  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
