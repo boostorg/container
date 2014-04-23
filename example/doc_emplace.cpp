@@ -35,7 +35,7 @@ int main ()
    l.emplace(l.begin(), 0);
    assert(l.size() == 1);
 
-   //A new element will be built calling the default constructor
+   //A new element will be value initialized
    l.emplace(l.begin());
    assert(l.size() == 2);
    return 0;

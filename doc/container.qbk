@@ -963,6 +963,10 @@ use [*Boost.Container]? There are several reasons for that:
 * Fixed bugs:
    *  [@https://svn.boost.org/trac/boost/ticket/9338 #9338: ['"VS2005 compiler errors in swap() definition after including container/memory_util.hpp"]].
    *  [@https://svn.boost.org/trac/boost/ticket/9648 #9648: ['"string construction optimization - char_traits::copy could be used ..."]].
+   *  [@https://svn.boost.org/trac/boost/ticket/9915 #9915: ['"Documentation issues regarding vector constructors and resize methods - value/default initialization"]].
+   *  [@https://svn.boost.org/trac/boost/ticket/9916 #9916: ['"Allocator propagation incorrect in the assignment operator of most"]].
+   *  [@https://svn.boost.org/trac/boost/ticket/9931 #9931: ['"flat_map::insert(ordered_unique_range_t...) fails with move_iterators"]].
+   *  [@https://svn.boost.org/trac/boost/ticket/9932 #9932: ['"Missing assignment operator from related static_vector"]].
 
 [endsect]
 

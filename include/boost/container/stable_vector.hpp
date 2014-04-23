@@ -573,7 +573,7 @@ class stable_vector
    //! <b>Effects</b>: Constructs a stable_vector that will use a copy of allocator a
    //!   and inserts n value initialized values.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or copy constructor
+   //! <b>Throws</b>: If allocator_type's default constructor
    //!   throws or T's default or copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
@@ -589,7 +589,7 @@ class stable_vector
    //! <b>Effects</b>: Constructs a stable_vector that will use a copy of allocator a
    //!   and inserts n default initialized values.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or copy constructor
+   //! <b>Throws</b>: If allocator_type's default constructor
    //!   throws or T's default or copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
@@ -607,7 +607,7 @@ class stable_vector
    //! <b>Effects</b>: Constructs a stable_vector that will use a copy of allocator a
    //!   and inserts n copies of value.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or copy constructor
+   //! <b>Throws</b>: If allocator_type's default constructor
    //!   throws or T's default or copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
@@ -623,8 +623,8 @@ class stable_vector
    //! <b>Effects</b>: Constructs a stable_vector that will use a copy of allocator a
    //!   and inserts a copy of the range [first, last) in the stable_vector.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or copy constructor
-   //!   throws or T's constructor taking an dereferenced InIt throws.
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's constructor taking a dereferenced InIt throws.
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
    template <class InputIterator>
@@ -743,34 +743,41 @@ class stable_vector
    //! <b>Postcondition</b>: x.empty(). *this contains a the elements x had
    //!   before the function.
    //!
-   //! <b>Throws</b>: If allocator_type's copy constructor throws.
+   //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
+   //!   is false and (allocation throws or T's move constructor throws)
    //!
-   //! <b>Complexity</b>: Linear.
+   //! <b>Complexity</b>: Constant if allocator_traits_type::
+   //!   propagate_on_container_move_assignment is true or
+   //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    stable_vector& operator=(BOOST_RV_REF(stable_vector) x)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
    {
-      if (&x != this){
-         node_allocator_type &this_alloc = this->priv_node_alloc();
-         node_allocator_type &x_alloc    = x.priv_node_alloc();
-         //If allocators are equal we can just swap pointers
-         if(this_alloc == x_alloc){
-            //Destroy objects but retain memory
-            this->clear();
-            this->index = boost::move(x.index);
-            this->priv_swap_members(x);
-            //Move allocator if needed
-            container_detail::bool_<allocator_traits_type::
-               propagate_on_container_move_assignment::value> flag;
-            container_detail::move_alloc(this->priv_node_alloc(), x.priv_node_alloc(), flag);
-         }
-         //If unequal allocators, then do a one by one move
-         else{
-            this->assign( boost::make_move_iterator(x.begin())
-                        , boost::make_move_iterator(x.end()));
-         }
+      //for move constructor, no aliasing (&x != this) is assummed.
+      BOOST_ASSERT(this != &x);
+      node_allocator_type &this_alloc = this->priv_node_alloc();
+      node_allocator_type &x_alloc    = x.priv_node_alloc();
+      const bool propagate_alloc = allocator_traits_type::
+            propagate_on_container_move_assignment::value;
+      container_detail::bool_<propagate_alloc> flag;
+      const bool allocators_equal = this_alloc == x_alloc; (void)allocators_equal;
+      //Resources can be transferred if both allocators are
+      //going to be equal after this function (either propagated or already equal)
+      if(propagate_alloc || allocators_equal){
+         //Destroy objects but retain memory in case x reuses it in the future
+         this->clear();
+         //Move allocator if needed
+         container_detail::move_alloc(this_alloc, x_alloc, flag);
+         //Take resources
+         this->index = boost::move(x.index);
+         this->priv_swap_members(x);
+      }
+      //Else do a one by one move
+      else{
+         this->assign( boost::make_move_iterator(x.begin())
+                     , boost::make_move_iterator(x.end()));
       }
       return *this;
    }
-
 
    //! <b>Effects</b>: Assigns the n copies of val to *this.
    //!
@@ -983,7 +990,7 @@ class stable_vector
    //! <b>Effects</b>: Inserts or erases elements at the end such that
    //!   the size becomes n. New elements are value initialized.
    //!
-   //! <b>Throws</b>: If memory allocation throws, or T's default constructor throws.
+   //! <b>Throws</b>: If memory allocation throws, or T's value initialization throws.
    //!
    //! <b>Complexity</b>: Linear to the difference between size() and new_size.
    void resize(size_type n)
@@ -999,7 +1006,7 @@ class stable_vector
    //! <b>Effects</b>: Inserts or erases elements at the end such that
    //!   the size becomes n. New elements are default initialized.
    //!
-   //! <b>Throws</b>: If memory allocation throws, or T's default constructor throws.
+   //! <b>Throws</b>: If memory allocation throws, or T's default initialization throws.
    //!
    //! <b>Complexity</b>: Linear to the difference between size() and new_size.
    //!

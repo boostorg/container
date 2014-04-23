@@ -592,7 +592,7 @@ class basic_string
    //!
    //! <b>Postcondition</b>: x == *this.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor throws.
+   //! <b>Throws</b>: If allocator_type's default constructor or allocation throws.
    basic_string(const basic_string& s)
       :  base_t(allocator_traits_type::select_on_container_copy_construction(s.alloc()))
    {
@@ -733,30 +733,38 @@ class basic_string
       return *this;
    }
 
-   //! <b>Effects</b>: Move constructor. Moves mx's resources to *this.
+   //! <b>Effects</b>: Move constructor. Moves x's resources to *this.
    //!
-   //! <b>Throws</b>: If allocator_type's copy constructor throws.
+   //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
+   //!   is false and allocation throws
    //!
-   //! <b>Complexity</b>: Constant.
-   basic_string& operator=(BOOST_RV_REF(basic_string) x) BOOST_CONTAINER_NOEXCEPT
+   //! <b>Complexity</b>: Constant if allocator_traits_type::
+   //!   propagate_on_container_move_assignment is true or
+   //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
+   basic_string& operator=(BOOST_RV_REF(basic_string) x)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
    {
-      if (&x != this){
-         allocator_type &this_alloc = this->alloc();
-         allocator_type &x_alloc    = x.alloc();
-         //If allocators are equal we can just swap pointers
-         if(this_alloc == x_alloc){
-            //Destroy objects but retain memory in case x reuses it in the future
-            this->clear();
-            this->swap_data(x);
-            //Move allocator if needed
-            container_detail::bool_<allocator_traits_type::
-               propagate_on_container_move_assignment::value> flag;
-            container_detail::move_alloc(this_alloc, x_alloc, flag);
-         }
-         //If unequal allocators, then do a one by one move
-         else{
-            this->assign( x.begin(), x.end());
-         }
+      //for move constructor, no aliasing (&x != this) is assummed.
+      BOOST_ASSERT(this != &x);
+      allocator_type &this_alloc = this->alloc();
+      allocator_type &x_alloc    = x.alloc();
+      const bool propagate_alloc = allocator_traits_type::
+            propagate_on_container_move_assignment::value;
+      container_detail::bool_<propagate_alloc> flag;
+      const bool allocators_equal = this_alloc == x_alloc; (void)allocators_equal;
+      //Resources can be transferred if both allocators are
+      //going to be equal after this function (either propagated or already equal)
+      if(propagate_alloc || allocators_equal){
+         //Destroy objects but retain memory in case x reuses it in the future
+         this->clear();
+         //Move allocator if needed
+         container_detail::move_alloc(this_alloc, x_alloc, flag);
+         //Nothrow swap
+         this->swap_data(x);
+      }
+      //Else do a one by one move
+      else{
+         this->assign( x.begin(), x.end());
       }
       return *this;
    }

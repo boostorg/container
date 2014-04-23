@@ -2,6 +2,7 @@
 //
 // Copyright (c) 2012-2013 Adam Wulkiewicz, Lodz, Poland.
 // Copyright (c) 2011-2013 Andrew Hundt.
+// Copyright (c) 2013-2014 Ion Gaztanaga
 //
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
@@ -145,7 +146,7 @@ public:
     //! @param count    The number of values which will be contained in the container.
     //!
     //! @par Throws
-    //!   If Value's default constructor throws.
+    //!   If Value's value initialization throws.
     //!
     //! @par Complexity
     //!   Linear O(N).
@@ -155,12 +156,12 @@ public:
 
     //! @pre <tt>count <= capacity()</tt>
     //!
-    //! @brief Constructs a static_vector containing count value initialized values.
+    //! @brief Constructs a static_vector containing count default initialized values.
     //!
     //! @param count    The number of values which will be contained in the container.
     //!
     //! @par Throws
-    //!   If Value's default constructor throws.
+    //!   If Value's default initialization throws.
     //!
     //! @par Complexity
     //!   Linear O(N).
@@ -231,45 +232,9 @@ public:
     //! @par Complexity
     //!   Linear O(N).
     template <std::size_t C>
-    static_vector(static_vector<value_type, C> const& other) : base_t(other) {}
-
-    //! @brief Copy assigns Values stored in the other static_vector to this one.
-    //!
-    //! @param other    The static_vector which content will be copied to this one.
-    //!
-    //! @par Throws
-    //!   If Value's copy constructor or copy assignment throws.
-    //!
-    //! @par Complexity
-    //! Linear O(N).
-    static_vector & operator=(BOOST_COPY_ASSIGN_REF(static_vector) other)
-    {
-        base_t::operator=(static_cast<base_t const&>(other));
-        return *this;
-    }
-
-    //! @pre <tt>other.size() <= capacity()</tt>
-    //!
-    //! @brief Copy assigns Values stored in the other static_vector to this one.
-    //!
-    //! @param other    The static_vector which content will be copied to this one.
-    //!
-    //! @par Throws
-    //!   If Value's copy constructor or copy assignment throws.
-    //!
-    //! @par Complexity
-    //!   Linear O(N).
-    template <std::size_t C>
-// TEMPORARY WORKAROUND
-#if defined(BOOST_NO_RVALUE_REFERENCES)
-    static_vector & operator=(::boost::rv< static_vector<value_type, C> > const& other)
-#else
-    static_vector & operator=(static_vector<value_type, C> const& other)
-#endif
-    {
-        base_t::operator=(static_cast<static_vector<value_type, C> const&>(other));
-        return *this;
-    }
+    static_vector(static_vector<value_type, C> const& other)
+        : base_t(other)
+    {}
 
     //! @brief Move constructor. Moves Values stored in the other static_vector to this one.
     //!
@@ -302,6 +267,38 @@ public:
         : base_t(boost::move(static_cast<typename static_vector<value_type, C>::base_t&>(other)))
     {}
 
+    //! @brief Copy assigns Values stored in the other static_vector to this one.
+    //!
+    //! @param other    The static_vector which content will be copied to this one.
+    //!
+    //! @par Throws
+    //!   If Value's copy constructor or copy assignment throws.
+    //!
+    //! @par Complexity
+    //! Linear O(N).
+    static_vector & operator=(BOOST_COPY_ASSIGN_REF(static_vector) other)
+    {
+        return static_cast<static_vector&>(base_t::operator=(static_cast<base_t const&>(other)));
+    }
+
+    //! @pre <tt>other.size() <= capacity()</tt>
+    //!
+    //! @brief Copy assigns Values stored in the other static_vector to this one.
+    //!
+    //! @param other    The static_vector which content will be copied to this one.
+    //!
+    //! @par Throws
+    //!   If Value's copy constructor or copy assignment throws.
+    //!
+    //! @par Complexity
+    //!   Linear O(N).
+    template <std::size_t C>
+    static_vector & operator=(static_vector<value_type, C> const& other)
+    {
+        return static_cast<static_vector&>(base_t::operator=
+            (static_cast<typename static_vector<value_type, C>::base_t const&>(other)));
+    }
+
     //! @brief Move assignment. Moves Values stored in the other static_vector to this one.
     //!
     //! @param other    The static_vector which content will be moved to this one.
@@ -314,8 +311,7 @@ public:
     //!   Linear O(N).
     static_vector & operator=(BOOST_RV_REF(static_vector) other)
     {
-        base_t::operator=(boost::move(static_cast<base_t&>(other)));
-        return *this;
+        return static_cast<static_vector&>(base_t::operator=(boost::move(static_cast<base_t&>(other))));
     }
 
     //! @pre <tt>other.size() <= capacity()</tt>
@@ -333,8 +329,8 @@ public:
     template <std::size_t C>
     static_vector & operator=(BOOST_RV_REF_BEG static_vector<value_type, C> BOOST_RV_REF_END other)
     {
-        base_t::operator=(boost::move(static_cast<typename static_vector<value_type, C>::base_t&>(other)));
-        return *this;
+        return static_cast<static_vector&>(base_t::operator=
+         (boost::move(static_cast<typename static_vector<value_type, C>::base_t&>(other))));
     }
 
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -383,7 +379,7 @@ public:
     //! @param count    The number of elements which will be stored in the container.
     //!
     //! @par Throws
-    //!   If Value's default constructor throws.
+    //!   If Value's value initialization throws.
     //!
     //! @par Complexity
     //!   Linear O(N).
@@ -397,7 +393,7 @@ public:
     //! @param count    The number of elements which will be stored in the container.
     //!
     //! @par Throws
-    //!   If Value's default constructor throws.
+    //!   If Value's default initialization throws.
     //!
     //! @par Complexity
     //!   Linear O(N).

@@ -97,7 +97,7 @@ public:
     //! @param count    The number of values which will be contained in the container.
     //!
     //! @par Throws
-    //!   If Value's default constructor throws.
+    //!   If Value's value initialization throws.
     //!
     //! @par Complexity
     //!   Linear O(N).
@@ -317,7 +317,7 @@ public:
     //! @param count    The number of elements which will be stored in the container.
     //!
     //! @par Throws
-    //!   If Value's default constructor throws.
+    //!   If Value's value initialization throws.
     //!
     //! @par Complexity
     //!   Linear O(N).

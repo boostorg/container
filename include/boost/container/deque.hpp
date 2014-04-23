@@ -541,8 +541,8 @@ class deque : protected deque_base<Allocator>
    //! <b>Effects</b>: Constructs a deque that will use a copy of allocator a
    //!   and inserts n value initialized values.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or copy constructor
-   //!   throws or T's default or copy constructor throws.
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's value initialization throws.
    //!
    //! <b>Complexity</b>: Linear to n.
    explicit deque(size_type n)
@@ -556,8 +556,8 @@ class deque : protected deque_base<Allocator>
    //! <b>Effects</b>: Constructs a deque that will use a copy of allocator a
    //!   and inserts n default initialized values.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or copy constructor
-   //!   throws or T's default or copy constructor throws.
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's default initialization or copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
    //!
@@ -573,8 +573,8 @@ class deque : protected deque_base<Allocator>
    //! <b>Effects</b>: Constructs a deque that will use a copy of allocator a
    //!   and inserts n copies of value.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or copy constructor
-   //!   throws or T's default or copy constructor throws.
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
    deque(size_type n, const value_type& value,
@@ -585,8 +585,8 @@ class deque : protected deque_base<Allocator>
    //! <b>Effects</b>: Constructs a deque that will use a copy of allocator a
    //!   and inserts a copy of the range [first, last) in the deque.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or copy constructor
-   //!   throws or T's constructor taking an dereferenced InIt throws.
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's constructor taking a dereferenced InIt throws.
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
    template <class InIt>
@@ -704,35 +704,39 @@ class deque : protected deque_base<Allocator>
       return *this;
    }
 
-   //! <b>Effects</b>: Move assignment. All mx's values are transferred to *this.
+   //! <b>Effects</b>: Move assignment. All x's values are transferred to *this.
    //!
-   //! <b>Postcondition</b>: x.empty(). *this contains a the elements x had
-   //!   before the function.
+   //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
+   //!   is false and (allocation throws or value_type's move constructor throws)
    //!
-   //! <b>Throws</b>: If allocator_type's copy constructor throws.
-   //!
-   //! <b>Complexity</b>: Linear.
+   //! <b>Complexity</b>: Constant if allocator_traits_type::
+   //!   propagate_on_container_move_assignment is true or
+   //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    deque& operator= (BOOST_RV_REF(deque) x)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
    {
-      if (&x != this){
-         allocator_type &this_alloc = this->alloc();
-         allocator_type &x_alloc    = x.alloc();
-         //If allocators are equal we can just swap pointers
-         if(this_alloc == x_alloc){
-            //Destroy objects but retain memory in case x reuses it in the future
-            this->clear();
-            this->swap_members(x);
-            //Move allocator if needed
-            container_detail::bool_<allocator_traits_type::
-               propagate_on_container_move_assignment::value> flag;
-            container_detail::move_alloc(this_alloc, x_alloc, flag);
-            container_detail::move_alloc(this->ptr_alloc(), x.ptr_alloc(), flag);
-         }
-         //If unequal allocators, then do a one by one move
-         else{
-            this->assign( boost::make_move_iterator(x.begin())
-                        , boost::make_move_iterator(x.end()));
-         }
+      BOOST_ASSERT(this != &x);
+      allocator_type &this_alloc = this->alloc();
+      allocator_type &x_alloc    = x.alloc();
+      const bool propagate_alloc = allocator_traits_type::
+            propagate_on_container_move_assignment::value;
+      container_detail::bool_<propagate_alloc> flag;
+      const bool allocators_equal = this_alloc == x_alloc; (void)allocators_equal;
+      //Resources can be transferred if both allocators are
+      //going to be equal after this function (either propagated or already equal)
+      if(propagate_alloc || allocators_equal){
+         //Destroy objects but retain memory in case x reuses it in the future
+         this->clear();
+         //Move allocator if needed
+         container_detail::move_alloc(this_alloc, x_alloc, flag);
+         container_detail::move_alloc(this->ptr_alloc(), x.ptr_alloc(), flag);
+         //Nothrow swap
+         this->swap_members(x);
+      }
+      //Else do a one by one move
+      else{
+         this->assign( boost::make_move_iterator(x.begin())
+                     , boost::make_move_iterator(x.end()));
       }
       return *this;
    }

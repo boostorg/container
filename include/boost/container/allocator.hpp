@@ -67,7 +67,7 @@ class allocator<void, Version, AllocationDisableMask>
 
    //!Default constructor
    //!Never throws
-   allocator() 
+   allocator()
    {}
 
    //!Constructor from other allocator.

@@ -89,6 +89,7 @@ class map
    //////////////////////////////////////////////
 
    typedef Key                                                                      key_type;
+   typedef ::boost::container::allocator_traits<Allocator>                          allocator_traits_type;
    typedef T                                                                        mapped_type;
    typedef std::pair<const Key, T>                                                  value_type;
    typedef typename boost::container::allocator_traits<Allocator>::pointer          pointer;
@@ -232,8 +233,14 @@ class map
 
    //! <b>Effects</b>: this->swap(x.get()).
    //!
-   //! <b>Complexity</b>: Constant.
+   //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
+   //!   is false and (allocation throws or value_type's move constructor throws)
+   //!
+   //! <b>Complexity</b>: Constant if allocator_traits_type::
+   //!   propagate_on_container_move_assignment is true or
+   //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    map& operator=(BOOST_RV_REF(map) x)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
    {  return static_cast<map&>(this->base_t::operator=(boost::move(static_cast<base_t&>(x))));  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)

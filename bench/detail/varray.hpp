@@ -298,7 +298,7 @@ public:
     //! @param count    The number of values which will be contained in the container.
     //!
     //! @par Throws
-    //!   If Value's default constructor throws.
+    //!   If Value's value initialization throws.
     //! @internal
     //!   @li If a throwing error handler is specified, throws when the capacity is exceeded. (not by default).
     //! @endinternal
@@ -621,7 +621,7 @@ public:
     //! @param count    The number of elements which will be stored in the container.
     //!
     //! @par Throws
-    //!   If Value's default constructor throws.
+    //!   If Value's value initialization throws.
     //! @internal
     //!   @li If a throwing error handler is specified, throws when the capacity is exceeded. (not by default).
     //! @endinternal

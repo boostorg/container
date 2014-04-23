@@ -72,6 +72,7 @@ class flat_set
    typedef Key                                                                         value_type;
    typedef Compare                                                                     key_compare;
    typedef Compare                                                                     value_compare;
+   typedef ::boost::container::allocator_traits<Allocator>                             allocator_traits_type;
    typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
    typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
    typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
@@ -181,11 +182,15 @@ class flat_set
    flat_set& operator=(BOOST_COPY_ASSIGN_REF(flat_set) x)
    {  return static_cast<flat_set&>(this->base_t::operator=(static_cast<const base_t&>(x)));  }
 
-   //! <b>Effects</b>: Makes *this a copy of the previous value of mx.
+   //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
+   //!   is false and (allocation throws or value_type's move constructor throws)
    //!
-   //! <b>Complexity</b>: Linear in x.size().
-   flat_set& operator=(BOOST_RV_REF(flat_set) mx)
-   {  return static_cast<flat_set&>(this->base_t::operator=(boost::move(static_cast<base_t&>(mx))));  }
+   //! <b>Complexity</b>: Constant if allocator_traits_type::
+   //!   propagate_on_container_move_assignment is true or
+   //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
+   flat_set& operator=(BOOST_RV_REF(flat_set) x)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
+   {  return static_cast<flat_set&>(this->base_t::operator=(boost::move(static_cast<base_t&>(x))));  }
 
    #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
    //! <b>Effects</b>: Returns a copy of the Allocator that
@@ -725,6 +730,7 @@ class flat_multiset
    typedef Key                                                                         value_type;
    typedef Compare                                                                     key_compare;
    typedef Compare                                                                     value_compare;
+   typedef ::boost::container::allocator_traits<Allocator>                             allocator_traits_type;
    typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
    typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
    typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
@@ -804,6 +810,7 @@ class flat_multiset
 
    //! @copydoc ::boost::container::flat_set::operator=(flat_set &&)
    flat_multiset& operator=(BOOST_RV_REF(flat_multiset) mx)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
    {  return static_cast<flat_multiset&>(this->base_t::operator=(boost::move(static_cast<base_t&>(mx))));  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
