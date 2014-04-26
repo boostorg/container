@@ -15,7 +15,7 @@
 #include <boost/container/detail/workaround.hpp>
 
 #include <cstdio>
-#include <cstring> //for ::memcpy
+#include <cstring> //for ::memmove / ::memcpy
 #include <boost/type_traits/is_fundamental.hpp>
 #include <boost/type_traits/is_pointer.hpp>
 #include <boost/type_traits/is_enum.hpp>
@@ -25,6 +25,7 @@
 #include <boost/move/core.hpp>
 #include <boost/move/utility.hpp>
 #include <boost/move/iterator.hpp>
+#include <boost/assert.hpp>
 #include <boost/container/throw_exception.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/type_traits.hpp>
@@ -290,47 +291,47 @@ struct are_contiguous_and_same
 };
 
 template <typename I, typename O>
-struct is_memcpy_copy_assignable
+struct is_memtransfer_copy_assignable
 {
    static const bool value = are_contiguous_and_same<I, O>::value &&
       boost::has_trivial_assign< typename ::std::iterator_traits<I>::value_type >::value;
 };
 
 template <typename I, typename O>
-struct is_memcpy_copy_constructible
+struct is_memtransfer_copy_constructible
 {
    static const bool value = are_contiguous_and_same<I, O>::value &&
       boost::has_trivial_copy< typename ::std::iterator_traits<I>::value_type >::value;
 };
 
 template <typename I, typename O, typename R>
-struct enable_if_memcpy_copy_constructible
-   : public enable_if_c<container_detail::is_memcpy_copy_constructible<I, O>::value, R>
+struct enable_if_memtransfer_copy_constructible
+   : public enable_if_c<container_detail::is_memtransfer_copy_constructible<I, O>::value, R>
 {};
 
 template <typename I, typename O, typename R>
-struct disable_if_memcpy_copy_constructible
-   : public enable_if_c<!container_detail::is_memcpy_copy_constructible<I, O>::value, R>
+struct disable_if_memtransfer_copy_constructible
+   : public enable_if_c<!container_detail::is_memtransfer_copy_constructible<I, O>::value, R>
 {};
 
 template <typename I, typename O, typename R>
-struct enable_if_memcpy_copy_assignable
-   : public enable_if_c<container_detail::is_memcpy_copy_assignable<I, O>::value, R>
+struct enable_if_memtransfer_copy_assignable
+   : public enable_if_c<container_detail::is_memtransfer_copy_assignable<I, O>::value, R>
 {};
 
 template <typename I, typename O, typename R>
-struct disable_if_memcpy_copy_assignable
-   : public enable_if_c<!container_detail::is_memcpy_copy_assignable<I, O>::value, R>
+struct disable_if_memtransfer_copy_assignable
+   : public enable_if_c<!container_detail::is_memtransfer_copy_assignable<I, O>::value, R>
 {};
 
 template
    <typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline F memcpy(I f, I l, F r) BOOST_CONTAINER_NOEXCEPT
+inline F memmove(I f, I l, F r) BOOST_CONTAINER_NOEXCEPT
 {
    typedef typename std::iterator_traits<I>::value_type value_type;
    typename std::iterator_traits<I>::difference_type n = std::distance(f, l);
-   ::memcpy(container_detail::addressof(*r), container_detail::addressof(*f), sizeof(value_type)*n);
+   ::memmove(container_detail::addressof(*r), container_detail::addressof(*f), sizeof(value_type)*n);
    std::advance(r, n);
    return r;
 }
@@ -338,10 +339,10 @@ inline F memcpy(I f, I l, F r) BOOST_CONTAINER_NOEXCEPT
 template
    <typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-F memcpy_n(I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_CONTAINER_NOEXCEPT
+F memmove_n(I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_CONTAINER_NOEXCEPT
 {
    typedef typename std::iterator_traits<I>::value_type value_type;
-   ::memcpy(container_detail::addressof(*r), container_detail::addressof(*f), sizeof(value_type)*n);
+   ::memmove(container_detail::addressof(*r), container_detail::addressof(*f), sizeof(value_type)*n);
    std::advance(r, n);
    return r;
 }
@@ -349,10 +350,10 @@ F memcpy_n(I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_
 template
    <typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-I memcpy_n_source(I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_CONTAINER_NOEXCEPT
+I memmove_n_source(I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_CONTAINER_NOEXCEPT
 {
    typedef typename std::iterator_traits<I>::value_type value_type;
-   ::memcpy(container_detail::addressof(*r), container_detail::addressof(*f), sizeof(value_type)*n);
+   ::memmove(container_detail::addressof(*r), container_detail::addressof(*f), sizeof(value_type)*n);
    std::advance(f, n);
    return f;
 }
@@ -360,10 +361,10 @@ I memcpy_n_source(I f, typename std::iterator_traits<I>::difference_type n, F r)
 template
    <typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-I memcpy_n_source_dest(I f, typename std::iterator_traits<I>::difference_type n, F &r) BOOST_CONTAINER_NOEXCEPT
+I memmove_n_source_dest(I f, typename std::iterator_traits<I>::difference_type n, F &r) BOOST_CONTAINER_NOEXCEPT
 {
    typedef typename std::iterator_traits<I>::value_type value_type;
-   ::memcpy(container_detail::addressof(*r), container_detail::addressof(*f), sizeof(value_type)*n);
+   ::memmove(container_detail::addressof(*r), container_detail::addressof(*f), sizeof(value_type)*n);
    std::advance(f, n);
    std::advance(r, n);
    return f;
@@ -391,7 +392,7 @@ template
    <typename A,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename container_detail::disable_if_memcpy_copy_constructible<I, F, F>::type
+inline typename container_detail::disable_if_memtransfer_copy_constructible<I, F, F>::type
    uninitialized_move_alloc(A &a, I f, I l, F r)
 {
    F back = r;
@@ -415,9 +416,9 @@ template
    <typename A,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename container_detail::enable_if_memcpy_copy_constructible<I, F, F>::type
+inline typename container_detail::enable_if_memtransfer_copy_constructible<I, F, F>::type
    uninitialized_move_alloc(A &, I f, I l, F r) BOOST_CONTAINER_NOEXCEPT
-{  return container_detail::memcpy(f, l, r); }
+{  return container_detail::memmove(f, l, r); }
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -436,7 +437,7 @@ template
    <typename A,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename container_detail::disable_if_memcpy_copy_constructible<I, F, F>::type
+inline typename container_detail::disable_if_memtransfer_copy_constructible<I, F, F>::type
    uninitialized_move_alloc_n(A &a, I f, typename std::iterator_traits<I>::difference_type n, F r)
 {
    F back = r;
@@ -460,9 +461,9 @@ template
    <typename A,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename container_detail::enable_if_memcpy_copy_constructible<I, F, F>::type
+inline typename container_detail::enable_if_memtransfer_copy_constructible<I, F, F>::type
    uninitialized_move_alloc_n(A &, I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_CONTAINER_NOEXCEPT
-{  return container_detail::memcpy_n(f, n, r); }
+{  return container_detail::memmove_n(f, n, r); }
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -481,7 +482,7 @@ template
    <typename A,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename container_detail::disable_if_memcpy_copy_constructible<I, F, I>::type
+inline typename container_detail::disable_if_memtransfer_copy_constructible<I, F, I>::type
    uninitialized_move_alloc_n_source(A &a, I f, typename std::iterator_traits<I>::difference_type n, F r)
 {
    F back = r;
@@ -505,9 +506,9 @@ template
    <typename A,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename container_detail::enable_if_memcpy_copy_constructible<I, F, I>::type
+inline typename container_detail::enable_if_memtransfer_copy_constructible<I, F, I>::type
    uninitialized_move_alloc_n_source(A &, I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_CONTAINER_NOEXCEPT
-{  return container_detail::memcpy_n_source(f, n, r); }
+{  return container_detail::memmove_n_source(f, n, r); }
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -526,7 +527,7 @@ template
    <typename A,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename container_detail::disable_if_memcpy_copy_constructible<I, F, F>::type
+inline typename container_detail::disable_if_memtransfer_copy_constructible<I, F, F>::type
    uninitialized_copy_alloc(A &a, I f, I l, F r)
 {
    F back = r;
@@ -550,9 +551,9 @@ template
    <typename A,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename container_detail::enable_if_memcpy_copy_constructible<I, F, F>::type
+inline typename container_detail::enable_if_memtransfer_copy_constructible<I, F, F>::type
    uninitialized_copy_alloc(A &, I f, I l, F r) BOOST_CONTAINER_NOEXCEPT
-{  return container_detail::memcpy(f, l, r); }
+{  return container_detail::memmove(f, l, r); }
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -571,7 +572,7 @@ template
    <typename A,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename container_detail::disable_if_memcpy_copy_constructible<I, F, F>::type
+inline typename container_detail::disable_if_memtransfer_copy_constructible<I, F, F>::type
    uninitialized_copy_alloc_n(A &a, I f, typename std::iterator_traits<I>::difference_type n, F r)
 {
    F back = r;
@@ -595,9 +596,9 @@ template
    <typename A,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename container_detail::enable_if_memcpy_copy_constructible<I, F, F>::type
+inline typename container_detail::enable_if_memtransfer_copy_constructible<I, F, F>::type
    uninitialized_copy_alloc_n(A &, I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_CONTAINER_NOEXCEPT
-{  return container_detail::memcpy_n(f, n, r); }
+{  return container_detail::memmove_n(f, n, r); }
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -616,7 +617,7 @@ template
    <typename A,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename container_detail::disable_if_memcpy_copy_constructible<I, F, I>::type
+inline typename container_detail::disable_if_memtransfer_copy_constructible<I, F, I>::type
    uninitialized_copy_alloc_n_source(A &a, I f, typename std::iterator_traits<I>::difference_type n, F r)
 {
    F back = r;
@@ -640,9 +641,9 @@ template
    <typename A,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename container_detail::enable_if_memcpy_copy_constructible<I, F, I>::type
+inline typename container_detail::enable_if_memtransfer_copy_constructible<I, F, I>::type
    uninitialized_copy_alloc_n_source(A &, I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_CONTAINER_NOEXCEPT
-{  return container_detail::memcpy_n_source(f, n, r); }
+{  return container_detail::memmove_n_source(f, n, r); }
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -795,7 +796,7 @@ inline F uninitialized_fill_alloc_n(A &a, const T &v, typename allocator_traits<
 template
 <typename I,   // I models InputIterator
 typename F>    // F models ForwardIterator
-inline typename container_detail::disable_if_memcpy_copy_assignable<I, F, F>::type
+inline typename container_detail::disable_if_memtransfer_copy_assignable<I, F, F>::type
    copy(I f, I l, F r)
 {
    while (f != l) {
@@ -808,9 +809,9 @@ inline typename container_detail::disable_if_memcpy_copy_assignable<I, F, F>::ty
 template
 <typename I,   // I models InputIterator
 typename F>    // F models ForwardIterator
-inline typename container_detail::enable_if_memcpy_copy_assignable<I, F, F>::type
+inline typename container_detail::enable_if_memtransfer_copy_assignable<I, F, F>::type
    copy(I f, I l, F r) BOOST_CONTAINER_NOEXCEPT
-{  return container_detail::memcpy(f, l, r); }
+{  return container_detail::memmove(f, l, r); }
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -821,7 +822,7 @@ inline typename container_detail::enable_if_memcpy_copy_assignable<I, F, F>::typ
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename container_detail::disable_if_memcpy_copy_assignable<I, F, F>::type
+inline typename container_detail::disable_if_memtransfer_copy_assignable<I, F, F>::type
    copy_n(I f, typename std::iterator_traits<I>::difference_type n, F r)
 {
    while (n--) {
@@ -834,9 +835,9 @@ inline typename container_detail::disable_if_memcpy_copy_assignable<I, F, F>::ty
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename container_detail::enable_if_memcpy_copy_assignable<I, F, F>::type
+inline typename container_detail::enable_if_memtransfer_copy_assignable<I, F, F>::type
    copy_n(I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_CONTAINER_NOEXCEPT
-{  return container_detail::memcpy_n(f, n, r); }
+{  return container_detail::memmove_n(f, n, r); }
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -847,7 +848,7 @@ inline typename container_detail::enable_if_memcpy_copy_assignable<I, F, F>::typ
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename container_detail::disable_if_memcpy_copy_assignable<I, F, I>::type
+inline typename container_detail::disable_if_memtransfer_copy_assignable<I, F, I>::type
    copy_n_source(I f, typename std::iterator_traits<I>::difference_type n, F r)
 {
    while (n--) {
@@ -860,9 +861,9 @@ inline typename container_detail::disable_if_memcpy_copy_assignable<I, F, I>::ty
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename container_detail::enable_if_memcpy_copy_assignable<I, F, I>::type
+inline typename container_detail::enable_if_memtransfer_copy_assignable<I, F, I>::type
    copy_n_source(I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_CONTAINER_NOEXCEPT
-{  return container_detail::memcpy_n_source(f, n, r); }
+{  return container_detail::memmove_n_source(f, n, r); }
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -873,7 +874,7 @@ inline typename container_detail::enable_if_memcpy_copy_assignable<I, F, I>::typ
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename container_detail::disable_if_memcpy_copy_assignable<I, F, I>::type
+inline typename container_detail::disable_if_memtransfer_copy_assignable<I, F, I>::type
    copy_n_source_dest(I f, typename std::iterator_traits<I>::difference_type n, F &r)
 {
    while (n--) {
@@ -886,9 +887,9 @@ inline typename container_detail::disable_if_memcpy_copy_assignable<I, F, I>::ty
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename container_detail::enable_if_memcpy_copy_assignable<I, F, I>::type
+inline typename container_detail::enable_if_memtransfer_copy_assignable<I, F, I>::type
    copy_n_source_dest(I f, typename std::iterator_traits<I>::difference_type n, F &r) BOOST_CONTAINER_NOEXCEPT
-{  return container_detail::memcpy_n_source_dest(f, n, r);  }
+{  return container_detail::memmove_n_source_dest(f, n, r);  }
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -899,7 +900,7 @@ inline typename container_detail::enable_if_memcpy_copy_assignable<I, F, I>::typ
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename container_detail::disable_if_memcpy_copy_assignable<I, F, F>::type
+inline typename container_detail::disable_if_memtransfer_copy_assignable<I, F, F>::type
    move(I f, I l, F r)
 {
    while (f != l) {
@@ -912,9 +913,9 @@ inline typename container_detail::disable_if_memcpy_copy_assignable<I, F, F>::ty
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename container_detail::enable_if_memcpy_copy_assignable<I, F, F>::type
+inline typename container_detail::enable_if_memtransfer_copy_assignable<I, F, F>::type
    move(I f, I l, F r) BOOST_CONTAINER_NOEXCEPT
-{  return container_detail::memcpy(f, l, r); }
+{  return container_detail::memmove(f, l, r); }
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -925,7 +926,7 @@ inline typename container_detail::enable_if_memcpy_copy_assignable<I, F, F>::typ
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename container_detail::disable_if_memcpy_copy_assignable<I, F, F>::type
+inline typename container_detail::disable_if_memtransfer_copy_assignable<I, F, F>::type
    move_n(I f, typename std::iterator_traits<I>::difference_type n, F r)
 {
    while (n--) {
@@ -938,9 +939,9 @@ inline typename container_detail::disable_if_memcpy_copy_assignable<I, F, F>::ty
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename container_detail::enable_if_memcpy_copy_assignable<I, F, F>::type
+inline typename container_detail::enable_if_memtransfer_copy_assignable<I, F, F>::type
    move_n(I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_CONTAINER_NOEXCEPT
-{  return container_detail::memcpy_n(f, n, r); }
+{  return container_detail::memmove_n(f, n, r); }
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -951,7 +952,7 @@ inline typename container_detail::enable_if_memcpy_copy_assignable<I, F, F>::typ
 template
 <typename I    // I models InputIterator
 ,typename F>   // F models ForwardIterator
-inline typename container_detail::disable_if_memcpy_copy_assignable<I, F, I>::type
+inline typename container_detail::disable_if_memtransfer_copy_assignable<I, F, I>::type
    move_n_source(I f, typename std::iterator_traits<I>::difference_type n, F r)
 {
    while (n--) {
@@ -964,9 +965,9 @@ inline typename container_detail::disable_if_memcpy_copy_assignable<I, F, I>::ty
 template
 <typename I    // I models InputIterator
 ,typename F>   // F models ForwardIterator
-inline typename container_detail::enable_if_memcpy_copy_assignable<I, F, I>::type
+inline typename container_detail::enable_if_memtransfer_copy_assignable<I, F, I>::type
    move_n_source(I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_CONTAINER_NOEXCEPT
-{  return container_detail::memcpy_n_source(f, n, r); }
+{  return container_detail::memmove_n_source(f, n, r); }
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -977,7 +978,7 @@ inline typename container_detail::enable_if_memcpy_copy_assignable<I, F, I>::typ
 template
 <typename I    // I models InputIterator
 ,typename F>   // F models ForwardIterator
-inline typename container_detail::disable_if_memcpy_copy_assignable<I, F, I>::type
+inline typename container_detail::disable_if_memtransfer_copy_assignable<I, F, I>::type
    move_n_source_dest(I f, typename std::iterator_traits<I>::difference_type n, F &r)
 {
    while (n--) {
@@ -990,9 +991,9 @@ inline typename container_detail::disable_if_memcpy_copy_assignable<I, F, I>::ty
 template
 <typename I    // I models InputIterator
 ,typename F>   // F models ForwardIterator
-inline typename container_detail::enable_if_memcpy_copy_assignable<I, F, I>::type
+inline typename container_detail::enable_if_memtransfer_copy_assignable<I, F, I>::type
    move_n_source_dest(I f, typename std::iterator_traits<I>::difference_type n, F &r) BOOST_CONTAINER_NOEXCEPT
-{  return container_detail::memcpy_n_source_dest(f, n, r); }
+{  return container_detail::memmove_n_source_dest(f, n, r); }
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1032,7 +1033,7 @@ template
    ,typename F // F models ForwardIterator
    ,typename G // G models ForwardIterator
    >
-inline typename container_detail::disable_if_memcpy_copy_assignable<F, G, void>::type
+inline typename container_detail::disable_if_memtransfer_copy_assignable<F, G, void>::type
    deep_swap_alloc_n( A &a, F short_range_f, typename allocator_traits<A>::size_type n_i
                     , G large_range_f, typename allocator_traits<A>::size_type n_j)
 {
@@ -1053,7 +1054,7 @@ template
    ,typename G // G models ForwardIterator
    >
 inline typename container_detail::enable_if_c
-   < container_detail::is_memcpy_copy_assignable<F, G>::value && (MaxTmpBytes <= DeepSwapAllocNMaxStorage) && false
+   < container_detail::is_memtransfer_copy_assignable<F, G>::value && (MaxTmpBytes <= DeepSwapAllocNMaxStorage) && false
    , void>::type
    deep_swap_alloc_n( A &a, F short_range_f, typename allocator_traits<A>::size_type n_i
                     , G large_range_f, typename allocator_traits<A>::size_type n_j)
@@ -1083,7 +1084,7 @@ template
    ,typename G // G models ForwardIterator
    >
 inline typename container_detail::enable_if_c
-   < container_detail::is_memcpy_copy_assignable<F, G>::value && true//(MaxTmpBytes > DeepSwapAllocNMaxStorage)
+   < container_detail::is_memtransfer_copy_assignable<F, G>::value && true//(MaxTmpBytes > DeepSwapAllocNMaxStorage)
    , void>::type
    deep_swap_alloc_n( A &a, F short_range_f, typename allocator_traits<A>::size_type n_i
                     , G large_range_f, typename allocator_traits<A>::size_type n_j)
