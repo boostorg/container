@@ -1295,7 +1295,7 @@ class slist
       this->insert_after(prev, n, x);
       return ++iterator(prev.get());
    }
-     
+
    //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
    //! <b>Effects</b>: Insert a copy of the [first, last) range before p.
@@ -1493,7 +1493,7 @@ class slist
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
 
-   void priv_push_front (const T &x)  
+   void priv_push_front (const T &x)
    {  this->insert_after(this->cbefore_begin(), x);  }
 
    void priv_push_front (BOOST_RV_REF(T) x)

@@ -198,7 +198,7 @@ struct scoped_destructor_n
 
    void shrink_forward(size_type inc)
    {  m_n -= inc;   m_p += inc;  }
-  
+
    ~scoped_destructor_n()
    {
       if(!m_p) return;

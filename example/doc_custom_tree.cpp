@@ -53,7 +53,7 @@ int main ()
    avl_set_no_szopt.insert(1);
    avl_set_no_szopt.insert(1);
    assert(avl_set_no_szopt.count(1) == 1);
-   
+
    SplayMultiset splay_mset;
    splay_mset.insert(2);
    splay_mset.insert(2);

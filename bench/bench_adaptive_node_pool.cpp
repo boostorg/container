@@ -144,7 +144,7 @@ void list_test_template(std::size_t num_iterations, std::size_t num_elements, bo
       }
       timer.stop();
       tinsert = timer.elapsed().wall;
-      
+
       insert_inuse = boost_cont_in_use_memory();
       insert_stats = boost_cont_malloc_stats();
 /*
@@ -248,7 +248,7 @@ void list_test_template(std::size_t num_iterations, std::size_t num_elements, bo
 
 void print_header()
 {
-   std::cout   << "Allocator" << ";" << "Iterations" << ";" << "Size" << ";" 
+   std::cout   << "Allocator" << ";" << "Iterations" << ";" << "Size" << ";"
                << "Insertion time(ns)" << ";"
                << "System bytes" << ";"
                << "System overhead(%)" << ";"

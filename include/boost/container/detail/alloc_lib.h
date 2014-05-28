@@ -277,7 +277,7 @@ BOOST_CONTAINER_DECL int boost_cont_malloc_check();
 typedef unsigned int allocation_type;
 
 enum
-{   
+{
    // constants for allocation commands
    BOOST_CONTAINER_ALLOCATE_NEW          = 0X01,
    BOOST_CONTAINER_EXPAND_FWD            = 0X02,

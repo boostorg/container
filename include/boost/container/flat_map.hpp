@@ -457,7 +457,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type capacity() const BOOST_CONTAINER_NOEXCEPT        
+   size_type capacity() const BOOST_CONTAINER_NOEXCEPT
       { return m_flat_tree.capacity(); }
 
    //! <b>Effects</b>: If n is less than or equal to capacity(), this call has no
@@ -469,7 +469,7 @@ class flat_map
    //!
    //! <b>Note</b>: If capacity() is less than "cnt", iterators and references to
    //!   to values might be invalidated.
-   void reserve(size_type cnt)      
+   void reserve(size_type cnt)
       { m_flat_tree.reserve(cnt);   }
 
    //! <b>Effects</b>: Tries to deallocate the excess of memory created
@@ -1362,7 +1362,7 @@ class flat_multimap
    //!
    //! <b>Note</b>: If capacity() is less than "cnt", iterators and references to
    //!   to values might be invalidated.
-   void reserve(size_type cnt)      
+   void reserve(size_type cnt)
       { m_flat_tree.reserve(cnt);   }
 
    //! <b>Effects</b>: Tries to deallocate the excess of memory created

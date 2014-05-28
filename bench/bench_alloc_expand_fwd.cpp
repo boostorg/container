@@ -228,8 +228,8 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
 
 void print_header()
 {
-   std::cout   << "Allocator" << ";" << "Iterations" << ";" << "Size" << ";" 
-               << "Capacity" << ";" << "push_back(ns)" << ";" << "Allocator calls" << ";" 
+   std::cout   << "Allocator" << ";" << "Iterations" << ";" << "Size" << ";"
+               << "Capacity" << ";" << "push_back(ns)" << ";" << "Allocator calls" << ";"
                << "New allocations" << ";" << "Fwd expansions" << std::endl;
 }
 

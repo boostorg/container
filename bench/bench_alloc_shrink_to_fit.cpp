@@ -65,7 +65,7 @@ class MyInt
 
 void print_header()
 {
-   std::cout   << "Allocator" << ";" << "Iterations" << ";" << "Size" << ";" 
+   std::cout   << "Allocator" << ";" << "Iterations" << ";" << "Size" << ";"
                << "num_shrink" << ";" << "shrink_to_fit(ns)" << std::endl;
 }
 

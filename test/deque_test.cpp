@@ -288,11 +288,11 @@ bool do_test()
 
       cntdeque->resize(100);
       stddeque->resize(100);
-      if(!test::CheckEqualContainers(cntdeque, stddeque)) return 1;        
+      if(!test::CheckEqualContainers(cntdeque, stddeque)) return 1;
 
       cntdeque->resize(200);
       stddeque->resize(200);
-      if(!test::CheckEqualContainers(cntdeque, stddeque)) return 1;        
+      if(!test::CheckEqualContainers(cntdeque, stddeque)) return 1;
 
       delete cntdeque;
       delete stddeque;
@@ -304,7 +304,7 @@ bool do_test()
       return false;
    }
    BOOST_CATCH_END
-  
+
    std::cout << std::endl << "Test OK!" << std::endl;
    return true;
 }

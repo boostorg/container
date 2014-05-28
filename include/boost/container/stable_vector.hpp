@@ -77,7 +77,7 @@ class clear_on_destroy
    {
       if(do_clear_){
          c_.clear();
-         c_.priv_clear_pool(); 
+         c_.priv_clear_pool();
       }
    }
 
@@ -708,7 +708,7 @@ class stable_vector
    ~stable_vector()
    {
       this->clear();
-      this->priv_clear_pool(); 
+      this->priv_clear_pool();
    }
 
    //! <b>Effects</b>: Makes *this contain the same elements as x.
@@ -1068,7 +1068,7 @@ class stable_vector
          throw_length_error("stable_vector::reserve max_size() exceeded");
       }
 
-      size_type sz         = this->size();  
+      size_type sz         = this->size();
       size_type old_capacity = this->capacity();
       if(n > old_capacity){
          index_traits_type::initialize_end_node(this->index, this->internal_data.end_node, n);

@@ -28,7 +28,7 @@ bool basic_test()
 
    if(boost_cont_all_deallocated())
       return false;
-   
+
    boost_cont_grow(ptr, received + 20, received + 30, &received);
 
    if(boost_cont_allocated_memory() != boost_cont_chunksize(ptr))

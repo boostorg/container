@@ -229,7 +229,7 @@ class map_propagate_test_wrapper
       < T, T, std::less<T>
       , typename boost::container::allocator_traits<A>::template
          portable_rebind_alloc< std::pair<const T, T> >::type
-      //tree_assoc_defaults 
+      //tree_assoc_defaults
       >
 {
    BOOST_COPYABLE_AND_MOVABLE(map_propagate_test_wrapper)

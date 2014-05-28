@@ -485,7 +485,7 @@ static void internal_multialloc_free(mstate m, boost_cont_memchain *pchain)
 
 /* lcm is an algorithm that calculates the least common multiple of two
    integers.
-  
+
    Pre: A > 0 && B > 0
    Recommended: A > B*/
 #define CALCULATE_LCM(A, B, OUT)\
@@ -520,7 +520,7 @@ static int calculate_lcm_and_needs_backwards_lcmed
 
       lcm = max;
       /*If we want to use minbytes data to get a buffer between maxbytes
-      and minbytes if maxbytes can't be achieved, calculate the 
+      and minbytes if maxbytes can't be achieved, calculate the
       biggest of all possibilities*/
       current_forward = GET_TRUNCATED_PO2_SIZE(received_size, backwards_multiple);
       needs_backwards = size_to_achieve - current_forward;
@@ -578,7 +578,7 @@ static int calculate_lcm_and_needs_backwards_lcmed
    else{
       CALCULATE_LCM(max, min, lcm);
       /*If we want to use minbytes data to get a buffer between maxbytes
-      and minbytes if maxbytes can't be achieved, calculate the 
+      and minbytes if maxbytes can't be achieved, calculate the
       biggest of all possibilities*/
       current_forward = GET_TRUNCATED_SIZE(received_size, backwards_multiple);
       needs_backwards = size_to_achieve - current_forward;
@@ -682,7 +682,7 @@ static void *internal_grow_both_sides
                int prev_was_dv = prev == m->dv;
 
                assert(newprevsize >= MIN_CHUNK_SIZE);
-               
+
                if (prev_was_dv) {
                   m->dvsize = newprevsize;
                }
@@ -691,7 +691,7 @@ static void *internal_grow_both_sides
                   insert_chunk(m, prev, newprevsize);
                }
 
-               set_size_and_pinuse_of_free_chunk(prev, newprevsize);   
+               set_size_and_pinuse_of_free_chunk(prev, newprevsize);
                clear_pinuse(r);
                set_inuse(m, r, rsize);
                check_malloced_chunk(m, chunk2mem(r), rsize);
@@ -762,7 +762,7 @@ static int internal_mmap_shrink_in_place(mstate m, mchunkptr oldp, size_t nbmin,
       if(!do_commit){
          const int flags = 0; /* placate people compiling -Wunused */
          char* cp = (char*)CALL_MREMAP((char*)oldp - offset,
-                                       oldmmsize, newmmsize, flags);          
+                                       oldmmsize, newmmsize, flags);
          /*This must always succeed */
          if(!cp){
             USAGE_ERROR_ACTION(m, m);
@@ -822,7 +822,7 @@ static int internal_shrink(mstate m, void* oldmem, size_t minbytes, size_t maxby
                   ok_next(oldp, next) && ok_pinuse(next))) {
          size_t nbmin = request2size(minbytes);
          size_t nbmax = request2size(maxbytes);
-   
+
          if (nbmin > oldsize){
             /* Return error if old size is too small */
          }
@@ -880,8 +880,8 @@ static int internal_node_multialloc
    if( !element_size ||
       /*OR Error if n_elements less thatn contiguous_elements */
       ((contiguous_elements + 1) > (DL_MULTIALLOC_DEFAULT_CONTIGUOUS + 1) && n_elements < contiguous_elements) ||
-      /* OR Error if integer overflow */ 
-      (SQRT_MAX_SIZE_T < (element_req_size | contiguous_elements) && 
+      /* OR Error if integer overflow */
+      (SQRT_MAX_SIZE_T < (element_req_size | contiguous_elements) &&
          (MAX_SIZE_T/element_req_size) < contiguous_elements)){
       return 0;
    }
@@ -1201,7 +1201,7 @@ BOOST_CONTAINER_DECL boost_cont_malloc_stats_t boost_cont_malloc_stats()
   }
   else {
     boost_cont_malloc_stats_t r = { 0, 0, 0 };
-    USAGE_ERROR_ACTION(ms,ms);    
+    USAGE_ERROR_ACTION(ms,ms);
     return r;
   }
 }

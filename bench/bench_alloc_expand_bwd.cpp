@@ -86,8 +86,8 @@ struct has_trivial_destructor_after_move<MyInt>
 
 void print_header()
 {
-   std::cout   << "Allocator" << ";" << "Iterations" << ";" << "Size" << ";" 
-               << "Capacity" << ";" << "push_back(ns)" << ";" << "Allocator calls" << ";" 
+   std::cout   << "Allocator" << ";" << "Iterations" << ";" << "Size" << ";"
+               << "Capacity" << ";" << "push_back(ns)" << ";" << "Allocator calls" << ";"
                << "New allocations" << ";" << "Bwd expansions" << std::endl;
 }
 

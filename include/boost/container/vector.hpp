@@ -103,7 +103,7 @@ class vec_iterator
       #ifndef NDEBUG
       : m_ptr()
       #else
-      // No value initialization of m_ptr() to speed up things a bit: 
+      // No value initialization of m_ptr() to speed up things a bit:
       #endif
    {}
 
@@ -790,7 +790,7 @@ class vector
       boost::container::destroy_alloc_n
          (this->get_stored_allocator(), container_detail::to_raw_pointer(this->m_holder.start()), this->m_holder.m_size);
       //vector_alloc_holder deallocates the data
-   } 
+   }
 
    //! <b>Effects</b>: Makes *this contain the same elements as x.
    //!
@@ -930,7 +930,7 @@ class vector
       const size_type input_sz = static_cast<size_type>(std::distance(first, last));
       const size_type old_capacity = this->capacity();
       if(input_sz > old_capacity){  //If input range is too big, we need to reallocate
-         size_type real_cap;
+         size_type real_cap = 0;
          std::pair<pointer, bool> ret =
             this->m_holder.allocation_command(allocate_new, input_sz, input_sz, real_cap, this->m_holder.start());
          if(!ret.second){  //New allocation, just emplace new values
@@ -945,7 +945,7 @@ class vector
             this->priv_uninitialized_construct_at_end(first, last);
             return;
          }
-         else{ 
+         else{
             //Forward expansion, use assignment + back deletion/construction that comes later
          }
       }
@@ -1426,7 +1426,7 @@ class vector
    #else
    BOOST_MOVE_CONVERSION_AWARE_CATCH(push_back, T, void, priv_push_back)
    #endif
- 
+
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //! <b>Requires</b>: position must be a valid iterator of *this.
    //!
@@ -2202,7 +2202,7 @@ class vector
    //
    //Old situation:
    //       first_pos   last_pos         old_limit
-   //             |       |                  | 
+   //             |       |                  |
    // ____________V_______V__________________V_____________
    //|   prefix   | range |     suffix       |raw_mem      ~
    //|____________|_______|__________________|_____________~
@@ -2211,19 +2211,19 @@ class vector
    // range is moved through move assignments
    //
    //       first_pos   last_pos         limit_pos
-   //             |       |                  | 
+   //             |       |                  |
    // ____________V_______V__________________V_____________
    //|   prefix'  |       |  | range |suffix'|raw_mem      ~
    //|________________+______|___^___|_______|_____________~
    //                 |          |
-   //                 |_>_>_>_>_>^                    
+   //                 |_>_>_>_>_>^
    //
    //
    //New situation in Case B (hole_size > 0):
    // range is moved through uninitialized moves
    //
    //       first_pos   last_pos         limit_pos
-   //             |       |                  | 
+   //             |       |                  |
    // ____________V_______V__________________V________________
    //|    prefix' |       |                  | [hole] | range |
    //|_______________________________________|________|___^___|
@@ -2234,7 +2234,7 @@ class vector
    // range is moved through move assignments and uninitialized moves
    //
    //       first_pos   last_pos         limit_pos
-   //             |       |                  | 
+   //             |       |                  |
    // ____________V_______V__________________V___
    //|   prefix'  |       |              | range |
    //|___________________________________|___^___|

@@ -87,7 +87,7 @@ class private_node_pool_impl
 
    void *allocate_node()
    {  return this->priv_alloc_node();  }
-  
+
    //!Deallocates an array pointed by ptr. Never throws
    void deallocate_node(void *ptr)
    {  this->priv_dealloc_node(ptr); }
@@ -235,7 +235,7 @@ class private_node_pool_impl
       push_in_list(free_nodes_t &l, typename free_nodes_t::iterator &it)
          :  slist_(l), last_it_(it)
       {}
-     
+
       void operator()(typename free_nodes_t::pointer p) const
       {
          slist_.push_front(*p);
@@ -257,7 +257,7 @@ class private_node_pool_impl
       is_between(const void *addr, std::size_t size)
          :  beg_(static_cast<const char *>(addr)), end_(beg_+size)
       {}
-     
+
       bool operator()(typename free_nodes_t::const_reference v) const
       {
          return (beg_ <= reinterpret_cast<const char *>(&v) &&
@@ -334,13 +334,13 @@ class private_node_pool_impl
    private:
    //!Returns a reference to the block hook placed in the end of the block
    static node_t & get_block_hook (void *block, size_type blocksize)
-   { 
-      return *reinterpret_cast<node_t*>(reinterpret_cast<char*>(block) + blocksize); 
+   {
+      return *reinterpret_cast<node_t*>(reinterpret_cast<char*>(block) + blocksize);
    }
 
    //!Returns the starting address of the block reference to the block hook placed in the end of the block
    void *get_block_from_hook (node_t *hook, size_type blocksize)
-   { 
+   {
       return (reinterpret_cast<char*>(hook) - blocksize);
    }
 

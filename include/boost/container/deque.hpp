@@ -93,9 +93,9 @@ namespace container_detail {
 //    [start.cur, start.last) and [finish.first, finish.cur) are initialized
 //    objects, and [start.first, start.cur) and [finish.cur, finish.last)
 //    are uninitialized storage.
-//  [map, map + map_size) is a valid, non-empty range. 
+//  [map, map + map_size) is a valid, non-empty range.
 //  [start.node, finish.node] is a valid range contained within
-//    [map, map + map_size). 
+//    [map, map + map_size).
 //  Allocator pointer in the range [map, map + map_size) points to an allocated node
 //    if and only if the pointer is in the range [start.node, finish.node].
 template<class Pointer, bool IsConst>
@@ -122,7 +122,7 @@ class deque_iterator
 
    typedef Pointer                                                                  val_alloc_ptr;
    typedef typename boost::intrusive::pointer_traits<Pointer>::
-      template rebind_pointer<Pointer>::type                                        index_pointer;                              
+      template rebind_pointer<Pointer>::type                                        index_pointer;
 
    Pointer m_cur;
    Pointer m_first;
@@ -227,7 +227,7 @@ class deque_iterator
 
    deque_iterator& operator-=(difference_type n) BOOST_CONTAINER_NOEXCEPT
       { return *this += -n; }
-   
+
    deque_iterator operator-(difference_type n) const BOOST_CONTAINER_NOEXCEPT
       {  deque_iterator tmp(*this); return tmp -= n;  }
 
@@ -343,7 +343,7 @@ class deque_base
 
    private:
    deque_base(const deque_base&);
- 
+
    protected:
 
    void swap_members(deque_base &x) BOOST_CONTAINER_NOEXCEPT
@@ -364,7 +364,7 @@ class deque_base
 
          ptr_alloc_ptr nstart = this->members_.m_map + (this->members_.m_map_size - num_nodes) / 2;
          ptr_alloc_ptr nfinish = nstart + num_nodes;
-            
+
          BOOST_TRY {
             this->priv_create_nodes(nstart, nfinish);
          }
@@ -451,13 +451,13 @@ class deque_base
 
    ptr_alloc_t &ptr_alloc() BOOST_CONTAINER_NOEXCEPT
    {  return members_;  }
-  
+
    const ptr_alloc_t &ptr_alloc() const BOOST_CONTAINER_NOEXCEPT
    {  return members_;  }
 
    allocator_type &alloc() BOOST_CONTAINER_NOEXCEPT
    {  return members_;  }
-  
+
    const allocator_type &alloc() const BOOST_CONTAINER_NOEXCEPT
    {  return members_;  }
 };
@@ -1896,7 +1896,7 @@ class deque : protected deque_base<Allocator>
       this->priv_deallocate_node(this->members_.m_start.m_first);
       this->members_.m_start.priv_set_node(this->members_.m_start.m_node + 1);
       this->members_.m_start.m_cur = this->members_.m_start.m_first;
-   }     
+   }
 
    iterator priv_reserve_elements_at_front(size_type n)
    {
@@ -1916,7 +1916,7 @@ class deque : protected deque_base<Allocator>
          }
          BOOST_CATCH(...) {
             for (size_type j = 1; j < i; ++j)
-               this->priv_deallocate_node(*(this->members_.m_start.m_node - j));     
+               this->priv_deallocate_node(*(this->members_.m_start.m_node - j));
             BOOST_RETHROW
          }
          BOOST_CATCH_END
@@ -1941,7 +1941,7 @@ class deque : protected deque_base<Allocator>
          }
          BOOST_CATCH(...) {
             for (size_type j = 1; j < i; ++j)
-               this->priv_deallocate_node(*(this->members_.m_finish.m_node + j));     
+               this->priv_deallocate_node(*(this->members_.m_finish.m_node + j));
             BOOST_RETHROW
          }
          BOOST_CATCH_END

@@ -83,7 +83,7 @@ bool test_allocation()
       }
       if(!boost_cont_all_deallocated())
          return false;
-      //bool ok = free_memory == a.get_free_memory() && 
+      //bool ok = free_memory == a.get_free_memory() &&
                //a.all_memory_deallocated() && a.check_sanity();
       //if(!ok)  return ok;
    }
@@ -137,7 +137,7 @@ bool test_allocation_shrink()
          }
       }
    }
-   
+
    //Deallocate it in non sequential order
    for(int j = 0, max = (int)buffers.size()
       ;j < max
@@ -187,7 +187,7 @@ bool test_allocation_expand()
          preferred_size = min_size*2;
       }
    }
-   
+
    //Deallocate it in non sequential order
    for(int j = 0, max = (int)buffers.size()
       ;j < max
@@ -262,7 +262,7 @@ bool test_allocation_shrink_and_expand()
          return false;
       }
    }
-   
+
    //Deallocate it in non sequential order
    for(int j = 0, max = (int)buffers.size()
       ;j < max
@@ -328,7 +328,7 @@ bool test_allocation_deallocation_expand()
          }
       }
    }
-   
+
    //Now erase null values from the vector
    buffers.erase(std::remove(buffers.begin(), buffers.end(), (void*)0)
                 ,buffers.end());
@@ -366,7 +366,7 @@ bool test_allocation_with_reuse()
             break;
          buffers.push_back(ptr);
       }
-      
+
       //Now deallocate all except the latest
       //Now try to expand to the double of the size
       for(int i = 0, max = (int)buffers.size() - 1
@@ -421,7 +421,7 @@ bool test_aligned_allocation()
          if(!ptr){
             return false;
          }
-         
+
          if(((std::size_t)ptr & (j - 1)) != 0)
             return false;
          boost_cont_free(ptr);
@@ -455,7 +455,7 @@ bool test_continuous_aligned_allocation()
                continue_loop = false;
                break;
             }
-            
+
             if(((std::size_t)ptr & (j - 1)) != 0)
                return false;
          }
@@ -576,7 +576,7 @@ bool test_many_equal_allocation()
          buffers2.erase(buffers2.begin()+pos);
       }
 
-      //bool ok = free_memory == a.get_free_memory() && 
+      //bool ok = free_memory == a.get_free_memory() &&
                //a.all_memory_deallocated() && a.check_sanity();
       //if(!ok)  return ok;
    }
@@ -684,7 +684,7 @@ bool test_many_different_allocation()
          buffers2.erase(buffers2.begin()+pos);
       }
 
-      //bool ok = free_memory == a.get_free_memory() && 
+      //bool ok = free_memory == a.get_free_memory() &&
                //a.all_memory_deallocated() && a.check_sanity();
       //if(!ok)  return ok;
    }

@@ -35,7 +35,7 @@ namespace container {
 namespace container_detail {
 
 //!Pooled memory allocator using single segregated storage. Includes
-//!a reference count but the class does not delete itself, this is  
+//!a reference count but the class does not delete itself, this is
 //!responsibility of user classes. Node size (NodeSize) and the number of
 //!nodes allocated per block (NodesPerBlock) are known at compile time
 template< std::size_t NodeSize, std::size_t NodesPerBlock >
@@ -64,8 +64,8 @@ class private_node_pool
 template< std::size_t NodeSize
         , std::size_t NodesPerBlock
         >
-class shared_node_pool 
-   : public private_node_pool<NodeSize, NodesPerBlock> 
+class shared_node_pool
+   : public private_node_pool<NodeSize, NodesPerBlock>
 {
    private:
    typedef private_node_pool<NodeSize, NodesPerBlock> private_node_allocator_t;
@@ -90,7 +90,7 @@ class shared_node_pool
       //-----------------------
       return private_node_allocator_t::allocate_node();
    }
-   
+
    //!Deallocates an array pointed by ptr. Never throws
    void deallocate_node(void *ptr)
    {

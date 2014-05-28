@@ -148,7 +148,7 @@ void stable_vector_test_template(unsigned int num_iterations, unsigned int num_e
          timer.start();
 
          for(unsigned int r = 0; r != num_iterations; ++r){
-            std::size_t init_pos = (num_iterations-1)-r; 
+            std::size_t init_pos = (num_iterations-1)-r;
             l.erase(ranges_to_erase[init_pos], l.end());
          }
          timer.stop();
@@ -180,7 +180,7 @@ void stable_vector_test_template(unsigned int num_iterations, unsigned int num_e
 
 void print_header()
 {
-   std::cout   << "Allocator" << ";" << "Iterations" << ";" << "Size" << ";" 
+   std::cout   << "Allocator" << ";" << "Iterations" << ";" << "Size" << ";"
                << "Insertion time(ns)" << ";" << "Erasure time(ns)" << ";"
                << std::endl;
 }

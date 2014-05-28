@@ -47,7 +47,7 @@ namespace boost { namespace container {
 //! ill-formed.
 //!
 //! <code>
-//!  template <class T, class Allocator = allocator<T> >  
+//!  template <class T, class Allocator = allocator<T> >
 //!  class Z {
 //!    public:
 //!      typedef Allocator allocator_type;
@@ -62,7 +62,7 @@ namespace boost { namespace container {
 //!
 //! // Specialize trait for class template Z
 //! template <class T, class Allocator = allocator<T> >
-//! struct constructible_with_allocator_suffix<Z<T,Allocator> > 
+//! struct constructible_with_allocator_suffix<Z<T,Allocator> >
 //!      : ::boost::true_type { };
 //! </code>
 //!
@@ -80,7 +80,7 @@ struct constructible_with_allocator_suffix
 {};
 
 //! <b>Remark</b>: if a specialization is derived from true_type, indicates that T may be constructed
-//! with allocator_arg and T::allocator_type as its first two constructor arguments. 
+//! with allocator_arg and T::allocator_type as its first two constructor arguments.
 //! Ideally, all constructors of T (including the copy and move constructors) should have a variant
 //! that accepts these two initial arguments.
 //!
@@ -95,26 +95,26 @@ struct constructible_with_allocator_suffix
 //! class Y {
 //!    public:
 //!       typedef Allocator allocator_type;
-//! 
+//!
 //!       // Default constructor with and allocator-extended default constructor
 //!       Y();
 //!       Y(allocator_arg_t, const allocator_type& a);
-//! 
+//!
 //!       // Copy constructor and allocator-extended copy constructor
 //!       Y(const Y& yy);
 //!       Y(allocator_arg_t, const allocator_type& a, const Y& yy);
-//! 
+//!
 //!       // Variadic constructor and allocator-extended variadic constructor
 //!       template<class ...Args> Y(Args&& args...);
-//!       template<class ...Args> 
+//!       template<class ...Args>
 //!       Y(allocator_arg_t, const allocator_type& a, Args&&... args);
 //! };
-//! 
+//!
 //! // Specialize trait for class template Y
 //! template <class T, class Allocator = allocator<T> >
-//! struct constructible_with_allocator_prefix<Y<T,Allocator> > 
+//! struct constructible_with_allocator_prefix<Y<T,Allocator> >
 //!       : ::boost::true_type { };
-//! 
+//!
 //! </code>
 //!
 //! <b>Note</b>: This trait is a workaround inspired by "N2554: The Scoped Allocator Model (Rev 2)"
@@ -960,7 +960,7 @@ class scoped_allocator_adaptor_base
    scoped_allocator_adaptor_base(internal_type_t, BOOST_FWD_REF(OuterA2) outerAlloc, const inner_allocator_type &)
       : outer_allocator_type(::boost::forward<OuterA2>(outerAlloc))
       {}
- 
+
    public:
    scoped_allocator_adaptor_base &operator=(BOOST_COPY_ASSIGN_REF(scoped_allocator_adaptor_base) other)
    {
@@ -1375,7 +1375,7 @@ class scoped_allocator_adaptor
    template <class T1, class T2, class U, class V>
    void construct(container_detail::pair<T1, T2>* p, BOOST_FWD_REF(U) x, BOOST_FWD_REF(V) y)
    {  this->construct_pair(p, ::boost::forward<U>(x), ::boost::forward<V>(y));   }
-  
+
    template <class T1, class T2, class U, class V>
    void construct(std::pair<T1, T2>* p, const std::pair<U, V>& x)
    {  this->construct_pair(p, x);   }
@@ -1384,7 +1384,7 @@ class scoped_allocator_adaptor
    void construct( container_detail::pair<T1, T2>* p
                  , const container_detail::pair<U, V>& x)
    {  this->construct_pair(p, x);   }
-  
+
    template <class T1, class T2, class U, class V>
    void construct( std::pair<T1, T2>* p
                  , BOOST_RV_REF_BEG std::pair<U, V> BOOST_RV_REF_END x)
@@ -1489,7 +1489,7 @@ inline bool operator==(
       #endif
    >& b)
 {
-   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)  
+   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    const bool has_zero_inner = sizeof...(InnerAllocs) == 0u;
    #else
    const bool has_zero_inner =

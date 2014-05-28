@@ -91,12 +91,12 @@ class node_allocator
       transform_multiallocation_chain
          <multiallocation_chain_void, T>              multiallocation_chain;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
- 
-   //!Obtains node_allocator from 
+
+   //!Obtains node_allocator from
    //!node_allocator
    template<class T2>
    struct rebind
-   {  
+   {
       typedef node_allocator< T2, NodesPerBlock
                             #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
                             , Version
@@ -144,7 +144,7 @@ class node_allocator
    size_type max_size() const
    {  return size_type(-1)/sizeof(T);   }
 
-   //!Allocate memory for an array of count elements. 
+   //!Allocate memory for an array of count elements.
    //!Throws std::bad_alloc if there is no enough memory
    pointer allocate(size_type count, const void * = 0)
    {
@@ -192,7 +192,7 @@ class node_allocator
 
    std::pair<pointer, bool>
       allocation_command(allocation_type command,
-                         size_type limit_size, 
+                         size_type limit_size,
                          size_type preferred_size,
                          size_type &received_size, pointer reuse = pointer())
    {
@@ -259,7 +259,7 @@ class node_allocator
       singleton_t::instance().deallocate_nodes(ch);
    }
 
-   //!Allocates many elements of size elem_size. 
+   //!Allocates many elements of size elem_size.
    //!Elements must be individually deallocated with deallocate()
    void allocate_many(size_type elem_size, std::size_t n_elements, multiallocation_chain &chain)
    {
@@ -275,7 +275,7 @@ class node_allocator
                              , BOOST_CONTAINER_MEMCHAIN_SIZE(&ch));
    }
 
-   //!Allocates n_elements elements, each one of size elem_sizes[i] 
+   //!Allocates n_elements elements, each one of size elem_sizes[i]
    //!Elements must be individually deallocated with deallocate()
    void allocate_many(const size_type *elem_sizes, size_type n_elements, multiallocation_chain &chain)
    {
@@ -318,7 +318,7 @@ class node_allocator
    {  return false;   }
 
    private:
-   std::pair<pointer, bool> priv_allocation_command 
+   std::pair<pointer, bool> priv_allocation_command
       (allocation_type command,   std::size_t limit_size
       ,std::size_t preferred_size,std::size_t &received_size, void *reuse_ptr)
    {
