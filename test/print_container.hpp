@@ -52,7 +52,7 @@ void PrintContainers(MyBoostCont *boostcont, MyStdCont *stdcont)
       std::cout << *itboost << std::endl;
    }
    std::cout << "MyStdCont" << std::endl;
- 
+
    for(; itstd != itstdend; ++itstd){
       std::cout << *itstd << std::endl;
    }

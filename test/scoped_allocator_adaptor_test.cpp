@@ -723,7 +723,7 @@ int main()
    }
 
    {
-      vector<int, scoped_allocator_adaptor< test_allocator<int, 0> > > dummy; 
+      vector<int, scoped_allocator_adaptor< test_allocator<int, 0> > > dummy;
       dummy.push_back(0);
    }
 

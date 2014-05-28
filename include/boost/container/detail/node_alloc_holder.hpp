@@ -151,7 +151,7 @@ struct node_alloc_holder
    {  this->icont().swap(x.icont());  }
 
    void copy_assign_alloc(const node_alloc_holder &x)
-   { 
+   {
       container_detail::bool_<allocator_traits_type::propagate_on_container_copy_assignment::value> flag;
       container_detail::assign_alloc( static_cast<NodeAlloc &>(this->members_)
                                     , static_cast<const NodeAlloc &>(x.members_), flag);

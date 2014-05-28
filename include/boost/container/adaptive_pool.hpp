@@ -111,11 +111,11 @@ class adaptive_pool
          <multiallocation_chain_void, T>              multiallocation_chain;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
-   //!Obtains adaptive_pool from 
+   //!Obtains adaptive_pool from
    //!adaptive_pool
    template<class T2>
    struct rebind
-   {  
+   {
       typedef adaptive_pool
          < T2
          , NodesPerBlock
@@ -166,7 +166,7 @@ class adaptive_pool
    size_type max_size() const BOOST_CONTAINER_NOEXCEPT
    {  return size_type(-1)/sizeof(T);   }
 
-   //!Allocate memory for an array of count elements. 
+   //!Allocate memory for an array of count elements.
    //!Throws std::bad_alloc if there is no enough memory
    pointer allocate(size_type count, const void * = 0)
    {
@@ -202,7 +202,7 @@ class adaptive_pool
 
    std::pair<pointer, bool>
       allocation_command(allocation_type command,
-                         size_type limit_size, 
+                         size_type limit_size,
                          size_type preferred_size,
                          size_type &received_size, pointer reuse = pointer())
    {
@@ -264,7 +264,7 @@ class adaptive_pool
       singleton_t::instance().deallocate_nodes(chain);
    }
 
-   //!Allocates many elements of size elem_size. 
+   //!Allocates many elements of size elem_size.
    //!Elements must be individually deallocated with deallocate()
    void allocate_many(size_type elem_size, std::size_t n_elements, multiallocation_chain &chain)
    {
@@ -276,14 +276,14 @@ class adaptive_pool
       }
       chain.incorporate_after(chain.before_begin()
                              ,(T*)BOOST_CONTAINER_MEMCHAIN_FIRSTMEM(&ch)
-                             ,(T*)BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch) 
+                             ,(T*)BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch)
                              ,BOOST_CONTAINER_MEMCHAIN_SIZE(&ch) );*/
       if(!boost_cont_multialloc_nodes(n_elements, elem_size*sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<boost_cont_memchain *>(&chain))){
          boost::container::throw_bad_alloc();
       }
    }
 
-   //!Allocates n_elements elements, each one of size elem_sizes[i] 
+   //!Allocates n_elements elements, each one of size elem_sizes[i]
    //!Elements must be individually deallocated with deallocate()
    void allocate_many(const size_type *elem_sizes, size_type n_elements, multiallocation_chain &chain)
    {
@@ -337,7 +337,7 @@ class adaptive_pool
    {  return false;   }
 
    private:
-   std::pair<pointer, bool> priv_allocation_command 
+   std::pair<pointer, bool> priv_allocation_command
       (allocation_type command,   std::size_t limit_size
       ,std::size_t preferred_size,std::size_t &received_size, void *reuse_ptr)
    {

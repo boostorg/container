@@ -23,7 +23,7 @@ namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 enum allocation_type_v
-{  
+{
    // constants for allocation commands
    allocate_new_v   = 0x01,
    expand_fwd_v     = 0x02,

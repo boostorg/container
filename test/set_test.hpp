@@ -99,7 +99,7 @@ int set_test_copyable(boost::container::container_detail::true_type)
 
          boostmsetcopy = *boostmultiset;
          stdmsetcopy = *stdmultiset;
-        
+
          if(!CheckEqualContainers(&boostmsetcopy, &stdmsetcopy))
             return 1;
       }
@@ -128,7 +128,7 @@ int set_test ()
    MyBoostMultiSet *boostmultiset = new MyBoostMultiSet;
    MyStdMultiSet *stdmultiset = new MyStdMultiSet;
 
-   //Test construction from a range  
+   //Test construction from a range
    {
       IntType aux_vect[50];
       for(int i = 0; i < 50; ++i){

@@ -278,7 +278,7 @@ a throw-callback declared in [headerref boost/container/throw_exception.hpp]:
 *  If `BOOST_CONTAINER_USER_DEFINED_THROW_CALLBACKS` is defined, then the programmer must provide its own definition for all
    `throw_xxx` functions. Those functions can't return, they must throw an exception or call `std::exit` or `std::abort`.
 *  Else if `BOOST_NO_EXCEPTIONS` is defined, a `BOOST_ASSERT_MSG` assertion is triggered
-   (see [@http://www.boost.org/libs/utility/assert.html Boost.Assert] for more information). 
+   (see [@http://www.boost.org/libs/utility/assert.html Boost.Assert] for more information).
    If this assertion returns, then `std::abort` is called.
 *  Else, an appropriate standard library exception is thrown (like `std::out_of_range`).
 
@@ -487,27 +487,27 @@ complementary.
 
 [section:static_vector ['static_vector]]
 
-`static_vector` is an hybrid between `vector` and `array`: like `vector`, it's a sequence container 
+`static_vector` is an hybrid between `vector` and `array`: like `vector`, it's a sequence container
 with contiguous storage that can change in size, along with the static allocation, low overhead,
 and fixed capacity of `array`. `static_vector` is based on Adam Wulkiewicz and Andrew Hundt's
 high-performance [@https://svn.boost.org/svn/boost/sandbox/varray/doc/html/index.html varray]
 class.
 
-The number of elements in a `static_vector` may vary dynamically up to a fixed capacity 
-because elements are stored within the object itself similarly to an array. However, objects are 
-initialized as they are inserted into `static_vector` unlike C arrays or `std::array` which must construct 
-all elements on instantiation. The behavior of `static_vector` enables the use of statically allocated 
-elements in cases with complex object lifetime requirements that would otherwise not be trivially 
+The number of elements in a `static_vector` may vary dynamically up to a fixed capacity
+because elements are stored within the object itself similarly to an array. However, objects are
+initialized as they are inserted into `static_vector` unlike C arrays or `std::array` which must construct
+all elements on instantiation. The behavior of `static_vector` enables the use of statically allocated
+elements in cases with complex object lifetime requirements that would otherwise not be trivially
 possible. Some other properties:
 
 * Random access to elements
 * Constant time insertion and removal of elements at the end
 * Linear time insertion and removal of elements at the beginning or in the middle.
- 
-`static_vector` is well suited for use in a buffer, the internal implementation of other 
+
+`static_vector` is well suited for use in a buffer, the internal implementation of other
 classes, or use cases where there is a fixed limit to the number of elements that must be stored.
-Embedded and realtime applications where allocation either may not be available or acceptable 
-are a particular case where `static_vector` can be beneficial. 
+Embedded and realtime applications where allocation either may not be available or acceptable
+are a particular case where `static_vector` can be beneficial.
 
 [endsect]
 
@@ -535,13 +535,13 @@ using [@http://en.cppreference.com/w/cpp/language/default_initialization default
 
 [section:ordered_range_insertion Ordered range insertion for associative containers (['ordered_unique_range], ['ordered_range]) ]
 
-When filling associative containers big performance gains can be achieved if the input range to be inserted 
+When filling associative containers big performance gains can be achieved if the input range to be inserted
 is guaranteed by the user to be ordered according to the predicate. This can happen when inserting values from a `set` to
 a `multiset` or between different associative container families (`[multi]set/map` vs. `flat_[multi]set/map`).
 
 [*Boost.Container] has some overloads for constructors and insertions taking an `ordered_unique_range_t` or
 an `ordered_range_t` tag parameters as the first argument. When an `ordered_unique_range_t` overload is used, the
-user notifies the container that the input range is ordered according to the container predicate and has no 
+user notifies the container that the input range is ordered according to the container predicate and has no
 duplicates. When an `ordered_range_t` overload is used, the
 user notifies the container that the input range is ordered according to the container predicate but it might
 have duplicates. With this information, the container can avoid multiple predicate calls and improve insertion
@@ -592,7 +592,7 @@ used to customize these containers:
 [section:constant_time_range_splice Constant-time range splice for `(s)list`]
 
 In the first C++ standard `list::size()` was not required to be constant-time,
-and that caused some controversy in the C++ community. Quoting Howard Hinnant's 
+and that caused some controversy in the C++ community. Quoting Howard Hinnant's
 [@http://home.roadrunner.com/~hinnant/On_list_size.html ['On List Size]] paper:
 
 [: ['There is a considerable debate on whether `std::list<T>::size()` should be O(1) or O(N).
@@ -603,7 +603,7 @@ The usual argument notes that it is a tradeoff with:]
 ['If size() is O(1) and this != &x, then this method must perform a linear operation so that it
 can adjust the size member in each list]]
 
-C++11 definitely required `size()` to be O(1), so range splice became O(N). However, 
+C++11 definitely required `size()` to be O(1), so range splice became O(N). However,
 Howard Hinnant's paper proposed a new `splice` overload so that even O(1) `list:size()`
 implementations could achieve O(1) range splice when the range size was known to the caller:
 
@@ -629,7 +629,7 @@ then the operation is constant time, even with an O(1) size.
 
 [section:extended_allocators Extended allocators]
 
-Many C++ programmers have ever wondered where does good old realloc fit in C++. And that's a good question. 
+Many C++ programmers have ever wondered where does good old realloc fit in C++. And that's a good question.
 Could we improve [classref boost::container::vector vector] performance using memory expansion mechanisms
 to avoid too many copies? But [classref boost::container::vector vector] is not the only container that
 could benefit from an improved allocator interface: we could take advantage of the insertion of multiple
@@ -637,7 +637,7 @@ elements in [classref boost::container::list list] using a burst allocation mech
 costs (mutex locks, free memory searches...) that can't be amortized when using single node allocation
 strategies.
 
-These improvements require extending the STL allocator interface and use make use of a new 
+These improvements require extending the STL allocator interface and use make use of a new
 general purpose allocator since new and delete don't offer expansion and burst capabilities.
 
 *  [*Boost.Container] containers support an extended allocator interface based on an evolution of proposals
@@ -803,7 +803,7 @@ versions.
 
 [classref ::boost::container::vector vector] does not support the strong exception guarantees
 given by `std::vector` in functions like `insert`, `push_back`, `emplace`, `emplace_back`,
-`resize`, `reserve` or `shrink_to_fit` for either copyable or no-throw moveable classes. 
+`resize`, `reserve` or `shrink_to_fit` for either copyable or no-throw moveable classes.
 [@http://en.cppreference.com/w/cpp/utility/move_if_noexcept move_if_noexcept] is used to maintain
 C++03 exception safety guarantees combined with C++11 move semantics.
 This strong exception guarantee degrades the insertion performance of copyable and throw moveable types,
@@ -902,7 +902,7 @@ use [*Boost.Container]? There are several reasons for that:
    * Small string optimization for [classref boost::container::basic_string basic_string].
 * [link container.extended_functionality Extended functionality] beyond the standard based
    on user feedback to improve code performance.
-* You need a portable implementation that works when compiling without exceptions support or 
+* You need a portable implementation that works when compiling without exceptions support or
   you need to customize the error handling when a container needs to signal an exceptional error.
 
 [endsect]
@@ -1051,7 +1051,7 @@ use [*Boost.Container]? There are several reasons for that:
   [@https://svn.boost.org/trac/boost/ticket/6536 #6536],
   [@https://svn.boost.org/trac/boost/ticket/6566 #6566],
   [@https://svn.boost.org/trac/boost/ticket/6575 #6575],
-  
+
 [endsect]
 
 

@@ -216,15 +216,15 @@ int string_test()
       boost_swapper.swap(auxBoostString);
       std_swapper.swap(auxStdString);
       if(!StringEqual()(auxBoostString, auxStdString))
-         return 1;  
+         return 1;
       if(!StringEqual()(boost_swapper, std_swapper))
-         return 1;  
+         return 1;
       boost_swapper.swap(auxBoostString);
       std_swapper.swap(auxStdString);
       if(!StringEqual()(auxBoostString, auxStdString))
-         return 1;  
+         return 1;
       if(!StringEqual()(boost_swapper, std_swapper))
-         return 1;  
+         return 1;
 
       //Shrink_to_fit
       auxBoostString.shrink_to_fit();
@@ -251,7 +251,7 @@ int string_test()
       boost_swapper.swap(auxBoostString);
       std_swapper.swap(auxStdString);
       if(!StringEqual()(auxBoostString, auxStdString))
-         return 1;  
+         return 1;
       if(!StringEqual()(boost_swapper, std_swapper))
          return 1;
       boost_swapper.swap(auxBoostString);

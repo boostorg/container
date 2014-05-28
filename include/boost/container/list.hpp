@@ -1193,7 +1193,7 @@ class list
    //! <b>Throws</b>: If comparison throws.
    //!
    //! <b>Notes</b>: Iterators and references are not invalidated.
-   //!  
+   //!
    //! <b>Complexity</b>: The number of comparisons is approximately N log N, where N
    //!   is the list's size.
    void sort()
@@ -1326,13 +1326,13 @@ class list
       return iterator(this->icont().insert(p.get(), *tmp));
    }
 
-   void priv_push_back (const T &x)  
+   void priv_push_back (const T &x)
    {  this->insert(this->cend(), x);    }
 
    void priv_push_back (BOOST_RV_REF(T) x)
    {  this->insert(this->cend(), boost::move(x));    }
 
-   void priv_push_front (const T &x)  
+   void priv_push_front (const T &x)
    {  this->insert(this->cbegin(), x);  }
 
    void priv_push_front (BOOST_RV_REF(T) x)

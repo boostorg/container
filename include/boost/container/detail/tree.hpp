@@ -385,7 +385,7 @@ class RecyclingCloner
    {  p->do_assign(other.m_data);   }
 
    static void do_assign(node_ptr_type &p, const node_type &other, bool_<false>)
-   {  p->do_move_assign(const_cast<node_type &>(other).m_data);   }   
+   {  p->do_move_assign(const_cast<node_type &>(other).m_data);   }
 
    node_ptr_type operator()(const node_type &other) const
    {
@@ -461,7 +461,7 @@ class tree
    typedef typename container_detail::intrusive_tree_type
          < A, ValComp, Options::tree_type
          , Options::optimize_size>::type                    Icont;
-   typedef container_detail::node_alloc_holder 
+   typedef container_detail::node_alloc_holder
       <A, Icont>                                            AllocHolder;
    typedef typename AllocHolder::NodePtr                    NodePtr;
    typedef tree < Key, Value, KeyOfValue
@@ -723,7 +723,7 @@ class tree
       return *this;
    }
 
-   public:   
+   public:
    // accessors:
    value_compare value_comp() const
    {  return this->icont().value_comp().value_comp(); }

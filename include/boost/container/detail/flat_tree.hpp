@@ -51,7 +51,7 @@ class flat_tree_value_compare
    typedef Value              first_argument_type;
    typedef Value              second_argument_type;
    typedef bool               return_type;
-   public:    
+   public:
    flat_tree_value_compare()
       : Compare()
    {}
@@ -68,7 +68,7 @@ class flat_tree_value_compare
 
    const Compare &get_comp() const
       {  return *this;  }
-  
+
    Compare &get_comp()
       {  return *this;  }
 };
@@ -265,7 +265,7 @@ class flat_tree
    flat_tree&  operator=(BOOST_RV_REF(flat_tree) mx)
    {  m_data = boost::move(mx.m_data); return *this;  }
 
-   public:   
+   public:
    // accessors:
    Compare key_comp() const
    { return this->m_data.get_comp(); }
@@ -728,8 +728,8 @@ class flat_tree
    {
       iterator i = this->lower_bound(k);
       iterator end_it = this->end();
-      if (i != end_it && this->m_data.get_comp()(k, KeyOfValue()(*i))){ 
-         i = end_it; 
+      if (i != end_it && this->m_data.get_comp()(k, KeyOfValue()(*i))){
+         i = end_it;
       }
       return i;
    }
@@ -739,7 +739,7 @@ class flat_tree
       const_iterator i = this->lower_bound(k);
 
       const_iterator end_it = this->cend();
-      if (i != end_it && this->m_data.get_comp()(k, KeyOfValue()(*i))){ 
+      if (i != end_it && this->m_data.get_comp()(k, KeyOfValue()(*i))){
          i = end_it;
       }
       return i;
@@ -777,10 +777,10 @@ class flat_tree
    std::pair<const_iterator, const_iterator> lower_bound_range(const key_type& k) const
    {  return this->priv_lower_bound_range(this->cbegin(), this->cend(), k);  }
 
-   size_type capacity() const          
+   size_type capacity() const
    { return this->m_data.m_vect.capacity(); }
 
-   void reserve(size_type cnt)      
+   void reserve(size_type cnt)
    { this->m_data.m_vect.reserve(cnt);   }
 
    friend bool operator==(const flat_tree& x, const flat_tree& y)

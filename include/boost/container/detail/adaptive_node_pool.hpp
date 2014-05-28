@@ -42,12 +42,12 @@ struct select_private_adaptive_node_pool_impl
          private_adaptive_node_pool_impl
             < fake_segment_manager
             , unsigned(AlignOnly)*::boost::container::adaptive_pool_flag::align_only
-            | ::boost::container::adaptive_pool_flag::size_ordered | ::boost::container::adaptive_pool_flag::address_ordered 
+            | ::boost::container::adaptive_pool_flag::size_ordered | ::boost::container::adaptive_pool_flag::address_ordered
             > type;
 };
 
 //!Pooled memory allocator using an smart adaptive pool. Includes
-//!a reference count but the class does not delete itself, this is  
+//!a reference count but the class does not delete itself, this is
 //!responsibility of user classes. Node size (NodeSize) and the number of
 //!nodes allocated per block (NodesPerBlock) are known at compile time.
 template< std::size_t NodeSize
@@ -78,7 +78,7 @@ class private_adaptive_node_pool
 };
 
 //!Pooled memory allocator using adaptive pool. Includes
-//!a reference count but the class does not delete itself, this is  
+//!a reference count but the class does not delete itself, this is
 //!responsibility of user classes. Node size (NodeSize) and the number of
 //!nodes allocated per block (NodesPerBlock) are known at compile time
 template< std::size_t NodeSize
@@ -86,8 +86,8 @@ template< std::size_t NodeSize
         , std::size_t MaxFreeBlocks
         , std::size_t OverheadPercent
         >
-class shared_adaptive_node_pool 
-   : public private_adaptive_node_pool 
+class shared_adaptive_node_pool
+   : public private_adaptive_node_pool
       <NodeSize, NodesPerBlock, MaxFreeBlocks, OverheadPercent>
 {
  private:
@@ -112,7 +112,7 @@ class shared_adaptive_node_pool
       //-----------------------
       return private_node_allocator_t::allocate_node();
    }
-   
+
    //!Deallocates an array pointed by ptr. Never throws
    void deallocate_node(void *ptr)
    {

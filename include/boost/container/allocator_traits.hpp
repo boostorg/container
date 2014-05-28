@@ -316,8 +316,8 @@ struct allocator_traits
 
       #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
          template<class T, class ...Args>
-         static void priv_construct(boost::false_type, Alloc &a, T *p, BOOST_FWD_REF(Args) ...args)                   
-         {                                                                                                 
+         static void priv_construct(boost::false_type, Alloc &a, T *p, BOOST_FWD_REF(Args) ...args)
+         {
             const bool value = boost::container::container_detail::
                   has_member_function_callable_with_construct
                      < Alloc, T*, Args... >::value;
@@ -352,7 +352,7 @@ struct allocator_traits
          //
          #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
          #include BOOST_PP_LOCAL_ITERATE()
-     
+
          private:
          #define BOOST_PP_LOCAL_MACRO(n)                                                                    \
          template<class T  BOOST_PP_ENUM_TRAILING_PARAMS(n, class P) >                                      \

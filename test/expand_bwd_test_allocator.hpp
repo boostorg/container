@@ -108,7 +108,7 @@ class expand_bwd_test_allocator
    {  return m_size;   }
 
    friend void swap(self_t &alloc1, self_t &alloc2)
-   { 
+   {
       boost::container::swap_dispatch(alloc1.mp_buffer, alloc2.mp_buffer);
       boost::container::swap_dispatch(alloc1.m_size,    alloc2.m_size);
       boost::container::swap_dispatch(alloc1.m_offset,  alloc2.m_offset);
@@ -125,7 +125,7 @@ class expand_bwd_test_allocator
       (void)preferred_size;   (void)reuse;   (void)command;
       //This allocator only expands backwards!
       assert(m_allocations == 0 || (command & boost::container::expand_bwd));
-     
+
       received_size = limit_size;
 
       if(m_allocations == 0){

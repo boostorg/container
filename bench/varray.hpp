@@ -32,12 +32,12 @@ namespace boost { namespace container {
  * change in size, along with the static allocation, low overhead, and fixed capacity of boost::array.
  *
  * A varray is a sequence that supports random access to elements, constant time insertion and
- * removal of elements at the end, and linear time insertion and removal of elements at the beginning or 
+ * removal of elements at the end, and linear time insertion and removal of elements at the beginning or
  * in the middle. The number of elements in a varray may vary dynamically up to a fixed capacity
- * because elements are stored within the object itself similarly to an array. However, objects are 
+ * because elements are stored within the object itself similarly to an array. However, objects are
  * initialized as they are inserted into varray unlike C arrays or std::array which must construct
  * all elements on instantiation. The behavior of varray enables the use of statically allocated
- * elements in cases with complex object lifetime requirements that would otherwise not be trivially 
+ * elements in cases with complex object lifetime requirements that would otherwise not be trivially
  * possible.
  *
  * @par Error Handling

@@ -639,7 +639,7 @@ class private_adaptive_node_pool_impl
 
       {  //We iterate through the block tree to free the memory
          const_block_iterator it(m_block_container.begin());
-   
+
          if(it != itend){
             for(++it; it != itend; ++it){
                const_block_iterator prev(it);

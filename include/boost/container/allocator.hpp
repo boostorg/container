@@ -57,7 +57,7 @@ class allocator<void, Version, AllocationDisableMask>
    //!objects of type T2
    template<class T2>
    struct rebind
-   {   
+   {
       typedef allocator< T2
                        #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
                        , Version, AllocationDisableMask
@@ -78,7 +78,7 @@ class allocator<void, Version, AllocationDisableMask>
    //!Constructor from related allocator.
    //!Never throws
    template<class T2>
-      allocator(const allocator<T2, Version, AllocationDisableMask> &) 
+      allocator(const allocator<T2, Version, AllocationDisableMask> &)
    {}
 };
 
@@ -99,7 +99,7 @@ template<class T>
 //! of allocation types the user wants to disable.
 template<class T, unsigned Version, unsigned int AllocationDisableMask>
 #endif   //#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-class allocator 
+class allocator
 {
    typedef unsigned int allocation_type;
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -115,7 +115,7 @@ class allocator
    //Not assignable from other allocator
    allocator& operator=(const allocator&);
 
-   static const unsigned int ForbiddenMask = 
+   static const unsigned int ForbiddenMask =
       BOOST_CONTAINER_ALLOCATE_NEW | BOOST_CONTAINER_EXPAND_BWD | BOOST_CONTAINER_EXPAND_FWD ;
 
    //The mask can't disable all the allocation types
@@ -151,7 +151,7 @@ class allocator
    //!objects of type T2
    template<class T2>
    struct rebind
-   {   
+   {
       typedef allocator<T2, Version, AllocationDisableMask> other;
    };
 
@@ -175,7 +175,7 @@ class allocator
             > &) BOOST_CONTAINER_NOEXCEPT
    {}
 
-   //!Allocates memory for an array of count elements. 
+   //!Allocates memory for an array of count elements.
    //!Throws std::bad_alloc if there is no enough memory
    //!If Version is 2, this allocated memory can only be deallocated
    //!with deallocate() or (for Version == 2) deallocate_many()
@@ -221,7 +221,7 @@ class allocator
    //!This function is available only with Version == 2
    std::pair<pointer, bool>
       allocation_command(allocation_type command,
-                         size_type limit_size, 
+                         size_type limit_size,
                          size_type preferred_size,
                          size_type &received_size, pointer reuse = pointer())
    {
@@ -283,7 +283,7 @@ class allocator
       return this->deallocate_many(chain);
    }
 
-   //!Allocates many elements of size elem_size. 
+   //!Allocates many elements of size elem_size.
    //!Elements must be individually deallocated with deallocate()
    //!This function is available only with Version == 2
    void allocate_many(size_type elem_size, std::size_t n_elements, multiallocation_chain &chain)
@@ -303,7 +303,7 @@ class allocator
       }
    }
 
-   //!Allocates n_elements elements, each one of size elem_sizes[i] 
+   //!Allocates n_elements elements, each one of size elem_sizes[i]
    //!Elements must be individually deallocated with deallocate()
    //!This function is available only with Version == 2
    void allocate_many(const size_type *elem_sizes, size_type n_elements, multiallocation_chain &chain)
@@ -340,7 +340,7 @@ class allocator
 
    private:
 
-   std::pair<pointer, bool> priv_allocation_command 
+   std::pair<pointer, bool> priv_allocation_command
       (allocation_type command,   std::size_t limit_size
       ,std::size_t preferred_size,std::size_t &received_size, void *reuse_ptr)
    {

@@ -205,7 +205,7 @@ void test_move()
 template<class T, class A>
 class set_propagate_test_wrapper
    : public boost::container::set<T, std::less<T>, A
-      //tree_assoc_defaults 
+      //tree_assoc_defaults
       >
 {
    BOOST_COPYABLE_AND_MOVABLE(set_propagate_test_wrapper)

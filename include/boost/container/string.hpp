@@ -55,7 +55,7 @@ namespace container {
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 namespace container_detail {
 // ------------------------------------------------------------
-// Class basic_string_base. 
+// Class basic_string_base.
 
 // basic_string_base is a helper class that makes it it easier to write
 // an exception-safe version of basic_string.  The constructor allocates,
@@ -88,20 +88,20 @@ class basic_string_base
 
    basic_string_base(const allocator_type& a, size_type n)
       : members_(a)
-   { 
+   {
       this->init();
       this->allocate_initial_block(n);
    }
 
    basic_string_base(BOOST_RV_REF(basic_string_base) b)
       :  members_(boost::move(b.alloc()))
-   { 
+   {
       this->init();
       this->swap_data(b);
    }
 
    ~basic_string_base()
-   { 
+   {
       if(!this->is_short()){
          this->deallocate_block();
          this->is_short(true);
@@ -149,7 +149,7 @@ class basic_string_base
 
    //This type has the same alignment and size as long_t but it's POD
    //so, unlike long_t, it can be placed in a union
-  
+
    typedef typename boost::aligned_storage< sizeof(long_t),
        container_detail::alignment_of<long_t>::value>::type   long_raw_t;
 
@@ -276,7 +276,7 @@ class basic_string_base
    }
 
    void deallocate(pointer p, size_type n)
-   { 
+   {
       if (p && (n > InternalBufferChars))
          this->alloc().deallocate(p, n);
    }
@@ -325,7 +325,7 @@ class basic_string_base
 
    void deallocate_block()
    {  this->deallocate(this->priv_addr(), this->priv_storage());  }
-     
+
    size_type max_size() const
    {  return allocator_traits_type::max_size(this->alloc()) - 1; }
 
@@ -368,13 +368,13 @@ class basic_string_base
    {  return this->members_.m_repr.long_repr().storage;  }
 
    void priv_storage(size_type storage)
-   { 
+   {
       if(!this->is_short())
          this->priv_long_storage(storage);
    }
 
    void priv_long_storage(size_type storage)
-   { 
+   {
       this->members_.m_repr.long_repr().storage = storage;
    }
 
@@ -388,7 +388,7 @@ class basic_string_base
    {  return this->members_.m_repr.long_repr().length;  }
 
    void priv_size(size_type sz)
-   { 
+   {
       if(this->is_short())
          this->priv_short_size(sz);
       else
@@ -396,12 +396,12 @@ class basic_string_base
    }
 
    void priv_short_size(size_type sz)
-   { 
+   {
       this->members_.m_repr.s.h.length = (unsigned char)sz;
    }
 
    void priv_long_size(size_type sz)
-   { 
+   {
       this->members_.m_repr.long_repr().length = sz;
    }
 
@@ -706,7 +706,7 @@ class basic_string
    //! <b>Complexity</b>: Constant.
    ~basic_string() BOOST_CONTAINER_NOEXCEPT
    {}
-     
+
    //! <b>Effects</b>: Copy constructs a string.
    //!
    //! <b>Postcondition</b>: x == *this.
@@ -1236,7 +1236,7 @@ class basic_string
    //! length n whose elements are a copy of those pointed to by s.
    //!
    //! <b>Throws</b>: If memory allocation throws or length_error if n > max_size().
-   //!   
+   //!
    //! <b>Returns</b>: *this
    basic_string& assign(const CharT* s, size_type n)
    {  return this->assign(s, s + n);   }
@@ -1258,16 +1258,16 @@ class basic_string
    //! <b>Effects</b>: Equivalent to assign(basic_string(first, last)).
  	//!
  	//! <b>Returns</b>: *this
- 	basic_string& assign(const CharT* first, const CharT* last) 
- 	{ 
+ 	basic_string& assign(const CharT* first, const CharT* last)
+ 	{
  	   size_type n = static_cast<size_type>(last - first);
- 	   this->reserve(n); 
- 	   CharT* ptr = container_detail::to_raw_pointer(this->priv_addr()); 
- 	   Traits::copy(ptr, first, n); 
- 	   this->priv_construct_null(ptr + n); 
- 	   this->priv_size(n); 
- 	   return *this; 
- 	} 
+ 	   this->reserve(n);
+ 	   CharT* ptr = container_detail::to_raw_pointer(this->priv_addr());
+ 	   Traits::copy(ptr, first, n);
+ 	   this->priv_construct_null(ptr + n);
+ 	   this->priv_size(n);
+ 	   return *this;
+ 	}
 
    //! <b>Effects</b>: Equivalent to assign(basic_string(first, last)).
    //!
@@ -1435,7 +1435,7 @@ class basic_string
       for ( ; first != last; ++first, ++p) {
          p = this->insert(p, *first);
       }
-      return this->begin() + n_pos; 
+      return this->begin() + n_pos;
    }
 
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -1459,7 +1459,7 @@ class basic_string
 
          //Check if we have enough capacity
          if (remaining >= n){
-            enough_capacity = true;           
+            enough_capacity = true;
          }
          else {
             //Otherwise expand current buffer or allocate new storage
@@ -1568,7 +1568,7 @@ class basic_string
       const pointer addr = this->priv_addr();
       erase(addr + pos, addr + pos + container_detail::min_value(n, this->size() - pos));
       return *this;
-   } 
+   }
 
    //! <b>Effects</b>: Removes the character referred to by p.
    //!
@@ -2527,7 +2527,7 @@ wstring;
 
 // Operator+
 
-template <class CharT, class Traits, class Allocator> inline 
+template <class CharT, class Traits, class Allocator> inline
    basic_string<CharT,Traits,Allocator>
    operator+(const basic_string<CharT,Traits,Allocator>& x
             ,const basic_string<CharT,Traits,Allocator>& y)
@@ -2576,7 +2576,7 @@ template <class CharT, class Traits, class Allocator> inline
    return y;
 }
 
-template <class CharT, class Traits, class Allocator> inline 
+template <class CharT, class Traits, class Allocator> inline
    basic_string<CharT,Traits,Allocator> operator+
       (basic_string<CharT,Traits,Allocator> x, const CharT* s)
 {
@@ -2592,7 +2592,7 @@ template <class CharT, class Traits, class Allocator> inline
    return y;
 }
 
-template <class CharT, class Traits, class Allocator> inline 
+template <class CharT, class Traits, class Allocator> inline
    basic_string<CharT,Traits,Allocator> operator+
       (basic_string<CharT,Traits,Allocator> x, const CharT c)
 {
@@ -2736,7 +2736,7 @@ inline void swap(basic_string<CharT,Traits,Allocator>& x, basic_string<CharT,Tra
 {  x.swap(y);  }
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-// I/O. 
+// I/O.
 namespace container_detail {
 
 template <class CharT, class Traits>
@@ -2774,9 +2774,9 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const basic_string<CharT,Trait
 
       if (w != 0 && n < w)
          pad_len = w - n;
-      
+
       if (!left)
-         ok = container_detail::string_fill(os, buf, pad_len);   
+         ok = container_detail::string_fill(os, buf, pad_len);
 
       ok = ok &&
             buf->sputn(s.data(), std::streamsize(n)) == std::streamsize(n);
@@ -2828,7 +2828,7 @@ operator>>(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allo
                s.push_back(c);
          }
       }
-     
+
       // If we have read no characters, then set failbit.
       if (s.size() == 0)
          is.setstate(std::ios_base::failbit);
@@ -2839,7 +2839,7 @@ operator>>(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allo
    return is;
 }
 
-template <class CharT, class Traits, class Allocator>   
+template <class CharT, class Traits, class Allocator>
 std::basic_istream<CharT, Traits>&
 getline(std::istream& is, basic_string<CharT,Traits,Allocator>& s,CharT delim)
 {
@@ -2871,7 +2871,7 @@ getline(std::istream& is, basic_string<CharT,Traits,Allocator>& s,CharT delim)
    return is;
 }
 
-template <class CharT, class Traits, class Allocator>   
+template <class CharT, class Traits, class Allocator>
 inline std::basic_istream<CharT, Traits>&
 getline(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allocator>& s)
 {

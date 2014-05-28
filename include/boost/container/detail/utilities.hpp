@@ -1159,7 +1159,7 @@ template
    <typename A
    ,typename I // F models InputIterator
    ,typename O // G models OutputIterator
-   >  
+   >
 void copy_assign_range_alloc_n( A &a, I inp_start, typename allocator_traits<A>::size_type n_i
                               , O out_start, typename allocator_traits<A>::size_type n_o )
 {
@@ -1183,7 +1183,7 @@ template
    <typename A
    ,typename I // F models InputIterator
    ,typename O // G models OutputIterator
-   >  
+   >
 void move_assign_range_alloc_n( A &a, I inp_start, typename allocator_traits<A>::size_type n_i
                               , O out_start, typename allocator_traits<A>::size_type n_o )
 {
