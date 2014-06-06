@@ -56,12 +56,8 @@ template class stable_vector
    < test::movable_and_copyable_int
    , node_allocator<test::movable_and_copyable_int> >;
 
-namespace stable_vector_detail{
-
-template class iterator<int*, false>;
-template class iterator<int*, true >;
-
-}  //namespace stable_vector_detail{
+template class stable_vector_iterator<int*, false>;
+template class stable_vector_iterator<int*, true >;
 
 }}
 
