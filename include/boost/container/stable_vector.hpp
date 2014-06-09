@@ -26,8 +26,6 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/container_fwd.hpp>
-#include <boost/mpl/bool.hpp>
-#include <boost/mpl/not.hpp>
 #include <boost/assert.hpp>
 #include <boost/container/throw_exception.hpp>
 #include <boost/container/detail/allocator_version_traits.hpp>

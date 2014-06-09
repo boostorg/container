@@ -22,7 +22,6 @@
 #include <boost/container/throw_exception.hpp>
 #include <boost/container/detail/alloc_lib_auto_link.hpp>
 #include <boost/container/detail/multiallocation_chain.hpp>
-#include <boost/iterator/transform_iterator.hpp>
 #include <boost/static_assert.hpp>
 #include <cstddef>
 #include <cassert>
