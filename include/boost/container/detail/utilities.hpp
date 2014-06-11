@@ -34,6 +34,7 @@
 #include <boost/type_traits/has_trivial_copy.hpp>
 #include <boost/type_traits/has_trivial_assign.hpp>
 #include <boost/container/detail/memory_util.hpp>
+#include <boost/intrusive/pointer_traits.hpp>
 #include <boost/aligned_storage.hpp>
 #include <algorithm>
 #include <iterator>
@@ -159,7 +160,7 @@ inline T* to_raw_pointer(T* p)
 {  return p; }
 
 template <class Pointer>
-inline typename Pointer::element_type*
+inline typename boost::intrusive::pointer_traits<Pointer>::element_type*
    to_raw_pointer(const Pointer &p)
 {  return boost::container::container_detail::to_raw_pointer(p.operator->());  }
 
