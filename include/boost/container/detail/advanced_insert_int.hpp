@@ -138,7 +138,7 @@ struct insert_copy_proxy
    void uninitialized_copy_n_and_update(A &a, Iterator p, size_type n) const
    {
       BOOST_ASSERT(n == 1);  (void)n;
-      alloc_traits::construct( a, container_detail::to_raw_pointer(&*p), v_);
+      alloc_traits::construct( a, iterator_to_raw_pointer(p), v_);
    }
 
    void copy_n_and_update(A &, Iterator p, size_type n) const
@@ -165,10 +165,7 @@ struct insert_move_proxy
    void uninitialized_copy_n_and_update(A &a, Iterator p, size_type n) const
    {
       BOOST_ASSERT(n == 1);  (void)n;
-      alloc_traits::construct( a
-                              , container_detail::to_raw_pointer(&*p)
-                              , ::boost::move(v_)
-                              );
+      alloc_traits::construct( a, iterator_to_raw_pointer(p), ::boost::move(v_) );
    }
 
    void copy_n_and_update(A &, Iterator p, size_type n) const
@@ -226,10 +223,7 @@ struct insert_non_movable_emplace_proxy
    void priv_uninitialized_copy_some_and_update(A &a, const index_tuple<IdxPack...>&, Iterator p, size_type n)
    {
       BOOST_ASSERT(n == 1); (void)n;
-      alloc_traits::construct( a
-                              , container_detail::to_raw_pointer(&*p)
-                              , ::boost::forward<Args>(get<IdxPack>(this->args_))...
-                              );
+      alloc_traits::construct( a, iterator_to_raw_pointer(p), ::boost::forward<Args>(get<IdxPack>(this->args_))... );
    }
 
    protected:
@@ -303,8 +297,7 @@ struct BOOST_PP_CAT(insert_non_movable_emplace_proxy_arg, N)                    
    {                                                                                \
       BOOST_ASSERT(n == 1); (void)n;                                                \
       alloc_traits::construct                                                       \
-         ( a                                                                        \
-         , container_detail::to_raw_pointer(&*p)                                    \
+         ( a, iterator_to_raw_pointer(p)                                            \
          BOOST_PP_ENUM_TRAILING(N, BOOST_CONTAINER_PP_MEMBER_FORWARD, _)            \
          );                                                                         \
    }                                                                                \

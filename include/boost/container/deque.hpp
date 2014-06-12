@@ -1683,7 +1683,7 @@ class deque : protected deque_base<Allocator>
       for(;p != p2; ++p){
          allocator_traits_type::destroy
             ( this->alloc()
-            , container_detail::to_raw_pointer(&*p)
+            , container_detail::to_raw_pointer(container_detail::iterator_to_pointer(p))
             );
       }
    }
@@ -1693,7 +1693,7 @@ class deque : protected deque_base<Allocator>
       for(;p != p2; ++p){
          allocator_traits_type::destroy
             ( this->alloc()
-            , container_detail::to_raw_pointer(&*p)
+            , container_detail::to_raw_pointer(container_detail::iterator_to_pointer(p))
             );
       }
    }

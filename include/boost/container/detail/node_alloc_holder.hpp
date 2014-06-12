@@ -261,7 +261,7 @@ struct node_alloc_holder
             Deallocator node_deallocator(NodePtr(), nalloc);
             container_detail::scoped_destructor<NodeAlloc> sdestructor(nalloc, 0);
             while(n--){
-               p = container_detail::to_raw_pointer(&*itbeg);
+               p = container_detail::to_raw_pointer(iterator_to_pointer(itbeg));
                node_deallocator.set(p);
                ++itbeg;
                //This can throw
