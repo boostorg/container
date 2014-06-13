@@ -38,10 +38,11 @@
 #include <boost/container/detail/preprocessor.hpp>
 #endif
 
-#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-
 namespace boost {
 namespace container {
+
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 namespace container_detail {
 
 //workaround needed for C++03 compilers with no construct()

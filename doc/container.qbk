@@ -745,12 +745,16 @@ C++11 further improves stateful allocator support through
 `std::allocator_traits` is the protocol between a container and an allocator, and
 an allocator writer can customize its behaviour (should the container propagate it in
 move constructor, swap, etc.?) following `allocator_traits` requirements. [*Boost.Container]
-not only supports this model with C++11 but also [*backports it to C++03].
+not only supports this model with C++11 but also [*backports it to C++03] via
+[classref boost::container::allocator_traits boost::container::allocator_traits]. This class
+offers some workarounds for C++03 compilers to achieve the same allocator guarantees as
+`std::allocator_traits`.
 
-If possible, a single allocator is hold to construct `value_type`. If the container needs an auxiliary
-allocator (e.g. a array allocator used by `deque` or `stable_vector`), that allocator is also
-constructed from the user-supplied allocator when the container is constructed (i.e. it's
-not constructed on the fly when auxiliary memory is needed).
+In [Boost.Container] containers, if possible, a single allocator is hold to construct
+`value_type`s. If the container needs an auxiliary
+allocator (e.g. an array allocator used by `deque` or `stable_vector`), that allocator is also
+stored in the container and initialized from the user-supplied allocator when the
+container is constructed (i.e. it's not constructed on the fly when auxiliary memory is needed).
 
 [endsect]
 
@@ -799,23 +803,23 @@ versions.
 
 [endsect]
 
-[section:vector_exception_guarantees `vector`'s exception guarantees]
+[section:vector_exception_guarantees `vector` vs. `std::vector` exception guarantees]
 
-[classref ::boost::container::vector vector] does not support the strong exception guarantees
+[classref boost::container::vector vector] does not support the strong exception guarantees
 given by `std::vector` in functions like `insert`, `push_back`, `emplace`, `emplace_back`,
 `resize`, `reserve` or `shrink_to_fit` for either copyable or no-throw moveable classes.
-[@http://en.cppreference.com/w/cpp/utility/move_if_noexcept move_if_noexcept] is used to maintain
-C++03 exception safety guarantees combined with C++11 move semantics.
-This strong exception guarantee degrades the insertion performance of copyable and throw moveable types,
+In C++11 [@http://en.cppreference.com/w/cpp/utility/move_if_noexcept move_if_noexcept] is used
+to maintain C++03 exception safety guarantees combined with C++11 move semantics.
+This strong exception guarantee degrades the insertion performance of copyable and throwing-moveable types,
 degrading moves to copies when such types are inserted in the vector using the aforementioned
 members.
 
 This strong exception guarantee also precludes the possibility of using some type of
 in-place reallocations that can further improve the insertion performance of `vector` See
 [link container.extended_functionality.extended_allocators Extended Allocators] to know more
-about these optimization.
+about these optimizations.
 
-[classref ::boost::container::vector ::boost::container::vector] always uses move constructors/assignments
+[classref boost::container::vector vector] always uses move constructors/assignments
 to rearrange elements in the vector and uses memory expansion mechanisms if the allocator supports them,
 while offering only basic safety guarantees. It trades off exception guarantees for an improved performance.
 
@@ -855,6 +859,40 @@ has already hurt users who have been forced to implement workarounds to disable 
 So `boost::container::vector<bool>::iterator` returns real `bool` references and works as a fully compliant container.
 If you need a memory optimized version of `boost::container::vector<bool>`, please use
 [@http://www.boost.org/libs/dynamic_bitset/ Boost.DynamicBitset].
+
+[endsect]
+
+[endsect]
+
+[section:known_issues Known Issues]
+
+[section:move_emulation_limitations Move emulation limitations in C++03 compilers]
+
+[*Boost.Container] uses [*Boost.Move] to implement move semantics both in C++03 and C++11 compilers.
+However, as explained in
+[@http://www.boost.org/doc/libs/release/doc/html/move/emulation_limitations.html Emulation limitations],
+there are some limitations in C++03 compilers that might surprise [*Boost.Container] users.
+
+The most noticeable problem is when [*Boost.Container] containers are placed in a struct with a
+compiler-generated assignment operator:
+
+[c++]
+
+   class holder
+   {
+      boost::container::vector<MyType> vect;
+   };
+
+   void func(const holder& h)
+   {
+      holder copy_h(h); //<--- ERROR: can't convert 'const holder&' to 'holder&'
+      //Compiler-generated copy constructor is non-const:
+      // holder& operator(holder &)
+      //!!!
+   }
+
+This limitation forces the user to define a const version of the copy assignment, in all classes
+holding containers, which might be annoying in some cases.
 
 [endsect]
 
