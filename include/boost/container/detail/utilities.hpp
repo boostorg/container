@@ -352,7 +352,7 @@ inline F memmove(I f, I l, F r) BOOST_CONTAINER_NOEXCEPT
 {
    typedef typename std::iterator_traits<I>::value_type value_type;
    typename std::iterator_traits<I>::difference_type n = std::distance(f, l);
-   ::memmove(container_detail::addressof(*r), container_detail::addressof(*f), sizeof(value_type)*n);
+   ::memmove(iterator_to_raw_pointer(r), iterator_to_raw_pointer(f), sizeof(value_type)*n);
    std::advance(r, n);
    return r;
 }
@@ -363,7 +363,7 @@ template
 F memmove_n(I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_CONTAINER_NOEXCEPT
 {
    typedef typename std::iterator_traits<I>::value_type value_type;
-   ::memmove(container_detail::addressof(*r), container_detail::addressof(*f), sizeof(value_type)*n);
+   ::memmove(iterator_to_raw_pointer(r), iterator_to_raw_pointer(f), sizeof(value_type)*n);
    std::advance(r, n);
    return r;
 }
@@ -374,7 +374,7 @@ template
 I memmove_n_source(I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_CONTAINER_NOEXCEPT
 {
    typedef typename std::iterator_traits<I>::value_type value_type;
-   ::memmove(container_detail::addressof(*r), container_detail::addressof(*f), sizeof(value_type)*n);
+   ::memmove(iterator_to_raw_pointer(r), iterator_to_raw_pointer(f), sizeof(value_type)*n);
    std::advance(f, n);
    return f;
 }
@@ -385,7 +385,7 @@ template
 I memmove_n_source_dest(I f, typename std::iterator_traits<I>::difference_type n, F &r) BOOST_CONTAINER_NOEXCEPT
 {
    typedef typename std::iterator_traits<I>::value_type value_type;
-   ::memmove(container_detail::addressof(*r), container_detail::addressof(*f), sizeof(value_type)*n);
+   ::memmove(iterator_to_raw_pointer(r), iterator_to_raw_pointer(f), sizeof(value_type)*n);
    std::advance(f, n);
    std::advance(r, n);
    return f;
@@ -736,7 +736,7 @@ inline typename container_detail::enable_if_memzero_initializable<F, F>::type
    uninitialized_value_init_alloc_n(A &, typename allocator_traits<A>::difference_type n, F r)
 {
    typedef typename std::iterator_traits<F>::value_type value_type;
-   ::memset((void*)container_detail::addressof(*r), 0, sizeof(value_type)*n);
+   ::memset((void*)container_detail::iterator_to_raw_pointer(r), 0, sizeof(value_type)*n);
    std::advance(r, n);
    return r;
 }
@@ -1070,7 +1070,7 @@ inline void destroy_alloc_n(A &a, I f, typename std::iterator_traits<I>::differe
       < !boost::has_trivial_destructor<typename std::iterator_traits<I>::value_type>::value >::type* = 0)
 {
    while(n--){
-      allocator_traits<A>::destroy(a, container_detail::addressof(*f++));
+      allocator_traits<A>::destroy(a, container_detail::iterator_to_raw_pointer(f++));
    }
 }
 
@@ -1126,9 +1126,9 @@ inline typename container_detail::enable_if_c
    storage_type storage;
 
    const std::size_t n_i_bytes = sizeof(value_type)*n_i;
-   unsigned char *const large_ptr = static_cast<unsigned char*>(static_cast<void*>(container_detail::addressof(*large_range_f)));
-   unsigned char *const short_ptr = static_cast<unsigned char*>(static_cast<void*>(container_detail::addressof(*short_range_f)));
-   unsigned char *const stora_ptr = static_cast<unsigned char*>(static_cast<void*>(container_detail::addressof(storage)));
+   void *const large_ptr = static_cast<void*>(container_detail::iterator_to_raw_pointer(large_range_f));
+   void *const short_ptr = static_cast<void*>(container_detail::iterator_to_raw_pointer(short_range_f));
+   void *const stora_ptr = static_cast<void*>(container_detail::iterator_to_raw_pointer(storage));
    ::memcpy(stora_ptr, large_ptr, n_i_bytes);
    ::memcpy(large_ptr, short_ptr, n_i_bytes);
    ::memcpy(short_ptr, stora_ptr, n_i_bytes);
@@ -1157,9 +1157,9 @@ inline typename container_detail::enable_if_c
    const std::size_t sizeof_storage = sizeof(storage);
 
    std::size_t n_i_bytes = sizeof(value_type)*n_i;
-   char *large_ptr = static_cast<char*>(static_cast<void*>(container_detail::addressof(*large_range_f)));
-   char *short_ptr = static_cast<char*>(static_cast<void*>(container_detail::addressof(*short_range_f)));
-   char *stora_ptr = static_cast<char*>(static_cast<void*>(container_detail::addressof(storage)));
+   char *large_ptr = static_cast<char*>(static_cast<void*>(container_detail::iterator_to_raw_pointer(large_range_f)));
+   char *short_ptr = static_cast<char*>(static_cast<void*>(container_detail::iterator_to_raw_pointer(short_range_f)));
+   char *stora_ptr = static_cast<char*>(static_cast<void*>(&storage));
 
    std::size_t szt_times = n_i_bytes/sizeof_storage;
    const std::size_t szt_rem = n_i_bytes%sizeof_storage;
@@ -1167,7 +1167,7 @@ inline typename container_detail::enable_if_c
    //Loop unrolling using Duff's device, as it seems it helps on some architectures
    const std::size_t Unroll = 4;
    std::size_t n = (szt_times + (Unroll-1))/Unroll;
-   const std::size_t branch_number = ((!szt_times)*Unroll) +  (szt_times % Unroll);
+   const std::size_t branch_number = (!szt_times)*Unroll + (szt_times % Unroll);
    switch(branch_number){
       case 4:
          break;
