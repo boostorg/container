@@ -45,6 +45,19 @@
 #define BOOST_CONTAINER_IMPDEF(TYPE) TYPE
 #define BOOST_CONTAINER_SEEDOC(TYPE) TYPE
 
+//Macros for memset optimization. In most platforms
+//memsetting pointers and floatings is safe and faster.
+//
+//If your platform does not offer these guarantees
+//define these to value zero.
+#ifndef BOOST_CONTAINER_MEMZEROED_FLOATING_POINT_IS_ZERO
+#define BOOST_CONTAINER_MEMZEROED_FLOATING_POINT_IS_ZERO 1
+#endif
+
+#ifndef BOOST_CONTAINER_MEMZEROED_POINTER_IS_NULL
+#define BOOST_CONTAINER_MEMZEROED_POINTER_IS_NULL 1
+#endif
+
 #include <boost/container/detail/config_end.hpp>
 
 #endif   //#ifndef BOOST_CONTAINER_DETAIL_WORKAROUND_HPP

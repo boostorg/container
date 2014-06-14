@@ -21,7 +21,13 @@
 #include <boost/type_traits/is_enum.hpp>
 #include <boost/type_traits/is_member_pointer.hpp>
 #include <boost/type_traits/is_class.hpp>
+#include <boost/type_traits/is_integral.hpp>
+#include <boost/type_traits/is_floating_point.hpp>
+#include <boost/type_traits/is_pointer.hpp>
 #include <boost/type_traits/has_trivial_destructor.hpp>
+#include <boost/type_traits/has_trivial_copy.hpp>
+#include <boost/type_traits/has_trivial_assign.hpp>
+#include <boost/type_traits/is_pod.hpp>
 #include <boost/move/core.hpp>
 #include <boost/move/utility.hpp>
 #include <boost/move/iterator.hpp>
@@ -31,8 +37,6 @@
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/allocator_traits.hpp>
 #include <boost/detail/no_exceptions_support.hpp>
-#include <boost/type_traits/has_trivial_copy.hpp>
-#include <boost/type_traits/has_trivial_assign.hpp>
 #include <boost/container/detail/memory_util.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/aligned_storage.hpp>
@@ -387,6 +391,33 @@ I memmove_n_source_dest(I f, typename std::iterator_traits<I>::difference_type n
    return f;
 }
 
+template <typename O>
+struct is_memzero_initializable
+{
+   typedef typename ::std::iterator_traits<O>::value_type value_type;
+   static const bool value = are_elements_contiguous<O>::value &&
+      (  ::boost::is_integral<value_type>::value
+      #if BOOST_CONTAINER_MEMZEROED_POINTER_IS_NULL
+      || ::boost::is_pointer<value_type>::value
+      #endif
+      #if BOOST_CONTAINER_MEMZEROED_FLOATING_POINT_IS_ZERO
+      || ::boost::is_floating_point<value_type>::value
+      #endif
+      #if BOOST_CONTAINER_MEMZEROED_FLOATING_POINT_IS_ZERO && BOOST_CONTAINER_MEMZEROED_POINTER_IS_NULL
+      || ::boost::is_pod<value_type>::value
+      #endif
+      );
+};
+
+template <typename O, typename R>
+struct enable_if_memzero_initializable
+   : public enable_if_c<container_detail::is_memzero_initializable<O>::value, R>
+{};
+
+template <typename O, typename R>
+struct disable_if_memzero_initializable
+   : public enable_if_c<!container_detail::is_memzero_initializable<O>::value, R>
+{};
 
 }  //namespace container_detail {
 
@@ -678,7 +709,8 @@ inline typename container_detail::enable_if_memtransfer_copy_constructible<I, F,
 template
    <typename A,
     typename F> // F models ForwardIterator
-inline F uninitialized_value_init_alloc_n(A &a, typename allocator_traits<A>::difference_type n, F r)
+inline typename container_detail::disable_if_memzero_initializable<F, F>::type
+   uninitialized_value_init_alloc_n(A &a, typename allocator_traits<A>::difference_type n, F r)
 {
    F back = r;
    BOOST_TRY{
@@ -694,6 +726,18 @@ inline F uninitialized_value_init_alloc_n(A &a, typename allocator_traits<A>::di
 	   BOOST_RETHROW;
    }
    BOOST_CATCH_END
+   return r;
+}
+
+template
+   <typename A,
+    typename F> // F models ForwardIterator
+inline typename container_detail::enable_if_memzero_initializable<F, F>::type
+   uninitialized_value_init_alloc_n(A &, typename allocator_traits<A>::difference_type n, F r)
+{
+   typedef typename std::iterator_traits<F>::value_type value_type;
+   ::memset((void*)container_detail::addressof(*r), 0, sizeof(value_type)*n);
+   std::advance(r, n);
    return r;
 }
 
