@@ -182,7 +182,7 @@ inline
    typename boost::intrusive::pointer_traits
       <typename std::iterator_traits<Iterator>::pointer>::element_type*
    iterator_to_raw_pointer(const Iterator &i)
-{  return to_raw_pointer(iterator_to_pointer(i));  }
+{  return (to_raw_pointer)((iterator_to_pointer)(i));  }
 
 
 template<class AllocatorType>
@@ -352,7 +352,7 @@ inline F memmove(I f, I l, F r) BOOST_CONTAINER_NOEXCEPT
 {
    typedef typename std::iterator_traits<I>::value_type value_type;
    typename std::iterator_traits<I>::difference_type n = std::distance(f, l);
-   ::memmove(iterator_to_raw_pointer(r), iterator_to_raw_pointer(f), sizeof(value_type)*n);
+   ::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
    std::advance(r, n);
    return r;
 }
@@ -363,7 +363,7 @@ template
 F memmove_n(I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_CONTAINER_NOEXCEPT
 {
    typedef typename std::iterator_traits<I>::value_type value_type;
-   ::memmove(iterator_to_raw_pointer(r), iterator_to_raw_pointer(f), sizeof(value_type)*n);
+   ::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
    std::advance(r, n);
    return r;
 }
@@ -374,7 +374,7 @@ template
 I memmove_n_source(I f, typename std::iterator_traits<I>::difference_type n, F r) BOOST_CONTAINER_NOEXCEPT
 {
    typedef typename std::iterator_traits<I>::value_type value_type;
-   ::memmove(iterator_to_raw_pointer(r), iterator_to_raw_pointer(f), sizeof(value_type)*n);
+   ::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
    std::advance(f, n);
    return f;
 }
@@ -385,7 +385,7 @@ template
 I memmove_n_source_dest(I f, typename std::iterator_traits<I>::difference_type n, F &r) BOOST_CONTAINER_NOEXCEPT
 {
    typedef typename std::iterator_traits<I>::value_type value_type;
-   ::memmove(iterator_to_raw_pointer(r), iterator_to_raw_pointer(f), sizeof(value_type)*n);
+   ::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
    std::advance(f, n);
    std::advance(r, n);
    return f;

@@ -74,11 +74,8 @@ class vec_iterator
                                  rebind_pointer<const value_type>::type
       , Pointer
       >::type                                                                       pointer;
-   typedef typename if_c
-      < IsConst
-      , const value_type&
-      , value_type&
-      >::type                                                                       reference;
+   typedef typename boost::intrusive::pointer_traits<Pointer>                       ptr_traits;
+   typedef typename ptr_traits::reference                                           reference;
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:

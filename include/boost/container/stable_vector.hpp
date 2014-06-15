@@ -235,11 +235,8 @@ class stable_vector_iterator
          rebind_pointer<const value_type>::type
       , Pointer
       >::type                                                                       pointer;
-   typedef typename ::boost::container::container_detail::if_c
-      < IsConst
-      , const value_type&
-      , value_type&
-      >::type                                                                       reference;
+   typedef boost::intrusive::pointer_traits<pointer>                                ptr_traits;
+   typedef typename ptr_traits::reference                                           reference;
 
    private:
    typedef typename non_const_ptr_traits::template
@@ -255,11 +252,11 @@ class stable_vector_iterator
    typedef typename non_const_ptr_traits::template
          rebind_pointer<node_base_ptr>::type    node_base_ptr_ptr;
 
-   node_ptr m_pn;
+   node_base_ptr m_pn;
 
    public:
 
-   explicit stable_vector_iterator(node_ptr p) BOOST_CONTAINER_NOEXCEPT
+   explicit stable_vector_iterator(node_base_ptr p) BOOST_CONTAINER_NOEXCEPT
       : m_pn(p)
    {}
 
@@ -270,30 +267,22 @@ class stable_vector_iterator
       :  m_pn(other.node_pointer())
    {}
 
-   node_ptr &node_pointer() BOOST_CONTAINER_NOEXCEPT
-   {  return m_pn;  }
-
-   const node_ptr &node_pointer() const BOOST_CONTAINER_NOEXCEPT
-   {  return m_pn;  }
+   node_ptr node_pointer() const BOOST_CONTAINER_NOEXCEPT
+   {  return node_ptr_traits::static_cast_from(m_pn);  }
 
    public:
    //Pointer like operators
    reference operator*()  const BOOST_CONTAINER_NOEXCEPT
-   {  return  m_pn->value;  }
+   {  return  node_pointer()->value;  }
 
    pointer   operator->() const BOOST_CONTAINER_NOEXCEPT
-   {
-      typedef boost::intrusive::pointer_traits<pointer> ptr_traits;
-      return  ptr_traits::pointer_to(this->operator*());
-   }
+   {  return ptr_traits::pointer_to(this->operator*());  }
 
    //Increment / Decrement
    stable_vector_iterator& operator++() BOOST_CONTAINER_NOEXCEPT
    {
-      if(node_base_ptr_ptr p = this->m_pn->up){
-         ++p;
-         this->m_pn = node_ptr_traits::static_cast_from(*p);
-      }
+      node_base_ptr_ptr p(this->m_pn->up);
+      this->m_pn = *(++p);
       return *this;
    }
 
@@ -302,10 +291,8 @@ class stable_vector_iterator
 
    stable_vector_iterator& operator--() BOOST_CONTAINER_NOEXCEPT
    {
-      if(node_base_ptr_ptr p = this->m_pn->up){
-         --p;
-         this->m_pn = node_ptr_traits::static_cast_from(*p);
-      }
+      node_base_ptr_ptr p(this->m_pn->up);
+      this->m_pn = *(--p);
       return *this;
    }
 
@@ -313,18 +300,11 @@ class stable_vector_iterator
    {  stable_vector_iterator tmp(*this);  --*this; return stable_vector_iterator(tmp);  }
 
    reference operator[](difference_type off) const BOOST_CONTAINER_NOEXCEPT
-   {
-      stable_vector_iterator tmp(*this);
-      tmp += off;
-      return *tmp;
-   }
+   {  return node_ptr_traits::static_cast_from(this->m_pn->up[off])->value;  }
 
    stable_vector_iterator& operator+=(difference_type off) BOOST_CONTAINER_NOEXCEPT
    {
-      if(node_base_ptr_ptr p = this->m_pn->up){
-         p += off;
-         this->m_pn = node_ptr_traits::static_cast_from(*p);
-      }
+      if(off) this->m_pn = this->m_pn->up[off];
       return *this;
    }
 
@@ -1757,11 +1737,8 @@ class stable_vector
       return ret;
    }
 
-   node_ptr priv_get_end_node() const
-   {
-      return node_ptr_traits::pointer_to
-         (static_cast<node_type&>(const_cast<node_base_type&>(this->internal_data.end_node)));
-   }
+   node_base_ptr priv_get_end_node() const
+   {  return node_base_ptr_traits::pointer_to(const_cast<node_base_type&>(this->internal_data.end_node));  }
 
    void priv_destroy_node(const node_type &n)
    {
