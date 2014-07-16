@@ -25,6 +25,10 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 
+#ifdef _AIX
+#include <sched.h>
+#endif
+
 // Extremely Light-Weight wrapper classes for OS thread synchronization
 
 #define BOOST_MUTEX_HELPER_NONE         0
