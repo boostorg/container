@@ -862,6 +862,31 @@ If you need a memory optimized version of `boost::container::vector<bool>`, plea
 
 [endsect]
 
+[section:non_standard_memset_initialization Non-standard value initialization using `std::memset`]
+
+[*Boost.Container] uses `std::memset` with a zero value to initialize some types as in most platforms this
+initialization yields to the desired value initialization with improved performance.
+
+Following the C11 standard, [*Boost.Container] assumes that ['for any integer type,
+the object representation where all the bits are zero shall be a representation of the value
+zero in that type]. Since `_Bool`/`wchar_t`/`char16_t`/`char32_t` are also integer types in C, it considers
+all C++ integral types as initializable via `std::memset`.
+
+By default, [*Boost.Container] also considers floating point types to be initializable using `std::memset`.
+Most platforms are compatible with this initialization, but in case this initialization is not desirable the
+user can `#define BOOST_CONTAINER_MEMZEROED_FLOATING_POINT_IS_NOT_ZERO` before including library headers.
+
+By default, it also considers pointer types (pointer and pointer to function types, excluding
+member object and member function pointers) to be initializable using `std::memset`.
+Most platforms are compatible with this initialization, but in case this initialization is not desired the
+user can `#define BOOST_CONTAINER_MEMZEROED_POINTER_IS_NOT_ZERO` before including library headers.
+
+If neither `BOOST_CONTAINER_MEMZEROED_FLOATING_POINT_IS_NOT_ZERO` nor 
+`BOOST_CONTAINER_MEMZEROED_POINTER_IS_NOT_ZERO` is defined [*Boost.Container] also considers POD
+types to be value initializable via `std::memset` with value zero.
+
+[endsect]
+
 [endsect]
 
 [section:known_issues Known Issues]

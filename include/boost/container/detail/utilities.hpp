@@ -396,14 +396,14 @@ struct is_memzero_initializable
 {
    typedef typename ::std::iterator_traits<O>::value_type value_type;
    static const bool value = are_elements_contiguous<O>::value &&
-      (  ::boost::is_integral<value_type>::value
-      #if BOOST_CONTAINER_MEMZEROED_POINTER_IS_NULL
+      (  ::boost::is_integral<value_type>::value || ::boost::is_enum<value_type>::value
+      #if defined(BOOST_CONTAINER_MEMZEROED_POINTER_IS_NULL)
       || ::boost::is_pointer<value_type>::value
       #endif
-      #if BOOST_CONTAINER_MEMZEROED_FLOATING_POINT_IS_ZERO
+      #if defined(BOOST_CONTAINER_MEMZEROED_FLOATING_POINT_IS_ZERO)
       || ::boost::is_floating_point<value_type>::value
       #endif
-      #if BOOST_CONTAINER_MEMZEROED_FLOATING_POINT_IS_ZERO && BOOST_CONTAINER_MEMZEROED_POINTER_IS_NULL
+      #if defined(BOOST_CONTAINER_MEMZEROED_FLOATING_POINT_IS_ZERO) && defined(BOOST_CONTAINER_MEMZEROED_POINTER_IS_NULL)
       || ::boost::is_pod<value_type>::value
       #endif
       );
