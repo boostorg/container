@@ -47,7 +47,7 @@ template<> struct get_allocator_name<AllocatorPlusV1>
 
 class MyInt
 {
-   int int_;
+   std::size_t int_; //Use a type that will grow on 64 bit machines
 
    public:
    MyInt(int i = 0) : int_(i){}
@@ -133,10 +133,18 @@ int main(int argc, const char *argv[])
 {
    #define SINGLE_TEST
    #ifndef SINGLE_TEST
+      #ifdef NDEBUG
       unsigned int numit [] =  { 100,   1000, 10000 };
+      #else
+      unsigned int numit [] =  { 10,   100, 1000 };
+      #endif
       unsigned int numele [] = { 10000, 2000, 500   };
    #else
+      #ifdef NDEBUG
       unsigned int numit [] =  { 500 };
+      #else
+      unsigned int numit [] =  { 50 };
+      #endif
       unsigned int numele [] = { 2000   };
    #endif
 

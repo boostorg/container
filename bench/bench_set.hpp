@@ -76,12 +76,17 @@ vector<string> random_range_string;
 
 void fill_range_strings()
 {
+   string model_s;
+   model_s.append(sizeof(string), '*');
+
    //sorted_unique_range_int
    sorted_unique_range_string.resize(NElements);
+   std::stringstream sstr;
+
    for(std::size_t i = 0, max = sorted_unique_range_string.size(); i != max; ++i){
-      std::stringstream sstr;
+      sstr.str(std::string());
       sstr << std::setfill('0') << std::setw(10) << i;
-      sorted_unique_range_string[i] = "really_long_long_prefix_to_ssb_and_increase_comparison_costs_";
+      sorted_unique_range_string[i] = model_s;
       const std::string &s = sstr.str();
       sorted_unique_range_string[i].append(s.begin(), s.end());
    }
