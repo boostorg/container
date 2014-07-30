@@ -102,7 +102,7 @@ template<class Pointer, bool IsConst>
 class deque_iterator
 {
    public:
-	typedef std::random_access_iterator_tag                                          iterator_category;
+   typedef std::random_access_iterator_tag                                          iterator_category;
    typedef typename boost::intrusive::pointer_traits<Pointer>::element_type         value_type;
    typedef typename boost::intrusive::pointer_traits<Pointer>::difference_type      difference_type;
    typedef typename if_c

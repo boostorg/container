@@ -226,7 +226,7 @@ class stable_vector_iterator
 {
    typedef boost::intrusive::pointer_traits<Pointer>                                non_const_ptr_traits;
    public:
-	typedef std::random_access_iterator_tag                                          iterator_category;
+   typedef std::random_access_iterator_tag                                          iterator_category;
    typedef typename non_const_ptr_traits::element_type                              value_type;
    typedef typename non_const_ptr_traits::difference_type                           difference_type;
    typedef typename ::boost::container::container_detail::if_c

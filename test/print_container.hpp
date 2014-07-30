@@ -22,8 +22,8 @@ namespace test{
 
 struct PrintValues
 {
-	typedef int    argument_type;
-	typedef void   result_type;
+   typedef int    argument_type;
+   typedef void   result_type;
 
    void operator() (int value) const
    {

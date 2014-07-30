@@ -494,9 +494,9 @@ class basic_string
    struct Eq_traits
    {
       //Compatibility with std::binary_function
-	   typedef typename Tr::char_type   first_argument_type;
-	   typedef typename Tr::char_type   second_argument_type;
-	   typedef bool   result_type;
+      typedef typename Tr::char_type   first_argument_type;
+      typedef typename Tr::char_type   second_argument_type;
+      typedef bool   result_type;
 
       bool operator()(const first_argument_type& x, const second_argument_type& y) const
          { return Tr::eq(x, y); }
@@ -505,8 +505,8 @@ class basic_string
    template <class Tr>
    struct Not_within_traits
    {
-	   typedef typename Tr::char_type   argument_type;
-	   typedef bool                     result_type;
+      typedef typename Tr::char_type   argument_type;
+      typedef bool                     result_type;
 
       typedef const typename Tr::char_type* Pointer;
       const Pointer m_first;
@@ -1256,18 +1256,18 @@ class basic_string
    {  return this->assign(cvalue_iterator(c, n), cvalue_iterator()); }
 
    //! <b>Effects</b>: Equivalent to assign(basic_string(first, last)).
- 	//!
- 	//! <b>Returns</b>: *this
- 	basic_string& assign(const CharT* first, const CharT* last)
- 	{
- 	   size_type n = static_cast<size_type>(last - first);
- 	   this->reserve(n);
- 	   CharT* ptr = container_detail::to_raw_pointer(this->priv_addr());
- 	   Traits::copy(ptr, first, n);
- 	   this->priv_construct_null(ptr + n);
- 	   this->priv_size(n);
- 	   return *this;
- 	}
+    //!
+    //! <b>Returns</b>: *this
+    basic_string& assign(const CharT* first, const CharT* last)
+    {
+       size_type n = static_cast<size_type>(last - first);
+       this->reserve(n);
+       CharT* ptr = container_detail::to_raw_pointer(this->priv_addr());
+       Traits::copy(ptr, first, n);
+       this->priv_construct_null(ptr + n);
+       this->priv_size(n);
+       return *this;
+    }
 
    //! <b>Effects</b>: Equivalent to assign(basic_string(first, last)).
    //!

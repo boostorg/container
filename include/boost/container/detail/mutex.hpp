@@ -25,10 +25,6 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 
-#ifdef _AIX
-#include <sched.h>
-#endif
-
 // Extremely Light-Weight wrapper classes for OS thread synchronization
 
 #define BOOST_MUTEX_HELPER_NONE         0
@@ -138,8 +134,10 @@
       #define SLEEP_EX_DURATION     50 /* delay for yield/sleep */
       #define SPIN_LOCK_YIELD  SleepEx(SLEEP_EX_DURATION, FALSE)
    #elif defined (__SVR4) && defined (__sun) /* solaris */
+      #include <thread.h>
       #define SPIN_LOCK_YIELD   thr_yield();
    #elif !defined(LACKS_SCHED_H)
+      #include <sched.h>
       #define SPIN_LOCK_YIELD   sched_yield();
    #else
       #define SPIN_LOCK_YIELD

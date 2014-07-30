@@ -103,8 +103,8 @@ template <typename T>
 inline T* addressof(T& obj)
 {
    return static_cast<T*>(
-	   static_cast<void*>(
-	      const_cast<char*>(
+      static_cast<void*>(
+         const_cast<char*>(
             &reinterpret_cast<const char&>(obj)
    )));
 }
@@ -451,10 +451,10 @@ inline typename container_detail::disable_if_memtransfer_copy_constructible<I, F
       }
    }
    BOOST_CATCH(...){
-	   for (; back != r; ++back){
+      for (; back != r; ++back){
          allocator_traits<A>::destroy(a, container_detail::iterator_to_raw_pointer(back));
       }
-	   BOOST_RETHROW;
+      BOOST_RETHROW;
    }
    BOOST_CATCH_END
    return r;
@@ -496,10 +496,10 @@ inline typename container_detail::disable_if_memtransfer_copy_constructible<I, F
       }
    }
    BOOST_CATCH(...){
-	   for (; back != r; ++back){
+      for (; back != r; ++back){
          allocator_traits<A>::destroy(a, container_detail::iterator_to_raw_pointer(back));
       }
-	   BOOST_RETHROW;
+      BOOST_RETHROW;
    }
    BOOST_CATCH_END
    return r;
@@ -541,10 +541,10 @@ inline typename container_detail::disable_if_memtransfer_copy_constructible<I, F
       }
    }
    BOOST_CATCH(...){
-	   for (; back != r; ++back){
+      for (; back != r; ++back){
          allocator_traits<A>::destroy(a, container_detail::iterator_to_raw_pointer(back));
       }
-	   BOOST_RETHROW;
+      BOOST_RETHROW;
    }
    BOOST_CATCH_END
    return f;
@@ -586,10 +586,10 @@ inline typename container_detail::disable_if_memtransfer_copy_constructible<I, F
       }
    }
    BOOST_CATCH(...){
-	   for (; back != r; ++back){
+      for (; back != r; ++back){
          allocator_traits<A>::destroy(a, container_detail::iterator_to_raw_pointer(back));
       }
-	   BOOST_RETHROW;
+      BOOST_RETHROW;
    }
    BOOST_CATCH_END
    return r;
@@ -631,10 +631,10 @@ inline typename container_detail::disable_if_memtransfer_copy_constructible<I, F
       }
    }
    BOOST_CATCH(...){
-	   for (; back != r; ++back){
+      for (; back != r; ++back){
          allocator_traits<A>::destroy(a, container_detail::iterator_to_raw_pointer(back));
       }
-	   BOOST_RETHROW;
+      BOOST_RETHROW;
    }
    BOOST_CATCH_END
    return r;
@@ -676,10 +676,10 @@ inline typename container_detail::disable_if_memtransfer_copy_constructible<I, F
       }
    }
    BOOST_CATCH(...){
-	   for (; back != r; ++back){
+      for (; back != r; ++back){
          allocator_traits<A>::destroy(a, container_detail::iterator_to_raw_pointer(back));
       }
-	   BOOST_RETHROW;
+      BOOST_RETHROW;
    }
    BOOST_CATCH_END
    return f;
@@ -720,10 +720,10 @@ inline typename container_detail::disable_if_memzero_initializable<F, F>::type
       }
    }
    BOOST_CATCH(...){
-	   for (; back != r; ++back){
+      for (; back != r; ++back){
          allocator_traits<A>::destroy(a, container_detail::iterator_to_raw_pointer(back));
       }
-	   BOOST_RETHROW;
+      BOOST_RETHROW;
    }
    BOOST_CATCH_END
    return r;
@@ -767,10 +767,10 @@ inline F uninitialized_default_init_alloc_n(A &a, typename allocator_traits<A>::
       }
    }
    BOOST_CATCH(...){
-	   for (; back != r; ++back){
+      for (; back != r; ++back){
          allocator_traits<A>::destroy(a, container_detail::iterator_to_raw_pointer(back));
       }
-	   BOOST_RETHROW;
+      BOOST_RETHROW;
    }
    BOOST_CATCH_END
    return r;
@@ -803,10 +803,10 @@ inline void uninitialized_fill_alloc(A &a, F f, F l, const T &t)
       }
    }
    BOOST_CATCH(...){
-	   for (; back != l; ++back){
+      for (; back != l; ++back){
          allocator_traits<A>::destroy(a, container_detail::iterator_to_raw_pointer(back));
       }
-	   BOOST_RETHROW;
+      BOOST_RETHROW;
    }
    BOOST_CATCH_END
 }
@@ -839,10 +839,10 @@ inline F uninitialized_fill_alloc_n(A &a, const T &v, typename allocator_traits<
       }
    }
    BOOST_CATCH(...){
-	   for (; back != r; ++back){
+      for (; back != r; ++back){
          allocator_traits<A>::destroy(a, container_detail::iterator_to_raw_pointer(back));
       }
-	   BOOST_RETHROW;
+      BOOST_RETHROW;
    }
    BOOST_CATCH_END
    return r;

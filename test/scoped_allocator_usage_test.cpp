@@ -19,35 +19,35 @@ template <typename Ty>
 class SimpleAllocator
 {
 public:
-	typedef Ty value_type;
+   typedef Ty value_type;
 
-	SimpleAllocator(int value)
-		: m_state(value)
-	{}
+   SimpleAllocator(int value)
+      : m_state(value)
+   {}
 
-	template <typename T>
-	SimpleAllocator(const SimpleAllocator<T> &other)
-		: m_state(other.m_state)
-	{}
+   template <typename T>
+   SimpleAllocator(const SimpleAllocator<T> &other)
+      : m_state(other.m_state)
+   {}
 
-	Ty* allocate(std::size_t n)
-	{
-		return m_allocator.allocate(n);
-	}
+   Ty* allocate(std::size_t n)
+   {
+      return m_allocator.allocate(n);
+   }
 
-	void deallocate(Ty* p, std::size_t n)
-	{
-		m_allocator.deallocate(p, n);
-	}
+   void deallocate(Ty* p, std::size_t n)
+   {
+      m_allocator.deallocate(p, n);
+   }
 
    int get_value() const
    {  return m_state;   }
 
    private:
-	int m_state;
-	std::allocator<Ty> m_allocator;
+   int m_state;
+   std::allocator<Ty> m_allocator;
 
-	template <typename T> friend class SimpleAllocator;
+   template <typename T> friend class SimpleAllocator;
 };
 
 class alloc_int
@@ -57,29 +57,29 @@ class alloc_int
    BOOST_MOVABLE_BUT_NOT_COPYABLE(alloc_int)
 
    public:
-	typedef SimpleAllocator<int> allocator_type;
+   typedef SimpleAllocator<int> allocator_type;
 
-	alloc_int(BOOST_RV_REF(alloc_int)other)
-		: m_value(other.m_value), m_allocator(boost::move(other.m_allocator))
-	{
-		other.m_value = -1;
-	}
+   alloc_int(BOOST_RV_REF(alloc_int)other)
+      : m_value(other.m_value), m_allocator(boost::move(other.m_allocator))
+   {
+      other.m_value = -1;
+   }
 
-	alloc_int(BOOST_RV_REF(alloc_int)other, const allocator_type &allocator)
-		: m_value(other.m_value), m_allocator(allocator)
-	{
-		other.m_value = -1;
-	}
+   alloc_int(BOOST_RV_REF(alloc_int)other, const allocator_type &allocator)
+      : m_value(other.m_value), m_allocator(allocator)
+   {
+      other.m_value = -1;
+   }
 
-	alloc_int(int value, const allocator_type &allocator)
-		: m_value(value), m_allocator(allocator)
-	{}
+   alloc_int(int value, const allocator_type &allocator)
+      : m_value(value), m_allocator(allocator)
+   {}
 
-	alloc_int & operator=(BOOST_RV_REF(alloc_int)other)
-	{
-		other.m_value = other.m_value;
+   alloc_int & operator=(BOOST_RV_REF(alloc_int)other)
+   {
+      other.m_value = other.m_value;
       return *this;
-	}
+   }
 
    int get_allocator_state() const
    {  return m_allocator.get_value();  }
@@ -94,8 +94,8 @@ class alloc_int
    {  return l.m_value == r.m_value;  }
 
    private:
-	int m_value;
-	allocator_type m_allocator;
+   int m_value;
+   allocator_type m_allocator;
 };
 
 using namespace ::boost::container;
@@ -345,10 +345,10 @@ bool one_level_allocator_propagation_test()
 {
    typedef container_wrapper<Container> ContainerWrapper;
    typedef typename ContainerWrapper::iterator iterator;
-	ContainerWrapper c(SimpleAllocator<MapNode>(5));
+   ContainerWrapper c(SimpleAllocator<MapNode>(5));
 
    c.clear();
-	iterator it = c.emplace(c.cbegin(), 42);
+   iterator it = c.emplace(c.cbegin(), 42);
 
    if(!test_value_and_state_equals(*it, 42, 5))
       return false;
@@ -387,7 +387,7 @@ int main()
       return 1;
    if(!one_level_allocator_propagation_test<StableVector>())
       return 1;
-	return 0;
+   return 0;
 }
 
 #include <boost/container/detail/config_end.hpp>

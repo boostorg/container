@@ -447,7 +447,7 @@ class flat_tree
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
       , typename container_detail::enable_if_c
          < !container_detail::is_input_iterator<FwdIt>::value &&
-		   container_detail::is_forward_iterator<FwdIt>::value
+         container_detail::is_forward_iterator<FwdIt>::value
          >::type * = 0
       #endif
       )
@@ -559,7 +559,7 @@ class flat_tree
             const typename std::iterator_traits<BidirIt>::value_type & val = *first;
             pos = const_cast<const flat_tree&>(*this).priv_lower_bound(pos, ce, KeyOfValue()(val));
             //Check if already present
-			   if (pos != ce){
+            if (pos != ce){
                ++first;
                --len;
                if(!val_cmp(val, *pos)){
