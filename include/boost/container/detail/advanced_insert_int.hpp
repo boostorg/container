@@ -22,6 +22,7 @@
 #include <boost/container/detail/destroyers.hpp>
 #include <boost/aligned_storage.hpp>
 #include <boost/move/utility.hpp>
+#include <boost/container/detail/mpl.hpp>
 #include <iterator>  //std::iterator_traits
 #include <boost/assert.hpp>
 #include <boost/detail/no_exceptions_support.hpp>
@@ -269,6 +270,44 @@ struct insert_emplace_proxy
    }
 };
 
+//Specializations to avoid an unneeded temporary when emplacing from a single argument o type value_type
+template<class A, class Iterator>
+struct insert_emplace_proxy<A, Iterator, typename boost::container::allocator_traits<A>::value_type>
+   : public insert_move_proxy<A, Iterator>
+{
+   explicit insert_emplace_proxy(typename boost::container::allocator_traits<A>::value_type &&v)
+   : insert_move_proxy<A, Iterator>(v)
+   {}
+};
+
+template<class A, class Iterator>
+struct insert_emplace_proxy<A, Iterator, typename boost::container::allocator_traits<A>::value_type &>
+   : public insert_copy_proxy<A, Iterator>
+{
+   explicit insert_emplace_proxy(const typename boost::container::allocator_traits<A>::value_type &v)
+   : insert_copy_proxy<A, Iterator>(v)
+   {}
+};
+
+template<class A, class Iterator>
+struct insert_emplace_proxy<A, Iterator, const typename boost::container::allocator_traits<A>::value_type &>
+   : public insert_copy_proxy<A, Iterator>
+{
+   explicit insert_emplace_proxy(const typename boost::container::allocator_traits<A>::value_type &v)
+   : insert_copy_proxy<A, Iterator>(v)
+   {}
+};
+
+template<class A, class Iterator>
+struct insert_emplace_proxy<A, Iterator, const typename boost::container::allocator_traits<A>::value_type>
+   : public insert_copy_proxy<A, Iterator>
+{
+   explicit insert_emplace_proxy(const typename boost::container::allocator_traits<A>::value_type &v)
+   : insert_copy_proxy<A, Iterator>(v)
+   {}
+};
+
+
 }}}   //namespace boost { namespace container { namespace container_detail {
 
 #else //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
@@ -347,6 +386,34 @@ struct BOOST_PP_CAT(insert_emplace_proxy_arg, N)                                
 #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
 #include BOOST_PP_LOCAL_ITERATE()
 
+//Specializations to avoid an unneeded temporary when emplacing from a single argument o type value_type
+template<class A, class Iterator>
+struct insert_emplace_proxy_arg1<A, Iterator, ::boost::rv<typename boost::container::allocator_traits<A>::value_type> >
+   : public insert_move_proxy<A, Iterator>
+{
+   explicit insert_emplace_proxy_arg1(typename boost::container::allocator_traits<A>::value_type &v)
+   : insert_move_proxy<A, Iterator>(v)
+   {}
+};
+
+template<class A, class Iterator>
+struct insert_emplace_proxy_arg1<A, Iterator, typename boost::container::allocator_traits<A>::value_type>
+   : public insert_copy_proxy<A, Iterator>
+{
+   explicit insert_emplace_proxy_arg1(const typename boost::container::allocator_traits<A>::value_type &v)
+   : insert_copy_proxy<A, Iterator>(v)
+   {}
+};
+/*
+template<class A, class Iterator>
+struct insert_emplace_proxy_arg1<A, Iterator, const typename boost::container::allocator_traits<A>::value_type>
+   : public insert_copy_proxy<A, Iterator>
+{
+   explicit insert_emplace_proxy_arg1(const typename boost::container::allocator_traits<A>::value_type &v)
+   : insert_copy_proxy<A, Iterator>(v)
+   {}
+};
+*/
 }}}   //namespace boost { namespace container { namespace container_detail {
 
 #endif   //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
