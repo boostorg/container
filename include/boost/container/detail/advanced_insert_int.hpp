@@ -23,6 +23,7 @@
 #include <boost/aligned_storage.hpp>
 #include <boost/move/utility.hpp>
 #include <boost/container/detail/mpl.hpp>
+#include <boost/container/detail/type_traits.hpp>
 #include <iterator>  //std::iterator_traits
 #include <boost/assert.hpp>
 #include <boost/detail/no_exceptions_support.hpp>
@@ -280,6 +281,20 @@ struct insert_emplace_proxy<A, Iterator, typename boost::container::allocator_tr
    {}
 };
 
+//We use "add_const" here as adding "const" only confuses MSVC12(and maybe later) provoking
+//compiler error C2752 (“more than one partial specialization matches”).
+//Any problem is solvable with an extra layer of indirection? ;-)
+template<class A, class Iterator>
+struct insert_emplace_proxy<A, Iterator
+   , typename boost::container::container_detail::add_const<typename boost::container::allocator_traits<A>::value_type>::type
+   >
+   : public insert_copy_proxy<A, Iterator>
+{
+   explicit insert_emplace_proxy(const typename boost::container::allocator_traits<A>::value_type &v)
+   : insert_copy_proxy<A, Iterator>(v)
+   {}
+};
+
 template<class A, class Iterator>
 struct insert_emplace_proxy<A, Iterator, typename boost::container::allocator_traits<A>::value_type &>
    : public insert_copy_proxy<A, Iterator>
@@ -290,23 +305,15 @@ struct insert_emplace_proxy<A, Iterator, typename boost::container::allocator_tr
 };
 
 template<class A, class Iterator>
-struct insert_emplace_proxy<A, Iterator, const typename boost::container::allocator_traits<A>::value_type &>
+struct insert_emplace_proxy<A, Iterator
+   , typename boost::container::container_detail::add_const<typename boost::container::allocator_traits<A>::value_type>::type &
+   >
    : public insert_copy_proxy<A, Iterator>
 {
    explicit insert_emplace_proxy(const typename boost::container::allocator_traits<A>::value_type &v)
    : insert_copy_proxy<A, Iterator>(v)
    {}
 };
-
-template<class A, class Iterator>
-struct insert_emplace_proxy<A, Iterator, const typename boost::container::allocator_traits<A>::value_type>
-   : public insert_copy_proxy<A, Iterator>
-{
-   explicit insert_emplace_proxy(const typename boost::container::allocator_traits<A>::value_type &v)
-   : insert_copy_proxy<A, Iterator>(v)
-   {}
-};
-
 
 }}}   //namespace boost { namespace container { namespace container_detail {
 
@@ -419,6 +426,20 @@ struct insert_emplace_proxy_arg1<A, Iterator, typename boost::container::allocat
    {}
 };
 
+//We use "add_const" here as adding "const" only confuses MSVC10&11 provoking
+//compiler error C2752 (“more than one partial specialization matches”).
+//Any problem is solvable with an extra layer of indirection? ;-)
+template<class A, class Iterator>
+struct insert_emplace_proxy_arg1<A, Iterator
+   , typename boost::container::container_detail::add_const<typename boost::container::allocator_traits<A>::value_type>::type
+   >
+   : public insert_copy_proxy<A, Iterator>
+{
+   explicit insert_emplace_proxy_arg1(const typename boost::container::allocator_traits<A>::value_type &v)
+   : insert_copy_proxy<A, Iterator>(v)
+   {}
+};
+
 template<class A, class Iterator>
 struct insert_emplace_proxy_arg1<A, Iterator, typename boost::container::allocator_traits<A>::value_type &>
    : public insert_copy_proxy<A, Iterator>
@@ -429,16 +450,9 @@ struct insert_emplace_proxy_arg1<A, Iterator, typename boost::container::allocat
 };
 
 template<class A, class Iterator>
-struct insert_emplace_proxy_arg1<A, Iterator, const typename boost::container::allocator_traits<A>::value_type &>
-   : public insert_copy_proxy<A, Iterator>
-{
-   explicit insert_emplace_proxy_arg1(const typename boost::container::allocator_traits<A>::value_type &v)
-   : insert_copy_proxy<A, Iterator>(v)
-   {}
-};
-
-template<class A, class Iterator>
-struct insert_emplace_proxy_arg1<A, Iterator, const typename boost::container::allocator_traits<A>::value_type>
+struct insert_emplace_proxy_arg1<A, Iterator
+   , typename boost::container::container_detail::add_const<typename boost::container::allocator_traits<A>::value_type>::type &
+   >
    : public insert_copy_proxy<A, Iterator>
 {
    explicit insert_emplace_proxy_arg1(const typename boost::container::allocator_traits<A>::value_type &v)

@@ -165,6 +165,10 @@ template <class T>
 struct add_const_reference<T&>
 {  typedef T& type;   };
 
+template <class T>
+struct add_const
+{  typedef const T type;   };
+
 template <typename T, typename U>
 struct is_same
 {
