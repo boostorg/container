@@ -386,6 +386,8 @@ struct BOOST_PP_CAT(insert_emplace_proxy_arg, N)                                
 #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
 #include BOOST_PP_LOCAL_ITERATE()
 
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
 //Specializations to avoid an unneeded temporary when emplacing from a single argument o type value_type
 template<class A, class Iterator>
 struct insert_emplace_proxy_arg1<A, Iterator, ::boost::rv<typename boost::container::allocator_traits<A>::value_type> >
@@ -404,7 +406,37 @@ struct insert_emplace_proxy_arg1<A, Iterator, typename boost::container::allocat
    : insert_copy_proxy<A, Iterator>(v)
    {}
 };
-/*
+
+#else //e.g. MSVC10 & MSVC11
+
+//Specializations to avoid an unneeded temporary when emplacing from a single argument o type value_type
+template<class A, class Iterator>
+struct insert_emplace_proxy_arg1<A, Iterator, typename boost::container::allocator_traits<A>::value_type>
+   : public insert_move_proxy<A, Iterator>
+{
+   explicit insert_emplace_proxy_arg1(typename boost::container::allocator_traits<A>::value_type &&v)
+   : insert_move_proxy<A, Iterator>(v)
+   {}
+};
+
+template<class A, class Iterator>
+struct insert_emplace_proxy_arg1<A, Iterator, typename boost::container::allocator_traits<A>::value_type &>
+   : public insert_copy_proxy<A, Iterator>
+{
+   explicit insert_emplace_proxy_arg1(const typename boost::container::allocator_traits<A>::value_type &v)
+   : insert_copy_proxy<A, Iterator>(v)
+   {}
+};
+
+template<class A, class Iterator>
+struct insert_emplace_proxy_arg1<A, Iterator, const typename boost::container::allocator_traits<A>::value_type &>
+   : public insert_copy_proxy<A, Iterator>
+{
+   explicit insert_emplace_proxy_arg1(const typename boost::container::allocator_traits<A>::value_type &v)
+   : insert_copy_proxy<A, Iterator>(v)
+   {}
+};
+
 template<class A, class Iterator>
 struct insert_emplace_proxy_arg1<A, Iterator, const typename boost::container::allocator_traits<A>::value_type>
    : public insert_copy_proxy<A, Iterator>
@@ -413,7 +445,9 @@ struct insert_emplace_proxy_arg1<A, Iterator, const typename boost::container::a
    : insert_copy_proxy<A, Iterator>(v)
    {}
 };
-*/
+
+#endif
+
 }}}   //namespace boost { namespace container { namespace container_detail {
 
 #endif   //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
