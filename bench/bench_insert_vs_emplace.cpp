@@ -107,8 +107,10 @@ operator<<(std::ostream& os, X::special const& sp)
 
 X::special X::sp = X::special();
 
-int
-main()
+const X produce_const_prvalue()
+{   return X(0, 0);   }
+
+int main()
 {
    X::special insert_results;
    X::special emplace_results;
@@ -167,6 +169,35 @@ main()
       std::cout << X::sp;
       std::cout << "----\n";
       emplace_results = X::sp;
+   }
+   BOOST_TEST_EQ(insert_results == emplace_results, true);
+   {
+      boost::container::vector<X> v;
+      v.reserve(4);
+      v.push_back(X(0,0));
+      v.push_back(X(0,0));
+      v.push_back(X(0,0));
+      X x(0,0);
+      std::cout << "--emplace const prvalue no reallocation--\n";
+      X::sp = X::special();
+      v.emplace(v.begin(), produce_const_prvalue());
+      std::cout << X::sp;
+      std::cout << "----\n";
+      emplace_results = X::sp;
+   }
+   {
+      boost::container::vector<X> v;
+      v.reserve(4);
+      v.push_back(X(0,0));
+      v.push_back(X(0,0));
+      v.push_back(X(0,0));
+      X x(0,0);
+      std::cout << "--emplace const prvalue no reallocation--\n";
+      X::sp = X::special();
+      v.insert(v.begin(), produce_const_prvalue());
+      std::cout << X::sp;
+      std::cout << "----\n";
+      insert_results = X::sp;
    }
    BOOST_TEST_EQ(insert_results == emplace_results, true);
    {
