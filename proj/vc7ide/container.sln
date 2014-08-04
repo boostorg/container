@@ -167,7 +167,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bench_set_alloc_v2", "bench
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bench_insert_vs_emplace", "bench_insert_vs_emplace.vcproj", "{5E1C1C23-26A9-4FE5-A24E-DA735271C32B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "insert_vs_emplace_test", "insert_vs_emplace_test.vcproj", "{A1C1C223-26A9-A20E-4CE5-D3325271A7CB}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject

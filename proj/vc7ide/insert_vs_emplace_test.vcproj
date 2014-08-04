@@ -2,7 +2,7 @@
 <VisualStudioProject
    ProjectType="Visual C++"
    Version="7.10"
-   Name="bench_insert_vs_emplace"
+   Name="insert_vs_emplace_test"
    ProjectGUID="{51EC9223-B8A9-4F6E-EA24-352DFA76C72A}"
    Keyword="Win32Proj">
    <Platforms>
@@ -13,7 +13,7 @@
       <Configuration
          Name="Debug|Win32"
          OutputDirectory="../../Bin/Win32/Debug"
-         IntermediateDirectory="Debug/bench_insert_vs_emplace"
+         IntermediateDirectory="Debug/insert_vs_emplace_test"
          ConfigurationType="1"
          CharacterSet="2">
          <Tool
@@ -36,11 +36,11 @@
          <Tool
             Name="VCLinkerTool"
             AdditionalDependencies="winmm.lib"
-            OutputFile="$(OutDir)/bench_insert_vs_emplace_d.exe"
+            OutputFile="$(OutDir)/insert_vs_emplace_test_d.exe"
             LinkIncremental="1"
             AdditionalLibraryDirectories="../../../../stage/lib"
             GenerateDebugInformation="TRUE"
-            ProgramDatabaseFile="$(OutDir)/bench_insert_vs_emplace.pdb"
+            ProgramDatabaseFile="$(OutDir)/insert_vs_emplace_test.pdb"
             SubSystem="1"
             TargetMachine="1"
             FixedBaseAddress="1"/>
@@ -68,7 +68,7 @@
       <Configuration
          Name="Release|Win32"
          OutputDirectory="../../Bin/Win32/Release"
-         IntermediateDirectory="Release/bench_insert_vs_emplace"
+         IntermediateDirectory="Release/insert_vs_emplace_test"
          ConfigurationType="1"
          CharacterSet="2">
          <Tool
@@ -87,7 +87,7 @@
          <Tool
             Name="VCLinkerTool"
             AdditionalDependencies="winmm.lib"
-            OutputFile="$(OutDir)/bench_insert_vs_emplace.exe"
+            OutputFile="$(OutDir)/insert_vs_emplace_test.exe"
             LinkIncremental="1"
             AdditionalLibraryDirectories="../../../../stage/lib"
             GenerateDebugInformation="TRUE"
@@ -125,7 +125,7 @@
          Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
          UniqueIdentifier="{4CBB737A-CAC8-16C6-1243-3D2AA35F127D}">
          <File
-            RelativePath="..\..\bench\bench_insert_vs_emplace.cpp">
+            RelativePath="..\..\bench\insert_vs_emplace_test.cpp">
          </File>
       </Filter>
    </Files>
