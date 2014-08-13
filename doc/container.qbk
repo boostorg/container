@@ -825,7 +825,36 @@ while offering only basic safety guarantees. It trades off exception guarantees 
 
 [endsect]
 
-[section:Vector_bool `vector<bool>`]
+[section:container_const_reference_parameters Parameter taken by const reference that can be changed]
+
+Several container operations use a parameter taken by const reference that can be changed during execution of the function.
+[@http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-closed.html#526 LWG Issue 526
+   (['Is it undefined if a function in the standard changes in parameters?])]
+discusses them:
+
+[c++]
+
+   //Given std::vector<int> v
+   v.insert(v.begin(), v[2]);
+   //v[2] can be changed by moving elements of vector
+
+   //Given std::list<int> l:
+   l.remove(*l.begin())
+   //The operation could delete the first element, and then continue trying to access it.
+
+The adopted resolution, NAD (Not A Defect), implies that previous operations must be well-defined. This requires code
+to detect a reference to an inserted element and an additional copy in that case, impacting performance even when
+references to already inserted objects are not used. Note that equivalent functions taking rvalue references or
+iterator ranges require elements not already inserted in the container.
+
+[*Boost.Container] prioritizes performance and has not implemented the NAD resolution: 
+in functions that might modify the argument, the library requires references to elements not stored
+in the container. Using references to inserted elements yields to undefined behaviour (although in debug mode, this
+precondition violation could be notified via BOOST_ASSERT).
+
+[endsect]
+
+[section:Vector_bool `vector<bool>` specialization]
 
 `vector<bool>` specialization has been quite problematic, and there have been several
 unsuccessful tries to deprecate or remove it from the standard. [*Boost.Container] does not implement it
