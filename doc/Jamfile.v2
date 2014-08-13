@@ -12,7 +12,7 @@ import quickbook ;
 
 using auto-index ;
 
-path-constant images_location : html ;
+path-constant images_location : ../ ;
 path-constant here : . ;
 
 doxygen autodoc
