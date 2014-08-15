@@ -635,12 +635,13 @@ class stable_vector
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: Constructs a stable_vector that will use a copy of allocator a
    //!  and inserts a copy of the range [il.begin(), il.last()) in the stable_vector
+   //!
    //! <b>Throws</b>: If allocator_type's default constructor
-   //!   throws or T's constructor taking a dereferenced InIt throws.
+   //!   throws or T's constructor taking a dereferenced initializer_list iterator throws.
    //!
    //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
-   stable_vector(std::initializer_list<T> il, const allocator_type& al = allocator_type())
-      : internal_data(al), index(al)
+   stable_vector(std::initializer_list<value_type> il, const allocator_type& l = allocator_type())
+      : internal_data(l), index(l)
    {
        stable_vector_detail::clear_on_destroy<stable_vector> cod(*this);
        insert(cend(), il.begin(), il.end())
@@ -778,7 +779,7 @@ class stable_vector
    //! <b>Effects</b>: Make *this container contains elements from il.
    //!
    //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
-   stable_vector& operator=(std::initializer_list<T> il)
+   stable_vector& operator=(std::initializer_list<value_type> il)
    {
       STABLE_VECTOR_CHECK_INVARIANT;
       clear();
@@ -831,9 +832,9 @@ class stable_vector
    //! <b>Effects</b>: Assigns the the range [il.begin(), il.end()) to *this.
    //!
    //! <b>Throws</b>: If memory allocation throws or
-   //!   T's constructor from dereferencing InpIt throws.
+   //!   T's constructor from dereferencing initializer_list iterator throws.
    //!
-   void assign(std::initializer_list<T> il)
+   void assign(std::initializer_list<value_type> il)
    {
        STABLE_VECTOR_CHECK_INVARIANT;
        assign(il.begin(), il.end());
@@ -1401,7 +1402,7 @@ class stable_vector
    //! <b>Returns</b>: an iterator to the first inserted element or position if first == last.
    //!
    //! <b>Complexity</b>: Linear to std::distance [il.begin(), il.end()).
-   iterator insert(const_iterator position, std::initializer_list<T> il)
+   iterator insert(const_iterator position, std::initializer_list<value_type> il)
    {
        STABLE_VECTOR_CHECK_INVARIANT;
       return insert(position, il.begin(), il.end());
