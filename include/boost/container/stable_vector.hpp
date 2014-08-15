@@ -643,10 +643,10 @@ class stable_vector
    stable_vector(std::initializer_list<value_type> il, const allocator_type& l = allocator_type())
       : internal_data(l), index(l)
    {
-       stable_vector_detail::clear_on_destroy<stable_vector> cod(*this);
-       insert(cend(), il.begin(), il.end())
-       STABLE_VECTOR_CHECK_INVARIANT;
-       cod.release();
+      stable_vector_detail::clear_on_destroy<stable_vector> cod(*this);
+      insert(cend(), il.begin(), il.end())
+      STABLE_VECTOR_CHECK_INVARIANT;
+      cod.release();
    }
 #endif
 
@@ -782,8 +782,6 @@ class stable_vector
    stable_vector& operator=(std::initializer_list<value_type> il)
    {
       STABLE_VECTOR_CHECK_INVARIANT;
-      clear();
-      shrink_to_fit();
       assign(il.begin(), il.end());
       return *this;
    }
@@ -836,8 +834,8 @@ class stable_vector
    //!
    void assign(std::initializer_list<value_type> il)
    {
-       STABLE_VECTOR_CHECK_INVARIANT;
-       assign(il.begin(), il.end());
+      STABLE_VECTOR_CHECK_INVARIANT;
+      assign(il.begin(), il.end());
    }
 #endif
 
@@ -1404,7 +1402,7 @@ class stable_vector
    //! <b>Complexity</b>: Linear to std::distance [il.begin(), il.end()).
    iterator insert(const_iterator p, std::initializer_list<value_type> il)
    {
-       STABLE_VECTOR_CHECK_INVARIANT;
+      STABLE_VECTOR_CHECK_INVARIANT;
       return insert(p, il.begin(), il.end());
    }
 #endif

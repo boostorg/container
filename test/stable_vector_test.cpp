@@ -216,6 +216,9 @@ int main()
    if(!boost::container::test::test_propagate_allocator<stable_vector>())
       return 1;
 
+   ////////////////////////////////////
+   //    Initializer lists testing
+   ////////////////////////////////////
    if(!test_methods_with_initializer_list_as_argument())
    {
        std::cerr << "test_methods_with_initializer_list_as_argument failed" << std::endl;
