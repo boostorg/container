@@ -56,6 +56,10 @@
 namespace boost {
 namespace container {
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+#include <initializer_list>
+#endif
+
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 namespace stable_vector_detail{
@@ -628,6 +632,24 @@ class stable_vector
       cod.release();
    }
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Constructs a stable_vector that will use a copy of allocator a
+   //!  and inserts a copy of the range [il.begin(), il.last()) in the stable_vector
+   //!
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's constructor taking a dereferenced initializer_list iterator throws.
+   //!
+   //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
+   stable_vector(std::initializer_list<value_type> il, const allocator_type& l = allocator_type())
+      : internal_data(l), index(l)
+   {
+       stable_vector_detail::clear_on_destroy<stable_vector> cod(*this);
+       insert(cend(), il.begin(), il.end())
+       STABLE_VECTOR_CHECK_INVARIANT;
+       cod.release();
+   }
+#endif
+
    //! <b>Effects</b>: Move constructor. Moves mx's resources to *this.
    //!
    //! <b>Throws</b>: If allocator_type's copy constructor throws.
@@ -753,6 +775,20 @@ class stable_vector
       return *this;
    }
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Make *this container contains elements from il.
+   //!
+   //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
+   stable_vector& operator=(std::initializer_list<value_type> il)
+   {
+      STABLE_VECTOR_CHECK_INVARIANT;
+      clear();
+      shrink_to_fit();
+      assign(il.begin(), il.end());
+      return *this;
+   }
+#endif
+
    //! <b>Effects</b>: Assigns the n copies of val to *this.
    //!
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
@@ -791,6 +827,19 @@ class stable_vector
          this->insert(last1, first, last);
       }
    }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Assigns the the range [il.begin(), il.end()) to *this.
+   //!
+   //! <b>Throws</b>: If memory allocation throws or
+   //!   T's constructor from dereferencing initializer_list iterator throws.
+   //!
+   void assign(std::initializer_list<value_type> il)
+   {
+       STABLE_VECTOR_CHECK_INVARIANT;
+       assign(il.begin(), il.end());
+   }
+#endif
 
    //! <b>Effects</b>: Returns a copy of the internal allocator.
    //!
@@ -1345,6 +1394,22 @@ class stable_vector
    }
 
    //! <b>Requires</b>: p must be a valid iterator of *this.
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Requires</b>: p must be a valid iterator of *this.
+   //!
+   //! <b>Effects</b>: Insert a copy of the [il.begin(), il.end()) range before p.
+   //!
+   //! <b>Returns</b>: an iterator to the first inserted element or p if first == last.
+   //!
+   //! <b>Complexity</b>: Linear to std::distance [il.begin(), il.end()).
+   iterator insert(const_iterator p, std::initializer_list<value_type> il)
+   {
+       STABLE_VECTOR_CHECK_INVARIANT;
+      return insert(p, il.begin(), il.end());
+   }
+#endif
+
+   //! <b>Requires</b>: pos must be a valid iterator of *this.
    //!
    //! <b>Effects</b>: Insert a copy of the [first, last) range before p.
    //!
