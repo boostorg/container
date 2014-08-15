@@ -658,10 +658,10 @@ class flat_map
    //!   right before p) plus insertion linear to the elements with bigger keys than x.
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
-   iterator insert(const_iterator position, const value_type& x)
+   iterator insert(const_iterator p, const value_type& x)
    {
       return container_detail::force_copy<iterator>(
-         m_flat_tree.insert_unique( container_detail::force_copy<impl_const_iterator>(position)
+         m_flat_tree.insert_unique( container_detail::force_copy<impl_const_iterator>(p)
                                   , container_detail::force<impl_value_type>(x)));
    }
 
@@ -674,10 +674,10 @@ class flat_map
    //!   right before p) plus insertion linear to the elements with bigger keys than x.
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
-   iterator insert(const_iterator position, BOOST_RV_REF(value_type) x)
+   iterator insert(const_iterator p, BOOST_RV_REF(value_type) x)
    {
       return container_detail::force_copy<iterator>
-         (m_flat_tree.insert_unique( container_detail::force_copy<impl_const_iterator>(position)
+         (m_flat_tree.insert_unique( container_detail::force_copy<impl_const_iterator>(p)
                                    , boost::move(container_detail::force<impl_value_type>(x))));
    }
 
@@ -690,10 +690,10 @@ class flat_map
    //!   right before p) plus insertion linear to the elements with bigger keys than x.
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
-   iterator insert(const_iterator position, BOOST_RV_REF(movable_value_type) x)
+   iterator insert(const_iterator p, BOOST_RV_REF(movable_value_type) x)
    {
       return container_detail::force_copy<iterator>(
-         m_flat_tree.insert_unique(container_detail::force_copy<impl_const_iterator>(position), boost::move(x)));
+         m_flat_tree.insert_unique(container_detail::force_copy<impl_const_iterator>(p), boost::move(x)));
    }
 
    //! <b>Requires</b>: first, last are not iterators into *this.
@@ -728,20 +728,20 @@ class flat_map
    void insert(ordered_unique_range_t, InputIterator first, InputIterator last)
       {  m_flat_tree.insert_unique(ordered_unique_range, first, last); }
 
-   //! <b>Effects</b>: Erases the element pointed to by position.
+   //! <b>Effects</b>: Erases the element pointed to by p.
    //!
    //! <b>Returns</b>: Returns an iterator pointing to the element immediately
    //!   following q prior to the element being erased. If no such element exists,
    //!   returns end().
    //!
-   //! <b>Complexity</b>: Linear to the elements with keys bigger than position
+   //! <b>Complexity</b>: Linear to the elements with keys bigger than p
    //!
    //! <b>Note</b>: Invalidates elements with keys
    //!   not less than the erased element.
-   iterator erase(const_iterator position)
+   iterator erase(const_iterator p)
    {
       return container_detail::force_copy<iterator>
-         (m_flat_tree.erase(container_detail::force_copy<impl_const_iterator>(position)));
+         (m_flat_tree.erase(container_detail::force_copy<impl_const_iterator>(p)));
    }
 
    //! <b>Effects</b>: Erases all elements in the container with key equivalent to x.
@@ -1477,10 +1477,10 @@ class flat_multimap
    //!   to the elements with bigger keys than x.
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
-   iterator insert(const_iterator position, const value_type& x)
+   iterator insert(const_iterator p, const value_type& x)
    {
       return container_detail::force_copy<iterator>
-         (m_flat_tree.insert_equal( container_detail::force_copy<impl_const_iterator>(position)
+         (m_flat_tree.insert_equal( container_detail::force_copy<impl_const_iterator>(p)
                                   , container_detail::force<impl_value_type>(x)));
    }
 
@@ -1495,10 +1495,10 @@ class flat_multimap
    //!   to the elements with bigger keys than x.
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
-   iterator insert(const_iterator position, BOOST_RV_REF(value_type) x)
+   iterator insert(const_iterator p, BOOST_RV_REF(value_type) x)
    {
       return container_detail::force_copy<iterator>
-         (m_flat_tree.insert_equal(container_detail::force_copy<impl_const_iterator>(position)
+         (m_flat_tree.insert_equal(container_detail::force_copy<impl_const_iterator>(p)
                                   , boost::move(x)));
    }
 
@@ -1513,10 +1513,10 @@ class flat_multimap
    //!   to the elements with bigger keys than x.
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
-   iterator insert(const_iterator position, BOOST_RV_REF(impl_value_type) x)
+   iterator insert(const_iterator p, BOOST_RV_REF(impl_value_type) x)
    {
       return container_detail::force_copy<iterator>(
-         m_flat_tree.insert_equal(container_detail::force_copy<impl_const_iterator>(position), boost::move(x)));
+         m_flat_tree.insert_equal(container_detail::force_copy<impl_const_iterator>(p), boost::move(x)));
    }
 
    //! <b>Requires</b>: first, last are not iterators into *this.
@@ -1549,20 +1549,20 @@ class flat_multimap
    void insert(ordered_range_t, InputIterator first, InputIterator last)
       {  m_flat_tree.insert_equal(ordered_range, first, last); }
 
-   //! <b>Effects</b>: Erases the element pointed to by position.
+   //! <b>Effects</b>: Erases the element pointed to by p.
    //!
    //! <b>Returns</b>: Returns an iterator pointing to the element immediately
    //!   following q prior to the element being erased. If no such element exists,
    //!   returns end().
    //!
-   //! <b>Complexity</b>: Linear to the elements with keys bigger than position
+   //! <b>Complexity</b>: Linear to the elements with keys bigger than p
    //!
    //! <b>Note</b>: Invalidates elements with keys
    //!   not less than the erased element.
-   iterator erase(const_iterator position)
+   iterator erase(const_iterator p)
    {
       return container_detail::force_copy<iterator>(
-         m_flat_tree.erase(container_detail::force_copy<impl_const_iterator>(position)));
+         m_flat_tree.erase(container_detail::force_copy<impl_const_iterator>(p)));
    }
 
    //! <b>Effects</b>: Erases all elements in the container with key equivalent to x.

@@ -394,8 +394,8 @@ class flat_set
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    template <class... Args>
-   iterator emplace_hint(const_iterator hint, Args&&... args)
-   {  return this->base_t::emplace_hint_unique(hint, boost::forward<Args>(args)...); }
+   iterator emplace_hint(const_iterator p, Args&&... args)
+   {  return this->base_t::emplace_hint_unique(p, boost::forward<Args>(args)...); }
 
    #else //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
 
@@ -405,10 +405,10 @@ class flat_set
    {  return this->base_t::emplace_unique(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); }\
                                                                                                    \
    BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)          \
-   iterator emplace_hint(const_iterator hint                                                       \
+   iterator emplace_hint(const_iterator p                                                          \
                          BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_LIST, _))              \
    {  return this->base_t::emplace_hint_unique                                                     \
-            (hint BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); }               \
+            (p BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); }                  \
    //!
    #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
    #include BOOST_PP_LOCAL_ITERATE()
@@ -471,7 +471,7 @@ class flat_set
    //!   right before p) plus insertion linear to the elements with bigger keys than x.
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
-   iterator insert(const_iterator position, value_type &&x);
+   iterator insert(const_iterator p, value_type &&x);
    #else
    BOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG(insert, value_type, iterator, this->priv_insert, const_iterator, const_iterator)
    #endif
@@ -506,17 +506,17 @@ class flat_set
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-   //! <b>Effects</b>: Erases the element pointed to by position.
+   //! <b>Effects</b>: Erases the element pointed to by p.
    //!
    //! <b>Returns</b>: Returns an iterator pointing to the element immediately
    //!   following q prior to the element being erased. If no such element exists,
    //!   returns end().
    //!
-   //! <b>Complexity</b>: Linear to the elements with keys bigger than position
+   //! <b>Complexity</b>: Linear to the elements with keys bigger than p
    //!
    //! <b>Note</b>: Invalidates elements with keys
    //!   not less than the erased element.
-   iterator erase(const_iterator position);
+   iterator erase(const_iterator p);
 
    //! <b>Effects</b>: Erases all elements in the container with key equivalent to x.
    //!
@@ -912,21 +912,21 @@ class flat_multiset
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    template <class... Args>
-   iterator emplace_hint(const_iterator hint, Args&&... args)
-   {  return this->base_t::emplace_hint_equal(hint, boost::forward<Args>(args)...); }
+   iterator emplace_hint(const_iterator p, Args&&... args)
+   {  return this->base_t::emplace_hint_equal(p, boost::forward<Args>(args)...); }
 
    #else //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
 
    #define BOOST_PP_LOCAL_MACRO(n)                                                                 \
    BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)          \
    iterator emplace(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_LIST, _))                            \
-   {  return this->base_t::emplace_equal(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); }   \
+   {  return this->base_t::emplace_equal(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); } \
                                                                                                    \
    BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)          \
-   iterator emplace_hint(const_iterator hint                                                       \
+   iterator emplace_hint(const_iterator p                                                          \
                          BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_LIST, _))              \
-   {  return this->base_t::emplace_hint_equal                                                        \
-            (hint BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); }               \
+   {  return this->base_t::emplace_hint_equal                                                      \
+            (p BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); }                  \
    //!
    #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
    #include BOOST_PP_LOCAL_ITERATE()
@@ -978,7 +978,7 @@ class flat_multiset
    //!   right before p) plus insertion linear to the elements with bigger keys than x.
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
-   iterator insert(const_iterator position, value_type &&x);
+   iterator insert(const_iterator p, value_type &&x);
    #else
    BOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG(insert, value_type, iterator, this->priv_insert, const_iterator, const_iterator)
    #endif
@@ -1012,7 +1012,7 @@ class flat_multiset
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! @copydoc ::boost::container::flat_set::erase(const_iterator)
-   iterator erase(const_iterator position);
+   iterator erase(const_iterator p);
 
    //! @copydoc ::boost::container::flat_set::erase(const key_type&)
    size_type erase(const key_type& x);

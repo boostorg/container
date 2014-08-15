@@ -1223,24 +1223,23 @@ class stable_vector
       this->insert(this->cend(), EmplaceIterator(ef), EmplaceIterator());
    }
 
-   //! <b>Requires</b>: position must be a valid iterator of *this.
+   //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
    //! <b>Effects</b>: Inserts an object of type T constructed with
-   //!   std::forward<Args>(args)... before position
+   //!   std::forward<Args>(args)... before p
    //!
    //! <b>Throws</b>: If memory allocation throws or the in-place constructor throws.
    //!
-   //! <b>Complexity</b>: If position is end(), amortized constant time
+   //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
    template<class ...Args>
-   iterator emplace(const_iterator position, Args && ...args)
+   iterator emplace(const_iterator p, Args && ...args)
    {
-      //Just call more general insert(pos, size, value) and return iterator
-      size_type pos_n = position - cbegin();
+      size_type pos_n = p - cbegin();
       typedef emplace_functor<Args...>         EmplaceFunctor;
       typedef emplace_iterator<value_type, EmplaceFunctor, difference_type> EmplaceIterator;
       EmplaceFunctor &&ef = EmplaceFunctor(boost::forward<Args>(args)...);
-      this->insert(position, EmplaceIterator(ef), EmplaceIterator());
+      this->insert(p, EmplaceIterator(ef), EmplaceIterator());
       return iterator(this->begin() + pos_n);
    }
 
@@ -1261,7 +1260,7 @@ class stable_vector
    }                                                                                            \
                                                                                                 \
    BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)       \
-   iterator emplace(const_iterator pos                                                          \
+   iterator emplace(const_iterator p                                                            \
            BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_LIST, _))                         \
    {                                                                                            \
       typedef BOOST_PP_CAT(BOOST_PP_CAT(emplace_functor, n), arg)                               \
@@ -1271,8 +1270,8 @@ class stable_vector
       EmplaceFunctor ef BOOST_PP_LPAREN_IF(n)                                                   \
                         BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)                   \
                         BOOST_PP_RPAREN_IF(n);                                                  \
-      size_type pos_n = pos - this->cbegin();                                                   \
-      this->insert(pos, EmplaceIterator(ef), EmplaceIterator());                                \
+      size_type pos_n = p - this->cbegin();                                                     \
+      this->insert(p, EmplaceIterator(ef), EmplaceIterator());                                  \
       return iterator(this->begin() + pos_n);                                                   \
    }                                                                                            \
    //!
@@ -1302,61 +1301,61 @@ class stable_vector
    #endif
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-   //! <b>Requires</b>: position must be a valid iterator of *this.
+   //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
-   //! <b>Effects</b>: Insert a copy of x before position.
+   //! <b>Effects</b>: Insert a copy of x before p.
    //!
    //! <b>Returns</b>: An iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws or x's copy constructor throws.
    //!
-   //! <b>Complexity</b>: If position is end(), amortized constant time
+   //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
-   iterator insert(const_iterator position, const T &x);
+   iterator insert(const_iterator p, const T &x);
 
-   //! <b>Requires</b>: position must be a valid iterator of *this.
+   //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
-   //! <b>Effects</b>: Insert a new element before position with mx's resources.
+   //! <b>Effects</b>: Insert a new element before p with mx's resources.
    //!
    //! <b>Returns</b>: an iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
    //!
-   //! <b>Complexity</b>: If position is end(), amortized constant time
+   //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
-   iterator insert(const_iterator position, T &&x);
+   iterator insert(const_iterator p, T &&x);
    #else
    BOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG(insert, T, iterator, priv_insert, const_iterator, const_iterator)
    #endif
 
-   //! <b>Requires</b>: pos must be a valid iterator of *this.
+   //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
-   //! <b>Effects</b>: Insert n copies of x before position.
+   //! <b>Effects</b>: Insert n copies of x before p.
    //!
-   //! <b>Returns</b>: an iterator to the first inserted element or position if n is 0.
+   //! <b>Returns</b>: an iterator to the first inserted element or p if n is 0.
    //!
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
-   iterator insert(const_iterator position, size_type n, const T& t)
+   iterator insert(const_iterator p, size_type n, const T& t)
    {
       STABLE_VECTOR_CHECK_INVARIANT;
       typedef constant_iterator<value_type, difference_type> cvalue_iterator;
-      return this->insert(position, cvalue_iterator(t, n), cvalue_iterator());
+      return this->insert(p, cvalue_iterator(t, n), cvalue_iterator());
    }
 
-   //! <b>Requires</b>: pos must be a valid iterator of *this.
+   //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
-   //! <b>Effects</b>: Insert a copy of the [first, last) range before pos.
+   //! <b>Effects</b>: Insert a copy of the [first, last) range before p.
    //!
-   //! <b>Returns</b>: an iterator to the first inserted element or position if first == last.
+   //! <b>Returns</b>: an iterator to the first inserted element or p if first == last.
    //!
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InpIt throws or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to std::distance [first, last).
    template <class InputIterator>
-   iterator insert(const_iterator position, InputIterator first, InputIterator last
+   iterator insert(const_iterator p, InputIterator first, InputIterator last
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
       , typename container_detail::enable_if_c
          < !container_detail::is_convertible<InputIterator, size_type>::value
@@ -1366,16 +1365,16 @@ class stable_vector
       )
    {
       STABLE_VECTOR_CHECK_INVARIANT;
-      const size_type pos_n = position - this->cbegin();
+      const size_type pos_n = p - this->cbegin();
       for(; first != last; ++first){
-         this->emplace(position, *first);
+         this->emplace(p, *first);
       }
       return this->begin() + pos_n;
    }
 
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    template <class FwdIt>
-   iterator insert(const_iterator position, FwdIt first, FwdIt last
+   iterator insert(const_iterator p, FwdIt first, FwdIt last
       , typename container_detail::enable_if_c
          < !container_detail::is_convertible<FwdIt, size_type>::value
             && !container_detail::is_input_iterator<FwdIt>::value
@@ -1383,13 +1382,13 @@ class stable_vector
       )
    {
       const size_type num_new = static_cast<size_type>(std::distance(first, last));
-      const size_type pos     = static_cast<size_type>(position - this->cbegin());
+      const size_type idx     = static_cast<size_type>(p - this->cbegin());
       if(num_new){
-         //Fills the node pool and inserts num_new null pointers in pos.
-         //If a new buffer was needed fixes up pointers up to pos so
+         //Fills the node pool and inserts num_new null pointers in idx.
+         //If a new buffer was needed fixes up pointers up to idx so
          //past-new nodes are not aligned until the end of this function
          //or in a rollback in case of exception
-         index_iterator it_past_newly_constructed(this->priv_insert_forward_non_templated(pos, num_new));
+         index_iterator it_past_newly_constructed(this->priv_insert_forward_non_templated(idx, num_new));
          const index_iterator it_past_new(it_past_newly_constructed + num_new);
          {
             //Prepare rollback
@@ -1407,10 +1406,10 @@ class stable_vector
             //rollback.~insert_rollback() called in case of exception
          }
          //Fix up pointers for past-new nodes (new nodes were fixed during construction) and
-         //nodes before insertion position in priv_insert_forward_non_templated(...)
+         //nodes before insertion p in priv_insert_forward_non_templated(...)
          index_traits_type::fix_up_pointers_from(this->index, it_past_newly_constructed);
       }
-      return this->begin() + pos;
+      return this->begin() + idx;
    }
    #endif
 
@@ -1422,18 +1421,18 @@ class stable_vector
    void pop_back() BOOST_CONTAINER_NOEXCEPT
    {  this->erase(--this->cend());   }
 
-   //! <b>Effects</b>: Erases the element at position pos.
+   //! <b>Effects</b>: Erases the element at p.
    //!
    //! <b>Throws</b>: Nothing.
    //!
-   //! <b>Complexity</b>: Linear to the elements between pos and the
-   //!   last element. Constant if pos is the last element.
-   iterator erase(const_iterator position) BOOST_CONTAINER_NOEXCEPT
+   //! <b>Complexity</b>: Linear to the elements between p and the
+   //!   last element. Constant if p is the last element.
+   iterator erase(const_iterator p) BOOST_CONTAINER_NOEXCEPT
    {
       STABLE_VECTOR_CHECK_INVARIANT;
-      const size_type d = position - this->cbegin();
+      const size_type d = p - this->cbegin();
       index_iterator it = this->index.begin() + d;
-      this->priv_delete_node(position.node_pointer());
+      this->priv_delete_node(p.node_pointer());
       it = this->index.erase(it);
       index_traits_type::fix_up_pointers_from(this->index, it);
       return iterator(node_ptr_traits::static_cast_from(*it));
@@ -1444,7 +1443,7 @@ class stable_vector
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear to the distance between first and last
-   //!   plus linear to the elements between pos and the last element.
+   //!   plus linear to the elements between p and the last element.
    iterator erase(const_iterator first, const_iterator last) BOOST_CONTAINER_NOEXCEPT
    {
       STABLE_VECTOR_CHECK_INVARIANT;
@@ -1584,7 +1583,7 @@ class stable_vector
       node_ptr m_p;
    };
 
-   index_iterator priv_insert_forward_non_templated(size_type pos, size_type num_new)
+   index_iterator priv_insert_forward_non_templated(size_type idx, size_type num_new)
    {
       index_traits_type::initialize_end_node(this->index, this->internal_data.end_node, num_new);
 
@@ -1595,15 +1594,15 @@ class stable_vector
 
       //Now try to make room in the vector
       const node_base_ptr_ptr old_buffer = this->index.data();
-      this->index.insert(this->index.begin() + pos, num_new, node_ptr());
+      this->index.insert(this->index.begin() + idx, num_new, node_ptr());
       bool new_buffer = this->index.data() != old_buffer;
 
       //Fix the pointers for the newly allocated buffer
       const index_iterator index_beg = this->index.begin();
       if(new_buffer){
-         index_traits_type::fix_up_pointers(index_beg, index_beg + pos);
+         index_traits_type::fix_up_pointers(index_beg, index_beg + idx);
       }
-      return index_beg + pos;
+      return index_beg + idx;
    }
 
    bool priv_capacity_bigger_than_size() const
@@ -1634,18 +1633,18 @@ class stable_vector
       }
    }
 
-   iterator priv_insert(const_iterator position, const value_type &t)
+   iterator priv_insert(const_iterator p, const value_type &t)
    {
       typedef constant_iterator<value_type, difference_type> cvalue_iterator;
-      return this->insert(position, cvalue_iterator(t, 1), cvalue_iterator());
+      return this->insert(p, cvalue_iterator(t, 1), cvalue_iterator());
    }
 
-   iterator priv_insert(const_iterator position, BOOST_RV_REF(T) x)
+   iterator priv_insert(const_iterator p, BOOST_RV_REF(T) x)
    {
       typedef repeat_iterator<T, difference_type>  repeat_it;
       typedef boost::move_iterator<repeat_it>      repeat_move_it;
-      //Just call more general insert(pos, size, value) and return iterator
-      return this->insert(position, repeat_move_it(repeat_it(x, 1)), repeat_move_it(repeat_it()));
+      //Just call more general insert(p, size, value) and return iterator
+      return this->insert(p, repeat_move_it(repeat_it(x, 1)), repeat_move_it(repeat_it()));
    }
 
    void priv_clear_pool()

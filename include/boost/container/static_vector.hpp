@@ -468,13 +468,13 @@ public:
     void pop_back();
 
     //! @pre
-    //!  @li \c position must be a valid iterator of \c *this in range <tt>[begin(), end()]</tt>.
+    //!  @li \c p must be a valid iterator of \c *this in range <tt>[begin(), end()]</tt>.
     //!  @li <tt>size() < capacity()</tt>
     //!
-    //! @brief Inserts a copy of element at position.
+    //! @brief Inserts a copy of element at p.
     //!
-    //! @param position    The position at which the new value will be inserted.
-    //! @param value       The value used to copy construct the new element.
+    //! @param p     The position at which the new value will be inserted.
+    //! @param value The value used to copy construct the new element.
     //!
     //! @par Throws
     //!   @li If Value's copy constructor or copy assignment throws
@@ -482,33 +482,33 @@ public:
     //!
     //! @par Complexity
     //!   Constant or linear.
-    iterator insert(iterator position, value_type const& value);
+    iterator insert(const_iterator p, value_type const& value);
 
     //! @pre
-    //!  @li \c position must be a valid iterator of \c *this in range <tt>[begin(), end()]</tt>.
+    //!  @li \c p must be a valid iterator of \c *this in range <tt>[begin(), end()]</tt>.
     //!  @li <tt>size() < capacity()</tt>
     //!
-    //! @brief Inserts a move-constructed element at position.
+    //! @brief Inserts a move-constructed element at p.
     //!
-    //! @param position    The position at which the new value will be inserted.
-    //! @param value       The value used to move construct the new element.
+    //! @param p     The position at which the new value will be inserted.
+    //! @param value The value used to move construct the new element.
     //!
     //! @par Throws
     //!   If Value's move constructor or move assignment throws.
     //!
     //! @par Complexity
     //!   Constant or linear.
-    iterator insert(iterator position, BOOST_RV_REF(value_type) value);
+    iterator insert(const_iterator p, BOOST_RV_REF(value_type) value);
 
     //! @pre
-    //!  @li \c position must be a valid iterator of \c *this in range <tt>[begin(), end()]</tt>.
+    //!  @li \c p must be a valid iterator of \c *this in range <tt>[begin(), end()]</tt>.
     //!  @li <tt>size() + count <= capacity()</tt>
     //!
-    //! @brief Inserts a count copies of value at position.
+    //! @brief Inserts a count copies of value at p.
     //!
-    //! @param position    The position at which new elements will be inserted.
-    //! @param count       The number of new elements which will be inserted.
-    //! @param value       The value used to copy construct new elements.
+    //! @param p     The position at which new elements will be inserted.
+    //! @param count The number of new elements which will be inserted.
+    //! @param value The value used to copy construct new elements.
     //!
     //! @par Throws
     //!   @li If Value's copy constructor or copy assignment throws.
@@ -516,18 +516,18 @@ public:
     //!
     //! @par Complexity
     //!   Linear O(N).
-    iterator insert(iterator position, size_type count, value_type const& value);
+    iterator insert(const_iterator p, size_type count, value_type const& value);
 
     //! @pre
-    //!  @li \c position must be a valid iterator of \c *this in range <tt>[begin(), end()]</tt>.
+    //!  @li \c p must be a valid iterator of \c *this in range <tt>[begin(), end()]</tt>.
     //!  @li <tt>distance(first, last) <= capacity()</tt>
     //!  @li \c Iterator must meet the \c ForwardTraversalIterator concept.
     //!
-    //! @brief Inserts a copy of a range <tt>[first, last)</tt> at position.
+    //! @brief Inserts a copy of a range <tt>[first, last)</tt> at p.
     //!
-    //! @param position    The position at which new elements will be inserted.
-    //! @param first       The iterator to the first element of a range used to construct new elements.
-    //! @param last        The iterator to the one after the last element of a range used to construct new elements.
+    //! @param p     The position at which new elements will be inserted.
+    //! @param first The iterator to the first element of a range used to construct new elements.
+    //! @param last  The iterator to the one after the last element of a range used to construct new elements.
     //!
     //! @par Throws
     //!   @li If Value's constructor and assignment taking a dereferenced \c Iterator.
@@ -536,20 +536,20 @@ public:
     //! @par Complexity
     //!   Linear O(N).
     template <typename Iterator>
-    iterator insert(iterator position, Iterator first, Iterator last);
+    iterator insert(const_iterator p, Iterator first, Iterator last);
 
-    //! @pre \c position must be a valid iterator of \c *this in range <tt>[begin(), end())</tt>
+    //! @pre \c p must be a valid iterator of \c *this in range <tt>[begin(), end())</tt>
     //!
-    //! @brief Erases Value from position.
+    //! @brief Erases Value from p.
     //!
-    //! @param position    The position of the element which will be erased from the container.
+    //! @param p    The position of the element which will be erased from the container.
     //!
     //! @par Throws
     //!   If Value's move assignment throws.
     //!
     //! @par Complexity
     //!   Linear O(N).
-    iterator erase(iterator position);
+    iterator erase(const_iterator p);
 
     //! @pre
     //!  @li \c first and \c last must define a valid range
@@ -565,7 +565,7 @@ public:
     //!
     //! @par Complexity
     //!   Linear O(N).
-    iterator erase(iterator first, iterator last);
+    iterator erase(const_iterator first, const_iterator last);
 
     //! @pre <tt>distance(first, last) <= capacity()</tt>
     //!
@@ -612,14 +612,14 @@ public:
     void emplace_back(Args &&...args);
 
     //! @pre
-    //!  @li \c position must be a valid iterator of \c *this in range <tt>[begin(), end()]</tt>
+    //!  @li \c p must be a valid iterator of \c *this in range <tt>[begin(), end()]</tt>
     //!  @li <tt>size() < capacity()</tt>
     //!
     //! @brief Inserts a Value constructed with
-    //!   \c std::forward<Args>(args)... before position
+    //!   \c std::forward<Args>(args)... before p
     //!
-    //! @param position The position at which new elements will be inserted.
-    //! @param args     The arguments of the constructor of the new element.
+    //! @param p     The position at which new elements will be inserted.
+    //! @param args  The arguments of the constructor of the new element.
     //!
     //! @par Throws
     //!   If in-place constructor throws or if Value's move constructor or move assignment throws.
@@ -627,7 +627,7 @@ public:
     //! @par Complexity
     //!   Constant or linear.
     template<class ...Args>
-    iterator emplace(iterator position, Args &&...args);
+    iterator emplace(const_iterator p, Args &&...args);
 
     //! @brief Removes all elements from the container.
     //!

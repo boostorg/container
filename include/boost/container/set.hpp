@@ -363,8 +363,8 @@ class set
    //!
    //! <b>Complexity</b>: Logarithmic.
    template <class... Args>
-   iterator emplace_hint(const_iterator hint, Args&&... args)
-   {  return this->base_t::emplace_hint_unique(hint, boost::forward<Args>(args)...); }
+   iterator emplace_hint(const_iterator p, Args&&... args)
+   {  return this->base_t::emplace_hint_unique(p, boost::forward<Args>(args)...); }
 
    #else //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
 
@@ -374,9 +374,9 @@ class set
    {  return this->base_t::emplace_unique(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); }\
                                                                                                    \
    BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)          \
-   iterator emplace_hint(const_iterator hint                                                       \
+   iterator emplace_hint(const_iterator p                                                          \
                          BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_LIST, _))              \
-   {  return this->base_t::emplace_hint_unique(hint                                                \
+   {  return this->base_t::emplace_hint_unique(p                                                   \
                                BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _));}   \
    //!
    #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
@@ -429,7 +429,7 @@ class set
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent to the key of x.
    //!
    //! <b>Complexity</b>: Logarithmic.
-   iterator insert(const_iterator position, value_type &&x);
+   iterator insert(const_iterator p, value_type &&x);
    #else
    BOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG(insert, value_type, iterator, this->priv_insert, const_iterator, const_iterator)
    #endif
@@ -851,8 +851,8 @@ class multiset
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    template <class... Args>
-   iterator emplace_hint(const_iterator hint, Args&&... args)
-   {  return this->base_t::emplace_hint_equal(hint, boost::forward<Args>(args)...); }
+   iterator emplace_hint(const_iterator p, Args&&... args)
+   {  return this->base_t::emplace_hint_equal(p, boost::forward<Args>(args)...); }
 
    #else //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
 
@@ -862,9 +862,9 @@ class multiset
    {  return this->base_t::emplace_equal(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); } \
                                                                                                    \
    BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)          \
-   iterator emplace_hint(const_iterator hint                                                       \
+   iterator emplace_hint(const_iterator p                                                          \
                          BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_LIST, _))              \
-   {  return this->base_t::emplace_hint_equal(hint                                                 \
+   {  return this->base_t::emplace_hint_equal(p                                                    \
                                BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _));}   \
    //!
    #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
@@ -910,7 +910,7 @@ class multiset
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
-   iterator insert(const_iterator position, value_type &&x);
+   iterator insert(const_iterator p, value_type &&x);
    #else
    BOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG(insert, value_type, iterator, this->priv_insert, const_iterator, const_iterator)
    #endif

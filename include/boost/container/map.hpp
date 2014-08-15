@@ -496,8 +496,8 @@ class map
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
-   iterator insert(const_iterator position, const value_type& x)
-   { return this->base_t::insert_unique(position, x); }
+   iterator insert(const_iterator p, const value_type& x)
+   { return this->base_t::insert_unique(p, x); }
 
    //! <b>Effects</b>: Move constructs a new value from x if and only if there is
    //!   no element in the container with key equivalent to the key of x.
@@ -508,8 +508,8 @@ class map
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
-   iterator insert(const_iterator position, BOOST_RV_REF(nonconst_value_type) x)
-   { return this->base_t::insert_unique(position, boost::move(x)); }
+   iterator insert(const_iterator p, BOOST_RV_REF(nonconst_value_type) x)
+   { return this->base_t::insert_unique(p, boost::move(x)); }
 
    //! <b>Effects</b>: Move constructs a new value from x if and only if there is
    //!   no element in the container with key equivalent to the key of x.
@@ -520,8 +520,8 @@ class map
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
-   iterator insert(const_iterator position, BOOST_RV_REF(movable_value_type) x)
-   { return this->base_t::insert_unique(position, boost::move(x)); }
+   iterator insert(const_iterator p, BOOST_RV_REF(movable_value_type) x)
+   { return this->base_t::insert_unique(p, boost::move(x)); }
 
    //! <b>Effects</b>: Inserts a copy of x in the container.
    //!   p is a hint pointing to where the insert should start to search.
@@ -529,8 +529,8 @@ class map
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent to the key of x.
    //!
    //! <b>Complexity</b>: Logarithmic.
-   iterator insert(const_iterator position, const nonconst_value_type& x)
-   { return this->base_t::insert_unique(position, x); }
+   iterator insert(const_iterator p, const nonconst_value_type& x)
+   { return this->base_t::insert_unique(p, x); }
 
    //! <b>Effects</b>: Inserts an element move constructed from x in the container.
    //!   p is a hint pointing to where the insert should start to search.
@@ -538,8 +538,8 @@ class map
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent to the key of x.
    //!
    //! <b>Complexity</b>: Logarithmic.
-   iterator insert(const_iterator position, BOOST_RV_REF(value_type) x)
-   { return this->base_t::insert_unique(position, boost::move(x)); }
+   iterator insert(const_iterator p, BOOST_RV_REF(value_type) x)
+   { return this->base_t::insert_unique(p, boost::move(x)); }
 
    //! <b>Requires</b>: first, last are not iterators into *this.
    //!
@@ -579,8 +579,8 @@ class map
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    template <class... Args>
-   iterator emplace_hint(const_iterator hint, Args&&... args)
-   {  return this->base_t::emplace_hint_unique(hint, boost::forward<Args>(args)...); }
+   iterator emplace_hint(const_iterator p, Args&&... args)
+   {  return this->base_t::emplace_hint_unique(p, boost::forward<Args>(args)...); }
 
    #else //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
 
@@ -590,9 +590,9 @@ class map
    {  return this->base_t::emplace_unique(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); }\
                                                                                                    \
    BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)          \
-   iterator emplace_hint(const_iterator hint                                                       \
+   iterator emplace_hint(const_iterator p                                                          \
                          BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_LIST, _))              \
-   {  return this->base_t::emplace_hint_unique(hint                                                \
+   {  return this->base_t::emplace_hint_unique(p                                                   \
                                BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _));}   \
    //!
    #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
@@ -602,14 +602,14 @@ class map
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-   //! <b>Effects</b>: Erases the element pointed to by position.
+   //! <b>Effects</b>: Erases the element pointed to by p.
    //!
    //! <b>Returns</b>: Returns an iterator pointing to the element immediately
    //!   following q prior to the element being erased. If no such element exists,
    //!   returns end().
    //!
    //! <b>Complexity</b>: Amortized constant time
-   iterator erase(const_iterator position) BOOST_CONTAINER_NOEXCEPT;
+   iterator erase(const_iterator p) BOOST_CONTAINER_NOEXCEPT;
 
    //! <b>Effects</b>: Erases all elements in the container with key equivalent to x.
    //!
@@ -1074,8 +1074,8 @@ class multimap
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    template <class... Args>
-   iterator emplace_hint(const_iterator hint, Args&&... args)
-   {  return this->base_t::emplace_hint_equal(hint, boost::forward<Args>(args)...); }
+   iterator emplace_hint(const_iterator p, Args&&... args)
+   {  return this->base_t::emplace_hint_equal(p, boost::forward<Args>(args)...); }
 
    #else //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
 
@@ -1085,9 +1085,9 @@ class multimap
    {  return this->base_t::emplace_equal(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); } \
                                                                                                    \
    BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)          \
-   iterator emplace_hint(const_iterator hint                                                       \
+   iterator emplace_hint(const_iterator p                                                          \
                          BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_LIST, _))              \
-   {  return this->base_t::emplace_hint_equal(hint                                                 \
+   {  return this->base_t::emplace_hint_equal(p                                                    \
                                BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _));}   \
    //!
    #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
@@ -1131,8 +1131,8 @@ class multimap
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
-   iterator insert(const_iterator position, const value_type& x)
-   { return this->base_t::insert_equal(position, x); }
+   iterator insert(const_iterator p, const value_type& x)
+   { return this->base_t::insert_equal(p, x); }
 
    //! <b>Effects</b>: Inserts a new value constructed from x in the container.
    //!   p is a hint pointing to where the insert should start to search.
@@ -1142,8 +1142,8 @@ class multimap
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
-   iterator insert(const_iterator position, const nonconst_value_type& x)
-   { return this->base_t::insert_equal(position, x); }
+   iterator insert(const_iterator p, const nonconst_value_type& x)
+   { return this->base_t::insert_equal(p, x); }
 
    //! <b>Effects</b>: Inserts a new value move constructed from x in the container.
    //!   p is a hint pointing to where the insert should start to search.
@@ -1153,8 +1153,8 @@ class multimap
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
-   iterator insert(const_iterator position, BOOST_RV_REF(nonconst_value_type) x)
-   { return this->base_t::insert_equal(position, boost::move(x)); }
+   iterator insert(const_iterator p, BOOST_RV_REF(nonconst_value_type) x)
+   { return this->base_t::insert_equal(p, boost::move(x)); }
 
    //! <b>Effects</b>: Inserts a new value move constructed from x in the container.
    //!   p is a hint pointing to where the insert should start to search.
@@ -1164,8 +1164,8 @@ class multimap
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
-   iterator insert(const_iterator position, BOOST_RV_REF(movable_value_type) x)
-   { return this->base_t::insert_equal(position, boost::move(x)); }
+   iterator insert(const_iterator p, BOOST_RV_REF(movable_value_type) x)
+   { return this->base_t::insert_equal(p, boost::move(x)); }
 
    //! <b>Requires</b>: first, last are not iterators into *this.
    //!

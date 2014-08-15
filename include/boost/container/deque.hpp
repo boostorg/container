@@ -1184,14 +1184,14 @@ class deque : protected deque_base<Allocator>
       }
    }
 
-   //! <b>Requires</b>: position must be a valid iterator of *this.
+   //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
    //! <b>Effects</b>: Inserts an object of type T constructed with
-   //!   std::forward<Args>(args)... before position
+   //!   std::forward<Args>(args)... before p
    //!
    //! <b>Throws</b>: If memory allocation throws or the in-place constructor throws.
    //!
-   //! <b>Complexity</b>: If position is end(), amortized constant time
+   //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
    template <class... Args>
    iterator emplace(const_iterator p, Args&&... args)
@@ -1317,29 +1317,29 @@ class deque : protected deque_base<Allocator>
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-   //! <b>Requires</b>: position must be a valid iterator of *this.
+   //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
-   //! <b>Effects</b>: Insert a copy of x before position.
+   //! <b>Effects</b>: Insert a copy of x before p.
    //!
    //! <b>Returns</b>: an iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws or x's copy constructor throws.
    //!
-   //! <b>Complexity</b>: If position is end(), amortized constant time
+   //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
-   iterator insert(const_iterator position, const T &x);
+   iterator insert(const_iterator p, const T &x);
 
-   //! <b>Requires</b>: position must be a valid iterator of *this.
+   //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
-   //! <b>Effects</b>: Insert a new element before position with mx's resources.
+   //! <b>Effects</b>: Insert a new element before p with mx's resources.
    //!
    //! <b>Returns</b>: an iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
    //!
-   //! <b>Complexity</b>: If position is end(), amortized constant time
+   //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
-   iterator insert(const_iterator position, T &&x);
+   iterator insert(const_iterator p, T &&x);
    #else
    BOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG(insert, T, iterator, priv_insert, const_iterator, const_iterator)
    #endif
@@ -1441,7 +1441,7 @@ class deque : protected deque_base<Allocator>
          this->priv_pop_back_aux();
    }
 
-   //! <b>Effects</b>: Erases the element at position pos.
+   //! <b>Effects</b>: Erases the element at p.
    //!
    //! <b>Throws</b>: Nothing.
    //!
@@ -1603,19 +1603,19 @@ class deque : protected deque_base<Allocator>
       {  if (n >= this->size())  throw_out_of_range("deque::at out of range");   }
 
    template <class U>
-   iterator priv_insert(const_iterator position, BOOST_FWD_REF(U) x)
+   iterator priv_insert(const_iterator p, BOOST_FWD_REF(U) x)
    {
-      if (position == cbegin()){
+      if (p == cbegin()){
          this->push_front(::boost::forward<U>(x));
          return begin();
       }
-      else if (position == cend()){
+      else if (p == cend()){
          this->push_back(::boost::forward<U>(x));
          return --end();
       }
       else {
          return priv_insert_aux_impl
-            ( position, (size_type)1
+            ( p, (size_type)1
             , container_detail::get_insert_value_proxy<iterator, Allocator>(::boost::forward<U>(x)));
       }
    }
