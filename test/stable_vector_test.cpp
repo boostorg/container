@@ -112,44 +112,6 @@ int test_cont_variants()
    return 0;
 }
 
-bool test_methods_with_initializer_list_as_argument()
-{
-#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
-   {
-      const stable_vector<int> testedVector = {1, 2, 3};
-      const std::vector<int> expectedVector = {1, 2, 3};
-      if(!test::CheckEqualContainers(&testedVector, &expectedVector)) return false;
-   }
-
-   {
-       stable_vector<int> testedVector = {1, 2, 3};
-       testedVector = {11, 12, 13};
-
-       const std::vector<int> expectedVector = {11, 12, 13};
-       if(!test::CheckEqualContainers(&testedVector, &expectedVector)) return false;
-   }
-
-   {
-       stable_vector<int> testedVector = {1, 2, 3};
-       testedVector.assign({5, 6, 7});
-
-       const std::vector<int> expectedVector = {5, 6, 7};
-       if(!test::CheckEqualContainers(&testedVector, &expectedVector)) return false;
-   }
-
-   {
-       stable_vector<int> testedVector = {1, 2, 3};
-       testedVector.insert(testedVector.cend(), {5, 6, 7});
-
-       const std::vector<int> expectedVector = {1, 2, 3, 5, 6, 7};
-       if(!test::CheckEqualContainers(&testedVector, &expectedVector)) return false;
-   }
-       return true;
-#else
-    return true;
-#endif
-}
-
 int main()
 {
    recursive_vector_test();
@@ -219,7 +181,9 @@ int main()
    ////////////////////////////////////
    //    Initializer lists testing
    ////////////////////////////////////
-   if(!test_methods_with_initializer_list_as_argument())
+   if(!boost::container::test::test_vector_methods_with_initializer_list_as_argument_for<
+       boost::container::stable_vector<int>
+   >())
    {
        std::cerr << "test_methods_with_initializer_list_as_argument failed" << std::endl;
        return 1;

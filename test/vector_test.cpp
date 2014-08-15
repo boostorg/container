@@ -251,6 +251,14 @@ int main()
       return 1;
    }
 
+   ////////////////////////////////////
+   //    Initializer lists testing
+   ////////////////////////////////////
+   if(!boost::container::test::test_vector_methods_with_initializer_list_as_argument_for<
+       boost::container::vector<int>
+   >()) {
+      return 1;
+   }
    return 0;
 
 }
