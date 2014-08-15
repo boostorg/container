@@ -788,6 +788,19 @@ will be used to detect if the allocator must be propagated with suffix or prefix
 
 [endsect]
 
+[section:insertion_hints Insertion hints in associative containers and preserving 
+ insertion ordering for elements with equivalent keys]
+
+[@http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#233 LWG Issue #233] corrected a defect
+in C++98 and specified how equivalent keys were to be inserted in associative containers. [*Boost.Container]
+implements the C++11 changes that were specified in [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1780.html N1780  
+['Comments on LWG issue 233: Insertion hints in associative containers]]:
+
+* `a_eq.insert(t)`: If a range containing elements equivalent to t exists in a_eq, t is inserted at the end of that range.
+* `a_eq.insert(p,t)`: t is inserted as close as possible to the position just prior to p.
+
+[endsect]
+
 [section:initializer_lists Initializer lists]
 
 [*Boost.Container] does not support initializer lists when constructing or assigning containers
