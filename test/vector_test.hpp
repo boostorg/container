@@ -328,6 +328,45 @@ int vector_test()
    return 0;
 }
 
+template<typename VectorContainerType>
+bool test_vector_methods_with_initializer_list_as_argument_for()
+{
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   {
+      const VectorContainerType testedVector = {1, 2, 3};
+      const std::vector<int> expectedVector = {1, 2, 3};
+      if(!test::CheckEqualContainers(&testedVector, &expectedVector)) return false;
+   }
+
+   {
+      VectorContainerType testedVector = {1, 2, 3};
+      testedVector = {11, 12, 13};
+
+      const std::vector<int> expectedVector = {11, 12, 13};
+      if(!test::CheckEqualContainers(&testedVector, &expectedVector)) return false;
+   }
+
+   {
+      VectorContainerType testedVector = {1, 2, 3};
+      testedVector.assign({5, 6, 7});
+
+      const std::vector<int> expectedVector = {5, 6, 7};
+      if(!test::CheckEqualContainers(&testedVector, &expectedVector)) return false;
+   }
+
+   {
+      VectorContainerType testedVector = {1, 2, 3};
+      testedVector.insert(testedVector.cend(), {5, 6, 7});
+
+      const std::vector<int> expectedVector = {1, 2, 3, 5, 6, 7};
+      if(!test::CheckEqualContainers(&testedVector, &expectedVector)) return false;
+   }
+   return true;
+#else
+   return true;
+#endif
+}
+
 }  //namespace test{
 }  //namespace container {
 }  //namespace boost{

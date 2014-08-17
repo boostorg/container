@@ -50,6 +50,10 @@
 #include <boost/container/detail/advanced_insert_int.hpp>
 #include <boost/assert.hpp>
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+#include <initializer_list>
+#endif
+
 namespace boost {
 namespace container {
 
@@ -710,6 +714,22 @@ class vector
          , x.size(), container_detail::to_raw_pointer(this->m_holder.start()));
    }
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Constructs a vector that will use a copy of allocator a
+   //!  and inserts a copy of the range [il.begin(), il.last()) in the vector
+   //!
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's constructor taking a dereferenced initializer_list iterator throws.
+   //!
+   //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
+   vector(std::initializer_list<value_type> il, const allocator_type& a = allocator_type())
+      : m_holder(a)
+   {
+      insert(cend(), il.begin(), il.end());
+   }
+#endif
+
+
    //! <b>Effects</b>: Move constructor. Moves x's resources to *this.
    //!
    //! <b>Throws</b>: Nothing
@@ -804,6 +824,17 @@ class vector
       }
       return *this;
    }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Make *this container contains elements from il.
+   //!
+   //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
+   vector& operator=(std::initializer_list<value_type> il)
+   {
+      assign(il.begin(), il.end());
+      return *this;
+   }
+#endif
 
    //! <b>Effects</b>: Move assignment. All x's values are transferred to *this.
    //!
@@ -904,6 +935,18 @@ class vector
          this->insert(this->cend(), first, last);
       }
    }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Assigns the the range [il.begin(), il.end()) to *this.
+   //!
+   //! <b>Throws</b>: If memory allocation throws or
+   //!   T's constructor from dereferencing iniializer_list iterator throws.
+   //!
+   void assign(std::initializer_list<T> il)
+   {
+      assign(il.begin(), il.end());
+   }
+#endif
 
    //! <b>Effects</b>: Assigns the the range [first, last) to *this.
    //!
@@ -1531,6 +1574,20 @@ class vector
       return this->priv_forward_range_insert(vector_iterator_get_ptr(pos), num, proxy, alloc_version());
    }
    #endif
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Requires</b>: position must be a valid iterator of *this.
+   //!
+   //! <b>Effects</b>: Insert a copy of the [il.begin(), il.end()) range before position.
+   //!
+   //! <b>Returns</b>: an iterator to the first inserted element or position if first == last.
+   //!
+   //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
+   iterator insert(const_iterator position, std::initializer_list<value_type> il)
+   {
+      return insert(position, il.begin(), il.end());
+   }
+#endif
 
    //! <b>Effects</b>: Removes the last element from the vector.
    //!
