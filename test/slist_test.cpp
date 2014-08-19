@@ -101,6 +101,48 @@ int test_cont_variants()
    return 0;
 }
 
+bool test_support_for_initializer_list()
+{
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   const std::initializer_list<int> il = {5, 10, 15};
+   const slist<int> expected_list(il.begin(), il.end());
+   {
+      slist<int> sl = il;
+      if(sl != expected_list)
+         return false;
+   }
+
+   {
+      slist<int> sl;
+      sl = il;
+      if(sl != expected_list)
+         return false;
+   }
+
+   {
+      slist<int> sl;
+      sl.assign(il);
+      if(sl != expected_list)
+         return false;
+   }
+
+   {
+      slist<int> sl = {15};
+      sl.insert(sl.cbegin(), {5, 10});
+      if(sl != expected_list)
+         return false;
+   }
+
+   {
+       slist<int> sl = {5};
+       sl.insert_after(sl.cbegin(), {10, 15});
+       if(sl != expected_list)
+          return false;
+   }
+   return true;
+#endif
+   return true;
+}
 
 int main ()
 {
@@ -158,6 +200,9 @@ int main ()
    //    Allocator propagation testing
    ////////////////////////////////////
    if(!boost::container::test::test_propagate_allocator<slist>())
+      return 1;
+
+   if(!test_support_for_initializer_list())
       return 1;
 }
 
