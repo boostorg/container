@@ -207,6 +207,24 @@ public:
         : base_t(first, last)
     {}
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+    //! @pre
+    //!  @li <tt>distance(il.begin(), il.end()) <= capacity()</tt>
+    //!
+    //! @brief Constructs a static_vector containing copy of a range <tt>[il.begin(), il.end())</tt>.
+    //!
+    //! @param il       std::initializer_list with values to initialize vector.
+    //!
+    //! @par Throws
+    //!   If Value's constructor taking a dereferenced std::initializer_list throws.
+    //!
+    //! @par Complexity
+    //!   Linear O(N).
+    static_vector(std::initializer_list<value_type> il)
+        : base_t(il)
+    {}
+#endif
+
     //! @brief Constructs a copy of other static_vector.
     //!
     //! @param other    The static_vector which content will be copied to this one.
@@ -280,6 +298,22 @@ public:
     {
         return static_cast<static_vector&>(base_t::operator=(static_cast<base_t const&>(other)));
     }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+    //! @brief Copy assigns Values stored in std::initializer_list to *this.
+    //!
+    //! @param il    The std::initializer_list which content will be copied to this one.
+    //!
+    //! @par Throws
+    //!   If Value's copy constructor or copy assignment throws.
+    //!
+    //! @par Complexity
+    //! Linear O(N).
+    static_vector & operator=(std::initializer_list<value_type> il)
+    {
+        return static_cast<static_vector&>(base_t::operator=(il));
+    }
+#endif
 
     //! @pre <tt>other.size() <= capacity()</tt>
     //!
@@ -538,6 +572,24 @@ public:
     template <typename Iterator>
     iterator insert(const_iterator p, Iterator first, Iterator last);
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+    //! @pre
+    //!  @li \c p must be a valid iterator of \c *this in range <tt>[begin(), end()]</tt>.
+    //!  @li <tt>distance(il.begin(), il.end()) <= capacity()</tt>
+    //!
+    //! @brief Inserts a copy of a range <tt>[il.begin(), il.end())</tt> at p.
+    //!
+    //! @param p     The position at which new elements will be inserted.
+    //! @param il    The std::initializer_list which contains elements that will be inserted.
+    //!
+    //! @par Throws
+    //!   @li If Value's constructor and assignment taking a dereferenced std::initializer_list iterator.
+    //!
+    //! @par Complexity
+    //!   Linear O(N).
+    iterator insert(const_iterator p, std::initializer_list<value_type> il);
+#endif
+
     //! @pre \c p must be a valid iterator of \c *this in range <tt>[begin(), end())</tt>
     //!
     //! @brief Erases Value from p.
@@ -581,6 +633,21 @@ public:
     //!   Linear O(N).
     template <typename Iterator>
     void assign(Iterator first, Iterator last);
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+    //! @pre <tt>distance(il.begin(), il.end()) <= capacity()</tt>
+    //!
+    //! @brief Assigns a range <tt>[il.begin(), il.end())</tt> of Values to this container.
+    //!
+    //! @param first       std::initializer_list with values used to construct new content of this container.
+    //!
+    //! @par Throws
+    //!   If Value's copy constructor or copy assignment throws,
+    //!
+    //! @par Complexity
+    //!   Linear O(N).
+    void assign(std::initializer_list<value_type> il);
+#endif
 
     //! @pre <tt>count <= capacity()</tt>
     //!
