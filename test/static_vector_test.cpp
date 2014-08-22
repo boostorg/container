@@ -79,6 +79,41 @@ void test_ctor_nd(size_t n, T const& v)
    }
 }
 
+void test_support_for_initializer_list()
+{
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   {
+      static_vector<int, 2> sv = {10, 8};
+      BOOST_TEST(10 == sv[0]);
+      BOOST_TEST(8 == sv[1]);
+
+      typedef static_vector<int, 1> sv_cap_1;
+      BOOST_TEST_THROWS(sv_cap_1({1, 1}), std::bad_alloc);
+   }
+
+   {
+      static_vector<int, 2> sv;
+      sv.assign({1, 2});
+      BOOST_TEST(1 == sv[0]);
+      BOOST_TEST(2 == sv[1]);
+
+      BOOST_TEST_THROWS(sv.assign({1, 2, 3}), std::bad_alloc);
+
+      static_vector<int, 3> greaterThanSv = {1, 2, 3};
+      BOOST_TEST_THROWS(sv = greaterThanSv, std::bad_alloc);
+   }
+
+   {
+      static_vector<int, 2> sv;
+      sv.insert(sv.begin(), {99, 95});
+      BOOST_TEST(99 == sv[0]);
+      BOOST_TEST(95 == sv[1]);
+
+      BOOST_TEST_THROWS(sv.insert(sv.begin(), {101, 102, 103}), std::bad_alloc);
+   }
+#endif
+}
+
 template <typename T, size_t N>
 void test_resize_nc(size_t n)
 {
@@ -654,6 +689,7 @@ bool default_init_test()//Test for default initialization
    return true;
 }
 
+
 int main(int, char* [])
 {
    using boost::container::test::movable_and_copyable_int;
@@ -772,6 +808,8 @@ int main(int, char* [])
    test_sv_elem<movable_and_copyable_int, 10>(movable_and_copyable_int(50));
 
    BOOST_TEST(default_init_test() == true);
+
+   test_support_for_initializer_list();
 
    return boost::report_errors();
 }
