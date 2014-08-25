@@ -113,14 +113,14 @@ bool test_support_for_initializer_list()
    }
 
    {
-      slist<int> sl;
+      slist<int> sl = {1, 2};
       sl = il;
       if(sl != expected_list)
          return false;
    }
 
    {
-      slist<int> sl;
+      slist<int> sl = {4, 5};
       sl.assign(il);
       if(sl != expected_list)
          return false;
