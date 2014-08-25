@@ -36,6 +36,10 @@
 #include <boost/container/detail/value_init.hpp>
 #include <boost/detail/no_exceptions_support.hpp>
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+#include <initializer_list>
+#endif
+
 namespace boost {
 namespace container {
 
@@ -180,6 +184,28 @@ class map
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Constructs an empty map using the specified comparison object and
+   //! allocator, and inserts elements from the range [il.begin(), il.end()).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
+   //! comp and otherwise N logN, where N is il.first() - il.end().
+   map(std::initializer_list<value_type> il, const Compare& comp = Compare(), const allocator_type& a = allocator_type())
+      : base_t(true, il.begin(), il.end(), comp, a)
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+
+   map(ordered_unique_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(),
+       const allocator_type& a = allocator_type())
+      : base_t(ordered_range, il.begin(), il.end(), comp, a)
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+#endif
+
    //! <b>Effects</b>: Copy constructs a map.
    //!
    //! <b>Complexity</b>: Linear in x.size().
@@ -242,6 +268,17 @@ class map
    map& operator=(BOOST_RV_REF(map) x)
       BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
    {  return static_cast<map&>(this->base_t::operator=(boost::move(static_cast<base_t&>(x))));  }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Assign content of il to *this.
+   //!
+   map& operator=(std::initializer_list<value_type> il)
+   {
+       this->clear();
+       insert(il.begin(), il.end());
+       return *this;
+   }
+#endif
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -550,6 +587,15 @@ class map
    template <class InputIterator>
    void insert(InputIterator first, InputIterator last)
    {  this->base_t::insert_unique(first, last);  }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()) if and only
+   //!   if there is no element with key equivalent to the key of that element.
+   //!
+   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from il.begin() to il.end())
+   void insert(std::initializer_list<value_type> il)
+   {  this->base_t::insert_unique(il.begin(), il.end()); }
+#endif
 
    #if defined(BOOST_CONTAINER_PERFECT_FORWARDING) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -935,6 +981,29 @@ class multimap
       : base_t(ordered_range, first, last, comp, a)
    {}
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Constructs an empty multimap using the specified comparison object and
+   //! allocator, and inserts elements from the range [il.begin(), il.end()).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
+   //! comp and otherwise N logN, where N is il.first() - il.end().
+   multimap(std::initializer_list<value_type> il, const Compare& comp = Compare(),
+           const allocator_type& a = allocator_type())
+      : base_t(false, il.begin(), il.end(), comp, a)
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+
+   multimap(ordered_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(),
+       const allocator_type& a = allocator_type())
+      : base_t(ordered_range, il.begin(), il.end(), comp, a)
+   {
+      //Allocator type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+#endif
+
    //! <b>Effects</b>: Copy constructs a multimap.
    //!
    //! <b>Complexity</b>: Linear in x.size().
@@ -990,6 +1059,17 @@ class multimap
    //! <b>Complexity</b>: Constant.
    multimap& operator=(BOOST_RV_REF(multimap) x)
    {  return static_cast<multimap&>(this->base_t::operator=(boost::move(static_cast<base_t&>(x))));  }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Assign content of il to *this.
+   //!
+   multimap& operator=(std::initializer_list<value_type> il)
+   {
+       this->clear();
+       insert(il.begin(), il.end());
+       return *this;
+   }
+#endif
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -1175,6 +1255,14 @@ class multimap
    template <class InputIterator>
    void insert(InputIterator first, InputIterator last)
    {  this->base_t::insert_equal(first, last); }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end().
+   //!
+   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from il.begin() to il.end())
+   void insert(std::initializer_list<value_type> il)
+   {  this->base_t::insert_equal(il.begin(), il.end()); }
+#endif
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
