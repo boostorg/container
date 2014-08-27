@@ -314,7 +314,36 @@ int test_set_variants()
    return 0;
 }
 
+template<typename SetType>
+bool test_support_for_initialization_list_for()
+{
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   std::initializer_list<int> il = {1, 2, 3, 4, 5};
+   SetType expected(il.begin(), il.end());
+   {
+       SetType sil = il;
+       if (sil != expected)
+          return false;
 
+       SetType sil_ordered(ordered_unique_range_t{}, il);
+       if(sil_ordered != expected)
+          return false;
+
+       SetType sil_assign = {99, 100, 101, 102, 103, 104, 105};
+       sil_assign = il;
+       if(sil_assign != expected)
+          return false;
+   }
+   {
+      SetType sil;
+      sil.insert(il);
+      if(sil != expected)
+         return false;
+   }
+   return true;
+#endif
+   return true;
+}
 int main ()
 {
    //Recursive container instantiation
@@ -389,6 +418,12 @@ int main ()
    //    Allocator propagation testing
    ////////////////////////////////////
    if(!boost::container::test::test_propagate_allocator<set_propagate_test_wrapper>())
+      return 1;
+
+   if(!test_support_for_initialization_list_for<set<int> >())
+      return 1;
+
+   if(!test_support_for_initialization_list_for<multiset<int> >())
       return 1;
 
    ////////////////////////////////////
