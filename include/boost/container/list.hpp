@@ -38,6 +38,10 @@
 #include <boost/container/detail/preprocessor.hpp>
 #endif
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+#include <initializer_list>
+#endif
+
 #include <iterator>
 #include <utility>
 #include <memory>
@@ -299,6 +303,21 @@ class list
       : AllocHolder(a)
    {  this->insert(this->cbegin(), first, last);  }
 
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Constructs a list that will use a copy of allocator a
+   //!   and inserts a copy of the range [il.begin(), il.end()) in the list.
+   //!
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's constructor taking a dereferenced
+   //!   std::initializer_list iterator throws.
+   //!
+   //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
+   list(std::initializer_list<value_type> il, const Allocator &a = Allocator())
+      : AllocHolder(a)
+   {  this->insert(this->cbegin(), il.begin(), il.end()); }
+#endif
+
    //! <b>Effects</b>: Destroys the list. All stored values are destroyed
    //!   and used memory is deallocated.
    //!
@@ -370,6 +389,22 @@ class list
       return *this;
    }
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Makes *this contain the same elements as il.
+   //!
+   //! <b>Postcondition</b>: this->size() == il.size(). *this contains a copy
+   //! of each of x's elements.
+   //!
+   //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in x.
+   list& operator=(std::initializer_list<value_type> il)
+   {
+      assign(il.begin(), il.end());
+      return *this;
+   }
+#endif
+
    //! <b>Effects</b>: Assigns the n copies of val to *this.
    //!
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
@@ -406,6 +441,17 @@ class list
          this->insert(last1, first, last);
       }
    }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Assigns the the range [il.begin(), il.end()) to *this.
+   //!
+   //! <b>Throws</b>: If memory allocation throws or
+   //!   T's constructor from dereferencing std::initializer_list iterator throws.
+   //!
+   //! <b>Complexity</b>: Linear to n.
+   void assign(std::initializer_list<value_type> il)
+   { assign(il.begin(), il.end()); }
+#endif
 
    //! <b>Effects</b>: Returns a copy of the internal allocator.
    //!
@@ -859,6 +905,21 @@ class list
       return ++before_p;
    }
    #endif
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Requires</b>: p must be a valid iterator of *this.
+   //!
+   //! <b>Effects</b>: Insert a copy of the [il.begin(), il.end()) range before p.
+   //!
+   //! <b>Returns</b>: an iterator to the first inserted element or p if if.begin() == il.end().
+   //!
+   //! <b>Throws</b>: If memory allocation throws, T's constructor from a
+   //!   dereferenced std::initializer_list iterator throws.
+   //!
+   //! <b>Complexity</b>: Linear to std::distance [il.begin(), il.end()).
+   iterator insert(const_iterator p, std::initializer_list<value_type> il)
+   { return insert(p, il.begin(), il.end()); }
+#endif
 
    //! <b>Effects</b>: Removes the first element from the list.
    //!
