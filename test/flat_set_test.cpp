@@ -501,10 +501,10 @@ int main()
    if(!boost::container::test::test_emplace<flat_multiset<test::EmplaceInt>, SetOptions>())
       return 1;
 
-   if(!test_support_for_initialization_list_for<flat_set<int>>())
+   if(!test_support_for_initialization_list_for<flat_set<int> >())
       return 1;
 
-   if(!test_support_for_initialization_list_for<flat_multiset<int>>())
+   if(!test_support_for_initialization_list_for<flat_multiset<int> >())
       return 1;
 
    ////////////////////////////////////
