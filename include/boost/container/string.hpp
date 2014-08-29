@@ -67,11 +67,12 @@ namespace container_detail {
 template <class Allocator>
 class basic_string_base
 {
-   BOOST_MOVABLE_BUT_NOT_COPYABLE(basic_string_base)
+   basic_string_base & operator=(const basic_string_base &);
+   basic_string_base(const basic_string_base &);
 
    typedef allocator_traits<Allocator> allocator_traits_type;
  public:
-   typedef Allocator                                  allocator_type;
+   typedef Allocator                                   allocator_type;
    typedef allocator_type                              stored_allocator_type;
    typedef typename allocator_traits_type::pointer     pointer;
    typedef typename allocator_traits_type::value_type  value_type;
@@ -86,18 +87,15 @@ class basic_string_base
       : members_(a)
    {  init(); }
 
+   basic_string_base(BOOST_RV_REF(allocator_type) a)
+      :  members_(boost::move(a))
+   {  this->init();  }
+
    basic_string_base(const allocator_type& a, size_type n)
       : members_(a)
    {
       this->init();
       this->allocate_initial_block(n);
-   }
-
-   basic_string_base(BOOST_RV_REF(basic_string_base) b)
-      :  members_(boost::move(b.alloc()))
-   {
-      this->init();
-      this->swap_data(b);
    }
 
    ~basic_string_base()
@@ -606,8 +604,15 @@ class basic_string
    //!
    //! <b>Complexity</b>: Constant.
    basic_string(BOOST_RV_REF(basic_string) s) BOOST_CONTAINER_NOEXCEPT
-      : base_t(boost::move((base_t&)s))
-   {}
+      : base_t(boost::move(s.alloc()))
+   {
+      if(s.alloc() == this->alloc()){
+         this->swap_data(s);
+      }
+      else{
+         this->assign(s.begin(), s.end());
+      }
+   }
 
    //! <b>Effects</b>: Copy constructs a basic_string using the specified allocator.
    //!
