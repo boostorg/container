@@ -325,7 +325,7 @@ bool test_support_for_initialization_list_for()
        if (sil != expected)
           return false;
 
-       SetType sil_ordered(ordered_unique_range_t{}, il);
+       SetType sil_ordered(ordered_unique_range, il);
        if(sil_ordered != expected)
           return false;
 
