@@ -28,6 +28,9 @@
 #include <boost/move/utility.hpp>
 #include <boost/move/detail/move_helpers.hpp>
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+#include <initializer_list>
+#endif
 namespace boost {
 namespace container {
 
@@ -145,6 +148,37 @@ class flat_set
       : base_t(ordered_range, first, last, comp, a)
    {}
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Constructs an empty container using the specified comparison object and
+   //! allocator, and inserts elements from the range [il.begin(), il.end()).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [il.begin(), il.end()) is already sorted using
+   //! comp and otherwise N logN, where N is il.begin() - il.end().
+   flat_set(std::initializer_list<value_type> il, const Compare& comp = Compare(),
+            const allocator_type& a = allocator_type())
+      : base_t(true, il.begin(), il.end(), comp, a)
+   {
+
+   }
+
+   //! <b>Effects</b>: Constructs an empty container using the specified comparison object and
+   //! allocator, and inserts elements from the ordered unique range [il.begin(), il.end()). This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Requires</b>: [il.begin(), il.end()) must be ordered according to the predicate and must be
+   //! unique values.
+   //!
+   //! <b>Complexity</b>: Linear in N.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   flat_set(ordered_unique_range_t, std::initializer_list<value_type> il,
+            const Compare& comp = Compare(), const allocator_type& a = allocator_type())
+      : base_t(ordered_range, il.begin(), il.end(), comp, a)
+   {
+
+   }
+#endif
+
    //! <b>Effects</b>: Copy constructs the container.
    //!
    //! <b>Complexity</b>: Linear in x.size().
@@ -191,6 +225,18 @@ class flat_set
    flat_set& operator=(BOOST_RV_REF(flat_set) x)
       BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
    {  return static_cast<flat_set&>(this->base_t::operator=(boost::move(static_cast<base_t&>(x))));  }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Copy all elements from il to *this.
+   //!
+   //! <b>Complexity</b>: Linear in il.size().
+   flat_set& operator=(std::initializer_list<value_type> il)
+   {
+       this->clear();
+       this->insert(il.begin(), il.end());
+       return *this;
+   }
+#endif
 
    #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
    //! <b>Effects</b>: Returns a copy of the Allocator that
@@ -504,6 +550,31 @@ class flat_set
    void insert(ordered_unique_range_t, InputIterator first, InputIterator last)
       {  this->base_t::insert_unique(ordered_unique_range, first, last);  }
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()) if and only
+   //!   if there is no element with key equivalent to the key of that element.
+   //!
+   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from il.begin() to il.end())
+   //!   search time plus N*size() insertion time.
+   //!
+   //! <b>Note</b>: If an element is inserted it might invalidate elements.
+   void insert(std::initializer_list<value_type> il)
+   {  this->base_t::insert_unique(il.begin(), il.end()); }
+
+   //! <b>Requires</b>: Range [il.begin(), il.end()) must be ordered according to the predicate
+   //! and must be unique values.
+   //!
+   //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()) .This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from il.begin() to il.end())
+   //!   search time plus N*size() insertion time.
+   //!
+   //! <b>Note</b>: Non-standard extension. If an element is inserted it might invalidate elements.
+   void insert(ordered_unique_range_t, std::initializer_list<value_type> il)
+   {  this->base_t::insert_unique(ordered_unique_range, il.begin(), il.end()); }
+#endif
+
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Effects</b>: Erases the element pointed to by p.
@@ -784,6 +855,20 @@ class flat_multiset
       : base_t(ordered_range, first, last, comp, a)
    {}
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! @copydoc ::boost::container::flat_set::flat_set(std::initializer_list<value_type>, const Compare& comp, const allocator_type&)
+   flat_multiset(std::initializer_list<value_type> il, const Compare& comp = Compare(),
+            const allocator_type& a = allocator_type())
+      : base_t(false, il.begin(), il.end(), comp, a)
+   {}
+
+   //! @copydoc ::boost::container::flat_set::flat_set(ordered_unique_range_t, std::initializer_list<value_type>, const Compare& comp, const allocator_type&)
+   flat_multiset(ordered_unique_range_t, std::initializer_list<value_type> il,
+            const Compare& comp = Compare(), const allocator_type& a = allocator_type())
+      : base_t(ordered_range, il.begin(), il.end(), comp, a)
+   {}
+#endif
+
    //! @copydoc ::boost::container::flat_set::flat_set(const flat_set &)
    flat_multiset(const flat_multiset& x)
       : base_t(static_cast<const base_t&>(x))
@@ -812,6 +897,16 @@ class flat_multiset
    flat_multiset& operator=(BOOST_RV_REF(flat_multiset) mx)
       BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
    {  return static_cast<flat_multiset&>(this->base_t::operator=(boost::move(static_cast<base_t&>(mx))));  }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! @copydoc ::boost::container::flat_set::operator=(std::initializer_list<value_type>)
+   flat_multiset& operator=(std::initializer_list<value_type> il)
+   {
+       this->clear();
+       this->insert(il.begin(), il.end());
+       return *this;
+   }
+#endif
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -1008,6 +1103,29 @@ class flat_multiset
    template <class InputIterator>
    void insert(ordered_range_t, InputIterator first, InputIterator last)
       {  this->base_t::insert_equal(ordered_range, first, last);  }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()).
+   //!
+   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
+   //!   search time plus N*size() insertion time.
+   //!
+   //! <b>Note</b>: If an element is inserted it might invalidate elements.
+   void insert(std::initializer_list<value_type> il)
+   {  this->base_t::insert_equal(il.begin(), il.end()); }
+
+   //! <b>Requires</b>: Range [il.begin(), il.end()) must be ordered according to the predicate.
+   //!
+   //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()). This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from il.begin() to il.end())
+   //!   search time plus N*size() insertion time.
+   //!
+   //! <b>Note</b>: Non-standard extension. If an element is inserted it might invalidate elements.
+   void insert(ordered_range_t, std::initializer_list<value_type> il)
+   {  this->base_t::insert_equal(ordered_range, il.begin(), il.end()); }
+#endif
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 

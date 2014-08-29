@@ -31,6 +31,9 @@
 #ifndef BOOST_CONTAINER_PERFECT_FORWARDING
 #include <boost/container/detail/preprocessor.hpp>
 #endif
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+#include <initializer_list>
+#endif
 
 namespace boost {
 namespace container {
@@ -146,6 +149,31 @@ class set
       : base_t(ordered_range, first, last, comp, a)
    {}
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Constructs an empty set using the specified comparison object and
+   //! allocator, and inserts elements from the range [il.begin(), il.end()).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [il.begin(), il.end()) is already sorted using
+   //! comp and otherwise N logN, where N is il.begin() - il.end().
+   set(std::initializer_list<value_type> il, const Compare& comp = Compare(), const allocator_type& a = allocator_type())
+      : base_t(true, il.begin(), il.end(), comp, a)
+   {}
+
+   //! <b>Effects</b>: Constructs an empty set using the specified comparison object and
+   //! allocator, and inserts elements from the ordered unique range [il.begin(), il.end()). This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Requires</b>: [il.begin(), il.end()) must be ordered according to the predicate and must be
+   //! unique values.
+   //!
+   //! <b>Complexity</b>: Linear in N.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   set(ordered_unique_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(), const allocator_type& a = allocator_type())
+      : base_t(ordered_range, il.begin(), il.end(), comp, a)
+   {}
+#endif
+
    //! <b>Effects</b>: Copy constructs a set.
    //!
    //! <b>Complexity</b>: Linear in x.size().
@@ -194,6 +222,15 @@ class set
    set& operator=(BOOST_RV_REF(set) x)
       BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
    {  return static_cast<set&>(this->base_t::operator=(boost::move(static_cast<base_t&>(x))));  }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   set& operator=(std::initializer_list<value_type> il)
+   {
+      this->clear();
+      insert(il.begin(), il.end());
+      return *this;
+   }
+#endif
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -443,6 +480,15 @@ class set
    template <class InputIterator>
    void insert(InputIterator first, InputIterator last)
    {  this->base_t::insert_unique(first, last);  }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: inserts each element from the range [il.begin(),il.end()) if and only
+   //!   if there is no element with key equivalent to the key of that element.
+   //!
+   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from il.begin() to il.end())
+   void insert(std::initializer_list<value_type> il)
+   {  this->base_t::insert_unique(il.begin(), il.end()); }
+#endif
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -745,6 +791,19 @@ class multiset
       : base_t(ordered_range, first, last, comp, a)
    {}
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! @copydoc ::boost::container::set::set(std::initializer_list<value_type>, const Compare& comp, const allocator_type&)
+   multiset(std::initializer_list<value_type> il, const Compare& comp = Compare(), const allocator_type& a = allocator_type())
+      : base_t(false, il.begin(), il.end(), comp, a)
+   {}
+
+   //! @copydoc ::boost::container::set::set(ordered_unique_range_t, std::initializer_list<value_type>, const Compare& comp, const allocator_type&)
+   multiset(ordered_unique_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(), const allocator_type& a = allocator_type())
+      : base_t(ordered_range, il.begin(), il.end(), comp, a)
+   {}
+#endif
+
+
    //! @copydoc ::boost::container::set::set(const set &)
    multiset(const multiset& x)
       : base_t(static_cast<const base_t&>(x))
@@ -773,6 +832,15 @@ class multiset
    multiset& operator=(BOOST_RV_REF(multiset) x)
    {  return static_cast<multiset&>(this->base_t::operator=(boost::move(static_cast<base_t&>(x))));  }
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! @copydoc ::boost::container::set::operator=(std::initializer_list<value_type>)
+   multiset& operator=(std::initializer_list<value_type> il)
+   {
+       this->clear();
+       insert(il.begin(), il.end());
+       return *this;
+   }
+#endif
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! @copydoc ::boost::container::set::get_allocator()
@@ -923,6 +991,12 @@ class multiset
    template <class InputIterator>
    void insert(InputIterator first, InputIterator last)
    {  this->base_t::insert_equal(first, last);  }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! @copydoc ::boost::container::set::insert(std::initializer_list<value_type>)
+   void insert(std::initializer_list<value_type> il)
+   {  this->base_t::insert_unique(il.begin(), il.end()); }
+#endif
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 

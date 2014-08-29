@@ -45,6 +45,11 @@
 #include <functional>
 #include <algorithm>
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+#include <initializer_list>
+#endif
+
+
 namespace boost {
 namespace container {
 
@@ -272,7 +277,20 @@ class slist
       : AllocHolder(a)
    { this->insert_after(this->cbefore_begin(), first, last); }
 
-   //! <b>Effects</b>: Copy constructs a list.
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Constructs a list that will use a copy of allocator a
+   //!   and inserts a copy of the range [il.begin(), il.end()) in the list.
+   //!
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's constructor taking a dereferenced std::initializer_list iterator throws.
+   //!
+   //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
+   slist(std::initializer_list<value_type> il, const allocator_type& a = allocator_type())
+      : AllocHolder(a)
+   { this->insert_after(this->cbefore_begin(), il.begin(), il.end()); }
+#endif
+
+    //! <b>Effects</b>: Copy constructs a list.
    //!
    //! <b>Postcondition</b>: x == *this.
    //!
@@ -391,6 +409,21 @@ class slist
       return *this;
    }
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Makes *this contain the same elements as in il.
+   //!
+   //! <b>Postcondition</b>: this->size() == il.size(). *this contains a copy
+   //! of each of il's elements.
+   //!
+   //! <b>Throws</b>: If allocator_traits_type::propagate_on_container_move_assignment
+   //!   is false and (allocation throws or value_type's move constructor throws)
+   slist& operator=(std::initializer_list<value_type> il)
+   {
+       assign(il.begin(), il.end());
+       return *this;
+   }
+#endif
+
    //! <b>Effects</b>: Assigns the n copies of val to *this.
    //!
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
@@ -432,6 +465,19 @@ class slist
          this->erase_after(prev, end_n);
    }
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Assigns the range [il.begin(), il.end()) to *this.
+   //!
+   //! <b>Throws</b>: If memory allocation throws or
+   //!   T's constructor from dereferencing std::initializer_list iterator throws.
+   //!
+   //! <b>Complexity</b>: Linear to range [il.begin(), il.end()).
+
+   void assign(std::initializer_list<value_type> il)
+   {
+       assign(il.begin(), il.end());
+   }
+#endif
    //! <b>Effects</b>: Returns a copy of the internal allocator.
    //!
    //! <b>Throws</b>: If allocator's copy constructor throws.
@@ -817,6 +863,25 @@ class slist
       return ret_it;
    }
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Requires</b>: prev_p must be a valid iterator of *this.
+   //!
+   //! <b>Effects</b>: Inserts the range pointed by [il.begin(), il.end()) after prev_p.
+   //!
+   //! <b>Returns</b>: an iterator to the last inserted element or prev_p if il.begin() == il.end().
+   //!
+   //! <b>Throws</b>: If memory allocation throws, T's constructor from a
+   //!   dereferenced std::initializer_list iterator throws.
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements inserted.
+   //!
+   //! <b>Note</b>: Does not affect the validity of iterators and references of
+   //!   previous values.
+   iterator insert_after(const_iterator prev_p, std::initializer_list<value_type> il)
+   {
+       return insert_after(prev_p, il.begin(), il.end());
+   }
+#endif
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    template <class FwdIt>
    iterator insert_after(const_iterator prev, FwdIt first, FwdIt last
@@ -1312,6 +1377,24 @@ class slist
       this->insert_after(prev, first, last);
       return ++iterator(prev.get());
    }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Requires</b>: p must be a valid iterator of *this.
+   //!
+   //! <b>Effects</b>: Insert a copy of the [il.begin(), il.end()) range before p.
+   //!
+   //! <b>Returns</b>: an iterator to the first inserted element or p if il.begin() == il.end().
+   //!
+   //! <b>Throws</b>: If memory allocation throws, T's constructor from a
+   //!   dereferenced std::initializer_list iterator throws.
+   //!
+   //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()) plus
+   //!    linear to the elements before p.
+   iterator insert(const_iterator p, std::initializer_list<value_type> il)
+   {
+       return insert(p, il.begin(), il.end());
+   }
+#endif
 
    //! <b>Requires</b>: p must be a valid iterator of *this.
    //!

@@ -412,6 +412,39 @@ int test_set_variants()
 }
 
 
+template<typename FlatSetType>
+bool test_support_for_initialization_list_for()
+{
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   const std::initializer_list<int> il
+      = {1, 2};
+
+   const FlatSetType expected(il.begin(), il.end());
+   {
+      const FlatSetType sil = il;
+      if (sil != expected)
+         return false;
+
+      const FlatSetType sil_ordered(ordered_unique_range, il);
+      if(sil_ordered != expected)
+         return false;
+
+      FlatSetType sil_assign = {99};
+      sil_assign = il;
+      if(sil_assign != expected)
+         return false;
+   }
+   {
+      FlatSetType sil;
+      sil.insert(il);
+      if(sil != expected)
+         return false;
+   }
+   return true;
+#endif
+   return true;
+}
+
 int main()
 {
    using namespace boost::container::test;
@@ -466,6 +499,12 @@ int main()
    if(!boost::container::test::test_emplace<flat_set<test::EmplaceInt>, SetOptions>())
       return 1;
    if(!boost::container::test::test_emplace<flat_multiset<test::EmplaceInt>, SetOptions>())
+      return 1;
+
+   if(!test_support_for_initialization_list_for<flat_set<int> >())
+      return 1;
+
+   if(!test_support_for_initialization_list_for<flat_multiset<int> >())
       return 1;
 
    ////////////////////////////////////

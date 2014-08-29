@@ -31,6 +31,10 @@
 #include <boost/move/detail/move_helpers.hpp>
 #include <boost/detail/no_exceptions_support.hpp>
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+#include <initializer_list>
+#endif
+
 namespace boost {
 namespace container {
 
@@ -223,6 +227,39 @@ class flat_map
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Constructs an empty flat_map using the specified comparison object and
+   //! allocator, and inserts elements from the range [il.begin() ,il.end()).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [il.begin(), il.end()) is already sorted using
+   //! comp and otherwise N logN, where N is last - first.
+   flat_map(std::initializer_list<value_type> il, const Compare& comp = Compare(),
+          const allocator_type& a = allocator_type())
+     : m_flat_tree(true, il.begin(), il.end(), comp, container_detail::force<impl_allocator_type>(a))
+   {
+       //Allocator type must be std::pair<Key, T>
+       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty flat_map using the specified comparison object and
+   //! allocator, and inserts elements from the ordered unique range [il.begin(), il.end()). This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Requires</b>: [il.begin(), il.end()) must be ordered according to the predicate and must be
+   //! unique values.
+   //!
+   //! <b>Complexity</b>: Linear in N.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   flat_map(ordered_unique_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(),
+          const allocator_type& a = allocator_type())
+     : m_flat_tree(ordered_range, il.begin(), il.end(), comp, a)
+   {
+       //Allocator type must be std::pair<Key, T>
+       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
+#endif
+
    //! <b>Effects</b>: Copy constructs a flat_map.
    //!
    //! <b>Complexity</b>: Linear in x.size().
@@ -285,6 +322,16 @@ class flat_map
    flat_map& operator=(BOOST_RV_REF(flat_map) x)
       BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
    {  m_flat_tree = boost::move(x.m_flat_tree);   return *this;  }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Assign elements from il to *this
+   flat_map& operator=(std::initializer_list<value_type> il)
+   {
+      this->clear();
+      this->insert(il.begin(), il.end());
+      return *this;
+   }
+#endif
 
    //! <b>Effects</b>: Returns a copy of the Allocator that
    //!   was passed to the object's constructor.
@@ -728,6 +775,34 @@ class flat_map
    void insert(ordered_unique_range_t, InputIterator first, InputIterator last)
       {  m_flat_tree.insert_unique(ordered_unique_range, first, last); }
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()) if and only
+   //!   if there is no element with key equivalent to the key of that element.
+   //!
+   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from il.first() to il.end())
+   //!   search time plus N*size() insertion time.
+   //!
+   //! <b>Note</b>: If an element is inserted it might invalidate elements.
+   void insert(std::initializer_list<value_type> il)
+   {  m_flat_tree.insert_unique(il.begin(), il.end());  }
+
+   //! <b>Requires</b>: [il.begin(), il.end()) must be ordered according to the predicate and must be
+   //! unique values.
+   //!
+   //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()) if and only
+   //!   if there is no element with key equivalent to the key of that element. This
+   //!   function is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
+   //!   search time plus N*size() insertion time.
+   //!
+   //! <b>Note</b>: If an element is inserted it might invalidate elements.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   void insert(ordered_unique_range_t, std::initializer_list<value_type> il)
+   {  m_flat_tree.insert_unique(ordered_unique_range, il.begin(), il.end()); }
+#endif
+
    //! <b>Effects</b>: Erases the element pointed to by p.
    //!
    //! <b>Returns</b>: Returns an iterator pointing to the element immediately
@@ -1123,6 +1198,37 @@ class flat_multimap
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Constructs an empty flat_map using the specified comparison object and
+   //! allocator, and inserts elements from the range [il.begin(), il.end()).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [il.begin(), il.end()) is already sorted using
+   //! comp and otherwise N logN, where N is last - first.
+   flat_multimap(std::initializer_list<value_type> il, const Compare& comp = Compare(), const allocator_type& a = allocator_type())
+      : m_flat_tree(false, il.begin(), il.end(), comp, container_detail::force<impl_allocator_type>(a))
+   {
+       //Allocator type must be std::pair<Key, T>
+       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty flat_multimap using the specified comparison object and
+   //! allocator, and inserts elements from the ordered range [il.begin(), il.end()). This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Requires</b>: [il.begin(), il.end()) must be ordered according to the predicate.
+   //!
+   //! <b>Complexity</b>: Linear in N.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   flat_multimap(ordered_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(),
+                 const allocator_type& a = allocator_type())
+      : m_flat_tree(ordered_range, il.begin(), il.end(), comp, a)
+   {
+       //Allocator type must be std::pair<Key, T>
+       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
+#endif
+
    //! <b>Effects</b>: Copy constructs a flat_multimap.
    //!
    //! <b>Complexity</b>: Linear in x.size().
@@ -1178,6 +1284,18 @@ class flat_multimap
    flat_multimap& operator=(BOOST_RV_REF(flat_multimap) x)
       BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
       {  m_flat_tree = boost::move(x.m_flat_tree);   return *this;  }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Assign content of il to *this
+   //!
+   //! <b>Complexity</b>: Linear in il.size().
+   flat_multimap& operator=(std::initializer_list<value_type> il)
+   {
+      this->clear();
+      this->insert(il.begin(), il.end());
+      return *this;
+   }
+#endif
 
    //! <b>Effects</b>: Returns a copy of the Allocator that
    //!   was passed to the object's constructor.
@@ -1548,6 +1666,32 @@ class flat_multimap
    template <class InputIterator>
    void insert(ordered_range_t, InputIterator first, InputIterator last)
       {  m_flat_tree.insert_equal(ordered_range, first, last); }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()) .
+   //!
+   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
+   //!   search time plus N*size() insertion time.
+   //!
+   //! <b>Note</b>: If an element is inserted it might invalidate elements.
+   void insert(std::initializer_list<value_type> il)
+   {  m_flat_tree.insert_equal(il.begin(), il.end()); }
+
+   //! <b>Requires</b>: [il.begin(), il.end()) must be ordered according to the predicate.
+   //!
+   //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()) if and only
+   //!   if there is no element with key equivalent to the key of that element. This
+   //!   function is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
+   //!   search time plus N*size() insertion time.
+   //!
+   //! <b>Note</b>: If an element is inserted it might invalidate elements.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   void insert(ordered_range_t, std::initializer_list<value_type> il)
+   {  m_flat_tree.insert_equal(ordered_range, il.begin(), il.end());  }
+#endif
 
    //! <b>Effects</b>: Erases the element pointed to by p.
    //!

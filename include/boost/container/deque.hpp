@@ -42,6 +42,10 @@
 #include <boost/container/detail/advanced_insert_int.hpp>
 #include <boost/detail/no_exceptions_support.hpp>
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+#include <initializer_list>
+#endif
+
 namespace boost {
 namespace container {
 
@@ -603,6 +607,21 @@ class deque : protected deque_base<Allocator>
       this->priv_range_initialize(first, last, ItCat());
    }
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Constructs a deque that will use a copy of allocator a
+   //!   and inserts a copy of the range [il.begin(), il.end()) in the deque.
+   //!
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's constructor taking a dereferenced std::initializer_list iterator throws.
+   //!
+   //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
+   deque(std::initializer_list<value_type> il, const allocator_type& a = allocator_type())
+      : Base(a)
+   {
+      this->priv_range_initialize(il.begin(), il.end(), std::input_iterator_tag());
+   }
+#endif
+
    //! <b>Effects</b>: Copy constructs a deque.
    //!
    //! <b>Postcondition</b>: x == *this.
@@ -741,6 +760,22 @@ class deque : protected deque_base<Allocator>
       return *this;
    }
 
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Makes *this contain the same elements as il.
+   //!
+   //! <b>Postcondition</b>: this->size() == il.size(). *this contains a copy
+   //! of each of x's elements.
+   //!
+   //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements in il.
+   deque& operator=(std::initializer_list<value_type> il)
+   {
+      this->assign(il.begin(), il.end());
+      return *this;
+   }
+#endif
+
    //! <b>Effects</b>: Assigns the n copies of val to *this.
    //!
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
@@ -801,6 +836,17 @@ class deque : protected deque_base<Allocator>
       }
    }
    #endif
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Assigns the the range [il.begin(), il.end()) to *this.
+   //!
+   //! <b>Throws</b>: If memory allocation throws or
+   //!   T's constructor from dereferencing std::initializer_list iterator throws.
+   //!
+   //! <b>Complexity</b>: Linear to il.size().
+   void assign(std::initializer_list<value_type> il)
+   {   this->assign(il.begin(), il.end());   }
+#endif
 
    //! <b>Effects</b>: Returns a copy of the internal allocator.
    //!
@@ -1388,6 +1434,21 @@ class deque : protected deque_base<Allocator>
       it -= n;
       return it;
    }
+
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Requires</b>: pos must be a valid iterator of *this.
+   //!
+   //! <b>Effects</b>: Insert a copy of the [il.begin(), il.end()) range before pos.
+   //!
+   //! <b>Returns</b>: an iterator to the first inserted element or pos if il.begin() == il.end().
+   //!
+   //! <b>Throws</b>: If memory allocation throws, T's constructor from a
+   //!   dereferenced std::initializer_list throws or T's copy constructor throws.
+   //!
+   //! <b>Complexity</b>: Linear to std::distance [il.begin(), il.end()).
+   iterator insert(const_iterator pos, std::initializer_list<value_type> il)
+   {   return insert(pos, il.begin(), il.end());   }
+#endif
 
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    template <class FwdIt>

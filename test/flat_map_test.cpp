@@ -389,6 +389,38 @@ int test_map_variants()
    return 0;
 }
 
+template<typename FlatMapType>
+bool test_support_for_initialization_list_for()
+{
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   const std::initializer_list<std::pair<int, int>> il
+      = {std::make_pair(1, 2), std::make_pair(3, 4)};
+
+   const FlatMapType expected(il.begin(), il.end());
+   {
+      const FlatMapType sil = il;
+      if (sil != expected)
+         return false;
+
+      const FlatMapType sil_ordered(ordered_unique_range_t{}, il);
+      if(sil_ordered != expected)
+         return false;
+
+      FlatMapType sil_assign = {std::make_pair(99, 100)};
+      sil_assign = il;
+      if(sil_assign != expected)
+         return false;
+   }
+   {
+      FlatMapType sil;
+      sil.insert(il);
+      if(sil != expected)
+         return false;
+   }
+   return true;
+#endif
+   return true;
+}
 
 int main()
 {
@@ -435,6 +467,12 @@ int main()
       std::cerr << "test_map_variants< adaptive_pool<void> > failed" << std::endl;
       return 1;
    }
+
+   if(!test_support_for_initialization_list_for<flat_map<int, int> >())
+      return 1;
+
+   if(!test_support_for_initialization_list_for<flat_multimap<int, int> >())
+      return 1;
 
    ////////////////////////////////////
    //    Emplace testing
