@@ -37,6 +37,7 @@
 #include <boost/intrusive/pointer_traits.hpp>
 #endif
 #include <boost/aligned_storage.hpp>
+#include <boost/move/make_unique.hpp>
 
 namespace boost {
 
@@ -466,47 +467,7 @@ class flat_tree
          >::type * = 0
       #endif
       )
-   {
-      size_type len = static_cast<size_type>(std::distance(first, last));
-      const size_type BurstSize = 16;
-      size_type positions[BurstSize];
-
-      //Prereserve all memory so that iterators are not invalidated
-      this->reserve(this->size()+len);
-      const const_iterator b(this->cbegin());
-      const_iterator pos(b);
-      //Loop in burst sizes
-      bool back_insert = false;
-      while(len && !back_insert){
-         size_type burst = len < BurstSize ? len : BurstSize;
-         const const_iterator ce(this->cend());
-         for(size_type i = 0; i != burst; ++i){
-            //Get the insertion position for each key, use std::iterator_traits<BidirIt>::value_type
-            //because it can be different from container::value_type
-            //(e.g. conversion between std::pair<A, B> -> boost::container::pair<A, B>
-            const typename std::iterator_traits<BidirIt>::value_type & val = *first;
-            pos = const_cast<const flat_tree&>(*this).priv_upper_bound(pos, ce, KeyOfValue()(val));
-            if(pos == this->cend()){   //this element and the remaining should be back inserted
-               burst = i;
-               back_insert = true;
-               break;
-            }
-            else{
-               positions[i] = static_cast<size_type>(pos - b);
-               ++first;
-               --len;
-            }
-         }
-         //Insert all in a single step in the precalculated positions
-         this->m_data.m_vect.insert_ordered_at(burst, positions + burst, first);
-         //Next search position updated, iterator still valid because we've preserved the vector
-         pos += burst;
-      }
-      if(first != last){
-         //The remaining range should be back inserted
-         this->m_data.m_vect.insert(this->m_data.m_vect.cend(), len, first, last);
-      }
-   }
+   {   this->priv_insert_ordered_range(false, first, last);   }
 
    template <class InIt>
    void insert_unique(ordered_unique_range_t, InIt first, InIt last
@@ -534,61 +495,7 @@ class flat_tree
          >::type * = 0
       #endif
       )
-   {
-      size_type len = static_cast<size_type>(std::distance(first, last));
-      const size_type BurstSize = 16;
-      size_type positions[BurstSize];
-      size_type skips[BurstSize];
-
-      //Prereserve all memory so that iterators are not invalidated
-      this->reserve(this->size()+len);
-      const const_iterator b(this->cbegin());
-      const_iterator pos(b);
-      const value_compare &val_cmp = this->m_data;
-      skips[0u] = 0u;
-      //Loop in burst sizes
-      bool back_insert = false;
-      while(len && !back_insert){
-         const size_type burst = len < BurstSize ? len : BurstSize;
-         size_type unique_burst = 0u;
-         const const_iterator ce(this->cend());
-         while(unique_burst < burst && len > 0){
-            //Get the insertion position for each key, use std::iterator_traits<BidirIt>::value_type
-            //because it can be different from container::value_type
-            //(e.g. conversion between std::pair<A, B> -> boost::container::pair<A, B>
-            const typename std::iterator_traits<BidirIt>::value_type & val = *first;
-            pos = const_cast<const flat_tree&>(*this).priv_lower_bound(pos, ce, KeyOfValue()(val));
-            //Check if already present
-            if (pos != ce){
-               ++first;
-               --len;
-               if(!val_cmp(val, *pos)){
-                  if(unique_burst > 0){
-                     ++skips[unique_burst-1];
-                  }
-                  continue;
-               }
-               //If not present, calculate position
-               positions[unique_burst] = static_cast<size_type>(pos - b);
-               skips[unique_burst++] = 0u;
-            }
-            else{ //this element and the remaining should be back inserted
-               back_insert = true;
-               break;
-            }
-         }
-         if(unique_burst){
-            //Insert all in a single step in the precalculated positions
-            this->m_data.m_vect.insert_ordered_at(unique_burst, positions + unique_burst, skips + unique_burst, first);
-            //Next search position updated, iterator still valid because we've preserved the vector
-            pos += unique_burst;
-         }
-      }
-      if(first != last){
-         //The remaining range should be back inserted
-         this->m_data.m_vect.insert(this->m_data.m_vect.cend(), len, first, last);
-      }
-   }
+   {   this->priv_insert_ordered_range(true, first, last);   }
 
    #ifdef BOOST_CONTAINER_PERFECT_FORWARDING
 
@@ -1021,6 +928,71 @@ class flat_tree
          //to achieve constant-time complexity per insertion
          pos = this->insert_equal(pos, *first);
          ++pos;
+      }
+   }
+
+   template <class BidirIt>
+   void priv_insert_ordered_range(const bool unique_values, BidirIt first, BidirIt last)
+   {
+      size_type len = static_cast<size_type>(std::distance(first, last));
+      //Prereserve all memory so that iterators are not invalidated
+      this->reserve(this->size()+len);
+      //Auxiliary data for insertion positions.
+      const size_type BurstSize = len;
+      const ::boost::movelib::unique_ptr<size_type[]> positions =
+         ::boost::movelib::make_unique_definit<size_type[]>(BurstSize);
+
+      const const_iterator b(this->cbegin());
+      const const_iterator ce(this->cend());
+      const_iterator pos(b);
+      const value_compare &val_cmp = this->m_data;
+      //Loop in burst sizes
+      bool back_insert = false;
+      while(len && !back_insert){
+         const size_type burst = len < BurstSize ? len : BurstSize;
+         size_type unique_burst = 0u;
+         size_type checked = 0;
+         for(; checked != burst; ++checked){
+            //Get the insertion position for each key, use std::iterator_traits<BidirIt>::value_type
+            //because it can be different from container::value_type
+            //(e.g. conversion between std::pair<A, B> -> boost::container::pair<A, B>
+            const typename std::iterator_traits<BidirIt>::value_type & val = *first;
+            pos = const_cast<const flat_tree&>(*this).priv_lower_bound(pos, ce, KeyOfValue()(val));
+            //Check if already present
+            if (pos != ce){
+               ++first;
+               --len;
+               positions[checked] = (unique_values && !val_cmp(val, *pos)) ?
+                   size_type(-1) : (++unique_burst, static_cast<size_type>(pos - b));
+            }
+            else{ //this element and the remaining should be back inserted
+               back_insert = true;
+               break;
+            }
+         }
+         if(unique_burst){
+            //Insert all in a single step in the precalculated positions
+            this->m_data.m_vect.insert_ordered_at(unique_burst, positions.get() + checked, first);
+            //Next search position updated, iterator still valid because we've preserved the vector
+            pos += unique_burst;
+         }
+      }
+      //The remaining range should be back inserted
+      if(unique_values){
+         while(len--){
+            BidirIt next(first);
+            ++next;
+            if(next == last || val_cmp(*first, *next)){
+               this->m_data.m_vect.push_back(*first);
+            }
+            first = next;
+         }
+         BOOST_ASSERT(first == last);
+      }
+      else{
+         BOOST_ASSERT(size_type(std::distance(first, last)) == len);
+         if(len)
+            this->m_data.m_vect.insert(this->m_data.m_vect.cend(), len, first, last);
       }
    }
 };
