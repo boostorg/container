@@ -30,7 +30,7 @@
 #include "input_from_forward_iterator.hpp"
 #include <boost/move/utility.hpp>
 #include <boost/move/iterator.hpp>
-#include <boost/detail/no_exceptions_support.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 #include <boost/static_assert.hpp>
 #include "insert_test.hpp"
 

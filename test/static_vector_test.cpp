@@ -8,8 +8,8 @@
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/container/detail/config_begin.hpp>
-#include <boost/detail/lightweight_test.hpp>
-#include <boost/detail/no_exceptions_support.hpp>
+#include <boost/core/lightweight_test.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 
 #include <vector>
 #include <list>

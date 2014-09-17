@@ -29,16 +29,12 @@
 #include <boost/type_traits/has_trivial_copy.hpp>
 #include <boost/type_traits/has_trivial_constructor.hpp>
 #include <boost/type_traits/has_trivial_destructor.hpp>
-//#include <boost/type_traits/has_nothrow_constructor.hpp>
-//#include <boost/type_traits/has_nothrow_copy.hpp>
-//#include <boost/type_traits/has_nothrow_assign.hpp>
-//#include <boost/type_traits/has_nothrow_destructor.hpp>
+#include <boost/iterator/iterator_traits.hpp>
 
-#include <boost/detail/no_exceptions_support.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 #include <boost/config.hpp>
 #include <boost/move/move.hpp>
 #include <boost/utility/addressof.hpp>
-#include <boost/iterator/iterator_traits.hpp>
 
 // TODO - move vectors iterators optimization to the other, optional file instead of checking defines?
 

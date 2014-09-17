@@ -27,7 +27,7 @@
 #include <boost/container/detail/math_functions.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/pool_common.hpp>
-#include <boost/detail/no_exceptions_support.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 #include <boost/assert.hpp>
 #include <cstddef>
 

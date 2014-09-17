@@ -24,10 +24,10 @@
 #include <boost/move/utility.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/detail/move_helpers.hpp>
+#include <boost/move/traits.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/container/detail/utilities.hpp>
 #include <boost/container/detail/algorithms.hpp>
-#include <boost/type_traits/has_trivial_destructor.hpp>
 #include <boost/intrusive/list.hpp>
 #include <boost/assert.hpp>
 #include <boost/container/detail/node_alloc_holder.hpp>

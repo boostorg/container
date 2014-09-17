@@ -27,6 +27,7 @@
 #include <boost/container/allocator_traits.hpp>
 #include <boost/move/utility.hpp>
 #include <boost/move/detail/move_helpers.hpp>
+#include <boost/move/traits.hpp>
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>

@@ -34,7 +34,7 @@
 #include "propagate_allocator_test.hpp"
 #include "vector_test.hpp"
 #include "default_init_test.hpp"
-#include <boost/detail/no_exceptions_support.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 
 using namespace boost::container;
 

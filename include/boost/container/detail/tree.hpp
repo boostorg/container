@@ -34,7 +34,7 @@
 //
 #include <boost/move/utility.hpp>
 #include <boost/type_traits/has_trivial_destructor.hpp>
-#include <boost/detail/no_exceptions_support.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 //
 #ifndef BOOST_CONTAINER_PERFECT_FORWARDING
 #include <boost/container/detail/preprocessor.hpp>

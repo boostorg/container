@@ -16,14 +16,12 @@
 
 #include <cstdio>
 #include <cstring> //for ::memmove / ::memcpy
-#include <boost/type_traits/is_fundamental.hpp>
 #include <boost/type_traits/is_pointer.hpp>
 #include <boost/type_traits/is_enum.hpp>
-#include <boost/type_traits/is_member_pointer.hpp>
 #include <boost/type_traits/is_class.hpp>
 #include <boost/type_traits/is_integral.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
-#include <boost/type_traits/is_pointer.hpp>
+#include <boost/type_traits/is_copy_constructible.hpp>
 #include <boost/type_traits/has_trivial_destructor.hpp>
 #include <boost/type_traits/has_trivial_copy.hpp>
 #include <boost/type_traits/has_trivial_assign.hpp>
@@ -36,7 +34,7 @@
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/allocator_traits.hpp>
-#include <boost/detail/no_exceptions_support.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 #include <boost/container/detail/memory_util.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/aligned_storage.hpp>

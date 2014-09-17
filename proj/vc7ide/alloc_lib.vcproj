@@ -183,7 +183,55 @@
 			Name="test"
 			Filter="">
 			<File
+				RelativePath="..\..\test\check_equal_containers.hpp">
+			</File>
+			<File
+				RelativePath="..\..\test\default_init_test.hpp">
+			</File>
+			<File
+				RelativePath="..\..\test\dummy_test_allocator.hpp">
+			</File>
+			<File
+				RelativePath="..\..\test\emplace_test.hpp">
+			</File>
+			<File
+				RelativePath="..\..\test\expand_bwd_test_allocator.hpp">
+			</File>
+			<File
+				RelativePath="..\..\test\expand_bwd_test_template.hpp">
+			</File>
+			<File
+				RelativePath="..\..\test\input_from_forward_iterator.hpp">
+			</File>
+			<File
+				RelativePath="..\..\test\insert_test.hpp">
+			</File>
+			<File
 				RelativePath="..\..\test\Jamfile.v2">
+			</File>
+			<File
+				RelativePath="..\..\test\list_test.hpp">
+			</File>
+			<File
+				RelativePath="..\..\test\map_test.hpp">
+			</File>
+			<File
+				RelativePath="..\..\test\movable_int.hpp">
+			</File>
+			<File
+				RelativePath="..\..\test\print_container.hpp">
+			</File>
+			<File
+				RelativePath="..\..\test\propagate_allocator_test.hpp">
+			</File>
+			<File
+				RelativePath="..\..\test\set_test.hpp">
+			</File>
+			<File
+				RelativePath="..\..\test\static_vector_test.hpp">
+			</File>
+			<File
+				RelativePath="..\..\test\vector_test.hpp">
 			</File>
 		</Filter>
 		<Filter

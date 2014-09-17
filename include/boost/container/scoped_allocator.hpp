@@ -31,7 +31,7 @@
 #include <utility>
 #include <boost/container/detail/pair.hpp>
 #include <boost/move/utility.hpp>
-#include <boost/detail/no_exceptions_support.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 
 namespace boost { namespace container {
 

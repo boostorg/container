@@ -25,6 +25,7 @@
 
 #include <boost/move/utility.hpp>
 #include <boost/move/detail/move_helpers.hpp>
+#include <boost/move/traits.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/tree.hpp>
 #include <boost/move/utility.hpp>

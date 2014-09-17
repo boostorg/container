@@ -35,7 +35,7 @@
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/throw_exception.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
-#include <boost/detail/no_exceptions_support.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 #include <boost/aligned_storage.hpp>
 #include <boost/move/utility.hpp>
 #include <boost/move/iterator.hpp>

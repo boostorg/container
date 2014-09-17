@@ -2,6 +2,7 @@
 //
 // Copyright (c) 2012-2013 Adam Wulkiewicz, Lodz, Poland.
 // Copyright (c) 2011-2013 Andrew Hundt.
+// Copyright (c) 2014-2014 Ion Gaztanaga
 //
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
@@ -19,8 +20,6 @@
 #include <boost/container/detail/preprocessor.hpp>
 
 #include "varray_util.hpp"
-//#include "varray_concept.hpp"
-//#include <boost/iterator/iterator_concepts.hpp>
 
 #ifndef BOOST_NO_EXCEPTIONS
 #include <stdexcept>
@@ -37,10 +36,7 @@
 #include <boost/type_traits/alignment_of.hpp>
 #include <boost/type_traits/aligned_storage.hpp>
 
-// TODO - use std::reverse_iterator and std::iterator_traits
-// instead Boost.Iterator to remove dependency?
-// or boost/detail/iterator.hpp ?
-#include <boost/iterator/reverse_iterator.hpp>
+#include <iterator>
 
 /**
  * @defgroup varray_non_member varray non-member functions
@@ -229,8 +225,6 @@ class varray
         (varray)
     );
 
-    //BOOST_CONCEPT_ASSERT((concept::VArrayStrategy<Strategy>));
-
     typedef boost::aligned_storage<
         sizeof(Value[Capacity]),
         boost::alignment_of<Value[Capacity]>::value
@@ -273,9 +267,9 @@ public:
     //! @brief The const iterator type.
     typedef const_pointer const_iterator;
     //! @brief The reverse iterator type.
-    typedef boost::reverse_iterator<iterator> reverse_iterator;
+    typedef std::reverse_iterator<iterator> reverse_iterator;
     //! @brief The const reverse iterator.
-    typedef boost::reverse_iterator<const_iterator> const_reverse_iterator;
+    typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
     //! @brief The type of a strategy used by the varray.
     typedef Strategy strategy_type;
@@ -334,7 +328,7 @@ public:
 
     //! @pre
     //!  @li <tt>distance(first, last) <= capacity()</tt>
-    //!  @li Iterator must meet the \c ForwardTraversalIterator concept.
+    //!  @li Iterator must meet the \c ForwardIterator.
     //!
     //! @brief Constructs a varray containing copy of a range <tt>[first, last)</tt>.
     //!
@@ -353,8 +347,6 @@ public:
     varray(Iterator first, Iterator last)
         : m_size(0)
     {
-        //BOOST_CONCEPT_ASSERT((boost_concepts::ForwardTraversal<Iterator>)); // Make sure you passed a ForwardIterator
-
         this->assign(first, last);                                                    // may throw
     }
 
@@ -870,7 +862,7 @@ public:
     //! @pre
     //!  @li \c position must be a valid iterator of \c *this in range <tt>[begin(), end()]</tt>.
     //!  @li <tt>distance(first, last) <= capacity()</tt>
-    //!  @li \c Iterator must meet the \c ForwardTraversalIterator concept.
+    //!  @li \c Iterator must meet the \c ForwardIterator.
     //!
     //! @brief Inserts a copy of a range <tt>[first, last)</tt> at position.
     //!
@@ -890,10 +882,8 @@ public:
     template <typename Iterator>
     iterator insert(iterator position, Iterator first, Iterator last)
     {
-        //BOOST_CONCEPT_ASSERT((boost_concepts::ForwardTraversal<Iterator>)); // Make sure you passed a ForwardIterator
-
-        typedef typename boost::iterator_traversal<Iterator>::type traversal;
-        this->insert_dispatch(position, first, last, traversal());
+        typedef typename std::iterator_traits<Iterator>::iterator_category category;
+        this->insert_dispatch(position, first, last, category());
 
         return position;
     }
@@ -975,10 +965,8 @@ public:
     template <typename Iterator>
     void assign(Iterator first, Iterator last)
     {
-        //BOOST_CONCEPT_ASSERT((boost_concepts::ForwardTraversal<Iterator>)); // Make sure you passed a ForwardIterator
-
-        typedef typename boost::iterator_traversal<Iterator>::type traversal;
-        this->assign_dispatch(first, last, traversal());                            // may throw
+        typedef typename std::iterator_traits<Iterator>::iterator_category category;
+        this->assign_dispatch(first, last, category());                            // may throw
     }
 
     //! @pre <tt>count <= capacity()</tt>
@@ -1726,10 +1714,8 @@ private:
     // @par Complexity
     //   Linear O(N).
     template <typename Iterator>
-    void insert_dispatch(iterator position, Iterator first, Iterator last, boost::random_access_traversal_tag const&)
+    void insert_dispatch(iterator position, Iterator first, Iterator last, std::random_access_iterator_tag)
     {
-        //BOOST_CONCEPT_ASSERT((boost_concepts::RandomAccessTraversal<Iterator>)); // Make sure you passed a RandomAccessIterator
-
         errh::check_iterator_end_eq(*this, position);
 
         typename boost::iterator_difference<Iterator>::type
@@ -1755,8 +1741,8 @@ private:
     //   or if Value's copy constructor or copy assignment throws.
     // @par Complexity
     //   Linear O(N).
-    template <typename Iterator, typename Traversal>
-    void insert_dispatch(iterator position, Iterator first, Iterator last, Traversal const& /*not_random_access*/)
+    template <typename Iterator, typename Category>
+    void insert_dispatch(iterator position, Iterator first, Iterator last, Category const& /*not_random_access*/)
     {
         errh::check_iterator_end_eq(*this, position);
 
@@ -1823,7 +1809,7 @@ private:
     // @par Complexity
     //   Linear O(N).
     template <typename Iterator>
-    void assign_dispatch(Iterator first, Iterator last, boost::random_access_traversal_tag const& /*not_random_access*/)
+    void assign_dispatch(Iterator first, Iterator last, std::random_access_iterator_tag const& /*not_random_access*/)
     {
         namespace sv = varray_detail;
 
@@ -1850,8 +1836,8 @@ private:
     //   If Value's constructor or assignment taking dereferenced Iterator throws.
     // @par Complexity
     //   Linear O(N).
-    template <typename Iterator, typename Traversal>
-    void assign_dispatch(Iterator first, Iterator last, Traversal const& /*not_random_access*/)
+    template <typename Iterator, typename Category>
+    void assign_dispatch(Iterator first, Iterator last, Category const& /*not_random_access*/)
     {
         namespace sv = varray_detail;
 
@@ -1909,8 +1895,8 @@ public:
 
     typedef pointer iterator;
     typedef const_pointer const_iterator;
-    typedef boost::reverse_iterator<iterator> reverse_iterator;
-    typedef boost::reverse_iterator<const_iterator> const_reverse_iterator;
+    typedef std::reverse_iterator<iterator> reverse_iterator;
+    typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
     // nothrow
     varray() {}
@@ -2014,8 +2000,6 @@ public:
     template <typename Iterator>
     void insert(iterator, Iterator first, Iterator last)
     {
-        // TODO - add MPL_ASSERT, check if Iterator is really an iterator
-        //typedef typename boost::iterator_traversal<Iterator>::type traversal;
         errh::check_capacity(*this, std::distance(first, last));                    // may throw
     }
 
@@ -2038,8 +2022,6 @@ public:
     template <typename Iterator>
     void assign(Iterator first, Iterator last)
     {
-        // TODO - add MPL_ASSERT, check if Iterator is really an iterator
-        //typedef typename boost::iterator_traversal<Iterator>::type traversal;
         errh::check_capacity(*this, std::distance(first, last));                    // may throw
     }
 

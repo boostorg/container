@@ -29,7 +29,7 @@
 #include <boost/static_assert.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
-#include <boost/detail/no_exceptions_support.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 
 #include <functional>
 #include <string>
@@ -45,9 +45,9 @@
 #include <cstddef>
 #include <climits>
 #include <boost/container/detail/type_traits.hpp>
-#include <boost/detail/no_exceptions_support.hpp>
 #include <boost/type_traits/has_trivial_destructor.hpp>
 #include <boost/aligned_storage.hpp>
+#include <boost/move/traits.hpp>
 
 namespace boost {
 namespace container {
@@ -2894,6 +2894,9 @@ inline std::size_t hash_value(basic_string<Ch, std::char_traits<Ch>, Allocator> 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 namespace boost {
+
+template <class T>
+struct has_trivial_destructor_after_move;
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations

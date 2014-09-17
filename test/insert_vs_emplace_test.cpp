@@ -16,7 +16,7 @@
 #include <iostream>
 #include <boost/move/utility.hpp>
 #include <boost/container/vector.hpp>
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 
 class X
 {

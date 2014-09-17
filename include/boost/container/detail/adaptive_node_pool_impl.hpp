@@ -30,7 +30,7 @@
 #include <boost/container/detail/pool_common.hpp>
 #include <boost/container/throw_exception.hpp>
 #include <boost/assert.hpp>
-#include <boost/detail/no_exceptions_support.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 #include <cstddef>
 
 namespace boost {

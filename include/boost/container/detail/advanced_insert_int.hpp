@@ -26,7 +26,7 @@
 #include <boost/container/detail/type_traits.hpp>
 #include <iterator>  //std::iterator_traits
 #include <boost/assert.hpp>
-#include <boost/detail/no_exceptions_support.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 
 namespace boost { namespace container { namespace container_detail {
 
