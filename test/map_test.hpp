@@ -20,7 +20,7 @@
 #include <boost/container/detail/utilities.hpp>
 #include <boost/container/detail/pair.hpp>
 #include <boost/move/iterator.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <string>
 
 #include <boost/intrusive/detail/has_member_function_callable_with.hpp>

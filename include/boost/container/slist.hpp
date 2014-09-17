@@ -20,7 +20,7 @@
 
 #include <boost/container/container_fwd.hpp>
 #include <boost/container/throw_exception.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/move/detail/move_helpers.hpp>
 #include <boost/move/traits.hpp>
 #include <boost/intrusive/pointer_traits.hpp>

@@ -28,7 +28,7 @@
 #include <utility>   //std::pair
 #include <algorithm> //std::swap
 
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 
 
 #ifndef BOOST_CONTAINER_PERFECT_FORWARDING

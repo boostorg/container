@@ -14,7 +14,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 #include <iostream>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/core/lightweight_test.hpp>
 

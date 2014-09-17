@@ -25,7 +25,7 @@
 #include <boost/container/detail/flat_tree.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/allocator_traits.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/move/detail/move_helpers.hpp>
 #include <boost/move/traits.hpp>
 

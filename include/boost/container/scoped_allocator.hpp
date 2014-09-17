@@ -30,7 +30,7 @@
 #include <boost/container/detail/utilities.hpp>
 #include <utility>
 #include <boost/container/detail/pair.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 
 namespace boost { namespace container {

@@ -19,7 +19,7 @@
 #include <functional>
 #include "print_container.hpp"
 #include "input_from_forward_iterator.hpp"
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
 #include <string>
 

@@ -25,7 +25,7 @@
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/detail/allocator_version_traits.hpp>
 #include <boost/container/detail/mpl.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/intrusive/pointer_traits.hpp>

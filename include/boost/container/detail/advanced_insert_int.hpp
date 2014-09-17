@@ -21,7 +21,7 @@
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/detail/destroyers.hpp>
 #include <boost/aligned_storage.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <iterator>  //std::iterator_traits
@@ -196,7 +196,7 @@ insert_copy_proxy<A, It> get_insert_value_proxy(const typename std::iterator_tra
 #ifdef BOOST_CONTAINER_PERFECT_FORWARDING
 
 #include <boost/container/detail/variadic_templates_tools.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <typeinfo>
 //#include <iostream> //For debugging purposes
 

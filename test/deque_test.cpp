@@ -25,7 +25,7 @@
 #include "check_equal_containers.hpp"
 #include "dummy_test_allocator.hpp"
 #include "movable_int.hpp"
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/type_traits.hpp>

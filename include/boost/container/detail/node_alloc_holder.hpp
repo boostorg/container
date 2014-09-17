@@ -21,7 +21,7 @@
 #include <utility>
 #include <functional>
 
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/intrusive/options.hpp>
 
 #include <boost/container/detail/version_type.hpp>

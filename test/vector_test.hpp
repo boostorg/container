@@ -19,7 +19,7 @@
 #include <functional>
 #include <list>
 
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include "print_container.hpp"
 #include "check_equal_containers.hpp"
@@ -28,7 +28,7 @@
 #include <vector>
 #include "emplace_test.hpp"
 #include "input_from_forward_iterator.hpp"
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/static_assert.hpp>

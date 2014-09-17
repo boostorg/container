@@ -27,7 +27,7 @@
 #include <boost/container/detail/version_type.hpp>
 #include <boost/container/detail/multiallocation_chain.hpp>
 #include <boost/container/throw_exception.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <memory>
 #include <algorithm>
 #include <cstddef>

@@ -19,7 +19,7 @@
 #include <boost/container/node_allocator.hpp>
 #include <boost/container/adaptive_pool.hpp>
 
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include "check_equal_containers.hpp"
 #include "movable_int.hpp"
 #include "expand_bwd_test_allocator.hpp"

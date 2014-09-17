@@ -41,7 +41,7 @@
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/detail/allocator_version_traits.hpp>
 #include <boost/container/throw_exception.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/detail/move_helpers.hpp>
 #include <boost/move/traits.hpp>
@@ -351,8 +351,8 @@ struct vector_alloc_holder
    size_type next_capacity(size_type additional_objects) const
    {
       return next_capacity_calculator
-         <size_type, NextCapacityDouble/*NextCapacity60Percent*/>::
-            get( allocator_traits_type::max_size(this->alloc())
+         <size_type, NextCapacityDouble //NextCapacity60Percent
+         >::get( allocator_traits_type::max_size(this->alloc())
                , this->m_capacity, additional_objects );
    }
 

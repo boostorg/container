@@ -32,7 +32,7 @@
 #include <boost/intrusive/splaytree.hpp>
 #include <boost/intrusive/sgtree.hpp>
 //
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/type_traits/has_trivial_destructor.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 //

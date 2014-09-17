@@ -23,12 +23,12 @@
 #include <functional>
 #include <memory>
 
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/move/detail/move_helpers.hpp>
 #include <boost/move/traits.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/tree.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #ifndef BOOST_CONTAINER_PERFECT_FORWARDING
 #include <boost/container/detail/preprocessor.hpp>
 #endif

@@ -15,7 +15,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/detail/mpl.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/container/detail/utilities.hpp>
 #include <boost/aligned_storage.hpp>
 

@@ -25,7 +25,7 @@
 #include <utility>
 
 #include <boost/type_traits/has_trivial_destructor.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 
 #include <boost/container/detail/utilities.hpp>
 #include <boost/container/detail/pair.hpp>

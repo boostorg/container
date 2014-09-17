@@ -17,7 +17,7 @@
 #include <set>
 #include <functional>
 #include "print_container.hpp"
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
 #include <string>
 

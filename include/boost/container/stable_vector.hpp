@@ -37,7 +37,7 @@
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/aligned_storage.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/detail/move_helpers.hpp>
 #include <algorithm> //max
