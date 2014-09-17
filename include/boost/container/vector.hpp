@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <iterator>
 #include <utility>
-#include <boost/detail/no_exceptions_support.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 #include <boost/type_traits/has_trivial_destructor.hpp>
 #include <boost/type_traits/has_trivial_copy.hpp>
 #include <boost/type_traits/has_trivial_assign.hpp>
@@ -44,6 +44,7 @@
 #include <boost/move/utility.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/detail/move_helpers.hpp>
+#include <boost/move/traits.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/type_traits.hpp>
@@ -1376,8 +1377,8 @@ class vector
    template<class ...Args>
    void emplace_back(Args &&...args)
    {
-      T* back_pos = container_detail::to_raw_pointer(this->m_holder.start()) + this->m_holder.m_size;
       if (this->m_holder.m_size < this->m_holder.capacity()){
+         T* const back_pos = container_detail::to_raw_pointer(this->m_holder.start()) + this->m_holder.m_size;
          //There is more memory, just construct a new object at the end
          allocator_traits_type::construct(this->m_holder.alloc(), back_pos, ::boost::forward<Args>(args)...);
          ++this->m_holder.m_size;
@@ -1414,7 +1415,7 @@ class vector
    BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)             \
    void emplace_back(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_LIST, _))                              \
    {                                                                                                  \
-      T* back_pos = container_detail::to_raw_pointer                                                  \
+      T* const back_pos = container_detail::to_raw_pointer                                            \
          (this->m_holder.start()) + this->m_holder.m_size;                                            \
       if (this->m_holder.m_size < this->m_holder.capacity()){                                         \
          allocator_traits_type::construct (this->m_holder.alloc()                                     \
@@ -1723,22 +1724,142 @@ class vector
    {  x.swap(y);  }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+   //! <b>Effects</b>: If n is less than or equal to capacity(), this call has no
+   //!   effect. Otherwise, it is a request for allocation of additional memory
+   //!   (memory expansion) that will not invalidate iterators.
+   //!   If the request is successful, then capacity() is greater than or equal to
+   //!   n; otherwise, capacity() is unchanged. In either case, size() is unchanged.
+   //!
+   //! <b>Throws</b>: If memory allocation allocation throws or T's copy/move constructor throws.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   bool stable_reserve(size_type new_cap)
+   {
+      const bool room_enough = this->capacity() < new_cap;
+      if(!room_enough && alloc_version::value < 2){
+         return false;
+      }
+      else{
+         //There is not enough memory, try to expand the old one
+         size_type real_cap = 0;
+         std::pair<pointer, bool> ret = this->m_holder.allocation_command
+            (expand_fwd, new_cap, new_cap, real_cap, this->m_holder.start());
+         //Check for forward expansion
+         if(ret.second){
+            #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
+            ++this->num_expand_fwd;
+            #endif
+            this->m_holder.capacity(real_cap);
+         }
+         return ret.second;
+      }
+   }
 
    //Absolutely experimental. This function might change, disappear or simply crash!
    template<class BiDirPosConstIt, class BiDirValueIt>
-   void insert_ordered_at(size_type element_count, BiDirPosConstIt last_position_it, BiDirValueIt last_value_it)
+   void insert_ordered_at(const size_type element_count, BiDirPosConstIt last_position_it, BiDirValueIt last_value_it)
    {
-      const size_type *dummy = 0;
-      this->priv_insert_ordered_at(element_count, last_position_it, false, dummy, last_value_it);
+      const size_type old_size_pos = this->size();
+      this->reserve(old_size_pos + element_count);
+      T* const begin_ptr = container_detail::to_raw_pointer(this->m_holder.start());
+      size_type insertions_left = element_count;
+      size_type next_pos = old_size_pos;
+      size_type hole_size = element_count;
+
+      //Exception rollback. If any copy throws before the hole is filled, values
+      //already inserted/copied at the end of the buffer will be destroyed.
+      typename value_traits::ArrayDestructor past_hole_values_destroyer
+         (begin_ptr + old_size_pos + element_count, this->m_holder.alloc(), size_type(0u));
+      //Loop for each insertion backwards, first moving the elements after the insertion point,
+      //then inserting the element.
+      while(insertions_left){
+         size_type pos = static_cast<size_type>(*(--last_position_it));
+         while(pos == size_type(-1)){
+            --last_value_it;
+            pos = static_cast<size_type>(*(--last_position_it));
+         }
+
+         BOOST_ASSERT(pos != size_type(-1) && pos <= old_size_pos);
+         //If needed shift the range after the insertion point and the previous insertion point.
+         //Function will take care if the shift crosses the size() boundary, using copy/move
+         //or uninitialized copy/move if necessary.
+         size_type new_hole_size = (pos != next_pos)
+            ? priv_insert_ordered_at_shift_range(pos, next_pos, this->size(), insertions_left)
+            : hole_size
+            ;
+         if(new_hole_size > 0){
+            //The hole was reduced by priv_insert_ordered_at_shift_range so expand exception rollback range backwards
+            past_hole_values_destroyer.increment_size_backwards(next_pos - pos);
+            //Insert the new value in the hole
+            allocator_traits_type::construct(this->m_holder.alloc(), begin_ptr + pos + insertions_left - 1, *(--last_value_it));
+            --new_hole_size;
+            if(new_hole_size == 0){
+               //Hole was just filled, disable exception rollback and change vector size
+               past_hole_values_destroyer.release();
+               this->m_holder.m_size += element_count;
+            }
+            else{
+               //The hole was reduced by the new insertion by one
+               past_hole_values_destroyer.increment_size_backwards(size_type(1u));
+            }
+         }
+         else{
+            if(hole_size){
+               //Hole was just filled by priv_insert_ordered_at_shift_range, disable exception rollback and change vector size
+               past_hole_values_destroyer.release();
+               this->m_holder.m_size += element_count;
+            }
+            //Insert the new value in the already constructed range
+            begin_ptr[pos + insertions_left - 1] = *(--last_value_it);
+         }
+         --insertions_left;
+         hole_size = new_hole_size;
+         next_pos = pos;
+      }
    }
 
-   //Absolutely experimental. This function might change, disappear or simply crash!
-   template<class BiDirPosConstIt, class BiDirSkipConstIt, class BiDirValueIt>
-   void insert_ordered_at( size_type element_count, BiDirPosConstIt last_position_it
-                         , BiDirSkipConstIt last_skip_it, BiDirValueIt last_value_it)
+   #if defined(BOOST_CONTAINER_PERFECT_FORWARDING) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   //! <b>Effects</b>: Inserts an object of type T constructed with
+   //!   std::forward<Args>(args)... in the end of the vector.
+   //!
+   //! <b>Throws</b>: If memory allocation throws or the in-place constructor throws or
+   //!   T's copy/move constructor throws.
+   //!
+   //! <b>Complexity</b>: Amortized constant time.
+   template<class ...Args>
+   bool stable_emplace_back(Args &&...args)
    {
-      this->priv_insert_ordered_at(element_count, last_position_it, true, last_skip_it, last_value_it);
+      const bool room_enough = this->m_holder.m_size < this->m_holder.capacity();
+      if (room_enough){
+         T* const back_pos = container_detail::to_raw_pointer(this->m_holder.start()) + this->m_holder.m_size;
+         //There is more memory, just construct a new object at the end
+         allocator_traits_type::construct(this->m_holder.alloc(), back_pos, ::boost::forward<Args>(args)...);
+         ++this->m_holder.m_size;
+      }
+      return room_enough;
    }
+
+   #else
+
+   #define BOOST_PP_LOCAL_MACRO(n)                                                           \
+   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)    \
+   bool stable_emplace_back(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_LIST, _))              \
+   {                                                                                         \
+      const bool room_enough = this->m_holder.m_size < this->m_holder.capacity();            \
+      if (room_enough){                                                                      \
+         T* const back_pos = container_detail::to_raw_pointer                                \
+            (this->m_holder.start()) + this->m_holder.m_size;                                \
+         allocator_traits_type::construct (this->m_holder.alloc()                            \
+            , back_pos BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _) );     \
+         ++this->m_holder.m_size;                                                            \
+      }                                                                                      \
+      return room_enough;                                                                    \
+   }                                                                                         \
+   //!
+   #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
+   #include BOOST_PP_LOCAL_ITERATE()
+
+   #endif   //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
 
    private:
 
@@ -2506,7 +2627,7 @@ class vector
                   (this->m_holder.alloc(), pos, raw_gap, new_start + before_plus_new);
                //Now we have a contiguous buffer so program trailing element destruction
                //and update size to the final size.
-               old_values_destroyer.shrink_forward(elemsbefore + raw_gap);
+               old_values_destroyer.shrink_forward(new_size-s_before);
                this->m_holder.m_size = new_size;
                //Now move remaining last objects in the old buffer begin
                ::boost::move(pos + raw_gap, old_finish, old_start);

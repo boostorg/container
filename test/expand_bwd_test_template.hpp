@@ -17,40 +17,71 @@
 #include "expand_bwd_test_allocator.hpp"
 #include <algorithm>
 #include <boost/type_traits/remove_volatile.hpp>
+#include <boost/move/make_unique.hpp>
 
 namespace boost { namespace container { namespace test {
 
 template<class T>
 struct value_holder
 {
-   value_holder(T val)  :  m_value(val){}
-   value_holder(): m_value(0){}
-   ~value_holder(){ m_value = 0; }
+   explicit value_holder(T val)  :  m_value(val)
+   { ++count;  }
+
+   value_holder(): m_value(0)
+   { ++count;  }
+
+   value_holder(const value_holder &other)
+      : m_value(other.m_value)
+   { ++count;  }
+
+   value_holder &operator=(const value_holder&other)
+   {  m_value = other.m_value; return *this; }
+
+   value_holder &operator=(T val)
+   {  m_value = val; return *this; }
+
+   ~value_holder()
+   { m_value = 0; --count; }
+
    bool operator == (const value_holder &other) const
    {  return m_value == other.m_value; }
    bool operator != (const value_holder &other) const
    {  return m_value != other.m_value; }
 
    T m_value;
+   static unsigned count;
 };
+
+template<class T>
+unsigned value_holder<T>::count = 0;
 
 template<class T>
 struct triple_value_holder
 {
-   triple_value_holder(T val)
+   explicit triple_value_holder(T val)
       :  m_value1(val)
       ,  m_value2(val)
       ,  m_value3(val)
-   {}
+   { ++count;  }
 
    triple_value_holder()
       :  m_value1(0)
       ,  m_value2(0)
       ,  m_value3(0)
-   {}
+   { ++count;  }
+
+   triple_value_holder(const triple_value_holder &other)
+      : m_value1(other.m_value1), m_value2(other.m_value2), m_value3(other.m_value3)
+   { ++count;  }
+
+   triple_value_holder &operator=(const triple_value_holder &other)
+   {  m_value1 = other.m_value1; m_value2 = other.m_value2; m_value3 = other.m_value3; ; return *this; }
+
+   triple_value_holder &operator=(T val)
+   {  m_value1 = val; m_value2 = val; m_value3 = val; ; return *this; }
 
    ~triple_value_holder()
-   {  m_value1 = m_value2 = m_value3 = 0; }
+   {  m_value1 = m_value2 = m_value3 = 0; --count; }
 
    bool operator == (const triple_value_holder &other) const
    {
@@ -69,12 +100,34 @@ struct triple_value_holder
    T m_value1;
    T m_value2;
    T m_value3;
+   static unsigned count;
 };
+
+template<class T>
+unsigned triple_value_holder<T>::count = 0;
 
 typedef value_holder<int> int_holder;
 typedef triple_value_holder<int> triple_int_holder;
 
+template<class T>
+struct life_count
+{
+   static unsigned check(unsigned) {  return true;   }
+};
 
+template<class T>
+struct life_count< triple_value_holder<T> >
+{
+   static unsigned check(unsigned c)
+   {  return c == triple_value_holder<T>::count;   }
+};
+
+template<class T>
+struct life_count< value_holder<T> >
+{
+   static unsigned check(unsigned c)
+   {  return c == value_holder<T>::count;   }
+};
 
 //Function to check if both sets are equal
 template <class Vector1, class Vector2>
@@ -134,43 +187,46 @@ bool test_insert_with_expand_bwd()
 
    for(int iteration = 0; iteration < Iterations; ++iteration)
    {
-      value_type *memory = new value_type[MemorySize];
-      BOOST_TRY {
-         std::vector<non_volatile_value_type> initial_data;
-         initial_data.resize(InitialSize[iteration]);
-         for(int i = 0; i < InitialSize[iteration]; ++i){
-            initial_data[i] = i;
-         }
-
-         Vect data_to_insert;
-         data_to_insert.resize(InsertSize[iteration]);
-         for(int i = 0; i < InsertSize[iteration]; ++i){
-            data_to_insert[i] = -i;
-         }
-
-         expand_bwd_test_allocator<value_type> alloc
-            (&memory[0], MemorySize, Offset[iteration]);
-         VectorWithExpandBwdAllocator vector(alloc);
-         vector.insert( vector.begin()
-                     , initial_data.begin(), initial_data.end());
-         vector.insert( vector.begin() + Position[iteration]
-                     , data_to_insert.begin(), data_to_insert.end());
-         initial_data.insert(initial_data.begin() + Position[iteration]
-                           , data_to_insert.begin(), data_to_insert.end());
-         //Now check that values are equal
-         if(!CheckEqualVector(vector, initial_data)){
-            std::cout << "test_assign_with_expand_bwd::CheckEqualVector failed." << std::endl
-                     << "   Class: " << typeid(VectorWithExpandBwdAllocator).name() << std::endl
-                     << "   Iteration: " << iteration << std::endl;
-            return false;
-         }
+      boost::movelib::unique_ptr<char[]> memptr =
+         boost::movelib::make_unique_definit<char[]>(MemorySize*sizeof(value_type));
+      value_type *memory = (value_type*)memptr.get();
+      std::vector<non_volatile_value_type> initial_data;
+      initial_data.resize(InitialSize[iteration]);
+      for(int i = 0; i < InitialSize[iteration]; ++i){
+         initial_data[i] = i;
       }
-      BOOST_CATCH(...){
-         delete [](const_cast<non_volatile_value_type*>(memory));
-         BOOST_RETHROW;
+
+      if(!life_count<value_type>::check(InitialSize[iteration]))
+         return false;
+      Vect data_to_insert;
+      data_to_insert.resize(InsertSize[iteration]);
+      for(int i = 0; i < InsertSize[iteration]; ++i){
+         data_to_insert[i] = -i;
       }
-      BOOST_CATCH_END
-      delete [](const_cast<non_volatile_value_type*>(memory));
+
+      if(!life_count<value_type>::check(InitialSize[iteration]+InsertSize[iteration]))
+         return false;
+
+      expand_bwd_test_allocator<value_type> alloc
+         (&memory[0], MemorySize, Offset[iteration]);
+      VectorWithExpandBwdAllocator vector(alloc);
+      vector.insert( vector.begin()
+                  , initial_data.begin(), initial_data.end());
+      vector.insert( vector.begin() + Position[iteration]
+                  , data_to_insert.begin(), data_to_insert.end());
+
+      if(!life_count<value_type>::check(InitialSize[iteration]*2+InsertSize[iteration]*2))
+         return false;
+
+      initial_data.insert(initial_data.begin() + Position[iteration]
+                        , data_to_insert.begin(), data_to_insert.end());
+      //Now check that values are equal
+      if(!CheckEqualVector(vector, initial_data)){
+         std::cout << "test_assign_with_expand_bwd::CheckEqualVector failed." << std::endl
+                  << "   Class: " << typeid(VectorWithExpandBwdAllocator).name() << std::endl
+                  << "   Iteration: " << iteration << std::endl;
+         return false;
+      }
    }
 
    return true;
