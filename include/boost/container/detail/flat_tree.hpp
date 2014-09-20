@@ -983,7 +983,9 @@ class flat_tree
             BidirIt next(first);
             ++next;
             if(next == last || val_cmp(*first, *next)){
-               this->m_data.m_vect.push_back(*first);
+               const bool room = this->m_data.m_vect.stable_emplace_back(*first);
+               (void)room;
+               BOOST_ASSERT(room);
             }
             first = next;
          }
