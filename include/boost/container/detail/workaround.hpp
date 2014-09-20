@@ -58,6 +58,11 @@
 #define BOOST_CONTAINER_MEMZEROED_POINTER_IS_NULL
 #endif
 
+#define BOOST_CONTAINER_DOC1ST(TYPE1, TYPE2) TYPE2
+#define BOOST_CONTAINER_I ,
+#define BOOST_CONTAINER_DOCIGN(T) T
+#define BOOST_CONTAINER_DOCONLY(T)
+
 #include <boost/container/detail/config_end.hpp>
 
 #endif   //#ifndef BOOST_CONTAINER_DETAIL_WORKAROUND_HPP

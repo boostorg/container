@@ -294,6 +294,9 @@ struct vector_alloc_holder
    {
       if(initial_size){
          m_start = this->allocation_command(allocate_new, initial_size, initial_size, m_capacity, m_start).first;
+         #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
+         ++this->num_alloc;
+         #endif
       }
    }
 
@@ -307,6 +310,9 @@ struct vector_alloc_holder
       if(initial_size){
          m_start = this->allocation_command
                (allocate_new, initial_size, initial_size, m_capacity, m_start).first;
+         #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
+         ++this->num_alloc;
+         #endif
       }
    }
 
@@ -325,6 +331,9 @@ struct vector_alloc_holder
       if(cap){
          m_start = this->allocation_command
                (allocate_new, cap, cap, m_capacity, m_start).first;
+         #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
+         ++this->num_alloc;
+         #endif
       }
    }
 
@@ -529,11 +538,7 @@ struct vector_alloc_holder<Allocator, container_detail::integral_constant<unsign
 //!
 //! \tparam T The type of object that is stored in the vector
 //! \tparam Allocator The allocator used for all internal memory management
-#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class T, class Allocator = std::allocator<T> >
-#else
-template <class T, class Allocator>
-#endif
+template <class T, class Allocator BOOST_CONTAINER_DOCONLY(= std::allocator<T>) >
 class vector
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -567,7 +572,7 @@ class vector
    typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
    typedef Allocator                                                                   allocator_type;
    typedef Allocator                                                                   stored_allocator_type;
-   #if defined BOOST_CONTAINER_VECTOR_ITERATOR_IS_POINTER && !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if defined BOOST_CONTAINER_VECTOR_ITERATOR_IS_POINTER
    typedef BOOST_CONTAINER_IMPDEF(pointer)                                             iterator;
    typedef BOOST_CONTAINER_IMPDEF(const_pointer)                                       const_iterator;
    #else
@@ -909,14 +914,11 @@ class vector
    //! <b>Complexity</b>: Linear to n.
    template <class InIt>
    void assign(InIt first, InIt last
-      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<InIt, size_type>::value &&
+      BOOST_CONTAINER_DOCIGN(BOOST_CONTAINER_I typename container_detail::enable_if_c
+         < !container_detail::is_convertible<InIt BOOST_CONTAINER_I size_type>::value &&
             ( container_detail::is_input_iterator<InIt>::value ||
-              container_detail::is_same<alloc_version, allocator_v0>::value )
-         >::type * = 0
-      #endif
-      )
+              container_detail::is_same<alloc_version BOOST_CONTAINER_I allocator_v0>::value )
+         >::type * = 0) )
    {
       //Overwrite all elements we can from [first, last)
       iterator cur = this->begin();
@@ -957,13 +959,11 @@ class vector
    //! <b>Complexity</b>: Linear to n.
    template <class FwdIt>
    void assign(FwdIt first, FwdIt last
-      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<FwdIt, size_type>::value &&
+      BOOST_CONTAINER_DOCIGN(BOOST_CONTAINER_I typename container_detail::enable_if_c
+         < !container_detail::is_convertible<FwdIt BOOST_CONTAINER_I size_type>::value &&
             ( !container_detail::is_input_iterator<FwdIt>::value &&
-              !container_detail::is_same<alloc_version, allocator_v0>::value )
-         >::type * = 0
-      #endif
+              !container_detail::is_same<alloc_version BOOST_CONTAINER_I allocator_v0>::value )
+         >::type * = 0)
       )
    {
       //For Fwd iterators the standard only requires EmplaceConstructible and assignable from *first
@@ -973,8 +973,11 @@ class vector
       if(input_sz > old_capacity){  //If input range is too big, we need to reallocate
          size_type real_cap = 0;
          std::pair<pointer, bool> ret =
-            this->m_holder.allocation_command(allocate_new, input_sz, input_sz, real_cap, this->m_holder.start());
+            this->m_holder.allocation_command(allocate_new|expand_fwd, input_sz, input_sz, real_cap, this->m_holder.start());
          if(!ret.second){  //New allocation, just emplace new values
+            #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
+            ++this->num_alloc;
+            #endif
             pointer const old_p = this->m_holder.start();
             if(old_p){
                this->priv_destroy_all();
@@ -987,6 +990,9 @@ class vector
             return;
          }
          else{
+            #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
+            ++this->num_expand_fwd;
+            #endif
             //Forward expansion, use assignment + back deletion/construction that comes later
          }
       }
@@ -1519,12 +1525,10 @@ class vector
    //! <b>Complexity</b>: Linear to std::distance [first, last).
    template <class InIt>
    iterator insert(const_iterator pos, InIt first, InIt last
-      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<InIt, size_type>::value
+      BOOST_CONTAINER_DOCIGN(BOOST_CONTAINER_I typename container_detail::enable_if_c
+         < !container_detail::is_convertible<InIt BOOST_CONTAINER_I size_type>::value
             && container_detail::is_input_iterator<InIt>::value
-         >::type * = 0
-      #endif
+         >::type * = 0)
       )
    {
       const size_type n_pos = pos - this->cbegin();
