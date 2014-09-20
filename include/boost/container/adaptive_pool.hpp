@@ -51,20 +51,12 @@ namespace container {
 //!
 //!OverheadPercent is the (approximated) maximum size overhead (1-20%) of the allocator:
 //!(memory usable for nodes / total memory allocated from the memory allocator)
-#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template < class T
-         , std::size_t NodesPerBlock   = ADP_nodes_per_block
-         , std::size_t MaxFreeBlocks   = ADP_max_free_blocks
-         , std::size_t OverheadPercent = ADP_overhead_percent
+         , std::size_t NodesPerBlock   BOOST_CONTAINER_DOCONLY(= ADP_nodes_per_block)
+         , std::size_t MaxFreeBlocks   BOOST_CONTAINER_DOCONLY(= ADP_max_free_blocks)
+         , std::size_t OverheadPercent BOOST_CONTAINER_DOCONLY(= ADP_overhead_percent)
+         BOOST_CONTAINER_DOCIGN(BOOST_CONTAINER_I unsigned Version)
          >
-#else
-template < class T
-         , std::size_t NodesPerBlock
-         , std::size_t MaxFreeBlocks
-         , std::size_t OverheadPercent
-         , unsigned Version
-         >
-#endif
 class adaptive_pool
 {
    //!If Version is 1, the allocator is a STL conforming allocator. If Version is 2,
@@ -73,9 +65,7 @@ class adaptive_pool
    typedef unsigned int allocation_type;
    typedef adaptive_pool
       <T, NodesPerBlock, MaxFreeBlocks, OverheadPercent
-         #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-         , Version
-         #endif
+         BOOST_CONTAINER_DOCIGN(BOOST_CONTAINER_I Version)
          >   self_t;
 
    static const std::size_t nodes_per_block        = NodesPerBlock;
@@ -83,9 +73,7 @@ class adaptive_pool
    static const std::size_t overhead_percent       = OverheadPercent;
    static const std::size_t real_nodes_per_block   = NodesPerBlock;
 
-   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   BOOST_STATIC_ASSERT((Version <=2));
-   #endif
+   BOOST_CONTAINER_DOCIGN(BOOST_STATIC_ASSERT((Version <=2)));
 
    public:
    //-------
@@ -120,9 +108,7 @@ class adaptive_pool
          , NodesPerBlock
          , MaxFreeBlocks
          , OverheadPercent
-         #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-         , Version
-         #endif
+         BOOST_CONTAINER_DOCIGN(BOOST_CONTAINER_I Version)
          >       other;
    };
 
@@ -150,10 +136,7 @@ class adaptive_pool
    template<class T2>
    adaptive_pool
       (const adaptive_pool<T2, NodesPerBlock, MaxFreeBlocks, OverheadPercent
-            #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-            , Version
-            #endif
-            > &) BOOST_CONTAINER_NOEXCEPT
+            BOOST_CONTAINER_DOCIGN(BOOST_CONTAINER_I Version)> &) BOOST_CONTAINER_NOEXCEPT
    {}
 
    //!Destructor
