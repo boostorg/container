@@ -168,64 +168,66 @@ bool test_insert_with_expand_bwd()
 
    //Distance old and new buffer
    const int Offset[]      =
-      {  350,  250,  150,  150,
-         150,  50,   50,   50    };
-   //Insert position
-   const int Position[]    =
-      {  100,  100,  100,  100,
-         100,  100,  100,  100   };
+      {  350, 300, 250, 200, 150, 100, 150, 100,
+         150,  50,  50,  50    };
    //Initial vector size
    const int InitialSize[] =
-      {  200,  200,  200,  200,
-         200,  200,  200,  200   };
+      {  200, 200, 200, 200, 200, 200, 200, 200,
+         200, 200, 200, 200   };
    //Size of the data to insert
    const int InsertSize[]  =
-      {  100,  100,  100,  200,
-         300,  25,   100,  200   };
+      {  100, 100, 100, 100, 100, 100, 200, 200,
+         300,  25, 100, 200   };
    //Number of tests
    const int Iterations    = sizeof(InsertSize)/sizeof(int);
 
-   for(int iteration = 0; iteration < Iterations; ++iteration)
-   {
-      boost::movelib::unique_ptr<char[]> memptr =
-         boost::movelib::make_unique_definit<char[]>(MemorySize*sizeof(value_type));
-      value_type *memory = (value_type*)memptr.get();
-      std::vector<non_volatile_value_type> initial_data;
-      initial_data.resize(InitialSize[iteration]);
-      for(int i = 0; i < InitialSize[iteration]; ++i){
-         initial_data[i] = i;
-      }
+   //Insert position
+   const int Position[]    =
+      {  0, 100,  200  };
 
-      if(!life_count<value_type>::check(InitialSize[iteration]))
-         return false;
-      Vect data_to_insert;
-      data_to_insert.resize(InsertSize[iteration]);
-      for(int i = 0; i < InsertSize[iteration]; ++i){
-         data_to_insert[i] = -i;
-      }
+   for(int pos = 0; pos < sizeof(Position)/sizeof(Position[0]); ++pos){
+      for(int iteration = 0; iteration < Iterations; ++iteration)
+      {
+         boost::movelib::unique_ptr<char[]> memptr =
+            boost::movelib::make_unique_definit<char[]>(MemorySize*sizeof(value_type));
+         value_type *memory = (value_type*)memptr.get();
+         std::vector<non_volatile_value_type> initial_data;
+         initial_data.resize(InitialSize[iteration]);
+         for(int i = 0; i < InitialSize[iteration]; ++i){
+            initial_data[i] = i;
+         }
 
-      if(!life_count<value_type>::check(InitialSize[iteration]+InsertSize[iteration]))
-         return false;
+         if(!life_count<value_type>::check(InitialSize[iteration]))
+            return false;
+         Vect data_to_insert;
+         data_to_insert.resize(InsertSize[iteration]);
+         for(int i = 0; i < InsertSize[iteration]; ++i){
+            data_to_insert[i] = -i;
+         }
 
-      expand_bwd_test_allocator<value_type> alloc
-         (&memory[0], MemorySize, Offset[iteration]);
-      VectorWithExpandBwdAllocator vector(alloc);
-      vector.insert( vector.begin()
-                  , initial_data.begin(), initial_data.end());
-      vector.insert( vector.begin() + Position[iteration]
-                  , data_to_insert.begin(), data_to_insert.end());
+         if(!life_count<value_type>::check(InitialSize[iteration]+InsertSize[iteration]))
+            return false;
 
-      if(!life_count<value_type>::check(InitialSize[iteration]*2+InsertSize[iteration]*2))
-         return false;
+         expand_bwd_test_allocator<value_type> alloc
+            (&memory[0], MemorySize, Offset[iteration]);
+         VectorWithExpandBwdAllocator vector(alloc);
+         vector.insert( vector.begin()
+                     , initial_data.begin(), initial_data.end());
+         vector.insert( vector.begin() + Position[pos]
+                     , data_to_insert.begin(), data_to_insert.end());
 
-      initial_data.insert(initial_data.begin() + Position[iteration]
-                        , data_to_insert.begin(), data_to_insert.end());
-      //Now check that values are equal
-      if(!CheckEqualVector(vector, initial_data)){
-         std::cout << "test_assign_with_expand_bwd::CheckEqualVector failed." << std::endl
-                  << "   Class: " << typeid(VectorWithExpandBwdAllocator).name() << std::endl
-                  << "   Iteration: " << iteration << std::endl;
-         return false;
+         if(!life_count<value_type>::check(InitialSize[iteration]*2+InsertSize[iteration]*2))
+            return false;
+
+         initial_data.insert(initial_data.begin() + Position[pos]
+                           , data_to_insert.begin(), data_to_insert.end());
+         //Now check that values are equal
+         if(!CheckEqualVector(vector, initial_data)){
+            std::cout << "test_assign_with_expand_bwd::CheckEqualVector failed." << std::endl
+                     << "   Class: " << typeid(VectorWithExpandBwdAllocator).name() << std::endl
+                     << "   Iteration: " << iteration << std::endl;
+            return false;
+         }
       }
    }
 
