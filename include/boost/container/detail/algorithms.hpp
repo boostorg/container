@@ -20,8 +20,6 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 
-#include <boost/type_traits/has_trivial_copy.hpp>
-#include <boost/type_traits/has_trivial_assign.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 
 #include <boost/container/detail/type_traits.hpp>

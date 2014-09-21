@@ -23,6 +23,7 @@
 #include <boost/aligned_storage.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/container/detail/mpl.hpp>
+#include <boost/container/detail/utilities.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <iterator>  //std::iterator_traits
 #include <boost/assert.hpp>
