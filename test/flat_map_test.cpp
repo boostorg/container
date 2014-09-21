@@ -150,6 +150,10 @@ class recursive_flat_map
 
    int id_;
    flat_map<recursive_flat_map, recursive_flat_map> map_;
+   flat_map<recursive_flat_map, recursive_flat_map>::iterator it_;
+   flat_map<recursive_flat_map, recursive_flat_map>::const_iterator cit_;
+   flat_map<recursive_flat_map, recursive_flat_map>::reverse_iterator rit_;
+   flat_map<recursive_flat_map, recursive_flat_map>::const_reverse_iterator crit_;
 
    friend bool operator< (const recursive_flat_map &a, const recursive_flat_map &b)
    {  return a.id_ < b.id_;   }
@@ -170,7 +174,12 @@ public:
       return *this;
    }
    int id_;
-   flat_map<recursive_flat_multimap, recursive_flat_multimap> map_;
+   flat_multimap<recursive_flat_multimap, recursive_flat_multimap> map_;
+   flat_multimap<recursive_flat_multimap, recursive_flat_multimap>::iterator it_;
+   flat_multimap<recursive_flat_multimap, recursive_flat_multimap>::const_iterator cit_;
+   flat_multimap<recursive_flat_multimap, recursive_flat_multimap>::reverse_iterator rit_;
+   flat_multimap<recursive_flat_multimap, recursive_flat_multimap>::const_reverse_iterator crit_;
+   
    friend bool operator< (const recursive_flat_multimap &a, const recursive_flat_multimap &b)
    {  return a.id_ < b.id_;   }
 };

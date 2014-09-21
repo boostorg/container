@@ -172,6 +172,11 @@ public:
 
    int id_;
    set<recursive_set> set_;
+   set<recursive_set>::iterator it_;
+   set<recursive_set>::const_iterator cit_;
+   set<recursive_set>::reverse_iterator rit_;
+   set<recursive_set>::const_reverse_iterator crit_;
+   
    friend bool operator< (const recursive_set &a, const recursive_set &b)
    {  return a.id_ < b.id_;   }
 };
@@ -185,6 +190,11 @@ class recursive_multiset
 
    int id_;
    multiset<recursive_multiset> multiset_;
+   multiset<recursive_multiset>::iterator it_;
+   multiset<recursive_multiset>::const_iterator cit_;
+   multiset<recursive_multiset>::reverse_iterator rit_;
+   multiset<recursive_multiset>::const_reverse_iterator crit_;
+   
    friend bool operator< (const recursive_multiset &a, const recursive_multiset &b)
    {  return a.id_ < b.id_;   }
 };

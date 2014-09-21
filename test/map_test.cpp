@@ -195,6 +195,11 @@ class recursive_map
 
    int id_;
    map<recursive_map, recursive_map> map_;
+   map<recursive_map, recursive_map>::iterator it_;
+   map<recursive_map, recursive_map>::const_iterator cit_;
+   map<recursive_map, recursive_map>::reverse_iterator rit_;
+   map<recursive_map, recursive_map>::const_reverse_iterator crit_;
+   
    friend bool operator< (const recursive_map &a, const recursive_map &b)
    {  return a.id_ < b.id_;   }
 };
@@ -207,6 +212,11 @@ class recursive_multimap
 
    int id_;
    multimap<recursive_multimap, recursive_multimap> multimap_;
+   multimap<recursive_multimap, recursive_multimap>::iterator it_;
+   multimap<recursive_multimap, recursive_multimap>::const_iterator cit_;
+   multimap<recursive_multimap, recursive_multimap>::reverse_iterator rit_;
+   multimap<recursive_multimap, recursive_multimap>::const_reverse_iterator crit_;
+   
    friend bool operator< (const recursive_multimap &a, const recursive_multimap &b)
    {  return a.id_ < b.id_;   }
 };

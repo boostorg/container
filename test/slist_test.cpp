@@ -57,6 +57,9 @@ class recursive_slist
 public:
    int id_;
    slist<recursive_slist> slist_;
+   slist<recursive_slist>::iterator it_;
+   slist<recursive_slist>::const_iterator cit_;
+   
    recursive_slist &operator=(const recursive_slist &o)
    { slist_ = o.slist_;  return *this; }
 };

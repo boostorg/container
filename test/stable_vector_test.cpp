@@ -66,6 +66,11 @@ class recursive_vector
    public:
    int id_;
    stable_vector<recursive_vector> vector_;
+   stable_vector<recursive_vector>::iterator it_;
+   stable_vector<recursive_vector>::const_iterator cit_;
+   stable_vector<recursive_vector>::reverse_iterator rit_;
+   stable_vector<recursive_vector>::const_reverse_iterator crit_;
+   
    recursive_vector &operator=(const recursive_vector &o)
    { vector_ = o.vector_;  return *this; }
 };
