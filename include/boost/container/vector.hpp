@@ -1591,6 +1591,7 @@ class vector
    {
       BOOST_ASSERT(container_detail::is_input_iterator<InIt>::value ||
                    num == static_cast<size_type>(std::distance(first, last)));
+      (void)last;
       container_detail::insert_range_proxy<Allocator, InIt, T*> proxy(first);
       return this->priv_forward_range_insert(vector_iterator_get_ptr(pos), num, proxy, alloc_version());
    }
