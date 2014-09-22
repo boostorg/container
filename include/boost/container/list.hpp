@@ -81,6 +81,11 @@ struct list_node
    {  return this->m_data;   }
 };
 
+template <class T, class VoidPointer>
+struct iiterator_node_value_type< list_node<T,VoidPointer> > {
+  typedef T type;
+};
+
 template<class Allocator>
 struct intrusive_list_type
 {

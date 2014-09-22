@@ -216,6 +216,11 @@ struct tree_node
    {  m_data = ::boost::move(v); }
 };
 
+template <class T, class VoidPointer, boost::container::tree_type_enum tree_type_value, bool OptimizeSize>
+struct iiterator_node_value_type< tree_node<T, VoidPointer, tree_type_value, OptimizeSize> > {
+  typedef T type;
+};
+
 template<class Node, class Icont>
 class insert_equal_end_hint_functor
 {

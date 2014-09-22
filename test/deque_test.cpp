@@ -138,6 +138,10 @@ public:
 
    int id_;
    deque<recursive_deque> deque_;
+   deque<recursive_deque>::iterator it_;
+   deque<recursive_deque>::const_iterator cit_;
+   deque<recursive_deque>::reverse_iterator rit_;
+   deque<recursive_deque>::const_reverse_iterator crit_;
 };
 
 template<class IntType>

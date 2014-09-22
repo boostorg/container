@@ -67,6 +67,11 @@ class recursive_list
 public:
    int id_;
    list<recursive_list> list_;
+   list<recursive_list>::iterator it_;
+   list<recursive_list>::const_iterator cit_;
+   list<recursive_list>::reverse_iterator rit_;
+   list<recursive_list>::const_reverse_iterator crit_;
+   
    recursive_list &operator=(const recursive_list &o)
    { list_ = o.list_;  return *this; }
 };

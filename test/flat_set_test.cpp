@@ -179,6 +179,11 @@ class recursive_flat_set
    }
    int id_;
    flat_set<recursive_flat_set> flat_set_;
+   flat_set<recursive_flat_set>::iterator it_;
+   flat_set<recursive_flat_set>::const_iterator cit_;
+   flat_set<recursive_flat_set>::reverse_iterator rit_;
+   flat_set<recursive_flat_set>::const_reverse_iterator crit_;
+   
    friend bool operator< (const recursive_flat_set &a, const recursive_flat_set &b)
    {  return a.id_ < b.id_;   }
 };
@@ -200,6 +205,11 @@ class recursive_flat_multiset
    }
    int id_;
    flat_multiset<recursive_flat_multiset> flat_multiset_;
+   flat_multiset<recursive_flat_multiset>::iterator it_;
+   flat_multiset<recursive_flat_multiset>::const_iterator cit_;
+   flat_multiset<recursive_flat_multiset>::reverse_iterator rit_;
+   flat_multiset<recursive_flat_multiset>::const_reverse_iterator crit_;
+   
    friend bool operator< (const recursive_flat_multiset &a, const recursive_flat_multiset &b)
    {  return a.id_ < b.id_;   }
 };

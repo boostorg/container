@@ -112,6 +112,10 @@ class recursive_vector
    public:
    int id_;
    vector<recursive_vector> vector_;
+   vector<recursive_vector>::iterator it_;
+   vector<recursive_vector>::const_iterator cit_;
+   vector<recursive_vector>::reverse_iterator rit_;
+   vector<recursive_vector>::const_reverse_iterator crit_;
 };
 
 void recursive_vector_test()//Test for recursive types

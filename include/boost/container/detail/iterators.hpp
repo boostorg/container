@@ -698,11 +698,16 @@ struct is_bidirectional_iterator<T, false>
    static const bool value = false;
 };
 
+template<class IINodeType>
+struct iiterator_node_value_type {
+  typedef typename IINodeType::value_type type;
+};
+
 template<class IIterator>
 struct iiterator_types
 {
    typedef typename IIterator::value_type                            it_value_type;
-   typedef typename it_value_type::value_type                        value_type;
+   typedef typename iiterator_node_value_type<it_value_type>::type   value_type;
    typedef typename std::iterator_traits<IIterator>::pointer         it_pointer;
    typedef typename std::iterator_traits<IIterator>::difference_type difference_type;
    typedef typename ::boost::intrusive::pointer_traits<it_pointer>::
