@@ -16,6 +16,7 @@
 #include <typeinfo>
 #include "expand_bwd_test_allocator.hpp"
 #include <algorithm>
+#include "movable_int.hpp"
 #include <boost/type_traits/remove_volatile.hpp>
 #include <boost/move/make_unique.hpp>
 
@@ -56,29 +57,29 @@ bool test_insert_with_expand_bwd()
    typedef typename VectorWithExpandBwdAllocator::value_type value_type;
    typedef typename boost::remove_volatile<value_type>::type non_volatile_value_type;
    typedef std::vector<non_volatile_value_type> Vect;
-   const int MemorySize = 1000;
+   const unsigned int MemorySize = 1000;
 
    //Distance old and new buffer
-   const int Offset[]      =
+   const unsigned int Offset[]      =
       {  350, 300, 250, 200, 150, 100, 150, 100,
          150,  50,  50,  50    };
    //Initial vector size
-   const int InitialSize[] =
+   const unsigned int InitialSize[] =
       {  200, 200, 200, 200, 200, 200, 200, 200,
          200, 200, 200, 200   };
    //Size of the data to insert
-   const int InsertSize[]  =
+   const unsigned int InsertSize[]  =
       {  100, 100, 100, 100, 100, 100, 200, 200,
          300,  25, 100, 200   };
    //Number of tests
-   const int Iterations    = sizeof(InsertSize)/sizeof(int);
+   const unsigned int Iterations    = sizeof(InsertSize)/sizeof(int);
 
    //Insert position
    const int Position[]    =
       {  0, 100,  200  };
 
-   for(int pos = 0; pos < sizeof(Position)/sizeof(Position[0]); ++pos){
-      for(int iteration = 0; iteration < Iterations; ++iteration)
+   for(unsigned int pos = 0; pos < sizeof(Position)/sizeof(Position[0]); ++pos){
+      for(unsigned int iteration = 0; iteration < Iterations; ++iteration)
       {
          boost::movelib::unique_ptr<char[]> memptr =
             boost::movelib::make_unique_definit<char[]>(MemorySize*sizeof(value_type));
@@ -93,7 +94,7 @@ bool test_insert_with_expand_bwd()
             return false;
          Vect data_to_insert;
          data_to_insert.resize(InsertSize[iteration]);
-         for(int i = 0; i < InsertSize[iteration]; ++i){
+         for(unsigned int i = 0; i < InsertSize[iteration]; ++i){
             data_to_insert[i] = -i;
          }
 
@@ -133,14 +134,14 @@ bool test_assign_with_expand_bwd()
 {
    typedef typename VectorWithExpandBwdAllocator::value_type value_type;
    typedef typename boost::remove_volatile<value_type>::type non_volatile_value_type;
-   const int MemorySize = 200;
+   const unsigned int MemorySize = 200;
 
-   const int Offset[]      = { 50, 50, 50};
-   const int InitialSize[] = { 25, 25, 25};
-   const int InsertSize[]  = { 15, 35, 55};
-   const int Iterations    = sizeof(InsertSize)/sizeof(int);
+   const unsigned int Offset[]      = { 50, 50, 50};
+   const unsigned int InitialSize[] = { 25, 25, 25};
+   const unsigned int InsertSize[]  = { 15, 35, 55};
+   const unsigned int Iterations    = sizeof(InsertSize)/sizeof(int);
 
-   for(int iteration = 0; iteration <Iterations; ++iteration)
+   for(unsigned int iteration = 0; iteration <Iterations; ++iteration)
    {
       boost::movelib::unique_ptr<char[]> memptr =
          boost::movelib::make_unique_definit<char[]>(MemorySize*sizeof(value_type));
@@ -148,14 +149,14 @@ bool test_assign_with_expand_bwd()
       //Create initial data
       std::vector<non_volatile_value_type> initial_data;
       initial_data.resize(InitialSize[iteration]);
-      for(int i = 0; i < InitialSize[iteration]; ++i){
+      for(unsigned int i = 0; i < InitialSize[iteration]; ++i){
          initial_data[i] = i;
       }
 
       //Create data to assign
       std::vector<non_volatile_value_type> data_to_insert;
       data_to_insert.resize(InsertSize[iteration]);
-      for(int i = 0; i < InsertSize[iteration]; ++i){
+      for(unsigned int i = 0; i < InsertSize[iteration]; ++i){
          data_to_insert[i] = -i;
       }
 
