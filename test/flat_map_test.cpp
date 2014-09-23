@@ -247,24 +247,24 @@ bool flat_tree_ordered_insertion_test()
       }
       //Construction insertion
       flat_multimap<int, int> fmmap(ordered_range, int_mmap.begin(), int_mmap.end());
-      if(!CheckEqualContainers(&int_mmap, &fmmap))
+      if(!CheckEqualContainers(int_mmap, fmmap))
          return false;
       //Insertion when empty
       fmmap.clear();
       fmmap.insert(ordered_range, int_mmap.begin(), int_mmap.end());
-      if(!CheckEqualContainers(&int_mmap, &fmmap))
+      if(!CheckEqualContainers(int_mmap, fmmap))
          return false;
       //Re-insertion
       fmmap.insert(ordered_range, int_mmap.begin(), int_mmap.end());
       std::multimap<int, int> int_mmap2(int_mmap);
       int_mmap2.insert(int_mmap.begin(), int_mmap.end());
-      if(!CheckEqualContainers(&int_mmap2, &fmmap))
+      if(!CheckEqualContainers(int_mmap2, fmmap))
          return false;
       //Re-re-insertion
       fmmap.insert(ordered_range, int_mmap2.begin(), int_mmap2.end());
       std::multimap<int, int> int_mmap4(int_mmap2);
       int_mmap4.insert(int_mmap2.begin(), int_mmap2.end());
-      if(!CheckEqualContainers(&int_mmap4, &fmmap))
+      if(!CheckEqualContainers(int_mmap4, fmmap))
          return false;
       //Re-re-insertion of even
       std::multimap<int, int> int_even_mmap;
@@ -273,7 +273,7 @@ bool flat_tree_ordered_insertion_test()
       }
       fmmap.insert(ordered_range, int_even_mmap.begin(), int_even_mmap.end());
       int_mmap4.insert(int_even_mmap.begin(), int_even_mmap.end());
-      if(!CheckEqualContainers(&int_mmap4, &fmmap))
+      if(!CheckEqualContainers(int_mmap4, fmmap))
          return false;
    }
 
@@ -285,24 +285,24 @@ bool flat_tree_ordered_insertion_test()
       }
       //Construction insertion
       flat_map<int, int> fmap(ordered_unique_range, int_map.begin(), int_map.end());
-      if(!CheckEqualContainers(&int_map, &fmap))
+      if(!CheckEqualContainers(int_map, fmap))
          return false;
       //Insertion when empty
       fmap.clear();
       fmap.insert(ordered_unique_range, int_map.begin(), int_map.end());
-      if(!CheckEqualContainers(&int_map, &fmap))
+      if(!CheckEqualContainers(int_map, fmap))
          return false;
       //Re-insertion
       fmap.insert(ordered_unique_range, int_map.begin(), int_map.end());
       std::map<int, int> int_map2(int_map);
       int_map2.insert(int_map.begin(), int_map.end());
-      if(!CheckEqualContainers(&int_map2, &fmap))
+      if(!CheckEqualContainers(int_map2, fmap))
          return false;
       //Re-re-insertion
       fmap.insert(ordered_unique_range, int_map2.begin(), int_map2.end());
       std::map<int, int> int_map4(int_map2);
       int_map4.insert(int_map2.begin(), int_map2.end());
-      if(!CheckEqualContainers(&int_map4, &fmap))
+      if(!CheckEqualContainers(int_map4, fmap))
          return false;
       //Re-re-insertion of even
       std::map<int, int> int_even_map;
@@ -311,7 +311,7 @@ bool flat_tree_ordered_insertion_test()
       }
       fmap.insert(ordered_unique_range, int_even_map.begin(), int_even_map.end());
       int_map4.insert(int_even_map.begin(), int_even_map.end());
-      if(!CheckEqualContainers(&int_map4, &fmap))
+      if(!CheckEqualContainers(int_map4, fmap))
          return false;
    }
 

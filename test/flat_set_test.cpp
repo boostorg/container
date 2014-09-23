@@ -272,24 +272,24 @@ bool flat_tree_ordered_insertion_test()
       }
       //Construction insertion
       flat_multiset<int> fmset(ordered_range, int_mset.begin(), int_mset.end());
-      if(!CheckEqualContainers(&int_mset, &fmset))
+      if(!CheckEqualContainers(int_mset, fmset))
          return false;
       //Insertion when empty
       fmset.clear();
       fmset.insert(ordered_range, int_mset.begin(), int_mset.end());
-      if(!CheckEqualContainers(&int_mset, &fmset))
+      if(!CheckEqualContainers(int_mset, fmset))
          return false;
       //Re-insertion
       fmset.insert(ordered_range, int_mset.begin(), int_mset.end());
       std::multiset<int> int_mset2(int_mset);
       int_mset2.insert(int_mset.begin(), int_mset.end());
-      if(!CheckEqualContainers(&int_mset2, &fmset))
+      if(!CheckEqualContainers(int_mset2, fmset))
          return false;
       //Re-re-insertion
       fmset.insert(ordered_range, int_mset2.begin(), int_mset2.end());
       std::multiset<int> int_mset4(int_mset2);
       int_mset4.insert(int_mset2.begin(), int_mset2.end());
-      if(!CheckEqualContainers(&int_mset4, &fmset))
+      if(!CheckEqualContainers(int_mset4, fmset))
          return false;
       //Re-re-insertion of even
       std::multiset<int> int_even_mset;
@@ -298,7 +298,7 @@ bool flat_tree_ordered_insertion_test()
       }
       fmset.insert(ordered_range, int_even_mset.begin(), int_even_mset.end());
       int_mset4.insert(int_even_mset.begin(), int_even_mset.end());
-      if(!CheckEqualContainers(&int_mset4, &fmset))
+      if(!CheckEqualContainers(int_mset4, fmset))
          return false;
    }
 
@@ -310,24 +310,24 @@ bool flat_tree_ordered_insertion_test()
       }
       //Construction insertion
       flat_set<int> fset(ordered_unique_range, int_set.begin(), int_set.end());
-      if(!CheckEqualContainers(&int_set, &fset))
+      if(!CheckEqualContainers(int_set, fset))
          return false;
       //Insertion when empty
       fset.clear();
       fset.insert(ordered_unique_range, int_set.begin(), int_set.end());
-      if(!CheckEqualContainers(&int_set, &fset))
+      if(!CheckEqualContainers(int_set, fset))
          return false;
       //Re-insertion
       fset.insert(ordered_unique_range, int_set.begin(), int_set.end());
       std::set<int> int_set2(int_set);
       int_set2.insert(int_set.begin(), int_set.end());
-      if(!CheckEqualContainers(&int_set2, &fset))
+      if(!CheckEqualContainers(int_set2, fset))
          return false;
       //Re-re-insertion
       fset.insert(ordered_unique_range, int_set2.begin(), int_set2.end());
       std::set<int> int_set4(int_set2);
       int_set4.insert(int_set2.begin(), int_set2.end());
-      if(!CheckEqualContainers(&int_set4, &fset))
+      if(!CheckEqualContainers(int_set4, fset))
          return false;
       //Re-re-insertion of even
       std::set<int> int_even_set;
@@ -336,7 +336,7 @@ bool flat_tree_ordered_insertion_test()
       }
       fset.insert(ordered_unique_range, int_even_set.begin(), int_even_set.end());
       int_set4.insert(int_even_set.begin(), int_even_set.end());
-      if(!CheckEqualContainers(&int_set4, &fset))
+      if(!CheckEqualContainers(int_set4, fset))
          return false;
       //Partial Re-re-insertion of even
       int_even_set.clear();
@@ -348,7 +348,7 @@ bool flat_tree_ordered_insertion_test()
       //insert 0,4,8,12...
       fset.insert(ordered_unique_range, int_even_set.begin(), int_even_set.end());
       int_set4.insert(int_even_set.begin(), int_even_set.end());
-      if(!CheckEqualContainers(&int_set4, &fset))
+      if(!CheckEqualContainers(int_set4, fset))
          return false;
       for(std::size_t i = 2; i < NumElements; i+=4){
          int_even_set.insert(static_cast<int>(i));
@@ -356,7 +356,7 @@ bool flat_tree_ordered_insertion_test()
       //insert 0,2,4,6,8,10,12...
       fset.insert(ordered_unique_range, int_even_set.begin(), int_even_set.end());
       int_set4.insert(int_even_set.begin(), int_even_set.end());
-      if(!CheckEqualContainers(&int_set4, &fset))
+      if(!CheckEqualContainers(int_set4, fset))
          return false;
       int_even_set.clear();
       for(std::size_t i = 0; i < NumElements; i+=8){
@@ -367,7 +367,7 @@ bool flat_tree_ordered_insertion_test()
       //insert 0,8,16...
       fset.insert(ordered_unique_range, int_even_set.begin(), int_even_set.end());
       int_set4.insert(int_even_set.begin(), int_even_set.end());
-      if(!CheckEqualContainers(&int_set4, &fset))
+      if(!CheckEqualContainers(int_set4, fset))
          return false;
       for(std::size_t i = 0; i < NumElements; i+=2){
          int_even_set.insert(static_cast<int>(i));
@@ -375,7 +375,7 @@ bool flat_tree_ordered_insertion_test()
       //insert 0,2,4,6,8,10,12...
       fset.insert(ordered_unique_range, int_even_set.begin(), int_even_set.end());
       int_set4.insert(int_even_set.begin(), int_even_set.end());
-      if(!CheckEqualContainers(&int_set4, &fset))
+      if(!CheckEqualContainers(int_set4, fset))
          return false;
 
 
@@ -390,7 +390,7 @@ bool flat_tree_ordered_insertion_test()
       //insert 0,2,8,10...
       fset.insert(ordered_unique_range, int_even_set.begin(), int_even_set.end());
       int_set4.insert(int_even_set.begin(), int_even_set.end());
-      if(!CheckEqualContainers(&int_set4, &fset))
+      if(!CheckEqualContainers(int_set4, fset))
          return false;
       for(std::size_t i = 0; i < NumElements; i+=2){
          int_even_set.insert(static_cast<int>(i));
@@ -398,7 +398,7 @@ bool flat_tree_ordered_insertion_test()
       //insert 0,2,4,6,8,10,12...
       fset.insert(ordered_unique_range, int_even_set.begin(), int_even_set.end());
       int_set4.insert(int_even_set.begin(), int_even_set.end());
-      if(!CheckEqualContainers(&int_set4, &fset))
+      if(!CheckEqualContainers(int_set4, fset))
          return false;
    }
 

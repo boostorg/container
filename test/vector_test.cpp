@@ -81,27 +81,15 @@ int test_expand_bwd()
       int_allocator_type;
    typedef vector<int, int_allocator_type>
       int_vector;
-
    if(!test::test_all_expand_bwd<int_vector>())
       return 1;
 
-   //Now user defined wrapped int
-   typedef test::expand_bwd_test_allocator<test::int_holder>
-      int_holder_allocator_type;
-   typedef vector<test::int_holder, int_holder_allocator_type>
-      int_holder_vector;
-
-   if(!test::test_all_expand_bwd<int_holder_vector>())
-      return 1;
-
-   //Now user defined bigger wrapped int
-   typedef test::expand_bwd_test_allocator<test::triple_int_holder>
-      triple_int_holder_allocator_type;
-
-   typedef vector<test::triple_int_holder, triple_int_holder_allocator_type>
-      triple_int_holder_vector;
-
-   if(!test::test_all_expand_bwd<triple_int_holder_vector>())
+   //Now user defined copyable int
+   typedef test::expand_bwd_test_allocator<test::copyable_int>
+      copyable_int_allocator_type;
+   typedef vector<test::copyable_int, copyable_int_allocator_type>
+      copyable_int_vector;
+   if(!test::test_all_expand_bwd<copyable_int_vector>())
       return 1;
 
    return 0;

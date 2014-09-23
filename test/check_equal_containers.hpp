@@ -17,6 +17,7 @@
 #include <functional>
 #include <iostream>
 #include <algorithm>
+#include <boost/move/unique_ptr.hpp>
 
 namespace boost{
 namespace container {
@@ -60,15 +61,15 @@ bool CheckEqual( const Pair1 &pair1, const Pair2 &pair2
 //Function to check if both containers are equal
 template<class MyBoostCont
         ,class MyStdCont>
-bool CheckEqualContainers(const MyBoostCont *boostcont, const MyStdCont *stdcont)
+bool CheckEqualContainers(const MyBoostCont &boostcont, const MyStdCont &stdcont)
 {
-   if(boostcont->size() != stdcont->size())
+   if(boostcont.size() != stdcont.size())
       return false;
 
-   typename MyBoostCont::const_iterator itboost(boostcont->begin()), itboostend(boostcont->end());
-   typename MyStdCont::const_iterator itstd(stdcont->begin());
+   typename MyBoostCont::const_iterator itboost(boostcont.begin()), itboostend(boostcont.end());
+   typename MyStdCont::const_iterator itstd(stdcont.begin());
    typename MyStdCont::size_type dist = (typename MyStdCont::size_type)std::distance(itboost, itboostend);
-   if(dist != boostcont->size()){
+   if(dist != boostcont.size()){
       return false;
    }
    std::size_t i = 0;
@@ -81,16 +82,16 @@ bool CheckEqualContainers(const MyBoostCont *boostcont, const MyStdCont *stdcont
 
 template<class MyBoostCont
         ,class MyStdCont>
-bool CheckEqualPairContainers(const MyBoostCont *boostcont, const MyStdCont *stdcont)
+bool CheckEqualPairContainers(const MyBoostCont &boostcont, const MyStdCont &stdcont)
 {
-   if(boostcont->size() != stdcont->size())
+   if(boostcont.size() != stdcont.size())
       return false;
 
    typedef typename MyBoostCont::key_type      key_type;
    typedef typename MyBoostCont::mapped_type   mapped_type;
 
-   typename MyBoostCont::const_iterator itboost(boostcont->begin()), itboostend(boostcont->end());
-   typename MyStdCont::const_iterator itstd(stdcont->begin());
+   typename MyBoostCont::const_iterator itboost(boostcont.begin()), itboostend(boostcont.end());
+   typename MyStdCont::const_iterator itstd(stdcont.begin());
    for(; itboost != itboostend; ++itboost, ++itstd){
       if(itboost->first != key_type(itstd->first))
          return false;
