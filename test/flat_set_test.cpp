@@ -226,6 +226,24 @@ void test_move()
    move_assign.swap(original);
 }
 
+template <class Iterator>
+bool test_value_init_iterator()
+{
+   // Create jumbled up memory to seat the iterator objects:
+   char c_arr[2*sizeof(Iterator)];
+   for(std::size_t i = 0; i < 2*sizeof(Iterator); ++i)
+      c_arr[i] = i;
+   Iterator* p_it1 = reinterpret_cast<Iterator*>(c_arr);
+   Iterator* p_it2 = reinterpret_cast<Iterator*>(c_arr + sizeof(Iterator));
+   // Do a placement value-initialization of iterators:
+   new(p_it1) Iterator();
+   new(p_it2) Iterator();
+   bool result = (*p_it1 == *p_it2);
+   p_it2->~Iterator();
+   p_it1->~Iterator();
+   return result;
+}
+
 template<class T, class A>
 class flat_set_propagate_test_wrapper
    : public boost::container::flat_set<T, std::less<T>, A>
@@ -584,6 +602,48 @@ int main()
    ////////////////////////////////////
    if(!boost::container::test::test_propagate_allocator<flat_set_propagate_test_wrapper>())
       return 1;
+
+   ////////////////////////////////////
+   //    n3644 "Null forward iterator" test:
+   ////////////////////////////////////
+   { 
+      typedef flat_set<int> cont_t;
+      if(!test_value_init_iterator<cont_t::iterator>()){
+         std::cerr << "test for n3644 failed on iterator on flat_set" << std::endl;
+         return 1;
+      }
+      if(!test_value_init_iterator<cont_t::const_iterator>()){
+         std::cerr << "test for n3644 failed on const_iterator on flat_set" << std::endl;
+         return 1;
+      }
+      if(!test_value_init_iterator<cont_t::reverse_iterator>()){
+         std::cerr << "test for n3644 failed on reverse_iterator on flat_set" << std::endl;
+         return 1;
+      }
+      if(!test_value_init_iterator<cont_t::const_reverse_iterator>()){
+         std::cerr << "test for n3644 failed on const_reverse_iterator on flat_set" << std::endl;
+         return 1;
+      }
+   }
+   { 
+      typedef flat_multiset<int> cont_t;
+      if(!test_value_init_iterator<cont_t::iterator>()){
+         std::cerr << "test for n3644 failed on iterator on flat_multiset" << std::endl;
+         return 1;
+      }
+      if(!test_value_init_iterator<cont_t::const_iterator>()){
+         std::cerr << "test for n3644 failed on const_iterator on flat_multiset" << std::endl;
+         return 1;
+      }
+      if(!test_value_init_iterator<cont_t::reverse_iterator>()){
+         std::cerr << "test for n3644 failed on reverse_iterator on flat_multiset" << std::endl;
+         return 1;
+      }
+      if(!test_value_init_iterator<cont_t::const_reverse_iterator>()){
+         std::cerr << "test for n3644 failed on const_reverse_iterator on flat_multiset" << std::endl;
+         return 1;
+      }
+   }
 
    return 0;
 }

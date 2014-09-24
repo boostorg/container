@@ -265,6 +265,7 @@ class stable_vector_iterator
    {}
 
    stable_vector_iterator() BOOST_CONTAINER_NOEXCEPT
+      : m_pn()
    {}
 
    stable_vector_iterator(stable_vector_iterator<Pointer, false> const& other) BOOST_CONTAINER_NOEXCEPT

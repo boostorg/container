@@ -111,6 +111,24 @@ void recursive_vector_test()//Test for recursive types
    vector<recursive_vector> recursive_vector_vector;
 }
 
+template <class Iterator>
+bool test_value_init_iterator()
+{
+   // Create jumbled up memory to seat the iterator objects:
+   char c_arr[2*sizeof(Iterator)];
+   for(std::size_t i = 0; i < 2*sizeof(Iterator); ++i)
+      c_arr[i] = i;
+   Iterator* p_it1 = reinterpret_cast<Iterator*>(c_arr);
+   Iterator* p_it2 = reinterpret_cast<Iterator*>(c_arr + sizeof(Iterator));
+   // Do a placement value-initialization of iterators:
+   new(p_it1) Iterator();
+   new(p_it2) Iterator();
+   bool result = (*p_it1 == *p_it2);
+   p_it2->~Iterator();
+   p_it1->~Iterator();
+   return result;
+}
+
 enum Test
 {
    zero, one, two, three, four, five, six
@@ -251,6 +269,30 @@ int main()
    >()) {
       return 1;
    }
+
+   ////////////////////////////////////
+   //    n3644 "Null forward iterator" test:
+   ////////////////////////////////////
+   { 
+      typedef vector<int> cont_t;
+      if(!test_value_init_iterator<cont_t::iterator>()){
+         std::cerr << "test for n3644 failed on iterator on vector" << std::endl;
+         return 1;
+      }
+      if(!test_value_init_iterator<cont_t::const_iterator>()){
+         std::cerr << "test for n3644 failed on const_iterator on vector" << std::endl;
+         return 1;
+      }
+      if(!test_value_init_iterator<cont_t::reverse_iterator>()){
+         std::cerr << "test for n3644 failed on reverse_iterator on vector" << std::endl;
+         return 1;
+      }
+      if(!test_value_init_iterator<cont_t::const_reverse_iterator>()){
+         std::cerr << "test for n3644 failed on const_reverse_iterator on vector" << std::endl;
+         return 1;
+      }
+   }
+
    return 0;
 
 }
