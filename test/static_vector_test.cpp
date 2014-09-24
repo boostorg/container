@@ -689,6 +689,24 @@ bool default_init_test()//Test for default initialization
    return true;
 }
 
+template <class Iterator>
+bool test_value_init_iterator()
+{
+   // Create jumbled up memory to seat the iterator objects:
+   char c_arr[2*sizeof(Iterator)];
+   for(std::size_t i = 0; i < 2*sizeof(Iterator); ++i)
+      c_arr[i] = i;
+   Iterator* p_it1 = reinterpret_cast<Iterator*>(c_arr);
+   Iterator* p_it2 = reinterpret_cast<Iterator*>(c_arr + sizeof(Iterator));
+   // Do a placement value-initialization of iterators:
+   new(p_it1) Iterator();
+   new(p_it2) Iterator();
+   bool result = (*p_it1 == *p_it2);
+   p_it2->~Iterator();
+   p_it1->~Iterator();
+   return result;
+}
+
 
 int main(int, char* [])
 {
@@ -810,6 +828,29 @@ int main(int, char* [])
    BOOST_TEST(default_init_test() == true);
 
    test_support_for_initializer_list();
+
+   ////////////////////////////////////
+   //    n3644 "Null forward iterator" test:
+   ////////////////////////////////////
+   { 
+      typedef static_vector<int, 100> cont_t;
+      if(!test_value_init_iterator<cont_t::iterator>()){
+         std::cerr << "test for n3644 failed on iterator on static_vector" << std::endl;
+         return 1;
+      }
+      if(!test_value_init_iterator<cont_t::const_iterator>()){
+         std::cerr << "test for n3644 failed on const_iterator on static_vector" << std::endl;
+         return 1;
+      }
+      if(!test_value_init_iterator<cont_t::reverse_iterator>()){
+         std::cerr << "test for n3644 failed on reverse_iterator on static_vector" << std::endl;
+         return 1;
+      }
+      if(!test_value_init_iterator<cont_t::const_reverse_iterator>()){
+         std::cerr << "test for n3644 failed on const_reverse_iterator on static_vector" << std::endl;
+         return 1;
+      }
+   }
 
    return boost::report_errors();
 }

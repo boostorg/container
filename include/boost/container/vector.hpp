@@ -102,11 +102,7 @@ class vec_iterator
 
    //Constructors
    vec_iterator() BOOST_CONTAINER_NOEXCEPT
-      #ifndef NDEBUG
       : m_ptr()
-      #else
-      // No value initialization of m_ptr() to speed up things a bit:
-      #endif
    {}
 
    vec_iterator(vec_iterator<Pointer, false> const& other) BOOST_CONTAINER_NOEXCEPT
