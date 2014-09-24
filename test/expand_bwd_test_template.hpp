@@ -86,7 +86,7 @@ bool test_insert_with_expand_bwd()
          value_type *memory = (value_type*)memptr.get();
          std::vector<non_volatile_value_type> initial_data;
          initial_data.resize(InitialSize[iteration]);
-         for(int i = 0; i < InitialSize[iteration]; ++i){
+         for(unsigned int i = 0; i < InitialSize[iteration]; ++i){
             initial_data[i] = i;
          }
 

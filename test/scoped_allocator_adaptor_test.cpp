@@ -115,7 +115,7 @@ enum ConstructionTypeEnum
 {
    ConstructiblePrefix,
    ConstructibleSuffix,
-   NotUsesAllocator,
+   NotUsesAllocator
 };
 
 //This base class provices types for

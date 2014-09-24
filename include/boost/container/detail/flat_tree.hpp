@@ -85,13 +85,15 @@ struct get_flat_tree_iterators
       pointer_traits<Pointer>:: template
          rebind_pointer<const iterator_element_type>::type  const_iterator;
    #else //BOOST_CONTAINER_VECTOR_ITERATOR_IS_POINTER
-   typedef typename container_detail::
+   typedef typename boost::container::container_detail::
       vec_iterator<Pointer, false>                    iterator;
-   typedef typename container_detail::
+   typedef typename boost::container::container_detail::
       vec_iterator<Pointer, true >                    const_iterator;
    #endif   //BOOST_CONTAINER_VECTOR_ITERATOR_IS_POINTER
-   typedef std::reverse_iterator<iterator>            reverse_iterator;
-   typedef std::reverse_iterator<const_iterator>      const_reverse_iterator;
+   typedef boost::container::container_detail::
+      reverse_iterator<iterator>                      reverse_iterator;
+   typedef boost::container::container_detail::
+      reverse_iterator<const_iterator>                const_reverse_iterator;
 };
 
 template <class Key, class Value, class KeyOfValue,

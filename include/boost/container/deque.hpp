@@ -146,7 +146,7 @@ class deque_iterator
    {}
 
    deque_iterator() BOOST_CONTAINER_NOEXCEPT
-      : m_cur(), m_first(), m_last(), m_node()
+      : m_cur(), m_first(), m_last(), m_node()  //Value initialization to achieve "null iterators" (N3644)
    {}
 
    deque_iterator(deque_iterator<Pointer, false> const& x) BOOST_CONTAINER_NOEXCEPT
@@ -504,8 +504,8 @@ class deque : protected deque_base<Allocator>
    typedef BOOST_CONTAINER_IMPDEF(allocator_type)                                      stored_allocator_type;
    typedef BOOST_CONTAINER_IMPDEF(typename Base::iterator)                             iterator;
    typedef BOOST_CONTAINER_IMPDEF(typename Base::const_iterator)                       const_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(std::reverse_iterator<iterator>)                     reverse_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(std::reverse_iterator<const_iterator>)               const_reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<iterator>)        reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<const_iterator>)  const_reverse_iterator;
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 

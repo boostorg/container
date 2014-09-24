@@ -515,10 +515,10 @@ class tree
    typedef key_node_compare<value_compare, Node>  KeyNodeCompare;
 
    public:
-   typedef container_detail::iterator<iiterator, false>  iterator;
-   typedef container_detail::iterator<iiterator, true >  const_iterator;
-   typedef std::reverse_iterator<iterator>        reverse_iterator;
-   typedef std::reverse_iterator<const_iterator>  const_reverse_iterator;
+   typedef container_detail::iterator<iiterator, false>        iterator;
+   typedef container_detail::iterator<iiterator, true >        const_iterator;
+   typedef container_detail::reverse_iterator<iterator>        reverse_iterator;
+   typedef container_detail::reverse_iterator<const_iterator>  const_reverse_iterator;
 
    tree()
       : AllocHolder(ValComp(key_compare()))

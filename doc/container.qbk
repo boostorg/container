@@ -712,7 +712,7 @@ Use them simply specifying the new allocator in the corresponding template argum
 
 [endsect]
 
-[section:Cpp11_conformance C++11 Conformance]
+[section:Cpp11_conformance C++11/C++14 Conformance]
 
 [*Boost.Container] aims for full C++11 conformance except reasoned deviations,
 backporting as much as possible for C++03. Obviously, this conformance is a work
@@ -807,7 +807,28 @@ implements the C++11 changes that were specified in [@http://www.open-std.org/jt
 [section:initializer_lists Initializer lists]
 
 [*Boost.Container] supports initialization, assignments and insertions from initializer lists
-but only in compilers that implement this feature.
+in compilers that implement this feature.
+
+[endsect]
+
+[section:null_iterators Null Forward Iterators]
+
+[*Boost.Container] implements
+[@http://www.open-std.org/JTC1/sc22/WG21/docs/papers/2013/n3644.pdf C++14 Null Forward Iterators],
+which means that value-initialized iterators may be compared and compare equal
+to other value-initialized iterators of the same type. Value initialized iterators behave as if they refer
+past the end of the same empty sequence (example taken from N3644):
+
+[c++]
+
+   vector<int> v = { ... };
+   auto ni = vector<int>::iterator();
+   auto nd = vector<double>::iterator();
+   ni == ni; // True.
+   nd != nd; // False.
+   v.begin() == ni; // ??? (likely false in practice).
+   v.end() == ni;   // ??? (likely false in practice).
+   ni == nd; // Won’t compile.
 
 [endsect]
 

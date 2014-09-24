@@ -20,10 +20,11 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
-#include <boost/move/utility_core.hpp>
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/move/utility_core.hpp>
+#include <boost/intrusive/detail/iterator.hpp>
 
 #ifdef BOOST_CONTAINER_PERFECT_FORWARDING
 #include <boost/container/detail/variadic_templates_tools.hpp>
@@ -745,14 +746,15 @@ struct std_iterator<IIterator, false>
 
 template<class IIterator, bool IsConst>
 class iterator
-   :  public std_iterator<IIterator, IsConst>::type
 {
    typedef typename std_iterator<IIterator, IsConst>::type types_t;
 
    public:
-   typedef typename types_t::value_type      value_type;
-   typedef typename types_t::pointer         pointer;
-   typedef typename types_t::reference       reference;
+   typedef typename types_t::pointer             pointer;
+   typedef typename types_t::reference           reference;
+   typedef typename types_t::difference_type     difference_type;
+   typedef typename types_t::iterator_category   iterator_category;
+   typedef typename types_t::value_type          value_type;
 
    iterator()
    {}
@@ -807,6 +809,8 @@ class iterator
    private:
    IIterator m_iit;
 };
+
+using ::boost::intrusive::detail::reverse_iterator;
 
 }  //namespace container_detail {
 }  //namespace container {

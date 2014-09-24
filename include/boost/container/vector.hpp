@@ -102,11 +102,7 @@ class vec_iterator
 
    //Constructors
    vec_iterator() BOOST_CONTAINER_NOEXCEPT
-      #ifndef NDEBUG
-      : m_ptr()
-      #else
-      // No value initialization of m_ptr() to speed up things a bit:
-      #endif
+      : m_ptr()   //Value initialization to achieve "null iterators" (N3644)
    {}
 
    vec_iterator(vec_iterator<Pointer, false> const& other) BOOST_CONTAINER_NOEXCEPT
@@ -573,8 +569,8 @@ class vector
    typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                                       iterator;
    typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                                 const_iterator;
    #endif
-   typedef BOOST_CONTAINER_IMPDEF(std::reverse_iterator<iterator>)                     reverse_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(std::reverse_iterator<const_iterator>)               const_reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<iterator>)        reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<const_iterator>)  const_reverse_iterator;
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:

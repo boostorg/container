@@ -19,6 +19,8 @@
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/detail/preprocessor.hpp>
 
+#include <boost/container/detail/iterators.hpp>
+
 #include "varray_util.hpp"
 
 #ifndef BOOST_NO_EXCEPTIONS
@@ -36,7 +38,6 @@
 #include <boost/type_traits/alignment_of.hpp>
 #include <boost/type_traits/aligned_storage.hpp>
 
-#include <iterator>
 
 /**
  * @defgroup varray_non_member varray non-member functions
@@ -267,9 +268,9 @@ public:
     //! @brief The const iterator type.
     typedef const_pointer const_iterator;
     //! @brief The reverse iterator type.
-    typedef std::reverse_iterator<iterator> reverse_iterator;
+    typedef container_detail::reverse_iterator<iterator> reverse_iterator;
     //! @brief The const reverse iterator.
-    typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+    typedef container_detail::reverse_iterator<const_iterator> const_reverse_iterator;
 
     //! @brief The type of a strategy used by the varray.
     typedef Strategy strategy_type;
@@ -1895,8 +1896,8 @@ public:
 
     typedef pointer iterator;
     typedef const_pointer const_iterator;
-    typedef std::reverse_iterator<iterator> reverse_iterator;
-    typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+    typedef container_detail::reverse_iterator<iterator> reverse_iterator;
+    typedef container_detail::reverse_iterator<const_iterator> const_reverse_iterator;
 
     // nothrow
     varray() {}
