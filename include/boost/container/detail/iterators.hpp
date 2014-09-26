@@ -24,7 +24,7 @@
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/move/utility_core.hpp>
-#include <boost/intrusive/detail/iterator.hpp>
+#include <boost/intrusive/detail/reverse_iterator.hpp>
 
 #ifdef BOOST_CONTAINER_PERFECT_FORWARDING
 #include <boost/container/detail/variadic_templates_tools.hpp>
@@ -148,7 +148,7 @@ class constant_iterator
    {  return m_num - other.m_num;   }
 };
 
-template <class T, class Difference = std::ptrdiff_t>
+template <class T, class Difference>
 class value_init_construct_iterator
   : public std::iterator
       <std::random_access_iterator_tag, T, Difference, const T*, const T &>
@@ -259,7 +259,7 @@ class value_init_construct_iterator
    {  return m_num - other.m_num;   }
 };
 
-template <class T, class Difference = std::ptrdiff_t>
+template <class T, class Difference>
 class default_init_construct_iterator
   : public std::iterator
       <std::random_access_iterator_tag, T, Difference, const T*, const T &>

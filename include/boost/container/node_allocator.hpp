@@ -31,7 +31,6 @@
 #include <memory>
 #include <algorithm>
 #include <cstddef>
-#include <new>
 
 namespace boost {
 namespace container {

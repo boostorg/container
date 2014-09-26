@@ -38,7 +38,6 @@
 #include <boost/container/detail/memory_util.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/aligned_storage.hpp>
-#include <algorithm>
 #include <iterator>
 #include <utility>   //std::distance
 
@@ -78,14 +77,14 @@ swap_dispatch(T &left, T &right)   //swap using member swap
 
 template<class T> inline
 typename container_detail::enable_if_c
-      <!container_swap::has_member_swap<T>::value && boost::has_move_emulation_enabled<T>::value, void>::type
+      <!container_swap::has_member_swap<T>::value/* && boost::has_move_emulation_enabled<T>::value*/, void>::type
    swap_dispatch(T &left, T &right)
 {
    T temp(boost::move(left)); // may throw
    left = boost::move(right); // may throw
    right = boost::move(temp); // may throw
 }
-
+/*
 template<class T> inline
 typename container_detail::enable_if_c
       <!container_swap::has_member_swap<T>::value && !boost::has_move_emulation_enabled<T>::value, void>::type
@@ -94,7 +93,7 @@ typename container_detail::enable_if_c
    using std::swap;
    swap(left, right);   // may throw
 }
-
+*/
 namespace container_detail {
 
 template <typename T>

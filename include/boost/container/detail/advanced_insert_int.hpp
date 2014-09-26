@@ -25,6 +25,7 @@
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/utilities.hpp>
 #include <boost/container/detail/type_traits.hpp>
+#include <boost/container/detail/iterators.hpp>
 #include <iterator>  //std::iterator_traits
 #include <boost/assert.hpp>
 #include <boost/core/no_exceptions_support.hpp>
@@ -94,7 +95,11 @@ struct insert_n_copies_proxy
    {  boost::container::uninitialized_fill_alloc_n(a, v_, n, p);  }
 
    void copy_n_and_update(A &, Iterator p, size_type n) const
-   {  std::fill_n(p, n, v_);  }
+   {
+	   for (; 0 < n; --n, ++p){
+		   *p = v_;
+      }
+   }
 
    const value_type &v_;
 };

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2014. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -59,11 +59,46 @@ namespace bi = boost::intrusive;
 }}}
 
 #include <cstddef>
-#include <utility>
-#include <memory>
-#include <functional>
-#include <iosfwd>
-#include <string>
+
+# if defined(__clang__) && defined(_LIBCPP_VERSION)
+   #define BOOST_CONTAINER_CLANG_INLINE_STD_NS
+   #pragma GCC diagnostic push
+   #pragma GCC diagnostic ignored "-Wc++11-extensions"
+
+   #define BOOST_CONTAINER_STD_NS_BEG _LIBCPP_BEGIN_NAMESPACE_STD
+   #define BOOST_CONTAINER_STD_NS_END _LIBCPP_END_NAMESPACE_STD
+
+#endif
+
+#if !defined(BOOST_CONTAINER_STD_NS_BEG)
+
+   #define BOOST_CONTAINER_STD_NS_BEG namespace std{
+   #define BOOST_CONTAINER_STD_NS_END }
+
+#endif
+
+BOOST_CONTAINER_STD_NS_BEG
+
+template<class T>
+class allocator;
+
+template<class T>
+struct less;
+
+template<class T1, class T2>
+struct pair;
+
+template<class T>
+struct char_traits;
+
+BOOST_CONTAINER_STD_NS_END
+
+#ifdef BOOST_CONTAINER_CLANG_INLINE_STD_NS
+
+#pragma GCC diagnostic pop
+#undef BOOST_CONTAINER_CLANG_INLINE_STD_NS
+
+#endif   //BOOST_CONTAINER_CLANG_INLINE_STD_NS
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -267,6 +302,7 @@ struct dummy
 };
 
 }  //detail_really_deep_namespace {
+
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 

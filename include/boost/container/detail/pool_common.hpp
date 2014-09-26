@@ -19,7 +19,6 @@
 #include <boost/container/detail/workaround.hpp>
 
 #include <boost/intrusive/slist.hpp>
-#include <new>
 
 namespace boost {
 namespace container {

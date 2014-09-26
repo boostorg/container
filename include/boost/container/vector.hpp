@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2014. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -19,19 +19,22 @@
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/container_fwd.hpp>
 
-#include <cstddef>
-#include <memory>
-#include <algorithm>
-#include <iterator>
-#include <utility>
+//#include <cstddef> //Already included by container_fwd.hpp
+#include <memory>    //for std::allocator
+#include <iterator>  //for std::random_access_iterator_tag
+#include <utility>   //for std::pair,std::distance
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+#include <initializer_list>   //for std::initializer_list
+#endif
+
 #include <boost/core/no_exceptions_support.hpp>
-#include <boost/type_traits/has_trivial_destructor.hpp>
-#include <boost/type_traits/has_trivial_copy.hpp>
-#include <boost/type_traits/has_trivial_assign.hpp>
-#include <boost/type_traits/has_nothrow_copy.hpp>
-#include <boost/type_traits/has_nothrow_assign.hpp>
-#include <boost/type_traits/has_nothrow_constructor.hpp>
-#include <boost/container/container_fwd.hpp>
+#include <boost/assert.hpp>
+#include <boost/move/utility_core.hpp>
+#include <boost/move/iterator.hpp>
+#include <boost/move/algorithm.hpp>
+#include <boost/move/detail/move_helpers.hpp>
+#include <boost/move/traits.hpp>
+
 #include <boost/container/detail/version_type.hpp>
 #include <boost/container/detail/allocation_type.hpp>
 #include <boost/container/detail/utilities.hpp>
@@ -41,19 +44,18 @@
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/detail/allocator_version_traits.hpp>
 #include <boost/container/throw_exception.hpp>
-#include <boost/move/utility_core.hpp>
-#include <boost/move/iterator.hpp>
-#include <boost/move/detail/move_helpers.hpp>
-#include <boost/move/traits.hpp>
-#include <boost/intrusive/pointer_traits.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/advanced_insert_int.hpp>
-#include <boost/assert.hpp>
 
-#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
-#include <initializer_list>
-#endif
+#include <boost/intrusive/pointer_traits.hpp>
+
+#include <boost/type_traits/has_trivial_destructor.hpp>
+#include <boost/type_traits/has_trivial_copy.hpp>
+#include <boost/type_traits/has_trivial_assign.hpp>
+#include <boost/type_traits/has_nothrow_copy.hpp>
+#include <boost/type_traits/has_nothrow_assign.hpp>
+#include <boost/type_traits/has_nothrow_constructor.hpp>
 
 namespace boost {
 namespace container {
@@ -225,31 +227,32 @@ namespace container_detail {
 struct uninitialized_size_t {};
 static const uninitialized_size_t uninitialized_size = uninitialized_size_t();
 
-template <class T, class Allocator>
-struct vector_value_traits
+template <class T>
+struct vector_value_traits_base
 {
-   typedef T value_type;
-   typedef Allocator allocator_type;
-   static const bool trivial_dctr = boost::has_trivial_destructor<value_type>::value;
-   static const bool trivial_dctr_after_move = ::boost::has_trivial_destructor_after_move<value_type>::value;
-   static const bool trivial_copy = has_trivial_copy<value_type>::value;
-   static const bool nothrow_copy = has_nothrow_copy<value_type>::value || trivial_copy;
-   static const bool trivial_assign = has_trivial_assign<value_type>::value;
-   static const bool nothrow_assign = has_nothrow_assign<value_type>::value || trivial_assign;
+   static const bool trivial_dctr = boost::has_trivial_destructor<T>::value;
+   static const bool trivial_dctr_after_move = ::boost::has_trivial_destructor_after_move<T>::value;
+   static const bool trivial_copy = has_trivial_copy<T>::value;
+   static const bool nothrow_copy = has_nothrow_copy<T>::value || trivial_copy;
+   static const bool trivial_assign = has_trivial_assign<T>::value;
+   static const bool nothrow_assign = has_nothrow_assign<T>::value || trivial_assign;
+};
 
+
+template <class Allocator>
+struct vector_value_traits
+   : public vector_value_traits_base<typename Allocator::value_type>
+{
+   typedef vector_value_traits_base<typename Allocator::value_type> base_t;
    //This is the anti-exception array destructor
    //to deallocate values already constructed
    typedef typename container_detail::if_c
-      <trivial_dctr
+      <base_t::trivial_dctr
       ,container_detail::null_scoped_destructor_n<Allocator>
       ,container_detail::scoped_destructor_n<Allocator>
       >::type   ArrayDestructor;
    //This is the anti-exception array deallocator
-   typedef typename container_detail::if_c
-      <false//nothrow_copy
-      ,container_detail::null_scoped_array_deallocator<Allocator>
-      ,container_detail::scoped_array_deallocator<Allocator>
-      >::type   ArrayDeallocator;
+   typedef container_detail::scoped_array_deallocator<Allocator> ArrayDeallocator;
 };
 
 //!This struct deallocates and allocated memory
@@ -569,13 +572,13 @@ class vector
    typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                                       iterator;
    typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                                 const_iterator;
    #endif
-   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<iterator>)        reverse_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<const_iterator>)  const_reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<iterator>)                          reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<const_iterator>)                    const_reverse_iterator;
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(vector)
-   typedef container_detail::vector_value_traits<value_type, Allocator> value_traits;
+   typedef container_detail::vector_value_traits<Allocator> value_traits;
 
    typedef container_detail::integral_constant<unsigned, 0> allocator_v0;
    typedef container_detail::integral_constant<unsigned, 1> allocator_v1;
@@ -1395,7 +1398,7 @@ class vector
    template<class ...Args>
    void emplace_back(Args &&...args)
    {
-      if (this->m_holder.m_size < this->m_holder.capacity()){
+      if (BOOST_LIKELY(this->m_holder.m_size < this->m_holder.capacity())){
          T* const back_pos = container_detail::to_raw_pointer(this->m_holder.start()) + this->m_holder.m_size;
          //There is more memory, just construct a new object at the end
          allocator_traits_type::construct(this->m_holder.alloc(), back_pos, ::boost::forward<Args>(args)...);
@@ -1435,7 +1438,7 @@ class vector
    {                                                                                                  \
       T* const back_pos = container_detail::to_raw_pointer                                            \
          (this->m_holder.start()) + this->m_holder.m_size;                                            \
-      if (this->m_holder.m_size < this->m_holder.capacity()){                                         \
+      if (BOOST_LIKELY(this->m_holder.m_size < this->m_holder.capacity())){                                         \
          allocator_traits_type::construct (this->m_holder.alloc()                                     \
             , back_pos BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _) );              \
          ++this->m_holder.m_size;                                                                     \
@@ -1698,7 +1701,21 @@ class vector
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const vector& x, const vector& y)
-   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
+   {  
+      if(x.size() != y.size()){
+         return false;
+      }
+      else{
+         const_iterator first1(x.cbegin()), first2(y.cbegin());
+         const const_iterator last1(x.cend());
+         for (; first1 != last1; ++first1, ++first2) {
+            if (!(*first1 != *first2)) {
+                  return false;
+            }
+         }
+         return true;
+      }
+   }
 
    //! <b>Effects</b>: Returns true if x and y are unequal
    //!
@@ -1710,7 +1727,15 @@ class vector
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<(const vector& x, const vector& y)
-   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+   {
+      const_iterator first1(x.cbegin()), first2(y.cbegin());
+      const const_iterator last1(x.cend()), last2(y.cend());
+      for ( ; (first1 != last1) && (first2 != last2); ++first1, ++first2 ) {
+         if (*first1 < *first2) return true;
+         if (*first2 < *first1) return false;
+      }
+      return (first1 == last1) && (first2 != last2);
+   }
 
    //! <b>Effects</b>: Returns true if x is greater than y
    //!
@@ -1843,7 +1868,7 @@ class vector
    bool stable_emplace_back(Args &&...args)
    {
       const bool room_enough = this->m_holder.m_size < this->m_holder.capacity();
-      if (room_enough){
+      if (BOOST_LIKELY(room_enough)){
          T* const back_pos = container_detail::to_raw_pointer(this->m_holder.start()) + this->m_holder.m_size;
          //There is more memory, just construct a new object at the end
          allocator_traits_type::construct(this->m_holder.alloc(), back_pos, ::boost::forward<Args>(args)...);
@@ -1859,7 +1884,7 @@ class vector
    bool stable_emplace_back(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_LIST, _))              \
    {                                                                                         \
       const bool room_enough = this->m_holder.m_size < this->m_holder.capacity();            \
-      if (room_enough){                                                                      \
+      if (BOOST_LIKELY(room_enough)){                                                                      \
          T* const back_pos = container_detail::to_raw_pointer                                \
             (this->m_holder.start()) + this->m_holder.m_size;                                \
          allocator_traits_type::construct (this->m_holder.alloc()                            \
@@ -2089,7 +2114,7 @@ class vector
    template <class U>
    void priv_push_back(BOOST_FWD_REF(U) u)
    {
-      if (this->m_holder.m_size < this->m_holder.capacity()){
+      if (BOOST_LIKELY(this->m_holder.m_size < this->m_holder.capacity())){
          //There is more memory, just construct a new object at the end
          allocator_traits_type::construct
             ( this->m_holder.alloc()
@@ -2928,14 +2953,14 @@ class vector
 
 namespace boost {
 
-
+/*
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
 template <class T, class Allocator>
 struct has_trivial_destructor_after_move<boost::container::vector<T, Allocator> >
    : public ::boost::has_trivial_destructor_after_move<Allocator>
 {};
-
+*/
 }
 
 //#define BOOST_CONTAINER_PUT_SWAP_OVERLOAD_IN_NAMESPACE_STD

@@ -18,7 +18,7 @@
 #include <boost/container/detail/config_begin.hpp>
 
 #include "detail/varray.hpp"
-#include <boost/move/move.hpp>
+#include <boost/move/utility_core.hpp>
 
 namespace boost { namespace container {
 

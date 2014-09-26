@@ -40,10 +40,11 @@
 #include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/detail/move_helpers.hpp>
-#include <algorithm> //max
+#include <boost/container/detail/placement_new.hpp>
+#include <algorithm>
+
 
 #include <memory>
-#include <new> //placement new
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -1825,7 +1826,7 @@ class stable_vector
          , container_detail::addressof(p->value)
          , it);
       //This does not throw
-      ::new(static_cast<node_base_type*>(container_detail::to_raw_pointer(p)))
+      ::new(static_cast<node_base_type*>(container_detail::to_raw_pointer(p)), boost_container_new_t())
          node_base_type(index_traits_type::ptr_to_node_base_ptr(*up_index));
    }
 
@@ -1838,7 +1839,7 @@ class stable_vector
          , container_detail::addressof(p->value)
          , ::boost::forward<ValueConvertible>(value_convertible));
       //This does not throw
-      ::new(static_cast<node_base_type*>(container_detail::to_raw_pointer(p))) node_base_type;
+      ::new(static_cast<node_base_type*>(container_detail::to_raw_pointer(p)), boost_container_new_t()) node_base_type;
    }
 
    void priv_swap_members(stable_vector &x)

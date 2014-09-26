@@ -15,7 +15,6 @@
 
 #include <vector>
 #include <iostream>
-#include <new>
 #include <utility>
 #include <cstring>
 #include <algorithm>    //std::remove

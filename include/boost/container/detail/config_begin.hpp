@@ -9,7 +9,9 @@
 //////////////////////////////////////////////////////////////////////////////
 #ifndef BOOST_CONTAINER_CONTAINER_DETAIL_CONFIG_INCLUDED
 #define BOOST_CONTAINER_CONTAINER_DETAIL_CONFIG_INCLUDED
+#ifndef BOOST_CONFIG_HPP
 #include <boost/config.hpp>
+#endif
 
 #endif   //BOOST_CONTAINER_CONTAINER_DETAIL_CONFIG_INCLUDED
 

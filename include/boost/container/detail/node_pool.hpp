@@ -23,9 +23,8 @@
 #include <boost/container/detail/node_pool_impl.hpp>
 #include <boost/container/detail/mutex.hpp>
 #include <boost/intrusive/slist.hpp>
-#include <boost/move/move.hpp>
+#include <boost/move/utility_core.hpp>
 #include <cstddef>
-#include <new>
 #include <functional>   //std::unary_function
 #include <algorithm>    //std::swap
 #include <cassert>

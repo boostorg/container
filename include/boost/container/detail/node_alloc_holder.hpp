@@ -34,13 +34,14 @@
 #include <boost/container/detail/memory_util.hpp>
 #include <boost/container/detail/allocator_version_traits.hpp>
 #include <boost/core/no_exceptions_support.hpp>
+#include <boost/container/detail/placement_new.hpp>
 
 #ifndef BOOST_CONTAINER_PERFECT_FORWARDING
 #include <boost/container/detail/preprocessor.hpp>
 #endif
 
 #include <boost/container/detail/algorithms.hpp>
-#include <new>
+
 
 
 namespace boost {
@@ -189,7 +190,7 @@ struct node_alloc_holder
       node_deallocator.release();
       //This does not throw
       typedef typename Node::hook_type hook_type;
-      ::new(static_cast<hook_type*>(container_detail::to_raw_pointer(p))) hook_type;
+      ::new(static_cast<hook_type*>(container_detail::to_raw_pointer(p)), boost_container_new_t()) hook_type;
       return (p);
    }
 
@@ -207,7 +208,7 @@ struct node_alloc_holder
             BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _));              \
       node_deallocator.release();                                                         \
       typedef typename Node::hook_type hook_type;                                         \
-      ::new(static_cast<hook_type*>(container_detail::to_raw_pointer(p))) hook_type;      \
+      ::new(static_cast<hook_type*>(container_detail::to_raw_pointer(p)), boost_container_new_t()) hook_type;      \
       return (p);                                                                         \
    }                                                                                      \
    //!
@@ -225,7 +226,7 @@ struct node_alloc_holder
       node_deallocator.release();
       //This does not throw
       typedef typename Node::hook_type hook_type;
-      ::new(static_cast<hook_type*>(container_detail::to_raw_pointer(p))) hook_type;
+      ::new(static_cast<hook_type*>(container_detail::to_raw_pointer(p)), boost_container_new_t()) hook_type;
       return (p);
    }
 
@@ -270,7 +271,7 @@ struct node_alloc_holder
                ++beg;
                //This does not throw
                typedef typename Node::hook_type hook_type;
-               ::new(static_cast<hook_type*>(p)) hook_type;
+               ::new(static_cast<hook_type*>(p), boost_container_new_t()) hook_type;
                //This can throw in some containers (predicate might throw).
                //(sdestructor will destruct the node and node_deallocator will deallocate it in case of exception)
                inserter(*p);

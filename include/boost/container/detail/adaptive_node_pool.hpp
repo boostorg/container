@@ -29,7 +29,7 @@
 #include <cstddef>
 #include <cmath>
 #include <cassert>
-#include <new>
+
 
 namespace boost {
 namespace container {

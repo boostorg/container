@@ -26,14 +26,16 @@
 #include <boost/container/detail/alloc_lib_auto_link.hpp>
 #include <boost/container/detail/singleton.hpp>
 
+#include <boost/container/detail/placement_new.hpp>
+
 #include <boost/assert.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/static_assert.hpp>
-#include <boost/move/move.hpp>
+#include <boost/move/utility_core.hpp>
 #include <memory>
 #include <algorithm>
 #include <cstddef>
-#include <new>
+
 
 namespace boost {
 namespace container {

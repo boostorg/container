@@ -39,7 +39,6 @@
 #include <boost/preprocessor/arithmetic/sub.hpp>
 #include <boost/preprocessor/arithmetic/add.hpp>
 #include <boost/preprocessor/iteration/iterate.hpp>
-#include <boost/move/utility_core.hpp>
 
 #define BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS 10
 
