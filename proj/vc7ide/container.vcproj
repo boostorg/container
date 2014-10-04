@@ -258,6 +258,9 @@
 					RelativePath="..\..\..\..\boost\container\detail\singleton.hpp">
 				</File>
 				<File
+					RelativePath="..\..\..\..\boost\container\detail\std_fwd.hpp">
+				</File>
+				<File
 					RelativePath="..\..\..\..\boost\container\detail\transform_iterator.hpp">
 				</File>
 				<File

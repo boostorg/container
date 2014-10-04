@@ -32,9 +32,8 @@
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/destroyers.hpp>
 #include <boost/container/detail/memory_util.hpp>
-#include <boost/container/detail/allocator_version_traits.hpp>
-#include <boost/core/no_exceptions_support.hpp>
 #include <boost/container/detail/placement_new.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 
 #ifndef BOOST_CONTAINER_PERFECT_FORWARDING
 #include <boost/container/detail/preprocessor.hpp>

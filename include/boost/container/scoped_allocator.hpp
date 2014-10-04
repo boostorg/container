@@ -292,7 +292,7 @@ namespace container_detail {
 
    #else // #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-   //Without variadic templates, we need to use de preprocessor to generate
+   //Without variadic templates, we need to use the preprocessor to generate
    //some specializations.
 
    #define BOOST_CONTAINER_MAX_IS_CONSTRUCTIBLE_PARAMETERS \

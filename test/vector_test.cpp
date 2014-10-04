@@ -7,10 +7,8 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/container/detail/config_begin.hpp>
-#include <algorithm>
+
 #include <memory>
-#include <vector>
 #include <iostream>
 #include <functional>
 
@@ -160,7 +158,7 @@ int main()
          positions[i] = 0u;
       }
       for(std::size_t i = 0, max = vector_int2.size(); i != max; ++i){
-         vector_int2[i] = i;
+         vector_int2[i] = (int)i;
       }
 
       vector_int.insert(vector_int.begin(), 999);
@@ -254,4 +252,3 @@ int main()
    return 0;
 
 }
-#include <boost/container/detail/config_end.hpp>

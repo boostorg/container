@@ -13,7 +13,6 @@
 #include <cstddef>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/move/utility_core.hpp>
-#include <boost/type_traits/integral_constant.hpp>
 #include <memory>
 
 using namespace boost::container;

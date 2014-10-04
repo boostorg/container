@@ -41,11 +41,12 @@
 //!
 //! And finally it defines the following types
 
-//////////////////////////////////////////////////////////////////////////////
-//                        Standard predeclarations
-//////////////////////////////////////////////////////////////////////////////
-
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
+//Std forward declarations
+#ifndef BOOST_CONTAINER_DETAIL_STD_FWD_HPP
+   #include <boost/container/detail/std_fwd.hpp>
+#endif
 
 namespace boost{
 namespace intrusive{
@@ -53,52 +54,10 @@ namespace intrusive{
 }}
 
 namespace boost{ namespace container{ namespace container_detail{
-
-namespace bi = boost::intrusive;
-
+   namespace bi = boost::intrusive;
 }}}
 
 #include <cstddef>
-
-# if defined(__clang__) && defined(_LIBCPP_VERSION)
-   #define BOOST_CONTAINER_CLANG_INLINE_STD_NS
-   #pragma GCC diagnostic push
-   #pragma GCC diagnostic ignored "-Wc++11-extensions"
-
-   #define BOOST_CONTAINER_STD_NS_BEG _LIBCPP_BEGIN_NAMESPACE_STD
-   #define BOOST_CONTAINER_STD_NS_END _LIBCPP_END_NAMESPACE_STD
-
-#endif
-
-#if !defined(BOOST_CONTAINER_STD_NS_BEG)
-
-   #define BOOST_CONTAINER_STD_NS_BEG namespace std{
-   #define BOOST_CONTAINER_STD_NS_END }
-
-#endif
-
-BOOST_CONTAINER_STD_NS_BEG
-
-template<class T>
-class allocator;
-
-template<class T>
-struct less;
-
-template<class T1, class T2>
-struct pair;
-
-template<class T>
-struct char_traits;
-
-BOOST_CONTAINER_STD_NS_END
-
-#ifdef BOOST_CONTAINER_CLANG_INLINE_STD_NS
-
-#pragma GCC diagnostic pop
-#undef BOOST_CONTAINER_CLANG_INLINE_STD_NS
-
-#endif   //BOOST_CONTAINER_CLANG_INLINE_STD_NS
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 

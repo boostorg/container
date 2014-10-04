@@ -31,6 +31,7 @@
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/container/detail/node_alloc_holder.hpp>
 #include <boost/intrusive/slist.hpp>
+#include <iterator>
 
 
 #if defined(BOOST_CONTAINER_PERFECT_FORWARDING) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
