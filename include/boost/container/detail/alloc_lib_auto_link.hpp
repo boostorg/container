@@ -10,6 +10,10 @@
 #ifndef BOOST_CONTAINER_DETAIL_BOOST_CONT_EXT_AUTO_LINK_HPP
 #define BOOST_CONTAINER_DETAIL_BOOST_CONT_EXT_AUTO_LINK_HPP
 
+#if defined(_MSC_VER)
+#  pragma once
+#endif
+
 #include <boost/container/detail/auto_link.hpp>
 #include <boost/container/detail/alloc_lib.h>
 

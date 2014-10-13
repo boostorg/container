@@ -19,6 +19,10 @@
 #ifndef BOOST_CONTAINER_MUTEX_HPP
 #define BOOST_CONTAINER_MUTEX_HPP
 
+#if defined(_MSC_VER)
+#  pragma once
+#endif
+
 //#define BOOST_CONTAINER_NO_MT
 //#define BOOST_CONTAINER_NO_SPINLOCKS
 

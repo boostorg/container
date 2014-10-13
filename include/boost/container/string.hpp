@@ -11,6 +11,10 @@
 #ifndef BOOST_CONTAINER_STRING_HPP
 #define BOOST_CONTAINER_STRING_HPP
 
+#if defined(_MSC_VER)
+#  pragma once
+#endif
+
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 

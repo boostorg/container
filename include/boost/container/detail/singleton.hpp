@@ -22,6 +22,10 @@
 #ifndef BOOST_CONTAINER_DETAIL_SINGLETON_DETAIL_HPP
 #define BOOST_CONTAINER_DETAIL_SINGLETON_DETAIL_HPP
 
+#if defined(_MSC_VER)
+#  pragma once
+#endif
+
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 

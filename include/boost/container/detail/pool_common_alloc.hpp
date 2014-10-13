@@ -11,6 +11,10 @@
 #ifndef BOOST_CONTAINER_DETAIL_POOL_COMMON_ALLOC_HPP
 #define BOOST_CONTAINER_DETAIL_POOL_COMMON_ALLOC_HPP
 
+#if defined(_MSC_VER)
+#  pragma once
+#endif
+
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/throw_exception.hpp>

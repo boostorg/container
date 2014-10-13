@@ -11,6 +11,10 @@
 #ifndef BOOST_CONTAINER_DETAIL_WORKAROUND_HPP
 #define BOOST_CONTAINER_DETAIL_WORKAROUND_HPP
 
+#if defined(_MSC_VER)
+#  pragma once
+#endif
+
 #include <boost/container/detail/config_begin.hpp>
 
 #if    !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)\
