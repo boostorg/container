@@ -828,7 +828,7 @@ past the end of the same empty sequence (example taken from N3644):
    nd != nd; // False.
    v.begin() == ni; // ??? (likely false in practice).
    v.end() == ni;   // ??? (likely false in practice).
-   ni == nd; // Won’t compile.
+   ni == nd; // Won't compile.
 
 [endsect]
 
