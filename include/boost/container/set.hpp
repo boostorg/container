@@ -188,7 +188,7 @@ class set
    //!
    //! <b>Postcondition</b>: x is emptied.
    set(BOOST_RV_REF(set) x)
-      : base_t(boost::move(static_cast<base_t&>(x)))
+      : base_t(BOOST_MOVE_BASE(base_t, x))
    {}
 
    //! <b>Effects</b>: Copy constructs a set using the specified allocator.
@@ -203,7 +203,7 @@ class set
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    set(BOOST_RV_REF(set) x, const allocator_type &a)
-      : base_t(boost::move(static_cast<base_t&>(x)), a)
+      : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {}
 
    //! <b>Effects</b>: Makes *this a copy of x.
@@ -222,7 +222,7 @@ class set
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    set& operator=(BOOST_RV_REF(set) x)
       BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
-   {  return static_cast<set&>(this->base_t::operator=(boost::move(static_cast<base_t&>(x))));  }
+   {  return static_cast<set&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    set& operator=(std::initializer_list<value_type> il)
@@ -812,7 +812,7 @@ class multiset
 
    //! @copydoc ::boost::container::set(set &&)
    multiset(BOOST_RV_REF(multiset) x)
-      : base_t(boost::move(static_cast<base_t&>(x)))
+      : base_t(BOOST_MOVE_BASE(base_t, x))
    {}
 
    //! @copydoc ::boost::container::set(const set &, const allocator_type &)
@@ -822,7 +822,7 @@ class multiset
 
    //! @copydoc ::boost::container::set(set &&, const allocator_type &)
    multiset(BOOST_RV_REF(multiset) x, const allocator_type &a)
-      : base_t(boost::move(static_cast<base_t&>(x)), a)
+      : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {}
 
    //! @copydoc ::boost::container::set::operator=(const set &)
@@ -831,7 +831,7 @@ class multiset
 
    //! @copydoc ::boost::container::set::operator=(set &&)
    multiset& operator=(BOOST_RV_REF(multiset) x)
-   {  return static_cast<multiset&>(this->base_t::operator=(boost::move(static_cast<base_t&>(x))));  }
+   {  return static_cast<multiset&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! @copydoc ::boost::container::set::operator=(std::initializer_list<value_type>)

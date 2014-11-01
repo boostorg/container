@@ -101,6 +101,7 @@ bool CheckEqualPairContainers(const MyBoostCont &boostcont, const MyStdCont &std
    }
    return true;
 }
+
 }  //namespace test{
 }  //namespace container {
 }  //namespace boost{

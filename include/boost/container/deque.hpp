@@ -639,13 +639,13 @@ class deque : protected deque_base<Allocator>
       }
    }
 
-   //! <b>Effects</b>: Move constructor. Moves mx's resources to *this.
+   //! <b>Effects</b>: Move constructor. Moves x's resources to *this.
    //!
    //! <b>Throws</b>: If allocator_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
    deque(BOOST_RV_REF(deque) x)
-      :  Base(boost::move(static_cast<Base&>(x)))
+      :  Base(BOOST_MOVE_BASE(Base, x))
    {  this->swap_members(x);   }
 
    //! <b>Effects</b>: Copy constructs a vector using the specified allocator.
@@ -667,23 +667,23 @@ class deque : protected deque_base<Allocator>
    }
 
    //! <b>Effects</b>: Move constructor using the specified allocator.
-   //!                 Moves mx's resources to *this if a == allocator_type().
+   //!                 Moves x's resources to *this if a == allocator_type().
    //!                 Otherwise copies values from x to *this.
    //!
    //! <b>Throws</b>: If allocation or T's copy constructor throws.
    //!
-   //! <b>Complexity</b>: Constant if a == mx.get_allocator(), linear otherwise.
-   deque(BOOST_RV_REF(deque) mx, const allocator_type &a)
+   //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
+   deque(BOOST_RV_REF(deque) x, const allocator_type &a)
       :  Base(a)
    {
-      if(mx.alloc() == a){
-         this->swap_members(mx);
+      if(x.alloc() == a){
+         this->swap_members(x);
       }
       else{
-         if(mx.size()){
-            this->priv_initialize_map(mx.size());
+         if(x.size()){
+            this->priv_initialize_map(x.size());
             boost::container::uninitialized_copy_alloc
-               (this->alloc(), mx.begin(), mx.end(), this->members_.m_start);
+               (this->alloc(), x.begin(), x.end(), this->members_.m_start);
          }
       }
    }
@@ -1158,6 +1158,67 @@ class deque : protected deque_base<Allocator>
    const_reference operator[](size_type n) const BOOST_CONTAINER_NOEXCEPT
       { return this->members_.m_start[difference_type(n)]; }
 
+   //! <b>Requires</b>: size() >= n.
+   //!
+   //! <b>Effects</b>: Returns an iterator to the nth element
+   //!   from the beginning of the container. Returns end()
+   //!   if n == size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   iterator nth(size_type n) BOOST_CONTAINER_NOEXCEPT
+   {
+      BOOST_ASSERT(this->size() >= n);
+      return iterator(this->begin()+n);
+   }
+
+   //! <b>Requires</b>: size() >= n.
+   //!
+   //! <b>Effects</b>: Returns a const_iterator to the nth element
+   //!   from the beginning of the container. Returns end()
+   //!   if n == size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   const_iterator nth(size_type n) const BOOST_CONTAINER_NOEXCEPT
+   {
+      BOOST_ASSERT(this->size() >= n);
+      return const_iterator(this->cbegin()+n);
+   }
+
+   //! <b>Requires</b>: size() >= n.
+   //!
+   //! <b>Effects</b>: Returns an iterator to the nth element
+   //!   from the beginning of the container. Returns end()
+   //!   if n == size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   size_type index_of(iterator p) BOOST_CONTAINER_NOEXCEPT
+   {  return this->priv_index_of(p);  }
+
+   //! <b>Requires</b>: begin() <= p <= end().
+   //!
+   //! <b>Effects</b>: Returns the index of the element pointed by p
+   //!   and size() if p == end().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   size_type index_of(const_iterator p) const BOOST_CONTAINER_NOEXCEPT
+   {  return this->priv_index_of(p);  }
+
    //! <b>Requires</b>: size() > n.
    //!
    //! <b>Effects</b>: Returns a reference to the nth element
@@ -1333,7 +1394,7 @@ class deque : protected deque_base<Allocator>
    void push_front(const T &x);
 
    //! <b>Effects</b>: Constructs a new element in the front of the deque
-   //!   and moves the resources of mx to this new element.
+   //!   and moves the resources of x to this new element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
    //!
@@ -1353,7 +1414,7 @@ class deque : protected deque_base<Allocator>
    void push_back(const T &x);
 
    //! <b>Effects</b>: Constructs a new element in the end of the deque
-   //!   and moves the resources of mx to this new element.
+   //!   and moves the resources of x to this new element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
    //!
@@ -1379,7 +1440,7 @@ class deque : protected deque_base<Allocator>
 
    //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
-   //! <b>Effects</b>: Insert a new element before p with mx's resources.
+   //! <b>Effects</b>: Insert a new element before p with x's resources.
    //!
    //! <b>Returns</b>: an iterator to the inserted element.
    //!
@@ -1647,6 +1708,13 @@ class deque : protected deque_base<Allocator>
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
+
+   size_type priv_index_of(const_iterator p) const
+   {
+      BOOST_ASSERT(this->cbegin() <= p);
+      BOOST_ASSERT(p <= this->cend());
+      return static_cast<size_type>(p - this->cbegin());
+   }
 
    void priv_erase_last_n(size_type n)
    {

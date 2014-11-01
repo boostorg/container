@@ -198,6 +198,9 @@
 					RelativePath="..\..\..\..\boost\container\detail\config_end.hpp">
 				</File>
 				<File
+					RelativePath="..\..\test\container_common_tests.hpp">
+				</File>
+				<File
 					RelativePath="..\..\..\..\boost\container\detail\destroyers.hpp">
 				</File>
 				<File

@@ -851,9 +851,9 @@ class tree
 
    template<class MovableConvertible>
    iterator insert_unique_commit
-      (BOOST_FWD_REF(MovableConvertible) mv, insert_commit_data &data)
+      (BOOST_FWD_REF(MovableConvertible) v, insert_commit_data &data)
    {
-      NodePtr tmp = AllocHolder::create_node(boost::forward<MovableConvertible>(mv));
+      NodePtr tmp = AllocHolder::create_node(boost::forward<MovableConvertible>(v));
       scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
       iterator ret(this->icont().insert_unique_commit(*tmp, data));
       destroy_deallocator.release();
@@ -872,13 +872,13 @@ class tree
    }
 
    template<class MovableConvertible>
-   std::pair<iterator,bool> insert_unique(BOOST_FWD_REF(MovableConvertible) mv)
+   std::pair<iterator,bool> insert_unique(BOOST_FWD_REF(MovableConvertible) v)
    {
       insert_commit_data data;
       std::pair<iterator,bool> ret =
-         this->insert_unique_check(KeyOfValue()(mv), data);
+         this->insert_unique_check(KeyOfValue()(v), data);
       if(ret.second){
-         ret.first = this->insert_unique_commit(boost::forward<MovableConvertible>(mv), data);
+         ret.first = this->insert_unique_commit(boost::forward<MovableConvertible>(v), data);
       }
       return ret;
    }
@@ -886,9 +886,9 @@ class tree
    private:
 
    template<class MovableConvertible>
-   void push_back_impl(BOOST_FWD_REF(MovableConvertible) mv)
+   void push_back_impl(BOOST_FWD_REF(MovableConvertible) v)
    {
-      NodePtr tmp(AllocHolder::create_node(boost::forward<MovableConvertible>(mv)));
+      NodePtr tmp(AllocHolder::create_node(boost::forward<MovableConvertible>(v)));
       //push_back has no-throw guarantee so avoid any deallocator/destroyer
       this->icont().push_back(*tmp);
    }
@@ -1010,14 +1010,14 @@ class tree
    }
 
    template<class MovableConvertible>
-   iterator insert_unique(const_iterator hint, BOOST_FWD_REF(MovableConvertible) mv)
+   iterator insert_unique(const_iterator hint, BOOST_FWD_REF(MovableConvertible) v)
    {
       insert_commit_data data;
       std::pair<iterator,bool> ret =
-         this->insert_unique_check(hint, KeyOfValue()(mv), data);
+         this->insert_unique_check(hint, KeyOfValue()(v), data);
       if(!ret.second)
          return ret.first;
-      return this->insert_unique_commit(boost::forward<MovableConvertible>(mv), data);
+      return this->insert_unique_commit(boost::forward<MovableConvertible>(v), data);
    }
 
    template <class InputIterator>
@@ -1037,9 +1037,9 @@ class tree
    }
 
    template<class MovableConvertible>
-   iterator insert_equal(BOOST_FWD_REF(MovableConvertible) mv)
+   iterator insert_equal(BOOST_FWD_REF(MovableConvertible) v)
    {
-      NodePtr tmp(AllocHolder::create_node(boost::forward<MovableConvertible>(mv)));
+      NodePtr tmp(AllocHolder::create_node(boost::forward<MovableConvertible>(v)));
       scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
       iterator ret(this->icont().insert_equal(this->icont().end(), *tmp));
       destroy_deallocator.release();
@@ -1056,9 +1056,9 @@ class tree
    }
 
    template<class MovableConvertible>
-   iterator insert_equal(const_iterator hint, BOOST_FWD_REF(MovableConvertible) mv)
+   iterator insert_equal(const_iterator hint, BOOST_FWD_REF(MovableConvertible) v)
    {
-      NodePtr tmp(AllocHolder::create_node(boost::forward<MovableConvertible>(mv)));
+      NodePtr tmp(AllocHolder::create_node(boost::forward<MovableConvertible>(v)));
       scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
       iterator ret(this->icont().insert_equal(hint.get(), *tmp));
       destroy_deallocator.release();

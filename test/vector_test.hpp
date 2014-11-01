@@ -34,6 +34,7 @@
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/static_assert.hpp>
 #include "insert_test.hpp"
+#include "container_common_tests.hpp"
 
 namespace boost{
 namespace container {
@@ -294,6 +295,10 @@ int vector_test()
          stdvector.assign(l.begin(), l.end());
          if(!test::CheckEqualContainers(boostvector, stdvector)) return 1;
       }
+
+      boostvector.resize(100);
+      if(!test_nth_index_of(boostvector))
+         return 1;
 /*       deque has no reserve or capacity
       std::size_t cap = boostvector.capacity();
       boostvector.reserve(cap*2);

@@ -307,13 +307,13 @@ class slist
       : AllocHolder(x)
    { this->insert_after(this->cbefore_begin(), x.begin(), x.end()); }
 
-   //! <b>Effects</b>: Move constructor. Moves mx's resources to *this.
+   //! <b>Effects</b>: Move constructor. Moves x's resources to *this.
    //!
    //! <b>Throws</b>: If allocator_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
    slist(BOOST_RV_REF(slist) x)
-      : AllocHolder(boost::move(static_cast<AllocHolder&>(x)))
+      : AllocHolder(BOOST_MOVE_BASE(AllocHolder, x))
    {}
 
    //! <b>Effects</b>: Copy constructs a list using the specified allocator.
@@ -774,7 +774,7 @@ class slist
    void push_front(const T &x);
 
    //! <b>Effects</b>: Constructs a new element in the beginning of the list
-   //!   and moves the resources of mx to this new element.
+   //!   and moves the resources of x to this new element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
    //!
@@ -1337,7 +1337,7 @@ class slist
 
    //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
-   //! <b>Effects</b>: Insert a new element before p with mx's resources.
+   //! <b>Effects</b>: Insert a new element before p with x's resources.
    //!
    //! <b>Returns</b>: an iterator to the inserted element.
    //!

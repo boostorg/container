@@ -21,6 +21,7 @@
 #include "set_test.hpp"
 #include "propagate_allocator_test.hpp"
 #include "emplace_test.hpp"
+#include "container_common_tests.hpp"
 #include <vector>
 #include <boost/container/detail/flat_tree.hpp>
 
@@ -530,6 +531,22 @@ int main()
    {
       test_move<flat_set<recursive_flat_set> >();
       test_move<flat_multiset<recursive_flat_multiset> >();
+   }
+   //Now test nth/index_of
+   {
+      flat_set<int> set;
+      flat_multiset<int> mset;
+
+      set.insert(0);
+      set.insert(1);
+      set.insert(2);
+      mset.insert(0);
+      mset.insert(1);
+      mset.insert(2);
+      if(!boost::container::test::test_nth_index_of(set))
+         return 1;
+      if(!boost::container::test::test_nth_index_of(mset))
+         return 1;
    }
 
    ////////////////////////////////////

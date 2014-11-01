@@ -19,6 +19,7 @@
 #include "movable_int.hpp"
 #include "map_test.hpp"
 #include "propagate_allocator_test.hpp"
+#include "container_common_tests.hpp"
 #include "emplace_test.hpp"
 #include <vector>
 #include <boost/container/detail/flat_tree.hpp>
@@ -444,6 +445,22 @@ int main()
    {
       test_move<flat_map<recursive_flat_map, recursive_flat_map> >();
       test_move<flat_multimap<recursive_flat_multimap, recursive_flat_multimap> >();
+   }
+   //Now test nth/index_of
+   {
+      flat_map<int, int> map;
+      flat_multimap<int, int> mmap;
+
+      map.insert(std::pair<int, int>(0, 0));
+      map.insert(std::pair<int, int>(1, 0));
+      map.insert(std::pair<int, int>(2, 0));
+      mmap.insert(std::pair<int, int>(0, 0));
+      mmap.insert(std::pair<int, int>(1, 0));
+      mmap.insert(std::pair<int, int>(2, 0));
+      if(!boost::container::test::test_nth_index_of(map))
+         return 1;
+      if(!boost::container::test::test_nth_index_of(mmap))
+         return 1;
    }
 
    ////////////////////////////////////

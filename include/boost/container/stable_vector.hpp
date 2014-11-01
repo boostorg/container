@@ -652,7 +652,7 @@ class stable_vector
    }
 #endif
 
-   //! <b>Effects</b>: Move constructor. Moves mx's resources to *this.
+   //! <b>Effects</b>: Move constructor. Moves x's resources to *this.
    //!
    //! <b>Throws</b>: If allocator_type's copy constructor throws.
    //!
@@ -678,7 +678,7 @@ class stable_vector
    }
 
    //! <b>Effects</b>: Move constructor using the specified allocator.
-   //!                 Moves mx's resources to *this.
+   //!                 Moves x's resources to *this.
    //!
    //! <b>Throws</b>: If allocator_type's copy constructor throws.
    //!
@@ -736,7 +736,7 @@ class stable_vector
       return *this;
    }
 
-   //! <b>Effects</b>: Move assignment. All mx's values are transferred to *this.
+   //! <b>Effects</b>: Move assignment. All x's values are transferred to *this.
    //!
    //! <b>Postcondition</b>: x.empty(). *this contains a the elements x had
    //!   before the function.
@@ -1217,6 +1217,67 @@ class stable_vector
       return static_cast<const_node_reference>(*this->index[n]).value;
    }
 
+   //! <b>Requires</b>: size() >= n.
+   //!
+   //! <b>Effects</b>: Returns an iterator to the nth element
+   //!   from the beginning of the container. Returns end()
+   //!   if n == size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   iterator nth(size_type n) BOOST_CONTAINER_NOEXCEPT
+   {
+      BOOST_ASSERT(this->size() >= n);
+      return (this->index.empty()) ? this->end() : iterator(node_ptr_traits::static_cast_from(this->index[n]));
+   }
+
+   //! <b>Requires</b>: size() >= n.
+   //!
+   //! <b>Effects</b>: Returns a const_iterator to the nth element
+   //!   from the beginning of the container. Returns end()
+   //!   if n == size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   const_iterator nth(size_type n) const BOOST_CONTAINER_NOEXCEPT
+   {
+      BOOST_ASSERT(this->size() >= n);
+      return (this->index.empty()) ? this->cend() : iterator(node_ptr_traits::static_cast_from(this->index[n]));
+   }
+
+   //! <b>Requires</b>: size() >= n.
+   //!
+   //! <b>Effects</b>: Returns an iterator to the nth element
+   //!   from the beginning of the container. Returns end()
+   //!   if n == size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   size_type index_of(iterator p) BOOST_CONTAINER_NOEXCEPT
+   {  return this->priv_index_of(p.node_pointer());  }
+
+   //! <b>Requires</b>: begin() <= p <= end().
+   //!
+   //! <b>Effects</b>: Returns the index of the element pointed by p
+   //!   and size() if p == end().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   size_type index_of(const_iterator p) const BOOST_CONTAINER_NOEXCEPT
+   {  return this->priv_index_of(p.node_pointer());  }
+
    //! <b>Requires</b>: size() > n.
    //!
    //! <b>Effects</b>: Returns a reference to the nth element
@@ -1339,7 +1400,7 @@ class stable_vector
    void push_back(const T &x);
 
    //! <b>Effects</b>: Constructs a new element in the end of the stable_vector
-   //!   and moves the resources of mx to this new element.
+   //!   and moves the resources of x to this new element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
    //!
@@ -1364,7 +1425,7 @@ class stable_vector
 
    //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
-   //! <b>Effects</b>: Insert a new element before p with mx's resources.
+   //! <b>Effects</b>: Insert a new element before p with x's resources.
    //!
    //! <b>Returns</b>: an iterator to the inserted element.
    //!
@@ -1602,6 +1663,14 @@ class stable_vector
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
+
+   size_type priv_index_of(node_ptr p) const
+   {
+      //Check range
+      BOOST_ASSERT(this->index.empty() || (this->index.data() <= p->up));
+      BOOST_ASSERT(this->index.empty() || p->up <= (this->index.data() + this->index.size()));
+      return this->index.empty() ? 0 : p->up - this->index.data();
+   }
 
    class insert_rollback
    {

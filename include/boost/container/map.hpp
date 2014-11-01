@@ -223,7 +223,7 @@ class map
    //!
    //! <b>Postcondition</b>: x is emptied.
    map(BOOST_RV_REF(map) x)
-      : base_t(boost::move(static_cast<base_t&>(x)))
+      : base_t(BOOST_MOVE_BASE(base_t, x))
    {
       //Allocator type must be std::pair<CONST Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
@@ -246,7 +246,7 @@ class map
    //!
    //! <b>Postcondition</b>: x is emptied.
    map(BOOST_RV_REF(map) x, const allocator_type &a)
-      : base_t(boost::move(static_cast<base_t&>(x)), a)
+      : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {
       //Allocator type must be std::pair<CONST Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
@@ -268,7 +268,7 @@ class map
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    map& operator=(BOOST_RV_REF(map) x)
       BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
-   {  return static_cast<map&>(this->base_t::operator=(boost::move(static_cast<base_t&>(x))));  }
+   {  return static_cast<map&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: Assign content of il to *this.
@@ -1021,7 +1021,7 @@ class multimap
    //!
    //! <b>Postcondition</b>: x is emptied.
    multimap(BOOST_RV_REF(multimap) x)
-      : base_t(boost::move(static_cast<base_t&>(x)))
+      : base_t(BOOST_MOVE_BASE(base_t, x))
    {
       //Allocator type must be std::pair<CONST Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
@@ -1043,7 +1043,7 @@ class multimap
    //!
    //! <b>Postcondition</b>: x is emptied.
    multimap(BOOST_RV_REF(multimap) x, const allocator_type &a)
-      : base_t(boost::move(static_cast<base_t&>(x)), a)
+      : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {
       //Allocator type must be std::pair<CONST Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
@@ -1059,7 +1059,7 @@ class multimap
    //!
    //! <b>Complexity</b>: Constant.
    multimap& operator=(BOOST_RV_REF(multimap) x)
-   {  return static_cast<multimap&>(this->base_t::operator=(boost::move(static_cast<base_t&>(x))));  }
+   {  return static_cast<multimap&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: Assign content of il to *this.

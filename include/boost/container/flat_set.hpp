@@ -187,13 +187,13 @@ class flat_set
       : base_t(static_cast<const base_t&>(x))
    {}
 
-   //! <b>Effects</b>: Move constructs thecontainer. Constructs *this using mx's resources.
+   //! <b>Effects</b>: Move constructs thecontainer. Constructs *this using x's resources.
    //!
    //! <b>Complexity</b>: Constant.
    //!
-   //! <b>Postcondition</b>: mx is emptied.
-   flat_set(BOOST_RV_REF(flat_set) mx)
-      : base_t(boost::move(static_cast<base_t&>(mx)))
+   //! <b>Postcondition</b>: x is emptied.
+   flat_set(BOOST_RV_REF(flat_set) x)
+      : base_t(BOOST_MOVE_BASE(base_t, x))
    {}
 
    //! <b>Effects</b>: Copy constructs a container using the specified allocator.
@@ -204,11 +204,11 @@ class flat_set
    {}
 
    //! <b>Effects</b>: Move constructs a container using the specified allocator.
-   //!                 Constructs *this using mx's resources.
+   //!                 Constructs *this using x's resources.
    //!
-   //! <b>Complexity</b>: Constant if a == mx.get_allocator(), linear otherwise
-   flat_set(BOOST_RV_REF(flat_set) mx, const allocator_type &a)
-      : base_t(boost::move(static_cast<base_t&>(mx)), a)
+   //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise
+   flat_set(BOOST_RV_REF(flat_set) x, const allocator_type &a)
+      : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {}
 
    //! <b>Effects</b>: Makes *this a copy of x.
@@ -225,7 +225,7 @@ class flat_set
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    flat_set& operator=(BOOST_RV_REF(flat_set) x)
       BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
-   {  return static_cast<flat_set&>(this->base_t::operator=(boost::move(static_cast<base_t&>(x))));  }
+   {  return static_cast<flat_set&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: Copy all elements from il to *this.
@@ -646,6 +646,57 @@ class flat_set
    //! <b>Complexity</b>: Logarithmic.
    const_iterator find(const key_type& x) const;
 
+   //! <b>Requires</b>: size() >= n.
+   //!
+   //! <b>Effects</b>: Returns an iterator to the nth element
+   //!   from the beginning of the container. Returns end()
+   //!   if n == size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   iterator nth(size_type n) BOOST_CONTAINER_NOEXCEPT;
+
+   //! <b>Requires</b>: size() >= n.
+   //!
+   //! <b>Effects</b>: Returns a const_iterator to the nth element
+   //!   from the beginning of the container. Returns end()
+   //!   if n == size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   const_iterator nth(size_type n) const BOOST_CONTAINER_NOEXCEPT;
+
+   //! <b>Requires</b>: size() >= n.
+   //!
+   //! <b>Effects</b>: Returns an iterator to the nth element
+   //!   from the beginning of the container. Returns end()
+   //!   if n == size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   size_type index_of(iterator p) BOOST_CONTAINER_NOEXCEPT;
+
+   //! <b>Requires</b>: begin() <= p <= end().
+   //!
+   //! <b>Effects</b>: Returns the index of the element pointed by p
+   //!   and size() if p == end().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   size_type index_of(const_iterator p) const BOOST_CONTAINER_NOEXCEPT;
+
    #endif   //   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Returns</b>: The number of elements with key equivalent to x.
@@ -876,8 +927,8 @@ class flat_multiset
    {}
 
    //! @copydoc ::boost::container::flat_set(flat_set &&)
-   flat_multiset(BOOST_RV_REF(flat_multiset) mx)
-      : base_t(boost::move(static_cast<base_t&>(mx)))
+   flat_multiset(BOOST_RV_REF(flat_multiset) x)
+      : base_t(boost::move(static_cast<base_t&>(x)))
    {}
 
    //! @copydoc ::boost::container::flat_set(const flat_set &, const allocator_type &)
@@ -886,8 +937,8 @@ class flat_multiset
    {}
 
    //! @copydoc ::boost::container::flat_set(flat_set &&, const allocator_type &)
-   flat_multiset(BOOST_RV_REF(flat_multiset) mx, const allocator_type &a)
-      : base_t(boost::move(static_cast<base_t&>(mx)), a)
+   flat_multiset(BOOST_RV_REF(flat_multiset) x, const allocator_type &a)
+      : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {}
 
    //! @copydoc ::boost::container::flat_set::operator=(const flat_set &)
@@ -895,9 +946,9 @@ class flat_multiset
    {  return static_cast<flat_multiset&>(this->base_t::operator=(static_cast<const base_t&>(x)));  }
 
    //! @copydoc ::boost::container::flat_set::operator=(flat_set &&)
-   flat_multiset& operator=(BOOST_RV_REF(flat_multiset) mx)
+   flat_multiset& operator=(BOOST_RV_REF(flat_multiset) x)
       BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
-   {  return static_cast<flat_multiset&>(this->base_t::operator=(boost::move(static_cast<base_t&>(mx))));  }
+   {  return static_cast<flat_multiset&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! @copydoc ::boost::container::flat_set::operator=(std::initializer_list<value_type>)
@@ -1156,6 +1207,18 @@ class flat_multiset
 
    //! @copydoc ::boost::container::flat_set::find(const key_type& ) const
    const_iterator find(const key_type& x) const;
+
+   //! @copydoc ::boost::container::flat_set::nth(size_type)
+   iterator nth(size_type n) BOOST_CONTAINER_NOEXCEPT;
+
+   //! @copydoc ::boost::container::flat_set::nth(size_type) const
+   const_iterator nth(size_type n) const BOOST_CONTAINER_NOEXCEPT;
+
+   //! @copydoc ::boost::container::flat_set::index_of(iterator)
+   size_type index_of(iterator p) BOOST_CONTAINER_NOEXCEPT;
+
+   //! @copydoc ::boost::container::flat_set::index_of(const_iterator) const
+   size_type index_of(const_iterator p) const BOOST_CONTAINER_NOEXCEPT;
 
    //! @copydoc ::boost::container::flat_set::count(const key_type& ) const
    size_type count(const key_type& x) const;

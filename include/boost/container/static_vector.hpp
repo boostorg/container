@@ -16,7 +16,7 @@
 #endif
 
 #include <boost/container/detail/config_begin.hpp>
-
+#include <boost/container/detail/workaround.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/aligned_storage.hpp>
 
@@ -265,7 +265,7 @@ public:
     //! @par Complexity
     //!   Linear O(N).
     static_vector(BOOST_RV_REF(static_vector) other)
-        : base_t(boost::move(static_cast<base_t&>(other)))
+        : base_t(BOOST_MOVE_BASE(base_t, other))
     {}
 
     //! @pre <tt>other.size() <= capacity()</tt>
@@ -282,7 +282,7 @@ public:
     //!   Linear O(N).
     template <std::size_t C>
     static_vector(BOOST_RV_REF_BEG static_vector<value_type, C> BOOST_RV_REF_END other)
-        : base_t(boost::move(static_cast<typename static_vector<value_type, C>::base_t&>(other)))
+        : base_t(BOOST_MOVE_BASE(typename static_vector<value_type BOOST_CONTAINER_I C>::base_t, other))
     {}
 
     //! @brief Copy assigns Values stored in the other static_vector to this one.
@@ -310,9 +310,7 @@ public:
     //! @par Complexity
     //! Linear O(N).
     static_vector & operator=(std::initializer_list<value_type> il)
-    {
-        return static_cast<static_vector&>(base_t::operator=(il));
-    }
+    { return static_cast<static_vector&>(base_t::operator=(il));  }
 #endif
 
     //! @pre <tt>other.size() <= capacity()</tt>
@@ -345,7 +343,7 @@ public:
     //!   Linear O(N).
     static_vector & operator=(BOOST_RV_REF(static_vector) other)
     {
-        return static_cast<static_vector&>(base_t::operator=(boost::move(static_cast<base_t&>(other))));
+        return static_cast<static_vector&>(base_t::operator=(BOOST_MOVE_BASE(base_t, other)));
     }
 
     //! @pre <tt>other.size() <= capacity()</tt>
@@ -364,7 +362,7 @@ public:
     static_vector & operator=(BOOST_RV_REF_BEG static_vector<value_type, C> BOOST_RV_REF_END other)
     {
         return static_cast<static_vector&>(base_t::operator=
-         (boost::move(static_cast<typename static_vector<value_type, C>::base_t&>(other))));
+         (BOOST_MOVE_BASE(typename static_vector<value_type BOOST_CONTAINER_I C>::base_t, other)));
     }
 
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -768,6 +766,66 @@ public:
     //! @par Complexity
     //!   Constant O(1).
     const_reference operator[](size_type i) const;
+
+    //! @pre <tt>i =< size()</tt>
+    //!
+    //! @brief Returns a iterator to the i-th element.
+    //!
+    //! @param i    The element's index.
+    //!
+    //! @return a iterator to the i-th element.
+    //!
+    //! @par Throws
+    //!   Nothing by default.
+    //!
+    //! @par Complexity
+    //!   Constant O(1).
+    iterator nth(size_type i);
+
+    //! @pre <tt>i =< size()</tt>
+    //!
+    //! @brief Returns a const_iterator to the i-th element.
+    //!
+    //! @param i    The element's index.
+    //!
+    //! @return a const_iterator to the i-th element.
+    //!
+    //! @par Throws
+    //!   Nothing by default.
+    //!
+    //! @par Complexity
+    //!   Constant O(1).
+    const_iterator nth(size_type i) const;
+
+    //! @pre <tt>begin() <= p <= end()</tt>
+    //!
+    //! @brief Returns the index of the element pointed by p.
+    //!
+    //! @param i    The element's index.
+    //!
+    //! @return The index of the element pointed by p.
+    //!
+    //! @par Throws
+    //!   Nothing by default.
+    //!
+    //! @par Complexity
+    //!   Constant O(1).
+    size_type index_of(iterator p);
+
+    //! @pre <tt>begin() <= p <= end()</tt>
+    //!
+    //! @brief Returns the index of the element pointed by p.
+    //!
+    //! @param i    The index of the element pointed by p.
+    //!
+    //! @return a const_iterator to the i-th element.
+    //!
+    //! @par Throws
+    //!   Nothing by default.
+    //!
+    //! @par Complexity
+    //!   Constant O(1).
+    size_type index_of(const_iterator p) const;
 
     //! @pre \c !empty()
     //!

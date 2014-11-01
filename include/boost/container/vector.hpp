@@ -310,7 +310,7 @@ struct vector_alloc_holder
    }
 
    vector_alloc_holder(BOOST_RV_REF(vector_alloc_holder) holder) BOOST_CONTAINER_NOEXCEPT
-      : Allocator(boost::move(static_cast<Allocator&>(holder)))
+      : Allocator(BOOST_MOVE_BASE(Allocator, holder))
       , m_start(holder.m_start)
       , m_size(holder.m_size)
       , m_capacity(holder.m_capacity)
@@ -439,7 +439,7 @@ struct vector_alloc_holder<Allocator, container_detail::integral_constant<unsign
    }
 
    vector_alloc_holder(BOOST_RV_REF(vector_alloc_holder) holder)
-      : Allocator(boost::move(static_cast<Allocator&>(holder)))
+      : Allocator(BOOST_MOVE_BASE(Allocator, holder))
       , m_size(holder.m_size) //Size is initialized here so vector should only call uninitialized_xxx after this
    {
       ::boost::container::uninitialized_move_alloc_n
@@ -1300,7 +1300,10 @@ class vector
    //!
    //! <b>Complexity</b>: Constant.
    reference         back() BOOST_CONTAINER_NOEXCEPT
-   { return this->m_holder.start()[this->m_holder.m_size - 1]; }
+   {
+      BOOST_ASSERT(this->m_holder.m_size > 0);
+      return this->m_holder.start()[this->m_holder.m_size - 1];
+   }
 
    //! <b>Requires</b>: !empty()
    //!
@@ -1311,7 +1314,10 @@ class vector
    //!
    //! <b>Complexity</b>: Constant.
    const_reference   back()  const BOOST_CONTAINER_NOEXCEPT
-   { return this->m_holder.start()[this->m_holder.m_size - 1]; }
+   {
+      BOOST_ASSERT(this->m_holder.m_size > 0);
+      return this->m_holder.start()[this->m_holder.m_size - 1];
+   }
 
    //! <b>Requires</b>: size() > n.
    //!
@@ -1322,7 +1328,10 @@ class vector
    //!
    //! <b>Complexity</b>: Constant.
    reference operator[](size_type n) BOOST_CONTAINER_NOEXCEPT
-   { return this->m_holder.start()[n]; }
+   {
+      BOOST_ASSERT(this->m_holder.m_size > n);
+      return this->m_holder.start()[n];
+   }
 
    //! <b>Requires</b>: size() > n.
    //!
@@ -1333,7 +1342,70 @@ class vector
    //!
    //! <b>Complexity</b>: Constant.
    const_reference operator[](size_type n) const BOOST_CONTAINER_NOEXCEPT
-   { return this->m_holder.start()[n]; }
+   {
+       return this->m_holder.start()[n];
+   }
+
+   //! <b>Requires</b>: size() >= n.
+   //!
+   //! <b>Effects</b>: Returns an iterator to the nth element
+   //!   from the beginning of the container. Returns end()
+   //!   if n == size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   iterator nth(size_type n) BOOST_CONTAINER_NOEXCEPT
+   {
+      BOOST_ASSERT(this->m_holder.m_size >= n);
+      return iterator(this->m_holder.start()+n);
+   }
+
+   //! <b>Requires</b>: size() >= n.
+   //!
+   //! <b>Effects</b>: Returns a const_iterator to the nth element
+   //!   from the beginning of the container. Returns end()
+   //!   if n == size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   const_iterator nth(size_type n) const BOOST_CONTAINER_NOEXCEPT
+   {
+      BOOST_ASSERT(this->m_holder.m_size >= n);
+      return const_iterator(this->m_holder.start()+n);
+   }
+
+   //! <b>Requires</b>: size() >= n.
+   //!
+   //! <b>Effects</b>: Returns an iterator to the nth element
+   //!   from the beginning of the container. Returns end()
+   //!   if n == size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   size_type index_of(iterator p) BOOST_CONTAINER_NOEXCEPT
+   {  return this->priv_index_of(vector_iterator_get_ptr(p));  }
+
+   //! <b>Requires</b>: begin() <= p <= end().
+   //!
+   //! <b>Effects</b>: Returns the index of the element pointed by p
+   //!   and size() if p == end().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   size_type index_of(const_iterator p) const BOOST_CONTAINER_NOEXCEPT
+   {  return this->priv_index_of(vector_iterator_get_ptr(p));  }
 
    //! <b>Requires</b>: size() > n.
    //!
@@ -1900,6 +1972,13 @@ class vector
    #endif   //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
 
    private:
+
+   size_type priv_index_of(pointer p) const
+   {
+      BOOST_ASSERT(this->m_holder.start() <= p);
+      BOOST_ASSERT(p <= (this->m_holder.start()+size()));
+      return static_cast<size_type>(p - this->m_holder.start());
+   }
 
    template<class OtherAllocator>
    void priv_move_assign(BOOST_RV_REF_BEG vector<T, OtherAllocator> BOOST_RV_REF_END x

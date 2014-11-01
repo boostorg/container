@@ -265,8 +265,8 @@ class flat_tree
    flat_tree&  operator=(BOOST_COPY_ASSIGN_REF(flat_tree) x)
    {  m_data = x.m_data;   return *this;  }
 
-   flat_tree&  operator=(BOOST_RV_REF(flat_tree) mx)
-   {  m_data = boost::move(mx.m_data); return *this;  }
+   flat_tree&  operator=(BOOST_RV_REF(flat_tree) x)
+   {  m_data = boost::move(x.m_data); return *this;  }
 
    public:
    // accessors:
@@ -631,6 +631,18 @@ class flat_tree
    //! <b>Complexity</b>: Linear to size().
    void shrink_to_fit()
    {  this->m_data.m_vect.shrink_to_fit();  }
+
+   iterator nth(size_type n) BOOST_CONTAINER_NOEXCEPT
+   {  return this->m_data.m_vect.nth(n);   }
+
+   const_iterator nth(size_type n) const BOOST_CONTAINER_NOEXCEPT
+   {  return this->m_data.m_vect.nth(n);   }
+
+   size_type index_of(iterator p) BOOST_CONTAINER_NOEXCEPT
+   {  return this->m_data.m_vect.index_of(p);   }
+
+   size_type index_of(const_iterator p) const BOOST_CONTAINER_NOEXCEPT
+   {  return this->m_data.m_vect.index_of(p);   }
 
    // set operations:
    iterator find(const key_type& k)

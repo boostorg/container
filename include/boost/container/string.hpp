@@ -2552,29 +2552,29 @@ template <class CharT, class Traits, class Allocator> inline
 
 template <class CharT, class Traits, class Allocator> inline
    basic_string<CharT, Traits, Allocator> operator+
-      ( BOOST_RV_REF_BEG basic_string<CharT, Traits, Allocator> BOOST_RV_REF_END mx
-      , BOOST_RV_REF_BEG basic_string<CharT, Traits, Allocator> BOOST_RV_REF_END my)
+      ( BOOST_RV_REF_BEG basic_string<CharT, Traits, Allocator> BOOST_RV_REF_END x
+      , BOOST_RV_REF_BEG basic_string<CharT, Traits, Allocator> BOOST_RV_REF_END y)
 {
-   mx += my;
-   return boost::move(mx);
+   x += y;
+   return boost::move(x);
 }
 
 template <class CharT, class Traits, class Allocator> inline
    basic_string<CharT, Traits, Allocator> operator+
-      ( BOOST_RV_REF_BEG basic_string<CharT, Traits, Allocator> BOOST_RV_REF_END mx
+      ( BOOST_RV_REF_BEG basic_string<CharT, Traits, Allocator> BOOST_RV_REF_END x
       , const basic_string<CharT,Traits,Allocator>& y)
 {
-   mx += y;
-   return boost::move(mx);
+   x += y;
+   return boost::move(x);
 }
 
 template <class CharT, class Traits, class Allocator> inline
    basic_string<CharT, Traits, Allocator> operator+
       (const basic_string<CharT,Traits,Allocator>& x
-      ,BOOST_RV_REF_BEG basic_string<CharT, Traits, Allocator> BOOST_RV_REF_END my)
+      ,BOOST_RV_REF_BEG basic_string<CharT, Traits, Allocator> BOOST_RV_REF_END y)
 {
-   my.insert(my.begin(), x.begin(), x.end());
-   return boost::move(my);
+   y.insert(y.begin(), x.begin(), x.end());
+   return boost::move(y);
 }
 
 template <class CharT, class Traits, class Allocator> inline

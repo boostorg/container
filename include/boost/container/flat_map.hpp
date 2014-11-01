@@ -115,6 +115,7 @@ class flat_map
 
    typedef typename impl_tree_t::value_type              impl_value_type;
    typedef typename impl_tree_t::const_iterator          impl_const_iterator;
+   typedef typename impl_tree_t::iterator                impl_iterator;
    typedef typename impl_tree_t::allocator_type          impl_allocator_type;
    typedef container_detail::flat_tree_value_compare
       < Compare
@@ -555,6 +556,22 @@ class flat_map
    #else
    BOOST_MOVE_CONVERSION_AWARE_CATCH( operator[] , key_type, mapped_type&, this->priv_subscript)
    #endif
+
+   //! @copydoc ::boost::container::flat_set::nth(size_type)
+   iterator nth(size_type n) BOOST_CONTAINER_NOEXCEPT
+   {  return container_detail::force_copy<iterator>(m_flat_tree.nth(n));  }
+
+   //! @copydoc ::boost::container::flat_set::nth(size_type) const
+   const_iterator nth(size_type n) const BOOST_CONTAINER_NOEXCEPT
+   {  return container_detail::force_copy<iterator>(m_flat_tree.nth(n));  }
+
+   //! @copydoc ::boost::container::flat_set::index_of(iterator)
+   size_type index_of(iterator p) BOOST_CONTAINER_NOEXCEPT
+   {  return m_flat_tree.index_of(container_detail::force_copy<impl_iterator>(p));  }
+
+   //! @copydoc ::boost::container::flat_set::index_of(const_iterator) const
+   size_type index_of(const_iterator p) const BOOST_CONTAINER_NOEXCEPT
+   {  return m_flat_tree.index_of(container_detail::force_copy<impl_const_iterator>(p));  }
 
    //! Returns: Allocator reference to the element whose key is equivalent to x.
    //!
@@ -1085,6 +1102,7 @@ class flat_multimap
 
    typedef typename impl_tree_t::value_type              impl_value_type;
    typedef typename impl_tree_t::const_iterator          impl_const_iterator;
+   typedef typename impl_tree_t::iterator                impl_iterator;
    typedef typename impl_tree_t::allocator_type          impl_allocator_type;
    typedef container_detail::flat_tree_value_compare
       < Compare
@@ -1493,11 +1511,21 @@ class flat_multimap
    void shrink_to_fit()
       { m_flat_tree.shrink_to_fit(); }
 
-   //////////////////////////////////////////////
-   //
-   //                modifiers
-   //
-   //////////////////////////////////////////////
+   //! @copydoc ::boost::container::flat_set::nth(size_type)
+   iterator nth(size_type n) BOOST_CONTAINER_NOEXCEPT
+   {  return container_detail::force_copy<iterator>(m_flat_tree.nth(n));  }
+
+   //! @copydoc ::boost::container::flat_set::nth(size_type) const
+   const_iterator nth(size_type n) const BOOST_CONTAINER_NOEXCEPT
+   {  return container_detail::force_copy<iterator>(m_flat_tree.nth(n));  }
+
+   //! @copydoc ::boost::container::flat_set::index_of(iterator)
+   size_type index_of(iterator p) BOOST_CONTAINER_NOEXCEPT
+   {  return m_flat_tree.index_of(container_detail::force_copy<impl_iterator>(p));  }
+
+   //! @copydoc ::boost::container::flat_set::index_of(const_iterator) const
+   size_type index_of(const_iterator p) const BOOST_CONTAINER_NOEXCEPT
+   {  return m_flat_tree.index_of(container_detail::force_copy<impl_const_iterator>(p));  }
 
    #if defined(BOOST_CONTAINER_PERFECT_FORWARDING) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
