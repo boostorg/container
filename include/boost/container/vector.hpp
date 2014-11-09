@@ -21,8 +21,9 @@
 
 //#include <cstddef> //Already included by container_fwd.hpp
 #include <memory>    //for std::allocator
-#include <iterator>  //for std::random_access_iterator_tag
-#include <utility>   //for std::pair,std::distance
+#include <iterator>  //for std::random_access_iterator_tag,std::distance
+#include <utility>   //for std::pair
+#include <algorithm> //for std::equal
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>   //for std::initializer_list
 #endif
@@ -1773,20 +1774,8 @@ class vector
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const vector& x, const vector& y)
-   {  
-      if(x.size() != y.size()){
-         return false;
-      }
-      else{
-         const_iterator first1(x.cbegin()), first2(y.cbegin());
-         const const_iterator last1(x.cend());
-         for (; first1 != last1; ++first1, ++first2) {
-            if (*first1 != *first2) {
-               return false;
-            }
-         }
-         return true;
-      }
+   {
+      return (x.size() == y.size()) && std::equal(x.cbegin(), x.cend(), y.cbegin());
    }
 
    //! <b>Effects</b>: Returns true if x and y are unequal
