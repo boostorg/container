@@ -188,7 +188,19 @@ int set_test ()
          aux_vect3[i] = boost::move(move_me);
       }
 
-
+      //some comparison operators
+      if(!(boostset2 == boostset2))
+         return 1;
+      if(boostset2 != boostset2)
+         return 1;
+      if(boostset2 < boostset2)
+         return 1;
+      if(boostset2 > boostset2)
+         return 1;
+      if(!(boostset2 <= boostset2))
+         return 1;
+      if(!(boostset2 >= boostset2))
+         return 1;
 
       ::boost::movelib::unique_ptr<MyBoostSet> const pboostset3 = ::boost::movelib::make_unique<MyBoostSet>
             ( ordered_unique_range

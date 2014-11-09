@@ -277,6 +277,20 @@ int vector_test()
       }
       if(!test::CheckEqualContainers(boostvector, stdvector)) return 1;
 
+      //some comparison operators
+      if(!(boostvector == boostvector))
+         return 1;
+      if(boostvector != boostvector)
+         return 1;
+      if(boostvector < boostvector)
+         return 1;
+      if(boostvector > boostvector)
+         return 1;
+      if(!(boostvector <= boostvector))
+         return 1;
+      if(!(boostvector >= boostvector))
+         return 1;
+
       //Test insertion from list
       {
          std::list<int> l(50, int(1));

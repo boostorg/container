@@ -285,6 +285,20 @@ int list_test (bool copied_allocators_equal = true)
    if(!CheckEqualContainers(boostlist, stdlist))
       return 1;
 
+   //some comparison operators
+   if(!(boostlist == boostlist))
+      return 1;
+   if(boostlist != boostlist)
+      return 1;
+   if(boostlist < boostlist)
+      return 1;
+   if(boostlist > boostlist)
+      return 1;
+   if(!(boostlist <= boostlist))
+      return 1;
+   if(!(boostlist >= boostlist))
+      return 1;
+
    if(push_data_t::execute(max, boostlist, stdlist)){
       return 1;
    }

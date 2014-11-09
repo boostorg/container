@@ -1510,7 +1510,7 @@ class vector
    {                                                                                                  \
       T* const back_pos = container_detail::to_raw_pointer                                            \
          (this->m_holder.start()) + this->m_holder.m_size;                                            \
-      if (BOOST_LIKELY(this->m_holder.m_size < this->m_holder.capacity())){                                         \
+      if (BOOST_LIKELY(this->m_holder.m_size < this->m_holder.capacity())){                           \
          allocator_traits_type::construct (this->m_holder.alloc()                                     \
             , back_pos BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _) );              \
          ++this->m_holder.m_size;                                                                     \
@@ -1781,8 +1781,8 @@ class vector
          const_iterator first1(x.cbegin()), first2(y.cbegin());
          const const_iterator last1(x.cend());
          for (; first1 != last1; ++first1, ++first2) {
-            if (!(*first1 != *first2)) {
-                  return false;
+            if (*first1 != *first2) {
+               return false;
             }
          }
          return true;
@@ -1956,7 +1956,7 @@ class vector
    bool stable_emplace_back(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_LIST, _))              \
    {                                                                                         \
       const bool room_enough = this->m_holder.m_size < this->m_holder.capacity();            \
-      if (BOOST_LIKELY(room_enough)){                                                                      \
+      if (BOOST_LIKELY(room_enough)){                                                        \
          T* const back_pos = container_detail::to_raw_pointer                                \
             (this->m_holder.start()) + this->m_holder.m_size;                                \
          allocator_traits_type::construct (this->m_holder.alloc()                            \
@@ -1976,7 +1976,7 @@ class vector
    size_type priv_index_of(pointer p) const
    {
       BOOST_ASSERT(this->m_holder.start() <= p);
-      BOOST_ASSERT(p <= (this->m_holder.start()+size()));
+      BOOST_ASSERT(p <= (this->m_holder.start()+this->size()));
       return static_cast<size_type>(p - this->m_holder.start());
    }
 

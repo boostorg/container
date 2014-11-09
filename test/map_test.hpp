@@ -206,6 +206,20 @@ int map_test()
       if(!CheckEqualContainers(boostmap2, stdmap2)) return 1;
       if(!CheckEqualContainers(boostmultimap2, stdmultimap2)) return 1;
 
+      //some comparison operators
+      if(!(boostmap2 == boostmap2))
+         return 1;
+      if(boostmap2 != boostmap2)
+         return 1;
+      if(boostmap2 < boostmap2)
+         return 1;
+      if(boostmap2 > boostmap2)
+         return 1;
+      if(!(boostmap2 <= boostmap2))
+         return 1;
+      if(!(boostmap2 >= boostmap2))
+         return 1;
+
       ::boost::movelib::unique_ptr<MyBoostMap> const pboostmap3 = ::boost::movelib::make_unique<MyBoostMap>
                ( boost::make_move_iterator(&aux_vect[0])
                , boost::make_move_iterator(&aux_vect[0] + 50));
