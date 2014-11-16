@@ -27,6 +27,10 @@
 #include <boost/container/detail/type_traits.hpp>
 #endif
 
+#if !defined(BOOST_NO_CXX11_ALLOCATOR)
+#include <memory>
+#endif
+
 namespace boost { namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -65,7 +69,11 @@ class scoped_allocator_adaptor;
 //! disambiguate constructor and function overloading. Specifically, several types
 //! have constructors with allocator_arg_t as the first argument, immediately followed
 //! by an argument of a type that satisfies the Allocator requirements
+#if defined(BOOST_NO_CXX11_ALLOCATOR)
 struct allocator_arg_t{};
+#else
+using allocator_arg_t = std::allocator_arg_t;
+#endif
 
 //! A instance of type allocator_arg_t
 //!
