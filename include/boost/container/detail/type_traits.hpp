@@ -69,7 +69,7 @@ union max_align
    int         int_;
    long        long_;
    #ifdef BOOST_HAS_LONG_LONG
-   long long   long_long_;
+   ::boost::long_long_type   long_long_;
    #endif
    float       float_;
    double      double_;
@@ -225,7 +225,7 @@ template <> struct make_unsigned<signed short>     {typedef unsigned short     t
 template <> struct make_unsigned<signed int>       {typedef unsigned int       type;};
 template <> struct make_unsigned<signed long>      {typedef unsigned long      type;};
 #ifdef BOOST_HAS_LONG_LONG
-template <> struct make_unsigned<signed long long> {typedef unsigned long long type;};
+template <> struct make_unsigned< ::boost::long_long_type > {typedef ::boost::ulong_long_type type;};
 #endif
 
 } // namespace container_detail
