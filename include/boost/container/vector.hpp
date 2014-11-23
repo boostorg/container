@@ -39,7 +39,6 @@
 #include <boost/container/detail/allocation_type.hpp>
 #include <boost/container/detail/utilities.hpp>
 #include <boost/container/detail/iterators.hpp>
-#include <boost/container/detail/algorithms.hpp>
 #include <boost/container/detail/destroyers.hpp>
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/detail/allocator_version_traits.hpp>

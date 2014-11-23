@@ -21,14 +21,13 @@
 
 #include <boost/container/detail/utilities.hpp>
 #include <boost/container/detail/iterators.hpp>
-#include <boost/container/detail/algorithms.hpp>
 #include <boost/container/detail/node_alloc_holder.hpp>
 #include <boost/container/detail/destroyers.hpp>
 #include <boost/container/detail/pair.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/options.hpp>
-
+#include <boost/container/detail/compare_functors.hpp>
 //
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/intrusive/rbtree.hpp>
@@ -93,6 +92,10 @@ struct tree_value_compare
 
    template<class KeyType, class KeyType2>
    bool operator()(const KeyType &key1, const KeyType2 &key2) const
+   {  return key_compare::operator()(this->key_forward(key1), this->key_forward(key2));  }
+
+   template<class KeyType, class KeyType2>
+   bool operator()(const KeyType &key1, const KeyType2 &key2)
    {  return key_compare::operator()(this->key_forward(key1), this->key_forward(key2));  }
 };
 
@@ -327,7 +330,8 @@ struct intrusive_tree_type
    typedef typename container_detail::tree_node
          < value_type, void_pointer
          , tree_type_value, OptimizeSize>          node_type;
-   typedef node_compare<ValueCompare, node_type>   node_compare_type;
+   typedef value_to_node_compare
+      <node_type, ValueCompare>                    node_compare_type;
    //Deducing the hook type from node_type (e.g. node_type::hook_type) would
    //provoke an early instantiation of node_type that could ruin recursive
    //tree definitions, so retype the complete type to avoid any problem.
@@ -525,11 +529,11 @@ class tree
    typedef container_detail::reverse_iterator<const_iterator>  const_reverse_iterator;
 
    tree()
-      : AllocHolder(ValComp(key_compare()))
+      : AllocHolder()
    {}
 
    explicit tree(const key_compare& comp, const allocator_type& a = allocator_type())
-      : AllocHolder(a, ValComp(comp))
+      : AllocHolder(ValComp(comp), a)
    {}
 
    explicit tree(const allocator_type& a)
@@ -546,7 +550,7 @@ class tree
          >::type * = 0
       #endif
          )
-      : AllocHolder(a, value_compare(comp))
+      : AllocHolder(value_compare(comp), a)
    {
       //Use cend() as hint to achieve linear time for
       //ordered ranges as required by the standard
@@ -574,7 +578,7 @@ class tree
          >::type * = 0
       #endif
          )
-      : AllocHolder(a, value_compare(comp))
+      : AllocHolder(value_compare(comp), a)
    {
       if(unique_insertion){
          //Use cend() as hint to achieve linear time for
@@ -603,7 +607,7 @@ class tree
             >::type * = 0
          #endif
          )
-      : AllocHolder(a, value_compare(comp))
+      : AllocHolder(value_compare(comp), a)
    {
       for ( ; first != last; ++first){
          this->push_back_impl(*first);
@@ -620,7 +624,7 @@ class tree
             >::type * = 0
          #endif
          )
-      : AllocHolder(a, value_compare(comp))
+      : AllocHolder(value_compare(comp), a)
    {
       //Optimized allocation and construction
       this->allocate_many_and_construct
@@ -629,25 +633,25 @@ class tree
    }
 
    tree(const tree& x)
-      :  AllocHolder(x, x.value_comp())
+      :  AllocHolder(x.value_comp(), x)
    {
       this->icont().clone_from
          (x.icont(), typename AllocHolder::cloner(*this), Destroyer(this->node_alloc()));
    }
 
    tree(BOOST_RV_REF(tree) x)
-      :  AllocHolder(::boost::move(static_cast<AllocHolder&>(x)), x.value_comp())
+      :  AllocHolder(BOOST_MOVE_BASE(AllocHolder, x), x.value_comp())
    {}
 
    tree(const tree& x, const allocator_type &a)
-      :  AllocHolder(a, x.value_comp())
+      :  AllocHolder(x.value_comp(), a)
    {
       this->icont().clone_from
          (x.icont(), typename AllocHolder::cloner(*this), Destroyer(this->node_alloc()));
    }
 
    tree(BOOST_RV_REF(tree) x, const allocator_type &a)
-      :  AllocHolder(a, x.value_comp())
+      :  AllocHolder(x.value_comp(), a)
    {
       if(this->node_alloc() == x.node_alloc()){
          this->icont().swap(x.icont());
@@ -735,10 +739,10 @@ class tree
    public:
    // accessors:
    value_compare value_comp() const
-   {  return this->icont().value_comp().value_comp(); }
+   {  return this->icont().value_comp().predicate(); }
 
    key_compare key_comp() const
-   {  return this->icont().value_comp().value_comp().key_comp(); }
+   {  return this->icont().value_comp().predicate().key_comp(); }
 
    allocator_type get_allocator() const
    {  return allocator_type(this->node_alloc()); }

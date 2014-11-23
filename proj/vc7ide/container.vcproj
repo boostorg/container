@@ -192,6 +192,9 @@
 					RelativePath="..\..\..\..\boost\container\detail\boost_cont_ext_auto_link.hpp">
 				</File>
 				<File
+					RelativePath="..\..\..\..\boost\container\detail\compare_functors.hpp">
+				</File>
+				<File
 					RelativePath="..\..\..\..\boost\container\detail\config_begin.hpp">
 				</File>
 				<File

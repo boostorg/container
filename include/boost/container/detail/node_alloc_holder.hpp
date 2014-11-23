@@ -47,33 +47,6 @@ namespace boost {
 namespace container {
 namespace container_detail {
 
-template<class ValueCompare, class Node>
-struct node_compare
-   :  private ValueCompare
-{
-   typedef ValueCompare                                 wrapped_value_compare;
-   typedef typename wrapped_value_compare::key_type     key_type;
-   typedef typename wrapped_value_compare::value_type   value_type;
-   typedef typename wrapped_value_compare::key_of_value key_of_value;
-
-   explicit node_compare(const wrapped_value_compare &pred)
-      :  wrapped_value_compare(pred)
-   {}
-
-   node_compare()
-      :  wrapped_value_compare()
-   {}
-
-   wrapped_value_compare &value_comp()
-   {  return static_cast<wrapped_value_compare &>(*this);  }
-
-   wrapped_value_compare &value_comp() const
-   {  return static_cast<const wrapped_value_compare &>(*this);  }
-
-   bool operator()(const Node &a, const Node &b) const
-   {  return wrapped_value_compare::operator()(a.get_data(), b.get_data());  }
-};
-
 template<class A, class ICont>
 struct node_alloc_holder
 {
@@ -81,10 +54,10 @@ struct node_alloc_holder
    //be of type node_compare<>. If not an associative container value_compare will be a "nat" type.
    typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT(boost::container::container_detail::, ICont,
       value_compare, container_detail::nat)                       intrusive_value_compare;
-   //In that case obtain the value predicate from the node predicate via wrapped_value_compare
+   //In that case obtain the value predicate from the node predicate via predicate_type
    //if intrusive_value_compare is node_compare<>, nat otherwise
-   typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT(boost::container::container_detail::, ICont,
-      wrapped_value_compare, container_detail::nat)               value_compare;
+   typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT(boost::container::container_detail::, intrusive_value_compare,
+      predicate_type, container_detail::nat)                      value_compare;
 
    typedef allocator_traits<A>                                    allocator_traits_type;
    typedef typename allocator_traits_type::value_type             value_type;
@@ -133,11 +106,11 @@ struct node_alloc_holder
    {  this->icont().swap(x.icont());  }
 
    //Constructors for associative containers
-   explicit node_alloc_holder(const ValAlloc &a, const value_compare &c)
+   explicit node_alloc_holder(const value_compare &c, const ValAlloc &a)
       : members_(a, c)
    {}
 
-   explicit node_alloc_holder(const node_alloc_holder &x, const value_compare &c)
+   explicit node_alloc_holder(const value_compare &c, const node_alloc_holder &x)
       : members_(NodeAllocTraits::select_on_container_copy_construction(x.node_alloc()), c)
    {}
 

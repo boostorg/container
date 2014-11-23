@@ -27,7 +27,7 @@
 #include <boost/move/traits.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/container/detail/utilities.hpp>
-#include <boost/container/detail/algorithms.hpp>
+#include <boost/container/detail/compare_functors.hpp>
 #include <boost/intrusive/list.hpp>
 #include <boost/assert.hpp>
 #include <boost/container/detail/node_alloc_holder.hpp>
@@ -145,35 +145,7 @@ class list
    typedef typename AllocHolder::allocator_v2                     allocator_v2;
    typedef typename AllocHolder::alloc_version                    alloc_version;
    typedef boost::container::allocator_traits<Allocator>          allocator_traits_type;
-
-   class equal_to_value
-   {
-      typedef typename AllocHolder::value_type value_type;
-      const value_type &t_;
-
-      public:
-      equal_to_value(const value_type &t)
-         :  t_(t)
-      {}
-
-      bool operator()(const value_type &t)const
-      {  return t_ == t;   }
-   };
-
-   template<class Pred>
-   struct ValueCompareToNodeCompare
-      :  Pred
-   {
-      ValueCompareToNodeCompare(Pred pred)
-         :  Pred(pred)
-      {}
-
-      bool operator()(const Node &a, const Node &b) const
-      {  return static_cast<const Pred&>(*this)(a.m_data, b.m_data);  }
-
-      bool operator()(const Node &a) const
-      {  return static_cast<const Pred&>(*this)(a.m_data);  }
-   };
+   typedef boost::container::equal_to_value<Allocator>            equal_to_value_type;
 
    BOOST_COPYABLE_AND_MOVABLE(list)
 
@@ -1139,7 +1111,7 @@ class list
    //! <b>Note</b>: The relative order of elements that are not removed is unchanged,
    //!   and iterators to elements that are not removed remain valid.
    void remove(const T& value)
-   {  this->remove_if(equal_to_value(value));  }
+   {  this->remove_if(equal_to_value_type(value));  }
 
    //! <b>Effects</b>: Removes all the elements for which a specified
    //!   predicate is satisfied.
@@ -1153,8 +1125,8 @@ class list
    template <class Pred>
    void remove_if(Pred pred)
    {
-      typedef ValueCompareToNodeCompare<Pred> Predicate;
-      this->icont().remove_and_dispose_if(Predicate(pred), Destroyer(this->node_alloc()));
+      typedef value_to_node_compare<Node, Pred> value_to_node_compare_type;
+      this->icont().remove_and_dispose_if(value_to_node_compare_type(pred), Destroyer(this->node_alloc()));
    }
 
    //! <b>Effects</b>: Removes adjacent duplicate elements or adjacent
@@ -1181,8 +1153,8 @@ class list
    template <class BinaryPredicate>
    void unique(BinaryPredicate binary_pred)
    {
-      typedef ValueCompareToNodeCompare<BinaryPredicate> Predicate;
-      this->icont().unique_and_dispose(Predicate(binary_pred), Destroyer(this->node_alloc()));
+      typedef value_to_node_compare<Node, BinaryPredicate> value_to_node_compare_type;
+      this->icont().unique_and_dispose(value_to_node_compare_type(binary_pred), Destroyer(this->node_alloc()));
    }
 
    //! <b>Requires</b>: The lists x and *this must be distinct.
@@ -1231,8 +1203,8 @@ class list
    void merge(list &x, const StrictWeakOrdering &comp)
    {
       BOOST_ASSERT(this->node_alloc() == x.node_alloc());
-      this->icont().merge(x.icont(),
-         ValueCompareToNodeCompare<StrictWeakOrdering>(comp));
+      typedef value_to_node_compare<Node, StrictWeakOrdering> value_to_node_compare_type;
+      this->icont().merge(x.icont(), value_to_node_compare_type(comp));
    }
 
    //! <b>Requires</b>: p must be a comparison function that induces a strict weak
@@ -1280,7 +1252,8 @@ class list
       // nothing if the list has length 0 or 1.
       if (this->size() < 2)
          return;
-      this->icont().sort(ValueCompareToNodeCompare<StrictWeakOrdering>(comp));
+      typedef value_to_node_compare<Node, StrictWeakOrdering> value_to_node_compare_type;
+      this->icont().sort(value_to_node_compare_type(comp));
    }
 
    //! <b>Effects</b>: Reverses the order of elements in the list.

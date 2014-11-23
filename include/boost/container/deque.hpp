@@ -20,7 +20,6 @@
 
 #include <boost/container/detail/utilities.hpp>
 #include <boost/container/detail/iterators.hpp>
-#include <boost/container/detail/algorithms.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/container_fwd.hpp>
