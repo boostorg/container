@@ -19,12 +19,11 @@
 #include <boost/container/detail/workaround.hpp>
 
 #include <boost/container/container_fwd.hpp>
-#include <utility>
-#include <functional>
-#include <memory>
+
 #include <boost/container/detail/flat_tree.hpp>
 #include <boost/type_traits/has_trivial_destructor.hpp>
 #include <boost/container/detail/mpl.hpp>
+#include <boost/container/detail/algorithm.hpp> //equal()
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/throw_exception.hpp>
 #include <boost/move/utility_core.hpp>
@@ -32,6 +31,9 @@
 #include <boost/move/traits.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 
+#include <utility>      //pair
+#include <functional>   //less
+#include <memory>       //allocator
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
 #endif
@@ -967,7 +969,7 @@ class flat_map
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const flat_map& x, const flat_map& y)
-   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
+   {  return x.size() == y.size() && ::boost::container::algo_equal(x.begin(), x.end(), y.begin());  }
 
    //! <b>Effects</b>: Returns true if x and y are unequal
    //!
@@ -979,7 +981,7 @@ class flat_map
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<(const flat_map& x, const flat_map& y)
-   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+   {  return ::boost::container::algo_lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
 
    //! <b>Effects</b>: Returns true if x is greater than y
    //!
@@ -1868,7 +1870,7 @@ class flat_multimap
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const flat_multimap& x, const flat_multimap& y)
-   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
+   {  return x.size() == y.size() && ::boost::container::algo_equal(x.begin(), x.end(), y.begin());  }
 
    //! <b>Effects</b>: Returns true if x and y are unequal
    //!
@@ -1880,7 +1882,7 @@ class flat_multimap
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<(const flat_multimap& x, const flat_multimap& y)
-   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+   {  return ::boost::container::algo_lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
 
    //! <b>Effects</b>: Returns true if x is greater than y
    //!

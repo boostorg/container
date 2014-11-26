@@ -32,8 +32,7 @@
 #include <boost/utility/addressof.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/move/utility_core.hpp>
-#include <memory>
-#include <algorithm>
+#include <utility>
 #include <cstddef>
 
 

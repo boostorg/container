@@ -19,9 +19,6 @@
 #include <boost/container/detail/workaround.hpp>
 
 #include <boost/container/container_fwd.hpp>
-#include <utility>
-#include <functional>
-#include <memory>
 #include <boost/container/detail/tree.hpp>
 #include <boost/container/detail/value_init.hpp>
 #include <boost/type_traits/has_trivial_destructor.hpp>
@@ -37,6 +34,9 @@
 #include <boost/container/detail/value_init.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 
+#include <utility>      //pair
+#include <functional>   //less
+#include <memory>       //allocator
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
 #endif

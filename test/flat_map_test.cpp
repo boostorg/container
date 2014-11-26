@@ -13,6 +13,7 @@
 #include <boost/container/allocator.hpp>
 #include <boost/container/node_allocator.hpp>
 #include <boost/container/adaptive_pool.hpp>
+#include <boost/container/detail/flat_tree.hpp>
 
 #include "print_container.hpp"
 #include "dummy_test_allocator.hpp"
@@ -21,8 +22,10 @@
 #include "propagate_allocator_test.hpp"
 #include "container_common_tests.hpp"
 #include "emplace_test.hpp"
+
 #include <vector>
-#include <boost/container/detail/flat_tree.hpp>
+#include <map>
+
 
 using namespace boost::container;
 

@@ -20,19 +20,24 @@
 
 #include <boost/container/container_fwd.hpp>
 #include <boost/container/throw_exception.hpp>
-#include <boost/move/utility_core.hpp>
-#include <boost/move/detail/move_helpers.hpp>
-#include <boost/move/traits.hpp>
-#include <boost/intrusive/pointer_traits.hpp>
 #include <boost/container/detail/utilities.hpp>
 #include <boost/container/detail/iterators.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/type_traits.hpp>
-#include <boost/core/no_exceptions_support.hpp>
+#include <boost/container/detail/iterator.hpp>
+
 #include <boost/container/detail/node_alloc_holder.hpp>
 #include <boost/container/detail/compare_functors.hpp>
+#include <boost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
+
+
+#include <boost/core/no_exceptions_support.hpp>
 #include <boost/intrusive/slist.hpp>
-#include <iterator>
+#include <boost/move/utility_core.hpp>
+#include <boost/move/detail/move_helpers.hpp>
+#include <boost/move/traits.hpp>
+#include <boost/intrusive/pointer_traits.hpp>
+
 
 
 #if defined(BOOST_CONTAINER_PERFECT_FORWARDING) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -41,12 +46,7 @@
 #include <boost/container/detail/preprocessor.hpp>
 #endif
 
-#include <iterator>
-#include <utility>
-#include <memory>
-#include <functional>
-#include <algorithm>
-
+#include <memory>    //std::allocator
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
 #endif
@@ -181,8 +181,8 @@ class slist
    typedef boost::container::equal_to_value<Allocator>      equal_to_value_type;
 
    BOOST_COPYABLE_AND_MOVABLE(slist)
-   typedef container_detail::iterator<typename Icont::iterator, false>  iterator_impl;
-   typedef container_detail::iterator<typename Icont::iterator, true >  const_iterator_impl;
+   typedef container_detail::iterator_from_iiterator<typename Icont::iterator, false>  iterator_impl;
+   typedef container_detail::iterator_from_iiterator<typename Icont::iterator, true >  const_iterator_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -875,7 +875,7 @@ class slist
    {
       //Optimized allocation and construction
       insertion_functor func(this->icont(), prev.get());
-      this->allocate_many_and_construct(first, std::distance(first, last), func);
+      this->allocate_many_and_construct(first, boost::container::iterator_distance(first, last), func);
       return iterator(func.inserted_first());
    }
    #endif
@@ -1058,7 +1058,7 @@ class slist
    //! <b>Requires</b>: prev_p must be a valid iterator of this.
    //!   before_first and before_last must be valid iterators of x.
    //!   prev_p must not be contained in [before_first, before_last) range.
-   //!   n == std::distance(before_first, before_last).
+   //!   n == distance(before_first, before_last).
    //!   this' allocator and x's allocator shall compare equal.
    //!
    //! <b>Effects</b>: Transfers the range [before_first + 1, before_last + 1)
@@ -1082,7 +1082,7 @@ class slist
    //! <b>Requires</b>: prev_p must be a valid iterator of this.
    //!   before_first and before_last must be valid iterators of x.
    //!   prev_p must not be contained in [before_first, before_last) range.
-   //!   n == std::distance(before_first, before_last).
+   //!   n == distance(before_first, before_last).
    //!   this' allocator and x's allocator shall compare equal.
    //!
    //! <b>Effects</b>: Transfers the range [before_first + 1, before_last + 1)
@@ -1349,7 +1349,7 @@ class slist
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InpIt throws.
    //!
-   //! <b>Complexity</b>: Linear to std::distance [first, last) plus
+   //! <b>Complexity</b>: Linear to distance [first, last) plus
    //!    linear to the elements before p.
    template <class InIter>
    iterator insert(const_iterator p, InIter first, InIter last)
@@ -1500,21 +1500,7 @@ class slist
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const slist& x, const slist& y)
-   {
-      if(x.size() != y.size()){
-         return false;
-      }
-      typedef typename slist<T,Allocator>::const_iterator const_iterator;
-      const_iterator end1 = x.end();
-
-      const_iterator i1 = x.begin();
-      const_iterator i2 = y.begin();
-      while (i1 != end1 && *i1 == *i2){
-         ++i1;
-         ++i2;
-      }
-      return i1 == end1;
-   }
+   {  return x.size() == y.size() && ::boost::container::algo_equal(x.begin(), x.end(), y.begin());  }
 
    //! <b>Effects</b>: Returns true if x and y are unequal
    //!
@@ -1526,7 +1512,7 @@ class slist
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<(const slist& x, const slist& y)
-   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+   {  return ::boost::container::algo_lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
 
    //! <b>Effects</b>: Returns true if x is greater than y
    //!

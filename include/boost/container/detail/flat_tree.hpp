@@ -20,10 +20,6 @@
 
 #include <boost/container/container_fwd.hpp>
 
-#include <algorithm>
-#include <functional>
-#include <utility>
-
 #include <boost/type_traits/has_trivial_destructor.hpp>
 #include <boost/move/utility_core.hpp>
 
@@ -32,6 +28,8 @@
 #include <boost/container/vector.hpp>
 #include <boost/container/detail/value_init.hpp>
 #include <boost/container/detail/destroyers.hpp>
+#include <boost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
+#include <boost/container/detail/iterator.hpp>
 #include <boost/container/allocator_traits.hpp>
 #ifdef BOOST_CONTAINER_VECTOR_ITERATOR_IS_POINTER
 #include <boost/intrusive/pointer_traits.hpp>
@@ -39,10 +37,10 @@
 #include <boost/aligned_storage.hpp>
 #include <boost/move/make_unique.hpp>
 
+#include <utility>      //std::pair
+
 namespace boost {
-
 namespace container {
-
 namespace container_detail {
 
 template<class Compare, class Value, class KeyOfValue>
@@ -78,22 +76,20 @@ template<class Pointer>
 struct get_flat_tree_iterators
 {
    #ifdef BOOST_CONTAINER_VECTOR_ITERATOR_IS_POINTER
-   typedef Pointer                                    iterator;
+   typedef Pointer                                             iterator;
    typedef typename boost::intrusive::
-      pointer_traits<Pointer>::element_type           iterator_element_type;
+      pointer_traits<Pointer>::element_type                    iterator_element_type;
    typedef typename boost::intrusive::
       pointer_traits<Pointer>:: template
-         rebind_pointer<const iterator_element_type>::type  const_iterator;
+         rebind_pointer<const iterator_element_type>::type     const_iterator;
    #else //BOOST_CONTAINER_VECTOR_ITERATOR_IS_POINTER
    typedef typename boost::container::container_detail::
-      vec_iterator<Pointer, false>                    iterator;
+      vec_iterator<Pointer, false>                             iterator;
    typedef typename boost::container::container_detail::
-      vec_iterator<Pointer, true >                    const_iterator;
+      vec_iterator<Pointer, true >                             const_iterator;
    #endif   //BOOST_CONTAINER_VECTOR_ITERATOR_IS_POINTER
-   typedef boost::container::container_detail::
-      reverse_iterator<iterator>                      reverse_iterator;
-   typedef boost::container::container_detail::
-      reverse_iterator<const_iterator>                const_reverse_iterator;
+   typedef boost::container::reverse_iterator<iterator>        reverse_iterator;
+   typedef boost::container::reverse_iterator<const_iterator>  const_reverse_iterator;
 };
 
 template <class Key, class Value, class KeyOfValue,
@@ -428,7 +424,7 @@ class flat_tree
       #endif
       )
    {
-      const size_type len = static_cast<size_type>(std::distance(first, last));
+      const size_type len = static_cast<size_type>(boost::container::iterator_distance(first, last));
       this->reserve(this->size()+len);
       this->priv_insert_equal_loop(first, last);
    }
@@ -455,7 +451,7 @@ class flat_tree
       #endif
       )
    {
-      const size_type len = static_cast<size_type>(std::distance(first, last));
+      const size_type len = static_cast<size_type>(boost::container::iterator_distance(first, last));
       this->reserve(this->size()+len);
       this->priv_insert_equal_loop_ordered(first, last);
    }
@@ -706,13 +702,12 @@ class flat_tree
 
    friend bool operator==(const flat_tree& x, const flat_tree& y)
    {
-      return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());
+      return x.size() == y.size() && ::boost::container::algo_equal(x.begin(), x.end(), y.begin());
    }
 
    friend bool operator<(const flat_tree& x, const flat_tree& y)
    {
-      return std::lexicographical_compare(x.begin(), x.end(),
-                                          y.begin(), y.end());
+      return ::boost::container::algo_lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());
    }
 
    friend bool operator!=(const flat_tree& x, const flat_tree& y)
@@ -948,7 +943,7 @@ class flat_tree
    template <class BidirIt>
    void priv_insert_ordered_range(const bool unique_values, BidirIt first, BidirIt last)
    {
-      size_type len = static_cast<size_type>(std::distance(first, last));
+      size_type len = static_cast<size_type>(boost::container::iterator_distance(first, last));
       //Prereserve all memory so that iterators are not invalidated
       this->reserve(this->size()+len);
       //Auxiliary data for insertion positions.
@@ -967,10 +962,10 @@ class flat_tree
          size_type unique_burst = 0u;
          size_type checked = 0;
          for(; checked != burst; ++checked){
-            //Get the insertion position for each key, use std::iterator_traits<BidirIt>::value_type
+            //Get the insertion position for each key, use iterator_traits<BidirIt>::value_type
             //because it can be different from container::value_type
             //(e.g. conversion between std::pair<A, B> -> boost::container::pair<A, B>
-            const typename std::iterator_traits<BidirIt>::value_type & val = *first;
+            const typename boost::container::iterator_traits<BidirIt>::value_type & val = *first;
             pos = const_cast<const flat_tree&>(*this).priv_lower_bound(pos, ce, KeyOfValue()(val));
             //Check if already present
             if (pos != ce){
@@ -1006,7 +1001,7 @@ class flat_tree
          BOOST_ASSERT(first == last);
       }
       else{
-         BOOST_ASSERT(size_type(std::distance(first, last)) == len);
+         BOOST_ASSERT(size_type(boost::container::iterator_distance(first, last)) == len);
          if(len)
             this->m_data.m_vect.insert(this->m_data.m_vect.cend(), len, first, last);
       }

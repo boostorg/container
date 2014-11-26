@@ -13,7 +13,7 @@
 #include <boost/container/string.hpp>
 #include <string>
 #include <vector>
-#include <algorithm>
+#include <boost/container/detail/algorithm.hpp> //equal()
 #include <cstring>
 #include <cstdio>
 #include <cstddef>
@@ -68,7 +68,7 @@ template<class StrVector1, class StrVector2>
 bool CheckEqualStringVector(StrVector1 *strvect1, StrVector2 *strvect2)
 {
    StringEqual comp;
-   return std::equal(strvect1->begin(), strvect1->end(),
+   return boost::container::algo_equal(strvect1->begin(), strvect1->end(),
                      strvect2->begin(), comp);
 }
 

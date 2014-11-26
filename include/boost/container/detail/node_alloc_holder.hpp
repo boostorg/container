@@ -39,7 +39,7 @@
 #include <boost/container/detail/preprocessor.hpp>
 #endif
 
-#include <boost/container/detail/algorithms.hpp>
+#include <boost/container/detail/construct_in_place.hpp>
 
 
 

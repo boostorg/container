@@ -25,9 +25,11 @@
 #include <boost/container/detail/destroyers.hpp>
 #include <boost/container/detail/pair.hpp>
 #include <boost/container/detail/type_traits.hpp>
+#include <boost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/options.hpp>
 #include <boost/container/detail/compare_functors.hpp>
+#include <boost/container/detail/iterator.hpp>
 //
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/intrusive/rbtree.hpp>
@@ -44,8 +46,6 @@
 #endif
 
 #include <utility>   //std::pair
-#include <iterator>
-#include <algorithm>
 
 namespace boost {
 namespace container {
@@ -523,10 +523,10 @@ class tree
    typedef key_node_compare<value_compare, Node>  KeyNodeCompare;
 
    public:
-   typedef container_detail::iterator<iiterator, false>        iterator;
-   typedef container_detail::iterator<iiterator, true >        const_iterator;
-   typedef container_detail::reverse_iterator<iterator>        reverse_iterator;
-   typedef container_detail::reverse_iterator<const_iterator>  const_reverse_iterator;
+   typedef container_detail::iterator_from_iiterator<iiterator, false>  iterator;
+   typedef container_detail::iterator_from_iiterator<iiterator, true >  const_iterator;
+   typedef boost::container::reverse_iterator<iterator>                 reverse_iterator;
+   typedef boost::container::reverse_iterator<const_iterator>           const_reverse_iterator;
 
    tree()
       : AllocHolder()
@@ -592,7 +592,7 @@ class tree
       else{
          //Optimized allocation and construction
          this->allocate_many_and_construct
-            ( first, std::distance(first, last)
+            ( first, boost::container::iterator_distance(first, last)
             , insert_equal_end_hint_functor<Node, Icont>(this->icont()));
       }
    }
@@ -628,7 +628,7 @@ class tree
    {
       //Optimized allocation and construction
       this->allocate_many_and_construct
-         ( first, std::distance(first, last)
+         ( first, boost::container::iterator_distance(first, last)
          , container_detail::push_back_functor<Node, Icont>(this->icont()));
    }
 
@@ -1145,10 +1145,10 @@ class tree
    {  intrusive_tree_proxy_t::rebalance(this->icont());   }
 
    friend bool operator==(const tree& x, const tree& y)
-   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
+   {  return x.size() == y.size() && ::boost::container::algo_equal(x.begin(), x.end(), y.begin());  }
 
    friend bool operator<(const tree& x, const tree& y)
-   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+   {  return ::boost::container::algo_lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
 
    friend bool operator!=(const tree& x, const tree& y)
    {  return !(x == y);  }

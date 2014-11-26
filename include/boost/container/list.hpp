@@ -20,7 +20,10 @@
 #include <boost/container/detail/version_type.hpp>
 #include <boost/container/detail/iterators.hpp>
 #include <boost/container/detail/mpl.hpp>
+#include <boost/container/detail/algorithm.hpp>
 #include <boost/container/throw_exception.hpp>
+#include <boost/container/detail/iterator.hpp>
+
 #include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/detail/move_helpers.hpp>
@@ -38,15 +41,10 @@
 #include <boost/container/detail/preprocessor.hpp>
 #endif
 
+#include <memory>    //std::allocator
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
 #endif
-
-#include <iterator>
-#include <utility>
-#include <memory>
-#include <functional>
-#include <algorithm>
 
 namespace boost {
 namespace container {
@@ -149,8 +147,8 @@ class list
 
    BOOST_COPYABLE_AND_MOVABLE(list)
 
-   typedef container_detail::iterator<typename Icont::iterator, false>  iterator_impl;
-   typedef container_detail::iterator<typename Icont::iterator, true>   const_iterator_impl;
+   typedef container_detail::iterator_from_iiterator<typename Icont::iterator, false>  iterator_impl;
+   typedef container_detail::iterator_from_iiterator<typename Icont::iterator, true>   const_iterator_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -171,8 +169,8 @@ class list
    typedef BOOST_CONTAINER_IMPDEF(NodeAlloc)                                           stored_allocator_type;
    typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                                       iterator;
    typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                                 const_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<iterator>)                          reverse_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<const_iterator>)                    const_reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
 
    //////////////////////////////////////////////
    //
@@ -838,7 +836,7 @@ class list
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InpIt throws.
    //!
-   //! <b>Complexity</b>: Linear to std::distance [first, last).
+   //! <b>Complexity</b>: Linear to distance [first, last).
    template <class InpIt>
    iterator insert(const_iterator p, InpIt first, InpIt last
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -878,7 +876,7 @@ class list
       insertion_functor func(this->icont(), p.get());
       iterator before_p(p.get());
       --before_p;
-      this->allocate_many_and_construct(first, std::distance(first, last), func);
+      this->allocate_many_and_construct(first, boost::container::iterator_distance(first, last), func);
       return ++before_p;
    }
    #endif
@@ -893,7 +891,7 @@ class list
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced std::initializer_list iterator throws.
    //!
-   //! <b>Complexity</b>: Linear to std::distance [il.begin(), il.end()).
+   //! <b>Complexity</b>: Linear to distance [il.begin(), il.end()).
    iterator insert(const_iterator p, std::initializer_list<value_type> il)
    { return insert(p, il.begin(), il.end()); }
 #endif
@@ -1065,7 +1063,7 @@ class list
 
    //! <b>Requires</b>: p must point to an element contained
    //!   by this list. first and last must point to elements contained in list x.
-   //!   n == std::distance(first, last). this' allocator and x's allocator shall compare equal
+   //!   n == distance(first, last). this' allocator and x's allocator shall compare equal
    //!
    //! <b>Effects</b>: Transfers the range pointed by first and last from list x to this list,
    //!   before the the element pointed by p. No destructors or copy constructors are called.
@@ -1086,7 +1084,7 @@ class list
 
    //! <b>Requires</b>: p must point to an element contained
    //!   by this list. first and last must point to elements contained in list x.
-   //!   n == std::distance(first, last). this' allocator and x's allocator shall compare equal
+   //!   n == distance(first, last). this' allocator and x's allocator shall compare equal
    //!
    //! <b>Effects</b>: Transfers the range pointed by first and last from list x to this list,
    //!   before the the element pointed by p. No destructors or copy constructors are called.
@@ -1270,21 +1268,7 @@ class list
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const list& x, const list& y)
-   {
-      if(x.size() != y.size()){
-         return false;
-      }
-      typedef typename list::const_iterator const_iterator;
-      const_iterator end1 = x.end();
-
-      const_iterator i1 = x.begin();
-      const_iterator i2 = y.begin();
-      while (i1 != end1 && *i1 == *i2) {
-         ++i1;
-         ++i2;
-      }
-      return i1 == end1;
-   }
+   {  return x.size() == y.size() && ::boost::container::algo_equal(x.begin(), x.end(), y.begin());  }
 
    //! <b>Effects</b>: Returns true if x and y are unequal
    //!
@@ -1296,7 +1280,7 @@ class list
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<(const list& x, const list& y)
-   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+   {  return boost::container::algo_lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
 
    //! <b>Effects</b>: Returns true if x is greater than y
    //!

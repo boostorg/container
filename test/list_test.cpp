@@ -53,9 +53,9 @@ template class boost::container::list
 
 namespace container_detail {
 
-template class iterator
+template class iterator_from_iiterator
    <intrusive_list_type< std::allocator<int> >::container_type::iterator, true >;
-template class iterator
+template class iterator_from_iiterator
    <intrusive_list_type< std::allocator<int> >::container_type::iterator, false>;
 
 }

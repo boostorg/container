@@ -19,9 +19,6 @@
 #include <boost/container/detail/workaround.hpp>
 
 #include <boost/container/container_fwd.hpp>
-#include <utility>
-#include <functional>
-#include <memory>
 #include <boost/container/detail/flat_tree.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/allocator_traits.hpp>
@@ -29,9 +26,13 @@
 #include <boost/move/detail/move_helpers.hpp>
 #include <boost/move/traits.hpp>
 
+#include <utility>      //pair
+#include <functional>   //less
+#include <memory>       //allocator
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
 #endif
+
 namespace boost {
 namespace container {
 

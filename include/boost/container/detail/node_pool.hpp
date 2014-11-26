@@ -25,8 +25,6 @@
 #include <boost/intrusive/slist.hpp>
 #include <boost/move/utility_core.hpp>
 #include <cstddef>
-#include <functional>   //std::unary_function
-#include <algorithm>    //std::swap
 #include <cassert>
 
 namespace boost {

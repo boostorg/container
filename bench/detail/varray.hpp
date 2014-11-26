@@ -18,14 +18,11 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/detail/preprocessor.hpp>
-
+#include <boost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
+#include <boost/container/detail/iterator.hpp>
 #include <boost/container/detail/iterators.hpp>
 
 #include "varray_util.hpp"
-
-#ifndef BOOST_NO_EXCEPTIONS
-#include <stdexcept>
-#endif // BOOST_NO_EXCEPTIONS
 
 #include <boost/assert.hpp>
 #include <boost/config.hpp>
@@ -37,6 +34,10 @@
 #include <boost/type_traits/is_unsigned.hpp>
 #include <boost/type_traits/alignment_of.hpp>
 #include <boost/type_traits/aligned_storage.hpp>
+
+#ifndef BOOST_NO_EXCEPTIONS
+#include <stdexcept>
+#endif // BOOST_NO_EXCEPTIONS
 
 
 /**
@@ -268,9 +269,9 @@ public:
     //! @brief The const iterator type.
     typedef const_pointer const_iterator;
     //! @brief The reverse iterator type.
-    typedef container_detail::reverse_iterator<iterator> reverse_iterator;
+    typedef boost::container::reverse_iterator<iterator> reverse_iterator;
     //! @brief The const reverse iterator.
-    typedef container_detail::reverse_iterator<const_iterator> const_reverse_iterator;
+    typedef boost::container::reverse_iterator<const_iterator> const_reverse_iterator;
 
     //! @brief The type of a strategy used by the varray.
     typedef Strategy strategy_type;
@@ -836,7 +837,7 @@ public:
         {
             namespace sv = varray_detail;
 
-            difference_type to_move = std::distance(position, this->end());
+            difference_type to_move = boost::container::iterator_distance(position, this->end());
 
             // TODO - should following lines check for exception and revert to the old size?
 
@@ -883,7 +884,7 @@ public:
     template <typename Iterator>
     iterator insert(iterator position, Iterator first, Iterator last)
     {
-        typedef typename std::iterator_traits<Iterator>::iterator_category category;
+        typedef typename boost::container::iterator_traits<Iterator>::iterator_category category;
         this->insert_dispatch(position, first, last, category());
 
         return position;
@@ -937,7 +938,7 @@ public:
         errh::check_iterator_end_eq(*this, first);
         errh::check_iterator_end_eq(*this, last);
 
-        difference_type n = std::distance(first, last);
+        difference_type n = boost::container::iterator_distance(first, last);
 
         //TODO - add invalid range check?
         //BOOST_ASSERT_MSG(0 <= n, "invalid range");
@@ -966,7 +967,7 @@ public:
     template <typename Iterator>
     void assign(Iterator first, Iterator last)
     {
-        typedef typename std::iterator_traits<Iterator>::iterator_category category;
+        typedef typename boost::container::iterator_traits<Iterator>::iterator_category category;
         this->assign_dispatch(first, last, category());                            // may throw
     }
 
@@ -1632,7 +1633,7 @@ private:
     //   Linear O(N).
     void swap_dispatch_impl(iterator first_sm, iterator last_sm, iterator first_la, iterator last_la, boost::true_type const& /*use_memop*/)
     {
-        //BOOST_ASSERT_MSG(std::distance(first_sm, last_sm) <= std::distance(first_la, last_la));
+        //BOOST_ASSERT_MSG(boost::container::iterator_distance(first_sm, last_sm) <= boost::container::iterator_distance(first_la, last_la));
 
         namespace sv = varray_detail;
         for (; first_sm != last_sm ; ++first_sm, ++first_la)
@@ -1648,7 +1649,7 @@ private:
             ::memcpy(boost::addressof(*first_la), temp_ptr, sizeof(value_type));
         }
 
-        ::memcpy(first_sm, first_la, sizeof(value_type) * std::distance(first_la, last_la));
+        ::memcpy(first_sm, first_la, sizeof(value_type) * boost::container::iterator_distance(first_la, last_la));
     }
 
     // @par Throws
@@ -1657,7 +1658,7 @@ private:
     //   Linear O(N).
     void swap_dispatch_impl(iterator first_sm, iterator last_sm, iterator first_la, iterator last_la, boost::false_type const& /*use_memop*/)
     {
-        //BOOST_ASSERT_MSG(std::distance(first_sm, last_sm) <= std::distance(first_la, last_la));
+        //BOOST_ASSERT_MSG(boost::container::iterator_distance(first_sm, last_sm) <= boost::container::iterator_distance(first_la, last_la));
 
         namespace sv = varray_detail;
         for (; first_sm != last_sm ; ++first_sm, ++first_la)
@@ -1719,8 +1720,7 @@ private:
     {
         errh::check_iterator_end_eq(*this, position);
 
-        typename boost::iterator_difference<Iterator>::type
-            count = std::distance(first, last);
+        size_type count = boost::container::iterator_distance(first, last);
 
         errh::check_capacity(*this, m_size + count);                                             // may throw
 
@@ -1751,7 +1751,7 @@ private:
         {
             namespace sv = varray_detail;
 
-            std::ptrdiff_t d = std::distance(position, this->begin() + Capacity);
+            std::ptrdiff_t d = boost::container::iterator_distance(position, this->begin() + Capacity);
             std::size_t count = sv::uninitialized_copy_s(first, last, position, d);                     // may throw
 
             errh::check_capacity(*this, count <= static_cast<std::size_t>(d) ? m_size + count : Capacity + 1);  // may throw
@@ -1760,8 +1760,7 @@ private:
         }
         else
         {
-            typename boost::iterator_difference<Iterator>::type
-                count = std::distance(first, last);
+            size_type count = boost::container::iterator_distance(first, last);
 
             errh::check_capacity(*this, m_size + count);                                                // may throw
 
@@ -1779,7 +1778,7 @@ private:
     {
         namespace sv = varray_detail;
 
-        difference_type to_move = std::distance(position, this->end());
+        difference_type to_move = boost::container::iterator_distance(position, this->end());
 
         // TODO - should following lines check for exception and revert to the old size?
 
@@ -1793,7 +1792,7 @@ private:
         else
         {
             Iterator middle_iter = first;
-            std::advance(middle_iter, to_move);
+            boost::container::iterator_advance(middle_iter, to_move);
 
             sv::uninitialized_copy(middle_iter, last, this->end());                             // may throw
             m_size += count - to_move; // update end
@@ -1814,8 +1813,7 @@ private:
     {
         namespace sv = varray_detail;
 
-        typename boost::iterator_difference<Iterator>::type
-            s = std::distance(first, last);
+        size_type s = boost::container::iterator_distance(first, last);
 
         errh::check_capacity(*this, s);                                     // may throw
 
@@ -1850,7 +1848,7 @@ private:
 
         sv::destroy(it, this->end());
 
-        std::ptrdiff_t d = std::distance(it, this->begin() + Capacity);
+        std::ptrdiff_t d = boost::container::iterator_distance(it, this->begin() + Capacity);
         std::size_t count = sv::uninitialized_copy_s(first, last, it, d);                                   // may throw
         s += count;
 
@@ -1896,8 +1894,8 @@ public:
 
     typedef pointer iterator;
     typedef const_pointer const_iterator;
-    typedef container_detail::reverse_iterator<iterator> reverse_iterator;
-    typedef container_detail::reverse_iterator<const_iterator> const_reverse_iterator;
+    typedef boost::container::reverse_iterator<iterator> reverse_iterator;
+    typedef boost::container::reverse_iterator<const_iterator> const_reverse_iterator;
 
     // nothrow
     varray() {}
@@ -1931,7 +1929,7 @@ public:
     template <typename Iterator>
     varray(Iterator first, Iterator last)
     {
-        errh::check_capacity(*this, std::distance(first, last));                    // may throw
+        errh::check_capacity(*this, boost::container::iterator_distance(first, last));                    // may throw
     }
 
     // basic
@@ -2001,7 +1999,7 @@ public:
     template <typename Iterator>
     void insert(iterator, Iterator first, Iterator last)
     {
-        errh::check_capacity(*this, std::distance(first, last));                    // may throw
+        errh::check_capacity(*this, boost::container::iterator_distance(first, last));                    // may throw
     }
 
     // basic
@@ -2023,7 +2021,7 @@ public:
     template <typename Iterator>
     void assign(Iterator first, Iterator last)
     {
-        errh::check_capacity(*this, std::distance(first, last));                    // may throw
+        errh::check_capacity(*this, boost::container::iterator_distance(first, last));                    // may throw
     }
 
     // basic
@@ -2145,7 +2143,7 @@ private:
 template<typename V, std::size_t C1, typename S1, std::size_t C2, typename S2>
 bool operator== (varray<V, C1, S1> const& x, varray<V, C2, S2> const& y)
 {
-    return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());
+    return x.size() == y.size() && ::boost::container::algo_equal(x.begin(), x.end(), y.begin());
 }
 
 //! @brief Checks if contents of two varrays are not equal.
@@ -2179,7 +2177,7 @@ bool operator!= (varray<V, C1, S1> const& x, varray<V, C2, S2> const& y)
 template<typename V, std::size_t C1, typename S1, std::size_t C2, typename S2>
 bool operator< (varray<V, C1, S1> const& x, varray<V, C2, S2> const& y)
 {
-    return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());
+    return ::boost::container::algo_lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());
 }
 
 //! @brief Lexicographically compares varrays.

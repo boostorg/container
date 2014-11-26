@@ -174,7 +174,7 @@
 					RelativePath="..\..\..\..\boost\container\detail\advanced_insert_int.hpp">
 				</File>
 				<File
-					RelativePath="..\..\..\..\boost\container\detail\algorithms.hpp">
+					RelativePath="..\..\..\..\boost\container\detail\algorithm.hpp">
 				</File>
 				<File
 					RelativePath="..\..\..\..\boost\container\detail\alloc_lib.h">
@@ -201,6 +201,9 @@
 					RelativePath="..\..\..\..\boost\container\detail\config_end.hpp">
 				</File>
 				<File
+					RelativePath="..\..\..\..\boost\container\detail\construct_in_place.hpp">
+				</File>
+				<File
 					RelativePath="..\..\test\container_common_tests.hpp">
 				</File>
 				<File
@@ -216,7 +219,7 @@
 					RelativePath="..\..\..\..\boost\container\detail\hash_table.hpp">
 				</File>
 				<File
-					RelativePath="..\..\..\..\boost\container\detail\iterator_traits.hpp">
+					RelativePath="..\..\..\..\boost\container\detail\iterator.hpp">
 				</File>
 				<File
 					RelativePath="..\..\..\..\boost\container\detail\iterators.hpp">
@@ -258,13 +261,13 @@
 					RelativePath="..\..\..\..\boost\container\detail\preprocessor.hpp">
 				</File>
 				<File
-					RelativePath="..\..\..\..\boost\container\detail\reverse_iterator.hpp">
-				</File>
-				<File
 					RelativePath="..\..\..\..\boost\container\detail\singleton.hpp">
 				</File>
 				<File
 					RelativePath="..\..\..\..\boost\container\detail\std_fwd.hpp">
+				</File>
+				<File
+					RelativePath="..\..\..\..\boost\container\detail\swap.hpp">
 				</File>
 				<File
 					RelativePath="..\..\..\..\boost\container\detail\transform_iterator.hpp">

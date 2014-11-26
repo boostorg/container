@@ -14,10 +14,10 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/pair.hpp>
 #include <boost/container/detail/mpl.hpp>
-#include <functional>
-#include <iostream>
-#include <algorithm>
 #include <boost/move/unique_ptr.hpp>
+
+#include <cstddef>
+#include <boost/container/detail/iterator.hpp>
 
 namespace boost{
 namespace container {
@@ -68,7 +68,7 @@ bool CheckEqualContainers(const MyBoostCont &boostcont, const MyStdCont &stdcont
 
    typename MyBoostCont::const_iterator itboost(boostcont.begin()), itboostend(boostcont.end());
    typename MyStdCont::const_iterator itstd(stdcont.begin());
-   typename MyStdCont::size_type dist = (typename MyStdCont::size_type)std::distance(itboost, itboostend);
+   typename MyStdCont::size_type dist = (typename MyStdCont::size_type)boost::container::iterator_distance(itboost, itboostend);
    if(dist != boostcont.size()){
       return false;
    }

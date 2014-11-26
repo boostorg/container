@@ -12,7 +12,9 @@
 #include <boost/container/allocator.hpp>
 #include <boost/container/node_allocator.hpp>
 #include <boost/container/adaptive_pool.hpp>
+
 #include <utility>
+#include <map>
 
 #include "print_container.hpp"
 #include "movable_int.hpp"

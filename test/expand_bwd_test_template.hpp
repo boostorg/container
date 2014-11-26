@@ -14,8 +14,9 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <vector>
 #include <typeinfo>
+#include <iostream>
 #include "expand_bwd_test_allocator.hpp"
-#include <algorithm>
+#include <boost/container/detail/algorithm.hpp> //equal()
 #include "movable_int.hpp"
 #include <boost/type_traits/remove_volatile.hpp>
 #include <boost/move/make_unique.hpp>
@@ -28,7 +29,7 @@ bool CheckEqualVector(const Vector1 &vector1, const Vector2 &vector2)
 {
    if(vector1.size() != vector2.size())
       return false;
-   return std::equal(vector1.begin(), vector1.end(), vector2.begin());
+   return boost::container::algo_equal(vector1.begin(), vector1.end(), vector2.begin());
 }
 
 template<class Vector>

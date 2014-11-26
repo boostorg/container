@@ -28,8 +28,7 @@
 #include <boost/assert.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/static_assert.hpp>
-#include <memory>
-#include <algorithm>
+#include <utility>
 #include <cstddef>
 
 namespace boost {

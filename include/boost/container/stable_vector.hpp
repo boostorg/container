@@ -31,8 +31,10 @@
 #include <boost/container/detail/allocator_version_traits.hpp>
 #include <boost/container/detail/utilities.hpp>
 #include <boost/container/detail/iterators.hpp>
-#include <boost/container/detail/algorithms.hpp>
+#include <boost/container/detail/construct_in_place.hpp>
+#include <boost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
 #include <boost/container/allocator_traits.hpp>
+#include <boost/container/detail/iterator.hpp>
 #include <boost/container/throw_exception.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/core/no_exceptions_support.hpp>
@@ -41,25 +43,21 @@
 #include <boost/move/iterator.hpp>
 #include <boost/move/detail/move_helpers.hpp>
 #include <boost/container/detail/placement_new.hpp>
-#include <algorithm>
 
 
+#include <utility>   //std::pair
 #include <memory>
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+#include <initializer_list>
+#endif
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-
-#include <boost/container/vector.hpp>
-
-//#define STABLE_VECTOR_ENABLE_INVARIANT_CHECKING
-
+   #include <boost/container/vector.hpp>
+   //#define STABLE_VECTOR_ENABLE_INVARIANT_CHECKING
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 namespace boost {
 namespace container {
-
-#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
-#include <initializer_list>
-#endif
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -506,8 +504,8 @@ class stable_vector
    typedef node_allocator_type                                                         stored_allocator_type;
    typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                                       iterator;
    typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                                 const_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<iterator>)        reverse_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<const_iterator>)  const_reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
@@ -999,7 +997,7 @@ class stable_vector
    size_type size() const BOOST_CONTAINER_NOEXCEPT
    {
       const size_type index_size = this->index.size();
-      return (index_size - ExtraPointers) & (std::size_t(0u) -std::size_t(index_size != 0));
+      return (index_size - ExtraPointers) & (size_type(0u) -size_type(index_size != 0));
    }
 
    //! <b>Effects</b>: Returns the largest possible size of the stable_vector.
@@ -1462,7 +1460,7 @@ class stable_vector
    //!
    //! <b>Returns</b>: an iterator to the first inserted element or p if first == last.
    //!
-   //! <b>Complexity</b>: Linear to std::distance [il.begin(), il.end()).
+   //! <b>Complexity</b>: Linear to distance [il.begin(), il.end()).
    iterator insert(const_iterator p, std::initializer_list<value_type> il)
    {
       STABLE_VECTOR_CHECK_INVARIANT;
@@ -1479,7 +1477,7 @@ class stable_vector
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InpIt throws or T's copy constructor throws.
    //!
-   //! <b>Complexity</b>: Linear to std::distance [first, last).
+   //! <b>Complexity</b>: Linear to distance [first, last).
    template <class InputIterator>
    iterator insert(const_iterator p, InputIterator first, InputIterator last
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -1507,7 +1505,7 @@ class stable_vector
          >::type * = 0
       )
    {
-      const size_type num_new = static_cast<size_type>(std::distance(first, last));
+      const size_type num_new = static_cast<size_type>(boost::container::iterator_distance(first, last));
       const size_type idx     = static_cast<size_type>(p - this->cbegin());
       if(num_new){
          //Fills the node pool and inserts num_new null pointers in idx.
@@ -1623,7 +1621,7 @@ class stable_vector
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const stable_vector& x, const stable_vector& y)
-   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
+   {  return x.size() == y.size() && ::boost::container::algo_equal(x.begin(), x.end(), y.begin());  }
 
    //! <b>Effects</b>: Returns true if x and y are unequal
    //!
@@ -1635,7 +1633,7 @@ class stable_vector
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<(const stable_vector& x, const stable_vector& y)
-   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+   {  return ::boost::container::algo_lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
 
    //! <b>Effects</b>: Returns true if x is greater than y
    //!

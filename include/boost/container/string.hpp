@@ -28,18 +28,18 @@
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/detail/allocator_version_traits.hpp>
 #include <boost/container/detail/mpl.hpp>
+#include <boost/container/detail/iterator.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 
+#include <algorithm>
 #include <functional>
 #include <string>
 #include <utility>
-#include <iterator>
 #include <memory>
-#include <algorithm>
 #include <iosfwd>
 #include <istream>
 #include <ostream>
@@ -410,7 +410,9 @@ class basic_string_base
    {
       if(this->is_short()){
          if(other.is_short()){
-            std::swap(this->members_.m_repr, other.members_.m_repr);
+            repr_t tmp(this->members_.m_repr);
+            this->members_.m_repr = other.members_.m_repr;
+            other.members_.m_repr = tmp;
          }
          else{
             short_t short_backup(this->members_.m_repr.short_repr());
@@ -542,8 +544,8 @@ class basic_string
    typedef BOOST_CONTAINER_IMPDEF(allocator_type)                                      stored_allocator_type;
    typedef BOOST_CONTAINER_IMPDEF(pointer)                                             iterator;
    typedef BOOST_CONTAINER_IMPDEF(const_pointer)                                       const_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<iterator>)        reverse_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<const_iterator>)  const_reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
    static const size_type npos = size_type(-1);
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -1457,7 +1459,7 @@ class basic_string
    {
       const size_type n_pos = p - this->cbegin();
       if (first != last) {
-         const size_type n = std::distance(first, last);
+         const size_type n = boost::container::iterator_distance(first, last);
          const size_type old_size = this->priv_size();
          const size_type remaining = this->capacity() - old_size;
          const pointer old_start = this->priv_addr();
@@ -1500,7 +1502,7 @@ class basic_string
             }
             else {
                ForwardIter mid = first;
-               std::advance(mid, elems_after + 1);
+               boost::container::iterator_advance(mid, elems_after + 1);
 
                priv_uninitialized_copy(mid, last, old_start + old_size + 1);
                const size_type newer_size = old_size + (n - elems_after);
@@ -1849,7 +1851,7 @@ class basic_string
          >::type * = 0
       )
    {
-      difference_type n = std::distance(j1, j2);
+      difference_type n = boost::container::iterator_distance(j1, j2);
       const difference_type len = i2 - i1;
       if (len >= n) {
          this->priv_copy(j1, j2, const_cast<CharT*>(container_detail::to_raw_pointer(i1)));
@@ -1857,7 +1859,7 @@ class basic_string
       }
       else {
          ForwardIter m = j1;
-         std::advance(m, len);
+         boost::container::iterator_advance(m, len);
          this->priv_copy(j1, m, const_cast<CharT*>(container_detail::to_raw_pointer(i1)));
          this->insert(i2, m, j2);
       }
@@ -2503,7 +2505,7 @@ class basic_string
                                        InputIter f, InputIter l,
                                        container_detail::false_)
    {
-      typedef typename std::iterator_traits<InputIter>::iterator_category Category;
+      typedef typename boost::container::iterator_traits<InputIter>::iterator_category Category;
       return this->priv_replace(first, last, f, l, Category());
    }
 

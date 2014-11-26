@@ -32,14 +32,14 @@
 #include <boost/container/detail/preprocessor.hpp>
 #endif
 
-#include <iterator>
+#include <boost/container/detail/iterator.hpp>
 
 namespace boost {
 namespace container {
 
 template <class T, class Difference = std::ptrdiff_t>
 class constant_iterator
-  : public std::iterator
+  : public ::boost::container::iterator
       <std::random_access_iterator_tag, T, Difference, const T*, const T &>
 {
    typedef  constant_iterator<T, Difference> this_type;
@@ -150,7 +150,7 @@ class constant_iterator
 
 template <class T, class Difference>
 class value_init_construct_iterator
-  : public std::iterator
+  : public ::boost::container::iterator
       <std::random_access_iterator_tag, T, Difference, const T*, const T &>
 {
    typedef  value_init_construct_iterator<T, Difference> this_type;
@@ -261,7 +261,7 @@ class value_init_construct_iterator
 
 template <class T, class Difference>
 class default_init_construct_iterator
-  : public std::iterator
+  : public ::boost::container::iterator
       <std::random_access_iterator_tag, T, Difference, const T*, const T &>
 {
    typedef  default_init_construct_iterator<T, Difference> this_type;
@@ -373,7 +373,7 @@ class default_init_construct_iterator
 
 template <class T, class Difference = std::ptrdiff_t>
 class repeat_iterator
-  : public std::iterator
+  : public ::boost::container::iterator
       <std::random_access_iterator_tag, T, Difference>
 {
    typedef repeat_iterator<T, Difference> this_type;
@@ -483,7 +483,7 @@ class repeat_iterator
 
 template <class T, class EmplaceFunctor, class Difference /*= std::ptrdiff_t*/>
 class emplace_iterator
-  : public std::iterator
+  : public ::boost::container::iterator
       <std::random_access_iterator_tag, T, Difference, const T*, const T &>
 {
    typedef emplace_iterator this_type;
@@ -709,8 +709,8 @@ struct iiterator_types
 {
    typedef typename IIterator::value_type                            it_value_type;
    typedef typename iiterator_node_value_type<it_value_type>::type   value_type;
-   typedef typename std::iterator_traits<IIterator>::pointer         it_pointer;
-   typedef typename std::iterator_traits<IIterator>::difference_type difference_type;
+   typedef typename boost::container::iterator_traits<IIterator>::pointer         it_pointer;
+   typedef typename boost::container::iterator_traits<IIterator>::difference_type difference_type;
    typedef typename ::boost::intrusive::pointer_traits<it_pointer>::
       template rebind_pointer<value_type>::type                      pointer;
    typedef typename ::boost::intrusive::pointer_traits<it_pointer>::
@@ -723,9 +723,9 @@ struct iiterator_types
 };
 
 template<class IIterator, bool IsConst>
-struct std_iterator
+struct iterator_types
 {
-   typedef typename std::iterator
+   typedef typename ::boost::container::iterator
       < typename iiterator_types<IIterator>::iterator_category
       , typename iiterator_types<IIterator>::value_type
       , typename iiterator_types<IIterator>::difference_type
@@ -734,9 +734,9 @@ struct std_iterator
 };
 
 template<class IIterator>
-struct std_iterator<IIterator, false>
+struct iterator_types<IIterator, false>
 {
-   typedef typename std::iterator
+   typedef typename ::boost::container::iterator
       < typename iiterator_types<IIterator>::iterator_category
       , typename iiterator_types<IIterator>::value_type
       , typename iiterator_types<IIterator>::difference_type
@@ -745,9 +745,9 @@ struct std_iterator<IIterator, false>
 };
 
 template<class IIterator, bool IsConst>
-class iterator
+class iterator_from_iiterator
 {
-   typedef typename std_iterator<IIterator, IsConst>::type types_t;
+   typedef typename iterator_types<IIterator, IsConst>::type types_t;
 
    public:
    typedef typename types_t::pointer             pointer;
@@ -756,45 +756,45 @@ class iterator
    typedef typename types_t::iterator_category   iterator_category;
    typedef typename types_t::value_type          value_type;
 
-   iterator()
+   iterator_from_iiterator()
    {}
 
-   explicit iterator(IIterator iit) BOOST_CONTAINER_NOEXCEPT
+   explicit iterator_from_iiterator(IIterator iit) BOOST_CONTAINER_NOEXCEPT
       : m_iit(iit)
    {}
 
-   iterator(iterator<IIterator, false> const& other) BOOST_CONTAINER_NOEXCEPT
+   iterator_from_iiterator(iterator_from_iiterator<IIterator, false> const& other) BOOST_CONTAINER_NOEXCEPT
       :  m_iit(other.get())
    {}
 
-   iterator& operator++() BOOST_CONTAINER_NOEXCEPT
+   iterator_from_iiterator& operator++() BOOST_CONTAINER_NOEXCEPT
    {  ++this->m_iit;   return *this;  }
 
-   iterator operator++(int) BOOST_CONTAINER_NOEXCEPT
+   iterator_from_iiterator operator++(int) BOOST_CONTAINER_NOEXCEPT
    {
-      iterator result (*this);
+      iterator_from_iiterator result (*this);
       ++this->m_iit;
       return result;
    }
 
-   iterator& operator--() BOOST_CONTAINER_NOEXCEPT
+   iterator_from_iiterator& operator--() BOOST_CONTAINER_NOEXCEPT
    {
-      //If the iterator is not a bidirectional iterator, operator-- should not exist
-      BOOST_STATIC_ASSERT((is_bidirectional_iterator<iterator>::value));
+      //If the iterator_from_iiterator is not a bidirectional iterator, operator-- should not exist
+      BOOST_STATIC_ASSERT((is_bidirectional_iterator<iterator_from_iiterator>::value));
       --this->m_iit;   return *this;
    }
 
-   iterator operator--(int) BOOST_CONTAINER_NOEXCEPT
+   iterator_from_iiterator operator--(int) BOOST_CONTAINER_NOEXCEPT
    {
-      iterator result (*this);
+      iterator_from_iiterator result (*this);
       --this->m_iit;
       return result;
    }
 
-   friend bool operator== (const iterator& l, const iterator& r) BOOST_CONTAINER_NOEXCEPT
+   friend bool operator== (const iterator_from_iiterator& l, const iterator_from_iiterator& r) BOOST_CONTAINER_NOEXCEPT
    {  return l.m_iit == r.m_iit;   }
 
-   friend bool operator!= (const iterator& l, const iterator& r) BOOST_CONTAINER_NOEXCEPT
+   friend bool operator!= (const iterator_from_iiterator& l, const iterator_from_iiterator& r) BOOST_CONTAINER_NOEXCEPT
    {  return !(l == r); }
 
    reference operator*()  const BOOST_CONTAINER_NOEXCEPT
@@ -810,9 +810,10 @@ class iterator
    IIterator m_iit;
 };
 
-using ::boost::intrusive::detail::reverse_iterator;
-
 }  //namespace container_detail {
+
+using ::boost::intrusive::reverse_iterator;
+
 }  //namespace container {
 }  //namespace boost {
 

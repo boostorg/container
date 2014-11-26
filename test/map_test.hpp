@@ -13,16 +13,16 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include "check_equal_containers.hpp"
-#include <map>
-#include <functional>
-#include <utility>
 #include "print_container.hpp"
 #include <boost/container/detail/utilities.hpp>
 #include <boost/container/detail/pair.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/move/make_unique.hpp>
+
+#include <utility>      //std::pair
 #include <string>
+#include <iostream>
 
 #include <boost/intrusive/detail/has_member_function_callable_with.hpp>
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_FUNCNAME rebalance
@@ -506,8 +506,8 @@ int map_test()
             std::pair<typename MyStdMultiMap::iterator, typename MyStdMultiMap::iterator>   sret =
                stdmultimap.equal_range(stdmultimap.begin()->first);
 
-            if( std::distance(bret.first, bret.second) !=
-                  std::distance(sret.first, sret.second) ){
+            if( boost::container::iterator_distance(bret.first, bret.second) !=
+                  boost::container::iterator_distance(sret.first, sret.second) ){
                return 1;
             }
          }

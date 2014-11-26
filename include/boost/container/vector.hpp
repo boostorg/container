@@ -19,14 +19,6 @@
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/container_fwd.hpp>
 
-//#include <cstddef> //Already included by container_fwd.hpp
-#include <memory>    //for std::allocator
-#include <iterator>  //for std::random_access_iterator_tag
-#include <utility>   //for std::pair,std::distance
-#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
-#include <initializer_list>   //for std::initializer_list
-#endif
-
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/assert.hpp>
 #include <boost/move/utility_core.hpp>
@@ -46,6 +38,8 @@
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/advanced_insert_int.hpp>
+#include <boost/container/detail/algorithm.hpp> //equal()
+#include <boost/container/detail/iterator.hpp>
 
 #include <boost/intrusive/pointer_traits.hpp>
 
@@ -55,6 +49,12 @@
 #include <boost/type_traits/has_nothrow_copy.hpp>
 #include <boost/type_traits/has_nothrow_assign.hpp>
 #include <boost/type_traits/has_nothrow_constructor.hpp>
+
+#include <memory>    //for std::allocator
+#include <utility>   //for std::pair
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+#include <initializer_list>   //for std::initializer_list
+#endif
 
 namespace boost {
 namespace container {
@@ -505,7 +505,7 @@ struct vector_alloc_holder<Allocator, container_detail::integral_constant<unsign
    template<class OtherAllocator, class OtherAllocatorVersion>
    void priv_swap_members_impl(vector_alloc_holder<OtherAllocator, OtherAllocatorVersion> &x)
    {
-      const std::size_t MaxTmpStorage = sizeof(value_type)*Allocator::internal_capacity;
+      const size_type MaxTmpStorage = sizeof(value_type)*Allocator::internal_capacity;
       value_type *const first_this = container_detail::to_raw_pointer(this->start());
       value_type *const first_x = container_detail::to_raw_pointer(x.start());
 
@@ -571,8 +571,8 @@ class vector
    typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                                       iterator;
    typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                                 const_iterator;
    #endif
-   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<iterator>)                          reverse_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<const_iterator>)                    const_reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
@@ -981,7 +981,7 @@ class vector
    {
       //For Fwd iterators the standard only requires EmplaceConstructible and assignable from *first
       //so we can't do any backwards allocation
-      const size_type input_sz = static_cast<size_type>(std::distance(first, last));
+      const size_type input_sz = static_cast<size_type>(boost::container::iterator_distance(first, last));
       const size_type old_capacity = this->capacity();
       if(input_sz > old_capacity){  //If input range is too big, we need to reallocate
          size_type real_cap = 0;
@@ -1608,7 +1608,7 @@ class vector
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InpIt throws or T's copy/move constructor/assignment throws.
    //!
-   //! <b>Complexity</b>: Linear to std::distance [first, last).
+   //! <b>Complexity</b>: Linear to boost::container::iterator_distance [first, last).
    template <class InIt>
    iterator insert(const_iterator pos, InIt first, InIt last
       BOOST_CONTAINER_DOCIGN(BOOST_CONTAINER_I typename container_detail::enable_if_c
@@ -1636,12 +1636,12 @@ class vector
       )
    {
       container_detail::insert_range_proxy<Allocator, FwdIt, T*> proxy(first);
-      return this->priv_forward_range_insert(vector_iterator_get_ptr(pos), std::distance(first, last), proxy, alloc_version());
+      return this->priv_forward_range_insert(vector_iterator_get_ptr(pos), boost::container::iterator_distance(first, last), proxy, alloc_version());
    }
    #endif
 
    //! <b>Requires</b>: p must be a valid iterator of *this. num, must
-   //!   be equal to std::distance(first, last)
+   //!   be equal to boost::container::iterator_distance(first, last)
    //!
    //! <b>Effects</b>: Insert a copy of the [first, last) range before pos.
    //!
@@ -1650,9 +1650,9 @@ class vector
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InpIt throws or T's copy/move constructor/assignment throws.
    //!
-   //! <b>Complexity</b>: Linear to std::distance [first, last).
+   //! <b>Complexity</b>: Linear to boost::container::iterator_distance [first, last).
    //!
-   //! <b>Note</b>: This function avoids a linear operation to calculate std::distance[first, last)
+   //! <b>Note</b>: This function avoids a linear operation to calculate boost::container::iterator_distance[first, last)
    //!   for forward and bidirectional iterators, and a one by one insertion for input iterators. This is a
    //!   a non-standard extension.
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -1660,7 +1660,7 @@ class vector
    iterator insert(const_iterator pos, size_type num, InIt first, InIt last)
    {
       BOOST_ASSERT(container_detail::is_input_iterator<InIt>::value ||
-                   num == static_cast<size_type>(std::distance(first, last)));
+                   num == static_cast<size_type>(boost::container::iterator_distance(first, last)));
       (void)last;
       container_detail::insert_range_proxy<Allocator, InIt, T*> proxy(first);
       return this->priv_forward_range_insert(vector_iterator_get_ptr(pos), num, proxy, alloc_version());
@@ -1772,21 +1772,7 @@ class vector
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const vector& x, const vector& y)
-   {  
-      if(x.size() != y.size()){
-         return false;
-      }
-      else{
-         const_iterator first1(x.cbegin()), first2(y.cbegin());
-         const const_iterator last1(x.cend());
-         for (; first1 != last1; ++first1, ++first2) {
-            if (*first1 != *first2) {
-               return false;
-            }
-         }
-         return true;
-      }
-   }
+   {  return x.size() == y.size() && ::boost::container::algo_equal(x.begin(), x.end(), y.begin());  }
 
    //! <b>Effects</b>: Returns true if x and y are unequal
    //!
@@ -2464,7 +2450,7 @@ class vector
       while(insertions_left){
          if(do_skip){
             size_type n = *(--last_skip_it);
-            std::advance(last_value_it, -difference_type(n));
+            boost::container::iterator_advance(last_value_it, -difference_type(n));
          }
          const size_type pos = static_cast<size_type>(*(--last_position_it));
          BOOST_ASSERT(pos <= old_size_pos);

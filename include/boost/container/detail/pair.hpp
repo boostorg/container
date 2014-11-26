@@ -26,7 +26,7 @@
 #include <boost/container/detail/type_traits.hpp>
 
 #include <utility>   //std::pair
-#include <algorithm> //std::swap
+#include <boost/container/detail/swap.hpp> //swap
 
 #include <boost/move/utility_core.hpp>
 
@@ -272,9 +272,8 @@ struct pair
    //swap
    void swap(pair& p)
    {
-      using std::swap;
-      swap(this->first, p.first);
-      swap(this->second, p.second);
+      ::boost::container::adl_swap(this->first, p.first);
+      ::boost::container::adl_swap(this->second, p.second);
    }
 };
 

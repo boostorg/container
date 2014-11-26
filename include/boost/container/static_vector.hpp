@@ -20,6 +20,11 @@
 #include <boost/container/vector.hpp>
 #include <boost/aligned_storage.hpp>
 
+#include <cstddef>
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+#include <initializer_list>
+#endif
+
 namespace boost { namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

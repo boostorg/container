@@ -24,11 +24,9 @@
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/container_fwd.hpp>
 #include <boost/container/throw_exception.hpp>
-#include <cstddef>
-#include <iterator>
+#include <boost/container/detail/iterator.hpp>
+
 #include <boost/assert.hpp>
-#include <memory>
-#include <algorithm>
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/type_traits/has_trivial_destructor.hpp>
 #include <boost/type_traits/has_trivial_copy.hpp>
@@ -41,8 +39,12 @@
 #include <boost/move/detail/move_helpers.hpp>
 #include <boost/move/traits.hpp>
 #include <boost/container/detail/advanced_insert_int.hpp>
+#include <boost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
 #include <boost/core/no_exceptions_support.hpp>
 
+#include <cstddef>
+
+#include <memory>    //std::allocator
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
 #endif
@@ -353,10 +355,10 @@ class deque_base
 
    void swap_members(deque_base &x) BOOST_CONTAINER_NOEXCEPT
    {
-      std::swap(this->members_.m_start, x.members_.m_start);
-      std::swap(this->members_.m_finish, x.members_.m_finish);
-      std::swap(this->members_.m_map, x.members_.m_map);
-      std::swap(this->members_.m_map_size, x.members_.m_map_size);
+      ::boost::container::swap_dispatch(this->members_.m_start, x.members_.m_start);
+      ::boost::container::swap_dispatch(this->members_.m_finish, x.members_.m_finish);
+      ::boost::container::swap_dispatch(this->members_.m_map, x.members_.m_map);
+      ::boost::container::swap_dispatch(this->members_.m_map_size, x.members_.m_map_size);
    }
 
    void priv_initialize_map(size_type num_elements)
@@ -504,8 +506,8 @@ class deque : protected deque_base<Allocator>
    typedef BOOST_CONTAINER_IMPDEF(allocator_type)                                      stored_allocator_type;
    typedef BOOST_CONTAINER_IMPDEF(typename Base::iterator)                             iterator;
    typedef BOOST_CONTAINER_IMPDEF(typename Base::const_iterator)                       const_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<iterator>)        reverse_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(container_detail::reverse_iterator<const_iterator>)  const_reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -604,7 +606,7 @@ class deque : protected deque_base<Allocator>
       )
       : Base(a)
    {
-      typedef typename std::iterator_traits<InIt>::iterator_category ItCat;
+      typedef typename boost::container::iterator_traits<InIt>::iterator_category ItCat;
       this->priv_range_initialize(first, last, ItCat());
    }
 
@@ -825,10 +827,10 @@ class deque : protected deque_base<Allocator>
          >::type * = 0
       )
    {
-      const size_type len = std::distance(first, last);
+      const size_type len = boost::container::iterator_distance(first, last);
       if (len > size()) {
          FwdIt mid = first;
-         std::advance(mid, this->size());
+         boost::container::iterator_advance(mid, this->size());
          boost::container::copy(first, mid, begin());
          this->insert(this->cend(), mid, last);
       }
@@ -1476,7 +1478,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InIt throws or T's copy constructor throws.
    //!
-   //! <b>Complexity</b>: Linear to std::distance [first, last).
+   //! <b>Complexity</b>: Linear to distance [first, last).
    template <class InIt>
    iterator insert(const_iterator pos, InIt first, InIt last
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -1507,7 +1509,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced std::initializer_list throws or T's copy constructor throws.
    //!
-   //! <b>Complexity</b>: Linear to std::distance [il.begin(), il.end()).
+   //! <b>Complexity</b>: Linear to distance [il.begin(), il.end()).
    iterator insert(const_iterator pos, std::initializer_list<value_type> il)
    {   return insert(pos, il.begin(), il.end());   }
 #endif
@@ -1524,7 +1526,7 @@ class deque : protected deque_base<Allocator>
       )
    {
       container_detail::insert_range_proxy<Allocator, FwdIt, iterator> proxy(first);
-      return priv_insert_aux_impl(p, (size_type)std::distance(first, last), proxy);
+      return priv_insert_aux_impl(p, boost::container::iterator_distance(first, last), proxy);
    }
    #endif
 
@@ -1667,7 +1669,7 @@ class deque : protected deque_base<Allocator>
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator==(const deque& x, const deque& y)
-   {  return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());  }
+   {  return x.size() == y.size() && ::boost::container::algo_equal(x.begin(), x.end(), y.begin());  }
 
    //! <b>Effects</b>: Returns true if x and y are unequal
    //!
@@ -1679,7 +1681,7 @@ class deque : protected deque_base<Allocator>
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<(const deque& x, const deque& y)
-   {  return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
+   {  return ::boost::container::algo_lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
 
    //! <b>Effects</b>: Returns true if x is greater than y
    //!
@@ -1979,7 +1981,7 @@ class deque : protected deque_base<Allocator>
    void priv_range_initialize(FwdIt first, FwdIt last, std::forward_iterator_tag)
    {
       size_type n = 0;
-      n = std::distance(first, last);
+      n = boost::container::iterator_distance(first, last);
       this->priv_initialize_map(n);
 
       index_pointer cur_node;
@@ -1988,7 +1990,7 @@ class deque : protected deque_base<Allocator>
                cur_node < this->members_.m_finish.m_node;
                ++cur_node) {
             FwdIt mid = first;
-            std::advance(mid, this->s_buffer_size());
+            boost::container::iterator_advance(mid, this->s_buffer_size());
             ::boost::container::uninitialized_copy_alloc(this->alloc(), first, mid, *cur_node);
             first = mid;
          }

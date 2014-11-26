@@ -12,17 +12,19 @@
 #define BOOST_CONTAINER_TEST_LIST_TEST_HEADER
 
 #include <boost/container/detail/config_begin.hpp>
+#include <boost/container/detail/iterator.hpp>
 #include "check_equal_containers.hpp"
-#include <memory>
-#include <list>
-#include <vector>
-#include <functional>
 #include "print_container.hpp"
 #include "input_from_forward_iterator.hpp"
 #include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
-#include <string>
 #include <boost/move/make_unique.hpp>
+
+#include <memory>
+#include <list>
+#include <vector>
+#include <functional>   //std::greater
+#include <string>
 
 namespace boost{
 namespace container {
@@ -229,7 +231,7 @@ int list_test (bool copied_allocators_equal = true)
          boostlist.insert(boostlist.begin()
                      ,boost::make_move_iterator(&aux_vect[0])
                      ,boost::make_move_iterator(&aux_vect[50]));
-      if(it_insert != boostlist.begin() || std::distance(it_insert, old_begin) != 50)
+      if(it_insert != boostlist.begin() || boost::container::iterator_distance(it_insert, old_begin) != 50)
          return 1;
 
       stdlist.insert(stdlist.begin(), &aux_vect2[0], &aux_vect2[50]);
@@ -249,7 +251,7 @@ int list_test (bool copied_allocators_equal = true)
       it_insert = boostlist.insert(boostlist.end()
                      ,boost::make_move_iterator(make_input_from_forward_iterator(&aux_vect[0]))
                      ,boost::make_move_iterator(make_input_from_forward_iterator(&aux_vect[50])));
-      if(std::distance(it_insert, boostlist.end()) != 50)
+      if(boost::container::iterator_distance(it_insert, boostlist.end()) != 50)
          return 1;
       stdlist.insert(stdlist.end(), &aux_vect2[0], &aux_vect2[50]);
       if(!CheckEqualContainers(boostlist, stdlist))

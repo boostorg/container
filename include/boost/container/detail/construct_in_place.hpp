@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2013.
+// (C) Copyright Ion Gaztanaga 2014-2014.
 //
 // Distributed under the Boost Software License, Version 1.0.
 // (See accompanying file LICENSE_1_0.txt or copy at
@@ -10,15 +10,13 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef BOOST_CONTAINER_DETAIL_ALGORITHMS_HPP
-#define BOOST_CONTAINER_DETAIL_ALGORITHMS_HPP
+#ifndef BOOST_CONTAINER_DETAIL_CONSTRUCT_IN_PLACE_HPP
+#define BOOST_CONTAINER_DETAIL_CONSTRUCT_IN_PLACE_HPP
 
 #if defined(_MSC_VER)
 #  pragma once
 #endif
 
-#include <boost/container/detail/config_begin.hpp>
-#include <boost/container/detail/workaround.hpp>
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/detail/iterators.hpp>
 
@@ -56,7 +54,5 @@ inline void construct_in_place(A &a, T *dest, emplace_iterator<U, EF, D> ei)
 }  //namespace container {
 }  //namespace boost {
 
-#include <boost/container/detail/config_end.hpp>
-
-#endif   //#ifndef BOOST_CONTAINER_DETAIL_ALGORITHMS_HPP
+#endif   //#ifndef BOOST_CONTAINER_DETAIL_CONSTRUCT_IN_PLACE_HPP
 

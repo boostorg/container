@@ -12,7 +12,7 @@
 #define BOOST_CONTAINER_TEST_VECTOR_TEST_HEADER
 
 #include <boost/container/detail/config_begin.hpp>
-#include <algorithm>
+
 #include <memory>
 #include <vector>
 #include <iostream>
@@ -21,20 +21,24 @@
 
 #include <boost/move/utility_core.hpp>
 #include <boost/container/detail/mpl.hpp>
-#include "print_container.hpp"
-#include "check_equal_containers.hpp"
-#include "movable_int.hpp"
-#include <string>
-#include <vector>
-#include "emplace_test.hpp"
-#include "input_from_forward_iterator.hpp"
 #include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/make_unique.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/static_assert.hpp>
+
+#include "print_container.hpp"
+#include "check_equal_containers.hpp"
+#include "movable_int.hpp"
+#include "emplace_test.hpp"
+#include "input_from_forward_iterator.hpp"
 #include "insert_test.hpp"
 #include "container_common_tests.hpp"
+
+#include <cstddef>
+#include <string>
+#include <vector>
+
 
 namespace boost{
 namespace container {
@@ -168,7 +172,7 @@ int vector_test()
             boostvector.insert(boostvector.end()
                            ,boost::make_move_iterator(&aux_vect[0])
                            ,boost::make_move_iterator(aux_vect + 50));
-         if(std::size_t(std::distance(insert_it, boostvector.end())) != 50) return 1;
+         if(std::size_t(boost::container::iterator_distance(insert_it, boostvector.end())) != 50) return 1;
          stdvector.insert(stdvector.end(), aux_vect2, aux_vect2 + 50);
          if(!test::CheckEqualContainers(boostvector, stdvector)) return 1;
 

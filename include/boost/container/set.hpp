@@ -19,10 +19,6 @@
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/container_fwd.hpp>
 
-#include <utility>
-#include <functional>
-#include <memory>
-
 #include <boost/move/utility_core.hpp>
 #include <boost/move/detail/move_helpers.hpp>
 #include <boost/move/traits.hpp>
@@ -32,6 +28,10 @@
 #ifndef BOOST_CONTAINER_PERFECT_FORWARDING
 #include <boost/container/detail/preprocessor.hpp>
 #endif
+
+#include <utility>      //pair
+#include <functional>   //less
+#include <memory>       //allocator
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
 #endif

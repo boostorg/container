@@ -25,8 +25,9 @@
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/utilities.hpp>
 #include <boost/container/detail/type_traits.hpp>
+#include <boost/container/detail/iterator.hpp>
 #include <boost/container/detail/iterators.hpp>
-#include <iterator>  //std::iterator_traits
+
 #include <boost/assert.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 
@@ -186,13 +187,13 @@ struct insert_move_proxy
 };
 
 template<class It, class A>
-insert_move_proxy<A, It> get_insert_value_proxy(BOOST_RV_REF(typename std::iterator_traits<It>::value_type) v)
+insert_move_proxy<A, It> get_insert_value_proxy(BOOST_RV_REF(typename boost::container::iterator_traits<It>::value_type) v)
 {
    return insert_move_proxy<A, It>(v);
 }
 
 template<class It, class A>
-insert_copy_proxy<A, It> get_insert_value_proxy(const typename std::iterator_traits<It>::value_type &v)
+insert_copy_proxy<A, It> get_insert_value_proxy(const typename boost::container::iterator_traits<It>::value_type &v)
 {
    return insert_copy_proxy<A, It>(v);
 }
