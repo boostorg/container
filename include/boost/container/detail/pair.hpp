@@ -24,9 +24,10 @@
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/type_traits.hpp>
+#include <boost/move/adl_move_swap.hpp> //swap
 
 #include <utility>   //std::pair
-#include <boost/container/detail/swap.hpp> //swap
+
 
 #include <boost/move/utility_core.hpp>
 
@@ -272,8 +273,8 @@ struct pair
    //swap
    void swap(pair& p)
    {
-      ::boost::container::adl_swap(this->first, p.first);
-      ::boost::container::adl_swap(this->second, p.second);
+      ::boost::adl_move_swap(this->first, p.first);
+      ::boost::adl_move_swap(this->second, p.second);
    }
 };
 

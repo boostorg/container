@@ -21,12 +21,13 @@
 #include <boost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
 #include <boost/container/detail/iterator.hpp>
 #include <boost/container/detail/iterators.hpp>
+#include <boost/move/adl_move_swap.hpp> //adl_move_swap
 
 #include "varray_util.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/config.hpp>
-#include <boost/swap.hpp>
+
 #include <boost/integer.hpp>
 
 #include <boost/mpl/assert.hpp>
@@ -1556,7 +1557,7 @@ private:
         this->clear();
 
         ::memcpy(this->data(), other.data(), sizeof(Value) * other.m_size);
-        boost::swap(m_size, other.m_size);
+        boost::adl_move_swap(m_size, other.m_size);
     }
 
     // @par Throws
@@ -1604,7 +1605,7 @@ private:
         ::memcpy(this->data(), other.data(), sizeof(Value) * other.size());
         ::memcpy(other.data(), temp_ptr, sizeof(Value) * this->size());
 
-        boost::swap(m_size, other.m_size);
+        boost::adl_move_swap(m_size, other.m_size);
     }
 
     // @par Throws
@@ -1624,7 +1625,7 @@ private:
             swap_dispatch_impl(this->begin(), this->end(), other.begin(), other.end(), use_memop_in_swap_and_move()); // may throw
         else
             swap_dispatch_impl(other.begin(), other.end(), this->begin(), this->end(), use_memop_in_swap_and_move()); // may throw
-        boost::swap(m_size, other.m_size);
+        boost::adl_move_swap(m_size, other.m_size);
     }
 
     // @par Throws
@@ -1663,7 +1664,7 @@ private:
         namespace sv = varray_detail;
         for (; first_sm != last_sm ; ++first_sm, ++first_la)
         {
-            //boost::swap(*first_sm, *first_la);                                    // may throw
+            //boost::adl_move_swap(*first_sm, *first_la);                                    // may throw
             value_type temp(boost::move(*first_sm));                                // may throw
             *first_sm = boost::move(*first_la);                                     // may throw
             *first_la = boost::move(temp);                                          // may throw
