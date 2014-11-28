@@ -40,10 +40,10 @@
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/allocator_traits.hpp>
 #include <boost/core/no_exceptions_support.hpp>
-#include <boost/container/detail/memory_util.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/aligned_storage.hpp>
 
+#include <boost/move/adl_move_swap.hpp>
 
 namespace boost {
 namespace container {
@@ -53,51 +53,6 @@ namespace container {
 //                                  swap
 //
 //////////////////////////////////////////////////////////////////////////////
-
-namespace container_swap {
-
-template<class T, bool IsClass = boost::is_class<T>::value >
-struct has_member_swap
-{
-   static const bool value = boost::container::container_detail::
-      has_member_function_callable_with_swap<T, T &>::value;
-};
-
-template<class T>
-struct has_member_swap<T, false>
-{
-   static const bool value = false;
-};
-
-}  //namespace container_swap {
-
-template<class T> inline
-typename container_detail::enable_if_c
-      <container_swap::has_member_swap<T>::value, void>::type
-swap_dispatch(T &left, T &right)   //swap using member swap
-{
-   left.swap(right); // may throw
-}
-
-template<class T> inline
-typename container_detail::enable_if_c
-      <!container_swap::has_member_swap<T>::value/* && boost::has_move_emulation_enabled<T>::value*/, void>::type
-   swap_dispatch(T &left, T &right)
-{
-   T temp(boost::move(left)); // may throw
-   left = boost::move(right); // may throw
-   right = boost::move(temp); // may throw
-}
-/*
-template<class T> inline
-typename container_detail::enable_if_c
-      <!container_swap::has_member_swap<T>::value && !boost::has_move_emulation_enabled<T>::value, void>::type
-   swap_dispatch(T &left, T &right)
-{
-   using std::swap;
-   swap(left, right);   // may throw
-}
-*/
 
 namespace container_detail {
 
@@ -194,7 +149,7 @@ inline void swap_alloc(AllocatorType &, AllocatorType &, container_detail::false
 
 template<class AllocatorType>
 inline void swap_alloc(AllocatorType &l, AllocatorType &r, container_detail::true_type)
-{  boost::container::swap_dispatch(l, r);   }
+{  boost::adl_move_swap(l, r);   }
 
 template<class AllocatorType>
 inline void assign_alloc(AllocatorType &, const AllocatorType &, container_detail::false_type)
@@ -1102,7 +1057,7 @@ inline typename container_detail::disable_if_memtransfer_copy_assignable<F, G, v
 {
    typename allocator_traits<A>::size_type n = 0;
    for (; n != n_i ; ++short_range_f, ++large_range_f, ++n){
-      boost::container::swap_dispatch(*short_range_f, *large_range_f);
+      boost::adl_move_swap(*short_range_f, *large_range_f);
    }
    boost::container::uninitialized_move_alloc_n(a, large_range_f, n_j - n_i, short_range_f);  // may throw
    boost::container::destroy_alloc_n(a, large_range_f, n_j - n_i);

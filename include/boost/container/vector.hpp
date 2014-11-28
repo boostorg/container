@@ -26,6 +26,7 @@
 #include <boost/move/algorithm.hpp>
 #include <boost/move/detail/move_helpers.hpp>
 #include <boost/move/traits.hpp>
+#include <boost/move/adl_move_swap.hpp>
 
 #include <boost/container/detail/version_type.hpp>
 #include <boost/container/detail/allocation_type.hpp>
@@ -363,9 +364,9 @@ struct vector_alloc_holder
 
    void swap(vector_alloc_holder &x) BOOST_CONTAINER_NOEXCEPT
    {
-      boost::container::swap_dispatch(this->m_start, x.m_start);
-      boost::container::swap_dispatch(this->m_size, x.m_size);
-      boost::container::swap_dispatch(this->m_capacity, x.m_capacity);
+      boost::adl_move_swap(this->m_start, x.m_start);
+      boost::adl_move_swap(this->m_size, x.m_size);
+      boost::adl_move_swap(this->m_capacity, x.m_capacity);
    }
 
    void move_from_empty(vector_alloc_holder &x) BOOST_CONTAINER_NOEXCEPT
@@ -515,7 +516,7 @@ struct vector_alloc_holder<Allocator, container_detail::integral_constant<unsign
       else{
          boost::container::deep_swap_alloc_n<MaxTmpStorage>(this->alloc(), first_x, x.m_size, first_this, this->m_size);
       }
-      boost::container::swap_dispatch(this->m_size, x.m_size);
+      boost::adl_move_swap(this->m_size, x.m_size);
    }
 };
 

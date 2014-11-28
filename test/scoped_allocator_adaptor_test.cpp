@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/move/utility_core.hpp>
+#include <boost/move/adl_move_swap.hpp>
 #include <memory>
 
 using namespace boost::container;
@@ -475,8 +476,8 @@ int main()
       {
          Scoped0Inner s0i2;
          Scoped1Inner s1i2;
-         boost::container::swap_dispatch(s0i, s0i2);
-         boost::container::swap_dispatch(s1i, s1i2);
+         boost::adl_move_swap(s0i, s0i2);
+         boost::adl_move_swap(s1i, s1i2);
       }
    }
 

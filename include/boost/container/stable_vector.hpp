@@ -43,6 +43,7 @@
 #include <boost/move/iterator.hpp>
 #include <boost/move/detail/move_helpers.hpp>
 #include <boost/container/detail/placement_new.hpp>
+#include <boost/move/adl_move_swap.hpp>
 
 
 #include <utility>   //std::pair
@@ -1911,7 +1912,7 @@ class stable_vector
 
    void priv_swap_members(stable_vector &x)
    {
-      boost::container::swap_dispatch(this->internal_data.pool_size, x.internal_data.pool_size);
+      boost::adl_move_swap(this->internal_data.pool_size, x.internal_data.pool_size);
       index_traits_type::readjust_end_node(this->index, this->internal_data.end_node);
       index_traits_type::readjust_end_node(x.index, x.internal_data.end_node);
    }

@@ -28,6 +28,7 @@
 #include <boost/container/detail/multiallocation_chain.hpp>
 #include <boost/container/throw_exception.hpp>
 #include <boost/move/utility_core.hpp>
+#include <boost/move/adl_move_swap.hpp>
 #include <memory>
 #include <algorithm>
 #include <cstddef>
@@ -314,12 +315,12 @@ class propagation_test_allocator
    void swap(propagation_test_allocator &r)
    {
       ++this->swaps_; ++r.swaps_;
-      boost::container::swap_dispatch(this->id_, r.id_);
-      boost::container::swap_dispatch(this->ctr_copies_, r.ctr_copies_);
-      boost::container::swap_dispatch(this->ctr_moves_, r.ctr_moves_);
-      boost::container::swap_dispatch(this->assign_copies_, r.assign_copies_);
-      boost::container::swap_dispatch(this->assign_moves_, r.assign_moves_);
-      boost::container::swap_dispatch(this->swaps_, r.swaps_);
+      boost::adl_move_swap(this->id_, r.id_);
+      boost::adl_move_swap(this->ctr_copies_, r.ctr_copies_);
+      boost::adl_move_swap(this->ctr_moves_, r.ctr_moves_);
+      boost::adl_move_swap(this->assign_copies_, r.assign_copies_);
+      boost::adl_move_swap(this->assign_moves_, r.assign_moves_);
+      boost::adl_move_swap(this->swaps_, r.swaps_);
    }
 
    friend void swap(propagation_test_allocator &l, propagation_test_allocator &r)

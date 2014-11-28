@@ -36,6 +36,7 @@
 #endif
 #include <boost/aligned_storage.hpp>
 #include <boost/move/make_unique.hpp>
+#include <boost/move/adl_move_swap.hpp>
 
 #include <utility>      //std::pair
 
@@ -159,7 +160,7 @@ class flat_tree
       void swap(Data &d)
       {
          value_compare& mycomp    = *this, & othercomp = d;
-         boost::container::swap_dispatch(mycomp, othercomp);
+         boost::adl_move_swap(mycomp, othercomp);
          this->m_vect.swap(d.m_vect);
       }
 

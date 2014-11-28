@@ -32,6 +32,7 @@
 #include <boost/container/detail/pair.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/core/no_exceptions_support.hpp>
+#include <boost/move/adl_move_swap.hpp>
 
 namespace boost { namespace container {
 
@@ -668,8 +669,8 @@ class scoped_allocator_adaptor_base
 
    void swap(scoped_allocator_adaptor_base &r)
    {
-      boost::container::swap_dispatch(this->outer_allocator(), r.outer_allocator());
-      boost::container::swap_dispatch(this->m_inner, r.inner_allocator());
+      boost::adl_move_swap(this->outer_allocator(), r.outer_allocator());
+      boost::adl_move_swap(this->m_inner, r.inner_allocator());
    }
 
    friend void swap(scoped_allocator_adaptor_base &l, scoped_allocator_adaptor_base &r)
@@ -839,8 +840,8 @@ class scoped_allocator_adaptor_base<OuterAlloc, true                            
                                                                                                 \
    void swap(scoped_allocator_adaptor_base &r)                                                  \
    {                                                                                            \
-      boost::container::swap_dispatch(this->outer_allocator(), r.outer_allocator());            \
-      boost::container::swap_dispatch(this->m_inner, r.inner_allocator());                      \
+      boost::adl_move_swap(this->outer_allocator(), r.outer_allocator());            \
+      boost::adl_move_swap(this->m_inner, r.inner_allocator());                      \
    }                                                                                            \
                                                                                                 \
    friend void swap(scoped_allocator_adaptor_base &l, scoped_allocator_adaptor_base &r)         \
@@ -976,7 +977,7 @@ class scoped_allocator_adaptor_base
 
    void swap(scoped_allocator_adaptor_base &r)
    {
-      boost::container::swap_dispatch(this->outer_allocator(), r.outer_allocator());
+      boost::adl_move_swap(this->outer_allocator(), r.outer_allocator());
    }
 
    friend void swap(scoped_allocator_adaptor_base &l, scoped_allocator_adaptor_base &r)

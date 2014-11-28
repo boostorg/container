@@ -35,6 +35,7 @@
 #include <boost/type_traits/has_nothrow_assign.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
+#include <boost/move/adl_move_swap.hpp>
 #include <boost/move/algorithm.hpp>
 #include <boost/move/detail/move_helpers.hpp>
 #include <boost/move/traits.hpp>
@@ -355,10 +356,10 @@ class deque_base
 
    void swap_members(deque_base &x) BOOST_CONTAINER_NOEXCEPT
    {
-      ::boost::container::swap_dispatch(this->members_.m_start, x.members_.m_start);
-      ::boost::container::swap_dispatch(this->members_.m_finish, x.members_.m_finish);
-      ::boost::container::swap_dispatch(this->members_.m_map, x.members_.m_map);
-      ::boost::container::swap_dispatch(this->members_.m_map_size, x.members_.m_map_size);
+      ::boost::adl_move_swap(this->members_.m_start, x.members_.m_start);
+      ::boost::adl_move_swap(this->members_.m_finish, x.members_.m_finish);
+      ::boost::adl_move_swap(this->members_.m_map, x.members_.m_map);
+      ::boost::adl_move_swap(this->members_.m_map_size, x.members_.m_map_size);
    }
 
    void priv_initialize_map(size_type num_elements)

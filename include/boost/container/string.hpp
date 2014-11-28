@@ -30,6 +30,7 @@
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/iterator.hpp>
 #include <boost/move/utility_core.hpp>
+#include <boost/move/adl_move_swap.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
@@ -433,7 +434,7 @@ class basic_string_base
             this->members_.m_repr.short_repr() = short_backup;
          }
          else{
-            boost::container::swap_dispatch(this->members_.m_repr.long_repr(), other.members_.m_repr.long_repr());
+            boost::adl_move_swap(this->members_.m_repr.long_repr(), other.members_.m_repr.long_repr());
          }
       }
    }
