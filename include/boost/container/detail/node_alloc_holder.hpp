@@ -31,8 +31,9 @@
 #include <boost/container/detail/allocator_version_traits.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/destroyers.hpp>
-#include <boost/container/detail/memory_util.hpp>
 #include <boost/container/detail/placement_new.hpp>
+
+#include <boost/intrusive/detail/mpl.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 
 #ifndef BOOST_CONTAINER_PERFECT_FORWARDING
@@ -42,10 +43,12 @@
 #include <boost/container/detail/construct_in_place.hpp>
 
 
-
 namespace boost {
 namespace container {
 namespace container_detail {
+
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(value_compare)
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(predicate_type)
 
 template<class A, class ICont>
 struct node_alloc_holder

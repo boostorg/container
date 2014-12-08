@@ -24,11 +24,12 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/container_fwd.hpp>
-#include <boost/intrusive/pointer_traits.hpp>
-#include <boost/intrusive/detail/memory_util.hpp>
 #include <boost/container/detail/memory_util.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/placement_new.hpp>
+
+#include <boost/intrusive/pointer_traits.hpp>
+#include <boost/intrusive/detail/mpl.hpp>
 #include <boost/move/utility_core.hpp>
 
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
@@ -56,6 +57,18 @@ struct is_std_allocator
 template<class T>
 struct is_std_allocator< std::allocator<T> >
 {  static const bool value = true; };
+
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(pointer)
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(const_pointer)
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(reference)
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(const_reference)
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(void_pointer)
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(const_void_pointer)
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(size_type)
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(propagate_on_container_copy_assignment)
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(propagate_on_container_move_assignment)
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(propagate_on_container_swap)
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(difference_type)
 
 }  //namespace container_detail {
 
@@ -295,7 +308,7 @@ struct allocator_traits
       {  return a.allocate(n, p);  }
 
       static pointer priv_allocate(container_detail::false_type, Alloc &a, size_type n, const_void_pointer)
-      {  return allocator_traits::allocate(a, n);  }
+      {  return a.allocate(n);  }
 
       template<class T>
       static void priv_destroy(container_detail::true_type, Alloc &a, T* p) BOOST_CONTAINER_NOEXCEPT

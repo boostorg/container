@@ -41,6 +41,7 @@
 #include <boost/container/allocator_traits.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
+#include <boost/intrusive/detail/to_raw_pointer.hpp>
 #include <boost/aligned_storage.hpp>
 
 #include <boost/move/adl_move_swap.hpp>
@@ -116,14 +117,7 @@ struct next_capacity_calculator<SizeType, NextCapacity60Percent>
    }
 };
 
-template <class T>
-inline T* to_raw_pointer(T* p)
-{  return p; }
-
-template <class Pointer>
-inline typename boost::intrusive::pointer_traits<Pointer>::element_type*
-   to_raw_pointer(const Pointer &p)
-{  return boost::container::container_detail::to_raw_pointer(p.operator->());  }
+using ::boost::intrusive::detail::to_raw_pointer;
 
 template <class T>
 inline T* iterator_to_pointer(T* i)

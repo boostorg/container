@@ -19,7 +19,7 @@
 #include <boost/container/set.hpp>
 #include <boost/container/flat_set.hpp>
 #include <boost/container/flat_map.hpp>
-#include <boost/intrusive/detail/memory_util.hpp>
+#include <boost/intrusive/detail/mpl.hpp>
 
 #include <boost/core/lightweight_test.hpp>
 #include <boost/aligned_storage.hpp>
