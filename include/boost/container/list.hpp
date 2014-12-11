@@ -84,10 +84,10 @@ struct iiterator_node_value_type< list_node<T,VoidPointer> > {
   typedef T type;
 };
 
-template<class Allocator>
+template<class A>
 struct intrusive_list_type
 {
-   typedef boost::container::allocator_traits<Allocator>   allocator_traits_type;
+   typedef boost::container::allocator_traits<A>   allocator_traits_type;
    typedef typename allocator_traits_type::value_type value_type;
    typedef typename boost::intrusive::pointer_traits
       <typename allocator_traits_type::pointer>::template
@@ -120,20 +120,20 @@ struct intrusive_list_type
 //! or mutation is explicit.
 //!
 //! \tparam T The type of object that is stored in the list
-//! \tparam Allocator The allocator used for all internal memory management
+//! \tparam A The allocator used for all internal memory management
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class T, class Allocator = std::allocator<T> >
+template <class T, class A = std::allocator<T> >
 #else
-template <class T, class Allocator>
+template <class T, class A>
 #endif
 class list
    : protected container_detail::node_alloc_holder
-      <Allocator, typename container_detail::intrusive_list_type<Allocator>::type>
+      <A, typename container_detail::intrusive_list_type<A>::type>
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    typedef typename
-      container_detail::intrusive_list_type<Allocator>::type Icont;
-   typedef container_detail::node_alloc_holder<Allocator, Icont>  AllocHolder;
+      container_detail::intrusive_list_type<A>::type Icont;
+   typedef container_detail::node_alloc_holder<A, Icont>  AllocHolder;
    typedef typename AllocHolder::NodePtr                          NodePtr;
    typedef typename AllocHolder::NodeAlloc                        NodeAlloc;
    typedef typename AllocHolder::ValAlloc                         ValAlloc;
@@ -142,8 +142,8 @@ class list
    typedef typename AllocHolder::allocator_v1                     allocator_v1;
    typedef typename AllocHolder::allocator_v2                     allocator_v2;
    typedef typename AllocHolder::alloc_version                    alloc_version;
-   typedef boost::container::allocator_traits<Allocator>          allocator_traits_type;
-   typedef boost::container::equal_to_value<Allocator>            equal_to_value_type;
+   typedef boost::container::allocator_traits<A>          allocator_traits_type;
+   typedef boost::container::equal_to_value<A>            equal_to_value_type;
 
    BOOST_COPYABLE_AND_MOVABLE(list)
 
@@ -159,13 +159,13 @@ class list
    //////////////////////////////////////////////
 
    typedef T                                                                           value_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_reference   const_reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
-   typedef Allocator                                                                   allocator_type;
+   typedef typename ::boost::container::allocator_traits<A>::pointer           pointer;
+   typedef typename ::boost::container::allocator_traits<A>::const_pointer     const_pointer;
+   typedef typename ::boost::container::allocator_traits<A>::reference         reference;
+   typedef typename ::boost::container::allocator_traits<A>::const_reference   const_reference;
+   typedef typename ::boost::container::allocator_traits<A>::size_type         size_type;
+   typedef typename ::boost::container::allocator_traits<A>::difference_type   difference_type;
+   typedef A                                                                   allocator_type;
    typedef BOOST_CONTAINER_IMPDEF(NodeAlloc)                                           stored_allocator_type;
    typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                                       iterator;
    typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                                 const_iterator;
@@ -204,7 +204,7 @@ class list
    //!
    //! <b>Complexity</b>: Linear to n.
    explicit list(size_type n)
-      : AllocHolder(Allocator())
+      : AllocHolder(A())
    {  this->resize(n);  }
 
    //! <b>Effects</b>: Constructs a list that will use a copy of allocator a
@@ -214,7 +214,7 @@ class list
    //!   throws or T's default or copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
-   list(size_type n, const T& value, const Allocator& a = Allocator())
+   list(size_type n, const T& value, const A& a = A())
       : AllocHolder(a)
    {  this->insert(this->cbegin(), n, value);  }
 
@@ -274,7 +274,7 @@ class list
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
    template <class InpIt>
-   list(InpIt first, InpIt last, const Allocator &a = Allocator())
+   list(InpIt first, InpIt last, const A &a = A())
       : AllocHolder(a)
    {  this->insert(this->cbegin(), first, last);  }
 
@@ -288,7 +288,7 @@ class list
    //!   std::initializer_list iterator throws.
    //!
    //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
-   list(std::initializer_list<value_type> il, const Allocator &a = Allocator())
+   list(std::initializer_list<value_type> il, const A &a = A())
       : AllocHolder(a)
    {  this->insert(this->cbegin(), il.begin(), il.end()); }
 #endif
@@ -1403,9 +1403,9 @@ class list
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class T, class Allocator>
-struct has_trivial_destructor_after_move<boost::container::list<T, Allocator> >
-   : public ::boost::has_trivial_destructor_after_move<Allocator>
+template <class T, class A>
+struct has_trivial_destructor_after_move<boost::container::list<T, A> >
+   : public ::boost::has_trivial_destructor_after_move<A>
 {};
 
 namespace container {

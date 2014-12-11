@@ -407,16 +407,16 @@ class stable_vector_iterator
 //! operations provide stronger exception safety guarantees than in std::vector.
 //!
 //! \tparam T The type of object that is stored in the stable_vector
-//! \tparam Allocator The allocator used for all internal memory management
+//! \tparam A The allocator used for all internal memory management
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class T, class Allocator = std::allocator<T> >
+template <class T, class A = std::allocator<T> >
 #else
-template <class T, class Allocator>
+template <class T, class A>
 #endif
 class stable_vector
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   typedef allocator_traits<Allocator>                allocator_traits_type;
+   typedef allocator_traits<A>                allocator_traits_type;
    typedef boost::intrusive::
       pointer_traits
          <typename allocator_traits_type::pointer>    ptr_traits;
@@ -458,7 +458,7 @@ class stable_vector
       integral_constant<unsigned, 2>                  allocator_v2;
    typedef ::boost::container::container_detail::integral_constant
       <unsigned, boost::container::container_detail::
-      version<Allocator>::value>                              alloc_version;
+      version<A>::value>                              alloc_version;
    typedef typename allocator_traits_type::
       template portable_rebind_alloc
          <node_type>::type                            node_allocator_type;
@@ -481,10 +481,10 @@ class stable_vector
 
    friend class stable_vector_detail::clear_on_destroy<stable_vector>;
    typedef stable_vector_iterator
-      < typename allocator_traits<Allocator>::pointer
+      < typename allocator_traits<A>::pointer
       , false>                                           iterator_impl;
    typedef stable_vector_iterator
-      < typename allocator_traits<Allocator>::pointer
+      < typename allocator_traits<A>::pointer
       , false>                                           const_iterator_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    public:
@@ -495,13 +495,13 @@ class stable_vector
    //
    //////////////////////////////////////////////
    typedef T                                                                           value_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_reference   const_reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
-   typedef Allocator                                                                   allocator_type;
+   typedef typename ::boost::container::allocator_traits<A>::pointer           pointer;
+   typedef typename ::boost::container::allocator_traits<A>::const_pointer     const_pointer;
+   typedef typename ::boost::container::allocator_traits<A>::reference         reference;
+   typedef typename ::boost::container::allocator_traits<A>::const_reference   const_reference;
+   typedef typename ::boost::container::allocator_traits<A>::size_type         size_type;
+   typedef typename ::boost::container::allocator_traits<A>::difference_type   difference_type;
+   typedef A                                                                   allocator_type;
    typedef node_allocator_type                                                         stored_allocator_type;
    typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                                       iterator;
    typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                                 const_iterator;
@@ -2003,9 +2003,9 @@ class stable_vector
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class T, class Allocator>
-struct has_trivial_destructor_after_move<boost::container::stable_vector<T, Allocator> >
-   : public has_trivial_destructor_after_move<Allocator>::value
+template <class T, class A>
+struct has_trivial_destructor_after_move<boost::container::stable_vector<T, A> >
+   : public has_trivial_destructor_after_move<A>::value
 {};
 
 */

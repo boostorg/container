@@ -84,17 +84,17 @@ struct def
 //!
 //! This strategy defines the same types that are defined in the Allocator.
 //!
-//! @tparam Allocator The Allocator which will be adapted.
-template <typename Allocator>
+//! @tparam A The Allocator which will be adapted.
+template <typename A>
 struct allocator_adaptor
 {
-    typedef typename Allocator::value_type value_type;
-    typedef typename Allocator::size_type size_type;
-    typedef typename Allocator::difference_type difference_type;
-    typedef typename Allocator::pointer pointer;
-    typedef typename Allocator::const_pointer const_pointer;
-    typedef typename Allocator::reference reference;
-    typedef typename Allocator::const_reference const_reference;
+    typedef typename A::value_type value_type;
+    typedef typename A::size_type size_type;
+    typedef typename A::difference_type difference_type;
+    typedef typename A::pointer pointer;
+    typedef typename A::const_pointer const_pointer;
+    typedef typename A::reference reference;
+    typedef typename A::const_reference const_reference;
 
     static void allocate_failed()
     {

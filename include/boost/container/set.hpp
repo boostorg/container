@@ -51,23 +51,23 @@ namespace container {
 //!
 //! \tparam Key is the type to be inserted in the set, which is also the key_type
 //! \tparam Compare is the comparison functor used to order keys
-//! \tparam Allocator is the allocator to be used to allocate memory for this container
+//! \tparam A is the allocator to be used to allocate memory for this container
 //! \tparam SetOptions is an packed option type generated using using boost::container::tree_assoc_options.
-template <class Key, class Compare = std::less<Key>, class Allocator = std::allocator<Key>, class SetOptions = tree_assoc_defaults >
+template <class Key, class Compare = std::less<Key>, class A = std::allocator<Key>, class SetOptions = tree_assoc_defaults >
 #else
-template <class Key, class Compare, class Allocator, class SetOptions>
+template <class Key, class Compare, class A, class SetOptions>
 #endif
 class set
    ///@cond
    : public container_detail::tree
-      < Key, Key, container_detail::identity<Key>, Compare, Allocator, SetOptions>
+      < Key, Key, container_detail::identity<Key>, Compare, A, SetOptions>
    ///@endcond
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(set)
    typedef container_detail::tree
-      < Key, Key, container_detail::identity<Key>, Compare, Allocator, SetOptions> base_t;
+      < Key, Key, container_detail::identity<Key>, Compare, A, SetOptions> base_t;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -80,14 +80,14 @@ class set
    typedef Key                                                                         value_type;
    typedef Compare                                                                     key_compare;
    typedef Compare                                                                     value_compare;
-   typedef ::boost::container::allocator_traits<Allocator>                             allocator_traits_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_reference   const_reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
-   typedef Allocator                                                                   allocator_type;
+   typedef ::boost::container::allocator_traits<A>                             allocator_traits_type;
+   typedef typename ::boost::container::allocator_traits<A>::pointer           pointer;
+   typedef typename ::boost::container::allocator_traits<A>::const_pointer     const_pointer;
+   typedef typename ::boost::container::allocator_traits<A>::reference         reference;
+   typedef typename ::boost::container::allocator_traits<A>::const_reference   const_reference;
+   typedef typename ::boost::container::allocator_traits<A>::size_type         size_type;
+   typedef typename ::boost::container::allocator_traits<A>::difference_type   difference_type;
+   typedef A                                                                   allocator_type;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)              stored_allocator_type;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                           iterator;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                     const_iterator;
@@ -235,7 +235,7 @@ class set
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-   //! <b>Effects</b>: Returns a copy of the Allocator that
+   //! <b>Effects</b>: Returns a copy of the allocator that
    //!   was passed to the object's constructor.
    //!
    //! <b>Complexity</b>: Constant.
@@ -548,7 +548,7 @@ class set
    //! <b>Complexity</b>: Logarithmic.
    iterator find(const key_type& x);
 
-   //! <b>Returns</b>: Allocator const_iterator pointing to an element with the key
+   //! <b>Returns</b>: A const_iterator pointing to an element with the key
    //!   equivalent to x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic.
@@ -576,7 +576,7 @@ class set
    //! <b>Complexity</b>: Logarithmic
    iterator lower_bound(const key_type& x);
 
-   //! <b>Returns</b>: Allocator const iterator pointing to the first element with key not
+   //! <b>Returns</b>: A const iterator pointing to the first element with key not
    //!   less than k, or a.end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic
@@ -588,7 +588,7 @@ class set
    //! <b>Complexity</b>: Logarithmic
    iterator upper_bound(const key_type& x);
 
-   //! <b>Returns</b>: Allocator const iterator pointing to the first element with key not
+   //! <b>Returns</b>: A const iterator pointing to the first element with key not
    //!   less than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic
@@ -680,10 +680,10 @@ class set
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class Key, class C, class SetOptions, class Allocator>
-struct has_trivial_destructor_after_move<boost::container::set<Key, C, Allocator, SetOptions> >
+template <class Key, class C, class SetOptions, class A>
+struct has_trivial_destructor_after_move<boost::container::set<Key, C, A, SetOptions> >
 {
-   static const bool value = has_trivial_destructor_after_move<Allocator>::value && has_trivial_destructor_after_move<C>::value;
+   static const bool value = has_trivial_destructor_after_move<A>::value && has_trivial_destructor_after_move<C>::value;
 };
 
 namespace container {
@@ -702,23 +702,23 @@ namespace container {
 //!
 //! \tparam Key is the type to be inserted in the set, which is also the key_type
 //! \tparam Compare is the comparison functor used to order keys
-//! \tparam Allocator is the allocator to be used to allocate memory for this container
+//! \tparam A is the allocator to be used to allocate memory for this container
 //! \tparam MultiSetOptions is an packed option type generated using using boost::container::tree_assoc_options.
-template <class Key, class Compare = std::less<Key>, class Allocator = std::allocator<Key>, class MultiSetOptions = tree_assoc_defaults >
+template <class Key, class Compare = std::less<Key>, class A = std::allocator<Key>, class MultiSetOptions = tree_assoc_defaults >
 #else
-template <class Key, class Compare, class Allocator, class MultiSetOptions>
+template <class Key, class Compare, class A, class MultiSetOptions>
 #endif
 class multiset
    /// @cond
    : public container_detail::tree
-      <Key, Key,container_detail::identity<Key>, Compare, Allocator, MultiSetOptions>
+      <Key, Key,container_detail::identity<Key>, Compare, A, MultiSetOptions>
    /// @endcond
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(multiset)
    typedef container_detail::tree
-      <Key, Key,container_detail::identity<Key>, Compare, Allocator, MultiSetOptions> base_t;
+      <Key, Key,container_detail::identity<Key>, Compare, A, MultiSetOptions> base_t;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -732,14 +732,14 @@ class multiset
    typedef Key                                                                         value_type;
    typedef Compare                                                                     key_compare;
    typedef Compare                                                                     value_compare;
-   typedef ::boost::container::allocator_traits<Allocator>                             allocator_traits_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_reference   const_reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
-   typedef Allocator                                                                   allocator_type;
+   typedef ::boost::container::allocator_traits<A>                             allocator_traits_type;
+   typedef typename ::boost::container::allocator_traits<A>::pointer           pointer;
+   typedef typename ::boost::container::allocator_traits<A>::const_pointer     const_pointer;
+   typedef typename ::boost::container::allocator_traits<A>::reference         reference;
+   typedef typename ::boost::container::allocator_traits<A>::const_reference   const_reference;
+   typedef typename ::boost::container::allocator_traits<A>::size_type         size_type;
+   typedef typename ::boost::container::allocator_traits<A>::difference_type   difference_type;
+   typedef A                                                                   allocator_type;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)              stored_allocator_type;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                           iterator;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                     const_iterator;
@@ -1108,10 +1108,10 @@ class multiset
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class Key, class C, class Allocator, class MultiSetOptions>
-struct has_trivial_destructor_after_move<boost::container::multiset<Key, C, Allocator, MultiSetOptions> >
+template <class Key, class C, class A, class MultiSetOptions>
+struct has_trivial_destructor_after_move<boost::container::multiset<Key, C, A, MultiSetOptions> >
 {
-   static const bool value = has_trivial_destructor_after_move<Allocator>::value && has_trivial_destructor_after_move<C>::value;
+   static const bool value = has_trivial_destructor_after_move<A>::value && has_trivial_destructor_after_move<C>::value;
 };
 
 namespace container {

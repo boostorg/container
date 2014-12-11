@@ -37,13 +37,13 @@ public:
                       const allocator_type& a = allocator_type());
     explicit hash_set(const allocator_type&);
     hash_set(const hash_set&);
-    hash_set(const hash_set&, const Allocator&);
+    hash_set(const hash_set&, const A&);
     hash_set(hash_set&&)
         noexcept(
             is_nothrow_move_constructible<hasher>::value &&
             is_nothrow_move_constructible<key_equal>::value &&
             is_nothrow_move_constructible<allocator_type>::value);
-    hash_set(hash_set&&, const Allocator&);
+    hash_set(hash_set&&, const A&);
     hash_set(initializer_list<value_type>, size_type n = 0,
                   const hasher& hf = hasher(), const key_equal& eql = key_equal(),
                   const allocator_type& a = allocator_type());
@@ -162,13 +162,13 @@ public:
                       const allocator_type& a = allocator_type());
     explicit hash_map(const allocator_type&);
     hash_map(const hash_map&);
-    hash_map(const hash_map&, const Allocator&);
+    hash_map(const hash_map&, const A&);
     hash_map(hash_map&&)
         noexcept(
             is_nothrow_move_constructible<hasher>::value &&
             is_nothrow_move_constructible<key_equal>::value &&
             is_nothrow_move_constructible<allocator_type>::value);
-    hash_map(hash_map&&, const Allocator&);
+    hash_map(hash_map&&, const A&);
     hash_map(initializer_list<value_type>, size_type n = 0,
                   const hasher& hf = hasher(), const key_equal& eql = key_equal(),
                   const allocator_type& a = allocator_type());
@@ -296,13 +296,13 @@ public:
                       const allocator_type& a = allocator_type());
     explicit hash_set(const allocator_type&);
     hash_set(const hash_set&);
-    hash_set(const hash_set&, const Allocator&);
+    hash_set(const hash_set&, const A&);
     hash_set(hash_set&&)
         noexcept(
             is_nothrow_move_constructible<hasher>::value &&
             is_nothrow_move_constructible<key_equal>::value &&
             is_nothrow_move_constructible<allocator_type>::value);
-    hash_set(hash_set&&, const Allocator&);
+    hash_set(hash_set&&, const A&);
     hash_set(initializer_list<value_type>, size_type n = 0,
                   const hasher& hf = hasher(), const key_equal& eql = key_equal(),
                   const allocator_type& a = allocator_type());

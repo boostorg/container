@@ -64,7 +64,7 @@ class scoped_allocator_adaptor;
 //! The allocator_arg_t struct is an empty structure type used as a unique type to
 //! disambiguate constructor and function overloading. Specifically, several types
 //! have constructors with allocator_arg_t as the first argument, immediately followed
-//! by an argument of a type that satisfies the Allocator requirements
+//! by an argument of a type that satisfies Allocator requirements
 struct allocator_arg_t{};
 
 //! A instance of type allocator_arg_t

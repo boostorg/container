@@ -48,10 +48,10 @@ namespace boost { namespace container {
 //! ill-formed.
 //!
 //! <code>
-//!  template <class T, class Allocator = allocator<T> >
+//!  template <class T, class A = allocator<T> >
 //!  class Z {
 //!    public:
-//!      typedef Allocator allocator_type;
+//!      typedef A allocator_type;
 //!
 //!    // Default constructor with optional allocator suffix
 //!    Z(const allocator_type& a = allocator_type());
@@ -62,12 +62,12 @@ namespace boost { namespace container {
 //! };
 //!
 //! // Specialize trait for class template Z
-//! template <class T, class Allocator = allocator<T> >
-//! struct constructible_with_allocator_suffix<Z<T,Allocator> >
+//! template <class T, class A = allocator<T> >
+//! struct constructible_with_allocator_suffix<Z<T,A> >
 //!      : ::boost::true_type { };
 //! </code>
 //!
-//! <b>Note</b>: This trait is a workaround inspired by "N2554: The Scoped Allocator Model (Rev 2)"
+//! <b>Note</b>: This trait is a workaround inspired by "N2554: The Scoped A Model (Rev 2)"
 //! (Pablo Halpern, 2008-02-29) to backport the scoped allocator model to C++03, as
 //! in C++03 there is no mechanism to detect if a type can be constructed from arbitrary arguments.
 //! Applications aiming portability with several compilers should always define this trait.
@@ -92,10 +92,10 @@ struct constructible_with_allocator_suffix
 //! a constructor, then the program is ill-formed.
 //!
 //! <code>
-//! template <class T, class Allocator = allocator<T> >
+//! template <class T, class A = allocator<T> >
 //! class Y {
 //!    public:
-//!       typedef Allocator allocator_type;
+//!       typedef A allocator_type;
 //!
 //!       // Default constructor with and allocator-extended default constructor
 //!       Y();
@@ -112,8 +112,8 @@ struct constructible_with_allocator_suffix
 //! };
 //!
 //! // Specialize trait for class template Y
-//! template <class T, class Allocator = allocator<T> >
-//! struct constructible_with_allocator_prefix<Y<T,Allocator> >
+//! template <class T, class A = allocator<T> >
+//! struct constructible_with_allocator_prefix<Y<T,A> >
 //!       : ::boost::true_type { };
 //!
 //! </code>
@@ -1103,16 +1103,16 @@ class scoped_allocator_adaptor
    typedef typename outer_traits_type::const_pointer        const_pointer;
    typedef typename outer_traits_type::void_pointer         void_pointer;
    typedef typename outer_traits_type::const_void_pointer   const_void_pointer;
-   //! Type: <code>true_type</code> if <code>allocator_traits<Allocator>::propagate_on_container_copy_assignment::value</code> is
-   //! true for any <code>Allocator</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>; otherwise, false_type.
+   //! Type: <code>true_type</code> if <code>allocator_traits<A>::propagate_on_container_copy_assignment::value</code> is
+   //! true for any <code>A</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>; otherwise, false_type.
    typedef typename base_type::
       propagate_on_container_copy_assignment                propagate_on_container_copy_assignment;
-   //! Type: <code>true_type</code> if <code>allocator_traits<Allocator>::propagate_on_container_move_assignment::value</code> is
-   //! true for any <code>Allocator</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>; otherwise, false_type.
+   //! Type: <code>true_type</code> if <code>allocator_traits<A>::propagate_on_container_move_assignment::value</code> is
+   //! true for any <code>A</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>; otherwise, false_type.
    typedef typename base_type::
       propagate_on_container_move_assignment                propagate_on_container_move_assignment;
-   //! Type: <code>true_type</code> if <code>allocator_traits<Allocator>::propagate_on_container_swap::value</code> is true for any
-   //! <code>Allocator</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>; otherwise, false_type.
+   //! Type: <code>true_type</code> if <code>allocator_traits<A>::propagate_on_container_swap::value</code> is true for any
+   //! <code>A</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>; otherwise, false_type.
    typedef typename base_type::
       propagate_on_container_swap                           propagate_on_container_swap;
 
@@ -1280,9 +1280,9 @@ class scoped_allocator_adaptor
    }
 
    #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-   //! <b>Returns</b>: Allocator new scoped_allocator_adaptor object where each allocator
+   //! <b>Returns</b>: A new scoped_allocator_adaptor object where each allocator
    //! A in the adaptor is initialized from the result of calling
-   //! <code>allocator_traits<Allocator>::select_on_container_copy_construction()</code> on
+   //! <code>allocator_traits<A>::select_on_container_copy_construction()</code> on
    //! the corresponding allocator in *this.
    scoped_allocator_adaptor select_on_container_copy_construction() const;
    #endif   //BOOST_CONTAINER_DOXYGEN_INVOKED

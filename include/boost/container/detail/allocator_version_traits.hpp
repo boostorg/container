@@ -32,32 +32,32 @@ namespace boost {
 namespace container {
 namespace container_detail {
 
-template<class Allocator, unsigned Version = boost::container::container_detail::version<Allocator>::value>
+template<class A, unsigned Version = boost::container::container_detail::version<A>::value>
 struct allocator_version_traits
 {
    typedef ::boost::container::container_detail::integral_constant
       <unsigned, Version> alloc_version;
 
-   typedef typename Allocator::multiallocation_chain multiallocation_chain;
+   typedef typename A::multiallocation_chain multiallocation_chain;
 
-   typedef typename boost::container::allocator_traits<Allocator>::pointer    pointer;
-   typedef typename boost::container::allocator_traits<Allocator>::size_type  size_type;
+   typedef typename boost::container::allocator_traits<A>::pointer    pointer;
+   typedef typename boost::container::allocator_traits<A>::size_type  size_type;
 
    //Node allocation interface
-   static pointer allocate_one(Allocator &a)
+   static pointer allocate_one(A &a)
    {  return a.allocate_one();   }
 
-   static void deallocate_one(Allocator &a, const pointer &p)
+   static void deallocate_one(A &a, const pointer &p)
    {  a.deallocate_one(p);   }
 
-   static void allocate_individual(Allocator &a, size_type n, multiallocation_chain &m)
+   static void allocate_individual(A &a, size_type n, multiallocation_chain &m)
    {  return a.allocate_individual(n, m);   }
 
-   static void deallocate_individual(Allocator &a, multiallocation_chain &holder)
+   static void deallocate_individual(A &a, multiallocation_chain &holder)
    {  a.deallocate_individual(holder);   }
 
    static std::pair<pointer, bool>
-      allocation_command(Allocator &a, allocation_type command,
+      allocation_command(A &a, allocation_type command,
                          size_type limit_size, size_type preferred_size,
                          size_type &received_size, const pointer &reuse)
    {
@@ -66,15 +66,15 @@ struct allocator_version_traits
    }
 };
 
-template<class Allocator>
-struct allocator_version_traits<Allocator, 1>
+template<class A>
+struct allocator_version_traits<A, 1>
 {
    typedef ::boost::container::container_detail::integral_constant
       <unsigned, 1> alloc_version;
 
-   typedef typename boost::container::allocator_traits<Allocator>::pointer    pointer;
-   typedef typename boost::container::allocator_traits<Allocator>::size_type  size_type;
-   typedef typename boost::container::allocator_traits<Allocator>::value_type value_type;
+   typedef typename boost::container::allocator_traits<A>::pointer    pointer;
+   typedef typename boost::container::allocator_traits<A>::size_type  size_type;
+   typedef typename boost::container::allocator_traits<A>::value_type value_type;
 
    typedef typename boost::intrusive::pointer_traits<pointer>::
          template rebind_pointer<void>::type                void_ptr;
@@ -85,13 +85,13 @@ struct allocator_version_traits<Allocator, 1>
          < multialloc_cached_counted, value_type>           multiallocation_chain;
 
    //Node allocation interface
-   static pointer allocate_one(Allocator &a)
+   static pointer allocate_one(A &a)
    {  return a.allocate(1);   }
 
-   static void deallocate_one(Allocator &a, const pointer &p)
+   static void deallocate_one(A &a, const pointer &p)
    {  a.deallocate(p, 1);   }
 
-   static void deallocate_individual(Allocator &a, multiallocation_chain &holder)
+   static void deallocate_individual(A &a, multiallocation_chain &holder)
    {
       size_type n = holder.size();
       typename multiallocation_chain::iterator it = holder.begin();
@@ -104,7 +104,7 @@ struct allocator_version_traits<Allocator, 1>
 
    struct allocate_individual_rollback
    {
-      allocate_individual_rollback(Allocator &a, multiallocation_chain &chain)
+      allocate_individual_rollback(A &a, multiallocation_chain &chain)
          : mr_a(a), mp_chain(&chain)
       {}
 
@@ -119,11 +119,11 @@ struct allocator_version_traits<Allocator, 1>
          mp_chain = 0;
       }
 
-      Allocator &mr_a;
+      A &mr_a;
       multiallocation_chain * mp_chain;
    };
 
-   static void allocate_individual(Allocator &a, size_type n, multiallocation_chain &m)
+   static void allocate_individual(A &a, size_type n, multiallocation_chain &m)
    {
       allocate_individual_rollback rollback(a, m);
       while(n--){
@@ -133,7 +133,7 @@ struct allocator_version_traits<Allocator, 1>
    }
 
    static std::pair<pointer, bool>
-      allocation_command(Allocator &a, allocation_type command,
+      allocation_command(A &a, allocation_type command,
                          size_type, size_type preferred_size,
                          size_type &received_size, const pointer &)
    {

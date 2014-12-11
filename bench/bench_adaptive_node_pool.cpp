@@ -79,7 +79,7 @@ template class bc::node_allocator
    , bc::NodeAlloc_nodes_per_block
    , 2>;
 
-template<class Allocator> struct get_allocator_name;
+template<class A> struct get_allocator_name;
 
 template<> struct get_allocator_name<StdAllocator>
 {  static const char *get() {  return "StdAllocator";  } };
@@ -124,10 +124,10 @@ class MyInt
    }
 };
 
-template<class Allocator>
+template<class A>
 void list_test_template(std::size_t num_iterations, std::size_t num_elements, bool csv_output)
 {
-   typedef typename Allocator::template rebind<MyInt>::other IntAllocator;
+   typedef typename A::template rebind<MyInt>::other IntAllocator;
    nanosecond_type tinsert, terase;
    boost_cont_malloc_stats_t insert_stats, erase_stats;
    std::size_t insert_inuse, erase_inuse;
@@ -181,7 +181,7 @@ void list_test_template(std::size_t num_iterations, std::size_t num_elements, bo
 
 
    if(csv_output){
-      std::cout   << get_allocator_name<Allocator>::get()
+      std::cout   << get_allocator_name<A>::get()
                   << ";"
                   << num_iterations
                   << ";"
@@ -206,7 +206,7 @@ void list_test_template(std::size_t num_iterations, std::size_t num_elements, bo
    }
    else{
       std::cout << std::endl
-               << "Allocator: " << get_allocator_name<Allocator>::get()
+               << "A: " << get_allocator_name<A>::get()
                << std::endl
                << "  allocation/deallocation(ns): " << float(tinsert)/(num_iterations*num_elements) <<  '\t' << float(terase)/(num_iterations*num_elements)
                << std::endl

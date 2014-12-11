@@ -76,14 +76,14 @@ struct scoped_deallocator
    {  m_ptr = 0; }
 };
 
-template <class Allocator>
+template <class A>
 struct null_scoped_deallocator
 {
-   typedef boost::container::allocator_traits<Allocator> AllocTraits;
+   typedef boost::container::allocator_traits<A> AllocTraits;
    typedef typename AllocTraits::pointer    pointer;
    typedef typename AllocTraits::size_type  size_type;
 
-   null_scoped_deallocator(pointer, Allocator&, size_type)
+   null_scoped_deallocator(pointer, A&, size_type)
    {}
 
    void release()
@@ -98,14 +98,14 @@ struct null_scoped_deallocator
 
 //!A deleter for scoped_ptr that deallocates the memory
 //!allocated for an array of objects using a STL allocator.
-template <class Allocator>
+template <class A>
 struct scoped_array_deallocator
 {
-   typedef boost::container::allocator_traits<Allocator> AllocTraits;
+   typedef boost::container::allocator_traits<A> AllocTraits;
    typedef typename AllocTraits::pointer    pointer;
    typedef typename AllocTraits::size_type  size_type;
 
-   scoped_array_deallocator(pointer p, Allocator& a, size_type length)
+   scoped_array_deallocator(pointer p, A& a, size_type length)
       : m_ptr(p), m_alloc(a), m_length(length) {}
 
    ~scoped_array_deallocator()
@@ -116,37 +116,37 @@ struct scoped_array_deallocator
 
    private:
    pointer     m_ptr;
-   Allocator&  m_alloc;
+   A&  m_alloc;
    size_type   m_length;
 };
 
-template <class Allocator>
+template <class A>
 struct null_scoped_array_deallocator
 {
-   typedef boost::container::allocator_traits<Allocator> AllocTraits;
+   typedef boost::container::allocator_traits<A> AllocTraits;
    typedef typename AllocTraits::pointer    pointer;
    typedef typename AllocTraits::size_type  size_type;
 
-   null_scoped_array_deallocator(pointer, Allocator&, size_type)
+   null_scoped_array_deallocator(pointer, A&, size_type)
    {}
 
    void release()
    {}
 };
 
-template <class Allocator>
+template <class A>
 struct scoped_destroy_deallocator
 {
-   typedef boost::container::allocator_traits<Allocator> AllocTraits;
+   typedef boost::container::allocator_traits<A> AllocTraits;
    typedef typename AllocTraits::pointer    pointer;
    typedef typename AllocTraits::size_type  size_type;
    typedef container_detail::integral_constant<unsigned,
       boost::container::container_detail::
-         version<Allocator>::value>                          alloc_version;
+         version<A>::value>                          alloc_version;
    typedef container_detail::integral_constant<unsigned, 1>  allocator_v1;
    typedef container_detail::integral_constant<unsigned, 2>  allocator_v2;
 
-   scoped_destroy_deallocator(pointer p, Allocator& a)
+   scoped_destroy_deallocator(pointer p, A& a)
       : m_ptr(p), m_alloc(a) {}
 
    ~scoped_destroy_deallocator()
@@ -169,21 +169,21 @@ struct scoped_destroy_deallocator
    {  m_alloc.deallocate_one(p); }
 
    pointer     m_ptr;
-   Allocator&  m_alloc;
+   A&  m_alloc;
 };
 
 
 //!A deleter for scoped_ptr that destroys
 //!an object using a STL allocator.
-template <class Allocator>
+template <class A>
 struct scoped_destructor_n
 {
-   typedef boost::container::allocator_traits<Allocator> AllocTraits;
+   typedef boost::container::allocator_traits<A> AllocTraits;
    typedef typename AllocTraits::pointer    pointer;
    typedef typename AllocTraits::value_type value_type;
    typedef typename AllocTraits::size_type  size_type;
 
-   scoped_destructor_n(pointer p, Allocator& a, size_type n)
+   scoped_destructor_n(pointer p, A& a, size_type n)
       : m_p(p), m_a(a), m_n(n)
    {}
 
@@ -210,20 +210,20 @@ struct scoped_destructor_n
 
    private:
    pointer     m_p;
-   Allocator & m_a;
+   A & m_a;
    size_type   m_n;
 };
 
 //!A deleter for scoped_ptr that destroys
 //!an object using a STL allocator.
-template <class Allocator>
+template <class A>
 struct null_scoped_destructor_n
 {
-   typedef boost::container::allocator_traits<Allocator> AllocTraits;
+   typedef boost::container::allocator_traits<A> AllocTraits;
    typedef typename AllocTraits::pointer pointer;
    typedef typename AllocTraits::size_type size_type;
 
-   null_scoped_destructor_n(pointer, Allocator&, size_type)
+   null_scoped_destructor_n(pointer, A&, size_type)
    {}
 
    void increment_size(size_type)
@@ -290,20 +290,20 @@ class value_destructor
    A &a_;
 };
 
-template <class Allocator>
+template <class A>
 class allocator_destroyer
 {
-   typedef boost::container::allocator_traits<Allocator> AllocTraits;
+   typedef boost::container::allocator_traits<A> AllocTraits;
    typedef typename AllocTraits::value_type value_type;
    typedef typename AllocTraits::pointer    pointer;
    typedef container_detail::integral_constant<unsigned,
       boost::container::container_detail::
-         version<Allocator>::value>                           alloc_version;
+         version<A>::value>                           alloc_version;
    typedef container_detail::integral_constant<unsigned, 1>  allocator_v1;
    typedef container_detail::integral_constant<unsigned, 2>  allocator_v2;
 
    private:
-   Allocator & a_;
+   A & a_;
 
    private:
    void priv_deallocate(const pointer &p, allocator_v1)
@@ -313,7 +313,7 @@ class allocator_destroyer
    {  a_.deallocate_one(p); }
 
    public:
-   allocator_destroyer(Allocator &a)
+   allocator_destroyer(A &a)
       : a_(a)
    {}
 
