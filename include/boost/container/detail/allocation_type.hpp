@@ -36,7 +36,7 @@ enum allocation_type_v
    try_shrink_in_place_v = 0x40
 };
 
-typedef int allocation_type;
+typedef unsigned int allocation_type;
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 static const allocation_type allocate_new       = (allocation_type)allocate_new_v;
 static const allocation_type expand_fwd         = (allocation_type)expand_fwd_v;

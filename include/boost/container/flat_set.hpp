@@ -7,7 +7,6 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-
 #ifndef BOOST_CONTAINER_FLAT_SET_HPP
 #define BOOST_CONTAINER_FLAT_SET_HPP
 
@@ -18,17 +17,25 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 
+// container
+#include <boost/container/allocator_traits.hpp>
 #include <boost/container/container_fwd.hpp>
+#include <boost/container/new_allocator.hpp> //new_allocator
+// container/detail
 #include <boost/container/detail/flat_tree.hpp>
 #include <boost/container/detail/mpl.hpp>
-#include <boost/container/allocator_traits.hpp>
-#include <boost/move/utility_core.hpp>
-#include <boost/move/detail/move_helpers.hpp>
+// move
 #include <boost/move/traits.hpp>
-
-#include <utility>      //pair
-#include <functional>   //less
-#include <memory>       //allocator
+#include <boost/move/utility_core.hpp>
+// move/detail
+#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#include <boost/move/detail/fwd_macros.hpp>
+#endif
+#include <boost/move/detail/move_helpers.hpp>
+// intrusive/detail
+#include <boost/intrusive/detail/minimal_pair_header.hpp>      //pair
+#include <boost/intrusive/detail/minimal_less_equal_header.hpp>//less, equal
+// std
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
 #endif
@@ -50,21 +57,21 @@ namespace container {
 //!
 //! \tparam Key is the type to be inserted in the set, which is also the key_type
 //! \tparam Compare is the comparison functor used to order keys
-//! \tparam A is the allocator to be used to allocate memory for this container
+//! \tparam Allocator is the allocator to be used to allocate memory for this container
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class Key, class Compare = std::less<Key>, class A = std::allocator<Key> >
+template <class Key, class Compare = std::less<Key>, class Allocator = new_allocator<Key> >
 #else
-template <class Key, class Compare, class A>
+template <class Key, class Compare, class Allocator>
 #endif
 class flat_set
    ///@cond
-   : public container_detail::flat_tree<Key, Key, container_detail::identity<Key>, Compare, A>
+   : public container_detail::flat_tree<Key, Key, container_detail::identity<Key>, Compare, Allocator>
    ///@endcond
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(flat_set)
-   typedef container_detail::flat_tree<Key, Key, container_detail::identity<Key>, Compare, A> base_t;
+   typedef container_detail::flat_tree<Key, Key, container_detail::identity<Key>, Compare, Allocator> base_t;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -77,19 +84,19 @@ class flat_set
    typedef Key                                                                         value_type;
    typedef Compare                                                                     key_compare;
    typedef Compare                                                                     value_compare;
-   typedef ::boost::container::allocator_traits<A>                             allocator_traits_type;
-   typedef typename ::boost::container::allocator_traits<A>::pointer           pointer;
-   typedef typename ::boost::container::allocator_traits<A>::const_pointer     const_pointer;
-   typedef typename ::boost::container::allocator_traits<A>::reference         reference;
-   typedef typename ::boost::container::allocator_traits<A>::const_reference   const_reference;
-   typedef typename ::boost::container::allocator_traits<A>::size_type         size_type;
-   typedef typename ::boost::container::allocator_traits<A>::difference_type   difference_type;
-   typedef A                                                                   allocator_type;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)              stored_allocator_type;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                           iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                     const_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                   reverse_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)             const_reverse_iterator;
+   typedef ::boost::container::allocator_traits<Allocator>                             allocator_traits_type;
+   typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
+   typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
+   typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
+   typedef typename ::boost::container::allocator_traits<Allocator>::const_reference   const_reference;
+   typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
+   typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
+   typedef Allocator                                                                   allocator_type;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::stored_allocator_type)              stored_allocator_type;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::iterator)                           iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::const_iterator)                     const_iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::reverse_iterator)                   reverse_iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::const_reverse_iterator)             const_reverse_iterator;
 
    public:
    //////////////////////////////////////////////
@@ -411,7 +418,7 @@ class flat_set
    //
    //////////////////////////////////////////////
 
-   #if defined(BOOST_CONTAINER_PERFECT_FORWARDING) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Effects</b>: Inserts an object x of type Key constructed with
    //!   std::forward<Args>(args)... if and only if there is no element in the container
@@ -426,7 +433,7 @@ class flat_set
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    template <class... Args>
-   std::pair<iterator,bool> emplace(Args&&... args)
+   std::pair<iterator,bool> emplace(BOOST_FWD_REF(Args)... args)
    {  return this->base_t::emplace_unique(boost::forward<Args>(args)...); }
 
    //! <b>Effects</b>: Inserts an object of type Key constructed with
@@ -442,26 +449,24 @@ class flat_set
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    template <class... Args>
-   iterator emplace_hint(const_iterator p, Args&&... args)
+   iterator emplace_hint(const_iterator p, BOOST_FWD_REF(Args)... args)
    {  return this->base_t::emplace_hint_unique(p, boost::forward<Args>(args)...); }
 
-   #else //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
+   #else // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-   #define BOOST_PP_LOCAL_MACRO(n)                                                                 \
-   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)          \
-   std::pair<iterator,bool> emplace(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_LIST, _))            \
-   {  return this->base_t::emplace_unique(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); }\
-                                                                                                   \
-   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)          \
-   iterator emplace_hint(const_iterator p                                                          \
-                         BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_LIST, _))              \
-   {  return this->base_t::emplace_hint_unique                                                     \
-            (p BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); }                  \
-   //!
-   #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
-   #include BOOST_PP_LOCAL_ITERATE()
+   #define BOOST_CONTAINER_FLAT_SET_EMPLACE_CODE(N) \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   std::pair<iterator,bool> emplace(BOOST_MOVE_UREF##N)\
+   {  return this->base_t::emplace_unique(BOOST_MOVE_FWD##N);  }\
+   \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   iterator emplace_hint(const_iterator hint BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {  return this->base_t::emplace_hint_unique(hint BOOST_MOVE_I##N BOOST_MOVE_FWD##N); }\
+   //
+   BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_FLAT_SET_EMPLACE_CODE)
+   #undef BOOST_CONTAINER_FLAT_SET_EMPLACE_CODE
 
-   #endif   //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
+   #endif   // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //! <b>Effects</b>: Inserts x if and only if there is no element in the container
@@ -802,10 +807,13 @@ class flat_set
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class Key, class C, class A>
-struct has_trivial_destructor_after_move<boost::container::flat_set<Key, C, A> >
+template <class Key, class Compare, class Allocator>
+struct has_trivial_destructor_after_move<boost::container::flat_set<Key, Compare, Allocator> >
 {
-   static const bool value = has_trivial_destructor_after_move<A>::value &&has_trivial_destructor_after_move<C>::value;
+   typedef typename ::boost::container::allocator_traits<Allocator>::pointer pointer;
+   static const bool value = ::boost::has_trivial_destructor_after_move<Allocator>::value &&
+                             ::boost::has_trivial_destructor_after_move<pointer>::value &&
+                             ::boost::has_trivial_destructor_after_move<Compare>::value;
 };
 
 namespace container {
@@ -827,21 +835,21 @@ namespace container {
 //!
 //! \tparam Key is the type to be inserted in the multiset, which is also the key_type
 //! \tparam Compare is the comparison functor used to order keys
-//! \tparam A is the allocator to be used to allocate memory for this container
+//! \tparam Allocator is the allocator to be used to allocate memory for this container
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class Key, class Compare = std::less<Key>, class A = std::allocator<Key> >
+template <class Key, class Compare = std::less<Key>, class Allocator = new_allocator<Key> >
 #else
-template <class Key, class Compare, class A>
+template <class Key, class Compare, class Allocator>
 #endif
 class flat_multiset
    ///@cond
-   : public container_detail::flat_tree<Key, Key, container_detail::identity<Key>, Compare, A>
+   : public container_detail::flat_tree<Key, Key, container_detail::identity<Key>, Compare, Allocator>
    ///@endcond
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(flat_multiset)
-   typedef container_detail::flat_tree<Key, Key, container_detail::identity<Key>, Compare, A> base_t;
+   typedef container_detail::flat_tree<Key, Key, container_detail::identity<Key>, Compare, Allocator> base_t;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -854,19 +862,19 @@ class flat_multiset
    typedef Key                                                                         value_type;
    typedef Compare                                                                     key_compare;
    typedef Compare                                                                     value_compare;
-   typedef ::boost::container::allocator_traits<A>                             allocator_traits_type;
-   typedef typename ::boost::container::allocator_traits<A>::pointer           pointer;
-   typedef typename ::boost::container::allocator_traits<A>::const_pointer     const_pointer;
-   typedef typename ::boost::container::allocator_traits<A>::reference         reference;
-   typedef typename ::boost::container::allocator_traits<A>::const_reference   const_reference;
-   typedef typename ::boost::container::allocator_traits<A>::size_type         size_type;
-   typedef typename ::boost::container::allocator_traits<A>::difference_type   difference_type;
-   typedef A                                                                   allocator_type;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)              stored_allocator_type;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                           iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                     const_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                   reverse_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)             const_reverse_iterator;
+   typedef ::boost::container::allocator_traits<Allocator>                             allocator_traits_type;
+   typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
+   typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
+   typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
+   typedef typename ::boost::container::allocator_traits<Allocator>::const_reference   const_reference;
+   typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
+   typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
+   typedef Allocator                                                                   allocator_type;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::stored_allocator_type)              stored_allocator_type;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::iterator)                           iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::const_iterator)                     const_iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::reverse_iterator)                   reverse_iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::const_reverse_iterator)             const_reverse_iterator;
 
    //! @copydoc ::boost::container::flat_set::flat_set()
    explicit flat_multiset()
@@ -1034,7 +1042,7 @@ class flat_multiset
    //
    //////////////////////////////////////////////
 
-   #if defined(BOOST_CONTAINER_PERFECT_FORWARDING) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Effects</b>: Inserts an object of type Key constructed with
    //!   std::forward<Args>(args)... and returns the iterator pointing to the
@@ -1045,7 +1053,7 @@ class flat_multiset
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    template <class... Args>
-   iterator emplace(Args&&... args)
+   iterator emplace(BOOST_FWD_REF(Args)... args)
    {  return this->base_t::emplace_equal(boost::forward<Args>(args)...); }
 
    //! <b>Effects</b>: Inserts an object of type Key constructed with
@@ -1060,26 +1068,24 @@ class flat_multiset
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    template <class... Args>
-   iterator emplace_hint(const_iterator p, Args&&... args)
+   iterator emplace_hint(const_iterator p, BOOST_FWD_REF(Args)... args)
    {  return this->base_t::emplace_hint_equal(p, boost::forward<Args>(args)...); }
 
-   #else //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
+   #else // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-   #define BOOST_PP_LOCAL_MACRO(n)                                                                 \
-   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)          \
-   iterator emplace(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_LIST, _))                            \
-   {  return this->base_t::emplace_equal(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); } \
-                                                                                                   \
-   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)          \
-   iterator emplace_hint(const_iterator p                                                          \
-                         BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_LIST, _))              \
-   {  return this->base_t::emplace_hint_equal                                                      \
-            (p BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); }                  \
-   //!
-   #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
-   #include BOOST_PP_LOCAL_ITERATE()
+   #define BOOST_CONTAINER_FLAT_MULTISET_EMPLACE_CODE(N) \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   iterator emplace(BOOST_MOVE_UREF##N)\
+   {  return this->base_t::emplace_equal(BOOST_MOVE_FWD##N);  }\
+   \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   iterator emplace_hint(const_iterator hint BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {  return this->base_t::emplace_hint_equal(hint BOOST_MOVE_I##N BOOST_MOVE_FWD##N); }\
+   //
+   BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_FLAT_MULTISET_EMPLACE_CODE)
+   #undef BOOST_CONTAINER_FLAT_MULTISET_EMPLACE_CODE
 
-   #endif   //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
+   #endif   // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //! <b>Effects</b>: Inserts x and returns the iterator pointing to the
@@ -1297,10 +1303,13 @@ class flat_multiset
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class Key, class C, class A>
-struct has_trivial_destructor_after_move<boost::container::flat_multiset<Key, C, A> >
+template <class Key, class Compare, class Allocator>
+struct has_trivial_destructor_after_move<boost::container::flat_multiset<Key, Compare, Allocator> >
 {
-   static const bool value = has_trivial_destructor_after_move<A>::value && has_trivial_destructor_after_move<C>::value;
+   typedef typename ::boost::container::allocator_traits<Allocator>::pointer pointer;
+   static const bool value = ::boost::has_trivial_destructor_after_move<Allocator>::value &&
+                             ::boost::has_trivial_destructor_after_move<pointer>::value &&
+                             ::boost::has_trivial_destructor_after_move<Compare>::value;
 };
 
 namespace container {

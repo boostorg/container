@@ -13,7 +13,6 @@
 #include <boost/container/node_allocator.hpp>
 #include <boost/container/adaptive_pool.hpp>
 
-#include <utility>
 #include <map>
 
 #include "print_container.hpp"
@@ -201,7 +200,7 @@ class recursive_map
    map<recursive_map, recursive_map>::const_iterator cit_;
    map<recursive_map, recursive_map>::reverse_iterator rit_;
    map<recursive_map, recursive_map>::const_reverse_iterator crit_;
-   
+
    friend bool operator< (const recursive_map &a, const recursive_map &b)
    {  return a.id_ < b.id_;   }
 };
@@ -218,7 +217,7 @@ class recursive_multimap
    multimap<recursive_multimap, recursive_multimap>::const_iterator cit_;
    multimap<recursive_multimap, recursive_multimap>::reverse_iterator rit_;
    multimap<recursive_multimap, recursive_multimap>::const_reverse_iterator crit_;
-   
+
    friend bool operator< (const recursive_multimap &a, const recursive_multimap &b)
    {  return a.id_ < b.id_;   }
 };
@@ -236,11 +235,11 @@ void test_move()
    move_assign.swap(original);
 }
 
-template<class T, class A>
+template<class T, class Allocator>
 class map_propagate_test_wrapper
    : public boost::container::map
       < T, T, std::less<T>
-      , typename boost::container::allocator_traits<A>::template
+      , typename boost::container::allocator_traits<Allocator>::template
          portable_rebind_alloc< std::pair<const T, T> >::type
       //tree_assoc_defaults
       >
@@ -248,7 +247,7 @@ class map_propagate_test_wrapper
    BOOST_COPYABLE_AND_MOVABLE(map_propagate_test_wrapper)
    typedef boost::container::map
       < T, T, std::less<T>
-      , typename boost::container::allocator_traits<A>::template
+      , typename boost::container::allocator_traits<Allocator>::template
          portable_rebind_alloc< std::pair<const T, T> >::type
       > Base;
    public:
@@ -399,8 +398,8 @@ int main ()
    }
    //Allocator argument container
    {
-      map<int, int> map_((std::allocator<std::pair<const int, int> >()));
-      multimap<int, int> multimap_((std::allocator<std::pair<const int, int> >()));
+      map<int, int> map_((map<int, int>::allocator_type()));
+      multimap<int, int> multimap_((multimap<int, int>::allocator_type()));
    }
    //Now test move semantics
    {

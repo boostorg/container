@@ -17,8 +17,8 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
+#include <boost/container/detail/type_traits.hpp>
 #include <boost/container/vector.hpp>
-#include <boost/aligned_storage.hpp>
 
 #include <cstddef>
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -63,8 +63,7 @@ class static_storage_allocator
    {  return true;  }
 
    private:
-   typename boost::aligned_storage
-      <sizeof(T)*N, boost::alignment_of<T>::value>::type storage;
+   typename aligned_storage<sizeof(T)*N, alignment_of<T>::value>::type storage;
 };
 
 }  //namespace container_detail {
@@ -264,8 +263,8 @@ public:
     //! @param other    The static_vector which content will be moved to this one.
     //!
     //! @par Throws
-    //!   @li If \c boost::has_nothrow_move<Value>::value is \c true and Value's move constructor throws.
-    //!   @li If \c boost::has_nothrow_move<Value>::value is \c false and Value's copy constructor throws.
+    //!   @li If \c has_nothrow_move<Value>::value is \c true and Value's move constructor throws.
+    //!   @li If \c has_nothrow_move<Value>::value is \c false and Value's copy constructor throws.
     //!
     //! @par Complexity
     //!   Linear O(N).
@@ -280,14 +279,14 @@ public:
     //! @param other    The static_vector which content will be moved to this one.
     //!
     //! @par Throws
-    //!   @li If \c boost::has_nothrow_move<Value>::value is \c true and Value's move constructor throws.
-    //!   @li If \c boost::has_nothrow_move<Value>::value is \c false and Value's copy constructor throws.
+    //!   @li If \c has_nothrow_move<Value>::value is \c true and Value's move constructor throws.
+    //!   @li If \c has_nothrow_move<Value>::value is \c false and Value's copy constructor throws.
     //!
     //! @par Complexity
     //!   Linear O(N).
     template <std::size_t C>
     static_vector(BOOST_RV_REF_BEG static_vector<value_type, C> BOOST_RV_REF_END other)
-        : base_t(BOOST_MOVE_BASE(typename static_vector<value_type BOOST_CONTAINER_I C>::base_t, other))
+        : base_t(BOOST_MOVE_BASE(typename static_vector<value_type BOOST_MOVE_I C>::base_t, other))
     {}
 
     //! @brief Copy assigns Values stored in the other static_vector to this one.
@@ -341,8 +340,8 @@ public:
     //! @param other    The static_vector which content will be moved to this one.
     //!
     //! @par Throws
-    //!   @li If \c boost::has_nothrow_move<Value>::value is \c true and Value's move constructor or move assignment throws.
-    //!   @li If \c boost::has_nothrow_move<Value>::value is \c false and Value's copy constructor or copy assignment throws.
+    //!   @li If \c has_nothrow_move<Value>::value is \c true and Value's move constructor or move assignment throws.
+    //!   @li If \c has_nothrow_move<Value>::value is \c false and Value's copy constructor or copy assignment throws.
     //!
     //! @par Complexity
     //!   Linear O(N).
@@ -358,8 +357,8 @@ public:
     //! @param other    The static_vector which content will be moved to this one.
     //!
     //! @par Throws
-    //!   @li If \c boost::has_nothrow_move<Value>::value is \c true and Value's move constructor or move assignment throws.
-    //!   @li If \c boost::has_nothrow_move<Value>::value is \c false and Value's copy constructor or copy assignment throws.
+    //!   @li If \c has_nothrow_move<Value>::value is \c true and Value's move constructor or move assignment throws.
+    //!   @li If \c has_nothrow_move<Value>::value is \c false and Value's copy constructor or copy assignment throws.
     //!
     //! @par Complexity
     //!   Linear O(N).
@@ -367,7 +366,7 @@ public:
     static_vector & operator=(BOOST_RV_REF_BEG static_vector<value_type, C> BOOST_RV_REF_END other)
     {
         return static_cast<static_vector&>(base_t::operator=
-         (BOOST_MOVE_BASE(typename static_vector<value_type BOOST_CONTAINER_I C>::base_t, other)));
+         (BOOST_MOVE_BASE(typename static_vector<value_type BOOST_MOVE_I C>::base_t, other)));
     }
 
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -386,8 +385,8 @@ public:
     //! @param other    The static_vector which content will be swapped with this one's content.
     //!
     //! @par Throws
-    //!   @li If \c boost::has_nothrow_move<Value>::value is \c true and Value's move constructor or move assignment throws,
-    //!   @li If \c boost::has_nothrow_move<Value>::value is \c false and Value's copy constructor or copy assignment throws,
+    //!   @li If \c has_nothrow_move<Value>::value is \c true and Value's move constructor or move assignment throws,
+    //!   @li If \c has_nothrow_move<Value>::value is \c false and Value's copy constructor or copy assignment throws,
     //!
     //! @par Complexity
     //!   Linear O(N).
@@ -400,8 +399,8 @@ public:
     //! @param other    The static_vector which content will be swapped with this one's content.
     //!
     //! @par Throws
-    //!   @li If \c boost::has_nothrow_move<Value>::value is \c true and Value's move constructor or move assignment throws,
-    //!   @li If \c boost::has_nothrow_move<Value>::value is \c false and Value's copy constructor or copy assignment throws,
+    //!   @li If \c has_nothrow_move<Value>::value is \c true and Value's move constructor or move assignment throws,
+    //!   @li If \c has_nothrow_move<Value>::value is \c false and Value's copy constructor or copy assignment throws,
     //!
     //! @par Complexity
     //!   Linear O(N).

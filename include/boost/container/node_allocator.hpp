@@ -26,9 +26,7 @@
 #include <boost/container/detail/singleton.hpp>
 
 #include <boost/assert.hpp>
-#include <boost/utility/addressof.hpp>
 #include <boost/static_assert.hpp>
-#include <utility>
 #include <cstddef>
 
 namespace boost {
@@ -145,7 +143,7 @@ class node_allocator
    //!Throws std::bad_alloc if there is no enough memory
    pointer allocate(size_type count, const void * = 0)
    {
-      if(count > this->max_size())
+      if(BOOST_UNLIKELY(count > this->max_size()))
          boost::container::throw_bad_alloc();
 
       if(Version == 1 && count == 1){
@@ -156,7 +154,7 @@ class node_allocator
       }
       else{
          void *ret = boost_cont_malloc(count*sizeof(T));
-         if(!ret)
+         if(BOOST_UNLIKELY(!ret))
             boost::container::throw_bad_alloc();
          return static_cast<pointer>(ret);
       }
@@ -187,16 +185,12 @@ class node_allocator
       singleton_t::instance().deallocate_free_blocks();
    }
 
-   std::pair<pointer, bool>
-      allocation_command(allocation_type command,
-                         size_type limit_size,
-                         size_type preferred_size,
-                         size_type &received_size, pointer reuse = pointer())
+   pointer allocation_command
+      (allocation_type command, size_type limit_size, size_type &prefer_in_recvd_out_size, pointer &reuse)
    {
       BOOST_STATIC_ASSERT(( Version > 1 ));
-      std::pair<pointer, bool> ret =
-         priv_allocation_command(command, limit_size, preferred_size, received_size, reuse);
-      if(!ret.first && !(command & BOOST_CONTAINER_NOTHROW_ALLOCATION))
+      pointer ret = this->priv_allocation_command(command, limit_size, prefer_in_recvd_out_size, reuse);
+      if(BOOST_UNLIKELY(!ret && !(command & BOOST_CONTAINER_NOTHROW_ALLOCATION)))
          boost::container::throw_bad_alloc();
       return ret;
    }
@@ -263,7 +257,7 @@ class node_allocator
       BOOST_STATIC_ASSERT(( Version > 1 ));
       boost_cont_memchain ch;
       BOOST_CONTAINER_MEMCHAIN_INIT(&ch);
-      if(!boost_cont_multialloc_nodes(n_elements, elem_size*sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch)){
+      if(BOOST_UNLIKELY(!boost_cont_multialloc_nodes(n_elements, elem_size*sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch))){
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after( chain.before_begin()
@@ -279,7 +273,7 @@ class node_allocator
       BOOST_STATIC_ASSERT(( Version > 1 ));
       boost_cont_memchain ch;
       boost_cont_multialloc_arrays(n_elements, elem_sizes, sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch);
-      if(BOOST_CONTAINER_MEMCHAIN_EMPTY(&ch)){
+      if(BOOST_UNLIKELY(BOOST_CONTAINER_MEMCHAIN_EMPTY(&ch))){
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after( chain.before_begin()
@@ -315,23 +309,26 @@ class node_allocator
    {  return false;   }
 
    private:
-   std::pair<pointer, bool> priv_allocation_command
+   pointer priv_allocation_command
       (allocation_type command,   std::size_t limit_size
-      ,std::size_t preferred_size,std::size_t &received_size, void *reuse_ptr)
+      ,size_type &prefer_in_recvd_out_size
+      ,pointer &reuse)
    {
+      std::size_t const preferred_size = prefer_in_recvd_out_size;
       boost_cont_command_ret_t ret = {0 , 0};
-      if(limit_size > this->max_size() || preferred_size > this->max_size()){
-         //ret.first = 0;
-         return std::pair<pointer, bool>(pointer(), false);
+      if((limit_size > this->max_size()) | (preferred_size > this->max_size())){
+         return pointer();
       }
       std::size_t l_size = limit_size*sizeof(T);
       std::size_t p_size = preferred_size*sizeof(T);
       std::size_t r_size;
       {
-         ret = boost_cont_allocation_command(command, sizeof(T), l_size, p_size, &r_size, reuse_ptr);
+         void* reuse_ptr_void = reuse;
+         ret = boost_cont_allocation_command(command, sizeof(T), l_size, p_size, &r_size, reuse_ptr_void);
+         reuse = static_cast<T*>(reuse_ptr_void);
       }
-      received_size = r_size/sizeof(T);
-      return std::pair<pointer, bool>(static_cast<pointer>(ret.first), !!ret.second);
+      prefer_in_recvd_out_size = r_size/sizeof(T);
+      return (pointer)ret.first;
    }
 };
 

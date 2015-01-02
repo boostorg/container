@@ -1,3 +1,12 @@
+//////////////////////////////////////////////////////////////////////////////
+//
+// (C) Copyright Ion Gaztanaga 2011-2013. Distributed under the Boost
+// Software License, Version 1.0. (See accompanying file
+// LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://www.boost.org/libs/container for documentation.
+//
+//////////////////////////////////////////////////////////////////////////////
 #include <boost/container/detail/config_begin.hpp>
 #include <memory>
 
@@ -136,26 +145,26 @@ struct is_unique_assoc
    static const bool value = false;
 };
 
-template<class K, class V, class C, class A>
-struct is_unique_assoc< map<K, V, C, A> >
+template<class Key, class T, class Compare, class Allocator>
+struct is_unique_assoc< map<Key, T, Compare, Allocator> >
 {
    static const bool value = true;
 };
 
-template<class K, class V, class C, class A>
-struct is_unique_assoc< flat_map<K, V, C, A> >
+template<class Key, class T, class Compare, class Allocator>
+struct is_unique_assoc< flat_map<Key, T, Compare, Allocator> >
 {
    static const bool value = true;
 };
 
-template<class V, class C, class A>
-struct is_unique_assoc< set<V, C, A> >
+template<class Key, class Compare, class Allocator>
+struct is_unique_assoc< set<Key, Compare, Allocator> >
 {
    static const bool value = true;
 };
 
-template<class V, class C, class A>
-struct is_unique_assoc< flat_set<V, C, A> >
+template<class Key, class Compare, class Allocator>
+struct is_unique_assoc< flat_set<Key, Compare, Allocator> >
 {
    static const bool value = true;
 };
@@ -171,26 +180,26 @@ struct is_map
    static const bool value = false;
 };
 
-template<class K, class V, class C, class A>
-struct is_map< map<K, V, C, A> >
+template<class Key, class T, class Compare, class Allocator>
+struct is_map< map<Key, T, Compare, Allocator> >
 {
    static const bool value = true;
 };
 
-template<class K, class V, class C, class A>
-struct is_map< flat_map<K, V, C, A> >
+template<class Key, class T, class Compare, class Allocator>
+struct is_map< flat_map<Key, T, Compare, Allocator> >
 {
    static const bool value = true;
 };
 
-template<class K, class V, class C, class A>
-struct is_map< multimap<K, V, C, A> >
+template<class Key, class T, class Compare, class Allocator>
+struct is_map< multimap<Key, T, Compare, Allocator> >
 {
    static const bool value = true;
 };
 
-template<class K, class V, class C, class A>
-struct is_map< flat_multimap<K, V, C, A> >
+template<class Key, class T, class Compare, class Allocator>
+struct is_map< flat_multimap<Key, T, Compare, Allocator> >
 {
    static const bool value = true;
 };
@@ -201,26 +210,26 @@ struct is_set
    static const bool value = false;
 };
 
-template<class V, class C, class A>
-struct is_set< set<V, C, A> >
+template<class Key, class Compare, class Allocator>
+struct is_set< set<Key, Compare, Allocator> >
 {
    static const bool value = true;
 };
 
-template<class V, class C, class A>
-struct is_set< flat_set<V, C, A> >
+template<class Key, class Compare, class Allocator>
+struct is_set< flat_set<Key, Compare, Allocator> >
 {
    static const bool value = true;
 };
 
-template<class V, class C, class A>
-struct is_set< multiset<V, C, A> >
+template<class Key, class Compare, class Allocator>
+struct is_set< multiset<Key, Compare, Allocator> >
 {
    static const bool value = true;
 };
 
-template<class V, class C, class A>
-struct is_set< flat_multiset<V, C, A> >
+template<class Key, class Compare, class Allocator>
+struct is_set< flat_multiset<Key, Compare, Allocator> >
 {
    static const bool value = true;
 };

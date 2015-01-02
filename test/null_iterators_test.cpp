@@ -22,14 +22,13 @@
 #include <boost/intrusive/detail/mpl.hpp>
 
 #include <boost/core/lightweight_test.hpp>
-#include <boost/aligned_storage.hpp>
 #include <boost/static_assert.hpp>
 #include <cstring>
 #include <new>
 
 using namespace boost::container;
 
-typedef boost::aligned_storage<sizeof(void*)*4>::type buffer_t;
+typedef boost::container::container_detail::aligned_storage<sizeof(void*)*4>::type buffer_t;
 
 static buffer_t buffer_0x00;
 static buffer_t buffer_0xFF;

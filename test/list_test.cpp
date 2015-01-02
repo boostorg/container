@@ -71,7 +71,7 @@ public:
    list<recursive_list>::const_iterator cit_;
    list<recursive_list>::reverse_iterator rit_;
    list<recursive_list>::const_reverse_iterator crit_;
-   
+
    recursive_list &operator=(const recursive_list &o)
    { list_ = o.list_;  return *this; }
 };
@@ -207,3 +207,13 @@ int main ()
 }
 
 #include <boost/container/detail/config_end.hpp>
+
+/*
+#include <boost/container/list.hpp>
+//#include <list>
+
+int main()
+{
+   return 0;
+}
+*/

@@ -26,7 +26,7 @@ const Container &as_const(Container &c)
 template<class Container>
 bool test_nth_index_of(Container &c)
 {
-   typename Container::iterator it; 
+   typename Container::iterator it;
    typename Container::const_iterator cit;
    typename Container::size_type sz, csz;
    //index 0
@@ -43,7 +43,7 @@ bool test_nth_index_of(Container &c)
       return false;
    if(csz != 0)
       return false;
-   
+
    //index size()/2
    const typename Container::size_type sz_div_2 = c.size()/2;
    it = c.nth(sz_div_2);

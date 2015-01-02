@@ -25,14 +25,11 @@
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/alloc_lib_auto_link.hpp>
 #include <boost/container/detail/singleton.hpp>
-
 #include <boost/container/detail/placement_new.hpp>
 
 #include <boost/assert.hpp>
-#include <boost/utility/addressof.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/move/utility_core.hpp>
-#include <utility>
 #include <cstddef>
 
 
@@ -56,7 +53,7 @@ template < class T
          , std::size_t NodesPerBlock   BOOST_CONTAINER_DOCONLY(= ADP_nodes_per_block)
          , std::size_t MaxFreeBlocks   BOOST_CONTAINER_DOCONLY(= ADP_max_free_blocks)
          , std::size_t OverheadPercent BOOST_CONTAINER_DOCONLY(= ADP_overhead_percent)
-         BOOST_CONTAINER_DOCIGN(BOOST_CONTAINER_I unsigned Version)
+         BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I unsigned Version)
          >
 class adaptive_pool
 {
@@ -66,7 +63,7 @@ class adaptive_pool
    typedef unsigned int allocation_type;
    typedef adaptive_pool
       <T, NodesPerBlock, MaxFreeBlocks, OverheadPercent
-         BOOST_CONTAINER_DOCIGN(BOOST_CONTAINER_I Version)
+         BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I Version)
          >   self_t;
 
    static const std::size_t nodes_per_block        = NodesPerBlock;
@@ -109,7 +106,7 @@ class adaptive_pool
          , NodesPerBlock
          , MaxFreeBlocks
          , OverheadPercent
-         BOOST_CONTAINER_DOCIGN(BOOST_CONTAINER_I Version)
+         BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I Version)
          >       other;
    };
 
@@ -137,7 +134,7 @@ class adaptive_pool
    template<class T2>
    adaptive_pool
       (const adaptive_pool<T2, NodesPerBlock, MaxFreeBlocks, OverheadPercent
-            BOOST_CONTAINER_DOCIGN(BOOST_CONTAINER_I Version)> &) BOOST_CONTAINER_NOEXCEPT
+            BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I Version)> &) BOOST_CONTAINER_NOEXCEPT
    {}
 
    //!Destructor
@@ -153,7 +150,7 @@ class adaptive_pool
    //!Throws std::bad_alloc if there is no enough memory
    pointer allocate(size_type count, const void * = 0)
    {
-      if(count > this->max_size())
+      if(BOOST_UNLIKELY(count > this->max_size()))
          boost::container::throw_bad_alloc();
 
       if(Version == 1 && count == 1){
@@ -183,15 +180,13 @@ class adaptive_pool
       }
    }
 
-   std::pair<pointer, bool>
-      allocation_command(allocation_type command,
+   pointer allocation_command(allocation_type command,
                          size_type limit_size,
-                         size_type preferred_size,
-                         size_type &received_size, pointer reuse = pointer())
+                         size_type &prefer_in_recvd_out_size,
+                         pointer &reuse)
    {
-      std::pair<pointer, bool> ret =
-         this->priv_allocation_command(command, limit_size, preferred_size, received_size, reuse);
-      if(!ret.first && !(command & BOOST_CONTAINER_NOTHROW_ALLOCATION))
+      pointer ret = this->priv_allocation_command(command, limit_size, prefer_in_recvd_out_size, reuse);
+      if(BOOST_UNLIKELY(!ret && !(command & BOOST_CONTAINER_NOTHROW_ALLOCATION)))
          boost::container::throw_bad_alloc();
       return ret;
    }
@@ -254,14 +249,15 @@ class adaptive_pool
       BOOST_STATIC_ASSERT(( Version > 1 ));/*
       boost_cont_memchain ch;
       BOOST_CONTAINER_MEMCHAIN_INIT(&ch);
-      if(!boost_cont_multialloc_nodes(n_elements, elem_size*sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch)){
+      if(BOOST_UNLIKELY(!boost_cont_multialloc_nodes(n_elements, elem_size*sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch))){
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after(chain.before_begin()
                              ,(T*)BOOST_CONTAINER_MEMCHAIN_FIRSTMEM(&ch)
                              ,(T*)BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch)
                              ,BOOST_CONTAINER_MEMCHAIN_SIZE(&ch) );*/
-      if(!boost_cont_multialloc_nodes(n_elements, elem_size*sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<boost_cont_memchain *>(&chain))){
+      if(BOOST_UNLIKELY(!boost_cont_multialloc_nodes
+            (n_elements, elem_size*sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<boost_cont_memchain *>(&chain)))){
          boost::container::throw_bad_alloc();
       }
    }
@@ -273,14 +269,15 @@ class adaptive_pool
       BOOST_STATIC_ASSERT(( Version > 1 ));/*
       boost_cont_memchain ch;
       BOOST_CONTAINER_MEMCHAIN_INIT(&ch);
-      if(!boost_cont_multialloc_arrays(n_elements, elem_sizes, sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch)){
+      if(BOOST_UNLIKELY(!boost_cont_multialloc_arrays(n_elements, elem_sizes, sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch))){
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after(chain.before_begin()
                              ,(T*)BOOST_CONTAINER_MEMCHAIN_FIRSTMEM(&ch)
                              ,(T*)BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch)
                              ,BOOST_CONTAINER_MEMCHAIN_SIZE(&ch) );*/
-      if(!boost_cont_multialloc_arrays(n_elements, elem_sizes, sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<boost_cont_memchain *>(&chain))){
+      if(BOOST_UNLIKELY(!boost_cont_multialloc_arrays
+         (n_elements, elem_sizes, sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<boost_cont_memchain *>(&chain)))){
          boost::container::throw_bad_alloc();
       }
    }
@@ -320,23 +317,25 @@ class adaptive_pool
    {  return false;   }
 
    private:
-   std::pair<pointer, bool> priv_allocation_command
+   pointer priv_allocation_command
       (allocation_type command,   std::size_t limit_size
-      ,std::size_t preferred_size,std::size_t &received_size, void *reuse_ptr)
+      ,size_type &prefer_in_recvd_out_size, pointer &reuse_ptr)
    {
+      std::size_t const preferred_size = prefer_in_recvd_out_size;
       boost_cont_command_ret_t ret = {0 , 0};
-      if(limit_size > this->max_size() || preferred_size > this->max_size()){
-//         ret.first = 0;
-         return std::pair<pointer, bool>(pointer(), false);
+      if(BOOST_UNLIKELY(limit_size > this->max_size() || preferred_size > this->max_size())){
+         return pointer();
       }
       std::size_t l_size = limit_size*sizeof(T);
       std::size_t p_size = preferred_size*sizeof(T);
       std::size_t r_size;
       {
-         ret = boost_cont_allocation_command(command, sizeof(T), l_size, p_size, &r_size, reuse_ptr);
+         void* reuse_ptr_void = reuse_ptr;
+         ret = boost_cont_allocation_command(command, sizeof(T), l_size, p_size, &r_size, reuse_ptr_void);
+         reuse_ptr = ret.second ? static_cast<T*>(reuse_ptr_void) : 0;
       }
-      received_size = r_size/sizeof(T);
-      return std::pair<pointer, bool>(static_cast<pointer>(ret.first), !!ret.second);
+      prefer_in_recvd_out_size = r_size/sizeof(T);
+      return (pointer)ret.first;
    }
 };
 

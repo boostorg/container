@@ -19,13 +19,14 @@
 #include <boost/container/detail/workaround.hpp>
 
 #include <boost/intrusive/set.hpp>
-#include <boost/aligned_storage.hpp>
 #include <boost/container/detail/alloc_lib_auto_link.hpp>
 #include <boost/container/detail/multiallocation_chain.hpp>
 #include <boost/container/detail/pool_common_alloc.hpp>
 #include <boost/container/detail/mutex.hpp>
 #include <boost/container/detail/adaptive_node_pool_impl.hpp>
 #include <boost/container/detail/multiallocation_chain.hpp>
+#include <boost/container/detail/type_traits.hpp>
+
 #include <cstddef>
 #include <cmath>
 #include <cassert>

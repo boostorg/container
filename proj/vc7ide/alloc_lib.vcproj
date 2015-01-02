@@ -107,76 +107,39 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
-			<File
-				RelativePath="..\..\..\..\boost\container\adaptive_pool.hpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\boost\container\allocator.hpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\boost\container\node_allocator.hpp">
-			</File>
 			<Filter
-				Name="detail"
+				Name="Included Sources"
 				Filter="">
 				<File
-					RelativePath="..\..\..\..\boost\container\detail\adaptive_node_pool.hpp">
+					RelativePath="..\..\src\dlmalloc_2_8_6.c">
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"/>
+					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\..\..\..\boost\container\detail\alloc_lib.h">
+					RelativePath="..\..\src\dlmalloc_ext_2_8_6.c">
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="TRUE">
+						<Tool
+							Name="VCCLCompilerTool"/>
+					</FileConfiguration>
 				</File>
-				<File
-					RelativePath="..\..\..\..\boost\container\detail\alloc_lib_auto_link.hpp">
-				</File>
-				<File
-					RelativePath="..\..\..\..\boost\container\detail\auto_link.hpp">
-				</File>
-				<File
-					RelativePath="..\..\..\..\boost\container\detail\mutex.hpp">
-				</File>
-				<File
-					RelativePath="..\..\..\..\boost\container\detail\node_pool.hpp">
-				</File>
-				<File
-					RelativePath="..\..\..\..\boost\container\detail\pool_common_alloc.hpp">
-				</File>
-				<File
-					RelativePath="..\..\..\..\boost\container\detail\singleton.hpp">
-				</File>
-				<Filter
-					Name="Included Sources"
-					Filter="">
-					<File
-						RelativePath="..\..\src\dlmalloc_2_8_6.c">
-						<FileConfiguration
-							Name="Debug|Win32"
-							ExcludedFromBuild="TRUE">
-							<Tool
-								Name="VCCLCompilerTool"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Release|Win32"
-							ExcludedFromBuild="TRUE">
-							<Tool
-								Name="VCCLCompilerTool"/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\..\src\dlmalloc_ext_2_8_6.c">
-						<FileConfiguration
-							Name="Debug|Win32"
-							ExcludedFromBuild="TRUE">
-							<Tool
-								Name="VCCLCompilerTool"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Release|Win32"
-							ExcludedFromBuild="TRUE">
-							<Tool
-								Name="VCCLCompilerTool"/>
-						</FileConfiguration>
-					</File>
-				</Filter>
 			</Filter>
 		</Filter>
 		<Filter

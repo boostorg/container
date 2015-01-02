@@ -162,7 +162,7 @@
    #define BOOST_CONTAINER_TRY_LOCK(sl)          !BOOST_CONTAINER_CAS_LOCK(sl)
    #define BOOST_CONTAINER_RELEASE_LOCK(sl)      BOOST_CONTAINER_CLEAR_LOCK(sl)
    #define BOOST_CONTAINER_ACQUIRE_LOCK(sl)      (BOOST_CONTAINER_CAS_LOCK(sl)? boost_interprocess_spin_acquire_lock(sl) : 0)
-   #define BOOST_CONTAINER_INITIAL_LOCK(sl)      (*sl = 0)
+   #define BOOST_MOVE_INITIAL_LOCK(sl)      (*sl = 0)
    #define BOOST_CONTAINER_DESTROY_LOCK(sl)      (0)
 #elif BOOST_MUTEX_HELPER == BOOST_MUTEX_HELPER_WIN32
    //
@@ -199,7 +199,7 @@ namespace container_detail {
       void operator=(const spin_mutex &);
 
    public:
-      spin_mutex() { BOOST_CONTAINER_INITIAL_LOCK(&sl); }
+      spin_mutex() { BOOST_MOVE_INITIAL_LOCK(&sl); }
 
       void lock() { BOOST_CONTAINER_ACQUIRE_LOCK(&sl); }
       void unlock() { BOOST_CONTAINER_RELEASE_LOCK(&sl); }

@@ -183,7 +183,7 @@ public:
    flat_multimap<recursive_flat_multimap, recursive_flat_multimap>::const_iterator cit_;
    flat_multimap<recursive_flat_multimap, recursive_flat_multimap>::reverse_iterator rit_;
    flat_multimap<recursive_flat_multimap, recursive_flat_multimap>::const_reverse_iterator crit_;
-   
+
    friend bool operator< (const recursive_flat_multimap &a, const recursive_flat_multimap &b)
    {  return a.id_ < b.id_;   }
 };
@@ -199,17 +199,17 @@ void test_move()
    move_assign.swap(original);
 }
 
-template<class T, class A>
+template<class T, class Allocator>
 class flat_map_propagate_test_wrapper
    : public boost::container::flat_map
       < T, T, std::less<T>
-      , typename boost::container::allocator_traits<A>::template
+      , typename boost::container::allocator_traits<Allocator>::template
          portable_rebind_alloc< std::pair<T, T> >::type>
 {
    BOOST_COPYABLE_AND_MOVABLE(flat_map_propagate_test_wrapper)
    typedef boost::container::flat_map
       < T, T, std::less<T>
-      , typename boost::container::allocator_traits<A>::template
+      , typename boost::container::allocator_traits<Allocator>::template
          portable_rebind_alloc< std::pair<T, T> >::type> Base;
    public:
    flat_map_propagate_test_wrapper()
@@ -441,8 +441,8 @@ int main()
 
    //Allocator argument container
    {
-      flat_map<int, int> map_((std::allocator<std::pair<int, int> >()));
-      flat_multimap<int, int> multimap_((std::allocator<std::pair<int, int> >()));
+      flat_map<int, int> map_((flat_map<int, int>::allocator_type()));
+      flat_multimap<int, int> multimap_((flat_multimap<int, int>::allocator_type()));
    }
    //Now test move semantics
    {

@@ -9,11 +9,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <boost/container/detail/config_begin.hpp>
-#include <algorithm>
 #include <memory>
-#include <vector>
-#include <iostream>
-#include <functional>
 
 #include <boost/container/stable_vector.hpp>
 #include <boost/container/allocator.hpp>
@@ -70,7 +66,7 @@ class recursive_vector
    stable_vector<recursive_vector>::const_iterator cit_;
    stable_vector<recursive_vector>::reverse_iterator rit_;
    stable_vector<recursive_vector>::const_reverse_iterator crit_;
-   
+
    recursive_vector &operator=(const recursive_vector &o)
    { vector_ = o.vector_;  return *this; }
 };

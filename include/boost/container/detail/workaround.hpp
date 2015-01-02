@@ -46,7 +46,7 @@
 #endif
 
 //Macros for documentation purposes. For code, expands to the argument
-#define BOOST_CONTAINER_IMPDEF(TYPE) TYPE
+#define BOOST_MOVE_IMPDEF(TYPE) TYPE
 #define BOOST_CONTAINER_SEEDOC(TYPE) TYPE
 
 //Macros for memset optimization. In most platforms
@@ -63,7 +63,7 @@
 #endif
 
 #define BOOST_CONTAINER_DOC1ST(TYPE1, TYPE2) TYPE2
-#define BOOST_CONTAINER_I ,
+#define BOOST_MOVE_I ,
 #define BOOST_CONTAINER_DOCIGN(T) T
 #define BOOST_CONTAINER_DOCONLY(T)
 

@@ -20,11 +20,8 @@
 #include <boost/move/iterator.hpp>
 #include <boost/move/make_unique.hpp>
 
-#include <memory>
 #include <list>
-#include <vector>
 #include <functional>   //std::greater
-#include <string>
 
 namespace boost{
 namespace container {

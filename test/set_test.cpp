@@ -176,7 +176,7 @@ public:
    set<recursive_set>::const_iterator cit_;
    set<recursive_set>::reverse_iterator rit_;
    set<recursive_set>::const_reverse_iterator crit_;
-   
+
    friend bool operator< (const recursive_set &a, const recursive_set &b)
    {  return a.id_ < b.id_;   }
 };
@@ -194,7 +194,7 @@ class recursive_multiset
    multiset<recursive_multiset>::const_iterator cit_;
    multiset<recursive_multiset>::reverse_iterator rit_;
    multiset<recursive_multiset>::const_reverse_iterator crit_;
-   
+
    friend bool operator< (const recursive_multiset &a, const recursive_multiset &b)
    {  return a.id_ < b.id_;   }
 };
@@ -212,14 +212,14 @@ void test_move()
    move_assign.swap(original);
 }
 
-template<class T, class A>
+template<class T, class Allocator>
 class set_propagate_test_wrapper
-   : public boost::container::set<T, std::less<T>, A
+   : public boost::container::set<T, std::less<T>, Allocator
       //tree_assoc_defaults
       >
 {
    BOOST_COPYABLE_AND_MOVABLE(set_propagate_test_wrapper)
-   typedef boost::container::set<T, std::less<T>, A > Base;
+   typedef boost::container::set<T, std::less<T>, Allocator > Base;
    public:
    set_propagate_test_wrapper()
       : Base()
@@ -363,8 +363,8 @@ int main ()
    }
    //Allocator argument container
    {
-      set<int> set_((std::allocator<int>()));
-      multiset<int> multiset_((std::allocator<int>()));
+      set<int> set_((set<int>::allocator_type()));
+      multiset<int> multiset_((multiset<int>::allocator_type()));
    }
    //Now test move semantics
    {

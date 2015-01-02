@@ -35,7 +35,7 @@ typedef bc::allocator<int, 2, bc::expand_bwd | bc::expand_fwd> AllocatorPlusV2Ma
 typedef bc::allocator<int, 2> AllocatorPlusV2;
 typedef bc::allocator<int, 1> AllocatorPlusV1;
 
-template<class A> struct get_allocator_name;
+template<class Allocator> struct get_allocator_name;
 
 template<> struct get_allocator_name<StdAllocator>
 {  static const char *get() {  return "StdAllocator";  } };
@@ -60,32 +60,32 @@ struct stats_traits;
 template<>
 struct stats_traits<std::vector>
 {
-   template<class T, class A>
-   static void reset_alloc_stats(std::vector<T, A> &)
+   template<class T, class Allocator>
+   static void reset_alloc_stats(std::vector<T, Allocator> &)
       {}
 
-   template<class T, class A>
-   static std::size_t get_num_alloc(std::vector<T, A> &)
+   template<class T, class Allocator>
+   static std::size_t get_num_alloc(std::vector<T, Allocator> &)
       {  return 0;   }
 
-   template<class T, class A>
-   static std::size_t get_num_expand(std::vector<T, A> &)
+   template<class T, class Allocator>
+   static std::size_t get_num_expand(std::vector<T, Allocator> &)
       {  return 0;   }
 };
 
 template<>
 struct stats_traits<bc::vector>
 {
-   template<class T, class A>
-   static void reset_alloc_stats(bc::vector<T, A> &v)
+   template<class T, class Allocator>
+   static void reset_alloc_stats(bc::vector<T, Allocator> &v)
       { v.reset_alloc_stats(); }
 
-   template<class T, class A>
-   static std::size_t get_num_alloc(bc::vector<T, A> &v)
+   template<class T, class Allocator>
+   static std::size_t get_num_alloc(bc::vector<T, Allocator> &v)
       {  return v.num_alloc;  }
 
-   template<class T, class A>
-   static std::size_t get_num_expand(bc::vector<T, A> &v)
+   template<class T, class Allocator>
+   static std::size_t get_num_expand(bc::vector<T, Allocator> &v)
       {  return v.num_expand_fwd;  }
 };
 
@@ -124,10 +124,10 @@ class MyInt
    }
 };
 
-template<class A, template <class, class> class Vector>
+template<class Allocator, template <class, class> class Vector>
 void vector_test_template(unsigned int num_iterations, unsigned int num_elements, bool csv_output)
 {
-   typedef typename A::template rebind<MyInt>::other IntAllocator;
+   typedef typename Allocator::template rebind<MyInt>::other IntAllocator;
    unsigned int numalloc = 0, numexpand = 0;
 
    #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
@@ -193,7 +193,7 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
    nanosecond_type nseconds = timer.elapsed().wall;
 
    if(csv_output){
-      std::cout   << get_allocator_name<A>::get()
+      std::cout   << get_allocator_name<Allocator>::get()
                   << ";"
                   << num_iterations
                   << ";"
@@ -212,7 +212,7 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
    }
    else{
       std::cout   << std::endl
-                  << "A: " << get_allocator_name<A>::get()
+                  << "Allocator: " << get_allocator_name<Allocator>::get()
                   << std::endl
                   << "  push_back ns:              "
                   << float(nseconds)/(num_iterations*num_elements)
@@ -229,7 +229,7 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
 void print_header()
 {
    std::cout   << "Allocator" << ";" << "Iterations" << ";" << "Size" << ";"
-               << "Capacity" << ";" << "push_back(ns)" << ";" << "A calls" << ";"
+               << "Capacity" << ";" << "push_back(ns)" << ";" << "Allocator calls" << ";"
                << "New allocations" << ";" << "Fwd expansions" << std::endl;
 }
 

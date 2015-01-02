@@ -64,7 +64,7 @@ public:
 
    X& operator=(BOOST_COPY_ASSIGN_REF(X) x)
    {
-   
+
       i_ = x.i_;
       p_ = x.p_;
 //         std::cout << "X& operator=(const X& x)\n";
@@ -82,7 +82,7 @@ public:
 
    X& operator=(BOOST_RV_REF(X) x) BOOST_CONTAINER_NOEXCEPT
    {
-   
+
       i_ = x.i_;
       p_ = x.p_;
 //         std::cout << "X& operator=(X&& x)\n";

@@ -169,6 +169,12 @@ struct ls_zeros<1>
    static const std::size_t value = 0;
 };
 
+template <std::size_t OrigSize, std::size_t RoundTo>
+struct ct_rounded_size
+{
+   static const std::size_t value = ((OrigSize-1)/RoundTo+1)*RoundTo;
+};
+
 template <typename T> struct unvoid { typedef T type; };
 template <> struct unvoid<void> { struct type { }; };
 template <> struct unvoid<const void> { struct type { }; };

@@ -25,7 +25,6 @@
 #include <boost/static_assert.hpp>
 #include <cstddef>
 #include <cassert>
-#include <new>
 
 namespace boost {
 namespace container {
@@ -218,18 +217,16 @@ class allocator
    //!capabilities. Memory allocated with this function can only be deallocated with deallocate()
    //!or deallocate_many().
    //!This function is available only with Version == 2
-   std::pair<pointer, bool>
-      allocation_command(allocation_type command,
+   pointer allocation_command(allocation_type command,
                          size_type limit_size,
-                         size_type preferred_size,
-                         size_type &received_size, pointer reuse = pointer())
+                         size_type &prefer_in_recvd_out_size,
+                         pointer &reuse)
    {
       BOOST_STATIC_ASSERT(( Version > 1 ));
       const allocation_type mask(AllocationDisableMask);
       command &= ~mask;
-      std::pair<pointer, bool> ret =
-         priv_allocation_command(command, limit_size, preferred_size, received_size, reuse);
-      if(!ret.first && !(command & BOOST_CONTAINER_NOTHROW_ALLOCATION))
+      pointer ret = this->priv_allocation_command(command, limit_size, prefer_in_recvd_out_size, reuse);
+      if(!ret && !(command & BOOST_CONTAINER_NOTHROW_ALLOCATION))
          boost::container::throw_bad_alloc();
       return ret;
    }
@@ -339,22 +336,26 @@ class allocator
 
    private:
 
-   std::pair<pointer, bool> priv_allocation_command
-      (allocation_type command,   std::size_t limit_size
-      ,std::size_t preferred_size,std::size_t &received_size, void *reuse_ptr)
+   pointer priv_allocation_command
+      (allocation_type command,    std::size_t limit_size
+      ,size_type &prefer_in_recvd_out_size
+      ,pointer &reuse_ptr)
    {
+      std::size_t const preferred_size = prefer_in_recvd_out_size;
       boost_cont_command_ret_t ret = {0 , 0};
       if((limit_size > this->max_size()) | (preferred_size > this->max_size())){
-         return std::pair<pointer, bool>(pointer(), false);
+         return pointer();
       }
       std::size_t l_size = limit_size*sizeof(T);
       std::size_t p_size = preferred_size*sizeof(T);
       std::size_t r_size;
       {
-         ret = boost_cont_allocation_command(command, sizeof(T), l_size, p_size, &r_size, reuse_ptr);
+         void* reuse_ptr_void = reuse_ptr;
+         ret = boost_cont_allocation_command(command, sizeof(T), l_size, p_size, &r_size, reuse_ptr_void);
+         reuse_ptr = ret.second ? static_cast<T*>(reuse_ptr_void) : 0;
       }
-      received_size = r_size/sizeof(T);
-      return std::pair<pointer, bool>(static_cast<pointer>(ret.first), !!ret.second);
+      prefer_in_recvd_out_size = r_size/sizeof(T);
+      return (pointer)ret.first;
    }
 };
 

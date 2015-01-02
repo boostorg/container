@@ -432,12 +432,12 @@ bool test_expand_bwd()
    return  test::test_all_expand_bwd<string_type>();
 }
 
-template<class T, class A>
+template<class T, class Allocator>
 class string_propagate_test_wrapper
-   : public basic_string<T, std::char_traits<T>, A>
+   : public basic_string<T, std::char_traits<T>, Allocator>
 {
    BOOST_COPYABLE_AND_MOVABLE(string_propagate_test_wrapper)
-   typedef basic_string<T, std::char_traits<T>, A> Base;
+   typedef basic_string<T, std::char_traits<T>, Allocator> Base;
    public:
    string_propagate_test_wrapper()
       : Base()

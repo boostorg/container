@@ -7,10 +7,8 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-
 #include <memory>
 #include <iostream>
-#include <functional>
 
 #include <boost/container/vector.hpp>
 #include <boost/container/allocator.hpp>
@@ -252,3 +250,14 @@ int main()
    return 0;
 
 }
+
+/*
+
+#include <vector>
+//#include <boost/container/vector.hpp>
+int main()
+{
+   boost::container::vector<int> a;
+   return 0;
+}
+*/

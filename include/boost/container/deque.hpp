@@ -7,7 +7,6 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-
 #ifndef BOOST_CONTAINER_DEQUE_HPP
 #define BOOST_CONTAINER_DEQUE_HPP
 
@@ -17,35 +16,39 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
-
-#include <boost/container/detail/utilities.hpp>
-#include <boost/container/detail/iterators.hpp>
-#include <boost/container/detail/mpl.hpp>
+// container
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/container_fwd.hpp>
+#include <boost/container/new_allocator.hpp> //new_allocator
 #include <boost/container/throw_exception.hpp>
-#include <boost/container/detail/iterator.hpp>
-
-#include <boost/assert.hpp>
-#include <boost/core/no_exceptions_support.hpp>
-#include <boost/type_traits/has_trivial_destructor.hpp>
-#include <boost/type_traits/has_trivial_copy.hpp>
-#include <boost/type_traits/has_trivial_assign.hpp>
-#include <boost/type_traits/has_nothrow_copy.hpp>
-#include <boost/type_traits/has_nothrow_assign.hpp>
-#include <boost/move/utility_core.hpp>
-#include <boost/move/iterator.hpp>
-#include <boost/move/adl_move_swap.hpp>
-#include <boost/move/algorithm.hpp>
-#include <boost/move/detail/move_helpers.hpp>
-#include <boost/move/traits.hpp>
+// container/detail
 #include <boost/container/detail/advanced_insert_int.hpp>
 #include <boost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
+#include <boost/container/detail/alloc_helpers.hpp>
+#include <boost/container/detail/copy_move_algo.hpp>
+#include <boost/container/detail/iterator.hpp>
+#include <boost/container/detail/iterator_to_raw_pointer.hpp>
+#include <boost/container/detail/iterators.hpp>
+#include <boost/container/detail/min_max.hpp>
+#include <boost/container/detail/mpl.hpp>
+#include <boost/container/detail/to_raw_pointer.hpp>
+#include <boost/container/detail/type_traits.hpp>
+// move
+#include <boost/move/adl_move_swap.hpp>
+#include <boost/move/iterator.hpp>
+#include <boost/move/traits.hpp>
+#include <boost/move/utility_core.hpp>
+// move/detail
+#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#include <boost/move/detail/fwd_macros.hpp>
+#endif
+#include <boost/move/detail/move_helpers.hpp>
+// other
+#include <boost/assert.hpp>
 #include <boost/core/no_exceptions_support.hpp>
-
+// std
 #include <cstddef>
 
-#include <memory>    //std::allocator
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
 #endif
@@ -54,20 +57,15 @@ namespace boost {
 namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class T, class A>
+template <class T, class Allocator>
 class deque;
 
 template <class T>
 struct deque_value_traits
 {
    typedef T value_type;
-   static const bool trivial_dctr = boost::has_trivial_destructor<value_type>::value;
+   static const bool trivial_dctr = container_detail::is_trivially_destructible<value_type>::value;
    static const bool trivial_dctr_after_move = ::boost::has_trivial_destructor_after_move<value_type>::value;
-   static const bool trivial_copy = has_trivial_copy<value_type>::value;
-   static const bool nothrow_copy = has_nothrow_copy<value_type>::value;
-   static const bool trivial_assign = has_trivial_assign<value_type>::value;
-   //static const bool nothrow_assign = has_nothrow_assign<value_type>::value;
-   static const bool nothrow_assign = false;
 };
 
 // Note: this function is simply a kludge to work around several compilers'
@@ -276,12 +274,12 @@ class deque_iterator
 // Deque base class.  It has two purposes.  First, its constructor
 //  and destructor allocate (but don't initialize) storage.  This makes
 //  exception safety easier.
-template <class A>
+template <class Allocator>
 class deque_base
 {
    BOOST_COPYABLE_AND_MOVABLE(deque_base)
    public:
-   typedef allocator_traits<A>                            val_alloc_traits_type;
+   typedef allocator_traits<Allocator>                            val_alloc_traits_type;
    typedef typename val_alloc_traits_type::value_type             val_alloc_val;
    typedef typename val_alloc_traits_type::pointer                val_alloc_ptr;
    typedef typename val_alloc_traits_type::const_pointer          val_alloc_cptr;
@@ -297,7 +295,7 @@ class deque_base
    typedef typename ptr_alloc_traits_type::const_pointer          ptr_alloc_cptr;
    typedef typename ptr_alloc_traits_type::reference              ptr_alloc_ref;
    typedef typename ptr_alloc_traits_type::const_reference        ptr_alloc_cref;
-   typedef A                                                      allocator_type;
+   typedef Allocator                                                      allocator_type;
    typedef allocator_type                                         stored_allocator_type;
    typedef val_alloc_size                                         size_type;
 
@@ -476,16 +474,16 @@ class deque_base
 //! and removal of elements at the end of the sequence, and linear time insertion and removal of elements in the middle.
 //!
 //! \tparam T The type of object that is stored in the deque
-//! \tparam A The allocator used for all internal memory management
-template <class T, class A = std::allocator<T> >
+//! \tparam Allocator The allocator used for all internal memory management
+template <class T, class Allocator = new_allocator<T> >
 #else
-template <class T, class A>
+template <class T, class Allocator>
 #endif
-class deque : protected deque_base<A>
+class deque : protected deque_base<Allocator>
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
-   typedef deque_base<A> Base;
+   typedef deque_base<Allocator> Base;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -497,18 +495,18 @@ class deque : protected deque_base<A>
    //////////////////////////////////////////////
 
    typedef T                                                                           value_type;
-   typedef typename ::boost::container::allocator_traits<A>::pointer           pointer;
-   typedef typename ::boost::container::allocator_traits<A>::const_pointer     const_pointer;
-   typedef typename ::boost::container::allocator_traits<A>::reference         reference;
-   typedef typename ::boost::container::allocator_traits<A>::const_reference   const_reference;
-   typedef typename ::boost::container::allocator_traits<A>::size_type         size_type;
-   typedef typename ::boost::container::allocator_traits<A>::difference_type   difference_type;
-   typedef A                                                                   allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(allocator_type)                                      stored_allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(typename Base::iterator)                             iterator;
-   typedef BOOST_CONTAINER_IMPDEF(typename Base::const_iterator)                       const_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
+   typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
+   typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
+   typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
+   typedef typename ::boost::container::allocator_traits<Allocator>::const_reference   const_reference;
+   typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
+   typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
+   typedef Allocator                                                                   allocator_type;
+   typedef BOOST_MOVE_IMPDEF(allocator_type)                                      stored_allocator_type;
+   typedef BOOST_MOVE_IMPDEF(typename Base::iterator)                             iterator;
+   typedef BOOST_MOVE_IMPDEF(typename Base::const_iterator)                       const_iterator;
+   typedef BOOST_MOVE_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
+   typedef BOOST_MOVE_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -517,7 +515,7 @@ class deque : protected deque_base<A>
    typedef typename Base::ptr_alloc_ptr index_pointer;
    static size_type s_buffer_size()
       { return Base::s_buffer_size(); }
-   typedef allocator_traits<A>                  allocator_traits_type;
+   typedef allocator_traits<Allocator>                  allocator_traits_type;
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -556,7 +554,7 @@ class deque : protected deque_base<A>
    explicit deque(size_type n)
       : Base(n, allocator_type())
    {
-      container_detail::insert_value_initialized_n_proxy<A, iterator> proxy;
+      container_detail::insert_value_initialized_n_proxy<Allocator, iterator> proxy;
       proxy.uninitialized_copy_n_and_update(this->alloc(), this->begin(), n);
       //deque_base will deallocate in case of exception...
    }
@@ -573,7 +571,7 @@ class deque : protected deque_base<A>
    deque(size_type n, default_init_t)
       : Base(n, allocator_type())
    {
-      container_detail::insert_default_initialized_n_proxy<A, iterator> proxy;
+      container_detail::insert_default_initialized_n_proxy<Allocator, iterator> proxy;
       proxy.uninitialized_copy_n_and_update(this->alloc(), this->begin(), n);
       //deque_base will deallocate in case of exception...
    }
@@ -1031,7 +1029,7 @@ class deque : protected deque_base<A>
          this->priv_erase_last_n(len - new_size);
       else{
          const size_type n = new_size - this->size();
-         container_detail::insert_value_initialized_n_proxy<A, iterator> proxy;
+         container_detail::insert_value_initialized_n_proxy<Allocator, iterator> proxy;
          priv_insert_back_aux_impl(n, proxy);
       }
    }
@@ -1051,7 +1049,7 @@ class deque : protected deque_base<A>
          this->priv_erase_last_n(len - new_size);
       else{
          const size_type n = new_size - this->size();
-         container_detail::insert_default_initialized_n_proxy<A, iterator> proxy;
+         container_detail::insert_default_initialized_n_proxy<Allocator, iterator> proxy;
          priv_insert_back_aux_impl(n, proxy);
       }
    }
@@ -1249,7 +1247,7 @@ class deque : protected deque_base<A>
    //
    //////////////////////////////////////////////
 
-   #if defined(BOOST_CONTAINER_PERFECT_FORWARDING) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
    //!   std::forward<Args>(args)... in the beginning of the deque.
@@ -1258,7 +1256,7 @@ class deque : protected deque_base<A>
    //!
    //! <b>Complexity</b>: Amortized constant time
    template <class... Args>
-   void emplace_front(Args&&... args)
+   void emplace_front(BOOST_FWD_REF(Args)... args)
    {
       if(this->priv_push_front_simple_available()){
          allocator_traits_type::construct
@@ -1268,7 +1266,7 @@ class deque : protected deque_base<A>
          this->priv_push_front_simple_commit();
       }
       else{
-         typedef container_detail::insert_non_movable_emplace_proxy<A, iterator, Args...> type;
+         typedef container_detail::insert_nonmovable_emplace_proxy<Allocator, iterator, Args...> type;
          this->priv_insert_front_aux_impl(1, type(boost::forward<Args>(args)...));
       }
    }
@@ -1280,7 +1278,7 @@ class deque : protected deque_base<A>
    //!
    //! <b>Complexity</b>: Amortized constant time
    template <class... Args>
-   void emplace_back(Args&&... args)
+   void emplace_back(BOOST_FWD_REF(Args)... args)
    {
       if(this->priv_push_back_simple_available()){
          allocator_traits_type::construct
@@ -1290,7 +1288,7 @@ class deque : protected deque_base<A>
          this->priv_push_back_simple_commit();
       }
       else{
-         typedef container_detail::insert_non_movable_emplace_proxy<A, iterator, Args...> type;
+         typedef container_detail::insert_nonmovable_emplace_proxy<Allocator, iterator, Args...> type;
          this->priv_insert_back_aux_impl(1, type(boost::forward<Args>(args)...));
       }
    }
@@ -1305,7 +1303,7 @@ class deque : protected deque_base<A>
    //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
    template <class... Args>
-   iterator emplace(const_iterator p, Args&&... args)
+   iterator emplace(const_iterator p, BOOST_FWD_REF(Args)... args)
    {
       if(p == this->cbegin()){
          this->emplace_front(boost::forward<Args>(args)...);
@@ -1316,75 +1314,66 @@ class deque : protected deque_base<A>
          return (this->end()-1);
       }
       else{
-         typedef container_detail::insert_emplace_proxy<A, iterator, Args...> type;
+         typedef container_detail::insert_emplace_proxy<Allocator, iterator, Args...> type;
          return this->priv_insert_aux_impl(p, 1, type(boost::forward<Args>(args)...));
       }
    }
 
-   #else //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
+   #else //!defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-   //advanced_insert_int.hpp includes all necessary preprocessor machinery...
-   #define BOOST_PP_LOCAL_MACRO(n)                                                           \
-   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >  )  \
-   void emplace_front(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_LIST, _))                    \
-   {                                                                                         \
-      if(priv_push_front_simple_available()){                                                \
-         allocator_traits_type::construct                                                    \
-            ( this->alloc()                                                                  \
-            , this->priv_push_front_simple_pos()                                             \
-              BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _));               \
-         priv_push_front_simple_commit();                                                    \
-      }                                                                                      \
-      else{                                                                                  \
-         typedef container_detail::BOOST_PP_CAT(insert_non_movable_emplace_proxy_arg, n)     \
-               <A, iterator BOOST_PP_ENUM_TRAILING_PARAMS(n, P)> type;               \
-         priv_insert_front_aux_impl                                                          \
-            (1, type(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)));                \
-      }                                                                                      \
-   }                                                                                         \
-                                                                                             \
-   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)    \
-   void emplace_back(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_LIST, _))                     \
-   {                                                                                         \
-      if(priv_push_back_simple_available()){                                                 \
-         allocator_traits_type::construct                                                    \
-            ( this->alloc()                                                                  \
-            , this->priv_push_back_simple_pos()                                              \
-              BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _));               \
-         priv_push_back_simple_commit();                                                     \
-      }                                                                                      \
-      else{                                                                                  \
-         typedef container_detail::BOOST_PP_CAT(insert_non_movable_emplace_proxy_arg, n)     \
-               <A, iterator BOOST_PP_ENUM_TRAILING_PARAMS(n, P)> type;               \
-         priv_insert_back_aux_impl                                                           \
-            (1, type(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)));                \
-      }                                                                                      \
-   }                                                                                         \
-                                                                                             \
-   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)    \
-   iterator emplace(const_iterator p                                                         \
-                    BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_LIST, _))             \
-   {                                                                                         \
-      if(p == this->cbegin()){                                                               \
-         this->emplace_front(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _));         \
-         return this->begin();                                                               \
-      }                                                                                      \
-      else if(p == cend()){                                                                  \
-         this->emplace_back(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _));          \
-         return (this->end()-1);                                                             \
-      }                                                                                      \
-      else{                                                                                  \
-         typedef container_detail::BOOST_PP_CAT(insert_emplace_proxy_arg, n)                 \
-               <A, iterator BOOST_PP_ENUM_TRAILING_PARAMS(n, P)> type;               \
-         return this->priv_insert_aux_impl                                                   \
-            (p, 1, type(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)));             \
-      }                                                                                      \
-   }                                                                                         \
-   //!
-   #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
-   #include BOOST_PP_LOCAL_ITERATE()
+   #define BOOST_CONTAINER_DEQUE_EMPLACE_CODE(N) \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N\
+   void emplace_front(BOOST_MOVE_UREF##N)\
+   {\
+      if(priv_push_front_simple_available()){\
+         allocator_traits_type::construct\
+            ( this->alloc(), this->priv_push_front_simple_pos() BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+         priv_push_front_simple_commit();\
+      }\
+      else{\
+         typedef container_detail::insert_nonmovable_emplace_proxy##N\
+               <Allocator, iterator BOOST_MOVE_I##N BOOST_MOVE_TARG##N> type;\
+         priv_insert_front_aux_impl(1, type(BOOST_MOVE_FWD##N));\
+      }\
+   }\
+   \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N\
+   void emplace_back(BOOST_MOVE_UREF##N)\
+   {\
+      if(priv_push_back_simple_available()){\
+         allocator_traits_type::construct\
+            ( this->alloc(), this->priv_push_back_simple_pos() BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+         priv_push_back_simple_commit();\
+      }\
+      else{\
+         typedef container_detail::insert_nonmovable_emplace_proxy##N\
+               <Allocator, iterator BOOST_MOVE_I##N BOOST_MOVE_TARG##N> type;\
+         priv_insert_back_aux_impl(1, type(BOOST_MOVE_FWD##N));\
+      }\
+   }\
+   \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N\
+   iterator emplace(const_iterator p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {\
+      if(p == this->cbegin()){\
+         this->emplace_front(BOOST_MOVE_FWD##N);\
+         return this->begin();\
+      }\
+      else if(p == cend()){\
+         this->emplace_back(BOOST_MOVE_FWD##N);\
+         return (--this->end());\
+      }\
+      else{\
+         typedef container_detail::insert_emplace_proxy_arg##N\
+               <Allocator, iterator BOOST_MOVE_I##N BOOST_MOVE_TARG##N> type;\
+         return this->priv_insert_aux_impl(p, 1, type(BOOST_MOVE_FWD##N));\
+      }\
+   }
+   //
+   BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_DEQUE_EMPLACE_CODE)
+   #undef BOOST_CONTAINER_DEQUE_EMPLACE_CODE
 
-   #endif   //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
+   #endif   // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //! <b>Effects</b>: Inserts a copy of x at the front of the deque.
@@ -1526,7 +1515,7 @@ class deque : protected deque_base<A>
       #endif
       )
    {
-      container_detail::insert_range_proxy<A, FwdIt, iterator> proxy(first);
+      container_detail::insert_range_proxy<Allocator, FwdIt, iterator> proxy(first);
       return priv_insert_aux_impl(p, boost::container::iterator_distance(first, last), proxy);
    }
    #endif
@@ -1581,11 +1570,11 @@ class deque : protected deque_base<A>
       ++next;
       size_type index = pos - this->members_.m_start;
       if (index < (this->size()/2)) {
-         boost::move_backward(this->begin(), pos.unconst(), next);
+         boost::container::move_backward(this->begin(), pos.unconst(), next);
          pop_front();
       }
       else {
-         boost::move(next, this->end(), pos.unconst());
+         boost::container::move(next, this->end(), pos.unconst());
          pop_back();
       }
       return this->members_.m_start + index;
@@ -1609,7 +1598,7 @@ class deque : protected deque_base<A>
          const size_type n = static_cast<size_type>(last - first);
          const size_type elems_before = static_cast<size_type>(first - this->members_.m_start);
          if (elems_before < (this->size() - n) - elems_before) {
-            boost::move_backward(begin(), first.unconst(), last.unconst());
+            boost::container::move_backward(begin(), first.unconst(), last.unconst());
             iterator new_start = this->members_.m_start + n;
             if(!Base::traits_t::trivial_dctr_after_move)
                this->priv_destroy_range(this->members_.m_start, new_start);
@@ -1617,7 +1606,7 @@ class deque : protected deque_base<A>
             this->members_.m_start = new_start;
          }
          else {
-            boost::move(last.unconst(), end(), first.unconst());
+            boost::container::move(last.unconst(), end(), first.unconst());
             iterator new_finish = this->members_.m_finish - n;
             if(!Base::traits_t::trivial_dctr_after_move)
                this->priv_destroy_range(new_finish, this->members_.m_finish);
@@ -1749,7 +1738,7 @@ class deque : protected deque_base<A>
       else {
          return priv_insert_aux_impl
             ( p, (size_type)1
-            , container_detail::get_insert_value_proxy<iterator, A>(::boost::forward<U>(x)));
+            , container_detail::get_insert_value_proxy<iterator, Allocator>(::boost::forward<U>(x)));
       }
    }
 
@@ -1764,7 +1753,7 @@ class deque : protected deque_base<A>
       else{
          priv_insert_aux_impl
             ( this->cbegin(), (size_type)1
-            , container_detail::get_insert_value_proxy<iterator, A>(::boost::forward<U>(x)));
+            , container_detail::get_insert_value_proxy<iterator, Allocator>(::boost::forward<U>(x)));
       }
    }
 
@@ -1779,7 +1768,7 @@ class deque : protected deque_base<A>
       else{
          priv_insert_aux_impl
             ( this->cend(), (size_type)1
-            , container_detail::get_insert_value_proxy<iterator, A>(::boost::forward<U>(x)));
+            , container_detail::get_insert_value_proxy<iterator, Allocator>(::boost::forward<U>(x)));
       }
    }
 
@@ -1813,21 +1802,19 @@ class deque : protected deque_base<A>
 
    void priv_destroy_range(iterator p, iterator p2)
    {
-      for(;p != p2; ++p){
-         allocator_traits_type::destroy
-            ( this->alloc()
-            , container_detail::to_raw_pointer(container_detail::iterator_to_pointer(p))
-            );
+      if(!Base::traits_t::trivial_dctr){
+         for(;p != p2; ++p){
+            allocator_traits_type::destroy(this->alloc(), container_detail::iterator_to_raw_pointer(p));
+         }
       }
    }
 
    void priv_destroy_range(pointer p, pointer p2)
    {
-      for(;p != p2; ++p){
-         allocator_traits_type::destroy
-            ( this->alloc()
-            , container_detail::to_raw_pointer(container_detail::iterator_to_pointer(p))
-            );
+      if(!Base::traits_t::trivial_dctr){
+         for(;p != p2; ++p){
+            allocator_traits_type::destroy(this->alloc(), container_detail::iterator_to_raw_pointer(p));
+         }
       }
    }
 
@@ -1857,7 +1844,7 @@ class deque : protected deque_base<A>
                ::boost::container::uninitialized_move_alloc
                   (this->alloc(), this->members_.m_start, start_n, new_start);
                this->members_.m_start = new_start;
-               boost::move(start_n, pos, old_start);
+               boost::container::move(start_n, pos, old_start);
                proxy.copy_n_and_update(this->alloc(), pos - n, n);
             }
             else {
@@ -1887,7 +1874,7 @@ class deque : protected deque_base<A>
                ::boost::container::uninitialized_move_alloc
                   (this->alloc(), finish_n, old_finish, old_finish);
                this->members_.m_finish = new_finish;
-               boost::move_backward(pos, finish_n, old_finish);
+               boost::container::move_backward(pos, finish_n, old_finish);
                proxy.copy_n_and_update(this->alloc(), pos, n);
             }
             else {
@@ -2092,9 +2079,9 @@ class deque : protected deque_base<A>
          new_nstart = this->members_.m_map + (this->members_.m_map_size - new_num_nodes) / 2
                            + (add_at_front ? nodes_to_add : 0);
          if (new_nstart < this->members_.m_start.m_node)
-            boost::move(this->members_.m_start.m_node, this->members_.m_finish.m_node + 1, new_nstart);
+            boost::container::move(this->members_.m_start.m_node, this->members_.m_finish.m_node + 1, new_nstart);
          else
-            boost::move_backward
+            boost::container::move_backward
                (this->members_.m_start.m_node, this->members_.m_finish.m_node + 1, new_nstart + old_num_nodes);
       }
       else {
@@ -2104,7 +2091,7 @@ class deque : protected deque_base<A>
          index_pointer new_map = this->priv_allocate_map(new_map_size);
          new_nstart = new_map + (new_map_size - new_num_nodes) / 2
                               + (add_at_front ? nodes_to_add : 0);
-         boost::move(this->members_.m_start.m_node, this->members_.m_finish.m_node + 1, new_nstart);
+         boost::container::move(this->members_.m_start.m_node, this->members_.m_finish.m_node + 1, new_nstart);
          this->priv_deallocate_map(this->members_.m_map, this->members_.m_map_size);
 
          this->members_.m_map = new_map;
@@ -2125,10 +2112,13 @@ namespace boost {
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class T, class A>
-struct has_trivial_destructor_after_move<boost::container::deque<T, A> >
-   : public ::boost::has_trivial_destructor_after_move<A>
-{};
+template <class T, class Allocator>
+struct has_trivial_destructor_after_move<boost::container::deque<T, Allocator> >
+{
+   typedef typename ::boost::container::allocator_traits<Allocator>::pointer pointer;
+   static const bool value = ::boost::has_trivial_destructor_after_move<Allocator>::value &&
+                             ::boost::has_trivial_destructor_after_move<pointer>::value;
+};
 
 }
 

@@ -30,8 +30,6 @@ namespace boost{
 namespace container {
 namespace container_detail {
 
-//using namespace boost;
-
 template <class T, unsigned V>
 struct version_type
     : public container_detail::integral_constant<unsigned, V>
@@ -95,6 +93,11 @@ struct is_version
 };
 
 }  //namespace container_detail {
+
+typedef container_detail::integral_constant<unsigned, 0> version_0;
+typedef container_detail::integral_constant<unsigned, 1> version_1;
+typedef container_detail::integral_constant<unsigned, 2> version_2;
+
 }  //namespace container {
 }  //namespace boost{
 

@@ -18,7 +18,6 @@
 #include "expand_bwd_test_allocator.hpp"
 #include <boost/container/detail/algorithm.hpp> //equal()
 #include "movable_int.hpp"
-#include <boost/type_traits/remove_volatile.hpp>
 #include <boost/move/make_unique.hpp>
 
 namespace boost { namespace container { namespace test {
@@ -79,6 +78,9 @@ bool test_insert_with_expand_bwd()
       {  0, 100,  200  };
 
    for(unsigned int pos = 0; pos < sizeof(Position)/sizeof(Position[0]); ++pos){
+      if(!life_count<value_type>::check(0))
+         return false;
+
       for(unsigned int iteration = 0; iteration < Iterations; ++iteration)
       {
          boost::movelib::unique_ptr<char[]> memptr =
@@ -122,6 +124,8 @@ bool test_insert_with_expand_bwd()
             return false;
          }
       }
+      if(!life_count<value_type>::check(0))
+         return false;
    }
 
    return true;

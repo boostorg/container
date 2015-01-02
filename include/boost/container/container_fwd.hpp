@@ -80,27 +80,30 @@ enum tree_type_enum
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
+template<class T>
+class new_allocator;
+
 template <class T
-         ,class A = std::allocator<T> >
+         ,class Allocator = new_allocator<T> >
 class vector;
 
 template <class T
-         ,class A = std::allocator<T> >
+         ,class Allocator = new_allocator<T> >
 class stable_vector;
 
 template <class T, std::size_t Capacity>
 class static_vector;
 
 template <class T
-         ,class A = std::allocator<T> >
+         ,class Allocator = new_allocator<T> >
 class deque;
 
 template <class T
-         ,class A = std::allocator<T> >
+         ,class Allocator = new_allocator<T> >
 class list;
 
 template <class T
-         ,class A = std::allocator<T> >
+         ,class Allocator = new_allocator<T> >
 class slist;
 
 template<tree_type_enum TreeType, bool OptimizeSize>
@@ -110,67 +113,67 @@ typedef tree_opt<red_black_tree, true> tree_assoc_defaults;
 
 template <class Key
          ,class Compare  = std::less<Key>
-         ,class A = std::allocator<Key>
+         ,class Allocator = new_allocator<Key>
          ,class Options = tree_assoc_defaults >
 class set;
 
 template <class Key
          ,class Compare  = std::less<Key>
-         ,class A = std::allocator<Key>
+         ,class Allocator = new_allocator<Key>
          ,class Options = tree_assoc_defaults >
 class multiset;
 
 template <class Key
          ,class T
          ,class Compare  = std::less<Key>
-         ,class A = std::allocator<std::pair<const Key, T> >
+         ,class Allocator = new_allocator<std::pair<const Key, T> >
          ,class Options = tree_assoc_defaults >
 class map;
 
 template <class Key
          ,class T
          ,class Compare  = std::less<Key>
-         ,class A = std::allocator<std::pair<const Key, T> >
+         ,class Allocator = new_allocator<std::pair<const Key, T> >
          ,class Options = tree_assoc_defaults >
 class multimap;
 
 template <class Key
          ,class Compare  = std::less<Key>
-         ,class A = std::allocator<Key> >
+         ,class Allocator = new_allocator<Key> >
 class flat_set;
 
 template <class Key
          ,class Compare  = std::less<Key>
-         ,class A = std::allocator<Key> >
+         ,class Allocator = new_allocator<Key> >
 class flat_multiset;
 
 template <class Key
          ,class T
          ,class Compare  = std::less<Key>
-         ,class A = std::allocator<std::pair<Key, T> > >
+         ,class Allocator = new_allocator<std::pair<Key, T> > >
 class flat_map;
 
 template <class Key
          ,class T
          ,class Compare  = std::less<Key>
-         ,class A = std::allocator<std::pair<Key, T> > >
+         ,class Allocator = new_allocator<std::pair<Key, T> > >
 class flat_multimap;
 
 template <class CharT
          ,class Traits = std::char_traits<CharT>
-         ,class A  = std::allocator<CharT> >
+         ,class Allocator  = new_allocator<CharT> >
 class basic_string;
 
 typedef basic_string
    <char
    ,std::char_traits<char>
-   ,std::allocator<char> >
+   ,new_allocator<char> >
 string;
 
 typedef basic_string
    <wchar_t
    ,std::char_traits<wchar_t>
-   ,std::allocator<wchar_t> >
+   ,new_allocator<wchar_t> >
 wstring;
 
 static const std::size_t ADP_nodes_per_block    = 256u;

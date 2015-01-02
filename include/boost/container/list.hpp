@@ -6,7 +6,7 @@
 //
 // See http://www.boost.org/libs/container for documentation.
 //
-
+//////////////////////////////////////////////////////////////////////////////
 #ifndef BOOST_CONTAINER_LIST_HPP
 #define BOOST_CONTAINER_LIST_HPP
 
@@ -16,32 +16,35 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
+
+// container
 #include <boost/container/container_fwd.hpp>
-#include <boost/container/detail/version_type.hpp>
+#include <boost/container/new_allocator.hpp> //new_allocator
+#include <boost/container/throw_exception.hpp>
+// container/detail
+#include <boost/container/detail/algorithm.hpp>
+#include <boost/container/detail/compare_functors.hpp>
+#include <boost/container/detail/iterator.hpp>
 #include <boost/container/detail/iterators.hpp>
 #include <boost/container/detail/mpl.hpp>
-#include <boost/container/detail/algorithm.hpp>
-#include <boost/container/throw_exception.hpp>
-#include <boost/container/detail/iterator.hpp>
-
+#include <boost/container/detail/node_alloc_holder.hpp>
+#include <boost/container/detail/version_type.hpp>
+// move
 #include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
-#include <boost/move/detail/move_helpers.hpp>
 #include <boost/move/traits.hpp>
-#include <boost/intrusive/pointer_traits.hpp>
-#include <boost/container/detail/utilities.hpp>
-#include <boost/container/detail/compare_functors.hpp>
-#include <boost/intrusive/list.hpp>
-#include <boost/assert.hpp>
-#include <boost/container/detail/node_alloc_holder.hpp>
-
-#if defined(BOOST_CONTAINER_PERFECT_FORWARDING) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-#else
-//Preprocessor library to emulate perfect forwarding
-#include <boost/container/detail/preprocessor.hpp>
+// move/detail
+#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#  include <boost/move/detail/fwd_macros.hpp>
 #endif
+#include <boost/move/detail/move_helpers.hpp>
 
-#include <memory>    //std::allocator
+// intrusive
+#include <boost/intrusive/pointer_traits.hpp>
+#include <boost/intrusive/list.hpp>
+// other
+#include <boost/assert.hpp>
+// std
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
 #endif
@@ -84,10 +87,10 @@ struct iiterator_node_value_type< list_node<T,VoidPointer> > {
   typedef T type;
 };
 
-template<class A>
+template<class Allocator>
 struct intrusive_list_type
 {
-   typedef boost::container::allocator_traits<A>   allocator_traits_type;
+   typedef boost::container::allocator_traits<Allocator>   allocator_traits_type;
    typedef typename allocator_traits_type::value_type value_type;
    typedef typename boost::intrusive::pointer_traits
       <typename allocator_traits_type::pointer>::template
@@ -120,30 +123,28 @@ struct intrusive_list_type
 //! or mutation is explicit.
 //!
 //! \tparam T The type of object that is stored in the list
-//! \tparam A The allocator used for all internal memory management
+//! \tparam Allocator The allocator used for all internal memory management
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class T, class A = std::allocator<T> >
+template <class T, class Allocator = new_allocator<T> >
 #else
-template <class T, class A>
+template <class T, class Allocator>
 #endif
 class list
    : protected container_detail::node_alloc_holder
-      <A, typename container_detail::intrusive_list_type<A>::type>
+      <Allocator, typename container_detail::intrusive_list_type<Allocator>::type>
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    typedef typename
-      container_detail::intrusive_list_type<A>::type Icont;
-   typedef container_detail::node_alloc_holder<A, Icont>  AllocHolder;
+      container_detail::intrusive_list_type<Allocator>::type Icont;
+   typedef container_detail::node_alloc_holder<Allocator, Icont>  AllocHolder;
    typedef typename AllocHolder::NodePtr                          NodePtr;
    typedef typename AllocHolder::NodeAlloc                        NodeAlloc;
    typedef typename AllocHolder::ValAlloc                         ValAlloc;
    typedef typename AllocHolder::Node                             Node;
    typedef container_detail::allocator_destroyer<NodeAlloc>       Destroyer;
-   typedef typename AllocHolder::allocator_v1                     allocator_v1;
-   typedef typename AllocHolder::allocator_v2                     allocator_v2;
    typedef typename AllocHolder::alloc_version                    alloc_version;
-   typedef boost::container::allocator_traits<A>          allocator_traits_type;
-   typedef boost::container::equal_to_value<A>            equal_to_value_type;
+   typedef boost::container::allocator_traits<Allocator>          allocator_traits_type;
+   typedef boost::container::equal_to_value<Allocator>            equal_to_value_type;
 
    BOOST_COPYABLE_AND_MOVABLE(list)
 
@@ -159,18 +160,18 @@ class list
    //////////////////////////////////////////////
 
    typedef T                                                                           value_type;
-   typedef typename ::boost::container::allocator_traits<A>::pointer           pointer;
-   typedef typename ::boost::container::allocator_traits<A>::const_pointer     const_pointer;
-   typedef typename ::boost::container::allocator_traits<A>::reference         reference;
-   typedef typename ::boost::container::allocator_traits<A>::const_reference   const_reference;
-   typedef typename ::boost::container::allocator_traits<A>::size_type         size_type;
-   typedef typename ::boost::container::allocator_traits<A>::difference_type   difference_type;
-   typedef A                                                                   allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(NodeAlloc)                                           stored_allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                                       iterator;
-   typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                                 const_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
+   typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
+   typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
+   typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
+   typedef typename ::boost::container::allocator_traits<Allocator>::const_reference   const_reference;
+   typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
+   typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
+   typedef Allocator                                                                   allocator_type;
+   typedef BOOST_MOVE_IMPDEF(NodeAlloc)                                           stored_allocator_type;
+   typedef BOOST_MOVE_IMPDEF(iterator_impl)                                       iterator;
+   typedef BOOST_MOVE_IMPDEF(const_iterator_impl)                                 const_iterator;
+   typedef BOOST_MOVE_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
+   typedef BOOST_MOVE_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
 
    //////////////////////////////////////////////
    //
@@ -204,7 +205,7 @@ class list
    //!
    //! <b>Complexity</b>: Linear to n.
    explicit list(size_type n)
-      : AllocHolder(A())
+      : AllocHolder(Allocator())
    {  this->resize(n);  }
 
    //! <b>Effects</b>: Constructs a list that will use a copy of allocator a
@@ -214,7 +215,7 @@ class list
    //!   throws or T's default or copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
-   list(size_type n, const T& value, const A& a = A())
+   list(size_type n, const T& value, const Allocator& a = Allocator())
       : AllocHolder(a)
    {  this->insert(this->cbegin(), n, value);  }
 
@@ -274,7 +275,7 @@ class list
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
    template <class InpIt>
-   list(InpIt first, InpIt last, const A &a = A())
+   list(InpIt first, InpIt last, const Allocator &a = Allocator())
       : AllocHolder(a)
    {  this->insert(this->cbegin(), first, last);  }
 
@@ -288,7 +289,7 @@ class list
    //!   std::initializer_list iterator throws.
    //!
    //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
-   list(std::initializer_list<value_type> il, const A &a = A())
+   list(std::initializer_list<value_type> il, const Allocator &a = Allocator())
       : AllocHolder(a)
    {  this->insert(this->cbegin(), il.begin(), il.end()); }
 #endif
@@ -677,7 +678,7 @@ class list
    //
    //////////////////////////////////////////////
 
-   #if defined(BOOST_CONTAINER_PERFECT_FORWARDING) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
    //!   std::forward<Args>(args)... in the end of the list.
@@ -687,7 +688,7 @@ class list
    //!
    //! <b>Complexity</b>: Constant
    template <class... Args>
-   void emplace_back(Args&&... args)
+   void emplace_back(BOOST_FWD_REF(Args)... args)
    {  this->emplace(this->cend(), boost::forward<Args>(args)...); }
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
@@ -698,7 +699,7 @@ class list
    //!
    //! <b>Complexity</b>: Constant
    template <class... Args>
-   void emplace_front(Args&&... args)
+   void emplace_front(BOOST_FWD_REF(Args)... args)
    {  this->emplace(this->cbegin(), boost::forward<Args>(args)...);  }
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
@@ -709,42 +710,34 @@ class list
    //!
    //! <b>Complexity</b>: Constant
    template <class... Args>
-   iterator emplace(const_iterator p, Args&&... args)
+   iterator emplace(const_iterator p, BOOST_FWD_REF(Args)... args)
    {
       NodePtr pnode(AllocHolder::create_node(boost::forward<Args>(args)...));
       return iterator(this->icont().insert(p.get(), *pnode));
    }
 
-   #else //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
+   #else // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-   #define BOOST_PP_LOCAL_MACRO(n)                                                              \
-   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)       \
-   void emplace_back(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_LIST, _))                        \
-   {                                                                                            \
-      this->emplace(this->cend()                                                                \
-                    BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _));            \
-   }                                                                                            \
-                                                                                                \
-   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)       \
-   void emplace_front(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_LIST, _))                       \
-   {                                                                                            \
-      this->emplace(this->cbegin()                                                              \
-                    BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _));            \
-   }                                                                                            \
-                                                                                                \
-   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)       \
-   iterator emplace(const_iterator p                                                            \
-                    BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_LIST, _))                \
-   {                                                                                            \
-      NodePtr pnode (AllocHolder::create_node                                                   \
-         (BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)));                              \
-      return iterator(this->icont().insert(p.get(), *pnode));                                   \
-   }                                                                                            \
-   //!
-   #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
-   #include BOOST_PP_LOCAL_ITERATE()
+   #define BOOST_CONTAINER_LIST_EMPLACE_CODE(N) \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   void emplace_back(BOOST_MOVE_UREF##N)\
+   {  this->emplace(this->cend() BOOST_MOVE_I##N BOOST_MOVE_FWD##N);  }\
+   \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   void emplace_front(BOOST_MOVE_UREF##N)\
+   {  this->emplace(this->cbegin() BOOST_MOVE_I##N BOOST_MOVE_FWD##N);}\
+   \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   iterator emplace(const_iterator p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {\
+      NodePtr pnode (AllocHolder::create_node(BOOST_MOVE_FWD##N));\
+      return iterator(this->icont().insert(p.get(), *pnode));\
+   }\
+   //
+   BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_LIST_EMPLACE_CODE)
+   #undef BOOST_CONTAINER_LIST_EMPLACE_CODE
 
-   #endif   //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
+   #endif   // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //! <b>Effects</b>: Inserts a copy of x at the beginning of the list.
@@ -843,7 +836,7 @@ class list
       , typename container_detail::enable_if_c
          < !container_detail::is_convertible<InpIt, size_type>::value
             && (container_detail::is_input_iterator<InpIt>::value
-                || container_detail::is_same<alloc_version, allocator_v1>::value
+                || container_detail::is_same<alloc_version, version_1>::value
                )
          >::type * = 0
       #endif
@@ -867,7 +860,7 @@ class list
       , typename container_detail::enable_if_c
          < !container_detail::is_convertible<FwdIt, size_type>::value
             && !(container_detail::is_input_iterator<FwdIt>::value
-                || container_detail::is_same<alloc_version, allocator_v1>::value
+                || container_detail::is_same<alloc_version, version_1>::value
                )
          >::type * = 0
       )
@@ -1403,10 +1396,13 @@ class list
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class T, class A>
-struct has_trivial_destructor_after_move<boost::container::list<T, A> >
-   : public ::boost::has_trivial_destructor_after_move<A>
-{};
+template <class T, class Allocator>
+struct has_trivial_destructor_after_move<boost::container::list<T, Allocator> >
+{
+   typedef typename ::boost::container::allocator_traits<Allocator>::pointer pointer;
+   static const bool value = ::boost::has_trivial_destructor_after_move<Allocator>::value &&
+                             ::boost::has_trivial_destructor_after_move<pointer>::value;
+};
 
 namespace container {
 

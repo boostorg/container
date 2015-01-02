@@ -18,10 +18,10 @@
 namespace boost {
 namespace container {
 
-template<class A>
+template<class Allocator>
 class equal_to_value
 {
-   typedef typename A::value_type value_type;
+   typedef typename Allocator::value_type value_type;
    const value_type &t_;
 
    public:

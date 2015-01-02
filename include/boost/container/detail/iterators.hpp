@@ -26,12 +26,11 @@
 #include <boost/move/utility_core.hpp>
 #include <boost/intrusive/detail/reverse_iterator.hpp>
 
-#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
-#include <boost/container/detail/variadic_templates_tools.hpp>
+#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#include <boost/move/detail/fwd_macros.hpp>
 #else
-#include <boost/container/detail/preprocessor.hpp>
+#include <boost/container/detail/variadic_templates_tools.hpp>
 #endif
-
 #include <boost/container/detail/iterator.hpp>
 
 namespace boost {
@@ -564,8 +563,8 @@ class emplace_iterator
    //const T& operator[](difference_type) const;
    //const T* operator->() const;
 
-   template<class A>
-   void construct_in_place(A &a, T* ptr)
+   template<class Allocator>
+   void construct_in_place(Allocator &a, T* ptr)
    {  (*m_pe)(a, ptr);  }
 
    private:
@@ -597,54 +596,49 @@ class emplace_iterator
    {  return difference_type(m_num - other.m_num);   }
 };
 
-#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
+#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 template<class ...Args>
 struct emplace_functor
 {
    typedef typename container_detail::build_number_seq<sizeof...(Args)>::type index_tuple_t;
 
-   emplace_functor(Args&&... args)
+   emplace_functor(BOOST_FWD_REF(Args)... args)
       : args_(args...)
    {}
 
-   template<class A, class T>
-   void operator()(A &a, T *ptr)
+   template<class Allocator, class T>
+   void operator()(Allocator &a, T *ptr)
    {  emplace_functor::inplace_impl(a, ptr, index_tuple_t());  }
 
-   template<class A, class T, int ...IdxPack>
-   void inplace_impl(A &a, T* ptr, const container_detail::index_tuple<IdxPack...>&)
+   template<class Allocator, class T, int ...IdxPack>
+   void inplace_impl(Allocator &a, T* ptr, const container_detail::index_tuple<IdxPack...>&)
    {
-      allocator_traits<A>::construct
+      allocator_traits<Allocator>::construct
          (a, ptr, ::boost::forward<Args>(container_detail::get<IdxPack>(args_))...);
    }
 
    container_detail::tuple<Args&...> args_;
 };
 
-#else //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
+#else // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-#define BOOST_PP_LOCAL_MACRO(n)                                                        \
-   BOOST_PP_EXPR_IF(n, template <)                                                     \
-      BOOST_PP_ENUM_PARAMS(n, class P)                                                 \
-         BOOST_PP_EXPR_IF(n, >)                                                        \
-   struct BOOST_PP_CAT(BOOST_PP_CAT(emplace_functor, n), arg)                          \
-   {                                                                                   \
-      BOOST_PP_CAT(BOOST_PP_CAT(emplace_functor, n), arg)                              \
-         ( BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_LIST, _) )                        \
-      BOOST_PP_EXPR_IF(n, :) BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_INIT, _){}      \
-                                                                                       \
-      template<class A, class T>                                                       \
-      void operator()(A &a, T *ptr)                                                    \
-      {                                                                                \
-         allocator_traits<A>::construct                                                \
-            (a, ptr BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_MEMBER_FORWARD, _) ); \
-      }                                                                                \
-      BOOST_PP_REPEAT(n, BOOST_CONTAINER_PP_PARAM_DEFINE, _)                           \
-   };                                                                                  \
-   //!
-#define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
-#include BOOST_PP_LOCAL_ITERATE()
+#define BOOST_MOVE_ITERATOR_EMPLACE_FUNCTOR_CODE(N) \
+BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+struct emplace_functor##N\
+{\
+   explicit emplace_functor##N( BOOST_MOVE_UREF##N )\
+      BOOST_MOVE_COLON##N BOOST_MOVE_FWD_INIT##N{}\
+   \
+   template<class Allocator, class T>\
+   void operator()(Allocator &a, T *ptr)\
+   {  allocator_traits<Allocator>::construct(a, ptr BOOST_MOVE_I##N BOOST_MOVE_MFWD##N);  }\
+   \
+   BOOST_MOVE_MREF##N\
+};\
+//
+BOOST_MOVE_ITERATE_0TO9(BOOST_MOVE_ITERATOR_EMPLACE_FUNCTOR_CODE)
+#undef BOOST_MOVE_ITERATOR_EMPLACE_FUNCTOR_CODE
 
 #endif
 

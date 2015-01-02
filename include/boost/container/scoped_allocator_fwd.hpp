@@ -23,8 +23,7 @@
 #include <boost/container/detail/workaround.hpp>
 
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-#include <boost/container/detail/preprocessor.hpp>
-#include <boost/container/detail/type_traits.hpp>
+#include <boost/move/detail/fwd_macros.hpp>
 #endif
 
 namespace boost { namespace container {
@@ -51,10 +50,7 @@ namespace boost { namespace container {
 
 #else    // #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-template <typename OuterAlloc
-BOOST_PP_ENUM_TRAILING( BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS
-                      , BOOST_CONTAINER_PP_TEMPLATE_PARAM_WITH_DEFAULT, container_detail::nat)
->
+template <typename OuterAlloc, BOOST_MOVE_CLASSDFLT9>
 class scoped_allocator_adaptor;
 
 #endif
@@ -77,7 +73,7 @@ struct constructible_with_allocator_suffix;
 template <class T>
 struct constructible_with_allocator_prefix;
 
-template <typename T, typename Alloc>
+template <typename T, typename Allocator>
 struct uses_allocator;
 
 }} // namespace boost { namespace container {

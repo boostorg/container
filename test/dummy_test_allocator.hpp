@@ -17,18 +17,22 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
-
 #include <boost/container/container_fwd.hpp>
-#include <boost/container/detail/allocation_type.hpp>
-#include <boost/assert.hpp>
-#include <boost/container/detail/utilities.hpp>
-#include <boost/container/detail/type_traits.hpp>
-#include <boost/container/detail/mpl.hpp>
-#include <boost/container/detail/version_type.hpp>
-#include <boost/container/detail/multiallocation_chain.hpp>
+
 #include <boost/container/throw_exception.hpp>
+
+#include <boost/container/detail/addressof.hpp>
+#include <boost/container/detail/allocation_type.hpp>
+#include <boost/container/detail/mpl.hpp>
+#include <boost/container/detail/multiallocation_chain.hpp>
+#include <boost/container/detail/type_traits.hpp>
+#include <boost/container/detail/version_type.hpp>
+
 #include <boost/move/utility_core.hpp>
 #include <boost/move/adl_move_swap.hpp>
+
+#include <boost/assert.hpp>
+
 #include <memory>
 #include <algorithm>
 #include <cstddef>
@@ -136,12 +140,8 @@ class dummy_test_allocator
 
    //Experimental version 2 dummy_test_allocator functions
 
-   std::pair<pointer, bool>
-      allocation_command(boost::container::allocation_type,
-                         size_type,
-                         size_type,
-                         size_type &, const pointer & = 0)
-   {  return std::pair<pointer, bool>(pointer(), true); }
+   pointer allocation_command(boost::container::allocation_type, size_type, size_type &, pointer &p)
+   {  p = pointer();   return pointer();  }
 
    //!Returns maximum the number of objects the previously allocated memory
    //!pointed by p can hold.

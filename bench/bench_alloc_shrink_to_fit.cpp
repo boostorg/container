@@ -34,7 +34,7 @@ typedef std::allocator<int>   StdAllocator;
 typedef bc::allocator<int, 2> AllocatorPlusV2;
 typedef bc::allocator<int, 1> AllocatorPlusV1;
 
-template<class A> struct get_allocator_name;
+template<class Allocator> struct get_allocator_name;
 
 template<> struct get_allocator_name<StdAllocator>
 {  static const char *get() {  return "StdAllocator";  } };
@@ -69,10 +69,10 @@ void print_header()
                << "num_shrink" << ";" << "shrink_to_fit(ns)" << std::endl;
 }
 
-template<class A>
+template<class Allocator>
 void vector_test_template(unsigned int num_iterations, unsigned int num_elements, bool csv_output)
 {
-   typedef typename A::template rebind<MyInt>::other IntAllocator;
+   typedef typename Allocator::template rebind<MyInt>::other IntAllocator;
 
    unsigned int capacity = 0;
    const std::size_t Step = 5;
@@ -84,7 +84,7 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
 
    #ifndef NDEBUG
    typedef bc::container_detail::integral_constant
-      <unsigned, bc::container_detail::version<A>::value> alloc_version;
+      <unsigned, bc::container_detail::version<Allocator>::value> alloc_version;
    #endif
 
    for(unsigned int r = 0; r != num_iterations; ++r){
@@ -105,7 +105,7 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
    nanosecond_type nseconds = timer.elapsed().wall;
 
    if(csv_output){
-      std::cout   << get_allocator_name<A>::get()
+      std::cout   << get_allocator_name<Allocator>::get()
                   << ";"
                   << num_iterations
                   << ";"
@@ -118,7 +118,7 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
    }
    else{
       std::cout   << std::endl
-                  << "A: " << get_allocator_name<A>::get()
+                  << "Allocator: " << get_allocator_name<Allocator>::get()
                   << std::endl
                   << "  num_shrink:         " << num_shrink
                   << std::endl

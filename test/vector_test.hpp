@@ -13,10 +13,8 @@
 
 #include <boost/container/detail/config_begin.hpp>
 
-#include <memory>
 #include <vector>
 #include <iostream>
-#include <functional>
 #include <list>
 
 #include <boost/move/utility_core.hpp>

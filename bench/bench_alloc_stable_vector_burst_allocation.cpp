@@ -41,7 +41,7 @@ typedef bc::adaptive_pool
    , 2
    , 2>                       AdPool2PercentV2;
 
-template<class A> struct get_allocator_name;
+template<class Allocator> struct get_allocator_name;
 
 template<> struct get_allocator_name<StdAllocator>
 {  static const char *get() {  return "StdAllocator";  } };
@@ -71,32 +71,32 @@ class MyInt
    }
 };
 
-template<class A>
+template<class Allocator>
 struct get_vector
 {
    typedef bc::vector
-      <MyInt, typename A::template rebind<MyInt>::other> type;
+      <MyInt, typename Allocator::template rebind<MyInt>::other> type;
    static const char *vector_name()
    {
       return "vector<MyInt>";
    }
 };
 
-template<class A>
+template<class Allocator>
 struct get_stable_vector
 {
    typedef bc::stable_vector
-      <MyInt, typename A::template rebind<MyInt>::other> type;
+      <MyInt, typename Allocator::template rebind<MyInt>::other> type;
    static const char *vector_name()
    {
       return "stable_vector<MyInt>";
    }
 };
 
-template<template<class> class GetContainer, class A>
+template<template<class> class GetContainer, class Allocator>
 void stable_vector_test_template(unsigned int num_iterations, unsigned int num_elements, bool csv_output)
 {
-   typedef typename GetContainer<A>::type vector_type;
+   typedef typename GetContainer<Allocator>::type vector_type;
    //std::size_t top_capacity = 0;
    nanosecond_type nseconds;
    {
@@ -113,9 +113,9 @@ void stable_vector_test_template(unsigned int num_iterations, unsigned int num_e
          nseconds = timer.elapsed().wall;
 
          if(csv_output){
-            std::cout   << get_allocator_name<A>::get()
+            std::cout   << get_allocator_name<Allocator>::get()
                         << ";"
-                        << GetContainer<A>::vector_name()
+                        << GetContainer<Allocator>::vector_name()
                         << ";"
                         << num_iterations
                         << ";"
@@ -125,9 +125,9 @@ void stable_vector_test_template(unsigned int num_iterations, unsigned int num_e
                         << ";";
          }
          else{
-            std::cout   << "Allocator: " << get_allocator_name<A>::get()
+            std::cout   << "Allocator: " << get_allocator_name<Allocator>::get()
                         << '\t'
-                        << GetContainer<A>::vector_name()
+                        << GetContainer<Allocator>::vector_name()
                         << std::endl
                         << "  allocation ns:   "
                         << float(nseconds)/(num_iterations*num_elements);

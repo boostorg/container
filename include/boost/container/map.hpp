@@ -7,7 +7,6 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-
 #ifndef BOOST_CONTAINER_MAP_HPP
 #define BOOST_CONTAINER_MAP_HPP
 
@@ -18,25 +17,31 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 
+// container
 #include <boost/container/container_fwd.hpp>
-#include <boost/container/detail/tree.hpp>
-#include <boost/container/detail/value_init.hpp>
-#include <boost/type_traits/has_trivial_destructor.hpp>
-#include <boost/container/detail/mpl.hpp>
-#include <boost/container/detail/utilities.hpp>
-#include <boost/container/detail/pair.hpp>
-#include <boost/container/detail/type_traits.hpp>
+#include <boost/container/new_allocator.hpp> //new_allocator
 #include <boost/container/throw_exception.hpp>
-#include <boost/move/utility_core.hpp>
-#include <boost/move/detail/move_helpers.hpp>
-#include <boost/move/traits.hpp>
-#include <boost/static_assert.hpp>
+// container/detail
+#include <boost/container/detail/mpl.hpp>
+#include <boost/container/detail/tree.hpp>
+#include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/value_init.hpp>
+#include <boost/container/detail/pair.hpp>
+// move
+#include <boost/move/traits.hpp>
+#include <boost/move/utility_core.hpp>
+// move/detail
+#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#include <boost/move/detail/fwd_macros.hpp>
+#endif
+#include <boost/move/detail/move_helpers.hpp>
+// intrusive/detail
+#include <boost/intrusive/detail/minimal_pair_header.hpp>      //pair
+#include <boost/intrusive/detail/minimal_less_equal_header.hpp>//less, equal
+// other
+#include <boost/static_assert.hpp>
 #include <boost/core/no_exceptions_support.hpp>
-
-#include <utility>      //pair
-#include <functional>   //less
-#include <memory>       //allocator
+// std
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
 #endif
@@ -55,22 +60,22 @@ namespace container {
 //! by this container is the value_type is std::pair<const Key, T>.
 //!
 //! \tparam Key is the key_type of the map
-//! \tparam Value is the <code>mapped_type</code>
+//! \tparam T is the <code>mapped_type</code>
 //! \tparam Compare is the ordering function for Keys (e.g. <i>std::less<Key></i>).
-//! \tparam A is the allocator to allocate the <code>value_type</code>s
+//! \tparam Allocator is the allocator to allocate the <code>value_type</code>s
 //!   (e.g. <i>allocator< std::pair<const Key, T> > </i>).
 //! \tparam MapOptions is an packed option type generated using using boost::container::tree_assoc_options.
 template < class Key, class T, class Compare = std::less<Key>
-         , class A = std::allocator< std::pair< const Key, T> >, class MapOptions = tree_assoc_defaults >
+         , class Allocator = new_allocator< std::pair< const Key, T> >, class MapOptions = tree_assoc_defaults >
 #else
-template <class Key, class T, class Compare, class A, class MapOptions>
+template <class Key, class T, class Compare, class Allocator, class MapOptions>
 #endif
 class map
    ///@cond
    : public container_detail::tree
       < Key, std::pair<const Key, T>
       , container_detail::select1st< std::pair<const Key, T> >
-      , Compare, A, MapOptions>
+      , Compare, Allocator, MapOptions>
    ///@endcond
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -79,7 +84,7 @@ class map
 
    typedef std::pair<const Key, T>  value_type_impl;
    typedef container_detail::tree
-      <Key, value_type_impl, container_detail::select1st<value_type_impl>, Compare, A, MapOptions> base_t;
+      <Key, value_type_impl, container_detail::select1st<value_type_impl>, Compare, Allocator, MapOptions> base_t;
    typedef container_detail::pair <Key, T> movable_value_type_impl;
    typedef container_detail::tree_value_compare
       < Key, value_type_impl, Compare, container_detail::select1st<value_type_impl>
@@ -94,25 +99,25 @@ class map
    //////////////////////////////////////////////
 
    typedef Key                                                              key_type;
-   typedef ::boost::container::allocator_traits<A>                          allocator_traits_type;
+   typedef ::boost::container::allocator_traits<Allocator>                          allocator_traits_type;
    typedef T                                                                mapped_type;
    typedef std::pair<const Key, T>                                          value_type;
-   typedef typename boost::container::allocator_traits<A>::pointer          pointer;
-   typedef typename boost::container::allocator_traits<A>::const_pointer    const_pointer;
-   typedef typename boost::container::allocator_traits<A>::reference        reference;
-   typedef typename boost::container::allocator_traits<A>::const_reference  const_reference;
-   typedef typename boost::container::allocator_traits<A>::size_type        size_type;
-   typedef typename boost::container::allocator_traits<A>::difference_type  difference_type;
-   typedef A                                                                allocator_type;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)           stored_allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(value_compare_impl)                               value_compare;
+   typedef typename boost::container::allocator_traits<Allocator>::pointer          pointer;
+   typedef typename boost::container::allocator_traits<Allocator>::const_pointer    const_pointer;
+   typedef typename boost::container::allocator_traits<Allocator>::reference        reference;
+   typedef typename boost::container::allocator_traits<Allocator>::const_reference  const_reference;
+   typedef typename boost::container::allocator_traits<Allocator>::size_type        size_type;
+   typedef typename boost::container::allocator_traits<Allocator>::difference_type  difference_type;
+   typedef Allocator                                                                allocator_type;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::stored_allocator_type)           stored_allocator_type;
+   typedef BOOST_MOVE_IMPDEF(value_compare_impl)                               value_compare;
    typedef Compare                                                                  key_compare;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                        iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                  const_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                reverse_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)          const_reverse_iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::iterator)                        iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::const_iterator)                  const_iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::reverse_iterator)                reverse_iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::const_reverse_iterator)          const_reverse_iterator;
    typedef std::pair<key_type, mapped_type>                                         nonconst_value_type;
-   typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                          movable_value_type;
+   typedef BOOST_MOVE_IMPDEF(movable_value_type_impl)                          movable_value_type;
 
    //////////////////////////////////////////////
    //
@@ -127,7 +132,7 @@ class map
       : base_t()
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    //! <b>Effects</b>: Constructs an empty map using the specified comparison object
@@ -139,7 +144,7 @@ class map
       : base_t(comp, a)
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    //! <b>Effects</b>: Constructs an empty map using the specified allocator.
@@ -149,7 +154,7 @@ class map
       : base_t(a)
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    //! <b>Effects</b>: Constructs an empty map using the specified comparison object and
@@ -163,7 +168,7 @@ class map
       : base_t(true, first, last, comp, a)
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    //! <b>Effects</b>: Constructs an empty map using the specified comparison object and
@@ -182,7 +187,7 @@ class map
       : base_t(ordered_range, first, last, comp, a)
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -195,7 +200,7 @@ class map
       : base_t(true, il.begin(), il.end(), comp, a)
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    map(ordered_unique_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(),
@@ -203,7 +208,7 @@ class map
       : base_t(ordered_range, il.begin(), il.end(), comp, a)
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 #endif
 
@@ -214,7 +219,7 @@ class map
       : base_t(static_cast<const base_t&>(x))
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    //! <b>Effects</b>: Move constructs a map. Constructs *this using x's resources.
@@ -226,7 +231,7 @@ class map
       : base_t(BOOST_MOVE_BASE(base_t, x))
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    //! <b>Effects</b>: Copy constructs a map using the specified allocator.
@@ -236,7 +241,7 @@ class map
       : base_t(static_cast<const base_t&>(x), a)
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    //! <b>Effects</b>: Move constructs a map using the specified allocator.
@@ -249,7 +254,7 @@ class map
       : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    //! <b>Effects</b>: Makes *this a copy of x.
@@ -598,7 +603,7 @@ class map
    {  this->base_t::insert_unique(il.begin(), il.end()); }
 #endif
 
-   #if defined(BOOST_CONTAINER_PERFECT_FORWARDING) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Effects</b>: Inserts an object x of type T constructed with
    //!   std::forward<Args>(args)... in the container if and only if there is
@@ -612,7 +617,7 @@ class map
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    template <class... Args>
-   std::pair<iterator,bool> emplace(Args&&... args)
+   std::pair<iterator,bool> emplace(BOOST_FWD_REF(Args)... args)
    {  return this->base_t::emplace_unique(boost::forward<Args>(args)...); }
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
@@ -626,26 +631,24 @@ class map
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    template <class... Args>
-   iterator emplace_hint(const_iterator p, Args&&... args)
+   iterator emplace_hint(const_iterator p, BOOST_FWD_REF(Args)... args)
    {  return this->base_t::emplace_hint_unique(p, boost::forward<Args>(args)...); }
 
-   #else //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
+   #else // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-   #define BOOST_PP_LOCAL_MACRO(n)                                                                 \
-   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)          \
-   std::pair<iterator,bool> emplace(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_LIST, _))            \
-   {  return this->base_t::emplace_unique(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); }\
-                                                                                                   \
-   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)          \
-   iterator emplace_hint(const_iterator p                                                          \
-                         BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_LIST, _))              \
-   {  return this->base_t::emplace_hint_unique(p                                                   \
-                               BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _));}   \
-   //!
-   #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
-   #include BOOST_PP_LOCAL_ITERATE()
+   #define BOOST_CONTAINER_MAP_EMPLACE_CODE(N) \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   std::pair<iterator,bool> emplace(BOOST_MOVE_UREF##N)\
+   {  return this->base_t::emplace_unique(BOOST_MOVE_FWD##N);   }\
+   \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   iterator emplace_hint(const_iterator hint BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {  return this->base_t::emplace_hint_unique(hint BOOST_MOVE_I##N BOOST_MOVE_FWD##N);  }\
+   //
+   BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_MAP_EMPLACE_CODE)
+   #undef BOOST_CONTAINER_MAP_EMPLACE_CODE
 
-   #endif   //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
+   #endif   // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -835,10 +838,13 @@ class map
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class K, class T, class C, class A>
-struct has_trivial_destructor_after_move<boost::container::map<K, T, C, A> >
+template <class Key, class T, class Compare, class Allocator>
+struct has_trivial_destructor_after_move<boost::container::map<Key, T, Compare, Allocator> >
 {
-   static const bool value = has_trivial_destructor_after_move<A>::value && has_trivial_destructor_after_move<C>::value;
+   typedef typename ::boost::container::allocator_traits<Allocator>::pointer pointer;
+   static const bool value = ::boost::has_trivial_destructor_after_move<Allocator>::value &&
+                             ::boost::has_trivial_destructor_after_move<pointer>::value &&
+                             ::boost::has_trivial_destructor_after_move<Compare>::value;
 };
 
 namespace container {
@@ -859,20 +865,20 @@ namespace container {
 //! \tparam Key is the key_type of the map
 //! \tparam Value is the <code>mapped_type</code>
 //! \tparam Compare is the ordering function for Keys (e.g. <i>std::less<Key></i>).
-//! \tparam A is the allocator to allocate the <code>value_type</code>s
+//! \tparam Allocator is the allocator to allocate the <code>value_type</code>s
 //!   (e.g. <i>allocator< std::pair<const Key, T> > </i>).
 //! \tparam MultiMapOptions is an packed option type generated using using boost::container::tree_assoc_options.
 template < class Key, class T, class Compare = std::less<Key>
-         , class A = std::allocator< std::pair< const Key, T> >, class MultiMapOptions = tree_assoc_defaults>
+         , class Allocator = new_allocator< std::pair< const Key, T> >, class MultiMapOptions = tree_assoc_defaults>
 #else
-template <class Key, class T, class Compare, class A, class MultiMapOptions>
+template <class Key, class T, class Compare, class Allocator, class MultiMapOptions>
 #endif
 class multimap
    ///@cond
    : public container_detail::tree
       < Key, std::pair<const Key, T>
       , container_detail::select1st< std::pair<const Key, T> >
-      , Compare, A, MultiMapOptions>
+      , Compare, Allocator, MultiMapOptions>
    ///@endcond
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -881,7 +887,7 @@ class multimap
 
    typedef std::pair<const Key, T>  value_type_impl;
    typedef container_detail::tree
-      <Key, value_type_impl, container_detail::select1st<value_type_impl>, Compare, A, MultiMapOptions> base_t;
+      <Key, value_type_impl, container_detail::select1st<value_type_impl>, Compare, Allocator, MultiMapOptions> base_t;
    typedef container_detail::pair <Key, T> movable_value_type_impl;
    typedef container_detail::tree_value_compare
       < Key, value_type_impl, Compare, container_detail::select1st<value_type_impl>
@@ -898,22 +904,22 @@ class multimap
    typedef Key                                                                      key_type;
    typedef T                                                                        mapped_type;
    typedef std::pair<const Key, T>                                                  value_type;
-   typedef typename boost::container::allocator_traits<A>::pointer          pointer;
-   typedef typename boost::container::allocator_traits<A>::const_pointer    const_pointer;
-   typedef typename boost::container::allocator_traits<A>::reference        reference;
-   typedef typename boost::container::allocator_traits<A>::const_reference  const_reference;
-   typedef typename boost::container::allocator_traits<A>::size_type        size_type;
-   typedef typename boost::container::allocator_traits<A>::difference_type  difference_type;
-   typedef A                                                                allocator_type;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)           stored_allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(value_compare_impl)                               value_compare;
+   typedef typename boost::container::allocator_traits<Allocator>::pointer          pointer;
+   typedef typename boost::container::allocator_traits<Allocator>::const_pointer    const_pointer;
+   typedef typename boost::container::allocator_traits<Allocator>::reference        reference;
+   typedef typename boost::container::allocator_traits<Allocator>::const_reference  const_reference;
+   typedef typename boost::container::allocator_traits<Allocator>::size_type        size_type;
+   typedef typename boost::container::allocator_traits<Allocator>::difference_type  difference_type;
+   typedef Allocator                                                                allocator_type;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::stored_allocator_type)           stored_allocator_type;
+   typedef BOOST_MOVE_IMPDEF(value_compare_impl)                               value_compare;
    typedef Compare                                                                  key_compare;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                        iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                  const_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                reverse_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)          const_reverse_iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::iterator)                        iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::const_iterator)                  const_iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::reverse_iterator)                reverse_iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::const_reverse_iterator)          const_reverse_iterator;
    typedef std::pair<key_type, mapped_type>                                         nonconst_value_type;
-   typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                          movable_value_type;
+   typedef BOOST_MOVE_IMPDEF(movable_value_type_impl)                          movable_value_type;
 
    //////////////////////////////////////////////
    //
@@ -928,7 +934,7 @@ class multimap
       : base_t()
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    //! <b>Effects</b>: Constructs an empty multimap using the specified allocator.
@@ -938,7 +944,7 @@ class multimap
       : base_t(comp, a)
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    //! <b>Effects</b>: Constructs an empty multimap using the specified comparison
@@ -949,7 +955,7 @@ class multimap
       : base_t(a)
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    //! <b>Effects</b>: Constructs an empty multimap using the specified comparison object
@@ -964,7 +970,7 @@ class multimap
       : base_t(false, first, last, comp, a)
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    //! <b>Effects</b>: Constructs an empty multimap using the specified comparison object and
@@ -993,7 +999,7 @@ class multimap
       : base_t(false, il.begin(), il.end(), comp, a)
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    multimap(ordered_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(),
@@ -1001,7 +1007,7 @@ class multimap
       : base_t(ordered_range, il.begin(), il.end(), comp, a)
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 #endif
 
@@ -1012,7 +1018,7 @@ class multimap
       : base_t(static_cast<const base_t&>(x))
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    //! <b>Effects</b>: Move constructs a multimap. Constructs *this using x's resources.
@@ -1024,7 +1030,7 @@ class multimap
       : base_t(BOOST_MOVE_BASE(base_t, x))
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    //! <b>Effects</b>: Copy constructs a multimap.
@@ -1034,7 +1040,7 @@ class multimap
       : base_t(static_cast<const base_t&>(x), a)
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    //! <b>Effects</b>: Move constructs a multimap using the specified allocator.
@@ -1046,7 +1052,7 @@ class multimap
       : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {
       //A type must be std::pair<CONST Key, T>
-      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename A::value_type>::value));
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
    //! <b>Effects</b>: Makes *this a copy of x.
@@ -1130,7 +1136,7 @@ class multimap
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-   #if defined(BOOST_CONTAINER_PERFECT_FORWARDING) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
    //!   std::forward<Args>(args)... in the container.
@@ -1142,7 +1148,7 @@ class multimap
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    template <class... Args>
-   iterator emplace(Args&&... args)
+   iterator emplace(BOOST_FWD_REF(Args)... args)
    {  return this->base_t::emplace_equal(boost::forward<Args>(args)...); }
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
@@ -1155,26 +1161,24 @@ class multimap
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    template <class... Args>
-   iterator emplace_hint(const_iterator p, Args&&... args)
+   iterator emplace_hint(const_iterator p, BOOST_FWD_REF(Args)... args)
    {  return this->base_t::emplace_hint_equal(p, boost::forward<Args>(args)...); }
 
-   #else //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
+   #else // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-   #define BOOST_PP_LOCAL_MACRO(n)                                                                 \
-   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)          \
-   iterator emplace(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_LIST, _))                            \
-   {  return this->base_t::emplace_equal(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)); } \
-                                                                                                   \
-   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)          \
-   iterator emplace_hint(const_iterator p                                                          \
-                         BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_LIST, _))              \
-   {  return this->base_t::emplace_hint_equal(p                                                    \
-                               BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _));}   \
-   //!
-   #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
-   #include BOOST_PP_LOCAL_ITERATE()
+   #define BOOST_CONTAINER_MULTIMAP_EMPLACE_CODE(N) \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   iterator emplace(BOOST_MOVE_UREF##N)\
+   {  return this->base_t::emplace_equal(BOOST_MOVE_FWD##N);   }\
+   \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   iterator emplace_hint(const_iterator hint BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {  return this->base_t::emplace_hint_equal(hint BOOST_MOVE_I##N BOOST_MOVE_FWD##N);  }\
+   //
+   BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_MULTIMAP_EMPLACE_CODE)
+   #undef BOOST_CONTAINER_MULTIMAP_EMPLACE_CODE
 
-   #endif   //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
+   #endif   // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    //! <b>Effects</b>: Inserts x and returns the iterator pointing to the
    //!   newly inserted element.
@@ -1388,10 +1392,13 @@ class multimap
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class K, class T, class C, class A>
-struct has_trivial_destructor_after_move<boost::container::multimap<K, T, C, A> >
+template <class Key, class T, class Compare, class Allocator>
+struct has_trivial_destructor_after_move<boost::container::multimap<Key, T, Compare, Allocator> >
 {
-   static const bool value = has_trivial_destructor_after_move<A>::value && has_trivial_destructor_after_move<C>::value;
+   typedef typename ::boost::container::allocator_traits<Allocator>::pointer pointer;
+   static const bool value = ::boost::has_trivial_destructor_after_move<Allocator>::value &&
+                             ::boost::has_trivial_destructor_after_move<pointer>::value &&
+                             ::boost::has_trivial_destructor_after_move<Compare>::value;
 };
 
 namespace container {

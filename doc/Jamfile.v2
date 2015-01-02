@@ -27,7 +27,7 @@ doxygen autodoc
         <doxygen:param>MACRO_EXPANSION=YES
         <doxygen:param>"PREDEFINED=\"insert_const_ref_type= const T&\" \\
                                    \"BOOST_CONTAINER_DOXYGEN_INVOKED\" \\
-                                   \"BOOST_CONTAINER_IMPDEF(T)=implementation_defined\" \\
+                                   \"BOOST_MOVE_IMPDEF(T)=implementation_defined\" \\
                                    \"BOOST_CONTAINER_SEEDOC(T)=see_documentation\" \\
                                    \"BOOST_CONTAINER_NOEXCEPT=noexcept\" \\
                                    \"BOOST_CONTAINER_NOEXCEPT_IF(T)=noexcept(T)\" \\
@@ -41,6 +41,8 @@ doxygen autodoc
                                    \"BOOST_CONTAINER_DOC1ST(T1, T2)=T1\" \\
                                    \"BOOST_CONTAINER_DOCIGN(T) \"\\
                                    \"BOOST_CONTAINER_DOCONLY(T) T\"\\
+                                   \"BOOST_CONTAINER_SCOPEDALLOC_DUMMYTRUE=\"\\
+                                   \"BOOST_CONTAINER_SCOPEDALLOC_ALLINNER=InnerAllocs...\"\\
                                    "
         <xsl:param>"boost.doxygen.reftitle=Boost.Container Header Reference"
    ;

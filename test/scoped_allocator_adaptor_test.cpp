@@ -9,7 +9,6 @@
 //////////////////////////////////////////////////////////////////////////////
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/scoped_allocator_fwd.hpp>
-#include <boost/container/detail/utilities.hpp>
 #include <cstddef>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/move/utility_core.hpp>
@@ -237,21 +236,22 @@ namespace container {
 template<unsigned int AllocatorTag>
 struct constructible_with_allocator_prefix
    < ::mark_on_scoped_allocation<ConstructiblePrefix, AllocatorTag> >
-   : ::boost::true_type
-{};
+{
+   static const bool value = true;
+};
 
 template<unsigned int AllocatorTag>
 struct constructible_with_allocator_suffix
    < ::mark_on_scoped_allocation<ConstructibleSuffix, AllocatorTag> >
-   : ::boost::true_type
-{};
+{
+   static const bool value = true;
+};
 
 }  //namespace container {
 }  //namespace boost {
 
 
 #include <boost/container/scoped_allocator.hpp>
-#include <boost/type_traits/is_same.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/detail/pair.hpp>

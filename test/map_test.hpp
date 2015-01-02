@@ -14,22 +14,22 @@
 #include <boost/container/detail/config_begin.hpp>
 #include "check_equal_containers.hpp"
 #include "print_container.hpp"
-#include <boost/container/detail/utilities.hpp>
 #include <boost/container/detail/pair.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/move/make_unique.hpp>
 
-#include <utility>      //std::pair
+#include <boost/intrusive/detail/minimal_pair_header.hpp>      //pair
 #include <string>
 #include <iostream>
 
-#include <boost/intrusive/detail/has_member_function_callable_with.hpp>
-#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_FUNCNAME rebalance
-#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_BEGIN namespace boost { namespace container { namespace test {
-#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_END   }}}
-#define BOOST_PP_ITERATION_PARAMS_1 (3, (0, 0, <boost/intrusive/detail/has_member_function_callable_with.hpp>))
-#include BOOST_PP_ITERATE()
+#include <boost/intrusive/detail/mpl.hpp>
+
+namespace boost { namespace container { namespace test {
+
+BOOST_INTRUSIVE_HAS_MEMBER_FUNC_CALLED(has_member_rebalance, rebalance)
+
+}}}
 
 template<class T1, class T2, class T3, class T4>
 bool operator ==(std::pair<T1, T2> &p1, std::pair<T1, T2> &p2)
@@ -534,13 +534,13 @@ int map_test()
             return 1;
 
          map_test_rebalanceable(boostmap
-            , container_detail::bool_<has_member_function_callable_with_rebalance<MyBoostMap>::value>());
+            , container_detail::bool_<has_member_rebalance<MyBoostMap>::value>());
          if(!CheckEqualContainers(boostmap, stdmap)){
             std::cout << "Error in boostmap.rebalance()" << std::endl;
             return 1;
          }
          map_test_rebalanceable(boostmultimap
-            , container_detail::bool_<has_member_function_callable_with_rebalance<MyBoostMultiMap>::value>());
+            , container_detail::bool_<has_member_rebalance<MyBoostMap>::value>());
          if(!CheckEqualContainers(boostmultimap, stdmultimap)){
             std::cout << "Error in boostmultimap.rebalance()" << std::endl;
             return 1;

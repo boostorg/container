@@ -25,29 +25,37 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
-#include <boost/container/container_fwd.hpp>
-#include <boost/assert.hpp>
-#include <boost/container/throw_exception.hpp>
-#include <boost/container/detail/allocator_version_traits.hpp>
-#include <boost/container/detail/utilities.hpp>
-#include <boost/container/detail/iterators.hpp>
-#include <boost/container/detail/construct_in_place.hpp>
-#include <boost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
+
+// container
 #include <boost/container/allocator_traits.hpp>
-#include <boost/container/detail/iterator.hpp>
+#include <boost/container/container_fwd.hpp>
+#include <boost/container/new_allocator.hpp> //new_allocator
 #include <boost/container/throw_exception.hpp>
+// container/detail
+#include <boost/container/detail/addressof.hpp>
+#include <boost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
+#include <boost/container/detail/alloc_helpers.hpp>
+#include <boost/container/detail/allocator_version_traits.hpp>
+#include <boost/container/detail/construct_in_place.hpp>
+#include <boost/container/detail/iterator.hpp>
+#include <boost/container/detail/iterators.hpp>
+#include <boost/container/detail/placement_new.hpp>
+#include <boost/container/detail/to_raw_pointer.hpp>
+#include <boost/container/detail/type_traits.hpp>
+// intrusive
 #include <boost/intrusive/pointer_traits.hpp>
-#include <boost/core/no_exceptions_support.hpp>
-#include <boost/aligned_storage.hpp>
+// intrusive/detail
+#include <boost/intrusive/detail/minimal_pair_header.hpp>   //pair
+// move
 #include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
-#include <boost/move/detail/move_helpers.hpp>
-#include <boost/container/detail/placement_new.hpp>
 #include <boost/move/adl_move_swap.hpp>
-
-
-#include <utility>   //std::pair
-#include <memory>
+// move/detail
+#include <boost/move/detail/move_helpers.hpp>
+// other
+#include <boost/assert.hpp>
+#include <boost/core/no_exceptions_support.hpp>
+// std
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
 #endif
@@ -407,16 +415,16 @@ class stable_vector_iterator
 //! operations provide stronger exception safety guarantees than in std::vector.
 //!
 //! \tparam T The type of object that is stored in the stable_vector
-//! \tparam A The allocator used for all internal memory management
+//! \tparam Allocator The allocator used for all internal memory management
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class T, class A = std::allocator<T> >
+template <class T, class Allocator = new_allocator<T> >
 #else
-template <class T, class A>
+template <class T, class Allocator>
 #endif
 class stable_vector
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   typedef allocator_traits<A>                allocator_traits_type;
+   typedef allocator_traits<Allocator>                allocator_traits_type;
    typedef boost::intrusive::
       pointer_traits
          <typename allocator_traits_type::pointer>    ptr_traits;
@@ -452,13 +460,9 @@ class stable_vector
    typedef typename node_ptr_traits::reference        node_reference;
    typedef typename const_node_ptr_traits::reference  const_node_reference;
 
-   typedef ::boost::container::container_detail::
-      integral_constant<unsigned, 1>                  allocator_v1;
-   typedef ::boost::container::container_detail::
-      integral_constant<unsigned, 2>                  allocator_v2;
    typedef ::boost::container::container_detail::integral_constant
       <unsigned, boost::container::container_detail::
-      version<A>::value>                              alloc_version;
+      version<Allocator>::value>                              alloc_version;
    typedef typename allocator_traits_type::
       template portable_rebind_alloc
          <node_type>::type                            node_allocator_type;
@@ -481,10 +485,10 @@ class stable_vector
 
    friend class stable_vector_detail::clear_on_destroy<stable_vector>;
    typedef stable_vector_iterator
-      < typename allocator_traits<A>::pointer
+      < typename allocator_traits<Allocator>::pointer
       , false>                                           iterator_impl;
    typedef stable_vector_iterator
-      < typename allocator_traits<A>::pointer
+      < typename allocator_traits<Allocator>::pointer
       , false>                                           const_iterator_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    public:
@@ -495,18 +499,18 @@ class stable_vector
    //
    //////////////////////////////////////////////
    typedef T                                                                           value_type;
-   typedef typename ::boost::container::allocator_traits<A>::pointer           pointer;
-   typedef typename ::boost::container::allocator_traits<A>::const_pointer     const_pointer;
-   typedef typename ::boost::container::allocator_traits<A>::reference         reference;
-   typedef typename ::boost::container::allocator_traits<A>::const_reference   const_reference;
-   typedef typename ::boost::container::allocator_traits<A>::size_type         size_type;
-   typedef typename ::boost::container::allocator_traits<A>::difference_type   difference_type;
-   typedef A                                                                   allocator_type;
+   typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
+   typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
+   typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
+   typedef typename ::boost::container::allocator_traits<Allocator>::const_reference   const_reference;
+   typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
+   typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
+   typedef Allocator                                                                   allocator_type;
    typedef node_allocator_type                                                         stored_allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                                       iterator;
-   typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                                 const_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
+   typedef BOOST_MOVE_IMPDEF(iterator_impl)                                       iterator;
+   typedef BOOST_MOVE_IMPDEF(const_iterator_impl)                                 const_iterator;
+   typedef BOOST_MOVE_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
+   typedef BOOST_MOVE_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
@@ -1315,7 +1319,7 @@ class stable_vector
    //
    //////////////////////////////////////////////
 
-   #if defined(BOOST_CONTAINER_PERFECT_FORWARDING) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
    //!   std::forward<Args>(args)... in the end of the stable_vector.
@@ -1354,40 +1358,33 @@ class stable_vector
 
    #else
 
-   #define BOOST_PP_LOCAL_MACRO(n)                                                              \
-   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)       \
-   void emplace_back(BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_LIST, _))                        \
-   {                                                                                            \
-      typedef BOOST_PP_CAT(BOOST_PP_CAT(emplace_functor, n), arg)                               \
-         BOOST_PP_EXPR_IF(n, <) BOOST_PP_ENUM_PARAMS(n, P) BOOST_PP_EXPR_IF(n, >)               \
-            EmplaceFunctor;                                                                     \
-      typedef emplace_iterator<value_type, EmplaceFunctor, difference_type>  EmplaceIterator;   \
-      EmplaceFunctor ef BOOST_PP_LPAREN_IF(n)                                                   \
-                        BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)                   \
-                        BOOST_PP_RPAREN_IF(n);                                                  \
-      this->insert(this->cend() , EmplaceIterator(ef), EmplaceIterator());                      \
-   }                                                                                            \
-                                                                                                \
-   BOOST_PP_EXPR_IF(n, template<) BOOST_PP_ENUM_PARAMS(n, class P) BOOST_PP_EXPR_IF(n, >)       \
-   iterator emplace(const_iterator p                                                            \
-           BOOST_PP_ENUM_TRAILING(n, BOOST_CONTAINER_PP_PARAM_LIST, _))                         \
-   {                                                                                            \
-      typedef BOOST_PP_CAT(BOOST_PP_CAT(emplace_functor, n), arg)                               \
-         BOOST_PP_EXPR_IF(n, <) BOOST_PP_ENUM_PARAMS(n, P) BOOST_PP_EXPR_IF(n, >)               \
-            EmplaceFunctor;                                                                     \
-      typedef emplace_iterator<value_type, EmplaceFunctor, difference_type>  EmplaceIterator;   \
-      EmplaceFunctor ef BOOST_PP_LPAREN_IF(n)                                                   \
-                        BOOST_PP_ENUM(n, BOOST_CONTAINER_PP_PARAM_FORWARD, _)                   \
-                        BOOST_PP_RPAREN_IF(n);                                                  \
-      size_type pos_n = p - this->cbegin();                                                     \
-      this->insert(p, EmplaceIterator(ef), EmplaceIterator());                                  \
-      return iterator(this->begin() + pos_n);                                                   \
-   }                                                                                            \
-   //!
-   #define BOOST_PP_LOCAL_LIMITS (0, BOOST_CONTAINER_MAX_CONSTRUCTOR_PARAMETERS)
-   #include BOOST_PP_LOCAL_ITERATE()
+   #define BOOST_CONTAINER_STABLE_VECTOR_EMPLACE_CODE(N) \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   void emplace_back(BOOST_MOVE_UREF##N)\
+   {\
+      typedef emplace_functor##N\
+         BOOST_MOVE_LT##N BOOST_MOVE_TARG##N BOOST_MOVE_GT##N EmplaceFunctor;\
+      typedef emplace_iterator<value_type, EmplaceFunctor, difference_type>  EmplaceIterator;\
+      EmplaceFunctor ef BOOST_MOVE_LP##N BOOST_MOVE_FWD##N BOOST_MOVE_RP##N;\
+      this->insert(this->cend() , EmplaceIterator(ef), EmplaceIterator());\
+   }\
+   \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   iterator emplace(const_iterator p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {\
+      typedef emplace_functor##N\
+         BOOST_MOVE_LT##N BOOST_MOVE_TARG##N BOOST_MOVE_GT##N EmplaceFunctor;\
+      typedef emplace_iterator<value_type, EmplaceFunctor, difference_type>  EmplaceIterator;\
+      EmplaceFunctor ef BOOST_MOVE_LP##N BOOST_MOVE_FWD##N BOOST_MOVE_RP##N;\
+      const size_type pos_n = p - this->cbegin();\
+      this->insert(p, EmplaceIterator(ef), EmplaceIterator());\
+      return this->begin() += pos_n;\
+   }\
+   //
+   BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_STABLE_VECTOR_EMPLACE_CODE)
+   #undef BOOST_CONTAINER_STABLE_VECTOR_EMPLACE_CODE
 
-   #endif   //#ifdef BOOST_CONTAINER_PERFECT_FORWARDING
+   #endif   // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //! <b>Effects</b>: Inserts a copy of x at the end of the stable_vector.
@@ -1997,20 +1994,23 @@ class stable_vector
 
 #undef STABLE_VECTOR_CHECK_INVARIANT
 
-#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-
-/*
+}  //namespace container {
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class T, class A>
-struct has_trivial_destructor_after_move<boost::container::stable_vector<T, A> >
-   : public has_trivial_destructor_after_move<A>::value
-{};
+template <class T, class Allocator>
+struct has_trivial_destructor_after_move<boost::container::stable_vector<T, Allocator> >
+{
+   typedef typename ::boost::container::allocator_traits<Allocator>::pointer pointer;
+   static const bool value = ::boost::has_trivial_destructor_after_move<Allocator>::value &&
+                             ::boost::has_trivial_destructor_after_move<pointer>::value;
+};
 
-*/
+namespace container {
 
-}}
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
+}} //namespace boost{  namespace container {
 
 #include <boost/container/detail/config_end.hpp>
 
