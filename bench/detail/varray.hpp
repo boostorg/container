@@ -878,9 +878,7 @@ public:
     template <typename Iterator>
     iterator insert(iterator position, Iterator first, Iterator last)
     {
-        typedef typename boost::container::iterator_traits<Iterator>::iterator_category category;
-        this->insert_dispatch(position, first, last, category());
-
+        this->insert_dispatch(position, first, last);
         return position;
     }
 
@@ -961,8 +959,7 @@ public:
     template <typename Iterator>
     void assign(Iterator first, Iterator last)
     {
-        typedef typename boost::container::iterator_traits<Iterator>::iterator_category category;
-        this->assign_dispatch(first, last, category());                            // may throw
+        this->assign_dispatch(first, last);                            // may throw
     }
 
     //! @pre <tt>count <= capacity()</tt>
@@ -1698,7 +1695,8 @@ private:
     // @par Complexity
     //   Linear O(N).
     template <typename Iterator>
-    void insert_dispatch(iterator position, Iterator first, Iterator last, std::random_access_iterator_tag)
+    typename iterator_enable_if_tag<Iterator, std::random_access_iterator_tag>::type
+       insert_dispatch(iterator position, Iterator first, Iterator last)
     {
         errh::check_iterator_end_eq(*this, position);
 
@@ -1725,7 +1723,8 @@ private:
     // @par Complexity
     //   Linear O(N).
     template <typename Iterator, typename Category>
-    void insert_dispatch(iterator position, Iterator first, Iterator last, Category const& /*not_random_access*/)
+    typename iterator_disable_if_tag<Iterator, std::random_access_iterator_tag>::type
+        insert_dispatch(iterator position, Iterator first, Iterator last)
     {
         errh::check_iterator_end_eq(*this, position);
 
@@ -1791,7 +1790,8 @@ private:
     // @par Complexity
     //   Linear O(N).
     template <typename Iterator>
-    void assign_dispatch(Iterator first, Iterator last, std::random_access_iterator_tag const& /*not_random_access*/)
+    typename iterator_enable_if_tag<Iterator, std::random_access_iterator_tag>::type
+       assign_dispatch(Iterator first, Iterator last)
     {
         namespace sv = varray_detail;
 
@@ -1818,7 +1818,8 @@ private:
     // @par Complexity
     //   Linear O(N).
     template <typename Iterator, typename Category>
-    void assign_dispatch(Iterator first, Iterator last, Category const& /*not_random_access*/)
+    typename iterator_disable_if_tag<Iterator, std::random_access_iterator_tag>::type
+       assign_dispatch(Iterator first, Iterator last)
     {
         namespace sv = varray_detail;
 

@@ -605,8 +605,7 @@ class deque : protected deque_base<Allocator>
       )
       : Base(a)
    {
-      typedef typename boost::container::iterator_traits<InIt>::iterator_category ItCat;
-      this->priv_range_initialize(first, last, ItCat());
+      this->priv_range_initialize(first, last);
    }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -620,7 +619,7 @@ class deque : protected deque_base<Allocator>
    deque(std::initializer_list<value_type> il, const allocator_type& a = allocator_type())
       : Base(a)
    {
-      this->priv_range_initialize(il.begin(), il.end(), std::input_iterator_tag());
+      this->priv_range_initialize(il.begin(), il.end());
    }
 #endif
 
@@ -1951,7 +1950,8 @@ class deque : protected deque_base<Allocator>
    }
 
    template <class InIt>
-   void priv_range_initialize(InIt first, InIt last, std::input_iterator_tag)
+   typename iterator_enable_if_tag<InIt, std::input_iterator_tag>::type
+      priv_range_initialize(InIt first, InIt last)
    {
       this->priv_initialize_map(0);
       BOOST_TRY {
@@ -1966,7 +1966,8 @@ class deque : protected deque_base<Allocator>
    }
 
    template <class FwdIt>
-   void priv_range_initialize(FwdIt first, FwdIt last, std::forward_iterator_tag)
+   typename iterator_disable_if_tag<FwdIt, std::input_iterator_tag>::type
+      priv_range_initialize(FwdIt first, FwdIt last)
    {
       size_type n = 0;
       n = boost::container::iterator_distance(first, last);
