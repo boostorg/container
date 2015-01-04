@@ -542,14 +542,14 @@ void construct(DisableTrivialInit const&,
 // which means that version with one parameter may take V const& v
 
 #define BOOST_CONTAINER_VARRAY_UTIL_CONSTRUCT_CODE(N) \
-template <typename DisableTrivialInit, typename I BOOST_MOVE_I##N BOOST_MOVE_CLASS##N >\
-inline void construct(DisableTrivialInit const&, I pos BOOST_MOVE_I##N BOOST_MOVE_UREF##N )\
+template <typename DisableTrivialInit, typename I, typename P BOOST_MOVE_I##N BOOST_MOVE_CLASS##N >\
+inline void construct(DisableTrivialInit const&, I pos, BOOST_FWD_REF(P) p BOOST_MOVE_I##N BOOST_MOVE_UREF##N )\
 {\
     typedef typename ::boost::container::iterator_traits<I>::value_type V;\
     new (static_cast<void*>(boost::container::container_detail::addressof(*pos)))\
-    V(boost::container::container_detail::addressof(*pos) BOOST_MOVE_I##N BOOST_MOVE_FWD##N); /*may throw*/\
+    V(::boost::forward<P>(p) BOOST_MOVE_I##N BOOST_MOVE_FWD##N); /*may throw*/\
 }
-BOOST_MOVE_ITERATE_2TO9(BOOST_CONTAINER_VARRAY_UTIL_CONSTRUCT_CODE)
+BOOST_MOVE_ITERATE_1TO9(BOOST_CONTAINER_VARRAY_UTIL_CONSTRUCT_CODE)
 #undef BOOST_CONTAINER_VARRAY_UTIL_CONSTRUCT_CODE
 
 #endif // !BOOST_NO_CXX11_VARIADIC_TEMPLATES
