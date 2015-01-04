@@ -243,6 +243,9 @@
 					RelativePath="..\..\..\..\boost\container\detail\math_functions.hpp">
 				</File>
 				<File
+					RelativePath="..\..\..\..\boost\container\detail\minimal_char_traits_header.hpp">
+				</File>
+				<File
 					RelativePath="..\..\..\..\boost\container\detail\mpl.hpp">
 				</File>
 				<File

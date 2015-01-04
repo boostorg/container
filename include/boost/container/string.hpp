@@ -39,14 +39,12 @@
 #include <boost/static_assert.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/core/no_exceptions_support.hpp>
-
-
+#include <boost/container/detail/minimal_char_traits_header.hpp>
 #include <boost/functional/hash.hpp>
 
 
 #include <algorithm>
 #include <functional>   //bind2nd, etc.
-#include <string>
 #include <iosfwd>
 #include <istream>
 #include <ostream>
