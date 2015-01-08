@@ -22,7 +22,6 @@
 #include <boost/container/detail/pool_common_alloc.hpp>
 #include <boost/container/detail/node_pool_impl.hpp>
 #include <boost/container/detail/mutex.hpp>
-#include <boost/intrusive/slist.hpp>
 #include <boost/move/utility_core.hpp>
 #include <cstddef>
 #include <cassert>
