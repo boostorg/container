@@ -1638,12 +1638,18 @@ namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
-//Ummm, I don't like to define things in namespace std, but
-//there is no other way
-namespace std {
+#if defined(__clang__) && defined(_LIBCPP_VERSION)
+   #define BOOST_CONTAINER_CLANG_INLINE_STD_NS
+   #pragma GCC diagnostic push
+   #pragma GCC diagnostic ignored "-Wc++11-extensions"
+   #define BOOST_CONTAINER_STD_NS_BEG _LIBCPP_BEGIN_NAMESPACE_STD
+   #define BOOST_CONTAINER_STD_NS_END _LIBCPP_END_NAMESPACE_STD
+#else
+   #define BOOST_CONTAINER_STD_NS_BEG namespace std{
+   #define BOOST_CONTAINER_STD_NS_END }
+#endif
 
-template <class T>
-class insert_iterator;
+BOOST_CONTAINER_STD_NS_BEG
 
 template <class T, class Allocator>
 class insert_iterator<boost::container::slist<T, Allocator> >
@@ -1676,7 +1682,12 @@ class insert_iterator<boost::container::slist<T, Allocator> >
    insert_iterator<Container>& operator++(int){ return *this; }
 };
 
-}  //namespace std;
+BOOST_CONTAINER_STD_NS_END
+
+#ifdef BOOST_CONTAINER_CLANG_INLINE_STD_NS
+   #pragma GCC diagnostic pop
+   #undef BOOST_CONTAINER_CLANG_INLINE_STD_NS
+#endif   //BOOST_CONTAINER_CLANG_INLINE_STD_NS
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
