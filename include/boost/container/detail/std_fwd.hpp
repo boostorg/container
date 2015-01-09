@@ -49,6 +49,9 @@ struct forward_iterator_tag;
 struct bidirectional_iterator_tag;
 struct random_access_iterator_tag;
 
+template<class Container>
+class insert_iterator;
+
 BOOST_CONTAINER_STD_NS_END
 
 #ifdef BOOST_CONTAINER_CLANG_INLINE_STD_NS
