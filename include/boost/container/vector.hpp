@@ -233,7 +233,7 @@ template <class T>
 struct vector_value_traits_base
 {
    static const bool trivial_dctr = is_trivially_destructible<T>::value;
-   static const bool trivial_dctr_after_move = trivial_dctr;//has_trivial_destructor_after_move<T>::value;
+   static const bool trivial_dctr_after_move = has_trivial_destructor_after_move<T>::value;
    static const bool trivial_copy = is_trivially_copy_constructible<T>::value;
    static const bool nothrow_copy = is_nothrow_copy_constructible<T>::value || trivial_copy;
    static const bool trivial_assign = is_trivially_copy_assignable<T>::value;
