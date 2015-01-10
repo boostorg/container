@@ -11,7 +11,7 @@
 #ifndef BOOST_CONTAINER_DETAIL_ADAPTIVE_NODE_POOL_HPP
 #define BOOST_CONTAINER_DETAIL_ADAPTIVE_NODE_POOL_HPP
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 

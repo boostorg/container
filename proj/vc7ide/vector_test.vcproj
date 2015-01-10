@@ -21,7 +21,6 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="../../../.."
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
-				GeneratePreprocessedFile="0"
 				MinimalRebuild="TRUE"
 				ExceptionHandling="TRUE"
 				BasicRuntimeChecks="3"

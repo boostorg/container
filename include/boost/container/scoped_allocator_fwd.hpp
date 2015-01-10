@@ -15,7 +15,7 @@
 //! This header file forward declares boost::container::scoped_allocator_adaptor
 //! and defines the following types:
 
-#if defined(_MSC_VER)
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 

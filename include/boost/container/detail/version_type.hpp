@@ -16,7 +16,7 @@
 #ifndef BOOST_CONTAINER_DETAIL_VERSION_TYPE_HPP
 #define BOOST_CONTAINER_DETAIL_VERSION_TYPE_HPP
 
-#if defined(_MSC_VER)
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 

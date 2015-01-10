@@ -11,7 +11,7 @@
 #ifndef BOOST_CONTAINER_DETAIL_POOL_COMMON_ALLOC_HPP
 #define BOOST_CONTAINER_DETAIL_POOL_COMMON_ALLOC_HPP
 
-#if defined(_MSC_VER)
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
