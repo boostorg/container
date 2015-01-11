@@ -9,11 +9,15 @@
 //////////////////////////////////////////////////////////////////////////////
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/scoped_allocator_fwd.hpp>
-#include <cstddef>
+
+// container/detail
 #include <boost/container/detail/mpl.hpp>
+// move
 #include <boost/move/utility_core.hpp>
 #include <boost/move/adl_move_swap.hpp>
+// std
 #include <memory>
+#include <cstddef>
 
 using namespace boost::container;
 
@@ -113,6 +117,7 @@ struct mark_on_destructor
 enum ConstructionTypeEnum
 {
    ConstructiblePrefix,
+   ConstructibleStdPrefix,
    ConstructibleSuffix,
    NotUsesAllocator
 };
@@ -133,6 +138,8 @@ struct uses_allocator_base<ConstructibleSuffix, AllocatorTag>
    typedef allocator_type allocator_constructor_type;
    struct nat{};
    typedef nat allocator_arg_type;
+   struct nat2{};
+   typedef nat2 std_allocator_arg_type;
 };
 
 template<unsigned int AllocatorTag>
@@ -141,6 +148,18 @@ struct uses_allocator_base<ConstructiblePrefix, AllocatorTag>
    typedef test_allocator<int, AllocatorTag> allocator_type;
    typedef allocator_type allocator_constructor_type;
    typedef allocator_arg_t allocator_arg_type;
+   struct nat{};
+   typedef nat std_allocator_arg_type;
+};
+
+template<unsigned int AllocatorTag>
+struct uses_allocator_base<ConstructibleStdPrefix, AllocatorTag>
+{
+   typedef test_allocator<int, AllocatorTag> allocator_type;
+   typedef allocator_type allocator_constructor_type;
+   struct nat{};
+   typedef nat allocator_arg_type;
+   typedef const std::allocator_arg_t& std_allocator_arg_type;
 };
 
 template<unsigned int AllocatorTag>
@@ -149,6 +168,8 @@ struct uses_allocator_base<NotUsesAllocator, AllocatorTag>
    struct nat{};
    typedef nat allocator_constructor_type;
    typedef nat allocator_arg_type;
+   struct nat2{};
+   typedef nat2 std_allocator_arg_type;
 };
 
 template<ConstructionTypeEnum ConstructionType, unsigned int AllocatorTag>
@@ -177,6 +198,11 @@ struct mark_on_scoped_allocation
       : construction_type(ConstructiblePrefix), value(0)
    {}
 
+   explicit mark_on_scoped_allocation
+      (typename base_type::std_allocator_arg_type, typename base_type::allocator_constructor_type)
+      : construction_type(ConstructibleStdPrefix), value(0)
+   {}
+
    //1 user argument constructors
    explicit mark_on_scoped_allocation(int i)
       : construction_type(NotUsesAllocator), value(i)
@@ -192,6 +218,13 @@ struct mark_on_scoped_allocation
       , typename base_type::allocator_constructor_type
       , int i)
       : construction_type(ConstructiblePrefix), value(i)
+   {}
+
+   mark_on_scoped_allocation
+      ( typename base_type::std_allocator_arg_type
+      , typename base_type::allocator_constructor_type
+      , int i)
+      : construction_type(ConstructibleStdPrefix), value(i)
    {}
 
    //Copy constructors
@@ -210,6 +243,12 @@ struct mark_on_scoped_allocation
       : construction_type(ConstructiblePrefix), value(other.value)
    {}
 
+   mark_on_scoped_allocation( typename base_type::std_allocator_arg_type
+                            , typename base_type::allocator_constructor_type
+                            , const mark_on_scoped_allocation &other)
+      : construction_type(ConstructibleStdPrefix), value(other.value)
+   {}
+
    //Move constructors
    mark_on_scoped_allocation(BOOST_RV_REF(mark_on_scoped_allocation) other)
       : construction_type(NotUsesAllocator), value(other.value)
@@ -226,6 +265,12 @@ struct mark_on_scoped_allocation
       : construction_type(ConstructiblePrefix), value(other.value)
    {  other.value = 0;  other.construction_type = ConstructiblePrefix;  }
 
+   mark_on_scoped_allocation( typename base_type::std_allocator_arg_type
+                            , typename base_type::allocator_constructor_type
+                            , BOOST_RV_REF(mark_on_scoped_allocation) other)
+      : construction_type(ConstructibleStdPrefix), value(other.value)
+   {  other.value = 0;  other.construction_type = ConstructibleStdPrefix;  }
+
    ConstructionTypeEnum construction_type;
    int                  value;
 };
@@ -236,6 +281,13 @@ namespace container {
 template<unsigned int AllocatorTag>
 struct constructible_with_allocator_prefix
    < ::mark_on_scoped_allocation<ConstructiblePrefix, AllocatorTag> >
+{
+   static const bool value = true;
+};
+
+template<unsigned int AllocatorTag>
+struct constructible_with_std_allocator_prefix
+   < ::mark_on_scoped_allocation<ConstructibleStdPrefix, AllocatorTag> >
 {
    static const bool value = true;
 };
@@ -768,11 +820,17 @@ int main()
                               , test_allocator<float, 0>
                               >::value ));
       BOOST_STATIC_ASSERT((  boost::container::uses_allocator
+                              < ::mark_on_scoped_allocation<ConstructibleStdPrefix, 0>
+                              , test_allocator<float, 0>
+                              >::value ));
+      BOOST_STATIC_ASSERT((  boost::container::uses_allocator
                               < ::mark_on_scoped_allocation<ConstructibleSuffix, 0>
                               , test_allocator<float, 0>
                               >::value ));
       BOOST_STATIC_ASSERT(( boost::container::constructible_with_allocator_prefix
                           < ::mark_on_scoped_allocation<ConstructiblePrefix, 0> >::value ));
+      BOOST_STATIC_ASSERT(( boost::container::constructible_with_std_allocator_prefix
+                          < ::mark_on_scoped_allocation<ConstructibleStdPrefix, 0> >::value ));
       BOOST_STATIC_ASSERT(( boost::container::constructible_with_allocator_suffix
                           < ::mark_on_scoped_allocation<ConstructibleSuffix, 0> >::value ));
 
@@ -820,6 +878,18 @@ int main()
             }
             dummy.~MarkType();
          }
+         {
+            typedef ::mark_on_scoped_allocation<ConstructibleStdPrefix, 0> MarkType;
+            MarkType dummy;
+            dummy.~MarkType();
+            s0i.construct(&dummy);
+            if(dummy.construction_type != ConstructibleStdPrefix ||
+               dummy.value != 0){
+               dummy.~MarkType();
+               return 1;
+            }
+            dummy.~MarkType();
+         }
 
          //Check construction with 1 user arguments
          {
@@ -852,6 +922,18 @@ int main()
             dummy.~MarkType();
             s0i.construct(&dummy, 3);
             if(dummy.construction_type != ConstructiblePrefix ||
+               dummy.value != 3){
+               dummy.~MarkType();
+               return 1;
+            }
+            dummy.~MarkType();
+         }
+         {
+            typedef ::mark_on_scoped_allocation<ConstructibleStdPrefix, 0> MarkType;
+            MarkType dummy;
+            dummy.~MarkType();
+            s0i.construct(&dummy, 3);
+            if(dummy.construction_type != ConstructibleStdPrefix ||
                dummy.value != 3){
                dummy.~MarkType();
                return 1;
@@ -903,6 +985,18 @@ int main()
             }
             dummy.~MarkType();
          }
+         {
+            typedef ::mark_on_scoped_allocation<ConstructibleStdPrefix, 1> MarkType;
+            MarkType dummy;
+            dummy.~MarkType();
+            s1i.construct(&dummy);
+            if(dummy.construction_type != ConstructibleStdPrefix ||
+               dummy.value != 0){
+               dummy.~MarkType();
+               return 1;
+            }
+            dummy.~MarkType();
+         }
 
          //Check construction with 1 user arguments
          {
@@ -935,6 +1029,18 @@ int main()
             dummy.~MarkType();
             s1i.construct(&dummy, 3);
             if(dummy.construction_type != ConstructiblePrefix ||
+               dummy.value != 3){
+               dummy.~MarkType();
+               return 1;
+            }
+            dummy.~MarkType();
+         }
+         {
+            typedef ::mark_on_scoped_allocation<ConstructibleStdPrefix, 1> MarkType;
+            MarkType dummy;
+            dummy.~MarkType();
+            s1i.construct(&dummy, 3);
+            if(dummy.construction_type != ConstructibleStdPrefix ||
                dummy.value != 3){
                dummy.~MarkType();
                return 1;
@@ -1008,6 +1114,18 @@ int main()
             }
             dummy.~MarkType();
          }
+         {
+            typedef ::mark_on_scoped_allocation<ConstructibleStdPrefix, 10> MarkType;
+            MarkType dummy;
+            dummy.~MarkType();
+            ssro0i.construct(&dummy);
+            if(dummy.construction_type != ConstructibleStdPrefix ||
+               dummy.value != 0){
+               dummy.~MarkType();
+               return 1;
+            }
+            dummy.~MarkType();
+         }
 
          //Check construction with 1 user arguments
          {
@@ -1040,6 +1158,18 @@ int main()
             dummy.~MarkType();
             ssro0i.construct(&dummy, 3);
             if(dummy.construction_type != ConstructiblePrefix ||
+               dummy.value != 3){
+               dummy.~MarkType();
+               return 1;
+            }
+            dummy.~MarkType();
+         }
+         {
+            typedef ::mark_on_scoped_allocation<ConstructibleStdPrefix, 10> MarkType;
+            MarkType dummy;
+            dummy.~MarkType();
+            ssro0i.construct(&dummy, 3);
+            if(dummy.construction_type != ConstructibleStdPrefix ||
                dummy.value != 3){
                dummy.~MarkType();
                return 1;
@@ -1115,6 +1245,18 @@ int main()
             }
             dummy.~MarkType();
          }
+         {
+            typedef ::mark_on_scoped_allocation<ConstructibleStdPrefix, 10> MarkType;
+            MarkType dummy;
+            dummy.~MarkType();
+            ssro1i.construct(&dummy);
+            if(dummy.construction_type != NotUsesAllocator ||
+               dummy.value != 0){
+               dummy.~MarkType();
+               return 1;
+            }
+            dummy.~MarkType();
+         }
 
          //Check construction with 1 user arguments
          {
@@ -1143,6 +1285,18 @@ int main()
          }
          {
             typedef ::mark_on_scoped_allocation<ConstructiblePrefix, 10> MarkType;
+            MarkType dummy;
+            dummy.~MarkType();
+            ssro1i.construct(&dummy, 3);
+            if(dummy.construction_type != NotUsesAllocator ||
+               dummy.value != 3){
+               dummy.~MarkType();
+               return 1;
+            }
+            dummy.~MarkType();
+         }
+         {
+            typedef ::mark_on_scoped_allocation<ConstructibleStdPrefix, 10> MarkType;
             MarkType dummy;
             dummy.~MarkType();
             ssro1i.construct(&dummy, 3);
@@ -1216,6 +1370,21 @@ int main()
             }
             dummy.~MarkTypePair();
          }
+         {
+            typedef ::mark_on_scoped_allocation<ConstructibleStdPrefix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy);
+            if(dummy.first.construction_type  != ConstructibleStdPrefix ||
+               dummy.second.construction_type != ConstructibleStdPrefix ||
+               dummy.first.value  != 0  ||
+               dummy.second.value != 0 ){
+               dummy.~MarkTypePair();
+               return 1;
+            }
+            dummy.~MarkTypePair();
+         }
 
          //Check construction with 1 user arguments for each pair
          {
@@ -1263,6 +1432,21 @@ int main()
             }
             dummy.~MarkTypePair();
          }
+         {
+            typedef ::mark_on_scoped_allocation<ConstructibleStdPrefix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, 2, 2);
+            if(dummy.first.construction_type  != ConstructibleStdPrefix ||
+               dummy.second.construction_type != ConstructibleStdPrefix ||
+               dummy.first.value  != 2 ||
+               dummy.second.value != 2 ){
+               dummy.~MarkTypePair();
+               return 1;
+            }
+            dummy.~MarkTypePair();
+         }
          //Check construction with pair copy construction
          {
             typedef ::mark_on_scoped_allocation<NotUsesAllocator, 0> MarkType;
@@ -1302,6 +1486,21 @@ int main()
             s0i.construct(&dummy, dummy2);
             if(dummy.first.construction_type  != ConstructiblePrefix ||
                dummy.second.construction_type != ConstructiblePrefix ||
+               dummy.first.value  != 2 ||
+               dummy.second.value != 2 ){
+               dummy.~MarkTypePair();
+               return 1;
+            }
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::mark_on_scoped_allocation<ConstructibleStdPrefix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy, dummy2(2, 2);
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, dummy2);
+            if(dummy.first.construction_type  != ConstructibleStdPrefix ||
+               dummy.second.construction_type != ConstructibleStdPrefix ||
                dummy.first.value  != 2 ||
                dummy.second.value != 2 ){
                dummy.~MarkTypePair();
@@ -1368,6 +1567,25 @@ int main()
             }
             dummy.~MarkTypePair();
          }
+         {
+            typedef ::mark_on_scoped_allocation<ConstructibleStdPrefix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy, dummy2(2, 2);
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, ::boost::move(dummy2));
+            if(dummy.first.construction_type  != ConstructibleStdPrefix ||
+               dummy.second.construction_type != ConstructibleStdPrefix ||
+               dummy.first.value  != 2 ||
+               dummy.second.value != 2 ||
+               dummy2.first.construction_type  != ConstructibleStdPrefix ||
+               dummy2.second.construction_type != ConstructibleStdPrefix ||
+               dummy2.first.value  != 0 ||
+               dummy2.second.value != 0 ){
+               dummy2.~MarkTypePair();
+               return 1;
+            }
+            dummy.~MarkTypePair();
+         }
          //Check construction with related pair copy construction
          {
             typedef ::mark_on_scoped_allocation<NotUsesAllocator, 0> MarkType;
@@ -1417,6 +1635,22 @@ int main()
             }
             dummy.~MarkTypePair();
          }
+         {
+            typedef ::mark_on_scoped_allocation<ConstructibleStdPrefix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            pair<int, int> dummy2(2, 2);
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, dummy2);
+            if(dummy.first.construction_type  != ConstructibleStdPrefix ||
+               dummy.second.construction_type != ConstructibleStdPrefix ||
+               dummy.first.value  != 2 ||
+               dummy.second.value != 2 ){
+               dummy.~MarkTypePair();
+               return 1;
+            }
+            dummy.~MarkTypePair();
+         }
          //Check construction with related pair move construction
          {
             typedef ::mark_on_scoped_allocation<NotUsesAllocator, 0> MarkType;
@@ -1459,6 +1693,22 @@ int main()
             s0i.construct(&dummy, ::boost::move(dummy2));
             if(dummy.first.construction_type  != ConstructiblePrefix ||
                dummy.second.construction_type != ConstructiblePrefix ||
+               dummy.first.value  != 2 ||
+               dummy.second.value != 2 ){
+               dummy.~MarkTypePair();
+               return 1;
+            }
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::mark_on_scoped_allocation<ConstructibleStdPrefix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            pair<int, int> dummy2(2, 2);
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, ::boost::move(dummy2));
+            if(dummy.first.construction_type  != ConstructibleStdPrefix ||
+               dummy.second.construction_type != ConstructibleStdPrefix ||
                dummy.first.value  != 2 ||
                dummy.second.value != 2 ){
                dummy.~MarkTypePair();

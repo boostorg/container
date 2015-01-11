@@ -21,6 +21,7 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
+#include <boost/container/detail/std_fwd.hpp>
 
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #include <boost/move/detail/fwd_macros.hpp>
@@ -72,6 +73,9 @@ struct constructible_with_allocator_suffix;
 
 template <class T>
 struct constructible_with_allocator_prefix;
+
+template <class T>
+struct constructible_with_std_allocator_prefix;
 
 template <typename T, typename Allocator>
 struct uses_allocator;

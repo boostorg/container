@@ -52,6 +52,8 @@ struct random_access_iterator_tag;
 template<class Container>
 class insert_iterator;
 
+struct allocator_arg_t;
+
 BOOST_CONTAINER_STD_NS_END
 
 #ifdef BOOST_CONTAINER_CLANG_INLINE_STD_NS

@@ -385,6 +385,9 @@ struct allocator_traits
 
          private:
 
+         //////////////////
+         // priv_construct
+         //////////////////
          #define BOOST_CONTAINER_ALLOCATOR_TRAITS_PRIV_CONSTRUCT_IMPL(N) \
          template<class T BOOST_MOVE_I##N BOOST_MOVE_CLASS##N >\
          static void priv_construct(container_detail::false_type, Allocator &a, T *p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
@@ -398,7 +401,14 @@ struct allocator_traits
          template<class T BOOST_MOVE_I##N BOOST_MOVE_CLASS##N >\
          static void priv_construct(container_detail::true_type, Allocator &a, T *p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
          {  (priv_construct_dispatch_next)(container_detail::false_type(), a, p BOOST_MOVE_I##N BOOST_MOVE_FWD##N); }\
-         \
+         //
+         BOOST_MOVE_ITERATE_0TO8(BOOST_CONTAINER_ALLOCATOR_TRAITS_PRIV_CONSTRUCT_IMPL)
+         #undef BOOST_CONTAINER_ALLOCATOR_TRAITS_PRIV_CONSTRUCT_IMPL
+
+         /////////////////////////////////
+         // priv_construct_dispatch_next
+         /////////////////////////////////
+         #define BOOST_CONTAINER_ALLOCATOR_TRAITS_PRIV_CONSTRUCT_DISPATCH_NEXT_IMPL(N) \
          template<class T BOOST_MOVE_I##N BOOST_MOVE_CLASS##N >\
          static void priv_construct_dispatch_next(container_detail::true_type, Allocator &a, T *p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
          {  a.construct( p BOOST_MOVE_I##N BOOST_MOVE_FWD##N );  }\
@@ -407,8 +417,9 @@ struct allocator_traits
          static void priv_construct_dispatch_next(container_detail::false_type, Allocator &, T *p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
          {  ::new((void*)p, boost_container_new_t()) T(BOOST_MOVE_FWD##N); }\
          //
-         BOOST_MOVE_ITERATE_0TO8(BOOST_CONTAINER_ALLOCATOR_TRAITS_PRIV_CONSTRUCT_IMPL)
-         #undef BOOST_CONTAINER_ALLOCATOR_TRAITS_PRIV_CONSTRUCT_IMPL
+         BOOST_MOVE_ITERATE_0TO8(BOOST_CONTAINER_ALLOCATOR_TRAITS_PRIV_CONSTRUCT_DISPATCH_NEXT_IMPL)
+         #undef BOOST_CONTAINER_ALLOCATOR_TRAITS_PRIV_CONSTRUCT_DISPATCH_NEXT_IMPL
+
       #endif   // #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
       template<class T>

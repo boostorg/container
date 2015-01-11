@@ -40,6 +40,13 @@ struct bool_ : integral_constant<bool, C_>
    operator bool() const { return bool_::value; }
 };
 
+template< unsigned V_ >
+struct unsigned_ : integral_constant<unsigned, V_>
+{
+   static const unsigned value = V_;
+   operator unsigned() const { return unsigned_::value; }
+};
+
 typedef bool_<true>        true_;
 typedef bool_<false>       false_;
 
