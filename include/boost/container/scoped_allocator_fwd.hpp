@@ -35,26 +35,36 @@ namespace boost { namespace container {
 
    #if !defined(BOOST_CONTAINER_UNIMPLEMENTED_PACK_EXPANSION_TO_FIXED_LIST)
 
-   template <typename OuterAlloc, typename ...InnerAllocs>
-   class scoped_allocator_adaptor;
+      template <typename OuterAlloc, typename ...InnerAllocs>
+      class scoped_allocator_adaptor;
 
    #else // #if !defined(BOOST_CONTAINER_UNIMPLEMENTED_PACK_EXPANSION_TO_FIXED_LIST)
 
-   template <typename ...InnerAllocs>
-   class scoped_allocator_adaptor;
+      template <typename ...InnerAllocs>
+      class scoped_allocator_adaptor;
 
-   template <typename OuterAlloc, typename ...InnerAllocs>
-   class scoped_allocator_adaptor<OuterAlloc, InnerAllocs...>;
+      template <typename OuterAlloc, typename ...InnerAllocs>
+      class scoped_allocator_adaptor<OuterAlloc, InnerAllocs...>;
 
    #endif   // #if !defined(BOOST_CONTAINER_UNIMPLEMENTED_PACK_EXPANSION_TO_FIXED_LIST)
 
-
 #else    // #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-template <typename OuterAlloc, BOOST_MOVE_CLASSDFLT9>
-class scoped_allocator_adaptor;
+   template <typename OuterAlloc, BOOST_MOVE_CLASSDFLT9>
+   class scoped_allocator_adaptor;
 
 #endif
+
+   template <int Dummy = 0>
+   struct std_allocator_arg_holder
+   {
+      static ::std::allocator_arg_t *dummy;
+   };
+
+   template <int Dummy>
+   ::std::allocator_arg_t *std_allocator_arg_holder<Dummy>::dummy;
+
+#else    //BOOST_CONTAINER_DOXYGEN_INVOKED
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -62,20 +72,17 @@ class scoped_allocator_adaptor;
 //! disambiguate constructor and function overloading. Specifically, several types
 //! have constructors with allocator_arg_t as the first argument, immediately followed
 //! by an argument of a type that satisfies Allocator requirements
-struct allocator_arg_t{};
+typedef const std::allocator_arg_t & allocator_arg_t;
 
 //! A instance of type allocator_arg_t
 //!
-static const allocator_arg_t allocator_arg = allocator_arg_t();
+static allocator_arg_t allocator_arg = BOOST_CONTAINER_DOC1ST(unspecified, *std_allocator_arg_holder<>::dummy);
 
 template <class T>
 struct constructible_with_allocator_suffix;
 
 template <class T>
 struct constructible_with_allocator_prefix;
-
-template <class T>
-struct constructible_with_std_allocator_prefix;
 
 template <typename T, typename Allocator>
 struct uses_allocator;

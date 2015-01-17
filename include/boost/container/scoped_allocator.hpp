@@ -31,7 +31,6 @@
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/pair.hpp>
 #include <boost/container/detail/type_traits.hpp>
-#include <boost/container/detail/std_allocator_arg.hpp>
 
 #include <boost/move/adl_move_swap.hpp>
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
@@ -134,10 +133,6 @@ struct constructible_with_allocator_suffix
 //! to detect if a type should be constructed with suffix or prefix allocator arguments.
 template <class T>
 struct constructible_with_allocator_prefix
-{  static const bool value = false; };
-
-template <class T>
-struct constructible_with_std_allocator_prefix
 {  static const bool value = false; };
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -297,11 +292,6 @@ namespace container_detail {
       : is_constructible<T, allocator_arg_t, InnerAlloc, Args...>
    {};
 
-   template <class T, class InnerAlloc, class ...Args>
-   struct is_constructible_with_std_allocator_prefix
-      : is_constructible<T, const std::allocator_arg_t&, InnerAlloc, Args...>
-   {};
-
 #else    // #if !defined(BOOST_NO_SFINAE_EXPR) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    //Without advanced SFINAE expressions, we can't use is_constructible
@@ -315,11 +305,6 @@ namespace container_detail {
    {};
 
    template <class T, class InnerAlloc, class ...Args>
-   struct is_constructible_with_std_allocator_prefix
-      : constructible_with_std_allocator_prefix<T>
-   {};
-
-   template <class T, class InnerAlloc, class ...Args>
    struct is_constructible_with_allocator_suffix
       : constructible_with_allocator_suffix<T>
    {};
@@ -329,11 +314,6 @@ namespace container_detail {
    template <class T, class InnerAlloc, BOOST_MOVE_CLASSDFLT9>
    struct is_constructible_with_allocator_prefix
       : constructible_with_allocator_prefix<T>
-   {};
-
-   template <class T, class InnerAlloc, BOOST_MOVE_CLASSDFLT9>
-   struct is_constructible_with_std_allocator_prefix
-      : constructible_with_std_allocator_prefix<T>
    {};
 
    template <class T, class InnerAlloc, BOOST_MOVE_CLASSDFLT9>
@@ -354,27 +334,14 @@ template < typename OutermostAlloc
          , class ...Args
          >
 inline void dispatch_allocator_prefix_suffix
-   ( unsigned_<1> use_alloc_prefix, OutermostAlloc& outermost_alloc
+   ( true_type use_alloc_prefix, OutermostAlloc& outermost_alloc
    , InnerAlloc& inner_alloc, T* p, BOOST_FWD_REF(Args) ...args)
 {
    (void)use_alloc_prefix;
    allocator_traits<OutermostAlloc>::construct
       ( outermost_alloc, p, allocator_arg, inner_alloc, ::boost::forward<Args>(args)...);
 }
-// std::allocator_arg_t
-template < typename OutermostAlloc
-         , typename InnerAlloc
-         , typename T
-         , class ...Args
-         >
-inline void dispatch_allocator_prefix_suffix
-   ( unsigned_<2> use_alloc_prefix, OutermostAlloc& outermost_alloc
-   , InnerAlloc &inner_alloc, T* p, BOOST_FWD_REF(Args)...args)
-{
-   (void)use_alloc_prefix;
-   allocator_traits<OutermostAlloc>::construct
-      ( outermost_alloc, p, alloc_arg<>::get(), inner_alloc, ::boost::forward<Args>(args)...);
-}
+
 // allocator suffix
 template < typename OutermostAlloc
          , typename InnerAlloc
@@ -382,7 +349,7 @@ template < typename OutermostAlloc
          , class ...Args
          >
 inline void dispatch_allocator_prefix_suffix
-   ( unsigned_<0> use_alloc_prefix, OutermostAlloc& outermost_alloc
+   ( false_type use_alloc_prefix, OutermostAlloc& outermost_alloc
    , InnerAlloc &inner_alloc, T* p, BOOST_FWD_REF(Args)...args)
 {
    (void)use_alloc_prefix;
@@ -403,8 +370,7 @@ inline void dispatch_uses_allocator
    //BOOST_STATIC_ASSERT((is_constructible_with_allocator_prefix<T, InnerAlloc, Args...>::value ||
    //                     is_constructible_with_allocator_suffix<T, InnerAlloc, Args...>::value ));
    dispatch_allocator_prefix_suffix
-      ( unsigned_< is_constructible_with_allocator_prefix<T, InnerAlloc, Args...>::value ? 1u :
-                  (is_constructible_with_std_allocator_prefix<T, InnerAlloc, Args...>::value ? 2u : 0u) >()
+      ( bool_< is_constructible_with_allocator_prefix<T, InnerAlloc, Args...>::value>()
       , outermost_alloc, inner_alloc, p, ::boost::forward<Args>(args)...);
 }
 
@@ -429,7 +395,7 @@ inline void dispatch_uses_allocator
 template < typename OutermostAlloc, typename InnerAlloc, typename T\
          BOOST_MOVE_I##N BOOST_MOVE_CLASS##N > \
 inline void dispatch_allocator_prefix_suffix\
-   (unsigned_<1u> use_alloc_prefix, OutermostAlloc& outermost_alloc,\
+   (true_type use_alloc_prefix, OutermostAlloc& outermost_alloc,\
     InnerAlloc& inner_alloc, T* p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
 {\
    (void)use_alloc_prefix,\
@@ -438,20 +404,9 @@ inline void dispatch_allocator_prefix_suffix\
 }\
 \
 template < typename OutermostAlloc, typename InnerAlloc, typename T\
-         BOOST_MOVE_I##N BOOST_MOVE_CLASS##N > \
-inline void dispatch_allocator_prefix_suffix\
-   (unsigned_<2u> use_alloc_prefix, OutermostAlloc& outermost_alloc,\
-    InnerAlloc& inner_alloc, T* p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
-{\
-   (void)use_alloc_prefix,\
-   allocator_traits<OutermostAlloc>::construct\
-      (outermost_alloc, p, alloc_arg<>::get(), inner_alloc BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
-}\
-\
-template < typename OutermostAlloc, typename InnerAlloc, typename T\
          BOOST_MOVE_I##N BOOST_MOVE_CLASS##N >\
 inline void dispatch_allocator_prefix_suffix\
-   (unsigned_<0u> use_alloc_prefix, OutermostAlloc& outermost_alloc,\
+   (false_type use_alloc_prefix, OutermostAlloc& outermost_alloc,\
     InnerAlloc& inner_alloc, T* p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
 {\
    (void)use_alloc_prefix;\
@@ -467,8 +422,7 @@ inline void dispatch_uses_allocator\
 {\
    (void)uses_allocator;\
    dispatch_allocator_prefix_suffix\
-      ( unsigned_< is_constructible_with_allocator_prefix<T, InnerAlloc BOOST_MOVE_I##N BOOST_MOVE_TARG##N>::value ? 1u :\
-                   (is_constructible_with_std_allocator_prefix<T, InnerAlloc BOOST_MOVE_I##N BOOST_MOVE_TARG##N>::value ? 2u : 0u) >()\
+      ( bool_< is_constructible_with_allocator_prefix<T, InnerAlloc BOOST_MOVE_I##N BOOST_MOVE_TARG##N>::value >()\
       , outermost_alloc, inner_alloc, p BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
 }\
 \
