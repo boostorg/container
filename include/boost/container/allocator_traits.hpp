@@ -339,7 +339,7 @@ struct allocator_traits
       {  return a.max_size();  }
 
       static size_type priv_max_size(container_detail::false_type, const Allocator &) BOOST_CONTAINER_NOEXCEPT
-      {  return size_type(-1);  }
+      {  return size_type(-1)/sizeof(value_type);  }
 
       static Allocator priv_select_on_container_copy_construction(container_detail::true_type, const Allocator &a)
       {  return a.select_on_container_copy_construction();  }

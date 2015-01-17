@@ -322,7 +322,7 @@ int main()
    CAllocTraits::max_size(c_alloc);
    BOOST_TEST(c_alloc.max_size_called());
 
-   SAllocTraits::max_size(s_alloc);
+   BOOST_TEST(SAllocTraits::size_type(-1)/sizeof(SAllocTraits::value_type) == SAllocTraits::max_size(s_alloc));
 
    //select_on_container_copy_construction
    CAllocTraits::select_on_container_copy_construction(c_alloc);
