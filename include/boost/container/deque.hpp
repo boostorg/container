@@ -392,9 +392,9 @@ class deque_base
 
    void priv_create_nodes(ptr_alloc_ptr nstart, ptr_alloc_ptr nfinish)
    {
-      ptr_alloc_ptr cur;
+      ptr_alloc_ptr cur = nstart;
       BOOST_TRY {
-         for (cur = nstart; cur < nfinish; ++cur)
+         for (; cur < nfinish; ++cur)
             *cur = this->priv_allocate_node();
       }
       BOOST_CATCH(...){
@@ -1933,9 +1933,9 @@ class deque : protected deque_base<Allocator>
    // but none of the deque's elements have yet been constructed.
    void priv_fill_initialize(const value_type& value)
    {
-      index_pointer cur;
+      index_pointer cur = this->members_.m_start.m_node;
       BOOST_TRY {
-         for (cur = this->members_.m_start.m_node; cur < this->members_.m_finish.m_node; ++cur){
+         for ( ; cur < this->members_.m_finish.m_node; ++cur){
             boost::container::uninitialized_fill_alloc
                (this->alloc(), *cur, *cur + this->s_buffer_size(), value);
          }
@@ -1973,11 +1973,9 @@ class deque : protected deque_base<Allocator>
       n = boost::container::iterator_distance(first, last);
       this->priv_initialize_map(n);
 
-      index_pointer cur_node;
+      index_pointer cur_node = this->members_.m_start.m_node;
       BOOST_TRY {
-         for (cur_node = this->members_.m_start.m_node;
-               cur_node < this->members_.m_finish.m_node;
-               ++cur_node) {
+         for (; cur_node < this->members_.m_finish.m_node; ++cur_node) {
             FwdIt mid = first;
             boost::container::iterator_advance(mid, this->s_buffer_size());
             ::boost::container::uninitialized_copy_alloc(this->alloc(), first, mid, *cur_node);
@@ -2055,9 +2053,9 @@ class deque : protected deque_base<Allocator>
          if (new_nodes + 1 > s){
             this->priv_reallocate_map(new_nodes, false);
          }
-         size_type i;
+         size_type i = 1;
          BOOST_TRY {
-            for (i = 1; i <= new_nodes; ++i)
+            for (; i <= new_nodes; ++i)
                *(this->members_.m_finish.m_node + i) = this->priv_allocate_node();
          }
          BOOST_CATCH(...) {
