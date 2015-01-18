@@ -40,6 +40,7 @@ class new_allocator<void>
    typedef void *                               pointer;
    typedef const void*                          const_pointer;
    typedef new_allocator_bool<true>             propagate_on_container_move_assignment;
+   typedef new_allocator_bool<true>             is_always_equal;
    // reference-to-void members are impossible
 
    //!Obtains an new_allocator that allocates
@@ -96,6 +97,7 @@ class new_allocator
    typedef std::size_t                          size_type;
    typedef std::ptrdiff_t                       difference_type;
    typedef new_allocator_bool<true>             propagate_on_container_move_assignment;
+   typedef new_allocator_bool<true>             is_always_equal;
 
    //!Obtains an new_allocator that allocates
    //!objects of type T2
