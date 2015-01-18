@@ -26,6 +26,7 @@
 // container
 #include <boost/container/container_fwd.hpp>
 #include <boost/container/detail/mpl.hpp>
+#include <boost/container/detail/type_traits.hpp>  //is_empty
 #include <boost/container/detail/placement_new.hpp>
 #ifndef BOOST_CONTAINER_DETAIL_STD_FWD_HPP
 #include <boost/container/detail/std_fwd.hpp>
@@ -94,6 +95,7 @@ BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(size_type)
 BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(propagate_on_container_copy_assignment)
 BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(propagate_on_container_move_assignment)
 BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(propagate_on_container_swap)
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(is_always_equal)
 BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(difference_type)
 
 }  //namespace container_detail {
@@ -138,12 +140,15 @@ struct allocator_traits
       //! Allocator::propagate_on_container_copy_assignment if such a type exists, otherwise a type
       //! with an internal constant static boolean member <code>value</code> == false.
       typedef see_documentation propagate_on_container_copy_assignment;
-      //! Allocator::propagate_on_container_move_assignment if such a type exists, otherwise otherwise a type
+      //! Allocator::propagate_on_container_move_assignment if such a type exists, otherwise a type
       //! with an internal constant static boolean member <code>value</code> == false.
       typedef see_documentation propagate_on_container_move_assignment;
-      //! Allocator::propagate_on_container_swap if such a type exists, otherwise an otherwise a type
+      //! Allocator::propagate_on_container_swap if such a type exists, otherwise a type
       //! with an internal constant static boolean member <code>value</code> == false.
       typedef see_documentation propagate_on_container_swap;
+      //! Allocator::is_always_equal if such a type exists, otherwise a type
+      //! with an internal constant static boolean member <code>value</code> == is_empty<Allocator>::value
+      typedef see_documentation is_always_equal;
       //! Defines an allocator: Allocator::rebind<T>::other if such a type exists; otherwise, Allocator<T, Args>
       //! if Allocator is a class template instantiation of the form Allocator<U, Args>, where Args is zero or
       //! more type arguments ; otherwise, the instantiation of rebind_alloc is ill-formed.
@@ -210,7 +215,10 @@ struct allocator_traits
       typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT(boost::container::container_detail::, Allocator,
          propagate_on_container_swap, container_detail::false_type)
             propagate_on_container_swap;
-
+      //is_always_equal
+      typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT(boost::container::container_detail::, Allocator,
+         is_always_equal, container_detail::is_empty<Allocator>)
+            is_always_equal;
       #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
          //C++11
          template <typename T> using rebind_alloc  = typename boost::intrusive::pointer_rebind<Allocator, T>::type;

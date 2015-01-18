@@ -103,6 +103,8 @@ class ComplexAllocator
       true_type                                 propagate_on_container_move_assignment;
    typedef boost::container::container_detail::
       true_type                                 propagate_on_container_swap;
+   typedef boost::container::container_detail::
+      true_type                                 is_always_equal;
 
    ComplexAllocator()
       : allocate_called_(false)
@@ -247,6 +249,8 @@ int main()
                        < SimpleAllocator<int> >::propagate_on_container_move_assignment::value == false ));
    BOOST_STATIC_ASSERT(( boost::container::allocator_traits
                        < SimpleAllocator<int> >::propagate_on_container_swap::value == false ));
+   BOOST_STATIC_ASSERT(( boost::container::allocator_traits
+                       < SimpleAllocator<int> >::is_always_equal::value == false ));
    BOOST_STATIC_ASSERT(( is_same<boost::container::allocator_traits
                        < SimpleAllocator<int> >::rebind_traits<double>::allocator_type
                        , SimpleAllocator<double> >::value ));
@@ -275,6 +279,8 @@ int main()
                        < ComplexAllocator<int> >::propagate_on_container_move_assignment::value == true ));
    BOOST_STATIC_ASSERT(( boost::container::allocator_traits
                        < ComplexAllocator<int> >::propagate_on_container_swap::value == true ));
+   BOOST_STATIC_ASSERT(( boost::container::allocator_traits
+                       < ComplexAllocator<int> >::is_always_equal::value == true ));
    BOOST_STATIC_ASSERT(( is_same<boost::container::allocator_traits
                        < ComplexAllocator<int> >::rebind_traits<double>::allocator_type
                        , ComplexAllocator<double> >::value ));

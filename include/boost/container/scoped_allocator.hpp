@@ -474,6 +474,10 @@ class scoped_allocator_adaptor_base
       outer_traits_type::propagate_on_container_swap::value ||
       inner_allocator_type::propagate_on_container_swap::value
       > propagate_on_container_swap;
+   typedef container_detail::bool_<
+      outer_traits_type::is_always_equal::value &&
+      inner_allocator_type::is_always_equal::value
+      > is_always_equal;
 
    scoped_allocator_adaptor_base()
       {}
@@ -613,6 +617,11 @@ class scoped_allocator_adaptor_base<OuterAlloc, true, BOOST_MOVE_TARG##N>\
       inner_allocator_type::propagate_on_container_swap::value\
       > propagate_on_container_swap;\
    \
+   typedef container_detail::bool_<\
+      outer_traits_type::is_always_equal::value &&\
+      inner_allocator_type::is_always_equal::value\
+      > is_always_equal;\
+   \
    scoped_allocator_adaptor_base(){}\
    \
    template <class OuterA2>\
@@ -746,6 +755,8 @@ class scoped_allocator_adaptor_base< OuterAlloc BOOST_CONTAINER_SCOPEDALLOC_DUMM
       propagate_on_container_move_assignment    propagate_on_container_move_assignment;
    typedef typename outer_traits_type::
       propagate_on_container_swap               propagate_on_container_swap;
+   typedef typename outer_traits_type::
+      is_always_equal                           is_always_equal;
 
    scoped_allocator_adaptor_base()
       {}
@@ -913,20 +924,26 @@ class scoped_allocator_adaptor
    typedef typename outer_traits_type::const_void_pointer   const_void_pointer;
    //! Type: A type with a constant boolean <code>value</code> == true if
    //!<code>allocator_traits<Allocator>::propagate_on_container_copy_assignment::value</code> is
-   //! true for any <code>Allocator</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>; otherwise, false otherwise.
+   //! true for any <code>Allocator</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>, false otherwise.
    typedef typename base_type::
       propagate_on_container_copy_assignment                propagate_on_container_copy_assignment;
    //! Type: A type with a constant boolean <code>value</code> == true if
    //!<code>allocator_traits<Allocator>::propagate_on_container_move_assignment::value</code> is
-   //! true for any <code>Allocator</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>; otherwise, false otherwise.
+   //! true for any <code>Allocator</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>, false otherwise.
    typedef typename base_type::
       propagate_on_container_move_assignment                propagate_on_container_move_assignment;
 
    //! Type: A type with a constant boolean <code>value</code> == true if
    //!<code>allocator_traits<Allocator>::propagate_on_container_swap::value</code> is
-   //! true for any <code>Allocator</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>; otherwise, false otherwise.
+   //! true for any <code>Allocator</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>, false otherwise.
    typedef typename base_type::
       propagate_on_container_swap                           propagate_on_container_swap;
+
+   //! Type: A type with a constant boolean <code>value</code> == true if
+   //!<code>allocator_traits<Allocator>::is_always_equal::value</code> is
+   //! true for all <code>Allocator</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>, false otherwise.
+   typedef typename base_type::
+      is_always_equal                           is_always_equal;
 
    //! Type: Rebinds scoped allocator to
    //!    <code>typedef scoped_allocator_adaptor

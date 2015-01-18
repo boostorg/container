@@ -38,6 +38,7 @@ using ::boost::move_detail::is_floating_point;
 using ::boost::move_detail::is_integral;
 using ::boost::move_detail::is_enum;
 using ::boost::move_detail::is_pod;
+using ::boost::move_detail::is_empty;
 using ::boost::move_detail::is_trivially_destructible;
 using ::boost::move_detail::is_trivially_default_constructible;
 using ::boost::move_detail::is_trivially_copy_constructible;
