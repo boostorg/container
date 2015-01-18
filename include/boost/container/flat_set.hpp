@@ -232,7 +232,8 @@ class flat_set
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    flat_set& operator=(BOOST_RV_REF(flat_set) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
+      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
    {  return static_cast<flat_set&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -619,7 +620,9 @@ class flat_set
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   void swap(flat_set& x);
+   void swap(flat_set& x)
+      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::container_detail::is_nothrow_swappable<Compare>::value );
 
    //! <b>Effects</b>: erase(a.begin(),a.end()).
    //!
@@ -956,7 +959,8 @@ class flat_multiset
 
    //! @copydoc ::boost::container::flat_set::operator=(flat_set &&)
    flat_multiset& operator=(BOOST_RV_REF(flat_multiset) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
+      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
    {  return static_cast<flat_multiset&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -1198,7 +1202,9 @@ class flat_multiset
    iterator erase(const_iterator first, const_iterator last);
 
    //! @copydoc ::boost::container::flat_set::swap
-   void swap(flat_multiset& x);
+   void swap(flat_multiset& x)
+      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::container_detail::is_nothrow_swappable<Compare>::value );
 
    //! @copydoc ::boost::container::flat_set::clear
    void clear() BOOST_CONTAINER_NOEXCEPT;

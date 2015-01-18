@@ -98,8 +98,9 @@ template <class Key, class Value, class KeyOfValue,
           class Compare, class Allocator>
 class flat_tree
 {
-   typedef boost::container::vector<Value, Allocator>  vector_t;
-   typedef Allocator                                   allocator_t;
+   typedef boost::container::vector<Value, Allocator>    vector_t;
+   typedef Allocator                                     allocator_t;
+   typedef allocator_traits<Allocator>                   allocator_traits_type;
 
    public:
    typedef flat_tree_value_compare<Compare, Value, KeyOfValue> value_compare;
@@ -264,6 +265,8 @@ class flat_tree
    {  m_data = x.m_data;   return *this;  }
 
    flat_tree&  operator=(BOOST_RV_REF(flat_tree) x)
+      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
    {  m_data = boost::move(x.m_data); return *this;  }
 
    public:
@@ -329,6 +332,8 @@ class flat_tree
    { return this->m_data.m_vect.max_size(); }
 
    void swap(flat_tree& other)
+      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::container_detail::is_nothrow_swappable<Compare>::value )
    {  this->m_data.swap(other.m_data);  }
 
    public:

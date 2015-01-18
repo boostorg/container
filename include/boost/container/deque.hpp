@@ -733,7 +733,8 @@ class deque : protected deque_base<Allocator>
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    deque& operator= (BOOST_RV_REF(deque) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
+                                  || allocator_traits_type::is_always_equal::value)
    {
       BOOST_ASSERT(this != &x);
       allocator_type &this_alloc = this->alloc();
@@ -1622,6 +1623,8 @@ class deque : protected deque_base<Allocator>
    //!
    //! <b>Complexity</b>: Constant.
    void swap(deque &x)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_swap::value
+                               || allocator_traits_type::is_always_equal::value)
    {
       this->swap_members(x);
       container_detail::bool_<allocator_traits_type::propagate_on_container_swap::value> flag;

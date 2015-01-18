@@ -751,7 +751,8 @@ class stable_vector
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    stable_vector& operator=(BOOST_RV_REF(stable_vector) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
+                                  || allocator_traits_type::is_always_equal::value)
    {
       //for move constructor, no aliasing (&x != this) is assummed.
       BOOST_ASSERT(this != &x);
@@ -1598,6 +1599,8 @@ class stable_vector
    //!
    //! <b>Complexity</b>: Constant.
    void swap(stable_vector & x)
+      BOOST_CONTAINER_NOEXCEPT_IF( allocator_traits_type::propagate_on_container_swap::value
+                                || allocator_traits_type::is_always_equal::value)
    {
       STABLE_VECTOR_CHECK_INVARIANT;
       container_detail::bool_<allocator_traits_type::propagate_on_container_swap::value> flag;

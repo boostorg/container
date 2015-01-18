@@ -471,16 +471,18 @@ class tree
       >
 {
    typedef tree_value_compare
-            <Key, T, Compare, KeyOfValue>            ValComp;
+            <Key, T, Compare, KeyOfValue>                   ValComp;
    typedef typename container_detail::intrusive_tree_type
          < Allocator, ValComp, Options::tree_type
          , Options::optimize_size>::type                    Icont;
    typedef container_detail::node_alloc_holder
-      <Allocator, Icont>                                            AllocHolder;
+      <Allocator, Icont>                                    AllocHolder;
    typedef typename AllocHolder::NodePtr                    NodePtr;
    typedef tree < Key, T, KeyOfValue
-                , Compare, Allocator, Options>                   ThisType;
+                , Compare, Allocator, Options>              ThisType;
    typedef typename AllocHolder::NodeAlloc                  NodeAlloc;
+   typedef boost::container::
+      allocator_traits<NodeAlloc>                           allocator_traits_type;
    typedef typename AllocHolder::ValAlloc                   ValAlloc;
    typedef typename AllocHolder::Node                       Node;
    typedef typename Icont::iterator                         iiterator;
@@ -494,22 +496,22 @@ class tree
    public:
 
    typedef Key                                        key_type;
-   typedef T                                      value_type;
-   typedef Allocator                                          allocator_type;
-   typedef Compare                                 key_compare;
+   typedef T                                          value_type;
+   typedef Allocator                                  allocator_type;
+   typedef Compare                                    key_compare;
    typedef ValComp                                    value_compare;
    typedef typename boost::container::
-      allocator_traits<Allocator>::pointer                    pointer;
+      allocator_traits<Allocator>::pointer            pointer;
    typedef typename boost::container::
-      allocator_traits<Allocator>::const_pointer              const_pointer;
+      allocator_traits<Allocator>::const_pointer      const_pointer;
    typedef typename boost::container::
-      allocator_traits<Allocator>::reference                  reference;
+      allocator_traits<Allocator>::reference          reference;
    typedef typename boost::container::
-      allocator_traits<Allocator>::const_reference            const_reference;
+      allocator_traits<Allocator>::const_reference    const_reference;
    typedef typename boost::container::
-      allocator_traits<Allocator>::size_type                  size_type;
+      allocator_traits<Allocator>::size_type          size_type;
    typedef typename boost::container::
-      allocator_traits<Allocator>::difference_type            difference_type;
+      allocator_traits<Allocator>::difference_type    difference_type;
    typedef difference_type                            tree_difference_type;
    typedef pointer                                    tree_pointer;
    typedef const_pointer                              tree_const_pointer;
@@ -696,6 +698,8 @@ class tree
    }
 
    tree& operator=(BOOST_RV_REF(tree) x)
+      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
    {
       BOOST_ASSERT(this != &x);
       NodeAlloc &this_alloc = this->node_alloc();
@@ -820,6 +824,8 @@ class tree
    {  return AllocHolder::max_size();  }
 
    void swap(ThisType& x)
+      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::container_detail::is_nothrow_swappable<Compare>::value )
    {  AllocHolder::swap(x);   }
 
    public:

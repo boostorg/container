@@ -358,7 +358,8 @@ class slist
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    slist& operator= (BOOST_RV_REF(slist) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
+                                  || allocator_traits_type::is_always_equal::value)
    {
       BOOST_ASSERT(this != &x);
       NodeAlloc &this_alloc = this->node_alloc();
@@ -916,6 +917,8 @@ class slist
    //!
    //! <b>Complexity</b>: Linear to the number of elements on *this and x.
    void swap(slist& x)
+      BOOST_CONTAINER_NOEXCEPT_IF( allocator_traits_type::propagate_on_container_swap::value
+                                || allocator_traits_type::is_always_equal::value)
    {  AllocHolder::swap(x);   }
 
    //! <b>Effects</b>: Erases all the elements of the list.

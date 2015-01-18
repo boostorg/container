@@ -99,7 +99,7 @@ class map
    //////////////////////////////////////////////
 
    typedef Key                                                              key_type;
-   typedef ::boost::container::allocator_traits<Allocator>                          allocator_traits_type;
+   typedef ::boost::container::allocator_traits<Allocator>                  allocator_traits_type;
    typedef T                                                                mapped_type;
    typedef std::pair<const Key, T>                                          value_type;
    typedef typename boost::container::allocator_traits<Allocator>::pointer          pointer;
@@ -272,7 +272,9 @@ class map
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    map& operator=(BOOST_RV_REF(map) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
+      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
+
    {  return static_cast<map&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -680,7 +682,9 @@ class map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   void swap(map& x);
+   void swap(map& x)
+      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::container_detail::is_nothrow_swappable<Compare>::value )
 
    //! <b>Effects</b>: erase(a.begin(),a.end()).
    //!
@@ -894,6 +898,8 @@ class multimap
       >  value_compare_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
+   typedef ::boost::container::allocator_traits<Allocator>                          allocator_traits_type;
+
    public:
    //////////////////////////////////////////////
    //
@@ -1065,6 +1071,8 @@ class multimap
    //!
    //! <b>Complexity</b>: Constant.
    multimap& operator=(BOOST_RV_REF(multimap) x)
+      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
    {  return static_cast<multimap&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -1281,7 +1289,9 @@ class multimap
    iterator erase(const_iterator first, const_iterator last);
 
    //! @copydoc ::boost::container::set::swap
-   void swap(flat_multiset& x);
+   void swap(multiset& x)
+      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::container_detail::is_nothrow_swappable<Compare>::value );
 
    //! @copydoc ::boost::container::set::clear
    void clear() BOOST_CONTAINER_NOEXCEPT;

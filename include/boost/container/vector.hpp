@@ -896,7 +896,8 @@ class vector
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    vector& operator=(BOOST_RV_REF(vector) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
+                                  || allocator_traits_type::is_always_equal::value)
    {
       this->priv_move_assign(boost::move(x));
       return *this;
@@ -1784,7 +1785,10 @@ class vector
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   void swap(vector& x) BOOST_CONTAINER_NOEXCEPT_IF((!container_detail::is_version<Allocator, 0>::value))
+   void swap(vector& x)
+      BOOST_CONTAINER_NOEXCEPT_IF( ((allocator_traits_type::propagate_on_container_swap::value
+                                    || allocator_traits_type::is_always_equal::value) &&
+                                    !container_detail::is_version<Allocator, 0>::value))
    {
       //Just swap internals in case of !version_0. Otherwise, deep swap
       this->m_holder.swap(x.m_holder);

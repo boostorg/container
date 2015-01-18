@@ -50,6 +50,7 @@ using ::boost::move_detail::is_nothrow_copy_constructible;
 using ::boost::move_detail::is_nothrow_move_constructible;
 using ::boost::move_detail::is_nothrow_copy_assignable;
 using ::boost::move_detail::is_nothrow_move_assignable;
+using ::boost::move_detail::is_nothrow_swappable;
 using ::boost::move_detail::alignment_of;
 using ::boost::move_detail::aligned_storage;
 using ::boost::move_detail::nat;

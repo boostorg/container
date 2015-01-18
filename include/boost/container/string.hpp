@@ -751,7 +751,8 @@ class basic_string
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    basic_string& operator=(BOOST_RV_REF(basic_string) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
+                                  || allocator_traits_type::is_always_equal::value)
    {
       //for move constructor, no aliasing (&x != this) is assummed.
       BOOST_ASSERT(this != &x);
@@ -1892,6 +1893,8 @@ class basic_string
    //!
    //! <b>Throws</b>: Nothing
    void swap(basic_string& x)
+      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_swap::value
+                               || allocator_traits_type::is_always_equal::value)
    {
       this->base_t::swap_data(x);
       container_detail::bool_<allocator_traits_type::propagate_on_container_swap::value> flag;
