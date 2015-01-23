@@ -41,8 +41,6 @@ doxygen autodoc
                                    \"BOOST_CONTAINER_DOC1ST(T1, T2)=T1\" \\
                                    \"BOOST_CONTAINER_DOCIGN(T) \"\\
                                    \"BOOST_CONTAINER_DOCONLY(T) T\"\\
-                                   \"BOOST_CONTAINER_SCOPEDALLOC_DUMMYTRUE=\"\\
-                                   \"BOOST_CONTAINER_SCOPEDALLOC_ALLINNER=InnerAllocs...\"\\
                                    "
         <xsl:param>"boost.doxygen.reftitle=Boost.Container Header Reference"
    ;
