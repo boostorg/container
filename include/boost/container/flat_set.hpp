@@ -92,11 +92,11 @@ class flat_set
    typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
    typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
    typedef Allocator                                                                   allocator_type;
-   typedef typename BOOST_MOVE_IMPDEF(base_t::stored_allocator_type)              stored_allocator_type;
-   typedef typename BOOST_MOVE_IMPDEF(base_t::iterator)                           iterator;
-   typedef typename BOOST_MOVE_IMPDEF(base_t::const_iterator)                     const_iterator;
-   typedef typename BOOST_MOVE_IMPDEF(base_t::reverse_iterator)                   reverse_iterator;
-   typedef typename BOOST_MOVE_IMPDEF(base_t::const_reverse_iterator)             const_reverse_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)              stored_allocator_type;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                           iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                     const_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                   reverse_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)             const_reverse_iterator;
 
    public:
    //////////////////////////////////////////////
@@ -873,11 +873,11 @@ class flat_multiset
    typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
    typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
    typedef Allocator                                                                   allocator_type;
-   typedef typename BOOST_MOVE_IMPDEF(base_t::stored_allocator_type)              stored_allocator_type;
-   typedef typename BOOST_MOVE_IMPDEF(base_t::iterator)                           iterator;
-   typedef typename BOOST_MOVE_IMPDEF(base_t::const_iterator)                     const_iterator;
-   typedef typename BOOST_MOVE_IMPDEF(base_t::reverse_iterator)                   reverse_iterator;
-   typedef typename BOOST_MOVE_IMPDEF(base_t::const_reverse_iterator)             const_reverse_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)              stored_allocator_type;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                           iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                     const_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                   reverse_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)             const_reverse_iterator;
 
    //! @copydoc ::boost::container::flat_set::flat_set()
    explicit flat_multiset()

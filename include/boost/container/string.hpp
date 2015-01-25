@@ -542,11 +542,11 @@ class basic_string
    typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
    typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
    typedef Allocator                                                                   allocator_type;
-   typedef BOOST_MOVE_IMPDEF(allocator_type)                                      stored_allocator_type;
-   typedef BOOST_MOVE_IMPDEF(pointer)                                             iterator;
-   typedef BOOST_MOVE_IMPDEF(const_pointer)                                       const_iterator;
-   typedef BOOST_MOVE_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
-   typedef BOOST_MOVE_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(allocator_type)                                      stored_allocator_type;
+   typedef BOOST_CONTAINER_IMPDEF(pointer)                                             iterator;
+   typedef BOOST_CONTAINER_IMPDEF(const_pointer)                                       const_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
    static const size_type npos = size_type(-1);
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
