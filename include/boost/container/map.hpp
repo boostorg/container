@@ -109,15 +109,15 @@ class map
    typedef typename boost::container::allocator_traits<Allocator>::size_type        size_type;
    typedef typename boost::container::allocator_traits<Allocator>::difference_type  difference_type;
    typedef Allocator                                                                allocator_type;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)           stored_allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(value_compare_impl)                               value_compare;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::stored_allocator_type)           stored_allocator_type;
+   typedef BOOST_MOVE_IMPDEF(value_compare_impl)                               value_compare;
    typedef Compare                                                                  key_compare;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                        iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                  const_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                reverse_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)          const_reverse_iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::iterator)                        iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::const_iterator)                  const_iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::reverse_iterator)                reverse_iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::const_reverse_iterator)          const_reverse_iterator;
    typedef std::pair<key_type, mapped_type>                                         nonconst_value_type;
-   typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                          movable_value_type;
+   typedef BOOST_MOVE_IMPDEF(movable_value_type_impl)                          movable_value_type;
 
    //////////////////////////////////////////////
    //
@@ -917,15 +917,15 @@ class multimap
    typedef typename boost::container::allocator_traits<Allocator>::size_type        size_type;
    typedef typename boost::container::allocator_traits<Allocator>::difference_type  difference_type;
    typedef Allocator                                                                allocator_type;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)           stored_allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(value_compare_impl)                               value_compare;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::stored_allocator_type)           stored_allocator_type;
+   typedef BOOST_MOVE_IMPDEF(value_compare_impl)                               value_compare;
    typedef Compare                                                                  key_compare;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                        iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                  const_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                reverse_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)          const_reverse_iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::iterator)                        iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::const_iterator)                  const_iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::reverse_iterator)                reverse_iterator;
+   typedef typename BOOST_MOVE_IMPDEF(base_t::const_reverse_iterator)          const_reverse_iterator;
    typedef std::pair<key_type, mapped_type>                                         nonconst_value_type;
-   typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                          movable_value_type;
+   typedef BOOST_MOVE_IMPDEF(movable_value_type_impl)                          movable_value_type;
 
    //////////////////////////////////////////////
    //

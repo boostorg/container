@@ -507,10 +507,10 @@ class stable_vector
    typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
    typedef Allocator                                                                   allocator_type;
    typedef node_allocator_type                                                         stored_allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                                       iterator;
-   typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                                 const_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
+   typedef BOOST_MOVE_IMPDEF(iterator_impl)                                       iterator;
+   typedef BOOST_MOVE_IMPDEF(const_iterator_impl)                                 const_iterator;
+   typedef BOOST_MOVE_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
+   typedef BOOST_MOVE_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
