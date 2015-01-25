@@ -157,14 +157,14 @@ class flat_map
    typedef typename boost::container::allocator_traits<Allocator>::size_type        size_type;
    typedef typename boost::container::allocator_traits<Allocator>::difference_type  difference_type;
    typedef Allocator                                                                allocator_type;
-   typedef BOOST_MOVE_IMPDEF(Allocator)                                        stored_allocator_type;
-   typedef BOOST_MOVE_IMPDEF(value_compare_impl)                               value_compare;
+   typedef BOOST_CONTAINER_IMPDEF(Allocator)                                        stored_allocator_type;
+   typedef BOOST_CONTAINER_IMPDEF(value_compare_impl)                               value_compare;
    typedef Compare                                                                  key_compare;
-   typedef BOOST_MOVE_IMPDEF(iterator_impl)                                    iterator;
-   typedef BOOST_MOVE_IMPDEF(const_iterator_impl)                              const_iterator;
-   typedef BOOST_MOVE_IMPDEF(reverse_iterator_impl)                            reverse_iterator;
-   typedef BOOST_MOVE_IMPDEF(const_reverse_iterator_impl)                      const_reverse_iterator;
-   typedef BOOST_MOVE_IMPDEF(impl_value_type)                                  movable_value_type;
+   typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                                    iterator;
+   typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                              const_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(reverse_iterator_impl)                            reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(const_reverse_iterator_impl)                      const_reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(impl_value_type)                                  movable_value_type;
 
    public:
    //////////////////////////////////////////////
@@ -1152,14 +1152,14 @@ class flat_multimap
    typedef typename boost::container::allocator_traits<Allocator>::size_type        size_type;
    typedef typename boost::container::allocator_traits<Allocator>::difference_type  difference_type;
    typedef Allocator                                                                allocator_type;
-   typedef BOOST_MOVE_IMPDEF(Allocator)                                        stored_allocator_type;
-   typedef BOOST_MOVE_IMPDEF(value_compare_impl)                               value_compare;
+   typedef BOOST_CONTAINER_IMPDEF(Allocator)                                        stored_allocator_type;
+   typedef BOOST_CONTAINER_IMPDEF(value_compare_impl)                               value_compare;
    typedef Compare                                                                  key_compare;
-   typedef BOOST_MOVE_IMPDEF(iterator_impl)                                    iterator;
-   typedef BOOST_MOVE_IMPDEF(const_iterator_impl)                              const_iterator;
-   typedef BOOST_MOVE_IMPDEF(reverse_iterator_impl)                            reverse_iterator;
-   typedef BOOST_MOVE_IMPDEF(const_reverse_iterator_impl)                      const_reverse_iterator;
-   typedef BOOST_MOVE_IMPDEF(impl_value_type)                                  movable_value_type;
+   typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                                    iterator;
+   typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                              const_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(reverse_iterator_impl)                            reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(const_reverse_iterator_impl)                      const_reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(impl_value_type)                                  movable_value_type;
 
    //////////////////////////////////////////////
    //

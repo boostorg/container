@@ -195,9 +195,9 @@ class slist
    typedef typename ::boost::container::allocator_traits<Allocator>::size_type        size_type;
    typedef typename ::boost::container::allocator_traits<Allocator>::difference_type  difference_type;
    typedef Allocator                                                                  allocator_type;
-   typedef BOOST_MOVE_IMPDEF(NodeAlloc)                                  stored_allocator_type;
-   typedef BOOST_MOVE_IMPDEF(iterator_impl)                              iterator;
-   typedef BOOST_MOVE_IMPDEF(const_iterator_impl)                        const_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(NodeAlloc)                                  stored_allocator_type;
+   typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                              iterator;
+   typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                        const_iterator;
 
    public:
 

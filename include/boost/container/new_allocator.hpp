@@ -32,6 +32,7 @@ struct new_allocator_bool
 template<class T>
 class new_allocator;
 
+//! Specialization of new_allocator for void types
 template<>
 class new_allocator<void>
 {
@@ -39,8 +40,10 @@ class new_allocator<void>
    typedef void                                 value_type;
    typedef void *                               pointer;
    typedef const void*                          const_pointer;
-   typedef new_allocator_bool<true>             propagate_on_container_move_assignment;
-   typedef new_allocator_bool<true>             is_always_equal;
+   //!A integral constant of type bool with value true
+   typedef BOOST_CONTAINER_IMPDEF(new_allocator_bool<true>) propagate_on_container_move_assignment;
+   //!A integral constant of type bool with value true
+   typedef BOOST_CONTAINER_IMPDEF(new_allocator_bool<true>) is_always_equal;
    // reference-to-void members are impossible
 
    //!Obtains an new_allocator that allocates
@@ -96,8 +99,10 @@ class new_allocator
    typedef const T &                            const_reference;
    typedef std::size_t                          size_type;
    typedef std::ptrdiff_t                       difference_type;
-   typedef new_allocator_bool<true>             propagate_on_container_move_assignment;
-   typedef new_allocator_bool<true>             is_always_equal;
+   //!A integral constant of type bool with value true
+   typedef BOOST_CONTAINER_IMPDEF(new_allocator_bool<true>) propagate_on_container_move_assignment;
+   //!A integral constant of type bool with value true
+   typedef BOOST_CONTAINER_IMPDEF(new_allocator_bool<true>) is_always_equal;
 
    //!Obtains an new_allocator that allocates
    //!objects of type T2

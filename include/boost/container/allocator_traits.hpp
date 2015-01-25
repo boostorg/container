@@ -41,6 +41,8 @@
 #include <boost/move/detail/fwd_macros.hpp>
 #endif
 
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_FUNCNAME allocate
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_BEG namespace boost { namespace container { namespace container_detail {
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_END   }}}
@@ -62,16 +64,19 @@
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 9
 #include <boost/intrusive/detail/has_member_function_callable_with.hpp>
 
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 namespace boost {
 namespace container {
+
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 namespace allocator_traits_detail {
 
 BOOST_INTRUSIVE_HAS_STATIC_MEMBER_FUNC_SIGNATURE(has_max_size, max_size)
 BOOST_INTRUSIVE_HAS_STATIC_MEMBER_FUNC_SIGNATURE(has_select_on_container_copy_construction, select_on_container_copy_construction)
 
-}
-
-#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+}  //namespace allocator_traits_detail {
 
 namespace container_detail {
 

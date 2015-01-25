@@ -923,24 +923,24 @@ class scoped_allocator_adaptor
    typedef typename outer_traits_type::void_pointer         void_pointer;
    typedef typename outer_traits_type::const_void_pointer   const_void_pointer;
    //! Type: A type with a constant boolean <code>value</code> == true if
-   //!<code>allocator_traits<Allocator>::propagate_on_container_copy_assignment::value</code> is
+   //!`allocator_traits<Allocator>::propagate_on_container_copy_assignment::value` is
    //! true for any <code>Allocator</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>, false otherwise.
    typedef typename base_type::
       propagate_on_container_copy_assignment                propagate_on_container_copy_assignment;
    //! Type: A type with a constant boolean <code>value</code> == true if
-   //!<code>allocator_traits<Allocator>::propagate_on_container_move_assignment::value</code> is
+   //!`allocator_traits<Allocator>::propagate_on_container_move_assignment::value` is
    //! true for any <code>Allocator</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>, false otherwise.
    typedef typename base_type::
       propagate_on_container_move_assignment                propagate_on_container_move_assignment;
 
    //! Type: A type with a constant boolean <code>value</code> == true if
-   //!<code>allocator_traits<Allocator>::propagate_on_container_swap::value</code> is
+   //! `allocator_traits<Allocator>::propagate_on_container_swap::value` is
    //! true for any <code>Allocator</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>, false otherwise.
    typedef typename base_type::
       propagate_on_container_swap                           propagate_on_container_swap;
 
    //! Type: A type with a constant boolean <code>value</code> == true if
-   //!<code>allocator_traits<Allocator>::is_always_equal::value</code> is
+   //!`allocator_traits<Allocator>::is_always_equal::value` is
    //! true for all <code>Allocator</code> in the set of <code>OuterAlloc</code> and <code>InnerAllocs...</code>, false otherwise.
    typedef typename base_type::
       is_always_equal                           is_always_equal;
