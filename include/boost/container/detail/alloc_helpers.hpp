@@ -24,7 +24,7 @@ namespace container_detail {
 
 template<class AllocatorType>
 inline void swap_alloc(AllocatorType &, AllocatorType &, container_detail::false_type)
-   BOOST_CONTAINER_NOEXCEPT
+   BOOST_NOEXCEPT_OR_NOTHROW
 {}
 
 template<class AllocatorType>
@@ -33,7 +33,7 @@ inline void swap_alloc(AllocatorType &l, AllocatorType &r, container_detail::tru
 
 template<class AllocatorType>
 inline void assign_alloc(AllocatorType &, const AllocatorType &, container_detail::false_type)
-   BOOST_CONTAINER_NOEXCEPT
+   BOOST_NOEXCEPT_OR_NOTHROW
 {}
 
 template<class AllocatorType>
@@ -42,7 +42,7 @@ inline void assign_alloc(AllocatorType &l, const AllocatorType &r, container_det
 
 template<class AllocatorType>
 inline void move_alloc(AllocatorType &, AllocatorType &, container_detail::false_type)
-   BOOST_CONTAINER_NOEXCEPT
+   BOOST_NOEXCEPT_OR_NOTHROW
 {}
 
 template<class AllocatorType>

@@ -142,34 +142,34 @@ class deque_iterator
    Pointer get_last()         const  {  return m_last;  }
    index_pointer get_node()   const  {  return m_node;  }
 
-   deque_iterator(val_alloc_ptr x, index_pointer y) BOOST_CONTAINER_NOEXCEPT
+   deque_iterator(val_alloc_ptr x, index_pointer y) BOOST_NOEXCEPT_OR_NOTHROW
       : m_cur(x), m_first(*y), m_last(*y + s_buffer_size()), m_node(y)
    {}
 
-   deque_iterator() BOOST_CONTAINER_NOEXCEPT
+   deque_iterator() BOOST_NOEXCEPT_OR_NOTHROW
       : m_cur(), m_first(), m_last(), m_node()  //Value initialization to achieve "null iterators" (N3644)
    {}
 
-   deque_iterator(deque_iterator<Pointer, false> const& x) BOOST_CONTAINER_NOEXCEPT
+   deque_iterator(deque_iterator<Pointer, false> const& x) BOOST_NOEXCEPT_OR_NOTHROW
       : m_cur(x.get_cur()), m_first(x.get_first()), m_last(x.get_last()), m_node(x.get_node())
    {}
 
-   deque_iterator(Pointer cur, Pointer first, Pointer last, index_pointer node) BOOST_CONTAINER_NOEXCEPT
+   deque_iterator(Pointer cur, Pointer first, Pointer last, index_pointer node) BOOST_NOEXCEPT_OR_NOTHROW
       : m_cur(cur), m_first(first), m_last(last), m_node(node)
    {}
 
-   deque_iterator<Pointer, false> unconst() const BOOST_CONTAINER_NOEXCEPT
+   deque_iterator<Pointer, false> unconst() const BOOST_NOEXCEPT_OR_NOTHROW
    {
       return deque_iterator<Pointer, false>(this->get_cur(), this->get_first(), this->get_last(), this->get_node());
    }
 
-   reference operator*() const BOOST_CONTAINER_NOEXCEPT
+   reference operator*() const BOOST_NOEXCEPT_OR_NOTHROW
       { return *this->m_cur; }
 
-   pointer operator->() const BOOST_CONTAINER_NOEXCEPT
+   pointer operator->() const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->m_cur; }
 
-   difference_type operator-(const deque_iterator& x) const BOOST_CONTAINER_NOEXCEPT
+   difference_type operator-(const deque_iterator& x) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       if(!this->m_cur && !x.m_cur){
          return 0;
@@ -178,7 +178,7 @@ class deque_iterator
          (this->m_cur - this->m_first) + (x.m_last - x.m_cur);
    }
 
-   deque_iterator& operator++() BOOST_CONTAINER_NOEXCEPT
+   deque_iterator& operator++() BOOST_NOEXCEPT_OR_NOTHROW
    {
       ++this->m_cur;
       if (this->m_cur == this->m_last) {
@@ -188,14 +188,14 @@ class deque_iterator
       return *this;
    }
 
-   deque_iterator operator++(int) BOOST_CONTAINER_NOEXCEPT
+   deque_iterator operator++(int) BOOST_NOEXCEPT_OR_NOTHROW
    {
       deque_iterator tmp(*this);
       ++*this;
       return tmp;
    }
 
-   deque_iterator& operator--() BOOST_CONTAINER_NOEXCEPT
+   deque_iterator& operator--() BOOST_NOEXCEPT_OR_NOTHROW
    {
       if (this->m_cur == this->m_first) {
          this->priv_set_node(this->m_node - 1);
@@ -205,14 +205,14 @@ class deque_iterator
       return *this;
    }
 
-   deque_iterator operator--(int) BOOST_CONTAINER_NOEXCEPT
+   deque_iterator operator--(int) BOOST_NOEXCEPT_OR_NOTHROW
    {
       deque_iterator tmp(*this);
       --*this;
       return tmp;
    }
 
-   deque_iterator& operator+=(difference_type n) BOOST_CONTAINER_NOEXCEPT
+   deque_iterator& operator+=(difference_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {
       difference_type offset = n + (this->m_cur - this->m_first);
       if (offset >= 0 && offset < difference_type(this->s_buffer_size()))
@@ -228,44 +228,44 @@ class deque_iterator
       return *this;
    }
 
-   deque_iterator operator+(difference_type n) const BOOST_CONTAINER_NOEXCEPT
+   deque_iterator operator+(difference_type n) const BOOST_NOEXCEPT_OR_NOTHROW
       {  deque_iterator tmp(*this); return tmp += n;  }
 
-   deque_iterator& operator-=(difference_type n) BOOST_CONTAINER_NOEXCEPT
+   deque_iterator& operator-=(difference_type n) BOOST_NOEXCEPT_OR_NOTHROW
       { return *this += -n; }
 
-   deque_iterator operator-(difference_type n) const BOOST_CONTAINER_NOEXCEPT
+   deque_iterator operator-(difference_type n) const BOOST_NOEXCEPT_OR_NOTHROW
       {  deque_iterator tmp(*this); return tmp -= n;  }
 
-   reference operator[](difference_type n) const BOOST_CONTAINER_NOEXCEPT
+   reference operator[](difference_type n) const BOOST_NOEXCEPT_OR_NOTHROW
       { return *(*this + n); }
 
-   friend bool operator==(const deque_iterator& l, const deque_iterator& r) BOOST_CONTAINER_NOEXCEPT
+   friend bool operator==(const deque_iterator& l, const deque_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
       { return l.m_cur == r.m_cur; }
 
-   friend bool operator!=(const deque_iterator& l, const deque_iterator& r) BOOST_CONTAINER_NOEXCEPT
+   friend bool operator!=(const deque_iterator& l, const deque_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
       { return l.m_cur != r.m_cur; }
 
-   friend bool operator<(const deque_iterator& l, const deque_iterator& r) BOOST_CONTAINER_NOEXCEPT
+   friend bool operator<(const deque_iterator& l, const deque_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
       {  return (l.m_node == r.m_node) ? (l.m_cur < r.m_cur) : (l.m_node < r.m_node);  }
 
-   friend bool operator>(const deque_iterator& l, const deque_iterator& r) BOOST_CONTAINER_NOEXCEPT
+   friend bool operator>(const deque_iterator& l, const deque_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
       { return r < l; }
 
-   friend bool operator<=(const deque_iterator& l, const deque_iterator& r) BOOST_CONTAINER_NOEXCEPT
+   friend bool operator<=(const deque_iterator& l, const deque_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
       { return !(r < l); }
 
-   friend bool operator>=(const deque_iterator& l, const deque_iterator& r) BOOST_CONTAINER_NOEXCEPT
+   friend bool operator>=(const deque_iterator& l, const deque_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
       { return !(l < r); }
 
-   void priv_set_node(index_pointer new_node) BOOST_CONTAINER_NOEXCEPT
+   void priv_set_node(index_pointer new_node) BOOST_NOEXCEPT_OR_NOTHROW
    {
       this->m_node = new_node;
       this->m_first = *new_node;
       this->m_last = this->m_first + this->s_buffer_size();
    }
 
-   friend deque_iterator operator+(difference_type n, deque_iterator x) BOOST_CONTAINER_NOEXCEPT
+   friend deque_iterator operator+(difference_type n, deque_iterator x) BOOST_NOEXCEPT_OR_NOTHROW
       {  return x += n;  }
 };
 
@@ -304,19 +304,19 @@ class deque_base
    typedef deque_value_traits<val_alloc_val>             traits_t;
    typedef ptr_alloc_t                                   map_allocator_type;
 
-   static size_type s_buffer_size() BOOST_CONTAINER_NOEXCEPT
+   static size_type s_buffer_size() BOOST_NOEXCEPT_OR_NOTHROW
       { return deque_buf_size<val_alloc_val>::value; }
 
    val_alloc_ptr priv_allocate_node()
       {  return this->alloc().allocate(s_buffer_size());  }
 
-   void priv_deallocate_node(val_alloc_ptr p) BOOST_CONTAINER_NOEXCEPT
+   void priv_deallocate_node(val_alloc_ptr p) BOOST_NOEXCEPT_OR_NOTHROW
       {  this->alloc().deallocate(p, s_buffer_size());  }
 
    ptr_alloc_ptr priv_allocate_map(size_type n)
       { return this->ptr_alloc().allocate(n); }
 
-   void priv_deallocate_map(ptr_alloc_ptr p, size_type n) BOOST_CONTAINER_NOEXCEPT
+   void priv_deallocate_map(ptr_alloc_ptr p, size_type n) BOOST_NOEXCEPT_OR_NOTHROW
       { this->ptr_alloc().deallocate(p, n); }
 
    typedef container_detail::deque_iterator<val_alloc_ptr, false> iterator;
@@ -352,7 +352,7 @@ class deque_base
 
    protected:
 
-   void swap_members(deque_base &x) BOOST_CONTAINER_NOEXCEPT
+   void swap_members(deque_base &x) BOOST_NOEXCEPT_OR_NOTHROW
    {
       ::boost::adl_move_swap(this->members_.m_start, x.members_.m_start);
       ::boost::adl_move_swap(this->members_.m_finish, x.members_.m_finish);
@@ -404,13 +404,13 @@ class deque_base
       BOOST_CATCH_END
    }
 
-   void priv_destroy_nodes(ptr_alloc_ptr nstart, ptr_alloc_ptr nfinish) BOOST_CONTAINER_NOEXCEPT
+   void priv_destroy_nodes(ptr_alloc_ptr nstart, ptr_alloc_ptr nfinish) BOOST_NOEXCEPT_OR_NOTHROW
    {
       for (ptr_alloc_ptr n = nstart; n < nfinish; ++n)
          this->priv_deallocate_node(*n);
    }
 
-   void priv_clear_map() BOOST_CONTAINER_NOEXCEPT
+   void priv_clear_map() BOOST_NOEXCEPT_OR_NOTHROW
    {
       if (this->members_.m_map) {
          this->priv_destroy_nodes(this->members_.m_start.m_node, this->members_.m_finish.m_node + 1);
@@ -455,16 +455,16 @@ class deque_base
       iterator        m_finish;
    } members_;
 
-   ptr_alloc_t &ptr_alloc() BOOST_CONTAINER_NOEXCEPT
+   ptr_alloc_t &ptr_alloc() BOOST_NOEXCEPT_OR_NOTHROW
    {  return members_;  }
 
-   const ptr_alloc_t &ptr_alloc() const BOOST_CONTAINER_NOEXCEPT
+   const ptr_alloc_t &ptr_alloc() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return members_;  }
 
-   allocator_type &alloc() BOOST_CONTAINER_NOEXCEPT
+   allocator_type &alloc() BOOST_NOEXCEPT_OR_NOTHROW
    {  return members_;  }
 
-   const allocator_type &alloc() const BOOST_CONTAINER_NOEXCEPT
+   const allocator_type &alloc() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return members_;  }
 };
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -540,7 +540,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing
    //!
    //! <b>Complexity</b>: Constant.
-   explicit deque(const allocator_type& a) BOOST_CONTAINER_NOEXCEPT
+   explicit deque(const allocator_type& a) BOOST_NOEXCEPT_OR_NOTHROW
       : Base(a)
    {}
 
@@ -693,7 +693,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear to the number of elements.
-   ~deque() BOOST_CONTAINER_NOEXCEPT
+   ~deque() BOOST_NOEXCEPT_OR_NOTHROW
    {
       this->priv_destroy_range(this->members_.m_start, this->members_.m_finish);
    }
@@ -733,7 +733,7 @@ class deque : protected deque_base<Allocator>
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    deque& operator= (BOOST_RV_REF(deque) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
+      BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
                                   || allocator_traits_type::is_always_equal::value)
    {
       BOOST_ASSERT(this != &x);
@@ -855,7 +855,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: If allocator's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   allocator_type get_allocator() const BOOST_CONTAINER_NOEXCEPT
+   allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    { return Base::alloc(); }
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
@@ -865,7 +865,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   const stored_allocator_type &get_stored_allocator() const BOOST_CONTAINER_NOEXCEPT
+   const stored_allocator_type &get_stored_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return Base::alloc(); }
 
    //////////////////////////////////////////////
@@ -881,7 +881,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   stored_allocator_type &get_stored_allocator() BOOST_CONTAINER_NOEXCEPT
+   stored_allocator_type &get_stored_allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {  return Base::alloc(); }
 
    //! <b>Effects</b>: Returns an iterator to the first element contained in the deque.
@@ -889,7 +889,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator begin() BOOST_CONTAINER_NOEXCEPT
+   iterator begin() BOOST_NOEXCEPT_OR_NOTHROW
       { return this->members_.m_start; }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the deque.
@@ -897,7 +897,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator begin() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator begin() const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->members_.m_start; }
 
    //! <b>Effects</b>: Returns an iterator to the end of the deque.
@@ -905,7 +905,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator end() BOOST_CONTAINER_NOEXCEPT
+   iterator end() BOOST_NOEXCEPT_OR_NOTHROW
       { return this->members_.m_finish; }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the deque.
@@ -913,7 +913,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator end() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator end() const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->members_.m_finish; }
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the beginning
@@ -922,7 +922,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rbegin() BOOST_CONTAINER_NOEXCEPT
+   reverse_iterator rbegin() BOOST_NOEXCEPT_OR_NOTHROW
       { return reverse_iterator(this->members_.m_finish); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
@@ -931,7 +931,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rbegin() const BOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator rbegin() const BOOST_NOEXCEPT_OR_NOTHROW
       { return const_reverse_iterator(this->members_.m_finish); }
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the end
@@ -940,7 +940,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rend() BOOST_CONTAINER_NOEXCEPT
+   reverse_iterator rend() BOOST_NOEXCEPT_OR_NOTHROW
       { return reverse_iterator(this->members_.m_start); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
@@ -949,7 +949,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rend() const BOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator rend() const BOOST_NOEXCEPT_OR_NOTHROW
       { return const_reverse_iterator(this->members_.m_start); }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the deque.
@@ -957,7 +957,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cbegin() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator cbegin() const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->members_.m_start; }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the deque.
@@ -965,7 +965,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cend() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->members_.m_finish; }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
@@ -974,7 +974,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crbegin() const BOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator crbegin() const BOOST_NOEXCEPT_OR_NOTHROW
       { return const_reverse_iterator(this->members_.m_finish); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
@@ -983,7 +983,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crend() const BOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator crend() const BOOST_NOEXCEPT_OR_NOTHROW
       { return const_reverse_iterator(this->members_.m_start); }
 
    //////////////////////////////////////////////
@@ -997,7 +997,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   bool empty() const BOOST_CONTAINER_NOEXCEPT
+   bool empty() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->members_.m_finish == this->members_.m_start; }
 
    //! <b>Effects</b>: Returns the number of the elements contained in the deque.
@@ -1005,7 +1005,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type size() const BOOST_CONTAINER_NOEXCEPT
+   size_type size() const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->members_.m_finish - this->members_.m_start; }
 
    //! <b>Effects</b>: Returns the largest possible size of the deque.
@@ -1013,7 +1013,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type max_size() const BOOST_CONTAINER_NOEXCEPT
+   size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
       { return allocator_traits_type::max_size(this->alloc()); }
 
    //! <b>Effects</b>: Inserts or erases elements at the end such that
@@ -1100,7 +1100,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reference front() BOOST_CONTAINER_NOEXCEPT
+   reference front() BOOST_NOEXCEPT_OR_NOTHROW
       { return *this->members_.m_start; }
 
    //! <b>Requires</b>: !empty()
@@ -1111,7 +1111,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reference front() const BOOST_CONTAINER_NOEXCEPT
+   const_reference front() const BOOST_NOEXCEPT_OR_NOTHROW
       { return *this->members_.m_start; }
 
    //! <b>Requires</b>: !empty()
@@ -1122,7 +1122,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reference back() BOOST_CONTAINER_NOEXCEPT
+   reference back() BOOST_NOEXCEPT_OR_NOTHROW
       {  return *(end()-1); }
 
    //! <b>Requires</b>: !empty()
@@ -1133,7 +1133,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reference back() const BOOST_CONTAINER_NOEXCEPT
+   const_reference back() const BOOST_NOEXCEPT_OR_NOTHROW
       {  return *(cend()-1);  }
 
    //! <b>Requires</b>: size() > n.
@@ -1144,7 +1144,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reference operator[](size_type n) BOOST_CONTAINER_NOEXCEPT
+   reference operator[](size_type n) BOOST_NOEXCEPT_OR_NOTHROW
       { return this->members_.m_start[difference_type(n)]; }
 
    //! <b>Requires</b>: size() > n.
@@ -1155,7 +1155,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reference operator[](size_type n) const BOOST_CONTAINER_NOEXCEPT
+   const_reference operator[](size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->members_.m_start[difference_type(n)]; }
 
    //! <b>Requires</b>: size() >= n.
@@ -1169,7 +1169,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension
-   iterator nth(size_type n) BOOST_CONTAINER_NOEXCEPT
+   iterator nth(size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->size() >= n);
       return iterator(this->begin()+n);
@@ -1186,7 +1186,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension
-   const_iterator nth(size_type n) const BOOST_CONTAINER_NOEXCEPT
+   const_iterator nth(size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->size() >= n);
       return const_iterator(this->cbegin()+n);
@@ -1203,7 +1203,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension
-   size_type index_of(iterator p) BOOST_CONTAINER_NOEXCEPT
+   size_type index_of(iterator p) BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->priv_index_of(p);  }
 
    //! <b>Requires</b>: begin() <= p <= end().
@@ -1216,7 +1216,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension
-   size_type index_of(const_iterator p) const BOOST_CONTAINER_NOEXCEPT
+   size_type index_of(const_iterator p) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->priv_index_of(p);  }
 
    //! <b>Requires</b>: size() > n.
@@ -1525,7 +1525,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant time.
-   void pop_front() BOOST_CONTAINER_NOEXCEPT
+   void pop_front() BOOST_NOEXCEPT_OR_NOTHROW
    {
       if (this->members_.m_start.m_cur != this->members_.m_start.m_last - 1) {
          allocator_traits_type::destroy
@@ -1543,7 +1543,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant time.
-   void pop_back() BOOST_CONTAINER_NOEXCEPT
+   void pop_back() BOOST_NOEXCEPT_OR_NOTHROW
    {
       if (this->members_.m_finish.m_cur != this->members_.m_finish.m_first) {
          --this->members_.m_finish.m_cur;
@@ -1564,7 +1564,7 @@ class deque : protected deque_base<Allocator>
    //!   last element (if pos is near the end) or the first element
    //!   if(pos is near the beginning).
    //!   Constant if pos is the first or the last element.
-   iterator erase(const_iterator pos) BOOST_CONTAINER_NOEXCEPT
+   iterator erase(const_iterator pos) BOOST_NOEXCEPT_OR_NOTHROW
    {
       iterator next = pos.unconst();
       ++next;
@@ -1588,7 +1588,7 @@ class deque : protected deque_base<Allocator>
    //!   last plus the elements between pos and the
    //!   last element (if pos is near the end) or the first element
    //!   if(pos is near the beginning).
-   iterator erase(const_iterator first, const_iterator last) BOOST_CONTAINER_NOEXCEPT
+   iterator erase(const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW
    {
       if (first == this->members_.m_start && last == this->members_.m_finish) {
          this->clear();
@@ -1623,7 +1623,7 @@ class deque : protected deque_base<Allocator>
    //!
    //! <b>Complexity</b>: Constant.
    void swap(deque &x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_swap::value
+      BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_swap::value
                                || allocator_traits_type::is_always_equal::value)
    {
       this->swap_members(x);
@@ -1637,7 +1637,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the deque.
-   void clear() BOOST_CONTAINER_NOEXCEPT
+   void clear() BOOST_NOEXCEPT_OR_NOTHROW
    {
       for (index_pointer node = this->members_.m_start.m_node + 1;
             node < this->members_.m_finish.m_node;
@@ -1994,7 +1994,7 @@ class deque : protected deque_base<Allocator>
    }
 
    // Called only if this->members_.m_finish.m_cur == this->members_.m_finish.m_first.
-   void priv_pop_back_aux() BOOST_CONTAINER_NOEXCEPT
+   void priv_pop_back_aux() BOOST_NOEXCEPT_OR_NOTHROW
    {
       this->priv_deallocate_node(this->members_.m_finish.m_first);
       this->members_.m_finish.priv_set_node(this->members_.m_finish.m_node - 1);
@@ -2009,7 +2009,7 @@ class deque : protected deque_base<Allocator>
    // if the deque has at least one element (a precondition for this member
    // function), and if this->members_.m_start.m_cur == this->members_.m_start.m_last, then the deque
    // must have at least two nodes.
-   void priv_pop_front_aux() BOOST_CONTAINER_NOEXCEPT
+   void priv_pop_front_aux() BOOST_NOEXCEPT_OR_NOTHROW
    {
       allocator_traits_type::destroy
          ( this->alloc()

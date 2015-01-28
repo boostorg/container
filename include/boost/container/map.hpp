@@ -272,7 +272,7 @@ class map
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    map& operator=(BOOST_RV_REF(map) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
 
    {  return static_cast<map&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
@@ -303,7 +303,7 @@ class map
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   stored_allocator_type &get_stored_allocator() BOOST_CONTAINER_NOEXCEPT;
+   stored_allocator_type &get_stored_allocator() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
    //!
@@ -312,49 +312,49 @@ class map
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   const stored_allocator_type &get_stored_allocator() const BOOST_CONTAINER_NOEXCEPT;
+   const stored_allocator_type &get_stored_allocator() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns an iterator to the first element contained in the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator begin() BOOST_CONTAINER_NOEXCEPT;
+   iterator begin() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator begin() const BOOST_CONTAINER_NOEXCEPT;
+   const_iterator begin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cbegin() const BOOST_CONTAINER_NOEXCEPT;
+   const_iterator cbegin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns an iterator to the end of the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator end() BOOST_CONTAINER_NOEXCEPT;
+   iterator end() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator end() const BOOST_CONTAINER_NOEXCEPT;
+   const_iterator end() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cend() const BOOST_CONTAINER_NOEXCEPT;
+   const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the beginning
    //! of the reversed container.
@@ -362,7 +362,7 @@ class map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rbegin() BOOST_CONTAINER_NOEXCEPT;
+   reverse_iterator rbegin() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
    //! of the reversed container.
@@ -370,7 +370,7 @@ class map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rbegin() const BOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator rbegin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
    //! of the reversed container.
@@ -378,7 +378,7 @@ class map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crbegin() const BOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator crbegin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the end
    //! of the reversed container.
@@ -386,7 +386,7 @@ class map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rend() BOOST_CONTAINER_NOEXCEPT;
+   reverse_iterator rend() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
    //! of the reversed container.
@@ -394,7 +394,7 @@ class map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rend() const BOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator rend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
    //! of the reversed container.
@@ -402,28 +402,28 @@ class map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crend() const BOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator crend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns true if the container contains no elements.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   bool empty() const BOOST_CONTAINER_NOEXCEPT;
+   bool empty() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns the number of the elements contained in the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type size() const BOOST_CONTAINER_NOEXCEPT;
+   size_type size() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns the largest possible size of the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type max_size() const BOOST_CONTAINER_NOEXCEPT;
+   size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -661,21 +661,21 @@ class map
    //!   returns end().
    //!
    //! <b>Complexity</b>: Amortized constant time
-   iterator erase(const_iterator p) BOOST_CONTAINER_NOEXCEPT;
+   iterator erase(const_iterator p) BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Erases all elements in the container with key equivalent to x.
    //!
    //! <b>Returns</b>: Returns the number of erased elements.
    //!
    //! <b>Complexity</b>: log(size()) + count(k)
-   size_type erase(const key_type& x) BOOST_CONTAINER_NOEXCEPT;
+   size_type erase(const key_type& x) BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Erases all the elements in the range [first, last).
    //!
    //! <b>Returns</b>: Returns last.
    //!
    //! <b>Complexity</b>: log(size())+N where N is the distance from first to last.
-   iterator erase(const_iterator first, const_iterator last) BOOST_CONTAINER_NOEXCEPT;
+   iterator erase(const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
@@ -683,7 +683,7 @@ class map
    //!
    //! <b>Complexity</b>: Constant.
    void swap(map& x)
-      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::container_detail::is_nothrow_swappable<Compare>::value )
 
    //! <b>Effects</b>: erase(a.begin(),a.end()).
@@ -691,7 +691,7 @@ class map
    //! <b>Postcondition</b>: size() == 0.
    //!
    //! <b>Complexity</b>: linear in size().
-   void clear() BOOST_CONTAINER_NOEXCEPT;
+   void clear() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Effects</b>: Returns the comparison object out
    //!   of which a was constructed.
@@ -1071,7 +1071,7 @@ class multimap
    //!
    //! <b>Complexity</b>: Constant.
    multimap& operator=(BOOST_RV_REF(multimap) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
    {  return static_cast<multimap&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
@@ -1107,31 +1107,31 @@ class multimap
    const_iterator cbegin() const;
 
    //! @copydoc ::boost::container::set::end()
-   iterator end() BOOST_CONTAINER_NOEXCEPT;
+   iterator end() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::end() const
-   const_iterator end() const BOOST_CONTAINER_NOEXCEPT;
+   const_iterator end() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::cend() const
-   const_iterator cend() const BOOST_CONTAINER_NOEXCEPT;
+   const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::rbegin()
-   reverse_iterator rbegin() BOOST_CONTAINER_NOEXCEPT;
+   reverse_iterator rbegin() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::rbegin() const
-   const_reverse_iterator rbegin() const BOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator rbegin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::crbegin() const
-   const_reverse_iterator crbegin() const BOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator crbegin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::rend()
-   reverse_iterator rend() BOOST_CONTAINER_NOEXCEPT;
+   reverse_iterator rend() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::rend() const
-   const_reverse_iterator rend() const BOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator rend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::crend() const
-   const_reverse_iterator crend() const BOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator crend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::empty() const
    bool empty() const;
@@ -1290,11 +1290,11 @@ class multimap
 
    //! @copydoc ::boost::container::set::swap
    void swap(multiset& x)
-      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::container_detail::is_nothrow_swappable<Compare>::value );
 
    //! @copydoc ::boost::container::set::clear
-   void clear() BOOST_CONTAINER_NOEXCEPT;
+   void clear() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::key_comp
    key_compare key_comp() const;

@@ -37,29 +37,29 @@ class static_storage_allocator
    public:
    typedef T value_type;
 
-   static_storage_allocator() BOOST_CONTAINER_NOEXCEPT
+   static_storage_allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
-   static_storage_allocator(const static_storage_allocator &) BOOST_CONTAINER_NOEXCEPT
+   static_storage_allocator(const static_storage_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
-   static_storage_allocator & operator=(const static_storage_allocator &) BOOST_CONTAINER_NOEXCEPT
+   static_storage_allocator & operator=(const static_storage_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
-   T* internal_storage() const BOOST_CONTAINER_NOEXCEPT
+   T* internal_storage() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return const_cast<T*>(static_cast<const T*>(static_cast<const void*>(&storage)));  }
 
-   T* internal_storage() BOOST_CONTAINER_NOEXCEPT
+   T* internal_storage() BOOST_NOEXCEPT_OR_NOTHROW
    {  return static_cast<T*>(static_cast<void*>(&storage));  }
 
    static const std::size_t internal_capacity = N;
 
    typedef boost::container::container_detail::version_type<static_storage_allocator, 0>   version;
 
-   friend bool operator==(const static_storage_allocator &, const static_storage_allocator &) BOOST_CONTAINER_NOEXCEPT
+   friend bool operator==(const static_storage_allocator &, const static_storage_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return false;  }
 
-   friend bool operator!=(const static_storage_allocator &, const static_storage_allocator &) BOOST_CONTAINER_NOEXCEPT
+   friend bool operator!=(const static_storage_allocator &, const static_storage_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return true;  }
 
    private:
@@ -139,7 +139,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    static_vector() BOOST_CONTAINER_NOEXCEPT
+    static_vector() BOOST_NOEXCEPT_OR_NOTHROW
         : base_t()
     {}
 
@@ -464,7 +464,7 @@ public:
     //!
     //! @par Complexity
     //!   Linear O(N).
-    void reserve(size_type count)  BOOST_CONTAINER_NOEXCEPT;
+    void reserve(size_type count)  BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @pre <tt>size() < capacity()</tt>
     //!
@@ -705,7 +705,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    void clear()  BOOST_CONTAINER_NOEXCEPT;
+    void clear()  BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @pre <tt>i < size()</tt>
     //!
@@ -895,7 +895,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    Value * data() BOOST_CONTAINER_NOEXCEPT;
+    Value * data() BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Const pointer such that <tt>[data(), data() + size())</tt> is a valid range.
     //!   For a non-empty vector <tt>data() == &front()</tt>.
@@ -905,7 +905,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    const Value * data() const BOOST_CONTAINER_NOEXCEPT;
+    const Value * data() const BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns iterator to the first element.
     //!
@@ -916,7 +916,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    iterator begin() BOOST_CONTAINER_NOEXCEPT;
+    iterator begin() BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns const iterator to the first element.
     //!
@@ -927,7 +927,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    const_iterator begin() const BOOST_CONTAINER_NOEXCEPT;
+    const_iterator begin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns const iterator to the first element.
     //!
@@ -938,7 +938,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    const_iterator cbegin() const BOOST_CONTAINER_NOEXCEPT;
+    const_iterator cbegin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns iterator to the one after the last element.
     //!
@@ -949,7 +949,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    iterator end() BOOST_CONTAINER_NOEXCEPT;
+    iterator end() BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns const iterator to the one after the last element.
     //!
@@ -960,7 +960,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    const_iterator end() const BOOST_CONTAINER_NOEXCEPT;
+    const_iterator end() const BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns const iterator to the one after the last element.
     //!
@@ -971,7 +971,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    const_iterator cend() const BOOST_CONTAINER_NOEXCEPT;
+    const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns reverse iterator to the first element of the reversed container.
     //!
@@ -983,7 +983,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    reverse_iterator rbegin() BOOST_CONTAINER_NOEXCEPT;
+    reverse_iterator rbegin() BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns const reverse iterator to the first element of the reversed container.
     //!
@@ -995,7 +995,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    const_reverse_iterator rbegin() const BOOST_CONTAINER_NOEXCEPT;
+    const_reverse_iterator rbegin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns const reverse iterator to the first element of the reversed container.
     //!
@@ -1007,7 +1007,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    const_reverse_iterator crbegin() const BOOST_CONTAINER_NOEXCEPT;
+    const_reverse_iterator crbegin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns reverse iterator to the one after the last element of the reversed container.
     //!
@@ -1019,7 +1019,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    reverse_iterator rend() BOOST_CONTAINER_NOEXCEPT;
+    reverse_iterator rend() BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns const reverse iterator to the one after the last element of the reversed container.
     //!
@@ -1031,7 +1031,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    const_reverse_iterator rend() const BOOST_CONTAINER_NOEXCEPT;
+    const_reverse_iterator rend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns const reverse iterator to the one after the last element of the reversed container.
     //!
@@ -1043,7 +1043,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    const_reverse_iterator crend() const BOOST_CONTAINER_NOEXCEPT;
+    const_reverse_iterator crend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns container's capacity.
     //!
@@ -1054,7 +1054,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    static size_type capacity() BOOST_CONTAINER_NOEXCEPT;
+    static size_type capacity() BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns container's capacity.
     //!
@@ -1065,7 +1065,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    static size_type max_size() BOOST_CONTAINER_NOEXCEPT;
+    static size_type max_size() BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns the number of stored elements.
     //!
@@ -1076,7 +1076,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    size_type size() const BOOST_CONTAINER_NOEXCEPT;
+    size_type size() const BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Queries if the container contains elements.
     //!
@@ -1088,7 +1088,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    bool empty() const BOOST_CONTAINER_NOEXCEPT;
+    bool empty() const BOOST_NOEXCEPT_OR_NOTHROW;
 #else
 
    friend void swap(static_vector &x, static_vector &y)

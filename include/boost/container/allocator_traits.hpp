@@ -282,7 +282,7 @@ struct allocator_traits
    //! <b>Effects</b>: calls <code>a.destroy(p)</code> if that call is well-formed;
    //! otherwise, invokes <code>p->~T()</code>.
    template<class T>
-   static void destroy(Allocator &a, T*p) BOOST_CONTAINER_NOEXCEPT
+   static void destroy(Allocator &a, T*p) BOOST_NOEXCEPT_OR_NOTHROW
    {
       typedef T* destroy_pointer;
       const bool value = boost::container::container_detail::
@@ -294,7 +294,7 @@ struct allocator_traits
 
    //! <b>Returns</b>: <code>a.max_size()</code> if that expression is well-formed; otherwise,
    //! <code>numeric_limits<size_type>::max()</code>.
-   static size_type max_size(const Allocator &a) BOOST_CONTAINER_NOEXCEPT
+   static size_type max_size(const Allocator &a) BOOST_NOEXCEPT_OR_NOTHROW
    {
       const bool value = allocator_traits_detail::has_max_size<Allocator, size_type (Allocator::*)() const>::value;
       container_detail::bool_<value> flag;
@@ -341,23 +341,23 @@ struct allocator_traits
       {  return a.allocate(n);  }
 
       template<class T>
-      static void priv_destroy(container_detail::true_type, Allocator &a, T* p) BOOST_CONTAINER_NOEXCEPT
+      static void priv_destroy(container_detail::true_type, Allocator &a, T* p) BOOST_NOEXCEPT_OR_NOTHROW
       {  a.destroy(p);  }
 
       template<class T>
-      static void priv_destroy(container_detail::false_type, Allocator &, T* p) BOOST_CONTAINER_NOEXCEPT
+      static void priv_destroy(container_detail::false_type, Allocator &, T* p) BOOST_NOEXCEPT_OR_NOTHROW
       {  p->~T(); (void)p;  }
 
-      static size_type priv_max_size(container_detail::true_type, const Allocator &a) BOOST_CONTAINER_NOEXCEPT
+      static size_type priv_max_size(container_detail::true_type, const Allocator &a) BOOST_NOEXCEPT_OR_NOTHROW
       {  return a.max_size();  }
 
-      static size_type priv_max_size(container_detail::false_type, const Allocator &) BOOST_CONTAINER_NOEXCEPT
+      static size_type priv_max_size(container_detail::false_type, const Allocator &) BOOST_NOEXCEPT_OR_NOTHROW
       {  return size_type(-1)/sizeof(value_type);  }
 
       static Allocator priv_select_on_container_copy_construction(container_detail::true_type, const Allocator &a)
       {  return a.select_on_container_copy_construction();  }
 
-      static const Allocator &priv_select_on_container_copy_construction(container_detail::false_type, const Allocator &a) BOOST_CONTAINER_NOEXCEPT
+      static const Allocator &priv_select_on_container_copy_construction(container_detail::false_type, const Allocator &a) BOOST_NOEXCEPT_OR_NOTHROW
       {  return a;  }
 
       #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)

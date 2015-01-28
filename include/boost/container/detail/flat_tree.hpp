@@ -265,7 +265,7 @@ class flat_tree
    {  m_data = x.m_data;   return *this;  }
 
    flat_tree&  operator=(BOOST_RV_REF(flat_tree) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
    {  m_data = boost::move(x.m_data); return *this;  }
 
@@ -332,7 +332,7 @@ class flat_tree
    { return this->m_data.m_vect.max_size(); }
 
    void swap(flat_tree& other)
-      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::container_detail::is_nothrow_swappable<Compare>::value )
    {  this->m_data.swap(other.m_data);  }
 
@@ -628,16 +628,16 @@ class flat_tree
    void shrink_to_fit()
    {  this->m_data.m_vect.shrink_to_fit();  }
 
-   iterator nth(size_type n) BOOST_CONTAINER_NOEXCEPT
+   iterator nth(size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->m_data.m_vect.nth(n);   }
 
-   const_iterator nth(size_type n) const BOOST_CONTAINER_NOEXCEPT
+   const_iterator nth(size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->m_data.m_vect.nth(n);   }
 
-   size_type index_of(iterator p) BOOST_CONTAINER_NOEXCEPT
+   size_type index_of(iterator p) BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->m_data.m_vect.index_of(p);   }
 
-   size_type index_of(const_iterator p) const BOOST_CONTAINER_NOEXCEPT
+   size_type index_of(const_iterator p) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->m_data.m_vect.index_of(p);   }
 
    // set operations:

@@ -113,11 +113,11 @@ class node_allocator
    public:
 
    //!Default constructor
-   node_allocator() BOOST_CONTAINER_NOEXCEPT
+   node_allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
    //!Copy constructor from other node_allocator.
-   node_allocator(const node_allocator &) BOOST_CONTAINER_NOEXCEPT
+   node_allocator(const node_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
    //!Copy constructor from related node_allocator.
@@ -127,11 +127,11 @@ class node_allocator
             #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
             , Version
             #endif
-            > &) BOOST_CONTAINER_NOEXCEPT
+            > &) BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
    //!Destructor
-   ~node_allocator() BOOST_CONTAINER_NOEXCEPT
+   ~node_allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
    //!Returns the number of elements that could be allocated.
@@ -162,7 +162,7 @@ class node_allocator
 
    //!Deallocate allocated memory.
    //!Never throws
-   void deallocate(const pointer &ptr, size_type count) BOOST_CONTAINER_NOEXCEPT
+   void deallocate(const pointer &ptr, size_type count) BOOST_NOEXCEPT_OR_NOTHROW
    {
       (void)count;
       if(Version == 1 && count == 1){
@@ -177,7 +177,7 @@ class node_allocator
    }
 
    //!Deallocates all free blocks of the pool
-   static void deallocate_free_blocks() BOOST_CONTAINER_NOEXCEPT
+   static void deallocate_free_blocks() BOOST_NOEXCEPT_OR_NOTHROW
    {
       typedef container_detail::shared_node_pool
          <sizeof(T), NodesPerBlock> shared_pool_t;
@@ -197,7 +197,7 @@ class node_allocator
 
    //!Returns maximum the number of objects the previously allocated memory
    //!pointed by p can hold.
-   size_type size(pointer p) const BOOST_CONTAINER_NOEXCEPT
+   size_type size(pointer p) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_STATIC_ASSERT(( Version > 1 ));
       return boost_cont_size(p);
@@ -231,7 +231,7 @@ class node_allocator
    //!Deallocates memory previously allocated with allocate_one().
    //!You should never use deallocate_one to deallocate memory allocated
    //!with other functions different from allocate_one(). Never throws
-   void deallocate_one(pointer p) BOOST_CONTAINER_NOEXCEPT
+   void deallocate_one(pointer p) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_STATIC_ASSERT(( Version > 1 ));
       typedef container_detail::shared_node_pool
@@ -240,7 +240,7 @@ class node_allocator
       singleton_t::instance().deallocate_node(p);
    }
 
-   void deallocate_individual(multiallocation_chain &chain) BOOST_CONTAINER_NOEXCEPT
+   void deallocate_individual(multiallocation_chain &chain) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_STATIC_ASSERT(( Version > 1 ));
       typedef container_detail::shared_node_pool
@@ -282,7 +282,7 @@ class node_allocator
                              , BOOST_CONTAINER_MEMCHAIN_SIZE(&ch));
    }
 
-   void deallocate_many(multiallocation_chain &chain) BOOST_CONTAINER_NOEXCEPT
+   void deallocate_many(multiallocation_chain &chain) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_STATIC_ASSERT(( Version > 1 ));
       void *first = &*chain.begin();
@@ -295,17 +295,17 @@ class node_allocator
 
    //!Swaps allocators. Does not throw. If each allocator is placed in a
    //!different memory segment, the result is undefined.
-   friend void swap(self_t &, self_t &) BOOST_CONTAINER_NOEXCEPT
+   friend void swap(self_t &, self_t &) BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
    //!An allocator always compares to true, as memory allocated with one
    //!instance can be deallocated by another instance
-   friend bool operator==(const node_allocator &, const node_allocator &) BOOST_CONTAINER_NOEXCEPT
+   friend bool operator==(const node_allocator &, const node_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return true;   }
 
    //!An allocator always compares to false, as memory allocated with one
    //!instance can be deallocated by another instance
-   friend bool operator!=(const node_allocator &, const node_allocator &) BOOST_CONTAINER_NOEXCEPT
+   friend bool operator!=(const node_allocator &, const node_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return false;   }
 
    private:

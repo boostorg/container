@@ -221,7 +221,7 @@ class slist
    //! <b>Throws</b>: Nothing
    //!
    //! <b>Complexity</b>: Constant.
-   explicit slist(const allocator_type& a) BOOST_CONTAINER_NOEXCEPT
+   explicit slist(const allocator_type& a) BOOST_NOEXCEPT_OR_NOTHROW
       :  AllocHolder(a)
    {}
 
@@ -319,7 +319,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear to the number of elements.
-   ~slist() BOOST_CONTAINER_NOEXCEPT
+   ~slist() BOOST_NOEXCEPT_OR_NOTHROW
    {} //AllocHolder clears the slist
 
    //! <b>Effects</b>: Makes *this contain the same elements as x.
@@ -358,7 +358,7 @@ class slist
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    slist& operator= (BOOST_RV_REF(slist) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
+      BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
                                   || allocator_traits_type::is_always_equal::value)
    {
       BOOST_ASSERT(this != &x);
@@ -459,7 +459,7 @@ class slist
    //! <b>Throws</b>: If allocator's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   allocator_type get_allocator() const BOOST_CONTAINER_NOEXCEPT
+   allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return allocator_type(this->node_alloc()); }
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
@@ -469,7 +469,7 @@ class slist
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   stored_allocator_type &get_stored_allocator() BOOST_CONTAINER_NOEXCEPT
+   stored_allocator_type &get_stored_allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->node_alloc(); }
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
@@ -479,7 +479,7 @@ class slist
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   const stored_allocator_type &get_stored_allocator() const BOOST_CONTAINER_NOEXCEPT
+   const stored_allocator_type &get_stored_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->node_alloc(); }
 
    //////////////////////////////////////////////
@@ -495,7 +495,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator before_begin() BOOST_CONTAINER_NOEXCEPT
+   iterator before_begin() BOOST_NOEXCEPT_OR_NOTHROW
    {  return iterator(end());  }
 
    //! <b>Effects</b>: Returns a non-dereferenceable const_iterator
@@ -505,7 +505,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator before_begin() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator before_begin() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->cbefore_begin();  }
 
    //! <b>Effects</b>: Returns an iterator to the first element contained in the list.
@@ -513,7 +513,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator begin() BOOST_CONTAINER_NOEXCEPT
+   iterator begin() BOOST_NOEXCEPT_OR_NOTHROW
    { return iterator(this->icont().begin()); }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the list.
@@ -521,7 +521,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator begin() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator begin() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->cbegin();   }
 
    //! <b>Effects</b>: Returns an iterator to the end of the list.
@@ -529,7 +529,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator end() BOOST_CONTAINER_NOEXCEPT
+   iterator end() BOOST_NOEXCEPT_OR_NOTHROW
    { return iterator(this->icont().end()); }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the list.
@@ -537,7 +537,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator end() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator end() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->cend();   }
 
    //! <b>Effects</b>: Returns a non-dereferenceable const_iterator
@@ -547,7 +547,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cbefore_begin() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator cbefore_begin() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return const_iterator(end());  }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the list.
@@ -555,7 +555,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cbegin() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator cbegin() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return const_iterator(this->non_const_icont().begin());   }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the list.
@@ -563,7 +563,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cend() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return const_iterator(this->non_const_icont().end());   }
 
    //! <b>Returns</b>: The iterator to the element before i in the sequence.
@@ -575,7 +575,7 @@ class slist
    //! <b>Complexity</b>: Linear to the number of elements before i.
    //!
    //! <b>Note</b>: Non-standard extension.
-   iterator previous(iterator p) BOOST_CONTAINER_NOEXCEPT
+   iterator previous(iterator p) BOOST_NOEXCEPT_OR_NOTHROW
    {  return iterator(this->icont().previous(p.get())); }
 
    //! <b>Returns</b>: The const_iterator to the element before i in the sequence.
@@ -917,7 +917,7 @@ class slist
    //!
    //! <b>Complexity</b>: Linear to the number of elements on *this and x.
    void swap(slist& x)
-      BOOST_CONTAINER_NOEXCEPT_IF( allocator_traits_type::propagate_on_container_swap::value
+      BOOST_NOEXCEPT_IF( allocator_traits_type::propagate_on_container_swap::value
                                 || allocator_traits_type::is_always_equal::value)
    {  AllocHolder::swap(x);   }
 
@@ -948,7 +948,7 @@ class slist
    //!
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of
    //!    this list. Iterators of this list and all the references are not invalidated.
-   void splice_after(const_iterator prev_p, slist& x) BOOST_CONTAINER_NOEXCEPT
+   void splice_after(const_iterator prev_p, slist& x) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this != &x);
       BOOST_ASSERT(this->node_alloc() == x.node_alloc());
@@ -968,7 +968,7 @@ class slist
    //!
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of
    //!    this list. Iterators of this list and all the references are not invalidated.
-   void splice_after(const_iterator prev_p, BOOST_RV_REF(slist) x) BOOST_CONTAINER_NOEXCEPT
+   void splice_after(const_iterator prev_p, BOOST_RV_REF(slist) x) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->splice_after(prev_p, static_cast<slist&>(x));  }
 
    //! <b>Requires</b>: prev_p must be a valid iterator of this.
@@ -985,7 +985,7 @@ class slist
    //!
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of this
    //!   list. Iterators of this list and all the references are not invalidated.
-   void splice_after(const_iterator prev_p, slist& x, const_iterator prev) BOOST_CONTAINER_NOEXCEPT
+   void splice_after(const_iterator prev_p, slist& x, const_iterator prev) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->node_alloc() == x.node_alloc());
       this->icont().splice_after(prev_p.get(), x.icont(), prev.get());
@@ -1005,7 +1005,7 @@ class slist
    //!
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of this
    //!   list. Iterators of this list and all the references are not invalidated.
-   void splice_after(const_iterator prev_p, BOOST_RV_REF(slist) x, const_iterator prev) BOOST_CONTAINER_NOEXCEPT
+   void splice_after(const_iterator prev_p, BOOST_RV_REF(slist) x, const_iterator prev) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->splice_after(prev_p, static_cast<slist&>(x), prev);  }
 
    //! <b>Requires</b>: prev_p must be a valid iterator of this.
@@ -1023,7 +1023,7 @@ class slist
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of this
    //!   list. Iterators of this list and all the references are not invalidated.
    void splice_after(const_iterator prev_p,      slist& x,
-      const_iterator before_first,  const_iterator before_last) BOOST_CONTAINER_NOEXCEPT
+      const_iterator before_first,  const_iterator before_last) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->node_alloc() == x.node_alloc());
       this->icont().splice_after
@@ -1045,7 +1045,7 @@ class slist
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of this
    //!   list. Iterators of this list and all the references are not invalidated.
    void splice_after(const_iterator prev_p,      BOOST_RV_REF(slist) x,
-      const_iterator before_first,  const_iterator before_last) BOOST_CONTAINER_NOEXCEPT
+      const_iterator before_first,  const_iterator before_last) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->splice_after(prev_p, static_cast<slist&>(x), before_first, before_last);  }
 
    //! <b>Requires</b>: prev_p must be a valid iterator of this.
@@ -1065,7 +1065,7 @@ class slist
    //!   list. Iterators of this list and all the references are not invalidated.
    void splice_after(const_iterator prev_p,      slist& x,
                      const_iterator before_first,  const_iterator before_last,
-                     size_type n) BOOST_CONTAINER_NOEXCEPT
+                     size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->node_alloc() == x.node_alloc());
       this->icont().splice_after
@@ -1089,7 +1089,7 @@ class slist
    //!   list. Iterators of this list and all the references are not invalidated.
    void splice_after(const_iterator prev_p,      BOOST_RV_REF(slist) x,
                      const_iterator before_first,  const_iterator before_last,
-                     size_type n) BOOST_CONTAINER_NOEXCEPT
+                     size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->splice_after(prev_p, static_cast<slist&>(x), before_first, before_last, n);  }
 
    //! <b>Effects</b>: Removes all the elements that compare equal to value.
@@ -1253,7 +1253,7 @@ class slist
    //! <b>Complexity</b>: This function is linear time.
    //!
    //! <b>Note</b>: Iterators and references are not invalidated
-   void reverse() BOOST_CONTAINER_NOEXCEPT
+   void reverse() BOOST_NOEXCEPT_OR_NOTHROW
    {  this->icont().reverse();  }
 
    //////////////////////////////////////////////
@@ -1375,7 +1375,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear to the number of elements before p.
-   iterator erase(const_iterator p) BOOST_CONTAINER_NOEXCEPT
+   iterator erase(const_iterator p) BOOST_NOEXCEPT_OR_NOTHROW
    {  return iterator(this->erase_after(previous(p))); }
 
    //! <b>Requires</b>: first and last must be valid iterator to elements in *this.
@@ -1386,7 +1386,7 @@ class slist
    //!
    //! <b>Complexity</b>: Linear to the distance between first and last plus
    //!   linear to the elements before first.
-   iterator erase(const_iterator first, const_iterator last) BOOST_CONTAINER_NOEXCEPT
+   iterator erase(const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW
    {  return iterator(this->erase_after(previous(first), last)); }
 
    //! <b>Requires</b>: p must point to an element contained
@@ -1401,7 +1401,7 @@ class slist
    //!
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of
    //!    this list. Iterators of this list and all the references are not invalidated.
-   void splice(const_iterator p, slist& x) BOOST_CONTAINER_NOEXCEPT
+   void splice(const_iterator p, slist& x) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->splice_after(this->previous(p), x);  }
 
    //! <b>Requires</b>: p must point to an element contained
@@ -1416,7 +1416,7 @@ class slist
    //!
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of
    //!    this list. Iterators of this list and all the references are not invalidated.
-   void splice(const_iterator p, BOOST_RV_REF(slist) x) BOOST_CONTAINER_NOEXCEPT
+   void splice(const_iterator p, BOOST_RV_REF(slist) x) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->splice(p, static_cast<slist&>(x));  }
 
    //! <b>Requires</b>: p must point to an element contained
@@ -1433,7 +1433,7 @@ class slist
    //!
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of this
    //!   list. Iterators of this list and all the references are not invalidated.
-   void splice(const_iterator p, slist& x, const_iterator i) BOOST_CONTAINER_NOEXCEPT
+   void splice(const_iterator p, slist& x, const_iterator i) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->splice_after(this->previous(p), x, this->previous(i));  }
 
    //! <b>Requires</b>: p must point to an element contained
@@ -1450,7 +1450,7 @@ class slist
    //!
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of this
    //!   list. Iterators of this list and all the references are not invalidated.
-   void splice(const_iterator p, BOOST_RV_REF(slist) x, const_iterator i) BOOST_CONTAINER_NOEXCEPT
+   void splice(const_iterator p, BOOST_RV_REF(slist) x, const_iterator i) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->splice(p, static_cast<slist&>(x), i);  }
 
    //! <b>Requires</b>: p must point to an element contained
@@ -1467,7 +1467,7 @@ class slist
    //!
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of this
    //!   list. Iterators of this list and all the references are not invalidated.
-   void splice(const_iterator p, slist& x, const_iterator first, const_iterator last) BOOST_CONTAINER_NOEXCEPT
+   void splice(const_iterator p, slist& x, const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->splice_after(this->previous(p), x, this->previous(first), this->previous(last));  }
 
    //! <b>Requires</b>: p must point to an element contained
@@ -1484,7 +1484,7 @@ class slist
    //!
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of this
    //!   list. Iterators of this list and all the references are not invalidated.
-   void splice(const_iterator p, BOOST_RV_REF(slist) x, const_iterator first, const_iterator last) BOOST_CONTAINER_NOEXCEPT
+   void splice(const_iterator p, BOOST_RV_REF(slist) x, const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW
    {  this->splice(p, static_cast<slist&>(x), first, last);  }
 
    //! <b>Effects</b>: Returns true if x and y are equal

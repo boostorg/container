@@ -586,7 +586,7 @@ class basic_string
    //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter.
    //!
    //! <b>Throws</b>: Nothing
-   explicit basic_string(const allocator_type& a) BOOST_CONTAINER_NOEXCEPT
+   explicit basic_string(const allocator_type& a) BOOST_NOEXCEPT_OR_NOTHROW
       : base_t(a)
    { this->priv_terminate_string(); }
 
@@ -607,7 +607,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   basic_string(BOOST_RV_REF(basic_string) s) BOOST_CONTAINER_NOEXCEPT
+   basic_string(BOOST_RV_REF(basic_string) s) BOOST_NOEXCEPT_OR_NOTHROW
       : base_t(boost::move(s.alloc()))
    {
       if(s.alloc() == this->alloc()){
@@ -713,7 +713,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   ~basic_string() BOOST_CONTAINER_NOEXCEPT
+   ~basic_string() BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
    //! <b>Effects</b>: Copy constructs a string.
@@ -751,7 +751,7 @@ class basic_string
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    basic_string& operator=(BOOST_RV_REF(basic_string) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
+      BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
                                   || allocator_traits_type::is_always_equal::value)
    {
       //for move constructor, no aliasing (&x != this) is assummed.
@@ -792,7 +792,7 @@ class basic_string
    //! <b>Throws</b>: If allocator's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   allocator_type get_allocator() const BOOST_CONTAINER_NOEXCEPT
+   allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->alloc(); }
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
@@ -802,7 +802,7 @@ class basic_string
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   stored_allocator_type &get_stored_allocator() BOOST_CONTAINER_NOEXCEPT
+   stored_allocator_type &get_stored_allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->alloc(); }
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
@@ -812,7 +812,7 @@ class basic_string
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   const stored_allocator_type &get_stored_allocator() const BOOST_CONTAINER_NOEXCEPT
+   const stored_allocator_type &get_stored_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->alloc(); }
 
    //////////////////////////////////////////////
@@ -826,7 +826,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator begin() BOOST_CONTAINER_NOEXCEPT
+   iterator begin() BOOST_NOEXCEPT_OR_NOTHROW
    { return this->priv_addr(); }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the vector.
@@ -834,7 +834,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator begin() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator begin() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->priv_addr(); }
 
    //! <b>Effects</b>: Returns an iterator to the end of the vector.
@@ -842,7 +842,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator end() BOOST_CONTAINER_NOEXCEPT
+   iterator end() BOOST_NOEXCEPT_OR_NOTHROW
    { return this->priv_end_addr(); }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the vector.
@@ -850,7 +850,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator end() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator end() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->priv_end_addr(); }
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the beginning
@@ -859,7 +859,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rbegin()  BOOST_CONTAINER_NOEXCEPT
+   reverse_iterator rbegin()  BOOST_NOEXCEPT_OR_NOTHROW
    { return reverse_iterator(this->priv_end_addr()); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
@@ -868,7 +868,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rbegin() const BOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator rbegin() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->crbegin(); }
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the end
@@ -877,7 +877,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rend()  BOOST_CONTAINER_NOEXCEPT
+   reverse_iterator rend()  BOOST_NOEXCEPT_OR_NOTHROW
    { return reverse_iterator(this->priv_addr()); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
@@ -886,7 +886,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rend() const BOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator rend() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->crend(); }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the vector.
@@ -894,7 +894,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cbegin() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator cbegin() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->priv_addr(); }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the vector.
@@ -902,7 +902,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cend() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->priv_end_addr(); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
@@ -911,7 +911,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crbegin() const BOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator crbegin() const BOOST_NOEXCEPT_OR_NOTHROW
    { return const_reverse_iterator(this->priv_end_addr()); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
@@ -920,7 +920,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crend() const BOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator crend() const BOOST_NOEXCEPT_OR_NOTHROW
    { return const_reverse_iterator(this->priv_addr()); }
 
    //////////////////////////////////////////////
@@ -934,7 +934,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   bool empty() const BOOST_CONTAINER_NOEXCEPT
+   bool empty() const BOOST_NOEXCEPT_OR_NOTHROW
    { return !this->priv_size(); }
 
    //! <b>Effects</b>: Returns the number of the elements contained in the vector.
@@ -942,7 +942,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type size() const    BOOST_CONTAINER_NOEXCEPT
+   size_type size() const    BOOST_NOEXCEPT_OR_NOTHROW
    { return this->priv_size(); }
 
    //! <b>Effects</b>: Returns the number of the elements contained in the vector.
@@ -950,7 +950,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type length() const BOOST_CONTAINER_NOEXCEPT
+   size_type length() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->size(); }
 
    //! <b>Effects</b>: Returns the largest possible size of the vector.
@@ -958,7 +958,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type max_size() const BOOST_CONTAINER_NOEXCEPT
+   size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
    { return base_t::max_size(); }
 
    //! <b>Effects</b>: Inserts or erases elements at the end such that
@@ -1010,7 +1010,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type capacity() const BOOST_CONTAINER_NOEXCEPT
+   size_type capacity() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->priv_capacity(); }
 
    //! <b>Effects</b>: If n is less than or equal to capacity(), this call has no
@@ -1067,7 +1067,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reference operator[](size_type n) BOOST_CONTAINER_NOEXCEPT
+   reference operator[](size_type n) BOOST_NOEXCEPT_OR_NOTHROW
       { return *(this->priv_addr() + n); }
 
    //! <b>Requires</b>: size() > n.
@@ -1078,7 +1078,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reference operator[](size_type n) const BOOST_CONTAINER_NOEXCEPT
+   const_reference operator[](size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
       { return *(this->priv_addr() + n); }
 
    //! <b>Requires</b>: size() > n.
@@ -1221,7 +1221,7 @@ class basic_string
    //! <b>Throws</b>: Nothing
    //!
    //! <b>Returns</b>: *this
-   basic_string& assign(BOOST_RV_REF(basic_string) ms) BOOST_CONTAINER_NOEXCEPT
+   basic_string& assign(BOOST_RV_REF(basic_string) ms) BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->swap_data(ms), *this;  }
 
    //! <b>Requires</b>: pos <= str.size()
@@ -1587,7 +1587,7 @@ class basic_string
    //!
    //! <b>Returns</b>: An iterator which points to the element immediately following p prior to the element being
    //!    erased. If no such element exists, end() is returned.
-   iterator erase(const_iterator p) BOOST_CONTAINER_NOEXCEPT
+   iterator erase(const_iterator p) BOOST_NOEXCEPT_OR_NOTHROW
    {
       // The move includes the terminating null.
       CharT * const ptr = const_cast<CharT*>(container_detail::to_raw_pointer(p));
@@ -1607,7 +1607,7 @@ class basic_string
    //!
    //! <b>Returns</b>: An iterator which points to the element pointed to by last prior to
    //!   the other elements being erased. If no such element exists, end() is returned.
-   iterator erase(const_iterator first, const_iterator last) BOOST_CONTAINER_NOEXCEPT
+   iterator erase(const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW
    {
       CharT * f = const_cast<CharT*>(container_detail::to_raw_pointer(first));
       if (first != last) { // The move includes the terminating null.
@@ -1627,7 +1627,7 @@ class basic_string
    //! <b>Throws</b>: Nothing
    //!
    //! <b>Effects</b>: Equivalent to erase(size() - 1, 1).
-   void pop_back() BOOST_CONTAINER_NOEXCEPT
+   void pop_back() BOOST_NOEXCEPT_OR_NOTHROW
    {
       const size_type old_size = this->priv_size();
       Traits::assign(this->priv_addr()[old_size-1], CharT(0));
@@ -1639,7 +1639,7 @@ class basic_string
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the vector.
-   void clear() BOOST_CONTAINER_NOEXCEPT
+   void clear() BOOST_NOEXCEPT_OR_NOTHROW
    {
       if (!this->empty()) {
          Traits::assign(*this->priv_addr(), CharT(0));
@@ -1893,7 +1893,7 @@ class basic_string
    //!
    //! <b>Throws</b>: Nothing
    void swap(basic_string& x)
-      BOOST_CONTAINER_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_swap::value
+      BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_swap::value
                                || allocator_traits_type::is_always_equal::value)
    {
       this->base_t::swap_data(x);
@@ -1912,7 +1912,7 @@ class basic_string
    //! <b>Returns</b>: A pointer p such that p + i == &operator[](i) for each i in [0,size()].
    //!
    //! <b>Complexity</b>: constant time.
-   const CharT* c_str() const BOOST_CONTAINER_NOEXCEPT
+   const CharT* c_str() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return container_detail::to_raw_pointer(this->priv_addr()); }
 
    //! <b>Requires</b>: The program shall not alter any of the values stored in the character array.
@@ -1920,7 +1920,7 @@ class basic_string
    //! <b>Returns</b>: A pointer p such that p + i == &operator[](i) for each i in [0,size()].
    //!
    //! <b>Complexity</b>: constant time.
-   const CharT* data()  const BOOST_CONTAINER_NOEXCEPT
+   const CharT* data()  const BOOST_NOEXCEPT_OR_NOTHROW
    {  return container_detail::to_raw_pointer(this->priv_addr()); }
 
    //////////////////////////////////////////////

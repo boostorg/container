@@ -330,7 +330,7 @@ class flat_map
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    flat_map& operator=(BOOST_RV_REF(flat_map) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
    {  m_flat_tree = boost::move(x.m_flat_tree);   return *this;  }
 
@@ -348,7 +348,7 @@ class flat_map
    //!   was passed to the object's constructor.
    //!
    //! <b>Complexity</b>: Constant.
-   allocator_type get_allocator() const BOOST_CONTAINER_NOEXCEPT
+   allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<allocator_type>(m_flat_tree.get_allocator()); }
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
@@ -358,7 +358,7 @@ class flat_map
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   stored_allocator_type &get_stored_allocator() BOOST_CONTAINER_NOEXCEPT
+   stored_allocator_type &get_stored_allocator() BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force<stored_allocator_type>(m_flat_tree.get_stored_allocator()); }
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
@@ -368,7 +368,7 @@ class flat_map
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   const stored_allocator_type &get_stored_allocator() const BOOST_CONTAINER_NOEXCEPT
+   const stored_allocator_type &get_stored_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force<stored_allocator_type>(m_flat_tree.get_stored_allocator()); }
 
    //////////////////////////////////////////////
@@ -382,7 +382,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator begin() BOOST_CONTAINER_NOEXCEPT
+   iterator begin() BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<iterator>(m_flat_tree.begin()); }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the container.
@@ -390,7 +390,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator begin() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator begin() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<const_iterator>(m_flat_tree.begin()); }
 
    //! <b>Effects</b>: Returns an iterator to the end of the container.
@@ -398,7 +398,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator end() BOOST_CONTAINER_NOEXCEPT
+   iterator end() BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<iterator>(m_flat_tree.end()); }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the container.
@@ -406,7 +406,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator end() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator end() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<const_iterator>(m_flat_tree.end()); }
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the beginning
@@ -415,7 +415,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rbegin() BOOST_CONTAINER_NOEXCEPT
+   reverse_iterator rbegin() BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<reverse_iterator>(m_flat_tree.rbegin()); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
@@ -424,7 +424,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rbegin() const BOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator rbegin() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<const_reverse_iterator>(m_flat_tree.rbegin()); }
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the end
@@ -433,7 +433,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rend() BOOST_CONTAINER_NOEXCEPT
+   reverse_iterator rend() BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<reverse_iterator>(m_flat_tree.rend()); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
@@ -442,7 +442,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rend() const BOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator rend() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<const_reverse_iterator>(m_flat_tree.rend()); }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the container.
@@ -450,7 +450,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cbegin() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator cbegin() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<const_iterator>(m_flat_tree.cbegin()); }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the container.
@@ -458,7 +458,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cend() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<const_iterator>(m_flat_tree.cend()); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
@@ -467,7 +467,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crbegin() const BOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator crbegin() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<const_reverse_iterator>(m_flat_tree.crbegin()); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
@@ -476,7 +476,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crend() const BOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator crend() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<const_reverse_iterator>(m_flat_tree.crend()); }
 
    //////////////////////////////////////////////
@@ -490,7 +490,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   bool empty() const BOOST_CONTAINER_NOEXCEPT
+   bool empty() const BOOST_NOEXCEPT_OR_NOTHROW
       { return m_flat_tree.empty(); }
 
    //! <b>Effects</b>: Returns the number of the elements contained in the container.
@@ -498,7 +498,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type size() const BOOST_CONTAINER_NOEXCEPT
+   size_type size() const BOOST_NOEXCEPT_OR_NOTHROW
       { return m_flat_tree.size(); }
 
    //! <b>Effects</b>: Returns the largest possible size of the container.
@@ -506,7 +506,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type max_size() const BOOST_CONTAINER_NOEXCEPT
+   size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
       { return m_flat_tree.max_size(); }
 
    //! <b>Effects</b>: Number of elements for which memory has been allocated.
@@ -515,7 +515,7 @@ class flat_map
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type capacity() const BOOST_CONTAINER_NOEXCEPT
+   size_type capacity() const BOOST_NOEXCEPT_OR_NOTHROW
       { return m_flat_tree.capacity(); }
 
    //! <b>Effects</b>: If n is less than or equal to capacity(), this call has no
@@ -567,19 +567,19 @@ class flat_map
    #endif
 
    //! @copydoc ::boost::container::flat_set::nth(size_type)
-   iterator nth(size_type n) BOOST_CONTAINER_NOEXCEPT
+   iterator nth(size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {  return container_detail::force_copy<iterator>(m_flat_tree.nth(n));  }
 
    //! @copydoc ::boost::container::flat_set::nth(size_type) const
-   const_iterator nth(size_type n) const BOOST_CONTAINER_NOEXCEPT
+   const_iterator nth(size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return container_detail::force_copy<iterator>(m_flat_tree.nth(n));  }
 
    //! @copydoc ::boost::container::flat_set::index_of(iterator)
-   size_type index_of(iterator p) BOOST_CONTAINER_NOEXCEPT
+   size_type index_of(iterator p) BOOST_NOEXCEPT_OR_NOTHROW
    {  return m_flat_tree.index_of(container_detail::force_copy<impl_iterator>(p));  }
 
    //! @copydoc ::boost::container::flat_set::index_of(const_iterator) const
-   size_type index_of(const_iterator p) const BOOST_CONTAINER_NOEXCEPT
+   size_type index_of(const_iterator p) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return m_flat_tree.index_of(container_detail::force_copy<impl_const_iterator>(p));  }
 
    //! Returns: A reference to the element whose key is equivalent to x.
@@ -878,7 +878,7 @@ class flat_map
    //!
    //! <b>Complexity</b>: Constant.
    void swap(flat_map& x)
-      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::container_detail::is_nothrow_swappable<Compare>::value )
    { m_flat_tree.swap(x.m_flat_tree); }
 
@@ -887,7 +887,7 @@ class flat_map
    //! <b>Postcondition</b>: size() == 0.
    //!
    //! <b>Complexity</b>: linear in size().
-   void clear() BOOST_CONTAINER_NOEXCEPT
+   void clear() BOOST_NOEXCEPT_OR_NOTHROW
       { m_flat_tree.clear(); }
 
    //////////////////////////////////////////////
@@ -1317,7 +1317,7 @@ class flat_multimap
    //!
    //! <b>Complexity</b>: Constant.
    flat_multimap& operator=(BOOST_RV_REF(flat_multimap) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
       {  m_flat_tree = boost::move(x.m_flat_tree);   return *this;  }
 
@@ -1337,7 +1337,7 @@ class flat_multimap
    //!   was passed to the object's constructor.
    //!
    //! <b>Complexity</b>: Constant.
-   allocator_type get_allocator() const BOOST_CONTAINER_NOEXCEPT
+   allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<allocator_type>(m_flat_tree.get_allocator()); }
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
@@ -1347,7 +1347,7 @@ class flat_multimap
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   stored_allocator_type &get_stored_allocator() BOOST_CONTAINER_NOEXCEPT
+   stored_allocator_type &get_stored_allocator() BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force<stored_allocator_type>(m_flat_tree.get_stored_allocator()); }
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
@@ -1357,7 +1357,7 @@ class flat_multimap
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   const stored_allocator_type &get_stored_allocator() const BOOST_CONTAINER_NOEXCEPT
+   const stored_allocator_type &get_stored_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force<stored_allocator_type>(m_flat_tree.get_stored_allocator()); }
 
    //////////////////////////////////////////////
@@ -1371,7 +1371,7 @@ class flat_multimap
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator begin() BOOST_CONTAINER_NOEXCEPT
+   iterator begin() BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<iterator>(m_flat_tree.begin()); }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the container.
@@ -1379,7 +1379,7 @@ class flat_multimap
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator begin() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator begin() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<const_iterator>(m_flat_tree.begin()); }
 
    //! <b>Effects</b>: Returns an iterator to the end of the container.
@@ -1387,7 +1387,7 @@ class flat_multimap
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   iterator end() BOOST_CONTAINER_NOEXCEPT
+   iterator end() BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<iterator>(m_flat_tree.end()); }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the container.
@@ -1395,7 +1395,7 @@ class flat_multimap
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator end() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator end() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<const_iterator>(m_flat_tree.end()); }
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the beginning
@@ -1404,7 +1404,7 @@ class flat_multimap
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rbegin() BOOST_CONTAINER_NOEXCEPT
+   reverse_iterator rbegin() BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<reverse_iterator>(m_flat_tree.rbegin()); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
@@ -1413,7 +1413,7 @@ class flat_multimap
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rbegin() const BOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator rbegin() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<const_reverse_iterator>(m_flat_tree.rbegin()); }
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the end
@@ -1422,7 +1422,7 @@ class flat_multimap
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reverse_iterator rend() BOOST_CONTAINER_NOEXCEPT
+   reverse_iterator rend() BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<reverse_iterator>(m_flat_tree.rend()); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
@@ -1431,7 +1431,7 @@ class flat_multimap
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator rend() const BOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator rend() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<const_reverse_iterator>(m_flat_tree.rend()); }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the container.
@@ -1439,7 +1439,7 @@ class flat_multimap
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cbegin() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator cbegin() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<const_iterator>(m_flat_tree.cbegin()); }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the container.
@@ -1447,7 +1447,7 @@ class flat_multimap
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_iterator cend() const BOOST_CONTAINER_NOEXCEPT
+   const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<const_iterator>(m_flat_tree.cend()); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
@@ -1456,7 +1456,7 @@ class flat_multimap
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crbegin() const BOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator crbegin() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<const_reverse_iterator>(m_flat_tree.crbegin()); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
@@ -1465,7 +1465,7 @@ class flat_multimap
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reverse_iterator crend() const BOOST_CONTAINER_NOEXCEPT
+   const_reverse_iterator crend() const BOOST_NOEXCEPT_OR_NOTHROW
       { return container_detail::force_copy<const_reverse_iterator>(m_flat_tree.crend()); }
 
    //////////////////////////////////////////////
@@ -1479,7 +1479,7 @@ class flat_multimap
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   bool empty() const BOOST_CONTAINER_NOEXCEPT
+   bool empty() const BOOST_NOEXCEPT_OR_NOTHROW
       { return m_flat_tree.empty(); }
 
    //! <b>Effects</b>: Returns the number of the elements contained in the container.
@@ -1487,7 +1487,7 @@ class flat_multimap
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type size() const BOOST_CONTAINER_NOEXCEPT
+   size_type size() const BOOST_NOEXCEPT_OR_NOTHROW
       { return m_flat_tree.size(); }
 
    //! <b>Effects</b>: Returns the largest possible size of the container.
@@ -1495,7 +1495,7 @@ class flat_multimap
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type max_size() const BOOST_CONTAINER_NOEXCEPT
+   size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
       { return m_flat_tree.max_size(); }
 
    //! <b>Effects</b>: Number of elements for which memory has been allocated.
@@ -1504,7 +1504,7 @@ class flat_multimap
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   size_type capacity() const BOOST_CONTAINER_NOEXCEPT
+   size_type capacity() const BOOST_NOEXCEPT_OR_NOTHROW
       { return m_flat_tree.capacity(); }
 
    //! <b>Effects</b>: If n is less than or equal to capacity(), this call has no
@@ -1529,19 +1529,19 @@ class flat_multimap
       { m_flat_tree.shrink_to_fit(); }
 
    //! @copydoc ::boost::container::flat_set::nth(size_type)
-   iterator nth(size_type n) BOOST_CONTAINER_NOEXCEPT
+   iterator nth(size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {  return container_detail::force_copy<iterator>(m_flat_tree.nth(n));  }
 
    //! @copydoc ::boost::container::flat_set::nth(size_type) const
-   const_iterator nth(size_type n) const BOOST_CONTAINER_NOEXCEPT
+   const_iterator nth(size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return container_detail::force_copy<iterator>(m_flat_tree.nth(n));  }
 
    //! @copydoc ::boost::container::flat_set::index_of(iterator)
-   size_type index_of(iterator p) BOOST_CONTAINER_NOEXCEPT
+   size_type index_of(iterator p) BOOST_NOEXCEPT_OR_NOTHROW
    {  return m_flat_tree.index_of(container_detail::force_copy<impl_iterator>(p));  }
 
    //! @copydoc ::boost::container::flat_set::index_of(const_iterator) const
-   size_type index_of(const_iterator p) const BOOST_CONTAINER_NOEXCEPT
+   size_type index_of(const_iterator p) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return m_flat_tree.index_of(container_detail::force_copy<impl_const_iterator>(p));  }
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -1784,7 +1784,7 @@ class flat_multimap
    //!
    //! <b>Complexity</b>: Constant.
    void swap(flat_multimap& x)
-      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::container_detail::is_nothrow_swappable<Compare>::value )
    { m_flat_tree.swap(x.m_flat_tree); }
 
@@ -1793,7 +1793,7 @@ class flat_multimap
    //! <b>Postcondition</b>: size() == 0.
    //!
    //! <b>Complexity</b>: linear in size().
-   void clear() BOOST_CONTAINER_NOEXCEPT
+   void clear() BOOST_NOEXCEPT_OR_NOTHROW
       { m_flat_tree.clear(); }
 
    //////////////////////////////////////////////

@@ -753,51 +753,51 @@ class iterator_from_iiterator
    iterator_from_iiterator()
    {}
 
-   explicit iterator_from_iiterator(IIterator iit) BOOST_CONTAINER_NOEXCEPT
+   explicit iterator_from_iiterator(IIterator iit) BOOST_NOEXCEPT_OR_NOTHROW
       : m_iit(iit)
    {}
 
-   iterator_from_iiterator(iterator_from_iiterator<IIterator, false> const& other) BOOST_CONTAINER_NOEXCEPT
+   iterator_from_iiterator(iterator_from_iiterator<IIterator, false> const& other) BOOST_NOEXCEPT_OR_NOTHROW
       :  m_iit(other.get())
    {}
 
-   iterator_from_iiterator& operator++() BOOST_CONTAINER_NOEXCEPT
+   iterator_from_iiterator& operator++() BOOST_NOEXCEPT_OR_NOTHROW
    {  ++this->m_iit;   return *this;  }
 
-   iterator_from_iiterator operator++(int) BOOST_CONTAINER_NOEXCEPT
+   iterator_from_iiterator operator++(int) BOOST_NOEXCEPT_OR_NOTHROW
    {
       iterator_from_iiterator result (*this);
       ++this->m_iit;
       return result;
    }
 
-   iterator_from_iiterator& operator--() BOOST_CONTAINER_NOEXCEPT
+   iterator_from_iiterator& operator--() BOOST_NOEXCEPT_OR_NOTHROW
    {
       //If the iterator_from_iiterator is not a bidirectional iterator, operator-- should not exist
       BOOST_STATIC_ASSERT((is_bidirectional_iterator<iterator_from_iiterator>::value));
       --this->m_iit;   return *this;
    }
 
-   iterator_from_iiterator operator--(int) BOOST_CONTAINER_NOEXCEPT
+   iterator_from_iiterator operator--(int) BOOST_NOEXCEPT_OR_NOTHROW
    {
       iterator_from_iiterator result (*this);
       --this->m_iit;
       return result;
    }
 
-   friend bool operator== (const iterator_from_iiterator& l, const iterator_from_iiterator& r) BOOST_CONTAINER_NOEXCEPT
+   friend bool operator== (const iterator_from_iiterator& l, const iterator_from_iiterator& r) BOOST_NOEXCEPT_OR_NOTHROW
    {  return l.m_iit == r.m_iit;   }
 
-   friend bool operator!= (const iterator_from_iiterator& l, const iterator_from_iiterator& r) BOOST_CONTAINER_NOEXCEPT
+   friend bool operator!= (const iterator_from_iiterator& l, const iterator_from_iiterator& r) BOOST_NOEXCEPT_OR_NOTHROW
    {  return !(l == r); }
 
-   reference operator*()  const BOOST_CONTAINER_NOEXCEPT
+   reference operator*()  const BOOST_NOEXCEPT_OR_NOTHROW
    {  return (*this->m_iit).get_data();  }
 
-   pointer   operator->() const BOOST_CONTAINER_NOEXCEPT
+   pointer   operator->() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return ::boost::intrusive::pointer_traits<pointer>::pointer_to(this->operator*());  }
 
-   const IIterator &get() const BOOST_CONTAINER_NOEXCEPT
+   const IIterator &get() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->m_iit;   }
 
    private:

@@ -698,7 +698,7 @@ class tree
    }
 
    tree& operator=(BOOST_RV_REF(tree) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
    {
       BOOST_ASSERT(this != &x);
@@ -824,7 +824,7 @@ class tree
    {  return AllocHolder::max_size();  }
 
    void swap(ThisType& x)
-      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::container_detail::is_nothrow_swappable<Compare>::value )
    {  AllocHolder::swap(x);   }
 

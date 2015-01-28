@@ -224,7 +224,7 @@ class set
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    set& operator=(BOOST_RV_REF(set) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
    {  return static_cast<set&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
@@ -524,7 +524,7 @@ class set
    //!
    //! <b>Complexity</b>: Constant.
    void swap(set& x)
-      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::container_detail::is_nothrow_swappable<Compare>::value );
 
    //! <b>Effects</b>: erase(a.begin(),a.end()).
@@ -838,7 +838,7 @@ class multiset
 
    //! @copydoc ::boost::container::set::operator=(set &&)
    multiset& operator=(BOOST_RV_REF(multiset) x)
-      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
    {  return static_cast<multiset&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
@@ -872,31 +872,31 @@ class multiset
    const_iterator cbegin() const;
 
    //! @copydoc ::boost::container::set::end()
-   iterator end() BOOST_CONTAINER_NOEXCEPT;
+   iterator end() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::end() const
-   const_iterator end() const BOOST_CONTAINER_NOEXCEPT;
+   const_iterator end() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::cend() const
-   const_iterator cend() const BOOST_CONTAINER_NOEXCEPT;
+   const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::rbegin()
-   reverse_iterator rbegin() BOOST_CONTAINER_NOEXCEPT;
+   reverse_iterator rbegin() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::rbegin() const
-   const_reverse_iterator rbegin() const BOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator rbegin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::crbegin() const
-   const_reverse_iterator crbegin() const BOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator crbegin() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::rend()
-   reverse_iterator rend() BOOST_CONTAINER_NOEXCEPT;
+   reverse_iterator rend() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::rend() const
-   const_reverse_iterator rend() const BOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator rend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::crend() const
-   const_reverse_iterator crend() const BOOST_CONTAINER_NOEXCEPT;
+   const_reverse_iterator crend() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::empty() const
    bool empty() const;
@@ -1019,11 +1019,11 @@ class multiset
 
    //! @copydoc ::boost::container::set::swap
    void swap(multiset& x)
-      BOOST_CONTAINER_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::container_detail::is_nothrow_swappable<Compare>::value );
 
    //! @copydoc ::boost::container::set::clear
-   void clear() BOOST_CONTAINER_NOEXCEPT;
+   void clear() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! @copydoc ::boost::container::set::key_comp
    key_compare key_comp() const;

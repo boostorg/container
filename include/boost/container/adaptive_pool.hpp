@@ -123,27 +123,27 @@ class adaptive_pool
 
    public:
    //!Default constructor
-   adaptive_pool() BOOST_CONTAINER_NOEXCEPT
+   adaptive_pool() BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
    //!Copy constructor from other adaptive_pool.
-   adaptive_pool(const adaptive_pool &) BOOST_CONTAINER_NOEXCEPT
+   adaptive_pool(const adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
    //!Copy constructor from related adaptive_pool.
    template<class T2>
    adaptive_pool
       (const adaptive_pool<T2, NodesPerBlock, MaxFreeBlocks, OverheadPercent
-            BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I Version)> &) BOOST_CONTAINER_NOEXCEPT
+            BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I Version)> &) BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
    //!Destructor
-   ~adaptive_pool() BOOST_CONTAINER_NOEXCEPT
+   ~adaptive_pool() BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
    //!Returns the number of elements that could be allocated.
    //!Never throws
-   size_type max_size() const BOOST_CONTAINER_NOEXCEPT
+   size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return size_type(-1)/sizeof(T);   }
 
    //!Allocate memory for an array of count elements.
@@ -166,7 +166,7 @@ class adaptive_pool
 
    //!Deallocate allocated memory.
    //!Never throws
-   void deallocate(const pointer &ptr, size_type count) BOOST_CONTAINER_NOEXCEPT
+   void deallocate(const pointer &ptr, size_type count) BOOST_NOEXCEPT_OR_NOTHROW
    {
       (void)count;
       if(Version == 1 && count == 1){
@@ -193,7 +193,7 @@ class adaptive_pool
 
    //!Returns maximum the number of objects the previously allocated memory
    //!pointed by p can hold.
-   size_type size(pointer p) const BOOST_CONTAINER_NOEXCEPT
+   size_type size(pointer p) const BOOST_NOEXCEPT_OR_NOTHROW
    {  return boost_cont_size(p);  }
 
    //!Allocates just one object. Memory allocated with this function
@@ -224,7 +224,7 @@ class adaptive_pool
    //!Deallocates memory previously allocated with allocate_one().
    //!You should never use deallocate_one to deallocate memory allocated
    //!with other functions different from allocate_one(). Never throws
-   void deallocate_one(pointer p) BOOST_CONTAINER_NOEXCEPT
+   void deallocate_one(pointer p) BOOST_NOEXCEPT_OR_NOTHROW
    {
       typedef container_detail::shared_adaptive_node_pool
          <sizeof(T), NodesPerBlock, MaxFreeBlocks, OverheadPercent> shared_pool_t;
@@ -232,7 +232,7 @@ class adaptive_pool
       singleton_t::instance().deallocate_node(p);
    }
 
-   void deallocate_individual(multiallocation_chain &chain) BOOST_CONTAINER_NOEXCEPT
+   void deallocate_individual(multiallocation_chain &chain) BOOST_NOEXCEPT_OR_NOTHROW
    {
       typedef container_detail::shared_adaptive_node_pool
          <sizeof(T), NodesPerBlock, MaxFreeBlocks, OverheadPercent> shared_pool_t;
@@ -282,7 +282,7 @@ class adaptive_pool
       }
    }
 
-   void deallocate_many(multiallocation_chain &chain) BOOST_CONTAINER_NOEXCEPT
+   void deallocate_many(multiallocation_chain &chain) BOOST_NOEXCEPT_OR_NOTHROW
    {/*
       boost_cont_memchain ch;
       void *beg(&*chain.begin()), *last(&*chain.last());
@@ -293,7 +293,7 @@ class adaptive_pool
    }
 
    //!Deallocates all free blocks of the pool
-   static void deallocate_free_blocks() BOOST_CONTAINER_NOEXCEPT
+   static void deallocate_free_blocks() BOOST_NOEXCEPT_OR_NOTHROW
    {
       typedef container_detail::shared_adaptive_node_pool
          <sizeof(T), NodesPerBlock, MaxFreeBlocks, OverheadPercent> shared_pool_t;
@@ -303,17 +303,17 @@ class adaptive_pool
 
    //!Swaps allocators. Does not throw. If each allocator is placed in a
    //!different memory segment, the result is undefined.
-   friend void swap(adaptive_pool &, adaptive_pool &) BOOST_CONTAINER_NOEXCEPT
+   friend void swap(adaptive_pool &, adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
    //!An allocator always compares to true, as memory allocated with one
    //!instance can be deallocated by another instance
-   friend bool operator==(const adaptive_pool &, const adaptive_pool &) BOOST_CONTAINER_NOEXCEPT
+   friend bool operator==(const adaptive_pool &, const adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return true;   }
 
    //!An allocator always compares to false, as memory allocated with one
    //!instance can be deallocated by another instance
-   friend bool operator!=(const adaptive_pool &, const adaptive_pool &) BOOST_CONTAINER_NOEXCEPT
+   friend bool operator!=(const adaptive_pool &, const adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return false;   }
 
    private:

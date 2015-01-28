@@ -72,7 +72,7 @@ public:
       return *this;
    }
 
-   X(BOOST_RV_REF(X) x) BOOST_CONTAINER_NOEXCEPT
+   X(BOOST_RV_REF(X) x) BOOST_NOEXCEPT_OR_NOTHROW
       : i_(x.i_)
       , p_(x.p_)
    {
@@ -80,7 +80,7 @@ public:
       sp.mc++;
    }
 
-   X& operator=(BOOST_RV_REF(X) x) BOOST_CONTAINER_NOEXCEPT
+   X& operator=(BOOST_RV_REF(X) x) BOOST_NOEXCEPT_OR_NOTHROW
    {
 
       i_ = x.i_;

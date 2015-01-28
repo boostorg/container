@@ -551,16 +551,16 @@ class scoped_allocator_adaptor_base
    friend void swap(scoped_allocator_adaptor_base &l, scoped_allocator_adaptor_base &r)
    {  l.swap(r);  }
 
-   inner_allocator_type&       inner_allocator() BOOST_CONTAINER_NOEXCEPT
+   inner_allocator_type&       inner_allocator() BOOST_NOEXCEPT_OR_NOTHROW
       { return m_inner; }
 
-   inner_allocator_type const& inner_allocator() const BOOST_CONTAINER_NOEXCEPT
+   inner_allocator_type const& inner_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
       { return m_inner; }
 
-   outer_allocator_type      & outer_allocator() BOOST_CONTAINER_NOEXCEPT
+   outer_allocator_type      & outer_allocator() BOOST_NOEXCEPT_OR_NOTHROW
       { return static_cast<outer_allocator_type&>(*this); }
 
-   const outer_allocator_type &outer_allocator() const BOOST_CONTAINER_NOEXCEPT
+   const outer_allocator_type &outer_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
       { return static_cast<const outer_allocator_type&>(*this); }
 
    scoped_allocator_type select_on_container_copy_construction() const
@@ -1036,31 +1036,31 @@ class scoped_allocator_adaptor
 
    //! <b>Returns</b>:
    //!   <code>static_cast<OuterAlloc&>(*this)</code>.
-   outer_allocator_type      & outer_allocator() BOOST_CONTAINER_NOEXCEPT;
+   outer_allocator_type      & outer_allocator() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Returns</b>:
    //!   <code>static_cast<const OuterAlloc&>(*this)</code>.
-   const outer_allocator_type &outer_allocator() const BOOST_CONTAINER_NOEXCEPT;
+   const outer_allocator_type &outer_allocator() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Returns</b>:
    //!   *this if <code>sizeof...(InnerAllocs)</code> is zero; otherwise, inner.
-   inner_allocator_type&       inner_allocator() BOOST_CONTAINER_NOEXCEPT;
+   inner_allocator_type&       inner_allocator() BOOST_NOEXCEPT_OR_NOTHROW;
 
    //! <b>Returns</b>:
    //!   *this if <code>sizeof...(InnerAllocs)</code> is zero; otherwise, inner.
-   inner_allocator_type const& inner_allocator() const BOOST_CONTAINER_NOEXCEPT;
+   inner_allocator_type const& inner_allocator() const BOOST_NOEXCEPT_OR_NOTHROW;
 
    #endif   //BOOST_CONTAINER_DOXYGEN_INVOKED
 
    //! <b>Returns</b>:
    //!   <code>allocator_traits<OuterAlloc>::max_size(outer_allocator())</code>.
-   size_type max_size() const BOOST_CONTAINER_NOEXCEPT
+   size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return outer_traits_type::max_size(this->outer_allocator());   }
 
    //! <b>Effects</b>:
    //!   calls <code>OUTERMOST_ALLOC_TRAITS(*this)::destroy(OUTERMOST(*this), p)</code>.
    template <class T>
-   void destroy(T* p) BOOST_CONTAINER_NOEXCEPT
+   void destroy(T* p) BOOST_NOEXCEPT_OR_NOTHROW
    {
       allocator_traits<typename outermost_allocator<OuterAlloc>::type>
          ::destroy(get_outermost_allocator(this->outer_allocator()), p);
