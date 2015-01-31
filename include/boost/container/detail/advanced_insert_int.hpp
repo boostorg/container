@@ -293,7 +293,7 @@ struct insert_emplace_proxy<Allocator, Iterator, typename boost::container::allo
 };
 
 //We use "add_const" here as adding "const" only confuses MSVC12(and maybe later) provoking
-//compiler error C2752 (“more than one partial specialization matches”).
+//compiler error C2752 ("more than one partial specialization matches").
 //Any problem is solvable with an extra layer of indirection? ;-)
 template<class Allocator, class Iterator>
 struct insert_emplace_proxy<Allocator, Iterator
@@ -429,7 +429,7 @@ struct insert_emplace_proxy_arg1<Allocator, Iterator, typename boost::container:
 };
 
 //We use "add_const" here as adding "const" only confuses MSVC10&11 provoking
-//compiler error C2752 (“more than one partial specialization matches”).
+//compiler error C2752 ("more than one partial specialization matches").
 //Any problem is solvable with an extra layer of indirection? ;-)
 template<class Allocator, class Iterator>
 struct insert_emplace_proxy_arg1<Allocator, Iterator
