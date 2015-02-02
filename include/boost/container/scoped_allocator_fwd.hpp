@@ -15,6 +15,10 @@
 //! This header file forward declares boost::container::scoped_allocator_adaptor
 //! and defines the following types:
 
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+
 #if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
