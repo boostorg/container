@@ -11,6 +11,10 @@
 #ifndef BOOST_CONTAINER_CONTAINER_VECTOR_HPP
 #define BOOST_CONTAINER_CONTAINER_VECTOR_HPP
 
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+
 #if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
@@ -592,14 +596,14 @@ class vector
    //////////////////////////////////////////////
 
    typedef T                                                                           value_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::pointer                   pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer             const_pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::reference                 reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_reference           const_reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::size_type                 size_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::difference_type           difference_type;
-   typedef Allocator                                                                           allocator_type;
-   typedef Allocator                                                                           stored_allocator_type;
+   typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
+   typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
+   typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
+   typedef typename ::boost::container::allocator_traits<Allocator>::const_reference   const_reference;
+   typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
+   typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
+   typedef Allocator                                                                   allocator_type;
+   typedef Allocator                                                                   stored_allocator_type;
    #if defined BOOST_CONTAINER_VECTOR_ITERATOR_IS_POINTER
    typedef BOOST_CONTAINER_IMPDEF(pointer)                                             iterator;
    typedef BOOST_CONTAINER_IMPDEF(const_pointer)                                       const_iterator;
@@ -626,11 +630,10 @@ class vector
 
    //! <b>Effects</b>: Constructs a vector taking the allocator as parameter.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor throws.
+   //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   vector()
-      BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value)
+   vector() BOOST_NOEXCEPT_OR_NOTHROW
       : m_holder()
    {}
 
@@ -643,10 +646,9 @@ class vector
       : m_holder(a)
    {}
 
-   //! <b>Effects</b>: Constructs a vector that will use a copy of allocator a
-   //!   and inserts n value initialized values.
+   //! <b>Effects</b>: Constructs a vector and inserts n value initialized values.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or allocation
+   //! <b>Throws</b>: If allocator_type's allocation
    //!   throws or T's value initialization throws.
    //!
    //! <b>Complexity</b>: Linear to n.
@@ -663,7 +665,7 @@ class vector
    //! <b>Effects</b>: Constructs a vector that will use a copy of allocator a
    //!   and inserts n default initialized values.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or allocation
+   //! <b>Throws</b>: If allocator_type's allocation
    //!   throws or T's default initialization throws.
    //!
    //! <b>Complexity</b>: Linear to n.
@@ -679,10 +681,46 @@ class vector
          (this->m_holder.alloc(), n, container_detail::to_raw_pointer(this->m_holder.start()));
    }
 
+   //! <b>Effects</b>: Constructs a vector that will use a copy of allocator a
+   //!   and inserts n value initialized values.
+   //!
+   //! <b>Throws</b>: If allocator_type's allocation
+   //!   throws or T's value initialization throws.
+   //!
+   //! <b>Complexity</b>: Linear to n.
+   explicit vector(size_type n, const allocator_type &a)
+      :  m_holder(container_detail::uninitialized_size, a, n)
+   {
+      #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
+      this->num_alloc += n != 0;
+      #endif
+      boost::container::uninitialized_value_init_alloc_n
+         (this->m_holder.alloc(), n, container_detail::to_raw_pointer(this->m_holder.start()));
+   }
+
+   //! <b>Effects</b>: Constructs a vector that will use a copy of allocator a
+   //!   and inserts n default initialized values.
+   //!
+   //! <b>Throws</b>: If allocator_type's allocation
+   //!   throws or T's default initialization throws.
+   //!
+   //! <b>Complexity</b>: Linear to n.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   vector(size_type n, default_init_t, const allocator_type &a)
+      :  m_holder(container_detail::uninitialized_size, a, n)
+   {
+      #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
+      this->num_alloc += n != 0;
+      #endif
+      boost::container::uninitialized_default_init_alloc_n
+         (this->m_holder.alloc(), n, container_detail::to_raw_pointer(this->m_holder.start()));
+   }
+
    //! <b>Effects</b>: Constructs a vector
    //!   and inserts n copies of value.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or allocation
+   //! <b>Throws</b>: If allocator_type's allocation
    //!   throws or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
@@ -716,7 +754,7 @@ class vector
    //! <b>Effects</b>: Constructs a vector
    //!   and inserts a copy of the range [first, last) in the vector.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or allocation
+   //! <b>Throws</b>: If allocator_type's allocation
    //!   throws or T's constructor taking a dereferenced InIt throws.
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
@@ -728,7 +766,7 @@ class vector
    //! <b>Effects</b>: Constructs a vector that will use a copy of allocator a
    //!   and inserts a copy of the range [first, last) in the vector.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or allocation
+   //! <b>Throws</b>: If allocator_type's allocation
    //!   throws or T's constructor taking a dereferenced InIt throws.
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
@@ -741,7 +779,7 @@ class vector
    //!
    //! <b>Postcondition</b>: x == *this.
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor or allocation
+   //! <b>Throws</b>: If allocator_type's allocation
    //!   throws or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to the elements x contains.
@@ -762,8 +800,7 @@ class vector
    //! <b>Effects</b>: Constructs a vector that will use a copy of allocator a
    //!  and inserts a copy of the range [il.begin(), il.last()) in the vector
    //!
-   //! <b>Throws</b>: If allocator_type's default constructor
-   //!   throws or T's constructor taking a dereferenced initializer_list iterator throws.
+   //! <b>Throws</b>: If T's constructor taking a dereferenced initializer_list iterator throws.
    //!
    //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
    vector(std::initializer_list<value_type> il, const allocator_type& a = allocator_type())

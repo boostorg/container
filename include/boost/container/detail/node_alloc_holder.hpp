@@ -11,6 +11,10 @@
 #ifndef BOOST_CONTAINER_DETAIL_NODE_ALLOC_HPP_
 #define BOOST_CONTAINER_DETAIL_NODE_ALLOC_HPP_
 
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+
 #if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
