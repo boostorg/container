@@ -995,7 +995,11 @@ class flat_tree
          while(len--){
             BidirIt next(first);
             ++next;
-            if(next == last || val_cmp(*first, *next)){
+            //Use iterator_traits<BidirIt>::value_type
+            //because it can be different from container::value_type
+            //(e.g. conversion between std::pair<T1, T2> -> boost::container::pair<T1, T2>
+            const typename boost::container::iterator_traits<BidirIt>::value_type & val = *first;
+            if (next == last || val_cmp(val, *next)){
                const bool room = this->m_data.m_vect.stable_emplace_back(*first);
                (void)room;
                BOOST_ASSERT(room);

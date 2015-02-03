@@ -1089,13 +1089,14 @@ use [*Boost.Container]? There are several reasons for that:
 *  Updated containers to implement new constructors as specified in
    [@http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2210 2210. Missing allocator-extended constructor for allocator-aware containers].
 *  Fixed bugs:
+   * [@https://svn.boost.org/trac/boost/ticket/9931 #9931: ['"flat_map::insert(ordered_unique_range_t...) fails with move_iterators"]] (reopened).
    * [@https://svn.boost.org/trac/boost/ticket/10790 Trac #10790 (['long long errors from container"])].
    * [@https://svn.boost.org/trac/boost/ticket/10808 Trac #10808 (['compare equal operator of vector is broken"])].
 * [*Source Breaking]: [classref boost::container::scoped_allocator_adaptor scoped_allocator_adaptor]'s
    `propagate_on_container_copy_assignment`, `propagate_on_container_move_assignment` and `propagate_on_container_swap`
    are no longer `::boost::integral_constant<bool, true/false>` types. The dependency reorganization needed to break
    with those classes to avoid MPL dependencies, and interoperability with `std::integral_constant` was not guaranteed.
-   Code assumming `boost::true_type/boost::false_type` on this will not compile. As a workaround, use the guarantee internal
+   Code assumming `boost::true_type/boost::false_type` on this will not compile. As a workaround, use the guaranteed internal
    `::value` constant: `::boost::integral_constant<bool, scoped_allocator_adaptor<Allocator>::propagate_on_container_move_assignment::value>`.
 
 [endsect]
