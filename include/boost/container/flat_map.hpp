@@ -222,6 +222,19 @@ class flat_map
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
+   //! <b>Effects</b>: Constructs an empty flat_map using the specified
+   //! allocator, and inserts elements from the range [first ,last ).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
+   //! comp and otherwise N logN, where N is last - first.
+   template <class InputIterator>
+   flat_map(InputIterator first, InputIterator last, const allocator_type& a)
+      : m_flat_tree(true, first, last, Compare(), container_detail::force<impl_allocator_type>(a))
+   {
+      //A type must be std::pair<Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
+
    //! <b>Effects</b>: Constructs an empty flat_map using the specified comparison object and
    //! allocator, and inserts elements from the ordered unique range [first ,last). This function
    //! is more efficient than the normal range creation for ordered ranges.
@@ -1213,6 +1226,19 @@ class flat_multimap
             const Compare& comp        = Compare(),
             const allocator_type& a = allocator_type())
       : m_flat_tree(false, first, last, comp, container_detail::force<impl_allocator_type>(a))
+   {
+      //A type must be std::pair<Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty flat_multimap using the specified
+   //!   allocator, and inserts elements from the range [first ,last ).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
+   //! comp and otherwise N logN, where N is last - first.
+   template <class InputIterator>
+   flat_multimap(InputIterator first, InputIterator last, const allocator_type& a)
+      : m_flat_tree(false, first, last, Compare(), container_detail::force<impl_allocator_type>(a))
    {
       //A type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));

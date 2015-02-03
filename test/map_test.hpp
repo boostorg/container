@@ -133,6 +133,80 @@ int map_test()
    typedef container_detail::pair<IntType, IntType>         IntPairType;
    typedef typename MyStdMap::value_type  StdPairType;
    const int max = 50;
+   typedef typename MyStdMap::value_type StdValueType;
+   typedef typename MyStdMap::key_type StdKeyType;
+   typedef typename MyStdMap::mapped_type StdMappedType;
+
+
+   //Test construction from a range
+   {
+      IntPairType aux_vect[50];
+      for(int i = 0; i < 50; ++i){
+         IntType i1(i/2);
+         IntType i2(i/2);
+         new(&aux_vect[i])IntPairType(boost::move(i1), boost::move(i2));
+      }
+
+      StdValueType aux_vect2[50];
+      for(int i = 0; i < 50; ++i){
+         new(&aux_vect2[i])StdValueType(StdKeyType(i/2), StdMappedType(i/2));
+      }
+
+      IntPairType aux_vect3[50];
+      for(int i = 0; i < 50; ++i){
+         IntType i1(i/2);
+         IntType i2(i/2);
+         new(&aux_vect3[i])IntPairType(boost::move(i1), boost::move(i2));
+      }
+
+      ::boost::movelib::unique_ptr<MyBoostMap> const pboostmap = ::boost::movelib::make_unique<MyBoostMap>
+               ( boost::make_move_iterator(&aux_vect[0])
+               , boost::make_move_iterator(&aux_vect[0] + 50), typename MyBoostMap::key_compare());
+      ::boost::movelib::unique_ptr<MyStdMap> const pstdmap = ::boost::movelib::make_unique<MyStdMap>
+         (&aux_vect2[0], &aux_vect2[0] + 50, typename MyStdMap::key_compare());
+      if(!CheckEqualContainers(*pboostmap, *pstdmap)) return 1;
+
+      ::boost::movelib::unique_ptr<MyBoostMultiMap> const pboostmultimap = ::boost::movelib::make_unique<MyBoostMultiMap>
+               ( boost::make_move_iterator(&aux_vect3[0])
+               , boost::make_move_iterator(&aux_vect3[0] + 50), typename MyBoostMap::key_compare());
+      ::boost::movelib::unique_ptr<MyStdMultiMap> const pstdmultimap = ::boost::movelib::make_unique<MyStdMultiMap>
+         (&aux_vect2[0], &aux_vect2[0] + 50, typename MyStdMap::key_compare());
+      if(!CheckEqualContainers(*pboostmultimap, *pstdmultimap)) return 1;
+   }
+   {
+      IntPairType aux_vect[50];
+      for(int i = 0; i < 50; ++i){
+         IntType i1(i/2);
+         IntType i2(i/2);
+         new(&aux_vect[i])IntPairType(boost::move(i1), boost::move(i2));
+      }
+
+      StdValueType aux_vect2[50];
+      for(int i = 0; i < 50; ++i){
+         new(&aux_vect2[i])StdValueType(StdKeyType(i/2), StdMappedType(i/2));
+      }
+
+      IntPairType aux_vect3[50];
+      for(int i = 0; i < 50; ++i){
+         IntType i1(i/2);
+         IntType i2(i/2);
+         new(&aux_vect3[i])IntPairType(boost::move(i1), boost::move(i2));
+      }
+
+      ::boost::movelib::unique_ptr<MyBoostMap> const pboostmap = ::boost::movelib::make_unique<MyBoostMap>
+               ( boost::make_move_iterator(&aux_vect[0])
+               , boost::make_move_iterator(&aux_vect[0] + 50), typename MyBoostMap::allocator_type());
+      ::boost::movelib::unique_ptr<MyStdMap> const pstdmap = ::boost::movelib::make_unique<MyStdMap>
+         (&aux_vect2[0], &aux_vect2[0] + 50, typename MyStdMap::key_compare());
+      if(!CheckEqualContainers(*pboostmap, *pstdmap)) return 1;
+
+      ::boost::movelib::unique_ptr<MyBoostMultiMap> const pboostmultimap = ::boost::movelib::make_unique<MyBoostMultiMap>
+               ( boost::make_move_iterator(&aux_vect3[0])
+               , boost::make_move_iterator(&aux_vect3[0] + 50), typename MyBoostMap::allocator_type());
+      ::boost::movelib::unique_ptr<MyStdMultiMap> const pstdmultimap = ::boost::movelib::make_unique<MyStdMultiMap>
+         (&aux_vect2[0], &aux_vect2[0] + 50, typename MyStdMap::key_compare());
+      if(!CheckEqualContainers(*pboostmultimap, *pstdmultimap)) return 1;
+   }
 
    ::boost::movelib::unique_ptr<MyBoostMap> const pboostmap = ::boost::movelib::make_unique<MyBoostMap>();
    ::boost::movelib::unique_ptr<MyStdMap> const pstdmap = ::boost::movelib::make_unique<MyStdMap>();
@@ -143,7 +217,6 @@ int map_test()
    MyBoostMultiMap &boostmultimap = *pboostmultimap;
    MyStdMultiMap   &stdmultimap   = *pstdmultimap;
 
-   //Test construction from a range
    {
       //This is really nasty, but we have no other simple choice
       IntPairType aux_vect[50];

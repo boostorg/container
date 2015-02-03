@@ -127,6 +127,54 @@ int set_test ()
    MyStdMultiSet   &stdmultiset   = *pstdmultiset;
 
    //Test construction from a range
+   {  //Set(beg, end, compare)
+      IntType aux_vect[50];
+      for(int i = 0; i < 50; ++i){
+         IntType move_me(i/2);
+         aux_vect[i] = boost::move(move_me);
+      }
+      int aux_vect2[50];
+      for(int i = 0; i < 50; ++i){
+         aux_vect2[i] = i/2;
+      }
+      IntType aux_vect3[50];
+      for(int i = 0; i < 50; ++i){
+         IntType move_me(i/2);
+         aux_vect3[i] = boost::move(move_me);
+      }
+      ::boost::movelib::unique_ptr<MyBoostSet> const pboostset = ::boost::movelib::make_unique<MyBoostSet>
+         (boost::make_move_iterator(&aux_vect[0]), boost::make_move_iterator(&aux_vect[0]+50), typename MyBoostSet::key_compare());
+      ::boost::movelib::unique_ptr<MyStdSet> const pstdset = ::boost::movelib::make_unique<MyStdSet>(&aux_vect2[0], &aux_vect2[0]+50);
+      if(!test::CheckEqualContainers(*pboostset, *pstdset)) return 1;
+      ::boost::movelib::unique_ptr<MyBoostMultiSet> const pboostmultiset = ::boost::movelib::make_unique<MyBoostMultiSet>
+         (boost::make_move_iterator(&aux_vect3[0]), boost::make_move_iterator(&aux_vect3[0]+50), typename MyBoostMultiSet::key_compare());
+      ::boost::movelib::unique_ptr<MyStdMultiSet> const pstdmultiset = ::boost::movelib::make_unique<MyStdMultiSet>(&aux_vect2[0], &aux_vect2[0]+50);
+      if(!test::CheckEqualContainers(*pboostmultiset, *pstdmultiset)) return 1;
+   }
+   {  //Set(beg, end, alloc)
+      IntType aux_vect[50];
+      for(int i = 0; i < 50; ++i){
+         IntType move_me(i/2);
+         aux_vect[i] = boost::move(move_me);
+      }
+      int aux_vect2[50];
+      for(int i = 0; i < 50; ++i){
+         aux_vect2[i] = i/2;
+      }
+      IntType aux_vect3[50];
+      for(int i = 0; i < 50; ++i){
+         IntType move_me(i/2);
+         aux_vect3[i] = boost::move(move_me);
+      }
+      ::boost::movelib::unique_ptr<MyBoostSet> const pboostset = ::boost::movelib::make_unique<MyBoostSet>
+         (boost::make_move_iterator(&aux_vect[0]), boost::make_move_iterator(&aux_vect[0]+50), typename MyBoostSet::allocator_type());
+      ::boost::movelib::unique_ptr<MyStdSet> const pstdset = ::boost::movelib::make_unique<MyStdSet>(&aux_vect2[0], &aux_vect2[0]+50);
+      if(!test::CheckEqualContainers(*pboostset, *pstdset)) return 1;
+      ::boost::movelib::unique_ptr<MyBoostMultiSet> const pboostmultiset = ::boost::movelib::make_unique<MyBoostMultiSet>
+         (boost::make_move_iterator(&aux_vect3[0]), boost::make_move_iterator(&aux_vect3[0]+50), typename MyBoostMultiSet::allocator_type());
+      ::boost::movelib::unique_ptr<MyStdMultiSet> const pstdmultiset = ::boost::movelib::make_unique<MyStdMultiSet>(&aux_vect2[0], &aux_vect2[0]+50);
+      if(!test::CheckEqualContainers(*pboostmultiset, *pstdmultiset)) return 1;
+   }
    {
       IntType aux_vect[50];
       for(int i = 0; i < 50; ++i){

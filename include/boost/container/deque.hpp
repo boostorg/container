@@ -548,7 +548,7 @@ class deque : protected deque_base<Allocator>
       : Base(a)
    {}
 
-   //! <b>Effects</b>: Constructs a deque that will use a copy of allocator a
+   //! <b>Effects</b>: Constructs a deque
    //!   and inserts n value initialized values.
    //!
    //! <b>Throws</b>: If allocator_type's default constructor
@@ -557,6 +557,38 @@ class deque : protected deque_base<Allocator>
    //! <b>Complexity</b>: Linear to n.
    explicit deque(size_type n)
       : Base(n, allocator_type())
+   {
+      container_detail::insert_value_initialized_n_proxy<Allocator, iterator> proxy;
+      proxy.uninitialized_copy_n_and_update(this->alloc(), this->begin(), n);
+      //deque_base will deallocate in case of exception...
+   }
+
+   //! <b>Effects</b>: Constructs a deque
+   //!   and inserts n default initialized values.
+   //!
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's default initialization or copy constructor throws.
+   //!
+   //! <b>Complexity</b>: Linear to n.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   deque(size_type n, default_init_t)
+      : Base(n, allocator_type())
+   {
+      container_detail::insert_default_initialized_n_proxy<Allocator, iterator> proxy;
+      proxy.uninitialized_copy_n_and_update(this->alloc(), this->begin(), n);
+      //deque_base will deallocate in case of exception...
+   }
+
+   //! <b>Effects</b>: Constructs a deque that will use a copy of allocator a
+   //!   and inserts n value initialized values.
+   //!
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's value initialization throws.
+   //!
+   //! <b>Complexity</b>: Linear to n.
+   explicit deque(size_type n, const allocator_type &a)
+      : Base(n, a)
    {
       container_detail::insert_value_initialized_n_proxy<Allocator, iterator> proxy;
       proxy.uninitialized_copy_n_and_update(this->alloc(), this->begin(), n);
@@ -572,8 +604,8 @@ class deque : protected deque_base<Allocator>
    //! <b>Complexity</b>: Linear to n.
    //!
    //! <b>Note</b>: Non-standard extension
-   deque(size_type n, default_init_t)
-      : Base(n, allocator_type())
+   deque(size_type n, default_init_t, const allocator_type &a)
+      : Base(n, a)
    {
       container_detail::insert_default_initialized_n_proxy<Allocator, iterator> proxy;
       proxy.uninitialized_copy_n_and_update(this->alloc(), this->begin(), n);

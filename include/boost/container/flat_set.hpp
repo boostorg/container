@@ -144,6 +144,16 @@ class flat_set
       : base_t(true, first, last, comp, a)
    {}
 
+   //! <b>Effects</b>: Constructs an empty container using the specified
+   //! allocator, and inserts elements from the range [first ,last ).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
+   //! comp and otherwise N logN, where N is last - first.
+   template <class InputIterator>
+   flat_set(InputIterator first, InputIterator last, const allocator_type& a)
+      : base_t(true, first, last, Compare(), a)
+   {}
+
    //! <b>Effects</b>: Constructs an empty container using the specified comparison object and
    //! allocator, and inserts elements from the ordered unique range [first ,last). This function
    //! is more efficient than the normal range creation for ordered ranges.
@@ -905,6 +915,12 @@ class flat_multiset
                  const Compare& comp        = Compare(),
                  const allocator_type& a = allocator_type())
       : base_t(false, first, last, comp, a)
+   {}
+
+   //! @copydoc ::boost::container::flat_set::flat_set(InputIterator, InputIterator, const allocator_type&)
+   template <class InputIterator>
+   flat_multiset(InputIterator first, InputIterator last, const allocator_type& a)
+      : base_t(false, first, last, Compare(), a)
    {}
 
    //! <b>Effects</b>: Constructs an empty flat_multiset using the specified comparison object and

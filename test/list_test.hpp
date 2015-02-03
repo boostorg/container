@@ -148,6 +148,17 @@ int list_test (bool copied_allocators_equal = true)
    const int max = 100;
    typedef list_push_data_function<DoublyLinked> push_data_t;
 
+   {  //List(n)
+      ::boost::movelib::unique_ptr<MyBoostList> const pboostlist = ::boost::movelib::make_unique<MyBoostList>(100);
+      ::boost::movelib::unique_ptr<MyStdList> const pstdlist = ::boost::movelib::make_unique<MyStdList>(100);
+      if(!test::CheckEqualContainers(*pboostlist, *pstdlist)) return 1;
+   }
+   {  //List(n, alloc)
+      ::boost::movelib::unique_ptr<MyBoostList> const pboostlist = ::boost::movelib::make_unique<MyBoostList>(100, typename MyBoostList::allocator_type());
+      ::boost::movelib::unique_ptr<MyStdList> const pstdlist = ::boost::movelib::make_unique<MyStdList>(100);
+      if(!test::CheckEqualContainers(*pboostlist, *pstdlist)) return 1;
+   }
+
    ::boost::movelib::unique_ptr<MyBoostList> const pboostlist = ::boost::movelib::make_unique<MyBoostList>();
    ::boost::movelib::unique_ptr<MyStdList>   const pstdlist   = ::boost::movelib::make_unique<MyStdList>();
 

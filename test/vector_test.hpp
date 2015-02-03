@@ -113,6 +113,16 @@ int vector_test()
    if(!test_range_insertion<MyBoostVector>()){
       return 1;
    }
+   {  //Vector(n)
+      ::boost::movelib::unique_ptr<MyBoostVector> const boostvectorp = ::boost::movelib::make_unique<MyBoostVector>(100);
+      ::boost::movelib::unique_ptr<MyStdVector> const stdvectorp = ::boost::movelib::make_unique<MyStdVector>(100);
+      if(!test::CheckEqualContainers(*boostvectorp, *stdvectorp)) return 1;
+   }
+   {  //Vector(n, alloc)
+      ::boost::movelib::unique_ptr<MyBoostVector> const boostvectorp = ::boost::movelib::make_unique<MyBoostVector>(100, typename MyBoostVector::allocator_type());
+      ::boost::movelib::unique_ptr<MyStdVector> const stdvectorp = ::boost::movelib::make_unique<MyStdVector>(100);
+      if(!test::CheckEqualContainers(*boostvectorp, *stdvectorp)) return 1;
+   }
 
    {
       ::boost::movelib::unique_ptr<MyBoostVector> const boostvectorp = ::boost::movelib::make_unique<MyBoostVector>();

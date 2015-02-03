@@ -229,9 +229,27 @@ class slist
       :  AllocHolder(a)
    {}
 
+   //! <b>Effects</b>: Constructs a list
+   //!   and inserts n value-initialized value_types.
+   //!
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's default or copy constructor throws.
+   //!
+   //! <b>Complexity</b>: Linear to n.
    explicit slist(size_type n)
       :  AllocHolder(allocator_type())
    { this->resize(n); }
+
+   //! <b>Effects</b>: Constructs a list that will use a copy of allocator a
+   //!   and inserts n copies of value.
+   //!
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's default or copy constructor throws.
+   //!
+   //! <b>Complexity</b>: Linear to n.
+   slist(size_type n, const allocator_type &a)
+      : AllocHolder(a)
+   {  this->resize(n);  }
 
    //! <b>Effects</b>: Constructs a list that will use a copy of allocator a
    //!   and inserts n copies of value.

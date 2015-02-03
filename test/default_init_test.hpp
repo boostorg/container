@@ -121,6 +121,17 @@ bool default_init_test()//Test for default initialization
       }
    }
    {
+      test::default_init_allocator<int>::reset_pattern(0);
+      test::default_init_allocator<int>::set_ascending(true);
+      IntDefaultInitAllocVector v(Capacity, default_init, test::default_init_allocator<int>());
+      typename IntDefaultInitAllocVector::iterator it = v.begin();
+      //Compare with the pattern
+      for(std::size_t i = 0; i != Capacity; ++i, ++it){
+         if(!test::check_ascending_byte_pattern(*it))
+            return false;
+      }
+   }
+   {
       test::default_init_allocator<int>::reset_pattern(100);
       test::default_init_allocator<int>::set_ascending(false);
       IntDefaultInitAllocVector v;

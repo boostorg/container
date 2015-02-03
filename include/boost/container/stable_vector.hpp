@@ -557,7 +557,7 @@ class stable_vector
       STABLE_VECTOR_CHECK_INVARIANT;
    }
 
-   //! <b>Effects</b>: Constructs a stable_vector that will use a copy of allocator a
+   //! <b>Effects</b>: Constructs a stable_vector
    //!   and inserts n value initialized values.
    //!
    //! <b>Throws</b>: If allocator_type's default constructor
@@ -566,6 +566,40 @@ class stable_vector
    //! <b>Complexity</b>: Linear to n.
    explicit stable_vector(size_type n)
       : internal_data(), index()
+   {
+      stable_vector_detail::clear_on_destroy<stable_vector> cod(*this);
+      this->resize(n);
+      STABLE_VECTOR_CHECK_INVARIANT;
+      cod.release();
+   }
+
+   //! <b>Effects</b>: Constructs a stable_vector
+   //!   and inserts n default initialized values.
+   //!
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's default or copy constructor throws.
+   //!
+   //! <b>Complexity</b>: Linear to n.
+   //!
+   //! <b>Note</b>: Non-standard extension
+   stable_vector(size_type n, default_init_t)
+      : internal_data(), index()
+   {
+      stable_vector_detail::clear_on_destroy<stable_vector> cod(*this);
+      this->resize(n, default_init);
+      STABLE_VECTOR_CHECK_INVARIANT;
+      cod.release();
+   }
+
+   //! <b>Effects</b>: Constructs a stable_vector that will use a copy of allocator a
+   //!   and inserts n value initialized values.
+   //!
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's default or copy constructor throws.
+   //!
+   //! <b>Complexity</b>: Linear to n.
+   explicit stable_vector(size_type n, const allocator_type &a)
+      : internal_data(), index(a)
    {
       stable_vector_detail::clear_on_destroy<stable_vector> cod(*this);
       this->resize(n);
@@ -582,8 +616,8 @@ class stable_vector
    //! <b>Complexity</b>: Linear to n.
    //!
    //! <b>Note</b>: Non-standard extension
-   stable_vector(size_type n, default_init_t)
-      : internal_data(), index()
+   stable_vector(size_type n, default_init_t, const allocator_type &a)
+      : internal_data(), index(a)
    {
       stable_vector_detail::clear_on_destroy<stable_vector> cod(*this);
       this->resize(n, default_init);

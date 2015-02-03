@@ -201,8 +201,8 @@ class list
       : AllocHolder(a)
    {}
 
-   //! <b>Effects</b>: Constructs a list that will use a copy of allocator a
-   //!   and inserts n copies of value.
+   //! <b>Effects</b>: Constructs a list
+   //!   and inserts n value-initialized value_types.
    //!
    //! <b>Throws</b>: If allocator_type's default constructor
    //!   throws or T's default or copy constructor throws.
@@ -210,6 +210,17 @@ class list
    //! <b>Complexity</b>: Linear to n.
    explicit list(size_type n)
       : AllocHolder(Allocator())
+   {  this->resize(n);  }
+
+   //! <b>Effects</b>: Constructs a list that will use a copy of allocator a
+   //!   and inserts n copies of value.
+   //!
+   //! <b>Throws</b>: If allocator_type's default constructor
+   //!   throws or T's default or copy constructor throws.
+   //!
+   //! <b>Complexity</b>: Linear to n.
+   list(size_type n, const allocator_type &a)
+      : AllocHolder(a)
    {  this->resize(n);  }
 
    //! <b>Effects</b>: Constructs a list that will use a copy of allocator a
