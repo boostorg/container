@@ -1154,5 +1154,4 @@ namespace container {
 
 #include <boost/container/detail/config_end.hpp>
 
-#endif /* BOOST_CONTAINER_SET_HPP */
-
+#endif   // BOOST_CONTAINER_SET_HPP

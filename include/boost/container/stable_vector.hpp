@@ -728,11 +728,12 @@ class stable_vector
       : internal_data(a), index(a)
    {
       if(this->priv_node_alloc() == x.priv_node_alloc()){
+         this->index.swap(x.index);         
          this->priv_swap_members(x);
       }
       else{
          stable_vector_detail::clear_on_destroy<stable_vector> cod(*this);
-         this->insert(this->cend(), x.begin(), x.end());
+         this->insert(this->cend(), boost::make_move_iterator(x.begin()), boost::make_move_iterator(x.end()));
          STABLE_VECTOR_CHECK_INVARIANT;
          cod.release();
       }
@@ -808,7 +809,7 @@ class stable_vector
          //Move allocator if needed
          container_detail::move_alloc(this_alloc, x_alloc, flag);
          //Take resources
-         this->index = boost::move(x.index);
+         this->index.swap(x.index);
          this->priv_swap_members(x);
       }
       //Else do a one by one move

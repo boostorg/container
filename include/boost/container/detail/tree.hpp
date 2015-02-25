@@ -400,10 +400,10 @@ class RecyclingCloner
    {}
 
    static void do_assign(node_ptr_type &p, const node_type &other, bool_<true>)
-   {  p->do_assign(other.m_data);   }
+   {  p->do_move_assign(const_cast<node_type &>(other).m_data);   }
 
    static void do_assign(node_ptr_type &p, const node_type &other, bool_<false>)
-   {  p->do_move_assign(const_cast<node_type &>(other).m_data);   }
+   {  p->do_assign(other.m_data);   }
 
    node_ptr_type operator()(const node_type &other) const
    {
@@ -663,7 +663,7 @@ class tree
       }
       else{
          this->icont().clone_from
-            (x.icont(), typename AllocHolder::cloner(*this), Destroyer(this->node_alloc()));
+            (x.icont(), typename AllocHolder::move_cloner(*this), Destroyer(this->node_alloc()));
       }
    }
 

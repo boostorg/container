@@ -278,7 +278,7 @@ class list
          this->icont().swap(x.icont());
       }
       else{
-         this->insert(this->cbegin(), x.begin(), x.end());
+         this->insert(this->cbegin(), boost::make_move_iterator(x.begin()), boost::make_move_iterator(x.end()));
       }
    }
 

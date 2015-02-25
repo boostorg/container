@@ -718,7 +718,8 @@ class deque : protected deque_base<Allocator>
          if(x.size()){
             this->priv_initialize_map(x.size());
             boost::container::uninitialized_copy_alloc
-               (this->alloc(), x.begin(), x.end(), this->members_.m_start);
+               ( this->alloc(), boost::make_move_iterator(x.begin())
+               , boost::make_move_iterator(x.end()), this->members_.m_start);
          }
       }
    }

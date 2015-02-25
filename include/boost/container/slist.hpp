@@ -331,7 +331,7 @@ class slist
          this->icont().swap(x.icont());
       }
       else{
-         this->insert_after(this->cbefore_begin(), x.begin(), x.end());
+         this->insert_after(this->cbefore_begin(), boost::make_move_iterator(x.begin()), boost::make_move_iterator(x.end()));
       }
    }
 
@@ -1667,11 +1667,6 @@ namespace container {
    #define BOOST_CONTAINER_CLANG_INLINE_STD_NS
    #pragma GCC diagnostic push
    #pragma GCC diagnostic ignored "-Wc++11-extensions"
-   #define BOOST_CONTAINER_STD_NS_BEG _LIBCPP_BEGIN_NAMESPACE_STD
-   #define BOOST_CONTAINER_STD_NS_END _LIBCPP_END_NAMESPACE_STD
-#else
-   #define BOOST_CONTAINER_STD_NS_BEG namespace std{
-   #define BOOST_CONTAINER_STD_NS_END }
 #endif
 
 BOOST_CONTAINER_STD_NS_BEG

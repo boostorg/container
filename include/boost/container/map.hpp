@@ -1449,5 +1449,5 @@ namespace container {
 
 #include <boost/container/detail/config_end.hpp>
 
-#endif /* BOOST_CONTAINER_MAP_HPP */
+#endif   // BOOST_CONTAINER_MAP_HPP
 

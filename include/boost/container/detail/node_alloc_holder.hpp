@@ -370,12 +370,24 @@ struct node_alloc_holder
    protected:
    struct cloner
    {
-      cloner(node_alloc_holder &holder)
+      explicit cloner(node_alloc_holder &holder)
          :  m_holder(holder)
       {}
 
       NodePtr operator()(const Node &other) const
       {  return m_holder.create_node(other.get_data());  }
+
+      node_alloc_holder &m_holder;
+   };
+
+   struct move_cloner
+   {
+      move_cloner(node_alloc_holder &holder)
+         :  m_holder(holder)
+      {}
+
+      NodePtr operator()(Node &other)
+      {  return m_holder.create_node(::boost::move(other.get_data()));  }
 
       node_alloc_holder &m_holder;
    };
