@@ -103,6 +103,20 @@ int set_test_copyable(boost::container::container_detail::true_type)
       if(!CheckEqualContainers(boostmsetcopy, stdmsetcopy))
          return 1;
    }
+   {
+      //Now, test copy constructor
+      MyBoostSet boostsetcopy(boostset, typename MyBoostSet::allocator_type());
+      MyStdSet stdsetcopy(stdset);
+
+      if(!CheckEqualContainers(boostsetcopy, stdsetcopy))
+         return 1;
+
+      MyBoostMultiSet boostmsetcopy(boostmultiset, typename MyBoostSet::allocator_type());
+      MyStdMultiSet stdmsetcopy(stdmultiset);
+
+      if(!CheckEqualContainers(boostmsetcopy, stdmsetcopy))
+         return 1;
+   }
    return 0;
 }
 

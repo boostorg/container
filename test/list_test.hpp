@@ -70,6 +70,32 @@ bool list_copyable_only(V1 &boostlist, V2 &stdlist, boost::container::container_
       stdlist.push_front(int(3));
       if(!test::CheckEqualContainers(boostlist, stdlist)) return false;
    }
+   {  //List(const List &)
+      ::boost::movelib::unique_ptr<V1> const pv1 = ::boost::movelib::make_unique<V1>(boostlist);
+      ::boost::movelib::unique_ptr<V2> const pv2 = ::boost::movelib::make_unique<V2>(stdlist);
+
+      V1 &v1 = *pv1;
+      V2 &v2 = *pv2;
+
+      boostlist.clear();
+      stdlist.clear();
+      boostlist.assign(v1.begin(), v1.end());
+      stdlist.assign(v2.begin(), v2.end());
+      if(!test::CheckEqualContainers(boostlist, stdlist)) return 1;
+   }
+   {  //List(const List &, alloc)
+      ::boost::movelib::unique_ptr<V1> const pv1 = ::boost::movelib::make_unique<V1>(boostlist, typename V1::allocator_type());
+      ::boost::movelib::unique_ptr<V2> const pv2 = ::boost::movelib::make_unique<V2>(stdlist);
+
+      V1 &v1 = *pv1;
+      V2 &v2 = *pv2;
+
+      boostlist.clear();
+      stdlist.clear();
+      boostlist.assign(v1.begin(), v1.end());
+      stdlist.assign(v2.begin(), v2.end());
+      if(!test::CheckEqualContainers(boostlist, stdlist)) return 1;
+   }
 
    return true;
 }
@@ -157,6 +183,26 @@ int list_test (bool copied_allocators_equal = true)
       ::boost::movelib::unique_ptr<MyBoostList> const pboostlist = ::boost::movelib::make_unique<MyBoostList>(100, typename MyBoostList::allocator_type());
       ::boost::movelib::unique_ptr<MyStdList> const pstdlist = ::boost::movelib::make_unique<MyStdList>(100);
       if(!test::CheckEqualContainers(*pboostlist, *pstdlist)) return 1;
+   }
+   {  //List(List &&)
+      ::boost::movelib::unique_ptr<MyStdList> const stdlistp = ::boost::movelib::make_unique<MyStdList>(100);
+      ::boost::movelib::unique_ptr<MyBoostList> const boostlistp = ::boost::movelib::make_unique<MyBoostList>(100);
+      ::boost::movelib::unique_ptr<MyBoostList> const boostlistp2 = ::boost::movelib::make_unique<MyBoostList>(::boost::move(*boostlistp));
+      if(!test::CheckEqualContainers(*boostlistp2, *stdlistp)) return 1;
+   }
+   {  //List(List &&, alloc)
+      ::boost::movelib::unique_ptr<MyStdList> const stdlistp = ::boost::movelib::make_unique<MyStdList>(100);
+      ::boost::movelib::unique_ptr<MyBoostList> const boostlistp = ::boost::movelib::make_unique<MyBoostList>(100);
+      ::boost::movelib::unique_ptr<MyBoostList> const boostlistp2 = ::boost::movelib::make_unique<MyBoostList>
+         (::boost::move(*boostlistp), typename MyBoostList::allocator_type());
+      if(!test::CheckEqualContainers(*boostlistp2, *stdlistp)) return 1;
+   }
+   {  //List operator=(List &&)
+      ::boost::movelib::unique_ptr<MyStdList> const stdlistp = ::boost::movelib::make_unique<MyStdList>(100);
+      ::boost::movelib::unique_ptr<MyBoostList> const boostlistp = ::boost::movelib::make_unique<MyBoostList>(100);
+      ::boost::movelib::unique_ptr<MyBoostList> const boostlistp2 = ::boost::movelib::make_unique<MyBoostList>();
+      *boostlistp2 = ::boost::move(*boostlistp);
+      if(!test::CheckEqualContainers(*boostlistp2, *stdlistp)) return 1;
    }
 
    ::boost::movelib::unique_ptr<MyBoostList> const pboostlist = ::boost::movelib::make_unique<MyBoostList>();

@@ -53,7 +53,8 @@ bool test_range_insertion()
    for (std::size_t i = 0; i <= input_deque.size(); ++i)
    {
       std::deque<int> std_deque;
-      SeqContainer seq_container;
+      ::boost::movelib::unique_ptr<SeqContainer> const pseqcontainer = ::boost::movelib::make_unique<SeqContainer>();
+      SeqContainer &seq_container = *pseqcontainer;
 
       for (int element = -10; element < 10; ++element)
       {
