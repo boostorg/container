@@ -212,36 +212,34 @@ void test_move()
    move_assign.swap(original);
 }
 
-template<class T, class Allocator>
-class set_propagate_test_wrapper
-   : public boost::container::set<T, std::less<T>, Allocator
-      //tree_assoc_defaults
-      >
+struct boost_container_set;
+struct boost_container_multiset;
+
+namespace boost {
+namespace container {
+namespace test {
+
+template<>
+struct alloc_propagate_base<boost_container_set>
 {
-   BOOST_COPYABLE_AND_MOVABLE(set_propagate_test_wrapper)
-   typedef boost::container::set<T, std::less<T>, Allocator > Base;
-   public:
-   set_propagate_test_wrapper()
-      : Base()
-   {}
-
-   set_propagate_test_wrapper(const set_propagate_test_wrapper &x)
-      : Base(x)
-   {}
-
-   set_propagate_test_wrapper(BOOST_RV_REF(set_propagate_test_wrapper) x)
-      : Base(boost::move(static_cast<Base&>(x)))
-   {}
-
-   set_propagate_test_wrapper &operator=(BOOST_COPY_ASSIGN_REF(set_propagate_test_wrapper) x)
-   {  this->Base::operator=(x);  return *this; }
-
-   set_propagate_test_wrapper &operator=(BOOST_RV_REF(set_propagate_test_wrapper) x)
-   {  this->Base::operator=(boost::move(static_cast<Base&>(x)));  return *this; }
-
-   void swap(set_propagate_test_wrapper &x)
-   {  this->Base::swap(x);  }
+   template <class T, class Allocator>
+   struct apply
+   {
+      typedef boost::container::set<T, std::less<T>, Allocator> type;
+   };
 };
+
+template<>
+struct alloc_propagate_base<boost_container_multiset>
+{
+   template <class T, class Allocator>
+   struct apply
+   {
+      typedef boost::container::multiset<T, std::less<T>, Allocator> type;
+   };
+};
+
+}}}   //boost::container::test
 
 template<class VoidAllocator, boost::container::tree_type_enum tree_type_value>
 struct GetAllocatorSet
@@ -427,7 +425,10 @@ int main ()
    ////////////////////////////////////
    //    Allocator propagation testing
    ////////////////////////////////////
-   if(!boost::container::test::test_propagate_allocator<set_propagate_test_wrapper>())
+   if(!boost::container::test::test_propagate_allocator<boost_container_set>())
+      return 1;
+
+   if(!boost::container::test::test_propagate_allocator<boost_container_multiset>())
       return 1;
 
    if(!test_support_for_initialization_list_for<set<int> >())

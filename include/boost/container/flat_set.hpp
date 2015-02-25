@@ -1346,4 +1346,4 @@ namespace container {
 
 #include <boost/container/detail/config_end.hpp>
 
-#endif /* BOOST_CONTAINER_FLAT_SET_HPP */
+#endif   // BOOST_CONTAINER_FLAT_SET_HPP

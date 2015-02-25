@@ -199,40 +199,6 @@ void test_move()
    move_assign.swap(original);
 }
 
-template<class T, class Allocator>
-class flat_map_propagate_test_wrapper
-   : public boost::container::flat_map
-      < T, T, std::less<T>
-      , typename boost::container::allocator_traits<Allocator>::template
-         portable_rebind_alloc< std::pair<T, T> >::type>
-{
-   BOOST_COPYABLE_AND_MOVABLE(flat_map_propagate_test_wrapper)
-   typedef boost::container::flat_map
-      < T, T, std::less<T>
-      , typename boost::container::allocator_traits<Allocator>::template
-         portable_rebind_alloc< std::pair<T, T> >::type> Base;
-   public:
-   flat_map_propagate_test_wrapper()
-      : Base()
-   {}
-
-   flat_map_propagate_test_wrapper(const flat_map_propagate_test_wrapper &x)
-      : Base(x)
-   {}
-
-   flat_map_propagate_test_wrapper(BOOST_RV_REF(flat_map_propagate_test_wrapper) x)
-      : Base(boost::move(static_cast<Base&>(x)))
-   {}
-
-   flat_map_propagate_test_wrapper &operator=(BOOST_COPY_ASSIGN_REF(flat_map_propagate_test_wrapper) x)
-   {  this->Base::operator=(x);  return *this; }
-
-   flat_map_propagate_test_wrapper &operator=(BOOST_RV_REF(flat_map_propagate_test_wrapper) x)
-   {  this->Base::operator=(boost::move(static_cast<Base&>(x)));  return *this; }
-
-   void swap(flat_map_propagate_test_wrapper &x)
-   {  this->Base::swap(x);  }
-};
 
 namespace boost{
 namespace container {
@@ -346,6 +312,49 @@ struct GetAllocatorMap
                  > multimap_type;
    };
 };
+
+struct boost_container_flat_map;
+struct boost_container_flat_multimap;
+
+namespace boost { namespace container {   namespace test {
+
+template<>
+struct alloc_propagate_base<boost_container_flat_map>
+{
+   template <class T, class Allocator>
+   struct apply
+   {
+      typedef typename boost::container::allocator_traits<Allocator>::
+         template portable_rebind_alloc<std::pair<T, T> >::type TypeAllocator;
+      typedef boost::container::flat_map<T, T, std::less<T>, TypeAllocator> type;
+   };
+};
+
+template<>
+struct alloc_propagate_base<boost_container_flat_multimap>
+{
+   template <class T, class Allocator>
+   struct apply
+   {
+      typedef typename boost::container::allocator_traits<Allocator>::
+         template portable_rebind_alloc<std::pair<T, T> >::type TypeAllocator;
+      typedef boost::container::flat_multimap<T, T, std::less<T>, TypeAllocator> type;
+   };
+};
+
+template <class Key, class T, class Compare, class Allocator>
+struct get_real_stored_allocator<flat_map<Key, T, Compare, Allocator> >
+{
+   typedef typename flat_map<Key, T, Compare, Allocator>::impl_stored_allocator_type type;
+};
+
+template <class Key, class T, class Compare, class Allocator>
+struct get_real_stored_allocator<flat_multimap<Key, T, Compare, Allocator> >
+{
+   typedef typename flat_multimap<Key, T, Compare, Allocator>::impl_stored_allocator_type type;
+};
+
+}}}   //namespace boost::container::test
 
 template<class VoidAllocator>
 int test_map_variants()
@@ -516,7 +525,10 @@ int main()
    ////////////////////////////////////
    //    Allocator propagation testing
    ////////////////////////////////////
-   if(!boost::container::test::test_propagate_allocator<flat_map_propagate_test_wrapper>())
+   if(!boost::container::test::test_propagate_allocator<boost_container_flat_map>())
+      return 1;
+
+   if(!boost::container::test::test_propagate_allocator<boost_container_flat_multimap>())
       return 1;
 
    return 0;

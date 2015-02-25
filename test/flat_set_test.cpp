@@ -227,35 +227,6 @@ void test_move()
    move_assign.swap(original);
 }
 
-template<class T, class Allocator>
-class flat_set_propagate_test_wrapper
-   : public boost::container::flat_set<T, std::less<T>, Allocator>
-{
-   BOOST_COPYABLE_AND_MOVABLE(flat_set_propagate_test_wrapper)
-   typedef boost::container::flat_set<T, std::less<T>, Allocator> Base;
-   public:
-   flat_set_propagate_test_wrapper()
-      : Base()
-   {}
-
-   flat_set_propagate_test_wrapper(const flat_set_propagate_test_wrapper &x)
-      : Base(x)
-   {}
-
-   flat_set_propagate_test_wrapper(BOOST_RV_REF(flat_set_propagate_test_wrapper) x)
-      : Base(boost::move(static_cast<Base&>(x)))
-   {}
-
-   flat_set_propagate_test_wrapper &operator=(BOOST_COPY_ASSIGN_REF(flat_set_propagate_test_wrapper) x)
-   {  this->Base::operator=(x);  return *this; }
-
-   flat_set_propagate_test_wrapper &operator=(BOOST_RV_REF(flat_set_propagate_test_wrapper) x)
-   {  this->Base::operator=(boost::move(static_cast<Base&>(x)));  return *this; }
-
-   void swap(flat_set_propagate_test_wrapper &x)
-   {  this->Base::swap(x);  }
-};
-
 namespace boost{
 namespace container {
 namespace test{
@@ -518,6 +489,35 @@ bool test_support_for_initialization_list_for()
    return true;
 }
 
+struct boost_container_flat_set;
+struct boost_container_flat_multiset;
+
+namespace boost {
+namespace container {
+namespace test {
+
+template<>
+struct alloc_propagate_base<boost_container_flat_set>
+{
+   template <class T, class Allocator>
+   struct apply
+   {
+      typedef boost::container::flat_set<T, std::less<T>, Allocator> type;
+   };
+};
+
+template<>
+struct alloc_propagate_base<boost_container_flat_multiset>
+{
+   template <class T, class Allocator>
+   struct apply
+   {
+      typedef boost::container::flat_multiset<T, std::less<T>, Allocator> type;
+   };
+};
+
+}}}   //boost::container::test
+
 int main()
 {
    using namespace boost::container::test;
@@ -599,7 +599,10 @@ int main()
    ////////////////////////////////////
    //    Allocator propagation testing
    ////////////////////////////////////
-   if(!boost::container::test::test_propagate_allocator<flat_set_propagate_test_wrapper>())
+   if(!boost::container::test::test_propagate_allocator<boost_container_flat_set>())
+      return 1;
+
+   if(!boost::container::test::test_propagate_allocator<boost_container_flat_multiset>())
       return 1;
 
    return 0;

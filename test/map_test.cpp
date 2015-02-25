@@ -235,45 +235,6 @@ void test_move()
    move_assign.swap(original);
 }
 
-template<class T, class Allocator>
-class map_propagate_test_wrapper
-   : public boost::container::map
-      < T, T, std::less<T>
-      , typename boost::container::allocator_traits<Allocator>::template
-         portable_rebind_alloc< std::pair<const T, T> >::type
-      //tree_assoc_defaults
-      >
-{
-   BOOST_COPYABLE_AND_MOVABLE(map_propagate_test_wrapper)
-   typedef boost::container::map
-      < T, T, std::less<T>
-      , typename boost::container::allocator_traits<Allocator>::template
-         portable_rebind_alloc< std::pair<const T, T> >::type
-      > Base;
-   public:
-   map_propagate_test_wrapper()
-      : Base()
-   {}
-
-   map_propagate_test_wrapper(const map_propagate_test_wrapper &x)
-      : Base(x)
-   {}
-
-   map_propagate_test_wrapper(BOOST_RV_REF(map_propagate_test_wrapper) x)
-      : Base(boost::move(static_cast<Base&>(x)))
-   {}
-
-   map_propagate_test_wrapper &operator=(BOOST_COPY_ASSIGN_REF(map_propagate_test_wrapper) x)
-   {  this->Base::operator=(x);  return *this; }
-
-   map_propagate_test_wrapper &operator=(BOOST_RV_REF(map_propagate_test_wrapper) x)
-   {  this->Base::operator=(boost::move(static_cast<Base&>(x)));  return *this; }
-
-   void swap(map_propagate_test_wrapper &x)
-   {  this->Base::swap(x);  }
-};
-
-
 template<class VoidAllocator, boost::container::tree_type_enum tree_type_value>
 struct GetAllocatorMap
 {
@@ -389,6 +350,37 @@ bool test_support_for_initialization_list_for()
    return true;
 }
 
+struct boost_container_map;
+struct boost_container_multimap;
+
+namespace boost { namespace container {   namespace test {
+
+template<>
+struct alloc_propagate_base<boost_container_map>
+{
+   template <class T, class Allocator>
+   struct apply
+   {
+      typedef typename boost::container::allocator_traits<Allocator>::
+         template portable_rebind_alloc<std::pair<const T, T> >::type TypeAllocator;
+      typedef boost::container::map<T, T, std::less<T>, TypeAllocator> type;
+   };
+};
+
+template<>
+struct alloc_propagate_base<boost_container_multimap>
+{
+   template <class T, class Allocator>
+   struct apply
+   {
+      typedef typename boost::container::allocator_traits<Allocator>::
+         template portable_rebind_alloc<std::pair<const T, T> >::type TypeAllocator;
+      typedef boost::container::multimap<T, T, std::less<T>, TypeAllocator> type;
+   };
+};
+
+}}}   //namespace boost::container::test
+
 int main ()
 {
    //Recursive container instantiation
@@ -462,7 +454,10 @@ int main ()
    ////////////////////////////////////
    //    Allocator propagation testing
    ////////////////////////////////////
-   if(!boost::container::test::test_propagate_allocator<map_propagate_test_wrapper>())
+   if(!boost::container::test::test_propagate_allocator<boost_container_map>())
+      return 1;
+
+   if(!boost::container::test::test_propagate_allocator<boost_container_multimap>())
       return 1;
 
    if(!test_support_for_initialization_list_for<map<int, int> >())

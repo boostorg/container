@@ -141,6 +141,9 @@ class flat_map
          <typename allocator_traits<Allocator>::pointer>::reverse_iterator          reverse_iterator_impl;
    typedef typename container_detail::get_flat_tree_iterators
          <typename allocator_traits<Allocator>::pointer>::const_reverse_iterator    const_reverse_iterator_impl;
+   public:
+   typedef typename impl_tree_t::stored_allocator_type   impl_stored_allocator_type;
+   private:
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -1149,6 +1152,9 @@ class flat_multimap
          <typename allocator_traits<Allocator>::pointer>::reverse_iterator          reverse_iterator_impl;
    typedef typename container_detail::get_flat_tree_iterators
          <typename allocator_traits<Allocator>::pointer>::const_reverse_iterator    const_reverse_iterator_impl;
+   public:
+   typedef typename impl_tree_t::stored_allocator_type   impl_stored_allocator_type;
+   private:
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -1978,4 +1984,4 @@ struct has_trivial_destructor_after_move< boost::container::flat_multimap<Key, T
 
 #include <boost/container/detail/config_end.hpp>
 
-#endif /* BOOST_CONTAINER_FLAT_MAP_HPP */
+#endif   // BOOST_CONTAINER_FLAT_MAP_HPP

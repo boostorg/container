@@ -113,6 +113,23 @@ int test_cont_variants()
    return 0;
 }
 
+struct boost_container_stable_vector;
+
+namespace boost { namespace container {   namespace test {
+
+template<>
+struct alloc_propagate_base<boost_container_stable_vector>
+{
+   template <class T, class Allocator>
+   struct apply
+   {
+      typedef boost::container::stable_vector<T, Allocator> type;
+   };
+};
+
+}}}   //namespace boost::container::test
+
+
 int main()
 {
    recursive_vector_test();
@@ -176,7 +193,7 @@ int main()
    ////////////////////////////////////
    //    Allocator propagation testing
    ////////////////////////////////////
-   if(!boost::container::test::test_propagate_allocator<stable_vector>())
+   if(!boost::container::test::test_propagate_allocator<boost_container_stable_vector>())
       return 1;
 
    ////////////////////////////////////

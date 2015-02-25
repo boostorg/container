@@ -238,7 +238,7 @@ class propagation_test_allocator
    {  return CopyOnPropagateOnContSwap ? propagation_test_allocator(*this) : propagation_test_allocator();  }
 
    explicit propagation_test_allocator()
-      : id_(unique_id_++)
+      : id_(++unique_id_)
       , ctr_copies_(0)
       , ctr_moves_(0)
       , assign_copies_(0)
@@ -263,7 +263,7 @@ class propagation_test_allocator
                                        , PropagateOnContSwap
                                        , CopyOnPropagateOnContSwap> &x)
       : id_(x.id_)
-      , ctr_copies_(0)
+      , ctr_copies_(x.ctr_copies_+1)
       , ctr_moves_(0)
       , assign_copies_(0)
       , assign_moves_(0)
@@ -301,8 +301,8 @@ class propagation_test_allocator
       return *this;
    }
 
-   static void reset_unique_id()
-   {  unique_id_ = 0;  }
+   static void reset_unique_id(unsigned id = 0)
+   {  unique_id_ = id;  }
 
    T* allocate(std::size_t n)
    {  return (T*)::new char[sizeof(T)*n];  }

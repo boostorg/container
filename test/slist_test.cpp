@@ -147,6 +147,24 @@ bool test_support_for_initializer_list()
    return true;
 }
 
+struct boost_container_slist;
+
+namespace boost {
+namespace container {
+namespace test {
+
+template<>
+struct alloc_propagate_base<boost_container_slist>
+{
+   template <class T, class Allocator>
+   struct apply
+   {
+      typedef boost::container::slist<T, Allocator> type;
+   };
+};
+
+}}}
+
 int main ()
 {
    recursive_slist_test();
@@ -202,7 +220,7 @@ int main ()
    ////////////////////////////////////
    //    Allocator propagation testing
    ////////////////////////////////////
-   if(!boost::container::test::test_propagate_allocator<slist>())
+   if(!boost::container::test::test_propagate_allocator<boost_container_slist>())
       return 1;
 
    if(!test_support_for_initializer_list())

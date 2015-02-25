@@ -366,6 +366,22 @@ bool test_support_for_initialization_list()
 
 }
 
+struct boost_container_deque;
+
+namespace boost { namespace container {   namespace test {
+
+template<>
+struct alloc_propagate_base<boost_container_deque>
+{
+   template <class T, class Allocator>
+   struct apply
+   {
+      typedef boost::container::deque<T, Allocator> type;
+   };
+};
+
+}}}   //namespace boost::container::test
+
 int main ()
 {
    if(!do_test<int>())
@@ -434,7 +450,7 @@ int main ()
    ////////////////////////////////////
    //    Allocator propagation testing
    ////////////////////////////////////
-   if(!boost::container::test::test_propagate_allocator<deque>())
+   if(!boost::container::test::test_propagate_allocator<boost_container_deque>())
       return 1;
 
    return 0;
