@@ -1255,8 +1255,14 @@ inline bool operator==(const scoped_allocator_adaptor<OuterA1, BOOST_CONTAINER_S
    #else
    const bool has_zero_inner = boost::container::container_detail::is_same<P0, void>::value;
    #endif
-   return a.outer_allocator() == b.outer_allocator()
-        && (has_zero_inner || a.inner_allocator() == b.inner_allocator());
+   typedef typename scoped_allocator_adaptor<OuterA1, BOOST_CONTAINER_SCOPEDALLOC_ALLINNER>
+      ::outer_allocator_type outer_allocator_type;
+   typedef typename scoped_allocator_adaptor<OuterA1, BOOST_CONTAINER_SCOPEDALLOC_ALLINNER>
+      ::inner_allocator_type inner_allocator_type;
+   
+   return allocator_traits<outer_allocator_type>::equal(a.outer_allocator(), b.outer_allocator())
+        && (has_zero_inner || 
+            allocator_traits<inner_allocator_type>::equal(a.inner_allocator(), b.inner_allocator()));
 }
 
 template <typename OuterA1, typename OuterA2, BOOST_CONTAINER_SCOPEDALLOC_ALLINNERCLASS>
