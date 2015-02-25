@@ -59,22 +59,26 @@ bool CheckEqual( const Pair1 &pair1, const Pair2 &pair2
 }
 
 //Function to check if both containers are equal
-template<class MyBoostCont
-        ,class MyStdCont>
-bool CheckEqualContainers(const MyBoostCont &boostcont, const MyStdCont &stdcont)
+template<class ContA
+        ,class ContB>
+bool CheckEqualContainers(const ContA &cont_a, const ContB &cont_b)
 {
-   if(boostcont.size() != stdcont.size())
+   if(cont_a.size() != cont_b.size())
       return false;
 
-   typename MyBoostCont::const_iterator itboost(boostcont.begin()), itboostend(boostcont.end());
-   typename MyStdCont::const_iterator itstd(stdcont.begin());
-   typename MyStdCont::size_type dist = (typename MyStdCont::size_type)boost::container::iterator_distance(itboost, itboostend);
-   if(dist != boostcont.size()){
+   typename ContA::const_iterator itcont_a(cont_a.begin()), itcont_a_end(cont_a.end());
+   typename ContB::const_iterator itcont_b(cont_b.begin()), itcont_b_end(cont_b.end());;
+   typename ContB::size_type dist = (typename ContB::size_type)boost::container::iterator_distance(itcont_a, itcont_a_end);
+   if(dist != cont_a.size()){
+      return false;
+   }
+   typename ContA::size_type dist2 = (typename ContA::size_type)boost::container::iterator_distance(itcont_b, itcont_b_end);
+   if(dist2 != cont_b.size()){
       return false;
    }
    std::size_t i = 0;
-   for(; itboost != itboostend; ++itboost, ++itstd, ++i){
-      if(!CheckEqual(*itstd, *itboost))
+   for(; itcont_a != itcont_a_end; ++itcont_a, ++itcont_b, ++i){
+      if(!CheckEqual(*itcont_a, *itcont_b))
          return false;
    }
    return true;
