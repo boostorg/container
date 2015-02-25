@@ -311,7 +311,7 @@ class allocator_destroyer
    {  a_.deallocate_one(p); }
 
    public:
-   allocator_destroyer(Allocator &a)
+   explicit allocator_destroyer(Allocator &a)
       : a_(a)
    {}
 
