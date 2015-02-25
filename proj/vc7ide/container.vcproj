@@ -147,6 +147,9 @@
 				RelativePath="..\..\..\..\boost\container\slist.hpp">
 			</File>
 			<File
+				RelativePath="..\..\..\..\boost\container\small_vector.hpp">
+			</File>
+			<File
 				RelativePath="..\..\..\..\boost\container\stable_vector.hpp">
 			</File>
 			<File
@@ -189,6 +192,9 @@
 					RelativePath="..\..\..\..\boost\container\detail\alloc_lib.h">
 				</File>
 				<File
+					RelativePath="..\..\..\..\boost\container\detail\alloc_lib_auto_link.hpp">
+				</File>
+				<File
 					RelativePath="..\..\..\..\boost\container\detail\allocation_type.hpp">
 				</File>
 				<File
@@ -196,9 +202,6 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\boost\container\detail\auto_link.hpp">
-				</File>
-				<File
-					RelativePath="..\..\..\..\boost\container\detail\boost_cont_ext_auto_link.hpp">
 				</File>
 				<File
 					RelativePath="..\..\..\..\boost\container\detail\compare_functors.hpp">
@@ -211,9 +214,6 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\boost\container\detail\construct_in_place.hpp">
-				</File>
-				<File
-					RelativePath="..\..\test\container_common_tests.hpp">
 				</File>
 				<File
 					RelativePath="..\..\..\..\boost\container\detail\copy_move_algo.hpp">
@@ -243,6 +243,9 @@
 					RelativePath="..\..\..\..\boost\container\detail\math_functions.hpp">
 				</File>
 				<File
+					RelativePath="..\..\..\..\boost\container\detail\min_max.hpp">
+				</File>
+				<File
 					RelativePath="..\..\..\..\boost\container\detail\minimal_char_traits_header.hpp">
 				</File>
 				<File
@@ -270,6 +273,9 @@
 					RelativePath="..\..\..\..\boost\container\detail\pair.hpp">
 				</File>
 				<File
+					RelativePath="..\..\..\..\boost\container\detail\placement_new.hpp">
+				</File>
+				<File
 					RelativePath="..\..\..\..\boost\container\detail\pool_common.hpp">
 				</File>
 				<File
@@ -279,13 +285,7 @@
 					RelativePath="..\..\..\..\boost\container\detail\singleton.hpp">
 				</File>
 				<File
-					RelativePath="..\..\..\..\boost\container\detail\std_allocator_arg.hpp">
-				</File>
-				<File
 					RelativePath="..\..\..\..\boost\container\detail\std_fwd.hpp">
-				</File>
-				<File
-					RelativePath="..\..\..\..\boost\container\detail\swap.hpp">
 				</File>
 				<File
 					RelativePath="..\..\..\..\boost\container\detail\to_raw_pointer.hpp">
@@ -298,9 +298,6 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\boost\container\detail\type_traits.hpp">
-				</File>
-				<File
-					RelativePath="..\..\..\..\boost\container\detail\utilities.hpp">
 				</File>
 				<File
 					RelativePath="..\..\..\..\boost\container\detail\value_init.hpp">
