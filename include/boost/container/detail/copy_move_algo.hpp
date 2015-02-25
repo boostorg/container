@@ -55,6 +55,15 @@ struct are_elements_contiguous<T*>
 };
 
 /////////////////////////
+//    move iterators
+/////////////////////////
+
+template<class It>
+struct are_elements_contiguous< ::boost::move_iterator<It> >
+   : are_elements_contiguous<It>
+{};
+
+/////////////////////////
 //    predeclarations
 /////////////////////////
 
