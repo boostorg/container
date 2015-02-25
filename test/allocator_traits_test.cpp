@@ -27,6 +27,9 @@ class SimpleAllocator
    bool allocate_called_;
    bool deallocate_called_;
 
+   typedef boost::container::container_detail::
+      true_type                                 is_always_equal;
+
    typedef T value_type;
 
    template <class U>
@@ -51,15 +54,26 @@ class SimpleAllocator
 
    bool deallocate_called() const
    {  return deallocate_called_;  }
+
+   friend bool operator==(const SimpleAllocator &, const SimpleAllocator &)
+   {  return true;  }
+
+   friend bool operator!=(const SimpleAllocator &, const SimpleAllocator &)
+   {  return false;  }
 };
 
 template<class T>
 class SimpleSmartPtr
 {
+   void unspecified_bool_type_func() const {}
+   typedef void (SimpleSmartPtr::*unspecified_bool_type)() const;
+
    public:
 
-   SimpleSmartPtr()
-    : ptr_(0)
+   typedef T* pointer;
+
+   explicit SimpleSmartPtr(pointer p = 0)
+    : ptr_(p)
    {}
 
    SimpleSmartPtr(const SimpleSmartPtr &c)
@@ -68,7 +82,8 @@ class SimpleSmartPtr
    SimpleSmartPtr & operator=(const SimpleSmartPtr &c)
    {  this->ptr_ = c.ptr_; }
 
-   typedef T* pointer;
+   operator unspecified_bool_type() const
+   {  return ptr_? &SimpleSmartPtr::unspecified_bool_type_func : 0;   }
 
    private:
    T *ptr_;
@@ -85,6 +100,7 @@ class ComplexAllocator
    mutable bool max_size_called_;
    mutable bool select_on_container_copy_construction_called_;
    bool construct_called_;
+   mutable bool storage_can_be_propagated_;
 
    typedef T value_type;
    typedef SimpleSmartPtr<T>                    pointer;
@@ -104,7 +120,7 @@ class ComplexAllocator
    typedef boost::container::container_detail::
       true_type                                 propagate_on_container_swap;
    typedef boost::container::container_detail::
-      true_type                                 is_always_equal;
+      true_type                                 is_partially_propagable;
 
    ComplexAllocator()
       : allocate_called_(false)
@@ -158,6 +174,9 @@ class ComplexAllocator
    void construct(U *p, boost::container::default_init_t)
    {  construct_called_ = true;  ::new(p)U;   }
 
+   bool storage_can_be_propagated(pointer p, const ComplexAllocator &, bool) const
+   {  storage_can_be_propagated_ = true; return p ? true : false;  }
+
    //getters
    bool allocate_called() const
    {  return allocate_called_;  }
@@ -179,6 +198,9 @@ class ComplexAllocator
 
    bool construct_called() const
    {  return construct_called_;  }
+
+   bool storage_can_be_propagated_called() const
+   {  return storage_can_be_propagated_;  }
 };
 
 class copymovable
@@ -250,7 +272,9 @@ int main()
    BOOST_STATIC_ASSERT(( boost::container::allocator_traits
                        < SimpleAllocator<int> >::propagate_on_container_swap::value == false ));
    BOOST_STATIC_ASSERT(( boost::container::allocator_traits
-                       < SimpleAllocator<int> >::is_always_equal::value == false ));
+                       < SimpleAllocator<int> >::is_always_equal::value == true ));
+   BOOST_STATIC_ASSERT(( boost::container::allocator_traits
+                       < SimpleAllocator<int> >::is_partially_propagable::value == false ));
    BOOST_STATIC_ASSERT(( is_same<boost::container::allocator_traits
                        < SimpleAllocator<int> >::rebind_traits<double>::allocator_type
                        , SimpleAllocator<double> >::value ));
@@ -280,7 +304,9 @@ int main()
    BOOST_STATIC_ASSERT(( boost::container::allocator_traits
                        < ComplexAllocator<int> >::propagate_on_container_swap::value == true ));
    BOOST_STATIC_ASSERT(( boost::container::allocator_traits
-                       < ComplexAllocator<int> >::is_always_equal::value == true ));
+                       < ComplexAllocator<int> >::is_always_equal::value == false ));
+   BOOST_STATIC_ASSERT(( boost::container::allocator_traits
+                       < ComplexAllocator<int> >::is_partially_propagable::value == true ));
    BOOST_STATIC_ASSERT(( is_same<boost::container::allocator_traits
                        < ComplexAllocator<int> >::rebind_traits<double>::allocator_type
                        , ComplexAllocator<double> >::value ));
@@ -395,6 +421,25 @@ int main()
       copymovable c2;
       SAllocTraits::construct(s_alloc, &c, 0, 1, 2);
       BOOST_TEST(!c.copymoveconstructed() && !c.moved());
+   }
+   //storage_can_be_propagated
+   {
+      SAlloc s_alloc2;
+      BOOST_TEST(SAllocTraits::storage_can_be_propagated(s_alloc, SAllocTraits::pointer(), s_alloc2, true));
+   }
+   {
+      {
+         CAlloc c_alloc2;
+         CAlloc::value_type v;
+         BOOST_TEST( CAllocTraits::storage_can_be_propagated(c_alloc, CAllocTraits::pointer(&v), c_alloc2, true));
+         BOOST_TEST(c_alloc.storage_can_be_propagated_called());
+      }
+      {
+         CAlloc c_alloc2;
+         BOOST_TEST(!CAllocTraits::storage_can_be_propagated(c_alloc2, CAllocTraits::pointer(),  c_alloc, true));
+         BOOST_TEST(c_alloc2.storage_can_be_propagated_called());
+      }
+
    }
 
    return ::boost::report_errors();
