@@ -276,10 +276,7 @@ inline pair<T1, T2> make_pair(T1 x, T2 y)
 
 template <class T1, class T2>
 inline void swap(pair<T1, T2>& x, pair<T1, T2>& y)
-{
-   swap(x.first, y.first);
-   swap(x.second, y.second);
-}
+{  x.swap(y);  }
 
 }  //namespace container_detail {
 }  //namespace container {
