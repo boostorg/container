@@ -335,37 +335,6 @@ int test_cont_variants()
    return 0;
 }
 
-bool test_support_for_initialization_list()
-{
-#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
-   const std::initializer_list<int> il = {1, 10, 11};
-   const deque<int> expectedDeque(il.begin(), il.end());
-
-   const deque<int> testConstructor = il;
-   if(testConstructor != expectedDeque)
-      return false;
-
-   deque<int> testAssignmentOperator = {11, 12, 23};
-   testAssignmentOperator = il;
-   if(testConstructor != expectedDeque)
-      return false;
-
-   deque<int> testAssignmentMethod = {11, 12, 23};
-   testAssignmentMethod.assign(il);
-   if(testConstructor != expectedDeque)
-      return false;
-
-   deque<int> testInsertMethod = {11};
-   testInsertMethod.insert(testInsertMethod.cbegin(), {12, 23});
-   if(testConstructor != expectedDeque)
-      return false;
-
-   return true;
-#endif
-   return true;
-
-}
-
 struct boost_container_deque;
 
 namespace boost { namespace container {   namespace test {
@@ -436,9 +405,6 @@ int main ()
       return 1;
    }
 
-   if(!test_support_for_initialization_list())
-      return 1;
-
    ////////////////////////////////////
    //    Emplace testing
    ////////////////////////////////////
@@ -452,6 +418,15 @@ int main ()
    ////////////////////////////////////
    if(!boost::container::test::test_propagate_allocator<boost_container_deque>())
       return 1;
+
+   ////////////////////////////////////
+   //    Initializer lists testing
+   ////////////////////////////////////
+   if(!boost::container::test::test_vector_methods_with_initializer_list_as_argument_for
+      < boost::container::deque<int> >()) {
+      return 1;
+   }
+   return 0;
 
    return 0;
 }
