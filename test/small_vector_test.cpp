@@ -81,6 +81,32 @@ struct alloc_propagate_base<boost_container_small_vector>
 
 }}}   //namespace boost::container::test
 
+bool test_small_vector_base_test()
+{
+   typedef boost::container::small_vector_base<int> smb_t;
+   {
+      typedef boost::container::small_vector<int, 5> sm5_t;
+      sm5_t sm5;
+      smb_t &smb = sm5;
+      smb.push_back(1);
+      sm5_t sm5_copy(sm5);
+      sm5_copy.push_back(1);
+      if (!boost::container::test::CheckEqualContainers(sm5, smb))
+         return false;
+   }
+   {
+      typedef boost::container::small_vector<int, 5> sm7_t;
+      sm7_t sm7;
+      smb_t &smb = sm7;
+      smb.push_back(2);
+      sm7_t sm7_copy(sm7);
+      sm7_copy.push_back(2);
+      if (!boost::container::test::CheckEqualContainers(sm7, smb))
+         return false;
+   }
+   return true;
+}
+
 int main()
 {
    using namespace boost::container;
@@ -144,6 +170,13 @@ int main()
    if(!boost::container::test::test_vector_methods_with_initializer_list_as_argument_for<
        boost::container::vector<int>
    >()) {
+      return 1;
+   }
+
+   ////////////////////////////////////
+   //       Small vector base
+   ////////////////////////////////////
+   if (!test_small_vector_base_test()){
       return 1;
    }
 
