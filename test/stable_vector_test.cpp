@@ -199,9 +199,8 @@ int main()
    ////////////////////////////////////
    //    Initializer lists testing
    ////////////////////////////////////
-   if(!boost::container::test::test_vector_methods_with_initializer_list_as_argument_for<
-       boost::container::stable_vector<int>
-   >())
+   if(!boost::container::test::test_vector_methods_with_initializer_list_as_argument_for
+      < boost::container::stable_vector<int> >())
    {
        std::cerr << "test_methods_with_initializer_list_as_argument failed" << std::endl;
        return 1;

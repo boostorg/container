@@ -410,6 +410,56 @@ int list_test (bool copied_allocators_equal = true)
    return 0;
 }
 
+template<class List>
+bool test_list_methods_with_initializer_list_as_argument_for()
+{
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   const std::initializer_list<int> il = {5, 10, 15};
+   const List expected_list(il.begin(), il.end());
+   {
+      List sl = il;
+      if(sl != expected_list)
+         return false;
+   }
+
+   {
+      List sl = {1, 2};
+      sl = il;
+      if(sl != expected_list)
+         return false;
+   }
+   {
+      List sl({ 1, 2 }, typename List::allocator_type());
+      sl = il;
+      if (sl != expected_list)
+         return false;
+   }
+   {
+      List sl = {4, 5};
+      sl.assign(il);
+      if(sl != expected_list)
+         return false;
+   }
+
+   {
+      List sl = {15};
+      sl.insert(sl.cbegin(), {5, 10});
+      if(sl != expected_list)
+         return false;
+   }
+
+   {
+       List sl = {5};
+       sl.insert_after(sl.cbegin(), {10, 15});
+       if(sl != expected_list)
+          return false;
+   }
+   return true;
+#endif
+   return true;
+}
+
+
 }  //namespace test{
 }  //namespace container {
 }  //namespace boost{
