@@ -445,6 +445,7 @@ class small_vector : public small_vector_base<T, Allocator>
 
    typedef typename base_type::allocator_type   allocator_type;
    typedef typename base_type::size_type        size_type;
+   typedef typename base_type::value_type       value_type;
 
    static std::size_t internal_capacity()
    {  return (sizeof(small_vector) - storage_test::s_start)/sizeof(T);  }
@@ -484,6 +485,14 @@ class small_vector : public small_vector_base<T, Allocator>
    small_vector(BOOST_RV_REF(small_vector) other, const allocator_type &a)
       : base_type(initial_capacity_t(), internal_capacity(), a)
    {  this->move_construct_impl(other, a);   }
+
+   #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   small_vector(std::initializer_list<value_type> il, const allocator_type& a = allocator_type())
+      : base_type(initial_capacity_t(), internal_capacity(), a)
+   {
+      this->assign(il.begin(), il.end());
+   }
+   #endif
 
    small_vector& operator=(BOOST_COPY_ASSIGN_REF(small_vector) other)
    {  return static_cast<small_vector&>(this->base_type::operator=(static_cast<base_type const&>(other)));  }

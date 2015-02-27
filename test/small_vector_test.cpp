@@ -167,9 +167,8 @@ int main()
    ////////////////////////////////////
    //    Initializer lists testing
    ////////////////////////////////////
-   if(!boost::container::test::test_vector_methods_with_initializer_list_as_argument_for<
-       boost::container::vector<int>
-   >()) {
+   if(!boost::container::test::test_vector_methods_with_initializer_list_as_argument_for
+      < boost::container::small_vector<int, 5> >()) {
       return 1;
    }
 
