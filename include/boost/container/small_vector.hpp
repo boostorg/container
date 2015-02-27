@@ -48,6 +48,8 @@
 namespace boost {
 namespace container {
 
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 template <class T, class Allocator = new_allocator<T> >
 class small_vector_base;
 
@@ -262,15 +264,39 @@ class small_vector_allocator
    }
 };
 
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 /////////////////////////////////////////////////////
 //
 //             small_vector_base
 //
 /////////////////////////////////////////////////////
+
+//! This class consists of common code from all small_vector<T, N> types that don't depend on the
+//! "N" template parameter. This class is non-copyable and non-destructible, so this class tipically
+//! used as reference argument to functions that read or write small vectors. Since small_vector<T, N>
+//! derives from small_vector_base<T>, the conversion to small_vector_base is implicit:
+//! <code>
+//!
+//! //Clients can pass any small_vector<Foo, N>.
+//! void read_any_small_vector_of_foo(const small_vector_base<Foo> &in_parameter);
+//! void modify_any_small_vector_of_foo(small_vector_base<Foo> &out_parameter);
+//! 
+//! void some_function()
+//! {
+//!    small_vector<Foo, 8> myvector;
+//!    read_any_small_vector_of_foo(myvector);   // Reads myvector
+//!    modify_any_small_vector_of_foo(myvector); // Modifies myvector
+//! }
+//! </code>
+//!
+//! All `boost::container:vector` member functions are inherited. See `vector` documentation for details.
+//!
 template <class T, class SecondaryAllocator>
 class small_vector_base
    : public vector<T, small_vector_allocator<SecondaryAllocator> >
 {
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    typedef typename allocator_traits<SecondaryAllocator>::pointer pointer;
 
    BOOST_COPYABLE_AND_MOVABLE(small_vector_base)
@@ -301,6 +327,16 @@ class small_vector_base
 
    ~small_vector_base(){}
 
+   using base_type::is_propagable_from;
+   using base_type::steal_resources;
+
+   private:
+   //The only member
+   storage_type m_storage_start;
+
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
+   public:
    small_vector_base& operator=(BOOST_COPY_ASSIGN_REF(small_vector_base) other)
    {  return static_cast<small_vector_base&>(this->base_type::operator=(static_cast<base_type const&>(other)));  }
 
@@ -309,14 +345,9 @@ class small_vector_base
 
    void swap(small_vector_base &other)
    {  return this->base_type::swap(other);  }
-
-   using base_type::is_propagable_from;
-   using base_type::steal_resources;
-
-   private:
-   //The only member
-   storage_type m_storage_start;
 };
+
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 /////////////////////////////////////////////////////
 //
@@ -376,6 +407,8 @@ struct small_vector_storage_definer
    typedef small_vector_storage<storage_type, needed_extra_storages> type;
 };
 
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 //! small_vector a vector-like container optimized for the case when it contains few elements.
 //! It contains some preallocated elements in-place, which allows it to avoid the use of the small_vector_allocator
 //! when the actual number of elements is below that preallocated threshold.
@@ -383,13 +416,16 @@ struct small_vector_storage_definer
 //! small_vector<T, N, Allocator> is convertible to small_vector_unbounded<T, Allocator> that is independent
 //! from the preallocated element capacity, so client code does not need to be templated on that N argument.
 //!
+//! All `boost::container:vector` member functions are inherited. See `vector` documentation for details.
+//!
 //! \tparam T The type of object that is stored in the small_vector
 //! \tparam N The number of preallocated elements stored inside small_vector. It shall be less than Allocator::max_size();
 //! \tparam Allocator The small_vector_allocator used for memory management when the number of elements exceeds N.
 template <class T, std::size_t N, class Allocator BOOST_CONTAINER_DOCONLY(= new_allocator<T>) >
 class small_vector : public small_vector_base<T, Allocator>
-                   , private small_vector_storage_definer<Allocator, N>::type
+   BOOST_CONTAINER_DOCIGN(BOOST_CONTAINER_I private small_vector_storage_definer<Allocator BOOST_CONTAINER_I N>::type)
 {
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    typedef small_vector_base<T, Allocator> base_type;
    typedef typename small_vector_storage_definer<Allocator, N>::type remaining_storage_holder;
 
@@ -413,6 +449,9 @@ class small_vector : public small_vector_base<T, Allocator>
    static std::size_t internal_capacity()
    {  return (sizeof(small_vector) - storage_test::s_start)/sizeof(T);  }
 
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
+   public:
    small_vector()
       : base_type(initial_capacity_t(), internal_capacity())
    {}
@@ -455,6 +494,7 @@ class small_vector : public small_vector_base<T, Allocator>
    void swap(small_vector &other)
    {  return this->base_type::swap(other);  }
 
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    void move_construct_impl(small_vector &x, const allocator_type &a)
    {
@@ -467,6 +507,7 @@ class small_vector : public small_vector_base<T, Allocator>
                      );
       }
    }
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
 }}
