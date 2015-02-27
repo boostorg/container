@@ -1023,7 +1023,7 @@ class multiset
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! @copydoc ::boost::container::set::insert(std::initializer_list<value_type>)
    void insert(std::initializer_list<value_type> il)
-   {  this->base_t::insert_unique(il.begin(), il.end()); }
+   {  this->base_t::insert_equal(il.begin(), il.end());  }
 #endif
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
