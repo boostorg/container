@@ -126,8 +126,12 @@ bool test_support_for_initializer_list()
    const std::initializer_list<int> il = {1, 10};
    const list<int> expectedList(il.begin(), il.end());
 
-   const list<int> testConstructor = il;
+   const list<int> testConstructor((il));
    if(testConstructor != expectedList)
+      return false;
+
+   const list<int> testConstructorAllocator(il, list<int>::allocator_type());
+   if (testConstructorAllocator != expectedList)
       return false;
 
    list<int> testAssignOperator = {10, 11};

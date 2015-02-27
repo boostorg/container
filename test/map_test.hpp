@@ -663,6 +663,76 @@ int map_test()
    }
    return 0;
 }
+/*
+template<typename MapType>
+bool test_support_for_initialization_list_for()
+{
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   const std::initializer_list<std::pair<const int, int>> il
+      = {std::make_pair(1, 2), std::make_pair(3, 4)};
+   const MapType expected(il.begin(), il.end());
+   {
+      const MapType sil = il;
+      if (sil != expected)
+         return false;
+
+      const MapType sil_ordered(ordered_unique_range, il);
+      if(sil_ordered != expected)
+         return false;
+
+      MapType sil_assign = {std::make_pair(99, 100)};
+      sil_assign = il;
+      if(sil_assign != expected)
+         return false;
+   }
+   {
+      MapType sil;
+      sil.insert(il);
+      if(sil != expected)
+         return false;
+   }
+   return true;
+#endif
+   return true;
+}
+*/
+template<typename MapType>
+bool test_map_support_for_initialization_list_for()
+{
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   const std::initializer_list<std::pair<typename MapType::value_type::first_type, typename MapType::mapped_type>> il
+      = { std::make_pair(1, 2), std::make_pair(3, 4) };
+
+   const MapType expected(il.begin(), il.end());
+   {
+      const MapType sil = il;
+      if (sil != expected)
+         return false;
+
+      MapType sila(il, typename MapType::allocator_type());
+      if (sila != expected)
+         return false;
+
+      const MapType sil_ordered(ordered_unique_range, il);
+      if (sil_ordered != expected)
+         return false;
+
+      MapType sil_assign = { std::make_pair(99, 100) };
+      sil_assign = il;
+      if (sil_assign != expected)
+         return false;
+   }
+   {
+      MapType sil;
+      sil.insert(il);
+      if (sil != expected)
+         return false;
+   }
+   return true;
+#endif
+   return true;
+}
+
 
 }  //namespace test{
 }  //namespace container {

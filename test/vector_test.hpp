@@ -389,12 +389,17 @@ template<typename VectorContainerType>
 bool test_vector_methods_with_initializer_list_as_argument_for()
 {
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   typedef typename VectorContainerType::allocator_type allocator_type;
    {
       const VectorContainerType testedVector = {1, 2, 3};
       const std::vector<int> expectedVector = {1, 2, 3};
       if(!test::CheckEqualContainers(testedVector, expectedVector)) return false;
    }
-
+   {
+      const VectorContainerType testedVector( { 1, 2, 3 }, allocator_type() );
+      const std::vector<int> expectedVector = {1, 2, 3};
+      if(!test::CheckEqualContainers(testedVector, expectedVector)) return false;
+   }
    {
       VectorContainerType testedVector = {1, 2, 3};
       testedVector = {11, 12, 13};

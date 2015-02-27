@@ -705,6 +705,43 @@ int set_test ()
    return 0;
 }
 
+template<typename SetType>
+bool test_set_methods_with_initializer_list_as_argument_for()
+{
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   std::initializer_list<int> il = { 1, 2, 3, 4, 5, 5 };
+   std::initializer_list<int> ilu = { 1, 2, 3, 4, 5 };
+   SetType expected(il.begin(), il.end());
+   SetType expectedu(ilu.begin(), ilu.end());
+   {
+      SetType sil((il));
+      if (sil != expected)
+         return false;
+
+      SetType sila(il, typename SetType::allocator_type());
+      if (sila != expected)
+         return false;
+
+      SetType sil_ordered(ordered_unique_range, ilu);
+      if (sil_ordered != expectedu)
+         return false;
+
+      SetType sil_assign = { 99, 100, 101, 102, 103, 104, 105 };
+      sil_assign = il;
+      if (sil_assign != expected)
+         return false;
+   }
+   {
+      SetType sil;
+      sil.insert(il);
+      if (sil != expected)
+         return false;
+   }
+   return true;
+#endif
+   return true;
+}
+
 }  //namespace test{
 }  //namespace container {
 }  //namespace boost{
