@@ -722,6 +722,10 @@ bool test_set_methods_with_initializer_list_as_argument_for()
       if (sila != expected)
          return false;
 
+      SetType silca(il, typename SetType::key_compare(), typename SetType::allocator_type());
+      if (silca != expected)
+         return false;
+
       SetType sil_ordered(ordered_unique_range, ilu);
       if (sil_ordered != expectedu)
          return false;

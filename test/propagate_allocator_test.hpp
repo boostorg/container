@@ -33,7 +33,9 @@ class alloc_propagate_wrapper
    typedef typename alloc_propagate_base
       <Selector>::template apply<T, Allocator>::type  Base;
 
-   typedef typename Base::allocator_type              allocator_type;
+   typedef typename Base::allocator_type  allocator_type;
+   typedef typename Base::value_type      value_type;
+   typedef typename Base::size_type       size_type;
 
    alloc_propagate_wrapper()
       : Base()
@@ -42,6 +44,32 @@ class alloc_propagate_wrapper
    explicit alloc_propagate_wrapper(const allocator_type &a)
       : Base(a)
    {}
+/*
+   //sequence containers only
+   explicit alloc_propagate_wrapper(size_type n, const value_type &v, const allocator_type &a)
+      : Base(n, v, a)
+   {}
+
+   alloc_propagate_wrapper(size_type n, const allocator_type &a)
+      : Base(n, a)
+   {}*/
+
+   template<class Iterator>
+   alloc_propagate_wrapper(Iterator b, Iterator e, const allocator_type &a)
+      : Base(b, e, a)
+   {}
+
+   #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   alloc_propagate_wrapper(std::initializer_list<value_type> il, const allocator_type& a)
+      : Base(il, a)
+   {}
+/*
+   //associative containers only
+   alloc_propagate_wrapper(std::initializer_list<value_type> il, const Compare& comp, const allocator_type& a)
+      : Base(il, comp, a)
+   {}*/
+
+   #endif
 
    alloc_propagate_wrapper(const alloc_propagate_wrapper &x)
       : Base(x)

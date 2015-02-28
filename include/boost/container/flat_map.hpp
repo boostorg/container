@@ -271,6 +271,18 @@ class flat_map
        BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
+   //! <b>Effects</b>: Constructs an empty flat_map using the specified
+   //! allocator, and inserts elements from the range [il.begin() ,il.end()).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [il.begin(), il.end()) is already sorted using
+   //! comp and otherwise N logN, where N is last - first.
+   flat_map(std::initializer_list<value_type> il, const allocator_type& a)
+     : m_flat_tree(true, il.begin(), il.end(), Compare(), container_detail::force<impl_allocator_type>(a))
+   {
+       //A type must be std::pair<Key, T>
+       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
+
    //! <b>Effects</b>: Constructs an empty flat_map using the specified comparison object and
    //! allocator, and inserts elements from the ordered unique range [il.begin(), il.end()). This function
    //! is more efficient than the normal range creation for ordered ranges.
@@ -1277,6 +1289,18 @@ class flat_multimap
    //! comp and otherwise N logN, where N is last - first.
    flat_multimap(std::initializer_list<value_type> il, const Compare& comp = Compare(), const allocator_type& a = allocator_type())
       : m_flat_tree(false, il.begin(), il.end(), comp, container_detail::force<impl_allocator_type>(a))
+   {
+       //A type must be std::pair<Key, T>
+       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty flat_map using the specified
+   //! allocator, and inserts elements from the range [il.begin(), il.end()).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [il.begin(), il.end()) is already sorted using
+   //! comp and otherwise N logN, where N is last - first.
+   flat_multimap(std::initializer_list<value_type> il, const allocator_type& a)
+      : m_flat_tree(false, il.begin(), il.end(), Compare(), container_detail::force<impl_allocator_type>(a))
    {
        //A type must be std::pair<Key, T>
        BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));

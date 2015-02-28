@@ -180,9 +180,16 @@ class flat_set
    flat_set(std::initializer_list<value_type> il, const Compare& comp = Compare(),
             const allocator_type& a = allocator_type())
       : base_t(true, il.begin(), il.end(), comp, a)
-   {
+   {}
 
-   }
+   //! <b>Effects</b>: Constructs an empty container using the specified
+   //! allocator, and inserts elements from the range [il.begin(), il.end()).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [il.begin(), il.end()) is already sorted using
+   //! comp and otherwise N logN, where N is il.begin() - il.end().
+   flat_set(std::initializer_list<value_type> il, const allocator_type& a)
+      : base_t(true, il.begin(), il.end(), Compare(), a)
+   {}
 
    //! <b>Effects</b>: Constructs an empty container using the specified comparison object and
    //! allocator, and inserts elements from the ordered unique range [il.begin(), il.end()). This function
@@ -197,9 +204,7 @@ class flat_set
    flat_set(ordered_unique_range_t, std::initializer_list<value_type> il,
             const Compare& comp = Compare(), const allocator_type& a = allocator_type())
       : base_t(ordered_range, il.begin(), il.end(), comp, a)
-   {
-
-   }
+   {}
 #endif
 
    //! <b>Effects</b>: Copy constructs the container.
@@ -944,6 +949,11 @@ class flat_multiset
    flat_multiset(std::initializer_list<value_type> il, const Compare& comp = Compare(),
             const allocator_type& a = allocator_type())
       : base_t(false, il.begin(), il.end(), comp, a)
+   {}
+
+   //! @copydoc ::boost::container::flat_set::flat_set(std::initializer_list<value_type>, const allocator_type&)
+   flat_multiset(std::initializer_list<value_type> il, const allocator_type& a)
+      : base_t(false, il.begin(), il.end(), Compare(), a)
    {}
 
    //! @copydoc ::boost::container::flat_set::flat_set(ordered_unique_range_t, std::initializer_list<value_type>, const Compare& comp, const allocator_type&)

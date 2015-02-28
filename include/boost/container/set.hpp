@@ -177,6 +177,15 @@ class set
       : base_t(true, il.begin(), il.end(), comp, a)
    {}
 
+   //! <b>Effects</b>: Constructs an empty set using the specified
+   //! allocator, and inserts elements from the range [il.begin(), il.end()).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [il.begin(), il.end()) is already sorted using
+   //! comp and otherwise N logN, where N is il.begin() - il.end().
+   set(std::initializer_list<value_type> il, const allocator_type& a)
+      : base_t(true, il.begin(), il.end(), Compare(), a)
+   {}
+
    //! <b>Effects</b>: Constructs an empty set using the specified comparison object and
    //! allocator, and inserts elements from the ordered unique range [il.begin(), il.end()). This function
    //! is more efficient than the normal range creation for ordered ranges.
@@ -187,7 +196,8 @@ class set
    //! <b>Complexity</b>: Linear in N.
    //!
    //! <b>Note</b>: Non-standard extension.
-   set(ordered_unique_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(), const allocator_type& a = allocator_type())
+   set( ordered_unique_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare()
+      , const allocator_type& a = allocator_type())
       : base_t(ordered_range, il.begin(), il.end(), comp, a)
    {}
 #endif
@@ -825,12 +835,16 @@ class multiset
       : base_t(false, il.begin(), il.end(), comp, a)
    {}
 
+   //! @copydoc ::boost::container::set::set(std::initializer_list<value_type>, const allocator_type&)
+   multiset(std::initializer_list<value_type> il, const allocator_type& a)
+      : base_t(false, il.begin(), il.end(), Compare(), a)
+   {}
+
    //! @copydoc ::boost::container::set::set(ordered_unique_range_t, std::initializer_list<value_type>, const Compare& comp, const allocator_type&)
    multiset(ordered_unique_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(), const allocator_type& a = allocator_type())
       : base_t(ordered_range, il.begin(), il.end(), comp, a)
    {}
 #endif
-
 
    //! @copydoc ::boost::container::set::set(const set &)
    multiset(const multiset& x)

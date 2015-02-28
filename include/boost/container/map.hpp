@@ -143,8 +143,7 @@ class map
    //! and allocator.
    //!
    //! <b>Complexity</b>: Constant.
-   explicit map(const Compare& comp,
-                const allocator_type& a = allocator_type())
+   explicit map(const Compare& comp, const allocator_type& a = allocator_type())
       : base_t(comp, a)
    {
       //A type must be std::pair<CONST Key, T>
@@ -220,6 +219,28 @@ class map
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
+   //! <b>Effects</b>: Constructs an empty map using the specified
+   //! allocator, and inserts elements from the range [il.begin(), il.end()).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
+   //! comp and otherwise N logN, where N is il.first() - il.end().
+   map(std::initializer_list<value_type> il, const allocator_type& a)
+      : base_t(true, il.begin(), il.end(), Compare(), a)
+   {
+      //A type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty set using the specified comparison object and
+   //! allocator, and inserts elements from the ordered unique range [il.begin(), il.end()). This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Requires</b>: [il.begin(), il.end()) must be ordered according to the predicate and must be
+   //! unique values.
+   //!
+   //! <b>Complexity</b>: Linear in N.
+   //!
+   //! <b>Note</b>: Non-standard extension.
    map(ordered_unique_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(),
        const allocator_type& a = allocator_type())
       : base_t(ordered_range, il.begin(), il.end(), comp, a)
@@ -1038,6 +1059,27 @@ class multimap
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
    }
 
+   //! <b>Effects</b>: Constructs an empty multimap using the specified
+   //! allocator, and inserts elements from the range [il.begin(), il.end()).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
+   //! comp and otherwise N logN, where N is il.first() - il.end().
+   multimap(std::initializer_list<value_type> il, const allocator_type& a)
+      : base_t(false, il.begin(), il.end(), Compare(), a)
+   {
+      //A type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty set using the specified comparison object and
+   //! allocator, and inserts elements from the ordered range [il.begin(), il.end()). This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Requires</b>: [il.begin(), il.end()) must be ordered according to the predicate.
+   //!
+   //! <b>Complexity</b>: Linear in N.
+   //!
+   //! <b>Note</b>: Non-standard extension.
    multimap(ordered_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(),
        const allocator_type& a = allocator_type())
       : base_t(ordered_range, il.begin(), il.end(), comp, a)
