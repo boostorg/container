@@ -278,6 +278,23 @@ struct vector_alloc_holder
    typedef typename allocator_traits_type::size_type     size_type;
    typedef typename allocator_traits_type::value_type    value_type;
 
+   static bool is_propagable_from(const allocator_type &from_alloc, pointer p, const allocator_type &to_alloc, bool const propagate_allocator)
+   {
+      (void)propagate_allocator; (void)p; (void)to_alloc; (void)from_alloc;
+      return (!allocator_traits_type::is_partially_propagable::value ||
+              !allocator_traits_type::storage_is_unpropagable(from_alloc, p)) &&
+              (propagate_allocator || allocator_traits_type::equal(from_alloc, to_alloc));
+   }
+
+   static bool are_swap_propagable(const allocator_type &l_a, pointer l_p, const allocator_type &r_a, pointer r_p, bool const propagate_allocator)
+   {
+      (void)propagate_allocator; (void)l_p; (void)r_p; (void)l_a; (void)r_a;
+      return (!allocator_traits_type::is_partially_propagable::value ||
+              (!allocator_traits_type::storage_is_unpropagable(r_a, r_p) &&
+               !allocator_traits_type::storage_is_unpropagable(l_a, l_p))
+             ) && (propagate_allocator || allocator_traits_type::equal(l_a, r_a));
+   }
+
    //Constructor, does not throw
    vector_alloc_holder()
       BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value)
@@ -335,7 +352,7 @@ struct vector_alloc_holder
    {
       allocator_type &this_alloc = this->alloc();
       allocator_type &x_alloc = holder.alloc();
-      if(allocator_traits_type::storage_can_be_propagated(x_alloc, holder.start(), this_alloc, true)){
+      if(this->is_propagable_from(x_alloc, holder.start(), this_alloc, true)){
          if(this->m_capacity){
             this->alloc().deallocate(this->m_start, this->m_capacity);
          }
@@ -624,8 +641,8 @@ class vector
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    typedef typename container_detail::version<Allocator>::type alloc_version;
-   boost::container::container_detail::vector_alloc_holder
-      <Allocator>                            m_holder;
+   typedef boost::container::container_detail::vector_alloc_holder<Allocator> alloc_holder_t;
+   alloc_holder_t m_holder;
    typedef allocator_traits<Allocator>                      allocator_traits_type;
    template <class U, class UAllocator>
    friend class vector;
@@ -635,25 +652,12 @@ class vector
    typedef container_detail::vec_iterator<pointer_impl, true > const_iterator_impl;
 
    protected:
-   static bool is_propagable_from(const vector &x, const Allocator &a, bool const propagate_allocator)
-   {
-      (void)propagate_allocator;
-      return (allocator_traits_type::is_partially_propagable::value &&
-              allocator_traits_type::storage_can_be_propagated(x.get_stored_allocator(), x.m_holder.start(), a, propagate_allocator)) ||
-             (!allocator_traits_type::is_partially_propagable::value && allocator_traits_type::equal(a, x.get_stored_allocator()));
-   }
+   static bool is_propagable_from(const Allocator &from_alloc, pointer_impl p, const Allocator &to_alloc, bool const propagate_allocator)
+   {  return alloc_holder_t::is_propagable_from(from_alloc, p, to_alloc, propagate_allocator);  }
 
-   static bool are_swap_propagable(const vector &l, const vector &r, bool const propagate_allocator)
-   {
-      (void)propagate_allocator;
-      const allocator_type &l_a = l.get_stored_allocator();
-      const allocator_type &r_a = r.get_stored_allocator();
-      return ( allocator_traits_type::is_partially_propagable::value &&
-                  allocator_traits_type::storage_can_be_propagated(r_a, r.m_holder.start(), l_a, propagate_allocator) &&
-                     allocator_traits_type::storage_can_be_propagated(l_a, l.m_holder.start(), r_a, propagate_allocator)
-             ) || 
-             ( !allocator_traits_type::is_partially_propagable::value && allocator_traits_type::equal(l_a, r_a) );
-   }
+   static bool are_swap_propagable( const Allocator &l_a, pointer_impl l_p
+                                  , const Allocator &r_a, pointer_impl r_p, bool const propagate_allocator)
+   {  return alloc_holder_t::are_swap_propagable(l_a, l_p, r_a, r_p, propagate_allocator);  }
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    public:
@@ -949,9 +953,11 @@ class vector
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    vector(BOOST_RV_REF(vector) x, const allocator_type &a)
-      :  m_holder(container_detail::uninitialized_size, a, is_propagable_from(x, a, true) ? 0 : x.size())
+      :  m_holder( container_detail::uninitialized_size, a
+                 , is_propagable_from(x.get_stored_allocator(), x.m_holder.start(), a, true) ? 0 : x.size()
+                 )
    {
-      if(is_propagable_from(x, a, true)){
+      if(is_propagable_from(x.get_stored_allocator(), x.m_holder.start(), a, true)){
          this->m_holder.steal_resources(x.m_holder);
       }
       else{
@@ -2117,8 +2123,8 @@ class vector
       allocator_type &x_alloc    = x.m_holder.alloc();
       const bool propagate_alloc = allocator_traits_type::propagate_on_container_move_assignment::value;
 
-      const bool is_propagable_from_x = is_propagable_from(x, this_alloc, propagate_alloc);
-      const bool is_propagable_from_t = is_propagable_from(*this, x_alloc, propagate_alloc);
+      const bool is_propagable_from_x = is_propagable_from(x_alloc, x.m_holder.start(), this_alloc, propagate_alloc);
+      const bool is_propagable_from_t = is_propagable_from(this_alloc, m_holder.start(), x_alloc,   propagate_alloc);
       const bool are_both_propagable  = is_propagable_from_x && is_propagable_from_t;
 
       //Resources can be transferred if both allocators are
@@ -2187,7 +2193,8 @@ class vector
    void priv_swap(Vector &x, container_detail::false_type)  //version_N
    {
       const bool propagate_alloc = allocator_traits_type::propagate_on_container_swap::value;
-      if(are_swap_propagable(*this, x, propagate_alloc)){
+      if(are_swap_propagable( this->get_stored_allocator(), this->m_holder.start()
+                            , x.get_stored_allocator(), this->m_holder.start(), propagate_alloc)){
          //Just swap internals
          this->m_holder.swap_resources(x.m_holder);
       }

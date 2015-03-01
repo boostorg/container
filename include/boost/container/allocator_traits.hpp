@@ -349,12 +349,12 @@ struct allocator_traits
    #endif
 
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-   //! <b>Returns</b>: <code>a.storage_can_be_propagated(p, to, propagate_a)</code> if is_partially_propagable::value is true; otherwise,
-   //! <code>a == to</code>.
-   static bool storage_can_be_propagated(const Allocator &a, pointer p, const Allocator &to, bool propagate_a) BOOST_NOEXCEPT_OR_NOTHROW
+   //! <b>Returns</b>: <code>a.storage_is_unpropagable(p)</code> if is_partially_propagable::value is true; otherwise,
+   //! <code>false</code>.
+   static bool storage_is_unpropagable(const Allocator &a, pointer p) BOOST_NOEXCEPT_OR_NOTHROW
    {
       container_detail::bool_<is_partially_propagable::value> flag;
-      return allocator_traits::priv_storage_can_be_propagated(flag, a, p, to, propagate_a);
+      return allocator_traits::priv_storage_is_unpropagable(flag, a, p);
    }
 
    //! <b>Returns</b>: <code>true</code> if <code>is_always_equal::value == true</code>, otherwise,
@@ -471,11 +471,11 @@ struct allocator_traits
    static void priv_construct_dispatch_next(container_detail::false_type, Allocator &, T *p, const ::boost::container::default_init_t&)
    {  ::new((void*)p) T; }
 
-   static bool priv_storage_can_be_propagated(container_detail::true_type, const Allocator &a, pointer p, const Allocator &to, const bool propagate_a)
-   {  return a.storage_can_be_propagated(p, to, propagate_a);  }
+   static bool priv_storage_is_unpropagable(container_detail::true_type, const Allocator &a, pointer p)
+   {  return a.storage_is_unpropagable(p);  }
 
-   static bool priv_storage_can_be_propagated(container_detail::false_type, const Allocator &a, pointer, const Allocator &to, const bool propagate_a)
-   {  return allocator_traits::equal(a, to) || propagate_a;  }
+   static bool priv_storage_is_unpropagable(container_detail::false_type, const Allocator &, pointer)
+   {  return false;  }
 
    static bool priv_equal(container_detail::true_type,  const Allocator &, const Allocator &)
    {  return true;  }

@@ -193,11 +193,8 @@ class small_vector_allocator
    small_vector_allocator select_on_container_copy_construction() const
    {  return small_vector_allocator(allocator_traits_type::select_on_container_copy_construction(this->as_base())); }
 
-   bool storage_can_be_propagated(pointer p, const small_vector_allocator &to, const bool propagate_a) const
-   {
-      return !this->is_internal_storage(p) &&
-         allocator_traits_type::storage_can_be_propagated(this->as_base(), p, to.as_base(), propagate_a);
-   }
+   bool storage_is_unpropagable(pointer p) const
+   {  return this->is_internal_storage(p) || allocator_traits_type::storage_is_unpropagable(this->as_base(), p);  }
 
    //!Swaps two allocators, does nothing
    //!because this small_vector_allocator is stateless
@@ -507,7 +504,7 @@ class small_vector : public small_vector_base<T, Allocator>
    private:
    void move_construct_impl(small_vector &x, const allocator_type &a)
    {
-      if(base_type::is_propagable_from(x, a, true)){
+      if(base_type::is_propagable_from(x.get_stored_allocator(), x.data(), a, true)){
          this->steal_resources(x);
       }
       else{

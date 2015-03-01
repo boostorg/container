@@ -100,7 +100,7 @@ class ComplexAllocator
    mutable bool max_size_called_;
    mutable bool select_on_container_copy_construction_called_;
    bool construct_called_;
-   mutable bool storage_can_be_propagated_;
+   mutable bool storage_is_unpropagable_;
 
    typedef T value_type;
    typedef SimpleSmartPtr<T>                    pointer;
@@ -174,8 +174,8 @@ class ComplexAllocator
    void construct(U *p, boost::container::default_init_t)
    {  construct_called_ = true;  ::new(p)U;   }
 
-   bool storage_can_be_propagated(pointer p, const ComplexAllocator &, bool) const
-   {  storage_can_be_propagated_ = true; return p ? true : false;  }
+   bool storage_is_unpropagable(pointer p) const
+   {  storage_is_unpropagable_ = true; return !p;  }
 
    //getters
    bool allocate_called() const
@@ -199,8 +199,8 @@ class ComplexAllocator
    bool construct_called() const
    {  return construct_called_;  }
 
-   bool storage_can_be_propagated_called() const
-   {  return storage_can_be_propagated_;  }
+   bool storage_is_unpropagable_called() const
+   {  return storage_is_unpropagable_;  }
 };
 
 class copymovable
@@ -422,22 +422,22 @@ int main()
       SAllocTraits::construct(s_alloc, &c, 0, 1, 2);
       BOOST_TEST(!c.copymoveconstructed() && !c.moved());
    }
-   //storage_can_be_propagated
+   //storage_is_unpropagable
    {
       SAlloc s_alloc2;
-      BOOST_TEST(SAllocTraits::storage_can_be_propagated(s_alloc, SAllocTraits::pointer(), s_alloc2, true));
+      BOOST_TEST(!SAllocTraits::storage_is_unpropagable(s_alloc, SAllocTraits::pointer()));
    }
    {
       {
          CAlloc c_alloc2;
          CAlloc::value_type v;
-         BOOST_TEST( CAllocTraits::storage_can_be_propagated(c_alloc, CAllocTraits::pointer(&v), c_alloc2, true));
-         BOOST_TEST(c_alloc.storage_can_be_propagated_called());
+         BOOST_TEST(!CAllocTraits::storage_is_unpropagable(c_alloc, CAllocTraits::pointer(&v)));
+         BOOST_TEST(c_alloc.storage_is_unpropagable_called());
       }
       {
          CAlloc c_alloc2;
-         BOOST_TEST(!CAllocTraits::storage_can_be_propagated(c_alloc2, CAllocTraits::pointer(),  c_alloc, true));
-         BOOST_TEST(c_alloc2.storage_can_be_propagated_called());
+         BOOST_TEST( CAllocTraits::storage_is_unpropagable(c_alloc2, CAllocTraits::pointer()));
+         BOOST_TEST(c_alloc2.storage_is_unpropagable_called());
       }
 
    }
