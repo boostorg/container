@@ -174,7 +174,7 @@ inline F memmove(I f, I l, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {
    typedef typename boost::container::iterator_traits<I>::value_type value_type;
    typename boost::container::iterator_traits<I>::difference_type n = boost::container::iterator_distance(f, l);
-   ::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
+   std::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
    boost::container::iterator_advance(r, n);
    return r;
 }
@@ -185,7 +185,7 @@ template
 F memmove_n(I f, typename boost::container::iterator_traits<I>::difference_type n, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {
    typedef typename boost::container::iterator_traits<I>::value_type value_type;
-   ::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
+   std::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
    boost::container::iterator_advance(r, n);
    return r;
 }
@@ -196,7 +196,7 @@ template
 I memmove_n_source(I f, typename boost::container::iterator_traits<I>::difference_type n, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {
    typedef typename boost::container::iterator_traits<I>::value_type value_type;
-   ::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
+   std::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
    boost::container::iterator_advance(f, n);
    return f;
 }
@@ -207,7 +207,7 @@ template
 I memmove_n_source_dest(I f, typename boost::container::iterator_traits<I>::difference_type n, F &r) BOOST_NOEXCEPT_OR_NOTHROW
 {
    typedef typename boost::container::iterator_traits<I>::value_type value_type;
-   ::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
+   std::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
    boost::container::iterator_advance(f, n);
    boost::container::iterator_advance(r, n);
    return f;
@@ -571,7 +571,7 @@ inline typename container_detail::enable_if_memzero_initializable<F, F>::type
    uninitialized_value_init_alloc_n(Allocator &, typename allocator_traits<Allocator>::difference_type n, F r)
 {
    typedef typename boost::container::iterator_traits<F>::value_type value_type;
-   ::memset((void*)container_detail::iterator_to_raw_pointer(r), 0, sizeof(value_type)*n);
+   std::memset((void*)container_detail::iterator_to_raw_pointer(r), 0, sizeof(value_type)*n);
    boost::container::iterator_advance(r, n);
    return r;
 }
@@ -868,7 +868,7 @@ inline typename container_detail::enable_if_memtransfer_copy_assignable<I, F, F>
    typedef typename boost::container::iterator_traits<I>::value_type value_type;
    const typename boost::container::iterator_traits<I>::difference_type n = boost::container::iterator_distance(f, l);
    r -= n;
-   ::memmove((container_detail::iterator_to_raw_pointer)(r), (container_detail::iterator_to_raw_pointer)(f), sizeof(value_type)*n);
+   std::memmove((container_detail::iterator_to_raw_pointer)(r), (container_detail::iterator_to_raw_pointer)(f), sizeof(value_type)*n);
    return r;
 }
 
@@ -998,9 +998,9 @@ inline typename container_detail::enable_if_c
    void *const large_ptr = static_cast<void*>(container_detail::iterator_to_raw_pointer(large_range_f));
    void *const short_ptr = static_cast<void*>(container_detail::iterator_to_raw_pointer(short_range_f));
    void *const stora_ptr = static_cast<void*>(container_detail::iterator_to_raw_pointer(storage));
-   ::memcpy(stora_ptr, large_ptr, n_i_bytes);
-   ::memcpy(large_ptr, short_ptr, n_i_bytes);
-   ::memcpy(short_ptr, stora_ptr, n_i_bytes);
+   std::memcpy(stora_ptr, large_ptr, n_i_bytes);
+   std::memcpy(large_ptr, short_ptr, n_i_bytes);
+   std::memcpy(short_ptr, stora_ptr, n_i_bytes);
    boost::container::iterator_advance(large_range_f, n_i);
    boost::container::iterator_advance(short_range_f, n_i);
    boost::container::uninitialized_move_alloc_n(a, large_range_f, n_j - n_i, short_range_f);  // may throw
@@ -1041,37 +1041,37 @@ inline typename container_detail::enable_if_c
       case 4:
          break;
       case 0: do{
-         ::memcpy(stora_ptr, large_ptr, sizeof_storage);
-         ::memcpy(large_ptr, short_ptr, sizeof_storage);
-         ::memcpy(short_ptr, stora_ptr, sizeof_storage);
+         std::memcpy(stora_ptr, large_ptr, sizeof_storage);
+         std::memcpy(large_ptr, short_ptr, sizeof_storage);
+         std::memcpy(short_ptr, stora_ptr, sizeof_storage);
          large_ptr += sizeof_storage;
          short_ptr += sizeof_storage;
          BOOST_CONTAINER_FALLTHOUGH
       case 3:
-         ::memcpy(stora_ptr, large_ptr, sizeof_storage);
-         ::memcpy(large_ptr, short_ptr, sizeof_storage);
-         ::memcpy(short_ptr, stora_ptr, sizeof_storage);
+         std::memcpy(stora_ptr, large_ptr, sizeof_storage);
+         std::memcpy(large_ptr, short_ptr, sizeof_storage);
+         std::memcpy(short_ptr, stora_ptr, sizeof_storage);
          large_ptr += sizeof_storage;
          short_ptr += sizeof_storage;
          BOOST_CONTAINER_FALLTHOUGH
       case 2:
-         ::memcpy(stora_ptr, large_ptr, sizeof_storage);
-         ::memcpy(large_ptr, short_ptr, sizeof_storage);
-         ::memcpy(short_ptr, stora_ptr, sizeof_storage);
+         std::memcpy(stora_ptr, large_ptr, sizeof_storage);
+         std::memcpy(large_ptr, short_ptr, sizeof_storage);
+         std::memcpy(short_ptr, stora_ptr, sizeof_storage);
          large_ptr += sizeof_storage;
          short_ptr += sizeof_storage;
          BOOST_CONTAINER_FALLTHOUGH
       case 1:
-         ::memcpy(stora_ptr, large_ptr, sizeof_storage);
-         ::memcpy(large_ptr, short_ptr, sizeof_storage);
-         ::memcpy(short_ptr, stora_ptr, sizeof_storage);
+         std::memcpy(stora_ptr, large_ptr, sizeof_storage);
+         std::memcpy(large_ptr, short_ptr, sizeof_storage);
+         std::memcpy(short_ptr, stora_ptr, sizeof_storage);
          large_ptr += sizeof_storage;
          short_ptr += sizeof_storage;
          } while(--n);
    }
-   ::memcpy(stora_ptr, large_ptr, szt_rem);
-   ::memcpy(large_ptr, short_ptr, szt_rem);
-   ::memcpy(short_ptr, stora_ptr, szt_rem);
+   std::memcpy(stora_ptr, large_ptr, szt_rem);
+   std::memcpy(large_ptr, short_ptr, szt_rem);
+   std::memcpy(short_ptr, stora_ptr, szt_rem);
    boost::container::iterator_advance(large_range_f, n_i);
    boost::container::iterator_advance(short_range_f, n_i);
    boost::container::uninitialized_move_alloc_n(a, large_range_f, n_j - n_i, short_range_f);  // may throw
