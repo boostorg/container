@@ -161,11 +161,10 @@ struct allocator_traits
       //! Allocator::is_always_equal if such a type exists, otherwise a type
       //! with an internal constant static boolean member <code>value</code> == is_empty<Allocator>::value
       typedef see_documentation is_always_equal;
-      #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED   //Still experimental
       //! Allocator::is_partially_propagable if such a type exists, otherwise a type
       //! with an internal constant static boolean member <code>value</code> == false
+      //! <b>Note</b>: Non-standard extension used to implement `small_vector_allocator`.
       typedef see_documentation is_partially_propagable;
-      #endif
       //! Defines an allocator: Allocator::rebind<T>::other if such a type exists; otherwise, Allocator<T, Args>
       //! if Allocator is a class template instantiation of the form Allocator<U, Args>, where Args is zero or
       //! more type arguments ; otherwise, the instantiation of rebind_alloc is ill-formed.
@@ -240,8 +239,6 @@ struct allocator_traits
       typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT(boost::container::container_detail::, Allocator,
          is_partially_propagable, container_detail::false_type)
             is_partially_propagable;
-      //is_always_equal and is_partially_propagable are not compatible
-      BOOST_STATIC_ASSERT((!is_always_equal::value || !is_partially_propagable::value));
 
       //rebind_alloc & rebind_traits
       #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
@@ -348,7 +345,6 @@ struct allocator_traits
       }
    #endif
 
-   #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //! <b>Returns</b>: <code>a.storage_is_unpropagable(p)</code> if is_partially_propagable::value is true; otherwise,
    //! <code>false</code>.
    static bool storage_is_unpropagable(const Allocator &a, pointer p) BOOST_NOEXCEPT_OR_NOTHROW
@@ -365,6 +361,7 @@ struct allocator_traits
       return allocator_traits::priv_equal(flag, a, b);
    }
 
+   #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    private:
    static pointer priv_allocate(container_detail::true_type, Allocator &a, size_type n, const_void_pointer p)
    {  return a.allocate(n, p);  }
