@@ -31,7 +31,7 @@ class SimpleAllocator
 public:
    typedef Ty value_type;
 
-   SimpleAllocator(int value)
+   explicit SimpleAllocator(int value)
       : m_state(value)
    {}
 
@@ -388,7 +388,7 @@ bool one_level_allocator_propagation_test()
 }
 
 int main()
-{/*
+{
    //unique assoc
    if(!one_level_allocator_propagation_test<FlatMap>())
       return 1;
@@ -406,7 +406,7 @@ int main()
    if(!one_level_allocator_propagation_test<FlatMultiSet>())
       return 1;
    if(!one_level_allocator_propagation_test<MultiSet>())
-      return 1;*/
+      return 1;
    //sequence containers
    if(!one_level_allocator_propagation_test<Vector>())
       return 1;
