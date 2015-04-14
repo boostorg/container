@@ -123,48 +123,49 @@ struct are_elements_contiguous< ::boost::interprocess::offset_ptr<PointedType, D
 
 template <typename I, typename O>
 struct are_contiguous_and_same
-{
-   static const bool is_same_io =
-      is_same< typename remove_const< typename ::boost::container::iterator_traits<I>::value_type >::type
-             , typename ::boost::container::iterator_traits<O>::value_type
-             >::value;
-   static const bool value = is_same_io &&
-      are_elements_contiguous<I>::value &&
-      are_elements_contiguous<O>::value;
-};
+   : boost::move_detail::and_
+      < are_elements_contiguous<I>
+      , are_elements_contiguous<O>
+      , is_same< typename remove_const< typename ::boost::container::iterator_traits<I>::value_type >::type
+               , typename ::boost::container::iterator_traits<O>::value_type
+               >
+      >
+{};
 
 template <typename I, typename O>
 struct is_memtransfer_copy_assignable
-{
-   static const bool value = are_contiguous_and_same<I, O>::value &&
-      container_detail::is_trivially_copy_assignable< typename ::boost::container::iterator_traits<I>::value_type >::value;
-};
+   : boost::move_detail::and_
+      < are_contiguous_and_same<I, O>
+      , container_detail::is_trivially_copy_assignable< typename ::boost::container::iterator_traits<I>::value_type >
+      >
+{};
 
 template <typename I, typename O>
 struct is_memtransfer_copy_constructible
-{
-   static const bool value = are_contiguous_and_same<I, O>::value &&
-      container_detail::is_trivially_copy_constructible< typename ::boost::container::iterator_traits<I>::value_type >::value;
-};
+   : boost::move_detail::and_
+      < are_contiguous_and_same<I, O>
+      , container_detail::is_trivially_copy_constructible< typename ::boost::container::iterator_traits<I>::value_type >
+      >
+{};
 
 template <typename I, typename O, typename R>
 struct enable_if_memtransfer_copy_constructible
-   : enable_if_c<container_detail::is_memtransfer_copy_constructible<I, O>::value, R>
+   : enable_if<container_detail::is_memtransfer_copy_constructible<I, O>, R>
 {};
 
 template <typename I, typename O, typename R>
 struct disable_if_memtransfer_copy_constructible
-   : enable_if_c<!container_detail::is_memtransfer_copy_constructible<I, O>::value, R>
+   : disable_if<container_detail::is_memtransfer_copy_constructible<I, O>, R>
 {};
 
 template <typename I, typename O, typename R>
 struct enable_if_memtransfer_copy_assignable
-   : enable_if_c<container_detail::is_memtransfer_copy_assignable<I, O>::value, R>
+   : enable_if<container_detail::is_memtransfer_copy_assignable<I, O>, R>
 {};
 
 template <typename I, typename O, typename R>
 struct disable_if_memtransfer_copy_assignable
-   : enable_if_c<!container_detail::is_memtransfer_copy_assignable<I, O>::value, R>
+   : disable_if<container_detail::is_memtransfer_copy_assignable<I, O>, R>
 {};
 
 template

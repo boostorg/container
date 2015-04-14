@@ -165,8 +165,7 @@ class basic_string_base
    static const size_type  MinInternalBufferChars = 8;
    static const size_type  AlignmentOfValueType =
       alignment_of<value_type>::value;
-   static const size_type  ShortDataOffset =
-      container_detail::ct_rounded_size<sizeof(short_header),  AlignmentOfValueType>::value;
+   static const size_type  ShortDataOffset = ((sizeof(short_header)-1)/AlignmentOfValueType+1)*AlignmentOfValueType;
    static const size_type  ZeroCostInternalBufferChars =
       (sizeof(long_t) - ShortDataOffset)/sizeof(value_type);
    static const size_type  UnalignedFinalInternalBufferChars =
@@ -1289,9 +1288,7 @@ class basic_string
    template <class InputIter>
    basic_string& assign(InputIter first, InputIter last
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<InputIter, size_type>::value
-         >::type * = 0
+      , typename container_detail::disable_if_convertible<InputIter, size_type>::type * = 0
       #endif
       )
    {
@@ -1438,9 +1435,10 @@ class basic_string
    template <class InputIter>
    iterator insert(const_iterator p, InputIter first, InputIter last
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<InputIter, size_type>::value
-            && container_detail::is_input_iterator<InputIter>::value
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_convertible<InputIter, size_type>
+         , container_detail::is_not_input_iterator<InputIter>
          >::type * = 0
       #endif
       )
@@ -1455,9 +1453,10 @@ class basic_string
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    template <class ForwardIter>
    iterator insert(const_iterator p, ForwardIter first, ForwardIter last
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<ForwardIter, size_type>::value
-            && !container_detail::is_input_iterator<ForwardIter>::value
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_convertible<ForwardIter, size_type>
+         , container_detail::is_input_iterator<ForwardIter>
          >::type * = 0
       )
    {
@@ -1829,9 +1828,10 @@ class basic_string
    template <class InputIter>
    basic_string& replace(const_iterator i1, const_iterator i2, InputIter j1, InputIter j2
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<InputIter, size_type>::value
-            && container_detail::is_input_iterator<InputIter>::value
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_convertible<InputIter, size_type>
+         , container_detail::is_input_iterator<InputIter>
          >::type * = 0
       #endif
       )
@@ -1850,9 +1850,10 @@ class basic_string
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    template <class ForwardIter>
    basic_string& replace(const_iterator i1, const_iterator i2, ForwardIter j1, ForwardIter j2
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<ForwardIter, size_type>::value
-            && !container_detail::is_input_iterator<ForwardIter>::value
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_convertible<ForwardIter, size_type>
+         , container_detail::is_not_input_iterator<ForwardIter>
          >::type * = 0
       )
    {

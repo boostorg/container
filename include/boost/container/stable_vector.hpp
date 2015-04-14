@@ -349,7 +349,7 @@ class stable_vector_iterator
       return tmp;
    }
 
-   friend difference_type operator-(const stable_vector_iterator& left, const stable_vector_iterator& right) BOOST_NOEXCEPT_OR_NOTHROW
+   friend difference_type operator-(const stable_vector_iterator &left, const stable_vector_iterator &right) BOOST_NOEXCEPT_OR_NOTHROW
    {  return left.m_pn->up - right.m_pn->up;  }
 
    //Comparison operators
@@ -493,7 +493,7 @@ class stable_vector
       , false>                                           iterator_impl;
    typedef stable_vector_iterator
       < typename allocator_traits<Allocator>::pointer
-      , false>                                           const_iterator_impl;
+      , true>                                            const_iterator_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    public:
 
@@ -850,13 +850,12 @@ class stable_vector
    //!
    //! <b>Complexity</b>: Linear to n.
    template<typename InputIterator>
-   void assign(InputIterator first,InputIterator last
-      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<InputIterator, size_type>::value
-         >::type * = 0
-      #endif
-      )
+   #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   typename container_detail::disable_if_convertible<InputIterator, size_type>::type
+   #else
+   void
+   #endif
+      assign(InputIterator first,InputIterator last)
    {
       STABLE_VECTOR_CHECK_INVARIANT;
       iterator first1   = this->begin();
@@ -1517,14 +1516,16 @@ class stable_vector
    //!
    //! <b>Complexity</b>: Linear to distance [first, last).
    template <class InputIterator>
-   iterator insert(const_iterator p, InputIterator first, InputIterator last
-      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<InputIterator, size_type>::value
-            && container_detail::is_input_iterator<InputIterator>::value
-         >::type * = 0
-      #endif
-      )
+   #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   typename container_detail::disable_if_or
+      < iterator
+      , container_detail::is_convertible<InputIterator, size_type>
+      , container_detail::is_not_input_iterator<InputIterator>
+      >::type
+   #else
+   iterator
+   #endif
+      insert(const_iterator p, InputIterator first, InputIterator last)
    {
       STABLE_VECTOR_CHECK_INVARIANT;
       const size_type pos_n = p - this->cbegin();
@@ -1536,12 +1537,12 @@ class stable_vector
 
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    template <class FwdIt>
-   iterator insert(const_iterator p, FwdIt first, FwdIt last
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<FwdIt, size_type>::value
-            && !container_detail::is_input_iterator<FwdIt>::value
-         >::type * = 0
-      )
+   typename container_detail::disable_if_or
+      < iterator
+      , container_detail::is_convertible<FwdIt, size_type>
+      , container_detail::is_input_iterator<FwdIt>
+      >::type
+      insert(const_iterator p, FwdIt first, FwdIt last)
    {
       const size_type num_new = static_cast<size_type>(boost::container::iterator_distance(first, last));
       const size_type idx     = static_cast<size_type>(p - this->cbegin());

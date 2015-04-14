@@ -74,9 +74,9 @@ class node_allocator
    typedef T *                                  pointer;
    typedef const T *                            const_pointer;
    typedef typename ::boost::container::
-      container_detail::unvoid<T>::type &       reference;
-   typedef const typename ::boost::container::
-      container_detail::unvoid<T>::type &       const_reference;
+      container_detail::unvoid_ref<T>::type     reference;
+   typedef typename ::boost::container::
+      container_detail::unvoid_ref<const T>::type     const_reference;
    typedef std::size_t                          size_type;
    typedef std::ptrdiff_t                       difference_type;
 

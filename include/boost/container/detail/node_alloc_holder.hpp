@@ -375,7 +375,7 @@ struct node_alloc_holder
       {}
 
       NodePtr operator()(const Node &other) const
-      {  return m_holder.create_node(other.get_data());  }
+      {  return m_holder.create_node(other.m_data);  }
 
       node_alloc_holder &m_holder;
    };
@@ -387,7 +387,9 @@ struct node_alloc_holder
       {}
 
       NodePtr operator()(Node &other)
-      {  return m_holder.create_node(::boost::move(other.get_data()));  }
+      {  //Use m_data instead of get_data to allow moving const key in [multi]map
+         return m_holder.create_node(::boost::move(other.m_data));
+      }
 
       node_alloc_holder &m_holder;
    };

@@ -835,9 +835,10 @@ class deque : protected deque_base<Allocator>
    template <class InIt>
    void assign(InIt first, InIt last
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<InIt, size_type>::value
-            && container_detail::is_input_iterator<InIt>::value
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_convertible<InIt, size_type>
+         , container_detail::is_not_input_iterator<InIt>
          >::type * = 0
       #endif
       )
@@ -857,9 +858,10 @@ class deque : protected deque_base<Allocator>
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    template <class FwdIt>
    void assign(FwdIt first, FwdIt last
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<FwdIt, size_type>::value
-            && !container_detail::is_input_iterator<FwdIt>::value
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_convertible<FwdIt, size_type>
+         , container_detail::is_input_iterator<FwdIt>
          >::type * = 0
       )
    {
@@ -1509,9 +1511,10 @@ class deque : protected deque_base<Allocator>
    template <class InIt>
    iterator insert(const_iterator pos, InIt first, InIt last
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<InIt, size_type>::value
-            && container_detail::is_input_iterator<InIt>::value
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_convertible<InIt, size_type>
+         , container_detail::is_not_input_iterator<InIt>
          >::type * = 0
       #endif
       )
@@ -1545,9 +1548,10 @@ class deque : protected deque_base<Allocator>
    template <class FwdIt>
    iterator insert(const_iterator p, FwdIt first, FwdIt last
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !container_detail::is_convertible<FwdIt, size_type>::value
-            && !container_detail::is_input_iterator<FwdIt>::value
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_convertible<FwdIt, size_type>
+         , container_detail::is_input_iterator<FwdIt>
          >::type * = 0
       #endif
       )

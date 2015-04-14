@@ -311,8 +311,12 @@ class small_vector_base
    : public vector<T, small_vector_allocator<SecondaryAllocator> >
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+   public:
+   //Make it public as it will be inherited by small_vector and container
+   //must have this public member
    typedef typename allocator_traits<SecondaryAllocator>::pointer pointer;
 
+   private: 
    BOOST_COPYABLE_AND_MOVABLE(small_vector_base)
 
    friend class small_vector_allocator<SecondaryAllocator>;

@@ -52,6 +52,10 @@
 // other
 #include <boost/core/no_exceptions_support.hpp>
 
+
+
+#include <boost/container/detail/std_fwd.hpp>
+
 namespace boost {
 namespace container {
 namespace container_detail {
@@ -156,7 +160,7 @@ struct tree_internal_data_type
 template<class T1, class T2>
 struct tree_internal_data_type< std::pair<T1, T2> >
 {
-   typedef pair<T1, T2> type;
+   typedef pair<typename boost::move_detail::remove_const<T1>::type, T2> type;
 };
 
 //The node to be store in the tree
@@ -549,9 +553,10 @@ class tree
    tree(bool unique_insertion, InputIterator first, InputIterator last, const key_compare& comp,
           const allocator_type& a
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < container_detail::is_input_iterator<InputIterator>::value
-            || container_detail::is_same<alloc_version, version_1>::value
+      , typename container_detail::enable_if_or
+         < void
+         , container_detail::is_same<alloc_version, version_1>
+         , container_detail::is_input_iterator<InputIterator>
          >::type * = 0
       #endif
          )
@@ -577,9 +582,10 @@ class tree
    tree(bool unique_insertion, InputIterator first, InputIterator last, const key_compare& comp,
           const allocator_type& a
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !(container_detail::is_input_iterator<InputIterator>::value
-            || container_detail::is_same<alloc_version, version_1>::value)
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_same<alloc_version, version_1>
+         , container_detail::is_input_iterator<InputIterator>
          >::type * = 0
       #endif
          )
@@ -606,10 +612,11 @@ class tree
    tree( ordered_range_t, InputIterator first, InputIterator last
          , const key_compare& comp = key_compare(), const allocator_type& a = allocator_type()
          #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-         , typename container_detail::enable_if_c
-            < container_detail::is_input_iterator<InputIterator>::value
-               || container_detail::is_same<alloc_version, version_1>::value
-            >::type * = 0
+      , typename container_detail::enable_if_or
+         < void
+         , container_detail::is_same<alloc_version, version_1>
+         , container_detail::is_input_iterator<InputIterator>
+         >::type * = 0
          #endif
          )
       : AllocHolder(value_compare(comp), a)
@@ -623,10 +630,11 @@ class tree
    tree( ordered_range_t, InputIterator first, InputIterator last
          , const key_compare& comp = key_compare(), const allocator_type& a = allocator_type()
          #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-         , typename container_detail::enable_if_c
-            < !(container_detail::is_input_iterator<InputIterator>::value
-               || container_detail::is_same<alloc_version, version_1>::value)
-            >::type * = 0
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_same<alloc_version, version_1>
+         , container_detail::is_input_iterator<InputIterator>
+         >::type * = 0
          #endif
          )
       : AllocHolder(value_compare(comp), a)
