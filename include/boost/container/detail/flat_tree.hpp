@@ -470,20 +470,22 @@ class flat_tree
    template <class BidirIt>
    void insert_equal(ordered_range_t, BidirIt first, BidirIt last
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < !container_detail::is_input_iterator<BidirIt>::value &&
-           !container_detail::is_forward_iterator<BidirIt>::value
+      , typename container_detail::disable_if_or
+         < void
+         , container_detail::is_input_iterator<BidirIt>
+         , container_detail::is_forward_iterator<BidirIt>
          >::type * = 0
       #endif
       )
-   {   this->priv_insert_ordered_range(false, first, last);   }
+   {   this->m_data.m_vect.merge(first, last);   }
 
    template <class InIt>
    void insert_unique(ordered_unique_range_t, InIt first, InIt last
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename container_detail::enable_if_c
-         < container_detail::is_input_iterator<InIt>::value ||
-           container_detail::is_forward_iterator<InIt>::value
+      , typename container_detail::enable_if_or
+         < void
+         , container_detail::is_input_iterator<InIt>
+         , container_detail::is_forward_iterator<InIt>
          >::type * = 0
       #endif
       )
@@ -504,7 +506,7 @@ class flat_tree
          >::type * = 0
       #endif
       )
-   {   this->priv_insert_ordered_range(true, first, last);   }
+   {   this->m_data.m_vect.merge_unique(first, last);   }
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
@@ -855,8 +857,8 @@ class flat_tree
    }
 
    template <class RanIt>
-   RanIt priv_upper_bound(RanIt first, const RanIt last,
-                          const key_type & key) const
+   RanIt priv_upper_bound
+      (RanIt first, const RanIt last,const key_type & key) const
    {
       const Compare &key_cmp = this->m_data.get_comp();
       KeyOfValue key_extract;
@@ -904,9 +906,9 @@ class flat_tree
             //Middle is equal to key
             last = first;
             last += len;
+            RanIt const first_ret = this->priv_lower_bound(first, middle, key);
             return std::pair<RanIt, RanIt>
-               ( this->priv_lower_bound(first, middle, key)
-               , this->priv_upper_bound(++middle, last, key));
+               ( first_ret, this->priv_upper_bound(++middle, last, key));
          }
       }
       return std::pair<RanIt, RanIt>(first, first);
@@ -939,79 +941,9 @@ class flat_tree
       for ( ; first != last; ++first){
          //If ordered, then try hint version
          //to achieve constant-time complexity per insertion
+         //in some cases
          pos = this->insert_equal(pos, *first);
          ++pos;
-      }
-   }
-
-   template <class BidirIt>
-   void priv_insert_ordered_range(const bool unique_values, BidirIt first, BidirIt last)
-   {
-      size_type len = static_cast<size_type>(boost::container::iterator_distance(first, last));
-      //Prereserve all memory so that iterators are not invalidated
-      this->reserve(this->size()+len);
-      //Auxiliary data for insertion positions.
-      const size_type BurstSize = len;
-      const ::boost::movelib::unique_ptr<size_type[]> positions =
-         ::boost::movelib::make_unique_definit<size_type[]>(BurstSize);
-
-      const const_iterator b(this->cbegin());
-      const const_iterator ce(this->cend());
-      const_iterator pos(b);
-      const value_compare &val_cmp = this->m_data;
-      //Loop in burst sizes
-      bool back_insert = false;
-      while(len && !back_insert){
-         const size_type burst = len < BurstSize ? len : BurstSize;
-         size_type unique_burst = 0u;
-         size_type checked = 0;
-         for(; checked != burst; ++checked){
-            //Get the insertion position for each key, use iterator_traits<BidirIt>::value_type
-            //because it can be different from container::value_type
-            //(e.g. conversion between std::pair<T1, T2> -> boost::container::pair<T1, T2>
-            const typename boost::container::iterator_traits<BidirIt>::value_type & val = *first;
-            pos = const_cast<const flat_tree&>(*this).priv_lower_bound(pos, ce, KeyOfValue()(val));
-            //Check if already present
-            if (pos != ce){
-               ++first;
-               --len;
-               positions[checked] = (unique_values && !val_cmp(val, *pos)) ?
-                   size_type(-1) : (++unique_burst, static_cast<size_type>(pos - b));
-            }
-            else{ //this element and the remaining should be back inserted
-               back_insert = true;
-               break;
-            }
-         }
-         if(unique_burst){
-            //Insert all in a single step in the precalculated positions
-            this->m_data.m_vect.insert_ordered_at(unique_burst, positions.get() + checked, first);
-            //Next search position updated, iterator still valid because we've preserved the vector
-            pos += unique_burst;
-         }
-      }
-      //The remaining range should be back inserted
-      if(unique_values){
-         while(len--){
-            BidirIt next(first);
-            ++next;
-            //Use iterator_traits<BidirIt>::value_type
-            //because it can be different from container::value_type
-            //(e.g. conversion between std::pair<T1, T2> -> boost::container::pair<T1, T2>
-            const typename boost::container::iterator_traits<BidirIt>::value_type & val = *first;
-            if (next == last || val_cmp(val, *next)){
-               const bool room = this->m_data.m_vect.stable_emplace_back(*first);
-               (void)room;
-               BOOST_ASSERT(room);
-            }
-            first = next;
-         }
-         BOOST_ASSERT(first == last);
-      }
-      else{
-         BOOST_ASSERT(size_type(boost::container::iterator_distance(first, last)) == len);
-         if(len)
-            this->m_data.m_vect.insert(this->m_data.m_vect.cend(), len, first, last);
       }
    }
 };
