@@ -1116,7 +1116,7 @@ class stable_vector
       const size_type extra_capacity        = (bucket_extra_capacity < node_extra_capacity)
          ? bucket_extra_capacity : node_extra_capacity;
       const size_type index_offset =
-         (ExtraPointers + extra_capacity) & (size_type(0u) - size_type(index_size != 0));
+         (ExtraPointers - extra_capacity) & (size_type(0u) - size_type(index_size != 0));
       return index_size - index_offset;
    }
 
