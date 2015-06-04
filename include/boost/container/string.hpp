@@ -111,8 +111,7 @@ class basic_string_base
    ~basic_string_base()
    {
       if(!this->is_short()){
-         this->deallocate_block();
-         this->is_short(true);
+         this->deallocate(this->priv_long_addr(), this->priv_long_storage());
       }
    }
 
@@ -131,15 +130,14 @@ class basic_string_base
 
       long_t(const long_t &other)
       {
-         this->is_short = other.is_short;
+         this->is_short = false;
          length   = other.length;
          storage  = other.storage;
          start    = other.start;
       }
 
-      long_t &operator =(const long_t &other)
+      long_t &operator= (const long_t &other)
       {
-         this->is_short = other.is_short;
          length   = other.length;
          storage  = other.storage;
          start    = other.start;
@@ -420,21 +418,19 @@ class basic_string_base
          }
          else{
             short_t short_backup(this->members_.m_repr.short_repr());
-            long_t  long_backup (other.members_.m_repr.long_repr());
+            this->members_.m_repr.short_repr().~short_t();
+            ::new(&this->members_.m_repr.long_repr()) long_t(other.members_.m_repr.long_repr());
             other.members_.m_repr.long_repr().~long_t();
-            ::new(&this->members_.m_repr.long_repr()) long_t;
-            this->members_.m_repr.long_repr()  = long_backup;
-            other.members_.m_repr.short_repr() = short_backup;
+            ::new(&other.members_.m_repr.short_repr()) short_t(short_backup);
          }
       }
       else{
          if(other.is_short()){
             short_t short_backup(other.members_.m_repr.short_repr());
-            long_t  long_backup (this->members_.m_repr.long_repr());
+            other.members_.m_repr.short_repr().~short_t();
+            ::new(&other.members_.m_repr.long_repr()) long_t(this->members_.m_repr.long_repr());
             this->members_.m_repr.long_repr().~long_t();
-            ::new(&other.members_.m_repr.long_repr()) long_t;
-            other.members_.m_repr.long_repr()  = long_backup;
-            this->members_.m_repr.short_repr() = short_backup;
+            ::new(&this->members_.m_repr.short_repr()) short_t(short_backup);
          }
          else{
             boost::adl_move_swap(this->members_.m_repr.long_repr(), other.members_.m_repr.long_repr());
