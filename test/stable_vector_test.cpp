@@ -7,7 +7,7 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-
+#define STABLE_VECTOR_ENABLE_INVARIANT_CHECKING
 #include <boost/container/detail/config_begin.hpp>
 #include <memory>
 
