@@ -415,12 +415,12 @@ struct node_alloc_holder
       template<class ConvertibleToAlloc>
       members_holder(BOOST_FWD_REF(ConvertibleToAlloc) c2alloc, const value_compare &c)
          :  NodeAlloc(boost::forward<ConvertibleToAlloc>(c2alloc))
-         , m_icont(typename ICont::value_compare(c))
+         , m_icont(typename ICont::key_compare(c))
       {}
 
       explicit members_holder(const value_compare &c)
          : NodeAlloc()
-         , m_icont(typename ICont::value_compare(c))
+         , m_icont(typename ICont::key_compare(c))
       {}
 
       //The intrusive container

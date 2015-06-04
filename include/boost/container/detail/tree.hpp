@@ -43,6 +43,7 @@
 #include <boost/intrusive/sgtree.hpp>
 // intrusive/detail
 #include <boost/intrusive/detail/minimal_pair_header.hpp>   //pair
+#include <boost/intrusive/detail/tree_value_compare.hpp>    //tree_value_compare
 // move
 #include <boost/move/utility_core.hpp>
 // move/detail
@@ -60,53 +61,7 @@ namespace boost {
 namespace container {
 namespace container_detail {
 
-template<class Key, class T, class Compare, class KeyOfValue>
-struct tree_value_compare
-   :  public Compare
-{
-   typedef T        value_type;
-   typedef Compare   key_compare;
-   typedef KeyOfValue   key_of_value;
-   typedef Key          key_type;
-
-   explicit tree_value_compare(const key_compare &kcomp)
-      :  Compare(kcomp)
-   {}
-
-   tree_value_compare()
-      :  Compare()
-   {}
-
-   const key_compare &key_comp() const
-   {  return static_cast<const key_compare &>(*this);  }
-
-   key_compare &key_comp()
-   {  return static_cast<key_compare &>(*this);  }
-
-   template<class U>
-   struct is_key
-   {
-      static const bool value = is_same<const U, const key_type>::value;
-   };
-
-   template<class U>
-   typename enable_if_c<is_key<U>::value, const key_type &>::type
-      key_forward(const U &key) const
-   {  return key; }
-
-   template<class U>
-   typename enable_if_c<!is_key<U>::value, const key_type &>::type
-      key_forward(const U &key) const
-   {  return KeyOfValue()(key);  }
-
-   template<class KeyType, class KeyType2>
-   bool operator()(const KeyType &key1, const KeyType2 &key2) const
-   {  return key_compare::operator()(this->key_forward(key1), this->key_forward(key2));  }
-
-   template<class KeyType, class KeyType2>
-   bool operator()(const KeyType &key1, const KeyType2 &key2)
-   {  return key_compare::operator()(this->key_forward(key1), this->key_forward(key2));  }
-};
+using boost::intrusive::tree_value_compare;
 
 template<class VoidPointer, boost::container::tree_type_enum tree_type_value, bool OptimizeSize>
 struct intrusive_tree_hook;
@@ -671,7 +626,7 @@ class tree
       }
       else{
          this->icont().clone_from
-            (x.icont(), typename AllocHolder::move_cloner(*this), Destroyer(this->node_alloc()));
+            (boost::move(x.icont()), typename AllocHolder::move_cloner(*this), Destroyer(this->node_alloc()));
       }
    }
 
@@ -738,7 +693,7 @@ class tree
 
          //Now recreate the source tree reusing nodes stored by other_tree
          this->icont().clone_from
-            (x.icont()
+            (::boost::move(x.icont())
             , RecyclingCloner<AllocHolder, true>(*this, other_tree)
             , Destroyer(this->node_alloc()));
 
