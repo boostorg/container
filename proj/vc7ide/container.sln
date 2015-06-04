@@ -59,10 +59,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bench_alloc_shrink_to_fit",
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bench_alloc_stable_vector_burst_allocation", "bench_alloc_stable_vector_burst_allocation.vcproj", "{C3AD2582-79BF-2FE1-8612-BD707552A6A1}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bench_set", "bench_set.vcproj", "{5E1C1C23-26A9-4FE5-A24E-DA735271C32B}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
@@ -223,6 +219,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "small_vector_test", "small_
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bench_alloc_stable_vector_burst", "bench_alloc_stable_vector_burst.vcproj", "{C3AD2582-79BF-2FE1-8612-BD707552A6A1}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -291,10 +291,6 @@ Global
 		{C7C283A2-7BF8-8612-42FE-B9D26A0793A1}.Debug.Build.0 = Debug|Win32
 		{C7C283A2-7BF8-8612-42FE-B9D26A0793A1}.Release.ActiveCfg = Release|Win32
 		{C7C283A2-7BF8-8612-42FE-B9D26A0793A1}.Release.Build.0 = Release|Win32
-		{C3AD2582-79BF-2FE1-8612-BD707552A6A1}.Debug.ActiveCfg = Debug|Win32
-		{C3AD2582-79BF-2FE1-8612-BD707552A6A1}.Debug.Build.0 = Debug|Win32
-		{C3AD2582-79BF-2FE1-8612-BD707552A6A1}.Release.ActiveCfg = Release|Win32
-		{C3AD2582-79BF-2FE1-8612-BD707552A6A1}.Release.Build.0 = Release|Win32
 		{5E1C1C23-26A9-4FE5-A24E-DA735271C32B}.Debug.ActiveCfg = Debug|Win32
 		{5E1C1C23-26A9-4FE5-A24E-DA735271C32B}.Debug.Build.0 = Debug|Win32
 		{5E1C1C23-26A9-4FE5-A24E-DA735271C32B}.Release.ActiveCfg = Release|Win32
@@ -453,6 +449,10 @@ Global
 		{5CE8E110-096A-84FE-4A2A-BA7E925A6002}.Debug.Build.0 = Debug|Win32
 		{5CE8E110-096A-84FE-4A2A-BA7E925A6002}.Release.ActiveCfg = Release|Win32
 		{5CE8E110-096A-84FE-4A2A-BA7E925A6002}.Release.Build.0 = Release|Win32
+		{C3AD2582-79BF-2FE1-8612-BD707552A6A1}.Debug.ActiveCfg = Debug|Win32
+		{C3AD2582-79BF-2FE1-8612-BD707552A6A1}.Debug.Build.0 = Debug|Win32
+		{C3AD2582-79BF-2FE1-8612-BD707552A6A1}.Release.ActiveCfg = Release|Win32
+		{C3AD2582-79BF-2FE1-8612-BD707552A6A1}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
