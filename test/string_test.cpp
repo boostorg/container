@@ -73,6 +73,32 @@ bool CheckEqualStringVector(StrVector1 *strvect1, StrVector2 *strvect2)
                      strvect2->begin(), comp);
 }
 
+template<class ForwardIt>
+ForwardIt unique(ForwardIt first, ForwardIt const last)
+{
+   if(first == last){
+      ForwardIt i = first;
+      //Find first adjacent pair
+      while(1){
+         if(++i == last){
+            return last;
+         }
+         else if(*first == *i){
+            break;
+         }
+         ++first;
+      }
+      //Now overwrite skipping adjacent elements
+      while (++i != last) {
+         if (!(*first == *i)) {
+            *(++first) = boost::move(*i);
+         }
+      }
+      ++first;
+   }
+   return first;
+}
+
 template<class CharType>
 struct string_literals;
 
@@ -323,9 +349,9 @@ int string_test()
 
       if(!CheckEqualStringVector(boostStringVect, stdStringVect)) return 1;
 
-      boostStringVect->erase(std::unique(boostStringVect->begin(), boostStringVect->end()),
+      boostStringVect->erase((unique)(boostStringVect->begin(), boostStringVect->end()),
                            boostStringVect->end());
-      stdStringVect->erase(std::unique(stdStringVect->begin(), stdStringVect->end()),
+      stdStringVect->erase((unique)(stdStringVect->begin(), stdStringVect->end()),
                            stdStringVect->end());
       if(!CheckEqualStringVector(boostStringVect, stdStringVect)) return 1;
 
