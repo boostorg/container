@@ -1985,7 +1985,7 @@ class vector
          T* const first_ptr = container_detail::to_raw_pointer(vector_iterator_get_ptr(first));
          T* const last_ptr  = container_detail::to_raw_pointer(vector_iterator_get_ptr(last));
          T* const ptr = container_detail::to_raw_pointer(boost::container::move(last_ptr, old_end_ptr, first_ptr));
-         this->priv_destroy_last_n(old_end_ptr - ptr, last_ptr == old_end_ptr);
+         this->priv_destroy_last_n(old_end_ptr - ptr);
       }
       return iterator(vector_iterator_get_ptr(first));
    }
@@ -2530,16 +2530,7 @@ class vector
       }
    }
 
-   void priv_destroy_last() BOOST_NOEXCEPT_OR_NOTHROW
-   {
-      if(!value_traits::trivial_dctr){
-         value_type* const p = this->back_raw() - 1;
-         allocator_traits_type::destroy(this->get_stored_allocator(), p);
-      }
-      --this->m_holder.m_size;
-   }
-
-   void priv_destroy_last(const bool moved) BOOST_NOEXCEPT_OR_NOTHROW
+   void priv_destroy_last(const bool moved = false) BOOST_NOEXCEPT_OR_NOTHROW
    {
       (void)moved;
       if(!(value_traits::trivial_dctr || (value_traits::trivial_dctr_after_move && moved))){
@@ -2553,17 +2544,6 @@ class vector
    {
       BOOST_ASSERT(n <= this->m_holder.m_size);
       if(!value_traits::trivial_dctr){
-         T* const destroy_pos = container_detail::to_raw_pointer(this->m_holder.start()) + (this->m_holder.m_size-n);
-         boost::container::destroy_alloc_n(this->get_stored_allocator(), destroy_pos, n);
-      }
-      this->m_holder.m_size -= n;
-   }
-
-   void priv_destroy_last_n(const size_type n, const bool moved) BOOST_NOEXCEPT_OR_NOTHROW
-   {
-      BOOST_ASSERT(n <= this->m_holder.m_size);
-      (void)moved;
-      if(!(value_traits::trivial_dctr || (value_traits::trivial_dctr_after_move && moved))){
          T* const destroy_pos = container_detail::to_raw_pointer(this->m_holder.start()) + (this->m_holder.m_size-n);
          boost::container::destroy_alloc_n(this->get_stored_allocator(), destroy_pos, n);
       }
