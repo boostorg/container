@@ -687,7 +687,7 @@ class stable_vector
       : internal_data(l), index(l)
    {
       stable_vector_detail::clear_on_destroy<stable_vector> cod(*this);
-      insert(cend(), il.begin(), il.end())
+      insert(cend(), il.begin(), il.end());
       STABLE_VECTOR_CHECK_INVARIANT;
       cod.release();
    }
@@ -804,6 +804,7 @@ class stable_vector
       //Resources can be transferred if both allocators are
       //going to be equal after this function (either propagated or already equal)
       if(propagate_alloc || allocators_equal){
+         STABLE_VECTOR_CHECK_INVARIANT
          //Destroy objects but retain memory in case x reuses it in the future
          this->clear();
          //Move allocator if needed
@@ -1111,13 +1112,12 @@ class stable_vector
    {
       const size_type index_size             = this->index.size();
       BOOST_ASSERT(!index_size || index_size >= ExtraPointers);
-      const size_type bucket_extra_capacity = this->index.capacity()- index_size;
       const size_type node_extra_capacity   = this->internal_data.pool_size;
-      const size_type extra_capacity        = (bucket_extra_capacity < node_extra_capacity)
-         ? bucket_extra_capacity : node_extra_capacity;
+      //Pool count must be less than index capacity, as index is a vector
+      BOOST_ASSERT(node_extra_capacity <= (this->index.capacity()- index_size));
       const size_type index_offset =
-         (ExtraPointers - extra_capacity) & (size_type(0u) - size_type(index_size != 0));
-      return index_size - index_offset;
+         (node_extra_capacity - ExtraPointers) & (size_type(0u) - size_type(index_size != 0));
+      return index_size + index_offset;
    }
 
    //! <b>Effects</b>: If n is less than or equal to capacity(), this call has no
@@ -1787,7 +1787,7 @@ class stable_vector
    template <class U>
    void priv_push_back(BOOST_MOVE_CATCH_FWD(U) x)
    {
-      if(this->priv_capacity_bigger_than_size()){
+      if(BOOST_LIKELY(this->priv_capacity_bigger_than_size())){
          //Enough memory in the pool and in the index
          const node_ptr p = this->priv_get_from_pool();
          BOOST_ASSERT(!!p);
@@ -1962,8 +1962,19 @@ class stable_vector
    {
       index_type & index_ref =  const_cast<index_type&>(this->index);
 
-      if(index.empty())
+      const size_type index_size = this->index.size();
+      if(!index_size)
          return !this->capacity() && !this->size();
+
+      if(index_size < ExtraPointers)
+         return false;
+
+      const size_type bucket_extra_capacity = this->index.capacity()- index_size;
+      const size_type node_extra_capacity   = this->internal_data.pool_size;
+      if(bucket_extra_capacity < node_extra_capacity){
+         return false;
+      }
+
       if(this->priv_get_end_node() != *(index.end() - ExtraPointers)){
          return false;
       }
