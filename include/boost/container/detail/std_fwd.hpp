@@ -26,9 +26,9 @@
 #if defined(_LIBCPP_VERSION)
    #define BOOST_CONTAINER_CLANG_INLINE_STD_NS
    #pragma GCC diagnostic push
-#if defined(__clang__)
-   #pragma GCC diagnostic ignored "-Wc++11-extensions"
-#endif
+   #if defined(__clang__)
+      #pragma GCC diagnostic ignored "-Wc++11-extensions"
+   #endif
    #define BOOST_CONTAINER_STD_NS_BEG _LIBCPP_BEGIN_NAMESPACE_STD
    #define BOOST_CONTAINER_STD_NS_END _LIBCPP_END_NAMESPACE_STD
 #elif defined(BOOST_GNU_STDLIB) && defined(_GLIBCXX_BEGIN_NAMESPACE_VERSION)  //GCC >= 4.6
