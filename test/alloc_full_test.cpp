@@ -110,12 +110,12 @@ bool test_allocation_shrink()
    for(int i = 0, max = (int)buffers.size()
       ;i < max
       ; ++i){
-      std::size_t try_received_size;
+      std::size_t try_received_size = 0;
       void* try_result = boost_cont_allocation_command
                ( BOOST_CONTAINER_TRY_SHRINK_IN_PLACE, 1, i*2
                , i, &try_received_size, (char*)buffers[i]).first;
 
-      std::size_t received_size;
+      std::size_t received_size = 0;
       void* result = boost_cont_allocation_command
          ( BOOST_CONTAINER_SHRINK_IN_PLACE, 1, i*2
          , i, &received_size, (char*)buffers[i]).first;
@@ -169,7 +169,7 @@ bool test_allocation_expand()
    for(int i = 0, max = (int)buffers.size()
       ;i < max
       ;++i){
-      std::size_t received_size;
+      std::size_t received_size = 0;
       std::size_t min_size = i+1;
       std::size_t preferred_size = i*2;
       preferred_size = min_size > preferred_size ? min_size : preferred_size;
@@ -209,7 +209,7 @@ bool test_allocation_shrink_and_expand()
 
    //Allocate buffers wand store received sizes
    for(int i = 0; i != NumIt; ++i){
-      std::size_t received_size;
+      std::size_t received_size = 0;
       void *ptr = boost_cont_allocation_command
          (BOOST_CONTAINER_ALLOCATE_NEW, 1, i, i*2, &received_size, 0).first;
       if(!ptr){
@@ -226,7 +226,7 @@ bool test_allocation_shrink_and_expand()
    for(int i = 0, max = (int)buffers.size()
       ; i < max
       ; ++i){
-      std::size_t received_size;
+      std::size_t received_size = 0;
       bool size_reduced_flag;
       if(true == (size_reduced_flag = !!
          boost_cont_allocation_command
@@ -247,7 +247,7 @@ bool test_allocation_shrink_and_expand()
       ;i < max
       ;++i){
       if(!size_reduced[i])  continue;
-      std::size_t received_size;
+      std::size_t received_size = 0;
       std::size_t request_size =  received_sizes[i];
       if(boost_cont_allocation_command
          ( BOOST_CONTAINER_EXPAND_FWD, 1, request_size
@@ -308,7 +308,7 @@ bool test_allocation_deallocation_expand()
       ;++i){
       //
       if(buffers[i]){
-         std::size_t received_size;
+         std::size_t received_size = 0;
          std::size_t min_size = i+1;
          std::size_t preferred_size = i*2;
          preferred_size = min_size > preferred_size ? min_size : preferred_size;

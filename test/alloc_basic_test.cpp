@@ -17,7 +17,7 @@ using namespace boost::container;
 
 bool basic_test()
 {
-   size_t received;
+   size_t received = 0;
    if(!boost_cont_all_deallocated())
       return false;
    void *ptr = boost_cont_alloc(50, 98, &received);
