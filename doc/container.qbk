@@ -1102,6 +1102,7 @@ use [*Boost.Container]? There are several reasons for that:
 * [@https://github.com/boostorg/container/pull/27 GitHub #27: ['fix stable_vector's index_of's doxygen comment]]. Thanks to kariya-mitsuru.
 * [@https://svn.boost.org/trac/boost/ticket/11380 Trac #11380: ['"Container library std forward declarations incorrect in std_fwd.hpp on libc++ with gcc"]].
 * [@https://svn.boost.org/trac/boost/ticket/11388 Trac #11388: ['"boost::container::list::emplace_back broken on Visual Studio 2010"]].
+* [@https://svn.boost.org/trac/boost/ticket/11339 Trac #11339: ['"VC12 LNK2005 error with boost::container::adaptive_pool"]].
 
 [endsect]
 

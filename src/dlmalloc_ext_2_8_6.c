@@ -31,7 +31,10 @@
 #endif
 
 #define USE_DL_PREFIX
-#define FORCEINLINE
+
+#ifdef __GNUC__
+#define FORCEINLINE inline
+#endif
 #include "dlmalloc_2_8_6.c"
 
 #ifdef _MSC_VER
