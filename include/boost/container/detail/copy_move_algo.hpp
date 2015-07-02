@@ -175,8 +175,10 @@ inline F memmove(I f, I l, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {
    typedef typename boost::container::iterator_traits<I>::value_type value_type;
    typename boost::container::iterator_traits<I>::difference_type n = boost::container::iterator_distance(f, l);
-   std::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
-   boost::container::iterator_advance(r, n);
+   if(n){
+      std::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
+      boost::container::iterator_advance(r, n);
+   }
    return r;
 }
 
@@ -186,8 +188,10 @@ template
 F memmove_n(I f, typename boost::container::iterator_traits<I>::difference_type n, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {
    typedef typename boost::container::iterator_traits<I>::value_type value_type;
-   std::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
-   boost::container::iterator_advance(r, n);
+   if(n){
+      std::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
+      boost::container::iterator_advance(r, n);
+   }
    return r;
 }
 
@@ -196,9 +200,11 @@ template
     typename F> // F models ForwardIterator
 I memmove_n_source(I f, typename boost::container::iterator_traits<I>::difference_type n, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {
-   typedef typename boost::container::iterator_traits<I>::value_type value_type;
-   std::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
-   boost::container::iterator_advance(f, n);
+   if(n){
+      typedef typename boost::container::iterator_traits<I>::value_type value_type;
+      std::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
+      boost::container::iterator_advance(f, n);
+   }
    return f;
 }
 
@@ -208,9 +214,11 @@ template
 I memmove_n_source_dest(I f, typename boost::container::iterator_traits<I>::difference_type n, F &r) BOOST_NOEXCEPT_OR_NOTHROW
 {
    typedef typename boost::container::iterator_traits<I>::value_type value_type;
-   std::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
-   boost::container::iterator_advance(f, n);
-   boost::container::iterator_advance(r, n);
+   if(n){
+      std::memmove((iterator_to_raw_pointer)(r), (iterator_to_raw_pointer)(f), sizeof(value_type)*n);
+      boost::container::iterator_advance(f, n);
+      boost::container::iterator_advance(r, n);
+   }
    return f;
 }
 

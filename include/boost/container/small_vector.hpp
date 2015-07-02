@@ -60,7 +60,7 @@ class small_vector_base;
 //! for documentation purposes.
 //! 
 //! This allocator inherits from a standard-conforming allocator
-//! and forwards member functiond to the standard allocator except
+//! and forwards member functions to the standard allocator except
 //! when internal storage is being used as memory source.
 //!
 //! This allocator is a "partially_propagable" allocator and
@@ -68,7 +68,7 @@ class small_vector_base;
 //! 
 //! A partially propagable allocator means that not all storage
 //! allocatod by an instance of `small_vector_allocator` can be
-//! deallocated by another instance of this type, even is both
+//! deallocated by another instance of this type, even if both
 //! instances compare equal or an instance is propagated to another
 //! one using the copy/move constructor or assignment. The storage that
 //! can never be propagated is identified by `storage_is_unpropagable(p)`.
@@ -432,8 +432,8 @@ struct small_vector_storage_definer
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
-//! small_vector a vector-like container optimized for the case when it contains few elements.
-//! It contains some preallocated elements in-place, which allows it to avoid the use of dynamic storage allocation
+//! small_vector is a vector-like container optimized for the case when it contains few elements.
+//! It contains some preallocated elements in-place, which can avoid the use of dynamic storage allocation
 //! when the actual number of elements is below that preallocated threshold.
 //!
 //! `small_vector<T, N, Allocator>` is convertible to `small_vector_base<T, Allocator>` that is independent
