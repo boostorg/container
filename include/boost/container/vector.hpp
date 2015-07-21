@@ -2292,7 +2292,7 @@ class vector
       //Merge in new buffer loop
       while(1){
          if(!n) {
-            ::boost::container::uninitialized_move_alloc(this->m_holder.alloc(), pbeg,  pend, d_first);
+            ::boost::container::uninitialized_move_alloc(this->m_holder.alloc(), pbeg, pend, d_first);
             break;
          } 
          else if(pbeg == pend) {
@@ -2300,8 +2300,9 @@ class vector
             break;
          }
          //maintain stability moving external values only if they are strictly less
-         else if(comp(*first, *pbeg)) { 
-            *d_first = ::boost::move(*first);
+         else if(comp(*first, *pbeg)) {
+            allocator_traits_type::construct( this->m_holder.alloc(), d_first, ::boost::move(*first) );
+            new_values_destroyer.increment_size(1u);
             ++first;
             --n;
             ++d_first;
@@ -2312,7 +2313,8 @@ class vector
             --added;
          }
          else{
-            *d_first = ::boost::move(*pbeg);
+            allocator_traits_type::construct( this->m_holder.alloc(), d_first, ::boost::move(*pbeg) );
+            new_values_destroyer.increment_size(1u);
             ++pbeg;
             ++d_first;
          }

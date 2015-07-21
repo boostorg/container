@@ -506,7 +506,7 @@ class flat_tree
          >::type * = 0
       #endif
       )
-   {   this->m_data.m_vect.merge_unique(first, last);   }
+   {   this->m_data.m_vect.merge_unique(first, last, value_compare());   }
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
