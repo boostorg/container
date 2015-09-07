@@ -645,7 +645,7 @@ public:
     //!
     //! @brief Assigns a range <tt>[il.begin(), il.end())</tt> of Values to this container.
     //!
-    //! @param first       std::initializer_list with values used to construct new content of this container.
+    //! @param il       std::initializer_list with values used to construct new content of this container.
     //!
     //! @par Throws
     //!   If Value's copy constructor or copy assignment throws,
@@ -809,7 +809,7 @@ public:
     //!
     //! @brief Returns the index of the element pointed by p.
     //!
-    //! @param i    The element's index.
+    //! @param p    An iterator to the element.
     //!
     //! @return The index of the element pointed by p.
     //!
@@ -824,7 +824,7 @@ public:
     //!
     //! @brief Returns the index of the element pointed by p.
     //!
-    //! @param i    The index of the element pointed by p.
+    //! @param p    A const_iterator to the element.
     //!
     //! @return a const_iterator to the i-th element.
     //!

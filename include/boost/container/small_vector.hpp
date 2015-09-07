@@ -117,9 +117,9 @@ class small_vector_allocator
    typedef typename allocator_traits<Allocator>::propagate_on_container_copy_assignment   propagate_on_container_copy_assignment;
    typedef typename allocator_traits<Allocator>::propagate_on_container_move_assignment   propagate_on_container_move_assignment;
    typedef typename allocator_traits<Allocator>::propagate_on_container_swap              propagate_on_container_swap;
-   //! An integral constant with member `::value == false`
+   //! An integral constant with member `value == false`
    typedef BOOST_CONTAINER_IMPDEF(container_detail::bool_<false>)                         is_always_equal;
-   //! An integral constant with member `::value == true`
+   //! An integral constant with member `value == true`
    typedef BOOST_CONTAINER_IMPDEF(container_detail::bool_<true>)                          is_partially_propagable;
 
    BOOST_CONTAINER_DOCIGN(typedef container_detail::version_type<small_vector_allocator BOOST_CONTAINER_I 1>  version;)
@@ -289,20 +289,25 @@ class small_vector_allocator
 //! This class consists of common code from all small_vector<T, N> types that don't depend on the
 //! "N" template parameter. This class is non-copyable and non-destructible, so this class tipically
 //! used as reference argument to functions that read or write small vectors. Since `small_vector<T, N>`
-//! derives from `small_vector_base<T>`, the conversion to `small_vector_base` is implicit:
-//! <code>
+//! derives from `small_vector_base<T>`, the conversion to `small_vector_base` is implicit
+//! <pre>
 //!
 //! //Clients can pass any small_vector<Foo, N>.
 //! void read_any_small_vector_of_foo(const small_vector_base<Foo> &in_parameter);
+//!
 //! void modify_any_small_vector_of_foo(small_vector_base<Foo> &out_parameter);
-//! 
+//!
 //! void some_function()
 //! {
+//! 
 //!    small_vector<Foo, 8> myvector;
+//!
 //!    read_any_small_vector_of_foo(myvector);   // Reads myvector
+//!
 //!    modify_any_small_vector_of_foo(myvector); // Modifies myvector
+//! 
 //! }
-//! </code>
+//! </pre>
 //!
 //! All `boost::container:vector` member functions are inherited. See `vector` documentation for details.
 //!
