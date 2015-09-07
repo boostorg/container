@@ -1556,12 +1556,12 @@ class stable_vector
             //Prepare rollback
             insert_rollback rollback(*this, it_past_newly_constructed, it_past_new);
             while(first != last){
-               const node_ptr p = this->priv_get_from_pool();
-               BOOST_ASSERT(!!p);
+               const node_ptr n = this->priv_get_from_pool();
+               BOOST_ASSERT(!!n);
                //Put it in the index so rollback can return it in pool if construct_in_place throws
-               *it_past_newly_constructed = p;
+               *it_past_newly_constructed = n;
                //Constructs and fixes up pointers This can throw
-               this->priv_build_node_from_it(p, it_past_newly_constructed, first);
+               this->priv_build_node_from_it(n, it_past_newly_constructed, first);
                ++first;
                ++it_past_newly_constructed;
             }
