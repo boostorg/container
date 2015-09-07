@@ -66,6 +66,8 @@ class insert_iterator;
 
 struct allocator_arg_t;
 
+struct piecewise_construct_t;
+
 BOOST_CONTAINER_STD_NS_END
 
 #ifdef BOOST_CONTAINER_CLANG_INLINE_STD_NS
