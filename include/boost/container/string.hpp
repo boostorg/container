@@ -93,16 +93,23 @@ class basic_string_base
       : members_()
    {  init(); }
 
-   basic_string_base(const allocator_type& a)
+   explicit basic_string_base(const allocator_type& a)
       : members_(a)
    {  init(); }
 
-   basic_string_base(BOOST_RV_REF(allocator_type) a)
+   explicit basic_string_base(BOOST_RV_REF(allocator_type) a)
       :  members_(boost::move(a))
    {  this->init();  }
 
    basic_string_base(const allocator_type& a, size_type n)
       : members_(a)
+   {
+      this->init();
+      this->allocate_initial_block(n);
+   }
+
+   explicit basic_string_base(size_type n)
+      : members_()
    {
       this->init();
       this->allocate_initial_block(n);
@@ -647,11 +654,10 @@ class basic_string
       }
    }
 
-   //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
+   //! <b>Effects</b>: Constructs a basic_string with a default-constructed allocator,
    //!   and is initialized by a specific number of characters of the s string.
-   basic_string(const basic_string& s, size_type pos, size_type n = npos,
-                const allocator_type& a = allocator_type())
-      : base_t(a)
+   basic_string(const basic_string& s, size_type pos, size_type n = npos)
+      : base_t()
    {
       this->priv_terminate_string();
       if (pos > s.size())
@@ -662,45 +668,105 @@ class basic_string
    }
 
    //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
-   //!   and is initialized by a specific number of characters of the s c-string.
-   basic_string(const CharT* s, size_type n, const allocator_type& a = allocator_type())
+   //!   and is initialized by a specific number of characters of the s string.
+   basic_string(const basic_string& s, size_type pos, size_type n, const allocator_type& a)
       : base_t(a)
+   {
+      this->priv_terminate_string();
+      if (pos > s.size())
+         throw_out_of_range("basic_string::basic_string out of range position");
+      else
+         this->assign
+            (s.begin() + pos, s.begin() + pos + container_detail::min_value(n, s.size() - pos));
+   }
+
+   //! <b>Effects</b>: Constructs a basic_string taking a default-constructed allocator,
+   //!   and is initialized by a specific number of characters of the s c-string.
+   basic_string(const CharT* s, size_type n)
+      : base_t()
    {
       this->priv_terminate_string();
       this->assign(s, s + n);
    }
 
    //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
-   //!   and is initialized by the null-terminated s c-string.
-   basic_string(const CharT* s, const allocator_type& a = allocator_type())
+   //!   and is initialized by a specific number of characters of the s c-string.
+   basic_string(const CharT* s, size_type n, const allocator_type& a)
       : base_t(a)
+   {
+      this->priv_terminate_string();
+      this->assign(s, s + n);
+   }
+
+   //! <b>Effects</b>: Constructs a basic_string with a default-constructed allocator,
+   //!   and is initialized by the null-terminated s c-string.
+   basic_string(const CharT* s)
+      : base_t()
    {
       this->priv_terminate_string();
       this->assign(s, s + Traits::length(s));
    }
 
    //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
-   //!   and is initialized by n copies of c.
-   basic_string(size_type n, CharT c, const allocator_type& a = allocator_type())
+   //!   and is initialized by the null-terminated s c-string.
+   basic_string(const CharT* s, const allocator_type& a)
       : base_t(a)
+   {
+      this->priv_terminate_string();
+      this->assign(s, s + Traits::length(s));
+   }
+
+
+   //! <b>Effects</b>: Constructs a basic_string with a default-constructed allocator,
+   //!   and is initialized by n copies of c.
+   basic_string(size_type n, CharT c)
+      : base_t()
    {
       this->priv_terminate_string();
       this->assign(n, c);
    }
 
    //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
+   //!   and is initialized by n copies of c.
+   basic_string(size_type n, CharT c, const allocator_type& a)
+      : base_t(a)
+   {
+      this->priv_terminate_string();
+      this->assign(n, c);
+   }
+
+   //! <b>Effects</b>: Constructs a basic_string with a default-constructed allocator,
    //!   and is initialized by n default-initialized characters.
-   basic_string(size_type n, default_init_t, const allocator_type& a = allocator_type())
-      : base_t(a, n + 1)
+   basic_string(size_type n, default_init_t)
+      : base_t(n + 1)
    {
       this->priv_size(n);
       this->priv_terminate_string();
    }
 
    //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
+   //!   and is initialized by n default-initialized characters.
+   basic_string(size_type n, default_init_t, const allocator_type& a)
+      : base_t(a, n + 1)
+   {
+      this->priv_size(n);
+      this->priv_terminate_string();
+   }
+
+   //! <b>Effects</b>: Constructs a basic_string with a default-constructed allocator,
    //!   and a range of iterators.
    template <class InputIterator>
-   basic_string(InputIterator f, InputIterator l, const allocator_type& a = allocator_type())
+   basic_string(InputIterator f, InputIterator l)
+      : base_t()
+   {
+      this->priv_terminate_string();
+      this->assign(f, l);
+   }
+
+   //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
+   //!   and a range of iterators.
+   template <class InputIterator>
+   basic_string(InputIterator f, InputIterator l, const allocator_type& a)
       : base_t(a)
    {
       this->priv_terminate_string();
