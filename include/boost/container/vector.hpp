@@ -346,18 +346,17 @@ struct vector_alloc_holder
    static bool is_propagable_from(const allocator_type &from_alloc, pointer p, const allocator_type &to_alloc, bool const propagate_allocator)
    {
       (void)propagate_allocator; (void)p; (void)to_alloc; (void)from_alloc;
-      return (!allocator_traits_type::is_partially_propagable::value ||
-              !allocator_traits_type::storage_is_unpropagable(from_alloc, p)) &&
-              (propagate_allocator || allocator_traits_type::equal(from_alloc, to_alloc));
+      const bool all_storage_propagable = !allocator_traits_type::is_partially_propagable::value ||
+                                          !allocator_traits_type::storage_is_unpropagable(from_alloc, p);
+      return all_storage_propagable && (propagate_allocator || allocator_traits_type::equal(from_alloc, to_alloc));
    }
 
    static bool are_swap_propagable(const allocator_type &l_a, pointer l_p, const allocator_type &r_a, pointer r_p, bool const propagate_allocator)
    {
       (void)propagate_allocator; (void)l_p; (void)r_p; (void)l_a; (void)r_a;
-      return (!allocator_traits_type::is_partially_propagable::value ||
-              (!allocator_traits_type::storage_is_unpropagable(r_a, r_p) &&
-               !allocator_traits_type::storage_is_unpropagable(l_a, l_p))
-             ) && (propagate_allocator || allocator_traits_type::equal(l_a, r_a));
+      const bool all_storage_propagable = !allocator_traits_type::is_partially_propagable::value || 
+              !(allocator_traits_type::storage_is_unpropagable(l_a, l_p) || allocator_traits_type::storage_is_unpropagable(r_a, r_p));
+      return all_storage_propagable && (propagate_allocator || allocator_traits_type::equal(l_a, r_a));
    }
 
    //Constructor, does not throw
@@ -2452,7 +2451,7 @@ class vector
    {
       const bool propagate_alloc = allocator_traits_type::propagate_on_container_swap::value;
       if(are_swap_propagable( this->get_stored_allocator(), this->m_holder.start()
-                            , x.get_stored_allocator(), this->m_holder.start(), propagate_alloc)){
+                            , x.get_stored_allocator(), x.m_holder.start(), propagate_alloc)){
          //Just swap internals
          this->m_holder.swap_resources(x.m_holder);
       }
@@ -2471,6 +2470,8 @@ class vector
                    , boost::make_move_iterator(container_detail::iterator_to_raw_pointer(big.nth(common_elements)))
                    , boost::make_move_iterator(container_detail::iterator_to_raw_pointer(big.end()))
                    );
+         //Destroy remaining elements
+         big.erase(big.nth(common_elements), big.cend());
       }
       //And now swap the allocator
       container_detail::swap_alloc(this->m_holder.alloc(), x.m_holder.alloc(), container_detail::bool_<propagate_alloc>());
