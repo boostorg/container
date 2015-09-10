@@ -645,7 +645,7 @@ struct vector_alloc_holder<Allocator, version_0>
       this->priv_deep_swap(x);
    }
 
-   void swap_resources(vector_alloc_holder &x) BOOST_NOEXCEPT_OR_NOTHROW
+   void swap_resources(vector_alloc_holder &) BOOST_NOEXCEPT_OR_NOTHROW
    {  //Containers with version 0 allocators can't be moved without moving elements one by one
       throw_bad_alloc();
    }
