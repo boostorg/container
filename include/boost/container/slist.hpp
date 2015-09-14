@@ -1652,22 +1652,15 @@ struct has_trivial_destructor_after_move<boost::container::slist<T, Allocator> >
 
 namespace container {
 
-#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-
 }} //namespace boost{  namespace container {
+
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 // Specialization of insert_iterator so that insertions will be constant
 // time rather than linear time.
 
-#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-
-#if defined(__clang__) && defined(_LIBCPP_VERSION)
-   #define BOOST_CONTAINER_CLANG_INLINE_STD_NS
-   #pragma GCC diagnostic push
-   #pragma GCC diagnostic ignored "-Wc++11-extensions"
-#endif
-
-BOOST_CONTAINER_STD_NS_BEG
+#include <boost/move/detail/std_ns_begin.hpp>
+BOOST_CONTAINER_DOC1ST(namespace std {, BOOST_MOVE_STD_NS_BEG)
 
 template <class T, class Allocator>
 class insert_iterator<boost::container::slist<T, Allocator> >
@@ -1700,14 +1693,8 @@ class insert_iterator<boost::container::slist<T, Allocator> >
    insert_iterator<Container>& operator++(int){ return *this; }
 };
 
-BOOST_CONTAINER_STD_NS_END
-
-#ifdef BOOST_CONTAINER_CLANG_INLINE_STD_NS
-   #pragma GCC diagnostic pop
-   #undef BOOST_CONTAINER_CLANG_INLINE_STD_NS
-#endif   //BOOST_CONTAINER_CLANG_INLINE_STD_NS
-
-#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+BOOST_CONTAINER_DOC1ST( }, BOOST_MOVE_STD_NS_END)
+#include <boost/move/detail/std_ns_end.hpp>
 
 #include <boost/container/detail/config_end.hpp>
 
