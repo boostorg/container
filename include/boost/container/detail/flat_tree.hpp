@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2015. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -376,35 +376,39 @@ class flat_tree
       return i;
    }
 
-   iterator insert_unique(const_iterator pos, const value_type& val)
+   iterator insert_unique(const_iterator hint, const value_type& val)
    {
+      BOOST_ASSERT(this->priv_in_range_or_end(hint));
       std::pair<iterator,bool> ret;
       insert_commit_data data;
-      return this->priv_insert_unique_prepare(pos, val, data)
+      return this->priv_insert_unique_prepare(hint, val, data)
             ? this->priv_insert_commit(data, val)
             : iterator(vector_iterator_get_ptr(data.position));
    }
 
-   iterator insert_unique(const_iterator pos, BOOST_RV_REF(value_type) val)
+   iterator insert_unique(const_iterator hint, BOOST_RV_REF(value_type) val)
    {
+      BOOST_ASSERT(this->priv_in_range_or_end(hint));
       std::pair<iterator,bool> ret;
       insert_commit_data data;
-      return this->priv_insert_unique_prepare(pos, val, data)
+      return this->priv_insert_unique_prepare(hint, val, data)
          ? this->priv_insert_commit(data, boost::move(val))
          : iterator(vector_iterator_get_ptr(data.position));
    }
 
-   iterator insert_equal(const_iterator pos, const value_type& val)
+   iterator insert_equal(const_iterator hint, const value_type& val)
    {
+      BOOST_ASSERT(this->priv_in_range_or_end(hint));
       insert_commit_data data;
-      this->priv_insert_equal_prepare(pos, val, data);
+      this->priv_insert_equal_prepare(hint, val, data);
       return this->priv_insert_commit(data, val);
    }
 
-   iterator insert_equal(const_iterator pos, BOOST_RV_REF(value_type) mval)
+   iterator insert_equal(const_iterator hint, BOOST_RV_REF(value_type) mval)
    {
+      BOOST_ASSERT(this->priv_in_range_or_end(hint));
       insert_commit_data data;
-      this->priv_insert_equal_prepare(pos, mval, data);
+      this->priv_insert_equal_prepare(hint, mval, data);
       return this->priv_insert_commit(data, boost::move(mval));
    }
 
@@ -524,6 +528,7 @@ class flat_tree
    template <class... Args>
    iterator emplace_hint_unique(const_iterator hint, BOOST_FWD_REF(Args)... args)
    {
+      //hint checked in insert_unique
       typename aligned_storage<sizeof(value_type), alignment_of<value_type>::value>::type v;
       value_type &val = *static_cast<value_type *>(static_cast<void *>(&v));
       stored_allocator_type &a = this->get_stored_allocator();
@@ -546,6 +551,7 @@ class flat_tree
    template <class... Args>
    iterator emplace_hint_equal(const_iterator hint, BOOST_FWD_REF(Args)... args)
    {
+      //hint checked in insert_equal
       typename aligned_storage<sizeof(value_type), alignment_of<value_type>::value>::type v;
       value_type &val = *static_cast<value_type *>(static_cast<void *>(&v));
       stored_allocator_type &a = this->get_stored_allocator();
@@ -732,6 +738,12 @@ class flat_tree
       {  x.swap(y);  }
 
    private:
+
+   bool priv_in_range_or_end(const_iterator pos) const
+   {
+      return (this->begin() <= pos) && (pos <= this->end());
+   }
+
    struct insert_commit_data
    {
       const_iterator position;

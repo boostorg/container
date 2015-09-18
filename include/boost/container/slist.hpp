@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2004-2013. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2004-2015. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -684,7 +684,10 @@ class slist
    //!
    //! <b>Complexity</b>: Constant.
    reference front()
-   {  return *this->begin();  }
+   {
+      BOOST_ASSERT(!this->empty());
+      return *this->begin();
+   }
 
    //! <b>Requires</b>: !empty()
    //!
@@ -695,7 +698,10 @@ class slist
    //!
    //! <b>Complexity</b>: Constant.
    const_reference front() const
-   {  return *this->begin();  }
+   {
+      BOOST_ASSERT(!this->empty());
+      return *this->begin();
+   }
 
    //////////////////////////////////////////////
    //
@@ -897,7 +903,10 @@ class slist
    //!
    //! <b>Complexity</b>: Amortized constant time.
    void pop_front()
-   {  this->icont().pop_front_and_dispose(Destroyer(this->node_alloc()));      }
+   {
+      BOOST_ASSERT(!this->empty());
+      this->icont().pop_front_and_dispose(Destroyer(this->node_alloc()));
+   }
 
    //! <b>Effects</b>: Erases the element after the element pointed by prev_p
    //!    of the list.
@@ -939,7 +948,12 @@ class slist
    void swap(slist& x)
       BOOST_NOEXCEPT_IF( allocator_traits_type::propagate_on_container_swap::value
                                 || allocator_traits_type::is_always_equal::value)
-   {  AllocHolder::swap(x);   }
+   {
+      BOOST_ASSERT(allocator_traits_type::propagate_on_container_swap::value ||
+                   allocator_traits_type::is_always_equal::value ||
+                   this->get_stored_allocator() == x.get_stored_allocator());
+      AllocHolder::swap(x);
+   }
 
    //! <b>Effects</b>: Erases all the elements of the list.
    //!

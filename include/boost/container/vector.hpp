@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2014. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2015. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -1097,6 +1097,7 @@ class vector
       BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
                                   || allocator_traits_type::is_always_equal::value)
    {
+      BOOST_ASSERT(&x != this);
       this->priv_move_assign(boost::move(x));
       return *this;
    }
@@ -1512,7 +1513,10 @@ class vector
    //!
    //! <b>Complexity</b>: Constant.
    reference         front() BOOST_NOEXCEPT_OR_NOTHROW
-   { return *this->m_holder.start(); }
+   {
+      BOOST_ASSERT(!this->empty());
+      return *this->m_holder.start();
+   }
 
    //! <b>Requires</b>: !empty()
    //!
@@ -1523,7 +1527,10 @@ class vector
    //!
    //! <b>Complexity</b>: Constant.
    const_reference   front() const BOOST_NOEXCEPT_OR_NOTHROW
-   { return *this->m_holder.start(); }
+   {
+      BOOST_ASSERT(!this->empty());
+      return *this->m_holder.start();
+   }
 
    //! <b>Requires</b>: !empty()
    //!
@@ -1535,7 +1542,7 @@ class vector
    //! <b>Complexity</b>: Constant.
    reference         back() BOOST_NOEXCEPT_OR_NOTHROW
    {
-      BOOST_ASSERT(this->m_holder.m_size > 0);
+      BOOST_ASSERT(!this->empty());
       return this->m_holder.start()[this->m_holder.m_size - 1];
    }
 
@@ -1549,7 +1556,7 @@ class vector
    //! <b>Complexity</b>: Constant.
    const_reference   back()  const BOOST_NOEXCEPT_OR_NOTHROW
    {
-      BOOST_ASSERT(this->m_holder.m_size > 0);
+      BOOST_ASSERT(!this->empty());
       return this->m_holder.start()[this->m_holder.m_size - 1];
    }
 
@@ -1577,7 +1584,8 @@ class vector
    //! <b>Complexity</b>: Constant.
    const_reference operator[](size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
-       return this->m_holder.start()[n];
+      BOOST_ASSERT(this->m_holder.m_size > n);
+      return this->m_holder.start()[n];
    }
 
    //! <b>Requires</b>: size() >= n.
@@ -1626,7 +1634,10 @@ class vector
    //!
    //! <b>Note</b>: Non-standard extension
    size_type index_of(iterator p) BOOST_NOEXCEPT_OR_NOTHROW
-   {  return this->priv_index_of(vector_iterator_get_ptr(p));  }
+   {
+      //Range check assert done in priv_index_of
+      return this->priv_index_of(vector_iterator_get_ptr(p));
+   }
 
    //! <b>Requires</b>: begin() <= p <= end().
    //!
@@ -1639,7 +1650,10 @@ class vector
    //!
    //! <b>Note</b>: Non-standard extension
    size_type index_of(const_iterator p) const BOOST_NOEXCEPT_OR_NOTHROW
-   {  return this->priv_index_of(vector_iterator_get_ptr(p));  }
+   {
+      //Range check assert done in priv_index_of
+      return this->priv_index_of(vector_iterator_get_ptr(p));
+   }
 
    //! <b>Requires</b>: size() > n.
    //!
@@ -1650,7 +1664,10 @@ class vector
    //!
    //! <b>Complexity</b>: Constant.
    reference at(size_type n)
-   { this->priv_check_range(n); return this->m_holder.start()[n]; }
+   {
+      this->priv_throw_if_out_of_range(n);
+      return this->m_holder.start()[n];
+   }
 
    //! <b>Requires</b>: size() > n.
    //!
@@ -1661,7 +1678,10 @@ class vector
    //!
    //! <b>Complexity</b>: Constant.
    const_reference at(size_type n) const
-   { this->priv_check_range(n); return this->m_holder.start()[n]; }
+   {
+      this->priv_throw_if_out_of_range(n);
+      return this->m_holder.start()[n];
+   }
 
    //////////////////////////////////////////////
    //
@@ -1749,6 +1769,7 @@ class vector
    template<class ...Args>
    iterator emplace(const_iterator position, BOOST_FWD_REF(Args) ...args)
    {
+      BOOST_ASSERT(this->priv_in_range_or_end(position));
       //Just call more general insert(pos, size, value) and return iterator
       typedef container_detail::insert_emplace_proxy<Allocator, T*, Args...> type;
       return this->priv_forward_range_insert( vector_iterator_get_ptr(position), 1
@@ -1788,6 +1809,7 @@ class vector
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    iterator emplace(const_iterator pos BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
    {\
+      BOOST_ASSERT(this->priv_in_range_or_end(pos));\
       typedef container_detail::insert_emplace_proxy_arg##N<Allocator, T* BOOST_MOVE_I##N BOOST_MOVE_TARG##N> type;\
       return this->priv_forward_range_insert(vector_iterator_get_ptr(pos), 1, type(BOOST_MOVE_FWD##N));\
    }\
@@ -1853,6 +1875,7 @@ class vector
    //! <b>Complexity</b>: Linear to n.
    iterator insert(const_iterator p, size_type n, const T& x)
    {
+      BOOST_ASSERT(this->priv_in_range_or_end(p));
       container_detail::insert_n_copies_proxy<Allocator, T*> proxy(x);
       return this->priv_forward_range_insert(vector_iterator_get_ptr(p), n, proxy);
    }
@@ -1878,6 +1901,7 @@ class vector
       #endif
       )
    {
+      BOOST_ASSERT(this->priv_in_range_or_end(pos));
       const size_type n_pos = pos - this->cbegin();
       iterator it(vector_iterator_get_ptr(pos));
       for(;first != last; ++first){
@@ -1897,6 +1921,7 @@ class vector
          >::type * = 0
       )
    {
+      BOOST_ASSERT(this->priv_in_range_or_end(pos));
       container_detail::insert_range_proxy<Allocator, FwdIt, T*> proxy(first);
       return this->priv_forward_range_insert(vector_iterator_get_ptr(pos), boost::container::iterator_distance(first, last), proxy);
    }
@@ -1921,6 +1946,7 @@ class vector
    template <class InIt>
    iterator insert(const_iterator pos, size_type num, InIt first, InIt last)
    {
+      BOOST_ASSERT(this->priv_in_range_or_end(pos));
       BOOST_ASSERT(container_detail::is_input_iterator<InIt>::value ||
                    num == static_cast<size_type>(boost::container::iterator_distance(first, last)));
       (void)last;
@@ -1939,17 +1965,19 @@ class vector
    //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
    iterator insert(const_iterator position, std::initializer_list<value_type> il)
    {
+      //Assertion done in insert()
       return this->insert(position, il.begin(), il.end());
    }
    #endif
 
-   //! <b>Effects</b>: Removes the last element from the vector.
+   //! <b>Effects</b>: Removes the last element from the container.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant time.
    void pop_back() BOOST_NOEXCEPT_OR_NOTHROW
    {
+      BOOST_ASSERT(!this->empty());
       //Destroy last element
       this->priv_destroy_last();
    }
@@ -1962,6 +1990,7 @@ class vector
    //!   last element. Constant if pos is the last element.
    iterator erase(const_iterator position)
    {
+      BOOST_ASSERT(this->priv_in_range(position));
       const pointer p = vector_iterator_get_ptr(position);
       T *const pos_ptr = container_detail::to_raw_pointer(p);
       T *const beg_ptr = container_detail::to_raw_pointer(this->m_holder.start());
@@ -1979,6 +2008,9 @@ class vector
    //!   plus linear to the elements between pos and the last element.
    iterator erase(const_iterator first, const_iterator last)
    {
+      BOOST_ASSERT(first <= last);
+      BOOST_ASSERT(first == last || this->priv_in_range(first));
+      BOOST_ASSERT(first == last || this->priv_in_range_or_end(last));
       if (first != last){
          T* const old_end_ptr = this->back_raw();
          T* const first_ptr = container_detail::to_raw_pointer(vector_iterator_get_ptr(first));
@@ -2571,6 +2603,7 @@ class vector
    template<class U>
    iterator priv_insert(const const_iterator &p, BOOST_FWD_REF(U) x)
    {
+      BOOST_ASSERT(this->priv_in_range_or_end(p));
       return this->priv_forward_range_insert
          ( vector_iterator_get_ptr(p), 1, container_detail::get_insert_value_proxy<T*, Allocator>(::boost::forward<U>(x)));
    }
@@ -3292,12 +3325,22 @@ class vector
       }
    }
 
-   void priv_check_range(size_type n) const
+   void priv_throw_if_out_of_range(size_type n) const
    {
       //If n is out of range, throw an out_of_range exception
       if (n >= this->size()){
          throw_out_of_range("vector::at out of range");
       }
+   }
+
+   bool priv_in_range(const_iterator pos) const
+   {
+      return (this->begin() <= pos) && (pos < this->end());
+   }
+
+   bool priv_in_range_or_end(const_iterator pos) const
+   {
+      return (this->begin() <= pos) && (pos <= this->end());
    }
 
    #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS

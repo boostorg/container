@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2008-2013. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2008-2015. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -1196,7 +1196,10 @@ class stable_vector
    //!
    //! <b>Complexity</b>: Constant.
    reference front() BOOST_NOEXCEPT_OR_NOTHROW
-   {  return static_cast<node_reference>(*this->index.front()).value;  }
+   {
+      BOOST_ASSERT(!this->empty());
+      return static_cast<node_reference>(*this->index.front()).value;
+   }
 
    //! <b>Requires</b>: !empty()
    //!
@@ -1207,7 +1210,10 @@ class stable_vector
    //!
    //! <b>Complexity</b>: Constant.
    const_reference front() const BOOST_NOEXCEPT_OR_NOTHROW
-   {  return static_cast<const_node_reference>(*this->index.front()).value;  }
+   {
+      BOOST_ASSERT(!this->empty());
+      return static_cast<const_node_reference>(*this->index.front()).value;
+   }
 
    //! <b>Requires</b>: !empty()
    //!
@@ -1218,7 +1224,10 @@ class stable_vector
    //!
    //! <b>Complexity</b>: Constant.
    reference back() BOOST_NOEXCEPT_OR_NOTHROW
-   {  return static_cast<node_reference>(*this->index[this->size()-1u]).value;  }
+   {
+      BOOST_ASSERT(!this->empty());
+      return static_cast<node_reference>(*this->index[this->size()-1u]).value;
+   }
 
    //! <b>Requires</b>: !empty()
    //!
@@ -1229,7 +1238,10 @@ class stable_vector
    //!
    //! <b>Complexity</b>: Constant.
    const_reference back() const BOOST_NOEXCEPT_OR_NOTHROW
-   {  return static_cast<const_node_reference>(*this->index[this->size()-1u]).value;  }
+   {
+      BOOST_ASSERT(!this->empty());
+      return static_cast<const_node_reference>(*this->index[this->size()-1u]).value;
+   }
 
    //! <b>Requires</b>: size() > n.
    //!
@@ -1241,7 +1253,7 @@ class stable_vector
    //! <b>Complexity</b>: Constant.
    reference operator[](size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {
-      BOOST_ASSERT(n < this->size());
+      BOOST_ASSERT(this->size() > n);
       return static_cast<node_reference>(*this->index[n]).value;
    }
 
@@ -1255,7 +1267,7 @@ class stable_vector
    //! <b>Complexity</b>: Constant.
    const_reference operator[](size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
-      BOOST_ASSERT(n < this->size());
+      BOOST_ASSERT(this->size() > n);
       return static_cast<const_node_reference>(*this->index[n]).value;
    }
 
@@ -1386,6 +1398,7 @@ class stable_vector
    template<class ...Args>
    iterator emplace(const_iterator p, Args && ...args)
    {
+      BOOST_ASSERT(this->priv_in_range_or_end(p));
       size_type pos_n = p - cbegin();
       typedef emplace_functor<Args...>         EmplaceFunctor;
       typedef emplace_iterator<value_type, EmplaceFunctor, difference_type> EmplaceIterator;
@@ -1410,6 +1423,7 @@ class stable_vector
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    iterator emplace(const_iterator p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
    {\
+      BOOST_ASSERT(this->priv_in_range_or_end(p));\
       typedef emplace_functor##N\
          BOOST_MOVE_LT##N BOOST_MOVE_TARG##N BOOST_MOVE_GT##N EmplaceFunctor;\
       typedef emplace_iterator<value_type, EmplaceFunctor, difference_type>  EmplaceIterator;\
@@ -1483,6 +1497,7 @@ class stable_vector
    //! <b>Complexity</b>: Linear to n.
    iterator insert(const_iterator p, size_type n, const T& t)
    {
+      BOOST_ASSERT(this->priv_in_range_or_end(p));
       STABLE_VECTOR_CHECK_INVARIANT;
       typedef constant_iterator<value_type, difference_type> cvalue_iterator;
       return this->insert(p, cvalue_iterator(t, n), cvalue_iterator());
@@ -1499,6 +1514,7 @@ class stable_vector
    //! <b>Complexity</b>: Linear to distance [il.begin(), il.end()).
    iterator insert(const_iterator p, std::initializer_list<value_type> il)
    {
+      //Position checks done by insert()
       STABLE_VECTOR_CHECK_INVARIANT;
       return insert(p, il.begin(), il.end());
    }
@@ -1526,6 +1542,7 @@ class stable_vector
    #endif
       insert(const_iterator p, InputIterator first, InputIterator last)
    {
+      BOOST_ASSERT(this->priv_in_range_or_end(p));
       STABLE_VECTOR_CHECK_INVARIANT;
       const size_type pos_n = p - this->cbegin();
       for(; first != last; ++first){
@@ -1543,6 +1560,7 @@ class stable_vector
       >::type
       insert(const_iterator p, FwdIt first, FwdIt last)
    {
+      BOOST_ASSERT(this->priv_in_range_or_end(p));
       const size_type num_new = static_cast<size_type>(boost::container::iterator_distance(first, last));
       const size_type idx     = static_cast<size_type>(p - this->cbegin());
       if(num_new){
@@ -1581,7 +1599,10 @@ class stable_vector
    //!
    //! <b>Complexity</b>: Constant time.
    void pop_back() BOOST_NOEXCEPT_OR_NOTHROW
-   {  this->erase(--this->cend());   }
+   {
+      BOOST_ASSERT(!this->empty());
+      this->erase(--this->cend());
+   }
 
    //! <b>Effects</b>: Erases the element at p.
    //!
@@ -1591,6 +1612,7 @@ class stable_vector
    //!   last element. Constant if p is the last element.
    iterator erase(const_iterator p) BOOST_NOEXCEPT_OR_NOTHROW
    {
+      BOOST_ASSERT(this->priv_in_range(p));
       STABLE_VECTOR_CHECK_INVARIANT;
       const size_type d = p - this->cbegin();
       index_iterator it = this->index.begin() + d;
@@ -1608,6 +1630,9 @@ class stable_vector
    //!   plus linear to the elements between p and the last element.
    iterator erase(const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW
    {
+      BOOST_ASSERT(first <= last);
+      BOOST_ASSERT(first == last || this->priv_in_range(first));
+      BOOST_ASSERT(first == last || this->priv_in_range_or_end(last));
       STABLE_VECTOR_CHECK_INVARIANT;
       const const_iterator cbeg(this->cbegin());
       const size_type d1 = static_cast<size_type>(first - cbeg),
@@ -1641,6 +1666,9 @@ class stable_vector
       BOOST_NOEXCEPT_IF( allocator_traits_type::propagate_on_container_swap::value
                                 || allocator_traits_type::is_always_equal::value)
    {
+      BOOST_ASSERT(allocator_traits_type::propagate_on_container_swap::value ||
+                   allocator_traits_type::is_always_equal::value ||
+                   this->get_stored_allocator() == x.get_stored_allocator());
       STABLE_VECTOR_CHECK_INVARIANT;
       container_detail::bool_<allocator_traits_type::propagate_on_container_swap::value> flag;
       container_detail::swap_alloc(this->priv_node_alloc(), x.priv_node_alloc(), flag);
@@ -1701,6 +1729,16 @@ class stable_vector
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
+
+   bool priv_in_range(const_iterator pos) const
+   {
+      return (this->begin() <= pos) && (pos < this->end());
+   }
+
+   bool priv_in_range_or_end(const_iterator pos) const
+   {
+      return (this->begin() <= pos) && (pos <= this->end());
+   }
 
    size_type priv_index_of(node_ptr p) const
    {
@@ -1807,12 +1845,14 @@ class stable_vector
 
    iterator priv_insert(const_iterator p, const value_type &t)
    {
+      BOOST_ASSERT(this->priv_in_range_or_end(p));
       typedef constant_iterator<value_type, difference_type> cvalue_iterator;
       return this->insert(p, cvalue_iterator(t, 1), cvalue_iterator());
    }
 
    iterator priv_insert(const_iterator p, BOOST_RV_REF(T) x)
    {
+      BOOST_ASSERT(this->priv_in_range_or_end(p));
       typedef repeat_iterator<T, difference_type>  repeat_it;
       typedef boost::move_iterator<repeat_it>      repeat_move_it;
       //Just call more general insert(p, size, value) and return iterator
