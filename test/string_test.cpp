@@ -440,6 +440,37 @@ int string_test()
          if(!StringEqual()(bs4, ss4)){
             return 1;
          }
+
+         //Check front/back/begin/end
+
+         if(bs4.front() != *ss4.begin())
+            return 1;
+
+         if(bs4.back() != *(ss4.end()-1))
+            return 1;
+
+         bs4.pop_back();
+         ss4.erase(ss4.end()-1);
+         if(!StringEqual()(bs4, ss4)){
+            return 1;
+         }
+
+         if(*bs4.begin() != *ss4.begin())
+            return 1;
+         if(*bs4.cbegin() != *ss4.begin())
+            return 1;
+         if(*bs4.rbegin() != *ss4.rbegin())
+            return 1;
+         if(*bs4.crbegin() != *ss4.rbegin())
+            return 1;
+         if(*(bs4.end()-1) != *(ss4.end()-1))
+            return 1;
+         if(*(bs4.cend()-1) != *(ss4.end()-1))
+            return 1;
+         if(*(bs4.rend()-1) != *(ss4.rend()-1))
+            return 1;
+         if(*(bs4.crend()-1) != *(ss4.rend()-1))
+            return 1;
       }
 
       //When done, delete vector

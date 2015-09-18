@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2015. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -1124,6 +1124,62 @@ class basic_string
    //
    //////////////////////////////////////////////
 
+   //! <b>Requires</b>: !empty()
+   //!
+   //! <b>Effects</b>: Returns a reference to the first
+   //!   element of the container.
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   reference         front() BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      BOOST_ASSERT(!this->empty());
+      return *this->priv_addr();
+   }
+
+   //! <b>Requires</b>: !empty()
+   //!
+   //! <b>Effects</b>: Returns a const reference to the first
+   //!   element of the container.
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   const_reference   front() const BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      BOOST_ASSERT(!this->empty());
+      return *this->priv_addr();
+   }
+
+   //! <b>Requires</b>: !empty()
+   //!
+   //! <b>Effects</b>: Returns a reference to the last
+   //!   element of the container.
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   reference         back() BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      BOOST_ASSERT(!this->empty());
+      return *(this->priv_addr() + (this->size() - 1u) );
+   }
+
+   //! <b>Requires</b>: !empty()
+   //!
+   //! <b>Effects</b>: Returns a const reference to the last
+   //!   element of the container.
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   const_reference   back()  const BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      BOOST_ASSERT(!this->empty());
+      return *(this->priv_addr() + (this->size() - 1u) );
+   }
+
    //! <b>Requires</b>: size() > n.
    //!
    //! <b>Effects</b>: Returns a reference to the nth element
@@ -1133,7 +1189,10 @@ class basic_string
    //!
    //! <b>Complexity</b>: Constant.
    reference operator[](size_type n) BOOST_NOEXCEPT_OR_NOTHROW
-      { return *(this->priv_addr() + n); }
+   {
+      BOOST_ASSERT(this->size() > n);
+      return *(this->priv_addr() + n);
+   }
 
    //! <b>Requires</b>: size() > n.
    //!
@@ -1144,7 +1203,10 @@ class basic_string
    //!
    //! <b>Complexity</b>: Constant.
    const_reference operator[](size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
-      { return *(this->priv_addr() + n); }
+   {
+      BOOST_ASSERT(this->size() > n);
+      return *(this->priv_addr() + n);
+   }
 
    //! <b>Requires</b>: size() > n.
    //!
@@ -1626,6 +1688,18 @@ class basic_string
    }
    #endif
 
+   //! <b>Effects</b>: Removes the last element from the container.
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant time.
+   void pop_back() BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      BOOST_ASSERT(!this->empty());
+      iterator p = this->end();
+      this->erase(--p);
+   }
+
    //! <b>Requires</b>: pos <= size()
    //!
    //! <b>Effects</b>: Determines the effective length xlen of the string to be removed as the smaller of n and size() - pos.
@@ -1685,18 +1759,6 @@ class basic_string
          this->priv_size(new_length);
       }
       return iterator(f);
-   }
-
-   //! <b>Requires</b>: !empty()
-   //!
-   //! <b>Throws</b>: Nothing
-   //!
-   //! <b>Effects</b>: Equivalent to erase(size() - 1, 1).
-   void pop_back() BOOST_NOEXCEPT_OR_NOTHROW
-   {
-      const size_type old_size = this->priv_size();
-      Traits::assign(this->priv_addr()[old_size-1], CharT(0));
-      this->priv_size(old_size-1);;
    }
 
    //! <b>Effects</b>: Erases all the elements of the vector.
