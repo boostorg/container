@@ -48,7 +48,7 @@ class static_storage_allocator
    {}
 
    static_storage_allocator & operator=(const static_storage_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
-   {}
+   {  return *this;  }
 
    T* internal_storage() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return const_cast<T*>(static_cast<const T*>(static_cast<const void*>(&storage)));  }
