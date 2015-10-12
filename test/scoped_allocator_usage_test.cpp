@@ -31,7 +31,7 @@ class SimpleAllocator
 public:
    typedef Ty value_type;
 
-   explicit SimpleAllocator(int value = 0)
+   explicit SimpleAllocator(int value)
       : m_state(value)
    {}
 

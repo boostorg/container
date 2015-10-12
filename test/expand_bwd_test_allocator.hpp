@@ -79,7 +79,7 @@ class expand_bwd_test_allocator
    {  typedef expand_bwd_test_allocator<T2>   other;   };
 
    //!Constructor from the segment manager. Never throws
-   expand_bwd_test_allocator(T *buffer = 0, size_type sz = 0, difference_type offset = 0)
+   expand_bwd_test_allocator(T *buffer, size_type sz, difference_type offset)
       : mp_buffer(buffer), m_size(sz)
       , m_offset(offset),  m_allocations(0){ }
 
