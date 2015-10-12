@@ -31,7 +31,7 @@ class SimpleAllocator
 public:
    typedef Ty value_type;
 
-   explicit SimpleAllocator(int value)
+   explicit SimpleAllocator(int value = 0)
       : m_state(value)
    {}
 
@@ -356,7 +356,8 @@ bool one_level_allocator_propagation_test()
    typedef typename ContainerWrapper::allocator_type allocator_type;
    typedef typename ContainerWrapper::value_type value_type;
    {
-      ContainerWrapper c(allocator_type(SimpleAllocator<value_type>(5)));
+      allocator_type al(SimpleAllocator<value_type>(5));
+      ContainerWrapper c(al);
 
       c.clear();
       iterator it = c.emplace(c.cbegin(), 42);
@@ -365,7 +366,8 @@ bool one_level_allocator_propagation_test()
          return false;
    }
    {
-      ContainerWrapper c2(allocator_type(SimpleAllocator<value_type>(4)));
+      allocator_type al(SimpleAllocator<value_type>(4));
+      ContainerWrapper c2(al);
       ContainerWrapper c(::boost::move(c2), allocator_type(SimpleAllocator<value_type>(5)));
 
       c.clear();

@@ -1531,16 +1531,17 @@ class stable_vector
    //!
    //! <b>Complexity</b>: Linear to distance [first, last).
    template <class InputIterator>
-   #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-   typename container_detail::disable_if_or
-      < iterator
-      , container_detail::is_convertible<InputIterator, size_type>
-      , container_detail::is_not_input_iterator<InputIterator>
-      >::type
-   #else
-   iterator
-   #endif
-      insert(const_iterator p, InputIterator first, InputIterator last)
+   iterator insert(const_iterator p, InputIterator first, InputIterator last
+         #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+         //Put this as argument instead of the return type as old GCC's like 3.4
+         //detect this and the next disable_if_or as overloads
+         ,  typename container_detail::disable_if_or
+               < void
+               , container_detail::is_convertible<InputIterator, size_type>
+               , container_detail::is_not_input_iterator<InputIterator>
+               >::type* = 0
+         #endif
+         )
    {
       BOOST_ASSERT(this->priv_in_range_or_end(p));
       STABLE_VECTOR_CHECK_INVARIANT;
@@ -1630,9 +1631,8 @@ class stable_vector
    //!   plus linear to the elements between p and the last element.
    iterator erase(const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW
    {
-      BOOST_ASSERT(first <= last);
-      BOOST_ASSERT(first == last || this->priv_in_range(first));
-      BOOST_ASSERT(first == last || this->priv_in_range_or_end(last));
+      BOOST_ASSERT(first == last ||
+         (first < last && this->priv_in_range(first) && this->priv_in_range_or_end(last)));
       STABLE_VECTOR_CHECK_INVARIANT;
       const const_iterator cbeg(this->cbegin());
       const size_type d1 = static_cast<size_type>(first - cbeg),

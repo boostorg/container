@@ -95,6 +95,9 @@ int test_expand_bwd()
 class recursive_vector
 {
    public:
+   recursive_vector & operator=(const recursive_vector &x)
+   {  this->vector_ = x.vector_;   return *this; }
+
    int id_;
    vector<recursive_vector> vector_;
    vector<recursive_vector>::iterator it_;

@@ -1672,9 +1672,8 @@ class deque : protected deque_base<Allocator>
    //!   if(pos is near the beginning).
    iterator erase(const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW
    {
-      BOOST_ASSERT(first <= last);
-      BOOST_ASSERT(first == last || this->priv_in_range(first));
-      BOOST_ASSERT(first == last || this->priv_in_range_or_end(last));
+      BOOST_ASSERT(first == last ||
+         (first < last && this->priv_in_range(first) && this->priv_in_range_or_end(last)));
       if (first == this->members_.m_start && last == this->members_.m_finish) {
          this->clear();
          return this->members_.m_finish;
@@ -2052,8 +2051,7 @@ class deque : protected deque_base<Allocator>
    }
 
    template <class InIt>
-   typename iterator_enable_if_tag<InIt, std::input_iterator_tag>::type
-      priv_range_initialize(InIt first, InIt last)
+   void priv_range_initialize(InIt first, InIt last, typename iterator_enable_if_tag<InIt, std::input_iterator_tag>::type* =0)
    {
       this->priv_initialize_map(0);
       BOOST_TRY {
@@ -2068,8 +2066,7 @@ class deque : protected deque_base<Allocator>
    }
 
    template <class FwdIt>
-   typename iterator_disable_if_tag<FwdIt, std::input_iterator_tag>::type
-      priv_range_initialize(FwdIt first, FwdIt last)
+   void priv_range_initialize(FwdIt first, FwdIt last, typename iterator_disable_if_tag<FwdIt, std::input_iterator_tag>::type* =0)
    {
       size_type n = 0;
       n = boost::container::iterator_distance(first, last);

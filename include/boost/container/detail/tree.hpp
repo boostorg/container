@@ -408,13 +408,12 @@ struct key_node_compare
    };
 
    template<class T>
-   typename enable_if_c<is_node<T>::value, const typename KeyValueCompare::value_type &>::type
-      key_forward(const T &node) const
+   const typename KeyValueCompare::value_type &
+      key_forward(const T &node, typename enable_if_c<is_node<T>::value>::type* =0) const
    {  return node.get_data();  }
 
    template<class T>
-   typename enable_if_c<!is_node<T>::value, const T &>::type
-      key_forward(const T &key) const
+   const T &key_forward(const T &key, typename enable_if_c<!is_node<T>::value>::type* =0) const
    {  return key; }
 
    template<class KeyType, class KeyType2>

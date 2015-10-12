@@ -92,6 +92,10 @@ struct stateful
    struct rebind
    {  typedef stateful other; };
 
+   stateful()
+      : m_u(0u)
+   {}
+
    char *allocate(std::size_t n)
    {  allocate_size = n;   return allocate_return;  }
 
