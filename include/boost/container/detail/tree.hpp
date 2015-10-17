@@ -408,13 +408,20 @@ struct key_node_compare
    };
 
    template<class T>
-   const typename KeyValueCompare::value_type &
-      key_forward(const T &node, typename enable_if_c<is_node<T>::value>::type* =0) const
+   typename enable_if_c<is_node<T>::value, const typename KeyValueCompare::value_type &>::type
+      key_forward(const T &node) const
    {  return node.get_data();  }
 
+   #if defined(BOOST_MOVE_HELPERS_RETURN_SFINAE_BROKEN)
    template<class T>
    const T &key_forward(const T &key, typename enable_if_c<!is_node<T>::value>::type* =0) const
    {  return key; }
+   #else
+   template<class T>
+   typename enable_if_c<!is_node<T>::value, const T &>::type
+      key_forward(const T &key) const
+   {  return key; }
+   #endif
 
    template<class KeyType, class KeyType2>
    bool operator()(const KeyType &key1, const KeyType2 &key2) const
