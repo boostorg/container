@@ -1379,8 +1379,8 @@ boost_cont_command_ret_t boost_cont_allocation_command
             if(!addr)   addr = mspace_malloc_lockless(ms, limit_size);
             if(addr){
                s_allocated_memory += chunksize(mem2chunk(addr));
+               *received_size = DL_SIZE_IMPL(addr);
             }
-            *received_size = DL_SIZE_IMPL(addr);
             ret.first  = addr;
             ret.second = 0;
             if(addr){
