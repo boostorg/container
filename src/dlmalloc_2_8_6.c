@@ -3978,6 +3978,7 @@ static void add_segment(mstate m, char* tbase, size_t tsize, flag_t mmapped) {
   /* Determine locations and sizes of segment, fenceposts, old top */
   char* old_top = (char*)m->top;
   msegmentptr oldsp = segment_holding(m, old_top);
+  assert(oldsp);
   char* old_end = oldsp->base + oldsp->size;
   size_t ssize = pad_request(sizeof(struct malloc_segment));
   char* rawsp = old_end - (ssize + FOUR_SIZE_T_SIZES + CHUNK_ALIGN_MASK);
