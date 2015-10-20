@@ -1223,6 +1223,7 @@ use [*Boost.Container]? There are several reasons for that:
    * [@https://svn.boost.org/trac/boost/ticket/11628 Trac #11628: ['"small_vector<int,n> iterates over elements in destructor"]].
    * [@https://svn.boost.org/trac/boost/ticket/11697 Trac #11697: ['"Wrong initialization order in tuple copy-constructor"]].
    * [@https://svn.boost.org/trac/boost/ticket/11698 Trac #11698: ['"Missing return statement in static_storage_allocator"]].
+   * [@https://github.com/boostorg/container/pull/32 GitHub #32: ['Add check for segment_holding() failure]].
 
 [endsect]
 
