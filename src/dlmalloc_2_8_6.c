@@ -4300,6 +4300,7 @@ static int sys_trim(mstate m, size_t pad) {
       size_t extra = ((m->topsize - pad + (unit - SIZE_T_ONE)) / unit -
                       SIZE_T_ONE) * unit;
       msegmentptr sp = segment_holding(m, (char*)m->top);
+      assert(sp);
 
       if (!is_extern_segment(sp)) {
         if (is_mmapped_segment(sp)) {
