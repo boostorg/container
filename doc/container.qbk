@@ -1217,6 +1217,7 @@ use [*Boost.Container]? There are several reasons for that:
 
 * Fixed bugs:
    * [@https://svn.boost.org/trac/boost/ticket/11856 Trac #11856 : ['"pool_resource.cpp error: declaration changes meaning"]].
+   * [@https://github.com/boostorg/container/pull/33 GitHub #33: ['Make sure std::string constructor is available]].
 
 [endsect]
 
