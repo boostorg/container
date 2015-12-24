@@ -847,31 +847,10 @@ class map
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
-   mapped_type& priv_subscript(const key_type &k)
+   template<class KeyConvertible>
+   mapped_type& priv_subscript(BOOST_FWD_REF(KeyConvertible) k)
    {
-      //we can optimize this
-      iterator i = this->lower_bound(k);
-      // i->first is greater than or equivalent to k.
-      if (i == this->end() || this->key_comp()(k, (*i).first)){
-         container_detail::value_init<mapped_type> m;
-         movable_value_type val(k, boost::move(m.m_t));
-         i = insert(i, boost::move(val));
-      }
-      return (*i).second;
-   }
-
-   mapped_type& priv_subscript(BOOST_RV_REF(key_type) mk)
-   {
-      key_type &k = mk;
-      //we can optimize this
-      iterator i = this->lower_bound(k);
-      // i->first is greater than or equivalent to k.
-      if (i == this->end() || this->key_comp()(k, (*i).first)){
-         container_detail::value_init<mapped_type> m;
-         movable_value_type val(boost::move(k), boost::move(m.m_t));
-         i = insert(i, boost::move(val));
-      }
-      return (*i).second;
+      return this->insert_from_key(boost::forward<KeyConvertible>(k))->second;
    }
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

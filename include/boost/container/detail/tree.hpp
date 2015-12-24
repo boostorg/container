@@ -1060,6 +1060,29 @@ class tree
          this->insert_equal(*first);
    }
 
+   template<class KeyConvertible>
+   iterator insert_from_key(BOOST_FWD_REF(KeyConvertible) key)
+   {
+      insert_commit_data data;
+      const key_type & k = key;  //Support emulated rvalue references
+      std::pair<iiterator, bool> ret =
+         this->icont().insert_unique_check(k, KeyNodeCompare(value_comp()), data);
+      return ret.second
+               ? this->insert_unique_key_commit(boost::forward<KeyConvertible>(key), data)
+               : iterator(ret.first);
+   }
+
+   template<class KeyConvertible>
+   iterator insert_unique_key_commit
+      (BOOST_FWD_REF(KeyConvertible) key, insert_commit_data &data)
+   {
+      NodePtr tmp = AllocHolder::create_node_from_key(boost::forward<KeyConvertible>(key));
+      scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
+      iterator ret(this->icont().insert_unique_commit(*tmp, data));
+      destroy_deallocator.release();
+      return ret;
+   }
+
    iterator erase(const_iterator position)
    {
       BOOST_ASSERT(position != this->cend() && (priv_is_linked)(position));
