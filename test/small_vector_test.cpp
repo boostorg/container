@@ -96,7 +96,7 @@ bool test_small_vector_base_test()
          return false;
    }
    {
-      typedef boost::container::small_vector<int, 5> sm7_t;
+      typedef boost::container::small_vector<int, 7> sm7_t;
       sm7_t sm7;
       smb_t &smb = sm7;
       smb.push_back(2);
@@ -105,6 +105,32 @@ bool test_small_vector_base_test()
       if (!boost::container::test::CheckEqualContainers(sm7, smb))
          return false;
    }
+   {
+      typedef boost::container::small_vector<int, 5> sm5_t;
+      sm5_t sm5;
+      smb_t &smb = sm5;
+      smb.push_back(1);
+      sm5_t sm5_copy(smb);
+      if (!boost::container::test::CheckEqualContainers(sm5, sm5_copy))
+         return false;
+      smb.push_back(2);
+      if(smb.size() != 2){
+         return false;
+      }
+      sm5_copy = smb;
+      if (!boost::container::test::CheckEqualContainers(sm5, sm5_copy))
+         return false;
+      sm5_t sm5_move(boost::move(smb));
+      smb.clear();
+      if (!boost::container::test::CheckEqualContainers(sm5_move, sm5_copy))
+         return false;
+      smb = sm5_copy;
+      sm5_move = boost::move(smb);
+      smb.clear();
+      if (!boost::container::test::CheckEqualContainers(sm5_move, sm5_copy))
+         return false;
+   }
+
    return true;
 }
 

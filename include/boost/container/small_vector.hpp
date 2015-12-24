@@ -355,9 +355,6 @@ class small_vector_base
 
    //~small_vector_base(){}
 
-   using base_type::is_propagable_from;
-   using base_type::steal_resources;
-
    private:
    //The only member
    storage_type m_storage_start;
@@ -373,6 +370,21 @@ class small_vector_base
 
    BOOST_CONTAINER_FORCEINLINE void swap(small_vector_base &other)
    {  return this->base_type::swap(other);  }
+
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+   protected:
+   void move_construct_impl(base_type &x, const allocator_type &a)
+   {
+      if(base_type::is_propagable_from(x.get_stored_allocator(), x.data(), a, true)){
+         this->steal_resources(x);
+      }
+      else{
+         this->assign( boost::make_move_iterator(container_detail::iterator_to_raw_pointer(x.begin()))
+                     , boost::make_move_iterator(container_detail::iterator_to_raw_pointer(x.end  ()))
+                     );
+      }
+   }
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -508,6 +520,15 @@ class small_vector : public small_vector_base<T, Allocator>
       : base_type(initial_capacity_t(), internal_capacity(), a)
    {  this->assign(other.cbegin(), other.cend());  }
 
+   explicit small_vector(const base_type &other)
+      : base_type( initial_capacity_t(), internal_capacity()
+                 , allocator_traits_type::select_on_container_copy_construction(other.get_stored_allocator()))
+   {  this->assign(other.cbegin(), other.cend());  }
+
+   explicit small_vector(BOOST_RV_REF(base_type) other)
+      : base_type(initial_capacity_t(), internal_capacity(), ::boost::move(other.get_stored_allocator()))
+   {  this->move_construct_impl(other, other.get_stored_allocator());   }
+
    small_vector(BOOST_RV_REF(small_vector) other)
       : base_type(initial_capacity_t(), internal_capacity(), ::boost::move(other.get_stored_allocator()))
    {  this->move_construct_impl(other, other.get_stored_allocator());   }
@@ -530,23 +551,14 @@ class small_vector : public small_vector_base<T, Allocator>
    BOOST_CONTAINER_FORCEINLINE small_vector& operator=(BOOST_RV_REF(small_vector) other)
    {  return static_cast<small_vector&>(this->base_type::operator=(BOOST_MOVE_BASE(base_type, other))); }
 
+   BOOST_CONTAINER_FORCEINLINE small_vector& operator=(const base_type &other)
+   {  return static_cast<small_vector&>(this->base_type::operator=(other));  }
+
+   BOOST_CONTAINER_FORCEINLINE small_vector& operator=(BOOST_RV_REF(base_type) other)
+   {  return static_cast<small_vector&>(this->base_type::operator=(boost::move(other))); }
+
    BOOST_CONTAINER_FORCEINLINE void swap(small_vector &other)
    {  return this->base_type::swap(other);  }
-
-   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   private:
-   void move_construct_impl(small_vector &x, const allocator_type &a)
-   {
-      if(base_type::is_propagable_from(x.get_stored_allocator(), x.data(), a, true)){
-         this->steal_resources(x);
-      }
-      else{
-         this->assign( boost::make_move_iterator(container_detail::iterator_to_raw_pointer(x.begin()))
-                     , boost::make_move_iterator(container_detail::iterator_to_raw_pointer(x.end  ()))
-                     );
-      }
-   }
-   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
 }}
