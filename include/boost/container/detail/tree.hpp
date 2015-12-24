@@ -136,13 +136,13 @@ struct tree_node
    typedef tree_node< T, VoidPointer
                     , tree_type_value, OptimizeSize>     node_type;
 
-   T &get_data()
+   BOOST_CONTAINER_FORCEINLINE T &get_data()
    {
       T* ptr = reinterpret_cast<T*>(&this->m_data);
       return *ptr;
    }
 
-   const T &get_data() const
+   BOOST_CONTAINER_FORCEINLINE const T &get_data() const
    {
       const T* ptr = reinterpret_cast<const T*>(&this->m_data);
       return *ptr;
@@ -151,39 +151,39 @@ struct tree_node
    internal_type m_data;
 
    template<class T1, class T2>
-   void do_assign(const std::pair<const T1, T2> &p)
+   BOOST_CONTAINER_FORCEINLINE void do_assign(const std::pair<const T1, T2> &p)
    {
       const_cast<T1&>(m_data.first) = p.first;
       m_data.second  = p.second;
    }
 
    template<class T1, class T2>
-   void do_assign(const pair<const T1, T2> &p)
+   BOOST_CONTAINER_FORCEINLINE void do_assign(const pair<const T1, T2> &p)
    {
       const_cast<T1&>(m_data.first) = p.first;
       m_data.second  = p.second;
    }
 
    template<class V>
-   void do_assign(const V &v)
+   BOOST_CONTAINER_FORCEINLINE void do_assign(const V &v)
    {  m_data = v; }
 
    template<class T1, class T2>
-   void do_move_assign(std::pair<const T1, T2> &p)
+   BOOST_CONTAINER_FORCEINLINE void do_move_assign(std::pair<const T1, T2> &p)
    {
       const_cast<T1&>(m_data.first) = ::boost::move(p.first);
       m_data.second = ::boost::move(p.second);
    }
 
    template<class T1, class T2>
-   void do_move_assign(pair<const T1, T2> &p)
+   BOOST_CONTAINER_FORCEINLINE void do_move_assign(pair<const T1, T2> &p)
    {
       const_cast<T1&>(m_data.first) = ::boost::move(p.first);
       m_data.second  = ::boost::move(p.second);
    }
 
    template<class V>
-   void do_move_assign(V &v)
+   BOOST_CONTAINER_FORCEINLINE void do_move_assign(V &v)
    {  m_data = ::boost::move(v); }
 };
 

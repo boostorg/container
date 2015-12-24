@@ -91,10 +91,10 @@ class small_vector_allocator
 
    BOOST_COPYABLE_AND_MOVABLE(small_vector_allocator)
 
-   const Allocator &as_base() const
+   BOOST_CONTAINER_FORCEINLINE const Allocator &as_base() const
    {  return static_cast<const Allocator&>(*this);  }
 
-   Allocator &as_base() 
+   BOOST_CONTAINER_FORCEINLINE Allocator &as_base() 
    {  return static_cast<Allocator&>(*this);  }
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -135,13 +135,13 @@ class small_vector_allocator
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
       //!Constructor from arbitrary arguments
       template<class ...Args>
-      explicit small_vector_allocator(BOOST_FWD_REF(Args) ...args)
+      BOOST_CONTAINER_FORCEINLINE explicit small_vector_allocator(BOOST_FWD_REF(Args) ...args)
          : Allocator(::boost::forward<Args>(args)...)
       {}
    #else
       #define BOOST_CONTAINER_SMALL_VECTOR_ALLOCATOR_CTOR_CODE(N) \
       BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
-      explicit small_vector_allocator(BOOST_MOVE_UREF##N)\
+      BOOST_CONTAINER_FORCEINLINE explicit small_vector_allocator(BOOST_MOVE_UREF##N)\
          : Allocator(BOOST_MOVE_FWD##N)\
       {}\
       //
@@ -151,54 +151,54 @@ class small_vector_allocator
 
    //!Constructor from other small_vector_allocator.
    //!Never throws
-   small_vector_allocator(const small_vector_allocator &other) BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE small_vector_allocator(const small_vector_allocator &other) BOOST_NOEXCEPT_OR_NOTHROW
       : Allocator(other.as_base())
    {}
 
    //!Move constructor from small_vector_allocator.
    //!Never throws
-   small_vector_allocator(BOOST_RV_REF(small_vector_allocator) other) BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE small_vector_allocator(BOOST_RV_REF(small_vector_allocator) other) BOOST_NOEXCEPT_OR_NOTHROW
       : Allocator(::boost::move(other.as_base()))
    {}
 
    //!Constructor from related small_vector_allocator.
    //!Never throws
    template<class OtherAllocator>
-   small_vector_allocator(const small_vector_allocator<OtherAllocator> &other) BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE small_vector_allocator(const small_vector_allocator<OtherAllocator> &other) BOOST_NOEXCEPT_OR_NOTHROW
       : Allocator(other.as_base())
    {}
 
    //!Move constructor from related small_vector_allocator.
    //!Never throws
    template<class OtherAllocator>
-   small_vector_allocator(BOOST_RV_REF(small_vector_allocator<OtherAllocator>) other) BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE small_vector_allocator(BOOST_RV_REF(small_vector_allocator<OtherAllocator>) other) BOOST_NOEXCEPT_OR_NOTHROW
       : Allocator(::boost::move(other.as_base()))
    {}
 
    //!Assignment from other small_vector_allocator.
    //!Never throws
-   small_vector_allocator & operator=(BOOST_COPY_ASSIGN_REF(small_vector_allocator) other) BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE small_vector_allocator & operator=(BOOST_COPY_ASSIGN_REF(small_vector_allocator) other) BOOST_NOEXCEPT_OR_NOTHROW
    {  return static_cast<small_vector_allocator&>(this->Allocator::operator=(other.as_base()));  }
 
    //!Move constructor from other small_vector_allocator.
    //!Never throws
-   small_vector_allocator & operator=(BOOST_RV_REF(small_vector_allocator) other) BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE small_vector_allocator & operator=(BOOST_RV_REF(small_vector_allocator) other) BOOST_NOEXCEPT_OR_NOTHROW
    {  return static_cast<small_vector_allocator&>(this->Allocator::operator=(::boost::move(other.as_base())));  }
 
    //!Assignment from related small_vector_allocator.
    //!Never throws
    template<class OtherAllocator>
-   small_vector_allocator & operator=(BOOST_COPY_ASSIGN_REF(small_vector_allocator<OtherAllocator>) other) BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE small_vector_allocator & operator=(BOOST_COPY_ASSIGN_REF(small_vector_allocator<OtherAllocator>) other) BOOST_NOEXCEPT_OR_NOTHROW
    {  return static_cast<small_vector_allocator&>(this->Allocator::operator=(other.as_base()));  }
 
    //!Move assignment from related small_vector_allocator.
    //!Never throws
    template<class OtherAllocator>
-   small_vector_allocator & operator=(BOOST_RV_REF(small_vector_allocator<OtherAllocator>) other) BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE small_vector_allocator & operator=(BOOST_RV_REF(small_vector_allocator<OtherAllocator>) other) BOOST_NOEXCEPT_OR_NOTHROW
    {  return static_cast<small_vector_allocator&>(this->Allocator::operator=(::boost::move(other.as_base())));  }
 
    //!Allocates storage from the standard-conforming allocator
-   pointer allocate(size_type count, const_void_pointer hint = const_void_pointer())
+   BOOST_CONTAINER_FORCEINLINE pointer allocate(size_type count, const_void_pointer hint = const_void_pointer())
    {  return allocator_traits_type::allocate(this->as_base(), count, hint);  }
 
    //!Deallocates previously allocated memory.
@@ -211,7 +211,7 @@ class small_vector_allocator
 
    //!Returns the maximum number of elements that could be allocated.
    //!Never throws
-   size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return allocator_traits_type::max_size(this->as_base());   }
 
    small_vector_allocator select_on_container_copy_construction() const
@@ -222,17 +222,17 @@ class small_vector_allocator
 
    //!Swaps two allocators, does nothing
    //!because this small_vector_allocator is stateless
-   friend void swap(small_vector_allocator &l, small_vector_allocator &r) BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE friend void swap(small_vector_allocator &l, small_vector_allocator &r) BOOST_NOEXCEPT_OR_NOTHROW
    {  boost::adl_move_swap(l.as_base(), r.as_base());  }
 
    //!An small_vector_allocator always compares to true, as memory allocated with one
    //!instance can be deallocated by another instance (except for unpropagable storage)
-   friend bool operator==(const small_vector_allocator &l, const small_vector_allocator &r) BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE friend bool operator==(const small_vector_allocator &l, const small_vector_allocator &r) BOOST_NOEXCEPT_OR_NOTHROW
    {  return allocator_traits_type::equal(l.as_base(), r.as_base());  }
 
    //!An small_vector_allocator always compares to false, as memory allocated with one
    //!instance can be deallocated by another instance
-   friend bool operator!=(const small_vector_allocator &l, const small_vector_allocator &r) BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE friend bool operator!=(const small_vector_allocator &l, const small_vector_allocator &r) BOOST_NOEXCEPT_OR_NOTHROW
    {  return !(l == r);   }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -268,7 +268,7 @@ class small_vector_allocator
    using Allocator::allocate_many;
    using Allocator::deallocate_many;*/
 
-   bool is_internal_storage(pointer p) const
+   BOOST_CONTAINER_FORCEINLINE bool is_internal_storage(pointer p) const
    {  return this->internal_storage() == p;  }
 
    pointer internal_storage() const
@@ -344,16 +344,16 @@ class small_vector_base
    protected:
    typedef typename base_type::initial_capacity_t initial_capacity_t;
 
-   explicit small_vector_base(initial_capacity_t, std::size_t initial_capacity)
+   BOOST_CONTAINER_FORCEINLINE explicit small_vector_base(initial_capacity_t, std::size_t initial_capacity)
       : base_type(initial_capacity_t(), this->internal_storage(), initial_capacity)
    {}
 
    template<class AllocFwd>
-   explicit small_vector_base(initial_capacity_t, std::size_t capacity, BOOST_FWD_REF(AllocFwd) a)
+   BOOST_CONTAINER_FORCEINLINE explicit small_vector_base(initial_capacity_t, std::size_t capacity, BOOST_FWD_REF(AllocFwd) a)
       : base_type(initial_capacity_t(), this->internal_storage(), capacity, ::boost::forward<AllocFwd>(a))
    {}
 
-   ~small_vector_base(){}
+   //~small_vector_base(){}
 
    using base_type::is_propagable_from;
    using base_type::steal_resources;
@@ -365,13 +365,13 @@ class small_vector_base
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
-   small_vector_base& operator=(BOOST_COPY_ASSIGN_REF(small_vector_base) other)
+   BOOST_CONTAINER_FORCEINLINE small_vector_base& operator=(BOOST_COPY_ASSIGN_REF(small_vector_base) other)
    {  return static_cast<small_vector_base&>(this->base_type::operator=(static_cast<base_type const&>(other)));  }
 
-   small_vector_base& operator=(BOOST_RV_REF(small_vector_base) other)
+   BOOST_CONTAINER_FORCEINLINE small_vector_base& operator=(BOOST_RV_REF(small_vector_base) other)
    {  return static_cast<small_vector_base&>(this->base_type::operator=(BOOST_MOVE_BASE(base_type, other))); }
 
-   void swap(small_vector_base &other)
+   BOOST_CONTAINER_FORCEINLINE void swap(small_vector_base &other)
    {  return this->base_type::swap(other);  }
 };
 
@@ -477,21 +477,21 @@ class small_vector : public small_vector_base<T, Allocator>
    typedef typename base_type::size_type        size_type;
    typedef typename base_type::value_type       value_type;
 
-   static std::size_t internal_capacity()
+   BOOST_CONTAINER_FORCEINLINE static std::size_t internal_capacity()
    {  return (sizeof(small_vector) - storage_test::s_start)/sizeof(T);  }
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
-   small_vector()
+   BOOST_CONTAINER_FORCEINLINE small_vector()
       : base_type(initial_capacity_t(), internal_capacity())
    {}
 
-   explicit small_vector(size_type n)
+   BOOST_CONTAINER_FORCEINLINE explicit small_vector(size_type n)
       : base_type(initial_capacity_t(), internal_capacity())
    {  this->resize(n); }
 
-   explicit small_vector(const allocator_type &a)
+   BOOST_CONTAINER_FORCEINLINE explicit small_vector(const allocator_type &a)
       : base_type(initial_capacity_t(), internal_capacity(), a)
    {}
 
@@ -524,13 +524,13 @@ class small_vector : public small_vector_base<T, Allocator>
    }
    #endif
 
-   small_vector& operator=(BOOST_COPY_ASSIGN_REF(small_vector) other)
+   BOOST_CONTAINER_FORCEINLINE small_vector& operator=(BOOST_COPY_ASSIGN_REF(small_vector) other)
    {  return static_cast<small_vector&>(this->base_type::operator=(static_cast<base_type const&>(other)));  }
 
-   small_vector& operator=(BOOST_RV_REF(small_vector) other)
+   BOOST_CONTAINER_FORCEINLINE small_vector& operator=(BOOST_RV_REF(small_vector) other)
    {  return static_cast<small_vector&>(this->base_type::operator=(BOOST_MOVE_BASE(base_type, other))); }
 
-   void swap(small_vector &other)
+   BOOST_CONTAINER_FORCEINLINE void swap(small_vector &other)
    {  return this->base_type::swap(other);  }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
