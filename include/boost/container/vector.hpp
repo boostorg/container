@@ -822,6 +822,23 @@ class vector
    }
 
    //! <b>Effects</b>: Constructs a vector that will use a copy of allocator a
+   //!   and inserts n value initialized values.
+   //!
+   //! <b>Throws</b>: If allocator_type's allocation
+   //!   throws or T's value initialization throws.
+   //!
+   //! <b>Complexity</b>: Linear to n.
+   explicit vector(size_type n, const allocator_type &a)
+      :  m_holder(container_detail::uninitialized_size, a, n)
+   {
+      #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
+      this->num_alloc += n != 0;
+      #endif
+      boost::container::uninitialized_value_init_alloc_n
+         (this->m_holder.alloc(), n, this->priv_raw_begin());
+   }
+
+   //! <b>Effects</b>: Constructs a vector that will use a copy of allocator a
    //!   and inserts n default initialized values.
    //!
    //! <b>Throws</b>: If allocator_type's allocation
@@ -837,23 +854,6 @@ class vector
       this->num_alloc += n != 0;
       #endif
       boost::container::uninitialized_default_init_alloc_n
-         (this->m_holder.alloc(), n, this->priv_raw_begin());
-   }
-
-   //! <b>Effects</b>: Constructs a vector that will use a copy of allocator a
-   //!   and inserts n value initialized values.
-   //!
-   //! <b>Throws</b>: If allocator_type's allocation
-   //!   throws or T's value initialization throws.
-   //!
-   //! <b>Complexity</b>: Linear to n.
-   explicit vector(size_type n, const allocator_type &a)
-      :  m_holder(container_detail::uninitialized_size, a, n)
-   {
-      #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
-      this->num_alloc += n != 0;
-      #endif
-      boost::container::uninitialized_value_init_alloc_n
          (this->m_holder.alloc(), n, this->priv_raw_begin());
    }
 
@@ -918,7 +918,11 @@ class vector
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
    template <class InIt>
-   vector(InIt first, InIt last)
+   vector(InIt first, InIt last
+      BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename container_detail::disable_if_c
+         < container_detail::is_convertible<InIt BOOST_MOVE_I size_type>::value
+         BOOST_MOVE_I container_detail::nat >::type * = 0)
+      )
       :  m_holder()
    {  this->assign(first, last); }
 
@@ -930,7 +934,11 @@ class vector
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
    template <class InIt>
-   vector(InIt first, InIt last, const allocator_type& a)
+   vector(InIt first, InIt last, const allocator_type& a
+      BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename container_detail::disable_if_c
+         < container_detail::is_convertible<InIt BOOST_MOVE_I size_type>::value
+         BOOST_MOVE_I container_detail::nat >::type * = 0)
+      )
       :  m_holder(a)
    {  this->assign(first, last); }
 
