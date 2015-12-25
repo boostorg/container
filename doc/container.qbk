@@ -1219,6 +1219,7 @@ use [*Boost.Container]? There are several reasons for that:
 * Fixed bugs:
    * [@https://svn.boost.org/trac/boost/ticket/11820 Trac #11820 : ['"compiler error when using operator[] of map"]].
    * [@https://svn.boost.org/trac/boost/ticket/11856 Trac #11856 : ['"pool_resource.cpp error: declaration changes meaning"]].
+   * [@https://svn.boost.org/trac/boost/ticket/11866 Trac #11866 : ['"small_vector does not have range constructor"]].
    * [@https://svn.boost.org/trac/boost/ticket/11867 Trac #11867 : ['"small_vector should have constructor and assignment operator taking other small_vector"]].
    * [@https://github.com/boostorg/container/pull/33 GitHub #33: ['Make sure std::string constructor is available]].
 
