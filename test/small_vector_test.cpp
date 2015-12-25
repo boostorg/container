@@ -211,7 +211,7 @@ int main()
    ////////////////////////////////////
    //    Default init test
    ////////////////////////////////////
-   if(!test::default_init_test< vector<int, test::default_init_allocator<int> > >()){
+   if(!test::default_init_test< small_vector<int, 5, test::default_init_allocator<int> > >()){
       std::cerr << "Default init test failed" << std::endl;
       return 1;
    }
@@ -220,7 +220,7 @@ int main()
    //    Emplace testing
    ////////////////////////////////////
    const test::EmplaceOptions Options = (test::EmplaceOptions)(test::EMPLACE_BACK | test::EMPLACE_BEFORE);
-   if(!boost::container::test::test_emplace< vector<test::EmplaceInt>, Options>()){
+   if(!boost::container::test::test_emplace< small_vector<test::EmplaceInt, 5>, Options>()){
       return 1;
    }
 
