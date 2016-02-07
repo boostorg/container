@@ -40,6 +40,7 @@ class static_storage_allocator
 {
    public:
    typedef T value_type;
+   typedef std::size_t size_type;
 
    BOOST_CONTAINER_FORCEINLINE static_storage_allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {}
@@ -57,6 +58,9 @@ class static_storage_allocator
    {  return static_cast<T*>(static_cast<void*>(&storage));  }
 
    static const std::size_t internal_capacity = N;
+   
+   static size_type max_size()
+   {  return internal_capacity;  }
 
    typedef boost::container::container_detail::version_type<static_storage_allocator, 0>   version;
 
