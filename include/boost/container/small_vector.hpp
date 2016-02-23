@@ -295,7 +295,7 @@ class small_vector_allocator
 };
 
 //! This class consists of common code from all small_vector<T, N> types that don't depend on the
-//! "N" template parameter. This class is non-copyable and non-destructible, so this class tipically
+//! "N" template parameter. This class is non-copyable and non-destructible, so this class typically
 //! used as reference argument to functions that read or write small vectors. Since `small_vector<T, N>`
 //! derives from `small_vector_base<T>`, the conversion to `small_vector_base` is implicit
 //! <pre>
