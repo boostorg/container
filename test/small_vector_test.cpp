@@ -15,8 +15,6 @@
 #include "../../intrusive/test/iterator_test.hpp"
 
 #include <boost/container/allocator.hpp>
-#include <boost/container/node_allocator.hpp>
-#include <boost/container/adaptive_pool.hpp>
 
 #include <iostream>
 
@@ -42,27 +40,7 @@ template class boost::container::small_vector
 template class boost::container::small_vector
    < test::movable_and_copyable_int
    , 10
-   , test::dummy_test_allocator<test::movable_and_copyable_int> >;
-
-template class boost::container::small_vector
-   < test::movable_and_copyable_int
-   , 10
-   , std::allocator<test::movable_and_copyable_int> >;
-
-template class boost::container::small_vector
-   < test::movable_and_copyable_int
-   , 10
    , allocator<test::movable_and_copyable_int> >;
-
-template class boost::container::small_vector
-   < test::movable_and_copyable_int
-   , 10
-   , adaptive_pool<test::movable_and_copyable_int> >;
-
-template class boost::container::small_vector
-   < test::movable_and_copyable_int
-   , 10
-   , node_allocator<test::movable_and_copyable_int> >;
 
 }}
 
