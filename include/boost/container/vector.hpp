@@ -3106,7 +3106,10 @@ class vector
                old_values_destroyer.shrink_forward(new_size-s_before);
                this->m_holder.m_size = new_size;
                //Now move remaining last objects in the old buffer begin
-               ::boost::container::move(pos + raw_gap, old_finish, old_start);
+               T * const remaining_pos = pos + raw_gap;
+               if(remaining_pos != old_start){  //Make sure data has to be moved
+                  ::boost::container::move(remaining_pos, old_finish, old_start);
+               }
                //Once moved, avoid calling the destructors if trivial after move
                if(value_traits::trivial_dctr_after_move){
                   old_values_destroyer.release();
@@ -3246,8 +3249,9 @@ class vector
                const size_type rest_new = n - mid_n;
                insert_range_proxy.copy_n_and_update(this->m_holder.alloc(), old_start, rest_new);
                T* const move_start = old_start + rest_new;
-               //Displace old_end
-               T* const move_end = ::boost::container::move(pos, old_finish, move_start);
+               //Displace old_end, but make sure data has to be moved
+               T* const move_end = move_start != pos ? ::boost::container::move(pos, old_finish, move_start)
+                                                     : old_finish;
                //Destroy remaining moved elements from old_end except if they
                //have trivial destructor after being moved
                size_type n_destroy = s_before - n;
