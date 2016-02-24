@@ -58,6 +58,9 @@ class static_storage_allocator
 
    static const std::size_t internal_capacity = N;
 
+   std::size_t max_size() const
+   {  return N;   }
+
    typedef boost::container::container_detail::version_type<static_storage_allocator, 0>   version;
 
    BOOST_CONTAINER_FORCEINLINE friend bool operator==(const static_storage_allocator &, const static_storage_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
