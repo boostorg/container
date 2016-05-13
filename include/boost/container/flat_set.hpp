@@ -700,11 +700,10 @@ class flat_set
    //! <b>Note</b>: Non-standard extension
    const_iterator nth(size_type n) const BOOST_NOEXCEPT_OR_NOTHROW;
 
-   //! <b>Requires</b>: size() >= n.
+   //! <b>Requires</b>: begin() <= p <= end().
    //!
-   //! <b>Effects</b>: Returns an iterator to the nth element
-   //!   from the beginning of the container. Returns end()
-   //!   if n == size().
+   //! <b>Effects</b>: Returns the index of the element pointed by p
+   //!   and size() if p == end().
    //!
    //! <b>Throws</b>: Nothing.
    //!
