@@ -2246,7 +2246,7 @@ class vector
             size_type *indexes = 0;
             while(remaining){
                //Query for room to store indexes in the remaining buffer
-               uintptr_t const szt_align_mask = container_detail::alignment_of<size_type>::value - 1;
+               boost::uintptr_t const szt_align_mask = container_detail::alignment_of<size_type>::value - 1;
                boost::uintptr_t const addr = boost::uintptr_t(this->priv_raw_begin() + s + n);
                boost::uintptr_t const capaddr = boost::uintptr_t(this->priv_raw_begin() + c);
                boost::uintptr_t const aligned_addr = (addr + szt_align_mask) & ~szt_align_mask;

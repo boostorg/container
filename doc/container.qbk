@@ -1217,6 +1217,7 @@ use [*Boost.Container]? There are several reasons for that:
 
 * Fixed bugs:
    * [@https://svn.boost.org/trac/boost/ticket/11170 Trac #11170: ['"Doc slip for index_of"]].
+   * [@https://svn.boost.org/trac/boost/ticket/12177 Trac #12177: ['"vector::priv_merge uses unqualified uintptr_t"]].
 
 [endsect]
 
