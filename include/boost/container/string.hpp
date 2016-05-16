@@ -230,7 +230,13 @@ class basic_string_base
 
    protected:
    bool is_short() const
-   {  return static_cast<bool>(this->members_.m_repr.s.h.is_short != 0);  }
+   {
+      //Access and copy (to avoid UB) the first byte of the union to know if the
+      //active representation is short or long
+      short_header hdr;
+      *(unsigned char*)&hdr = *(unsigned char*)&this->members_.m_repr;
+      return hdr.is_short != 0;
+   }
 
    void is_short(bool yes)
    {
