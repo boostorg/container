@@ -68,22 +68,6 @@ template class flat_multimap
       < std::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> >
    >;
 
-template class flat_multimap
-   < test::movable_and_copyable_int
-   , test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
-   , std::allocator
-      < std::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> >
-   >;
-
-template class flat_multimap
-   < test::movable_and_copyable_int
-   , test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
-   , allocator
-      < std::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> >
-   >;
-
 //As flat container iterators are typedefs for vector::[const_]iterator,
 //no need to explicit instantiate them
 
