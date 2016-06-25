@@ -222,7 +222,7 @@ template < typename ConstructAlloc
 BOOST_CONTAINER_DOC1ST(void, typename container_detail::enable_if<container_detail::is_pair<Pair> >::type)
    dispatch_uses_allocator
    ( ConstructAlloc & construct_alloc
-   , ArgAlloc & arg_alloc
+   , BOOST_FWD_REF(ArgAlloc) arg_alloc
    , Pair* p)
 {
    (dispatch_uses_allocator)(construct_alloc, arg_alloc, container_detail::addressof(p->first));
@@ -243,7 +243,7 @@ template < typename ConstructAlloc
 BOOST_CONTAINER_DOC1ST(void, typename container_detail::enable_if<container_detail::is_pair<Pair> >::type)
    dispatch_uses_allocator
    ( ConstructAlloc & construct_alloc
-   , ArgAlloc & arg_alloc
+   , BOOST_FWD_REF(ArgAlloc) arg_alloc
    , Pair* p, BOOST_FWD_REF(U) x, BOOST_FWD_REF(V) y)
 {
    (dispatch_uses_allocator)(construct_alloc, arg_alloc, container_detail::addressof(p->first), ::boost::forward<U>(x));
@@ -263,7 +263,7 @@ template < typename ConstructAlloc
 BOOST_CONTAINER_DOC1ST(void, typename container_detail::enable_if< container_detail::is_pair<Pair> >::type)
    dispatch_uses_allocator
    (ConstructAlloc & construct_alloc
-   , ArgAlloc & arg_alloc
+   , BOOST_FWD_REF(ArgAlloc) arg_alloc
    , Pair* p, Pair2& x)
 {  (dispatch_uses_allocator)(construct_alloc, arg_alloc, p, x.first, x.second);  }
 
@@ -276,7 +276,7 @@ typename container_detail::enable_if_and
    , container_detail::not_<boost::move_detail::is_reference<Pair2> > >::type //This is needed for MSVC10 and ambiguous overloads
    dispatch_uses_allocator
    (ConstructAlloc & construct_alloc
-      , ArgAlloc & arg_alloc
+      , BOOST_FWD_REF(ArgAlloc) arg_alloc
       , Pair* p, BOOST_RV_REF_BEG Pair2 BOOST_RV_REF_END x)
 {  (dispatch_uses_allocator)(construct_alloc, arg_alloc, p, ::boost::move(x.first), ::boost::move(x.second));  }
 
