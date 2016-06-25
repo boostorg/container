@@ -97,10 +97,12 @@ bool CheckEqualPairContainers(const MyBoostCont &boostcont, const MyStdCont &std
    typename MyBoostCont::const_iterator itboost(boostcont.begin()), itboostend(boostcont.end());
    typename MyStdCont::const_iterator itstd(stdcont.begin());
    for(; itboost != itboostend; ++itboost, ++itstd){
-      if(itboost->first != key_type(itstd->first))
+      key_type k(itstd->first);
+      if(itboost->first != k)
          return false;
 
-      if(itboost->second != mapped_type(itstd->second))
+      mapped_type m(itstd->second);
+      if(itboost->second != m)
          return false;
    }
    return true;

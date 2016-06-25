@@ -429,9 +429,10 @@ int map_test()
       if(!CheckEqualPairContainers(boostmultimap, stdmultimap)) return 1;
 
       for(int i = 0, j = static_cast<int>(boostmap.size()); i < j; ++i){
-         boostmap.erase(IntType(i));
+         IntType k(i);
+         boostmap.erase(k);
          stdmap.erase(i);
-         boostmultimap.erase(IntType(i));
+         boostmultimap.erase(k);
          stdmultimap.erase(i);
       }
       if(!CheckEqualPairContainers(boostmap, stdmap)) return 1;
@@ -559,7 +560,8 @@ int map_test()
             IntType i2(i);
             new(&intpair)IntPairType(boost::move(i1), boost::move(i2));
          }
-         boostmap.insert(boostmap.lower_bound(IntType(i)), boost::move(intpair));
+         IntType k(i);
+         boostmap.insert(boostmap.lower_bound(k), boost::move(intpair));
          stdmap.insert(stdmap.lower_bound(i), StdPairType(i, i));
          //PrintContainers(boostmap, stdmap);
          {
@@ -628,11 +630,12 @@ int map_test()
 
       //Compare count with std containers
       for(int i = 0; i < max; ++i){
-         if(boostmap.count(IntType(i)) != stdmap.count(i)){
+         IntType k(i);
+         if(boostmap.count(k) != stdmap.count(i)){
             return -1;
          }
 
-         if(boostmultimap.count(IntType(i)) != stdmultimap.count(i)){
+         if(boostmultimap.count(k) != stdmultimap.count(i)){
             return -1;
          }
       }
@@ -656,9 +659,10 @@ int map_test()
             new(&intpair)IntPairType(boost::move(i1), boost::move(i2));
          }
          boostmultimap.insert(boost::move(intpair));
-         if(boostmap.count(IntType(i)) != typename MyBoostMultiMap::size_type(1))
+         IntType k(i);
+         if(boostmap.count(k) != typename MyBoostMultiMap::size_type(1))
             return 1;
-         if(boostmultimap.count(IntType(i)) != typename MyBoostMultiMap::size_type(j+1))
+         if(boostmultimap.count(k) != typename MyBoostMultiMap::size_type(j+1))
             return 1;
       }
    }
