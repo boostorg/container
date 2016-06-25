@@ -23,6 +23,8 @@
 #include <iostream>  //std::cout, std::endl
 #include <vector>    //std::vector
 #include <cstddef>   //std::size_t
+#include <cassert>   //assert
+
 #include <boost/timer/timer.hpp>
 using boost::timer::cpu_timer;
 using boost::timer::cpu_times;

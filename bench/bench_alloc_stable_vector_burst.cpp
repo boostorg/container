@@ -20,11 +20,14 @@
 #include <iostream>  //std::cout, std::endl
 #include <vector>    //std::vector
 #include <cstddef>   //std::size_t
+#include <cassert>   //assert
+
 #include <boost/container/allocator.hpp>
 #include <boost/container/adaptive_pool.hpp>
 #include <boost/container/stable_vector.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/timer/timer.hpp>
+
 using boost::timer::cpu_timer;
 using boost::timer::cpu_times;
 using boost::timer::nanosecond_type;

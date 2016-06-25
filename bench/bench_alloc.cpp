@@ -18,6 +18,7 @@
 
 #include <iostream>  //std::cout, std::endl
 #include <typeinfo>  //typeid
+#include <cassert>   //assert
 
 #include <boost/timer/timer.hpp>
 using boost::timer::cpu_timer;

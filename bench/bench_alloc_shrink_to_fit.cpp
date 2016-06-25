@@ -22,6 +22,7 @@
 
 #include <memory>    //std::allocator
 #include <iostream>  //std::cout, std::endl
+#include <cassert>   //assert
 
 #include <boost/timer/timer.hpp>
 using boost::timer::cpu_timer;
