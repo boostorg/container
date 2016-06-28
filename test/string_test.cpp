@@ -347,9 +347,9 @@ int string_test()
 
       if(!CheckEqualStringVector(boostStringVect, stdStringVect)) return 1;
 
-      boostStringVect->erase((unique)(boostStringVect->begin(), boostStringVect->end()),
+      boostStringVect->erase(::unique(boostStringVect->begin(), boostStringVect->end()),
                            boostStringVect->end());
-      stdStringVect->erase((unique)(stdStringVect->begin(), stdStringVect->end()),
+      stdStringVect->erase(::unique(stdStringVect->begin(), stdStringVect->end()),
                            stdStringVect->end());
       if(!CheckEqualStringVector(boostStringVect, stdStringVect)) return 1;
 
