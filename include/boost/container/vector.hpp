@@ -2543,7 +2543,7 @@ class vector
       //buffer or expand the old one.
       bool same_buffer_start;
       size_type real_cap = 0;
-      pointer reuse = 0;
+      pointer reuse(this->m_holder.start());
       pointer const ret(this->m_holder.allocation_command(allocate_new | expand_fwd | expand_bwd, new_cap, real_cap = new_cap, reuse));
 
       //Check for forward expansion
