@@ -380,7 +380,7 @@ struct vector_alloc_holder
       , m_capacity()
    {
       if(initial_size){
-         pointer reuse = 0;
+         pointer reuse = pointer();
          m_start = this->allocation_command(allocate_new, initial_size, m_capacity = initial_size, reuse);
       }
    }
@@ -393,7 +393,7 @@ struct vector_alloc_holder
       , m_capacity()
    {
       if(initial_size){
-         pointer reuse = 0;
+         pointer reuse = pointer();
          m_start = this->allocation_command(allocate_new, initial_size, m_capacity = initial_size, reuse);
       }
    }
@@ -525,7 +525,7 @@ struct vector_alloc_holder
    void priv_first_allocation(size_type cap)
    {
       if(cap){
-         pointer reuse = 0;
+         pointer reuse = pointer();
          m_start = this->allocation_command(allocate_new, cap, cap, reuse);
          m_capacity = cap;
          #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
