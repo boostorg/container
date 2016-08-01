@@ -504,6 +504,7 @@ class small_vector : public small_vector_base<T, Allocator>
 
    public:
    BOOST_CONTAINER_FORCEINLINE small_vector()
+	 BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value)
       : base_type(initial_capacity_t(), internal_capacity())
    {}
 
@@ -531,12 +532,12 @@ class small_vector : public small_vector_base<T, Allocator>
       : base_type(initial_capacity_t(), internal_capacity())
    {  this->resize(n, v); }
 
-   small_vector(size_type n, const value_type &v, const allocator_type &a)
+   BOOST_CONTAINER_FORCEINLINE small_vector(size_type n, const value_type &v, const allocator_type &a)
       : base_type(initial_capacity_t(), internal_capacity(), a)
    {  this->resize(n, v); }
 
    template <class InIt>
-   small_vector(InIt first, InIt last
+   BOOST_CONTAINER_FORCEINLINE small_vector(InIt first, InIt last
       BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename container_detail::disable_if_c
          < container_detail::is_convertible<InIt BOOST_MOVE_I size_type>::value
          BOOST_MOVE_I container_detail::nat >::type * = 0)

@@ -612,6 +612,7 @@ class tree
    }
 
    tree(BOOST_RV_REF(tree) x)
+      BOOST_NOEXCEPT_IF(boost::container::container_detail::is_nothrow_move_constructible<Compare>::value)
       :  AllocHolder(BOOST_MOVE_BASE(AllocHolder, x), x.value_comp())
    {}
 
@@ -669,8 +670,9 @@ class tree
    }
 
    tree& operator=(BOOST_RV_REF(tree) x)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
+      BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
+                          allocator_traits_type::is_always_equal::value) &&
+                           boost::container::container_detail::is_nothrow_move_assignable<Compare>::value)
    {
       BOOST_ASSERT(this != &x);
       NodeAlloc &this_alloc = this->node_alloc();

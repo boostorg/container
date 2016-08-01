@@ -216,7 +216,7 @@ class slist
    //! <b>Throws</b>: If allocator_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   slist()
+   slist() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value)
       :  AllocHolder()
    {}
 
@@ -303,7 +303,7 @@ class slist
    //! <b>Throws</b>: If allocator_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   slist(BOOST_RV_REF(slist) x)
+   slist(BOOST_RV_REF(slist) x) BOOST_NOEXCEPT_OR_NOTHROW
       : AllocHolder(BOOST_MOVE_BASE(AllocHolder, x))
    {}
 
@@ -379,7 +379,7 @@ class slist
    //! <b>Complexity</b>: Constant if allocator_traits_type::
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
-   slist& operator= (BOOST_RV_REF(slist) x)
+   slist& operator=(BOOST_RV_REF(slist) x)
       BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
                                   || allocator_traits_type::is_always_equal::value)
    {

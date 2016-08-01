@@ -112,7 +112,8 @@ class flat_set
    //! <b>Effects</b>: Default constructs an empty container.
    //!
    //! <b>Complexity</b>: Constant.
-   explicit flat_set()
+   explicit flat_set() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value &&
+                                         container_detail::is_nothrow_default_constructible<Compare>::value)
       : base_t()
    {}
 
@@ -220,6 +221,7 @@ class flat_set
    //!
    //! <b>Postcondition</b>: x is emptied.
    flat_set(BOOST_RV_REF(flat_set) x)
+      BOOST_NOEXCEPT_IF(boost::container::container_detail::is_nothrow_move_constructible<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x))
    {}
 
@@ -251,8 +253,9 @@ class flat_set
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    flat_set& operator=(BOOST_RV_REF(flat_set) x)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
+      BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
+                          allocator_traits_type::is_always_equal::value) &&
+                           boost::container::container_detail::is_nothrow_move_assignable<Compare>::value)
    {  return static_cast<flat_set&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -898,7 +901,8 @@ class flat_multiset
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)             const_reverse_iterator;
 
    //! @copydoc ::boost::container::flat_set::flat_set()
-   explicit flat_multiset()
+   explicit flat_multiset() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value &&
+                                              container_detail::is_nothrow_default_constructible<Compare>::value)
       : base_t()
    {}
 
@@ -969,6 +973,7 @@ class flat_multiset
 
    //! @copydoc ::boost::container::flat_set::flat_set(flat_set &&)
    flat_multiset(BOOST_RV_REF(flat_multiset) x)
+      BOOST_NOEXCEPT_IF(boost::container::container_detail::is_nothrow_move_constructible<Compare>::value)
       : base_t(boost::move(static_cast<base_t&>(x)))
    {}
 
@@ -988,8 +993,9 @@ class flat_multiset
 
    //! @copydoc ::boost::container::flat_set::operator=(flat_set &&)
    flat_multiset& operator=(BOOST_RV_REF(flat_multiset) x)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
+      BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
+                          allocator_traits_type::is_always_equal::value) &&
+                           boost::container::container_detail::is_nothrow_move_assignable<Compare>::value)
    {  return static_cast<flat_multiset&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)

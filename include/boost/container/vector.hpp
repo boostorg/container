@@ -792,7 +792,7 @@ class vector
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   vector() BOOST_NOEXCEPT_OR_NOTHROW
+   vector() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value)
       : m_holder()
    {}
 
@@ -1103,7 +1103,7 @@ class vector
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    BOOST_CONTAINER_FORCEINLINE vector& operator=(BOOST_RV_REF(vector) x)
       BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
-                                  || allocator_traits_type::is_always_equal::value)
+                        || allocator_traits_type::is_always_equal::value)
    {
       BOOST_ASSERT(&x != this);
       this->priv_move_assign(boost::move(x));

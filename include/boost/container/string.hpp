@@ -591,7 +591,7 @@ class basic_string
    //! <b>Effects</b>: Default constructs a basic_string.
    //!
    //! <b>Throws</b>: If allocator_type's default constructor throws.
-   basic_string()
+   basic_string() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value)
       : base_t()
    { this->priv_terminate_string(); }
 

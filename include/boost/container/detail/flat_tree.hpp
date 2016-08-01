@@ -221,6 +221,7 @@ class flat_tree
    { }
 
    flat_tree(BOOST_RV_REF(flat_tree) x)
+      BOOST_NOEXCEPT_IF(boost::container::container_detail::is_nothrow_move_constructible<Compare>::value)
       :  m_data(boost::move(x.m_data))
    { }
 
@@ -269,8 +270,9 @@ class flat_tree
    {  m_data = x.m_data;   return *this;  }
 
    flat_tree&  operator=(BOOST_RV_REF(flat_tree) x)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
+      BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
+                          allocator_traits_type::is_always_equal::value) &&
+                           boost::container::container_detail::is_nothrow_move_assignable<Compare>::value)
    {  m_data = boost::move(x.m_data); return *this;  }
 
    public:

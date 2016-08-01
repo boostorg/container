@@ -535,7 +535,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: If allocator_type's default constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   deque()
+   deque() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value)
       : Base()
    {}
 
@@ -707,7 +707,7 @@ class deque : protected deque_base<Allocator>
    //! <b>Throws</b>: If allocator_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   deque(BOOST_RV_REF(deque) x)
+   deque(BOOST_RV_REF(deque) x) BOOST_NOEXCEPT_OR_NOTHROW
       :  Base(BOOST_MOVE_BASE(Base, x))
    {  this->swap_members(x);   }
 

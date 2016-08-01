@@ -540,7 +540,7 @@ class stable_vector
    //! <b>Throws</b>: If allocator_type's default constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   stable_vector()
+   stable_vector() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value)
       : internal_data(), index()
    {
       STABLE_VECTOR_CHECK_INVARIANT;
@@ -698,7 +698,7 @@ class stable_vector
    //! <b>Throws</b>: If allocator_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   stable_vector(BOOST_RV_REF(stable_vector) x)
+   stable_vector(BOOST_RV_REF(stable_vector) x) BOOST_NOEXCEPT_OR_NOTHROW
       : internal_data(boost::move(x.priv_node_alloc())), index(boost::move(x.index))
    {
       this->priv_swap_members(x);

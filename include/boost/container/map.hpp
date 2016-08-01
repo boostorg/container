@@ -132,7 +132,8 @@ class map
    //! <b>Effects</b>: Default constructs an empty map.
    //!
    //! <b>Complexity</b>: Constant.
-   map()
+   map() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value &&
+                           container_detail::is_nothrow_default_constructible<Compare>::value)
       : base_t()
    {
       //A type must be std::pair<CONST Key, T>
@@ -266,6 +267,7 @@ class map
    //!
    //! <b>Postcondition</b>: x is emptied.
    map(BOOST_RV_REF(map) x)
+      BOOST_NOEXCEPT_IF(boost::container::container_detail::is_nothrow_move_constructible<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x))
    {
       //A type must be std::pair<CONST Key, T>
@@ -310,9 +312,9 @@ class map
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    map& operator=(BOOST_RV_REF(map) x)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
-
+      BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
+                          allocator_traits_type::is_always_equal::value) &&
+                           boost::container::container_detail::is_nothrow_move_assignable<Compare>::value)
    {  return static_cast<map&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -957,7 +959,8 @@ class multimap
    //! <b>Effects</b>: Default constructs an empty multimap.
    //!
    //! <b>Complexity</b>: Constant.
-   multimap()
+   multimap() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value &&
+                                container_detail::is_nothrow_default_constructible<Compare>::value)
       : base_t()
    {
       //A type must be std::pair<CONST Key, T>
@@ -1088,6 +1091,7 @@ class multimap
    //!
    //! <b>Postcondition</b>: x is emptied.
    multimap(BOOST_RV_REF(multimap) x)
+      BOOST_NOEXCEPT_IF(boost::container::container_detail::is_nothrow_move_constructible<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x))
    {
       //A type must be std::pair<CONST Key, T>
@@ -1126,8 +1130,9 @@ class multimap
    //!
    //! <b>Complexity</b>: Constant.
    multimap& operator=(BOOST_RV_REF(multimap) x)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
+      BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
+                          allocator_traits_type::is_always_equal::value) &&
+                           boost::container::container_detail::is_nothrow_move_assignable<Compare>::value)
    {  return static_cast<multimap&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)

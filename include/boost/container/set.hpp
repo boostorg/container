@@ -110,7 +110,8 @@ class set
    //! <b>Effects</b>: Default constructs an empty set.
    //!
    //! <b>Complexity</b>: Constant.
-   set()
+   set() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value &&
+                           container_detail::is_nothrow_default_constructible<Compare>::value)
       : base_t()
    {}
 
@@ -215,6 +216,7 @@ class set
    //!
    //! <b>Postcondition</b>: x is emptied.
    set(BOOST_RV_REF(set) x)
+      BOOST_NOEXCEPT_IF(boost::container::container_detail::is_nothrow_move_constructible<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x))
    {}
 
@@ -248,8 +250,9 @@ class set
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    set& operator=(BOOST_RV_REF(set) x)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
+      BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
+                          allocator_traits_type::is_always_equal::value) &&
+                           boost::container::container_detail::is_nothrow_move_assignable<Compare>::value)
    {  return static_cast<set&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -787,7 +790,8 @@ class multiset
    //////////////////////////////////////////////
 
    //! @copydoc ::boost::container::set::set()
-   multiset()
+   multiset() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value &&
+                                container_detail::is_nothrow_default_constructible<Compare>::value)
       : base_t()
    {}
 
@@ -856,6 +860,7 @@ class multiset
 
    //! @copydoc ::boost::container::set::set(set &&)
    multiset(BOOST_RV_REF(multiset) x)
+      BOOST_NOEXCEPT_IF(boost::container::container_detail::is_nothrow_move_constructible<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x))
    {}
 
@@ -875,8 +880,9 @@ class multiset
 
    //! @copydoc ::boost::container::set::operator=(set &&)
    multiset& operator=(BOOST_RV_REF(multiset) x)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::container_detail::is_nothrow_move_assignable<Compare>::value )
+      BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
+                          allocator_traits_type::is_always_equal::value) &&
+                           boost::container::container_detail::is_nothrow_move_assignable<Compare>::value)
    {  return static_cast<multiset&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)

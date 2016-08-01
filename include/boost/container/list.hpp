@@ -188,7 +188,7 @@ class list
    //! <b>Throws</b>: If allocator_type's default constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   list()
+   list() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value)
       : AllocHolder()
    {}
 
@@ -250,7 +250,7 @@ class list
    //! <b>Throws</b>: If allocator_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   list(BOOST_RV_REF(list) x)
+   list(BOOST_RV_REF(list) x) BOOST_NOEXCEPT_OR_NOTHROW
       : AllocHolder(BOOST_MOVE_BASE(AllocHolder, x))
    {}
 
