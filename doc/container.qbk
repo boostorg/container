@@ -1220,7 +1220,8 @@ use [*Boost.Container]? There are several reasons for that:
    * [@https://svn.boost.org/trac/boost/ticket/12177 Trac #12177: ['"vector::priv_merge uses unqualified uintptr_t"]].
    * [@https://svn.boost.org/trac/boost/ticket/12183 Trac #12183: ['"GCC 6.1 thinks boost::container::string violates strict aliasing"]].
    * [@https://svn.boost.org/trac/boost/ticket/12286 Trac #12286: ['"PMR flat_map from Boost Container does not compile"]].
-   * [@https://svn.boost.org/trac/boost/ticket/12286 Trac #12319: ['"boost::container::flat_set` should be nothrow move constructible"]].
+   * [@https://svn.boost.org/trac/boost/ticket/12296 Trac #12296: ['"boost::container::{deque,string} combine for a memory leak"]].
+   * [@https://svn.boost.org/trac/boost/ticket/12319 Trac #12319: ['"boost::container::flat_set` should be nothrow move constructible"]].
 
 * Revised noexcept expressions of default and move constructors in all containers.
 

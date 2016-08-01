@@ -1711,16 +1711,14 @@ class deque : protected deque_base<Allocator>
          if (elems_before < (this->size() - n) - elems_before) {
             boost::container::move_backward(begin(), first.unconst(), last.unconst());
             iterator new_start = this->members_.m_start + n;
-            if(!Base::traits_t::trivial_dctr_after_move)
-               this->priv_destroy_range(this->members_.m_start, new_start);
+            this->priv_destroy_range(this->members_.m_start, new_start);
             this->priv_destroy_nodes(this->members_.m_start.m_node, new_start.m_node);
             this->members_.m_start = new_start;
          }
          else {
             boost::container::move(last.unconst(), end(), first.unconst());
             iterator new_finish = this->members_.m_finish - n;
-            if(!Base::traits_t::trivial_dctr_after_move)
-               this->priv_destroy_range(new_finish, this->members_.m_finish);
+            this->priv_destroy_range(new_finish, this->members_.m_finish);
             this->priv_destroy_nodes(new_finish.m_node + 1, this->members_.m_finish.m_node + 1);
             this->members_.m_finish = new_finish;
          }
@@ -1827,8 +1825,7 @@ class deque : protected deque_base<Allocator>
       }
       else {
          iterator new_finish = this->members_.m_finish - n;
-         if(!Base::traits_t::trivial_dctr_after_move)
-            this->priv_destroy_range(new_finish, this->members_.m_finish);
+         this->priv_destroy_range(new_finish, this->members_.m_finish);
          this->priv_destroy_nodes(new_finish.m_node + 1, this->members_.m_finish.m_node + 1);
          this->members_.m_finish = new_finish;
       }
