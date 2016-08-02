@@ -139,6 +139,9 @@ public:
     //! @brief The const reverse iterator.
     typedef typename base_t::const_reverse_iterator const_reverse_iterator;
 
+    //! @brief The capacity/max size of the container
+    static const size_type static_capacity = Capacity;
+
     //! @brief Constructs an empty static_vector.
     //!
     //! @par Throws

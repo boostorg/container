@@ -502,9 +502,12 @@ class small_vector : public small_vector_base<T, Allocator>
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
+   //! @brief The capacity/max size of the container
+   static const size_type static_capacity = N;
+
    public:
    BOOST_CONTAINER_FORCEINLINE small_vector()
-	 BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value)
+	   BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value)
       : base_type(initial_capacity_t(), internal_capacity())
    {}
 
