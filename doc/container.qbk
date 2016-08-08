@@ -1219,11 +1219,12 @@ use [*Boost.Container]? There are several reasons for that:
    * [@https://svn.boost.org/trac/boost/ticket/11170 Trac #11170: ['"Doc slip for index_of"]].
    * [@https://svn.boost.org/trac/boost/ticket/12177 Trac #12177: ['"vector::priv_merge uses unqualified uintptr_t"]].
    * [@https://svn.boost.org/trac/boost/ticket/12183 Trac #12183: ['"GCC 6.1 thinks boost::container::string violates strict aliasing"]].
+   * [@https://svn.boost.org/trac/boost/ticket/12256 Trac #12256: ['"set<std::pair<int,int>>::insert cause compilation error in debug configuration in Visual Studio 2012"]].
+   * [@https://svn.boost.org/trac/boost/ticket/12273 Trac #12273: ['"static_vector max_size() and capacity() should be constant expressions"]].
+     Added constant `static_vector<>::static_capacity` to use the configured capacity in constant expressions.
    * [@https://svn.boost.org/trac/boost/ticket/12286 Trac #12286: ['"PMR flat_map from Boost Container does not compile"]].
    * [@https://svn.boost.org/trac/boost/ticket/12296 Trac #12296: ['"{deque,string} combine for a memory leak"]].
    * [@https://svn.boost.org/trac/boost/ticket/12319 Trac #12319: ['"flat_set` should be nothrow move constructible"]].
-   * [@https://svn.boost.org/trac/boost/ticket/12273 Trac #12273: ['"static_vector max_size() and capacity() should be constant expressions"]].
-     Added constant `static_vector<>::static_capacity` to use the configured capacity in constant expressions.
 
 * Revised noexcept expressions of default and move constructors in all containers.
 

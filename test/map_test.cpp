@@ -242,6 +242,17 @@ int main ()
       test_move<multimap<recursive_multimap, recursive_multimap> >();
    }
 
+   //Test std::pair value type as tree has workarounds to make old std::pair
+   //implementations movable that can break things
+   {
+      typedef std::pair<int,int> pair_t;
+	   boost::container::map<pair_t, pair_t> s;
+	   std::pair<const pair_t,pair_t> p;
+	   s.insert(p);
+	   s.emplace(p);
+	   return 0;
+   }
+
    ////////////////////////////////////
    //    Testing allocator implementations
    ////////////////////////////////////

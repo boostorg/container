@@ -264,6 +264,15 @@ int main ()
       test_move<set<recursive_set> >();
       test_move<multiset<recursive_multiset> >();
    }
+   //Test std::pair value type as tree has workarounds to make old std::pair
+   //implementations movable that can break things
+   {
+	   boost::container::set<std::pair<int,int> > s;
+	   std::pair<int,int> p(0, 0);
+	   s.insert(p);
+	   s.emplace(p);
+	   return 0;
+   }
 
    ////////////////////////////////////
    //    Testing allocator implementations
