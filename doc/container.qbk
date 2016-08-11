@@ -1218,6 +1218,7 @@ use [*Boost.Container]? There are several reasons for that:
 * Fixed bugs:
    * [@https://svn.boost.org/trac/boost/ticket/9481 Trac #9481: ['"Minor comment typo in Boost.Container"]].
    * [@https://svn.boost.org/trac/boost/ticket/11170 Trac #11170: ['"Doc slip for index_of"]].
+   * [@https://svn.boost.org/trac/boost/ticket/11802 Trac #11802: ['"Incorrect ordering after using insert() with ordered_range_t on a flat_multiset with a non-default sort order"]].
    * [@https://svn.boost.org/trac/boost/ticket/12177 Trac #12177: ['"vector::priv_merge uses unqualified uintptr_t"]].
    * [@https://svn.boost.org/trac/boost/ticket/12183 Trac #12183: ['"GCC 6.1 thinks boost::container::string violates strict aliasing"]].
    * [@https://svn.boost.org/trac/boost/ticket/12256 Trac #12256: ['"set<std::pair<int,int>>::insert cause compilation error in debug configuration in Visual Studio 2012"]].

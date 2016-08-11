@@ -483,7 +483,7 @@ class flat_tree
          >::type * = 0
       #endif
       )
-   {   this->m_data.m_vect.merge(first, last);   }
+   {   this->m_data.m_vect.merge(first, last, static_cast<const value_compare &>(this->m_data));   }
 
    template <class InIt>
    void insert_unique(ordered_unique_range_t, InIt first, InIt last
@@ -512,7 +512,7 @@ class flat_tree
          >::type * = 0
       #endif
       )
-   {   this->m_data.m_vect.merge_unique(first, last, value_compare());   }
+   {   this->m_data.m_vect.merge_unique(first, last, static_cast<const value_compare &>(this->m_data));   }
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
