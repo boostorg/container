@@ -794,7 +794,7 @@ class slist
    //! <b>Requires</b>: prev_p must be a valid iterator of *this.
    //!
    //! <b>Effects</b>: Inserts a move constructed copy object from the value after the
-   //!    p pointed by prev_p.
+   //!    element pointed by prev_p.
    //!
    //! <b>Returns</b>: An iterator to the inserted element.
    //!
@@ -1404,7 +1404,7 @@ class slist
 
    //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
-   //! <b>Effects</b>: Erases the element at p p.
+   //! <b>Effects</b>: Erases the element at p.
    //!
    //! <b>Throws</b>: Nothing.
    //!
@@ -1458,7 +1458,7 @@ class slist
    //!   this' allocator and x's allocator shall compare equal
    //!
    //! <b>Effects</b>: Transfers the value pointed by i, from list x to this list,
-   //!   before the the element pointed by p. No destructors or copy constructors are called.
+   //!   before the element pointed by p. No destructors or copy constructors are called.
    //!   If p == i or p == ++i, this function is a null operation.
    //!
    //! <b>Throws</b>: Nothing
@@ -1475,7 +1475,7 @@ class slist
    //!   this' allocator and x's allocator shall compare equal.
    //!
    //! <b>Effects</b>: Transfers the value pointed by i, from list x to this list,
-   //!   before the the element pointed by p. No destructors or copy constructors are called.
+   //!   before the element pointed by p. No destructors or copy constructors are called.
    //!   If p == i or p == ++i, this function is a null operation.
    //!
    //! <b>Throws</b>: Nothing
@@ -1491,7 +1491,7 @@ class slist
    //!   by this list. first and last must point to elements contained in list x.
    //!
    //! <b>Effects</b>: Transfers the range pointed by first and last from list x to this list,
-   //!   before the the element pointed by p. No destructors or copy constructors are called.
+   //!   before the element pointed by p. No destructors or copy constructors are called.
    //!   this' allocator and x's allocator shall compare equal.
    //!
    //! <b>Throws</b>: Nothing
@@ -1509,7 +1509,7 @@ class slist
    //!   this' allocator and x's allocator shall compare equal
    //!
    //! <b>Effects</b>: Transfers the range pointed by first and last from list x to this list,
-   //!   before the the element pointed by p. No destructors or copy constructors are called.
+   //!   before the element pointed by p. No destructors or copy constructors are called.
    //!
    //! <b>Throws</b>: Nothing
    //!

@@ -408,7 +408,7 @@ class list
       return this->assign(cvalue_iterator(val, n), cvalue_iterator());
    }
 
-   //! <b>Effects</b>: Assigns the the range [first, last) to *this.
+   //! <b>Effects</b>: Assigns the range [first, last) to *this.
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's constructor from dereferencing InpIt throws.
@@ -433,7 +433,7 @@ class list
    }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
-   //! <b>Effects</b>: Assigns the the range [il.begin(), il.end()) to *this.
+   //! <b>Effects</b>: Assigns the range [il.begin(), il.end()) to *this.
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's constructor from dereferencing std::initializer_list iterator throws.
@@ -948,7 +948,7 @@ class list
 
    //! <b>Requires</b>: p must be a valid iterator of *this.
    //!
-   //! <b>Effects</b>: Erases the element at p p.
+   //! <b>Effects</b>: Erases the element at p.
    //!
    //! <b>Throws</b>: Nothing.
    //!
@@ -1045,7 +1045,7 @@ class list
    //!   this' allocator and x's allocator shall compare equal
    //!
    //! <b>Effects</b>: Transfers the value pointed by i, from list x to this list,
-   //!   before the the element pointed by p. No destructors or copy constructors are called.
+   //!   before the element pointed by p. No destructors or copy constructors are called.
    //!   If p == i or p == ++i, this function is a null operation.
    //!
    //! <b>Throws</b>: Nothing
@@ -1066,7 +1066,7 @@ class list
    //!   this' allocator and x's allocator shall compare equal.
    //!
    //! <b>Effects</b>: Transfers the value pointed by i, from list x to this list,
-   //!   before the the element pointed by p. No destructors or copy constructors are called.
+   //!   before the element pointed by p. No destructors or copy constructors are called.
    //!   If p == i or p == ++i, this function is a null operation.
    //!
    //! <b>Throws</b>: Nothing
@@ -1087,7 +1087,7 @@ class list
    //!   this' allocator and x's allocator shall compare equal
    //!
    //! <b>Effects</b>: Transfers the range pointed by first and last from list x to this list,
-   //!   before the the element pointed by p. No destructors or copy constructors are called.
+   //!   before the element pointed by p. No destructors or copy constructors are called.
    //!
    //! <b>Throws</b>: Nothing
    //!
@@ -1109,7 +1109,7 @@ class list
    //!   this' allocator and x's allocator shall compare equal.
    //!
    //! <b>Effects</b>: Transfers the range pointed by first and last from list x to this list,
-   //!   before the the element pointed by p. No destructors or copy constructors are called.
+   //!   before the element pointed by p. No destructors or copy constructors are called.
    //!
    //! <b>Throws</b>: Nothing
    //!
@@ -1129,7 +1129,7 @@ class list
    //!   n == distance(first, last). this' allocator and x's allocator shall compare equal
    //!
    //! <b>Effects</b>: Transfers the range pointed by first and last from list x to this list,
-   //!   before the the element pointed by p. No destructors or copy constructors are called.
+   //!   before the element pointed by p. No destructors or copy constructors are called.
    //!
    //! <b>Throws</b>:  Nothing
    //!
@@ -1150,7 +1150,7 @@ class list
    //!   n == distance(first, last). this' allocator and x's allocator shall compare equal
    //!
    //! <b>Effects</b>: Transfers the range pointed by first and last from list x to this list,
-   //!   before the the element pointed by p. No destructors or copy constructors are called.
+   //!   before the element pointed by p. No destructors or copy constructors are called.
    //!
    //! <b>Throws</b>: Nothing
    //!
