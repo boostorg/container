@@ -187,7 +187,7 @@ class flat_map
                                  container_detail::is_nothrow_default_constructible<Compare>::value)
       : m_flat_tree()
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -198,7 +198,7 @@ class flat_map
    explicit flat_map(const Compare& comp, const allocator_type& a = allocator_type())
       : m_flat_tree(comp, container_detail::force<impl_allocator_type>(a))
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -208,7 +208,7 @@ class flat_map
    explicit flat_map(const allocator_type& a)
       : m_flat_tree(container_detail::force<impl_allocator_type>(a))
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -222,7 +222,7 @@ class flat_map
          const allocator_type& a = allocator_type())
       : m_flat_tree(true, first, last, comp, container_detail::force<impl_allocator_type>(a))
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -235,7 +235,7 @@ class flat_map
    flat_map(InputIterator first, InputIterator last, const allocator_type& a)
       : m_flat_tree(true, first, last, Compare(), container_detail::force<impl_allocator_type>(a))
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -252,9 +252,9 @@ class flat_map
    template <class InputIterator>
    flat_map( ordered_unique_range_t, InputIterator first, InputIterator last
            , const Compare& comp = Compare(), const allocator_type& a = allocator_type())
-      : m_flat_tree(ordered_range, first, last, comp, a)
+      : m_flat_tree(ordered_unique_range, first, last, comp, a)
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -268,7 +268,7 @@ class flat_map
           const allocator_type& a = allocator_type())
      : m_flat_tree(true, il.begin(), il.end(), comp, container_detail::force<impl_allocator_type>(a))
    {
-       //A type must be std::pair<Key, T>
+       //value_type must be std::pair<Key, T>
        BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -280,7 +280,7 @@ class flat_map
    flat_map(std::initializer_list<value_type> il, const allocator_type& a)
      : m_flat_tree(true, il.begin(), il.end(), Compare(), container_detail::force<impl_allocator_type>(a))
    {
-       //A type must be std::pair<Key, T>
+       //value_type must be std::pair<Key, T>
        BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -296,9 +296,9 @@ class flat_map
    //! <b>Note</b>: Non-standard extension.
    flat_map(ordered_unique_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(),
           const allocator_type& a = allocator_type())
-     : m_flat_tree(ordered_range, il.begin(), il.end(), comp, a)
+     : m_flat_tree(ordered_unique_range, il.begin(), il.end(), comp, a)
    {
-       //A type must be std::pair<Key, T>
+       //value_type must be std::pair<Key, T>
        BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 #endif
@@ -309,7 +309,7 @@ class flat_map
    flat_map(const flat_map& x)
       : m_flat_tree(x.m_flat_tree)
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -323,7 +323,7 @@ class flat_map
       BOOST_NOEXCEPT_IF(boost::container::container_detail::is_nothrow_move_constructible<Compare>::value)
       : m_flat_tree(boost::move(x.m_flat_tree))
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -333,7 +333,7 @@ class flat_map
    flat_map(const flat_map& x, const allocator_type &a)
       : m_flat_tree(x.m_flat_tree, a)
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -344,7 +344,7 @@ class flat_map
    flat_map(BOOST_RV_REF(flat_map) x, const allocator_type &a)
       : m_flat_tree(boost::move(x.m_flat_tree), a)
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -1215,7 +1215,7 @@ class flat_multimap
                                      container_detail::is_nothrow_default_constructible<Compare>::value)
       : m_flat_tree()
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -1227,7 +1227,7 @@ class flat_multimap
                           const allocator_type& a = allocator_type())
       : m_flat_tree(comp, container_detail::force<impl_allocator_type>(a))
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -1237,7 +1237,7 @@ class flat_multimap
    explicit flat_multimap(const allocator_type& a)
       : m_flat_tree(container_detail::force<impl_allocator_type>(a))
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -1252,7 +1252,7 @@ class flat_multimap
             const allocator_type& a = allocator_type())
       : m_flat_tree(false, first, last, comp, container_detail::force<impl_allocator_type>(a))
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -1265,7 +1265,7 @@ class flat_multimap
    flat_multimap(InputIterator first, InputIterator last, const allocator_type& a)
       : m_flat_tree(false, first, last, Compare(), container_detail::force<impl_allocator_type>(a))
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -1284,7 +1284,7 @@ class flat_multimap
             const allocator_type& a = allocator_type())
       : m_flat_tree(ordered_range, first, last, comp, a)
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -1297,7 +1297,7 @@ class flat_multimap
    flat_multimap(std::initializer_list<value_type> il, const Compare& comp = Compare(), const allocator_type& a = allocator_type())
       : m_flat_tree(false, il.begin(), il.end(), comp, container_detail::force<impl_allocator_type>(a))
    {
-       //A type must be std::pair<Key, T>
+       //value_type must be std::pair<Key, T>
        BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -1309,7 +1309,7 @@ class flat_multimap
    flat_multimap(std::initializer_list<value_type> il, const allocator_type& a)
       : m_flat_tree(false, il.begin(), il.end(), Compare(), container_detail::force<impl_allocator_type>(a))
    {
-       //A type must be std::pair<Key, T>
+       //value_type must be std::pair<Key, T>
        BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -1326,7 +1326,7 @@ class flat_multimap
                  const allocator_type& a = allocator_type())
       : m_flat_tree(ordered_range, il.begin(), il.end(), comp, a)
    {
-       //A type must be std::pair<Key, T>
+       //value_type must be std::pair<Key, T>
        BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 #endif
@@ -1337,7 +1337,7 @@ class flat_multimap
    flat_multimap(const flat_multimap& x)
       : m_flat_tree(x.m_flat_tree)
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -1350,7 +1350,7 @@ class flat_multimap
       BOOST_NOEXCEPT_IF(boost::container::container_detail::is_nothrow_move_constructible<Compare>::value)
       : m_flat_tree(boost::move(x.m_flat_tree))
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -1360,7 +1360,7 @@ class flat_multimap
    flat_multimap(const flat_multimap& x, const allocator_type &a)
       : m_flat_tree(x.m_flat_tree, a)
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 
@@ -1371,7 +1371,7 @@ class flat_multimap
    flat_multimap(BOOST_RV_REF(flat_multimap) x, const allocator_type &a)
       : m_flat_tree(boost::move(x.m_flat_tree), a)
    {
-      //A type must be std::pair<Key, T>
+      //value_type must be std::pair<Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<Key, T>, typename Allocator::value_type>::value));
    }
 

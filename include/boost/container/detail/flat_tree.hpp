@@ -32,6 +32,7 @@
 #include <boost/container/detail/destroyers.hpp>
 #include <boost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
 #include <boost/container/detail/iterator.hpp>
+#include <boost/container/detail/is_sorted.hpp>
 #include <boost/container/allocator_traits.hpp>
 #ifdef BOOST_CONTAINER_VECTOR_ITERATOR_IS_POINTER
 #include <boost/intrusive/pointer_traits.hpp>
@@ -238,7 +239,20 @@ class flat_tree
             , const Compare& comp     = Compare()
             , const allocator_type& a = allocator_type())
       : m_data(comp, a)
-   { this->m_data.m_vect.insert(this->m_data.m_vect.end(), first, last); }
+   {
+      this->m_data.m_vect.insert(this->m_data.m_vect.end(), first, last);
+      BOOST_ASSERT((is_sorted)(this->m_data.m_vect.cbegin(), this->m_data.m_vect.cend(), this->priv_value_comp()));
+   }
+
+   template <class InputIterator>
+   flat_tree( ordered_unique_range_t, InputIterator first, InputIterator last
+            , const Compare& comp     = Compare()
+            , const allocator_type& a = allocator_type())
+      : m_data(comp, a)
+   {
+      this->m_data.m_vect.insert(this->m_data.m_vect.end(), first, last);
+      BOOST_ASSERT((is_sorted_and_unique)(this->m_data.m_vect.cbegin(), this->m_data.m_vect.cend(), this->priv_value_comp()));
+   }
 
    template <class InputIterator>
    flat_tree( bool unique_insertion
@@ -274,6 +288,12 @@ class flat_tree
                           allocator_traits_type::is_always_equal::value) &&
                            boost::container::container_detail::is_nothrow_move_assignable<Compare>::value)
    {  m_data = boost::move(x.m_data); return *this;  }
+
+   BOOST_CONTAINER_FORCEINLINE const value_compare &priv_value_comp() const
+   { return static_cast<const value_compare &>(this->m_data); }
+
+   BOOST_CONTAINER_FORCEINLINE value_compare &priv_value_comp()
+   { return static_cast<value_compare &>(this->m_data); }
 
    public:
    // accessors:

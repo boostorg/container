@@ -169,7 +169,7 @@ class flat_set
    flat_set(ordered_unique_range_t, InputIterator first, InputIterator last,
             const Compare& comp = Compare(),
             const allocator_type& a = allocator_type())
-      : base_t(ordered_range, first, last, comp, a)
+      : base_t(ordered_unique_range, first, last, comp, a)
    {}
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -204,7 +204,7 @@ class flat_set
    //! <b>Note</b>: Non-standard extension.
    flat_set(ordered_unique_range_t, std::initializer_list<value_type> il,
             const Compare& comp = Compare(), const allocator_type& a = allocator_type())
-      : base_t(ordered_range, il.begin(), il.end(), comp, a)
+      : base_t(ordered_unique_range, il.begin(), il.end(), comp, a)
    {}
 #endif
 
@@ -959,8 +959,16 @@ class flat_multiset
       : base_t(false, il.begin(), il.end(), Compare(), a)
    {}
 
-   //! @copydoc ::boost::container::flat_set::flat_set(ordered_unique_range_t, std::initializer_list<value_type>, const Compare& comp, const allocator_type&)
-   flat_multiset(ordered_unique_range_t, std::initializer_list<value_type> il,
+   //! <b>Effects</b>: Constructs an empty container using the specified comparison object and
+   //! allocator, and inserts elements from the ordered unique range [il.begin(), il.end()). This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Requires</b>: [il.begin(), il.end()) must be ordered according to the predicate.
+   //!
+   //! <b>Complexity</b>: Linear in N.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   flat_multiset(ordered_range_t, std::initializer_list<value_type> il,
             const Compare& comp = Compare(), const allocator_type& a = allocator_type())
       : base_t(ordered_range, il.begin(), il.end(), comp, a)
    {}
