@@ -7,8 +7,8 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#ifndef BOOST_CONTAINER_DETAIL_UTILITIES_HPP
-#define BOOST_CONTAINER_DETAIL_UTILITIES_HPP
+#ifndef BOOST_CONTAINER_DETAIL_COPY_MOVE_ALGO_HPP
+#define BOOST_CONTAINER_DETAIL_COPY_MOVE_ALGO_HPP
 
 #ifndef BOOST_CONFIG_HPP
 #  include <boost/config.hpp>
@@ -1139,4 +1139,4 @@ void move_assign_range_alloc_n( Allocator &a, I inp_start, typename allocator_tr
 }  //namespace container {
 }  //namespace boost {
 
-#endif   //#ifndef BOOST_CONTAINER_DETAIL_UTILITIES_HPP
+#endif   //#ifndef BOOST_CONTAINER_DETAIL_COPY_MOVE_ALGO_HPP
