@@ -250,7 +250,6 @@ int main ()
 	   std::pair<const pair_t,pair_t> p;
 	   s.insert(p);
 	   s.emplace(p);
-	   return 0;
    }
 
    ////////////////////////////////////

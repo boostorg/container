@@ -56,11 +56,11 @@ namespace container {
 namespace container_detail{
 
 template<class D, class S>
-static D &force(const S &s)
+BOOST_CONTAINER_FORCEINLINE static D &force(const S &s)
 {  return *const_cast<D*>((reinterpret_cast<const D*>(&s))); }
 
 template<class D, class S>
-static D force_copy(S s)
+BOOST_CONTAINER_FORCEINLINE static D force_copy(S s)
 {
    D *vp = reinterpret_cast<D *>(&s);
    return D(*vp);
@@ -603,6 +603,98 @@ class flat_map
    #else
       BOOST_MOVE_CONVERSION_AWARE_CATCH( operator[] , key_type, mapped_type&, this->priv_subscript)
    #endif
+
+   //! Effects: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
+   //! to the mapped_type corresponding to the key k. If the key does not exist, inserts the new value
+   //! as if by insert, constructing it from value_type(k, forward<M>(obj)).
+   //! 
+   //! No iterators or references are invalidated. If the insertion is successful, pointers and references
+   //! to the element obtained while it is held in the node handle are invalidated, and pointers and
+   //! references obtained to that element before it was extracted become valid.
+   //!
+   //! Returns: The bool component is true if the insertion took place and false if the assignment
+   //!   took place. The iterator component is pointing at the element that was inserted or updated.
+   //!
+   //! Complexity: Logarithmic in the size of the container.
+   template <class M>
+   BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> insert_or_assign(const key_type& k, BOOST_FWD_REF(M) obj)
+   {
+      return container_detail::force_copy< std::pair<iterator, bool> >
+         (this->m_flat_tree.insert_or_assign
+            ( container_detail::force_copy<impl_const_iterator>(const_iterator())
+            , k, ::boost::forward<M>(obj))
+         );
+   }
+
+   //! Effects: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
+   //! to the mapped_type corresponding to the key k. If the key does not exist, inserts the new value
+   //! as if by insert, constructing it from value_type(k, move(obj)).
+   //! 
+   //! No iterators or references are invalidated. If the insertion is successful, pointers and references
+   //! to the element obtained while it is held in the node handle are invalidated, and pointers and
+   //! references obtained to that element before it was extracted become valid.
+   //!
+   //! Returns: The bool component is true if the insertion took place and false if the assignment
+   //!   took place. The iterator component is pointing at the element that was inserted or updated.
+   //!
+   //! Complexity: Logarithmic in the size of the container.
+   template <class M>
+   BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> insert_or_assign(BOOST_RV_REF(key_type) k, BOOST_FWD_REF(M) obj)
+   {
+      return container_detail::force_copy< std::pair<iterator, bool> >
+         (this->m_flat_tree.insert_or_assign
+            ( container_detail::force_copy<impl_const_iterator>(const_iterator())
+            , ::boost::move(k), ::boost::forward<M>(obj))
+         );
+   }
+
+   //! Effects: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
+   //! to the mapped_type corresponding to the key k. If the key does not exist, inserts the new value
+   //! as if by insert, constructing it from value_type(k, forward<M>(obj)) and the new element
+   //! to the container as close as possible to the position just before hint.
+   //! 
+   //! No iterators or references are invalidated. If the insertion is successful, pointers and references
+   //! to the element obtained while it is held in the node handle are invalidated, and pointers and
+   //! references obtained to that element before it was extracted become valid.
+   //!
+   //! Returns: The bool component is true if the insertion took place and false if the assignment
+   //!   took place. The iterator component is pointing at the element that was inserted or updated.
+   //!
+   //! Complexity: Logarithmic in the size of the container in general, but amortized constant if
+   //! the new element is inserted just before hint.
+   template <class M>
+   BOOST_CONTAINER_FORCEINLINE iterator insert_or_assign(const_iterator hint, const key_type& k, BOOST_FWD_REF(M) obj)
+   {
+      return container_detail::force_copy< std::pair<iterator, bool> >
+         (this->m_flat_tree.insert_or_assign
+            ( container_detail::force_copy<impl_const_iterator>(hint)
+            , k, ::boost::forward<M>(obj))
+         );
+   }
+
+   //! Effects: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
+   //! to the mapped_type corresponding to the key k. If the key does not exist, inserts the new value
+   //! as if by insert, constructing it from value_type(k, move(obj)) and the new element
+   //! to the container as close as possible to the position just before hint.
+   //! 
+   //! No iterators or references are invalidated. If the insertion is successful, pointers and references
+   //! to the element obtained while it is held in the node handle are invalidated, and pointers and
+   //! references obtained to that element before it was extracted become valid.
+   //!
+   //! Returns: The bool component is true if the insertion took place and false if the assignment
+   //!   took place. The iterator component is pointing at the element that was inserted or updated.
+   //!
+   //! Complexity: Logarithmic in the size of the container in general, but amortized constant if
+   //! the new element is inserted just before hint.
+   template <class M>
+   BOOST_CONTAINER_FORCEINLINE iterator insert_or_assign(const_iterator hint, BOOST_RV_REF(key_type) k, BOOST_FWD_REF(M) obj)
+   {
+      return container_detail::force_copy< std::pair<iterator, bool> >
+         (this->m_flat_tree.insert_or_assign
+            ( container_detail::force_copy<impl_const_iterator>(hint)
+            , ::boost::move(k), ::boost::forward<M>(obj))
+         );
+   }
 
    //! @copydoc ::boost::container::flat_set::nth(size_type)
    iterator nth(size_type n) BOOST_NOEXCEPT_OR_NOTHROW

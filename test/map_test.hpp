@@ -667,6 +667,65 @@ int map_test()
       }
    }
 
+   {  //operator[] test
+      boostmap.clear();
+      boostmultimap.clear();
+      stdmap.clear();
+      stdmultimap.clear();
+
+      IntPairType aux_vect[max];
+      for(int i = 0; i < max; ++i){
+         IntType i1(i);
+         IntType i2(i);
+         new(&aux_vect[i])IntPairType(boost::move(i1), boost::move(i2));
+      }
+
+      for(int i = 0; i < max; ++i){
+         boostmap[boost::move(aux_vect[i].first)] = boost::move(aux_vect[i].second);
+         stdmap[i] = i;
+      }
+
+      if(!CheckEqualPairContainers(boostmap, stdmap)) return 1;
+      if(!CheckEqualPairContainers(boostmultimap, stdmultimap)) return 1;
+   }
+
+   {  //insert_or_assign test
+      boostmap.clear();
+      boostmultimap.clear();
+      stdmap.clear();
+      stdmultimap.clear();
+
+      IntPairType aux_vect[max];
+      for(int i = 0; i < max; ++i){
+         IntType i1(i);
+         IntType i2(i);
+         new(&aux_vect[i])IntPairType(boost::move(i1), boost::move(i2));
+      }
+
+      IntPairType aux_vect2[max];
+      for(int i = 0; i < max; ++i){
+         IntType i1(i);
+         IntType i2(max-i);
+         new(&aux_vect2[i])IntPairType(boost::move(i1), boost::move(i2));
+      }
+
+      for(int i = 0; i < max; ++i){
+         boostmap.insert_or_assign(boost::move(aux_vect[i].first), boost::move(aux_vect[i].second));
+         stdmap[i] = i;
+      }
+
+      if(!CheckEqualPairContainers(boostmap, stdmap)) return 1;
+      if(!CheckEqualPairContainers(boostmultimap, stdmultimap)) return 1;
+
+      for(int i = 0; i < max; ++i){
+         boostmap.insert_or_assign(boost::move(aux_vect2[i].first), boost::move(aux_vect2[i].second));
+         stdmap[i] = max-i;
+      }
+
+      if(!CheckEqualPairContainers(boostmap, stdmap)) return 1;
+      if(!CheckEqualPairContainers(boostmultimap, stdmultimap)) return 1;
+   }
+
    if(map_test_copyable<MyBoostMap, MyStdMap, MyBoostMultiMap, MyStdMultiMap>
       (container_detail::bool_<boost::container::test::is_copyable<IntType>::value>())){
       return 1;
