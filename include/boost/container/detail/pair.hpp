@@ -214,10 +214,10 @@ struct pair
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
    #  if !defined(BOOST_CONTAINER_NO_CXX11_DELEGATING_CONSTRUCTORS)
       private:
-      template<class Tuple1, class Tuple2, size_t... Indexes1, size_t... Indexes2>
-      pair(Tuple1& t1, Tuple2& t2, index_tuple<Indexes1...>, index_tuple<Indexes2...>)
-         : first (get<Indexes1>(::boost::move(t1))...)
-         , second(get<Indexes2>(::boost::move(t2))...)
+      template<template<class ...> class Tuple, class... Args1, class... Args2, size_t... Indexes1, size_t... Indexes2>
+      pair(Tuple<Args1...>& t1, Tuple<Args2...>& t2, index_tuple<Indexes1...>, index_tuple<Indexes2...>)
+         : first (::boost::forward<Args1>(get<Indexes1>(t1))...)
+         , second(::boost::forward<Args2>(get<Indexes2>(t2))...)
       {  (void) t1; (void)t2; }
 
       public:

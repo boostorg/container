@@ -42,13 +42,13 @@ class tuple<Head, Tail...>
    typedef tuple<Tail...> inherited;
 
    public:
-   tuple() { }
+   tuple()
+      : inherited(), m_head()
+   {}
 
-   // implicit copy-constructor is okay
-   // Construct tuple from separate arguments.
-   tuple(typename add_const_reference<Head>::type v,
-         typename add_const_reference<Tail>::type... vtail)
-   : inherited(vtail...), m_head(v)
+   template<class U, class ...Args>
+   tuple(U &&u, Args && ...args)
+      : inherited(::boost::forward<Args>(args)...), m_head(::boost::forward<U>(u))
    {}
 
    // Construct tuple from another tuple.
@@ -77,8 +77,8 @@ class tuple<Head, Tail...>
 
 
 template<typename... Values>
-tuple<Values&&...> tie_forward(Values&&... values)
-{ return tuple<Values&&...>(values...); }
+tuple<Values&&...> forward_as_tuple(Values&&... values)
+{ return tuple<Values&&...>(::boost::forward<Values>(values)...); }
 
 template<int I, typename Tuple>
 struct tuple_element;

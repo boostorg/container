@@ -135,6 +135,19 @@ int main ()
          BOOST_TEST(std::get<2>(p.first) == 32.);
          BOOST_TEST(p.second == 'b');
       }
+      #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+      typedef container_detail::pair<test::movable_int, test::movable_int> movable_pair_t;
+      typedef container_detail::pair<movable_pair_t, movable_pair_t> movable_pair_pair_t;
+      test::movable_int a(1), b(2), c(3), d(4);
+      movable_pair_pair_t p( piecewise_construct
+                           , container_detail::forward_as_tuple(boost::move(a), boost::move(b))
+                           , container_detail::forward_as_tuple(boost::move(c), boost::move(d))
+                           );
+      BOOST_TEST(p.first.first   == 1);
+      BOOST_TEST(p.first.second  == 2);
+      BOOST_TEST(p.second.first  == 3);
+      BOOST_TEST(p.second.second == 4);
+      #endif
    }
    #endif   //#!defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && !defined(BOOST_NO_CXX11_HDR_TUPLE)
    return ::boost::report_errors();
