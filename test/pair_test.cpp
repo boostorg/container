@@ -12,12 +12,24 @@
 #include "movable_int.hpp"
 #include "emplace_test.hpp"
 #include<boost/move/utility_core.hpp>
+#include<boost/move/detail/fwd_macros.hpp>
+#include<boost/core/lightweight_test.hpp>
 
 //non_copymovable_int
 //copyable_int
 //movable_int
 //movable_and_copyable_int
 
+
+#include <boost/tuple/tuple.hpp>
+
+#if !defined(BOOST_NO_CXX11_HDR_TUPLE) || (defined(BOOST_MSVC) && (BOOST_MSVC == 1700 || BOOST_MSVC == 1600))
+#define BOOST_CONTAINER_PAIR_TEST_HAS_HEADER_TUPLE
+#endif
+
+#if defined(BOOST_CONTAINER_PAIR_TEST_HAS_HEADER_TUPLE)
+#include <tuple>
+#endif
 
 using namespace ::boost::container;
 
@@ -47,8 +59,85 @@ int main ()
          container_detail::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> p4(::boost::move(a), ::boost::move(b));
       }
    }
-   //piecewise_construct missing...
-   return 0;
+   {  //piecewise construct from boost tuple
+      using namespace boost::tuples;
+      {
+         boost::container::container_detail::pair<int, float> p(piecewise_construct, tuple<>(), tuple<>());
+         BOOST_TEST(p.first == 0);
+         BOOST_TEST(p.second == 0.f);
+      }
+      {
+         boost::container::container_detail::pair<int, float> p(piecewise_construct, tuple<>(), tuple<float>(2.f));
+         BOOST_TEST(p.first == 0);
+         BOOST_TEST(p.second == 2.f);
+      }
+      {
+         boost::container::container_detail::pair<int, float> p(piecewise_construct, tuple<int>(2), tuple<float>(1.f));
+         BOOST_TEST(p.first == 2);
+         BOOST_TEST(p.second == 1.f);
+      }
+      {
+         boost::container::container_detail::pair
+            < boost::container::container_detail::pair<int, float>
+            , boost::container::container_detail::pair<double, char>
+            > p(piecewise_construct, tuple<int, float>(3, 4.f), tuple<double, char>(8.,'a'));
+         BOOST_TEST(p.first.first   == 3);
+         BOOST_TEST(p.first.second  == 4.f);
+         BOOST_TEST(p.second.first  == 8.);
+         BOOST_TEST(p.second.second == 'a');
+      }
+      {
+         boost::container::container_detail::pair
+            < tuple<int, float, double>
+            , char
+            > p(piecewise_construct, tuple<int, float, double>(3, 16.f, 32.), tuple<char>('b'));
+         BOOST_TEST(p.first.get<0>() == 3);
+         BOOST_TEST(p.first.get<1>() == 16.f);
+         BOOST_TEST(p.first.get<2>() == 32.);
+         BOOST_TEST(p.second == 'b');
+      }
+   }
+   #if defined(BOOST_CONTAINER_PAIR_TEST_HAS_HEADER_TUPLE)
+   {  //piecewise construct from std tuple
+      using std::tuple;
+      {
+         boost::container::container_detail::pair<int, float> p(piecewise_construct, tuple<>(), tuple<>());
+         BOOST_TEST(p.first == 0);
+         BOOST_TEST(p.second == 0.f);
+      }
+      {
+         boost::container::container_detail::pair<int, float> p(piecewise_construct, tuple<>(), tuple<float>(2.f));
+         BOOST_TEST(p.first == 0);
+         BOOST_TEST(p.second == 2.f);
+      }
+      {
+         boost::container::container_detail::pair<int, float> p(piecewise_construct, tuple<int>(2), tuple<float>(1.f));
+         BOOST_TEST(p.first == 2);
+         BOOST_TEST(p.second == 1.f);
+      }
+      {
+         boost::container::container_detail::pair
+            < boost::container::container_detail::pair<int, float>
+            , boost::container::container_detail::pair<double, char>
+            > p(piecewise_construct, tuple<int, float>(3, 4.f), tuple<double, char>(8.,'a'));
+         BOOST_TEST(p.first.first   == 3);
+         BOOST_TEST(p.first.second  == 4.f);
+         BOOST_TEST(p.second.first  == 8.);
+         BOOST_TEST(p.second.second == 'a');
+      }
+      {
+         boost::container::container_detail::pair
+            < tuple<int, float, double>
+            , char
+            > p(piecewise_construct, tuple<int, float, double>(3, 16.f, 32.), tuple<char>('b'));
+         BOOST_TEST(std::get<0>(p.first) == 3);
+         BOOST_TEST(std::get<1>(p.first) == 16.f);
+         BOOST_TEST(std::get<2>(p.first) == 32.);
+         BOOST_TEST(p.second == 'b');
+      }
+   }
+   #endif   //#!defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && !defined(BOOST_NO_CXX11_HDR_TUPLE)
+   return ::boost::report_errors();
 }
 
 #include <boost/container/detail/config_end.hpp>
