@@ -26,6 +26,7 @@
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/detail/type_traits.hpp>
+#include <boost/container/detail/value_init.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/intrusive/detail/reverse_iterator.hpp>
@@ -626,14 +627,14 @@ struct emplace_functor
    {  emplace_functor::inplace_impl(dest, index_tuple_t());  }
 
    private:
-   template<class Allocator, class T, int ...IdxPack>
+   template<class Allocator, class T, std::size_t ...IdxPack>
    BOOST_CONTAINER_FORCEINLINE void inplace_impl(Allocator &a, T* ptr, const container_detail::index_tuple<IdxPack...>&)
    {
       allocator_traits<Allocator>::construct
          (a, ptr, ::boost::forward<Args>(container_detail::get<IdxPack>(args_))...);
    }
 
-   template<class DestIt, int ...IdxPack>
+   template<class DestIt, std::size_t ...IdxPack>
    BOOST_CONTAINER_FORCEINLINE void inplace_impl(DestIt dest, const container_detail::index_tuple<IdxPack...>&)
    {
       typedef typename boost::container::iterator_traits<DestIt>::value_type value_type;
@@ -671,8 +672,8 @@ struct emplace_functor##N\
    void operator()(DestIt dest)\
    {\
       typedef typename boost::container::iterator_traits<DestIt>::value_type value_type;\
-      value_type tmp(BOOST_MOVE_MFWD##N);\
-      *dest = ::boost::move(const_cast<value_type &>(tmp));\
+      BOOST_MOVE_IF(N, value_type tmp(BOOST_MOVE_MFWD##N), container_detail::value_init<value_type> tmp) ;\
+      *dest = ::boost::move(const_cast<value_type &>(BOOST_MOVE_IF(N, tmp, tmp.get())));\
    }\
    \
    BOOST_MOVE_MREF##N\
