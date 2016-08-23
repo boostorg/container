@@ -135,18 +135,18 @@ typename get_impl<I, tuple<Values...> >::const_type get(const tuple<Values...>& 
 // in a function call.
 ////////////////////////////////////////////////////
 
-template<int... Indexes>
+template<std::size_t ... Indexes>
 struct index_tuple{};
 
 template<std::size_t Num, typename Tuple = index_tuple<> >
 struct build_number_seq;
 
-template<std::size_t Num, int... Indexes>
+template<std::size_t Num, std::size_t ... Indexes>
 struct build_number_seq<Num, index_tuple<Indexes...> >
    : build_number_seq<Num - 1, index_tuple<Indexes..., sizeof...(Indexes)> >
 {};
 
-template<int... Indexes>
+template<std::size_t ... Indexes>
 struct build_number_seq<0, index_tuple<Indexes...> >
 {  typedef index_tuple<Indexes...> type;  };
 
