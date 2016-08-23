@@ -29,6 +29,20 @@
    #define BOOST_CONTAINER_UNIMPLEMENTED_PACK_EXPANSION_TO_FIXED_LIST
 #endif
 
+#if defined(BOOST_GCC_VERSION)
+#  if (BOOST_GCC_VERSION < 40700) || !defined(BOOST_GCC_CXX11)
+#     define BOOST_CONTAINER_NO_CXX11_DELEGATING_CONSTRUCTORS
+#  endif
+#elif defined(BOOST_MSVC)
+#  if _MSC_FULL_VER < 180020827
+#     define BOOST_CONTAINER_NO_CXX11_DELEGATING_CONSTRUCTORS
+#  endif
+#elif defined(BOOST_CLANG)
+#  if !__has_feature(cxx_delegating_constructors)
+#     define BOOST_CONTAINER_NO_CXX11_DELEGATING_CONSTRUCTORS
+#  endif
+#endif
+
 #if !defined(BOOST_FALLTHOUGH)
    #define BOOST_CONTAINER_FALLTHOUGH
 #else
