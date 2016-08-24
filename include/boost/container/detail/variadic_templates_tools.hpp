@@ -21,6 +21,7 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
+#include <boost/move/utility_core.hpp>
 
 #include <boost/container/detail/type_traits.hpp>
 #include <cstddef>   //std::size_t
