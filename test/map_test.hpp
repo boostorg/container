@@ -726,6 +726,75 @@ int map_test()
       if(!CheckEqualPairContainers(boostmultimap, stdmultimap)) return 1;
    }
 
+   {  //try_emplace
+      boostmap.clear();
+      boostmultimap.clear();
+      stdmap.clear();
+      stdmultimap.clear();
+
+      IntPairType aux_vect[max];
+      for(int i = 0; i < max; ++i){
+         IntType i1(i);
+         IntType i2(i);
+         new(&aux_vect[i])IntPairType(boost::move(i1), boost::move(i2));
+      }
+
+      IntPairType aux_vect2[max];
+      for(int i = 0; i < max; ++i){
+         IntType i1(i);
+         IntType i2(max-i);
+         new(&aux_vect2[i])IntPairType(boost::move(i1), boost::move(i2));
+      }
+
+      typedef typename MyBoostMap::iterator iterator;
+      for(int i = 0; i < max; ++i){
+         iterator it;
+         if(i&1){
+            std::pair<typename MyBoostMap::iterator, bool> ret =
+               boostmap.try_emplace(boost::move(aux_vect[i].first), boost::move(aux_vect[i].second));
+            if(!ret.second)
+               return 1;
+            it = ret.first;
+         }
+         else{
+            it = boostmap.try_emplace
+               (boostmap.upper_bound(aux_vect[i].first), boost::move(aux_vect[i].first), boost::move(aux_vect[i].second));
+         }
+         if(boostmap.end() == it || it->first != aux_vect2[i].first || it->second != aux_vect2[i].first){
+            return 1;
+         }
+         stdmap[i] = i;
+      }
+
+      if(!CheckEqualPairContainers(boostmap, stdmap)) return 1;
+      if(!CheckEqualPairContainers(boostmultimap, stdmultimap)) return 1;
+
+      for(int i = 0; i < max; ++i){
+         iterator it;
+         iterator itex = boostmap.find(aux_vect2[i].first);
+         if(itex == boostmap.end())
+            return 1;
+         if(i&1){
+            std::pair<typename MyBoostMap::iterator, bool> ret =
+               boostmap.try_emplace(boost::move(aux_vect2[i].first), boost::move(aux_vect2[i].second));
+            if(ret.second)
+               return 1;
+            it = ret.first;
+         }
+         else{
+            it = boostmap.try_emplace
+               (boostmap.upper_bound(aux_vect2[i].first), boost::move(aux_vect2[i].first), boost::move(aux_vect2[i].second));
+         }
+         const IntType test_int(i);
+         if(boostmap.end() == it || it != itex || it->second != test_int){
+            return 1;
+         }
+      }
+
+      if(!CheckEqualPairContainers(boostmap, stdmap)) return 1;
+      if(!CheckEqualPairContainers(boostmultimap, stdmultimap)) return 1;
+   }
+
    if(map_test_copyable<MyBoostMap, MyStdMap, MyBoostMultiMap, MyStdMultiMap>
       (container_detail::bool_<boost::container::test::is_copyable<IntType>::value>())){
       return 1;
@@ -740,33 +809,33 @@ bool test_map_support_for_initialization_list_for()
    const std::initializer_list<std::pair<typename MapType::value_type::first_type, typename MapType::mapped_type>> il
       = { std::make_pair(1, 2), std::make_pair(3, 4) };
 
-   const MapType expected(il.begin(), il.end());
+   const MapType expected_map(il.begin(), il.end());
    {
       const MapType sil = il;
-      if (sil != expected)
+      if (sil != expected_map)
          return false;
 
       MapType sila(il, typename MapType::allocator_type());
-      if (sila != expected)
+      if (sila != expected_map)
          return false;
 
       MapType silca(il, typename MapType::key_compare(), typename MapType::allocator_type());
-      if (silca != expected)
+      if (silca != expected_map)
          return false;
 
       const MapType sil_ordered(ordered_unique_range, il);
-      if (sil_ordered != expected)
+      if (sil_ordered != expected_map)
          return false;
 
       MapType sil_assign = { std::make_pair(99, 100) };
       sil_assign = il;
-      if (sil_assign != expected)
+      if (sil_assign != expected_map)
          return false;
    }
    {
       MapType sil;
       sil.insert(il);
-      if (sil != expected)
+      if (sil != expected_map)
          return false;
    }
    return true;

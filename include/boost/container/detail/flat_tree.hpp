@@ -589,6 +589,29 @@ class flat_tree
       return this->insert_equal(hint, ::boost::move(val));
    }
 
+   template <class KeyType, class... Args>
+   BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> try_emplace
+      (const_iterator hint, BOOST_FWD_REF(KeyType) key, BOOST_FWD_REF(Args)... args)
+   {
+      std::pair<iterator,bool> ret;
+      insert_commit_data data;
+      const key_type & k = key;
+      ret.second = hint == const_iterator()
+         ? this->priv_insert_unique_prepare(k, data)
+         : this->priv_insert_unique_prepare(hint, k, data);
+
+      if(!ret.second){
+         ret.first  = this->nth(data.position - this->cbegin());
+      }
+      else{
+         typedef typename emplace_functor_type<try_emplace_t, KeyType, Args...>::type func_t;
+         typedef emplace_iterator<value_type, func_t, difference_type> it_t;
+         func_t func(try_emplace_t(), ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
+         ret.first = this->m_data.m_vect.insert(data.position, it_t(func), it_t());
+      }
+      return ret;
+   }
+
    #else // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #define BOOST_CONTAINER_FLAT_TREE_EMPLACE_CODE(N) \
@@ -635,8 +658,30 @@ class flat_tree
       value_destructor<stored_allocator_type> d(a, val);\
       return this->insert_equal(hint, ::boost::move(val));\
    }\
+   template <class KeyType BOOST_MOVE_I##N BOOST_MOVE_CLASS##N>\
+   BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool>\
+      try_emplace(const_iterator hint, BOOST_FWD_REF(KeyType) key BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {\
+      std::pair<iterator,bool> ret;\
+      insert_commit_data data;\
+      const key_type & k = key;\
+      ret.second = hint == const_iterator()\
+         ? this->priv_insert_unique_prepare(k, data)\
+         : this->priv_insert_unique_prepare(hint, k, data);\
+      \
+      if(!ret.second){\
+         ret.first  = this->nth(data.position - this->cbegin());\
+      }\
+      else{\
+         typedef typename emplace_functor_type<try_emplace_t, KeyType BOOST_MOVE_I##N BOOST_MOVE_TARG##N>::type func_t;\
+         typedef emplace_iterator<value_type, func_t, difference_type> it_t;\
+         func_t func(try_emplace_t(), ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+         ret.first = this->m_data.m_vect.insert(data.position, it_t(func), it_t());\
+      }\
+      return ret;\
+   }\
    //
-   BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_FLAT_TREE_EMPLACE_CODE)
+   BOOST_MOVE_ITERATE_0TO7(BOOST_CONTAINER_FLAT_TREE_EMPLACE_CODE)
    #undef BOOST_CONTAINER_FLAT_TREE_EMPLACE_CODE
 
    #endif   // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)

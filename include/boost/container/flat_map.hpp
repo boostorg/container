@@ -621,8 +621,7 @@ class flat_map
    {
       return container_detail::force_copy< std::pair<iterator, bool> >
          (this->m_flat_tree.insert_or_assign
-            ( container_detail::force_copy<impl_const_iterator>(const_iterator())
-            , k, ::boost::forward<M>(obj))
+            ( impl_const_iterator(), k, ::boost::forward<M>(obj))
          );
    }
 
@@ -643,8 +642,7 @@ class flat_map
    {
       return container_detail::force_copy< std::pair<iterator, bool> >
          (this->m_flat_tree.insert_or_assign
-            ( container_detail::force_copy<impl_const_iterator>(const_iterator())
-            , ::boost::move(k), ::boost::forward<M>(obj))
+            ( impl_const_iterator(), ::boost::move(k), ::boost::forward<M>(obj))
          );
    }
 
@@ -784,6 +782,79 @@ class flat_map
                                          , boost::forward<Args>(args)...));
    }
 
+   //! <b>Requires<b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
+   //! forward_as_tuple(k), forward_as_tuple(forward<Args>(args)...).
+   //! 
+   //! <b>Effects<b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
+   //! inserts an object of type value_type constructed with piecewise_construct, forward_as_tuple(k),
+   //! forward_as_tuple(forward<Args>(args)...).
+   //! 
+   //! <b>Returns<b>: The bool component of the returned pair is true if and only if the
+   //! insertion took place. The returned iterator points to the map element whose key is equivalent to k.
+   //! 
+   //! <b>Complexity:<b> Logarithmic.
+   template <class... Args>
+   BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> try_emplace(const key_type& k, BOOST_FWD_REF(Args)... args)
+   {
+      return container_detail::force_copy< std::pair<iterator, bool> >(
+         m_flat_tree.try_emplace(impl_const_iterator(), k, boost::forward<Args>(args)...));
+   }
+
+   //! <b>Requires<b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
+   //! forward_as_tuple(k), forward_as_tuple(forward<Args>(args)...).
+   //! 
+   //! <b>Effects<b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
+   //! inserts an object of type value_type constructed with piecewise_construct, forward_as_tuple(k),
+   //! forward_as_tuple(forward<Args>(args)...).
+   //! 
+   //! <b>Returns<b>: The returned iterator points to the map element whose key is equivalent to k.
+   //! 
+   //! <b>Complexity</b>: Logarithmic in general, but amortized constant if value
+   //!   is inserted right before p.
+   template <class... Args>
+   BOOST_CONTAINER_FORCEINLINE iterator try_emplace(const_iterator hint, const key_type &k, BOOST_FWD_REF(Args)... args)
+   {
+      return container_detail::force_copy<iterator>(m_flat_tree.try_emplace
+         (container_detail::force_copy<impl_const_iterator>(hint), k, boost::forward<Args>(args)...).first);
+   }
+
+   //! <b>Requires<b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
+   //! forward_as_tuple(move(k)), forward_as_tuple(forward<Args>(args)...).
+   //! 
+   //! <b>Effects<b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
+   //! inserts an object of type value_type constructed with piecewise_construct, forward_as_tuple(move(k)),
+   //! forward_as_tuple(forward<Args>(args)...).
+   //! 
+   //! <b>Returns<b>: The bool component of the returned pair is true if and only if the
+   //! insertion took place. The returned iterator points to the map element whose key is equivalent to k.
+   //! 
+   //! <b>Complexity:<b> Logarithmic.
+   template <class... Args>
+   BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> try_emplace(BOOST_RV_REF(key_type) k, BOOST_FWD_REF(Args)... args)
+   {
+      return container_detail::force_copy< std::pair<iterator, bool> >
+         (m_flat_tree.try_emplace(impl_const_iterator(), boost::move(k), boost::forward<Args>(args)...));
+   }
+
+   //! <b>Requires<b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
+   //! forward_as_tuple(move(k)), forward_as_tuple(forward<Args>(args)...).
+   //! 
+   //! <b>Effects<b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
+   //! inserts an object of type value_type constructed with piecewise_construct, forward_as_tuple(move(k)),
+   //! forward_as_tuple(forward<Args>(args)...).
+   //! 
+   //! <b>Returns<b>: The returned iterator points to the map element whose key is equivalent to k.
+   //! 
+   //! <b>Complexity</b>: Logarithmic in general, but amortized constant if value
+   //!   is inserted right before p.
+   template <class... Args>
+   BOOST_CONTAINER_FORCEINLINE iterator try_emplace(const_iterator hint, BOOST_RV_REF(key_type) k, BOOST_FWD_REF(Args)... args)
+   {
+      return container_detail::force_copy<iterator>
+         (m_flat_tree.try_emplace(container_detail::force_copy
+            <impl_const_iterator>(hint), boost::move(k), boost::forward<Args>(args)...).first);
+   }
+
    #else // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #define BOOST_CONTAINER_FLAT_MAP_EMPLACE_CODE(N) \
@@ -800,6 +871,29 @@ class flat_map
       return container_detail::force_copy<iterator>(m_flat_tree.emplace_hint_unique\
          (container_detail::force_copy<impl_const_iterator>(hint) BOOST_MOVE_I##N BOOST_MOVE_FWD##N));\
    }\
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> try_emplace(const key_type& k BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {\
+      return container_detail::force_copy< std::pair<iterator, bool> >\
+         (m_flat_tree.try_emplace(impl_const_iterator(), k BOOST_MOVE_I##N BOOST_MOVE_FWD##N));\
+   }\
+   \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   BOOST_CONTAINER_FORCEINLINE iterator try_emplace(const_iterator hint, const key_type &k BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {  return container_detail::force_copy<iterator>(m_flat_tree.try_emplace\
+         (container_detail::force_copy<impl_const_iterator>(hint), k BOOST_MOVE_I##N BOOST_MOVE_FWD##N).first); }\
+   \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> try_emplace(BOOST_RV_REF(key_type) k BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {\
+      return container_detail::force_copy< std::pair<iterator, bool> >\
+         (m_flat_tree.try_emplace(impl_const_iterator(), boost::move(k) BOOST_MOVE_I##N BOOST_MOVE_FWD##N));\
+   }\
+   \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   BOOST_CONTAINER_FORCEINLINE iterator try_emplace(const_iterator hint, BOOST_RV_REF(key_type) k BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {  return container_detail::force_copy<iterator>(m_flat_tree.try_emplace\
+      (container_detail::force_copy<impl_const_iterator>(hint), boost::move(k) BOOST_MOVE_I##N BOOST_MOVE_FWD##N).first); }\
    //
    BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_FLAT_MAP_EMPLACE_CODE)
    #undef BOOST_CONTAINER_FLAT_MAP_EMPLACE_CODE

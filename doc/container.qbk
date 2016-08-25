@@ -1231,7 +1231,7 @@ use [*Boost.Container]? There are several reasons for that:
    * [@https://svn.boost.org/trac/boost/ticket/12319 Trac #12319: ['"flat_set` should be nothrow move constructible"]].
 
 * Revised noexcept expressions of default and move constructors in all containers.
-* Implemented `insert_or_assign` for [classref boost::container::map map] and [classref boost::container::flat_map flat_map].
+* Implemented C++17 `insert_or_assign` and `try_emplace`for [classref boost::container::map map] and [classref boost::container::flat_map flat_map].
 
 [endsect]
 

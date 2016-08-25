@@ -70,6 +70,8 @@ namespace container {
 
 typedef const std::piecewise_construct_t & piecewise_construct_t;
 
+struct try_emplace_t{};
+
 #else
 
 //! The piecewise_construct_t struct is an empty structure type used as a unique type to
@@ -196,6 +198,25 @@ struct pair
    pair(BOOST_RV_REF_BEG std::pair<D, S> BOOST_RV_REF_END p)
       : first(::boost::move(p.first)), second(::boost::move(p.second))
    {}
+
+   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+   template< class KeyType, class ...Args>
+   pair(const try_emplace_t &, BOOST_FWD_REF(KeyType) k, Args && ...args)
+      : first(boost::forward<KeyType>(k)), second(::boost::forward<Args>(args)...)\
+   {}
+   #else
+
+   //piecewise construction from boost::tuple
+   #define BOOST_PAIR_TRY_EMPLACE_CONSTRUCT_CODE(N)\
+   template< class KeyType BOOST_MOVE_I##N BOOST_MOVE_CLASS##N > \
+   pair( try_emplace_t, BOOST_FWD_REF(KeyType) k BOOST_MOVE_I##N BOOST_MOVE_UREF##N )\
+      : first(boost::forward<KeyType>(k)), second(BOOST_MOVE_FWD##N)\
+   {}\
+   //
+   BOOST_MOVE_ITERATE_0TO9(BOOST_PAIR_TRY_EMPLACE_CONSTRUCT_CODE)
+   #undef BOOST_PAIR_TRY_EMPLACE_CONSTRUCT_CODE
+
+   #endif   //BOOST_NO_CXX11_VARIADIC_TEMPLATES
 
    //piecewise construction from boost::tuple
    #define BOOST_PAIR_PIECEWISE_CONSTRUCT_BOOST_TUPLE_CODE(N,M)\

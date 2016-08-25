@@ -920,7 +920,7 @@ class tree
       //No throw insertion part, release rollback
       destroy_deallocator.release();
       return std::pair<iterator,bool>
-         ( iterator(iiterator(this->icont().insert_unique_commit(*p, data)))
+         ( iterator(this->icont().insert_unique_commit(*p, data))
          , true );
    }
 
@@ -935,7 +935,7 @@ class tree
          Destroyer(this->node_alloc())(p);
          return ret.first;
       }
-      return iterator(iiterator(this->icont().insert_unique_commit(*p, data)));
+      return iterator(this->icont().insert_unique_commit(*p, data));
    }
 
    public:
@@ -971,6 +971,22 @@ class tree
       return ret;
    }
 
+   template <class KeyType, class... Args>
+   BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> try_emplace
+      (const_iterator hint, BOOST_FWD_REF(KeyType) key, BOOST_FWD_REF(Args)... args)
+   {
+      insert_commit_data data;
+      const key_type & k = key;  //Support emulated rvalue references
+      std::pair<iiterator, bool> ret =
+         hint == const_iterator() ? this->icont().insert_unique_check(            k, KeyNodeCompare(value_comp()), data)
+                                  : this->icont().insert_unique_check(hint.get(), k, KeyNodeCompare(value_comp()), data);
+      if(ret.second){
+         ret.first = this->icont().insert_unique_commit
+            (*AllocHolder::create_node(try_emplace_t(), boost::forward<KeyType>(key), boost::forward<Args>(args)...), data);
+      }
+      return std::pair<iterator, bool>(iterator(ret.first), ret.second);
+   }
+
    #else // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #define BOOST_CONTAINER_TREE_EMPLACE_CODE(N) \
@@ -1001,6 +1017,22 @@ class tree
       iterator ret(this->icont().insert_equal(hint.get(), *tmp));\
       destroy_deallocator.release();\
       return ret;\
+   }\
+   \
+   template <class KeyType BOOST_MOVE_I##N BOOST_MOVE_CLASS##N>\
+   BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool>\
+      try_emplace(const_iterator hint, BOOST_FWD_REF(KeyType) key BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {\
+      insert_commit_data data;\
+      const key_type & k = key;\
+      std::pair<iiterator, bool> ret =\
+         hint == const_iterator() ? this->icont().insert_unique_check(            k, KeyNodeCompare(value_comp()), data)\
+                                  : this->icont().insert_unique_check(hint.get(), k, KeyNodeCompare(value_comp()), data);\
+      if(ret.second){\
+         ret.first = this->icont().insert_unique_commit\
+            (*AllocHolder::create_node(try_emplace_t(), boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N), data);\
+      }\
+      return std::pair<iterator, bool>(iterator(ret.first), ret.second);\
    }\
    //
    BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_TREE_EMPLACE_CODE)
