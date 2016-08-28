@@ -1676,13 +1676,16 @@ namespace container {
 #include <boost/move/detail/std_ns_begin.hpp>
 BOOST_CONTAINER_DOC1ST(namespace std {, BOOST_MOVE_STD_NS_BEG)
 
+//! A specialization of insert_iterator
+//! that works with slist
 template <class T, class Allocator>
 class insert_iterator<boost::container::slist<T, Allocator> >
 {
- protected:
+   private:
    typedef boost::container::slist<T, Allocator> Container;
    Container* container;
    typename Container::iterator iter;
+
    public:
    typedef Container           container_type;
    typedef output_iterator_tag iterator_category;
