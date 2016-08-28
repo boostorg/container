@@ -36,6 +36,8 @@ doxygen autodoc
                                    \"BOOST_RV_REF(T)=T&&\" \\
                                    \"BOOST_RV_REF_BEG=\" \\
                                    \"BOOST_RV_REF_END=&&\" \\
+                                   \"BOOST_RV_REF_BEG_IF_CXX11=\" \\
+                                   \"BOOST_RV_REF_END_IF_CXX11=&&\" \\
                                    \"BOOST_COPY_ASSIGN_REF(T)=const T &\" \\
                                    \"BOOST_FWD_REF(a)=a &&\" \\
                                    \"BOOST_INTRUSIVE_OPTION_CONSTANT(OPTION_NAME, TYPE, VALUE, CONSTANT_NAME) = template<TYPE VALUE> struct OPTION_NAME{};\" \\

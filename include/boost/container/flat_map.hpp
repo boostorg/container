@@ -112,14 +112,14 @@ class flat_map
    //This is the tree that we should store if pair was movable
    typedef container_detail::flat_tree<Key,
                            std::pair<Key, T>,
-                           container_detail::select1st< std::pair<Key, T> >,
+                           container_detail::select1st<Key>,
                            Compare,
                            Allocator> tree_t;
 
    //This is the real tree stored here. It's based on a movable pair
    typedef container_detail::flat_tree<Key,
                            container_detail::pair<Key, T>,
-                           container_detail::select1st<container_detail::pair<Key, T> >,
+                           container_detail::select1st<Key>,
                            Compare,
                            typename allocator_traits<Allocator>::template portable_rebind_alloc
                               <container_detail::pair<Key, T> >::type> impl_tree_t;
@@ -131,7 +131,7 @@ class flat_map
    typedef typename impl_tree_t::allocator_type          impl_allocator_type;
    typedef container_detail::flat_tree_value_compare
       < Compare
-      , container_detail::select1st< std::pair<Key, T> >
+      , container_detail::select1st<Key>
       , std::pair<Key, T> >                                                         value_compare_impl;
    typedef typename container_detail::get_flat_tree_iterators
          <typename allocator_traits<Allocator>::pointer>::iterator                  iterator_impl;
@@ -782,17 +782,17 @@ class flat_map
                                          , boost::forward<Args>(args)...));
    }
 
-   //! <b>Requires<b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
+   //! <b>Requires</b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
    //! forward_as_tuple(k), forward_as_tuple(forward<Args>(args)...).
    //! 
-   //! <b>Effects<b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
+   //! <b>Effects</b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
    //! inserts an object of type value_type constructed with piecewise_construct, forward_as_tuple(k),
    //! forward_as_tuple(forward<Args>(args)...).
    //! 
-   //! <b>Returns<b>: The bool component of the returned pair is true if and only if the
+   //! <b>Returns</b>: The bool component of the returned pair is true if and only if the
    //! insertion took place. The returned iterator points to the map element whose key is equivalent to k.
    //! 
-   //! <b>Complexity:<b> Logarithmic.
+   //! <b>Complexity</b>: Logarithmic.
    template <class... Args>
    BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> try_emplace(const key_type& k, BOOST_FWD_REF(Args)... args)
    {
@@ -800,14 +800,14 @@ class flat_map
          m_flat_tree.try_emplace(impl_const_iterator(), k, boost::forward<Args>(args)...));
    }
 
-   //! <b>Requires<b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
+   //! <b>Requires</b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
    //! forward_as_tuple(k), forward_as_tuple(forward<Args>(args)...).
    //! 
-   //! <b>Effects<b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
+   //! <b>Effects</b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
    //! inserts an object of type value_type constructed with piecewise_construct, forward_as_tuple(k),
    //! forward_as_tuple(forward<Args>(args)...).
    //! 
-   //! <b>Returns<b>: The returned iterator points to the map element whose key is equivalent to k.
+   //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
    //! 
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if value
    //!   is inserted right before p.
@@ -818,17 +818,17 @@ class flat_map
          (container_detail::force_copy<impl_const_iterator>(hint), k, boost::forward<Args>(args)...).first);
    }
 
-   //! <b>Requires<b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
+   //! <b>Requires</b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
    //! forward_as_tuple(move(k)), forward_as_tuple(forward<Args>(args)...).
    //! 
-   //! <b>Effects<b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
+   //! <b>Effects</b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
    //! inserts an object of type value_type constructed with piecewise_construct, forward_as_tuple(move(k)),
    //! forward_as_tuple(forward<Args>(args)...).
    //! 
-   //! <b>Returns<b>: The bool component of the returned pair is true if and only if the
+   //! <b>Returns</b>: The bool component of the returned pair is true if and only if the
    //! insertion took place. The returned iterator points to the map element whose key is equivalent to k.
    //! 
-   //! <b>Complexity:<b> Logarithmic.
+   //! <b>Complexity</b>: Logarithmic.
    template <class... Args>
    BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> try_emplace(BOOST_RV_REF(key_type) k, BOOST_FWD_REF(Args)... args)
    {
@@ -836,14 +836,14 @@ class flat_map
          (m_flat_tree.try_emplace(impl_const_iterator(), boost::move(k), boost::forward<Args>(args)...));
    }
 
-   //! <b>Requires<b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
+   //! <b>Requires</b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
    //! forward_as_tuple(move(k)), forward_as_tuple(forward<Args>(args)...).
    //! 
-   //! <b>Effects<b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
+   //! <b>Effects</b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
    //! inserts an object of type value_type constructed with piecewise_construct, forward_as_tuple(move(k)),
    //! forward_as_tuple(forward<Args>(args)...).
    //! 
-   //! <b>Returns<b>: The returned iterator points to the map element whose key is equivalent to k.
+   //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
    //! 
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if value
    //!   is inserted right before p.
@@ -1328,13 +1328,13 @@ class flat_multimap
    BOOST_COPYABLE_AND_MOVABLE(flat_multimap)
    typedef container_detail::flat_tree<Key,
                            std::pair<Key, T>,
-                           container_detail::select1st< std::pair<Key, T> >,
+                           container_detail::select1st<Key>,
                            Compare,
                            Allocator> tree_t;
    //This is the real tree stored here. It's based on a movable pair
    typedef container_detail::flat_tree<Key,
                            container_detail::pair<Key, T>,
-                           container_detail::select1st<container_detail::pair<Key, T> >,
+                           container_detail::select1st<Key>,
                            Compare,
                            typename allocator_traits<Allocator>::template portable_rebind_alloc
                               <container_detail::pair<Key, T> >::type> impl_tree_t;
@@ -1346,7 +1346,7 @@ class flat_multimap
    typedef typename impl_tree_t::allocator_type          impl_allocator_type;
    typedef container_detail::flat_tree_value_compare
       < Compare
-      , container_detail::select1st< std::pair<Key, T> >
+      , container_detail::select1st<Key>
       , std::pair<Key, T> >                                                         value_compare_impl;
    typedef typename container_detail::get_flat_tree_iterators
          <typename allocator_traits<Allocator>::pointer>::iterator                  iterator_impl;

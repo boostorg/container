@@ -201,7 +201,7 @@ struct pair
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
    template< class KeyType, class ...Args>
-   pair(const try_emplace_t &, BOOST_FWD_REF(KeyType) k, Args && ...args)
+   pair(try_emplace_t, BOOST_FWD_REF(KeyType) k, Args && ...args)
       : first(boost::forward<KeyType>(k)), second(::boost::forward<Args>(args)...)\
    {}
    #else

@@ -100,6 +100,8 @@ class set
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                     const_iterator;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                   reverse_iterator;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)             const_reverse_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::node_type)                          node_type;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::insert_return_type)                 insert_return_type;
 
    //////////////////////////////////////////////
    //
@@ -523,6 +525,14 @@ class set
    {  this->base_t::insert_unique(il.begin(), il.end()); }
 #endif
 
+   //! @copydoc ::boost::container::map::insert(node_type&&)
+   insert_return_type insert(BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
+   {  return this->base_t::insert_unique_node(boost::move(nh));  }
+
+   //! @copydoc ::boost::container::map::insert(const_iterator, node_type&&)
+   insert_return_type insert(const_iterator hint, BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
+   {  return this->base_t::insert_unique_node(hint, boost::move(nh));  }
+
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Effects</b>: Erases the element pointed to by p.
@@ -782,6 +792,7 @@ class multiset
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                     const_iterator;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                   reverse_iterator;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)             const_reverse_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::node_type)                          node_type;
 
    //////////////////////////////////////////////
    //
@@ -1048,6 +1059,14 @@ class multiset
    void insert(std::initializer_list<value_type> il)
    {  this->base_t::insert_equal(il.begin(), il.end());  }
 #endif
+
+   //! @copydoc ::boost::container::multimap::insert(node_type&&)
+   iterator insert(BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
+   {  return this->base_t::insert_equal_node(boost::move(nh));  }
+
+   //! @copydoc ::boost::container::multimap::insert(const_iterator, node_type&&)
+   iterator insert(const_iterator hint, BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
+   {  return this->base_t::insert_equal_node(hint, boost::move(nh));  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 

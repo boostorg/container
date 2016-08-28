@@ -303,6 +303,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pmr_string_test", "pmr_stri
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "node_handle_test", "node_handle_test.vcproj", "{5A17C6C5-6C29-A74F-48FE-A7FA7A063106}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -613,6 +617,10 @@ Global
 		{85EADC21-42FA-F8A3-306C-A2029D5E7233}.Debug.Build.0 = Debug|Win32
 		{85EADC21-42FA-F8A3-306C-A2029D5E7233}.Release.ActiveCfg = Release|Win32
 		{85EADC21-42FA-F8A3-306C-A2029D5E7233}.Release.Build.0 = Release|Win32
+		{5A17C6C5-6C29-A74F-48FE-A7FA7A063106}.Debug.ActiveCfg = Debug|Win32
+		{5A17C6C5-6C29-A74F-48FE-A7FA7A063106}.Debug.Build.0 = Debug|Win32
+		{5A17C6C5-6C29-A74F-48FE-A7FA7A063106}.Release.ActiveCfg = Release|Win32
+		{5A17C6C5-6C29-A74F-48FE-A7FA7A063106}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

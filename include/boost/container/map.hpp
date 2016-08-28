@@ -53,6 +53,34 @@
 namespace boost {
 namespace container {
 
+///@cond
+
+template<class Key, class Mapped>
+struct pair_key_mapped_of_value
+{
+   typedef Key    key_type;
+   typedef Mapped mapped_type;
+
+   template<class Pair>
+   const key_type & key_of_value(const Pair &p) const
+   {  return p.first;  }
+
+   template<class Pair>
+   const mapped_type & mapped_of_value(const Pair &p) const
+   {  return p.second;  }
+
+   template<class Pair>
+   key_type & key_of_value(Pair &p) const
+   {  return const_cast<key_type&>(p.first);  }
+
+   template<class Pair>
+   mapped_type & mapped_of_value(Pair &p) const
+   {  return p.second;  }
+
+};
+
+///@endcond
+
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! A map is a kind of associative container that supports unique keys (contains at
@@ -78,7 +106,7 @@ class map
    ///@cond
    : public container_detail::tree
       < Key, std::pair<const Key, T>
-      , container_detail::select1st< std::pair<const Key, T> >
+      , container_detail::select1st<Key>
       , Compare, Allocator, MapOptions>
    ///@endcond
 {
@@ -86,13 +114,13 @@ class map
    private:
    BOOST_COPYABLE_AND_MOVABLE(map)
 
-   typedef std::pair<const Key, T>  value_type_impl;
+   typedef container_detail::select1st<Key>                                select_1st_t;
+   typedef std::pair<const Key, T>                                         value_type_impl;
    typedef container_detail::tree
-      <Key, value_type_impl, container_detail::select1st<value_type_impl>, Compare, Allocator, MapOptions> base_t;
-   typedef container_detail::pair <Key, T> movable_value_type_impl;
+      <Key, value_type_impl, select_1st_t, Compare, Allocator, MapOptions> base_t;
+   typedef container_detail::pair <Key, T>                                 movable_value_type_impl;
    typedef container_detail::tree_value_compare
-      < Key, value_type_impl, Compare, container_detail::select1st<value_type_impl>
-      >  value_compare_impl;
+      < Key, value_type_impl, Compare, select_1st_t>                       value_compare_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -102,10 +130,10 @@ class map
    //
    //////////////////////////////////////////////
 
-   typedef Key                                                              key_type;
-   typedef ::boost::container::allocator_traits<Allocator>                  allocator_traits_type;
-   typedef T                                                                mapped_type;
-   typedef std::pair<const Key, T>                                          value_type;
+   typedef Key                                                                      key_type;
+   typedef ::boost::container::allocator_traits<Allocator>                          allocator_traits_type;
+   typedef T                                                                        mapped_type;
+   typedef std::pair<const Key, T>                                                  value_type;
    typedef typename boost::container::allocator_traits<Allocator>::pointer          pointer;
    typedef typename boost::container::allocator_traits<Allocator>::const_pointer    const_pointer;
    typedef typename boost::container::allocator_traits<Allocator>::reference        reference;
@@ -122,6 +150,14 @@ class map
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)          const_reverse_iterator;
    typedef std::pair<key_type, mapped_type>                                         nonconst_value_type;
    typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                          movable_value_type;
+   typedef BOOST_CONTAINER_IMPDEF(node_handle<
+      typename base_t::node_type::container_node_type
+      BOOST_MOVE_I value_type
+      BOOST_MOVE_I allocator_type
+      BOOST_MOVE_I pair_key_mapped_of_value
+         <key_type BOOST_MOVE_I mapped_type> >)                                     node_type;
+   typedef BOOST_CONTAINER_IMPDEF
+      (insert_return_type_base<iterator BOOST_MOVE_I node_type>)                    insert_return_type;
 
    //////////////////////////////////////////////
    //
@@ -484,20 +520,20 @@ class map
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-   //! <b>Effects<b>: If there is no key equivalent to x in the map, inserts
+   //! <b>Effects</b>: If there is no key equivalent to x in the map, inserts
    //! value_type(x, T()) into the map.
    //!
-   //! <b>Returns<b>: A reference to the mapped_type corresponding to x in *this.
+   //! <b>Returns</b>: A reference to the mapped_type corresponding to x in *this.
    //!
-   //! <b>Complexity<b>: Logarithmic.
+   //! <b>Complexity</b>: Logarithmic.
    mapped_type& operator[](const key_type &k);
 
-   //! <b>Effects<b>: If there is no key equivalent to x in the map, inserts
+   //! <b>Effects</b>: If there is no key equivalent to x in the map, inserts
    //! value_type(boost::move(x), T()) into the map (the key is move-constructed)
    //!
-   //! <b>Returns<b>: A reference to the mapped_type corresponding to x in *this.
+   //! <b>Returns</b>: A reference to the mapped_type corresponding to x in *this.
    //!
-   //! <b>Complexity<b>: Logarithmic.
+   //! <b>Complexity</b>: Logarithmic.
    mapped_type& operator[](key_type &&k);
    #elif defined(BOOST_MOVE_HELPERS_RETURN_SFINAE_BROKEN)
       //in compilers like GCC 3.4, we can't catch temporaries
@@ -507,7 +543,7 @@ class map
       BOOST_MOVE_CONVERSION_AWARE_CATCH( operator[] , key_type, mapped_type&, this->priv_subscript)
    #endif
 
-   //! <b>Effects<b>: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
+   //! <b>Effects</b>: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
    //! to the mapped_type corresponding to the key k. If the key does not exist, inserts the new value
    //! as if by insert, constructing it from value_type(k, forward<M>(obj)).
    //! 
@@ -515,15 +551,15 @@ class map
    //! to the element obtained while it is held in the node handle are invalidated, and pointers and
    //! references obtained to that element before it was extracted become valid.
    //!
-   //! <b>Returns<b>: The bool component is true if the insertion took place and false if the assignment
+   //! <b>Returns</b>: The bool component is true if the insertion took place and false if the assignment
    //!   took place. The iterator component is pointing at the element that was inserted or updated.
    //!
-   //! <b>Complexity<b>: Logarithmic in the size of the container.
+   //! <b>Complexity</b>: Logarithmic in the size of the container.
    template <class M>
    BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> insert_or_assign(const key_type& k, BOOST_FWD_REF(M) obj)
    {  return this->base_t::insert_or_assign(const_iterator(), k, ::boost::forward<M>(obj));  }
 
-   //! <b>Effects<b>: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
+   //! <b>Effects</b>: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
    //! to the mapped_type corresponding to the key k. If the key does not exist, inserts the new value
    //! as if by insert, constructing it from value_type(k, move(obj)).
    //! 
@@ -531,15 +567,15 @@ class map
    //! to the element obtained while it is held in the node handle are invalidated, and pointers and
    //! references obtained to that element before it was extracted become valid.
    //!
-   //! <b>Returns<b>: The bool component is true if the insertion took place and false if the assignment
+   //! <b>Returns</b>: The bool component is true if the insertion took place and false if the assignment
    //!   took place. The iterator component is pointing at the element that was inserted or updated.
    //!
-   //! <b>Complexity<b>: Logarithmic in the size of the container.
+   //! <b>Complexity</b>: Logarithmic in the size of the container.
    template <class M>
    BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> insert_or_assign(BOOST_RV_REF(key_type) k, BOOST_FWD_REF(M) obj)
    {  return this->base_t::insert_or_assign(const_iterator(), ::boost::move(k), ::boost::forward<M>(obj));  }
 
-   //! <b>Effects<b>: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
+   //! <b>Effects</b>: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
    //! to the mapped_type corresponding to the key k. If the key does not exist, inserts the new value
    //! as if by insert, constructing it from value_type(k, forward<M>(obj)) and the new element
    //! to the container as close as possible to the position just before hint.
@@ -548,16 +584,16 @@ class map
    //! to the element obtained while it is held in the node handle are invalidated, and pointers and
    //! references obtained to that element before it was extracted become valid.
    //!
-   //! <b>Returns<b>: The bool component is true if the insertion took place and false if the assignment
+   //! <b>Returns</b>: The bool component is true if the insertion took place and false if the assignment
    //!   took place. The iterator component is pointing at the element that was inserted or updated.
    //!
-   //! <b>Complexity<b>: Logarithmic in the size of the container in general, but amortized constant if
+   //! <b>Complexity</b>: Logarithmic in the size of the container in general, but amortized constant if
    //! the new element is inserted just before hint.
    template <class M>
    BOOST_CONTAINER_FORCEINLINE iterator insert_or_assign(const_iterator hint, const key_type& k, BOOST_FWD_REF(M) obj)
    {  return this->base_t::insert_or_assign(hint, k, ::boost::forward<M>(obj));  }
 
-   //! <b>Effects<b>: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
+   //! <b>Effects</b>: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
    //! to the mapped_type corresponding to the key k. If the key does not exist, inserts the new value
    //! as if by insert, constructing it from value_type(k, move(obj)) and the new element
    //! to the container as close as possible to the position just before hint.
@@ -566,18 +602,18 @@ class map
    //! to the element obtained while it is held in the node handle are invalidated, and pointers and
    //! references obtained to that element before it was extracted become valid.
    //!
-   //! <b>Returns<b>: The bool component is true if the insertion took place and false if the assignment
+   //! <b>Returns</b>: The bool component is true if the insertion took place and false if the assignment
    //!   took place. The iterator component is pointing at the element that was inserted or updated.
    //!
-   //! <b>Complexity<b>: Logarithmic in the size of the container in general, but amortized constant if
+   //! <b>Complexity</b>: Logarithmic in the size of the container in general, but amortized constant if
    //! the new element is inserted just before hint.
    template <class M>
    BOOST_CONTAINER_FORCEINLINE iterator insert_or_assign(const_iterator hint, BOOST_RV_REF(key_type) k, BOOST_FWD_REF(M) obj)
    {  return this->base_t::insert_or_assign(hint, ::boost::move(k), ::boost::forward<M>(obj));  }
 
-   //! <b>Returns<b>: A reference to the element whose key is equivalent to x.
+   //! <b>Returns</b>: A reference to the element whose key is equivalent to x.
    //! Throws: An exception object of type out_of_range if no such element is present.
-   //! <b>Complexity<b>: logarithmic.
+   //! <b>Complexity</b>: logarithmic.
    T& at(const key_type& k)
    {
       iterator i = this->find(k);
@@ -587,9 +623,9 @@ class map
       return i->second;
    }
 
-   //! <b>Returns<b>: A reference to the element whose key is equivalent to x.
+   //! <b>Returns</b>: A reference to the element whose key is equivalent to x.
    //! Throws: An exception object of type out_of_range if no such element is present.
-   //! <b>Complexity<b>: logarithmic.
+   //! <b>Complexity</b>: logarithmic.
    const T& at(const key_type& k) const
    {
       const_iterator i = this->find(k);
@@ -625,7 +661,7 @@ class map
    //!
    //! <b>Complexity</b>: Logarithmic.
    BOOST_CONTAINER_FORCEINLINE std::pair<iterator,bool> insert(const nonconst_value_type& x)
-   { return this->base_t::insert_unique(x); }
+   { return this->try_emplace(x.first, x.second); }
 
    //! <b>Effects</b>: Inserts a new value_type move constructed from the pair if and
    //! only if there is no element in the container with key equivalent to the key of x.
@@ -636,7 +672,7 @@ class map
    //!
    //! <b>Complexity</b>: Logarithmic.
    BOOST_CONTAINER_FORCEINLINE std::pair<iterator,bool> insert(BOOST_RV_REF(nonconst_value_type) x)
-   { return this->base_t::insert_unique(boost::move(x)); }
+   { return this->try_emplace(boost::move(x.first), boost::move(x.second)); }
 
    //! <b>Effects</b>: Inserts a new value_type move constructed from the pair if and
    //! only if there is no element in the container with key equivalent to the key of x.
@@ -647,7 +683,7 @@ class map
    //!
    //! <b>Complexity</b>: Logarithmic.
    BOOST_CONTAINER_FORCEINLINE std::pair<iterator,bool> insert(BOOST_RV_REF(movable_value_type) x)
-   { return this->base_t::insert_unique(boost::move(x)); }
+   { return this->try_emplace(boost::move(x.first), boost::move(x.second)); }
 
    //! <b>Effects</b>: Move constructs a new value from x if and only if there is
    //!   no element in the container with key equivalent to the key of x.
@@ -682,7 +718,7 @@ class map
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    iterator insert(const_iterator p, BOOST_RV_REF(nonconst_value_type) x)
-   { return this->base_t::insert_unique_convertible(p, boost::move(x)); }
+   { return this->try_emplace(p, boost::move(x.first), boost::move(x.second)); }
 
    //! <b>Effects</b>: Move constructs a new value from x if and only if there is
    //!   no element in the container with key equivalent to the key of x.
@@ -694,7 +730,7 @@ class map
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    iterator insert(const_iterator p, BOOST_RV_REF(movable_value_type) x)
-   { return this->base_t::insert_unique_convertible(p, boost::move(x)); }
+   { return this->try_emplace(p, boost::move(x.first), boost::move(x.second)); }
 
    //! <b>Effects</b>: Inserts a copy of x in the container.
    //!   p is a hint pointing to where the insert should start to search.
@@ -703,7 +739,7 @@ class map
    //!
    //! <b>Complexity</b>: Logarithmic.
    iterator insert(const_iterator p, const nonconst_value_type& x)
-   { return this->base_t::insert_unique_convertible(p, x); }
+   { return this->try_emplace(p, x.first, x.second); }
 
    //! <b>Effects</b>: Inserts an element move constructed from x in the container.
    //!   p is a hint pointing to where the insert should start to search.
@@ -732,6 +768,38 @@ class map
    BOOST_CONTAINER_FORCEINLINE void insert(std::initializer_list<value_type> il)
    {  this->base_t::insert_unique(il.begin(), il.end()); }
 #endif
+
+   //! <b>Requires</b>: nh is empty or this->get_allocator() == nh.get_allocator().
+   //!
+   //! <b>Effects</b>: If nh is empty, has no effect. Otherwise, inserts the element owned
+   //!   by nh if and only if there is no element in the container with a key equivalent to nh.key().
+   //!
+   //! <b>Returns</b>: If nh is empty, insert_return_type.inserted is false, insert_return_type.position
+   //!   is end(), and insert_return_type.node is empty. Otherwise if the insertion took place,
+   //!   insert_return_type.inserted is true, insert_return_type.position points to the inserted element,
+   //!   and insert_return_type.node is empty; if the insertion failed, insert_return_type.inserted is
+   //!   false, insert_return_type.node has the previous value of nh, and insert_return_type.position
+   //!   points to an element with a key equivalent to nh.key().
+   //!
+   //! <b>Complexity</b>: Logarithmic
+   insert_return_type insert(BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
+   {
+      typename base_t::node_type  n(boost::move(nh));
+      typename base_t::insert_return_type base_ret(this->base_t::insert_unique_node(boost::move(n)));
+      return insert_return_type (base_ret.inserted, base_ret.position, boost::move(base_ret.node));
+   }
+
+   //! <b>Effects</b>: Same as `insert(node_type && nh)` but the element is inserted as close as possible
+   //!   to the position just prior to "hint".
+   //!
+   //! <b>Complexity</b>: logarithmic in general, but amortized constant if the element is inserted
+   //!   right before "hint".
+   insert_return_type insert(const_iterator hint, BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
+   {
+      typename base_t::node_type  n(boost::move(nh));
+      typename base_t::insert_return_type base_ret(this->base_t::insert_unique_node(hint, boost::move(n)));
+      return insert_return_type (base_ret.inserted, base_ret.position, boost::move(base_ret.node));
+   }
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -764,29 +832,29 @@ class map
    BOOST_CONTAINER_FORCEINLINE iterator emplace_hint(const_iterator p, BOOST_FWD_REF(Args)... args)
    {  return this->base_t::emplace_hint_unique(p, boost::forward<Args>(args)...); }
 
-   //! <b>Requires<b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
+   //! <b>Requires</b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
    //! forward_as_tuple(k), forward_as_tuple(forward<Args>(args)...).
    //! 
-   //! <b>Effects<b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
+   //! <b>Effects</b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
    //! inserts an object of type value_type constructed with piecewise_construct, forward_as_tuple(k),
    //! forward_as_tuple(forward<Args>(args)...).
    //! 
-   //! <b>Returns<b>: The bool component of the returned pair is true if and only if the
+   //! <b>Returns</b>: The bool component of the returned pair is true if and only if the
    //! insertion took place. The returned iterator points to the map element whose key is equivalent to k.
    //! 
-   //! <b>Complexity:<b> Logarithmic.
+   //! <b>Complexity</b>: Logarithmic.
    template <class... Args>
    BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> try_emplace(const key_type& k, BOOST_FWD_REF(Args)... args)
    {  return this->base_t::try_emplace(const_iterator(), k, boost::forward<Args>(args)...); }
 
-   //! <b>Requires<b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
+   //! <b>Requires</b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
    //! forward_as_tuple(k), forward_as_tuple(forward<Args>(args)...).
    //! 
-   //! <b>Effects<b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
+   //! <b>Effects</b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
    //! inserts an object of type value_type constructed with piecewise_construct, forward_as_tuple(k),
    //! forward_as_tuple(forward<Args>(args)...).
    //! 
-   //! <b>Returns<b>: The returned iterator points to the map element whose key is equivalent to k.
+   //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
    //! 
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if value
    //!   is inserted right before p.
@@ -794,29 +862,29 @@ class map
    BOOST_CONTAINER_FORCEINLINE iterator try_emplace(const_iterator hint, const key_type &k, BOOST_FWD_REF(Args)... args)
    {  return this->base_t::try_emplace(hint, k, boost::forward<Args>(args)...).first; }
 
-   //! <b>Requires<b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
+   //! <b>Requires</b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
    //! forward_as_tuple(move(k)), forward_as_tuple(forward<Args>(args)...).
    //! 
-   //! <b>Effects<b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
+   //! <b>Effects</b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
    //! inserts an object of type value_type constructed with piecewise_construct, forward_as_tuple(move(k)),
    //! forward_as_tuple(forward<Args>(args)...).
    //! 
-   //! <b>Returns<b>: The bool component of the returned pair is true if and only if the
+   //! <b>Returns</b>: The bool component of the returned pair is true if and only if the
    //! insertion took place. The returned iterator points to the map element whose key is equivalent to k.
    //! 
-   //! <b>Complexity:<b> Logarithmic.
+   //! <b>Complexity</b>: Logarithmic.
    template <class... Args>
    BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> try_emplace(BOOST_RV_REF(key_type) k, BOOST_FWD_REF(Args)... args)
    {  return this->base_t::try_emplace(const_iterator(), boost::move(k), boost::forward<Args>(args)...); }
 
-   //! <b>Requires<b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
+   //! <b>Requires</b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
    //! forward_as_tuple(move(k)), forward_as_tuple(forward<Args>(args)...).
    //! 
-   //! <b>Effects<b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
+   //! <b>Effects</b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
    //! inserts an object of type value_type constructed with piecewise_construct, forward_as_tuple(move(k)),
    //! forward_as_tuple(forward<Args>(args)...).
    //! 
-   //! <b>Returns<b>: The returned iterator points to the map element whose key is equivalent to k.
+   //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
    //! 
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if value
    //!   is inserted right before p.
@@ -881,6 +949,33 @@ class map
    //! <b>Complexity</b>: log(size())+N where N is the distance from first to last.
    iterator erase(const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW;
 
+   #endif
+
+   //! <b>Effects</b>: Removes the first element in the container with key equivalent to k.
+   //!
+   //! <b>Returns</b>: A node_type owning the element if found, otherwise an empty node_type.
+   //!
+   //! <b>Complexity</b>: log(a.size()).
+   node_type extract(const key_type& k)
+   {
+      typename base_t::node_type base_nh(this->base_t::extract(k));
+      node_type nh(boost::move(base_nh));
+      return BOOST_MOVE_RET(node_type, nh);
+   }
+
+   //! <b>Effects</b>: Removes the element pointed to by "position".
+   //!
+   //! <b>Returns</b>: A node_type owning the element, otherwise an empty node_type.
+   //!
+   //! <b>Complexity</b>: Amortized constant.
+   node_type extract(const_iterator position)
+   {
+      typename base_t::node_type base_nh(this->base_t::extract(position));
+      node_type nh(boost::move(base_nh));
+      return BOOST_MOVE_RET(node_type, nh);
+   }
+
+   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
    //! <b>Throws</b>: Nothing.
@@ -1012,7 +1107,7 @@ class map
    template<class KeyConvertible>
    BOOST_CONTAINER_FORCEINLINE mapped_type& priv_subscript(BOOST_FWD_REF(KeyConvertible) k)
    {
-      return this->insert_from_key(boost::forward<KeyConvertible>(k))->second;
+      return this->try_emplace(boost::forward<KeyConvertible>(k)).first->second;
    }
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
@@ -1063,7 +1158,7 @@ class multimap
    ///@cond
    : public container_detail::tree
       < Key, std::pair<const Key, T>
-      , container_detail::select1st< std::pair<const Key, T> >
+      , container_detail::select1st<Key>
       , Compare, Allocator, MultiMapOptions>
    ///@endcond
 {
@@ -1071,16 +1166,16 @@ class multimap
    private:
    BOOST_COPYABLE_AND_MOVABLE(multimap)
 
-   typedef std::pair<const Key, T>  value_type_impl;
+   typedef container_detail::select1st<Key>                                      select_1st_t;
+   typedef std::pair<const Key, T>                                               value_type_impl;
    typedef container_detail::tree
-      <Key, value_type_impl, container_detail::select1st<value_type_impl>, Compare, Allocator, MultiMapOptions> base_t;
-   typedef container_detail::pair <Key, T> movable_value_type_impl;
+      <Key, value_type_impl, select_1st_t, Compare, Allocator, MultiMapOptions>  base_t;
+   typedef container_detail::pair <Key, T>                                       movable_value_type_impl;
    typedef container_detail::tree_value_compare
-      < Key, value_type_impl, Compare, container_detail::select1st<value_type_impl>
-      >  value_compare_impl;
+      <Key, value_type_impl, Compare, select_1st_t>                              value_compare_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
-   typedef ::boost::container::allocator_traits<Allocator>                          allocator_traits_type;
+   typedef ::boost::container::allocator_traits<Allocator>                       allocator_traits_type;
 
    public:
    //////////////////////////////////////////////
@@ -1108,6 +1203,12 @@ class multimap
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)          const_reverse_iterator;
    typedef std::pair<key_type, mapped_type>                                         nonconst_value_type;
    typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                          movable_value_type;
+   typedef BOOST_CONTAINER_IMPDEF(node_handle<
+      typename base_t::node_type::container_node_type
+      BOOST_MOVE_I value_type
+      BOOST_MOVE_I allocator_type
+      BOOST_MOVE_I pair_key_mapped_of_value
+         <key_type BOOST_MOVE_I mapped_type> >)                                     node_type;
 
    //////////////////////////////////////////////
    //
@@ -1426,21 +1527,21 @@ class multimap
    //!
    //! <b>Complexity</b>: Logarithmic.
    BOOST_CONTAINER_FORCEINLINE iterator insert(const nonconst_value_type& x)
-   { return this->base_t::insert_equal(x); }
+   { return this->base_t::emplace_equal(x); }
 
    //! <b>Effects</b>: Inserts a new value move-constructed from x and returns
    //!   the iterator pointing to the newly inserted element.
    //!
    //! <b>Complexity</b>: Logarithmic.
    BOOST_CONTAINER_FORCEINLINE iterator insert(BOOST_RV_REF(nonconst_value_type) x)
-   { return this->base_t::insert_equal(boost::move(x)); }
+   { return this->base_t::emplace_equal(boost::move(x)); }
 
    //! <b>Effects</b>: Inserts a new value move-constructed from x and returns
    //!   the iterator pointing to the newly inserted element.
    //!
    //! <b>Complexity</b>: Logarithmic.
    iterator insert(BOOST_RV_REF(movable_value_type) x)
-   { return this->base_t::insert_equal(boost::move(x)); }
+   { return this->base_t::emplace_equal(boost::move(x)); }
 
    //! <b>Effects</b>: Inserts a copy of x in the container.
    //!   p is a hint pointing to where the insert should start to search.
@@ -1462,7 +1563,7 @@ class multimap
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, const nonconst_value_type& x)
-   { return this->base_t::insert_equal_convertible(p, x); }
+   { return this->base_t::emplace_hint_equal(p, x); }
 
    //! <b>Effects</b>: Inserts a new value move constructed from x in the container.
    //!   p is a hint pointing to where the insert should start to search.
@@ -1473,7 +1574,7 @@ class multimap
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, BOOST_RV_REF(nonconst_value_type) x)
-   { return this->base_t::insert_equal_convertible(p, boost::move(x)); }
+   { return this->base_t::emplace_hint_equal(p, boost::move(x)); }
 
    //! <b>Effects</b>: Inserts a new value move constructed from x in the container.
    //!   p is a hint pointing to where the insert should start to search.
@@ -1484,7 +1585,7 @@ class multimap
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, BOOST_RV_REF(movable_value_type) x)
-   { return this->base_t::insert_equal_convertible(p, boost::move(x)); }
+   { return this->base_t::emplace_hint_equal(p, boost::move(x)); }
 
    //! <b>Requires</b>: first, last are not iterators into *this.
    //!
@@ -1503,6 +1604,31 @@ class multimap
    {  this->base_t::insert_equal(il.begin(), il.end()); }
 #endif
 
+   //! <b>Requires</b>: nh is empty or this->get_allocator() == nh.get_allocator().
+   //!
+   //! <b>Effects/Returns</b>: If nh is empty, has no effect and returns end(). Otherwise, inserts 
+   //!   the element owned by nh and returns an iterator pointing to the newly inserted element.
+   //!   If a range containing elements with keys equivalent to nh.key() exists, 
+   //!   the element is inserted at the end of that range. nh is always emptied.
+   //!
+   //! <b>Complexity</b>: Logarithmic
+   iterator insert(BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
+   {
+      typename base_t::node_type n(boost::move(nh));
+      return this->base_t::insert_equal_node(boost::move(n));
+   }
+
+   //! <b>Effects</b>: Same as `insert(node_type && nh)` but the element is inserted as close as possible
+   //!   to the position just prior to "hint".
+   //!
+   //! <b>Complexity</b>: logarithmic in general, but amortized constant if the element is inserted
+   //!   right before "hint".
+   iterator insert(const_iterator hint, BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
+   {
+      typename base_t::node_type n(boost::move(nh));
+      return this->base_t::insert_equal_node(hint, boost::move(n));
+   }
+
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! @copydoc ::boost::container::set::erase(const_iterator)
@@ -1513,7 +1639,23 @@ class multimap
 
    //! @copydoc ::boost::container::set::erase(const_iterator,const_iterator)
    iterator erase(const_iterator first, const_iterator last);
+   #endif
 
+   //! @copydoc ::boost::container::map::extract(const key_type&)
+   node_type extract(const key_type& k)
+   {
+      typename base_t::node_type base_nh(this->base_t::extract(k));
+      return node_type(boost::move(base_nh));
+   }
+
+   //! @copydoc ::boost::container::map::extract(const_iterator)
+   node_type extract(const_iterator position)
+   {
+      typename base_t::node_type base_nh(this->base_t::extract(position));
+      return node_type (boost::move(base_nh));
+   }
+
+   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //! @copydoc ::boost::container::set::swap
    void swap(multiset& x)
       BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
