@@ -394,37 +394,39 @@ class RecyclingCloner
    intrusive_container &m_icont;
 };
 
-template<class KeyValueCompare, class Node>
-//where KeyValueCompare is tree_value_compare<Key, T, Compare, KeyOfValue>
+template<class KeyCompare, class KeyOfValue>
 struct key_node_compare
-   :  private KeyValueCompare
+   :  public boost::intrusive::detail::ebo_functor_holder<KeyCompare>
 {
-   BOOST_CONTAINER_FORCEINLINE explicit key_node_compare(const KeyValueCompare &comp)
-      :  KeyValueCompare(comp)
+   BOOST_CONTAINER_FORCEINLINE explicit key_node_compare(const KeyCompare &comp)
+      :  base_t(comp)
    {}
 
-   template<class T>
-   struct is_node
-   {
-      static const bool value = is_same<T, Node>::value;
-   };
+   typedef boost::intrusive::detail::ebo_functor_holder<KeyCompare> base_t;
+   typedef KeyCompare                  key_compare;
+   typedef KeyOfValue                  key_of_value;
+   typedef typename KeyOfValue::type   key_type;
 
-   template<class T>
-   BOOST_CONTAINER_FORCEINLINE typename enable_if_c<is_node<T>::value, const typename KeyValueCompare::value_type &>::type
-      key_forward(const T &node) const
-   {  return node.get_data();  }
+   BOOST_CONTAINER_FORCEINLINE const key_compare &key_comp() const
+   {  return static_cast<const key_compare &>(*this);  }
 
-   template<class T>
-   #if defined(BOOST_MOVE_HELPERS_RETURN_SFINAE_BROKEN)
-   BOOST_CONTAINER_FORCEINLINE const T &key_forward(const T &key, typename enable_if_c<!is_node<T>::value>::type* =0) const
-   #else
-   BOOST_CONTAINER_FORCEINLINE typename enable_if_c<!is_node<T>::value, const T &>::type key_forward(const T &key) const
-   #endif
-   {  return key; }
+   BOOST_CONTAINER_FORCEINLINE key_compare &key_comp()
+   {  return static_cast<key_compare &>(*this);  }
 
-   template<class KeyType, class KeyType2>
-   BOOST_CONTAINER_FORCEINLINE bool operator()(const KeyType &key1, const KeyType2 &key2) const
-   {  return KeyValueCompare::operator()(this->key_forward(key1), this->key_forward(key2));  }
+   BOOST_CONTAINER_FORCEINLINE bool operator()(const key_type &key1, const key_type &key2) const
+   {  return this->key_comp()(key1, key2);  }
+
+   template<class U>
+   BOOST_CONTAINER_FORCEINLINE bool operator()(const key_type &key1, const U &nonkey2) const
+   {  return this->key_comp()(key1, key_of_value()(nonkey2.get_data()));  }
+
+   template<class U>
+   BOOST_CONTAINER_FORCEINLINE bool operator()(const U &nonkey1, const key_type &key2) const
+   {  return this->key_comp()(key_of_value()(nonkey1.get_data()), key2);  }
+
+   template<class U, class V>
+   BOOST_CONTAINER_FORCEINLINE bool operator()(const U &nonkey1, const V &nonkey2) const
+   {  return this->key_comp()(key_of_value()(nonkey1.get_data()), key_of_value()(nonkey2.get_data()));  }
 };
 
 template <class Key, class T, class KeyOfValue,
@@ -434,12 +436,12 @@ class tree
    : protected container_detail::node_alloc_holder
       < Allocator
       , typename container_detail::intrusive_tree_type
-         < Allocator, tree_value_compare<Key, T, Compare, KeyOfValue> //ValComp
+         < Allocator, tree_value_compare<Compare, KeyOfValue> //ValComp
          , Options::tree_type, Options::optimize_size>::type
       >
 {
    typedef tree_value_compare
-            <Key, T, Compare, KeyOfValue>                   ValComp;
+            <Compare, KeyOfValue>                           ValComp;
    typedef typename container_detail::intrusive_tree_type
          < Allocator, ValComp, Options::tree_type
          , Options::optimize_size>::type                    Icont;
@@ -497,7 +499,7 @@ class tree
 
    private:
 
-   typedef key_node_compare<value_compare, Node>  KeyNodeCompare;
+   typedef key_node_compare<key_compare, KeyOfValue>  KeyNodeCompare;
 
    public:
 
@@ -815,7 +817,7 @@ class tree
       (const key_type& key, insert_commit_data &data)
    {
       std::pair<iiterator, bool> ret =
-         this->icont().insert_unique_check(key, KeyNodeCompare(value_comp()), data);
+         this->icont().insert_unique_check(key, KeyNodeCompare(key_comp()), data);
       return std::pair<iterator, bool>(iterator(ret.first), ret.second);
    }
 
@@ -824,7 +826,7 @@ class tree
    {
       BOOST_ASSERT((priv_is_linked)(hint));
       std::pair<iiterator, bool> ret =
-         this->icont().insert_unique_check(hint.get(), key, KeyNodeCompare(value_comp()), data);
+         this->icont().insert_unique_check(hint.get(), key, KeyNodeCompare(key_comp()), data);
       return std::pair<iterator, bool>(iterator(ret.first), ret.second);
    }
 
@@ -952,8 +954,8 @@ class tree
       insert_commit_data data;
       const key_type & k = key;  //Support emulated rvalue references
       std::pair<iiterator, bool> ret =
-         hint == const_iterator() ? this->icont().insert_unique_check(            k, KeyNodeCompare(value_comp()), data)
-                                  : this->icont().insert_unique_check(hint.get(), k, KeyNodeCompare(value_comp()), data);
+         hint == const_iterator() ? this->icont().insert_unique_check(            k, KeyNodeCompare(key_comp()), data)
+                                  : this->icont().insert_unique_check(hint.get(), k, KeyNodeCompare(key_comp()), data);
       if(ret.second){
          ret.first = this->icont().insert_unique_commit
             (*AllocHolder::create_node(try_emplace_t(), boost::forward<KeyType>(key), boost::forward<Args>(args)...), data);
@@ -1000,8 +1002,8 @@ class tree
       insert_commit_data data;\
       const key_type & k = key;\
       std::pair<iiterator, bool> ret =\
-         hint == const_iterator() ? this->icont().insert_unique_check(            k, KeyNodeCompare(value_comp()), data)\
-                                  : this->icont().insert_unique_check(hint.get(), k, KeyNodeCompare(value_comp()), data);\
+         hint == const_iterator() ? this->icont().insert_unique_check(            k, KeyNodeCompare(key_comp()), data)\
+                                  : this->icont().insert_unique_check(hint.get(), k, KeyNodeCompare(key_comp()), data);\
       if(ret.second){\
          ret.first = this->icont().insert_unique_commit\
             (*AllocHolder::create_node(try_emplace_t(), boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N), data);\
@@ -1080,8 +1082,8 @@ class tree
       insert_commit_data data;
       const key_type & k = key;  //Support emulated rvalue references
       std::pair<iiterator, bool> ret =
-         hint == const_iterator() ? this->icont().insert_unique_check(k, KeyNodeCompare(value_comp()), data)
-                                  : this->icont().insert_unique_check(hint.get(), k, KeyNodeCompare(value_comp()), data);
+         hint == const_iterator() ? this->icont().insert_unique_check(k, KeyNodeCompare(key_comp()), data)
+                                  : this->icont().insert_unique_check(hint.get(), k, KeyNodeCompare(key_comp()), data);
       if(ret.second){
          ret.first = this->priv_insert_or_assign_commit(boost::forward<KeyType>(key), boost::forward<M>(obj), data);
       }
@@ -1098,7 +1100,7 @@ class tree
    }
 
    BOOST_CONTAINER_FORCEINLINE size_type erase(const key_type& k)
-   {  return AllocHolder::erase_key(k, KeyNodeCompare(value_comp()), alloc_version()); }
+   {  return AllocHolder::erase_key(k, KeyNodeCompare(key_comp()), alloc_version()); }
 
    iterator erase(const_iterator first, const_iterator last)
    {
@@ -1180,37 +1182,37 @@ class tree
    // search operations. Const and non-const overloads even if no iterator is returned
    // so splay implementations can to their rebalancing when searching in non-const versions
    BOOST_CONTAINER_FORCEINLINE iterator find(const key_type& k)
-   {  return iterator(this->icont().find(k, KeyNodeCompare(value_comp())));  }
+   {  return iterator(this->icont().find(k, KeyNodeCompare(key_comp())));  }
 
    BOOST_CONTAINER_FORCEINLINE const_iterator find(const key_type& k) const
-   {  return const_iterator(this->non_const_icont().find(k, KeyNodeCompare(value_comp())));  }
+   {  return const_iterator(this->non_const_icont().find(k, KeyNodeCompare(key_comp())));  }
 
    BOOST_CONTAINER_FORCEINLINE size_type count(const key_type& k) const
-   {  return size_type(this->icont().count(k, KeyNodeCompare(value_comp()))); }
+   {  return size_type(this->icont().count(k, KeyNodeCompare(key_comp()))); }
 
    BOOST_CONTAINER_FORCEINLINE iterator lower_bound(const key_type& k)
-   {  return iterator(this->icont().lower_bound(k, KeyNodeCompare(value_comp())));  }
+   {  return iterator(this->icont().lower_bound(k, KeyNodeCompare(key_comp())));  }
 
    BOOST_CONTAINER_FORCEINLINE const_iterator lower_bound(const key_type& k) const
-   {  return const_iterator(this->non_const_icont().lower_bound(k, KeyNodeCompare(value_comp())));  }
+   {  return const_iterator(this->non_const_icont().lower_bound(k, KeyNodeCompare(key_comp())));  }
 
    BOOST_CONTAINER_FORCEINLINE iterator upper_bound(const key_type& k)
-   {  return iterator(this->icont().upper_bound(k, KeyNodeCompare(value_comp())));   }
+   {  return iterator(this->icont().upper_bound(k, KeyNodeCompare(key_comp())));   }
 
    BOOST_CONTAINER_FORCEINLINE const_iterator upper_bound(const key_type& k) const
-   {  return const_iterator(this->non_const_icont().upper_bound(k, KeyNodeCompare(value_comp())));  }
+   {  return const_iterator(this->non_const_icont().upper_bound(k, KeyNodeCompare(key_comp())));  }
 
    std::pair<iterator,iterator> equal_range(const key_type& k)
    {
       std::pair<iiterator, iiterator> ret =
-         this->icont().equal_range(k, KeyNodeCompare(value_comp()));
+         this->icont().equal_range(k, KeyNodeCompare(key_comp()));
       return std::pair<iterator,iterator>(iterator(ret.first), iterator(ret.second));
    }
 
    std::pair<const_iterator, const_iterator> equal_range(const key_type& k) const
    {
       std::pair<iiterator, iiterator> ret =
-         this->non_const_icont().equal_range(k, KeyNodeCompare(value_comp()));
+         this->non_const_icont().equal_range(k, KeyNodeCompare(key_comp()));
       return std::pair<const_iterator,const_iterator>
          (const_iterator(ret.first), const_iterator(ret.second));
    }
@@ -1218,14 +1220,14 @@ class tree
    std::pair<iterator,iterator> lower_bound_range(const key_type& k)
    {
       std::pair<iiterator, iiterator> ret =
-         this->icont().lower_bound_range(k, KeyNodeCompare(value_comp()));
+         this->icont().lower_bound_range(k, KeyNodeCompare(key_comp()));
       return std::pair<iterator,iterator>(iterator(ret.first), iterator(ret.second));
    }
 
    std::pair<const_iterator, const_iterator> lower_bound_range(const key_type& k) const
    {
       std::pair<iiterator, iiterator> ret =
-         this->non_const_icont().lower_bound_range(k, KeyNodeCompare(value_comp()));
+         this->non_const_icont().lower_bound_range(k, KeyNodeCompare(key_comp()));
       return std::pair<const_iterator,const_iterator>
          (const_iterator(ret.first), const_iterator(ret.second));
    }

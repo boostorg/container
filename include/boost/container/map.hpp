@@ -120,7 +120,7 @@ class map
       <Key, value_type_impl, select_1st_t, Compare, Allocator, MapOptions> base_t;
    typedef container_detail::pair <Key, T>                                 movable_value_type_impl;
    typedef container_detail::tree_value_compare
-      < Key, value_type_impl, Compare, select_1st_t>                       value_compare_impl;
+      <Compare, select_1st_t>                                              value_compare_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -1172,7 +1172,7 @@ class multimap
       <Key, value_type_impl, select_1st_t, Compare, Allocator, MultiMapOptions>  base_t;
    typedef container_detail::pair <Key, T>                                       movable_value_type_impl;
    typedef container_detail::tree_value_compare
-      <Key, value_type_impl, Compare, select_1st_t>                              value_compare_impl;
+      <Compare, select_1st_t>                                                    value_compare_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    typedef ::boost::container::allocator_traits<Allocator>                       allocator_traits_type;
