@@ -1724,21 +1724,24 @@ class vector
    //! <b>Effects</b>: Inserts an object of type T constructed with
    //!   std::forward<Args>(args)... in the end of the vector.
    //!
+   //! <b>Returns</b>: A reference to the created object.
+   //!
    //! <b>Throws</b>: If memory allocation throws or the in-place constructor throws or
    //!   T's copy/move constructor throws.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    template<class ...Args>
-   BOOST_CONTAINER_FORCEINLINE void emplace_back(BOOST_FWD_REF(Args)...args)
+   BOOST_CONTAINER_FORCEINLINE reference emplace_back(BOOST_FWD_REF(Args)...args)
    {
       if (BOOST_LIKELY(this->room_enough())){
          //There is more memory, just construct a new object at the end
          allocator_traits_type::construct(this->m_holder.alloc(), this->priv_raw_end(), ::boost::forward<Args>(args)...);
          ++this->m_holder.m_size;
+         return *this->priv_raw_end();
       }
       else{
          typedef container_detail::insert_emplace_proxy<Allocator, T*, Args...> type;
-         this->priv_forward_range_insert_no_capacity
+         return *this->priv_forward_range_insert_no_capacity
             (this->back_ptr(), 1, type(::boost::forward<Args>(args)...), alloc_version());
       }
    }
@@ -1787,16 +1790,17 @@ class vector
 
    #define BOOST_CONTAINER_VECTOR_EMPLACE_CODE(N) \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
-   BOOST_CONTAINER_FORCEINLINE void emplace_back(BOOST_MOVE_UREF##N)\
+   BOOST_CONTAINER_FORCEINLINE reference emplace_back(BOOST_MOVE_UREF##N)\
    {\
       if (BOOST_LIKELY(this->room_enough())){\
          allocator_traits_type::construct (this->m_holder.alloc()\
             , this->priv_raw_end() BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
          ++this->m_holder.m_size;\
+         return *this->priv_raw_end();\
       }\
       else{\
          typedef container_detail::insert_emplace_proxy_arg##N<Allocator, T* BOOST_MOVE_I##N BOOST_MOVE_TARG##N> type;\
-         this->priv_forward_range_insert_no_capacity\
+         return *this->priv_forward_range_insert_no_capacity\
             ( this->back_ptr(), 1, type(BOOST_MOVE_FWD##N), alloc_version());\
       }\
    }\

@@ -1348,44 +1348,52 @@ class deque : protected deque_base<Allocator>
    //! <b>Effects</b>: Inserts an object of type T constructed with
    //!   std::forward<Args>(args)... in the beginning of the deque.
    //!
+   //! <b>Returns</b>: A reference to the created object.
+   //!
    //! <b>Throws</b>: If memory allocation throws or the in-place constructor throws.
    //!
    //! <b>Complexity</b>: Amortized constant time
    template <class... Args>
-   void emplace_front(BOOST_FWD_REF(Args)... args)
+   reference emplace_front(BOOST_FWD_REF(Args)... args)
    {
       if(this->priv_push_front_simple_available()){
+         reference r = *this->priv_push_front_simple_pos();
          allocator_traits_type::construct
             ( this->alloc()
             , this->priv_push_front_simple_pos()
             , boost::forward<Args>(args)...);
          this->priv_push_front_simple_commit();
+         return r;
       }
       else{
          typedef container_detail::insert_nonmovable_emplace_proxy<Allocator, iterator, Args...> type;
-         this->priv_insert_front_aux_impl(1, type(boost::forward<Args>(args)...));
+         return *this->priv_insert_front_aux_impl(1, type(boost::forward<Args>(args)...));
       }
    }
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
    //!   std::forward<Args>(args)... in the end of the deque.
    //!
+   //! <b>Returns</b>: A reference to the created object.
+   //!
    //! <b>Throws</b>: If memory allocation throws or the in-place constructor throws.
    //!
    //! <b>Complexity</b>: Amortized constant time
    template <class... Args>
-   void emplace_back(BOOST_FWD_REF(Args)... args)
+   reference emplace_back(BOOST_FWD_REF(Args)... args)
    {
       if(this->priv_push_back_simple_available()){
+         reference r = *this->priv_push_back_simple_pos();
          allocator_traits_type::construct
             ( this->alloc()
             , this->priv_push_back_simple_pos()
             , boost::forward<Args>(args)...);
          this->priv_push_back_simple_commit();
+         return r;
       }
       else{
          typedef container_detail::insert_nonmovable_emplace_proxy<Allocator, iterator, Args...> type;
-         this->priv_insert_back_aux_impl(1, type(boost::forward<Args>(args)...));
+         return *this->priv_insert_back_aux_impl(1, type(boost::forward<Args>(args)...));
       }
    }
 
@@ -1420,32 +1428,36 @@ class deque : protected deque_base<Allocator>
 
    #define BOOST_CONTAINER_DEQUE_EMPLACE_CODE(N) \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N\
-   void emplace_front(BOOST_MOVE_UREF##N)\
+   reference emplace_front(BOOST_MOVE_UREF##N)\
    {\
       if(priv_push_front_simple_available()){\
+         reference r = *this->priv_push_front_simple_pos();\
          allocator_traits_type::construct\
             ( this->alloc(), this->priv_push_front_simple_pos() BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
          priv_push_front_simple_commit();\
+         return r;\
       }\
       else{\
          typedef container_detail::insert_nonmovable_emplace_proxy##N\
                <Allocator, iterator BOOST_MOVE_I##N BOOST_MOVE_TARG##N> type;\
-         priv_insert_front_aux_impl(1, type(BOOST_MOVE_FWD##N));\
+         return *priv_insert_front_aux_impl(1, type(BOOST_MOVE_FWD##N));\
       }\
    }\
    \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N\
-   void emplace_back(BOOST_MOVE_UREF##N)\
+   reference emplace_back(BOOST_MOVE_UREF##N)\
    {\
       if(priv_push_back_simple_available()){\
+         reference r = *this->priv_push_back_simple_pos();\
          allocator_traits_type::construct\
             ( this->alloc(), this->priv_push_back_simple_pos() BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
          priv_push_back_simple_commit();\
+         return r;\
       }\
       else{\
          typedef container_detail::insert_nonmovable_emplace_proxy##N\
                <Allocator, iterator BOOST_MOVE_I##N BOOST_MOVE_TARG##N> type;\
-         priv_insert_back_aux_impl(1, type(BOOST_MOVE_FWD##N));\
+         return *priv_insert_back_aux_impl(1, type(BOOST_MOVE_FWD##N));\
       }\
    }\
    \

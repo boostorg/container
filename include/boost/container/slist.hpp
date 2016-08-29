@@ -714,13 +714,15 @@ class slist
    //! <b>Effects</b>: Inserts an object of type T constructed with
    //!   std::forward<Args>(args)... in the front of the list
    //!
+   //! <b>Returns</b>: A reference to the created object.
+   //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    template <class... Args>
-   void emplace_front(BOOST_FWD_REF(Args)... args)
-   {  this->emplace_after(this->cbefore_begin(), boost::forward<Args>(args)...); }
+   reference emplace_front(BOOST_FWD_REF(Args)... args)
+   {  return *this->emplace_after(this->cbefore_begin(), boost::forward<Args>(args)...); }
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
    //!   std::forward<Args>(args)... after prev
@@ -740,8 +742,8 @@ class slist
 
    #define BOOST_CONTAINER_SLIST_EMPLACE_CODE(N) \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
-   void emplace_front(BOOST_MOVE_UREF##N)\
-   {  this->emplace_after(this->cbefore_begin() BOOST_MOVE_I##N BOOST_MOVE_FWD##N);}\
+   reference emplace_front(BOOST_MOVE_UREF##N)\
+   {  return *this->emplace_after(this->cbefore_begin() BOOST_MOVE_I##N BOOST_MOVE_FWD##N);}\
    \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    iterator emplace_after(const_iterator p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\

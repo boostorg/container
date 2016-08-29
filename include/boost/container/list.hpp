@@ -709,24 +709,28 @@ class list
    //! <b>Effects</b>: Inserts an object of type T constructed with
    //!   std::forward<Args>(args)... in the end of the list.
    //!
+   //! <b>Returns</b>: A reference to the created object.
+   //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's in-place constructor throws.
    //!
    //! <b>Complexity</b>: Constant
    template <class... Args>
-   void emplace_back(BOOST_FWD_REF(Args)... args)
-   {  this->emplace(this->cend(), boost::forward<Args>(args)...); }
+   reference emplace_back(BOOST_FWD_REF(Args)... args)
+   {  return *this->emplace(this->cend(), boost::forward<Args>(args)...); }
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
    //!   std::forward<Args>(args)... in the beginning of the list.
    //!
+   //! <b>Returns</b>: A reference to the created object.
+   //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's in-place constructor throws.
    //!
    //! <b>Complexity</b>: Constant
    template <class... Args>
-   void emplace_front(BOOST_FWD_REF(Args)... args)
-   {  this->emplace(this->cbegin(), boost::forward<Args>(args)...);  }
+   reference emplace_front(BOOST_FWD_REF(Args)... args)
+   {  return *this->emplace(this->cbegin(), boost::forward<Args>(args)...);  }
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
    //!   std::forward<Args>(args)... before p.
@@ -747,12 +751,12 @@ class list
 
    #define BOOST_CONTAINER_LIST_EMPLACE_CODE(N) \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
-   void emplace_back(BOOST_MOVE_UREF##N)\
-   {  this->emplace(this->cend() BOOST_MOVE_I##N BOOST_MOVE_FWD##N);  }\
+   reference emplace_back(BOOST_MOVE_UREF##N)\
+   {  return *this->emplace(this->cend() BOOST_MOVE_I##N BOOST_MOVE_FWD##N);  }\
    \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
-   void emplace_front(BOOST_MOVE_UREF##N)\
-   {  this->emplace(this->cbegin() BOOST_MOVE_I##N BOOST_MOVE_FWD##N);}\
+   reference emplace_front(BOOST_MOVE_UREF##N)\
+   {  return *this->emplace(this->cbegin() BOOST_MOVE_I##N BOOST_MOVE_FWD##N);}\
    \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    iterator emplace(const_iterator position BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\

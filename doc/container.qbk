@@ -1234,6 +1234,8 @@ use [*Boost.Container]? There are several reasons for that:
 * Implemented C++17 `insert_or_assign`/`try_emplace` for [classref boost::container::map map] and [classref boost::container::flat_map flat_map].
 * Implemented C++17 `extract`/`insert(node)` for [classref boost::container::map map], [classref boost::container::multimap multimap],
    [classref boost::container::set set], [classref boost::container::multiset multiset].
+* Implemented C++17's [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0084r2.pdf P0084R2 Emplace Return Type]
+  in `deque`, `vector`, `stable_vector`, `small_vector`, `static_vector`, `list` and `slist`.
 
 [endsect]
 
