@@ -58,7 +58,6 @@ namespace container_detail {
 //Instantiate base class as previous instantiations don't instantiate inherited members
 template class tree
    < test::movable_and_copyable_int
-   , test::movable_and_copyable_int
    , identity<test::movable_and_copyable_int>
    , std::less<test::movable_and_copyable_int>
    , test::simple_allocator<test::movable_and_copyable_int>
@@ -67,7 +66,6 @@ template class tree
 
 template class tree
    < test::movable_and_copyable_int
-   , test::movable_and_copyable_int
    , identity<test::movable_and_copyable_int>
    , std::less<test::movable_and_copyable_int>
    , std::allocator<test::movable_and_copyable_int>
@@ -76,7 +74,6 @@ template class tree
 
 template class tree
    < test::movable_and_copyable_int
-   , test::movable_and_copyable_int
    , identity<test::movable_and_copyable_int>
    , std::less<test::movable_and_copyable_int>
    , adaptive_pool<test::movable_and_copyable_int>
@@ -354,6 +351,13 @@ int test_set_variants()
    return 0;
 }
 
+void test_merge_from_different_comparison()
+{
+   set<int> set1;
+   set<int, std::greater<int> > set2;
+   set1.merge(set2);
+}
+
 
 int main ()
 {
@@ -380,6 +384,8 @@ int main ()
 	   s.insert(p);
 	   s.emplace(p);
    }
+
+   test_merge_from_different_comparison();
 
    ////////////////////////////////////
    //    Testing allocator implementations

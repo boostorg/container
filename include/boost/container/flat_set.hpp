@@ -47,6 +47,11 @@
 namespace boost {
 namespace container {
 
+#if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+template <class Key, class T, class Compare, class Allocator>
+class flat_multimap;
+#endif
+
 //! flat_set is a Sorted Associative Container that stores objects of type Key.
 //! It is also a Unique Associative Container, meaning that no two elements are the same.
 //!
@@ -69,13 +74,21 @@ template <class Key, class Compare, class Allocator>
 #endif
 class flat_set
    ///@cond
-   : public container_detail::flat_tree<Key, Key, container_detail::identity<Key>, Compare, Allocator>
+   : public container_detail::flat_tree<Key, container_detail::identity<Key>, Compare, Allocator>
    ///@endcond
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(flat_set)
-   typedef container_detail::flat_tree<Key, Key, container_detail::identity<Key>, Compare, Allocator> base_t;
+   typedef container_detail::flat_tree<Key, container_detail::identity<Key>, Compare, Allocator> base_t;
+
+   public:
+   base_t &tree()
+   {  return *this;  }
+
+   const base_t &tree() const
+   {  return *this;  }
+
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -605,6 +618,26 @@ class flat_set
    {  this->base_t::insert_unique(ordered_unique_range, il.begin(), il.end()); }
 #endif
 
+   //! @copydoc ::boost::container::flat_map::merge(flat_map<Key, T, C2, Allocator>&)
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge(flat_set<Key, C2, Allocator>& source)
+   {  this->base_t::merge_unique(source.tree());   }
+
+   //! @copydoc ::boost::container::flat_map::merge(flat_set<Key, C2, Allocator>&)
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_set<Key, C2, Allocator> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<flat_set<Key, C2, Allocator>&>(source));   }
+
+   //! @copydoc ::boost::container::flat_map::merge(flat_multimap<Key, T, C2, Allocator>&)
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge(flat_multiset<Key, C2, Allocator>& source)
+   {  this->base_t::merge_unique(source.tree());   }
+
+   //! @copydoc ::boost::container::flat_map::merge(flat_multiset<Key, C2, Allocator>&)
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_multiset<Key, C2, Allocator> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<flat_multiset<Key, C2, Allocator>&>(source));   }
+
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Effects</b>: Erases the element pointed to by p.
@@ -867,13 +900,20 @@ template <class Key, class Compare, class Allocator>
 #endif
 class flat_multiset
    ///@cond
-   : public container_detail::flat_tree<Key, Key, container_detail::identity<Key>, Compare, Allocator>
+   : public container_detail::flat_tree<Key, container_detail::identity<Key>, Compare, Allocator>
    ///@endcond
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(flat_multiset)
-   typedef container_detail::flat_tree<Key, Key, container_detail::identity<Key>, Compare, Allocator> base_t;
+   typedef container_detail::flat_tree<Key, container_detail::identity<Key>, Compare, Allocator> base_t;
+
+   public:
+   base_t &tree()
+   {  return *this;  }
+
+   const base_t &tree() const
+   {  return *this;  }
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -1232,6 +1272,26 @@ class flat_multiset
    void insert(ordered_range_t, std::initializer_list<value_type> il)
    {  this->base_t::insert_equal(ordered_range, il.begin(), il.end()); }
 #endif
+
+   //! @copydoc ::boost::container::flat_multimap::merge(flat_multimap<Key, T, C2, Allocator>&)
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge(flat_multiset<Key, C2, Allocator>& source)
+   {  this->base_t::merge_equal(source.tree());   }
+
+   //! @copydoc ::boost::container::flat_multiset::merge(flat_multiset<Key, C2, Allocator>&)
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_multiset<Key, C2, Allocator> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<flat_multiset<Key, C2, Allocator>&>(source));   }
+
+   //! @copydoc ::boost::container::flat_multimap::merge(flat_map<Key, T, C2, Allocator>&)
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge(flat_set<Key, C2, Allocator>& source)
+   {  this->base_t::merge_equal(source.tree());   }
+
+   //! @copydoc ::boost::container::flat_multiset::merge(flat_set<Key, C2, Allocator>&)
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_set<Key, C2, Allocator> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<flat_set<Key, C2, Allocator>&>(source));   }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 

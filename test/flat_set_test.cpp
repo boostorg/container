@@ -62,7 +62,6 @@ namespace container_detail {
 //Instantiate base class as previous instantiations don't instantiate inherited members
 template class flat_tree
    < test::movable_and_copyable_int
-   , test::movable_and_copyable_int
    , identity<test::movable_and_copyable_int>
    , std::less<test::movable_and_copyable_int>
    , test::simple_allocator<test::movable_and_copyable_int>
@@ -70,7 +69,6 @@ template class flat_tree
 
 template class flat_tree
    < test::movable_and_copyable_int
-   , test::movable_and_copyable_int
    , identity<test::movable_and_copyable_int>
    , std::less<test::movable_and_copyable_int>
    , allocator<test::movable_and_copyable_int>

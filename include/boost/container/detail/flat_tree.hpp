@@ -46,6 +46,7 @@
 #endif
 
 #include <boost/intrusive/detail/minimal_pair_header.hpp>      //pair
+#include <boost/move/iterator.hpp>
 
 namespace boost {
 namespace container {
@@ -100,7 +101,7 @@ struct get_flat_tree_iterators
    typedef boost::container::reverse_iterator<const_iterator>  const_reverse_iterator;
 };
 
-template <class Key, class Value, class KeyOfValue,
+template <class Value, class KeyOfValue,
           class Compare, class Allocator>
 class flat_tree
 {
@@ -185,7 +186,7 @@ class flat_tree
    typedef typename vector_t::const_pointer           const_pointer;
    typedef typename vector_t::reference               reference;
    typedef typename vector_t::const_reference         const_reference;
-   typedef Key                                        key_type;
+   typedef typename KeyOfValue::type                  key_type;
    typedef Compare                                    key_compare;
    typedef typename vector_t::allocator_type          allocator_type;
    typedef typename vector_t::size_type               size_type;
@@ -778,6 +779,36 @@ class flat_tree
       return n;
    }
 
+   template<class C2>
+   void merge_unique(flat_tree<Value, KeyOfValue, C2, Allocator>& source)
+   {
+      this->insert( boost::make_move_iterator(source.begin())
+                  , boost::make_move_iterator(source.end()));
+   }
+
+   template<class C2>
+   void merge_equal(flat_tree<Value, KeyOfValue, C2, Allocator>& source)
+   {
+      this->insert( boost::make_move_iterator(source.begin())
+                  , boost::make_move_iterator(source.end()));
+   }
+
+   void merge_unique(flat_tree& source)
+   {
+      this->m_data.m_vect.merge_unique
+         ( boost::make_move_iterator(source.begin())
+         , boost::make_move_iterator(source.end())
+         , static_cast<const value_compare &>(this->m_data));
+   }
+
+   void merge_equal(flat_tree& source)
+   {
+      this->m_data.m_vect.merge
+         ( boost::make_move_iterator(source.begin())
+         , boost::make_move_iterator(source.end())
+         , static_cast<const value_compare &>(this->m_data));
+   }
+
    BOOST_CONTAINER_FORCEINLINE iterator lower_bound(const key_type& k)
    {  return this->priv_lower_bound(this->begin(), this->end(), k);  }
 
@@ -1062,9 +1093,9 @@ class flat_tree
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class Key, class T, class KeyOfValue,
+template <class T, class KeyOfValue,
 class Compare, class Allocator>
-struct has_trivial_destructor_after_move<boost::container::container_detail::flat_tree<Key, T, KeyOfValue, Compare, Allocator> >
+struct has_trivial_destructor_after_move<boost::container::container_detail::flat_tree<T, KeyOfValue, Compare, Allocator> >
 {
    typedef typename ::boost::container::allocator_traits<Allocator>::pointer pointer;
    static const bool value = ::boost::has_trivial_destructor_after_move<Allocator>::value &&

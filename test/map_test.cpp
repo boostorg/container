@@ -23,6 +23,8 @@
 
 using namespace boost::container;
 
+typedef std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> pair_t;
+
 namespace boost {
 namespace container {
 
@@ -33,33 +35,58 @@ template class map
    < test::movable_and_copyable_int
    , test::movable_and_copyable_int
    , std::less<test::movable_and_copyable_int>
-   , test::simple_allocator
-      < std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , test::simple_allocator< pair_t >
    >;
 
 template class map
    < test::movable_and_copyable_int
    , test::movable_and_copyable_int
    , std::less<test::movable_and_copyable_int>
-   , std::allocator
-      < std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , std::allocator< pair_t >
    >;
 
 template class map
    < test::movable_and_copyable_int
    , test::movable_and_copyable_int
    , std::less<test::movable_and_copyable_int>
-   , adaptive_pool
-      < std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , adaptive_pool< pair_t >
    >;
 
 template class multimap
    < test::movable_and_copyable_int
    , test::movable_and_copyable_int
    , std::less<test::movable_and_copyable_int>
-   , std::allocator
-      < std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , std::allocator< pair_t >
    >;
+
+namespace container_detail {
+
+//Instantiate base class as previous instantiations don't instantiate inherited members
+template class tree
+   < pair_t
+   , select1st<test::movable_and_copyable_int>
+   , std::less<test::movable_and_copyable_int>
+   , test::simple_allocator<pair_t>
+   , tree_assoc_defaults
+   >;
+
+template class tree
+   < pair_t
+   , select1st<test::movable_and_copyable_int>
+   , std::less<test::movable_and_copyable_int>
+   , std::allocator<pair_t>
+   , tree_assoc_defaults
+   >;
+
+template class tree
+   < pair_t
+   , select1st<test::movable_and_copyable_int>
+   , std::less<test::movable_and_copyable_int>
+   , adaptive_pool<pair_t>
+   , tree_assoc_defaults
+   >;
+
+}  //container_detail {
 
 }} //boost::container
 
@@ -334,6 +361,13 @@ struct alloc_propagate_base<boost_container_multimap>
    };
 };
 
+void test_merge_from_different_comparison()
+{
+   map<int, int> map1;
+   map<int, int, std::greater<int> > map2;
+   map1.merge(map2);
+}
+
 }}}   //namespace boost::container::test
 
 int main ()
@@ -357,7 +391,6 @@ int main ()
    //Test std::pair value type as tree has workarounds to make old std::pair
    //implementations movable that can break things
    {
-      typedef std::pair<int,int> pair_t;
 	   boost::container::map<pair_t, pair_t> s;
 	   std::pair<const pair_t,pair_t> p;
 	   s.insert(p);
@@ -446,6 +479,8 @@ int main ()
    ////////////////////////////////////
    if(!node_type_test())
       return 1;
+
+   test::test_merge_from_different_comparison();
 
    ////////////////////////////////////
    //    Test optimize_size option

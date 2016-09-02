@@ -295,9 +295,9 @@ struct intrusive_tree_type
       allocator_traits<Allocator>::size_type               size_type;
    typedef typename container_detail::tree_node
          < value_type, void_pointer
-         , tree_type_value, OptimizeSize>          node_t;
+         , tree_type_value, OptimizeSize>                   node_t;
    typedef value_to_node_compare
-      <node_t, ValueCompare>                    node_compare_type;
+      <node_t, ValueCompare>                                node_compare_type;
    //Deducing the hook type from node_t (e.g. node_t::hook_type) would
    //provoke an early instantiation of node_t that could ruin recursive
    //tree definitions, so retype the complete type to avoid any problem.
@@ -429,26 +429,28 @@ struct key_node_compare
    {  return this->key_comp()(key_of_value()(nonkey1.get_data()), key_of_value()(nonkey2.get_data()));  }
 };
 
-template <class Key, class T, class KeyOfValue,
+template <class T, class KeyOfValue,
           class Compare, class Allocator,
           class Options = tree_assoc_defaults>
 class tree
-   : protected container_detail::node_alloc_holder
+   : public container_detail::node_alloc_holder
       < Allocator
       , typename container_detail::intrusive_tree_type
-         < Allocator, tree_value_compare<Compare, KeyOfValue> //ValComp
+         < Allocator, tree_value_compare
+            <typename allocator_traits<Allocator>::pointer, Compare, KeyOfValue>
          , Options::tree_type, Options::optimize_size>::type
       >
 {
    typedef tree_value_compare
-            <Compare, KeyOfValue>                           ValComp;
+      < typename allocator_traits<Allocator>::pointer
+      , Compare, KeyOfValue>                                ValComp;
    typedef typename container_detail::intrusive_tree_type
          < Allocator, ValComp, Options::tree_type
          , Options::optimize_size>::type                    Icont;
    typedef container_detail::node_alloc_holder
       <Allocator, Icont>                                    AllocHolder;
    typedef typename AllocHolder::NodePtr                    NodePtr;
-   typedef tree < Key, T, KeyOfValue
+   typedef tree < T, KeyOfValue
                 , Compare, Allocator, Options>              ThisType;
    typedef typename AllocHolder::NodeAlloc                  NodeAlloc;
    typedef boost::container::
@@ -465,7 +467,7 @@ class tree
 
    public:
 
-   typedef Key                                        key_type;
+   typedef typename KeyOfValue::type                  key_type;
    typedef T                                          value_type;
    typedef Allocator                                  allocator_type;
    typedef Compare                                    key_compare;
@@ -1176,6 +1178,13 @@ class tree
       }
    }
 
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge_unique(tree<T, KeyOfValue, C2, Allocator, Options>& source)
+   {  return this->icont().merge_unique(source.icont()); }
+
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge_equal(tree<T, KeyOfValue, C2, Allocator, Options>& source)
+   {  return this->icont().merge_equal(source.icont());  }
    BOOST_CONTAINER_FORCEINLINE void clear()
    {  AllocHolder::clear(alloc_version());  }
 
@@ -1265,11 +1274,11 @@ struct has_trivial_destructor_after_move;
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class Key, class T, class KeyOfValue, class Compare, class Allocator, class Options>
+template <class T, class KeyOfValue, class Compare, class Allocator, class Options>
 struct has_trivial_destructor_after_move
    < 
       ::boost::container::container_detail::tree
-         <Key, T, KeyOfValue, Compare, Allocator, Options>
+         <T, KeyOfValue, Compare, Allocator, Options>
    >
 {
    typedef typename ::boost::container::allocator_traits<Allocator>::pointer pointer;

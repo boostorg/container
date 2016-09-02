@@ -53,6 +53,9 @@ namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
+template <class Key, class T, class Compare, class Allocator>
+class flat_multimap;
+
 namespace container_detail{
 
 template<class D, class S>
@@ -110,14 +113,14 @@ class flat_map
    private:
    BOOST_COPYABLE_AND_MOVABLE(flat_map)
    //This is the tree that we should store if pair was movable
-   typedef container_detail::flat_tree<Key,
+   typedef container_detail::flat_tree<
                            std::pair<Key, T>,
                            container_detail::select1st<Key>,
                            Compare,
                            Allocator> tree_t;
 
    //This is the real tree stored here. It's based on a movable pair
-   typedef container_detail::flat_tree<Key,
+   typedef container_detail::flat_tree<
                            container_detail::pair<Key, T>,
                            container_detail::select1st<Key>,
                            Compare,
@@ -143,6 +146,13 @@ class flat_map
          <typename allocator_traits<Allocator>::pointer>::const_reverse_iterator    const_reverse_iterator_impl;
    public:
    typedef typename impl_tree_t::stored_allocator_type   impl_stored_allocator_type;
+
+   impl_tree_t &tree()
+   {  return m_flat_tree;  }
+
+   const impl_tree_t &tree() const
+   {  return m_flat_tree;  }
+
    private:
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -1056,6 +1066,39 @@ class flat_map
    {  m_flat_tree.insert_unique(ordered_unique_range, il.begin(), il.end()); }
 #endif
 
+   //! <b>Requires</b>: this->get_allocator() == source.get_allocator().
+   //!
+   //! <b>Effects</b>: Attempts to extract each element in source and insert it into a using
+   //!   the comparison object of *this. If there is an element in a with key equivalent to the
+   //!   key of an element from source, then that element is not extracted from source.
+   //! 
+   //! <b>Postcondition</b>: Pointers and references to the transferred elements of source refer
+   //!   to those same elements but as members of *this. Iterators referring to the transferred
+   //!   elements will continue to refer to their elements, but they now behave as iterators into *this,
+   //!   not into source.
+   //!
+   //! <b>Throws</b>: Nothing unless the comparison object throws.
+   //!
+   //! <b>Complexity</b>: N log(a.size() + N) (N has the value source.size())
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge(flat_map<Key, T, C2, Allocator>& source)
+   {  m_flat_tree.merge_unique(source.tree());   }
+
+   //! @copydoc ::boost::container::flat_map::merge(flat_map<Key, T, C2, Allocator>&)
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_map<Key, T, C2, Allocator> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<flat_map<Key, T, C2, Allocator>&>(source)); }
+
+   //! @copydoc ::boost::container::flat_map::merge(flat_map<Key, T, C2, Allocator>&)
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge(flat_multimap<Key, T, C2, Allocator>& source)
+   {  m_flat_tree.merge_unique(source.tree());   }
+
+   //! @copydoc ::boost::container::flat_map::merge(flat_map<Key, T, C2, Allocator>&)
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_multimap<Key, T, C2, Allocator> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<flat_multimap<Key, T, C2, Allocator>&>(source));  }
+
    //! <b>Effects</b>: Erases the element pointed to by p.
    //!
    //! <b>Returns</b>: Returns an iterator pointing to the element immediately
@@ -1326,13 +1369,13 @@ class flat_multimap
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(flat_multimap)
-   typedef container_detail::flat_tree<Key,
+   typedef container_detail::flat_tree<
                            std::pair<Key, T>,
                            container_detail::select1st<Key>,
                            Compare,
                            Allocator> tree_t;
    //This is the real tree stored here. It's based on a movable pair
-   typedef container_detail::flat_tree<Key,
+   typedef container_detail::flat_tree<
                            container_detail::pair<Key, T>,
                            container_detail::select1st<Key>,
                            Compare,
@@ -1358,6 +1401,13 @@ class flat_multimap
          <typename allocator_traits<Allocator>::pointer>::const_reverse_iterator    const_reverse_iterator_impl;
    public:
    typedef typename impl_tree_t::stored_allocator_type   impl_stored_allocator_type;
+
+   impl_tree_t &tree()
+   {  return m_flat_tree;  }
+
+   const impl_tree_t &tree() const
+   {  return m_flat_tree;  }
+
    private:
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -1992,6 +2042,38 @@ class flat_multimap
    void insert(ordered_range_t, std::initializer_list<value_type> il)
    {  m_flat_tree.insert_equal(ordered_range, il.begin(), il.end());  }
 #endif
+
+   //! <b>Requires</b>: this->get_allocator() == source.get_allocator().
+   //!
+   //! <b>Effects</b>: Extracts each element in source and insert it into a using
+   //!   the comparison object of *this.
+   //! 
+   //! <b>Postcondition</b>: Pointers and references to the transferred elements of source refer
+   //!   to those same elements but as members of *this. Iterators referring to the transferred
+   //!   elements will continue to refer to their elements, but they now behave as iterators into *this,
+   //!   not into source.
+   //!
+   //! <b>Throws</b>: Nothing unless the comparison object throws.
+   //!
+   //! <b>Complexity</b>: N log(a.size() + N) (N has the value source.size())
+   template<class C2>
+   void merge(flat_multimap<Key, T, C2, Allocator>& source)
+   {  m_flat_tree.merge_equal(source.tree());   }
+
+   //! @copydoc ::boost::container::flat_multimap::merge(flat_multimap<Key, T, C2, Allocator>&)
+   template<class C2>
+   void merge(BOOST_RV_REF_BEG flat_multimap<Key, T, C2, Allocator> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<flat_multimap<Key, T, C2, Allocator>&>(source)); }
+
+   //! @copydoc ::boost::container::flat_multimap::merge(flat_multimap<Key, T, C2, Allocator>&)
+   template<class C2>
+   void merge(flat_map<Key, T, C2, Allocator>& source)
+   {  m_flat_tree.merge_equal(source.tree());   }
+
+   //! @copydoc ::boost::container::flat_multimap::merge(flat_multimap<Key, T, C2, Allocator>&)
+   template<class C2>
+   void merge(BOOST_RV_REF_BEG flat_map<Key, T, C2, Allocator> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<flat_map<Key, T, C2, Allocator>&>(source)); }
 
    //! <b>Effects</b>: Erases the element pointed to by p.
    //!

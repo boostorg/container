@@ -96,18 +96,18 @@ struct pair_key_mapped_of_value
 //! \tparam Compare is the ordering function for Keys (e.g. <i>std::less<Key></i>).
 //! \tparam Allocator is the allocator to allocate the <code>value_type</code>s
 //!   (e.g. <i>allocator< std::pair<const Key, T> > </i>).
-//! \tparam MapOptions is an packed option type generated using using boost::container::tree_assoc_options.
+//! \tparam Options is an packed option type generated using using boost::container::tree_assoc_options.
 template < class Key, class T, class Compare = std::less<Key>
-         , class Allocator = new_allocator< std::pair< const Key, T> >, class MapOptions = tree_assoc_defaults >
+         , class Allocator = new_allocator< std::pair< const Key, T> >, class Options = tree_assoc_defaults >
 #else
-template <class Key, class T, class Compare, class Allocator, class MapOptions>
+template <class Key, class T, class Compare, class Allocator, class Options>
 #endif
 class map
    ///@cond
    : public container_detail::tree
-      < Key, std::pair<const Key, T>
+      < std::pair<const Key, T>
       , container_detail::select1st<Key>
-      , Compare, Allocator, MapOptions>
+      , Compare, Allocator, Options>
    ///@endcond
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -117,10 +117,9 @@ class map
    typedef container_detail::select1st<Key>                                select_1st_t;
    typedef std::pair<const Key, T>                                         value_type_impl;
    typedef container_detail::tree
-      <Key, value_type_impl, select_1st_t, Compare, Allocator, MapOptions> base_t;
+      <value_type_impl, select_1st_t, Compare, Allocator, Options>         base_t;
    typedef container_detail::pair <Key, T>                                 movable_value_type_impl;
-   typedef container_detail::tree_value_compare
-      <Compare, select_1st_t>                                              value_compare_impl;
+   typedef typename base_t::value_compare                                  value_compare_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -975,6 +974,47 @@ class map
       return BOOST_MOVE_RET(node_type, nh);
    }
 
+   //! <b>Requires</b>: this->get_allocator() == source.get_allocator().
+   //!
+   //! <b>Effects</b>: Attempts to extract each element in source and insert it into a using
+   //!   the comparison object of *this. If there is an element in a with key equivalent to the
+   //!   key of an element from source, then that element is not extracted from source.
+   //! 
+   //! <b>Postcondition</b>: Pointers and references to the transferred elements of source refer
+   //!   to those same elements but as members of *this. Iterators referring to the transferred
+   //!   elements will continue to refer to their elements, but they now behave as iterators into *this,
+   //!   not into source.
+   //!
+   //! <b>Throws</b>: Nothing unless the comparison object throws.
+   //!
+   //! <b>Complexity</b>: N log(a.size() + N) (N has the value source.size())
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge(map<Key, T, C2, Allocator, Options>& source)
+   {
+      typedef container_detail::tree
+         <value_type_impl, select_1st_t, C2, Allocator, Options> base2_t;
+      this->merge_unique(static_cast<base2_t&>(source));
+   }
+
+   //! @copydoc ::boost::container::map::merge(map<Key, T, C2, Allocator, Options>&)
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG map<Key, T, C2, Allocator, Options> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<map<Key, T, C2, Allocator, Options>&>(source)); }
+
+   //! @copydoc ::boost::container::map::merge(map<Key, T, C2, Allocator, Options>&)
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge(multimap<Key, T, C2, Allocator, Options>& source)
+   {
+      typedef container_detail::tree
+         <value_type_impl, select_1st_t, C2, Allocator, Options> base2_t;
+      this->base_t::merge_unique(static_cast<base2_t&>(source));
+   }
+
+   //! @copydoc ::boost::container::map::merge(map<Key, T, C2, Allocator, Options>&)
+   template<class C2>
+   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG multimap<Key, T, C2, Allocator, Options> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<multimap<Key, T, C2, Allocator, Options>&>(source)); }
+
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
@@ -1148,18 +1188,18 @@ namespace container {
 //! \tparam Compare is the ordering function for Keys (e.g. <i>std::less<Key></i>).
 //! \tparam Allocator is the allocator to allocate the <code>value_type</code>s
 //!   (e.g. <i>allocator< std::pair<const Key, T> > </i>).
-//! \tparam MultiMapOptions is an packed option type generated using using boost::container::tree_assoc_options.
+//! \tparam Options is an packed option type generated using using boost::container::tree_assoc_options.
 template < class Key, class T, class Compare = std::less<Key>
-         , class Allocator = new_allocator< std::pair< const Key, T> >, class MultiMapOptions = tree_assoc_defaults>
+         , class Allocator = new_allocator< std::pair< const Key, T> >, class Options = tree_assoc_defaults>
 #else
-template <class Key, class T, class Compare, class Allocator, class MultiMapOptions>
+template <class Key, class T, class Compare, class Allocator, class Options>
 #endif
 class multimap
    ///@cond
    : public container_detail::tree
-      < Key, std::pair<const Key, T>
+      < std::pair<const Key, T>
       , container_detail::select1st<Key>
-      , Compare, Allocator, MultiMapOptions>
+      , Compare, Allocator, Options>
    ///@endcond
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -1169,10 +1209,9 @@ class multimap
    typedef container_detail::select1st<Key>                                      select_1st_t;
    typedef std::pair<const Key, T>                                               value_type_impl;
    typedef container_detail::tree
-      <Key, value_type_impl, select_1st_t, Compare, Allocator, MultiMapOptions>  base_t;
+      <value_type_impl, select_1st_t, Compare, Allocator, Options>               base_t;
    typedef container_detail::pair <Key, T>                                       movable_value_type_impl;
-   typedef container_detail::tree_value_compare
-      <Compare, select_1st_t>                                                    value_compare_impl;
+   typedef typename base_t::value_compare                                        value_compare_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    typedef ::boost::container::allocator_traits<Allocator>                       allocator_traits_type;
@@ -1654,6 +1693,46 @@ class multimap
       typename base_t::node_type base_nh(this->base_t::extract(position));
       return node_type (boost::move(base_nh));
    }
+
+   //! <b>Requires</b>: this->get_allocator() == source.get_allocator().
+   //!
+   //! <b>Effects</b>: Extracts each element in source and insert it into a using
+   //!   the comparison object of *this.
+   //! 
+   //! <b>Postcondition</b>: Pointers and references to the transferred elements of source refer
+   //!   to those same elements but as members of *this. Iterators referring to the transferred
+   //!   elements will continue to refer to their elements, but they now behave as iterators into *this,
+   //!   not into source.
+   //!
+   //! <b>Throws</b>: Nothing unless the comparison object throws.
+   //!
+   //! <b>Complexity</b>: N log(a.size() + N) (N has the value source.size())
+   template<class C2>
+   void merge(multimap<Key, T, C2, Allocator, Options>& source)
+   {
+      typedef container_detail::tree
+         <value_type_impl, select_1st_t, C2, Allocator, Options> base2_t;
+      this->base_t::merge_equal(static_cast<base2_t&>(source));
+   }
+
+   //! @copydoc ::boost::container::multimap::merge(multimap<Key, T, C2, Allocator, Options>&)
+   template<class C2>
+   void merge(BOOST_RV_REF_BEG multimap<Key, T, C2, Allocator, Options> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<multimap<Key, T, C2, Allocator, Options>&>(source)); }
+
+   //! @copydoc ::boost::container::multimap::merge(multimap<Key, T, C2, Allocator, Options>&)
+   template<class C2>
+   void merge(map<Key, T, C2, Allocator, Options>& source)
+   {
+      typedef container_detail::tree
+         <value_type_impl, select_1st_t, C2, Allocator, Options> base2_t;
+      this->base_t::merge_equal(static_cast<base2_t&>(source));
+   }
+
+   //! @copydoc ::boost::container::multimap::merge(multimap<Key, T, C2, Allocator, Options>&)
+   template<class C2>
+   void merge(BOOST_RV_REF_BEG map<Key, T, C2, Allocator, Options> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<map<Key, T, C2, Allocator, Options>&>(source)); }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //! @copydoc ::boost::container::set::swap
