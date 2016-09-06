@@ -49,6 +49,10 @@
    #define BOOST_CONTAINER_FALLTHOUGH BOOST_FALLTHOUGH;
 #endif
 
+#if !defined(BOOST_NO_CXX11_HDR_TUPLE) || (defined(BOOST_MSVC) && (BOOST_MSVC == 1700 || BOOST_MSVC == 1600))
+#define BOOST_CONTAINER_PAIR_TEST_HAS_HEADER_TUPLE
+#endif
+
 //Macros for documentation purposes. For code, expands to the argument
 #define BOOST_CONTAINER_IMPDEF(TYPE) TYPE
 #define BOOST_CONTAINER_SEEDOC(TYPE) TYPE

@@ -15,9 +15,15 @@
 // move
 #include <boost/move/utility_core.hpp>
 #include <boost/move/adl_move_swap.hpp>
+//boost
+#include <boost/tuple/tuple.hpp>
 // std
 #include <memory>
 #include <cstddef>
+
+#if defined(BOOST_CONTAINER_PAIR_TEST_HAS_HEADER_TUPLE)
+#include <tuple>
+#endif
 
 //test
 #include <boost/core/lightweight_test.hpp>
@@ -894,7 +900,81 @@ int main()
             BOOST_TEST(dummy.second.value == 0);
             dummy.~MarkTypePair();
          }
-
+         #if defined(BOOST_CONTAINER_PAIR_TEST_HAS_HEADER_TUPLE)
+         //Check construction with 0 user arguments and Std tuple
+         {
+            typedef ::allocator_argument_tester<NotUsesAllocator, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, std::tuple<>(), std::tuple<>());
+            BOOST_TEST(dummy.first.construction_type == NotUsesAllocator);
+            BOOST_TEST(dummy.second.construction_type == NotUsesAllocator);
+            BOOST_TEST(dummy.first.value  == 0);
+            BOOST_TEST(dummy.second.value == 0);
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::allocator_argument_tester<ConstructibleSuffix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, std::tuple<>(), std::tuple<>());
+            BOOST_TEST(dummy.first.construction_type == ConstructibleSuffix);
+            BOOST_TEST(dummy.second.construction_type == ConstructibleSuffix);
+            BOOST_TEST(dummy.first.value  == 0);
+            BOOST_TEST(dummy.second.value == 0);
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::allocator_argument_tester<ConstructiblePrefix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, std::tuple<>(), std::tuple<>());
+            BOOST_TEST(dummy.first.construction_type  == ConstructiblePrefix);
+            BOOST_TEST(dummy.second.construction_type == ConstructiblePrefix);
+            BOOST_TEST(dummy.first.value  == 0);
+            BOOST_TEST(dummy.second.value == 0);
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::allocator_argument_tester<NotUsesAllocator, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, std::tuple<>(), std::tuple<>());
+            BOOST_TEST(dummy.first.construction_type == NotUsesAllocator);
+            BOOST_TEST(dummy.second.construction_type == NotUsesAllocator);
+            BOOST_TEST(dummy.first.value  == 0);
+            BOOST_TEST(dummy.second.value == 0);
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::allocator_argument_tester<ConstructibleSuffix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, std::tuple<>(), std::tuple<>());
+            BOOST_TEST(dummy.first.construction_type == ConstructibleSuffix);
+            BOOST_TEST(dummy.second.construction_type == ConstructibleSuffix);
+            BOOST_TEST(dummy.first.value  == 0);
+            BOOST_TEST(dummy.second.value == 0);
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::allocator_argument_tester<ConstructiblePrefix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, std::tuple<>(), std::tuple<>());
+            BOOST_TEST(dummy.first.construction_type  == ConstructiblePrefix);
+            BOOST_TEST(dummy.second.construction_type == ConstructiblePrefix);
+            BOOST_TEST(dummy.first.value  == 0);
+            BOOST_TEST(dummy.second.value == 0);
+            dummy.~MarkTypePair();
+         }
+         #endif   //BOOST_CONTAINER_PAIR_TEST_HAS_HEADER_TUPLE
          //Check construction with 1 user arguments for each pair
          {
             typedef ::allocator_argument_tester<NotUsesAllocator, 0> MarkType;
@@ -932,6 +1012,82 @@ int main()
             BOOST_TEST(dummy.second.value == 2);
             dummy.~MarkTypePair();
          }
+         //Check construction with 1 user arguments for each pair and Boost tuple
+         {
+            typedef ::allocator_argument_tester<NotUsesAllocator, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, boost::tuple<int>(1), boost::tuple<int>(1));
+            BOOST_TEST(dummy.first.construction_type  == NotUsesAllocator);
+            BOOST_TEST(dummy.second.construction_type == NotUsesAllocator);
+            BOOST_TEST(dummy.first.value  == 1);
+            BOOST_TEST(dummy.second.value == 1);
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::allocator_argument_tester<ConstructibleSuffix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, boost::tuple<int>(1), boost::tuple<int>(1));
+            BOOST_TEST(dummy.first.construction_type  == ConstructibleSuffix);
+            BOOST_TEST(dummy.second.construction_type == ConstructibleSuffix);
+            BOOST_TEST(dummy.first.value  == 1);
+            BOOST_TEST(dummy.second.value == 1);
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::allocator_argument_tester<ConstructiblePrefix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, boost::tuple<int>(2), boost::tuple<int>(2));
+            BOOST_TEST(dummy.first.construction_type  == ConstructiblePrefix);
+            BOOST_TEST(dummy.second.construction_type == ConstructiblePrefix);
+            BOOST_TEST(dummy.first.value  == 2);
+            BOOST_TEST(dummy.second.value == 2);
+            dummy.~MarkTypePair();
+         }
+         #if defined(BOOST_CONTAINER_PAIR_TEST_HAS_HEADER_TUPLE)
+         //Check construction with 1 user arguments for each pair and Boost tuple
+         {
+            typedef ::allocator_argument_tester<NotUsesAllocator, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, std::tuple<int>(1), std::tuple<int>(1));
+            BOOST_TEST(dummy.first.construction_type  == NotUsesAllocator);
+            BOOST_TEST(dummy.second.construction_type == NotUsesAllocator);
+            BOOST_TEST(dummy.first.value  == 1);
+            BOOST_TEST(dummy.second.value == 1);
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::allocator_argument_tester<ConstructibleSuffix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, std::tuple<int>(1), std::tuple<int>(1));
+            BOOST_TEST(dummy.first.construction_type  == ConstructibleSuffix);
+            BOOST_TEST(dummy.second.construction_type == ConstructibleSuffix);
+            BOOST_TEST(dummy.first.value  == 1);
+            BOOST_TEST(dummy.second.value == 1);
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::allocator_argument_tester<ConstructiblePrefix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, std::tuple<int>(2), std::tuple<int>(2));
+            BOOST_TEST(dummy.first.construction_type  == ConstructiblePrefix);
+            BOOST_TEST(dummy.second.construction_type == ConstructiblePrefix);
+            BOOST_TEST(dummy.first.value  == 2);
+            BOOST_TEST(dummy.second.value == 2);
+            dummy.~MarkTypePair();
+         }
+         #endif   //BOOST_CONTAINER_PAIR_TEST_HAS_HEADER_TUPLE
          //Check construction with pair copy construction
          {
             typedef ::allocator_argument_tester<NotUsesAllocator, 0> MarkType;
@@ -1099,6 +1255,82 @@ int main()
             BOOST_TEST(dummy.second.value == 2);
             dummy.~MarkTypePair();
          }
+         //Check construction with 0/1 arguments for each pair and Boost tuple
+         {
+            typedef ::allocator_argument_tester<NotUsesAllocator, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, boost::tuple<>(), boost::tuple<int>(1));
+            BOOST_TEST(dummy.first.construction_type  == NotUsesAllocator);
+            BOOST_TEST(dummy.second.construction_type == NotUsesAllocator);
+            BOOST_TEST(dummy.first.value  == 0);
+            BOOST_TEST(dummy.second.value == 1);
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::allocator_argument_tester<ConstructibleSuffix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, boost::tuple<int>(1), boost::tuple<>());
+            BOOST_TEST(dummy.first.construction_type  == ConstructibleSuffix);
+            BOOST_TEST(dummy.second.construction_type == ConstructibleSuffix);
+            BOOST_TEST(dummy.first.value  == 1);
+            BOOST_TEST(dummy.second.value == 0);
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::allocator_argument_tester<ConstructiblePrefix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, boost::tuple<>(), boost::tuple<int>(2));
+            BOOST_TEST(dummy.first.construction_type  == ConstructiblePrefix);
+            BOOST_TEST(dummy.second.construction_type == ConstructiblePrefix);
+            BOOST_TEST(dummy.first.value  == 0);
+            BOOST_TEST(dummy.second.value == 2);
+            dummy.~MarkTypePair();
+         }
+         #if defined(BOOST_CONTAINER_PAIR_TEST_HAS_HEADER_TUPLE)
+         //Check construction with 0/1 arguments for each pair and Boost tuple
+         {
+            typedef ::allocator_argument_tester<NotUsesAllocator, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, std::tuple<>(), std::tuple<int>(1));
+            BOOST_TEST(dummy.first.construction_type  == NotUsesAllocator);
+            BOOST_TEST(dummy.second.construction_type == NotUsesAllocator);
+            BOOST_TEST(dummy.first.value  == 0);
+            BOOST_TEST(dummy.second.value == 1);
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::allocator_argument_tester<ConstructibleSuffix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, std::tuple<int>(1), std::tuple<>());
+            BOOST_TEST(dummy.first.construction_type  == ConstructibleSuffix);
+            BOOST_TEST(dummy.second.construction_type == ConstructibleSuffix);
+            BOOST_TEST(dummy.first.value  == 1);
+            BOOST_TEST(dummy.second.value == 0);
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::allocator_argument_tester<ConstructiblePrefix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, piecewise_construct, std::tuple<>(), std::tuple<int>(2));
+            BOOST_TEST(dummy.first.construction_type  == ConstructiblePrefix);
+            BOOST_TEST(dummy.second.construction_type == ConstructiblePrefix);
+            BOOST_TEST(dummy.first.value  == 0);
+            BOOST_TEST(dummy.second.value == 2);
+            dummy.~MarkTypePair();
+         }
+         #endif   //BOOST_CONTAINER_PAIR_TEST_HAS_HEADER_TUPLE
       }
    }
 
