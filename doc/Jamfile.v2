@@ -106,4 +106,12 @@ boostbook standalone
 install pdfinstall : standalone/<format>pdf : <install-type>PDF <location>. <name>container.pdf ;
 explicit pdfinstall ;
 
-
+###############################################################################
+alias boostdoc
+    : standalone/<format>docbook
+    :
+    :
+    : ;
+explicit boostdoc ;
+alias boostrelease ;
+explicit boostrelease ;
