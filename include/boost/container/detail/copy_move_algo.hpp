@@ -512,7 +512,7 @@ template
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
 inline typename container_detail::disable_if_memtransfer_copy_constructible<I, F, I>::type
-   uninitialized_copy_alloc_n_source(Allocator &a, I f, typename boost::container::iterator_traits<I>::difference_type n, F r)
+   uninitialized_copy_alloc_n_source(Allocator &a, I f, typename boost::container::allocator_traits<Allocator>::size_type n, F r)
 {
    F back = r;
    BOOST_TRY{
