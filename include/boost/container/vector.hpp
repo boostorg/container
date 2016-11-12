@@ -1848,7 +1848,7 @@ class vector
    //! <b>Complexity</b>: Amortized constant time.
    void push_back(T &&x);
    #else
-   BOOST_CONTAINER_FORCEINLINE BOOST_MOVE_CONVERSION_AWARE_CATCH(push_back, T, void, priv_push_back)
+   BOOST_MOVE_CONVERSION_AWARE_CATCH(push_back, T, void, priv_push_back)
    #endif
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
