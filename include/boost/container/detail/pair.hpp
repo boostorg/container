@@ -66,7 +66,8 @@ namespace container {
    };
 
    template <int Dummy>
-   ::std::piecewise_construct_t *std_piecewise_construct_holder<Dummy>::dummy;
+   ::std::piecewise_construct_t *std_piecewise_construct_holder<Dummy>::dummy =
+      reinterpret_cast< ::std::piecewise_construct_t *>(0x01234);  //Avoid sanitizer errors on references to null pointers
 
 typedef const std::piecewise_construct_t & piecewise_construct_t;
 
