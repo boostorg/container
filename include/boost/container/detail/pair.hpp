@@ -84,7 +84,16 @@ typedef unspecified piecewise_construct_t;
 //! piecewise_construct_t
 static piecewise_construct_t piecewise_construct = BOOST_CONTAINER_DOC1ST(unspecified, *std_piecewise_construct_holder<>::dummy);
 
+///@cond
+
 namespace container_detail {
+
+struct piecewise_construct_use
+{
+   //Avoid warnings of unused "piecewise_construct"
+   piecewise_construct_use()
+   {  (void)&::boost::container::piecewise_construct;   }
+};
 
 template <class T1, class T2>
 struct pair;
@@ -129,6 +138,8 @@ struct pair_nat;
 
 template<typename T, typename U, typename V>
 void get(T); //to enable ADL
+
+///@endcond
 
 template <class T1, class T2>
 struct pair
