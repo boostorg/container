@@ -391,10 +391,10 @@ int main ()
    //Test std::pair value type as tree has workarounds to make old std::pair
    //implementations movable that can break things
    {
-	   boost::container::map<pair_t, pair_t> s;
-	   std::pair<const pair_t,pair_t> p;
-	   s.insert(p);
-	   s.emplace(p);
+      boost::container::map<pair_t, pair_t> s;
+      std::pair<const pair_t,pair_t> p;
+      s.insert(p);
+      s.emplace(p);
    }
 
    ////////////////////////////////////
