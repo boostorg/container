@@ -1331,6 +1331,44 @@ int main()
             dummy.~MarkTypePair();
          }
          #endif   //BOOST_CONTAINER_PAIR_TEST_HAS_HEADER_TUPLE
+
+         //Check construction with try_emplace_t 0/1 arguments for each pair
+         {
+            typedef ::allocator_argument_tester<NotUsesAllocator, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, try_emplace_t(), 5, 1);
+            BOOST_TEST(dummy.first.construction_type  == NotUsesAllocator);
+            BOOST_TEST(dummy.second.construction_type == NotUsesAllocator);
+            BOOST_TEST(dummy.first.value  == 5);
+            BOOST_TEST(dummy.second.value == 1);
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::allocator_argument_tester<ConstructibleSuffix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, try_emplace_t(), 6);
+            BOOST_TEST(dummy.first.construction_type  == ConstructibleSuffix);
+            BOOST_TEST(dummy.second.construction_type == ConstructibleSuffix);
+            BOOST_TEST(dummy.first.value  == 6);
+            BOOST_TEST(dummy.second.value == 0);
+            dummy.~MarkTypePair();
+         }
+         {
+            typedef ::allocator_argument_tester<ConstructiblePrefix, 0> MarkType;
+            typedef pair<MarkType, MarkType> MarkTypePair;
+            MarkTypePair dummy;
+            dummy.~MarkTypePair();
+            s0i.construct(&dummy, try_emplace_t(), 7, 2);
+            BOOST_TEST(dummy.first.construction_type  == ConstructiblePrefix);
+            BOOST_TEST(dummy.second.construction_type == ConstructiblePrefix);
+            BOOST_TEST(dummy.first.value  == 7);
+            BOOST_TEST(dummy.second.value == 2);
+            dummy.~MarkTypePair();
+         }
       }
    }
 
