@@ -379,10 +379,10 @@ int main ()
    //Test std::pair value type as tree has workarounds to make old std::pair
    //implementations movable that can break things
    {
-	   boost::container::set<std::pair<int,int> > s;
-	   std::pair<int,int> p(0, 0);
-	   s.insert(p);
-	   s.emplace(p);
+      boost::container::set<std::pair<int,int> > s;
+      std::pair<int,int> p(0, 0);
+      s.insert(p);
+      s.emplace(p);
    }
 
    test_merge_from_different_comparison();
