@@ -58,6 +58,7 @@
 #include <climits>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/move/traits.hpp>
+#include <boost/utility/string_view.hpp>
 
 namespace boost {
 namespace container {
@@ -2059,6 +2060,12 @@ class basic_string
    const CharT* data()  const BOOST_NOEXCEPT_OR_NOTHROW
    {  return container_detail::to_raw_pointer(this->priv_addr()); }
 
+   //! <b>Returns</b>: a string_view to the characters in the string.
+   //!
+   //! <b>Complexity</b>: constant time.
+   operator boost::basic_string_view<CharT, Traits>() const BOOST_NOEXCEPT_OR_NOTHROW
+   { return boost::basic_string_view<CharT, Traits>(data(), size()); }
+   
    //////////////////////////////////////////////
    //
    //             string operations
@@ -2463,6 +2470,16 @@ class basic_string
    }
 
 
+   //! <b>Throws</b>: Nothing
+   //!
+   //! <b>Returns</b>: compare(basic_string(sv)).
+   int compare(boost::basic_string_view<CharT,Traits> sv) const
+   {
+      const pointer addr = this->priv_addr();
+      return s_compare(addr,      addr + this->priv_size(), 
+                       sv.data(), sv.data() + sv.size());
+   }
+
    //! <b>Requires</b>: pos1 > size() and s points to an array of at least n2 elements of CharT.
    //!
    //! <b>Throws</b>: out_of_range if pos1 > size()
@@ -2778,6 +2795,25 @@ operator==(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
 
 template <class CharT, class Traits, class Allocator>
 inline bool
+operator==( boost::basic_string_view<CharT,Traits> x,
+                  const basic_string<CharT,Traits,Allocator>& y)
+{
+   return x.size() == y.size() &&
+          Traits::compare(x.data(), y.data(), x.size()) == 0;
+}
+
+template <class CharT, class Traits, class Allocator>
+inline bool
+operator==(       const basic_string<CharT,Traits,Allocator>& x,
+            boost::basic_string_view<CharT,Traits> y)
+{
+   return x.size() == y.size() &&
+          Traits::compare(x.data(), y.data(), x.size()) == 0;
+}
+
+
+template <class CharT, class Traits, class Allocator>
+inline bool
 operator!=(const basic_string<CharT,Traits,Allocator>& x,
            const basic_string<CharT,Traits,Allocator>& y)
    {  return !(x == y);  }
@@ -2791,6 +2827,19 @@ template <class CharT, class Traits, class Allocator>
 inline bool
 operator!=(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
    {  return !(x == s);   }
+
+
+template <class CharT, class Traits, class Allocator>
+inline bool
+operator!=( boost::basic_string_view<CharT,Traits> x,
+                  const basic_string<CharT,Traits,Allocator>& y)
+   {  return !(x == y);  }
+
+template <class CharT, class Traits, class Allocator>
+inline bool
+operator!=(       const basic_string<CharT,Traits,Allocator>& x,
+            boost::basic_string_view<CharT,Traits> y)
+   {  return !(x == y);  }
 
 
 // Operator< (and also >, <=, and >=).
@@ -2827,6 +2876,18 @@ operator<(const basic_string<CharT,Traits,Allocator>& x,
 
 template <class CharT, class Traits, class Allocator>
 inline bool
+operator<( boost::basic_string_view<CharT,Traits> x,
+                  const basic_string<CharT,Traits,Allocator>& y)
+   {  return x.compare(y) < 0;  }
+
+template <class CharT, class Traits, class Allocator>
+inline bool
+operator<(       const basic_string<CharT,Traits,Allocator>& x,
+            boost::basic_string_view<CharT,Traits> y)
+   {  return y.compare(x) > 0;  }
+
+template <class CharT, class Traits, class Allocator>
+inline bool
 operator>(const basic_string<CharT,Traits,Allocator>& x,
           const basic_string<CharT,Traits,Allocator>& y) {
    return y < x;
@@ -2847,6 +2908,19 @@ operator>(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
 
 template <class CharT, class Traits, class Allocator>
 inline bool
+operator>( boost::basic_string_view<CharT,Traits> x,
+                  const basic_string<CharT,Traits,Allocator>& y)
+   {  return y < x;  }
+
+template <class CharT, class Traits, class Allocator>
+inline bool
+operator>(       const basic_string<CharT,Traits,Allocator>& x,
+            boost::basic_string_view<CharT,Traits> y)
+   {  return y < x;  }
+
+
+template <class CharT, class Traits, class Allocator>
+inline bool
 operator<=(const basic_string<CharT,Traits,Allocator>& x,
            const basic_string<CharT,Traits,Allocator>& y)
 {
@@ -2863,6 +2937,19 @@ inline bool
 operator<=(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
    {  return !(s < x);  }
 
+
+template <class CharT, class Traits, class Allocator>
+inline bool
+operator<=( boost::basic_string_view<CharT,Traits> x,
+                  const basic_string<CharT,Traits,Allocator>& y)
+   {  return !(y < x);  }
+
+template <class CharT, class Traits, class Allocator>
+inline bool
+operator<=(       const basic_string<CharT,Traits,Allocator>& x,
+            boost::basic_string_view<CharT,Traits> y)
+   {  return !(y < x);  }
+
 template <class CharT, class Traits, class Allocator>
 inline bool
 operator>=(const basic_string<CharT,Traits,Allocator>& x,
@@ -2878,6 +2965,19 @@ template <class CharT, class Traits, class Allocator>
 inline bool
 operator>=(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
    {  return !(x < s);  }
+
+template <class CharT, class Traits, class Allocator>
+inline bool
+operator>=( boost::basic_string_view<CharT,Traits> x,
+                  const basic_string<CharT,Traits,Allocator>& y)
+   {  return !(x < y);  }
+
+template <class CharT, class Traits, class Allocator>
+inline bool
+operator>=(       const basic_string<CharT,Traits,Allocator>& x,
+            boost::basic_string_view<CharT,Traits> y)
+   {  return !(x < y);  }
+
 
 // Swap.
 template <class CharT, class Traits, class Allocator>
