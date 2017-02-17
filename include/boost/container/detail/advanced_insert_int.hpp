@@ -107,8 +107,8 @@ struct insert_n_copies_proxy
 
    void copy_n_and_update(Allocator &, Iterator p, size_type n) const
    {
-	   for (; 0 < n; --n, ++p){
-		   *p = v_;
+      for (; 0 < n; --n, ++p){
+         *p = v_;
       }
    }
 

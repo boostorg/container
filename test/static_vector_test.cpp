@@ -650,10 +650,13 @@ void test_sv_elem(T const& t)
 
 bool default_init_test()//Test for default initialization
 {
-   typedef static_vector<int, 100> di_vector_t;
-
    const std::size_t Capacity = 100;
 
+   typedef static_vector<int, Capacity> di_vector_t;
+
+   {
+      di_vector_t v(Capacity, default_init);
+   }
    {
       di_vector_t v;
       int *p = v.data();
@@ -662,7 +665,7 @@ bool default_init_test()//Test for default initialization
          *p = static_cast<int>(i);
       }
 
-      //Destroy the vector, p stilll pointing to the storage
+      //Destroy the vector, p still pointing to the storage
       v.~di_vector_t();
 
       di_vector_t &rv = *::new(&v)di_vector_t(Capacity, default_init);
