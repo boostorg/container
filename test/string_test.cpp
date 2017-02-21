@@ -25,6 +25,7 @@
 #include "propagate_allocator_test.hpp"
 #include "default_init_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
+#include <boost/utility/string_view.hpp>
 
 using namespace boost::container;
 
@@ -546,20 +547,14 @@ int main()
       typedef boost::container::basic_string<char> cont_int;
       cont_int a; a.push_back(char(1)); a.push_back(char(2)); a.push_back(char(3));
       boost::intrusive::test::test_iterator_random< cont_int >(a);
-      if(boost::report_errors() != 0) {
-         return 1;
-      }
    }
    {
       typedef boost::container::basic_string<wchar_t> cont_int;
       cont_int a; a.push_back(wchar_t(1)); a.push_back(wchar_t(2)); a.push_back(wchar_t(3));
       boost::intrusive::test::test_iterator_random< cont_int >(a);
-      if(boost::report_errors() != 0) {
-         return 1;
-      }
    }
 
-   return 0;
+   return boost::report_errors();
 }
 
 #include <boost/container/detail/config_end.hpp>

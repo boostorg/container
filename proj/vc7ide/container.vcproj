@@ -246,9 +246,6 @@
 					RelativePath="..\..\..\..\boost\container\detail\function_detector.hpp">
 				</File>
 				<File
-					RelativePath="..\..\..\..\boost\container\detail\hash_table.hpp">
-				</File>
-				<File
 					RelativePath="..\..\..\..\boost\container\detail\is_sorted.hpp">
 				</File>
 				<File
