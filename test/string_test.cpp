@@ -183,6 +183,10 @@ int string_test()
          stdStringVect->push_back(auxStdString);
       }
 
+      if(auxBoostString.data() != const_cast<const BoostString&>(auxBoostString).data() &&
+         auxBoostString.data() != &auxBoostString[0])
+         return 1;
+
       if(!CheckEqualStringVector(boostStringVect, stdStringVect)){
          return 1;
       }

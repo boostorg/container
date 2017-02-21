@@ -37,15 +37,18 @@
 #include <boost/container/detail/next_capacity.hpp>
 #include <boost/container/detail/to_raw_pointer.hpp>
 #include <boost/container/detail/version_type.hpp>
+#include <boost/container/detail/type_traits.hpp>
+#include <boost/container/detail/minimal_char_traits_header.hpp>
+
+#include <boost/intrusive/pointer_traits.hpp>
 
 #include <boost/move/utility_core.hpp>
 #include <boost/move/adl_move_swap.hpp>
-#include <boost/static_assert.hpp>
-#include <boost/intrusive/pointer_traits.hpp>
-#include <boost/core/no_exceptions_support.hpp>
-#include <boost/container/detail/minimal_char_traits_header.hpp>
-#include <boost/functional/hash.hpp>
+#include <boost/move/traits.hpp>
 
+#include <boost/static_assert.hpp>
+#include <boost/core/no_exceptions_support.hpp>
+#include <boost/functional/hash.hpp>
 
 #include <algorithm>
 #include <functional>   //bind2nd, etc.
@@ -56,8 +59,12 @@
 #include <locale>
 #include <cstddef>
 #include <climits>
-#include <boost/container/detail/type_traits.hpp>
-#include <boost/move/traits.hpp>
+
+//std
+#if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+#include <initializer_list>   //for std::initializer_list
+#endif
+
 
 namespace boost {
 namespace container {
@@ -791,6 +798,17 @@ class basic_string
       this->assign(f, l);
    }
 
+   #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Same as basic_string(il.begin(), il.end(), a).
+   //!
+   basic_string(std::initializer_list<value_type> il, const allocator_type& a = allocator_type())
+      : base_t(a)
+   {
+      this->priv_terminate_string();
+      this->assign(il.begin(), il.end());
+   }
+   #endif
+
    //! <b>Effects</b>: Destroys the basic_string. All used memory is deallocated.
    //!
    //! <b>Throws</b>: Nothing.
@@ -867,7 +885,7 @@ class basic_string
    basic_string& operator=(const CharT* s)
    { return this->assign(s, s + Traits::length(s)); }
 
-   //! <b>Effects</b>: Returns: *this = basic_string(1, c).
+   //! <b>Effects</b>: Returns *this = basic_string(1, c).
    //!
    basic_string& operator=(CharT c)
    { return this->assign(static_cast<size_type>(1), c); }
@@ -877,6 +895,15 @@ class basic_string
    template<template <class, class> class BasicStringView>
    basic_string& operator=(BasicStringView<CharT, Traits> sv)
    { return this->assign(sv.data(), sv.size()); }
+
+   #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Returns *this = basic_string(il);
+   //!
+   basic_string& operator=(std::initializer_list<CharT> il)
+   {
+      return this->assign(il.begin(), il.end());
+   }
+   #endif
 
    //! <b>Effects</b>: Returns a copy of the internal allocator.
    //!
@@ -1295,6 +1322,15 @@ class basic_string
    basic_string& operator+=(CharT c)
    {  this->push_back(c); return *this;   }
 
+   #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Returns append(il)
+   //!
+   basic_string& operator+=(std::initializer_list<CharT> il)
+   {
+      return this->append(il);
+   }
+   #endif
+
    //! <b>Effects</b>: Calls append(str.data(), str.size()).
    //!
    //! <b>Returns</b>: *this
@@ -1315,7 +1351,7 @@ class basic_string
    //! <b>Throws</b>: If memory allocation throws and out_of_range if pos > str.size()
    //!
    //! <b>Returns</b>: *this
-   basic_string& append(const basic_string& s, size_type pos, size_type n)
+   basic_string& append(const basic_string& s, size_type pos, size_type n = npos)
    {
       if (pos > s.size())
          throw_out_of_range("basic_string::append out of range position");
@@ -1358,6 +1394,15 @@ class basic_string
    template <class InputIter>
    basic_string& append(InputIter first, InputIter last)
    {  this->insert(this->end(), first, last);   return *this;  }
+
+   #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Returns append(il.begin(), il.size()).
+   //!
+   basic_string& append(std::initializer_list<CharT> il)
+   {
+      return this->append(il.begin(), il.size());
+   }
+   #endif
 
    //! <b>Effects</b>: Equivalent to append(static_cast<size_type>(1), c).
    //!
@@ -1481,6 +1526,15 @@ class basic_string
       return *this;
    }
 
+   #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: Returns assign(il.begin(), il.size()).
+   //!
+   basic_string& assign(std::initializer_list<CharT> il)
+   {
+      return this->assign(il.begin(), il.size());
+   }
+   #endif
+
    //! <b>Requires</b>: pos <= size().
    //!
    //! <b>Effects</b>: Calls insert(pos, str.data(), str.size()).
@@ -1507,7 +1561,7 @@ class basic_string
    //! <b>Throws</b>: If memory allocation throws or out_of_range if pos1 > size() or pos2 > str.size().
    //!
    //! <b>Returns</b>: *this
-   basic_string& insert(size_type pos1, const basic_string& s, size_type pos2, size_type n)
+   basic_string& insert(size_type pos1, const basic_string& s, size_type pos2, size_type n = npos)
    {
       const size_type sz = this->size();
       const size_type str_size = s.size();
@@ -1741,6 +1795,17 @@ class basic_string
    }
    #endif
 
+   #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Effects</b>: As if by insert(p, il.begin(), il.end()).
+   //!
+   //! <b>Returns</b>: An iterator which refers to the copy of the first inserted
+   //!   character, or p if i1 is empty.
+   iterator insert(const_iterator p, std::initializer_list<CharT> il)
+   {
+      return this->insert(p, il.begin(), il.end());
+   }
+   #endif
+   
    //! <b>Effects</b>: Removes the last element from the container.
    //!
    //! <b>Throws</b>: Nothing.
@@ -2067,9 +2132,22 @@ class basic_string
    template<template <class, class> class BasicStringView>
    basic_string& replace(const_iterator i1, const_iterator i2, BasicStringView<CharT, Traits> sv)
    {
-      return this->replace(static_cast<size_type>(i1 - this->cbegin())
-                          ,static_cast<size_type>(i2 - i1) ,sv);
+      return this->replace( static_cast<size_type>(i1 - this->cbegin())
+                          , static_cast<size_type>(i2 - i1), sv);
    }
+
+   #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+   //! <b>Requires</b>: [begin(), i1) and [i1, i2) are valid ranges.
+   //!
+   //! <b>Effects</b>: Calls replace(i1 - begin(), i2 - i1, il.begin(), il.size()).
+   //!
+   //! <bReturns</b>: *this.
+   basic_string& replace(const_iterator i1, const_iterator i2, std::initializer_list<CharT> il)
+   {
+      return this->replace( static_cast<size_type>(i1 - begin())
+                          , static_cast<size_type>(i2 - i1), il.begin(), il.size());
+   }
+   #endif
 
    //! <b>Requires</b>: pos <= size()
    //!
@@ -2124,6 +2202,12 @@ class basic_string
    //!
    //! <b>Complexity</b>: constant time.
    const CharT* data()  const BOOST_NOEXCEPT_OR_NOTHROW
+   {  return container_detail::to_raw_pointer(this->priv_addr()); }
+
+   //! <b>Returns</b>: A pointer p such that p + i == &operator[](i) for each i in [0,size()].
+   //!
+   //! <b>Complexity</b>: constant time.
+   CharT* data()  BOOST_NOEXCEPT_OR_NOTHROW
    {  return container_detail::to_raw_pointer(this->priv_addr()); }
 
    #ifndef BOOST_CONTAINER_TEMPLATED_CONVERSION_OPERATOR_BROKEN
@@ -2624,7 +2708,7 @@ class basic_string
    //! <b>Throws</b>: out_of_range if pos1 > size() or pos2 > str.size()
    //!
    //! <b>Returns</b>: basic_string(*this, pos1, n1).compare(basic_string(str, pos2, n2)).
-   int compare(size_type pos1, size_type n1, const basic_string& str, size_type pos2, size_type n2) const
+   int compare(size_type pos1, size_type n1, const basic_string& str, size_type pos2, size_type n2 = npos) const
    {
       if (pos1 > this->size() || pos2 > str.size())
          throw_out_of_range("basic_string::compare out of range position");
