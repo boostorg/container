@@ -307,6 +307,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "node_handle_test", "node_ha
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "string_view_compat_test", "string_view_compat_test.vcproj", "{58CCE183-6092-48FE-A4F7-BA0D4A792607}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -621,6 +625,10 @@ Global
 		{5A17C6C5-6C29-A74F-48FE-A7FA7A063106}.Debug.Build.0 = Debug|Win32
 		{5A17C6C5-6C29-A74F-48FE-A7FA7A063106}.Release.ActiveCfg = Release|Win32
 		{5A17C6C5-6C29-A74F-48FE-A7FA7A063106}.Release.Build.0 = Release|Win32
+		{58CCE183-6092-48FE-A4F7-BA0D4A792607}.Debug.ActiveCfg = Debug|Win32
+		{58CCE183-6092-48FE-A4F7-BA0D4A792607}.Debug.Build.0 = Debug|Win32
+		{58CCE183-6092-48FE-A4F7-BA0D4A792607}.Release.ActiveCfg = Release|Win32
+		{58CCE183-6092-48FE-A4F7-BA0D4A792607}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
