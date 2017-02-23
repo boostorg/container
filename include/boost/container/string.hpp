@@ -1805,7 +1805,7 @@ class basic_string
       return this->insert(p, il.begin(), il.end());
    }
    #endif
-   
+
    //! <b>Effects</b>: Removes the last element from the container.
    //!
    //! <b>Throws</b>: Nothing.
@@ -1939,7 +1939,7 @@ class basic_string
 
    //! <b>Throws</b>: out_of_range if pos1 > size() or pos2 > sv.size().
    //!
-   //! <b>Effects</b>: Determines the effective length rlen of the string to be inserted as the 
+   //! <b>Effects</b>: Determines the effective length rlen of the string to be inserted as the
    //!   smaller of n2 and sv.size() - pos2 and calls `replace(pos1, n1, sv.data() + pos2, rlen)`.
    //!
    //! <b>Returns</b>: *this.
@@ -2144,8 +2144,9 @@ class basic_string
    //! <bReturns</b>: *this.
    basic_string& replace(const_iterator i1, const_iterator i2, std::initializer_list<CharT> il)
    {
-      return this->replace( static_cast<size_type>(i1 - begin())
-                          , static_cast<size_type>(i2 - i1), il.begin(), il.size());
+      return this->replace( static_cast<size_type>(i1 - this->cbegin())
+                          , static_cast<size_type>(i2 - i1)
+                          , il.begin(), il.size());
    }
    #endif
 
