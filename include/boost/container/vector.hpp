@@ -1735,9 +1735,10 @@ class vector
    {
       if (BOOST_LIKELY(this->room_enough())){
          //There is more memory, just construct a new object at the end
-         allocator_traits_type::construct(this->m_holder.alloc(), this->priv_raw_end(), ::boost::forward<Args>(args)...);
+         T* const p = this->priv_raw_end();
+         allocator_traits_type::construct(this->m_holder.alloc(), p, ::boost::forward<Args>(args)...);
          ++this->m_holder.m_size;
-         return *this->priv_raw_end();
+         return *p;
       }
       else{
          typedef container_detail::insert_emplace_proxy<Allocator, T*, Args...> type;
