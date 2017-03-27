@@ -115,7 +115,8 @@ template <class T, std::size_t Capacity>
 class static_vector;
 
 template < class T, std::size_t N
-         , class Allocator= new_allocator<T> >
+         , class Allocator= new_allocator<T>
+         , std::size_t alignment= 0 >
 class small_vector;
 
 template <class T
