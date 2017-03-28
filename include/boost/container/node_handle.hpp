@@ -131,6 +131,9 @@ class node_handle
    nallocator_type &node_alloc()
    {  return *static_cast<nallocator_type*>(m_nalloc_storage.address()); }
 
+   const nallocator_type &node_alloc() const
+   {  return *static_cast<const nallocator_type*>(m_nalloc_storage.address()); }
+
    node_pointer release()
    {
       node_pointer p(m_ptr);
