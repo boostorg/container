@@ -323,7 +323,7 @@ class node_handle
 
       if(was_nh_non_null){
          if(was_this_non_null){
-            if(ator_traits::propagate_on_container_swap){
+            if(ator_traits::propagate_on_container_swap::value){
                ::boost::adl_move_swap(this->node_alloc(), nh.node_alloc());
             }
          }
