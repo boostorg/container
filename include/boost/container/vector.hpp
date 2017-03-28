@@ -2257,7 +2257,7 @@ class vector
                boost::uintptr_t const capaddr = boost::uintptr_t(this->priv_raw_begin() + c);
                boost::uintptr_t const aligned_addr = (addr + szt_align_mask) & ~szt_align_mask;
                indexes =  reinterpret_cast<size_type *>(aligned_addr);
-               std::size_t index_capacity = (aligned_addr >= capaddr) ? 0u : (capaddr - addr)/sizeof(size_type);
+               std::size_t index_capacity = (aligned_addr >= capaddr) ? 0u : (capaddr - aligned_addr)/sizeof(size_type);
 
                //Capacity is constant, we're not going to change it
                if(index_capacity < PosCount){
