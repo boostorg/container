@@ -37,7 +37,7 @@ template class set
 template class set
    < test::movable_and_copyable_int
    , std::less<test::movable_and_copyable_int>
-   , adaptive_pool<test::movable_and_copyable_int>
+   , new_allocator<test::movable_and_copyable_int>
    >;
 
 //multiset

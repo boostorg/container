@@ -42,13 +42,6 @@ template class map
    < test::movable_and_copyable_int
    , test::movable_and_copyable_int
    , std::less<test::movable_and_copyable_int>
-   , std::allocator< pair_t >
-   >;
-
-template class map
-   < test::movable_and_copyable_int
-   , test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
    , adaptive_pool< pair_t >
    >;
 
