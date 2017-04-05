@@ -114,6 +114,7 @@ class flat_set
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                     const_iterator;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                   reverse_iterator;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)             const_reverse_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::sequence_type)                      sequence_type;
 
    public:
    //////////////////////////////////////////////
@@ -844,7 +845,37 @@ class flat_set
    //! <b>Complexity</b>: Constant.
    friend void swap(flat_set& x, flat_set& y);
 
+   //! <b>Effects</b>: Extracts the internal sequence container.
+   //!
+   //! <b>Complexity</b>: Same as the move constructor of sequence_type, usually constant.
+   //!
+   //! <b>Postcondition</b>: this->empty()
+   //!
+   //! <b>Throws</b>: If secuence_type's move constructor throws 
+   sequence_type extract_sequence();
+
    #endif   //#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
+
+   //! <b>Effects</b>: Discards the internally hold sequence container and move adopts the
+   //!   one passed externally using the move assignment. Erases non-unique elements.
+   //!
+   //! <b>Complexity</b>: Assuming O(1) move assignmet, O(NlogN) with N = seq.size()
+   //!
+   //! <b>Throws</b>: If the comparison or the move constructor throws
+   void adopt_sequence(BOOST_RV_REF(sequence_type) seq)
+   {  this->base_t::adopt_sequence_unique(boost::move(seq));  }
+
+   //! <b>Requires</b>: seq shall be ordered according to this->compare()
+   //!   and shall contain unique elements.
+   //!
+   //! <b>Effects</b>: Discards the internally hold sequence container and move adopts the
+   //!   one passed externally using the move assignment.
+   //!
+   //! <b>Complexity</b>: Assuming O(1) move assignment, O(1)
+   //!
+   //! <b>Throws</b>: If the move constructor throws
+   void adopt_sequence(ordered_unique_range_t, BOOST_RV_REF(sequence_type) seq)
+   {  this->base_t::adopt_sequence_unique(ordered_unique_range_t(), boost::move(seq));  }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
@@ -939,6 +970,7 @@ class flat_multiset
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                     const_iterator;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                   reverse_iterator;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)             const_reverse_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::sequence_type)                      sequence_type;
 
    //! @copydoc ::boost::container::flat_set::flat_set()
    explicit flat_multiset() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value &&
@@ -1392,7 +1424,36 @@ class flat_multiset
    //! <b>Complexity</b>: Constant.
    friend void swap(flat_multiset& x, flat_multiset& y);
 
+   //! <b>Effects</b>: Extracts the internal sequence container.
+   //!
+   //! <b>Complexity</b>: Same as the move constructor of sequence_type, usually constant.
+   //!
+   //! <b>Postcondition</b>: this->empty()
+   //!
+   //! <b>Throws</b>: If secuence_type's move constructor throws 
+   sequence_type extract_sequence();
+
    #endif   //#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
+
+   //! <b>Effects</b>: Discards the internally hold sequence container and move adopts the
+   //!   one passed externally using the move assignment.
+   //!
+   //! <b>Complexity</b>: Assuming O(1) move assignmet, O(NlogN) with N = seq.size()
+   //!
+   //! <b>Throws</b>: If the comparison or the move constructor throws
+   void adopt_sequence(BOOST_RV_REF(sequence_type) seq)
+   {  this->base_t::adopt_sequence_equal(boost::move(seq));  }
+
+   //! <b>Requires</b>: seq shall be ordered according to this->compare()
+   //!
+   //! <b>Effects</b>: Discards the internally hold sequence container and move adopts the
+   //!   one passed externally using the move assignment.
+   //!
+   //! <b>Complexity</b>: Assuming O(1) move assignment, O(1)
+   //!
+   //! <b>Throws</b>: If the move constructor throws
+   void adopt_sequence(ordered_range_t, BOOST_RV_REF(sequence_type) seq)
+   {  this->base_t::adopt_sequence_equal(ordered_range_t(), boost::move(seq));  }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:

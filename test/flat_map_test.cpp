@@ -224,6 +224,116 @@ bool flat_tree_ordered_insertion_test()
    return true;
 }
 
+template< class RandomIt >
+void random_shuffle( RandomIt first, RandomIt last )
+{
+   typedef typename boost::container::iterator_traits<RandomIt>::difference_type difference_type;
+   difference_type n = last - first;
+   for (difference_type i = n-1; i > 0; --i) {
+      difference_type j = std::rand() % (i+1);
+      if(j != i) {
+         boost::adl_move_swap(first[i], first[j]);
+      }
+   }
+}
+
+bool flat_tree_extract_adopt_test()
+{
+   using namespace boost::container;
+   const std::size_t NumElements = 100;
+
+   //extract/adopt map
+   {
+      //Construction insertion
+      flat_map<int, int> fmap;
+
+      for(std::size_t i = 0; i != NumElements; ++i){
+         fmap.emplace(static_cast<int>(i), -static_cast<int>(i));
+      }
+
+      flat_map<int, int> fmap_copy(fmap);
+      flat_map<int, int>::sequence_type seq(fmap.extract_sequence());
+      if(!fmap.empty())
+         return false;
+      if(!CheckEqualContainers(seq, fmap_copy))
+         return false;
+
+      seq.insert(seq.end(), fmap_copy.begin(), fmap_copy.end());
+      boost::container::test::random_shuffle(seq.begin(), seq.end());
+      fmap.adopt_sequence(boost::move(seq));
+      if(!CheckEqualContainers(fmap, fmap_copy))
+         return false;
+   }
+
+   //extract/adopt map, ordered_unique_range
+   {
+      //Construction insertion
+      flat_map<int, int> fmap;
+
+      for(std::size_t i = 0; i != NumElements; ++i){
+         fmap.emplace(static_cast<int>(i), -static_cast<int>(i));
+      }
+
+      flat_map<int, int> fmap_copy(fmap);
+      flat_map<int, int>::sequence_type seq(fmap.extract_sequence());
+      if(!fmap.empty())
+         return false;
+      if(!CheckEqualContainers(seq, fmap_copy))
+         return false;
+
+      fmap.adopt_sequence(ordered_unique_range, boost::move(seq));
+      if(!CheckEqualContainers(fmap, fmap_copy))
+         return false;
+   }
+
+   //extract/adopt multimap
+   {
+      //Construction insertion
+      flat_multimap<int, int> fmmap;
+
+      for(std::size_t i = 0; i != NumElements; ++i){
+         fmmap.emplace(static_cast<int>(i), -static_cast<int>(i));
+         fmmap.emplace(static_cast<int>(i), -static_cast<int>(i));
+      }
+
+      flat_multimap<int, int> fmmap_copy(fmmap);
+      flat_multimap<int, int>::sequence_type seq(fmmap.extract_sequence());
+      if(!fmmap.empty())
+         return false;
+      if(!CheckEqualContainers(seq, fmmap_copy))
+         return false;
+
+      boost::container::test::random_shuffle(seq.begin(), seq.end());
+      fmmap.adopt_sequence(boost::move(seq));
+      if(!CheckEqualContainers(fmmap, fmmap_copy))
+         return false;
+   }
+
+   //extract/adopt multimap, ordered_range
+   {
+      //Construction insertion
+      flat_multimap<int, int> fmmap;
+
+      for(std::size_t i = 0; i != NumElements; ++i){
+         fmmap.emplace(static_cast<int>(i), -static_cast<int>(i));
+         fmmap.emplace(static_cast<int>(i), -static_cast<int>(i));
+      }
+
+      flat_multimap<int, int> fmmap_copy(fmmap);
+      flat_multimap<int, int>::sequence_type seq(fmmap.extract_sequence());
+      if(!fmmap.empty())
+         return false;
+      if(!CheckEqualContainers(seq, fmmap_copy))
+         return false;
+
+      fmmap.adopt_sequence(ordered_range, boost::move(seq));
+      if(!CheckEqualContainers(fmmap, fmmap_copy))
+         return false;
+   }
+
+   return true;
+}
+
 }}}
 
 
@@ -382,6 +492,13 @@ int main()
    //    Ordered insertion test
    ////////////////////////////////////
    if(!flat_tree_ordered_insertion_test()){
+      return 1;
+   }
+
+   ////////////////////////////////////
+   //    Extract/Adopt test
+   ////////////////////////////////////
+   if(!flat_tree_extract_adopt_test()){
       return 1;
    }
 

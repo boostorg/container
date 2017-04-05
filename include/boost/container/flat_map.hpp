@@ -144,8 +144,10 @@ class flat_map
          <typename allocator_traits<Allocator>::pointer>::reverse_iterator          reverse_iterator_impl;
    typedef typename container_detail::get_flat_tree_iterators
          <typename allocator_traits<Allocator>::pointer>::const_reverse_iterator    const_reverse_iterator_impl;
+
    public:
    typedef typename impl_tree_t::stored_allocator_type   impl_stored_allocator_type;
+   typedef typename impl_tree_t::sequence_type           impl_sequence_type;
 
    impl_tree_t &tree()
    {  return m_flat_tree;  }
@@ -182,6 +184,7 @@ class flat_map
    typedef BOOST_CONTAINER_IMPDEF(reverse_iterator_impl)                            reverse_iterator;
    typedef BOOST_CONTAINER_IMPDEF(const_reverse_iterator_impl)                      const_reverse_iterator;
    typedef BOOST_CONTAINER_IMPDEF(impl_value_type)                                  movable_value_type;
+   typedef typename BOOST_CONTAINER_IMPDEF(tree_t::sequence_type)                   sequence_type;
 
    public:
    //////////////////////////////////////////////
@@ -1243,6 +1246,39 @@ class flat_map
    std::pair<const_iterator,const_iterator> equal_range(const key_type& x) const
       {  return container_detail::force_copy<std::pair<const_iterator,const_iterator> >(m_flat_tree.lower_bound_range(x)); }
 
+   //! <b>Effects</b>: Extracts the internal sequence container.
+   //!
+   //! <b>Complexity</b>: Same as the move constructor of sequence_type, usually constant.
+   //!
+   //! <b>Postcondition</b>: this->empty()
+   //!
+   //! <b>Throws</b>: If secuence_type's move constructor throws 
+   sequence_type extract_sequence()
+   {
+      return boost::move(container_detail::force<sequence_type>(m_flat_tree.get_sequence_ref()));
+   }
+
+   //! <b>Effects</b>: Discards the internally hold sequence container and move adopts the
+   //!   one passed externally using the move assignment. Erases non-unique elements.
+   //!
+   //! <b>Complexity</b>: Assuming O(1) move assignmet, O(NlogN) with N = seq.size()
+   //!
+   //! <b>Throws</b>: If the comparison or the move constructor throws
+   void adopt_sequence(BOOST_RV_REF(sequence_type) seq)
+   {  this->m_flat_tree.adopt_sequence_unique(boost::move(container_detail::force<impl_sequence_type>(seq)));  }
+
+   //! <b>Requires</b>: seq shall be ordered according to this->compare()
+   //!   and shall contain unique elements.
+   //!
+   //! <b>Effects</b>: Discards the internally hold sequence container and move adopts the
+   //!   one passed externally using the move assignment.
+   //!
+   //! <b>Complexity</b>: Assuming O(1) move assignment, O(1)
+   //!
+   //! <b>Throws</b>: If the move constructor throws
+   void adopt_sequence(ordered_unique_range_t, BOOST_RV_REF(sequence_type) seq)
+   {  this->m_flat_tree.adopt_sequence_unique(ordered_unique_range_t(), boost::move(container_detail::force<impl_sequence_type>(seq)));  }
+
    //! <b>Effects</b>: Returns true if x and y are equal
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
@@ -1401,6 +1437,7 @@ class flat_multimap
          <typename allocator_traits<Allocator>::pointer>::const_reverse_iterator    const_reverse_iterator_impl;
    public:
    typedef typename impl_tree_t::stored_allocator_type   impl_stored_allocator_type;
+   typedef typename impl_tree_t::sequence_type           impl_sequence_type;
 
    impl_tree_t &tree()
    {  return m_flat_tree;  }
@@ -1437,6 +1474,7 @@ class flat_multimap
    typedef BOOST_CONTAINER_IMPDEF(reverse_iterator_impl)                            reverse_iterator;
    typedef BOOST_CONTAINER_IMPDEF(const_reverse_iterator_impl)                      const_reverse_iterator;
    typedef BOOST_CONTAINER_IMPDEF(impl_value_type)                                  movable_value_type;
+   typedef typename BOOST_CONTAINER_IMPDEF(tree_t::sequence_type)                   sequence_type;
 
    //////////////////////////////////////////////
    //
@@ -2218,6 +2256,38 @@ class flat_multimap
    //! <b>Complexity</b>: Logarithmic
    std::pair<const_iterator,const_iterator> equal_range(const key_type& x) const
       {  return container_detail::force_copy<std::pair<const_iterator,const_iterator> >(m_flat_tree.equal_range(x));   }
+
+   //! <b>Effects</b>: Extracts the internal sequence container.
+   //!
+   //! <b>Complexity</b>: Same as the move constructor of sequence_type, usually constant.
+   //!
+   //! <b>Postcondition</b>: this->empty()
+   //!
+   //! <b>Throws</b>: If secuence_type's move constructor throws 
+   sequence_type extract_sequence()
+   {
+      return boost::move(container_detail::force<sequence_type>(m_flat_tree.get_sequence_ref()));
+   }
+
+   //! <b>Effects</b>: Discards the internally hold sequence container and move adopts the
+   //!   one passed externally using the move assignment.
+   //!
+   //! <b>Complexity</b>: Assuming O(1) move assignmet, O(NlogN) with N = seq.size()
+   //!
+   //! <b>Throws</b>: If the comparison or the move constructor throws
+   void adopt_sequence(BOOST_RV_REF(sequence_type) seq)
+   {  this->m_flat_tree.adopt_sequence_equal(boost::move(container_detail::force<impl_sequence_type>(seq)));  }
+
+   //! <b>Requires</b>: seq shall be ordered according to this->compare().
+   //!
+   //! <b>Effects</b>: Discards the internally hold sequence container and move adopts the
+   //!   one passed externally using the move assignment.
+   //!
+   //! <b>Complexity</b>: Assuming O(1) move assignment, O(1)
+   //!
+   //! <b>Throws</b>: If the move constructor throws
+   void adopt_sequence(ordered_range_t, BOOST_RV_REF(sequence_type) seq)
+   {  this->m_flat_tree.adopt_sequence_equal(ordered_range_t(), boost::move(container_detail::force<impl_sequence_type>(seq)));  }
 
    //! <b>Effects</b>: Returns true if x and y are equal
    //!
