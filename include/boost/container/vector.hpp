@@ -54,6 +54,10 @@
 #include <boost/move/detail/fwd_macros.hpp>
 #endif
 #include <boost/move/detail/move_helpers.hpp>
+// move/algo
+#include <boost/move/algo/adaptive_merge.hpp>
+#include <boost/move/algo/unique.hpp>
+#include <boost/move/algo/predicate.hpp>
 // other
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/assert.hpp>
@@ -2240,90 +2244,21 @@ class vector
             p = this->m_holder.allocation_command(allocate_new, new_size, new_cap, p);
             this->priv_merge_in_new_buffer(UniqueBool(), first, n, comp, p, new_cap);
          }
-         else if(!UniqueBool::value && free_c >= n){
-            typedef container_detail::vector_merge_cursor<T, size_type, BidirIt, Compare> inserter_t;
-            T* const pbeg = this->priv_raw_begin();
-            return this->priv_insert_ordered_at(n, inserter_t(pbeg, pbeg + s, last, comp));
-         }
-         else{ //UniqueBool::value == true and free_c >= n
-            std::size_t remaining = n;
-            static const std::size_t PosCount = 64u;
-            size_type positions[PosCount];
-            size_type *indexes = 0;
-            while(remaining){
-               //Query for room to store indexes in the remaining buffer
-               boost::uintptr_t const szt_align_mask = container_detail::alignment_of<size_type>::value - 1;
-               boost::uintptr_t const addr = boost::uintptr_t(this->priv_raw_begin() + s + n);
-               boost::uintptr_t const capaddr = boost::uintptr_t(this->priv_raw_begin() + c);
-               boost::uintptr_t const aligned_addr = (addr + szt_align_mask) & ~szt_align_mask;
-               indexes =  reinterpret_cast<size_type *>(aligned_addr);
-               std::size_t index_capacity = (aligned_addr >= capaddr) ? 0u : (capaddr - aligned_addr)/sizeof(size_type);
-
-               //Capacity is constant, we're not going to change it
-               if(index_capacity < PosCount){
-                  indexes =  positions; 
-                  index_capacity = PosCount;
-               }
-               if(index_capacity > remaining)
-                  index_capacity = remaining;
-               BidirIt limit = first;
-               boost::container::iterator_advance(limit, index_capacity);
-               this->priv_insert_ordered_range(UniqueBool(), index_capacity, first, limit, indexes, comp);
-               first = limit;
-               remaining -= index_capacity;
+         else{
+            T *raw_pos = container_detail::iterator_to_raw_pointer(this->insert(this->cend(), first, last));
+            T *raw_beg = this->priv_raw_begin();
+            T *raw_end = this->priv_raw_end();
+            boost::movelib::adaptive_merge(raw_beg, raw_pos, raw_end, comp, raw_end, free_c - n);
+            if(UniqueBool::value){
+               size_type const count =
+                  static_cast<size_type>(raw_end - boost::movelib::unique(raw_beg, raw_end, boost::movelib::negate<Compare>(comp)));
+               this->priv_destroy_last_n(count);
             }
          }
       }
       else{
          this->insert(this->cend(), n, first, last);
       }
-   }
-
-   template <class UniqueBool, class BidirIt, class Compare>
-   void priv_insert_ordered_range
-      (UniqueBool, size_type const n, BidirIt first, BidirIt const last, size_type positions[], Compare comp)
-   {
-      //Linear: at most N + M -1 comparisons
-      //Log: MlogN
-      //Average
-      //Linear: N + M - 2
-      //Log: MlogN
-      //N+M - 2
-      //N
-      //(N+M)/2 < MlogN
-      //(N/M+1)/2 <= logN
-      //bool const linear = !s || !n || (s <= n) || ((s+n)/n/2 < logN);
-      size_type const s = this->size();
-      size_type remaining = n;
-      T* const pbeg = this->priv_raw_begin();
-      T* const pend = pbeg + s;
-      T* pcur = pbeg;
-      size_type *position = positions;
-      size_type added_in_middle = 0;
-      if(first != last && pcur != pend){
-         while(1){
-            //maintain stability moving external values only if they are strictly less
-            if(comp(*first, *pcur)) { 
-               *position = static_cast<size_type>(pcur - pbeg);
-               BOOST_ASSERT((position == positions) || (*(position-1) == size_type(-1)) || (*(position-1) <= *position));
-               ++position;
-               ++added_in_middle;
-               --remaining;
-               if(++first == last)  break;
-            }
-            else if(UniqueBool::value && !comp(*pcur, *first)){
-               *position = size_type(-1);
-               ++position;
-               --remaining;
-               if(++first == last)  break;
-            }
-            else{
-               if(++pcur == pend)   break;
-            }
-         }
-      }
-      this->insert_ordered_at(added_in_middle, position, first);
-      this->insert(this->cend(), remaining, first, last);
    }
 
    template<class UniqueBool, class FwdIt, class Compare>
@@ -2926,10 +2861,10 @@ class vector
    }
 
    private:
-   T *priv_raw_begin() const
+   BOOST_CONTAINER_FORCEINLINE T *priv_raw_begin() const
    {  return container_detail::to_raw_pointer(m_holder.start());  }
 
-   T* priv_raw_end() const
+   BOOST_CONTAINER_FORCEINLINE T* priv_raw_end() const
    {  return this->priv_raw_begin() + this->m_holder.m_size;  }
 
    template <class InsertionProxy>
