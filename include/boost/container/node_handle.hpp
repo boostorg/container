@@ -23,7 +23,7 @@
 #include <boost/container/detail/workaround.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/container/detail/placement_new.hpp>
-#include <boost/container/detail/to_raw_pointer.hpp>
+#include <boost/move/detail/to_raw_pointer.hpp>
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/detail/mpl.hpp>
 
@@ -123,7 +123,7 @@ class node_handle
 
    void destroy_deallocate_node()
    {
-      nator_traits::destroy(this->node_alloc(), container_detail::to_raw_pointer(m_ptr));
+      nator_traits::destroy(this->node_alloc(), boost::movelib::to_raw_pointer(m_ptr));
       nator_traits::deallocate(this->node_alloc(), m_ptr, 1u);
    }
 

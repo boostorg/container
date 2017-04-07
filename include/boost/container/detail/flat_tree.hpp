@@ -859,10 +859,10 @@ class flat_tree
    {
       sequence_type &tseq = m_data.m_seq;
       boost::movelib::adaptive_sort
-         ( container_detail::iterator_to_raw_pointer(seq.begin())
-         , container_detail::iterator_to_raw_pointer(seq.end())
+         ( boost::movelib::iterator_to_raw_pointer(seq.begin())
+         , boost::movelib::iterator_to_raw_pointer(seq.end())
          , this->priv_value_comp()
-         , container_detail::iterator_to_raw_pointer(tseq.begin() + tseq.size())
+         , boost::movelib::iterator_to_raw_pointer(tseq.begin() + tseq.size())
          , tseq.capacity() - tseq.size());
       tseq = boost::move(seq);
    }
@@ -878,10 +878,10 @@ class flat_tree
    {
       sequence_type &tseq = m_data.m_seq;
       boost::movelib::adaptive_sort
-         ( container_detail::iterator_to_raw_pointer(seq.begin())
-         , container_detail::iterator_to_raw_pointer(seq.end())
+         ( boost::movelib::iterator_to_raw_pointer(seq.begin())
+         , boost::movelib::iterator_to_raw_pointer(seq.end())
          , this->priv_value_comp()
-         , container_detail::iterator_to_raw_pointer(tseq.begin() + tseq.size())
+         , boost::movelib::iterator_to_raw_pointer(tseq.begin() + tseq.size())
          , tseq.capacity() - tseq.size());
       seq.erase( boost::movelib::unique
                   (seq.begin(), seq.end(), boost::movelib::negate<value_compare>(this->m_data.get_comp()))
