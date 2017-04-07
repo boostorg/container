@@ -624,7 +624,7 @@ class flat_set
    BOOST_CONTAINER_FORCEINLINE void merge(flat_set<Key, C2, Allocator>& source)
    {  this->base_t::merge_unique(source.tree());   }
 
-   //! @copydoc ::boost::container::flat_map::merge(flat_set<Key, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_set::merge(flat_set<Key, C2, Allocator>&)
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_set<Key, C2, Allocator> BOOST_RV_REF_END source)
    {  return this->merge(static_cast<flat_set<Key, C2, Allocator>&>(source));   }
@@ -634,7 +634,7 @@ class flat_set
    BOOST_CONTAINER_FORCEINLINE void merge(flat_multiset<Key, C2, Allocator>& source)
    {  this->base_t::merge_unique(source.tree());   }
 
-   //! @copydoc ::boost::container::flat_map::merge(flat_multiset<Key, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_set::merge(flat_multiset<Key, C2, Allocator>&)
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_multiset<Key, C2, Allocator> BOOST_RV_REF_END source)
    {  return this->merge(static_cast<flat_multiset<Key, C2, Allocator>&>(source));   }

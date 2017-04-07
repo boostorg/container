@@ -2128,7 +2128,7 @@ class basic_string
    //!
    //! <b>Effects</b>: Calls `replace(i1 - begin(), i2 - i1, sv).`.
    //!
-   //! <bReturns</b>: *this.
+   //! <b>Returns</b>: *this.
    template<template <class, class> class BasicStringView>
    basic_string& replace(const_iterator i1, const_iterator i2, BasicStringView<CharT, Traits> sv)
    {
@@ -2141,7 +2141,7 @@ class basic_string
    //!
    //! <b>Effects</b>: Calls replace(i1 - begin(), i2 - i1, il.begin(), il.size()).
    //!
-   //! <bReturns</b>: *this.
+   //! <b>Returns</b>: *this.
    basic_string& replace(const_iterator i1, const_iterator i2, std::initializer_list<CharT> il)
    {
       return this->replace( static_cast<size_type>(i1 - this->cbegin())

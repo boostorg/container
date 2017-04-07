@@ -2108,7 +2108,7 @@ class flat_multimap
    void merge(flat_map<Key, T, C2, Allocator>& source)
    {  m_flat_tree.merge_equal(source.tree());   }
 
-   //! @copydoc ::boost::container::flat_multimap::merge(flat_multimap<Key, T, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_multimap::merge(flat_map<Key, T, C2, Allocator>&)
    template<class C2>
    void merge(BOOST_RV_REF_BEG flat_map<Key, T, C2, Allocator> BOOST_RV_REF_END source)
    {  return this->merge(static_cast<flat_map<Key, T, C2, Allocator>&>(source)); }
