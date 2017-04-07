@@ -1258,10 +1258,10 @@ class flat_map
       return boost::move(container_detail::force<sequence_type>(m_flat_tree.get_sequence_ref()));
    }
 
-   //! <b>Effects</b>: Discards the internally hold sequence container and move adopts the
+   //! <b>Effects</b>: Discards the internally hold sequence container and adopts the
    //!   one passed externally using the move assignment. Erases non-unique elements.
    //!
-   //! <b>Complexity</b>: Assuming O(1) move assignmet, O(NlogN) with N = seq.size()
+   //! <b>Complexity</b>: Assuming O(1) move assignment, O(NlogN) with N = seq.size()
    //!
    //! <b>Throws</b>: If the comparison or the move constructor throws
    void adopt_sequence(BOOST_RV_REF(sequence_type) seq)
@@ -1270,12 +1270,12 @@ class flat_map
    //! <b>Requires</b>: seq shall be ordered according to this->compare()
    //!   and shall contain unique elements.
    //!
-   //! <b>Effects</b>: Discards the internally hold sequence container and move adopts the
+   //! <b>Effects</b>: Discards the internally hold sequence container and adopts the
    //!   one passed externally using the move assignment.
    //!
    //! <b>Complexity</b>: Assuming O(1) move assignment, O(1)
    //!
-   //! <b>Throws</b>: If the move constructor throws
+   //! <b>Throws</b>: If the move assignment throws
    void adopt_sequence(ordered_unique_range_t, BOOST_RV_REF(sequence_type) seq)
    {  this->m_flat_tree.adopt_sequence_unique(ordered_unique_range_t(), boost::move(container_detail::force<impl_sequence_type>(seq)));  }
 
@@ -2269,10 +2269,10 @@ class flat_multimap
       return boost::move(container_detail::force<sequence_type>(m_flat_tree.get_sequence_ref()));
    }
 
-   //! <b>Effects</b>: Discards the internally hold sequence container and move adopts the
+   //! <b>Effects</b>: Discards the internally hold sequence container and adopts the
    //!   one passed externally using the move assignment.
    //!
-   //! <b>Complexity</b>: Assuming O(1) move assignmet, O(NlogN) with N = seq.size()
+   //! <b>Complexity</b>: Assuming O(1) move assignment, O(NlogN) with N = seq.size()
    //!
    //! <b>Throws</b>: If the comparison or the move constructor throws
    void adopt_sequence(BOOST_RV_REF(sequence_type) seq)
@@ -2280,12 +2280,12 @@ class flat_multimap
 
    //! <b>Requires</b>: seq shall be ordered according to this->compare().
    //!
-   //! <b>Effects</b>: Discards the internally hold sequence container and move adopts the
+   //! <b>Effects</b>: Discards the internally hold sequence container and adopts the
    //!   one passed externally using the move assignment.
    //!
    //! <b>Complexity</b>: Assuming O(1) move assignment, O(1)
    //!
-   //! <b>Throws</b>: If the move constructor throws
+   //! <b>Throws</b>: If the move assignment throws
    void adopt_sequence(ordered_range_t, BOOST_RV_REF(sequence_type) seq)
    {  this->m_flat_tree.adopt_sequence_equal(ordered_range_t(), boost::move(container_detail::force<impl_sequence_type>(seq)));  }
 
