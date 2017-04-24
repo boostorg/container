@@ -312,6 +312,116 @@ bool flat_tree_ordered_insertion_test()
    return true;
 }
 
+template< class RandomIt >
+void random_shuffle( RandomIt first, RandomIt last )
+{
+   typedef typename boost::container::iterator_traits<RandomIt>::difference_type difference_type;
+   difference_type n = last - first;
+   for (difference_type i = n-1; i > 0; --i) {
+      difference_type j = std::rand() % (i+1);
+      if(j != i) {
+         boost::adl_move_swap(first[i], first[j]);
+      }
+   }
+}
+
+bool flat_tree_extract_adopt_test()
+{
+   using namespace boost::container;
+   const std::size_t NumElements = 100;
+
+   //extract/adopt set
+   {
+      //Construction insertion
+      flat_set<int> fset;
+
+      for(std::size_t i = 0; i != NumElements; ++i){
+         fset.insert(static_cast<int>(i));
+      }
+
+      flat_set<int> fset_copy(fset);
+      flat_set<int>::sequence_type seq(fset.extract_sequence());
+      if(!fset.empty())
+         return false;
+      if(!CheckEqualContainers(seq, fset_copy))
+         return false;
+
+      seq.insert(seq.end(), fset_copy.begin(), fset_copy.end());
+      boost::container::test::random_shuffle(seq.begin(), seq.end());
+      fset.adopt_sequence(boost::move(seq));
+      if(!CheckEqualContainers(fset, fset_copy))
+         return false;
+   }
+
+   //extract/adopt set, ordered_unique_range
+   {
+      //Construction insertion
+      flat_set<int> fset;
+
+      for(std::size_t i = 0; i != NumElements; ++i){
+         fset.insert(static_cast<int>(i));
+      }
+
+      flat_set<int> fset_copy(fset);
+      flat_set<int>::sequence_type seq(fset.extract_sequence());
+      if(!fset.empty())
+         return false;
+      if(!CheckEqualContainers(seq, fset_copy))
+         return false;
+
+      fset.adopt_sequence(ordered_unique_range, boost::move(seq));
+      if(!CheckEqualContainers(fset, fset_copy))
+         return false;
+   }
+
+   //extract/adopt multiset
+   {
+      //Construction insertion
+      flat_multiset<int> fmset;
+
+      for(std::size_t i = 0; i != NumElements; ++i){
+         fmset.insert(static_cast<int>(i));
+         fmset.insert(static_cast<int>(i));
+      }
+
+      flat_multiset<int> fmset_copy(fmset);
+      flat_multiset<int>::sequence_type seq(fmset.extract_sequence());
+      if(!fmset.empty())
+         return false;
+      if(!CheckEqualContainers(seq, fmset_copy))
+         return false;
+
+      boost::container::test::random_shuffle(seq.begin(), seq.end());
+      fmset.adopt_sequence(boost::move(seq));
+      if(!CheckEqualContainers(fmset, fmset_copy))
+         return false;
+   }
+
+   //extract/adopt multiset, ordered_range
+   {
+      //Construction insertion
+      flat_multiset<int> fmset;
+
+      for(std::size_t i = 0; i != NumElements; ++i){
+         fmset.insert(static_cast<int>(i));
+         fmset.insert(static_cast<int>(i));
+      }
+
+      flat_multiset<int> fmset_copy(fmset);
+      flat_multiset<int>::sequence_type seq(fmset.extract_sequence());
+      if(!fmset.empty())
+         return false;
+      if(!CheckEqualContainers(seq, fmset_copy))
+         return false;
+
+      fmset.adopt_sequence(ordered_range, boost::move(seq));
+      if(!CheckEqualContainers(fmset, fmset_copy))
+         return false;
+   }
+
+   return true;
+}
+
 }}}
 
 
@@ -488,6 +598,13 @@ int main()
    //    Ordered insertion test
    ////////////////////////////////////
    if(!flat_tree_ordered_insertion_test()){
+      return 1;
+   }
+
+   ////////////////////////////////////
+   //    Extract/Adopt test
+   ////////////////////////////////////
+   if(!flat_tree_extract_adopt_test()){
       return 1;
    }
 

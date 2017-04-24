@@ -311,6 +311,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "string_view_compat_test", "
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tree_test", "tree_test.vcproj", "{5CE185C3-2609-4FA5-FE38-792BA0D3A606}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -629,6 +633,10 @@ Global
 		{58CCE183-6092-48FE-A4F7-BA0D4A792607}.Debug.Build.0 = Debug|Win32
 		{58CCE183-6092-48FE-A4F7-BA0D4A792607}.Release.ActiveCfg = Release|Win32
 		{58CCE183-6092-48FE-A4F7-BA0D4A792607}.Release.Build.0 = Release|Win32
+		{5CE185C3-2609-4FA5-FE38-792BA0D3A606}.Debug.ActiveCfg = Debug|Win32
+		{5CE185C3-2609-4FA5-FE38-792BA0D3A606}.Debug.Build.0 = Debug|Win32
+		{5CE185C3-2609-4FA5-FE38-792BA0D3A606}.Release.ActiveCfg = Release|Win32
+		{5CE185C3-2609-4FA5-FE38-792BA0D3A606}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

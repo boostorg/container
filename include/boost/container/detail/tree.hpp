@@ -493,7 +493,7 @@ class tree
    typedef boost::container::reverse_iterator
       <const_iterator>                                const_reverse_iterator;
    typedef node_handle
-      < Node, value_type, allocator_type, void>       node_type;
+      < NodeAlloc, void>                              node_type;
    typedef insert_return_type_base
       <iterator, node_type>                           insert_return_type;
 
@@ -1142,7 +1142,7 @@ class tree
             this->insert_unique_check(hint, KeyOfValue()(nh.value()), data);
          if(ret.second){
             irt.inserted = true;
-            irt.position = iterator(this->icont().insert_unique_commit(*nh.get_node_pointer(), data));
+            irt.position = iterator(this->icont().insert_unique_commit(*nh.get(), data));
             nh.release();
          }
          else{

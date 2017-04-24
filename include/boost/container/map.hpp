@@ -31,6 +31,8 @@
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/value_init.hpp>
 #include <boost/container/detail/pair.hpp>
+#include <boost/container/detail/pair_key_mapped_of_value.hpp>
+
 // move
 #include <boost/move/traits.hpp>
 #include <boost/move/utility_core.hpp>
@@ -52,34 +54,6 @@
 
 namespace boost {
 namespace container {
-
-///@cond
-
-template<class Key, class Mapped>
-struct pair_key_mapped_of_value
-{
-   typedef Key    key_type;
-   typedef Mapped mapped_type;
-
-   template<class Pair>
-   const key_type & key_of_value(const Pair &p) const
-   {  return p.first;  }
-
-   template<class Pair>
-   const mapped_type & mapped_of_value(const Pair &p) const
-   {  return p.second;  }
-
-   template<class Pair>
-   key_type & key_of_value(Pair &p) const
-   {  return const_cast<key_type&>(p.first);  }
-
-   template<class Pair>
-   mapped_type & mapped_of_value(Pair &p) const
-   {  return p.second;  }
-
-};
-
-///@endcond
 
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -150,9 +124,7 @@ class map
    typedef std::pair<key_type, mapped_type>                                         nonconst_value_type;
    typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                          movable_value_type;
    typedef BOOST_CONTAINER_IMPDEF(node_handle<
-      typename base_t::node_type::container_node_type
-      BOOST_MOVE_I value_type
-      BOOST_MOVE_I allocator_type
+      typename base_t::stored_allocator_type
       BOOST_MOVE_I pair_key_mapped_of_value
          <key_type BOOST_MOVE_I mapped_type> >)                                     node_type;
    typedef BOOST_CONTAINER_IMPDEF
@@ -1243,9 +1215,7 @@ class multimap
    typedef std::pair<key_type, mapped_type>                                         nonconst_value_type;
    typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                          movable_value_type;
    typedef BOOST_CONTAINER_IMPDEF(node_handle<
-      typename base_t::node_type::container_node_type
-      BOOST_MOVE_I value_type
-      BOOST_MOVE_I allocator_type
+      typename base_t::stored_allocator_type
       BOOST_MOVE_I pair_key_mapped_of_value
          <key_type BOOST_MOVE_I mapped_type> >)                                     node_type;
 
