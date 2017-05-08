@@ -519,7 +519,7 @@ class tree
 
    template <class InputIterator>
    tree(bool unique_insertion, InputIterator first, InputIterator last, const key_compare& comp,
-          const allocator_type& a
+          const allocator_type& a = allocator_type()
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
       , typename container_detail::enable_if_or
          < void
@@ -548,7 +548,7 @@ class tree
 
    template <class InputIterator>
    tree(bool unique_insertion, InputIterator first, InputIterator last, const key_compare& comp,
-          const allocator_type& a
+          const allocator_type& a = allocator_type()
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
       , typename container_detail::disable_if_or
          < void

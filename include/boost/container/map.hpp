@@ -153,8 +153,19 @@ class map
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_FORCEINLINE 
-   explicit map(const Compare& comp, const allocator_type& a = allocator_type())
+   explicit map(const Compare& comp, const allocator_type& a)
       : base_t(comp, a)
+   {
+      //A type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty map using the specified comparison object.
+   //!
+   //! <b>Complexity</b>: Constant.
+   BOOST_CONTAINER_FORCEINLINE
+   explicit map(const Compare& comp)
+      : base_t(comp)
    {
       //A type must be std::pair<CONST Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
@@ -178,9 +189,23 @@ class map
    //! comp and otherwise N logN, where N is last - first.
    template <class InputIterator>
    BOOST_CONTAINER_FORCEINLINE 
-   map(InputIterator first, InputIterator last, const Compare& comp = Compare(),
-         const allocator_type& a = allocator_type())
+   map(InputIterator first, InputIterator last, const Compare& comp,
+         const allocator_type& a)
       : base_t(true, first, last, comp, a)
+   {
+      //A type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty map using the specified comparison object and
+   //! inserts elements from the range [first ,last ).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
+   //! comp and otherwise N logN, where N is last - first.
+   template <class InputIterator>
+   BOOST_CONTAINER_FORCEINLINE 
+   map(InputIterator first, InputIterator last, const Compare& comp = Compare())
+      : base_t(true, first, last, comp)
    {
       //A type must be std::pair<CONST Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
@@ -213,8 +238,28 @@ class map
    template <class InputIterator>
    BOOST_CONTAINER_FORCEINLINE 
    map( ordered_unique_range_t, InputIterator first, InputIterator last
-      , const Compare& comp = Compare(), const allocator_type& a = allocator_type())
+      , const Compare& comp, const allocator_type& a)
       : base_t(ordered_range, first, last, comp, a)
+   {
+      //A type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty map using the specified comparison object and
+   //! inserts elements from the ordered unique range [first ,last). This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Requires</b>: [first ,last) must be ordered according to the predicate and must be
+   //! unique values.
+   //!
+   //! <b>Complexity</b>: Linear in N.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   template <class InputIterator>
+   BOOST_CONTAINER_FORCEINLINE 
+   map( ordered_unique_range_t, InputIterator first, InputIterator last
+      , const Compare& comp = Compare())
+      : base_t(ordered_range, first, last, comp)
    {
       //A type must be std::pair<CONST Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
@@ -227,8 +272,21 @@ class map
    //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
    //! comp and otherwise N logN, where N is il.first() - il.end().
    BOOST_CONTAINER_FORCEINLINE 
-   map(std::initializer_list<value_type> il, const Compare& comp = Compare(), const allocator_type& a = allocator_type())
+   map(std::initializer_list<value_type> il, const Compare& comp, const allocator_type& a)
       : base_t(true, il.begin(), il.end(), comp, a)
+   {
+      //A type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty map using the specified comparison object and
+   //! inserts elements from the range [il.begin(), il.end()).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
+   //! comp and otherwise N logN, where N is il.first() - il.end().
+   BOOST_CONTAINER_FORCEINLINE 
+   map(std::initializer_list<value_type> il, const Compare& comp = Compare())
+      : base_t(true, il.begin(), il.end(), comp)
    {
       //A type must be std::pair<CONST Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
@@ -259,8 +317,26 @@ class map
    //! <b>Note</b>: Non-standard extension.
    BOOST_CONTAINER_FORCEINLINE 
    map(ordered_unique_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(),
-       const allocator_type& a = allocator_type())
+       const allocator_type& a)
       : base_t(ordered_range, il.begin(), il.end(), comp, a)
+   {
+      //A type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty set using the specified comparison object and
+   //! allocator, and inserts elements from the ordered unique range [il.begin(), il.end()). This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Requires</b>: [il.begin(), il.end()) must be ordered according to the predicate and must be
+   //! unique values.
+   //!
+   //! <b>Complexity</b>: Linear in N.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   BOOST_CONTAINER_FORCEINLINE 
+   map(ordered_unique_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare())
+      : base_t(ordered_range, il.begin(), il.end(), comp)
    {
       //A type must be std::pair<CONST Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
@@ -1268,9 +1344,24 @@ class multimap
    template <class InputIterator>
    BOOST_CONTAINER_FORCEINLINE
    multimap(InputIterator first, InputIterator last,
-            const Compare& comp = Compare(),
-            const allocator_type& a = allocator_type())
+            const Compare& comp,
+            const allocator_type& a)
       : base_t(false, first, last, comp, a)
+   {
+      //A type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty multimap using the specified comparison object and
+   //! inserts elements from the range [first ,last ).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
+   //! comp and otherwise N logN, where N is last - first.
+   template <class InputIterator>
+   BOOST_CONTAINER_FORCEINLINE
+   multimap(InputIterator first, InputIterator last,
+            const Compare& comp = Compare())
+      : base_t(false, first, last, comp)
    {
       //A type must be std::pair<CONST Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
@@ -1299,9 +1390,23 @@ class multimap
    //!
    //! <b>Note</b>: Non-standard extension.
    template <class InputIterator>
-   BOOST_CONTAINER_FORCEINLINE multimap(ordered_range_t, InputIterator first, InputIterator last, const Compare& comp = Compare(),
-         const allocator_type& a = allocator_type())
+   BOOST_CONTAINER_FORCEINLINE multimap(ordered_range_t, InputIterator first, InputIterator last, const Compare& comp,
+         const allocator_type& a)
       : base_t(ordered_range, first, last, comp, a)
+   {}
+
+   //! <b>Effects</b>: Constructs an empty multimap using the specified comparison object and
+   //! inserts elements from the ordered range [first ,last). This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Requires</b>: [first ,last) must be ordered according to the predicate.
+   //!
+   //! <b>Complexity</b>: Linear in N.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   template <class InputIterator>
+   BOOST_CONTAINER_FORCEINLINE multimap(ordered_range_t, InputIterator first, InputIterator last, const Compare& comp = Compare())
+      : base_t(ordered_range, first, last, comp)
    {}
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -1312,8 +1417,21 @@ class multimap
    //! comp and otherwise N logN, where N is il.first() - il.end().
    BOOST_CONTAINER_FORCEINLINE
    multimap(std::initializer_list<value_type> il, const Compare& comp = Compare(),
-           const allocator_type& a = allocator_type())
+           const allocator_type& a)
       : base_t(false, il.begin(), il.end(), comp, a)
+   {
+      //A type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty multimap using the specified comparison object and
+   //! inserts elements from the range [il.begin(), il.end()).
+   //!
+   //! <b>Complexity</b>: Linear in N if the range [first ,last ) is already sorted using
+   //! comp and otherwise N logN, where N is il.first() - il.end().
+   BOOST_CONTAINER_FORCEINLINE
+   multimap(std::initializer_list<value_type> il, const Compare& comp = Compare())
+      : base_t(false, il.begin(), il.end(), comp)
    {
       //A type must be std::pair<CONST Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
@@ -1343,8 +1461,25 @@ class multimap
    //! <b>Note</b>: Non-standard extension.
    BOOST_CONTAINER_FORCEINLINE
    multimap(ordered_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare(),
-       const allocator_type& a = allocator_type())
+       const allocator_type& a)
       : base_t(ordered_range, il.begin(), il.end(), comp, a)
+   {
+      //A type must be std::pair<CONST Key, T>
+      BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
+   }
+
+   //! <b>Effects</b>: Constructs an empty set using the specified comparison object and
+   //! inserts elements from the ordered range [il.begin(), il.end()). This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Requires</b>: [il.begin(), il.end()) must be ordered according to the predicate.
+   //!
+   //! <b>Complexity</b>: Linear in N.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   BOOST_CONTAINER_FORCEINLINE
+   multimap(ordered_range_t, std::initializer_list<value_type> il, const Compare& comp = Compare())
+      : base_t(ordered_range, il.begin(), il.end(), comp)
    {
       //A type must be std::pair<CONST Key, T>
       BOOST_STATIC_ASSERT((container_detail::is_same<std::pair<const Key, T>, typename Allocator::value_type>::value));
