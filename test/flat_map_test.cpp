@@ -502,6 +502,9 @@ int main()
       return 1;
    }
 
+   if (!boost::container::test::instantiate_constructors<flat_map<int, int>, flat_multimap<int, int> >())
+      return 1;
+
    ////////////////////////////////////
    //    Testing allocator implementations
    ////////////////////////////////////

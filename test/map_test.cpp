@@ -432,6 +432,9 @@ int main ()
    if(!node_type_test())
       return 1;
 
+   if (!boost::container::test::instantiate_constructors<map<int, int>, multimap<int, int> >())
+      return 1;
+
    test::test_merge_from_different_comparison();
 
    ////////////////////////////////////
@@ -440,21 +443,21 @@ int main ()
    //
    // map
    //
-   typedef map< int*, int*, std::less<int*>, std::allocator< std::pair<int const*, int*> >
+   typedef map< int*, int*, std::less<int*>, std::allocator< std::pair<int *const, int*> >
               , tree_assoc_options< optimize_size<false>, tree_type<red_black_tree> >::type > rbmap_size_optimized_no;
 
-   typedef map< int*, int*, std::less<int*>, std::allocator< std::pair<int const*, int*> >
+   typedef map< int*, int*, std::less<int*>, std::allocator< std::pair<int *const, int*> >
               , tree_assoc_options< optimize_size<true>, tree_type<avl_tree>  >::type > avlmap_size_optimized_yes;
    //
    // multimap
    //
-   typedef multimap< int*, int*, std::less<int*>, std::allocator< std::pair<int const*, int*> >
+   typedef multimap< int*, int*, std::less<int*>, std::allocator< std::pair<int *const, int*> >
                    , tree_assoc_options< optimize_size<true>, tree_type<red_black_tree>  >::type > rbmmap_size_optimized_yes;
-   typedef multimap< int*, int*, std::less<int*>, std::allocator< std::pair<int const*, int*> >
+   typedef multimap< int*, int*, std::less<int*>, std::allocator< std::pair<int *const, int*> >
                    , tree_assoc_options< optimize_size<false>, tree_type<avl_tree> >::type > avlmmap_size_optimized_no;
+
    BOOST_STATIC_ASSERT(sizeof(rbmmap_size_optimized_yes) < sizeof(rbmap_size_optimized_no));
    BOOST_STATIC_ASSERT(sizeof(avlmap_size_optimized_yes) < sizeof(avlmmap_size_optimized_no));
-
 
    return 0;
 }

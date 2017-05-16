@@ -132,6 +132,18 @@ class flat_tree
          : value_compare(), m_seq()
       {}
 
+      explicit Data(const allocator_t &alloc)
+         : value_compare(), m_seq(alloc)
+      {}
+
+      explicit Data(const Compare &comp)
+         : value_compare(comp), m_seq()
+      {}
+
+      Data(const Compare &comp, const allocator_t &alloc)
+         : value_compare(comp), m_seq(alloc)
+      {}
+
       explicit Data(const Data &d)
          : value_compare(static_cast<const value_compare&>(d)), m_seq(d.m_seq)
       {}
@@ -146,18 +158,6 @@ class flat_tree
 
       Data(BOOST_RV_REF(Data) d, const Allocator &a)
          : value_compare(boost::move(static_cast<value_compare&>(d))), m_seq(boost::move(d.m_seq), a)
-      {}
-
-      explicit Data(const Compare &comp)
-         : value_compare(comp), m_seq()
-      {}
-
-      Data(const Compare &comp, const allocator_t &alloc)
-         : value_compare(comp), m_seq(alloc)
-      {}
-
-      explicit Data(const allocator_t &alloc)
-         : value_compare(), m_seq(alloc)
       {}
 
       Data& operator=(BOOST_COPY_ASSIGN_REF(Data) d)
@@ -219,12 +219,12 @@ class flat_tree
       : m_data(comp)
    { }
 
-   BOOST_CONTAINER_FORCEINLINE flat_tree(const Compare& comp, const allocator_type& a)
-      : m_data(comp, a)
-   { }
-
    BOOST_CONTAINER_FORCEINLINE explicit flat_tree(const allocator_type& a)
       : m_data(a)
+   { }
+
+   BOOST_CONTAINER_FORCEINLINE flat_tree(const Compare& comp, const allocator_type& a)
+      : m_data(comp, a)
    { }
 
    BOOST_CONTAINER_FORCEINLINE flat_tree(const flat_tree& x)
@@ -245,9 +245,26 @@ class flat_tree
    { }
 
    template <class InputIterator>
-   flat_tree( ordered_range_t, InputIterator first, InputIterator last
-            , const Compare& comp     = Compare()
-            , const allocator_type& a = allocator_type())
+   BOOST_CONTAINER_FORCEINLINE
+   flat_tree( ordered_range_t, InputIterator first, InputIterator last)
+      : m_data()
+   {
+      this->m_data.m_seq.insert(this->m_data.m_seq.end(), first, last);
+      BOOST_ASSERT((is_sorted)(this->m_data.m_seq.cbegin(), this->m_data.m_seq.cend(), this->priv_value_comp()));
+   }
+
+   template <class InputIterator>
+   BOOST_CONTAINER_FORCEINLINE
+   flat_tree( ordered_range_t, InputIterator first, InputIterator last, const Compare& comp)
+      : m_data(comp)
+   {
+      this->m_data.m_seq.insert(this->m_data.m_seq.end(), first, last);
+      BOOST_ASSERT((is_sorted)(this->m_data.m_seq.cbegin(), this->m_data.m_seq.cend(), this->priv_value_comp()));
+   }
+
+   template <class InputIterator>
+   BOOST_CONTAINER_FORCEINLINE
+   flat_tree( ordered_range_t, InputIterator first, InputIterator last, const Compare& comp, const allocator_type& a)
       : m_data(comp, a)
    {
       this->m_data.m_seq.insert(this->m_data.m_seq.end(), first, last);
@@ -255,9 +272,26 @@ class flat_tree
    }
 
    template <class InputIterator>
-   flat_tree( ordered_unique_range_t, InputIterator first, InputIterator last
-            , const Compare& comp     = Compare()
-            , const allocator_type& a = allocator_type())
+   BOOST_CONTAINER_FORCEINLINE
+   flat_tree( ordered_unique_range_t, InputIterator first, InputIterator last)
+      : m_data()
+   {
+      this->m_data.m_seq.insert(this->m_data.m_seq.end(), first, last);
+      BOOST_ASSERT((is_sorted_and_unique)(this->m_data.m_seq.cbegin(), this->m_data.m_seq.cend(), this->priv_value_comp()));
+   }
+
+   template <class InputIterator>
+   BOOST_CONTAINER_FORCEINLINE
+   flat_tree( ordered_unique_range_t, InputIterator first, InputIterator last, const Compare& comp)
+      : m_data(comp)
+   {
+      this->m_data.m_seq.insert(this->m_data.m_seq.end(), first, last);
+      BOOST_ASSERT((is_sorted_and_unique)(this->m_data.m_seq.cbegin(), this->m_data.m_seq.cend(), this->priv_value_comp()));
+   }
+
+   template <class InputIterator>
+   BOOST_CONTAINER_FORCEINLINE
+   flat_tree( ordered_unique_range_t, InputIterator first, InputIterator last, const Compare& comp, const allocator_type& a)
       : m_data(comp, a)
    {
       this->m_data.m_seq.insert(this->m_data.m_seq.end(), first, last);
@@ -265,26 +299,38 @@ class flat_tree
    }
 
    template <class InputIterator>
-   flat_tree( bool unique_insertion
-            , InputIterator first, InputIterator last
-            , const Compare& comp     = Compare()
-            , const allocator_type& a = allocator_type())
+   BOOST_CONTAINER_FORCEINLINE
+   flat_tree( bool unique_insertion, InputIterator first, InputIterator last)
+      : m_data()
+   {
+      this->priv_range_insertion_construct(unique_insertion, first, last);
+   }
+
+   template <class InputIterator>
+   BOOST_CONTAINER_FORCEINLINE
+   flat_tree( bool unique_insertion, InputIterator first, InputIterator last
+            , const Compare& comp)
+      : m_data(comp)
+   {
+      this->priv_range_insertion_construct(unique_insertion, first, last);
+   }
+
+   template <class InputIterator>
+   BOOST_CONTAINER_FORCEINLINE
+   flat_tree( bool unique_insertion, InputIterator first, InputIterator last
+            , const allocator_type& a)
+      : m_data(a)
+   {
+      this->priv_range_insertion_construct(unique_insertion, first, last);
+   }
+
+   template <class InputIterator>
+   BOOST_CONTAINER_FORCEINLINE
+   flat_tree( bool unique_insertion, InputIterator first, InputIterator last
+            , const Compare& comp, const allocator_type& a)
       : m_data(comp, a)
    {
-      //Use cend() as hint to achieve linear time for
-      //ordered ranges as required by the standard
-      //for the constructor
-      //Call end() every iteration as reallocation might have invalidated iterators
-      if(unique_insertion){
-         for ( ; first != last; ++first){
-            this->insert_unique(this->cend(), *first);
-         }
-      }
-      else{
-         for ( ; first != last; ++first){
-            this->insert_equal(this->cend(), *first);
-         }
-      }
+      this->priv_range_insertion_construct(unique_insertion, first, last);
    }
 
    BOOST_CONTAINER_FORCEINLINE ~flat_tree()
@@ -922,6 +968,25 @@ class flat_tree
       {  x.swap(y);  }
 
    private:
+
+   template <class InputIterator>
+   void priv_range_insertion_construct( bool unique_insertion, InputIterator first, InputIterator last)
+   {
+      //Use cend() as hint to achieve linear time for
+      //ordered ranges as required by the standard
+      //for the constructor
+      //Call end() every iteration as reallocation might have invalidated iterators
+      if(unique_insertion){
+         for ( ; first != last; ++first){
+            this->insert_unique(this->cend(), *first);
+         }
+      }
+      else{
+         for ( ; first != last; ++first){
+            this->insert_equal(this->cend(), *first);
+         }
+      }
+   }
 
    BOOST_CONTAINER_FORCEINLINE bool priv_in_range_or_end(const_iterator pos) const
    {

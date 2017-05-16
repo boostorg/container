@@ -318,7 +318,6 @@ void test_merge_from_different_comparison()
    set1.merge(set2);
 }
 
-
 int main ()
 {
    //Recursive container instantiation
@@ -344,6 +343,9 @@ int main ()
       s.insert(p);
       s.emplace(p);
    }
+
+   if (!boost::container::test::instantiate_constructors<set<int>, multiset<int> >())
+      return 1;
 
    test_merge_from_different_comparison();
 

@@ -945,6 +945,88 @@ bool test_map_support_for_initialization_list_for()
    return true;
 }
 
+template<typename MapType, typename MultimapType>
+bool instantiate_constructors()
+{
+   {
+      typedef typename MapType::value_type value_type;
+      typename MapType::key_compare comp;
+      typename MapType::allocator_type a;
+      typename MapType::value_type value;
+      {
+         MapType s0;
+         MapType s1(comp);
+         MapType s2(a);
+         MapType s3(comp, a);
+      }
+      {
+         MapType s0(&value, &value);
+         MapType s1(&value, &value ,comp);
+         MapType s2(&value, &value ,a);
+         MapType s3(&value, &value ,comp, a);
+      }
+      #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+      {
+         std::initializer_list<value_type> il;
+         MapType s0(il);
+         MapType s1(il, comp);
+         MapType s2(il, a);
+         MapType s3(il, comp, a);
+      }
+      {
+         std::initializer_list<value_type> il;
+         MapType s0(ordered_unique_range, il);
+         MapType s1(ordered_unique_range, il, comp);
+         MapType s3(ordered_unique_range, il, comp, a);
+      }
+      #endif
+      {
+         MapType s0(ordered_unique_range, &value, &value);
+         MapType s1(ordered_unique_range, &value, &value ,comp);
+         MapType s2(ordered_unique_range, &value, &value ,comp, a);
+      }
+   }
+
+   {
+      typedef typename MultimapType::value_type value_type;
+      typename MultimapType::key_compare comp;
+      typename MultimapType::allocator_type a;
+      typename MultimapType::value_type value;
+      {
+         MultimapType s0;
+         MultimapType s1(comp);
+         MultimapType s2(a);
+         MultimapType s3(comp, a);
+      }
+      {
+         MultimapType s0(&value, &value);
+         MultimapType s1(&value, &value ,comp);
+         MultimapType s2(&value, &value ,a);
+         MultimapType s3(&value, &value ,comp, a);
+      }
+      #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+      {
+         std::initializer_list<value_type> il;
+         MultimapType s0(il);
+         MultimapType s1(il, comp);
+         MultimapType s2(il, a);
+         MultimapType s3(il, comp, a);
+      }
+      {
+         std::initializer_list<value_type> il;
+         MultimapType s0(ordered_range, il);
+         MultimapType s1(ordered_range, il, comp);
+         MultimapType s3(ordered_range, il, comp, a);
+      }
+      #endif
+      {
+         MultimapType s0(ordered_range, &value, &value);
+         MultimapType s1(ordered_range, &value, &value ,comp);
+         MultimapType s2(ordered_range, &value, &value ,comp, a);
+      }
+   }
+   return true;
+}
 
 }  //namespace test{
 }  //namespace container {
