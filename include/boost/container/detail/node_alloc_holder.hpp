@@ -106,22 +106,22 @@ struct node_alloc_holder
       : members_(a)
    {}
 
+   //Constructors for associative containers
+   node_alloc_holder(const value_compare &c, const ValAlloc &a)
+      : members_(a, c)
+   {}
+
    explicit node_alloc_holder(const node_alloc_holder &x)
       : members_(NodeAllocTraits::select_on_container_copy_construction(x.node_alloc()))
+   {}
+
+   node_alloc_holder(const node_alloc_holder &x, const value_compare &c)
+      : members_(NodeAllocTraits::select_on_container_copy_construction(x.node_alloc()), c)
    {}
 
    explicit node_alloc_holder(BOOST_RV_REF(node_alloc_holder) x)
       : members_(boost::move(x.node_alloc()))
    {  this->icont().swap(x.icont());  }
-
-   //Constructors for associative containers
-   explicit node_alloc_holder(const value_compare &c, const ValAlloc &a)
-      : members_(a, c)
-   {}
-
-   explicit node_alloc_holder(const value_compare &c, const node_alloc_holder &x)
-      : members_(NodeAllocTraits::select_on_container_copy_construction(x.node_alloc()), c)
-   {}
 
    explicit node_alloc_holder(const value_compare &c)
       : members_(c)

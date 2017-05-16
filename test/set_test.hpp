@@ -162,14 +162,14 @@ int set_test ()
          IntType move_me(i/2);
          aux_vect3[i] = boost::move(move_me);
       }
-      ::boost::movelib::unique_ptr<MyBoostSet> const pboostset = ::boost::movelib::make_unique<MyBoostSet>
+      ::boost::movelib::unique_ptr<MyBoostSet> const pboostset2 = ::boost::movelib::make_unique<MyBoostSet>
          (boost::make_move_iterator(&aux_vect[0]), boost::make_move_iterator(&aux_vect[0]+50), typename MyBoostSet::key_compare());
-      ::boost::movelib::unique_ptr<MyStdSet> const pstdset = ::boost::movelib::make_unique<MyStdSet>(&aux_vect2[0], &aux_vect2[0]+50);
-      if(!test::CheckEqualContainers(*pboostset, *pstdset)) return 1;
-      ::boost::movelib::unique_ptr<MyBoostMultiSet> const pboostmultiset = ::boost::movelib::make_unique<MyBoostMultiSet>
+      ::boost::movelib::unique_ptr<MyStdSet> const pstdset2 = ::boost::movelib::make_unique<MyStdSet>(&aux_vect2[0], &aux_vect2[0]+50);
+      if(!test::CheckEqualContainers(*pboostset2, *pstdset2)) return 1;
+      ::boost::movelib::unique_ptr<MyBoostMultiSet> const pboostmultiset2 = ::boost::movelib::make_unique<MyBoostMultiSet>
          (boost::make_move_iterator(&aux_vect3[0]), boost::make_move_iterator(&aux_vect3[0]+50), typename MyBoostMultiSet::key_compare());
-      ::boost::movelib::unique_ptr<MyStdMultiSet> const pstdmultiset = ::boost::movelib::make_unique<MyStdMultiSet>(&aux_vect2[0], &aux_vect2[0]+50);
-      if(!test::CheckEqualContainers(*pboostmultiset, *pstdmultiset)) return 1;
+      ::boost::movelib::unique_ptr<MyStdMultiSet> const pstdmultiset2 = ::boost::movelib::make_unique<MyStdMultiSet>(&aux_vect2[0], &aux_vect2[0]+50);
+      if(!test::CheckEqualContainers(*pboostmultiset2, *pstdmultiset2)) return 1;
    }
    {  //Set(beg, end, alloc)
       IntType aux_vect[50];
@@ -186,14 +186,14 @@ int set_test ()
          IntType move_me(i/2);
          aux_vect3[i] = boost::move(move_me);
       }
-      ::boost::movelib::unique_ptr<MyBoostSet> const pboostset = ::boost::movelib::make_unique<MyBoostSet>
+      ::boost::movelib::unique_ptr<MyBoostSet> const pboostset2 = ::boost::movelib::make_unique<MyBoostSet>
          (boost::make_move_iterator(&aux_vect[0]), boost::make_move_iterator(&aux_vect[0]+50), typename MyBoostSet::allocator_type());
-      ::boost::movelib::unique_ptr<MyStdSet> const pstdset = ::boost::movelib::make_unique<MyStdSet>(&aux_vect2[0], &aux_vect2[0]+50);
-      if(!test::CheckEqualContainers(*pboostset, *pstdset)) return 1;
-      ::boost::movelib::unique_ptr<MyBoostMultiSet> const pboostmultiset = ::boost::movelib::make_unique<MyBoostMultiSet>
+      ::boost::movelib::unique_ptr<MyStdSet> const pstdset2 = ::boost::movelib::make_unique<MyStdSet>(&aux_vect2[0], &aux_vect2[0]+50);
+      if(!test::CheckEqualContainers(*pboostset2, *pstdset2)) return 1;
+      ::boost::movelib::unique_ptr<MyBoostMultiSet> const pboostmultiset2 = ::boost::movelib::make_unique<MyBoostMultiSet>
          (boost::make_move_iterator(&aux_vect3[0]), boost::make_move_iterator(&aux_vect3[0]+50), typename MyBoostMultiSet::allocator_type());
-      ::boost::movelib::unique_ptr<MyStdMultiSet> const pstdmultiset = ::boost::movelib::make_unique<MyStdMultiSet>(&aux_vect2[0], &aux_vect2[0]+50);
-      if(!test::CheckEqualContainers(*pboostmultiset, *pstdmultiset)) return 1;
+      ::boost::movelib::unique_ptr<MyStdMultiSet> const pstdmultiset2 = ::boost::movelib::make_unique<MyStdMultiSet>(&aux_vect2[0], &aux_vect2[0]+50);
+      if(!test::CheckEqualContainers(*pboostmultiset2, *pstdmultiset2)) return 1;
    }
    {
       IntType aux_vect[50];
@@ -839,6 +839,87 @@ bool test_set_methods_with_initializer_list_as_argument_for()
    }
    return true;
 #endif
+   return true;
+}
+
+template<typename SetType, typename MultisetType>
+bool instantiate_constructors()
+{
+   {
+      typedef typename SetType::value_type value_type;
+      typename SetType::key_compare comp;
+      typename SetType::allocator_type a;
+      typename SetType::value_type value;
+      {
+         SetType s0;
+         SetType s1(comp);
+         SetType s2(a);
+         SetType s3(comp, a);
+      }
+      {
+         SetType s0(&value, &value);
+         SetType s1(&value, &value ,comp);
+         SetType s2(&value, &value ,a);
+         SetType s3(&value, &value ,comp, a);
+      }
+      #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+      {
+         SetType s0({ 0 });
+         SetType s1({ 0 },comp);
+         SetType s2({ 0 },a);
+         SetType s3({ 0 },comp, a);
+      }
+      {
+         std::initializer_list<value_type> il{0};
+         SetType s0(ordered_unique_range, il);
+         SetType s1(ordered_unique_range, il,comp);
+         SetType s3(ordered_unique_range, il,comp, a);
+      }
+      #endif
+      {
+         SetType s0(ordered_unique_range, &value, &value);
+         SetType s1(ordered_unique_range, &value, &value ,comp);
+         SetType s2(ordered_unique_range, &value, &value ,comp, a);
+      }
+   }
+
+   {
+      typename MultisetType::key_compare comp;
+      typename MultisetType::allocator_type a;
+      typename MultisetType::value_type value;
+      {
+         MultisetType s0;
+         MultisetType s1(comp);
+         MultisetType s2(a);
+         MultisetType s3(comp, a);
+      }
+      {
+         MultisetType s0(&value, &value);
+         MultisetType s1(&value, &value ,comp);
+         MultisetType s2(&value, &value ,a);
+         MultisetType s3(&value, &value ,comp, a);
+      }
+      #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+      {
+         MultisetType s0({ 0 });
+         MultisetType s1({ 0 },comp);
+         MultisetType s2({ 0 },a);
+         MultisetType s3({ 0 },comp, a);
+      }
+      {
+         typedef typename MultisetType::value_type value_type;
+         std::initializer_list<value_type>il{0};
+         MultisetType s0(ordered_range, il);
+         MultisetType s1(ordered_range, il,comp);
+         MultisetType s3(ordered_range, il,comp, a);
+      }
+      #endif
+      {
+         MultisetType s0(ordered_range, &value, &value);
+         MultisetType s1(ordered_range, &value, &value ,comp);
+         MultisetType s2(ordered_range, &value, &value ,comp, a);
+      }
+   }
    return true;
 }
 

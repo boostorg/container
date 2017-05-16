@@ -143,8 +143,6 @@ bool test_expected_container(const Container &ec, const std::pair<EmplaceInt, Em
    return true;
 }
 
-static EmplaceInt expected [10];
-
 typedef std::pair<EmplaceInt, EmplaceInt> EmplaceIntPair;
 static boost::container::container_detail::aligned_storage<sizeof(EmplaceIntPair)*10>::type pair_storage;
 
@@ -166,6 +164,7 @@ bool test_emplace_back(container_detail::true_)
 {
    std::cout << "Starting test_emplace_back." << std::endl << "  Class: "
       << typeid(Container).name() << std::endl;
+   static EmplaceInt expected [10];
 
    {
       new(&expected [0]) EmplaceInt();
@@ -218,7 +217,7 @@ bool test_emplace_front(container_detail::true_)
 {
    std::cout << "Starting test_emplace_front." << std::endl << "  Class: "
       << typeid(Container).name() << std::endl;
-
+   static EmplaceInt expected [10];
    {
       new(&expected [0]) EmplaceInt(1, 2, 3, 4, 5);
       new(&expected [1]) EmplaceInt(1, 2, 3, 4);
@@ -270,7 +269,7 @@ bool test_emplace_before(container_detail::true_)
 {
    std::cout << "Starting test_emplace_before." << std::endl << "  Class: "
       << typeid(Container).name() << std::endl;
-
+   static EmplaceInt expected [10];
    {
       new(&expected [0]) EmplaceInt();
       new(&expected [1]) EmplaceInt(1);
@@ -382,6 +381,7 @@ bool test_emplace_after(container_detail::true_)
 {
    std::cout << "Starting test_emplace_after." << std::endl << "  Class: "
       << typeid(Container).name() << std::endl;
+   static EmplaceInt expected [10];
    {
       new(&expected [0]) EmplaceInt();
       new(&expected [1]) EmplaceInt(1);
@@ -467,7 +467,7 @@ bool test_emplace_assoc(container_detail::true_)
 {
    std::cout << "Starting test_emplace_assoc." << std::endl << "  Class: "
       << typeid(Container).name() << std::endl;
-
+   static EmplaceInt expected [10];
    new(&expected [0]) EmplaceInt();
    new(&expected [1]) EmplaceInt(1);
    new(&expected [2]) EmplaceInt(1, 2);
@@ -514,7 +514,7 @@ bool test_emplace_hint(container_detail::true_)
 {
    std::cout << "Starting test_emplace_hint." << std::endl << "  Class: "
       << typeid(Container).name() << std::endl;
-
+   static EmplaceInt expected [10];
    new(&expected [0]) EmplaceInt();
    new(&expected [1]) EmplaceInt(1);
    new(&expected [2]) EmplaceInt(1, 2);
@@ -565,11 +565,11 @@ bool test_emplace_assoc_pair(container_detail::true_)
    std::cout << "Starting test_emplace_assoc_pair." << std::endl << "  Class: "
       << typeid(Container).name() << std::endl;
 
-   new(&expected_pair[0].first) EmplaceInt();
+   new(&expected_pair[0].first)  EmplaceInt();
    new(&expected_pair[0].second) EmplaceInt();
-   new(&expected_pair[1].first) EmplaceInt(1);
+   new(&expected_pair[1].first)  EmplaceInt(1);
    new(&expected_pair[1].second) EmplaceInt(1);
-   new(&expected_pair[2].first) EmplaceInt(2);
+   new(&expected_pair[2].first)  EmplaceInt(2);
    new(&expected_pair[2].second) EmplaceInt(2);
    {
       Container c;
@@ -603,11 +603,11 @@ bool test_emplace_hint_pair(container_detail::true_)
    std::cout << "Starting test_emplace_hint_pair." << std::endl << "  Class: "
       << typeid(Container).name() << std::endl;
 
-   new(&expected_pair[0].first) EmplaceInt();
+   new(&expected_pair[0].first)  EmplaceInt();
    new(&expected_pair[0].second) EmplaceInt();
-   new(&expected_pair[1].first) EmplaceInt(1);
+   new(&expected_pair[1].first)  EmplaceInt(1);
    new(&expected_pair[1].second) EmplaceInt(1);
-   new(&expected_pair[2].first) EmplaceInt(2);
+   new(&expected_pair[2].first)  EmplaceInt(2);
    new(&expected_pair[2].second) EmplaceInt(2);
    {
       Container c;

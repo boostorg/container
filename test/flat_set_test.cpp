@@ -608,6 +608,9 @@ int main()
       return 1;
    }
 
+   if (!boost::container::test::instantiate_constructors<flat_set<int>, flat_multiset<int> >())
+      return 1;
+
    ////////////////////////////////////
    //    Testing allocator implementations
    ////////////////////////////////////
