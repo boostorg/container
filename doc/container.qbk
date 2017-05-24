@@ -1217,6 +1217,10 @@ use [*Boost.Container]? There are several reasons for that:
 
 * Implemented `extract_sequence`, `adopt_sequence` functions for flat_[multi]map/set associative containers.
 
+* Fixed bugs:
+   * [@https://github.com/boostorg/container/pull/49 GitHub #49: ['"Remove useless allocator copy in map"]].
+   * [@https://github.com/boostorg/container/pull/50 GitHub #50: ['"Fixed bug Trac #13038"]].
+
 [endsect]
 
 [section:release_notes_boost_1_64_00 Boost 1.64 Release]
