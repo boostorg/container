@@ -849,7 +849,7 @@ bool instantiate_constructors()
       typedef typename SetType::value_type value_type;
       typename SetType::key_compare comp;
       typename SetType::allocator_type a;
-      typename SetType::value_type value;
+      value_type value;
       {
          SetType s0;
          SetType s1(comp);
@@ -884,9 +884,10 @@ bool instantiate_constructors()
    }
 
    {
+      typedef typename MultisetType::value_type value_type;
       typename MultisetType::key_compare comp;
       typename MultisetType::allocator_type a;
-      typename MultisetType::value_type value;
+      value_type value;
       {
          MultisetType s0;
          MultisetType s1(comp);
@@ -907,7 +908,6 @@ bool instantiate_constructors()
          MultisetType s3({ 0 },comp, a);
       }
       {
-         typedef typename MultisetType::value_type value_type;
          std::initializer_list<value_type>il{0};
          MultisetType s0(ordered_range, il);
          MultisetType s1(ordered_range, il,comp);

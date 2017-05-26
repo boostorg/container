@@ -952,7 +952,7 @@ bool instantiate_constructors()
       typedef typename MapType::value_type value_type;
       typename MapType::key_compare comp;
       typename MapType::allocator_type a;
-      typename MapType::value_type value;
+      value_type value;
       {
          MapType s0;
          MapType s1(comp);
@@ -991,7 +991,7 @@ bool instantiate_constructors()
       typedef typename MultimapType::value_type value_type;
       typename MultimapType::key_compare comp;
       typename MultimapType::allocator_type a;
-      typename MultimapType::value_type value;
+      value_type value;
       {
          MultimapType s0;
          MultimapType s1(comp);

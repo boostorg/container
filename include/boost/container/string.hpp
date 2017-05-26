@@ -39,6 +39,7 @@
 #include <boost/container/detail/version_type.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/minimal_char_traits_header.hpp>
+#include <boost/container/detail/algorithm.hpp>
 
 #include <boost/intrusive/pointer_traits.hpp>
 
@@ -51,7 +52,6 @@
 #include <boost/functional/hash.hpp>
 
 #include <algorithm>
-#include <functional>   //bind2nd, etc.
 #include <iosfwd>
 #include <istream>
 #include <ostream>
@@ -541,12 +541,8 @@ class basic_string
 
       bool operator()(const typename Tr::char_type& x) const
       {
-         return std::find_if(m_first, m_last,
-#ifdef BOOST_NO_CXX98_BINDERS
-                        [&](argument_type ch) { return Eq_traits<Tr>()(x, ch); }) == m_last;
-#else
-                        std::bind1st(Eq_traits<Tr>(), x)) == m_last;
-#endif
+         return boost::container::find_if(m_first, m_last,
+                        boost::container::bind1st(Eq_traits<Tr>(), x)) == m_last;
       }
    };
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -2276,7 +2272,7 @@ class basic_string
          const pointer addr = this->priv_addr();
          pointer finish = addr + this->priv_size();
          const const_iterator result =
-            std::search(boost::movelib::to_raw_pointer(addr + pos),
+            boost::container::search(boost::movelib::to_raw_pointer(addr + pos),
                    boost::movelib::to_raw_pointer(finish),
                    s, s + n, Eq_traits<Traits>());
          return result != finish ? result - begin() : npos;
@@ -2303,12 +2299,8 @@ class basic_string
          const pointer addr    = this->priv_addr();
          pointer finish = addr + sz;
          const const_iterator result =
-            std::find_if(addr + pos, finish,
-#ifdef BOOST_NO_CXX98_BINDERS
-                  [&](value_type ch) { return Eq_traits<Traits>()(ch, c); });
-#else
-                  std::bind2nd(Eq_traits<Traits>(), c));
-#endif
+            boost::container::find_if(addr + pos, finish,
+                  boost::container::bind2nd(Eq_traits<Traits>(), c));
          return result != finish ? result - begin() : npos;
       }
    }
@@ -2379,12 +2371,8 @@ class basic_string
       else {
          const const_iterator last = begin() + container_detail::min_value(len - 1, pos) + 1;
          const_reverse_iterator rresult =
-            std::find_if(const_reverse_iterator(last), rend(),
-#ifdef BOOST_NO_CXX98_BINDERS
-                  [&](value_type ch) { return Eq_traits<Traits>()(ch, c); });
-#else
-                  std::bind2nd(Eq_traits<Traits>(), c));
-#endif
+            boost::container::find_if(const_reverse_iterator(last), rend(),
+                  boost::container::bind2nd(Eq_traits<Traits>(), c));
          return rresult != rend() ? (rresult.base() - 1) - begin() : npos;
       }
    }
@@ -2397,7 +2385,7 @@ class basic_string
    //!
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    size_type find_first_of(const basic_string& str, size_type pos = 0) const
-      { return find_first_of(str.c_str(), pos, str.size()); }
+      { return this->find_first_of(str.c_str(), pos, str.size()); }
 
    //! <b>Effects</b>: Determines the lowest position xpos, if possible, such that both of the
    //!   following conditions obtain: a) pos <= xpos and xpos < size();
@@ -2408,7 +2396,7 @@ class basic_string
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    template<template <class, class> class BasicStringView>
    size_type find_first_of(BasicStringView<CharT, Traits> sv, size_type pos = 0) const
-      { return find_first_of(sv.data(), pos, sv.size()); }
+      { return this->find_first_of(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
    //!
@@ -2423,7 +2411,7 @@ class basic_string
       else {
          const pointer addr    = this->priv_addr();
          pointer finish = addr + sz;
-         const_iterator result = std::find_first_of
+         const_iterator result = boost::container::find_first_of
             (addr + pos, finish, s, s + n, Eq_traits<Traits>());
          return result != finish ? result - this->begin() : npos;
       }
@@ -2435,7 +2423,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_first_of(basic_string(s), pos).
    size_type find_first_of(const CharT* s, size_type pos = 0) const
-      { return find_first_of(s, pos, Traits::length(s)); }
+      { return this->find_first_of(s, pos, Traits::length(s)); }
 
    //! <b>Requires</b>: s points to an array of at least traits::length(s) + 1 elements of CharT.
    //!
@@ -2443,7 +2431,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_first_of(basic_string<CharT,traits,Allocator>(1,c), pos).
    size_type find_first_of(CharT c, size_type pos = 0) const
-    { return find(c, pos); }
+    { return this->find(c, pos); }
 
    //! <b>Effects</b>: Determines the highest position xpos, if possible, such that both of
    //!   the following conditions obtain: a) xpos <= pos and xpos < size(); b)
@@ -2453,7 +2441,7 @@ class basic_string
    //!
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    size_type find_last_of(const basic_string& str, size_type pos = npos) const
-      { return find_last_of(str.c_str(), pos, str.size()); }
+      { return this->find_last_of(str.c_str(), pos, str.size()); }
 
    //! <b>Effects</b>: Determines the highest position xpos, if possible, such that both of
    //!   the following conditions obtain: a) xpos <= pos and xpos < size(); b)
@@ -2464,7 +2452,7 @@ class basic_string
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    template<template <class, class> class BasicStringView>
    size_type find_last_of(BasicStringView<CharT, Traits> sv, size_type pos = npos) const
-      { return find_last_of(sv.data(), pos, sv.size()); }
+      { return this->find_last_of(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
    //!
@@ -2481,7 +2469,7 @@ class basic_string
          const pointer addr    = this->priv_addr();
          const const_iterator last = addr + container_detail::min_value(len - 1, pos) + 1;
          const const_reverse_iterator rresult =
-            std::find_first_of(const_reverse_iterator(last), rend(),
+            boost::container::find_first_of(const_reverse_iterator(last), rend(),
                                s, s + n, Eq_traits<Traits>());
          return rresult != rend() ? (rresult.base() - 1) - addr : npos;
       }
@@ -2536,7 +2524,7 @@ class basic_string
       else {
          const pointer addr   = this->priv_addr();
          const pointer finish = addr + this->priv_size();
-         const const_iterator result = std::find_if
+         const const_iterator result = boost::container::find_if
             (addr + pos, finish, Not_within_traits<Traits>(s, s + n));
          return result != finish ? result - addr : npos;
       }
@@ -2561,12 +2549,8 @@ class basic_string
          const pointer addr   = this->priv_addr();
          const pointer finish = addr + this->priv_size();
          const const_iterator result
-            = std::find_if(addr + pos, finish,
-#ifdef BOOST_NO_CXX98_BINDERS
-                     [&](value_type ch) { return !Eq_traits<Traits>()(ch, c); });
-#else
-                     std::not1(std::bind2nd(Eq_traits<Traits>(), c)));
-#endif
+            = boost::container::find_if(addr + pos, finish,
+                     boost::container::not1(boost::container::bind2nd(Eq_traits<Traits>(), c)));
          return result != finish ? result - begin() : npos;
       }
    }
@@ -2606,7 +2590,7 @@ class basic_string
       else {
          const const_iterator last = begin() + container_detail::min_value(len - 1, pos) + 1;
          const const_reverse_iterator rresult =
-            std::find_if(const_reverse_iterator(last), rend(),
+            boost::container::find_if(const_reverse_iterator(last), rend(),
                     Not_within_traits<Traits>(s, s + n));
          return rresult != rend() ? (rresult.base() - 1) - begin() : npos;
       }
@@ -2632,12 +2616,8 @@ class basic_string
       else {
          const const_iterator last = begin() + container_detail::min_value(len - 1, pos) + 1;
          const const_reverse_iterator rresult =
-            std::find_if(const_reverse_iterator(last), rend(),
-#ifdef BOOST_NO_CXX98_BINDERS
-                  [&](value_type ch) { return !Eq_traits<Traits>()(ch, c); });
-#else
-                  std::not1(std::bind2nd(Eq_traits<Traits>(), c)));
-#endif
+            boost::container::find_if(const_reverse_iterator(last), rend(),
+                  boost::container::not1(boost::container::bind2nd(Eq_traits<Traits>(), c)));
          return rresult != rend() ? (rresult.base() - 1) - begin() : npos;
       }
    }
