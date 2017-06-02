@@ -1448,7 +1448,7 @@ class vector
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_FORCEINLINE size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
-   { return allocator_traits_type::max_size(this->m_holder.alloc()); }
+   { return this->m_holder.max_size(); }
 
    //! <b>Effects</b>: Inserts or erases elements at the end such that
    //!   the size becomes n. New elements are value initialized.
