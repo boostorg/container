@@ -591,6 +591,13 @@ class small_vector : public small_vector_base<T, Allocator>
    }
    #endif
 
+   template <class InIt>
+   small_vector(InIt first,InIt last, const allocator_type& a = allocator_type())
+      : base_type(initial_capacity_t(), internal_capacity(), a)
+   {
+      this->assign(first,last);
+   }
+
    BOOST_CONTAINER_FORCEINLINE small_vector& operator=(BOOST_COPY_ASSIGN_REF(small_vector) other)
    {  return static_cast<small_vector&>(this->base_type::operator=(static_cast<base_type const&>(other)));  }
 
