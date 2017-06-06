@@ -1221,7 +1221,7 @@ use [*Boost.Container]? There are several reasons for that:
    * [@https://github.com/boostorg/container/pull/48 GitHub #48: ['"Replace deprecated/removed C++98 binders"]].
    * [@https://github.com/boostorg/container/pull/49 GitHub #49: ['"Remove useless allocator copy in map"]].
    * [@https://github.com/boostorg/container/pull/50 GitHub #50: ['"Fixed bug Trac #13038"]].
-
+   * [@https://github.com/boostorg/container/pull/51 GitHub #51: ['"Fix integer rollover that triggers clang ubsan when U is unsigned"]].
 
 [endsect]
 
