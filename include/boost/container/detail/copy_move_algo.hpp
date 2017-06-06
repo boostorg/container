@@ -963,7 +963,8 @@ template
 inline typename container_detail::disable_if_trivially_destructible<I, void>::type
    destroy_alloc_n(Allocator &a, I f, U n)
 {
-   while(n--){
+   while(n){
+      --n;
       allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(f));
       ++f;
    }
