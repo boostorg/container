@@ -688,6 +688,12 @@ class set
    //! <b>Complexity</b>: log(size())+N where N is the distance from first to last.
    iterator erase(const_iterator first, const_iterator last);
 
+   //! @copydoc ::boost::container::map::extract(const_iterator)
+   node_type extract(const_iterator p);
+
+   //! @copydoc ::boost::container::map::extract(const key_type&)
+   node_type extract(const key_type& x);
+
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
    //! <b>Throws</b>: Nothing.
@@ -1297,6 +1303,12 @@ class multiset
 
    //! @copydoc ::boost::container::set::erase(const_iterator,const_iterator)
    iterator erase(const_iterator first, const_iterator last);
+
+   //! @copydoc ::boost::container::multimap::extract(const_iterator)
+   node_type extract(const_iterator p);
+
+   //! @copydoc ::boost::container::multimap::extract(const key_type&)
+   node_type extract(const key_type& x);
 
    //! @copydoc ::boost::container::set::swap
    void swap(multiset& x)
