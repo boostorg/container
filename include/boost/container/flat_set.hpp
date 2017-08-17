@@ -127,8 +127,8 @@ class flat_set
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_FORCEINLINE
-   explicit flat_set() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value &&
-                                         container_detail::is_nothrow_default_constructible<Compare>::value)
+   flat_set() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value &&
+                                container_detail::is_nothrow_default_constructible<Compare>::value)
       : base_t()
    {}
 
@@ -1081,8 +1081,8 @@ class flat_multiset
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::sequence_type)                      sequence_type;
 
    //! @copydoc ::boost::container::flat_set::flat_set()
-   BOOST_CONTAINER_FORCEINLINE explicit flat_multiset() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value &&
-                                              container_detail::is_nothrow_default_constructible<Compare>::value)
+   BOOST_CONTAINER_FORCEINLINE flat_multiset() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value &&
+                                                                 container_detail::is_nothrow_default_constructible<Compare>::value)
       : base_t()
    {}
 
