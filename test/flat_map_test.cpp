@@ -12,6 +12,7 @@
 #include <boost/container/flat_map.hpp>
 #include <boost/container/allocator.hpp>
 #include <boost/container/detail/flat_tree.hpp>
+#include <boost/container/stable_vector.hpp>
 
 #include "print_container.hpp"
 #include "dummy_test_allocator.hpp"
@@ -336,9 +337,25 @@ bool flat_tree_extract_adopt_test()
 
 }}}
 
+template<class VoidAllocatorOrContainer, class ValueType, bool = boost::container::container_detail::is_container<VoidAllocatorOrContainer>::value>
+struct RebindAllocatorOrContainer
+{
+   typedef typename allocator_traits<VoidAllocatorOrContainer>
+      ::template portable_rebind_alloc< std::pair<ValueType, ValueType> >::type type;
+};
 
-template<class VoidAllocator>
-struct GetAllocatorMap
+template<class SomeType, class ValueType, template <class> class Allocator>
+struct RebindAllocatorOrContainer< boost::container::stable_vector<SomeType, Allocator<SomeType> >, ValueType, true>
+{
+   typedef std::pair<ValueType, ValueType> type_t;
+   typedef typename allocator_traits< Allocator<SomeType> >
+      ::template portable_rebind_alloc< type_t >::type allocator_t;
+   typedef typename boost::container::stable_vector<type_t, allocator_t> type;
+};
+
+
+template<class VoidAllocatorOrContainer>
+struct GetMapContainer
 {
    template<class ValueType>
    struct apply
@@ -346,15 +363,13 @@ struct GetAllocatorMap
       typedef flat_map< ValueType
                  , ValueType
                  , std::less<ValueType>
-                 , typename allocator_traits<VoidAllocator>
-                    ::template portable_rebind_alloc< std::pair<ValueType, ValueType> >::type
+                 , typename RebindAllocatorOrContainer<VoidAllocatorOrContainer, ValueType>::type
                  > map_type;
 
       typedef flat_multimap< ValueType
                  , ValueType
                  , std::less<ValueType>
-                 , typename allocator_traits<VoidAllocator>
-                    ::template portable_rebind_alloc< std::pair<ValueType, ValueType> >::type
+                 , typename RebindAllocatorOrContainer<VoidAllocatorOrContainer, ValueType>::type
                  > multimap_type;
    };
 };
@@ -402,18 +417,18 @@ struct get_real_stored_allocator<flat_multimap<Key, T, Compare, Allocator> >
 
 }}}   //namespace boost::container::test
 
-template<class VoidAllocator>
+template<class VoidAllocatorOrContainer>
 int test_map_variants()
 {
-   typedef typename GetAllocatorMap<VoidAllocator>::template apply<int>::map_type MyMap;
-   typedef typename GetAllocatorMap<VoidAllocator>::template apply<test::movable_int>::map_type MyMoveMap;
-   typedef typename GetAllocatorMap<VoidAllocator>::template apply<test::movable_and_copyable_int>::map_type MyCopyMoveMap;
-   typedef typename GetAllocatorMap<VoidAllocator>::template apply<test::copyable_int>::map_type MyCopyMap;
+   typedef typename GetMapContainer<VoidAllocatorOrContainer>::template apply<int>::map_type MyMap;
+   typedef typename GetMapContainer<VoidAllocatorOrContainer>::template apply<test::movable_int>::map_type MyMoveMap;
+   typedef typename GetMapContainer<VoidAllocatorOrContainer>::template apply<test::movable_and_copyable_int>::map_type MyCopyMoveMap;
+   typedef typename GetMapContainer<VoidAllocatorOrContainer>::template apply<test::copyable_int>::map_type MyCopyMap;
 
-   typedef typename GetAllocatorMap<VoidAllocator>::template apply<int>::multimap_type MyMultiMap;
-   typedef typename GetAllocatorMap<VoidAllocator>::template apply<test::movable_int>::multimap_type MyMoveMultiMap;
-   typedef typename GetAllocatorMap<VoidAllocator>::template apply<test::movable_and_copyable_int>::multimap_type MyCopyMoveMultiMap;
-   typedef typename GetAllocatorMap<VoidAllocator>::template apply<test::copyable_int>::multimap_type MyCopyMultiMap;
+   typedef typename GetMapContainer<VoidAllocatorOrContainer>::template apply<int>::multimap_type MyMultiMap;
+   typedef typename GetMapContainer<VoidAllocatorOrContainer>::template apply<test::movable_int>::multimap_type MyMoveMultiMap;
+   typedef typename GetMapContainer<VoidAllocatorOrContainer>::template apply<test::movable_and_copyable_int>::multimap_type MyCopyMoveMultiMap;
+   typedef typename GetMapContainer<VoidAllocatorOrContainer>::template apply<test::copyable_int>::multimap_type MyCopyMultiMap;
 
    typedef std::map<int, int>                                     MyStdMap;
    typedef std::multimap<int, int>                                MyStdMultiMap;

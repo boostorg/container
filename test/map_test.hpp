@@ -886,14 +886,14 @@ int map_test()
       for(int i = 0; i < MaxElem; ++i){
          stdmultimap.insert(StdPairType(MaxElem/2+i, MaxElem-i));
       }
-      boostmultimap.merge(boost::move(boostmultimap2));
+      boostmultimap.merge(boostmultimap2);
       if(!CheckEqualPairContainers(boostmultimap, stdmultimap)) return 1;
 
       for(int i = 0; i < MaxElem; ++i){
          stdmultimap.insert(StdPairType(MaxElem*2/2+i, MaxElem*2+i));
       }
 
-      boostmultimap.merge(boost::move(boostmap2));
+      boostmultimap.merge(boostmap2);
       if(!CheckEqualPairContainers(boostmultimap, stdmultimap)) return 1;
    }
 

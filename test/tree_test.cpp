@@ -49,7 +49,6 @@ template class tree
    , tree_assoc_defaults
    >;
 
-//Instantiate base class as previous instantiations don't instantiate inherited members
 template class tree
    < test::movable_and_copyable_int
    , identity<test::movable_and_copyable_int>
