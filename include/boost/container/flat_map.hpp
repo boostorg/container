@@ -158,6 +158,11 @@ class flat_map
    {  return m_flat_tree;  }
 
    private:
+   typedef typename tree_t::get_stored_allocator_const_return_t         get_stored_allocator_const_return_t;
+   typedef typename tree_t::get_stored_allocator_noconst_return_t       get_stored_allocator_noconst_return_t;
+   typedef typename impl_tree_t::get_stored_allocator_const_return_t    impl_get_stored_allocator_const_return_t;
+   typedef typename impl_tree_t::get_stored_allocator_noconst_return_t  impl_get_stored_allocator_noconst_return_t;
+
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -493,8 +498,11 @@ class flat_map
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   BOOST_CONTAINER_FORCEINLINE stored_allocator_type &get_stored_allocator() BOOST_NOEXCEPT_OR_NOTHROW
-      { return container_detail::force<stored_allocator_type>(m_flat_tree.get_stored_allocator()); }
+   BOOST_CONTAINER_FORCEINLINE get_stored_allocator_noconst_return_t get_stored_allocator() BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      impl_get_stored_allocator_noconst_return_t r = m_flat_tree.get_stored_allocator();
+      return container_detail::force<stored_allocator_type>(r);
+   }
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
    //!
@@ -503,8 +511,11 @@ class flat_map
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   BOOST_CONTAINER_FORCEINLINE const stored_allocator_type &get_stored_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
-      { return container_detail::force<const stored_allocator_type>(m_flat_tree.get_stored_allocator()); }
+   BOOST_CONTAINER_FORCEINLINE get_stored_allocator_const_return_t get_stored_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      impl_get_stored_allocator_const_return_t r = m_flat_tree.get_stored_allocator();
+      return container_detail::force<const stored_allocator_type>(r);
+   }
 
    //////////////////////////////////////////////
    //

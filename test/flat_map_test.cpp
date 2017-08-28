@@ -88,14 +88,12 @@ namespace boost{
 namespace container{
 
 template class flat_map
-< test::movable_and_copyable_int
-   , test::movable_and_copyable_int
+   < test::movable_and_copyable_int
    , test::movable_and_copyable_int
    , std::less<test::movable_and_copyable_int>
    , std::vector<test_pair_t>
 >;
 
-}  //container_detail {
 }} //boost::container
 
 #endif

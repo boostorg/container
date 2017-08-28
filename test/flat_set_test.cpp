@@ -86,7 +86,6 @@ template class flat_set
    , std::vector<test::movable_and_copyable_int>
 >;
 
-}  //container_detail {
 }} //boost::container
 
 #endif

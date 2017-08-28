@@ -460,13 +460,14 @@ class flat_tree
 
    private:
    typedef allocator_traits<stored_allocator_type> stored_allocator_traits;
+
+   public:
    typedef typename container_detail::if_c
       <has_stored_allocator_type, const stored_allocator_type &, allocator_type>::type get_stored_allocator_const_return_t;
 
    typedef typename container_detail::if_c
       <has_stored_allocator_type, stored_allocator_type &, allocator_type>::type get_stored_allocator_noconst_return_t;
 
-   public:
    BOOST_CONTAINER_FORCEINLINE flat_tree()
       : m_data()
    { }
