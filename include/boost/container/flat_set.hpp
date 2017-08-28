@@ -543,12 +543,13 @@ class flat_set
    //! <b>Complexity</b>: Constant.
    size_type capacity() const BOOST_NOEXCEPT_OR_NOTHROW;
 
-   //! <b>Effects</b>: If n is less than or equal to capacity(), this call has no
+   //! <b>Effects</b>: If n is less than or equal to capacity(), or the
+   //!   underlying container has no `reserve` member, this call has no
    //!   effect. Otherwise, it is a request for allocation of additional memory.
    //!   If the request is successful, then capacity() is greater than or equal to
    //!   n; otherwise, capacity() is unchanged. In either case, size() is unchanged.
    //!
-   //! <b>Throws</b>: If memory allocation allocation throws or Key's copy constructor throws.
+   //! <b>Throws</b>: If memory allocation allocation throws or T's copy constructor throws.
    //!
    //! <b>Note</b>: If capacity() is less than "cnt", iterators and references to
    //!   to values might be invalidated.

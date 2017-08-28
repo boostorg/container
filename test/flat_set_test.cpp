@@ -9,9 +9,16 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <boost/container/detail/config_begin.hpp>
+
 #include <set>
+
 #include <boost/container/flat_set.hpp>
+#include <boost/container/stable_vector.hpp>
+#include <boost/container/small_vector.hpp>
+#include <boost/container/deque.hpp>
+#include <boost/container/static_vector.hpp>
 #include <boost/container/allocator.hpp>
+#include <boost/container/detail/container_or_allocator_rebind.hpp>
 
 #include "print_container.hpp"
 #include "dummy_test_allocator.hpp"
@@ -20,8 +27,6 @@
 #include "propagate_allocator_test.hpp"
 #include "emplace_test.hpp"
 #include "container_common_tests.hpp"
-#include <vector>
-#include <boost/container/detail/flat_tree.hpp>
 #include "../../intrusive/test/iterator_test.hpp"
 
 using namespace boost::container;
@@ -41,26 +46,50 @@ template class flat_set
 template class flat_set
    < test::movable_and_copyable_int
    , std::less<test::movable_and_copyable_int>
-   , allocator<test::movable_and_copyable_int>
+   , small_vector<test::movable_and_copyable_int, 10, allocator<test::movable_and_copyable_int> >
    >;
 
 //flat_multiset
 template class flat_multiset
    < test::movable_and_copyable_int
    , std::less<test::movable_and_copyable_int>
-   , test::simple_allocator<test::movable_and_copyable_int>
+   , stable_vector<test::movable_and_copyable_int, test::simple_allocator<test::movable_and_copyable_int> >
    >;
 
 template class flat_multiset
    < test::movable_and_copyable_int
    , std::less<test::movable_and_copyable_int>
-   , allocator<test::movable_and_copyable_int>
+   , deque<test::movable_and_copyable_int, test::simple_allocator< test::movable_and_copyable_int > >
+   >;
+
+template class flat_multiset
+   < test::movable_and_copyable_int
+   , std::less<test::movable_and_copyable_int>
+   , static_vector<test::movable_and_copyable_int, 10 >
    >;
 
 //As flat container iterators are typedefs for vector::[const_]iterator,
 //no need to explicit instantiate them
 
 }} //boost::container
+
+
+#if (__cplusplus > 201103L)
+#include <vector>
+
+namespace boost{
+namespace container{
+
+template class flat_set
+   < test::movable_and_copyable_int
+   , std::less<test::movable_and_copyable_int>
+   , std::vector<test::movable_and_copyable_int>
+>;
+
+}  //container_detail {
+}} //boost::container
+
+#endif
 
 //Test recursive structures
 class recursive_flat_set
@@ -405,23 +434,20 @@ bool flat_tree_extract_adopt_test()
 
 }}}
 
-
-template<class VoidAllocator>
-struct GetAllocatorSet
+template<class VoidAllocatorOrContainer>
+struct GetSetContainer
 {
    template<class ValueType>
    struct apply
    {
       typedef flat_set < ValueType
                        , std::less<ValueType>
-                       , typename allocator_traits<VoidAllocator>
-                           ::template portable_rebind_alloc<ValueType>::type
+                       , typename boost::container::container_detail::container_or_allocator_rebind<VoidAllocatorOrContainer, ValueType>::type
                         > set_type;
 
       typedef flat_multiset < ValueType
                             , std::less<ValueType>
-                            , typename allocator_traits<VoidAllocator>
-                                 ::template portable_rebind_alloc<ValueType>::type
+                            , typename boost::container::container_detail::container_or_allocator_rebind<VoidAllocatorOrContainer, ValueType>::type
                             > multiset_type;
    };
 };
@@ -429,15 +455,15 @@ struct GetAllocatorSet
 template<class VoidAllocator>
 int test_set_variants()
 {
-   typedef typename GetAllocatorSet<VoidAllocator>::template apply<int>::set_type MySet;
-   typedef typename GetAllocatorSet<VoidAllocator>::template apply<test::movable_int>::set_type MyMoveSet;
-   typedef typename GetAllocatorSet<VoidAllocator>::template apply<test::movable_and_copyable_int>::set_type MyCopyMoveSet;
-   typedef typename GetAllocatorSet<VoidAllocator>::template apply<test::copyable_int>::set_type MyCopySet;
+   typedef typename GetSetContainer<VoidAllocator>::template apply<int>::set_type MySet;
+   typedef typename GetSetContainer<VoidAllocator>::template apply<test::movable_int>::set_type MyMoveSet;
+   typedef typename GetSetContainer<VoidAllocator>::template apply<test::movable_and_copyable_int>::set_type MyCopyMoveSet;
+   typedef typename GetSetContainer<VoidAllocator>::template apply<test::copyable_int>::set_type MyCopySet;
 
-   typedef typename GetAllocatorSet<VoidAllocator>::template apply<int>::multiset_type MyMultiSet;
-   typedef typename GetAllocatorSet<VoidAllocator>::template apply<test::movable_int>::multiset_type MyMoveMultiSet;
-   typedef typename GetAllocatorSet<VoidAllocator>::template apply<test::movable_and_copyable_int>::multiset_type MyCopyMoveMultiSet;
-   typedef typename GetAllocatorSet<VoidAllocator>::template apply<test::copyable_int>::multiset_type MyCopyMultiSet;
+   typedef typename GetSetContainer<VoidAllocator>::template apply<int>::multiset_type MyMultiSet;
+   typedef typename GetSetContainer<VoidAllocator>::template apply<test::movable_int>::multiset_type MyMoveMultiSet;
+   typedef typename GetSetContainer<VoidAllocator>::template apply<test::movable_and_copyable_int>::multiset_type MyCopyMoveMultiSet;
+   typedef typename GetSetContainer<VoidAllocator>::template apply<test::copyable_int>::multiset_type MyCopyMultiSet;
 
    typedef std::set<int>                                          MyStdSet;
    typedef std::multiset<int>                                     MyStdMultiSet;

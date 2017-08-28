@@ -30,6 +30,7 @@
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/algorithm.hpp> //equal()
+#include <boost/container/detail/container_or_allocator_rebind.hpp>
 // move
 #include <boost/move/utility_core.hpp>
 #include <boost/move/traits.hpp>
@@ -125,8 +126,8 @@ class flat_map
                            container_detail::pair<Key, T>,
                            container_detail::select1st<Key>,
                            Compare,
-                           typename allocator_traits<AllocatorOrContainer>::template portable_rebind_alloc
-                              <container_detail::pair<Key, T> >::type> impl_tree_t;
+                           typename container_detail::container_or_allocator_rebind<AllocatorOrContainer, container_detail::pair<Key, T> >::type
+                           > impl_tree_t;
    impl_tree_t m_flat_tree;  // flat tree representing flat_map
 
    typedef typename impl_tree_t::value_type              impl_value_type;
@@ -652,7 +653,8 @@ class flat_map
    BOOST_CONTAINER_FORCEINLINE size_type capacity() const BOOST_NOEXCEPT_OR_NOTHROW
       { return m_flat_tree.capacity(); }
 
-   //! <b>Effects</b>: If n is less than or equal to capacity(), this call has no
+   //! <b>Effects</b>: If n is less than or equal to capacity(), or the
+   //!   underlying container has no `reserve` member, this call has no
    //!   effect. Otherwise, it is a request for allocation of additional memory.
    //!   If the request is successful, then capacity() is greater than or equal to
    //!   n; otherwise, capacity() is unchanged. In either case, size() is unchanged.
@@ -1507,8 +1509,8 @@ class flat_multimap
                            container_detail::pair<Key, T>,
                            container_detail::select1st<Key>,
                            Compare,
-                           typename allocator_traits<AllocatorOrContainer>::template portable_rebind_alloc
-                              <container_detail::pair<Key, T> >::type> impl_tree_t;
+                           typename container_detail::container_or_allocator_rebind<AllocatorOrContainer, container_detail::pair<Key, T> >::type
+                           > impl_tree_t;
    impl_tree_t m_flat_tree;  // flat tree representing flat_map
 
    typedef typename impl_tree_t::value_type              impl_value_type;
@@ -1798,7 +1800,7 @@ class flat_multimap
       : m_flat_tree( ordered_range
                    , container_detail::force<impl_initializer_list>(il).begin()
                    , container_detail::force<impl_initializer_list>(il).end()
-                   , comp, a)
+                   , comp, container_detail::force<const impl_allocator_type>(a))
    {}
 #endif
 
@@ -1826,7 +1828,7 @@ class flat_multimap
    //! <b>Complexity</b>: Linear in x.size().
    BOOST_CONTAINER_FORCEINLINE
    flat_multimap(const flat_multimap& x, const allocator_type &a)
-      : m_flat_tree(x.m_flat_tree, a)
+      : m_flat_tree(x.m_flat_tree, container_detail::force<const impl_allocator_type>(a))
    {}
 
    //! <b>Effects</b>: Move constructs a flat_multimap using the specified allocator.
@@ -1835,7 +1837,7 @@ class flat_multimap
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    BOOST_CONTAINER_FORCEINLINE
    flat_multimap(BOOST_RV_REF(flat_multimap) x, const allocator_type &a)
-      : m_flat_tree(boost::move(x.m_flat_tree), a)
+      : m_flat_tree(boost::move(x.m_flat_tree), container_detail::force<const impl_allocator_type>(a))
    {}
 
    //! <b>Effects</b>: Makes *this a copy of x.
@@ -2061,7 +2063,8 @@ class flat_multimap
    size_type capacity() const BOOST_NOEXCEPT_OR_NOTHROW
       { return m_flat_tree.capacity(); }
 
-   //! <b>Effects</b>: If n is less than or equal to capacity(), this call has no
+   //! <b>Effects</b>: If n is less than or equal to capacity(), or the
+   //!   underlying container has no `reserve` member, this call has no
    //!   effect. Otherwise, it is a request for allocation of additional memory.
    //!   If the request is successful, then capacity() is greater than or equal to
    //!   n; otherwise, capacity() is unchanged. In either case, size() is unchanged.

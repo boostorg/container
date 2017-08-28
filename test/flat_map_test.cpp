@@ -13,6 +13,10 @@
 #include <boost/container/allocator.hpp>
 #include <boost/container/detail/flat_tree.hpp>
 #include <boost/container/stable_vector.hpp>
+#include <boost/container/small_vector.hpp>
+#include <boost/container/deque.hpp>
+#include <boost/container/static_vector.hpp>
+#include <boost/container/detail/container_or_allocator_rebind.hpp>
 
 #include "print_container.hpp"
 #include "dummy_test_allocator.hpp"
@@ -23,7 +27,6 @@
 #include "emplace_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 
-#include <vector>
 #include <map>
 
 
@@ -35,29 +38,20 @@ namespace container {
 //Explicit instantiation to detect compilation errors
 
 //flat_map
+typedef std::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> test_pair_t;
 
 template class flat_map
    < test::movable_and_copyable_int
    , test::movable_and_copyable_int
    , std::less<test::movable_and_copyable_int>
-   , test::simple_allocator
-      < std::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , test::simple_allocator< test_pair_t >
    >;
 
 template class flat_map
    < test::movable_and_copyable_int
    , test::movable_and_copyable_int
    , std::less<test::movable_and_copyable_int>
-   , std::allocator
-      < std::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> >
-   >;
-
-template class flat_map
-   < test::movable_and_copyable_int
-   , test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
-   , allocator
-      < std::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , small_vector< test_pair_t, 10, std::allocator< test_pair_t > >
    >;
 
 //flat_multimap
@@ -65,8 +59,21 @@ template class flat_multimap
    < test::movable_and_copyable_int
    , test::movable_and_copyable_int
    , std::less<test::movable_and_copyable_int>
-   , test::simple_allocator
-      < std::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> >
+   , stable_vector< test_pair_t, allocator< test_pair_t > >
+   >;
+
+template class flat_multimap
+   < test::movable_and_copyable_int
+   , test::movable_and_copyable_int
+   , std::less<test::movable_and_copyable_int>
+   , deque<test_pair_t, test::simple_allocator< test_pair_t > >
+   >;
+
+template class flat_multimap
+   < test::movable_and_copyable_int
+   , test::movable_and_copyable_int
+   , std::less<test::movable_and_copyable_int>
+   , static_vector<test_pair_t, 10 >
    >;
 
 //As flat container iterators are typedefs for vector::[const_]iterator,
@@ -74,6 +81,24 @@ template class flat_multimap
 
 }} //boost::container
 
+#if (__cplusplus > 201103L)
+#include <vector>
+
+namespace boost{
+namespace container{
+
+template class flat_map
+< test::movable_and_copyable_int
+   , test::movable_and_copyable_int
+   , test::movable_and_copyable_int
+   , std::less<test::movable_and_copyable_int>
+   , std::vector<test_pair_t>
+>;
+
+}  //container_detail {
+}} //boost::container
+
+#endif
 
 class recursive_flat_map
 {
@@ -337,39 +362,23 @@ bool flat_tree_extract_adopt_test()
 
 }}}
 
-template<class VoidAllocatorOrContainer, class ValueType, bool = boost::container::container_detail::is_container<VoidAllocatorOrContainer>::value>
-struct RebindAllocatorOrContainer
-{
-   typedef typename allocator_traits<VoidAllocatorOrContainer>
-      ::template portable_rebind_alloc< std::pair<ValueType, ValueType> >::type type;
-};
-
-template<class SomeType, class ValueType, template <class> class Allocator>
-struct RebindAllocatorOrContainer< boost::container::stable_vector<SomeType, Allocator<SomeType> >, ValueType, true>
-{
-   typedef std::pair<ValueType, ValueType> type_t;
-   typedef typename allocator_traits< Allocator<SomeType> >
-      ::template portable_rebind_alloc< type_t >::type allocator_t;
-   typedef typename boost::container::stable_vector<type_t, allocator_t> type;
-};
-
-
 template<class VoidAllocatorOrContainer>
 struct GetMapContainer
 {
    template<class ValueType>
    struct apply
    {
+      typedef std::pair<ValueType, ValueType> type_t;
       typedef flat_map< ValueType
                  , ValueType
                  , std::less<ValueType>
-                 , typename RebindAllocatorOrContainer<VoidAllocatorOrContainer, ValueType>::type
+                 , typename boost::container::container_detail::container_or_allocator_rebind<VoidAllocatorOrContainer, type_t>::type
                  > map_type;
 
       typedef flat_multimap< ValueType
                  , ValueType
                  , std::less<ValueType>
-                 , typename RebindAllocatorOrContainer<VoidAllocatorOrContainer, ValueType>::type
+                 , typename boost::container::container_detail::container_or_allocator_rebind<VoidAllocatorOrContainer, type_t>::type
                  > multimap_type;
    };
 };

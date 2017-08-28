@@ -86,60 +86,87 @@
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 1
 #include <boost/intrusive/detail/has_member_function_callable_with.hpp>
 
+//reserve
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_FUNCNAME reserve
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_BEG namespace boost { namespace container { namespace container_detail {
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_END   }}}
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MIN 1
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 1
+#include <boost/intrusive/detail/has_member_function_callable_with.hpp>
+
+//capacity
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_FUNCNAME capacity
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_BEG namespace boost { namespace container { namespace container_detail {
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_END   }}}
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MIN 0
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 0
+#include <boost/intrusive/detail/has_member_function_callable_with.hpp>
+
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 namespace boost {
 namespace container {
 namespace container_detail {
 
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(stored_allocator_type)
 
 template<class SequenceContainer, class Iterator, class Compare>
 BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_equal
-   (SequenceContainer& dest, Iterator begin, Iterator end, Compare comp, container_detail::false_)
+   (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, container_detail::true_)
+{
+   dest.merge(first, last, comp);
+}
+
+template<class SequenceContainer, class Iterator, class Compare>
+BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_equal_non_merge_member
+   (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, container_detail::true_)
 {
    typedef typename SequenceContainer::iterator    iterator;
    typedef typename SequenceContainer::value_type  value_type;
 
-   iterator it = dest.insert( dest.end(), boost::make_move_iterator(begin), boost::make_move_iterator(end) );
-
-   if (is_contiguous_container<SequenceContainer>::value){
-      value_type *const braw = boost::movelib::iterator_to_raw_pointer(dest.begin());
-      value_type *const iraw = boost::movelib::iterator_to_raw_pointer(it);
-      value_type *const eraw = boost::movelib::iterator_to_raw_pointer(dest.end());
-      value_type *const sraw = boost::movelib::iterator_to_raw_pointer(dest.begin()+dest.size());
-      boost::movelib::adaptive_sort(iraw, eraw, comp, sraw, dest.capacity());
-      boost::movelib::adaptive_merge(braw, iraw, eraw, comp, sraw, dest.capacity()- dest.size());
-   }
-   else{
-      boost::movelib::adaptive_sort(it, dest.end(), comp);
-      boost::movelib::adaptive_merge(dest.begin(), it, dest.end(), comp);
-   }
+   iterator const it = dest.insert( dest.end(), first, last );
+   value_type *const braw = boost::movelib::iterator_to_raw_pointer(dest.begin());
+   value_type *const iraw = boost::movelib::iterator_to_raw_pointer(it);
+   value_type *const eraw = boost::movelib::iterator_to_raw_pointer(dest.end());
+   value_type *const sraw = boost::movelib::iterator_to_raw_pointer(dest.begin()+dest.size());
+   boost::movelib::adaptive_sort(iraw, eraw, comp, sraw, dest.capacity());
+   boost::movelib::adaptive_merge(braw, iraw, eraw, comp, sraw, dest.capacity()- dest.size());
 }
 
 template<class SequenceContainer, class Iterator, class Compare>
-BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_unique
-   (SequenceContainer& dest, Iterator begin, Iterator end, Compare comp, container_detail::false_)
+BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_equal_non_merge_member
+   (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, container_detail::false_)
 {
-   (flat_tree_merge_equal)(dest, begin, end, comp, container_detail::false_());
-   dest.erase(boost::movelib::unique
-      (dest.begin(), dest.end(), boost::movelib::negate<Compare>(comp)), dest.cend());
+   typedef typename SequenceContainer::iterator    iterator;
+
+   iterator const it = dest.insert( dest.end(), first, last );
+   boost::movelib::adaptive_sort(it, dest.end(), comp);
+   boost::movelib::adaptive_merge(dest.begin(), it, dest.end(), comp);
 }
 
 template<class SequenceContainer, class Iterator, class Compare>
 BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_equal
-   (SequenceContainer& dest, Iterator begin, Iterator end, Compare comp, container_detail::true_)
+   (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, container_detail::false_)
 {
-   dest.merge(begin, end, comp);
+   (flat_tree_merge_equal_non_merge_member)( dest, first, last, comp
+                                           , container_detail::bool_<is_contiguous_container<SequenceContainer>::value>());
 }
 
 template<class SequenceContainer, class Iterator, class Compare>
 BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_unique
-   (SequenceContainer& dest, Iterator begin, Iterator end, Compare comp, container_detail::true_)
+   (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, container_detail::true_)
 {
-   dest.merge_unique(begin, end, comp);
+   dest.merge_unique(first, last, comp);
 }
 
-BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(stored_allocator_type)
+template<class SequenceContainer, class Iterator, class Compare>
+BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_unique
+   (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, container_detail::false_)
+{
+   (flat_tree_merge_equal)(dest, first, last, comp, container_detail::false_());
+   dest.erase(boost::movelib::unique
+      (dest.begin(), dest.end(), boost::movelib::negate<Compare>(comp)), dest.cend());
+}
 
 template<class SequenceContainer, class Iterator>
 BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::size_type
@@ -192,10 +219,81 @@ BOOST_CONTAINER_FORCEINLINE const typename SequenceContainer::stored_allocator_t
 
 template<class SequenceContainer>
 BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::allocator_type
-flat_tree_get_stored_allocator
+   flat_tree_get_stored_allocator
       (SequenceContainer& cont, container_detail::false_)
 {
    return cont.get_allocator();
+}
+
+template<class SequenceContainer, class Compare>
+void flat_tree_adopt_sequence_equal(SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, container_detail::true_)
+{
+   tseq.clear();
+   boost::movelib::adaptive_sort
+   (boost::movelib::iterator_to_raw_pointer(seq.begin())
+      , boost::movelib::iterator_to_raw_pointer(seq.end())
+      , comp
+      , boost::movelib::iterator_to_raw_pointer(tseq.begin() + tseq.size())
+      , tseq.capacity() - tseq.size());
+   tseq = boost::move(seq);
+}
+
+template<class SequenceContainer, class Compare>
+void flat_tree_adopt_sequence_equal(SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, container_detail::false_)
+{
+   boost::movelib::adaptive_sort(seq.begin(), seq.end(), comp);
+   tseq = boost::move(seq);
+}
+
+template<class SequenceContainer, class Compare>
+void flat_tree_adopt_sequence_unique(SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, container_detail::true_)
+{
+   boost::movelib::adaptive_sort
+      ( boost::movelib::iterator_to_raw_pointer(seq.begin())
+      , boost::movelib::iterator_to_raw_pointer(seq.end())
+      , comp
+      , boost::movelib::iterator_to_raw_pointer(tseq.begin() + tseq.size())
+      , tseq.capacity() - tseq.size());
+   seq.erase(boost::movelib::unique
+      ( seq.begin(), seq.end(), boost::movelib::negate<Compare>(comp))
+      , seq.cend());
+   tseq = boost::move(seq);
+}
+
+template<class SequenceContainer, class Compare>
+void flat_tree_adopt_sequence_unique(SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, container_detail::false_)
+{
+   boost::movelib::adaptive_sort(seq.begin(), seq.end(), comp);
+   seq.erase(boost::movelib::unique
+      (seq.begin(), seq.end(), boost::movelib::negate<Compare>(comp)), seq.cend());
+   tseq = boost::move(seq);
+}
+
+template<class SequenceContainer>
+BOOST_CONTAINER_FORCEINLINE void
+   flat_tree_reserve(SequenceContainer &tseq, typename SequenceContainer::size_type cap, container_detail::true_)
+{
+   tseq.reserve(cap);
+}
+
+template<class SequenceContainer>
+BOOST_CONTAINER_FORCEINLINE void
+   flat_tree_reserve(SequenceContainer &, typename SequenceContainer::size_type, container_detail::false_)
+{
+}
+
+template<class SequenceContainer>
+BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::size_type
+   flat_tree_capacity(const SequenceContainer &tseq, container_detail::true_)
+{
+   return tseq.capacity();
+}
+
+template<class SequenceContainer>
+BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::size_type
+   flat_tree_capacity(const SequenceContainer &tseq, container_detail::false_)
+{
+   return tseq.size();
 }
 
 template<class Compare, class Value, class KeyOfValue>
@@ -268,6 +366,7 @@ class flat_tree
    typedef flat_tree_value_compare<Compare, Value, KeyOfValue> value_compare;
 
    private:
+   
    struct Data
       //Inherit from value_compare to do EBO
       : public value_compare
@@ -1088,10 +1187,18 @@ class flat_tree
    {  return this->priv_lower_bound_range(this->cbegin(), this->cend(), k);  }
 
    BOOST_CONTAINER_FORCEINLINE size_type capacity() const
-   { return this->m_data.m_seq.capacity(); }
+   {
+      const bool value = boost::container::container_detail::
+         has_member_function_callable_with_capacity<container_type>::value;
+      return (flat_tree_capacity)(this->m_data.m_seq, container_detail::bool_<value>());
+   }
 
    BOOST_CONTAINER_FORCEINLINE void reserve(size_type cnt)
-   { this->m_data.m_seq.reserve(cnt);   }
+   {
+      const bool value = boost::container::container_detail::
+         has_member_function_callable_with_reserve<container_type, size_type>::value;
+      (flat_tree_reserve)(this->m_data.m_seq, cnt, container_detail::bool_<value>());
+   }
 
    BOOST_CONTAINER_FORCEINLINE container_type extract_sequence()
    {
@@ -1103,57 +1210,28 @@ class flat_tree
       return m_data.m_seq;
    }
 
-   void adopt_sequence_equal(BOOST_RV_REF(container_type) seq)
+   BOOST_CONTAINER_FORCEINLINE void adopt_sequence_equal(BOOST_RV_REF(container_type) seq)
    {
-      container_type &tseq = m_data.m_seq;
-      if (is_contiguous_container<container_type>::value){
-         boost::movelib::adaptive_sort
-            ( boost::movelib::iterator_to_raw_pointer(seq.begin())
-            , boost::movelib::iterator_to_raw_pointer(seq.end())
-            , this->priv_value_comp()
-            , boost::movelib::iterator_to_raw_pointer(tseq.begin() + tseq.size())
-            , tseq.capacity() - tseq.size());
-      }
-      else{
-         boost::movelib::adaptive_sort
-            (seq.begin(), seq.end(), this->priv_value_comp());
-      }
-      tseq = boost::move(seq);
+      (flat_tree_adopt_sequence_equal)( m_data.m_seq, boost::move(seq), this->priv_value_comp()
+         , container_detail::bool_<is_contiguous_container<container_type>::value>());
    }
 
-   void adopt_sequence_unique(BOOST_RV_REF(container_type) seq)
+   BOOST_CONTAINER_FORCEINLINE void adopt_sequence_unique(BOOST_RV_REF(container_type) seq)
    {
-      container_type &tseq = m_data.m_seq;
-      if (is_contiguous_container<container_type>::value){
-         boost::movelib::adaptive_sort
-            ( boost::movelib::iterator_to_raw_pointer(seq.begin())
-            , boost::movelib::iterator_to_raw_pointer(seq.end())
-            , this->priv_value_comp()
-            , boost::movelib::iterator_to_raw_pointer(tseq.begin() + tseq.size())
-            , tseq.capacity() - tseq.size());
-      }
-      else{
-         boost::movelib::adaptive_sort
-            ( seq.begin(), seq.end(), this->priv_value_comp());
-      }
-      seq.erase( boost::movelib::unique
-                  (seq.begin(), seq.end(), boost::movelib::negate<value_compare>(this->m_data.get_comp()))
-               , seq.cend());
-      tseq = boost::move(seq);
+      (flat_tree_adopt_sequence_unique)(m_data.m_seq, boost::move(seq), this->priv_value_comp()
+         , container_detail::bool_<is_contiguous_container<container_type>::value>());
    }
 
    void adopt_sequence_equal(ordered_range_t, BOOST_RV_REF(container_type) seq)
    {
       BOOST_ASSERT((is_sorted)(seq.cbegin(), seq.cend(), this->priv_value_comp()));
-      container_type &tseq = m_data.m_seq;
-      tseq = boost::move(seq);
+      m_data.m_seq = boost::move(seq);
    }
 
    void adopt_sequence_unique(ordered_unique_range_t, BOOST_RV_REF(container_type) seq)
    {
       BOOST_ASSERT((is_sorted_and_unique)(seq.cbegin(), seq.cend(), this->priv_value_comp()));
-      container_type &tseq = m_data.m_seq;
-      tseq = boost::move(seq);
+      m_data.m_seq = boost::move(seq);
    }
 
    BOOST_CONTAINER_FORCEINLINE friend bool operator==(const flat_tree& x, const flat_tree& y)

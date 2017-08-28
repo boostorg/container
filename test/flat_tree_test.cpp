@@ -92,7 +92,7 @@ template class flat_tree
 }  //container_detail {
 }} //boost::container
 
-#if (__cplusplus >= 201402L)
+#if (__cplusplus > 201103L)
 #include <vector>
 
 namespace boost{
