@@ -25,7 +25,7 @@
 [section:intro Introduction]
 
 [*Boost.Container] library implements several well-known containers, including
-STL containers. The aim of the library is to offers advanced features not present
+STL containers. The aim of the library is to offer advanced features not present
 in standard containers or to offer the latest standard draft features for compilers
 that don't comply with the latest C++ standard.
 
