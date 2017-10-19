@@ -24,8 +24,10 @@
 #include "expand_bwd_test_template.hpp"
 #include "propagate_allocator_test.hpp"
 #include "default_init_test.hpp"
+#include "comparison_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 #include <boost/utility/string_view.hpp>
+#include <boost/core/lightweight_test.hpp>
 
 using namespace boost::container;
 
@@ -507,7 +509,9 @@ struct alloc_propagate_base<boost_container_string>
    };
 };
 
+
 }}}   //namespace boost::container::test
+
 
 int main()
 {
@@ -556,6 +560,16 @@ int main()
       typedef boost::container::basic_string<wchar_t> cont_int;
       cont_int a; a.push_back(wchar_t(1)); a.push_back(wchar_t(2)); a.push_back(wchar_t(3));
       boost::intrusive::test::test_iterator_random< cont_int >(a);
+   }
+
+   ////////////////////////////////////
+   //    Comparison testing
+   ////////////////////////////////////
+   {
+      if(!boost::container::test::test_container_comparisons<string>())
+         return 1;
+      if(!boost::container::test::test_container_comparisons<wstring>())
+         return 1;
    }
 
    return boost::report_errors();

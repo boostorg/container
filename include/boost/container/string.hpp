@@ -2953,6 +2953,20 @@ typedef basic_string
    ,new_allocator<wchar_t> >
 wstring;
 
+#else
+
+template<class S>
+struct is_string
+{
+   static const bool value = false;
+};
+
+template<class C, class T, class A>
+struct is_string< basic_string<C, T, A> >
+{
+   static const bool value = true;
+};
+
 #endif
 
 // ------------------------------------------------------------
@@ -3060,16 +3074,22 @@ operator==(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
 }
 
 template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
-inline bool
-operator==( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator>& y)
+inline 
+   BOOST_CONTAINER_DOC1ST( bool, 
+                           typename container_detail::disable_if
+                              <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
+      operator==( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator>& y)
 {
    return x.size() == y.size() &&
           Traits::compare(x.data(), y.data(), x.size()) == 0;
 }
 
 template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
-inline bool
-operator==( const basic_string<CharT,Traits,Allocator>& x, BasicStringView<CharT,Traits> y)
+inline
+   BOOST_CONTAINER_DOC1ST( bool, 
+                           typename container_detail::disable_if
+                              <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
+      operator==( const basic_string<CharT,Traits,Allocator>& x, BasicStringView<CharT,Traits> y)
 {
    return x.size() == y.size() &&
           Traits::compare(x.data(), y.data(), x.size()) == 0;
@@ -3092,12 +3112,18 @@ operator!=(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
 
 
 template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
-inline bool
+inline
+   BOOST_CONTAINER_DOC1ST( bool, 
+                           typename container_detail::disable_if
+                              <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
 operator!=( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator>& y)
    {  return !(x == y);  }
 
 template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
-inline bool
+inline
+   BOOST_CONTAINER_DOC1ST( bool, 
+                           typename container_detail::disable_if
+                              <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
 operator!=( const basic_string<CharT,Traits,Allocator>& x, BasicStringView<CharT,Traits> y)
    {  return !(x == y);  }
 
@@ -3124,12 +3150,18 @@ operator<(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
 }
 
 template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
-inline bool
+inline
+   BOOST_CONTAINER_DOC1ST( bool, 
+                           typename container_detail::disable_if
+                              <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
 operator<( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator>& y)
    {  return y.compare(x) > 0;  }
 
 template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
-inline bool
+inline
+   BOOST_CONTAINER_DOC1ST( bool, 
+                           typename container_detail::disable_if
+                              <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
 operator<(  const basic_string<CharT,Traits,Allocator>& x, BasicStringView<CharT,Traits> y)
    {  return x.compare(y) < 0;  }
 
@@ -3153,12 +3185,18 @@ operator>(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
 }
 
 template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
-inline bool
+inline
+   BOOST_CONTAINER_DOC1ST( bool, 
+                           typename container_detail::disable_if
+                              <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
 operator>( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator>& y)
    {  return y < x;  }
 
 template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
-inline bool
+inline
+   BOOST_CONTAINER_DOC1ST( bool, 
+                           typename container_detail::disable_if
+                              <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
 operator>( const basic_string<CharT,Traits,Allocator>& x, BasicStringView<CharT,Traits> y)
    {  return y < x;  }
 
@@ -3181,12 +3219,18 @@ operator<=(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
 
 
 template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
-inline bool
+inline
+   BOOST_CONTAINER_DOC1ST( bool, 
+                           typename container_detail::disable_if
+                              <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
 operator<=( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator>& y)
    {  return !(y < x);  }
 
 template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
-inline bool
+inline
+   BOOST_CONTAINER_DOC1ST( bool, 
+                           typename container_detail::disable_if
+                              <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
 operator<=( const basic_string<CharT,Traits,Allocator>& x, BasicStringView<CharT,Traits> y)
    {  return !(y < x);  }
 
@@ -3207,12 +3251,18 @@ operator>=(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
    {  return !(x < s);  }
 
 template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
-inline bool
+inline
+   BOOST_CONTAINER_DOC1ST( bool, 
+                           typename container_detail::disable_if
+                              <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
 operator>=( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator>& y)
    {  return !(x < y);  }
 
 template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
-inline bool
+inline
+   BOOST_CONTAINER_DOC1ST( bool, 
+                           typename container_detail::disable_if
+                              <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
 operator>=( const basic_string<CharT,Traits,Allocator>& x, BasicStringView<CharT,Traits> y)
    {  return !(x < y);  }
 
