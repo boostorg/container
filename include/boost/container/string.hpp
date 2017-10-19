@@ -2955,6 +2955,10 @@ wstring;
 
 #else
 
+template <class CharT, class Traits, class Allocator>
+const typename basic_string<CharT,Traits,Allocator>::size_type
+   basic_string<CharT,Traits,Allocator>::npos;
+
 template<class S>
 struct is_string
 {
