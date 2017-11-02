@@ -31,6 +31,12 @@ matrix:
     - os: linux
       compiler: clang++
       env: TOOLSET=clang CXXSTD=03,11,14,1z
+      addons:
+        apt:
+          packages:
+            - libstdc++-4.9-dev
+          sources:
+            - ubuntu-toolchain-r-test
 
     - os: osx
       compiler: clang++
