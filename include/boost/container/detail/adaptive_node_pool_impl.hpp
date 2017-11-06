@@ -55,7 +55,7 @@ static const unsigned int address_ordered = 1u << 2u;
 
 }  //namespace adaptive_pool_flag{
 
-namespace container_detail {
+namespace dtl {
 
 template<class size_type>
 struct hdr_offset_holder_t
@@ -876,7 +876,7 @@ class private_adaptive_node_pool_impl
    size_type                           m_totally_free_blocks;  //Free blocks
 };
 
-}  //namespace container_detail {
+}  //namespace dtl {
 }  //namespace container {
 }  //namespace boost {
 

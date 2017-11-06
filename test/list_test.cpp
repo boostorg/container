@@ -34,7 +34,7 @@ template class boost::container::list
    < test::movable_and_copyable_int
    , adaptive_pool<test::movable_and_copyable_int> >;
 
-namespace container_detail {
+namespace dtl {
 
 template class iterator_from_iiterator
    <intrusive_list_type< std::allocator<int> >::container_type::iterator, true >;

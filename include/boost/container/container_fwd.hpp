@@ -67,7 +67,7 @@ namespace detail{
    //Create namespace to avoid compilation errors
 }}}
 
-namespace boost{ namespace container{ namespace container_detail{
+namespace boost{ namespace container{ namespace dtl{
    namespace bi = boost::intrusive;
    namespace bid = boost::intrusive::detail;
 }}}

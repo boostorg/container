@@ -221,28 +221,28 @@ void list_test_template(std::size_t num_iterations, std::size_t num_elements, bo
    }
 
    //Release node_allocator cache
-   typedef boost::container::container_detail::shared_node_pool
+   typedef boost::container::dtl::shared_node_pool
       < (2*sizeof(void*)+sizeof(int))
       , AdPoolAlignOnlyV2::nodes_per_block> shared_node_pool_t;
-   boost::container::container_detail::singleton_default
+   boost::container::dtl::singleton_default
       <shared_node_pool_t>::instance().purge_blocks();
 
    //Release adaptive_pool cache
-   typedef boost::container::container_detail::shared_adaptive_node_pool
+   typedef boost::container::dtl::shared_adaptive_node_pool
       < (2*sizeof(void*)+sizeof(int))
       , AdPool2PercentV2::nodes_per_block
       , AdPool2PercentV2::max_free_blocks
       , AdPool2PercentV2::overhead_percent> shared_adaptive_pool_plus_t;
-   boost::container::container_detail::singleton_default
+   boost::container::dtl::singleton_default
       <shared_adaptive_pool_plus_t>::instance().deallocate_free_blocks();
 
    //Release adaptive_pool cache
-   typedef boost::container::container_detail::shared_adaptive_node_pool
+   typedef boost::container::dtl::shared_adaptive_node_pool
       < (2*sizeof(void*)+sizeof(int))
       , AdPool2PercentV2::nodes_per_block
       , AdPool2PercentV2::max_free_blocks
       , 0u> shared_adaptive_pool_plus_align_only_t;
-   boost::container::container_detail::singleton_default
+   boost::container::dtl::singleton_default
       <shared_adaptive_pool_plus_align_only_t>::instance().deallocate_free_blocks();
    //Release dlmalloc memory
    bc::dlmalloc_trim(0);

@@ -41,7 +41,7 @@
 #include <boost/assert.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 
-namespace boost { namespace container { namespace container_detail {
+namespace boost { namespace container { namespace dtl {
 
 template<class Allocator, class FwdIt, class Iterator>
 struct move_insert_range_proxy
@@ -208,7 +208,7 @@ insert_copy_proxy<Allocator, It> get_insert_value_proxy(const typename boost::co
    return insert_copy_proxy<Allocator, It>(v);
 }
 
-}}}   //namespace boost { namespace container { namespace container_detail {
+}}}   //namespace boost { namespace container { namespace dtl {
 
 #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
@@ -217,7 +217,7 @@ insert_copy_proxy<Allocator, It> get_insert_value_proxy(const typename boost::co
 
 namespace boost {
 namespace container {
-namespace container_detail {
+namespace dtl {
 
 template<class Allocator, class Iterator, class ...Args>
 struct insert_nonmovable_emplace_proxy
@@ -301,7 +301,7 @@ struct insert_emplace_proxy<Allocator, Iterator, typename boost::container::allo
 //Any problem is solvable with an extra layer of indirection? ;-)
 template<class Allocator, class Iterator>
 struct insert_emplace_proxy<Allocator, Iterator
-   , typename boost::container::container_detail::add_const<typename boost::container::allocator_traits<Allocator>::value_type>::type
+   , typename boost::container::dtl::add_const<typename boost::container::allocator_traits<Allocator>::value_type>::type
    >
    : public insert_copy_proxy<Allocator, Iterator>
 {
@@ -321,7 +321,7 @@ struct insert_emplace_proxy<Allocator, Iterator, typename boost::container::allo
 
 template<class Allocator, class Iterator>
 struct insert_emplace_proxy<Allocator, Iterator
-   , typename boost::container::container_detail::add_const<typename boost::container::allocator_traits<Allocator>::value_type>::type &
+   , typename boost::container::dtl::add_const<typename boost::container::allocator_traits<Allocator>::value_type>::type &
    >
    : public insert_copy_proxy<Allocator, Iterator>
 {
@@ -330,7 +330,7 @@ struct insert_emplace_proxy<Allocator, Iterator
    {}
 };
 
-}}}   //namespace boost { namespace container { namespace container_detail {
+}}}   //namespace boost { namespace container { namespace dtl {
 
 #else // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
@@ -338,7 +338,7 @@ struct insert_emplace_proxy<Allocator, Iterator
 
 namespace boost {
 namespace container {
-namespace container_detail {
+namespace dtl {
 
 #define BOOST_CONTAINER_ADVANCED_INSERT_INT_CODE(N) \
 template< class Allocator, class Iterator BOOST_MOVE_I##N BOOST_MOVE_CLASS##N >\
@@ -437,7 +437,7 @@ struct insert_emplace_proxy_arg1<Allocator, Iterator, typename boost::container:
 //Any problem is solvable with an extra layer of indirection? ;-)
 template<class Allocator, class Iterator>
 struct insert_emplace_proxy_arg1<Allocator, Iterator
-   , typename boost::container::container_detail::add_const<typename boost::container::allocator_traits<Allocator>::value_type>::type
+   , typename boost::container::dtl::add_const<typename boost::container::allocator_traits<Allocator>::value_type>::type
    >
    : public insert_copy_proxy<Allocator, Iterator>
 {
@@ -457,7 +457,7 @@ struct insert_emplace_proxy_arg1<Allocator, Iterator, typename boost::container:
 
 template<class Allocator, class Iterator>
 struct insert_emplace_proxy_arg1<Allocator, Iterator
-   , typename boost::container::container_detail::add_const<typename boost::container::allocator_traits<Allocator>::value_type>::type &
+   , typename boost::container::dtl::add_const<typename boost::container::allocator_traits<Allocator>::value_type>::type &
    >
    : public insert_copy_proxy<Allocator, Iterator>
 {
@@ -468,7 +468,7 @@ struct insert_emplace_proxy_arg1<Allocator, Iterator
 
 #endif
 
-}}}   //namespace boost { namespace container { namespace container_detail {
+}}}   //namespace boost { namespace container { namespace dtl {
 
 #endif   // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 

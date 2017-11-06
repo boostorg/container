@@ -66,15 +66,15 @@ template <class Key, class Compare, class Allocator, class Options>
 #endif
 class set
    ///@cond
-   : public container_detail::tree
-      < Key, container_detail::identity<Key>, Compare, Allocator, Options>
+   : public dtl::tree
+      < Key, dtl::identity<Key>, Compare, Allocator, Options>
    ///@endcond
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(set)
-   typedef container_detail::tree
-      < Key, container_detail::identity<Key>, Compare, Allocator, Options> base_t;
+   typedef dtl::tree
+      < Key, dtl::identity<Key>, Compare, Allocator, Options> base_t;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -114,8 +114,8 @@ class set
    //! <b>Complexity</b>: Constant.
    
    BOOST_CONTAINER_FORCEINLINE set()
-      BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value &&
-                        container_detail::is_nothrow_default_constructible<Compare>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<Allocator>::value &&
+                        dtl::is_nothrow_default_constructible<Compare>::value)
       : base_t()
    {}
 
@@ -320,7 +320,7 @@ class set
    //!
    //! <b>Postcondition</b>: x is emptied.
    BOOST_CONTAINER_FORCEINLINE set(BOOST_RV_REF(set) x)
-      BOOST_NOEXCEPT_IF(boost::container::container_detail::is_nothrow_move_constructible<Compare>::value)
+      BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_constructible<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x))
    {}
 
@@ -356,7 +356,7 @@ class set
    BOOST_CONTAINER_FORCEINLINE set& operator=(BOOST_RV_REF(set) x)
       BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
                           allocator_traits_type::is_always_equal::value) &&
-                           boost::container::container_detail::is_nothrow_move_assignable<Compare>::value)
+                           boost::container::dtl::is_nothrow_move_assignable<Compare>::value)
    {  return static_cast<set&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -639,8 +639,8 @@ class set
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge(set<Key, C2, Allocator, Options>& source)
    {
-      typedef container_detail::tree
-         <Key, container_detail::identity<Key>, C2, Allocator, Options> base2_t;
+      typedef dtl::tree
+         <Key, dtl::identity<Key>, C2, Allocator, Options> base2_t;
       this->base_t::merge_unique(static_cast<base2_t&>(source));
    }
 
@@ -653,8 +653,8 @@ class set
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge(multiset<Key, C2, Allocator, Options>& source)
    {
-      typedef container_detail::tree
-         <Key, container_detail::identity<Key>, C2, Allocator, Options> base2_t;
+      typedef dtl::tree
+         <Key, dtl::identity<Key>, C2, Allocator, Options> base2_t;
       this->base_t::merge_unique(static_cast<base2_t&>(source));
    }
 
@@ -701,7 +701,7 @@ class set
    //! <b>Complexity</b>: Constant.
    void swap(set& x)
       BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::container_detail::is_nothrow_swappable<Compare>::value );
+                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    //! <b>Effects</b>: erase(a.begin(),a.end()).
    //!
@@ -893,15 +893,15 @@ template <class Key, class Compare, class Allocator, class Options>
 #endif
 class multiset
    /// @cond
-   : public container_detail::tree
-      <Key,container_detail::identity<Key>, Compare, Allocator, Options>
+   : public dtl::tree
+      <Key,dtl::identity<Key>, Compare, Allocator, Options>
    /// @endcond
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(multiset)
-   typedef container_detail::tree
-      <Key,container_detail::identity<Key>, Compare, Allocator, Options> base_t;
+   typedef dtl::tree
+      <Key,dtl::identity<Key>, Compare, Allocator, Options> base_t;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -938,8 +938,8 @@ class multiset
 
    //! @copydoc ::boost::container::set::set()
    BOOST_CONTAINER_FORCEINLINE multiset()
-      BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value &&
-                        container_detail::is_nothrow_default_constructible<Compare>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<Allocator>::value &&
+                        dtl::is_nothrow_default_constructible<Compare>::value)
       : base_t()
    {}
 
@@ -1068,7 +1068,7 @@ class multiset
 
    //! @copydoc ::boost::container::set::set(set &&)
    BOOST_CONTAINER_FORCEINLINE multiset(BOOST_RV_REF(multiset) x)
-      BOOST_NOEXCEPT_IF(boost::container::container_detail::is_nothrow_move_constructible<Compare>::value)
+      BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_constructible<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x))
    {}
 
@@ -1090,7 +1090,7 @@ class multiset
    BOOST_CONTAINER_FORCEINLINE multiset& operator=(BOOST_RV_REF(multiset) x)
       BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
                           allocator_traits_type::is_always_equal::value) &&
-                           boost::container::container_detail::is_nothrow_move_assignable<Compare>::value)
+                           boost::container::dtl::is_nothrow_move_assignable<Compare>::value)
    {  return static_cast<multiset&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -1269,8 +1269,8 @@ class multiset
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge(multiset<Key, C2, Allocator, Options>& source)
    {
-      typedef container_detail::tree
-         <Key, container_detail::identity<Key>, C2, Allocator, Options> base2_t;
+      typedef dtl::tree
+         <Key, dtl::identity<Key>, C2, Allocator, Options> base2_t;
       this->base_t::merge_equal(static_cast<base2_t&>(source));
    }
 
@@ -1283,8 +1283,8 @@ class multiset
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge(set<Key, C2, Allocator, Options>& source)
    {
-      typedef container_detail::tree
-         <Key, container_detail::identity<Key>, C2, Allocator, Options> base2_t;
+      typedef dtl::tree
+         <Key, dtl::identity<Key>, C2, Allocator, Options> base2_t;
       this->base_t::merge_equal(static_cast<base2_t&>(source));
    }
 
@@ -1313,7 +1313,7 @@ class multiset
    //! @copydoc ::boost::container::set::swap
    void swap(multiset& x)
       BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::container_detail::is_nothrow_swappable<Compare>::value );
+                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    //! @copydoc ::boost::container::set::clear
    void clear() BOOST_NOEXCEPT_OR_NOTHROW;

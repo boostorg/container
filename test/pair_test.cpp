@@ -36,50 +36,50 @@ using namespace ::boost::container;
 int main ()
 {
    {
-      container_detail::pair<test::non_copymovable_int, test::non_copymovable_int> p1;
-      container_detail::pair<test::copyable_int, test::copyable_int> p2;
-      container_detail::pair<test::movable_int, test::movable_int> p3;
-      container_detail::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> p4;
+      dtl::pair<test::non_copymovable_int, test::non_copymovable_int> p1;
+      dtl::pair<test::copyable_int, test::copyable_int> p2;
+      dtl::pair<test::movable_int, test::movable_int> p3;
+      dtl::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> p4;
    }
    {  //Constructible from two values
-      container_detail::pair<test::non_copymovable_int, test::non_copymovable_int> p1(1, 2);
-      container_detail::pair<test::copyable_int, test::copyable_int> p2(1, 2);
-      container_detail::pair<test::movable_int, test::movable_int> p3(1, 2);
-      container_detail::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> p4(1, 2);
+      dtl::pair<test::non_copymovable_int, test::non_copymovable_int> p1(1, 2);
+      dtl::pair<test::copyable_int, test::copyable_int> p2(1, 2);
+      dtl::pair<test::movable_int, test::movable_int> p3(1, 2);
+      dtl::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> p4(1, 2);
    }
 
    {  //Constructible from internal types
-      container_detail::pair<test::copyable_int, test::copyable_int> p2(test::copyable_int(1), test::copyable_int(2));
+      dtl::pair<test::copyable_int, test::copyable_int> p2(test::copyable_int(1), test::copyable_int(2));
       {
          test::movable_int a(1), b(2);
-         container_detail::pair<test::movable_int, test::movable_int> p3(::boost::move(a), ::boost::move(b));
+         dtl::pair<test::movable_int, test::movable_int> p3(::boost::move(a), ::boost::move(b));
       }
       {
          test::movable_and_copyable_int a(1), b(2);
-         container_detail::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> p4(::boost::move(a), ::boost::move(b));
+         dtl::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> p4(::boost::move(a), ::boost::move(b));
       }
    }
    {  //piecewise construct from boost tuple
       using namespace boost::tuples;
       {
-         boost::container::container_detail::pair<int, float> p(piecewise_construct, tuple<>(), tuple<>());
+         boost::container::dtl::pair<int, float> p(piecewise_construct, tuple<>(), tuple<>());
          BOOST_TEST(p.first == 0);
          BOOST_TEST(p.second == 0.f);
       }
       {
-         boost::container::container_detail::pair<int, float> p(piecewise_construct, tuple<>(), tuple<float>(2.f));
+         boost::container::dtl::pair<int, float> p(piecewise_construct, tuple<>(), tuple<float>(2.f));
          BOOST_TEST(p.first == 0);
          BOOST_TEST(p.second == 2.f);
       }
       {
-         boost::container::container_detail::pair<int, float> p(piecewise_construct, tuple<int>(2), tuple<float>(1.f));
+         boost::container::dtl::pair<int, float> p(piecewise_construct, tuple<int>(2), tuple<float>(1.f));
          BOOST_TEST(p.first == 2);
          BOOST_TEST(p.second == 1.f);
       }
       {
-         boost::container::container_detail::pair
-            < boost::container::container_detail::pair<int, float>
-            , boost::container::container_detail::pair<double, char>
+         boost::container::dtl::pair
+            < boost::container::dtl::pair<int, float>
+            , boost::container::dtl::pair<double, char>
             > p(piecewise_construct, tuple<int, float>(3, 4.f), tuple<double, char>(8.,'a'));
          BOOST_TEST(p.first.first   == 3);
          BOOST_TEST(p.first.second  == 4.f);
@@ -87,7 +87,7 @@ int main ()
          BOOST_TEST(p.second.second == 'a');
       }
       {
-         boost::container::container_detail::pair
+         boost::container::dtl::pair
             < tuple<int, float, double>
             , char
             > p(piecewise_construct, tuple<int, float, double>(3, 16.f, 32.), tuple<char>('b'));
@@ -101,24 +101,24 @@ int main ()
    {  //piecewise construct from std tuple
       using std::tuple;
       {
-         boost::container::container_detail::pair<int, float> p(piecewise_construct, tuple<>(), tuple<>());
+         boost::container::dtl::pair<int, float> p(piecewise_construct, tuple<>(), tuple<>());
          BOOST_TEST(p.first == 0);
          BOOST_TEST(p.second == 0.f);
       }
       {
-         boost::container::container_detail::pair<int, float> p(piecewise_construct, tuple<>(), tuple<float>(2.f));
+         boost::container::dtl::pair<int, float> p(piecewise_construct, tuple<>(), tuple<float>(2.f));
          BOOST_TEST(p.first == 0);
          BOOST_TEST(p.second == 2.f);
       }
       {
-         boost::container::container_detail::pair<int, float> p(piecewise_construct, tuple<int>(2), tuple<float>(1.f));
+         boost::container::dtl::pair<int, float> p(piecewise_construct, tuple<int>(2), tuple<float>(1.f));
          BOOST_TEST(p.first == 2);
          BOOST_TEST(p.second == 1.f);
       }
       {
-         boost::container::container_detail::pair
-            < boost::container::container_detail::pair<int, float>
-            , boost::container::container_detail::pair<double, char>
+         boost::container::dtl::pair
+            < boost::container::dtl::pair<int, float>
+            , boost::container::dtl::pair<double, char>
             > p(piecewise_construct, tuple<int, float>(3, 4.f), tuple<double, char>(8.,'a'));
          BOOST_TEST(p.first.first   == 3);
          BOOST_TEST(p.first.second  == 4.f);
@@ -126,7 +126,7 @@ int main ()
          BOOST_TEST(p.second.second == 'a');
       }
       {
-         boost::container::container_detail::pair
+         boost::container::dtl::pair
             < tuple<int, float, double>
             , char
             > p(piecewise_construct, tuple<int, float, double>(3, 16.f, 32.), tuple<char>('b'));
@@ -136,12 +136,12 @@ int main ()
          BOOST_TEST(p.second == 'b');
       }
       #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-      typedef container_detail::pair<test::movable_int, test::movable_int> movable_pair_t;
-      typedef container_detail::pair<movable_pair_t, movable_pair_t> movable_pair_pair_t;
+      typedef dtl::pair<test::movable_int, test::movable_int> movable_pair_t;
+      typedef dtl::pair<movable_pair_t, movable_pair_t> movable_pair_pair_t;
       test::movable_int a(1), b(2), c(3), d(4);
       movable_pair_pair_t p( piecewise_construct
-                           , container_detail::forward_as_tuple(boost::move(a), boost::move(b))
-                           , container_detail::forward_as_tuple(boost::move(c), boost::move(d))
+                           , dtl::forward_as_tuple(boost::move(a), boost::move(b))
+                           , dtl::forward_as_tuple(boost::move(c), boost::move(d))
                            );
       BOOST_TEST(p.first.first   == 1);
       BOOST_TEST(p.first.second  == 2);

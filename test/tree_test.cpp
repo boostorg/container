@@ -22,7 +22,7 @@ namespace container {
 
 //Explicit instantiation to detect compilation errors
 
-namespace container_detail {
+namespace dtl {
 
 //Instantiate base class as previous instantiations don't instantiate inherited members
 template class tree
@@ -73,7 +73,7 @@ template class tree
    , tree_assoc_defaults
    >;
 
-}  //container_detail {
+}  //dtl {
 
 }} //boost::container
 

@@ -144,7 +144,7 @@ bool test_expected_container(const Container &ec, const std::pair<EmplaceInt, Em
 }
 
 typedef std::pair<EmplaceInt, EmplaceInt> EmplaceIntPair;
-static boost::container::container_detail::aligned_storage<sizeof(EmplaceIntPair)*10>::type pair_storage;
+static boost::container::dtl::aligned_storage<sizeof(EmplaceIntPair)*10>::type pair_storage;
 
 static EmplaceIntPair* initialize_emplace_int_pair()
 {
@@ -160,7 +160,7 @@ static EmplaceIntPair * expected_pair = initialize_emplace_int_pair();
 
 
 template<class Container>
-bool test_emplace_back(container_detail::true_)
+bool test_emplace_back(dtl::true_)
 {
    std::cout << "Starting test_emplace_back." << std::endl << "  Class: "
       << typeid(Container).name() << std::endl;
@@ -209,11 +209,11 @@ bool test_emplace_back(container_detail::true_)
 }
 
 template<class Container>
-bool test_emplace_back(container_detail::false_)
+bool test_emplace_back(dtl::false_)
 {  return true;   }
 
 template<class Container>
-bool test_emplace_front(container_detail::true_)
+bool test_emplace_front(dtl::true_)
 {
    std::cout << "Starting test_emplace_front." << std::endl << "  Class: "
       << typeid(Container).name() << std::endl;
@@ -261,11 +261,11 @@ bool test_emplace_front(container_detail::true_)
 }
 
 template<class Container>
-bool test_emplace_front(container_detail::false_)
+bool test_emplace_front(dtl::false_)
 {  return true;   }
 
 template<class Container>
-bool test_emplace_before(container_detail::true_)
+bool test_emplace_before(dtl::true_)
 {
    std::cout << "Starting test_emplace_before." << std::endl << "  Class: "
       << typeid(Container).name() << std::endl;
@@ -373,11 +373,11 @@ bool test_emplace_before(container_detail::true_)
 }
 
 template<class Container>
-bool test_emplace_before(container_detail::false_)
+bool test_emplace_before(dtl::false_)
 {  return true;   }
 
 template<class Container>
-bool test_emplace_after(container_detail::true_)
+bool test_emplace_after(dtl::true_)
 {
    std::cout << "Starting test_emplace_after." << std::endl << "  Class: "
       << typeid(Container).name() << std::endl;
@@ -459,11 +459,11 @@ bool test_emplace_after(container_detail::true_)
 }
 
 template<class Container>
-bool test_emplace_after(container_detail::false_)
+bool test_emplace_after(dtl::false_)
 {  return true;   }
 
 template<class Container>
-bool test_emplace_assoc(container_detail::true_)
+bool test_emplace_assoc(dtl::true_)
 {
    std::cout << "Starting test_emplace_assoc." << std::endl << "  Class: "
       << typeid(Container).name() << std::endl;
@@ -506,11 +506,11 @@ bool test_emplace_assoc(container_detail::true_)
 }
 
 template<class Container>
-bool test_emplace_assoc(container_detail::false_)
+bool test_emplace_assoc(dtl::false_)
 {  return true;   }
 
 template<class Container>
-bool test_emplace_hint(container_detail::true_)
+bool test_emplace_hint(dtl::true_)
 {
    std::cout << "Starting test_emplace_hint." << std::endl << "  Class: "
       << typeid(Container).name() << std::endl;
@@ -556,11 +556,11 @@ bool test_emplace_hint(container_detail::true_)
 }
 
 template<class Container>
-bool test_emplace_hint(container_detail::false_)
+bool test_emplace_hint(dtl::false_)
 {  return true;   }
 
 template<class Container>
-bool test_emplace_assoc_pair(container_detail::true_)
+bool test_emplace_assoc_pair(dtl::true_)
 {
    std::cout << "Starting test_emplace_assoc_pair." << std::endl << "  Class: "
       << typeid(Container).name() << std::endl;
@@ -594,11 +594,11 @@ bool test_emplace_assoc_pair(container_detail::true_)
 }
 
 template<class Container>
-bool test_emplace_assoc_pair(container_detail::false_)
+bool test_emplace_assoc_pair(dtl::false_)
 {  return true;   }
 
 template<class Container>
-bool test_emplace_hint_pair(container_detail::true_)
+bool test_emplace_hint_pair(dtl::true_)
 {
    std::cout << "Starting test_emplace_hint_pair." << std::endl << "  Class: "
       << typeid(Container).name() << std::endl;
@@ -633,14 +633,14 @@ bool test_emplace_hint_pair(container_detail::true_)
 }
 
 template<class Container>
-bool test_emplace_hint_pair(container_detail::false_)
+bool test_emplace_hint_pair(dtl::false_)
 {  return true;   }
 
 template <EmplaceOptions O, EmplaceOptions Mask>
 struct emplace_active
 {
    static const bool value = (0 != (O & Mask));
-   typedef container_detail::bool_<value> type;
+   typedef dtl::bool_<value> type;
    operator type() const{  return type(); }
 };
 

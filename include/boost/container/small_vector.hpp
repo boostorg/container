@@ -118,11 +118,11 @@ class small_vector_allocator
    typedef typename allocator_traits<Allocator>::propagate_on_container_move_assignment   propagate_on_container_move_assignment;
    typedef typename allocator_traits<Allocator>::propagate_on_container_swap              propagate_on_container_swap;
    //! An integral constant with member `value == false`
-   typedef BOOST_CONTAINER_IMPDEF(container_detail::bool_<false>)                         is_always_equal;
+   typedef BOOST_CONTAINER_IMPDEF(dtl::bool_<false>)                         is_always_equal;
    //! An integral constant with member `value == true`
-   typedef BOOST_CONTAINER_IMPDEF(container_detail::bool_<true>)                          is_partially_propagable;
+   typedef BOOST_CONTAINER_IMPDEF(dtl::bool_<true>)                          is_partially_propagable;
 
-   BOOST_CONTAINER_DOCIGN(typedef container_detail::version_type<small_vector_allocator BOOST_CONTAINER_I 1>  version;)
+   BOOST_CONTAINER_DOCIGN(typedef dtl::version_type<small_vector_allocator BOOST_CONTAINER_I 1>  version;)
 
    //!Obtains an small_vector_allocator that allocates
    //!objects of type T2
@@ -282,7 +282,7 @@ class small_vector_allocator
    pointer internal_storage() const
    {
       typedef typename Allocator::value_type                                              value_type;
-      typedef container_detail::vector_alloc_holder< small_vector_allocator<Allocator> >  vector_alloc_holder_t;
+      typedef dtl::vector_alloc_holder< small_vector_allocator<Allocator> >  vector_alloc_holder_t;
       typedef vector<value_type, small_vector_allocator<Allocator> >                      vector_base;
       typedef small_vector_base<value_type, Allocator>                                    derived_type;
       //
@@ -345,8 +345,8 @@ class small_vector_base
    const base_type &as_base() const { return static_cast<const base_type&>(*this); }
 
    public:
-   typedef typename container_detail::aligned_storage
-      <sizeof(T), container_detail::alignment_of<T>::value>::type storage_type;
+   typedef typename dtl::aligned_storage
+      <sizeof(T), dtl::alignment_of<T>::value>::type storage_type;
    typedef small_vector_allocator<SecondaryAllocator>             allocator_type;
 
    protected:
@@ -419,7 +419,7 @@ struct small_vector_storage_calculator
 {
    typedef small_vector_base<T, Allocator> svh_type;
    typedef vector<T, small_vector_allocator<Allocator> > svhb_type;
-   static const std::size_t s_align = container_detail::alignment_of<Storage>::value;
+   static const std::size_t s_align = dtl::alignment_of<Storage>::value;
    static const std::size_t s_size = sizeof(Storage);
    static const std::size_t svh_sizeof = sizeof(svh_type);
    static const std::size_t svhb_sizeof = sizeof(svhb_type);
@@ -507,7 +507,7 @@ class small_vector : public small_vector_base<T, Allocator>
 
    public:
    BOOST_CONTAINER_FORCEINLINE small_vector()
-      BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<Allocator>::value)
       : base_type(initial_capacity_t(), internal_capacity())
    {}
 
@@ -541,18 +541,18 @@ class small_vector : public small_vector_base<T, Allocator>
 
    template <class InIt>
    BOOST_CONTAINER_FORCEINLINE small_vector(InIt first, InIt last
-      BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename container_detail::disable_if_c
-         < container_detail::is_convertible<InIt BOOST_MOVE_I size_type>::value
-         BOOST_MOVE_I container_detail::nat >::type * = 0)
+      BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename dtl::disable_if_c
+         < dtl::is_convertible<InIt BOOST_MOVE_I size_type>::value
+         BOOST_MOVE_I dtl::nat >::type * = 0)
       )
       : base_type(initial_capacity_t(), internal_capacity())
    {  this->assign(first, last); }
 
    template <class InIt>
    BOOST_CONTAINER_FORCEINLINE small_vector(InIt first, InIt last, const allocator_type& a
-      BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename container_detail::disable_if_c
-         < container_detail::is_convertible<InIt BOOST_MOVE_I size_type>::value
-         BOOST_MOVE_I container_detail::nat >::type * = 0)
+      BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename dtl::disable_if_c
+         < dtl::is_convertible<InIt BOOST_MOVE_I size_type>::value
+         BOOST_MOVE_I dtl::nat >::type * = 0)
       )
       : base_type(initial_capacity_t(), internal_capacity(), a)
    {  this->assign(first, last); }

@@ -42,11 +42,11 @@ namespace container {
 namespace test{
 
 template<class C>
-void map_test_rebalanceable(C &, boost::container::container_detail::false_type)
+void map_test_rebalanceable(C &, boost::container::dtl::false_type)
 {}
 
 template<class C>
-void map_test_rebalanceable(C &c, boost::container::container_detail::true_type)
+void map_test_rebalanceable(C &c, boost::container::dtl::true_type)
 {
    c.rebalance();
 }
@@ -55,17 +55,17 @@ template<class MyBoostMap
         ,class MyStdMap
         ,class MyBoostMultiMap
         ,class MyStdMultiMap>
-int map_test_copyable(boost::container::container_detail::false_type)
+int map_test_copyable(boost::container::dtl::false_type)
 {  return 0; }
 
 template<class MyBoostMap
         ,class MyStdMap
         ,class MyBoostMultiMap
         ,class MyStdMultiMap>
-int map_test_copyable(boost::container::container_detail::true_type)
+int map_test_copyable(boost::container::dtl::true_type)
 {
    typedef typename MyBoostMap::key_type    IntType;
-   typedef container_detail::pair<IntType, IntType>         IntPairType;
+   typedef dtl::pair<IntType, IntType>         IntPairType;
    typedef typename MyStdMap::value_type  StdPairType;
 
    const int MaxElem = 50;
@@ -136,7 +136,7 @@ template<class MyBoostMap
 int map_test()
 {
    typedef typename MyBoostMap::key_type    IntType;
-   typedef container_detail::pair<IntType, IntType>         IntPairType;
+   typedef dtl::pair<IntType, IntType>         IntPairType;
    typedef typename MyStdMap::value_type  StdPairType;
    const int MaxElem = 50;
    typedef typename MyStdMap::value_type StdValueType;
@@ -615,13 +615,13 @@ int map_test()
             return 1;
 
          map_test_rebalanceable(boostmap
-            , container_detail::bool_<has_member_rebalance<MyBoostMap>::value>());
+            , dtl::bool_<has_member_rebalance<MyBoostMap>::value>());
          if(!CheckEqualContainers(boostmap, stdmap)){
             std::cout << "Error in boostmap.rebalance()" << std::endl;
             return 1;
          }
          map_test_rebalanceable(boostmultimap
-            , container_detail::bool_<has_member_rebalance<MyBoostMap>::value>());
+            , dtl::bool_<has_member_rebalance<MyBoostMap>::value>());
          if(!CheckEqualContainers(boostmultimap, stdmultimap)){
             std::cout << "Error in boostmultimap.rebalance()" << std::endl;
             return 1;
@@ -898,7 +898,7 @@ int map_test()
    }
 
    if(map_test_copyable<MyBoostMap, MyStdMap, MyBoostMultiMap, MyStdMultiMap>
-      (container_detail::bool_<boost::container::test::is_copyable<IntType>::value>())){
+      (dtl::bool_<boost::container::test::is_copyable<IntType>::value>())){
       return 1;
    }
    return 0;

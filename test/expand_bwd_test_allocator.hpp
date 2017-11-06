@@ -62,14 +62,14 @@ class expand_bwd_test_allocator
    typedef T                                    value_type;
    typedef T *                                  pointer;
    typedef const T *                            const_pointer;
-   typedef typename container_detail::add_reference
+   typedef typename dtl::add_reference
                      <value_type>::type         reference;
-   typedef typename container_detail::add_reference
+   typedef typename dtl::add_reference
                      <const value_type>::type   const_reference;
    typedef std::size_t                          size_type;
    typedef std::ptrdiff_t                       difference_type;
 
-   typedef boost::container::container_detail::version_type<expand_bwd_test_allocator, 2>   version;
+   typedef boost::container::dtl::version_type<expand_bwd_test_allocator, 2>   version;
 
    //Dummy multiallocation chain
    struct multiallocation_chain{};
@@ -95,10 +95,10 @@ class expand_bwd_test_allocator
       , m_offset(other.m_offset),  m_allocations(0){ }
 
    pointer address(reference value)
-   {  return pointer(container_detail::addressof(value));  }
+   {  return pointer(dtl::addressof(value));  }
 
    const_pointer address(const_reference value) const
-   {  return const_pointer(container_detail::addressof(value));  }
+   {  return const_pointer(dtl::addressof(value));  }
 
    pointer allocate(size_type , cvoid_ptr hint = 0)
    {  (void)hint; return 0; }

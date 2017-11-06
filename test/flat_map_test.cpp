@@ -370,13 +370,13 @@ struct GetMapContainer
       typedef flat_map< ValueType
                  , ValueType
                  , std::less<ValueType>
-                 , typename boost::container::container_detail::container_or_allocator_rebind<VoidAllocatorOrContainer, type_t>::type
+                 , typename boost::container::dtl::container_or_allocator_rebind<VoidAllocatorOrContainer, type_t>::type
                  > map_type;
 
       typedef flat_multimap< ValueType
                  , ValueType
                  , std::less<ValueType>
-                 , typename boost::container::container_detail::container_or_allocator_rebind<VoidAllocatorOrContainer, type_t>::type
+                 , typename boost::container::dtl::container_or_allocator_rebind<VoidAllocatorOrContainer, type_t>::type
                  > multimap_type;
    };
 };

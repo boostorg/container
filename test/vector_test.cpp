@@ -38,7 +38,7 @@ template class boost::container::vector
    < test::movable_and_copyable_int
    , allocator<test::movable_and_copyable_int> >;
 
-namespace container_detail {
+namespace dtl {
 
 template class vec_iterator<int*, true >;
 template class vec_iterator<int*, false>;

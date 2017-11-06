@@ -51,14 +51,14 @@ template class boost::container::deque
 
 //Function to check if both sets are equal
 template<class V1, class V2>
-bool deque_copyable_only(V1 &, V2 &, container_detail::false_type)
+bool deque_copyable_only(V1 &, V2 &, dtl::false_type)
 {
    return true;
 }
 
 //Function to check if both sets are equal
 template<class V1, class V2>
-bool deque_copyable_only(V1 &cntdeque, V2 &stddeque, container_detail::true_type)
+bool deque_copyable_only(V1 &cntdeque, V2 &stddeque, dtl::true_type)
 {
    typedef typename V1::value_type IntType;
    std::size_t size = cntdeque.size();
@@ -246,7 +246,7 @@ bool do_test()
       }
 
       if(!deque_copyable_only(cntdeque, stddeque
-                     ,container_detail::bool_<boost::container::test::is_copyable<IntType>::value>())){
+                     ,dtl::bool_<boost::container::test::is_copyable<IntType>::value>())){
          return false;
       }
 

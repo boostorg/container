@@ -441,12 +441,12 @@ struct GetSetContainer
    {
       typedef flat_set < ValueType
                        , std::less<ValueType>
-                       , typename boost::container::container_detail::container_or_allocator_rebind<VoidAllocatorOrContainer, ValueType>::type
+                       , typename boost::container::dtl::container_or_allocator_rebind<VoidAllocatorOrContainer, ValueType>::type
                         > set_type;
 
       typedef flat_multiset < ValueType
                             , std::less<ValueType>
-                            , typename boost::container::container_detail::container_or_allocator_rebind<VoidAllocatorOrContainer, ValueType>::type
+                            , typename boost::container::dtl::container_or_allocator_rebind<VoidAllocatorOrContainer, ValueType>::type
                             > multiset_type;
    };
 };

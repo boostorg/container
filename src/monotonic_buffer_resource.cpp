@@ -80,7 +80,7 @@ monotonic_buffer_resource::monotonic_buffer_resource(void* buffer, std::size_t b
    , m_current_buffer_size(buffer_size)
    , m_next_buffer_size
       (bi::detail::previous_or_equal_pow2
-         (boost::container::container_detail::max_value(buffer_size, std::size_t(initial_next_buffer_size))))
+         (boost::container::dtl::max_value(buffer_size, std::size_t(initial_next_buffer_size))))
 {  this->increase_next_buffer(); }
 
 monotonic_buffer_resource::~monotonic_buffer_resource()

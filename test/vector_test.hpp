@@ -55,13 +55,13 @@ struct vector_hash_function_capacity
 };
 
 template<class V1, class V2>
-bool vector_vector_hash_function_capacity_only(V1&, V2&, boost::container::container_detail::false_type)
+bool vector_vector_hash_function_capacity_only(V1&, V2&, boost::container::dtl::false_type)
 {
    return true;
 }
 
 template<class MyBoostVector, class MyStdVector>
-bool vector_vector_hash_function_capacity_only(MyBoostVector&boostvector, MyStdVector&stdvector, boost::container::container_detail::true_type)
+bool vector_vector_hash_function_capacity_only(MyBoostVector&boostvector, MyStdVector&stdvector, boost::container::dtl::true_type)
 {
    //deque has no reserve
    boostvector.reserve(boostvector.size()*2);
@@ -89,14 +89,14 @@ bool vector_vector_hash_function_capacity_only(MyBoostVector&boostvector, MyStdV
 
 
 template<class V1, class V2>
-bool vector_copyable_only(V1&, V2&, boost::container::container_detail::false_type)
+bool vector_copyable_only(V1&, V2&, boost::container::dtl::false_type)
 {
    return true;
 }
 
 //Function to check if both sets are equal
 template<class MyBoostVector, class MyStdVector>
-bool vector_copyable_only(MyBoostVector &boostvector, MyStdVector &stdvector, boost::container::container_detail::true_type)
+bool vector_copyable_only(MyBoostVector &boostvector, MyStdVector &stdvector, boost::container::dtl::true_type)
 {
    typedef typename MyBoostVector::value_type IntType;
    std::size_t size = boostvector.size();
@@ -403,7 +403,7 @@ int vector_test()
       }
 
       if(!vector_copyable_only(boostvector, stdvector
-                     ,container_detail::bool_<boost::container::test::is_copyable<IntType>::value>())){
+                     ,dtl::bool_<boost::container::test::is_copyable<IntType>::value>())){
          return 1;
       }
 
@@ -453,7 +453,7 @@ int vector_test()
          if(!test::CheckEqualContainers(boostvector, stdvector)) return 1;
       }
    
-      if(!vector_vector_hash_function_capacity_only(boostvector, stdvector, container_detail::bool_<vector_hash_function_capacity<MyBoostVector>::value>()))
+      if(!vector_vector_hash_function_capacity_only(boostvector, stdvector, dtl::bool_<vector_hash_function_capacity<MyBoostVector>::value>()))
          return 1;
 
       boostvector.clear();

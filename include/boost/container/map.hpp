@@ -78,9 +78,9 @@ template <class Key, class T, class Compare, class Allocator, class Options>
 #endif
 class map
    ///@cond
-   : public container_detail::tree
+   : public dtl::tree
       < std::pair<const Key, T>
-      , container_detail::select1st<Key>
+      , dtl::select1st<Key>
       , Compare, Allocator, Options>
    ///@endcond
 {
@@ -88,11 +88,11 @@ class map
    private:
    BOOST_COPYABLE_AND_MOVABLE(map)
 
-   typedef container_detail::select1st<Key>                                select_1st_t;
+   typedef dtl::select1st<Key>                                select_1st_t;
    typedef std::pair<const Key, T>                                         value_type_impl;
-   typedef container_detail::tree
+   typedef dtl::tree
       <value_type_impl, select_1st_t, Compare, Allocator, Options>         base_t;
-   typedef container_detail::pair <Key, T>                                 movable_value_type_impl;
+   typedef dtl::pair <Key, T>                                 movable_value_type_impl;
    typedef typename base_t::value_compare                                  value_compare_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -131,7 +131,7 @@ class map
       (insert_return_type_base<iterator BOOST_MOVE_I node_type>)                    insert_return_type;
 
    //allocator_type::value_type type must be std::pair<CONST Key, T>
-   BOOST_STATIC_ASSERT((container_detail::is_same<typename allocator_type::value_type, std::pair<const Key, T> >::value));
+   BOOST_STATIC_ASSERT((dtl::is_same<typename allocator_type::value_type, std::pair<const Key, T> >::value));
 
    //////////////////////////////////////////////
    //
@@ -143,8 +143,8 @@ class map
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_FORCEINLINE 
-   map() BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value &&
-                           container_detail::is_nothrow_default_constructible<Compare>::value)
+   map() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<Allocator>::value &&
+                           dtl::is_nothrow_default_constructible<Compare>::value)
       : base_t()
    {}
 
@@ -350,7 +350,7 @@ class map
    //!
    //! <b>Postcondition</b>: x is emptied.
    BOOST_CONTAINER_FORCEINLINE map(BOOST_RV_REF(map) x)
-      BOOST_NOEXCEPT_IF(boost::container::container_detail::is_nothrow_move_constructible<Compare>::value)
+      BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_constructible<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x))
    {}
 
@@ -388,7 +388,7 @@ class map
    BOOST_CONTAINER_FORCEINLINE map& operator=(BOOST_RV_REF(map) x)
       BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
                           allocator_traits_type::is_always_equal::value) &&
-                           boost::container::container_detail::is_nothrow_move_assignable<Compare>::value)
+                           boost::container::dtl::is_nothrow_move_assignable<Compare>::value)
    {  return static_cast<map&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -1014,7 +1014,7 @@ class map
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge(map<Key, T, C2, Allocator, Options>& source)
    {
-      typedef container_detail::tree
+      typedef dtl::tree
          <value_type_impl, select_1st_t, C2, Allocator, Options> base2_t;
       this->merge_unique(static_cast<base2_t&>(source));
    }
@@ -1028,7 +1028,7 @@ class map
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge(multimap<Key, T, C2, Allocator, Options>& source)
    {
-      typedef container_detail::tree
+      typedef dtl::tree
          <value_type_impl, select_1st_t, C2, Allocator, Options> base2_t;
       this->base_t::merge_unique(static_cast<base2_t&>(source));
    }
@@ -1046,7 +1046,7 @@ class map
    //! <b>Complexity</b>: Constant.
    void swap(map& x)
       BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::container_detail::is_nothrow_swappable<Compare>::value )
+                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value )
 
    //! <b>Effects</b>: erase(a.begin(),a.end()).
    //!
@@ -1219,9 +1219,9 @@ template <class Key, class T, class Compare, class Allocator, class Options>
 #endif
 class multimap
    ///@cond
-   : public container_detail::tree
+   : public dtl::tree
       < std::pair<const Key, T>
-      , container_detail::select1st<Key>
+      , dtl::select1st<Key>
       , Compare, Allocator, Options>
    ///@endcond
 {
@@ -1229,11 +1229,11 @@ class multimap
    private:
    BOOST_COPYABLE_AND_MOVABLE(multimap)
 
-   typedef container_detail::select1st<Key>                                      select_1st_t;
+   typedef dtl::select1st<Key>                                      select_1st_t;
    typedef std::pair<const Key, T>                                               value_type_impl;
-   typedef container_detail::tree
+   typedef dtl::tree
       <value_type_impl, select_1st_t, Compare, Allocator, Options>               base_t;
-   typedef container_detail::pair <Key, T>                                       movable_value_type_impl;
+   typedef dtl::pair <Key, T>                                       movable_value_type_impl;
    typedef typename base_t::value_compare                                        value_compare_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -1271,7 +1271,7 @@ class multimap
          <key_type BOOST_MOVE_I mapped_type> >)                                     node_type;
 
    //allocator_type::value_type type must be std::pair<CONST Key, T>
-   BOOST_STATIC_ASSERT((container_detail::is_same<typename allocator_type::value_type, std::pair<const Key, T> >::value));
+   BOOST_STATIC_ASSERT((dtl::is_same<typename allocator_type::value_type, std::pair<const Key, T> >::value));
 
    //////////////////////////////////////////////
    //
@@ -1283,8 +1283,8 @@ class multimap
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_FORCEINLINE multimap()
-      BOOST_NOEXCEPT_IF(container_detail::is_nothrow_default_constructible<Allocator>::value &&
-                        container_detail::is_nothrow_default_constructible<Compare>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<Allocator>::value &&
+                        dtl::is_nothrow_default_constructible<Compare>::value)
       : base_t()
    {}
 
@@ -1486,7 +1486,7 @@ class multimap
    //!
    //! <b>Postcondition</b>: x is emptied.
    BOOST_CONTAINER_FORCEINLINE multimap(BOOST_RV_REF(multimap) x)
-      BOOST_NOEXCEPT_IF(boost::container::container_detail::is_nothrow_move_constructible<Compare>::value)
+      BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_constructible<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x))
    {}
 
@@ -1518,7 +1518,7 @@ class multimap
    BOOST_CONTAINER_FORCEINLINE multimap& operator=(BOOST_RV_REF(multimap) x)
       BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
                           allocator_traits_type::is_always_equal::value) &&
-                           boost::container::container_detail::is_nothrow_move_assignable<Compare>::value)
+                           boost::container::dtl::is_nothrow_move_assignable<Compare>::value)
    {  return static_cast<multimap&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -1790,7 +1790,7 @@ class multimap
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge(multimap<Key, T, C2, Allocator, Options>& source)
    {
-      typedef container_detail::tree
+      typedef dtl::tree
          <value_type_impl, select_1st_t, C2, Allocator, Options> base2_t;
       this->base_t::merge_equal(static_cast<base2_t&>(source));
    }
@@ -1804,7 +1804,7 @@ class multimap
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge(map<Key, T, C2, Allocator, Options>& source)
    {
-      typedef container_detail::tree
+      typedef dtl::tree
          <value_type_impl, select_1st_t, C2, Allocator, Options> base2_t;
       this->base_t::merge_equal(static_cast<base2_t&>(source));
    }
@@ -1818,7 +1818,7 @@ class multimap
    //! @copydoc ::boost::container::set::swap
    void swap(multiset& x)
       BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::container_detail::is_nothrow_swappable<Compare>::value );
+                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    //! @copydoc ::boost::container::set::clear
    void clear() BOOST_NOEXCEPT_OR_NOTHROW;

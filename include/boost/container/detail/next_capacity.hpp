@@ -25,7 +25,7 @@
 
 namespace boost {
 namespace container {
-namespace container_detail {
+namespace dtl {
 
 enum NextCapacityOption { NextCapacityDouble, NextCapacity60Percent };
 
@@ -68,7 +68,7 @@ struct next_capacity_calculator<SizeType, NextCapacity60Percent>
    }
 };
 
-}  //namespace container_detail {
+}  //namespace dtl {
 }  //namespace container {
 }  //namespace boost {
 

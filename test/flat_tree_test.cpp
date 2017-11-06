@@ -17,14 +17,14 @@
 
 using namespace boost::container;
 
-typedef boost::container::container_detail::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> pair_t;
+typedef boost::container::dtl::pair<test::movable_and_copyable_int, test::movable_and_copyable_int> pair_t;
 
 namespace boost {
 namespace container {
 
 //Explicit instantiation to detect compilation errors
 
-namespace container_detail {
+namespace dtl {
 
 template class flat_tree
    < pair_t
@@ -89,7 +89,7 @@ template class flat_tree
    , static_vector<test::movable_and_copyable_int, 10>
 >;
 
-}  //container_detail {
+}  //dtl {
 }} //boost::container
 
 #if (__cplusplus > 201103L)
@@ -97,7 +97,7 @@ template class flat_tree
 
 namespace boost{
 namespace container{
-namespace container_detail{
+namespace dtl{
 
 template class flat_tree
 < test::movable_and_copyable_int
@@ -113,7 +113,7 @@ template class flat_tree
    , std::vector<pair_t>
 >;
 
-}  //container_detail {
+}  //dtl {
 }} //boost::container
 
 #endif
