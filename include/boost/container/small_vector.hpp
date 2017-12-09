@@ -282,7 +282,7 @@ class small_vector_allocator
    pointer internal_storage() const
    {
       typedef typename Allocator::value_type                                              value_type;
-      typedef dtl::vector_alloc_holder< small_vector_allocator<Allocator> >  vector_alloc_holder_t;
+      typedef vector_alloc_holder< small_vector_allocator<Allocator> >                    vector_alloc_holder_t;
       typedef vector<value_type, small_vector_allocator<Allocator> >                      vector_base;
       typedef small_vector_base<value_type, Allocator>                                    derived_type;
       //
