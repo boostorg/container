@@ -34,6 +34,7 @@
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/node_alloc_holder.hpp>
 #include <boost/container/detail/type_traits.hpp>
+#include <boost/container/detail/value_functors.hpp>
 // intrusive
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/intrusive/slist.hpp>
@@ -1165,7 +1166,7 @@ class slist
    //! <b>Note</b>: The relative order of elements that are not removed is unchanged,
    //!   and iterators to elements that are not removed remain valid.
    void unique()
-   {  this->unique(value_equal());  }
+   {  this->unique(value_equal_t());  }
 
    //! <b>Effects</b>: Removes adjacent duplicate elements or adjacent
    //!   elements that satisfy some binary predicate from the list.
@@ -1195,7 +1196,7 @@ class slist
    //! <b>Complexity</b>: This function is linear time: it performs at most
    //!   size() + x.size() - 1 comparisons.
    void merge(slist & x)
-   {  this->merge(x, value_less()); }
+   {  this->merge(x, value_less_t()); }
 
    //! <b>Requires</b>: The lists x and *this must be distinct.
    //!
@@ -1261,7 +1262,7 @@ class slist
    //! <b>Complexity</b>: The number of comparisons is approximately N log N, where N
    //!   is the list's size.
    void sort()
-   {  this->sort(value_less());  }
+   {  this->sort(value_less_t());  }
 
    //! <b>Effects</b>: This function sorts the list *this according to std::less<value_type>.
    //!   The sort is stable, that is, the relative order of equivalent elements is preserved.
@@ -1625,28 +1626,9 @@ class slist
    };
 
    //Functors for member algorithm defaults
-   struct value_less
-   {
-      bool operator()(const value_type &a, const value_type &b) const
-         {  return a < b;  }
-   };
+   typedef value_less<value_type>   value_less_t;
+   typedef value_equal<value_type>  value_equal_t;
 
-   struct value_equal
-   {
-      bool operator()(const value_type &a, const value_type &b) const
-         {  return a == b;  }
-   };
-
-   struct value_equal_to_this
-   {
-      explicit value_equal_to_this(const value_type &ref)
-         : m_ref(ref){}
-
-      bool operator()(const value_type &val) const
-         {  return m_ref == val;  }
-
-      const value_type &m_ref;
-   };
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 

@@ -282,7 +282,8 @@ class small_vector_allocator
    pointer internal_storage() const
    {
       typedef typename Allocator::value_type                                              value_type;
-      typedef vector_alloc_holder< small_vector_allocator<Allocator> >                    vector_alloc_holder_t;
+      typedef typename allocator_traits_type::size_type                                   size_type;
+      typedef vector_alloc_holder< small_vector_allocator<Allocator>, size_type >         vector_alloc_holder_t;
       typedef vector<value_type, small_vector_allocator<Allocator> >                      vector_base;
       typedef small_vector_base<value_type, Allocator>                                    derived_type;
       //
@@ -350,7 +351,6 @@ class small_vector_base
    typedef small_vector_allocator<SecondaryAllocator>             allocator_type;
 
    protected:
-   typedef typename base_type::initial_capacity_t initial_capacity_t;
 
    BOOST_CONTAINER_FORCEINLINE explicit small_vector_base(initial_capacity_t, std::size_t initial_capacity)
       : base_type(initial_capacity_t(), this->internal_storage(), initial_capacity)
@@ -481,7 +481,6 @@ class small_vector : public small_vector_base<T, Allocator>
 
    BOOST_COPYABLE_AND_MOVABLE(small_vector)
 
-   typedef typename base_type::initial_capacity_t initial_capacity_t;
    typedef allocator_traits<typename base_type::allocator_type> allocator_traits_type;
 
    public:

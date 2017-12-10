@@ -60,7 +60,7 @@ namespace container {
 //! \tparam Compare is the comparison functor used to order keys
 //! \tparam Allocator is the allocator to be used to allocate memory for this container
 //! \tparam Options is an packed option type generated using using boost::container::tree_assoc_options.
-template <class Key, class Compare = std::less<Key>, class Allocator = new_allocator<Key>, class Options = tree_assoc_defaults >
+template <class Key, class Compare = std::less<Key>, class Allocator = new_allocator<Key>, class Options = void>
 #else
 template <class Key, class Compare, class Allocator, class Options>
 #endif

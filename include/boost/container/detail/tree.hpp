@@ -429,24 +429,39 @@ struct key_node_compare
    {  return this->key_comp()(key_of_value()(nonkey1.get_data()), key_of_value()(nonkey2.get_data()));  }
 };
 
-template <class T, class KeyOfValue,
-          class Compare, class Allocator,
-          class Options = tree_assoc_defaults>
+template<class Options>
+struct get_tree_opt
+{
+   typedef Options type;
+};
+
+template<>
+struct get_tree_opt<void>
+{
+   typedef tree_assoc_defaults type;
+};
+
+template <class T, class KeyOfValue, class Compare, class Allocator, class Options>
 class tree
    : public dtl::node_alloc_holder
       < Allocator
       , typename dtl::intrusive_tree_type
          < Allocator, tree_value_compare
             <typename allocator_traits<Allocator>::pointer, Compare, KeyOfValue>
-         , Options::tree_type, Options::optimize_size>::type
+         , get_tree_opt<Options>::type::tree_type
+         , get_tree_opt<Options>::type::optimize_size
+         >::type
       >
 {
    typedef tree_value_compare
       < typename allocator_traits<Allocator>::pointer
       , Compare, KeyOfValue>                                ValComp;
+   typedef typename get_tree_opt<Options>::type             options_type;
    typedef typename dtl::intrusive_tree_type
-         < Allocator, ValComp, Options::tree_type
-         , Options::optimize_size>::type                    Icont;
+         < Allocator, ValComp
+         , options_type::tree_type
+         , options_type::optimize_size
+         >::type                                            Icont;
    typedef dtl::node_alloc_holder
       <Allocator, Icont>                                    AllocHolder;
    typedef typename AllocHolder::NodePtr                    NodePtr;
@@ -461,7 +476,7 @@ class tree
    typedef typename Icont::const_iterator                   iconst_iterator;
    typedef dtl::allocator_destroyer<NodeAlloc> Destroyer;
    typedef typename AllocHolder::alloc_version              alloc_version;
-   typedef intrusive_tree_proxy<Options::tree_type>         intrusive_tree_proxy_t;
+   typedef intrusive_tree_proxy<options_type::tree_type>    intrusive_tree_proxy_t;
 
    BOOST_COPYABLE_AND_MOVABLE(tree)
 

@@ -2,8 +2,8 @@
 <VisualStudioProject
    ProjectType="Visual C++"
    Version="7.10"
-   Name="doc_extended_allocators"
-   ProjectGUID="{5CE11C83-FA84-295A-4FA2-D7921A0BAB02}"
+   Name="doc_custom_vector"
+   ProjectGUID="{5E11C8B3-A8C4-4A2F-295A-7951A0EDAA02}"
    Keyword="Win32Proj">
    <Platforms>
       <Platform
@@ -13,7 +13,7 @@
       <Configuration
          Name="Debug|Win32"
          OutputDirectory="../../Bin/Win32/Debug"
-         IntermediateDirectory="Debug/doc_extended_allocators"
+         IntermediateDirectory="Debug/doc_custom_vector"
          ConfigurationType="1"
          CharacterSet="2">
          <Tool
@@ -36,11 +36,11 @@
          <Tool
             Name="VCLinkerTool"
             AdditionalDependencies="winmm.lib"
-            OutputFile="$(OutDir)/doc_extended_allocators_d.exe"
+            OutputFile="$(OutDir)/doc_custom_vector_d.exe"
             LinkIncremental="1"
             AdditionalLibraryDirectories="../../../../stage/lib"
             GenerateDebugInformation="TRUE"
-            ProgramDatabaseFile="$(OutDir)/doc_extended_allocators.pdb"
+            ProgramDatabaseFile="$(OutDir)/doc_custom_vector.pdb"
             SubSystem="1"
             TargetMachine="1"
 				FixedBaseAddress="1"
@@ -69,7 +69,7 @@
       <Configuration
          Name="Release|Win32"
          OutputDirectory="../../Bin/Win32/Release"
-         IntermediateDirectory="Release/doc_extended_allocators"
+         IntermediateDirectory="Release/doc_custom_vector"
          ConfigurationType="1"
          CharacterSet="2">
          <Tool
@@ -88,7 +88,7 @@
          <Tool
             Name="VCLinkerTool"
             AdditionalDependencies="winmm.lib"
-            OutputFile="$(OutDir)/doc_extended_allocators.exe"
+            OutputFile="$(OutDir)/doc_custom_vector.exe"
             LinkIncremental="1"
             AdditionalLibraryDirectories="../../../../stage/lib"
             GenerateDebugInformation="TRUE"
@@ -125,9 +125,9 @@
       <Filter
          Name="Source Files"
          Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
-         UniqueIdentifier="{41737BFF-1543-AC75-62A0-35A32A2D72AF}">
+         UniqueIdentifier="{4F4737BC-032A-5430-AC75-A32542AA2D1F}">
          <File
-            RelativePath="..\..\example\doc_extended_allocators.cpp">
+            RelativePath="..\..\example\doc_custom_vector.cpp">
          </File>
       </Filter>
    </Files>

@@ -108,6 +108,12 @@ namespace boost {
 namespace container {
 namespace dtl {
 
+///////////////////////////////////////
+//
+// Helper functions to merge elements
+//
+///////////////////////////////////////
+
 BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(stored_allocator_type)
 
 template<class SequenceContainer, class Iterator, class Compare>
@@ -118,23 +124,25 @@ BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_equal
 }
 
 template<class SequenceContainer, class Iterator, class Compare>
-BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_equal_non_merge_member
+void aux_flat_tree_merge_equal_non_merge_member  //is_contiguous_container == true
    (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, dtl::true_)
 {
    typedef typename SequenceContainer::iterator    iterator;
    typedef typename SequenceContainer::value_type  value_type;
+   typedef typename SequenceContainer::size_type   size_type;
 
    iterator const it = dest.insert( dest.end(), first, last );
    value_type *const braw = boost::movelib::iterator_to_raw_pointer(dest.begin());
    value_type *const iraw = boost::movelib::iterator_to_raw_pointer(it);
    value_type *const eraw = boost::movelib::iterator_to_raw_pointer(dest.end());
-   value_type *const sraw = boost::movelib::iterator_to_raw_pointer(dest.begin()+dest.size());
-   boost::movelib::adaptive_sort(iraw, eraw, comp, sraw, dest.capacity());
-   boost::movelib::adaptive_merge(braw, iraw, eraw, comp, sraw, dest.capacity()- dest.size());
+   value_type *const sraw = boost::movelib::iterator_to_raw_pointer(dest.begin())+dest.size();
+   size_type const sraw_size = dest.capacity()- dest.size();
+   boost::movelib::adaptive_sort(iraw, eraw, comp, sraw, sraw_size);
+   boost::movelib::adaptive_merge(braw, iraw, eraw, comp, sraw, sraw_size);
 }
 
 template<class SequenceContainer, class Iterator, class Compare>
-BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_equal_non_merge_member
+void aux_flat_tree_merge_equal_non_merge_member  //is_contiguous_container == false
    (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, dtl::false_)
 {
    typedef typename SequenceContainer::iterator    iterator;
@@ -145,22 +153,22 @@ BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_equal_non_merge_member
 }
 
 template<class SequenceContainer, class Iterator, class Compare>
-BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_equal
+BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_equal   //has_merge_unique == false
    (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, dtl::false_)
 {
-   (flat_tree_merge_equal_non_merge_member)( dest, first, last, comp
-                                           , dtl::bool_<is_contiguous_container<SequenceContainer>::value>());
+   (aux_flat_tree_merge_equal_non_merge_member)
+      ( dest, first, last, comp, dtl::bool_<is_contiguous_container<SequenceContainer>::value>());
 }
 
 template<class SequenceContainer, class Iterator, class Compare>
-BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_unique
+BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_unique  //has_merge_unique == true
    (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, dtl::true_)
 {
    dest.merge_unique(first, last, comp);
 }
 
 template<class SequenceContainer, class Iterator, class Compare>
-BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_unique
+BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_unique  //has_merge_unique == false
    (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, dtl::false_)
 {
    (flat_tree_merge_equal)(dest, first, last, comp, dtl::false_());
@@ -170,7 +178,7 @@ BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_unique
 
 template<class SequenceContainer, class Iterator>
 BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::size_type
-   flat_tree_index_of
+   flat_tree_index_of   // has_index_of == true
       (SequenceContainer& cont, Iterator p, dtl::true_)
 {
    return cont.index_of(p);
@@ -178,7 +186,7 @@ BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::size_type
 
 template<class SequenceContainer, class Iterator>
 BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::size_type
-   flat_tree_index_of
+   flat_tree_index_of   // has_index_of == false
       (SequenceContainer& cont, Iterator p, dtl::false_)
 {
    typedef typename SequenceContainer::size_type size_type;
@@ -187,7 +195,7 @@ BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::size_type
 
 template<class Iterator, class SequenceContainer>
 BOOST_CONTAINER_FORCEINLINE Iterator
-   flat_tree_nth
+   flat_tree_nth  // has_nth == true
       (SequenceContainer& cont, typename SequenceContainer::size_type n, dtl::true_)
 {
    return cont.nth(n);
@@ -195,7 +203,7 @@ BOOST_CONTAINER_FORCEINLINE Iterator
 
 template<class Iterator, class SequenceContainer>
 BOOST_CONTAINER_FORCEINLINE Iterator
-   flat_tree_nth
+   flat_tree_nth  // has_nth == false
       (SequenceContainer& cont, typename SequenceContainer::size_type n, dtl::false_)
 {
    return cont.begin()+ n;
@@ -203,7 +211,7 @@ BOOST_CONTAINER_FORCEINLINE Iterator
 
 template<class SequenceContainer>
 BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::stored_allocator_type &
-   flat_tree_get_stored_allocator
+   flat_tree_get_stored_allocator   // has_get_stored_allocator == true
       (SequenceContainer& cont, dtl::true_)
 {
    return cont.get_stored_allocator();
@@ -211,7 +219,7 @@ BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::stored_allocator_type &
 
 template<class SequenceContainer>
 BOOST_CONTAINER_FORCEINLINE const typename SequenceContainer::stored_allocator_type &
-   flat_tree_get_stored_allocator
+   flat_tree_get_stored_allocator   // has_get_stored_allocator == true
       (const SequenceContainer& cont, dtl::true_)
 {
    return cont.get_stored_allocator();
@@ -219,14 +227,15 @@ BOOST_CONTAINER_FORCEINLINE const typename SequenceContainer::stored_allocator_t
 
 template<class SequenceContainer>
 BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::allocator_type
-   flat_tree_get_stored_allocator
+   flat_tree_get_stored_allocator   // has_get_stored_allocator == false
       (SequenceContainer& cont, dtl::false_)
 {
    return cont.get_allocator();
 }
 
 template<class SequenceContainer, class Compare>
-void flat_tree_adopt_sequence_equal(SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, dtl::true_)
+void flat_tree_adopt_sequence_equal // is_contiguous_container == true
+   (SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, dtl::true_)
 {
    tseq.clear();
    boost::movelib::adaptive_sort
@@ -239,14 +248,16 @@ void flat_tree_adopt_sequence_equal(SequenceContainer &tseq, BOOST_RV_REF(Sequen
 }
 
 template<class SequenceContainer, class Compare>
-void flat_tree_adopt_sequence_equal(SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, dtl::false_)
+void flat_tree_adopt_sequence_equal // is_contiguous_container == false
+   (SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, dtl::false_)
 {
    boost::movelib::adaptive_sort(seq.begin(), seq.end(), comp);
    tseq = boost::move(seq);
 }
 
 template<class SequenceContainer, class Compare>
-void flat_tree_adopt_sequence_unique(SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, dtl::true_)
+void flat_tree_adopt_sequence_unique// is_contiguous_container == true
+   (SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, dtl::true_)
 {
    boost::movelib::adaptive_sort
       ( boost::movelib::iterator_to_raw_pointer(seq.begin())
@@ -261,7 +272,8 @@ void flat_tree_adopt_sequence_unique(SequenceContainer &tseq, BOOST_RV_REF(Seque
 }
 
 template<class SequenceContainer, class Compare>
-void flat_tree_adopt_sequence_unique(SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, dtl::false_)
+void flat_tree_adopt_sequence_unique// is_contiguous_container == false
+   (SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, dtl::false_)
 {
    boost::movelib::adaptive_sort(seq.begin(), seq.end(), comp);
    seq.erase(boost::movelib::unique
@@ -270,31 +282,37 @@ void flat_tree_adopt_sequence_unique(SequenceContainer &tseq, BOOST_RV_REF(Seque
 }
 
 template<class SequenceContainer>
-BOOST_CONTAINER_FORCEINLINE void
+BOOST_CONTAINER_FORCEINLINE void // has_reserve == true
    flat_tree_reserve(SequenceContainer &tseq, typename SequenceContainer::size_type cap, dtl::true_)
 {
    tseq.reserve(cap);
 }
 
 template<class SequenceContainer>
-BOOST_CONTAINER_FORCEINLINE void
+BOOST_CONTAINER_FORCEINLINE void // has_reserve == false
    flat_tree_reserve(SequenceContainer &, typename SequenceContainer::size_type, dtl::false_)
 {
 }
 
-template<class SequenceContainer>
+template<class SequenceContainer>   // has_capacity == true
 BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::size_type
    flat_tree_capacity(const SequenceContainer &tseq, dtl::true_)
 {
    return tseq.capacity();
 }
 
-template<class SequenceContainer>
+template<class SequenceContainer>   // has_capacity == false
 BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::size_type
    flat_tree_capacity(const SequenceContainer &tseq, dtl::false_)
 {
    return tseq.size();
 }
+
+///////////////////////////////////////
+//
+//       flat_tree_value_compare
+//
+///////////////////////////////////////
 
 template<class Compare, class Value, class KeyOfValue>
 class flat_tree_value_compare
@@ -324,19 +342,12 @@ class flat_tree_value_compare
    Compare &get_comp()
       {  return *this;  }
 };
-/*
-template<class Pointer>
-struct get_flat_tree_iterators
-{
-   typedef typename boost::container::dtl::
-      vec_iterator<Pointer, false>                             iterator;
-   typedef typename boost::container::dtl::
-      vec_iterator<Pointer, true >                             const_iterator;
-   typedef boost::container::reverse_iterator<iterator>        reverse_iterator;
-   typedef boost::container::reverse_iterator<const_iterator>  const_reverse_iterator;
-};
-*/
 
+///////////////////////////////////////
+//
+//       select_container_type
+//
+///////////////////////////////////////
 template < class Value, class AllocatorOrContainer
          , bool = boost::container::dtl::is_container<AllocatorOrContainer>::value >
 struct select_container_type
@@ -350,6 +361,12 @@ struct select_container_type<Value, AllocatorOrContainer, false>
    typedef boost::container::vector<Value, AllocatorOrContainer> type;
 };
 
+
+///////////////////////////////////////
+//
+//          flat_tree
+//
+///////////////////////////////////////
 template <class Value, class KeyOfValue,
           class Compare, class AllocatorOrContainer>
 class flat_tree

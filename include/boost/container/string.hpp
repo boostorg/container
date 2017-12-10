@@ -292,10 +292,8 @@ class basic_string_base
 
    size_type next_capacity(size_type additional_objects) const
    {
-      return next_capacity_calculator
-         <size_type, NextCapacityDouble /*NextCapacity60Percent*/>::
-            get( allocator_traits_type::max_size(this->alloc())
-               , this->priv_storage(), additional_objects );
+      return growth_factor_100()
+            ( this->priv_storage(), additional_objects, allocator_traits_type::max_size(this->alloc()));
    }
 
    void deallocate(pointer p, size_type n)
