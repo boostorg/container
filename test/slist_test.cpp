@@ -135,6 +135,33 @@ bool test_support_for_initializer_list()
    return true;
 }
 
+bool test_for_splice()
+{
+   {
+      slist<int> list1; list1.push_front(3); list1.push_front(2); list1.push_front(1); list1.push_front(0);
+      slist<int> list2;
+      slist<int> expected1; expected1.push_front(3); expected1.push_front(2);  expected1.push_front(0);
+      slist<int> expected2; expected2.push_front(1);
+
+      list2.splice(list2.begin(), list1, ++list1.begin());
+
+      if (!(expected1 == list1 && expected2 == list2))
+         return false;
+   }
+   {
+      slist<int> list1; list1.push_front(3); list1.push_front(2); list1.push_front(1); list1.push_front(0);
+      slist<int> list2;
+      slist<int> expected1;
+      slist<int> expected2; expected2.push_front(3); expected2.push_front(2); expected2.push_front(1); expected2.push_front(0);
+
+      list2.splice(list2.begin(), list1, list1.begin(), list1.end());
+
+      if (!(expected1 == list1 && expected2 == list2))
+         return false;
+   }
+   return true;
+}
+
 struct boost_container_slist;
 
 namespace boost {
@@ -205,6 +232,12 @@ int main ()
    //    Initializer lists
    ////////////////////////////////////
    if(!test_support_for_initializer_list())
+      return 1;
+
+   ////////////////////////////////////
+   //    Splice testing
+   ////////////////////////////////////
+   if(!test_for_splice())
       return 1;
 
    ////////////////////////////////////

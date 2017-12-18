@@ -1471,7 +1471,7 @@ class slist
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of this
    //!   list. Iterators of this list and all the references are not invalidated.
    void splice(const_iterator p, slist& x, const_iterator i) BOOST_NOEXCEPT_OR_NOTHROW
-   {  this->splice_after(this->previous(p), x, this->previous(i));  }
+   {  this->splice_after(this->previous(p), x, x.previous(i));  }
 
    //! <b>Requires</b>: p must point to an element contained
    //!   by this list. i must point to an element contained in list x.
@@ -1505,7 +1505,7 @@ class slist
    //! <b>Note</b>: Iterators of values obtained from list x now point to elements of this
    //!   list. Iterators of this list and all the references are not invalidated.
    void splice(const_iterator p, slist& x, const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW
-   {  this->splice_after(this->previous(p), x, this->previous(first), this->previous(last));  }
+   {  this->splice_after(this->previous(p), x, x.previous(first), x.previous(last));  }
 
    //! <b>Requires</b>: p must point to an element contained
    //!   by this list. first and last must point to elements contained in list x.
