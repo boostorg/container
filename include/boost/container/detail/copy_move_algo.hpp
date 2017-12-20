@@ -65,17 +65,15 @@ struct are_elements_contiguous< ::boost::move_iterator<It> >
    : are_elements_contiguous<It>
 {};
 
+}  //namespace dtl {
+
 /////////////////////////
 //    predeclarations
 /////////////////////////
 
-template<class Pointer>
-class vector_iterator;
+template <class Pointer, bool IsConst>
+class vec_iterator;
 
-template<class Pointer>
-class vector_const_iterator;
-
-}  //namespace dtl {
 }  //namespace container {
 
 namespace interprocess {
@@ -93,14 +91,8 @@ namespace dtl {
 //vector_[const_]iterator
 /////////////////////////
 
-template<class Pointer>
-struct are_elements_contiguous<boost::container::dtl::vector_iterator<Pointer> >
-{
-   static const bool value = true;
-};
-
-template<class Pointer>
-struct are_elements_contiguous<boost::container::dtl::vector_const_iterator<Pointer> >
+template <class Pointer, bool IsConst>
+struct are_elements_contiguous<boost::container::vec_iterator<Pointer, IsConst> >
 {
    static const bool value = true;
 };
