@@ -27,25 +27,17 @@ std::size_t allocation_count = 0;
 #pragma warning (disable : 4290)
 #endif
 
-#if defined(BOOST_GCC) && (BOOST_GCC >= 40700) && (__cplusplus >= 201103L)
-#define BOOST_CONTAINER_NEW_EXCEPTION_SPECIFIER
-#define BOOST_CONTAINER_DELETE_EXCEPTION_SPECIFIER noexcept
-#else
-#define BOOST_CONTAINER_NEW_EXCEPTION_SPECIFIER    throw(std::bad_alloc)
-#define BOOST_CONTAINER_DELETE_EXCEPTION_SPECIFIER throw()
-#endif
-
 #if defined(BOOST_GCC) && (BOOST_GCC >= 50000)
 #pragma GCC diagnostic ignored "-Wsized-deallocation"
 #endif
 
-void* operator new[](std::size_t count) BOOST_CONTAINER_NEW_EXCEPTION_SPECIFIER
+void* operator new[](std::size_t count) BOOST_NOEXCEPT_IF(false)
 {
    ++allocation_count;
    return std::malloc(count);
 }
 
-void operator delete[](void *p) BOOST_CONTAINER_DELETE_EXCEPTION_SPECIFIER
+void operator delete[](void *p) BOOST_NOEXCEPT
 {
    --allocation_count;
    return std::free(p);
