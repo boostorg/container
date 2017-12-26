@@ -1113,8 +1113,7 @@ class flat_map
    //! <b>Effects</b>: inserts each element from the range [first,last) if and only
    //!   if there is no element with key equivalent to the key of that element.
    //!
-   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
-   //!   search time plus N*size() insertion time.
+   //! <b>Complexity</b>: N log(size()+N).
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    template <class InputIterator>
@@ -1130,8 +1129,7 @@ class flat_map
    //!   if there is no element with key equivalent to the key of that element. This
    //!   function is more efficient than the normal range creation for ordered ranges.
    //!
-   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
-   //!   search time plus N*size() insertion time.
+   //! <b>Complexity</b>: Linear.
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    //!
@@ -1144,8 +1142,7 @@ class flat_map
    //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()) if and only
    //!   if there is no element with key equivalent to the key of that element.
    //!
-   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from il.first() to il.end())
-   //!   search time plus N*size() insertion time.
+   //! <b>Complexity</b>: N log(N).
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    BOOST_CONTAINER_FORCEINLINE void insert(std::initializer_list<value_type> il)
@@ -1161,8 +1158,7 @@ class flat_map
    //!   if there is no element with key equivalent to the key of that element. This
    //!   function is more efficient than the normal range creation for ordered ranges.
    //!
-   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
-   //!   search time plus N*size() insertion time.
+   //! <b>Complexity</b>: Linear.
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    //!
@@ -2262,8 +2258,7 @@ class flat_multimap
    //!
    //! <b>Effects</b>: inserts each element from the range [first,last) .
    //!
-   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
-   //!   search time plus N*size() insertion time.
+   //! <b>Complexity</b>: N log(N).
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    template <class InputIterator>
@@ -2278,8 +2273,7 @@ class flat_multimap
    //!   if there is no element with key equivalent to the key of that element. This
    //!   function is more efficient than the normal range creation for ordered ranges.
    //!
-   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
-   //!   search time plus N*size() insertion time.
+   //! <b>Complexity</b>: Linear.
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    //!
@@ -2291,8 +2285,7 @@ class flat_multimap
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()) .
    //!
-   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
-   //!   search time plus N*size() insertion time.
+   //! <b>Complexity</b>: N log(N).
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    BOOST_CONTAINER_FORCEINLINE void insert(std::initializer_list<value_type> il)
@@ -2307,8 +2300,7 @@ class flat_multimap
    //!   if there is no element with key equivalent to the key of that element. This
    //!   function is more efficient than the normal range creation for ordered ranges.
    //!
-   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
-   //!   search time plus N*size() insertion time.
+   //! <b>Complexity</b>: Linear.
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    //!

@@ -60,6 +60,7 @@
 #include <boost/move/algo/adaptive_merge.hpp>
 #include <boost/move/algo/unique.hpp>
 #include <boost/move/algo/predicate.hpp>
+#include <boost/move/algo/detail/set_difference.hpp>
 // other
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/assert.hpp>
@@ -74,6 +75,7 @@ namespace boost {
 namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 
 template <class Pointer, bool IsConst>
 class vec_iterator
@@ -208,40 +210,6 @@ struct vector_insert_ordered_cursor
 
    BiDirPosConstIt last_position_it;
    BiDirValueIt last_value_it;
-};
-
-template<class T, class SizeType, class BiDirValueIt, class Comp>
-struct vector_merge_cursor
-{
-   typedef SizeType  size_type;
-   typedef typename iterator_traits<BiDirValueIt>::reference      reference;
-
-   BOOST_CONTAINER_FORCEINLINE vector_merge_cursor(T *pbeg, T *plast, BiDirValueIt valueit, Comp &cmp)
-      : m_pbeg(pbeg), m_pcur(--plast), m_valueit(valueit), m_cmp(cmp)
-   {}
-
-   void operator --()
-   {
-      --m_valueit;
-      const T &t = *m_valueit;
-      while((m_pcur + 1) != m_pbeg){
-         if(!m_cmp(t, *m_pcur)){
-            break;
-         }
-         --m_pcur;
-      }
-   }
-
-   BOOST_CONTAINER_FORCEINLINE size_type get_pos() const
-   {  return static_cast<size_type>((m_pcur + 1) - m_pbeg);  }
-
-   BOOST_CONTAINER_FORCEINLINE reference get_val()
-   {  return *m_valueit;  }
-
-   T *const m_pbeg;
-   T *m_pcur;
-   BiDirValueIt m_valueit;
-   Comp &m_cmp;
 };
 
 struct initial_capacity_t{};
@@ -508,10 +476,14 @@ struct vector_alloc_holder
    BOOST_CONTAINER_FORCEINLINE const Allocator &alloc() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this;  }
 
-   const pointer   &start() const     BOOST_NOEXCEPT_OR_NOTHROW {  return m_start;  }
-       size_type capacity() const     BOOST_NOEXCEPT_OR_NOTHROW {  return m_capacity;  }
-   void start(const pointer &p)       BOOST_NOEXCEPT_OR_NOTHROW {  m_start = p;  }
-   void capacity(const size_type &c)  BOOST_NOEXCEPT_OR_NOTHROW {  BOOST_ASSERT( c <= stored_size_type(-1)); m_capacity = c;  }
+   BOOST_CONTAINER_FORCEINLINE const pointer   &start() const     BOOST_NOEXCEPT_OR_NOTHROW
+      {  return m_start;  }
+   BOOST_CONTAINER_FORCEINLINE       size_type capacity() const     BOOST_NOEXCEPT_OR_NOTHROW
+      {  return m_capacity;  }
+   BOOST_CONTAINER_FORCEINLINE void start(const pointer &p)       BOOST_NOEXCEPT_OR_NOTHROW
+      {  m_start = p;  }
+   BOOST_CONTAINER_FORCEINLINE void capacity(const size_type &c)  BOOST_NOEXCEPT_OR_NOTHROW
+      {  BOOST_ASSERT( c <= stored_size_type(-1)); m_capacity = c;  }
 
    private:
    void priv_first_allocation(size_type cap)
@@ -2191,21 +2163,45 @@ class vector
       return this->priv_insert_ordered_at(element_count, inserter_t(last_position_it, last_value_it));
    }
 
-   template<class BidirIt>
-   BOOST_CONTAINER_FORCEINLINE void merge(BidirIt first, BidirIt last)
+   template<class InputIt>
+   BOOST_CONTAINER_FORCEINLINE void merge(InputIt first, InputIt last)
    {  this->merge(first, last, value_less_t());  }
 
-   template<class BidirIt, class Compare>
-   BOOST_CONTAINER_FORCEINLINE void merge(BidirIt first, BidirIt last, Compare comp)
-   {  this->priv_merge(dtl::false_type(), first, last, comp);  }
+   template<class InputIt, class Compare>
+   BOOST_CONTAINER_FORCEINLINE void merge(InputIt first, InputIt last, Compare comp)
+   {
+      size_type const s = this->size();
+      size_type const c = this->capacity();
+      size_type n = 0;
+      size_type const free_cap = c - s;
+      //If not input iterator and new elements don't fit in the remaining capacity, merge in new buffer
+      if(!dtl::is_input_iterator<InputIt>::value &&
+         free_cap < (n = static_cast<size_type>(boost::container::iterator_distance(first, last)))){
+         this->priv_merge_in_new_buffer(first, n, comp, alloc_version());
+      }
+      else{
+         iterator pos(this->insert(this->cend(), first, last));
+         T *const raw_beg = this->priv_raw_begin();
+         T *const raw_end = this->priv_raw_end();
+         T *const raw_pos = raw_beg + s;
+         boost::movelib::adaptive_merge(raw_beg, raw_pos, raw_end, comp, raw_end, free_cap - n);
+      }
+   }
 
-   template<class BidirIt>
-   BOOST_CONTAINER_FORCEINLINE void merge_unique(BidirIt first, BidirIt last)
-   {  this->priv_merge(dtl::true_type(),  first, last, value_less_t());  }
+   template<class InputIt>
+   BOOST_CONTAINER_FORCEINLINE void merge_unique(InputIt first, InputIt last)
+   {  this->merge_unique(first, last, value_less_t());  }
 
-   template<class BidirIt, class Compare>
-   BOOST_CONTAINER_FORCEINLINE void merge_unique(BidirIt first, BidirIt last, Compare comp)
-   {  this->priv_merge(dtl::true_type(),  first, last, comp);  }
+   template<class InputIt, class Compare>
+   BOOST_CONTAINER_FORCEINLINE void merge_unique(InputIt first, InputIt last, Compare comp)
+   {
+      size_type const s = this->size();
+      this->priv_set_difference_back(first, last, comp);
+      T *const raw_beg = this->priv_raw_begin();
+      T *const raw_end = this->priv_raw_end();
+      T *raw_pos = raw_beg + s;
+      boost::movelib::adaptive_merge(raw_beg, raw_pos, raw_end, comp, raw_end, this->capacity() - this->size());
+   }
 
    private:
    template<class PositionValue>
@@ -2265,43 +2261,48 @@ class vector
       }
    }
 
-   template<class UniqueBool, class BidirIt, class Compare>
-   void priv_merge(UniqueBool, BidirIt first, BidirIt last, Compare comp)
+   template<class InputIt, class Compare>
+   void priv_set_difference_back(InputIt first1, InputIt last1, Compare comp)
    {
-      size_type const n = static_cast<size_type>(boost::container::iterator_distance(first, last));
-      size_type const s = this->size();
-      if(BOOST_LIKELY(s)){
-         size_type const c = this->capacity();
-         size_type const free_c = (c - s);
-         //Use a new buffer if current one is too small for new elements
-         if(free_c < n){
-            this->priv_merge_in_new_buffer(UniqueBool(), first, n, comp, alloc_version());
+      T * old_first2 = this->priv_raw_begin();
+      T * first2 = old_first2;
+      T * last2  = this->priv_raw_end();
+
+      while (first1 != last1) {
+         if (first2 == last2){
+            this->insert(this->cend(), first1, last1);
+            return;
          }
-         else{
-            T *raw_pos = boost::movelib::iterator_to_raw_pointer(this->insert(this->cend(), first, last));
-            T *raw_beg = this->priv_raw_begin();
-            T *raw_end = this->priv_raw_end();
-            boost::movelib::adaptive_merge(raw_beg, raw_pos, raw_end, comp, raw_end, free_c - n);
-            if(UniqueBool::value){
-               size_type const count =
-                  static_cast<size_type>(raw_end - boost::movelib::unique(raw_beg, raw_end, boost::movelib::negate<Compare>(comp)));
-               this->priv_destroy_last_n(count);
+
+         if (comp(*first1, *first2)) {
+            this->emplace_back(*first1);
+            //Reallocation happened, update range
+            T * const raw_begin = this->priv_raw_begin();
+            if(old_first2 != raw_begin){
+               first2 = raw_begin + (first2 - old_first2);
+               last2  = first2 + (last2 - old_first2);
+               old_first2 = raw_begin;
             }
+
+            ++first1;
          }
-      }
-      else{
-         this->insert(this->cend(), n, first, last);
+         else {
+            if (!comp(*first2, *first1)) {
+               ++first1;
+            }
+            ++first2;
+         }
       }
    }
 
-   template<class UniqueBool, class FwdIt, class Compare>
-   BOOST_CONTAINER_FORCEINLINE void priv_merge_in_new_buffer(UniqueBool, FwdIt, size_type, Compare, version_0)
+   template<class FwdIt, class Compare>
+   BOOST_CONTAINER_FORCEINLINE void priv_merge_in_new_buffer(FwdIt, size_type, Compare, version_0)
    {
       throw_bad_alloc();
    }
 
-   template<class UniqueBool, class FwdIt, class Compare, class Version>
-   void priv_merge_in_new_buffer(UniqueBool, FwdIt first, size_type n, Compare comp, Version)
+   template<class FwdIt, class Compare, class Version>
+   void priv_merge_in_new_buffer(FwdIt first, size_type n, Compare comp, Version)
    {
       size_type const new_size = this->size() + n;
       size_type new_cap = new_size;
@@ -2334,11 +2335,6 @@ class vector
             ++first;
             --n;
             ++d_first;
-         }
-         else if(UniqueBool::value && !comp(*pbeg, *first)){
-            ++first;
-            --n;
-            --added;
          }
          else{
             allocator_traits_type::construct( this->m_holder.alloc(), d_first, boost::move(*pbeg) );

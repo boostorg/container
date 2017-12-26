@@ -116,6 +116,56 @@ namespace dtl {
 
 BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(stored_allocator_type)
 
+///////////////////////////////////////
+//
+//  flat_tree_container_inplace_merge
+//
+///////////////////////////////////////
+template<class SequenceContainer, class Compare>
+void flat_tree_container_inplace_merge //is_contiguous_container == true
+   (SequenceContainer& dest, typename SequenceContainer::iterator it, Compare comp , dtl::true_)
+{
+   typedef typename SequenceContainer::value_type  value_type;
+   value_type *const braw = boost::movelib::iterator_to_raw_pointer(dest.begin());
+   value_type *const iraw = boost::movelib::iterator_to_raw_pointer(it);
+   value_type *const eraw = boost::movelib::iterator_to_raw_pointer(dest.end());
+   boost::movelib::adaptive_merge(braw, iraw, eraw, comp, eraw, dest.capacity()- dest.size());
+}
+
+template<class SequenceContainer, class Compare>
+void flat_tree_container_inplace_merge //is_contiguous_container == false
+   (SequenceContainer& dest, typename SequenceContainer::iterator it, Compare comp, dtl::false_)
+{
+   boost::movelib::adaptive_merge(dest.begin(), it, dest.end(), comp);
+}
+
+///////////////////////////////////////
+//
+//  flat_tree_container_inplace_sort_ending
+//
+///////////////////////////////////////
+template<class SequenceContainer, class Compare>
+void flat_tree_container_inplace_sort_ending //is_contiguous_container == true
+   (SequenceContainer& dest, typename SequenceContainer::iterator it, Compare comp, dtl::true_)
+{
+   typedef typename SequenceContainer::value_type  value_type;
+   value_type *const iraw = boost::movelib::iterator_to_raw_pointer(it);
+   value_type *const eraw = boost::movelib::iterator_to_raw_pointer(dest.end());
+   boost::movelib::adaptive_sort(iraw, eraw, comp, eraw, dest.capacity()- dest.size());
+}
+
+template<class SequenceContainer, class Compare>
+void flat_tree_container_inplace_sort_ending //is_contiguous_container == false
+   (SequenceContainer& dest, typename SequenceContainer::iterator it, Compare comp , dtl::false_)
+{
+   boost::movelib::adaptive_sort(it, dest.end(), comp);
+}
+
+///////////////////////////////////////
+//
+//          flat_tree_merge
+//
+///////////////////////////////////////
 template<class SequenceContainer, class Iterator, class Compare>
 BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_equal
    (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, dtl::true_)
@@ -124,42 +174,20 @@ BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_equal
 }
 
 template<class SequenceContainer, class Iterator, class Compare>
-void aux_flat_tree_merge_equal_non_merge_member  //is_contiguous_container == true
-   (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, dtl::true_)
-{
-   typedef typename SequenceContainer::iterator    iterator;
-   typedef typename SequenceContainer::value_type  value_type;
-   typedef typename SequenceContainer::size_type   size_type;
-
-   iterator const it = dest.insert( dest.end(), first, last );
-   value_type *const braw = boost::movelib::iterator_to_raw_pointer(dest.begin());
-   value_type *const iraw = boost::movelib::iterator_to_raw_pointer(it);
-   value_type *const eraw = boost::movelib::iterator_to_raw_pointer(dest.end());
-   value_type *const sraw = boost::movelib::iterator_to_raw_pointer(dest.begin())+dest.size();
-   size_type const sraw_size = dest.capacity()- dest.size();
-   boost::movelib::adaptive_sort(iraw, eraw, comp, sraw, sraw_size);
-   boost::movelib::adaptive_merge(braw, iraw, eraw, comp, sraw, sraw_size);
-}
-
-template<class SequenceContainer, class Iterator, class Compare>
-void aux_flat_tree_merge_equal_non_merge_member  //is_contiguous_container == false
-   (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, dtl::false_)
-{
-   typedef typename SequenceContainer::iterator    iterator;
-
-   iterator const it = dest.insert( dest.end(), first, last );
-   boost::movelib::adaptive_sort(it, dest.end(), comp);
-   boost::movelib::adaptive_merge(dest.begin(), it, dest.end(), comp);
-}
-
-template<class SequenceContainer, class Iterator, class Compare>
 BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_equal   //has_merge_unique == false
    (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, dtl::false_)
 {
-   (aux_flat_tree_merge_equal_non_merge_member)
-      ( dest, first, last, comp, dtl::bool_<is_contiguous_container<SequenceContainer>::value>());
+   typedef typename SequenceContainer::iterator    iterator;
+   iterator const it = dest.insert( dest.end(), first, last );
+   dtl::bool_<is_contiguous_container<SequenceContainer>::value> contiguous_tag;
+   (flat_tree_container_inplace_merge)(dest, it, comp, contiguous_tag);
 }
 
+///////////////////////////////////////
+//
+//       flat_tree_merge_unique
+//
+///////////////////////////////////////
 template<class SequenceContainer, class Iterator, class Compare>
 BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_unique  //has_merge_unique == true
    (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, dtl::true_)
@@ -171,11 +199,22 @@ template<class SequenceContainer, class Iterator, class Compare>
 BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_unique  //has_merge_unique == false
    (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, dtl::false_)
 {
-   (flat_tree_merge_equal)(dest, first, last, comp, dtl::false_());
-   dest.erase(boost::movelib::unique
-      (dest.begin(), dest.end(), boost::movelib::negate<Compare>(comp)), dest.cend());
+   typedef typename SequenceContainer::iterator    iterator;
+   typedef typename SequenceContainer::size_type   size_type;
+
+   size_type const old_sz = dest.size();
+   iterator const first_new = dest.insert(dest.cend(), first, last );
+   iterator e = boost::movelib::inplace_set_difference(first_new, dest.end(), dest.begin(), first_new, comp);
+   dest.erase(e, dest.end());
+   dtl::bool_<is_contiguous_container<SequenceContainer>::value> contiguous_tag;
+   (flat_tree_container_inplace_merge)(dest, dest.begin()+old_sz, comp, contiguous_tag);
 }
 
+///////////////////////////////////////
+//
+//         flat_tree_index_of
+//
+///////////////////////////////////////
 template<class SequenceContainer, class Iterator>
 BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::size_type
    flat_tree_index_of   // has_index_of == true
@@ -193,6 +232,11 @@ BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::size_type
    return static_cast<size_type>(p - cont.begin());
 }
 
+///////////////////////////////////////
+//
+//         flat_tree_nth
+//
+///////////////////////////////////////
 template<class Iterator, class SequenceContainer>
 BOOST_CONTAINER_FORCEINLINE Iterator
    flat_tree_nth  // has_nth == true
@@ -209,6 +253,11 @@ BOOST_CONTAINER_FORCEINLINE Iterator
    return cont.begin()+ n;
 }
 
+///////////////////////////////////////
+//
+//    flat_tree_get_stored_allocator
+//
+///////////////////////////////////////
 template<class SequenceContainer>
 BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::stored_allocator_type &
    flat_tree_get_stored_allocator   // has_get_stored_allocator == true
@@ -233,17 +282,39 @@ BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::allocator_type
    return cont.get_allocator();
 }
 
+///////////////////////////////////////
+//
+//    flat_tree_adopt_sequence_equal
+//
+///////////////////////////////////////
+template<class SequenceContainer, class Compare>
+void flat_tree_sort_contiguous_to_adopt // is_contiguous_container == true
+   (SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp)
+{
+   if(tseq.capacity() >= (seq.capacity() - seq.size())) {
+      tseq.clear();
+      boost::movelib::adaptive_sort
+      (boost::movelib::iterator_to_raw_pointer(seq.begin())
+         , boost::movelib::iterator_to_raw_pointer(seq.end())
+         , comp
+         , boost::movelib::iterator_to_raw_pointer(tseq.begin())
+         , tseq.capacity());
+   }
+   else{
+      boost::movelib::adaptive_sort
+      (boost::movelib::iterator_to_raw_pointer(seq.begin())
+         , boost::movelib::iterator_to_raw_pointer(seq.end())
+         , comp
+         , boost::movelib::iterator_to_raw_pointer(seq.end())
+         , seq.capacity() - seq.size());
+   }
+}
+
 template<class SequenceContainer, class Compare>
 void flat_tree_adopt_sequence_equal // is_contiguous_container == true
    (SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, dtl::true_)
 {
-   tseq.clear();
-   boost::movelib::adaptive_sort
-   (boost::movelib::iterator_to_raw_pointer(seq.begin())
-      , boost::movelib::iterator_to_raw_pointer(seq.end())
-      , comp
-      , boost::movelib::iterator_to_raw_pointer(tseq.begin() + tseq.size())
-      , tseq.capacity() - tseq.size());
+   flat_tree_sort_contiguous_to_adopt(tseq, boost::move(seq), comp);
    tseq = boost::move(seq);
 }
 
@@ -255,10 +326,16 @@ void flat_tree_adopt_sequence_equal // is_contiguous_container == false
    tseq = boost::move(seq);
 }
 
+///////////////////////////////////////
+//
+//    flat_tree_adopt_sequence_unique
+//
+///////////////////////////////////////
 template<class SequenceContainer, class Compare>
 void flat_tree_adopt_sequence_unique// is_contiguous_container == true
    (SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, dtl::true_)
 {
+   tseq.clear();
    boost::movelib::adaptive_sort
       ( boost::movelib::iterator_to_raw_pointer(seq.begin())
       , boost::movelib::iterator_to_raw_pointer(seq.end())
@@ -281,6 +358,11 @@ void flat_tree_adopt_sequence_unique// is_contiguous_container == false
    tseq = boost::move(seq);
 }
 
+///////////////////////////////////////
+//
+//       flat_tree_reserve
+//
+///////////////////////////////////////
 template<class SequenceContainer>
 BOOST_CONTAINER_FORCEINLINE void // has_reserve == true
    flat_tree_reserve(SequenceContainer &tseq, typename SequenceContainer::size_type cap, dtl::true_)
@@ -294,6 +376,11 @@ BOOST_CONTAINER_FORCEINLINE void // has_reserve == false
 {
 }
 
+///////////////////////////////////////
+//
+//       flat_tree_capacity
+//
+///////////////////////////////////////
 template<class SequenceContainer>   // has_capacity == true
 BOOST_CONTAINER_FORCEINLINE typename SequenceContainer::size_type
    flat_tree_capacity(const SequenceContainer &tseq, dtl::true_)
@@ -784,108 +871,50 @@ class flat_tree
    template <class InIt>
    void insert_unique(InIt first, InIt last)
    {
-      for ( ; first != last; ++first){
-         this->insert_unique(*first);
-      }
+      dtl::bool_<is_contiguous_container<container_type>::value> contiguous_tag;
+      container_type &seq = this->m_data.m_seq;
+      value_compare &val_cmp = this->priv_value_comp();
+
+      //Step 1: put new elements in the back
+      typename container_type::iterator const it = seq.insert(seq.cend(), first, last);
+
+      //Step 2: sort them
+      (flat_tree_container_inplace_sort_ending)(seq, it, val_cmp, contiguous_tag);
+
+      //Step 3: only left unique values from the back not already present in the original range
+      typename container_type::iterator const e = boost::movelib::inplace_set_unique_difference
+         (it, seq.end(), seq.begin(), it, val_cmp);
+      seq.erase(e, seq.cend());
+
+      //Step 4: merge both ranges
+      (flat_tree_container_inplace_merge)(seq, it, this->priv_value_comp(), contiguous_tag);
    }
 
    template <class InIt>
-   void insert_equal(InIt first, InIt last
-      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename dtl::enable_if_c
-         < dtl::is_input_iterator<InIt>::value
-         >::type * = 0
-      #endif
-      )
-   {  this->priv_insert_equal_loop(first, last);  }
-
-   template <class InIt>
-   void insert_equal(InIt first, InIt last
-      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename dtl::enable_if_c
-         < !dtl::is_input_iterator<InIt>::value
-         >::type * = 0
-      #endif
-      )
+   void insert_equal(InIt first, InIt last)
    {
-      const size_type len = static_cast<size_type>(boost::container::iterator_distance(first, last));
-      this->reserve(this->size()+len);
-      this->priv_insert_equal_loop(first, last);
+      dtl::bool_<is_contiguous_container<container_type>::value> contiguous_tag;
+      container_type &seq = this->m_data.m_seq;
+      typename container_type::iterator const it = seq.insert(seq.cend(), first, last);
+      (flat_tree_container_inplace_sort_ending)(seq, it, this->priv_value_comp(), contiguous_tag);
+      (flat_tree_container_inplace_merge)      (seq, it, this->priv_value_comp(), contiguous_tag);
    }
 
    //Ordered
 
    template <class InIt>
-   void insert_equal(ordered_range_t, InIt first, InIt last
-      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename dtl::enable_if_c
-         < dtl::is_input_iterator<InIt>::value
-         >::type * = 0
-      #endif
-      )
-   {  this->priv_insert_equal_loop_ordered(first, last); }
-
-   template <class FwdIt>
-   void insert_equal(ordered_range_t, FwdIt first, FwdIt last
-      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename dtl::enable_if_c
-         < !dtl::is_input_iterator<FwdIt>::value &&
-         dtl::is_forward_iterator<FwdIt>::value
-         >::type * = 0
-      #endif
-      )
-   {
-      const size_type len = static_cast<size_type>(boost::container::iterator_distance(first, last));
-      this->reserve(this->size()+len);
-      this->priv_insert_equal_loop_ordered(first, last);
-   }
-
-   template <class BidirIt>
-   void insert_equal(ordered_range_t, BidirIt first, BidirIt last
-      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename dtl::disable_if_or
-         < void
-         , dtl::is_input_iterator<BidirIt>
-         , dtl::is_forward_iterator<BidirIt>
-         >::type * = 0
-      #endif
-      )
+   void insert_equal(ordered_range_t, InIt first, InIt last)
    {
       const bool value = boost::container::dtl::
-         has_member_function_callable_with_merge_unique<container_type, iterator, iterator, value_compare>::value;
+         has_member_function_callable_with_merge_unique<container_type, InIt, InIt, value_compare>::value;
       (flat_tree_merge_equal)(this->m_data.m_seq, first, last, this->priv_value_comp(), dtl::bool_<value>());
    }
 
    template <class InIt>
-   void insert_unique(ordered_unique_range_t, InIt first, InIt last
-      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename dtl::enable_if_or
-         < void
-         , dtl::is_input_iterator<InIt>
-         , dtl::is_forward_iterator<InIt>
-         >::type * = 0
-      #endif
-      )
-   {
-      const_iterator pos(this->cend());
-      for ( ; first != last; ++first){
-         pos = this->insert_unique(pos, *first);
-         ++pos;
-      }
-   }
-
-   template <class BidirIt>
-   void insert_unique(ordered_unique_range_t, BidirIt first, BidirIt last
-      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename dtl::enable_if_c
-         < !(dtl::is_input_iterator<BidirIt>::value ||
-             dtl::is_forward_iterator<BidirIt>::value)
-         >::type * = 0
-      #endif
-      )
+   void insert_unique(ordered_unique_range_t, InIt first, InIt last)
    {
       const bool value = boost::container::dtl::
-         has_member_function_callable_with_merge_unique<container_type, iterator, iterator, value_compare>::value;
+         has_member_function_callable_with_merge_unique<container_type, InIt, InIt, value_compare>::value;
       (flat_tree_merge_unique)(this->m_data.m_seq, first, last, this->priv_value_comp(), dtl::bool_<value>());
    }
 
@@ -1287,14 +1316,10 @@ class flat_tree
       //for the constructor
       //Call end() every iteration as reallocation might have invalidated iterators
       if(unique_insertion){
-         for ( ; first != last; ++first){
-            this->insert_unique(this->cend(), *first);
-         }
+         this->insert_unique(first, last);
       }
       else{
-         for ( ; first != last; ++first){
-            this->insert_equal(this->cend(), *first);
-         }
+         this->insert_equal (first, last);
       }
    }
 
@@ -1490,27 +1515,6 @@ class flat_tree
          ++ub;
       }
       return std::pair<RanIt, RanIt>(lb, ub);
-   }
-
-   template<class InIt>
-   void priv_insert_equal_loop(InIt first, InIt last)
-   {
-      for ( ; first != last; ++first){
-         this->insert_equal(*first);
-      }
-   }
-
-   template<class InIt>
-   void priv_insert_equal_loop_ordered(InIt first, InIt last)
-   {
-      const_iterator pos(this->cend());
-      for ( ; first != last; ++first){
-         //If ordered, then try hint version
-         //to achieve constant-time complexity per insertion
-         //in some cases
-         pos = this->insert_equal(pos, *first);
-         ++pos;
-      }
    }
 };
 

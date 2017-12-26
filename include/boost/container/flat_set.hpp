@@ -687,8 +687,7 @@ class flat_set
    //! <b>Effects</b>: inserts each element from the range [first,last) if and only
    //!   if there is no element with key equivalent to the key of that element.
    //!
-   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
-   //!   search time plus N*size() insertion time.
+   //! <b>Complexity</b>: N log(N).
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    template <class InputIterator>
@@ -702,8 +701,7 @@ class flat_set
    //! <b>Effects</b>: inserts each element from the range [first,last) .This function
    //! is more efficient than the normal range creation for ordered ranges.
    //!
-   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
-   //!   search time plus N*size() insertion time.
+   //! <b>Complexity</b>: Linear.
    //!
    //! <b>Note</b>: Non-standard extension. If an element is inserted it might invalidate elements.
    template <class InputIterator>
@@ -714,8 +712,7 @@ class flat_set
    //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()) if and only
    //!   if there is no element with key equivalent to the key of that element.
    //!
-   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from il.begin() to il.end())
-   //!   search time plus N*size() insertion time.
+   //! <b>Complexity</b>: N log(N).
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    BOOST_CONTAINER_FORCEINLINE void insert(std::initializer_list<value_type> il)
@@ -727,8 +724,7 @@ class flat_set
    //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()) .This function
    //! is more efficient than the normal range creation for ordered ranges.
    //!
-   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from il.begin() to il.end())
-   //!   search time plus N*size() insertion time.
+   //! <b>Complexity</b>: Linear.
    //!
    //! <b>Note</b>: Non-standard extension. If an element is inserted it might invalidate elements.
    BOOST_CONTAINER_FORCEINLINE void insert(ordered_unique_range_t, std::initializer_list<value_type> il)
@@ -1456,8 +1452,7 @@ class flat_multiset
    //!
    //! <b>Effects</b>: inserts each element from the range [first,last) .
    //!
-   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
-   //!   search time plus N*size() insertion time.
+   //! <b>Complexity</b>: N log(N).
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    template <class InputIterator>
@@ -1470,8 +1465,7 @@ class flat_multiset
    //! <b>Effects</b>: inserts each element from the range [first,last) .This function
    //! is more efficient than the normal range creation for ordered ranges.
    //!
-   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
-   //!   search time plus N*size() insertion time.
+   //! <b>Complexity</b>: Linear.
    //!
    //! <b>Note</b>: Non-standard extension. If an element is inserted it might invalidate elements.
    template <class InputIterator>
@@ -1481,8 +1475,7 @@ class flat_multiset
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()).
    //!
-   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
-   //!   search time plus N*size() insertion time.
+   //! <b>Complexity</b>: N log(N).
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    BOOST_CONTAINER_FORCEINLINE void insert(std::initializer_list<value_type> il)
@@ -1493,8 +1486,7 @@ class flat_multiset
    //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()). This function
    //! is more efficient than the normal range creation for ordered ranges.
    //!
-   //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from il.begin() to il.end())
-   //!   search time plus N*size() insertion time.
+   //! <b>Complexity</b>: Linear.
    //!
    //! <b>Note</b>: Non-standard extension. If an element is inserted it might invalidate elements.
    BOOST_CONTAINER_FORCEINLINE void insert(ordered_range_t, std::initializer_list<value_type> il)

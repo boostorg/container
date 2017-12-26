@@ -1237,6 +1237,8 @@ use [*Boost.Container]? There are several reasons for that:
 * ['vector] can now have options, using [classref boost::container::vector_options vector_options].
   The growth factor and the stored size type can be specified.
 
+* Improved range insertion in ['flat_[multi]map/set] containers overall complexity is reduced to O(NlogN).
+
 * Fixed bugs:
    * [@https://github.com/boostorg/container/pull/64 GitHub #64: ['"Fix splice for slist"]].
 

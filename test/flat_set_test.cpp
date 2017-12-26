@@ -316,6 +316,25 @@ bool flat_tree_ordered_insertion_test()
       int_set4.insert(int_even_set.begin(), int_even_set.end());
       if(!CheckEqualContainers(int_set4, fset))
          return false;
+
+      //add even/odd values with not enough capacity 
+      flat_set<int>().swap(fset);
+      int_set4.clear();
+      int_set.clear();
+
+      fset.reserve(int_even_set.size());
+      fset.insert(ordered_unique_range, int_even_set.begin(), int_even_set.end());
+      int_set4.insert(int_even_set.begin(), int_even_set.end());
+
+      for(std::size_t i = 0; i < NumElements*2; i+=2){
+         int_set.insert(static_cast<int>(i));
+         int_set.insert(static_cast<int>(i+1));
+      }
+
+      fset.insert(ordered_unique_range, int_set.begin(), int_set.end());
+      int_set4.insert(int_set.begin(), int_set.end());
+      if(!CheckEqualContainers(int_set4, fset))
+         return false;
    }
 
    return true;
