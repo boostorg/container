@@ -2052,7 +2052,7 @@ class vector
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   void swap(vector& x)
+   BOOST_CONTAINER_FORCEINLINE void swap(vector& x)
       BOOST_NOEXCEPT_IF( ((allocator_traits_type::propagate_on_container_swap::value
                                     || allocator_traits_type::is_always_equal::value) &&
                                     !dtl::is_version<Allocator, 0>::value))
@@ -2070,7 +2070,7 @@ class vector
    //!
    //! <b>Note</b>: Non-standard extension to support static_vector
    template<class OtherAllocator>
-   void swap(vector<T, OtherAllocator> & x
+   BOOST_CONTAINER_FORCEINLINE void swap(vector<T, OtherAllocator> & x
             , typename dtl::enable_if_and
                      < void
                      , dtl::is_version<OtherAllocator, 0>
