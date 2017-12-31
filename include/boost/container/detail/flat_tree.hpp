@@ -47,6 +47,7 @@
 #include <boost/move/iterator.hpp>
 #include <boost/move/adl_move_swap.hpp>
 #include <boost/move/algo/adaptive_sort.hpp>
+#include <boost/move/algo/detail/pdqsort.hpp>
 
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #include <boost/move/detail/fwd_macros.hpp>
@@ -335,16 +336,12 @@ template<class SequenceContainer, class Compare>
 void flat_tree_adopt_sequence_unique// is_contiguous_container == true
    (SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, dtl::true_)
 {
-   tseq.clear();
-   boost::movelib::adaptive_sort
+   boost::movelib::pdqsort
       ( boost::movelib::iterator_to_raw_pointer(seq.begin())
       , boost::movelib::iterator_to_raw_pointer(seq.end())
-      , comp
-      , boost::movelib::iterator_to_raw_pointer(tseq.begin() + tseq.size())
-      , tseq.capacity() - tseq.size());
+      , comp);
    seq.erase(boost::movelib::unique
-      ( seq.begin(), seq.end(), boost::movelib::negate<Compare>(comp))
-      , seq.cend());
+      (seq.begin(), seq.end(), boost::movelib::negate<Compare>(comp)), seq.cend());
    tseq = boost::move(seq);
 }
 
@@ -352,7 +349,7 @@ template<class SequenceContainer, class Compare>
 void flat_tree_adopt_sequence_unique// is_contiguous_container == false
    (SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, dtl::false_)
 {
-   boost::movelib::adaptive_sort(seq.begin(), seq.end(), comp);
+   boost::movelib::pdqsort(seq.begin(), seq.end(), comp);
    seq.erase(boost::movelib::unique
       (seq.begin(), seq.end(), boost::movelib::negate<Compare>(comp)), seq.cend());
    tseq = boost::move(seq);
@@ -879,7 +876,7 @@ class flat_tree
       typename container_type::iterator const it = seq.insert(seq.cend(), first, last);
 
       //Step 2: sort them
-      (flat_tree_container_inplace_sort_ending)(seq, it, val_cmp, contiguous_tag);
+      boost::movelib::pdqsort(it, seq.end(), val_cmp);
 
       //Step 3: only left unique values from the back not already present in the original range
       typename container_type::iterator const e = boost::movelib::inplace_set_unique_difference
