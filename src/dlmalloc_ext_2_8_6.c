@@ -1092,7 +1092,7 @@ int boost_cont_multialloc_arrays
 /*Doug Lea malloc extensions*/
 static boost_cont_malloc_stats_t get_malloc_stats(mstate m)
 {
-   boost_cont_malloc_stats_t ret;
+   boost_cont_malloc_stats_t ret = { 0, 0, 0 };
    ensure_initialization();
    if (!PREACTION(m)) {
       size_t maxfp = 0;
