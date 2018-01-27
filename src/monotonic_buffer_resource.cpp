@@ -60,14 +60,14 @@ void monotonic_buffer_resource::increase_next_buffer_at_least_to(std::size_t min
 
 monotonic_buffer_resource::monotonic_buffer_resource(memory_resource* upstream) BOOST_NOEXCEPT
    : m_memory_blocks(upstream ? *upstream : *get_default_resource())
-   , m_current_buffer(0u)
+   , m_current_buffer(0)
    , m_current_buffer_size(0u)
    , m_next_buffer_size(initial_next_buffer_size)
 {}
 
 monotonic_buffer_resource::monotonic_buffer_resource(std::size_t initial_size, memory_resource* upstream) BOOST_NOEXCEPT
    : m_memory_blocks(upstream ? *upstream : *get_default_resource())
-   , m_current_buffer(0u)
+   , m_current_buffer(0)
    , m_current_buffer_size(0u)
    , m_next_buffer_size(minimum_buffer_size)
 {                                         //In case initial_size is zero
@@ -87,7 +87,12 @@ monotonic_buffer_resource::~monotonic_buffer_resource()
 {  this->release();  }
 
 void monotonic_buffer_resource::release() BOOST_NOEXCEPT
-{  m_memory_blocks.release();  }
+{
+   m_memory_blocks.release();
+   m_current_buffer = 0u;
+   m_current_buffer_size = 0u;
+   m_next_buffer_size = initial_next_buffer_size;
+}
 
 memory_resource* monotonic_buffer_resource::upstream_resource() const BOOST_NOEXCEPT
 {  return &m_memory_blocks.upstream_resource();   }
