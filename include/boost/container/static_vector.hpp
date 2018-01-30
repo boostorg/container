@@ -51,10 +51,10 @@ class static_storage_allocator
    {  return *this;  }
 
    BOOST_CONTAINER_FORCEINLINE T* internal_storage() const BOOST_NOEXCEPT_OR_NOTHROW
-   {  return const_cast<T*>(static_cast<const T*>(static_cast<const void*>(&storage)));  }
+   {  return const_cast<T*>(static_cast<const T*>(static_cast<const void*>(storage.data)));  }
 
    BOOST_CONTAINER_FORCEINLINE T* internal_storage() BOOST_NOEXCEPT_OR_NOTHROW
-   {  return static_cast<T*>(static_cast<void*>(&storage));  }
+   {  return static_cast<T*>(static_cast<void*>(storage.data));  }
 
    static const std::size_t internal_capacity = N;
 

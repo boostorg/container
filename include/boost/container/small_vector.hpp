@@ -338,7 +338,7 @@ class small_vector_base
    pointer internal_storage() const BOOST_NOEXCEPT_OR_NOTHROW
    {
       return boost::intrusive::pointer_traits<pointer>::pointer_to
-         (*const_cast<T*>(static_cast<const T*>(static_cast<const void*>(&m_storage_start))));
+         (*const_cast<T*>(static_cast<const T*>(static_cast<const void*>(m_storage_start.data))));
    }
 
    typedef vector<T, small_vector_allocator<SecondaryAllocator> > base_type;

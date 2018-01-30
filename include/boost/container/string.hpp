@@ -199,7 +199,7 @@ class basic_string_base
       {  return s;  }
 
       const long_t &long_repr() const
-      {  return *static_cast<const long_t*>(static_cast<const void*>(&r));  }
+      {  return *static_cast<const long_t*>(static_cast<const void*>(r.data));  }
 
       short_t &short_repr()
       {  return s;  }

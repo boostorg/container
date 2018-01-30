@@ -1008,7 +1008,7 @@ inline typename dtl::enable_if_c
    const std::size_t n_i_bytes = sizeof(value_type)*n_i;
    void *const large_ptr = static_cast<void*>(boost::movelib::iterator_to_raw_pointer(large_range_f));
    void *const short_ptr = static_cast<void*>(boost::movelib::iterator_to_raw_pointer(short_range_f));
-   void *const stora_ptr = static_cast<void*>(boost::movelib::iterator_to_raw_pointer(storage));
+   void *const stora_ptr = static_cast<void*>(boost::movelib::iterator_to_raw_pointer(storage.data));
    std::memcpy(stora_ptr, large_ptr, n_i_bytes);
    std::memcpy(large_ptr, short_ptr, n_i_bytes);
    std::memcpy(short_ptr, stora_ptr, n_i_bytes);
@@ -1039,7 +1039,7 @@ inline typename dtl::enable_if_c
    std::size_t n_i_bytes = sizeof(value_type)*n_i;
    char *large_ptr = static_cast<char*>(static_cast<void*>(boost::movelib::iterator_to_raw_pointer(large_range_f)));
    char *short_ptr = static_cast<char*>(static_cast<void*>(boost::movelib::iterator_to_raw_pointer(short_range_f)));
-   char *stora_ptr = static_cast<char*>(static_cast<void*>(&storage));
+   char *stora_ptr = static_cast<char*>(static_cast<void*>(storage.data));
 
    std::size_t szt_times = n_i_bytes/sizeof_storage;
    const std::size_t szt_rem = n_i_bytes%sizeof_storage;
