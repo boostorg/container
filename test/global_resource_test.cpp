@@ -27,7 +27,7 @@ std::size_t allocation_count = 0;
 #pragma warning (disable : 4290)
 #endif
 
-#if defined(BOOST_GCC) && (BOOST_GCC >= 40700) && (__cplusplus >= 201103L)
+#if __cplusplus >= 201103L
 #define BOOST_CONTAINER_NEW_EXCEPTION_SPECIFIER
 #define BOOST_CONTAINER_DELETE_EXCEPTION_SPECIFIER noexcept
 #else
