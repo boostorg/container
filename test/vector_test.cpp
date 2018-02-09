@@ -7,6 +7,13 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
+
+// the tests trigger deprecation warnings when compiled with msvc in C++17 mode
+#if defined(_MSVC_LANG) && _MSVC_LANG > 201402
+// warning STL4009: std::allocator<void> is deprecated in C++17
+# define _SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING
+#endif
+
 #include <memory>
 #include <iostream>
 
