@@ -2023,7 +2023,7 @@ class vector
       T *const beg_ptr = this->priv_raw_begin();
       T *const new_end_ptr = ::boost::container::move(pos_ptr + 1, beg_ptr + this->m_holder.m_size, pos_ptr);
       //Move elements forward and destroy last
-      this->priv_destroy_last(pos_ptr == new_end_ptr);
+      this->priv_destroy_last(pos_ptr != new_end_ptr);
       return iterator(p);
    }
 
@@ -2557,7 +2557,8 @@ class vector
    void priv_destroy_last(const bool moved = false) BOOST_NOEXCEPT_OR_NOTHROW
    {
       (void)moved;
-      if(!(value_traits::trivial_dctr || (value_traits::trivial_dctr_after_move && moved))){
+      const bool skip_destructor = value_traits::trivial_dctr || (value_traits::trivial_dctr_after_move && moved);
+      if(!skip_destructor){
          value_type* const p = this->priv_raw_end() - 1;
          allocator_traits_type::destroy(this->get_stored_allocator(), p);
       }
