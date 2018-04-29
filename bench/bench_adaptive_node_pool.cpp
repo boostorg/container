@@ -7,6 +7,10 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
+//Enable checks in debug mode
+#ifndef NDEBUG
+#define BOOST_CONTAINER_ADAPTIVE_NODE_POOL_CHECK_INVARIANTS
+#endif
 
 #ifdef _MSC_VER
 #pragma warning (disable : 4512)
@@ -273,12 +277,14 @@ int main(int argc, const char *argv[])
       #endif
       std::size_t numele [] = { 10000, 1000, 100, 10, 5, 2, 1     };
    #else
-      #ifdef NDEBUG
-      std::size_t numrep [] = { 150000 };
+      #ifdef BOOST_CONTAINER_ADAPTIVE_NODE_POOL_CHECK_INVARIANTS
+      std::size_t numrep[] = { 1000 };
+      #elif defined(NDEBUG)
+      std::size_t numrep [] = { 15000 };
       #else
-      std::size_t numrep [] = { 10000 };
+      std::size_t numrep [] = { 1000 };
       #endif
-      std::size_t numele [] = { 10 };
+      std::size_t numele [] = { 100 };
    #endif
 
    bool csv_output = argc == 2 && (strcmp(argv[1], "--csv-output") == 0);
