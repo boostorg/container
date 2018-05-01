@@ -394,6 +394,7 @@ class RecyclingCloner
    intrusive_container &m_icont;
 };
 
+
 template<class KeyCompare, class KeyOfValue>
 struct key_node_compare
    :  public boost::intrusive::detail::ebo_functor_holder<KeyCompare>
@@ -407,6 +408,21 @@ struct key_node_compare
    typedef KeyOfValue                  key_of_value;
    typedef typename KeyOfValue::type   key_type;
 
+
+   template <class T, class VoidPointer, boost::container::tree_type_enum tree_type_value, bool OptimizeSize>
+   BOOST_CONTAINER_FORCEINLINE static const key_type &
+      key_from(const tree_node<T, VoidPointer, tree_type_value, OptimizeSize> &n)
+   {
+      return key_of_value()(n.get_data());
+   }
+
+   template <class T>
+   BOOST_CONTAINER_FORCEINLINE static const T &
+      key_from(const T &t)
+   {
+      return t;
+   }
+
    BOOST_CONTAINER_FORCEINLINE const key_compare &key_comp() const
    {  return static_cast<const key_compare &>(*this);  }
 
@@ -418,15 +434,15 @@ struct key_node_compare
 
    template<class U>
    BOOST_CONTAINER_FORCEINLINE bool operator()(const key_type &key1, const U &nonkey2) const
-   {  return this->key_comp()(key1, key_of_value()(nonkey2.get_data()));  }
+   {  return this->key_comp()(key1, this->key_from(nonkey2));  }
 
    template<class U>
    BOOST_CONTAINER_FORCEINLINE bool operator()(const U &nonkey1, const key_type &key2) const
-   {  return this->key_comp()(key_of_value()(nonkey1.get_data()), key2);  }
+   {  return this->key_comp()(this->key_from(nonkey1), key2);  }
 
    template<class U, class V>
    BOOST_CONTAINER_FORCEINLINE bool operator()(const U &nonkey1, const V &nonkey2) const
-   {  return this->key_comp()(key_of_value()(nonkey1.get_data()), key_of_value()(nonkey2.get_data()));  }
+   {  return this->key_comp()(this->key_from(nonkey1), this->key_from(nonkey2));  }
 };
 
 template<class Options>
@@ -1260,7 +1276,25 @@ class tree
    BOOST_CONTAINER_FORCEINLINE const_iterator find(const key_type& k) const
    {  return const_iterator(this->non_const_icont().find(k, KeyNodeCompare(key_comp())));  }
 
+   template <class K>
+   BOOST_CONTAINER_FORCEINLINE
+      typename dtl::enable_if_transparent<key_compare, K, iterator>::type
+         find(const K& k)
+   {  return iterator(this->icont().find(k, KeyNodeCompare(key_comp())));  }
+
+   template <class K>
+   BOOST_CONTAINER_FORCEINLINE
+      typename dtl::enable_if_transparent<key_compare, K, const_iterator>::type
+         find(const K& k) const
+   {  return const_iterator(this->non_const_icont().find(k, KeyNodeCompare(key_comp())));  }
+
    BOOST_CONTAINER_FORCEINLINE size_type count(const key_type& k) const
+   {  return size_type(this->icont().count(k, KeyNodeCompare(key_comp()))); }
+
+   template <class K>
+   BOOST_CONTAINER_FORCEINLINE
+      typename dtl::enable_if_transparent<key_compare, K, size_type>::type
+         count(const K& k) const
    {  return size_type(this->icont().count(k, KeyNodeCompare(key_comp()))); }
 
    BOOST_CONTAINER_FORCEINLINE iterator lower_bound(const key_type& k)
@@ -1269,10 +1303,34 @@ class tree
    BOOST_CONTAINER_FORCEINLINE const_iterator lower_bound(const key_type& k) const
    {  return const_iterator(this->non_const_icont().lower_bound(k, KeyNodeCompare(key_comp())));  }
 
+   template <class K>
+   BOOST_CONTAINER_FORCEINLINE
+      typename dtl::enable_if_transparent<key_compare, K, iterator>::type
+         lower_bound(const K& k)
+   {  return iterator(this->icont().lower_bound(k, KeyNodeCompare(key_comp())));  }
+
+   template <class K>
+   BOOST_CONTAINER_FORCEINLINE
+      typename dtl::enable_if_transparent<key_compare, K, const_iterator>::type
+         lower_bound(const K& k) const
+   {  return const_iterator(this->non_const_icont().lower_bound(k, KeyNodeCompare(key_comp())));  }
+
    BOOST_CONTAINER_FORCEINLINE iterator upper_bound(const key_type& k)
    {  return iterator(this->icont().upper_bound(k, KeyNodeCompare(key_comp())));   }
 
    BOOST_CONTAINER_FORCEINLINE const_iterator upper_bound(const key_type& k) const
+   {  return const_iterator(this->non_const_icont().upper_bound(k, KeyNodeCompare(key_comp())));  }
+
+   template <class K>
+   BOOST_CONTAINER_FORCEINLINE
+      typename dtl::enable_if_transparent<key_compare, K, iterator>::type
+         upper_bound(const K& k)
+   {  return iterator(this->icont().upper_bound(k, KeyNodeCompare(key_comp())));   }
+
+   template <class K>
+   BOOST_CONTAINER_FORCEINLINE
+      typename dtl::enable_if_transparent<key_compare, K, const_iterator>::type
+         upper_bound(const K& k) const
    {  return const_iterator(this->non_const_icont().upper_bound(k, KeyNodeCompare(key_comp())));  }
 
    std::pair<iterator,iterator> equal_range(const key_type& k)
@@ -1290,6 +1348,27 @@ class tree
          (const_iterator(ret.first), const_iterator(ret.second));
    }
 
+   template <class K>
+   BOOST_CONTAINER_FORCEINLINE
+      typename dtl::enable_if_transparent<key_compare, K, std::pair<iterator,iterator> >::type
+         equal_range(const K& k)
+   {
+      std::pair<iiterator, iiterator> ret =
+         this->icont().equal_range(k, KeyNodeCompare(key_comp()));
+      return std::pair<iterator,iterator>(iterator(ret.first), iterator(ret.second));
+   }
+
+   template <class K>
+   BOOST_CONTAINER_FORCEINLINE
+      typename dtl::enable_if_transparent<key_compare, K, std::pair<const_iterator, const_iterator> >::type
+         equal_range(const K& k) const
+   {
+      std::pair<iiterator, iiterator> ret =
+         this->non_const_icont().equal_range(k, KeyNodeCompare(key_comp()));
+      return std::pair<const_iterator,const_iterator>
+         (const_iterator(ret.first), const_iterator(ret.second));
+   }
+
    std::pair<iterator,iterator> lower_bound_range(const key_type& k)
    {
       std::pair<iiterator, iiterator> ret =
@@ -1298,6 +1377,27 @@ class tree
    }
 
    std::pair<const_iterator, const_iterator> lower_bound_range(const key_type& k) const
+   {
+      std::pair<iiterator, iiterator> ret =
+         this->non_const_icont().lower_bound_range(k, KeyNodeCompare(key_comp()));
+      return std::pair<const_iterator,const_iterator>
+         (const_iterator(ret.first), const_iterator(ret.second));
+   }
+
+   template <class K>
+   BOOST_CONTAINER_FORCEINLINE
+      typename dtl::enable_if_transparent<key_compare, K, std::pair<iterator,iterator> >::type
+         lower_bound_range(const K& k)
+   {
+      std::pair<iiterator, iiterator> ret =
+         this->icont().lower_bound_range(k, KeyNodeCompare(key_comp()));
+      return std::pair<iterator,iterator>(iterator(ret.first), iterator(ret.second));
+   }
+
+   template <class K>
+   BOOST_CONTAINER_FORCEINLINE
+      typename dtl::enable_if_transparent<key_compare, K, std::pair<const_iterator, const_iterator> >::type
+         lower_bound_range(const K& k) const
    {
       std::pair<iiterator, iiterator> ret =
          this->non_const_icont().lower_bound_range(k, KeyNodeCompare(key_comp()));

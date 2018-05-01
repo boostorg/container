@@ -422,6 +422,85 @@ struct get_real_stored_allocator<flat_multimap<Key, T, Compare, Allocator> >
    typedef typename flat_multimap<Key, T, Compare, Allocator>::impl_stored_allocator_type type;
 };
 
+bool test_heterogeneous_lookups()
+{
+   typedef flat_map<int, char, less_transparent> map_t;
+   typedef flat_multimap<int, char, less_transparent> mmap_t;
+   typedef map_t::value_type value_type;
+
+   map_t map1;
+   mmap_t mmap1;
+
+   const map_t &cmap1 = map1;
+   const mmap_t &cmmap1 = mmap1;
+
+   map1.insert_or_assign(1, 'a');
+   map1.insert_or_assign(1, 'b');
+   map1.insert_or_assign(2, 'c');
+   map1.insert_or_assign(2, 'd');
+   map1.insert_or_assign(3, 'e');
+
+   mmap1.insert(value_type(1, 'a'));
+   mmap1.insert(value_type(1, 'b'));
+   mmap1.insert(value_type(2, 'c'));
+   mmap1.insert(value_type(2, 'd'));
+   mmap1.insert(value_type(3, 'e'));
+
+   const test::non_copymovable_int find_me(2);
+
+   //find
+   if(map1.find(find_me)->second != 'd')
+      return false;
+   if(cmap1.find(find_me)->second != 'd')
+      return false;
+   if(mmap1.find(find_me)->second != 'c')
+      return false;
+   if(cmmap1.find(find_me)->second != 'c')
+      return false;
+
+   //count
+   if(map1.count(find_me) != 1)
+      return false;
+   if(cmap1.count(find_me) != 1)
+      return false;
+   if(mmap1.count(find_me) != 2)
+      return false;
+   if(cmmap1.count(find_me) != 2)
+      return false;
+
+   //lower_bound
+   if(map1.lower_bound(find_me)->second != 'd')
+      return false;
+   if(cmap1.lower_bound(find_me)->second != 'd')
+      return false;
+   if(mmap1.lower_bound(find_me)->second != 'c')
+      return false;
+   if(cmmap1.lower_bound(find_me)->second != 'c')
+      return false;
+
+   //upper_bound
+   if(map1.upper_bound(find_me)->second != 'e')
+      return false;
+   if(cmap1.upper_bound(find_me)->second != 'e')
+      return false;
+   if(mmap1.upper_bound(find_me)->second != 'e')
+      return false;
+   if(cmmap1.upper_bound(find_me)->second != 'e')
+      return false;
+
+   //equal_range
+   if(map1.equal_range(find_me).first->second != 'd')
+      return false;
+   if(cmap1.equal_range(find_me).second->second != 'e')
+      return false;
+   if(mmap1.equal_range(find_me).first->second != 'c')
+      return false;
+   if(cmmap1.equal_range(find_me).second->second != 'e')
+      return false;
+
+   return true;
+}
+
 }}}   //namespace boost::container::test
 
 template<class VoidAllocatorOrContainer>
@@ -525,6 +604,9 @@ int main()
    }
 
    if (!boost::container::test::instantiate_constructors<flat_map<int, int>, flat_multimap<int, int> >())
+      return 1;
+
+   if (!test_heterogeneous_lookups())
       return 1;
 
    ////////////////////////////////////

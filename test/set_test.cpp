@@ -318,6 +318,84 @@ void test_merge_from_different_comparison()
    set1.merge(set2);
 }
 
+bool test_heterogeneous_lookups()
+{
+   typedef set<int, test::less_transparent> set_t;
+   typedef multiset<int, test::less_transparent> mset_t;
+
+   set_t set1;
+   mset_t mset1;
+
+   const set_t &cset1 = set1;
+   const mset_t &cmset1 = mset1;
+
+   set1.insert(1);
+   set1.insert(1);
+   set1.insert(2);
+   set1.insert(2);
+   set1.insert(3);
+
+   mset1.insert(1);
+   mset1.insert(1);
+   mset1.insert(2);
+   mset1.insert(2);
+   mset1.insert(3);
+
+   const test::non_copymovable_int find_me(2);
+
+   //find
+   if(*set1.find(find_me) != 2)
+      return false;
+   if(*cset1.find(find_me) != 2)
+      return false;
+   if(*mset1.find(find_me) != 2)
+      return false;
+   if(*cmset1.find(find_me) != 2)
+      return false;
+
+   //count
+   if(set1.count(find_me) != 1)
+      return false;
+   if(cset1.count(find_me) != 1)
+      return false;
+   if(mset1.count(find_me) != 2)
+      return false;
+   if(cmset1.count(find_me) != 2)
+      return false;
+
+   //lower_bound
+   if(*set1.lower_bound(find_me) != 2)
+      return false;
+   if(*cset1.lower_bound(find_me) != 2)
+      return false;
+   if(*mset1.lower_bound(find_me) != 2)
+      return false;
+   if(*cmset1.lower_bound(find_me) != 2)
+      return false;
+
+   //upper_bound
+   if(*set1.upper_bound(find_me) != 3)
+      return false;
+   if(*cset1.upper_bound(find_me) != 3)
+      return false;
+   if(*mset1.upper_bound(find_me) != 3)
+      return false;
+   if(*cmset1.upper_bound(find_me) != 3)
+      return false;
+
+   //equal_range
+   if(*set1.equal_range(find_me).first != 2)
+      return false;
+   if(*cset1.equal_range(find_me).second != 3)
+      return false;
+   if(*mset1.equal_range(find_me).first != 2)
+      return false;
+   if(*cmset1.equal_range(find_me).second != 3)
+      return false;
+
+   return true;
+}
+
 int main ()
 {
    //Recursive container instantiation
@@ -348,6 +426,9 @@ int main ()
       return 1;
 
    test_merge_from_different_comparison();
+
+   if(!test_heterogeneous_lookups())
+      return 1;
 
    ////////////////////////////////////
    //    Testing allocator implementations

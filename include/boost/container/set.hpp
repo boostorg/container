@@ -734,6 +734,26 @@ class set
    //! <b>Complexity</b>: Logarithmic.
    const_iterator find(const key_type& x) const;
 
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Returns</b>: An iterator pointing to an element with the key
+   //!   equivalent to x, or end() if such an element is not found.
+   //!
+   //! <b>Complexity</b>: Logarithmic.
+   template<typename K>
+   iterator find(const K& x);
+
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Returns</b>: A const_iterator pointing to an element with the key
+   //!   equivalent to x, or end() if such an element is not found.
+   //!
+   //! <b>Complexity</b>: Logarithmic.
+   template<typename K>
+   const_iterator find(const K& x) const;
+
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    //! <b>Returns</b>: The number of elements with key equivalent to x.
@@ -741,6 +761,16 @@ class set
    //! <b>Complexity</b>: log(size())+count(k)
    BOOST_CONTAINER_FORCEINLINE size_type count(const key_type& x) const
    {  return static_cast<size_type>(this->base_t::find(x) != this->base_t::cend());  }
+
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Returns</b>: The number of elements with key equivalent to x.
+   //!
+   //! <b>Complexity</b>: log(size())+count(k)
+   template<typename K>
+   BOOST_CONTAINER_FORCEINLINE size_type count(const K& x) const
+   {  return static_cast<size_type>(this->find(x) != this->cend());  }
 
    //! <b>Returns</b>: The number of elements with key equivalent to x.
    //!
@@ -762,6 +792,26 @@ class set
    //! <b>Complexity</b>: Logarithmic
    const_iterator lower_bound(const key_type& x) const;
 
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Returns</b>: An iterator pointing to the first element with key not less
+   //!   than k, or a.end() if such an element is not found.
+   //!
+   //! <b>Complexity</b>: Logarithmic
+   template<typename K>
+   iterator lower_bound(const K& x);
+
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Returns</b>: A const iterator pointing to the first element with key not
+   //!   less than k, or a.end() if such an element is not found.
+   //!
+   //! <b>Complexity</b>: Logarithmic
+   template<typename K>
+   const_iterator lower_bound(const K& x) const;
+
    //! <b>Returns</b>: An iterator pointing to the first element with key not less
    //!   than x, or end() if such an element is not found.
    //!
@@ -773,6 +823,26 @@ class set
    //!
    //! <b>Complexity</b>: Logarithmic
    const_iterator upper_bound(const key_type& x) const;
+
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Returns</b>: An iterator pointing to the first element with key not less
+   //!   than x, or end() if such an element is not found.
+   //!
+   //! <b>Complexity</b>: Logarithmic
+   template<typename K>
+   iterator upper_bound(const K& x);
+
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Returns</b>: A const iterator pointing to the first element with key not
+   //!   less than x, or end() if such an element is not found.
+   //!
+   //! <b>Complexity</b>: Logarithmic
+   template<typename K>
+   const_iterator upper_bound(const K& x) const;
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -788,17 +858,27 @@ class set
    BOOST_CONTAINER_FORCEINLINE std::pair<const_iterator, const_iterator> equal_range(const key_type& x) const
    {  return this->base_t::lower_bound_range(x);  }
 
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Effects</b>: Equivalent to std::make_pair(this->lower_bound(k), this->upper_bound(k)).
+   //!
+   //! <b>Complexity</b>: Logarithmic
+   template<typename K>
+   std::pair<iterator,iterator> equal_range(const K& x)
+   {  return this->base_t::lower_bound_range(x);  }
+
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Effects</b>: Equivalent to std::make_pair(this->lower_bound(k), this->upper_bound(k)).
+   //!
+   //! <b>Complexity</b>: Logarithmic
+   template<typename K>
+   std::pair<const_iterator,const_iterator> equal_range(const K& x) const
+   {  return this->base_t::lower_bound_range(x);  }
+
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-
-   //! <b>Effects</b>: Equivalent to std::make_pair(this->lower_bound(k), this->upper_bound(k)).
-   //!
-   //! <b>Complexity</b>: Logarithmic
-   std::pair<iterator,iterator> equal_range(const key_type& x);
-
-   //! <b>Effects</b>: Equivalent to std::make_pair(this->lower_bound(k), this->upper_bound(k)).
-   //!
-   //! <b>Complexity</b>: Logarithmic
-   std::pair<const_iterator, const_iterator> equal_range(const key_type& x) const;
 
    //! <b>Effects</b>: Rebalances the tree. It's a no-op for Red-Black and AVL trees.
    //!
@@ -1330,8 +1410,20 @@ class multiset
    //! @copydoc ::boost::container::set::find(const key_type& ) const
    const_iterator find(const key_type& x) const;
 
+   //! @copydoc ::boost::container::set::find(const K& )
+   template<typename K>
+   iterator find(const K& x);
+
+   //! @copydoc ::boost::container::set::find(const K& )
+   template<typename K>
+   const_iterator find(const K& x) const;
+
    //! @copydoc ::boost::container::set::count(const key_type& ) const
    size_type count(const key_type& x) const;
+
+   //! @copydoc ::boost::container::set::count(const K& ) const
+   template<typename K>
+   size_type count(const K& x) const;
 
    //! @copydoc ::boost::container::set::lower_bound(const key_type& )
    iterator lower_bound(const key_type& x);
@@ -1339,17 +1431,41 @@ class multiset
    //! @copydoc ::boost::container::set::lower_bound(const key_type& ) const
    const_iterator lower_bound(const key_type& x) const;
 
+   //! @copydoc ::boost::container::set::lower_bound(const K& )
+   template<typename K>
+   iterator lower_bound(const K& x);
+
+   //! @copydoc ::boost::container::set::lower_bound(const K& ) const
+   template<typename K>
+   const_iterator lower_bound(const K& x) const;
+
    //! @copydoc ::boost::container::set::upper_bound(const key_type& )
    iterator upper_bound(const key_type& x);
 
    //! @copydoc ::boost::container::set::upper_bound(const key_type& ) const
    const_iterator upper_bound(const key_type& x) const;
 
+   //! @copydoc ::boost::container::set::upper_bound(const K& )
+   template<typename K>
+   iterator upper_bound(const K& x);
+
+   //! @copydoc ::boost::container::set::upper_bound(const K& ) const
+   template<typename K>
+   const_iterator upper_bound(const K& x) const;
+
    //! @copydoc ::boost::container::set::equal_range(const key_type& ) const
    std::pair<const_iterator, const_iterator> equal_range(const key_type& x) const;
 
    //! @copydoc ::boost::container::set::equal_range(const key_type& )
    std::pair<iterator,iterator> equal_range(const key_type& x);
+
+   //! @copydoc ::boost::container::set::equal_range(const K& ) const
+   template<typename K>
+   std::pair<const_iterator, const_iterator> equal_range(const K& x) const;
+
+   //! @copydoc ::boost::container::set::equal_range(const K& )
+   template<typename K>
+   std::pair<iterator,iterator> equal_range(const K& x);
 
    //! @copydoc ::boost::container::set::rebalance()
    void rebalance();
