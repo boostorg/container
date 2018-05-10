@@ -1001,6 +1001,25 @@ class flat_set
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
+#if __cplusplus >= 201703L
+template <typename InputIterator>
+flat_set(InputIterator, InputIterator) -> flat_set<typename std::iterator_traits<InputIterator>::value_type>;
+template <typename InputIterator, typename Allocator>
+flat_set(InputIterator, InputIterator, Allocator const&) -> flat_set<typename std::iterator_traits<InputIterator>::value_type, std::less<typename std::iterator_traits<InputIterator>::value_type>, Allocator>;
+template <typename InputIterator, typename Compare>
+flat_set(InputIterator, InputIterator, Compare const&) -> flat_set<typename std::iterator_traits<InputIterator>::value_type, Compare>;
+template <typename InputIterator, typename Compare, typename Allocator>
+flat_set(InputIterator, InputIterator, Compare const&, Allocator const&) -> flat_set<typename std::iterator_traits<InputIterator>::value_type, Compare, Allocator>;
+template <typename InputIterator>
+flat_set(ordered_unique_range_t, InputIterator, InputIterator) -> flat_set<typename std::iterator_traits<InputIterator>::value_type>;
+template <typename InputIterator, typename Allocator>
+flat_set(ordered_unique_range_t, InputIterator, InputIterator, Allocator const&) -> flat_set<typename std::iterator_traits<InputIterator>::value_type, std::less<typename std::iterator_traits<InputIterator>::value_type>, Allocator>;
+template <typename InputIterator, typename Compare>
+flat_set(ordered_unique_range_t, InputIterator, InputIterator, Compare const&) -> flat_set<typename std::iterator_traits<InputIterator>::value_type, Compare>;
+template <typename InputIterator, typename Compare, typename Allocator>
+flat_set(ordered_unique_range_t, InputIterator, InputIterator, Compare const&, Allocator const&) -> flat_set<typename std::iterator_traits<InputIterator>::value_type, Compare, Allocator>;
+#endif
+
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }  //namespace container {
@@ -1654,6 +1673,25 @@ class flat_multiset
    {  return this->tree_t::insert_equal(p, ::boost::forward<KeyType>(x)); }
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
+
+#if __cplusplus >= 201703L
+template <typename InputIterator>
+flat_multiset(InputIterator, InputIterator) -> flat_multiset<typename std::iterator_traits<InputIterator>::value_type>;
+template <typename InputIterator, typename Allocator>
+flat_multiset(InputIterator, InputIterator, Allocator const&) -> flat_multiset<typename std::iterator_traits<InputIterator>::value_type, std::less<typename std::iterator_traits<InputIterator>::value_type>, Allocator>;
+template <typename InputIterator, typename Compare>
+flat_multiset(InputIterator, InputIterator, Compare const&) -> flat_multiset<typename std::iterator_traits<InputIterator>::value_type, Compare>;
+template <typename InputIterator, typename Compare, typename Allocator>
+flat_multiset(InputIterator, InputIterator, Compare const&, Allocator const&) -> flat_multiset<typename std::iterator_traits<InputIterator>::value_type, Compare, Allocator>;
+template <typename InputIterator>
+flat_multiset(ordered_range_t, InputIterator, InputIterator) -> flat_multiset<typename std::iterator_traits<InputIterator>::value_type>;
+template <typename InputIterator, typename Allocator>
+flat_multiset(ordered_range_t, InputIterator, InputIterator, Allocator const&) -> flat_multiset<typename std::iterator_traits<InputIterator>::value_type, std::less<typename std::iterator_traits<InputIterator>::value_type>, Allocator>;
+template <typename InputIterator, typename Compare>
+flat_multiset(ordered_range_t, InputIterator, InputIterator, Compare const&) -> flat_multiset<typename std::iterator_traits<InputIterator>::value_type, Compare>;
+template <typename InputIterator, typename Compare, typename Allocator>
+flat_multiset(ordered_range_t, InputIterator, InputIterator, Compare const&, Allocator const&) -> flat_multiset<typename std::iterator_traits<InputIterator>::value_type, Compare, Allocator>;
+#endif
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 

@@ -211,6 +211,44 @@ int main ()
       }
    }
 
+#if __cplusplus >= 201703L
+   ////////////////////////////////////
+   //    Constructor Template Auto Deduction Tests
+   ////////////////////////////////////
+   {
+      auto gold = std::list{ 1, 2, 3 };
+      auto test = boost::container::list(gold.begin(), gold.end());
+      if (test.size() != 3) {
+         return 1;
+      }
+      if (test.front() != 1)
+         return 1;
+      test.pop_front();
+      if (test.front() != 2)
+         return 1;
+      test.pop_front();
+      if (test.front() != 3)
+         return 1;
+      test.pop_front();
+   }
+   {
+      auto gold = std::list{ 1, 2, 3 };
+      auto test = boost::container::list(gold.begin(), gold.end(), new_allocator<int>());
+      if (test.size() != 3) {
+         return 1;
+      }
+      if (test.front() != 1)
+         return 1;
+      test.pop_front();
+      if (test.front() != 2)
+         return 1;
+      test.pop_front();
+      if (test.front() != 3)
+         return 1;
+      test.pop_front();
+   }
+#endif
+
    return 0;
 }
 

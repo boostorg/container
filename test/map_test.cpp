@@ -426,6 +426,24 @@ int main ()
       }
    }
 
+#if __cplusplus >= 201703L
+   ////////////////////////////////////
+   //    Constructor Template Auto Deduction
+   ////////////////////////////////////
+   {
+      auto gold = std::map<int, int>({ {1,1}, {2,2}, {3,3} } );
+      auto test = boost::container::map(gold.begin(), gold.end());
+      if (test.size() != 3)
+         return 1;
+   }
+   {
+      auto gold = std::multimap<int, int>({ {1,1}, {2,2}, {3,3} } );
+      auto test = boost::container::multimap(gold.begin(), gold.end());
+      if (test.size() != 3)
+         return 1;
+   }
+#endif
+
    ////////////////////////////////////
    //    Node extraction/insertion testing functions
    ////////////////////////////////////

@@ -1449,6 +1449,25 @@ class flat_map
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
+#if __cplusplus >= 201703L
+template <typename InputIterator>
+flat_map(InputIterator, InputIterator) -> flat_map<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>, typename std::iterator_traits<InputIterator>::value_type::second_type>;
+template <typename InputIterator, typename Allocator>
+flat_map(InputIterator, InputIterator, Allocator const&) -> flat_map<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>, typename std::iterator_traits<InputIterator>::value_type::second_type, std::less<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>>, Allocator>;
+template <typename InputIterator, typename Compare>
+flat_map(InputIterator, InputIterator, Compare const&) -> flat_map<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>, typename std::iterator_traits<InputIterator>::value_type::second_type, Compare>;
+template <typename InputIterator, typename Compare, typename Allocator>
+flat_map(InputIterator, InputIterator, Compare const&, Allocator const&) -> flat_map<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>, typename std::iterator_traits<InputIterator>::value_type::second_type, Compare, Allocator>;
+template <typename InputIterator>
+flat_map(ordered_unique_range_t, InputIterator, InputIterator) -> flat_map<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>, typename std::iterator_traits<InputIterator>::value_type::second_type>;
+template <typename InputIterator, typename Allocator>
+flat_map(ordered_unique_range_t, InputIterator, InputIterator, Allocator const&) -> flat_map<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>, typename std::iterator_traits<InputIterator>::value_type::second_type, std::less<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>>, Allocator>;
+template <typename InputIterator, typename Compare>
+flat_map(ordered_unique_range_t, InputIterator, InputIterator, Compare const&) -> flat_map<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>, typename std::iterator_traits<InputIterator>::value_type::second_type, Compare>;
+template <typename InputIterator, typename Compare, typename Allocator>
+flat_map(ordered_unique_range_t, InputIterator, InputIterator, Compare const&, Allocator const&) -> flat_map<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>, typename std::iterator_traits<InputIterator>::value_type::second_type, Compare, Allocator>;
+#endif
+
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 }  //namespace container {
@@ -2563,6 +2582,25 @@ class flat_multimap
    BOOST_CONTAINER_FORCEINLINE friend void swap(flat_multimap& x, flat_multimap& y)
    {  x.swap(y);  }
 };
+
+#if __cplusplus >= 201703L
+template <typename InputIterator>
+flat_multimap(InputIterator, InputIterator) -> flat_multimap<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>, typename std::iterator_traits<InputIterator>::value_type::second_type>;
+template <typename InputIterator, typename Allocator>
+flat_multimap(InputIterator, InputIterator, Allocator const&) -> flat_multimap<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>, typename std::iterator_traits<InputIterator>::value_type::second_type, std::less<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>>, Allocator>;
+template <typename InputIterator, typename Compare>
+flat_multimap(InputIterator, InputIterator, Compare const&) -> flat_multimap<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>, typename std::iterator_traits<InputIterator>::value_type::second_type, Compare>;
+template <typename InputIterator, typename Compare, typename Allocator>
+flat_multimap(InputIterator, InputIterator, Compare const&, Allocator const&) -> flat_multimap<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>, typename std::iterator_traits<InputIterator>::value_type::second_type, Compare, Allocator>;
+template <typename InputIterator>
+flat_multimap(ordered_range_t, InputIterator, InputIterator) -> flat_multimap<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>, typename std::iterator_traits<InputIterator>::value_type::second_type>;
+template <typename InputIterator, typename Allocator>
+flat_multimap(ordered_range_t, InputIterator, InputIterator, Allocator const&) -> flat_multimap<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>, typename std::iterator_traits<InputIterator>::value_type::second_type, std::less<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>>, Allocator>;
+template <typename InputIterator, typename Compare>
+flat_multimap(ordered_range_t, InputIterator, InputIterator, Compare const&) -> flat_multimap<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>, typename std::iterator_traits<InputIterator>::value_type::second_type, Compare>;
+template <typename InputIterator, typename Compare, typename Allocator>
+flat_multimap(ordered_range_t, InputIterator, InputIterator, Compare const&, Allocator const&) -> flat_multimap<std::remove_const_t<typename std::iterator_traits<InputIterator>::value_type::first_type>, typename std::iterator_traits<InputIterator>::value_type::second_type, Compare, Allocator>;
+#endif
 
 }}
 
