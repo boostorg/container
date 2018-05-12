@@ -48,7 +48,7 @@ namespace boost {
 namespace container {
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-template <class Key, class T, class Compare, class Allocator>
+template <class Key, class T, class Compare, class Allocator, class ContainerGenerator>
 class flat_multimap;
 #endif
 
@@ -68,19 +68,20 @@ class flat_multimap;
 //! \tparam Compare is the comparison functor used to order keys
 //! \tparam Allocator is the allocator to be used to allocate memory for this container
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class Key, class Compare = std::less<Key>, class Allocator = new_allocator<Key> >
+template <class Key, class Compare = std::less<Key>, class Allocator = new_allocator<Key>
+    , class ContainerGenerator = flat_map_default_container_generator >
 #else
-template <class Key, class Compare, class Allocator>
+template <class Key, class Compare, class Allocator, class ContainerGenerator>
 #endif
 class flat_set
    ///@cond
-   : public container_detail::flat_tree<Key, container_detail::identity<Key>, Compare, Allocator>
+   : public container_detail::flat_tree<Key, container_detail::identity<Key>, Compare, Allocator, ContainerGenerator>
    ///@endcond
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(flat_set)
-   typedef container_detail::flat_tree<Key, container_detail::identity<Key>, Compare, Allocator> base_t;
+   typedef container_detail::flat_tree<Key, container_detail::identity<Key>, Compare, Allocator, ContainerGenerator> base_t;
 
    public:
    base_t &tree()
@@ -618,25 +619,25 @@ class flat_set
    {  this->base_t::insert_unique(ordered_unique_range, il.begin(), il.end()); }
 #endif
 
-   //! @copydoc ::boost::container::flat_map::merge(flat_map<Key, T, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_map::merge(flat_map<Key, T, C2, Allocator, ContainerGenerator>&)
    template<class C2>
-   BOOST_CONTAINER_FORCEINLINE void merge(flat_set<Key, C2, Allocator>& source)
+   BOOST_CONTAINER_FORCEINLINE void merge(flat_set<Key, C2, Allocator, ContainerGenerator>& source)
    {  this->base_t::merge_unique(source.tree());   }
 
-   //! @copydoc ::boost::container::flat_map::merge(flat_set<Key, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_map::merge(flat_set<Key, C2, Allocator, ContainerGenerator>&)
    template<class C2>
-   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_set<Key, C2, Allocator> BOOST_RV_REF_END source)
-   {  return this->merge(static_cast<flat_set<Key, C2, Allocator>&>(source));   }
+   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_set<Key, C2, Allocator, ContainerGenerator> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<flat_set<Key, C2, Allocator, ContainerGenerator>&>(source));   }
 
-   //! @copydoc ::boost::container::flat_map::merge(flat_multimap<Key, T, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_map::merge(flat_multimap<Key, T, C2, Allocator, ContainerGenerator>&)
    template<class C2>
-   BOOST_CONTAINER_FORCEINLINE void merge(flat_multiset<Key, C2, Allocator>& source)
+   BOOST_CONTAINER_FORCEINLINE void merge(flat_multiset<Key, C2, Allocator, ContainerGenerator>& source)
    {  this->base_t::merge_unique(source.tree());   }
 
-   //! @copydoc ::boost::container::flat_map::merge(flat_multiset<Key, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_map::merge(flat_multiset<Key, C2, Allocator, ContainerGenerator>&)
    template<class C2>
-   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_multiset<Key, C2, Allocator> BOOST_RV_REF_END source)
-   {  return this->merge(static_cast<flat_multiset<Key, C2, Allocator>&>(source));   }
+   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_multiset<Key, C2, Allocator, ContainerGenerator> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<flat_multiset<Key, C2, Allocator, ContainerGenerator>&>(source));   }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -864,8 +865,8 @@ class flat_set
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class Key, class Compare, class Allocator>
-struct has_trivial_destructor_after_move<boost::container::flat_set<Key, Compare, Allocator> >
+template <class Key, class Compare, class Allocator, class ContainerGenerator>
+struct has_trivial_destructor_after_move<boost::container::flat_set<Key, Compare, Allocator, ContainerGenerator> >
 {
    typedef typename ::boost::container::allocator_traits<Allocator>::pointer pointer;
    static const bool value = ::boost::has_trivial_destructor_after_move<Allocator>::value &&
@@ -894,19 +895,20 @@ namespace container {
 //! \tparam Compare is the comparison functor used to order keys
 //! \tparam Allocator is the allocator to be used to allocate memory for this container
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class Key, class Compare = std::less<Key>, class Allocator = new_allocator<Key> >
+template <class Key, class Compare = std::less<Key>, class Allocator = new_allocator<Key>
+    , class ContainerGenerator = flat_map_default_container_generator >
 #else
-template <class Key, class Compare, class Allocator>
+template <class Key, class Compare, class Allocator, class ContainerGenerator>
 #endif
 class flat_multiset
    ///@cond
-   : public container_detail::flat_tree<Key, container_detail::identity<Key>, Compare, Allocator>
+   : public container_detail::flat_tree<Key, container_detail::identity<Key>, Compare, Allocator, ContainerGenerator>
    ///@endcond
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(flat_multiset)
-   typedef container_detail::flat_tree<Key, container_detail::identity<Key>, Compare, Allocator> base_t;
+   typedef container_detail::flat_tree<Key, container_detail::identity<Key>, Compare, Allocator, ContainerGenerator> base_t;
 
    public:
    base_t &tree()
@@ -1273,25 +1275,25 @@ class flat_multiset
    {  this->base_t::insert_equal(ordered_range, il.begin(), il.end()); }
 #endif
 
-   //! @copydoc ::boost::container::flat_multimap::merge(flat_multimap<Key, T, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_multimap::merge(flat_multimap<Key, T, C2, Allocator, ContainerGenerator>&)
    template<class C2>
-   BOOST_CONTAINER_FORCEINLINE void merge(flat_multiset<Key, C2, Allocator>& source)
+   BOOST_CONTAINER_FORCEINLINE void merge(flat_multiset<Key, C2, Allocator, ContainerGenerator>& source)
    {  this->base_t::merge_equal(source.tree());   }
 
-   //! @copydoc ::boost::container::flat_multiset::merge(flat_multiset<Key, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_multiset::merge(flat_multiset<Key, C2, Allocator, ContainerGenerator>&)
    template<class C2>
-   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_multiset<Key, C2, Allocator> BOOST_RV_REF_END source)
-   {  return this->merge(static_cast<flat_multiset<Key, C2, Allocator>&>(source));   }
+   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_multiset<Key, C2, Allocator, ContainerGenerator> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<flat_multiset<Key, C2, Allocator, ContainerGenerator>&>(source));   }
 
-   //! @copydoc ::boost::container::flat_multimap::merge(flat_map<Key, T, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_multimap::merge(flat_map<Key, T, C2, Allocator, ContainerGenerator>&)
    template<class C2>
-   BOOST_CONTAINER_FORCEINLINE void merge(flat_set<Key, C2, Allocator>& source)
+   BOOST_CONTAINER_FORCEINLINE void merge(flat_set<Key, C2, Allocator, ContainerGenerator>& source)
    {  this->base_t::merge_equal(source.tree());   }
 
-   //! @copydoc ::boost::container::flat_multiset::merge(flat_set<Key, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_multiset::merge(flat_set<Key, C2, Allocator, ContainerGenerator>&)
    template<class C2>
-   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_set<Key, C2, Allocator> BOOST_RV_REF_END source)
-   {  return this->merge(static_cast<flat_set<Key, C2, Allocator>&>(source));   }
+   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_set<Key, C2, Allocator, ContainerGenerator> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<flat_set<Key, C2, Allocator, ContainerGenerator>&>(source));   }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -1412,8 +1414,8 @@ class flat_multiset
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class Key, class Compare, class Allocator>
-struct has_trivial_destructor_after_move<boost::container::flat_multiset<Key, Compare, Allocator> >
+template <class Key, class Compare, class Allocator, class ContainerGenerator>
+struct has_trivial_destructor_after_move<boost::container::flat_multiset<Key, Compare, Allocator, ContainerGenerator> >
 {
    typedef typename ::boost::container::allocator_traits<Allocator>::pointer pointer;
    static const bool value = ::boost::has_trivial_destructor_after_move<Allocator>::value &&

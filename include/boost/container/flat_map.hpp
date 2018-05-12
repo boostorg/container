@@ -53,7 +53,7 @@ namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
-template <class Key, class T, class Compare, class Allocator>
+template <class Key, class T, class Compare, class Allocator, class ContainerGenerator>
 class flat_multimap;
 
 namespace container_detail{
@@ -103,9 +103,10 @@ BOOST_CONTAINER_FORCEINLINE static D force_copy(S s)
 //! \tparam Allocator is the allocator to allocate the <code>value_type</code>s
 //!   (e.g. <i>allocator< std::pair<Key, T> > </i>).
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class Key, class T, class Compare = std::less<Key>, class Allocator = new_allocator< std::pair< Key, T> > >
+template <class Key, class T, class Compare = std::less<Key>, class Allocator = new_allocator< std::pair< Key, T> >
+    , class ContainerGenerator = flat_map_default_container_generator >
 #else
-template <class Key, class T, class Compare, class Allocator>
+template <class Key, class T, class Compare, class Allocator, class ContainerGenerator>
 #endif
 class flat_map
 {
@@ -117,7 +118,9 @@ class flat_map
                            std::pair<Key, T>,
                            container_detail::select1st<Key>,
                            Compare,
-                           Allocator> tree_t;
+                           Allocator,
+                           ContainerGenerator
+                           > tree_t;
 
    //This is the real tree stored here. It's based on a movable pair
    typedef container_detail::flat_tree<
@@ -125,7 +128,9 @@ class flat_map
                            container_detail::select1st<Key>,
                            Compare,
                            typename allocator_traits<Allocator>::template portable_rebind_alloc
-                              <container_detail::pair<Key, T> >::type> impl_tree_t;
+                              <container_detail::pair<Key, T> >::type,
+                           ContainerGenerator
+                           > impl_tree_t;
    impl_tree_t m_flat_tree;  // flat tree representing flat_map
 
    typedef typename impl_tree_t::value_type              impl_value_type;
@@ -1081,23 +1086,23 @@ class flat_map
    //!
    //! <b>Complexity</b>: N log(a.size() + N) (N has the value source.size())
    template<class C2>
-   BOOST_CONTAINER_FORCEINLINE void merge(flat_map<Key, T, C2, Allocator>& source)
+   BOOST_CONTAINER_FORCEINLINE void merge(flat_map<Key, T, C2, Allocator, ContainerGenerator>& source)
    {  m_flat_tree.merge_unique(source.tree());   }
 
-   //! @copydoc ::boost::container::flat_map::merge(flat_map<Key, T, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_map::merge(flat_map<Key, T, C2, Allocator, ContainerGenerator>&)
    template<class C2>
-   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_map<Key, T, C2, Allocator> BOOST_RV_REF_END source)
-   {  return this->merge(static_cast<flat_map<Key, T, C2, Allocator>&>(source)); }
+   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_map<Key, T, C2, Allocator, ContainerGenerator> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<flat_map<Key, T, C2, Allocator, ContainerGenerator>&>(source)); }
 
-   //! @copydoc ::boost::container::flat_map::merge(flat_map<Key, T, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_map::merge(flat_map<Key, T, C2, Allocator, ContainerGenerator>&)
    template<class C2>
-   BOOST_CONTAINER_FORCEINLINE void merge(flat_multimap<Key, T, C2, Allocator>& source)
+   BOOST_CONTAINER_FORCEINLINE void merge(flat_multimap<Key, T, C2, Allocator, ContainerGenerator>& source)
    {  m_flat_tree.merge_unique(source.tree());   }
 
-   //! @copydoc ::boost::container::flat_map::merge(flat_map<Key, T, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_map::merge(flat_map<Key, T, C2, Allocator, ContainerGenerator>&)
    template<class C2>
-   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_multimap<Key, T, C2, Allocator> BOOST_RV_REF_END source)
-   {  return this->merge(static_cast<flat_multimap<Key, T, C2, Allocator>&>(source));  }
+   BOOST_CONTAINER_FORCEINLINE void merge(BOOST_RV_REF_BEG flat_multimap<Key, T, C2, Allocator, ContainerGenerator> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<flat_multimap<Key, T, C2, Allocator, ContainerGenerator>&>(source));  }
 
    //! <b>Effects</b>: Erases the element pointed to by p.
    //!
@@ -1317,8 +1322,8 @@ class flat_map
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class Key, class T, class Compare, class Allocator>
-struct has_trivial_destructor_after_move<boost::container::flat_map<Key, T, Compare, Allocator> >
+template <class Key, class T, class Compare, class Allocator, class ContainerGenerator>
+struct has_trivial_destructor_after_move<boost::container::flat_map<Key, T, Compare, Allocator, ContainerGenerator> >
 {
    typedef typename ::boost::container::allocator_traits<Allocator>::pointer pointer;
    static const bool value = ::boost::has_trivial_destructor_after_move<Allocator>::value &&
@@ -1360,9 +1365,10 @@ namespace container {
 //! \tparam Allocator is the allocator to allocate the <code>value_type</code>s
 //!   (e.g. <i>allocator< std::pair<Key, T> > </i>).
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class Key, class T, class Compare = std::less<Key>, class Allocator = new_allocator< std::pair< Key, T> > >
+template <class Key, class T, class Compare = std::less<Key>, class Allocator = new_allocator< std::pair< Key, T> >
+    , class ContainerGenerator = flat_map_default_container_generator >
 #else
-template <class Key, class T, class Compare, class Allocator>
+template <class Key, class T, class Compare, class Allocator, class ContainerGenerator>
 #endif
 class flat_multimap
 {
@@ -1373,14 +1379,18 @@ class flat_multimap
                            std::pair<Key, T>,
                            container_detail::select1st<Key>,
                            Compare,
-                           Allocator> tree_t;
+                           Allocator,
+                           ContainerGenerator
+                           > tree_t;
    //This is the real tree stored here. It's based on a movable pair
    typedef container_detail::flat_tree<
                            container_detail::pair<Key, T>,
                            container_detail::select1st<Key>,
                            Compare,
                            typename allocator_traits<Allocator>::template portable_rebind_alloc
-                              <container_detail::pair<Key, T> >::type> impl_tree_t;
+                              <container_detail::pair<Key, T> >::type,
+                           ContainerGenerator
+                           > impl_tree_t;
    impl_tree_t m_flat_tree;  // flat tree representing flat_map
 
    typedef typename impl_tree_t::value_type              impl_value_type;
@@ -2057,23 +2067,23 @@ class flat_multimap
    //!
    //! <b>Complexity</b>: N log(a.size() + N) (N has the value source.size())
    template<class C2>
-   void merge(flat_multimap<Key, T, C2, Allocator>& source)
+   void merge(flat_multimap<Key, T, C2, Allocator, ContainerGenerator>& source)
    {  m_flat_tree.merge_equal(source.tree());   }
 
-   //! @copydoc ::boost::container::flat_multimap::merge(flat_multimap<Key, T, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_multimap::merge(flat_multimap<Key, T, C2, Allocator, ContainerGenerator>&)
    template<class C2>
-   void merge(BOOST_RV_REF_BEG flat_multimap<Key, T, C2, Allocator> BOOST_RV_REF_END source)
-   {  return this->merge(static_cast<flat_multimap<Key, T, C2, Allocator>&>(source)); }
+   void merge(BOOST_RV_REF_BEG flat_multimap<Key, T, C2, Allocator, ContainerGenerator> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<flat_multimap<Key, T, C2, Allocator, ContainerGenerator>&>(source)); }
 
-   //! @copydoc ::boost::container::flat_multimap::merge(flat_multimap<Key, T, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_multimap::merge(flat_multimap<Key, T, C2, Allocator, ContainerGenerator>&)
    template<class C2>
-   void merge(flat_map<Key, T, C2, Allocator>& source)
+   void merge(flat_map<Key, T, C2, Allocator, ContainerGenerator>& source)
    {  m_flat_tree.merge_equal(source.tree());   }
 
-   //! @copydoc ::boost::container::flat_multimap::merge(flat_multimap<Key, T, C2, Allocator>&)
+   //! @copydoc ::boost::container::flat_multimap::merge(flat_multimap<Key, T, C2, Allocator, ContainerGenerator>&)
    template<class C2>
-   void merge(BOOST_RV_REF_BEG flat_map<Key, T, C2, Allocator> BOOST_RV_REF_END source)
-   {  return this->merge(static_cast<flat_map<Key, T, C2, Allocator>&>(source)); }
+   void merge(BOOST_RV_REF_BEG flat_map<Key, T, C2, Allocator, ContainerGenerator> BOOST_RV_REF_END source)
+   {  return this->merge(static_cast<flat_map<Key, T, C2, Allocator, ContainerGenerator>&>(source)); }
 
    //! <b>Effects</b>: Erases the element pointed to by p.
    //!
@@ -2270,8 +2280,8 @@ namespace boost {
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class Key, class T, class Compare, class Allocator>
-struct has_trivial_destructor_after_move< boost::container::flat_multimap<Key, T, Compare, Allocator> >
+template <class Key, class T, class Compare, class Allocator, class ContainerGenerator>
+struct has_trivial_destructor_after_move< boost::container::flat_multimap<Key, T, Compare, Allocator, ContainerGenerator> >
 {
    typedef typename ::boost::container::allocator_traits<Allocator>::pointer pointer;
    static const bool value = ::boost::has_trivial_destructor_after_move<Allocator>::value &&

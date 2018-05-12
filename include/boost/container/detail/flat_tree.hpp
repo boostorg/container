@@ -50,7 +50,29 @@
 
 namespace boost {
 namespace container {
+
+ 
+class flat_map_default_container_generator {
+public:
+    template<class Value, class Allocator>
+    struct apply {
+        typedef boost::container::vector<Value, Allocator> type;
+    };
+};
+
+
+template<std::size_t N>
+class flat_map_small_container_generator {
+public:
+    template<class Value, class Allocator>
+    struct apply {
+        typedef small_vector<Value, N, Allocator> type;
+    };
+};
+
+    
 namespace container_detail {
+
 
 template<class Compare, class Value, class KeyOfValue>
 class flat_tree_value_compare
@@ -102,12 +124,13 @@ struct get_flat_tree_iterators
 };
 
 template <class Value, class KeyOfValue,
-          class Compare, class Allocator>
+          class Compare, class Allocator,
+          class ContainerGenerator>
 class flat_tree
 {
-   typedef boost::container::vector<Value, Allocator>    vector_t;
-   typedef Allocator                                     allocator_t;
-   typedef allocator_traits<Allocator>                   allocator_traits_type;
+   typedef typename ContainerGenerator::template apply<Value, Allocator>::type  vector_t;
+   typedef Allocator                                                            allocator_t;
+   typedef allocator_traits<Allocator>                                          allocator_traits_type;
 
    public:
    typedef flat_tree_value_compare<Compare, Value, KeyOfValue> value_compare;
@@ -778,14 +801,14 @@ class flat_tree
    }
 
    template<class C2>
-   void merge_unique(flat_tree<Value, KeyOfValue, C2, Allocator>& source)
+   void merge_unique(flat_tree<Value, KeyOfValue, C2, Allocator, ContainerGenerator>& source)
    {
       this->insert( boost::make_move_iterator(source.begin())
                   , boost::make_move_iterator(source.end()));
    }
 
    template<class C2>
-   void merge_equal(flat_tree<Value, KeyOfValue, C2, Allocator>& source)
+   void merge_equal(flat_tree<Value, KeyOfValue, C2, Allocator, ContainerGenerator>& source)
    {
       this->insert( boost::make_move_iterator(source.begin())
                   , boost::make_move_iterator(source.end()));
@@ -1092,8 +1115,9 @@ class flat_tree
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
 template <class T, class KeyOfValue,
-class Compare, class Allocator>
-struct has_trivial_destructor_after_move<boost::container::container_detail::flat_tree<T, KeyOfValue, Compare, Allocator> >
+class Compare, class Allocator,
+template<class Value, class Allocator> class ContainerGenerator>
+struct has_trivial_destructor_after_move<boost::container::container_detail::flat_tree<T, KeyOfValue, Compare, Allocator, ContainerGenerator> >
 {
    typedef typename ::boost::container::allocator_traits<Allocator>::pointer pointer;
    static const bool value = ::boost::has_trivial_destructor_after_move<Allocator>::value &&

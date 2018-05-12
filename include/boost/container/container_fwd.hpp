@@ -100,6 +100,11 @@ enum tree_type_enum
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
+class flat_map_default_container_generator;
+
+template<std::size_t N>
+class flat_map_small_container_generator;
+
 template<class T>
 class new_allocator;
 
@@ -163,25 +168,61 @@ class multimap;
 
 template <class Key
          ,class Compare  = std::less<Key>
-         ,class Allocator = new_allocator<Key> >
+         ,class Allocator = new_allocator<Key>
+         ,class ContainerGenerator = flat_map_default_container_generator >
 class flat_set;
 
 template <class Key
          ,class Compare  = std::less<Key>
-         ,class Allocator = new_allocator<Key> >
+         ,class Allocator = new_allocator<Key>
+         ,class ContainerGenerator = flat_map_default_container_generator >
 class flat_multiset;
 
 template <class Key
          ,class T
          ,class Compare  = std::less<Key>
-         ,class Allocator = new_allocator<std::pair<Key, T> > >
+         ,class Allocator = new_allocator<std::pair<Key, T> >
+         ,class ContainerGenerator = flat_map_default_container_generator >
 class flat_map;
 
 template <class Key
          ,class T
          ,class Compare  = std::less<Key>
-         ,class Allocator = new_allocator<std::pair<Key, T> > >
+         ,class Allocator = new_allocator<std::pair<Key, T> >
+         ,class ContainerGenerator = flat_map_default_container_generator >
 class flat_multimap;
+
+
+#ifndef BOOST_NO_TEMPLATE_ALIASES
+
+template <class Key
+    , std::size_t N
+    , class Compare = std::less<Key>
+    , class Allocator = new_allocator<Key> >
+    using small_flat_set = flat_set<Key, Compare, Allocator, flat_map_small_container_generator<N>>;
+
+template <class Key
+    , std::size_t N
+    , class Compare = std::less<Key>
+    , class Allocator = new_allocator<Key> >
+    using small_flat_multiset = flat_multiset<Key, Compare, Allocator, flat_map_small_container_generator<N>>;
+
+template <class Key
+    , class T
+    , std::size_t N
+    , class Compare = std::less<Key>
+    , class Allocator = new_allocator<std::pair<Key, T> > >
+    using small_flat_map = flat_map<Key, T, Compare, Allocator, flat_map_small_container_generator<N>>;
+
+template <class Key
+    , class T
+    , std::size_t N
+    , class Compare = std::less<Key>
+    , class Allocator = new_allocator<std::pair<Key, T> > >
+    using small_flat_multimap = flat_multimap<Key, T, Compare, Allocator, flat_map_small_container_generator<N>>;
+
+
+#endif
 
 template <class CharT
          ,class Traits = std::char_traits<CharT>
