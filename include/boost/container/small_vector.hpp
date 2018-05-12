@@ -50,7 +50,7 @@ namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
-template <class T, class Allocator = new_allocator<T>, std::size_t alignment = 0 >
+template <class T, class Allocator = new_allocator<T> >
 class small_vector_base;
 
 #endif
@@ -81,7 +81,7 @@ class small_vector_base;
 //! `boost::container::vector< T, small_vector_allocator<Allocator> >`
 //! and internal storage can be obtained downcasting that vector
 //! to `small_vector_base<T>`.
-template<class Allocator, std::size_t alignment>
+template<class Allocator>
 class small_vector_allocator
    : public Allocator
 {
@@ -165,17 +165,17 @@ class small_vector_allocator
 
    //!Constructor from related small_vector_allocator.
    //!Never throws
-   template<class OtherAllocator, std::size_t alignment>
+   template<class OtherAllocator>
    BOOST_CONTAINER_FORCEINLINE small_vector_allocator
-      (const small_vector_allocator<OtherAllocator, alignment> &other) BOOST_NOEXCEPT_OR_NOTHROW
+      (const small_vector_allocator<OtherAllocator> &other) BOOST_NOEXCEPT_OR_NOTHROW
       : Allocator(other.as_base())
    {}
 
    //!Move constructor from related small_vector_allocator.
    //!Never throws
-   template<class OtherAllocator, std::size_t alignment>
+   template<class OtherAllocator>
    BOOST_CONTAINER_FORCEINLINE small_vector_allocator
-      (BOOST_RV_REF_BEG small_vector_allocator<OtherAllocator, alignment> BOOST_RV_REF_END other) BOOST_NOEXCEPT_OR_NOTHROW
+      (BOOST_RV_REF(small_vector_allocator<OtherAllocator>) other) BOOST_NOEXCEPT_OR_NOTHROW
       : Allocator(::boost::move(other.as_base()))
    {}
 
@@ -193,16 +193,16 @@ class small_vector_allocator
 
    //!Assignment from related small_vector_allocator.
    //!Never throws
-   template<class OtherAllocator, std::size_t alignment>
+   template<class OtherAllocator>
    BOOST_CONTAINER_FORCEINLINE small_vector_allocator &
-      operator=(BOOST_COPY_ASSIGN_REF_BEG small_vector_allocator<OtherAllocator, alignment> BOOST_COPY_ASSIGN_REF_END other) BOOST_NOEXCEPT_OR_NOTHROW
+      operator=(BOOST_COPY_ASSIGN_REF(small_vector_allocator<OtherAllocator>) other) BOOST_NOEXCEPT_OR_NOTHROW
    {  return static_cast<small_vector_allocator&>(this->Allocator::operator=(other.as_base()));  }
 
    //!Move assignment from related small_vector_allocator.
    //!Never throws
-   template<class OtherAllocator, std::size_t alignment>
+   template<class OtherAllocator>
    BOOST_CONTAINER_FORCEINLINE small_vector_allocator &
-      operator=(BOOST_RV_REF_BEG small_vector_allocator<OtherAllocator, alignment> BOOST_RV_REF_END other) BOOST_NOEXCEPT_OR_NOTHROW
+      operator=(BOOST_RV_REF(small_vector_allocator<OtherAllocator>) other) BOOST_NOEXCEPT_OR_NOTHROW
    {  return static_cast<small_vector_allocator&>(this->Allocator::operator=(::boost::move(other.as_base())));  }
 
    //!Allocates storage from the standard-conforming allocator
@@ -281,10 +281,10 @@ class small_vector_allocator
 
    pointer internal_storage() const
    {
-      typedef typename Allocator::value_type                                                        value_type;
-      typedef container_detail::vector_alloc_holder< small_vector_allocator<Allocator, alignment> > vector_alloc_holder_t;
-      typedef vector<value_type, small_vector_allocator<Allocator, alignment> >                     vector_base;
-      typedef small_vector_base<value_type, Allocator, alignment>                                   derived_type;
+      typedef typename Allocator::value_type                                              value_type;
+      typedef container_detail::vector_alloc_holder< small_vector_allocator<Allocator> >  vector_alloc_holder_t;
+      typedef vector<value_type, small_vector_allocator<Allocator> >                      vector_base;
+      typedef small_vector_base<value_type, Allocator>                                    derived_type;
       //
       const vector_alloc_holder_t &v_holder = static_cast<const vector_alloc_holder_t &>(*this);
       const vector_base &v_base = reinterpret_cast<const vector_base &>(v_holder);
@@ -319,9 +319,9 @@ class small_vector_allocator
 //!
 //! All `boost::container:vector` member functions are inherited. See `vector` documentation for details.
 //!
-template <class T, class SecondaryAllocator, std::size_t alignment>
+template <class T, class SecondaryAllocator>
 class small_vector_base
-   : public vector<T, small_vector_allocator<SecondaryAllocator, alignment> >
+   : public vector<T, small_vector_allocator<SecondaryAllocator> >
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    public:
@@ -332,7 +332,7 @@ class small_vector_base
    private: 
    BOOST_COPYABLE_AND_MOVABLE(small_vector_base)
 
-   friend class small_vector_allocator<SecondaryAllocator, alignment>;
+   friend class small_vector_allocator<SecondaryAllocator>;
 
    pointer internal_storage() const BOOST_NOEXCEPT_OR_NOTHROW
    {
@@ -340,14 +340,14 @@ class small_vector_base
          (*const_cast<T*>(static_cast<const T*>(static_cast<const void*>(&m_storage_start))));
    }
 
-   typedef vector<T, small_vector_allocator<SecondaryAllocator, alignment> > base_type;
+   typedef vector<T, small_vector_allocator<SecondaryAllocator> > base_type;
          base_type &as_base()       { return static_cast<base_type&>(*this); }
    const base_type &as_base() const { return static_cast<const base_type&>(*this); }
 
    public:
    typedef typename container_detail::aligned_storage
-      <sizeof(T), (alignment > 0) ? alignment : container_detail::alignment_of<T>::value>::type storage_type;
-   typedef small_vector_allocator<SecondaryAllocator, alignment>             allocator_type;
+      <sizeof(T), container_detail::alignment_of<T>::value>::type storage_type;
+   typedef small_vector_allocator<SecondaryAllocator>             allocator_type;
 
    protected:
    typedef typename base_type::initial_capacity_t initial_capacity_t;
@@ -414,12 +414,12 @@ struct small_vector_storage_calculator_helper<Needed, Hdr, SSize, true>
    static const std::size_t value = 0u;
 };
 
-template<class Storage, class Allocator, class T, std::size_t N, std::size_t alignment>
+template<class Storage, class Allocator, class T, std::size_t N>
 struct small_vector_storage_calculator
 {
-   typedef small_vector_base<T, Allocator, alignment> svh_type;
-   typedef vector<T, small_vector_allocator<Allocator, alignment> > svhb_type;
-   static const std::size_t s_align = alignment > 0 ? alignment : container_detail::alignment_of<Storage>::value;
+   typedef small_vector_base<T, Allocator> svh_type;
+   typedef vector<T, small_vector_allocator<Allocator> > svhb_type;
+   static const std::size_t s_align = container_detail::alignment_of<Storage>::value;
    static const std::size_t s_size = sizeof(Storage);
    static const std::size_t svh_sizeof = sizeof(svh_type);
    static const std::size_t svhb_sizeof = sizeof(svhb_type);
@@ -445,13 +445,13 @@ template<class Storage>
 struct small_vector_storage<Storage, 0>
 {};
 
-template<class Allocator, std::size_t N, std::size_t alignment>
+template<class Allocator, std::size_t N>
 struct small_vector_storage_definer
 {
-   typedef typename Allocator::value_type                                               value_type;
-   typedef typename small_vector_base<value_type, Allocator, alignment>::storage_type   storage_type;
+   typedef typename Allocator::value_type                                  value_type;
+   typedef typename small_vector_base<value_type, Allocator>::storage_type storage_type;
    static const std::size_t needed_extra_storages =
-      small_vector_storage_calculator<storage_type, Allocator, value_type, N, alignment>::needed_extra_storages;
+      small_vector_storage_calculator<storage_type, Allocator, value_type, N>::needed_extra_storages;
    typedef small_vector_storage<storage_type, needed_extra_storages> type;
 };
 
@@ -469,16 +469,15 @@ struct small_vector_storage_definer
 //! \tparam T The type of object that is stored in the small_vector
 //! \tparam N The number of preallocated elements stored inside small_vector. It shall be less than Allocator::max_size();
 //! \tparam Allocator The allocator used for memory management when the number of elements exceeds N.
-//! \tparam alignment Alignment of the prealocated storage. alignment == 0 uses default alignment.
-template <class T, std::size_t N, class Allocator BOOST_CONTAINER_DOCONLY(= new_allocator<T>), std::size_t alignment BOOST_CONTAINER_DOCONLY(= 0)>
-class small_vector : public small_vector_base<T, Allocator, alignment>
+template <class T, std::size_t N, class Allocator BOOST_CONTAINER_DOCONLY(= new_allocator<T>) >
+class small_vector : public small_vector_base<T, Allocator>
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   , private small_vector_storage_definer<Allocator, N, alignment>::type
+   , private small_vector_storage_definer<Allocator, N>::type
    #endif
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   typedef small_vector_base<T, Allocator, alignment> base_type;
-   typedef typename small_vector_storage_definer<Allocator, N, alignment>::type remaining_storage_holder;
+   typedef small_vector_base<T, Allocator> base_type;
+   typedef typename small_vector_storage_definer<Allocator, N>::type remaining_storage_holder;
 
    BOOST_COPYABLE_AND_MOVABLE(small_vector)
 
@@ -486,8 +485,8 @@ class small_vector : public small_vector_base<T, Allocator, alignment>
    typedef allocator_traits<typename base_type::allocator_type> allocator_traits_type;
 
    public:
-   typedef small_vector_storage_calculator< typename small_vector_base<T, Allocator, alignment>
-      ::storage_type, Allocator, T, N, alignment> storage_test;
+   typedef small_vector_storage_calculator< typename small_vector_base<T, Allocator>
+      ::storage_type, Allocator, T, N> storage_test;
 
    static const std::size_t needed_extra_storages =  storage_test::needed_extra_storages;
    static const std::size_t needed_bytes =  storage_test::needed_bytes;
