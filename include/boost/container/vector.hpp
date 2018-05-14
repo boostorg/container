@@ -931,6 +931,12 @@ class vector
    //!   throws or T's constructor taking a dereferenced InIt throws.
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
+//    template <class InIt>
+//    vector(InIt first, InIt last
+//           BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename dtl::disable_if_c
+//                                  < dtl::is_convertible<InIt BOOST_MOVE_I size_type>::value
+//                                  BOOST_MOVE_I dtl::nat >::type * = 0)
+//           ) -> vector<typename iterator_traits<InIt>::value_type, new_allocator<typename iterator_traits<InIt>::value_type>>;
    template <class InIt>
    vector(InIt first, InIt last
       BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename dtl::disable_if_c
@@ -947,6 +953,12 @@ class vector
    //!   throws or T's constructor taking a dereferenced InIt throws.
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
+//    template <class InIt>
+//    vector(InIt first, InIt last, const allocator_type& a
+//           BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename dtl::disable_if_c
+//                                  < dtl::is_convertible<InIt BOOST_MOVE_I size_type>::value
+//                                  BOOST_MOVE_I dtl::nat >::type * = 0)
+//           ) -> vector<typename iterator_traits<InIt>::value_type, new_allocator<typename iterator_traits<InIt>::value_type>>;
    template <class InIt>
    vector(InIt first, InIt last, const allocator_type& a
       BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename dtl::disable_if_c
@@ -3351,6 +3363,14 @@ class vector
    #endif
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
+
+#if __cplusplus >= 201703L
+template <typename InputIterator>
+vector(InputIterator, InputIterator) -> vector<typename std::iterator_traits<InputIterator>::value_type>;
+template <typename InputIterator, typename Allocator>
+vector(InputIterator, InputIterator, Allocator const&) -> vector<typename std::iterator_traits<InputIterator>::value_type, Allocator>;
+#endif
+
 
 }} //namespace boost::container
 

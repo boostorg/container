@@ -777,6 +777,30 @@ int main()
       }
    }
 
+#if __cplusplus >= 201703L
+   ////////////////////////////////////
+   //    Constructor Template Auto Deduction
+   ////////////////////////////////////
+   {
+      auto gold = std::set({ 1, 2, 3 });
+      auto test = boost::container::flat_set(gold.begin(), gold.end());
+      if (test.size() != 3)
+         return 1;
+      test = boost::container::flat_set(ordered_unique_range, gold.begin(), gold.end());
+      if (test.size() != 3)
+         return 1;
+   }
+   {
+      auto gold = std::multiset({ 1, 2, 3 });
+      auto test = boost::container::flat_multiset(gold.begin(), gold.end());
+      if (test.size() != 3)
+         return 1;
+      test = boost::container::flat_multiset(ordered_range, gold.begin(), gold.end());
+      if (test.size() != 3)
+         return 1;
+   }
+#endif
+
    return 0;
 }
 

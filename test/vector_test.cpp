@@ -250,5 +250,31 @@ int main()
          return 1;
       }
    }
+
+#if __cplusplus >= 201703L
+   ////////////////////////////////////
+   //    Constructor Template Auto Deduction testing
+   ////////////////////////////////////
+   {
+      auto gold = std::vector{ 1, 2, 3 };
+      auto test = boost::container::vector(gold.begin(), gold.end());
+      if (test.size() != 3) {
+         return 1;
+      }
+      if (!(test[0] == 1 && test[1] == 2 && test[2] == 3)) {
+         return 1;
+      }
+   }
+   {
+      auto gold = std::vector{ 1, 2, 3 };
+      auto test = boost::container::vector(gold.begin(), gold.end(), boost::container::new_allocator<int>());
+      if (test.size() != 3) {
+         return 1;
+      }
+      if (!(test[0] == 1 && test[1] == 2 && test[2] == 3)) {
+         return 1;
+      }
+   }
+#endif
    return 0;
 }

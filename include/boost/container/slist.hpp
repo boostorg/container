@@ -1632,6 +1632,13 @@ class slist
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
+#if __cplusplus >= 201703L
+template <typename InpIt>
+slist(InpIt, InpIt) -> slist<typename std::iterator_traits<InpIt>::value_type>;
+template <typename InpIt, typename Allocator>
+slist(InpIt, InpIt, Allocator const&) -> slist<typename std::iterator_traits<InpIt>::value_type, Allocator>;
+#endif
+
 }}
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

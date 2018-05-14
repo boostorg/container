@@ -478,6 +478,18 @@ int string_test()
             return 1;
       }
 
+#if __cplusplus >= 201703L
+      //Chect Constructor Template Auto Deduction
+      {
+         auto gold = StdString(string_literals<CharType>::String());
+         auto test = basic_string(gold.begin(), gold.end());
+         if(!StringEqual()(gold, test)) {
+            return 1;
+         }
+      }
+#endif
+
+
       //When done, delete vector
       delete boostStringVect;
       delete stdStringVect;
