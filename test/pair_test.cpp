@@ -140,8 +140,8 @@ int main ()
       typedef dtl::pair<movable_pair_t, movable_pair_t> movable_pair_pair_t;
       test::movable_int a(1), b(2), c(3), d(4);
       movable_pair_pair_t p( piecewise_construct
-                           , dtl::forward_as_tuple(boost::move(a), boost::move(b))
-                           , dtl::forward_as_tuple(boost::move(c), boost::move(d))
+                           , dtl::forward_as_tuple_impl(boost::move(a), boost::move(b))
+                           , dtl::forward_as_tuple_impl(boost::move(c), boost::move(d))
                            );
       BOOST_TEST(p.first.first   == 1);
       BOOST_TEST(p.first.second  == 2);
