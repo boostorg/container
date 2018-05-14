@@ -2238,6 +2238,13 @@ class deque : protected deque_base<Allocator>
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
+#if __cplusplus >= 201703L
+template <typename InputIterator>
+deque(InputIterator, InputIterator) -> deque<typename std::iterator_traits<InputIterator>::value_type>;
+template <typename InputIterator, typename Allocator>
+deque(InputIterator, InputIterator, Allocator const&) -> deque<typename std::iterator_traits<InputIterator>::value_type, Allocator>;
+#endif
+
 }}
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

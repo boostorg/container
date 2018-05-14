@@ -248,6 +248,36 @@ bool flat_tree_ordered_insertion_test()
    return true;
 }
 
+bool constructor_template_auto_deduction_test()
+{
+#if __cplusplus >= 201703L
+   using namespace boost::container;
+   const std::size_t NumElements = 100;
+   //Ordered insertion map
+   {
+      std::map<int, int> int_map;
+      for(std::size_t i = 0; i != NumElements; ++i){
+         int_map.insert(std::map<int, int>::value_type(static_cast<int>(i), static_cast<int>(i)));
+      }
+      //Construction insertion
+      auto fmap = flat_map(ordered_unique_range, int_map.begin(), int_map.end());
+      if(!CheckEqualContainers(int_map, fmap))
+         return false;
+
+      std::multimap<int, int> int_mmap;
+      for(std::size_t i = 0; i != NumElements; ++i){
+         int_mmap.insert(std::multimap<int, int>::value_type(static_cast<int>(i), static_cast<int>(i)));
+      }
+      //Construction insertion
+      auto fmmap = flat_multimap(ordered_range, int_mmap.begin(), int_mmap.end());
+      if(!CheckEqualContainers(int_mmap, fmmap))
+         return false;
+   }
+#endif
+
+   return true;
+}
+
 template< class RandomIt >
 void random_shuffle( RandomIt first, RandomIt last )
 {
@@ -593,6 +623,13 @@ int main()
    //    Ordered insertion test
    ////////////////////////////////////
    if(!flat_tree_ordered_insertion_test()){
+      return 1;
+   }
+
+   ////////////////////////////////////
+   //    Constructor Template Auto Deduction test
+   ////////////////////////////////////
+   if(!constructor_template_auto_deduction_test()){
       return 1;
    }
 
