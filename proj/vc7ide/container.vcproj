@@ -315,6 +315,9 @@
 					RelativePath="..\..\..\..\boost\container\detail\std_fwd.hpp">
 				</File>
 				<File
+					RelativePath="..\..\..\..\boost\container\detail\thread_mutex.hpp">
+				</File>
+				<File
 					RelativePath="..\to-do.txt">
 				</File>
 				<File

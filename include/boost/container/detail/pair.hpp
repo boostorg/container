@@ -550,6 +550,14 @@ struct is_class< std::pair<T1, T2> >
    static const bool value = true;
 };
 
+template<class A, class B>
+struct is_trivially_copy_assignable
+   <boost::container::dtl::pair<A,B> >
+{
+   static const bool value = boost::move_detail::is_trivially_copy_assignable<A>::value &&
+                             boost::move_detail::is_trivially_copy_assignable<B>::value ;
+};
+
 }  //namespace move_detail{
 
 }  //namespace boost {

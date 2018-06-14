@@ -1633,10 +1633,15 @@ class slist
 };
 
 #if __cplusplus >= 201703L
+
 template <typename InpIt>
-slist(InpIt, InpIt) -> slist<typename std::iterator_traits<InpIt>::value_type>;
+slist(InpIt, InpIt) ->
+   slist<typename iterator_traits<InpIt>::value_type>;
+
 template <typename InpIt, typename Allocator>
-slist(InpIt, InpIt, Allocator const&) -> slist<typename std::iterator_traits<InpIt>::value_type, Allocator>;
+slist(InpIt, InpIt, Allocator const&) ->
+   slist<typename iterator_traits<InpIt>::value_type, Allocator>;
+
 #endif
 
 }}

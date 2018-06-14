@@ -1466,9 +1466,12 @@ class list
 
 #if __cplusplus >= 201703L
 template <typename InputIterator>
-list(InputIterator, InputIterator) -> list<typename std::iterator_traits<InputIterator>::value_type>;
+list(InputIterator, InputIterator) ->
+   list<typename iterator_traits<InputIterator>::value_type>;
+
 template <typename InputIterator, typename Allocator>
-list(InputIterator, InputIterator, Allocator const&) -> list<typename std::iterator_traits<InputIterator>::value_type, Allocator>;
+list(InputIterator, InputIterator, Allocator const&) ->
+   list<typename iterator_traits<InputIterator>::value_type, Allocator>;
 #endif
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

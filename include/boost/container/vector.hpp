@@ -3365,10 +3365,15 @@ class vector
 };
 
 #if __cplusplus >= 201703L
+
 template <typename InputIterator>
-vector(InputIterator, InputIterator) -> vector<typename std::iterator_traits<InputIterator>::value_type>;
+vector(InputIterator, InputIterator) ->
+   vector<typename iterator_traits<InputIterator>::value_type>;
+
 template <typename InputIterator, typename Allocator>
-vector(InputIterator, InputIterator, Allocator const&) -> vector<typename std::iterator_traits<InputIterator>::value_type, Allocator>;
+vector(InputIterator, InputIterator, Allocator const&) ->
+   vector<typename iterator_traits<InputIterator>::value_type, Allocator>;
+
 #endif
 
 

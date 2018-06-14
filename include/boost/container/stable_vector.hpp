@@ -2086,10 +2086,15 @@ class stable_vector
 };
 
 #if __cplusplus >= 201703L
+
 template <typename InputIterator>
-stable_vector(InputIterator, InputIterator) -> stable_vector<typename std::iterator_traits<InputIterator>::value_type>;
+stable_vector(InputIterator, InputIterator) ->
+   stable_vector<typename iterator_traits<InputIterator>::value_type>;
+
 template <typename InputIterator, typename Allocator>
-stable_vector(InputIterator, InputIterator, Allocator const&) -> stable_vector<typename std::iterator_traits<InputIterator>::value_type, Allocator>;
+stable_vector(InputIterator, InputIterator, Allocator const&) ->
+   stable_vector<typename iterator_traits<InputIterator>::value_type, Allocator>;
+
 #endif
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

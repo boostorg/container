@@ -2240,9 +2240,9 @@ class deque : protected deque_base<Allocator>
 
 #if __cplusplus >= 201703L
 template <typename InputIterator>
-deque(InputIterator, InputIterator) -> deque<typename std::iterator_traits<InputIterator>::value_type>;
+deque(InputIterator, InputIterator) -> deque<typename iterator_traits<InputIterator>::value_type>;
 template <typename InputIterator, typename Allocator>
-deque(InputIterator, InputIterator, Allocator const&) -> deque<typename std::iterator_traits<InputIterator>::value_type, Allocator>;
+deque(InputIterator, InputIterator, Allocator const&) -> deque<typename iterator_traits<InputIterator>::value_type, Allocator>;
 #endif
 
 }}
