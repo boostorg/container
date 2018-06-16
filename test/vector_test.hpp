@@ -203,6 +203,45 @@ bool vector_copyable_only(MyBoostVector &boostvector, MyStdVector &stdvector, bo
       boostvectorp->resize(100, IntType(9));
       if(!test::CheckEqualContainers(*boostvectorp, *stdvectorp)) return 1;
    }
+   //operator=
+   {
+      //Copy constructor test
+      MyBoostVector bcopy((const MyBoostVector&) boostvector);
+      MyStdVector   scopy((const MyStdVector&)   stdvector);
+      MyBoostVector bcopy2(boostvector);
+      MyStdVector   scopy2(stdvector);
+
+      if(!test::CheckEqualContainers(bcopy, scopy)) return false;
+      if(!test::CheckEqualContainers(bcopy2, scopy2)) return false;
+
+      //Assignment from a smaller vector
+      bcopy2.erase(bcopy2.begin() + bcopy2.size()/2, bcopy2.end());
+      scopy2.erase(scopy2.begin() + scopy2.size()/2, scopy2.end());
+      bcopy = bcopy2;
+      scopy = scopy2;
+      if(!test::CheckEqualContainers(bcopy, scopy)) return false;
+
+      //Assignment from a bigger vector with capacity
+      bcopy2  = boostvector;
+      scopy2  = stdvector;
+      if(!test::CheckEqualContainers(bcopy2, scopy2)) return false;
+
+      //Assignment from bigger vector with no capacity
+      bcopy2.erase(bcopy2.begin() + bcopy2.size()/2, bcopy2.end());
+      scopy2.erase(scopy2.begin() + scopy2.size()/2, scopy2.end());
+      bcopy2.shrink_to_fit();
+      MyStdVector(scopy2).swap(scopy2);
+
+      bcopy2 = boostvector;
+      scopy2 = stdvector;
+      if(!test::CheckEqualContainers(bcopy, scopy)) return false;
+
+      //Assignment with equal capacity
+      bcopy2 = boostvector;
+      scopy2 = stdvector;
+      if(!test::CheckEqualContainers(bcopy2, scopy2)) return false;
+   }
+
    return true;
 }
 

@@ -1192,6 +1192,7 @@ class vector
    //! <b>Complexity</b>: Linear to n.
    template <class InIt>
    void assign(InIt first, InIt last
+      //Input iterators or version 0 allocator
       BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename dtl::disable_if_or
          < void
          BOOST_MOVE_I dtl::is_convertible<InIt BOOST_MOVE_I size_type>
@@ -1241,6 +1242,7 @@ class vector
    //! <b>Complexity</b>: Linear to n.
    template <class FwdIt>
    void assign(FwdIt first, FwdIt last
+      //Forward iterators and version > 0 allocator
       BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename dtl::disable_if_or
          < void
          BOOST_MOVE_I dtl::is_same<alloc_version BOOST_MOVE_I version_0>
@@ -1280,21 +1282,9 @@ class vector
             //Forward expansion, use assignment + back deletion/construction that comes later
          }
       }
-      //Overwrite all elements we can from [first, last)
-      iterator cur = this->begin();
-      const iterator end_it = this->end();
-      for ( ; first != last && cur != end_it; ++cur, ++first){
-         *cur = *first;
-      }
 
-      if (first == last){
-         //There are no more elements in the sequence, erase remaining
-         this->priv_destroy_last_n(this->size() - input_sz);
-      }
-      else{
-         //Uninitialized construct at end the remaining range
-         this->priv_uninitialized_construct_at_end(first, last);
-      }
+      boost::container::copy_assign_range_alloc_n(this->m_holder.alloc(), first, input_sz, this->priv_raw_begin(), this->size());
+      this->m_holder.m_size = input_sz;
    }
 
    //! <b>Effects</b>: Assigns the n copies of val to *this.
