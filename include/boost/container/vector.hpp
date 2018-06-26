@@ -2197,11 +2197,11 @@ class vector
    template<class InputIt, class Compare>
    BOOST_CONTAINER_FORCEINLINE void merge_unique(InputIt first, InputIt last, Compare comp)
    {
-      size_type const s = this->size();
+      size_type const old_size = this->size();
       this->priv_set_difference_back(first, last, comp);
       T *const raw_beg = this->priv_raw_begin();
       T *const raw_end = this->priv_raw_end();
-      T *raw_pos = raw_beg + s;
+      T *raw_pos = raw_beg + old_size;
       boost::movelib::adaptive_merge(raw_beg, raw_pos, raw_end, comp, raw_end, this->capacity() - this->size());
    }
 
@@ -2278,14 +2278,14 @@ class vector
 
          if (comp(*first1, *first2)) {
             this->emplace_back(*first1);
-            //Reallocation happened, update range
             T * const raw_begin = this->priv_raw_begin();
-            if(old_first2 != raw_begin){
+            if(old_first2 != raw_begin)
+            {
+               //Reallocation happened, update range
                first2 = raw_begin + (first2 - old_first2);
-               last2  = first2 + (last2 - old_first2);
+               last2  = raw_begin + (last2 - old_first2);
                old_first2 = raw_begin;
             }
-
             ++first1;
          }
          else {
