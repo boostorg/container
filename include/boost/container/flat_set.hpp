@@ -912,6 +912,23 @@ class flat_set
    {  return static_cast<size_type>(this->tree_t::find(x) != this->tree_t::cend());  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+   //! <b>Returns</b>: Returns true if there is an element with key
+   //!   equivalent to key in the container, otherwise false.
+   //!
+   //! <b>Complexity</b>: log(size()).
+   bool contains(const key_type& x) const;
+
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Returns</b>: Returns true if there is an element with key
+   //!   equivalent to key in the container, otherwise false.
+   //!
+   //! <b>Complexity</b>: log(size()).
+   template<typename K>
+   bool contains(const K& x) const;
+
    //! <b>Returns</b>: An iterator pointing to the first element with key not less
    //!   than k, or a.end() if such an element is not found.
    //!
@@ -1684,6 +1701,13 @@ class flat_multiset
 
    //! @copydoc ::boost::container::flat_set::count(const key_type& ) const
    size_type count(const key_type& x) const;
+
+   //! @copydoc ::boost::container::flat_set::contains(const key_type& ) const
+   bool contains(const key_type& x) const;
+
+   //! @copydoc ::boost::container::flat_set::contains(const K& ) const
+   template<typename K>
+   bool contains(const K& x) const;
 
    //! @copydoc ::boost::container::flat_set::lower_bound(const key_type& )
    iterator lower_bound(const key_type& x);

@@ -454,6 +454,8 @@ struct get_real_stored_allocator<flat_multimap<Key, T, Compare, Allocator> >
 
 bool test_heterogeneous_lookups()
 {
+   BOOST_STATIC_ASSERT((dtl::is_transparent<less_transparent>::value));
+   BOOST_STATIC_ASSERT(!(dtl::is_transparent<std::less<int> >::value));
    typedef flat_map<int, char, less_transparent> map_t;
    typedef flat_multimap<int, char, less_transparent> mmap_t;
    typedef map_t::value_type value_type;
@@ -496,6 +498,16 @@ bool test_heterogeneous_lookups()
    if(mmap1.count(find_me) != 2)
       return false;
    if(cmmap1.count(find_me) != 2)
+      return false;
+
+   //contains
+   if(!map1.contains(find_me))
+      return false;
+   if(!cmap1.contains(find_me))
+      return false;
+   if(!mmap1.contains(find_me))
+      return false;
+   if(!cmmap1.contains(find_me))
       return false;
 
    //lower_bound
@@ -709,4 +721,3 @@ int main()
 }
 
 #include <boost/container/detail/config_end.hpp>
-

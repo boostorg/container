@@ -1297,6 +1297,15 @@ class tree
          count(const K& k) const
    {  return size_type(this->icont().count(k, KeyNodeCompare(key_comp()))); }
 
+   BOOST_CONTAINER_FORCEINLINE bool contains(const key_type& x) const
+   {  return this->find(x) != this->cend();  }
+
+   template<typename K>
+   BOOST_CONTAINER_FORCEINLINE
+      typename dtl::enable_if_transparent<key_compare, K, bool>::type
+         contains(const K& x) const
+   {  return this->find(x) != this->cend();  }
+
    BOOST_CONTAINER_FORCEINLINE iterator lower_bound(const key_type& k)
    {  return iterator(this->icont().lower_bound(k, KeyNodeCompare(key_comp())));  }
 

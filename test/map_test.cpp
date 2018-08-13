@@ -366,6 +366,16 @@ bool test_heterogeneous_lookups()
    if(cmmap1.count(find_me) != 2)
       return false;
 
+   //contains
+   if(!map1.contains(find_me))
+      return false;
+   if(!cmap1.contains(find_me))
+      return false;
+   if(!mmap1.contains(find_me))
+      return false;
+   if(!cmmap1.contains(find_me))
+      return false;
+
    //lower_bound
    if(map1.lower_bound(find_me)->second != 'd')
       return false;

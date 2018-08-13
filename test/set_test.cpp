@@ -363,6 +363,16 @@ bool test_heterogeneous_lookups()
    if(cmset1.count(find_me) != 2)
       return false;
 
+   //contains
+   if(!set1.contains(find_me))
+      return false;
+   if(!cset1.contains(find_me))
+      return false;
+   if(!mset1.contains(find_me))
+      return false;
+   if(!cmset1.contains(find_me))
+      return false;
+
    //lower_bound
    if(*set1.lower_bound(find_me) != 2)
       return false;

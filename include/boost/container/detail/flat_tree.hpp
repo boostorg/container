@@ -1201,6 +1201,15 @@ class flat_tree
       return n;
    }
 
+   BOOST_CONTAINER_FORCEINLINE bool contains(const key_type& x) const
+   {  return this->find(x) != this->cend();  }
+
+   template<typename K>
+   BOOST_CONTAINER_FORCEINLINE
+      typename dtl::enable_if_transparent<key_compare, K, bool>::type
+         contains(const K& x) const
+   {  return this->find(x) != this->cend();  }
+
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge_unique(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
    {

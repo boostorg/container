@@ -137,7 +137,7 @@ int main()
 
       std::cout << "varray/std::vector total time comparison:";
       compare_times(time_varray,time_standard_vector);
-   }catch(std::exception e){
+   }catch(std::exception &e){
       std::cout << e.what();
    }
    return 0;

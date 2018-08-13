@@ -628,14 +628,22 @@ int map_test()
          }
       }
 
-      //Compare count with std containers
+      //Compare count/contains with std containers
       for(int i = 0; i < MaxElem; ++i){
          IntType k(i);
          if(boostmap.count(k) != stdmap.count(i)){
             return -1;
          }
 
+         if(boostmap.contains(k) != (stdmap.find(i) != stdmap.end())){
+            return -1;
+         }
+
          if(boostmultimap.count(k) != stdmultimap.count(i)){
+            return -1;
+         }
+
+         if(boostmultimap.contains(k) != (stdmultimap.find(i) != stdmultimap.end())){
             return -1;
          }
       }

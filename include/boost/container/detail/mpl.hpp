@@ -76,19 +76,28 @@ struct select1st
    {  return const_cast<type&>(x.first);   }
 };
 
+
+template<typename T>
+struct void_t { typedef void type; };
+
 template <class T, class=void>
-struct is_transparent
+struct is_transparent_base
 {
    static const bool value = false;
 };
 
 template <class T>
-struct is_transparent<T, typename T::is_transparent>
+struct is_transparent_base<T, typename void_t<typename T::is_transparent>::type>
 {
    static const bool value = true;
 };
 
-template <typename C, typename K, typename R>
+template <class T>
+struct is_transparent
+   : is_transparent_base<T>
+{};
+
+template <typename C, class /*Dummy*/, typename R>
 struct enable_if_transparent
    : boost::move_detail::enable_if_c<dtl::is_transparent<C>::value, R>
 {};

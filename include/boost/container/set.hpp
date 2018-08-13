@@ -772,13 +772,23 @@ class set
    BOOST_CONTAINER_FORCEINLINE size_type count(const K& x) const
    {  return static_cast<size_type>(this->find(x) != this->cend());  }
 
-   //! <b>Returns</b>: The number of elements with key equivalent to x.
-   //!
-   //! <b>Complexity</b>: log(size())+count(k)
-   BOOST_CONTAINER_FORCEINLINE size_type count(const key_type& x)
-   {  return static_cast<size_type>(this->base_t::find(x) != this->base_t::end());  }
-
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+   //! <b>Returns</b>: Returns true if there is an element with key
+   //!   equivalent to key in the container, otherwise false.
+   //!
+   //! <b>Complexity</b>: log(size()).
+   bool contains(const key_type& x) const;
+
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Returns</b>: Returns true if there is an element with key
+   //!   equivalent to key in the container, otherwise false.
+   //!
+   //! <b>Complexity</b>: log(size()).
+   template<typename K>
+   bool contains(const K& x) const;
 
    //! <b>Returns</b>: An iterator pointing to the first element with key not less
    //!   than k, or a.end() if such an element is not found.
@@ -1460,6 +1470,13 @@ class multiset
    //! @copydoc ::boost::container::set::count(const K& ) const
    template<typename K>
    size_type count(const K& x) const;
+
+   //! @copydoc ::boost::container::set::contains(const key_type& ) const
+   bool contains(const key_type& x) const;
+
+   //! @copydoc ::boost::container::set::contains(const K& ) const
+   template<typename K>
+   bool contains(const K& x) const;
 
    //! @copydoc ::boost::container::set::lower_bound(const key_type& )
    iterator lower_bound(const key_type& x);

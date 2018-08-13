@@ -471,7 +471,7 @@ void launch_tests(const char *BoostContName, const char *StdContName)
          extensions_time< BoostClass >(get_range_t::sorted_unique());
       }
 
-   }catch(std::exception e){
+   }catch(std::exception &e){
       std::cout << e.what();
    }
 }
