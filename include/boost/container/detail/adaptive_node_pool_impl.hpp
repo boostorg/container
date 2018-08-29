@@ -363,16 +363,16 @@ struct candidate_power_of_2_ct
 //       candidate_power_of_2_rt
 //
 /////////////////////////////////////////////
-void candidate_power_of_2_rt  ( std::size_t initial_alignment
-                              , std::size_t real_node_size
-                              , std::size_t payload_per_allocation
-                              , std::size_t min_elements_per_block
-                              , std::size_t hdr_size
-                              , std::size_t hdr_offset_size
-                              , std::size_t overhead_percent
-                              , std::size_t &alignment
-                              , std::size_t &num_subblocks
-                              , std::size_t &real_num_node)
+inline void candidate_power_of_2_rt ( std::size_t initial_alignment
+                                    , std::size_t real_node_size
+                                    , std::size_t payload_per_allocation
+                                    , std::size_t min_elements_per_block
+                                    , std::size_t hdr_size
+                                    , std::size_t hdr_offset_size
+                                    , std::size_t overhead_percent
+                                    , std::size_t &alignment
+                                    , std::size_t &num_subblocks
+                                    , std::size_t &real_num_node)
 {
    bool overhead_satisfied = false;
    std::size_t num_b_subblock = 0;
