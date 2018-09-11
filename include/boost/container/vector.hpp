@@ -1131,7 +1131,8 @@ class vector
       BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
                         || allocator_traits_type::is_always_equal::value)
    {
-      BOOST_ASSERT(&x != this);
+      if (&x == this)
+         return *this;
       this->priv_move_assign(boost::move(x));
       return *this;
    }
