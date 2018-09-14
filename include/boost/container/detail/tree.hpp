@@ -1436,6 +1436,8 @@ class tree
    {  return !(x < y);  }
 
    BOOST_CONTAINER_FORCEINLINE friend void swap(tree& x, tree& y)
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value )
    {  x.swap(y);  }
 };
 
