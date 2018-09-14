@@ -2182,7 +2182,7 @@ class vector
          this->priv_merge_in_new_buffer(first, n, comp, alloc_version());
       }
       else{
-         iterator pos(this->insert(this->cend(), first, last));
+         this->insert(this->cend(), first, last);
          T *const raw_beg = this->priv_raw_begin();
          T *const raw_end = this->priv_raw_end();
          T *const raw_pos = raw_beg + s;
