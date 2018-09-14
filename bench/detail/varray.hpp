@@ -1902,7 +1902,7 @@ public:
     // strong
     varray(varray const& other)
     {
-        //errh::check_capacity(*this, count);
+        errh::check_capacity(*this, other.size());
     }
 
     // strong
@@ -1922,7 +1922,7 @@ public:
     // basic
     varray & operator=(varray const& other)
     {
-        //errh::check_capacity(*this, other.size());
+        errh::check_capacity(*this, other.size());
         return *this;
     }
 
