@@ -52,26 +52,49 @@ namespace boost {
 namespace container {
 namespace dtl {
 
-BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(value_compare)
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(key_compare)
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(key_equal)
+BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(hasher)
 BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(predicate_type)
 
 template<class Allocator, class ICont>
 struct node_alloc_holder
+   : public allocator_traits<Allocator>::template
+            portable_rebind_alloc<typename ICont::value_type>::type   //NodeAlloc
 {
    //If the intrusive container is an associative container, obtain the predicate, which will
-   //be of type node_compare<>. If not an associative container value_compare will be a "nat" type.
+   //be of type node_compare<>. If not an associative container val_compare will be a "nat" type.
    typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT
       ( boost::container::dtl::
-      , ICont, value_compare, dtl::nat)              intrusive_value_compare;
+      , ICont, key_compare, dtl::nat)                 intrusive_val_compare;
    //In that case obtain the value predicate from the node predicate via predicate_type
-   //if intrusive_value_compare is node_compare<>, nat otherwise
+   //if intrusive_val_compare is node_compare<>, nat otherwise
    typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT
       ( boost::container::dtl::
-      , intrusive_value_compare
-      , predicate_type, dtl::nat)                    value_compare;
+      , intrusive_val_compare
+      , predicate_type, dtl::nat)                    val_compare;
+
+   //If the intrusive container is a hash container, obtain the predicate, which will
+   //be of type node_compare<>. If not an associative container val_equal will be a "nat" type.
+   typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT
+      (boost::container::dtl::
+         , ICont, key_equal, dtl::nat2)              intrusive_val_equal;
+   typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT
+   (boost::container::dtl::
+      , ICont, hasher, dtl::nat3)                     intrusive_val_hasher;
+   //In that case obtain the value predicate from the node predicate via predicate_type
+   //if intrusive_val_compare is node_compare<>, nat otherwise
+   typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT
+   (boost::container::dtl::
+      , intrusive_val_equal
+      , predicate_type, dtl::nat2)                    val_equal;
+   typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT
+   (boost::container::dtl::
+      , intrusive_val_hasher
+      , predicate_type, dtl::nat3)                    val_hasher;
 
    typedef allocator_traits<Allocator>                            allocator_traits_type;
-   typedef typename allocator_traits_type::value_type             value_type;
+   typedef typename allocator_traits_type::value_type             val_type;
    typedef ICont                                                  intrusive_container;
    typedef typename ICont::value_type                             Node;
    typedef typename allocator_traits_type::template
@@ -99,51 +122,91 @@ struct node_alloc_holder
 
    //Constructors for sequence containers
    node_alloc_holder()
-      : members_()
    {}
 
    explicit node_alloc_holder(const ValAlloc &a)
-      : members_(a)
+      : NodeAlloc(a)
    {}
 
    //Constructors for associative containers
-   node_alloc_holder(const value_compare &c, const ValAlloc &a)
-      : members_(a, c)
+   node_alloc_holder(const val_compare &c, const ValAlloc &a)
+      : NodeAlloc(a), m_icont(typename ICont::key_compare(c))
+   {}
+
+   node_alloc_holder(const val_hasher &hf, const val_equal &eql, const ValAlloc &a)
+      : NodeAlloc(a)
+      , m_icont(typename ICont::bucket_traits()
+         , typename ICont::hasher(hf)
+         , typename ICont::key_equal(eql))
+   {}
+
+   node_alloc_holder(const val_hasher &hf, const ValAlloc &a)
+      : NodeAlloc(a)
+      , m_icont(typename ICont::bucket_traits()
+         , typename ICont::hasher(hf)
+         , typename ICont::key_equal())
+   {}
+
+   node_alloc_holder(const val_hasher &hf)
+      : m_icont(typename ICont::bucket_traits()
+         , typename ICont::hasher(hf)
+         , typename ICont::key_equal())
    {}
 
    explicit node_alloc_holder(const node_alloc_holder &x)
-      : members_(NodeAllocTraits::select_on_container_copy_construction(x.node_alloc()))
+      : NodeAlloc(NodeAllocTraits::select_on_container_copy_construction(x.node_alloc()))
    {}
 
-   node_alloc_holder(const node_alloc_holder &x, const value_compare &c)
-      : members_(NodeAllocTraits::select_on_container_copy_construction(x.node_alloc()), c)
+   node_alloc_holder(const node_alloc_holder &x, const val_compare &c)
+      : NodeAlloc(NodeAllocTraits::select_on_container_copy_construction(x.node_alloc()))
+      , m_icont(typename ICont::key_compare(c))
+   {}
+
+   node_alloc_holder(const node_alloc_holder &x, const val_hasher &hf, const val_equal &eql)
+      : NodeAlloc(NodeAllocTraits::select_on_container_copy_construction(x.node_alloc()))
+      , m_icont( typename ICont::bucket_traits()
+               , typename ICont::hasher(hf)
+               , typename ICont::key_equal(eql))
+   {}
+
+   node_alloc_holder(const val_hasher &hf, const val_equal &eql)
+      : m_icont(typename ICont::bucket_traits()
+         , typename ICont::hasher(hf)
+         , typename ICont::key_equal(eql))
    {}
 
    explicit node_alloc_holder(BOOST_RV_REF(node_alloc_holder) x)
-      : members_(boost::move(x.node_alloc()))
+      : NodeAlloc(boost::move(x.node_alloc()))
    {  this->icont().swap(x.icont());  }
 
-   explicit node_alloc_holder(const value_compare &c)
-      : members_(c)
+   explicit node_alloc_holder(const val_compare &c)
+      : m_icont(typename ICont::key_compare(c))
    {}
 
    //helpers for move assignments
-   explicit node_alloc_holder(BOOST_RV_REF(node_alloc_holder) x, const value_compare &c)
-      : members_(boost::move(x.node_alloc()), c)
+   explicit node_alloc_holder(BOOST_RV_REF(node_alloc_holder) x, const val_compare &c)
+      : NodeAlloc(boost::move(x.node_alloc())), m_icont(typename ICont::key_compare(c))
    {  this->icont().swap(x.icont());  }
+
+   explicit node_alloc_holder(BOOST_RV_REF(node_alloc_holder) x, const val_hasher &hf, const val_equal &eql)
+      : NodeAlloc(boost::move(x.node_alloc()))
+      , m_icont( typename ICont::bucket_traits()
+               , typename ICont::hasher(hf)
+               , typename ICont::key_equal(eql))
+   {  this->icont().swap(x.icont());   }
 
    void copy_assign_alloc(const node_alloc_holder &x)
    {
       dtl::bool_<allocator_traits_type::propagate_on_container_copy_assignment::value> flag;
-      dtl::assign_alloc( static_cast<NodeAlloc &>(this->members_)
-                                    , static_cast<const NodeAlloc &>(x.members_), flag);
+      dtl::assign_alloc( static_cast<NodeAlloc &>(*this)
+                       , static_cast<const NodeAlloc &>(x), flag);
    }
 
    void move_assign_alloc( node_alloc_holder &x)
    {
       dtl::bool_<allocator_traits_type::propagate_on_container_move_assignment::value> flag;
-      dtl::move_alloc( static_cast<NodeAlloc &>(this->members_)
-                                  , static_cast<NodeAlloc &>(x.members_), flag);
+      dtl::move_alloc( static_cast<NodeAlloc &>(*this)
+                     , static_cast<NodeAlloc &>(x), flag);
    }
 
    ~node_alloc_holder()
@@ -358,56 +421,25 @@ struct node_alloc_holder
       node_alloc_holder &m_holder;
    };
 
-   struct members_holder
-      :  public NodeAlloc
-   {
-      private:
-      members_holder(const members_holder&);
-      members_holder & operator=(const members_holder&);
-
-      public:
-      members_holder()
-         : NodeAlloc(), m_icont()
-      {}
-
-      template<class ConvertibleToAlloc>
-      explicit members_holder(BOOST_FWD_REF(ConvertibleToAlloc) c2alloc)
-         :  NodeAlloc(boost::forward<ConvertibleToAlloc>(c2alloc))
-         , m_icont()
-      {}
-
-      template<class ConvertibleToAlloc>
-      members_holder(BOOST_FWD_REF(ConvertibleToAlloc) c2alloc, const value_compare &c)
-         :  NodeAlloc(boost::forward<ConvertibleToAlloc>(c2alloc))
-         , m_icont(typename ICont::key_compare(c))
-      {}
-
-      explicit members_holder(const value_compare &c)
-         : NodeAlloc()
-         , m_icont(typename ICont::key_compare(c))
-      {}
-
-      //The intrusive container
-      ICont m_icont;
-   };
-
    ICont &non_const_icont() const
-   {  return const_cast<ICont&>(this->members_.m_icont);   }
+   {  return const_cast<ICont&>(this->m_icont);   }
 
    NodeAlloc &node_alloc()
-   {  return static_cast<NodeAlloc &>(this->members_);   }
+   {  return static_cast<NodeAlloc &>(*this);   }
 
    const NodeAlloc &node_alloc() const
-   {  return static_cast<const NodeAlloc &>(this->members_);   }
-
-   members_holder members_;
+   {  return static_cast<const NodeAlloc &>(*this);   }
 
    public:
    ICont &icont()
-   {  return this->members_.m_icont;   }
+   {  return this->m_icont;   }
 
    const ICont &icont() const
-   {  return this->members_.m_icont;   }
+   {  return this->m_icont;   }
+
+   private:
+   //The intrusive container
+   ICont m_icont;
 };
 
 }  //namespace dtl {
