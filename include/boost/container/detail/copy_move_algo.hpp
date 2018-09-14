@@ -36,9 +36,18 @@
 // std
 #include <cstring> //for memmove/memcpy
 
-#if defined(BOOST_GCC) && (BOOST_GCC >= 80000)
+#if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wclass-memaccess"
+//pair memcpy optimizations rightfully detected by GCC
+#  if defined(BOOST_GCC) && (BOOST_GCC >= 80000)
+#     pragma GCC diagnostic ignored "-Wclass-memaccess"
+#  endif
+//GCC 8 seems a bit confused about array access error with static_vector
+//when out of bound exceptions are being thrown.
+#  if defined(BOOST_GCC) && (BOOST_GCC >= 80000) && (BOOST_GCC < 80200)
+#     pragma GCC diagnostic ignored "-Wstringop-overflow"
+#  endif
+#  pragma GCC diagnostic ignored "-Warray-bounds"
 #endif
 
 namespace boost {
@@ -184,6 +193,7 @@ F memmove_n(I f, U n, F r) BOOST_NOEXCEPT_OR_NOTHROW
       std::memmove(boost::movelib::iterator_to_raw_pointer(r), boost::movelib::iterator_to_raw_pointer(f), sizeof(value_type)*n);
       boost::container::iterator_advance(r, n);
    }
+
    return r;
 }
 
@@ -1146,9 +1156,9 @@ void move_assign_range_alloc_n( Allocator &a, I inp_start, typename allocator_tr
 }  //namespace container {
 }  //namespace boost {
 
-#if defined(BOOST_GCC) && (BOOST_GCC >= 80000)
+//#pragma GCC diagnostic ignored "-Wclass-memaccess"
+#if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
 #pragma GCC diagnostic pop
 #endif
-
 
 #endif   //#ifndef BOOST_CONTAINER_DETAIL_COPY_MOVE_ALGO_HPP
