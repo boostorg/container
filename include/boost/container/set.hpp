@@ -875,7 +875,7 @@ class set
    //!
    //! <b>Complexity</b>: Logarithmic
    template<typename K>
-   std::pair<iterator,iterator> equal_range(const K& x)
+   BOOST_CONTAINER_FORCEINLINE std::pair<iterator,iterator> equal_range(const K& x)
    {  return this->base_t::lower_bound_range(x);  }
 
    //! <b>Requires</b>: This overload is available only if
@@ -885,7 +885,7 @@ class set
    //!
    //! <b>Complexity</b>: Logarithmic
    template<typename K>
-   std::pair<const_iterator,const_iterator> equal_range(const K& x) const
+   BOOST_CONTAINER_FORCEINLINE std::pair<const_iterator,const_iterator> equal_range(const K& x) const
    {  return this->base_t::lower_bound_range(x);  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
