@@ -466,13 +466,13 @@ void test_exceptions_nd()
    BOOST_TEST_THROWS(s.resize(N, T(0)), std::bad_alloc);
    BOOST_TEST_THROWS(s.push_back(T(0)), std::bad_alloc);
    BOOST_TEST_THROWS(s.insert(s.end(), T(0)), std::bad_alloc);
-   BOOST_TEST_THROWS(s.insert(s.end(), N, T(0)), std::bad_alloc);
+   BOOST_TEST_THROWS(s.insert(s.end(), 1, T(0)), std::bad_alloc);
    BOOST_TEST_THROWS(s.insert(s.end(), v.begin(), v.end()), std::bad_alloc);
    BOOST_TEST_THROWS(s.assign(v.begin(), v.end()), std::bad_alloc);
    BOOST_TEST_THROWS(s.assign(N, T(0)), std::bad_alloc);
    typedef static_vector<T, N/2> static_vector_n_half_t;
    BOOST_TEST_THROWS(static_vector_n_half_t s2(v.begin(), v.end()), std::bad_alloc);
-   BOOST_TEST_THROWS(static_vector_n_half_t s1(N, T(0)), std::bad_alloc);
+   BOOST_TEST_THROWS(static_vector_n_half_t s1(N/2+1, T(0)), std::bad_alloc);
 }
 
 template <typename T, size_t N>
