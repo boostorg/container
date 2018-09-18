@@ -263,43 +263,51 @@ class basic_string_base
       return hdr.is_short != 0;
    }
 
-   short_t *make_short()
+   short_t *construct_short()
    {
-      BOOST_ASSERT(!this->is_short());
-      allocator_traits_type::destroy
-         ( this->alloc()
-         , reinterpret_cast<long_t*>(this->members_.m_repr.data)
-         );
       short_t *ps = ::new(this->members_.m_repr.data) short_t;
       ps->h.is_short = 1;
       return ps;
    }
 
-   long_t *make_long()
+   void destroy_short()
    {
       BOOST_ASSERT(this->is_short());
-      long_t *pl = reinterpret_cast<long_t*>(this->members_.m_repr.data);
-      allocator_traits_type::construct(this->alloc(), pl);
+      this->members_.pshort_repr()->~short_t();
+   }
+
+   short_t *assure_short()
+   {
+      if (!this->is_short()){
+         this->destroy_long();
+         return construct_short();
+      }
+      return this->members_.pshort_repr();
+   }
+
+   long_t *construct_long()
+   {
+      long_t *pl = ::new(this->members_.m_repr.data) long_t;
       //is_short flag is written in the constructor
       return pl;
    }
 
-   long_t *make_long_if_needed()
+   void destroy_long()
    {
-      if (this->is_short()){
-         this->members_.pshort_repr()->~short_t();
-      }
-      return this->make_long();
+      BOOST_ASSERT(!this->is_short());
+      this->members_.plong_repr()->~long_t();
    }
 
-   short_t *make_short_if_needed()
+   long_t *assure_long()
    {
-      if (!this->is_short()){
-         this->members_.plong_repr()->~long_t();
+      if (this->is_short()){
+         this->destroy_short();
+         return this->construct_long();
       }
-      return this->make_short();
+      return this->members_.plong_repr();
    }
-   
+
+  
    protected:
 
    typedef dtl::integral_constant<unsigned,
@@ -362,7 +370,8 @@ class basic_string_base
             size_type new_cap = this->next_capacity(n);
             pointer reuse = 0;
             pointer p = this->allocation_command(allocate_new, n, new_cap, reuse);
-            this->make_long();
+            BOOST_ASSERT(this->is_short());
+            this->construct_long();
             this->priv_long_addr(p);
             this->priv_long_size(0);
             this->priv_storage(new_cap);
@@ -864,7 +873,7 @@ class basic_string
          if(flag && this_alloc != x_alloc){
             if(!this->is_short()){
                this->deallocate_block();
-               this->make_short();
+               this->assure_short();
                Traits::assign(*this->priv_addr(), CharT(0));
                this->priv_short_size(0);
             }
@@ -1193,7 +1202,9 @@ class basic_string
             Traits::copy( boost::movelib::to_raw_pointer(this->priv_short_addr())
                         , boost::movelib::to_raw_pointer(long_addr)
                         , long_size+1);
-            this->make_short();
+            BOOST_ASSERT(!this->is_short());
+            this->destroy_long();
+            this->construct_short();
             this->alloc().deallocate(long_addr, long_storage);
          }
          else{
@@ -1797,7 +1808,7 @@ class basic_string
                this->priv_construct_null(new_start + new_length);
 
                this->deallocate_block();
-               this->make_long_if_needed();
+               this->assure_long();
                this->priv_long_addr(new_start);
                this->priv_long_size(new_length);
                this->priv_long_storage(new_cap);
@@ -1816,9 +1827,7 @@ class basic_string
                //Now initialize the new data
                priv_uninitialized_copy(first, last, new_start + before);
                this->priv_construct_null(new_start + (old_size + n));
-               if(this->is_short())
-                  this->members_.pshort_repr()->~short_t();
-               this->make_long_if_needed();
+               this->assure_long();
                this->priv_long_addr(new_start);
                this->priv_long_size(old_size + n);
                this->priv_long_storage(new_cap);
@@ -2826,7 +2835,7 @@ class basic_string
             this->priv_construct_null(new_start + new_length);
          }
          this->deallocate_block();
-         this->make_long_if_needed();
+         this->assure_long();
          this->priv_long_addr(new_start);
          this->priv_long_size(new_length);
          this->priv_storage(new_cap);
