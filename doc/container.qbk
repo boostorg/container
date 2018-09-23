@@ -365,8 +365,8 @@ operations provide stronger exception safety guarantees than in vector:
     [[erase]     [no-throw unless copy/move construction/assignment  of `T` throw (basic)]     [no-throw]]
 ]
 
-[*Memory overhead]. The C++ standard does not specifiy requirements on memory consumption, but virtually any implementation
-of `vector` has the same behavior wih respect to memory usage: the memory allocated by a `vector` v with n elements of type T
+[*Memory overhead]. The C++ standard does not specify requirements on memory consumption, but virtually any implementation
+of `vector` has the same behavior with respect to memory usage: the memory allocated by a `vector` v with n elements of type T
 is
 
 m[sub v] = c\u2219e,

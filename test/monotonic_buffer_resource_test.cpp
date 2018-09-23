@@ -352,7 +352,7 @@ void test_do_allocate()
       BOOST_TEST(dmbr.remaining_storage(1u) == sizeof(buf));
       //Allocate all remaining storage
       dmbr.do_allocate(dmbr.remaining_storage(1u), 1u);
-      //No new allocation should have ocurred
+      //No new allocation should have occurred
       BOOST_TEST(mrl.m_info.size() == 0u);
       BOOST_TEST(dmbr.remaining_storage(1u) == 0u);
    }
@@ -433,7 +433,7 @@ void test_release()
       //Allocate all remaining storage
       mr.allocate(monr.remaining_storage(1u), 1u);
       BOOST_TEST(monr.current_buffer() == ((char*)&buf + sizeof(buf)));
-      //No new allocation should have ocurred
+      //No new allocation should have occurred
       BOOST_TEST(monr.remaining_storage(1u) == 0u);
       //Release and check memory was released and the original buffer is back
       monr.release();
