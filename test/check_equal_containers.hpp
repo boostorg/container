@@ -119,6 +119,17 @@ struct less_transparent
    }
 };
 
+struct equal_transparent
+{
+   typedef void is_transparent;
+
+   template<class T, class U>
+   bool operator()(const T &t, const U &u) const
+   {
+      return t == u;
+   }
+};
+
 }  //namespace test{
 }  //namespace container {
 }  //namespace boost{
