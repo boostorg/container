@@ -24,13 +24,19 @@ using boost::timer::cpu_timer;
 using boost::timer::cpu_times;
 using boost::timer::nanosecond_type;
 
+#define SIMPLE_IT
+#ifdef SIMPLE_IT
+static const std::size_t NIter = 3;
+#else
+   #ifdef NDEBUG
+   static const std::size_t NIter = 250;
+   #else
+   static const std::size_t NIter = 25;
+   #endif
+#endif
+
 static const std::size_t NElements = 1000;
 
-#ifdef NDEBUG
-static const std::size_t NIter = 250;
-#else
-static const std::size_t NIter = 25;
-#endif
 
 void compare_times(cpu_times time_numerator, cpu_times time_denominator){
    std::cout << ((double)time_numerator.wall/(double)time_denominator.wall) << std::endl;
@@ -290,8 +296,8 @@ cpu_times search_time(boost::container::vector<typename C::value_type> &unique_r
       {
          find_timer.resume();
          for(std::size_t rep = 0; rep != 2; ++rep)
-         for(std::size_t i = 0, max = unique_range.size(); i != max; ++i){
-            v_it[i] = c.find(unique_range[i]);
+         for(std::size_t j = 0, max = unique_range.size(); j != max; ++j){
+            v_it[j] = c.find(unique_range[j]);
          }
          find_timer.stop();
          if(!check_not_end(v_it, c.end())){
@@ -302,8 +308,8 @@ cpu_times search_time(boost::container::vector<typename C::value_type> &unique_r
       {
          lower_timer.resume();
          for(std::size_t rep = 0; rep != 2; ++rep)
-         for(std::size_t i = 0, max = unique_range.size(); i != max; ++i){
-            v_it[i] = c.lower_bound(unique_range[i]);
+         for(std::size_t j = 0, max = unique_range.size(); j != max; ++j){
+            v_it[j] = c.lower_bound(unique_range[j]);
          }
          lower_timer.stop();
          if(!check_not_end(v_it, c.end())){
@@ -314,8 +320,8 @@ cpu_times search_time(boost::container::vector<typename C::value_type> &unique_r
       {
          upper_timer.resume();
          for(std::size_t rep = 0; rep != 2; ++rep)
-         for(std::size_t i = 0, max = unique_range.size(); i != max; ++i){
-            v_it[i] = c.upper_bound(unique_range[i]);
+         for(std::size_t j = 0, max = unique_range.size(); j != max; ++j){
+            v_it[j] = c.upper_bound(unique_range[j]);
          }
          upper_timer.stop();
          if(!check_not_end(v_it, c.end(), 1u)){
@@ -326,8 +332,8 @@ cpu_times search_time(boost::container::vector<typename C::value_type> &unique_r
       {
          equal_range_timer.resume();
          for(std::size_t rep = 0; rep != 2; ++rep)
-         for(std::size_t i = 0, max = unique_range.size(); i != max; ++i){
-            v_itp[i] = c.equal_range(unique_range[i]);
+         for(std::size_t j = 0, max = unique_range.size(); j != max; ++j){
+            v_itp[j] = c.equal_range(unique_range[j]);
          }
          equal_range_timer.stop();
          if(!check_all_not_empty(v_itp)){
@@ -339,8 +345,8 @@ cpu_times search_time(boost::container::vector<typename C::value_type> &unique_r
          std::size_t count = 0;
          count_timer.resume();
          for(std::size_t rep = 0; rep != 2; ++rep)
-         for(std::size_t i = 0, max = unique_range.size(); i != max; ++i){
-            count += c.count(unique_range[i]);
+         for(std::size_t j = 0, max = unique_range.size(); j != max; ++j){
+            count += c.count(unique_range[j]);
          }
          count_timer.stop();
          if(count/2 != c.size()){

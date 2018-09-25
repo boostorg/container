@@ -170,21 +170,25 @@ void print_header()
 
 int main()
 {
-   #define SINGLE_TEST
-   #ifndef SINGLE_TEST
-      #ifdef NDEBUG
-      unsigned int numit []  = { 1000, 10000, 100000, 1000000 };
-      #else
-      unsigned int numit []  = { 100, 1000, 10000, 100000 };
-      #endif
-      unsigned int numele [] = { 10000, 1000,   100,     10       };
-   #else
+   //#define SINGLE_TEST
+   #define SIMPLE_IT
+   #ifdef SINGLE_TEST
       #ifdef NDEBUG
       std::size_t numit [] = { 1000 };
       #else
       std::size_t numit [] = { 100 };
       #endif
       std::size_t numele [] = { 10000 };
+   #elif defined SIMPLE_IT
+      std::size_t numit [] = { 3 };
+      std::size_t numele [] = { 10000 };
+   #else
+      #ifdef NDEBUG
+      unsigned int numit []  = { 1000, 10000, 100000, 1000000 };
+      #else
+      unsigned int numit []  = { 100, 1000, 10000, 100000 };
+      #endif
+      unsigned int numele [] = { 10000, 1000,   100,     10       };
    #endif
 
    print_header();
