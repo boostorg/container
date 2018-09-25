@@ -63,6 +63,9 @@ class EmplaceInt
    friend bool operator!=(const EmplaceInt &l, const EmplaceInt &r)
    {  return !(l == r); }
 
+   friend std::size_t hash_value(const EmplaceInt &v)
+   {  return std::size_t(v.a_); }
+
    friend std::ostream &operator <<(std::ostream &os, const EmplaceInt &v)
    {
       os << "EmplaceInt: " << v.a_ << ' ' << v.b_ << ' ' << v.c_ << ' ' << v.d_ << ' ' << v.e_;
