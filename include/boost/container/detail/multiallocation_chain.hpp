@@ -240,37 +240,37 @@ class transform_multiallocation_chain
 
    void swap(transform_multiallocation_chain &other_chain)
    {  holder_.swap(other_chain.holder_); }
-
+*/
    void splice_after(iterator after_this, transform_multiallocation_chain &x, iterator before_b, iterator before_e, size_type n)
-   {  holder_.splice_after(after_this.base(), x.holder_, before_b.base(), before_e.base(), n);  }
+   {  this->MultiallocationChain::splice_after(after_this.base(), x, before_b.base(), before_e.base(), n);  }
 
    void incorporate_after(iterator after_this, pointer b, pointer before_e, size_type n)
-   {  holder_.incorporate_after(after_this.base(), b, before_e, n);  }
-*/
+   {  this->MultiallocationChain::incorporate_after(after_this.base(), b, before_e, n);  }
+
    pointer pop_front()
    {  return cast(this->MultiallocationChain::pop_front());  }
-/*
+
    bool empty() const
-   {  return holder_.empty(); }
+   {  return this->MultiallocationChain::empty(); }
 
    iterator before_begin()
-   {  return iterator(holder_.before_begin());   }
-*/
+   {  return iterator(this->MultiallocationChain::before_begin());   }
+
    iterator begin()
    {  return iterator(this->MultiallocationChain::begin());   }
-/*
-   iterator end()
-   {  return iterator(holder_.end());   }
 
    iterator last()
-   {  return iterator(holder_.last());   }
+   {  return iterator(this->MultiallocationChain::last());  }
+
+   iterator end()
+   {  return iterator(this->MultiallocationChain::end());   }
 
    size_type size() const
-   {  return holder_.size();  }
+   {  return this->MultiallocationChain::size();  }
 
    void clear()
-   {  holder_.clear(); }
-*/
+   {  this->MultiallocationChain::clear(); }
+
    iterator insert_after(iterator it, pointer m)
    {  return iterator(this->MultiallocationChain::insert_after(it.base(), m)); }
 
