@@ -1352,7 +1352,11 @@ class vector
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_FORCEINLINE iterator end() BOOST_NOEXCEPT_OR_NOTHROW
-   { return iterator(this->m_holder.start() + this->m_holder.m_size); }
+   {
+      pointer   const bg = this->m_holder.start();
+      size_type const sz = this->m_holder.m_size;
+      return iterator(BOOST_LIKELY(sz) ? bg + sz : bg);  //Avoid UB on null-pointer arithmetic
+   }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the vector.
    //!
@@ -1412,7 +1416,12 @@ class vector
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_FORCEINLINE const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW
-   { return const_iterator(this->m_holder.start() + this->m_holder.m_size); }
+   {
+      pointer   const bg = this->m_holder.start();
+      size_type const sz = this->m_holder.m_size;
+      return const_iterator(BOOST_LIKELY(sz) ? bg + sz : bg);  //Avoid UB on null-pointer arithmetic
+   }
+   //{ return const_iterator(this->m_holder.start() + this->m_holder.m_size); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
    //! of the reversed vector.
@@ -2037,9 +2046,10 @@ class vector
    //!   plus linear to the elements between pos and the last element.
    iterator erase(const_iterator first, const_iterator last)
    {
-      BOOST_ASSERT(first == last ||
-         (first < last && this->priv_in_range(first) && this->priv_in_range_or_end(last)));
       if (first != last){
+         BOOST_ASSERT(this->priv_in_range(first));
+         BOOST_ASSERT(this->priv_in_range_or_end(last));
+         BOOST_ASSERT(first < last);
          T* const old_end_ptr = this->priv_raw_end();
          T* const first_ptr = boost::movelib::to_raw_pointer(vector_iterator_get_ptr(first));
          T* const last_ptr  = boost::movelib::to_raw_pointer(vector_iterator_get_ptr(last));

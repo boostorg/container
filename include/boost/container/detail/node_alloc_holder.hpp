@@ -227,14 +227,18 @@ struct node_alloc_holder
    NodePtr create_node(Args &&...args)
    {
       NodePtr p = this->allocate_one();
-      Deallocator node_deallocator(p, this->node_alloc());
-      allocator_traits<NodeAlloc>::construct
-         ( this->node_alloc()
-         , dtl::addressof(p->m_data), boost::forward<Args>(args)...);
-      node_deallocator.release();
-      //This does not throw
-      typedef typename Node::hook_type hook_type;
-      ::new(static_cast<hook_type*>(boost::movelib::to_raw_pointer(p)), boost_container_new_t()) hook_type;
+      BOOST_TRY{
+         ::new(boost::movelib::iterator_to_raw_pointer(p), boost_container_new_t()) Node;
+         allocator_traits<NodeAlloc>::construct
+            (this->node_alloc()
+            , p->get_real_data_ptr(), boost::forward<Args>(args)...);
+      }
+      BOOST_CATCH(...) {
+         p->destroy_header();
+         this->node_alloc().deallocate(p, 1);
+         BOOST_RETHROW
+      }
+      BOOST_CATCH_END
       return (p);
    }
 
@@ -245,14 +249,19 @@ struct node_alloc_holder
    NodePtr create_node(BOOST_MOVE_UREF##N)\
    {\
       NodePtr p = this->allocate_one();\
-      Deallocator node_deallocator(p, this->node_alloc());\
-      allocator_traits<NodeAlloc>::construct\
-         ( this->node_alloc()\
-         , dtl::addressof(p->m_data)\
-          BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
-      node_deallocator.release();\
-      typedef typename Node::hook_type hook_type;\
-      ::new(static_cast<hook_type*>(boost::movelib::to_raw_pointer(p)), boost_container_new_t()) hook_type;\
+      BOOST_TRY{\
+         ::new(boost::movelib::iterator_to_raw_pointer(p), boost_container_new_t()) Node;\
+         allocator_traits<NodeAlloc>::construct\
+            ( this->node_alloc()\
+            , p->get_real_data_ptr()\
+             BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+      }\
+      BOOST_CATCH(...) {\
+         p->destroy_header();\
+         this->node_alloc().deallocate(p, 1);\
+         BOOST_RETHROW\
+      }\
+      BOOST_CATCH_END\
       return (p);\
    }\
    //
@@ -265,12 +274,16 @@ struct node_alloc_holder
    NodePtr create_node_from_it(const It &it)
    {
       NodePtr p = this->allocate_one();
-      Deallocator node_deallocator(p, this->node_alloc());
-      ::boost::container::construct_in_place(this->node_alloc(), dtl::addressof(p->m_data), it);
-      node_deallocator.release();
-      //This does not throw
-      typedef typename Node::hook_type hook_type;
-      ::new(static_cast<hook_type*>(boost::movelib::to_raw_pointer(p)), boost_container_new_t()) hook_type;
+      BOOST_TRY{
+         ::new(boost::movelib::iterator_to_raw_pointer(p), boost_container_new_t()) Node;
+         ::boost::container::construct_in_place(this->node_alloc(), p->get_real_data_ptr(), it);
+      }
+      BOOST_CATCH(...) {
+         p->destroy_header();
+         this->node_alloc().deallocate(p, 1);
+         BOOST_RETHROW
+      }
+      BOOST_CATCH_END
       return (p);
    }
 
@@ -278,22 +291,26 @@ struct node_alloc_holder
    NodePtr create_node_from_key(BOOST_FWD_REF(KeyConvertible) key)
    {
       NodePtr p = this->allocate_one();
-      NodeAlloc &na = this->node_alloc();
-      Deallocator node_deallocator(p, this->node_alloc());
-      node_allocator_traits_type::construct
-         (na, dtl::addressof(p->m_data.first), boost::forward<KeyConvertible>(key));
       BOOST_TRY{
-         node_allocator_traits_type::construct(na, dtl::addressof(p->m_data.second));
+         ::new(boost::movelib::iterator_to_raw_pointer(p), boost_container_new_t()) Node;
+         NodeAlloc &na = this->node_alloc();
+         node_allocator_traits_type::construct
+            (na, dtl::addressof(p->get_real_data().first), boost::forward<KeyConvertible>(key));
+         BOOST_TRY{
+            node_allocator_traits_type::construct(na, dtl::addressof(p->get_real_data().second));
+         }
+         BOOST_CATCH(...){
+            node_allocator_traits_type::destroy(na, dtl::addressof(p->get_real_data().first));
+            BOOST_RETHROW;
+         }
+         BOOST_CATCH_END
       }
-      BOOST_CATCH(...){
-         node_allocator_traits_type::destroy(na, dtl::addressof(p->m_data.first));
-         BOOST_RETHROW;
+      BOOST_CATCH(...) {
+         p->destroy_header();
+         this->node_alloc().deallocate(p, 1);
+         BOOST_RETHROW
       }
       BOOST_CATCH_END
-      node_deallocator.release();
-      //This does not throw
-      typedef typename Node::hook_type hook_type;
-      ::new(static_cast<hook_type*>(boost::movelib::to_raw_pointer(p)), boost_container_new_t()) hook_type;
       return (p);
    }
 
@@ -315,30 +332,31 @@ struct node_alloc_holder
       (FwdIterator beg, difference_type n, Inserter inserter)
    {
       if(n){
-         typedef typename node_allocator_version_traits_type::multiallocation_chain multiallocation_chain;
+         typedef typename node_allocator_version_traits_type::multiallocation_chain multiallocation_chain_t;
 
          //Try to allocate memory in a single block
-         typedef typename multiallocation_chain::iterator multialloc_iterator;
-         multiallocation_chain mem;
+         typedef typename multiallocation_chain_t::iterator multialloc_iterator_t;
+         multiallocation_chain_t chain;
          NodeAlloc &nalloc = this->node_alloc();
-         node_allocator_version_traits_type::allocate_individual(nalloc, n, mem);
-         multialloc_iterator itbeg(mem.begin()), itlast(mem.last());
-         mem.clear();
+         node_allocator_version_traits_type::allocate_individual(nalloc, n, chain);
+         multialloc_iterator_t itbeg  = chain.begin();
+         multialloc_iterator_t itlast = chain.last();
+         chain.clear();
+
          Node *p = 0;
-         BOOST_TRY{
+            BOOST_TRY{
             Deallocator node_deallocator(NodePtr(), nalloc);
             dtl::scoped_destructor<NodeAlloc> sdestructor(nalloc, 0);
-            while(n--){
-               p = boost::movelib::iterator_to_raw_pointer(itbeg);
+            while(n){
+               --n;
+               //This does not throw
+               p = ::new(boost::movelib::iterator_to_raw_pointer(itbeg), boost_container_new_t()) Node;
                node_deallocator.set(p);
                ++itbeg;
                //This can throw
-               boost::container::construct_in_place(nalloc, dtl::addressof(p->m_data), beg);
+               boost::container::construct_in_place(nalloc, p->get_real_data_ptr(), beg);
                sdestructor.set(p);
                ++beg;
-               //This does not throw
-               typedef typename Node::hook_type hook_type;
-               ::new(static_cast<hook_type*>(p), boost_container_new_t()) hook_type;
                //This can throw in some containers (predicate might throw).
                //(sdestructor will destruct the node and node_deallocator will deallocate it in case of exception)
                inserter(*p);
@@ -348,8 +366,9 @@ struct node_alloc_holder
             node_deallocator.release();
          }
          BOOST_CATCH(...){
-            mem.incorporate_after(mem.last(), &*itbeg, &*itlast, n);
-            node_allocator_version_traits_type::deallocate_individual(this->node_alloc(), mem);
+            p->destroy_header();
+            chain.incorporate_after(chain.last(), &*itbeg, &*itlast, n);
+            node_allocator_version_traits_type::deallocate_individual(this->node_alloc(), chain);
             BOOST_RETHROW
          }
          BOOST_CATCH_END
@@ -402,7 +421,7 @@ struct node_alloc_holder
       {}
 
       NodePtr operator()(const Node &other) const
-      {  return m_holder.create_node(other.m_data);  }
+      {  return m_holder.create_node(other.get_real_data());  }
 
       node_alloc_holder &m_holder;
    };
@@ -414,8 +433,8 @@ struct node_alloc_holder
       {}
 
       NodePtr operator()(Node &other)
-      {  //Use m_data instead of get_data to allow moving const key in [multi]map
-         return m_holder.create_node(::boost::move(other.m_data));
+      {  //Use get_real_data() instead of get_real_data to allow moving const key in [multi]map
+         return m_holder.create_node(::boost::move(other.get_real_data()));
       }
 
       node_alloc_holder &m_holder;
