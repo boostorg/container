@@ -33,23 +33,6 @@
 
 using namespace boost::container;
 
-namespace boost {
-namespace container {
-
-//Explicit instantiation to detect compilation errors
-template class boost::container::vector
-   < test::movable_and_copyable_int
-   , test::simple_allocator<test::movable_and_copyable_int> >;
-
-template class boost::container::vector
-   < test::movable_and_copyable_int
-   , allocator<test::movable_and_copyable_int> >;
-
-template class vec_iterator<int*, true >;
-template class vec_iterator<int*, false>;
-
-}}
-
 int test_expand_bwd()
 {
    //Now test all back insertion possibilities

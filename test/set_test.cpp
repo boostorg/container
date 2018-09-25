@@ -22,39 +22,6 @@
 
 using namespace boost::container;
 
-namespace boost {
-namespace container {
-
-//Explicit instantiation to detect compilation errors
-
-//set
-template class set
-   < test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
-   , test::simple_allocator<test::movable_and_copyable_int>
-   >;
-
-template class set
-   < test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
-   , new_allocator<test::movable_and_copyable_int>
-   >;
-
-//multiset
-template class multiset
-   < test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
-   , test::simple_allocator<test::movable_and_copyable_int>
-   >;
-
-template class multiset
-   < test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
-   , adaptive_pool<test::movable_and_copyable_int>
-   >;
-
-}} //boost::container
-
 //Test recursive structures
 class recursive_set
 {
@@ -267,50 +234,6 @@ struct GetAllocatorSet
    };
 };
 
-template<class VoidAllocator, boost::container::tree_type_enum tree_type_value>
-int test_set_variants()
-{
-   typedef typename GetAllocatorSet<VoidAllocator, tree_type_value>::template apply<int>::set_type MySet;
-   typedef typename GetAllocatorSet<VoidAllocator, tree_type_value>::template apply<test::movable_int>::set_type MyMoveSet;
-   typedef typename GetAllocatorSet<VoidAllocator, tree_type_value>::template apply<test::copyable_int>::set_type MyCopySet;
-
-   typedef typename GetAllocatorSet<VoidAllocator, tree_type_value>::template apply<int>::multiset_type MyMultiSet;
-   typedef typename GetAllocatorSet<VoidAllocator, tree_type_value>::template apply<test::movable_int>::multiset_type MyMoveMultiSet;
-   typedef typename GetAllocatorSet<VoidAllocator, tree_type_value>::template apply<test::copyable_int>::multiset_type MyCopyMultiSet;
-
-   typedef std::set<int>                                          MyStdSet;
-   typedef std::multiset<int>                                     MyStdMultiSet;
-
-   if (0 != test::set_test<
-                  MySet
-                  ,MyStdSet
-                  ,MyMultiSet
-                  ,MyStdMultiSet>()){
-      std::cout << "Error in set_test<MyBoostSet>" << std::endl;
-      return 1;
-   }
-
-   if (0 != test::set_test<
-                  MyMoveSet
-                  ,MyStdSet
-                  ,MyMoveMultiSet
-                  ,MyStdMultiSet>()){
-      std::cout << "Error in set_test<MyBoostSet>" << std::endl;
-      return 1;
-   }
-
-   if (0 != test::set_test<
-                  MyCopySet
-                  ,MyStdSet
-                  ,MyCopyMultiSet
-                  ,MyStdMultiSet>()){
-      std::cout << "Error in set_test<MyBoostSet>" << std::endl;
-      return 1;
-   }
-
-   return 0;
-}
-
 void test_merge_from_different_comparison()
 {
    set<int> set1;
@@ -443,34 +366,65 @@ int main ()
    ////////////////////////////////////
    //    Testing allocator implementations
    ////////////////////////////////////
-   //       std:allocator
-   if(test_set_variants< std::allocator<void>, red_black_tree >()){
-      std::cerr << "test_set_variants< std::allocator<void> > failed" << std::endl;
-      return 1;
-   }
-   //       boost::container::adaptive_pool
-   if(test_set_variants< adaptive_pool<void>, red_black_tree>()){
-      std::cerr << "test_set_variants< adaptive_pool<void> > failed" << std::endl;
-      return 1;
-   }
+   {
+      typedef std::set<int>                                          MyStdSet;
+      typedef std::multiset<int>                                     MyStdMultiSet;
 
-   ////////////////////////////////////
-   //    Tree implementations
-   ////////////////////////////////////
-   //       AVL
-   if(test_set_variants< std::allocator<void>, avl_tree >()){
-      std::cerr << "test_set_variants< std::allocator<void>, avl_tree > failed" << std::endl;
-      return 1;
-   }
-   //    SCAPEGOAT TREE
-   if(test_set_variants< std::allocator<void>, scapegoat_tree >()){
-      std::cerr << "test_set_variants< std::allocator<void>, scapegoat_tree > failed" << std::endl;
-      return 1;
-   }
-   //    SPLAY TREE
-   if(test_set_variants< std::allocator<void>, splay_tree >()){
-      std::cerr << "test_set_variants< std::allocator<void>, splay_tree > failed" << std::endl;
-      return 1;
+      if (0 != test::set_test
+         < GetAllocatorSet<std::allocator<void>, red_black_tree>::apply<int>::set_type
+         , MyStdSet
+         , GetAllocatorSet<std::allocator<void>, red_black_tree>::apply<int>::multiset_type
+         , MyStdMultiSet>()) {
+         std::cout << "Error in set_test<std::allocator<void>, red_black_tree>" << std::endl;
+         return 1;
+      }
+
+      if (0 != test::set_test
+         < GetAllocatorSet<new_allocator<void>, avl_tree>::apply<int>::set_type
+         , MyStdSet
+         , GetAllocatorSet<new_allocator<void>, avl_tree>::apply<int>::multiset_type
+         , MyStdMultiSet>()) {
+         std::cout << "Error in set_test<new_allocator<void>, avl_tree>" << std::endl;
+         return 1;
+      }
+
+      if (0 != test::set_test
+         < GetAllocatorSet<adaptive_pool<void>, scapegoat_tree>::apply<int>::set_type
+         , MyStdSet
+         , GetAllocatorSet<adaptive_pool<void>, scapegoat_tree>::apply<int>::multiset_type
+         , MyStdMultiSet>()) {
+         std::cout << "Error in set_test<adaptive_pool<void>, scapegoat_tree>" << std::endl;
+         return 1;
+      }
+
+      ///////////
+
+     if (0 != test::set_test
+         < GetAllocatorSet<new_allocator<void>, splay_tree>::apply<test::movable_int>::set_type
+         , MyStdSet
+         , GetAllocatorSet<new_allocator<void>, splay_tree>::apply<test::movable_int>::multiset_type
+         , MyStdMultiSet>()) {
+         std::cout << "Error in set_test<new_allocator<void>, splay_tree>" << std::endl;
+         return 1;
+      }
+
+      if (0 != test::set_test
+         < GetAllocatorSet<new_allocator<void>, red_black_tree>::apply<test::copyable_int>::set_type
+         , MyStdSet
+         , GetAllocatorSet<new_allocator<void>, red_black_tree>::apply<test::copyable_int>::multiset_type
+         , MyStdMultiSet>()) {
+         std::cout << "Error in set_test<new_allocator<void>, red_black_tree>" << std::endl;
+         return 1;
+      }
+
+      if (0 != test::set_test
+         < GetAllocatorSet<new_allocator<void>, red_black_tree>::apply<test::movable_and_copyable_int>::set_type
+         , MyStdSet
+         , GetAllocatorSet<new_allocator<void>, red_black_tree>::apply<test::movable_and_copyable_int>::multiset_type
+         , MyStdMultiSet>()) {
+         std::cout << "Error in set_test<new_allocator<void>, red_black_tree>" << std::endl;
+         return 1;
+      }
    }
 
    ////////////////////////////////////

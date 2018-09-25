@@ -18,32 +18,6 @@
 
 #include <iostream>
 
-namespace boost {
-namespace container {
-
-template class small_vector<char, 0>;
-template class small_vector<char, 1>;
-template class small_vector<char, 2>;
-template class small_vector<char, 10>;
-
-template class small_vector<int, 0>;
-template class small_vector<int, 1>;
-template class small_vector<int, 2>;
-template class small_vector<int, 10>;
-
-//Explicit instantiation to detect compilation errors
-template class boost::container::small_vector
-   < test::movable_and_copyable_int
-   , 10
-   , test::simple_allocator<test::movable_and_copyable_int> >;
-
-template class boost::container::small_vector
-   < test::movable_and_copyable_int
-   , 10
-   , allocator<test::movable_and_copyable_int> >;
-
-}}
-
 struct boost_container_small_vector;
 
 namespace boost { namespace container {   namespace test {

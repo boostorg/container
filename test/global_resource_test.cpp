@@ -20,8 +20,6 @@
 using namespace boost::container;
 using namespace boost::container::pmr;
 
-std::size_t allocation_count = 0;
-
 #ifdef BOOST_MSVC
 #pragma warning (push)
 #pragma warning (disable : 4290)
@@ -39,6 +37,11 @@ std::size_t allocation_count = 0;
 #pragma GCC diagnostic ignored "-Wsized-deallocation"
 #endif
 
+//ASAN does not support operator new overloading
+#ifndef BOOST_CONTAINER_ASAN
+
+std::size_t allocation_count = 0;
+
 void* operator new[](std::size_t count) BOOST_CONTAINER_NEW_EXCEPTION_SPECIFIER
 {
    ++allocation_count;
@@ -51,9 +54,14 @@ void operator delete[](void *p) BOOST_CONTAINER_DELETE_EXCEPTION_SPECIFIER
    return std::free(p);
 }
 
+#endif   //BOOST_CONTAINER_ASAN
+
 #ifdef BOOST_MSVC
 #pragma warning (pop)
 #endif
+
+#define BOOST_CONTAINER_ASAN
+#ifndef BOOST_CONTAINER_ASAN
 
 void test_new_delete_resource()
 {
@@ -72,6 +80,8 @@ void test_new_delete_resource()
    mr->deallocate(addr, 16, 1);
    BOOST_TEST(memcount == allocation_count);
 }
+
+#endif   //BOOST_CONTAINER_ASAN
 
 void test_null_memory_resource()
 {
@@ -109,7 +119,9 @@ void test_default_resource()
 
 int main()
 {
+   #ifndef BOOST_CONTAINER_ASAN
    test_new_delete_resource();
+   #endif
    test_null_memory_resource();
    test_default_resource();
    return ::boost::report_errors();

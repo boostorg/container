@@ -20,14 +20,6 @@
 
 #include "static_vector_test.hpp"
 
-namespace boost {
-namespace container {
-
-//Explicit instantiation to detect compilation errors
-template class boost::container::static_vector<int, 10>;
-
-}}
-
 
 template <typename T, size_t N>
 void test_ctor_ndc()

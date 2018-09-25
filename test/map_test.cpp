@@ -25,34 +25,6 @@ using namespace boost::container;
 
 typedef std::pair<const test::movable_and_copyable_int, test::movable_and_copyable_int> pair_t;
 
-namespace boost {
-namespace container {
-
-//Explicit instantiation to detect compilation errors
-
-//map
-template class map
-   < test::movable_and_copyable_int
-   , test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
-   , test::simple_allocator< pair_t >
-   >;
-
-template class map
-   < test::movable_and_copyable_int
-   , test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
-   , adaptive_pool< pair_t >
-   >;
-
-template class multimap
-   < test::movable_and_copyable_int
-   , test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
-   , std::allocator< pair_t >
-   >;
-}} //boost::container
-
 class recursive_map
 {
    public:
@@ -240,50 +212,6 @@ struct GetAllocatorMap
    };
 };
 
-template<class VoidAllocator, boost::container::tree_type_enum tree_type_value>
-int test_map_variants()
-{
-   typedef typename GetAllocatorMap<VoidAllocator, tree_type_value>::template apply<int>::map_type MyMap;
-   typedef typename GetAllocatorMap<VoidAllocator, tree_type_value>::template apply<test::movable_int>::map_type MyMoveMap;
-   typedef typename GetAllocatorMap<VoidAllocator, tree_type_value>::template apply<test::copyable_int>::map_type MyCopyMap;
-
-   typedef typename GetAllocatorMap<VoidAllocator, tree_type_value>::template apply<int>::multimap_type MyMultiMap;
-   typedef typename GetAllocatorMap<VoidAllocator, tree_type_value>::template apply<test::movable_int>::multimap_type MyMoveMultiMap;
-   typedef typename GetAllocatorMap<VoidAllocator, tree_type_value>::template apply<test::copyable_int>::multimap_type MyCopyMultiMap;
-
-   typedef std::map<int, int>                                     MyStdMap;
-   typedef std::multimap<int, int>                                MyStdMultiMap;
-
-   if (0 != test::map_test<
-                  MyMap
-                  ,MyStdMap
-                  ,MyMultiMap
-                  ,MyStdMultiMap>()){
-      std::cout << "Error in map_test<MyBoostMap>" << std::endl;
-      return 1;
-   }
-
-   if (0 != test::map_test<
-                  MyMoveMap
-                  ,MyStdMap
-                  ,MyMoveMultiMap
-                  ,MyStdMultiMap>()){
-      std::cout << "Error in map_test<MyBoostMap>" << std::endl;
-      return 1;
-   }
-
-   if (0 != test::map_test<
-                  MyCopyMap
-                  ,MyStdMap
-                  ,MyCopyMultiMap
-                  ,MyStdMultiMap>()){
-      std::cout << "Error in map_test<MyBoostMap>" << std::endl;
-      return 1;
-   }
-
-   return 0;
-}
-
 struct boost_container_map;
 struct boost_container_multimap;
 
@@ -441,34 +369,65 @@ int main ()
    ////////////////////////////////////
    //    Testing allocator implementations
    ////////////////////////////////////
-   //       std:allocator
-   if(test_map_variants< std::allocator<void>, red_black_tree >()){
-      std::cerr << "test_map_variants< std::allocator<void> > failed" << std::endl;
-      return 1;
-   }
-   //       boost::container::adaptive_pool
-   if(test_map_variants< adaptive_pool<void>, red_black_tree >()){
-      std::cerr << "test_map_variants< adaptive_pool<void> > failed" << std::endl;
-      return 1;
-   }
+   {
+      typedef std::map<int, int>                                     MyStdMap;
+      typedef std::multimap<int, int>                                MyStdMultiMap;
 
-   ////////////////////////////////////
-   //    Tree implementations
-   ////////////////////////////////////
-   //       AVL
-   if(test_map_variants< std::allocator<void>, avl_tree >()){
-      std::cerr << "test_map_variants< std::allocator<void>, avl_tree > failed" << std::endl;
-      return 1;
-   }
-   //    SCAPEGOAT TREE
-   if(test_map_variants< std::allocator<void>, scapegoat_tree >()){
-      std::cerr << "test_map_variants< std::allocator<void>, scapegoat_tree > failed" << std::endl;
-      return 1;
-   }
-   //    SPLAY TREE
-   if(test_map_variants< std::allocator<void>, splay_tree >()){
-      std::cerr << "test_map_variants< std::allocator<void>, splay_tree > failed" << std::endl;
-      return 1;
+      if (0 != test::map_test
+         < GetAllocatorMap<std::allocator<void>, red_black_tree>::apply<int>::map_type
+         , MyStdMap
+         , GetAllocatorMap<std::allocator<void>, red_black_tree>::apply<int>::multimap_type
+         , MyStdMultiMap>()) {
+         std::cout << "Error in map_test<std::allocator<void>, red_black_tree>" << std::endl;
+         return 1;
+      }
+
+      if (0 != test::map_test
+         < GetAllocatorMap<new_allocator<void>, avl_tree>::apply<int>::map_type
+         , MyStdMap
+         , GetAllocatorMap<new_allocator<void>, avl_tree>::apply<int>::multimap_type
+         , MyStdMultiMap>()) {
+         std::cout << "Error in map_test<new_allocator<void>, avl_tree>" << std::endl;
+         return 1;
+      }
+
+      if (0 != test::map_test
+         < GetAllocatorMap<adaptive_pool<void>, scapegoat_tree>::apply<int>::map_type
+         , MyStdMap
+         , GetAllocatorMap<adaptive_pool<void>, scapegoat_tree>::apply<int>::multimap_type
+         , MyStdMultiMap>()) {
+         std::cout << "Error in map_test<adaptive_pool<void>, scapegoat_tree>" << std::endl;
+         return 1;
+      }
+
+      ///////////
+
+     if (0 != test::map_test
+         < GetAllocatorMap<new_allocator<void>, splay_tree>::apply<test::movable_int>::map_type
+         , MyStdMap
+         , GetAllocatorMap<new_allocator<void>, splay_tree>::apply<test::movable_int>::multimap_type
+         , MyStdMultiMap>()) {
+         std::cout << "Error in map_test<new_allocator<void>, splay_tree>" << std::endl;
+         return 1;
+      }
+
+      if (0 != test::map_test
+         < GetAllocatorMap<new_allocator<void>, red_black_tree>::apply<test::copyable_int>::map_type
+         , MyStdMap
+         , GetAllocatorMap<new_allocator<void>, red_black_tree>::apply<test::copyable_int>::multimap_type
+         , MyStdMultiMap>()) {
+         std::cout << "Error in map_test<new_allocator<void>, red_black_tree>" << std::endl;
+         return 1;
+      }
+
+      if (0 != test::map_test
+         < GetAllocatorMap<new_allocator<void>, red_black_tree>::apply<test::movable_and_copyable_int>::map_type
+         , MyStdMap
+         , GetAllocatorMap<new_allocator<void>, red_black_tree>::apply<test::movable_and_copyable_int>::multimap_type
+         , MyStdMultiMap>()) {
+         std::cout << "Error in map_test<new_allocator<void>, red_black_tree>" << std::endl;
+         return 1;
+      }
    }
 
    ////////////////////////////////////

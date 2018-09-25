@@ -103,6 +103,9 @@ class movable_int
    friend bool operator<(int l, const movable_int &r)
    {  return l < r.get_int();   }
 
+   friend std::size_t hash_value(const movable_int &v)
+   {  return (std::size_t)v.get_int(); }
+
    private:
    int m_int;
 };
@@ -205,6 +208,9 @@ class movable_and_copyable_int
    friend bool operator<(int l, const movable_and_copyable_int &r)
    {  return l < r.get_int();   }
 
+   friend std::size_t hash_value(const movable_and_copyable_int &v)
+   {  return (std::size_t)v.get_int(); }
+
    private:
    int m_int;
 };
@@ -298,6 +304,9 @@ class copyable_int
    friend bool operator<(int l, const copyable_int &r)
    {  return l < r.get_int();   }
 
+   friend std::size_t hash_value(const copyable_int &v)
+   {  return (std::size_t)v.get_int(); }
+
    private:
    int m_int;
 };
@@ -374,6 +383,9 @@ class non_copymovable_int
 
    friend bool operator<(int l, const non_copymovable_int &r)
    {  return l < r.get_int();   }
+
+   friend std::size_t hash_value(const non_copymovable_int &v)
+   {  return (std::size_t)v.get_int(); }
 
    private:
    int m_int;

@@ -168,16 +168,19 @@ int main ()
    ////////////////////////////////////
    //    Testing allocator implementations
    ////////////////////////////////////
-   //       std:allocator
-   if(test_cont_variants< std::allocator<void> >()){
-      std::cerr << "test_cont_variants< std::allocator<void> > failed" << std::endl;
+   //       int variants
+   if (test::list_test<list<int, std::allocator<int> >, true>())
       return 1;
-   }
-   //       boost::container::adaptive_pool
-   if(test_cont_variants< adaptive_pool<void> >()){
-      std::cerr << "test_cont_variants< adaptive_pool<void> > failed" << std::endl;
+   if (test::list_test<list<int>, true>())
       return 1;
-   }
+   if (test::list_test<list<int, adaptive_pool<int> >, true>())
+      return 1;
+   if (test::list_test<list<test::movable_int>, true>())
+      return 1;
+   if (test::list_test<list<test::movable_and_copyable_int>, true>())
+      return 1;
+   if (test::list_test<list<test::copyable_int>, true>())
+      return 1;
 
    ////////////////////////////////////
    //    Emplace testing

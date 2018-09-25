@@ -13,11 +13,6 @@
 #include <set>
 
 #include <boost/container/flat_set.hpp>
-#include <boost/container/stable_vector.hpp>
-#include <boost/container/small_vector.hpp>
-#include <boost/container/deque.hpp>
-#include <boost/container/static_vector.hpp>
-#include <boost/container/allocator.hpp>
 #include <boost/container/detail/container_or_allocator_rebind.hpp>
 
 #include "print_container.hpp"
@@ -30,65 +25,6 @@
 #include "../../intrusive/test/iterator_test.hpp"
 
 using namespace boost::container;
-
-namespace boost {
-namespace container {
-
-//Explicit instantiation to detect compilation errors
-
-//flat_set
-template class flat_set
-   < test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
-   , test::simple_allocator<test::movable_and_copyable_int>
-   >;
-
-template class flat_set
-   < test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
-   , small_vector<test::movable_and_copyable_int, 10, allocator<test::movable_and_copyable_int> >
-   >;
-
-//flat_multiset
-template class flat_multiset
-   < test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
-   , stable_vector<test::movable_and_copyable_int, test::simple_allocator<test::movable_and_copyable_int> >
-   >;
-
-template class flat_multiset
-   < test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
-   , deque<test::movable_and_copyable_int, test::simple_allocator< test::movable_and_copyable_int > >
-   >;
-
-template class flat_multiset
-   < test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
-   , static_vector<test::movable_and_copyable_int, 10 >
-   >;
-
-//As flat container iterators are typedefs for vector::[const_]iterator,
-//no need to explicit instantiate them
-
-}} //boost::container
-
-
-#if (__cplusplus > 201103L)
-#include <vector>
-
-namespace boost{
-namespace container{
-
-template class flat_set
-   < test::movable_and_copyable_int
-   , std::less<test::movable_and_copyable_int>
-   , std::vector<test::movable_and_copyable_int>
->;
-
-}} //boost::container
-
-#endif
 
 //Test recursive structures
 class recursive_flat_set
@@ -558,62 +494,6 @@ struct GetSetContainer
    };
 };
 
-template<class VoidAllocator>
-int test_set_variants()
-{
-   typedef typename GetSetContainer<VoidAllocator>::template apply<int>::set_type MySet;
-   typedef typename GetSetContainer<VoidAllocator>::template apply<test::movable_int>::set_type MyMoveSet;
-   typedef typename GetSetContainer<VoidAllocator>::template apply<test::movable_and_copyable_int>::set_type MyCopyMoveSet;
-   typedef typename GetSetContainer<VoidAllocator>::template apply<test::copyable_int>::set_type MyCopySet;
-
-   typedef typename GetSetContainer<VoidAllocator>::template apply<int>::multiset_type MyMultiSet;
-   typedef typename GetSetContainer<VoidAllocator>::template apply<test::movable_int>::multiset_type MyMoveMultiSet;
-   typedef typename GetSetContainer<VoidAllocator>::template apply<test::movable_and_copyable_int>::multiset_type MyCopyMoveMultiSet;
-   typedef typename GetSetContainer<VoidAllocator>::template apply<test::copyable_int>::multiset_type MyCopyMultiSet;
-
-   typedef std::set<int>                                          MyStdSet;
-   typedef std::multiset<int>                                     MyStdMultiSet;
-
-   if (0 != test::set_test<
-                  MySet
-                  ,MyStdSet
-                  ,MyMultiSet
-                  ,MyStdMultiSet>()){
-      std::cout << "Error in set_test<MyBoostSet>" << std::endl;
-      return 1;
-   }
-
-   if (0 != test::set_test<
-                  MyMoveSet
-                  ,MyStdSet
-                  ,MyMoveMultiSet
-                  ,MyStdMultiSet>()){
-      std::cout << "Error in set_test<MyBoostSet>" << std::endl;
-      return 1;
-   }
-
-   if (0 != test::set_test<
-                  MyCopyMoveSet
-                  ,MyStdSet
-                  ,MyCopyMoveMultiSet
-                  ,MyStdMultiSet>()){
-      std::cout << "Error in set_test<MyBoostSet>" << std::endl;
-      return 1;
-   }
-
-   if (0 != test::set_test<
-                  MyCopySet
-                  ,MyStdSet
-                  ,MyCopyMultiSet
-                  ,MyStdMultiSet>()){
-      std::cout << "Error in set_test<MyBoostSet>" << std::endl;
-      return 1;
-   }
-
-   return 0;
-}
-
-
 template<typename FlatSetType>
 bool test_support_for_initialization_list_for()
 {
@@ -731,15 +611,54 @@ int main()
    ////////////////////////////////////
    //    Testing allocator implementations
    ////////////////////////////////////
-   //       std::allocator
-   if(test_set_variants< std::allocator<void> >()){
-      std::cerr << "test_set_variants< std::allocator<void> > failed" << std::endl;
-      return 1;
-   }
-   //       boost::container::allocator
-   if(test_set_variants< allocator<void> >()){
-      std::cerr << "test_set_variants< allocator<void> > failed" << std::endl;
-      return 1;
+   {
+      typedef std::set<int>                                          MyStdSet;
+      typedef std::multiset<int>                                     MyStdMultiSet;
+
+      if (0 != test::set_test
+         < GetSetContainer<std::allocator<void> >::apply<int>::set_type
+         , MyStdSet
+         , GetSetContainer<std::allocator<void> >::apply<int>::multiset_type
+         , MyStdMultiSet>()) {
+         std::cout << "Error in set_test<std::allocator<void> >" << std::endl;
+         return 1;
+      }
+
+      if (0 != test::set_test
+         < GetSetContainer<new_allocator<void> >::apply<int>::set_type
+         , MyStdSet
+         , GetSetContainer<new_allocator<void> >::apply<int>::multiset_type
+         , MyStdMultiSet>()) {
+         std::cout << "Error in set_test<new_allocator<void> >" << std::endl;
+         return 1;
+      }
+
+      if (0 != test::set_test
+         < GetSetContainer<new_allocator<void> >::apply<test::movable_int>::set_type
+         , MyStdSet
+         , GetSetContainer<new_allocator<void> >::apply<test::movable_int>::multiset_type
+         , MyStdMultiSet>()) {
+         std::cout << "Error in set_test<new_allocator<void> >" << std::endl;
+         return 1;
+      }
+
+      if (0 != test::set_test
+         < GetSetContainer<new_allocator<void> >::apply<test::copyable_int>::set_type
+         , MyStdSet
+         , GetSetContainer<new_allocator<void> >::apply<test::copyable_int>::multiset_type
+         , MyStdMultiSet>()) {
+         std::cout << "Error in set_test<new_allocator<void> >" << std::endl;
+         return 1;
+      }
+
+      if (0 != test::set_test
+         < GetSetContainer<new_allocator<void> >::apply<test::movable_and_copyable_int>::set_type
+         , MyStdSet
+         , GetSetContainer<new_allocator<void> >::apply<test::movable_and_copyable_int>::multiset_type
+         , MyStdMultiSet>()) {
+         std::cout << "Error in set_test<new_allocator<void> >" << std::endl;
+         return 1;
+      }
    }
 
    ////////////////////////////////////
