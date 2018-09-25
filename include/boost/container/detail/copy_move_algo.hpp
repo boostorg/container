@@ -174,9 +174,13 @@ template
 inline F memmove(I f, I l, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {
    typedef typename boost::container::iterator_traits<I>::value_type value_type;
-   typename boost::container::iterator_traits<I>::difference_type n = boost::container::iterator_distance(f, l);
-   if(n){
-      std::memmove(boost::movelib::iterator_to_raw_pointer(r), boost::movelib::iterator_to_raw_pointer(f), sizeof(value_type)*n);
+   value_type *const dest_raw = boost::movelib::iterator_to_raw_pointer(r);
+   const value_type *const beg_raw = boost::movelib::iterator_to_raw_pointer(f);
+   const value_type *const end_raw = boost::movelib::iterator_to_raw_pointer(l);
+   if(BOOST_LIKELY(beg_raw != end_raw)){
+      BOOST_ASSERT(beg_raw != 0);
+      const typename boost::container::iterator_traits<I>::difference_type n = end_raw - beg_raw;
+      std::memmove(dest_raw, beg_raw, sizeof(value_type)*n);
       boost::container::iterator_advance(r, n);
    }
    return r;
@@ -189,7 +193,7 @@ template
 F memmove_n(I f, U n, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {
    typedef typename boost::container::iterator_traits<I>::value_type value_type;
-   if(n){
+   if(BOOST_LIKELY(n)){
       std::memmove(boost::movelib::iterator_to_raw_pointer(r), boost::movelib::iterator_to_raw_pointer(f), sizeof(value_type)*n);
       boost::container::iterator_advance(r, n);
    }
@@ -203,7 +207,7 @@ template
     typename F> // F models ForwardIterator
 I memmove_n_source(I f, U n, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {
-   if(n){
+   if(BOOST_LIKELY(n)){
       typedef typename boost::container::iterator_traits<I>::value_type value_type;
       std::memmove(boost::movelib::iterator_to_raw_pointer(r), boost::movelib::iterator_to_raw_pointer(f), sizeof(value_type)*n);
       boost::container::iterator_advance(f, n);
@@ -218,7 +222,7 @@ template
 I memmove_n_source_dest(I f, U n, F &r) BOOST_NOEXCEPT_OR_NOTHROW
 {
    typedef typename boost::container::iterator_traits<I>::value_type value_type;
-   if(n){
+   if(BOOST_LIKELY(n)){
       std::memmove(boost::movelib::iterator_to_raw_pointer(r), boost::movelib::iterator_to_raw_pointer(f), sizeof(value_type)*n);
       boost::container::iterator_advance(f, n);
       boost::container::iterator_advance(r, n);
@@ -735,7 +739,8 @@ typename F>   // F models ForwardIterator
 inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, F>::type
    copy_n(I f, U n, F r)
 {
-   while (n--) {
+   while (n) {
+      --n;
       *r = *f;
       ++f; ++r;
    }
