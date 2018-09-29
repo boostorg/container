@@ -349,10 +349,11 @@ struct node_alloc_holder
             dtl::scoped_destructor<NodeAlloc> sdestructor(nalloc, 0);
             while(n){
                --n;
+               p = boost::movelib::iterator_to_raw_pointer(itbeg);
+               ++itbeg; //Increment iterator before overwriting pointed memory
                //This does not throw
-               p = ::new(boost::movelib::iterator_to_raw_pointer(itbeg), boost_container_new_t()) Node;
+               p = ::new(p, boost_container_new_t()) Node;
                node_deallocator.set(p);
-               ++itbeg;
                //This can throw
                boost::container::construct_in_place(nalloc, p->get_real_data_ptr(), beg);
                sdestructor.set(p);
