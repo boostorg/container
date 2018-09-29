@@ -231,16 +231,16 @@ class transform_multiallocation_chain
       return static_cast<MultiallocationChain&>
          (this->MultiallocationChain::operator=(::boost::move(static_cast<MultiallocationChain&>(other))));
    }
-/*
+
    void push_front(const pointer &mem)
-   {  holder_.push_front(mem);  }
+   {   this->MultiallocationChain::push_front(mem);  }
 
    void push_back(const pointer &mem)
-   {  return holder_.push_back(mem);   }
+   {  return this->MultiallocationChain::push_back(mem);   }
 
    void swap(transform_multiallocation_chain &other_chain)
-   {  holder_.swap(other_chain.holder_); }
-*/
+   {  this->MultiallocationChain::swap(other_chain); }
+
    void splice_after(iterator after_this, transform_multiallocation_chain &x, iterator before_b, iterator before_e, size_type n)
    {  this->MultiallocationChain::splice_after(after_this.base(), x, before_b.base(), before_e.base(), n);  }
 
