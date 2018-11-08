@@ -1570,18 +1570,40 @@ flat_map(InputIterator, InputIterator) ->
    flat_map< typename dtl::remove_const< typename iterator_traits<InputIterator>::value_type::first_type>::type
            , typename iterator_traits<InputIterator>::value_type::second_type>;
 
+#ifdef BOOST_HAS_CTAD_SFINAE
+
+namespace dtl {
+
+    template<class T, class U>
+    using enable_if_allocator_t = std::enable_if_t<std::is_same_v<decltype(std::declval<T>().allocate(0)), U *>, T>;
+
+    template<class T, class U>
+    using enable_if_compare_t = std::enable_if_t<std::is_same_v<decltype(std::declval<T>()(std::declval<U>(), std::declval<U>())), bool>, T>;
+
+}  // namespace dtl
+
 template <typename InputIterator, typename Allocator>
 flat_map(InputIterator, InputIterator, Allocator const&) ->
    flat_map< typename dtl::remove_const< typename iterator_traits<InputIterator>::value_type::first_type>::type
            , typename iterator_traits<InputIterator>::value_type::second_type
            , std::less<typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type>
-           , Allocator>;
+           , dtl::enable_if_allocator_t<Allocator, std::remove_const_t<typename iterator_traits<InputIterator>::value_type>>>;
+
+template <typename InputIterator, typename Compare>
+flat_map(InputIterator, InputIterator, Compare const&) ->
+   flat_map< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
+           , typename iterator_traits<InputIterator>::value_type::second_type
+           , dtl::enable_if_compare_t<Compare, std::remove_const_t<typename iterator_traits<InputIterator>::value_type::first_type>>>;
+
+#else
 
 template <typename InputIterator, typename Compare>
 flat_map(InputIterator, InputIterator, Compare const&) ->
    flat_map< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
            , typename iterator_traits<InputIterator>::value_type::second_type
            , Compare>;
+
+#endif
 
 template <typename InputIterator, typename Compare, typename Allocator>
 flat_map(InputIterator, InputIterator, Compare const&, Allocator const&) ->
@@ -1595,18 +1617,30 @@ flat_map(ordered_unique_range_t, InputIterator, InputIterator) ->
    flat_map< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
            , typename iterator_traits<InputIterator>::value_type::second_type>;
 
+#ifdef BOOST_HAS_CTAD_SFINAE
+
 template <typename InputIterator, typename Allocator>
 flat_map(ordered_unique_range_t, InputIterator, InputIterator, Allocator const&) ->
    flat_map< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
            , typename iterator_traits<InputIterator>::value_type::second_type
            , std::less<typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type>
-           , Allocator>;
+           , dtl::enable_if_allocator_t<Allocator, std::remove_const_t<typename iterator_traits<InputIterator>::value_type>>>;
+
+template <typename InputIterator, typename Compare>
+flat_map(ordered_unique_range_t, InputIterator, InputIterator, Compare const&) ->
+   flat_map< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
+           , typename iterator_traits<InputIterator>::value_type::second_type
+           , dtl::enable_if_compare_t<Compare, std::remove_const_t<typename iterator_traits<InputIterator>::value_type::first_type>>>;
+
+#else
 
 template <typename InputIterator, typename Compare>
 flat_map(ordered_unique_range_t, InputIterator, InputIterator, Compare const&) ->
    flat_map< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
            , typename iterator_traits<InputIterator>::value_type::second_type
            , Compare>;
+
+#endif
 
 template <typename InputIterator, typename Compare, typename Allocator>
 flat_map(ordered_unique_range_t, InputIterator, InputIterator, Compare const&, Allocator const&) ->
@@ -2853,18 +2887,30 @@ flat_multimap(InputIterator, InputIterator) ->
    flat_multimap<typename dtl::remove_const< typename iterator_traits<InputIterator>::value_type::first_type>::type
                         , typename iterator_traits<InputIterator>::value_type::second_type>;
 
+#ifdef BOOST_HAS_CTAD_SFINAE
+
 template <typename InputIterator, typename Allocator>
 flat_multimap(InputIterator, InputIterator, Allocator const&) ->
    flat_multimap<typename dtl::remove_const< typename iterator_traits<InputIterator>::value_type::first_type>::type
                         , typename iterator_traits<InputIterator>::value_type::second_type
                         , std::less<typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type>
-                        , Allocator>;
+                        , dtl::enable_if_allocator_t<Allocator, std::remove_const_t<typename iterator_traits<InputIterator>::value_type>>>;
+
+template <typename InputIterator, typename Compare>
+flat_multimap(InputIterator, InputIterator, Compare const&) ->
+   flat_multimap< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
+           , typename iterator_traits<InputIterator>::value_type::second_type
+           , dtl::enable_if_compare_t<Compare, std::remove_const_t<typename iterator_traits<InputIterator>::value_type::first_type>>>;
+
+#else
 
 template <typename InputIterator, typename Compare>
 flat_multimap(InputIterator, InputIterator, Compare const&) ->
    flat_multimap< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
            , typename iterator_traits<InputIterator>::value_type::second_type
            , Compare>;
+
+#endif
 
 template <typename InputIterator, typename Compare, typename Allocator>
 flat_multimap(InputIterator, InputIterator, Compare const&, Allocator const&) ->
@@ -2878,18 +2924,31 @@ flat_multimap(ordered_range_t, InputIterator, InputIterator) ->
    flat_multimap< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
            , typename iterator_traits<InputIterator>::value_type::second_type>;
 
+#ifdef BOOST_HAS_CTAD_SFINAE
+
 template <typename InputIterator, typename Allocator>
 flat_multimap(ordered_range_t, InputIterator, InputIterator, Allocator const&) ->
    flat_multimap< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
            , typename iterator_traits<InputIterator>::value_type::second_type
            , std::less<typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type>
-           , Allocator>;
+           , dtl::enable_if_allocator_t<Allocator, std::remove_const_t<typename iterator_traits<InputIterator>::value_type>>>;
+
+template <typename InputIterator, typename Compare>
+flat_multimap(ordered_range_t, InputIterator, InputIterator, Compare const&) ->
+   flat_multimap< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
+           , typename iterator_traits<InputIterator>::value_type::second_type
+           , dtl::enable_if_compare_t<Compare, std::remove_const_t<typename iterator_traits<InputIterator>::value_type::first_type>>>;
+
+#else
 
 template <typename InputIterator, typename Compare>
 flat_multimap(ordered_range_t, InputIterator, InputIterator, Compare const&) ->
    flat_multimap< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
            , typename iterator_traits<InputIterator>::value_type::second_type
            , Compare>;
+
+#endif
+
 
 template <typename InputIterator, typename Compare, typename Allocator>
 flat_multimap(ordered_range_t, InputIterator, InputIterator, Compare const&, Allocator const&) ->
