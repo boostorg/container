@@ -788,7 +788,7 @@ static int internal_node_multialloc
 
 	/*Error if wrong element_size parameter */
 	if (!element_size ||
-		/*OR Error if n_elements less thatn contiguous_elements */
+		/*OR Error if n_elements less than contiguous_elements */
 		((contiguous_elements + 1) > (DL_MULTIALLOC_DEFAULT_CONTIGUOUS + 1) && n_elements < contiguous_elements) ||
 		/* OR Error if integer overflow */
 		(SQRT_MAX_SIZE_T < (element_req_size | contiguous_elements) &&

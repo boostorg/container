@@ -96,7 +96,7 @@ class static_storage_allocator
 //! Insertion beyond the capacity result in throwing std::bad_alloc() if exceptions are enabled or
 //! calling throw_bad_alloc() if not enabled.
 //!
-//! std::out_of_range is thrown if out of bound access is performed in <code>at()</code> if exceptions are
+//! std::out_of_range is thrown if out of bounds access is performed in <code>at()</code> if exceptions are
 //! enabled, throw_out_of_range() if not enabled.
 //!
 //!@tparam Value    The type of element that will be stored.
