@@ -145,19 +145,19 @@ class vec_iterator
 
    //Arithmetic
    BOOST_CONTAINER_FORCEINLINE vec_iterator& operator+=(difference_type off) BOOST_NOEXCEPT_OR_NOTHROW
-   {  BOOST_ASSERT(!!m_ptr); m_ptr += off; return *this;   }
+   {  BOOST_ASSERT(m_ptr || !off); m_ptr += off; return *this;   }
 
    BOOST_CONTAINER_FORCEINLINE vec_iterator& operator-=(difference_type off) BOOST_NOEXCEPT_OR_NOTHROW
-   {  BOOST_ASSERT(!!m_ptr); m_ptr -= off; return *this;   }
+   {  BOOST_ASSERT(m_ptr || !off); m_ptr -= off; return *this;   }
 
    BOOST_CONTAINER_FORCEINLINE friend vec_iterator operator+(const vec_iterator &x, difference_type off) BOOST_NOEXCEPT_OR_NOTHROW
-   {  BOOST_ASSERT(!!x.m_ptr); return vec_iterator(x.m_ptr+off);  }
+   {  BOOST_ASSERT(x.m_ptr || !off); return vec_iterator(x.m_ptr+off);  }
 
    BOOST_CONTAINER_FORCEINLINE friend vec_iterator operator+(difference_type off, vec_iterator right) BOOST_NOEXCEPT_OR_NOTHROW
-   {  BOOST_ASSERT(!!right.m_ptr); right.m_ptr += off;  return right; }
+   {  BOOST_ASSERT(right.m_ptr || !off); right.m_ptr += off;  return right; }
 
    BOOST_CONTAINER_FORCEINLINE friend vec_iterator operator-(vec_iterator left, difference_type off) BOOST_NOEXCEPT_OR_NOTHROW
-   {  BOOST_ASSERT(!!left.m_ptr); left.m_ptr -= off;  return left; }
+   {  BOOST_ASSERT(left.m_ptr || !off); left.m_ptr -= off;  return left; }
 
    BOOST_CONTAINER_FORCEINLINE friend difference_type operator-(const vec_iterator &left, const vec_iterator& right) BOOST_NOEXCEPT_OR_NOTHROW
    {  return left.m_ptr - right.m_ptr;   }
