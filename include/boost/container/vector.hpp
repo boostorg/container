@@ -2406,7 +2406,7 @@ class vector
          , dtl::is_different<OtherAllocator, allocator_type>
          >::type * = 0)
    {
-      //for move assignment, no aliasing (&x != this) is assummed.
+      //for move assignment, no aliasing (&x != this) is assumed.
       BOOST_ASSERT(this != &x);
       allocator_type &this_alloc = this->m_holder.alloc();
       allocator_type &x_alloc    = x.m_holder.alloc();
