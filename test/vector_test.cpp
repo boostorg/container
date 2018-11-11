@@ -56,6 +56,29 @@ int test_expand_bwd()
    return 0;
 }
 
+struct X;
+
+template<typename T>
+struct XRef
+{
+   explicit XRef(T* ptr) noexcept : ptr(ptr) {}
+   operator T*() const noexcept { return ptr; }
+   T* ptr;
+};
+
+struct X
+{
+   XRef<X const> operator&() const noexcept { return XRef<X const>(this); }
+   XRef<X>       operator&()       noexcept { return XRef<X>(this); }
+};
+
+
+bool test_smart_ref_type()
+{
+   boost::container::vector<X> x(5);
+   return x.empty();
+}
+
 class recursive_vector
 {
    public:
@@ -183,6 +206,9 @@ int main()
       v.push_back(::boost::move(t));
       v.push_back(Test());
    }
+
+   if (test_smart_ref_type())
+      return 1;
 
    ////////////////////////////////////
    //    Backwards expansion test
