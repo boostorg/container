@@ -1131,7 +1131,6 @@ class vector
       BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
                         || allocator_traits_type::is_always_equal::value)
    {
-      BOOST_ASSERT(&x != this);
       this->priv_move_assign(boost::move(x));
       return *this;
    }
@@ -2407,7 +2406,8 @@ class vector
          >::type * = 0)
    {
       //for move assignment, no aliasing (&x != this) is assumed.
-      BOOST_ASSERT(this != &x);
+      //x.size() == 0 is allowed for buggy std libraries.
+      BOOST_ASSERT(this != &x || x.size() == 0);
       allocator_type &this_alloc = this->m_holder.alloc();
       allocator_type &x_alloc    = x.m_holder.alloc();
       const bool propagate_alloc = allocator_traits_type::propagate_on_container_move_assignment::value;
@@ -2425,7 +2425,8 @@ class vector
       }
       else if(is_propagable_from_x){
          this->clear();
-         this->m_holder.deallocate(this->m_holder.m_start, this->m_holder.m_capacity);
+         if(BOOST_LIKELY(!!this->m_holder.m_start))
+            this->m_holder.deallocate(this->m_holder.m_start, this->m_holder.m_capacity);
          this->m_holder.steal_resources(x.m_holder);
       }
       //Else do a one by one move
@@ -2489,6 +2490,9 @@ class vector
          this->m_holder.swap_resources(x.m_holder);
       }
       else{
+         if (BOOST_UNLIKELY(&x == this))
+            return;
+
          //Else swap element by element...
          bool const t_smaller = this->size() < x.size();
          vector &sml = t_smaller ? *this : x;
@@ -2664,7 +2668,8 @@ class vector
       if(cp){
          const size_type sz = this->size();
          if(!sz){
-            this->m_holder.deallocate(this->m_holder.m_start, cp);
+            if(BOOST_LIKELY(!!this->m_holder.m_start))
+               this->m_holder.deallocate(this->m_holder.m_start, cp);
             this->m_holder.m_start     = pointer();
             this->m_holder.m_capacity  = 0;
          }
@@ -2690,7 +2695,8 @@ class vector
       if(cp){
          const size_type sz = this->size();
          if(!sz){
-            this->m_holder.deallocate(this->m_holder.m_start, cp);
+            if(BOOST_LIKELY(!!this->m_holder.m_start))
+               this->m_holder.deallocate(this->m_holder.m_start, cp);
             this->m_holder.m_start     = pointer();
             this->m_holder.m_capacity  = 0;
          }
