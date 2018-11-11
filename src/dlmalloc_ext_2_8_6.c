@@ -19,6 +19,8 @@
 #define MSPACES      1
 #define NO_MALLINFO  1
 #define NO_MALLOC_STATS 1
+//disable sbrk as it's deprecated in some systems and weakens ASLR
+#define HAVE_MORECORE 0
 
 
 #if !defined(NDEBUG)
