@@ -3370,7 +3370,7 @@ class vector
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
-#if __cplusplus >= 201703L
+#ifndef BOOST_CONTAINER_NO_CXX17_CTAD
 
 template <typename InputIterator>
 vector(InputIterator, InputIterator) ->

@@ -217,7 +217,7 @@ int main ()
          return 1;
       }
    }
-#if __cplusplus >= 201703L
+#ifndef BOOST_CONTAINER_NO_CXX17_CTAD
    ////////////////////////////////////
    //    Constructor Template Auto Deduction Tests
    ////////////////////////////////////

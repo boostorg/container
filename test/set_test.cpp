@@ -206,6 +206,104 @@ struct alloc_propagate_base<boost_container_multiset>
    };
 };
 
+bool constructor_template_auto_deduction_test()
+{
+#ifndef BOOST_CONTAINER_NO_CXX17_CTAD
+   using namespace boost::container;
+   const std::size_t NumElements = 100;
+   {
+      std::set<int> int_set;
+      for (std::size_t i = 0; i != NumElements; ++i) {
+         int_set.insert(static_cast<int>(i));
+      }
+      std::multiset<int> int_mset;
+      for (std::size_t i = 0; i != NumElements; ++i) {
+         int_mset.insert(static_cast<int>(i));
+      }
+
+      typedef std::less<int> comp_int_t;
+      typedef std::allocator<int> alloc_int_t;
+
+      //range
+      {
+         auto fset = set(int_set.begin(), int_set.end());
+         if (!CheckEqualContainers(int_set, fset))
+            return false;
+         auto fmset = multiset(int_mset.begin(), int_mset.end());
+         if (!CheckEqualContainers(int_mset, fmset))
+            return false;
+      }
+      //range+comp
+      {
+         auto fset = set(int_set.begin(), int_set.end(), comp_int_t());
+         if (!CheckEqualContainers(int_set, fset))
+            return false;
+         auto fmset = multiset(int_mset.begin(), int_mset.end(), comp_int_t());
+         if (!CheckEqualContainers(int_mset, fmset))
+            return false;
+      }
+      //range+comp+alloc
+      {
+         auto fset = set(int_set.begin(), int_set.end(), comp_int_t(), alloc_int_t());
+         if (!CheckEqualContainers(int_set, fset))
+            return false;
+         auto fmset = multiset(int_mset.begin(), int_mset.end(), comp_int_t(), alloc_int_t());
+         if (!CheckEqualContainers(int_mset, fmset))
+            return false;
+      }
+      //range+alloc
+      {
+         auto fset = set(int_set.begin(), int_set.end(), alloc_int_t());
+         if (!CheckEqualContainers(int_set, fset))
+            return false;
+         auto fmset = multiset(int_mset.begin(), int_mset.end(), alloc_int_t());
+         if (!CheckEqualContainers(int_mset, fmset))
+            return false;
+      }
+
+      //ordered_unique_range / ordered_range
+
+      //range
+      {
+         auto fset = set(ordered_unique_range, int_set.begin(), int_set.end());
+         if (!CheckEqualContainers(int_set, fset))
+            return false;
+         auto fmset = multiset(ordered_range, int_mset.begin(), int_mset.end());
+         if (!CheckEqualContainers(int_mset, fmset))
+            return false;
+      }
+      //range+comp
+      {
+         auto fset = set(ordered_unique_range, int_set.begin(), int_set.end(), comp_int_t());
+         if (!CheckEqualContainers(int_set, fset))
+            return false;
+         auto fmset = multiset(ordered_range, int_mset.begin(), int_mset.end(), comp_int_t());
+         if (!CheckEqualContainers(int_mset, fmset))
+            return false;
+      }
+      //range+comp+alloc
+      {
+         auto fset = set(ordered_unique_range, int_set.begin(), int_set.end(), comp_int_t(), alloc_int_t());
+         if (!CheckEqualContainers(int_set, fset))
+            return false;
+         auto fmset = multiset(ordered_range, int_mset.begin(), int_mset.end(), comp_int_t(), alloc_int_t());
+         if (!CheckEqualContainers(int_mset, fmset))
+            return false;
+      }
+      //range+alloc
+      {
+         auto fset = set(ordered_unique_range, int_set.begin(), int_set.end(), alloc_int_t());
+         if (!CheckEqualContainers(int_set, fset))
+            return false;
+         auto fmset = multiset(ordered_range, int_mset.begin(), int_mset.end(), alloc_int_t());
+         if (!CheckEqualContainers(int_mset, fmset))
+            return false;
+      }
+   }
+#endif
+   return true;
+}
+
 }}}   //boost::container::test
 
 template<class VoidAllocator, boost::container::tree_type_enum tree_type_value>
@@ -360,6 +458,13 @@ int main ()
 
    test_merge_from_different_comparison();
 
+   ////////////////////////////////////
+   //    Constructor Template Auto Deduction test
+   ////////////////////////////////////
+   if (!test::constructor_template_auto_deduction_test()) {
+      return 1;
+   }
+
    if(!test_heterogeneous_lookups())
       return 1;
 
@@ -500,7 +605,7 @@ int main ()
    if(!node_type_test())
       return 1;
 
-#if __cplusplus >= 201703L
+#ifndef BOOST_CONTAINER_NO_CXX17_CTAD
    ////////////////////////////////////
    //    Constructor Template Auto Deduction
    ////////////////////////////////////

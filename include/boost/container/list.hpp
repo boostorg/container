@@ -1498,7 +1498,7 @@ class list
 
 };
 
-#if __cplusplus >= 201703L
+#ifndef BOOST_CONTAINER_NO_CXX17_CTAD
 template <typename InputIterator>
 list(InputIterator, InputIterator) ->
    list<typename iterator_traits<InputIterator>::value_type>;
