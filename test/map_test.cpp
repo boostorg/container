@@ -337,6 +337,106 @@ bool test_heterogeneous_lookups()
    return true;
 }
 
+bool constructor_template_auto_deduction_test()
+{
+
+#ifndef BOOST_CONTAINER_NO_CXX17_CTAD
+   using namespace boost::container;
+   const std::size_t NumElements = 100;
+   {
+      std::map<int, int> int_map;
+      for(std::size_t i = 0; i != NumElements; ++i){
+         int_map.insert(std::map<int, int>::value_type(static_cast<int>(i), static_cast<int>(i)));
+      }
+      std::multimap<int, int> int_mmap;
+      for (std::size_t i = 0; i != NumElements; ++i) {
+         int_mmap.insert(std::multimap<int, int>::value_type(static_cast<int>(i), static_cast<int>(i)));
+      }
+
+      typedef std::less<int> comp_int_t;
+      typedef std::allocator<std::pair<const int, int> > alloc_pair_int_t;
+
+      //range
+      {
+         auto fmap = map(int_map.begin(), int_map.end());
+         if (!CheckEqualContainers(int_map, fmap))
+            return false;
+         auto fmmap = multimap(int_mmap.begin(), int_mmap.end());
+         if (!CheckEqualContainers(int_mmap, fmmap))
+            return false;
+      }
+      //range+comp
+      {
+         auto fmap = map(int_map.begin(), int_map.end(), comp_int_t());
+         if (!CheckEqualContainers(int_map, fmap))
+            return false;
+         auto fmmap = multimap(int_mmap.begin(), int_mmap.end(), comp_int_t());
+         if (!CheckEqualContainers(int_mmap, fmmap))
+            return false;
+      }
+      //range+comp+alloc
+      {
+         auto fmap = map(int_map.begin(), int_map.end(), comp_int_t(), alloc_pair_int_t());
+         if (!CheckEqualContainers(int_map, fmap))
+            return false;
+         auto fmmap = multimap(int_mmap.begin(), int_mmap.end(), comp_int_t(), alloc_pair_int_t());
+         if (!CheckEqualContainers(int_mmap, fmmap))
+            return false;
+      }
+      //range+alloc
+      {
+         auto fmap = map(int_map.begin(), int_map.end(), alloc_pair_int_t());
+         if (!CheckEqualContainers(int_map, fmap))
+            return false;
+         auto fmmap = multimap(int_mmap.begin(), int_mmap.end(), alloc_pair_int_t());
+         if (!CheckEqualContainers(int_mmap, fmmap))
+            return false;
+      }
+
+      //ordered_unique_range / ordered_range
+
+      //range
+      {
+         auto fmap = map(ordered_unique_range, int_map.begin(), int_map.end());
+         if(!CheckEqualContainers(int_map, fmap))
+            return false;
+         auto fmmap = multimap(ordered_range, int_mmap.begin(), int_mmap.end());
+         if(!CheckEqualContainers(int_mmap, fmmap))
+            return false;
+      }
+      //range+comp
+      {
+         auto fmap = map(ordered_unique_range, int_map.begin(), int_map.end(), comp_int_t());
+         if (!CheckEqualContainers(int_map, fmap))
+            return false;
+         auto fmmap = multimap(ordered_range, int_mmap.begin(), int_mmap.end(), comp_int_t());
+         if (!CheckEqualContainers(int_mmap, fmmap))
+            return false;
+      }
+      //range+comp+alloc
+      {
+         auto fmap = map(ordered_unique_range, int_map.begin(), int_map.end(), comp_int_t(), alloc_pair_int_t());
+         if (!CheckEqualContainers(int_map, fmap))
+            return false;
+         auto fmmap = multimap(ordered_range, int_mmap.begin(), int_mmap.end(), comp_int_t(), alloc_pair_int_t());
+         if (!CheckEqualContainers(int_mmap, fmmap))
+            return false;
+      }
+      //range+alloc
+      {
+         auto fmap = map(ordered_unique_range, int_map.begin(), int_map.end(),alloc_pair_int_t());
+         if (!CheckEqualContainers(int_map, fmap))
+            return false;
+         auto fmmap = multimap(ordered_range, int_mmap.begin(), int_mmap.end(),alloc_pair_int_t());
+         if (!CheckEqualContainers(int_mmap, fmmap))
+            return false;
+      }
+   }
+#endif
+
+   return true;
+}
+
 }}}   //namespace boost::container::test
 
 int main ()
@@ -474,29 +574,18 @@ int main ()
       }
    }
 
-#if __cplusplus >= 201703L
-   ////////////////////////////////////
-   //    Constructor Template Auto Deduction
-   ////////////////////////////////////
-   {
-      auto gold = std::map<int, int>({ {1,1}, {2,2}, {3,3} } );
-      auto test = boost::container::map(gold.begin(), gold.end());
-      if (test.size() != 3)
-         return 1;
-   }
-   {
-      auto gold = std::multimap<int, int>({ {1,1}, {2,2}, {3,3} } );
-      auto test = boost::container::multimap(gold.begin(), gold.end());
-      if (test.size() != 3)
-         return 1;
-   }
-#endif
-
    ////////////////////////////////////
    //    Node extraction/insertion testing functions
    ////////////////////////////////////
    if(!node_type_test())
       return 1;
+
+   ////////////////////////////////////
+   //    Constructor Template Auto Deduction test
+   ////////////////////////////////////
+   if (!test::constructor_template_auto_deduction_test()) {
+      return 1;
+   }
 
    if (!boost::container::test::instantiate_constructors<map<int, int>, multimap<int, int> >())
       return 1;

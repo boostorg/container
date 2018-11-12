@@ -276,6 +276,106 @@ bool flat_tree_ordered_insertion_test()
    return true;
 }
 
+bool constructor_template_auto_deduction_test()
+{
+
+#ifndef BOOST_CONTAINER_NO_CXX17_CTAD
+   using namespace boost::container;
+   const std::size_t NumElements = 100;
+   {
+      std::set<int> int_set;
+      for (std::size_t i = 0; i != NumElements; ++i) {
+         int_set.insert(static_cast<int>(i));
+      }
+      std::multiset<int> int_mset;
+      for (std::size_t i = 0; i != NumElements; ++i) {
+         int_mset.insert(static_cast<int>(i));
+      }
+
+      typedef std::less<int> comp_int_t;
+      typedef std::allocator<int> alloc_int_t;
+
+      //range
+      {
+         auto fset = flat_set(int_set.begin(), int_set.end());
+         if (!CheckEqualContainers(int_set, fset))
+            return false;
+         auto fmset = flat_multiset(int_mset.begin(), int_mset.end());
+         if (!CheckEqualContainers(int_mset, fmset))
+            return false;
+      }
+      //range+comp
+      {
+         auto fset = flat_set(int_set.begin(), int_set.end(), comp_int_t());
+         if (!CheckEqualContainers(int_set, fset))
+            return false;
+         auto fmset = flat_multiset(int_mset.begin(), int_mset.end(), comp_int_t());
+         if (!CheckEqualContainers(int_mset, fmset))
+            return false;
+      }
+      //range+comp+alloc
+      {
+         auto fset = flat_set(int_set.begin(), int_set.end(), comp_int_t(), alloc_int_t());
+         if (!CheckEqualContainers(int_set, fset))
+            return false;
+         auto fmset = flat_multiset(int_mset.begin(), int_mset.end(), comp_int_t(), alloc_int_t());
+         if (!CheckEqualContainers(int_mset, fmset))
+            return false;
+      }
+      //range+alloc
+      {
+         auto fset = flat_set(int_set.begin(), int_set.end(), alloc_int_t());
+         if (!CheckEqualContainers(int_set, fset))
+            return false;
+         auto fmset = flat_multiset(int_mset.begin(), int_mset.end(), alloc_int_t());
+         if (!CheckEqualContainers(int_mset, fmset))
+            return false;
+      }
+
+      //ordered_unique_range / ordered_range
+
+      //range
+      {
+         auto fset = flat_set(ordered_unique_range, int_set.begin(), int_set.end());
+         if (!CheckEqualContainers(int_set, fset))
+            return false;
+         auto fmset = flat_multiset(ordered_range, int_mset.begin(), int_mset.end());
+         if (!CheckEqualContainers(int_mset, fmset))
+            return false;
+      }
+      //range+comp
+      {
+         auto fset = flat_set(ordered_unique_range, int_set.begin(), int_set.end(), comp_int_t());
+         if (!CheckEqualContainers(int_set, fset))
+            return false;
+         auto fmset = flat_multiset(ordered_range, int_mset.begin(), int_mset.end(), comp_int_t());
+         if (!CheckEqualContainers(int_mset, fmset))
+            return false;
+      }
+      //range+comp+alloc
+      {
+         auto fset = flat_set(ordered_unique_range, int_set.begin(), int_set.end(), comp_int_t(), alloc_int_t());
+         if (!CheckEqualContainers(int_set, fset))
+            return false;
+         auto fmset = flat_multiset(ordered_range, int_mset.begin(), int_mset.end(), comp_int_t(), alloc_int_t());
+         if (!CheckEqualContainers(int_mset, fmset))
+            return false;
+      }
+      //range+alloc
+      {
+         auto fset = flat_set(ordered_unique_range, int_set.begin(), int_set.end(), alloc_int_t());
+         if (!CheckEqualContainers(int_set, fset))
+            return false;
+         auto fmset = flat_multiset(ordered_range, int_mset.begin(), int_mset.end(), alloc_int_t());
+         if (!CheckEqualContainers(int_mset, fmset))
+            return false;
+      }
+   }
+#endif
+
+   return true;
+}
+
 template< class RandomIt >
 void random_shuffle( RandomIt first, RandomIt last )
 {
@@ -595,6 +695,13 @@ int main()
    }
 
    ////////////////////////////////////
+   //    Constructor Template Auto Deduction test
+   ////////////////////////////////////
+   if (!constructor_template_auto_deduction_test()) {
+      return 1;
+   }
+
+   ////////////////////////////////////
    //    Extract/Adopt test
    ////////////////////////////////////
    if(!flat_tree_extract_adopt_test()){
@@ -705,30 +812,6 @@ int main()
          return 1;
       }
    }
-
-#if __cplusplus >= 201703L
-   ////////////////////////////////////
-   //    Constructor Template Auto Deduction
-   ////////////////////////////////////
-   {
-      auto gold = std::set({ 1, 2, 3 });
-      auto test = boost::container::flat_set(gold.begin(), gold.end());
-      if (test.size() != 3)
-         return 1;
-      test = boost::container::flat_set(ordered_unique_range, gold.begin(), gold.end());
-      if (test.size() != 3)
-         return 1;
-   }
-   {
-      auto gold = std::multiset({ 1, 2, 3 });
-      auto test = boost::container::flat_multiset(gold.begin(), gold.end());
-      if (test.size() != 3)
-         return 1;
-      test = boost::container::flat_multiset(ordered_range, gold.begin(), gold.end());
-      if (test.size() != 3)
-         return 1;
-   }
-#endif
 
    return 0;
 }
