@@ -171,11 +171,16 @@ class basic_multiallocation_chain
 
    std::pair<void_pointer, void_pointer> extract_data()
    {
-      std::pair<void_pointer, void_pointer> ret
-         (slist_impl_.begin().operator->()
-         ,slist_impl_.last().operator->());
-      slist_impl_.clear();
-      return ret;
+      if(BOOST_LIKELY(!slist_impl_.empty())){
+         std::pair<void_pointer, void_pointer> ret
+            (slist_impl_.begin().operator->()
+            ,slist_impl_.last().operator->());
+         slist_impl_.clear();
+         return ret;
+      }
+      else {
+         return std::pair<void_pointer, void_pointer>();
+      }
    }
 };
 
