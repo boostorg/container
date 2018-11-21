@@ -56,6 +56,29 @@ int test_expand_bwd()
    return 0;
 }
 
+struct X;
+
+template<typename T>
+struct XRef
+{
+   explicit XRef(T* ptr)  : ptr(ptr) {}
+   operator T*() const { return ptr; }
+   T* ptr;
+};
+
+struct X
+{
+   XRef<X const> operator&() const { return XRef<X const>(this); }
+   XRef<X>       operator&()       { return XRef<X>(this); }
+};
+
+
+bool test_smart_ref_type()
+{
+   boost::container::vector<X> x(5);
+   return x.empty();
+}
+
 class recursive_vector
 {
    public:
@@ -184,6 +207,9 @@ int main()
       v.push_back(Test());
    }
 
+   if (test_smart_ref_type())
+      return 1;
+
    ////////////////////////////////////
    //    Backwards expansion test
    ////////////////////////////////////
@@ -234,7 +260,7 @@ int main()
       }
    }
 
-#if __cplusplus >= 201703L
+#ifndef BOOST_CONTAINER_NO_CXX17_CTAD
    ////////////////////////////////////
    //    Constructor Template Auto Deduction testing
    ////////////////////////////////////

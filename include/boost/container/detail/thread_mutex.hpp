@@ -176,4 +176,6 @@ class thread_mutex
 
 #endif   //BOOST_HAS_PTHREADS
 
+#include <boost/container/detail/config_end.hpp>
+
 #endif // #ifndef BOOST_CONTAINER_DETAIL_THREAD_MUTEX_HPP

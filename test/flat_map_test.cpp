@@ -178,28 +178,98 @@ bool flat_tree_ordered_insertion_test()
 
 bool constructor_template_auto_deduction_test()
 {
-#if __cplusplus >= 201703L
+
+#ifndef BOOST_CONTAINER_NO_CXX17_CTAD
    using namespace boost::container;
    const std::size_t NumElements = 100;
-   //Ordered insertion map
    {
       std::map<int, int> int_map;
       for(std::size_t i = 0; i != NumElements; ++i){
          int_map.insert(std::map<int, int>::value_type(static_cast<int>(i), static_cast<int>(i)));
       }
-      //Construction insertion
-      auto fmap = flat_map(ordered_unique_range, int_map.begin(), int_map.end());
-      if(!CheckEqualContainers(int_map, fmap))
-         return false;
-
       std::multimap<int, int> int_mmap;
-      for(std::size_t i = 0; i != NumElements; ++i){
+      for (std::size_t i = 0; i != NumElements; ++i) {
          int_mmap.insert(std::multimap<int, int>::value_type(static_cast<int>(i), static_cast<int>(i)));
       }
-      //Construction insertion
-      auto fmmap = flat_multimap(ordered_range, int_mmap.begin(), int_mmap.end());
-      if(!CheckEqualContainers(int_mmap, fmmap))
-         return false;
+
+      typedef std::less<int> comp_int_t;
+      typedef std::allocator<std::pair<int, int> > alloc_pair_int_t;
+
+      //range
+      {
+         auto fmap = flat_map(int_map.begin(), int_map.end());
+         if (!CheckEqualContainers(int_map, fmap))
+            return false;
+         auto fmmap = flat_multimap(int_mmap.begin(), int_mmap.end());
+         if (!CheckEqualContainers(int_mmap, fmmap))
+            return false;
+      }
+      //range+comp
+      {
+         auto fmap = flat_map(int_map.begin(), int_map.end(), comp_int_t());
+         if (!CheckEqualContainers(int_map, fmap))
+            return false;
+         auto fmmap = flat_multimap(int_mmap.begin(), int_mmap.end(), comp_int_t());
+         if (!CheckEqualContainers(int_mmap, fmmap))
+            return false;
+      }
+      //range+comp+alloc
+      {
+         auto fmap = flat_map(int_map.begin(), int_map.end(), comp_int_t(), alloc_pair_int_t());
+         if (!CheckEqualContainers(int_map, fmap))
+            return false;
+         auto fmmap = flat_multimap(int_mmap.begin(), int_mmap.end(), comp_int_t(), alloc_pair_int_t());
+         if (!CheckEqualContainers(int_mmap, fmmap))
+            return false;
+      }
+      //range+alloc
+      {
+         auto fmap = flat_map(int_map.begin(), int_map.end(), alloc_pair_int_t());
+         if (!CheckEqualContainers(int_map, fmap))
+            return false;
+         auto fmmap = flat_multimap(int_mmap.begin(), int_mmap.end(), alloc_pair_int_t());
+         if (!CheckEqualContainers(int_mmap, fmmap))
+            return false;
+      }
+
+      //ordered_unique_range / ordered_range
+
+      //range
+      {
+         auto fmap = flat_map(ordered_unique_range, int_map.begin(), int_map.end());
+         if(!CheckEqualContainers(int_map, fmap))
+            return false;
+         auto fmmap = flat_multimap(ordered_range, int_mmap.begin(), int_mmap.end());
+         if(!CheckEqualContainers(int_mmap, fmmap))
+            return false;
+      }
+      //range+comp
+      {
+         auto fmap = flat_map(ordered_unique_range, int_map.begin(), int_map.end(), comp_int_t());
+         if (!CheckEqualContainers(int_map, fmap))
+            return false;
+         auto fmmap = flat_multimap(ordered_range, int_mmap.begin(), int_mmap.end(), comp_int_t());
+         if (!CheckEqualContainers(int_mmap, fmmap))
+            return false;
+      }
+      //range+comp+alloc
+      {
+         auto fmap = flat_map(ordered_unique_range, int_map.begin(), int_map.end(), comp_int_t(), alloc_pair_int_t());
+         if (!CheckEqualContainers(int_map, fmap))
+            return false;
+         auto fmmap = flat_multimap(ordered_range, int_mmap.begin(), int_mmap.end(), comp_int_t(), alloc_pair_int_t());
+         if (!CheckEqualContainers(int_mmap, fmmap))
+            return false;
+      }
+      //range+alloc
+      {
+         auto fmap = flat_map(ordered_unique_range, int_map.begin(), int_map.end(),alloc_pair_int_t());
+         if (!CheckEqualContainers(int_map, fmap))
+            return false;
+         auto fmmap = flat_multimap(ordered_range, int_mmap.begin(), int_mmap.end(),alloc_pair_int_t());
+         if (!CheckEqualContainers(int_mmap, fmmap))
+            return false;
+      }
    }
 #endif
 
@@ -476,7 +546,7 @@ bool test_heterogeneous_lookups()
 int main()
 {
    using namespace boost::container::test;
-/*
+
    //Allocator argument container
    {
       flat_map<int, int> map_((flat_map<int, int>::allocator_type()));
@@ -530,7 +600,7 @@ int main()
 
    if (!test_heterogeneous_lookups())
       return 1;
-*/
+
    ////////////////////////////////////
    //    Testing allocator implementations
    ////////////////////////////////////
@@ -546,7 +616,7 @@ int main()
          std::cout << "Error in map_test<std::allocator<void> >" << std::endl;
          return 1;
       }
-      /*
+
       if (0 != test::map_test
          < GetMapContainer<new_allocator<void> >::apply<int>::map_type
          , MyStdMap
@@ -581,9 +651,9 @@ int main()
          , MyStdMultiMap>()) {
          std::cout << "Error in map_test<new_allocator<void> >" << std::endl;
          return 1;
-      }*/
+      }
    }
-/*
+
    if(!boost::container::test::test_map_support_for_initialization_list_for<flat_map<int, int> >())
       return 1;
 
@@ -628,7 +698,7 @@ int main()
          return 1;
       }
    }
-*/
+
    return 0;
 }
 

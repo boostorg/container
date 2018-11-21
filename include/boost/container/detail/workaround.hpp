@@ -119,4 +119,11 @@
 #define BOOST_CONTAINER_ASAN
 #endif
 
+
+#if (__cplusplus >= 201703L)
+//CTAD supported
+#else
+#define BOOST_CONTAINER_NO_CXX17_CTAD
+#endif
+
 #endif   //#ifndef BOOST_CONTAINER_DETAIL_WORKAROUND_HPP

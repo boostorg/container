@@ -837,7 +837,7 @@ class stable_vector
       BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
                                   || allocator_traits_type::is_always_equal::value)
    {
-      //for move constructor, no aliasing (&x != this) is assummed.
+      //for move constructor, no aliasing (&x != this) is assumed.
       BOOST_ASSERT(this != &x);
       node_allocator_type &this_alloc = this->priv_node_alloc();
       node_allocator_type &x_alloc    = x.priv_node_alloc();
@@ -2142,7 +2142,7 @@ class stable_vector
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
-#if __cplusplus >= 201703L
+#ifndef BOOST_CONTAINER_NO_CXX17_CTAD
 
 template <typename InputIterator>
 stable_vector(InputIterator, InputIterator) ->

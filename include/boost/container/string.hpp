@@ -896,7 +896,7 @@ class basic_string
       BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
                                   || allocator_traits_type::is_always_equal::value)
    {
-      //for move constructor, no aliasing (&x != this) is assummed.
+      //for move constructor, no aliasing (&x != this) is assumed.
       BOOST_ASSERT(this != &x);
       allocator_type &this_alloc = this->alloc();
       allocator_type &x_alloc    = x.alloc();
@@ -2978,7 +2978,7 @@ class basic_string
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
-#if __cplusplus >= 201703L
+#ifndef BOOST_CONTAINER_NO_CXX17_CTAD
 
 template <typename InputIterator>
 basic_string(InputIterator, InputIterator) ->

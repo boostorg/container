@@ -256,6 +256,22 @@ class map
       : base_t(ordered_range, first, last, comp, a)
    {}
 
+   //! <b>Effects</b>: Constructs an empty map using the specified allocator object and
+   //! inserts elements from the ordered unique range [first ,last). This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Requires</b>: [first ,last) must be ordered according to the predicate and must be
+   //! unique values.
+   //!
+   //! <b>Complexity</b>: Linear in N.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   template <class InputIterator>
+   BOOST_CONTAINER_FORCEINLINE map(ordered_unique_range_t, InputIterator first, InputIterator last, const allocator_type& a)
+      : base_t(ordered_range, first, last, Compare(), a)
+   {}
+
+
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: Constructs an empty map and
    //! inserts elements from the range [il.begin(), il.end()).
@@ -1279,55 +1295,63 @@ class map
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
-#if __cplusplus >= 201703L
+#ifndef BOOST_CONTAINER_NO_CXX17_CTAD
 
 template <typename InputIterator>
 map(InputIterator, InputIterator) ->
-   map< typename dtl::remove_const< typename iterator_traits<InputIterator>::value_type::first_type>::type
-           , typename iterator_traits<InputIterator>::value_type::second_type>;
+   map< it_based_non_const_first_type_t<InputIterator>
+           , it_based_second_type_t<InputIterator>>;
 
-template <typename InputIterator, typename Allocator>
+template < typename InputIterator, typename Allocator
+         , typename = dtl::require_allocator_t<Allocator>>
 map(InputIterator, InputIterator, Allocator const&) ->
-   map< typename dtl::remove_const< typename iterator_traits<InputIterator>::value_type::first_type>::type
-           , typename iterator_traits<InputIterator>::value_type::second_type
-           , std::less<typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type>
+   map< it_based_non_const_first_type_t<InputIterator>
+           , it_based_second_type_t<InputIterator>
+           , std::less<it_based_non_const_first_type_t<InputIterator>>
            , Allocator>;
 
-template <typename InputIterator, typename Compare>
+template < typename InputIterator, typename Compare
+         , typename = dtl::require_nonallocator_t<Compare>>
 map(InputIterator, InputIterator, Compare const&) ->
-   map< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
-           , typename iterator_traits<InputIterator>::value_type::second_type
+   map< it_based_non_const_first_type_t<InputIterator>
+           , it_based_second_type_t<InputIterator>
            , Compare>;
 
-template <typename InputIterator, typename Compare, typename Allocator>
+template < typename InputIterator, typename Compare, typename Allocator
+         , typename = dtl::require_nonallocator_t<Compare>
+         , typename = dtl::require_allocator_t<Allocator>>
 map(InputIterator, InputIterator, Compare const&, Allocator const&) ->
-   map< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
-           , typename iterator_traits<InputIterator>::value_type::second_type
+   map< it_based_non_const_first_type_t<InputIterator>
+           , it_based_second_type_t<InputIterator>
            , Compare
            , Allocator>;
 
 template <typename InputIterator>
 map(ordered_unique_range_t, InputIterator, InputIterator) ->
-   map< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
-           , typename iterator_traits<InputIterator>::value_type::second_type>;
+   map< it_based_non_const_first_type_t<InputIterator>
+           , it_based_second_type_t<InputIterator>>;
 
-template <typename InputIterator, typename Allocator>
+template < typename InputIterator, typename Allocator
+         , typename = dtl::require_allocator_t<Allocator>>
 map(ordered_unique_range_t, InputIterator, InputIterator, Allocator const&) ->
-   map< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
-           , typename iterator_traits<InputIterator>::value_type::second_type
-           , std::less<typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type>
+   map< it_based_non_const_first_type_t<InputIterator>
+           , it_based_second_type_t<InputIterator>
+           , std::less<it_based_non_const_first_type_t<InputIterator>>
            , Allocator>;
 
-template <typename InputIterator, typename Compare>
+template < typename InputIterator, typename Compare
+         , typename = dtl::require_nonallocator_t<Compare>>
 map(ordered_unique_range_t, InputIterator, InputIterator, Compare const&) ->
-   map< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
-           , typename iterator_traits<InputIterator>::value_type::second_type
+   map< it_based_non_const_first_type_t<InputIterator>
+           , it_based_second_type_t<InputIterator>
            , Compare>;
 
-template <typename InputIterator, typename Compare, typename Allocator>
+template < typename InputIterator, typename Compare, typename Allocator
+         , typename = dtl::require_nonallocator_t<Compare>
+         , typename = dtl::require_allocator_t<Allocator>>
 map(ordered_unique_range_t, InputIterator, InputIterator, Compare const&, Allocator const&) ->
-   map< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
-           , typename iterator_traits<InputIterator>::value_type::second_type
+   map< it_based_non_const_first_type_t<InputIterator>
+           , it_based_second_type_t<InputIterator>
            , Compare
            , Allocator>;
 
@@ -1550,6 +1574,20 @@ class multimap
    BOOST_CONTAINER_FORCEINLINE multimap(ordered_range_t, InputIterator first, InputIterator last, const Compare& comp,
          const allocator_type& a)
       : base_t(ordered_range, first, last, comp, a)
+   {}
+
+   //! <b>Effects</b>: Constructs an empty multimap using the specified allocator and
+   //! inserts elements from the ordered range [first ,last). This function
+   //! is more efficient than the normal range creation for ordered ranges.
+   //!
+   //! <b>Requires</b>: [first ,last) must be ordered according to the predicate.
+   //!
+   //! <b>Complexity</b>: Linear in N.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   template <class InputIterator>
+   BOOST_CONTAINER_FORCEINLINE multimap(ordered_range_t, InputIterator first, InputIterator last, const allocator_type& a)
+      : base_t(ordered_range, first, last, Compare(), a)
    {}
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -2184,58 +2222,65 @@ class multimap
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 };
 
-#if __cplusplus >= 201703L
+#ifndef BOOST_CONTAINER_NO_CXX17_CTAD
 
 template <typename InputIterator>
 multimap(InputIterator, InputIterator) ->
-   multimap<typename dtl::remove_const< typename iterator_traits<InputIterator>::value_type::first_type>::type
-                        , typename iterator_traits<InputIterator>::value_type::second_type>;
+   multimap< it_based_non_const_first_type_t<InputIterator>
+           , it_based_second_type_t<InputIterator>>;
 
-template <typename InputIterator, typename Allocator>
+template < typename InputIterator, typename Allocator
+         , typename = dtl::require_allocator_t<Allocator>>
 multimap(InputIterator, InputIterator, Allocator const&) ->
-   multimap<typename dtl::remove_const< typename iterator_traits<InputIterator>::value_type::first_type>::type
-                        , typename iterator_traits<InputIterator>::value_type::second_type
-                        , std::less<typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type>
-                        , Allocator>;
+   multimap< it_based_non_const_first_type_t<InputIterator>
+           , it_based_second_type_t<InputIterator>
+           , std::less<it_based_non_const_first_type_t<InputIterator>>
+           , Allocator>;
 
-template <typename InputIterator, typename Compare>
+template < typename InputIterator, typename Compare
+         , typename = dtl::require_nonallocator_t<Compare>>
 multimap(InputIterator, InputIterator, Compare const&) ->
-   multimap< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
-           , typename iterator_traits<InputIterator>::value_type::second_type
+   multimap< it_based_non_const_first_type_t<InputIterator>
+           , it_based_second_type_t<InputIterator>
            , Compare>;
 
-template <typename InputIterator, typename Compare, typename Allocator>
+template < typename InputIterator, typename Compare, typename Allocator
+         , typename = dtl::require_nonallocator_t<Compare>
+         , typename = dtl::require_allocator_t<Allocator>>
 multimap(InputIterator, InputIterator, Compare const&, Allocator const&) ->
-   multimap< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
-           , typename iterator_traits<InputIterator>::value_type::second_type
+   multimap< it_based_non_const_first_type_t<InputIterator>
+           , it_based_second_type_t<InputIterator>
            , Compare
            , Allocator>;
 
 template <typename InputIterator>
 multimap(ordered_range_t, InputIterator, InputIterator) ->
-   multimap< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
-           , typename iterator_traits<InputIterator>::value_type::second_type>;
+   multimap< it_based_non_const_first_type_t<InputIterator>
+           , it_based_second_type_t<InputIterator>>;
 
-template <typename InputIterator, typename Allocator>
+template < typename InputIterator, typename Allocator
+         , typename = dtl::require_allocator_t<Allocator>>
 multimap(ordered_range_t, InputIterator, InputIterator, Allocator const&) ->
-   multimap< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
-           , typename iterator_traits<InputIterator>::value_type::second_type
-           , std::less<typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type>
+   multimap< it_based_non_const_first_type_t<InputIterator>
+           , it_based_second_type_t<InputIterator>
+           , std::less<it_based_non_const_first_type_t<InputIterator>>
            , Allocator>;
 
-template <typename InputIterator, typename Compare>
+template < typename InputIterator, typename Compare
+         , typename = dtl::require_nonallocator_t<Compare>>
 multimap(ordered_range_t, InputIterator, InputIterator, Compare const&) ->
-   multimap< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
-           , typename iterator_traits<InputIterator>::value_type::second_type
+   multimap< it_based_non_const_first_type_t<InputIterator>
+           , it_based_second_type_t<InputIterator>
            , Compare>;
 
-template <typename InputIterator, typename Compare, typename Allocator>
+template < typename InputIterator, typename Compare, typename Allocator
+         , typename = dtl::require_nonallocator_t<Compare>
+         , typename = dtl::require_allocator_t<Allocator>>
 multimap(ordered_range_t, InputIterator, InputIterator, Compare const&, Allocator const&) ->
-   multimap< typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type
-           , typename iterator_traits<InputIterator>::value_type::second_type
+   multimap< it_based_non_const_first_type_t<InputIterator>
+           , it_based_second_type_t<InputIterator>
            , Compare
            , Allocator>;
-
 #endif
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
