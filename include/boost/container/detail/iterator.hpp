@@ -70,6 +70,9 @@ template<class InputIterator>
 using it_based_non_const_first_type_t = typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type;
 
 template<class InputIterator>
+using it_based_const_first_type_t = const typename dtl::remove_const<typename iterator_traits<InputIterator>::value_type::first_type>::type;
+
+template<class InputIterator>
 using it_based_second_type_t = typename iterator_traits<InputIterator>::value_type::second_type;
 
 template<class InputIterator>

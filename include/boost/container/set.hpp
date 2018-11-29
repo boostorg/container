@@ -965,18 +965,20 @@ template <typename InputIterator>
 set(InputIterator, InputIterator) ->
    set< it_based_value_type_t<InputIterator> >;
 
-template < typename InputIterator, typename Allocator
-         , typename = dtl::require_allocator_t<Allocator>>
-set(InputIterator, InputIterator, Allocator const&) ->
-   set< it_based_value_type_t<InputIterator>
-           , std::less<it_based_value_type_t<InputIterator>>
-           , Allocator>;
-
-template < typename InputIterator, typename Compare
-         , typename = dtl::require_nonallocator_t<Compare>>
-set(InputIterator, InputIterator, Compare const&) ->
-   set< it_based_value_type_t<InputIterator>
-           , Compare>;
+template < typename InputIterator, typename AllocatorOrCompare>
+    set(InputIterator, InputIterator, AllocatorOrCompare const&) ->
+    set< it_based_value_type_t<InputIterator>
+            , typename dtl::if_c< // Compare
+                dtl::is_allocator<AllocatorOrCompare>::value
+                , std::less<it_based_value_type_t<InputIterator>>
+                , AllocatorOrCompare
+            >::type
+            , typename dtl::if_c< // Allocator
+                dtl::is_allocator<AllocatorOrCompare>::value
+                , AllocatorOrCompare
+                , new_allocator<it_based_value_type_t<InputIterator>>
+                >::type
+            >;
 
 template < typename InputIterator, typename Compare, typename Allocator
          , typename = dtl::require_nonallocator_t<Compare>
@@ -990,18 +992,21 @@ template <typename InputIterator>
 set(ordered_unique_range_t, InputIterator, InputIterator) ->
    set< it_based_value_type_t<InputIterator>>;
 
-template < typename InputIterator, typename Allocator
-         , typename = dtl::require_allocator_t<Allocator>>
-set(ordered_unique_range_t, InputIterator, InputIterator, Allocator const&) ->
-   set< it_based_value_type_t<InputIterator>
-           , std::less<it_based_value_type_t<InputIterator>>
-           , Allocator>;
 
-template < typename InputIterator, typename Compare
-         , typename = dtl::require_nonallocator_t<Compare>>
-set(ordered_unique_range_t, InputIterator, InputIterator, Compare const&) ->
-   set< it_based_value_type_t<InputIterator>
-           , Compare>;
+template < typename InputIterator, typename AllocatorOrCompare>
+    set(ordered_unique_range_t, InputIterator, InputIterator, AllocatorOrCompare const&) ->
+    set< it_based_value_type_t<InputIterator>
+            , typename dtl::if_c< // Compare
+                dtl::is_allocator<AllocatorOrCompare>::value
+                , std::less<it_based_value_type_t<InputIterator>>
+                , AllocatorOrCompare
+            >::type
+            , typename dtl::if_c< // Allocator
+                dtl::is_allocator<AllocatorOrCompare>::value
+                , AllocatorOrCompare
+                , new_allocator<it_based_value_type_t<InputIterator>>
+                >::type
+            >;
 
 template < typename InputIterator, typename Compare, typename Allocator
          , typename = dtl::require_nonallocator_t<Compare>
@@ -1626,18 +1631,21 @@ template <typename InputIterator>
 multiset(InputIterator, InputIterator) ->
    multiset< it_based_value_type_t<InputIterator> >;
 
-template < typename InputIterator, typename Allocator
-         , typename = dtl::require_allocator_t<Allocator>>
-multiset(InputIterator, InputIterator, Allocator const&) ->
-   multiset< it_based_value_type_t<InputIterator>
-           , std::less<it_based_value_type_t<InputIterator>>
-           , Allocator>;
 
-template < typename InputIterator, typename Compare
-         , typename = dtl::require_nonallocator_t<Compare>>
-multiset(InputIterator, InputIterator, Compare const&) ->
-   multiset< it_based_value_type_t<InputIterator>
-           , Compare>;
+template < typename InputIterator, typename AllocatorOrCompare>
+multiset(InputIterator, InputIterator, AllocatorOrCompare const&) ->
+    multiset < it_based_value_type_t<InputIterator>
+                  , typename dtl::if_c< // Compare
+                      dtl::is_allocator<AllocatorOrCompare>::value
+                      , std::less<it_based_value_type_t<InputIterator>>
+                      , AllocatorOrCompare
+                  >::type
+                  , typename dtl::if_c< // Allocator
+                      dtl::is_allocator<AllocatorOrCompare>::value
+                      , AllocatorOrCompare
+                      , new_allocator<it_based_value_type_t<InputIterator>>
+                      >::type
+                  >;
 
 template < typename InputIterator, typename Compare, typename Allocator
          , typename = dtl::require_nonallocator_t<Compare>
@@ -1651,18 +1659,20 @@ template <typename InputIterator>
 multiset(ordered_range_t, InputIterator, InputIterator) ->
    multiset< it_based_value_type_t<InputIterator>>;
 
-template < typename InputIterator, typename Allocator
-         , typename = dtl::require_allocator_t<Allocator>>
-multiset(ordered_range_t, InputIterator, InputIterator, Allocator const&) ->
-   multiset< it_based_value_type_t<InputIterator>
-           , std::less<it_based_value_type_t<InputIterator>>
-           , Allocator>;
-
-template < typename InputIterator, typename Compare
-         , typename = dtl::require_nonallocator_t<Compare>>
-multiset(ordered_range_t, InputIterator, InputIterator, Compare const&) ->
-   multiset< it_based_value_type_t<InputIterator>
-           , Compare>;
+template < typename InputIterator, typename AllocatorOrCompare>
+multiset(ordered_range_t, InputIterator, InputIterator, AllocatorOrCompare const&) ->
+    multiset < it_based_value_type_t<InputIterator>
+                  , typename dtl::if_c< // Compare
+                      dtl::is_allocator<AllocatorOrCompare>::value
+                      , std::less<it_based_value_type_t<InputIterator>>
+                      , AllocatorOrCompare
+                  >::type
+                  , typename dtl::if_c< // Allocator
+                      dtl::is_allocator<AllocatorOrCompare>::value
+                      , AllocatorOrCompare
+                      , new_allocator<it_based_value_type_t<InputIterator>>
+                      >::type
+                  >;
 
 template < typename InputIterator, typename Compare, typename Allocator
          , typename = dtl::require_nonallocator_t<Compare>
