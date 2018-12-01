@@ -2413,17 +2413,10 @@ class vector
       const bool propagate_alloc = allocator_traits_type::propagate_on_container_move_assignment::value;
 
       const bool is_propagable_from_x = is_propagable_from(x_alloc, x.m_holder.start(), this_alloc, propagate_alloc);
-      const bool is_propagable_from_t = is_propagable_from(this_alloc, m_holder.start(), x_alloc,   propagate_alloc);
-      const bool are_both_propagable  = is_propagable_from_x && is_propagable_from_t;
 
       //Resources can be transferred if both allocators are
       //going to be equal after this function (either propagated or already equal)
-      if(are_both_propagable){
-         //Destroy objects but retain memory in case x reuses it in the future
-         this->clear();
-         this->m_holder.swap_resources(x.m_holder);
-      }
-      else if(is_propagable_from_x){
+      if(is_propagable_from_x){
          this->clear();
          if(BOOST_LIKELY(!!this->m_holder.m_start))
             this->m_holder.deallocate(this->m_holder.m_start, this->m_holder.m_capacity);
