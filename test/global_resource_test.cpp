@@ -60,7 +60,6 @@ void operator delete[](void *p) BOOST_CONTAINER_DELETE_EXCEPTION_SPECIFIER
 #pragma warning (pop)
 #endif
 
-#define BOOST_CONTAINER_ASAN
 #ifndef BOOST_CONTAINER_ASAN
 
 void test_new_delete_resource()
