@@ -236,6 +236,17 @@ struct vector_value_traits_base
    static const bool nothrow_assign = dtl::is_nothrow_copy_assignable<T>::value || trivial_assign;
 };
 
+template<class T, class AllocatorOrVoid>
+struct real_allocator
+{
+   typedef AllocatorOrVoid type;
+};
+
+template<class T>
+struct real_allocator<T, void>
+{
+   typedef new_allocator<T> type;
+};
 
 template <class Allocator>
 struct vector_value_traits
@@ -265,12 +276,12 @@ struct vector_alloc_holder
    BOOST_MOVABLE_BUT_NOT_COPYABLE(vector_alloc_holder)
 
    public:
-   typedef Allocator                                     allocator_type;
-   typedef StoredSizeType                                stored_size_type;
-   typedef boost::container::allocator_traits<Allocator> allocator_traits_type;
-   typedef typename allocator_traits_type::pointer       pointer;
-   typedef typename allocator_traits_type::size_type     size_type;
-   typedef typename allocator_traits_type::value_type    value_type;
+   typedef Allocator                                           allocator_type;
+   typedef StoredSizeType                                      stored_size_type;
+   typedef boost::container::allocator_traits<allocator_type>  allocator_traits_type;
+   typedef typename allocator_traits_type::pointer             pointer;
+   typedef typename allocator_traits_type::size_type           size_type;
+   typedef typename allocator_traits_type::value_type          value_type;
 
    static bool is_propagable_from(const allocator_type &from_alloc, pointer p, const allocator_type &to_alloc, bool const propagate_allocator)
    {
@@ -290,20 +301,20 @@ struct vector_alloc_holder
 
    //Constructor, does not throw
    vector_alloc_holder()
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<Allocator>::value)
-      : Allocator(), m_start(), m_size(), m_capacity()
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<allocator_type>::value)
+      : allocator_type(), m_start(), m_size(), m_capacity()
    {}
 
    //Constructor, does not throw
    template<class AllocConvertible>
    explicit vector_alloc_holder(BOOST_FWD_REF(AllocConvertible) a) BOOST_NOEXCEPT_OR_NOTHROW
-      : Allocator(boost::forward<AllocConvertible>(a)), m_start(), m_size(), m_capacity()
+      : allocator_type(boost::forward<AllocConvertible>(a)), m_start(), m_size(), m_capacity()
    {}
 
    //Constructor, does not throw
    template<class AllocConvertible>
    vector_alloc_holder(vector_uninitialized_size_t, BOOST_FWD_REF(AllocConvertible) a, size_type initial_size)
-      : Allocator(boost::forward<AllocConvertible>(a))
+      : allocator_type(boost::forward<AllocConvertible>(a))
       , m_start()
       //Size is initialized here so vector should only call uninitialized_xxx after this
       , m_size(static_cast<stored_size_type>(initial_size))
@@ -319,7 +330,7 @@ struct vector_alloc_holder
 
    //Constructor, does not throw
    vector_alloc_holder(vector_uninitialized_size_t, size_type initial_size)
-      : Allocator()
+      : allocator_type()
       , m_start()
       //Size is initialized here so vector should only call uninitialized_xxx after this
       , m_size(static_cast<stored_size_type>(initial_size))
@@ -334,7 +345,7 @@ struct vector_alloc_holder
    }
 
    vector_alloc_holder(BOOST_RV_REF(vector_alloc_holder) holder) BOOST_NOEXCEPT_OR_NOTHROW
-      : Allocator(BOOST_MOVE_BASE(Allocator, holder))
+      : allocator_type(BOOST_MOVE_BASE(allocator_type, holder))
       , m_start(holder.m_start)
       , m_size(holder.m_size)
       , m_capacity(holder.m_capacity)
@@ -344,7 +355,7 @@ struct vector_alloc_holder
    }
 
    vector_alloc_holder(initial_capacity_t, pointer p, size_type capacity, BOOST_RV_REF(vector_alloc_holder) holder)
-      : Allocator(BOOST_MOVE_BASE(Allocator, holder))
+      : allocator_type(BOOST_MOVE_BASE(allocator_type, holder))
       , m_start(p)
       , m_size(holder.m_size)
       , m_capacity(static_cast<stored_size_type>(capacity))
@@ -373,8 +384,8 @@ struct vector_alloc_holder
    }
 
    vector_alloc_holder(initial_capacity_t, pointer p, size_type n)
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<Allocator>::value)
-      : Allocator()
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<allocator_type>::value)
+      : allocator_type()
       , m_start(p)
       , m_size()
       //n is guaranteed to fit into stored_size_type
@@ -383,7 +394,7 @@ struct vector_alloc_holder
 
    template<class AllocFwd>
    vector_alloc_holder(initial_capacity_t, pointer p, size_type n, BOOST_FWD_REF(AllocFwd) a)
-      : Allocator(::boost::forward<AllocFwd>(a))
+      : allocator_type(::boost::forward<AllocFwd>(a))
       , m_start(p)
       , m_size()
       , m_capacity(n)
@@ -399,7 +410,7 @@ struct vector_alloc_holder
    BOOST_CONTAINER_FORCEINLINE pointer allocation_command(boost::container::allocation_type command,
                               size_type limit_size, size_type &prefer_in_recvd_out_size, pointer &reuse)
    {
-      typedef typename dtl::version<Allocator>::type alloc_version;
+      typedef typename dtl::version<allocator_type>::type alloc_version;
       return this->priv_allocation_command(alloc_version(), command, limit_size, prefer_in_recvd_out_size, reuse);
    }
 
@@ -470,10 +481,10 @@ struct vector_alloc_holder
       x.m_size = x.m_capacity = 0;
    }
 
-   BOOST_CONTAINER_FORCEINLINE Allocator &alloc() BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE allocator_type &alloc() BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this;  }
 
-   BOOST_CONTAINER_FORCEINLINE const Allocator &alloc() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE const allocator_type &alloc() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this;  }
 
    BOOST_CONTAINER_FORCEINLINE const pointer   &start() const     BOOST_NOEXCEPT_OR_NOTHROW
@@ -553,31 +564,33 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
    BOOST_MOVABLE_BUT_NOT_COPYABLE(vector_alloc_holder)
 
    public:
-   typedef boost::container::allocator_traits<Allocator> allocator_traits_type;
+   typedef Allocator                                     allocator_type;
+   typedef boost::container::
+      allocator_traits<allocator_type>                   allocator_traits_type;
    typedef typename allocator_traits_type::pointer       pointer;
    typedef typename allocator_traits_type::size_type     size_type;
    typedef typename allocator_traits_type::value_type    value_type;
    typedef StoredSizeType                                stored_size_type;
-
+      
    template <class OtherAllocator, class OtherStoredSizeType, class OtherAllocatorVersion>
    friend struct vector_alloc_holder;
 
    //Constructor, does not throw
    vector_alloc_holder()
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<Allocator>::value)
-      : Allocator(), m_size()
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<allocator_type>::value)
+      : allocator_type(), m_size()
    {}
 
    //Constructor, does not throw
    template<class AllocConvertible>
    explicit vector_alloc_holder(BOOST_FWD_REF(AllocConvertible) a) BOOST_NOEXCEPT_OR_NOTHROW
-      : Allocator(boost::forward<AllocConvertible>(a)), m_size()
+      : allocator_type(boost::forward<AllocConvertible>(a)), m_size()
    {}
 
    //Constructor, does not throw
    template<class AllocConvertible>
    vector_alloc_holder(vector_uninitialized_size_t, BOOST_FWD_REF(AllocConvertible) a, size_type initial_size)
-      : Allocator(boost::forward<AllocConvertible>(a))
+      : allocator_type(boost::forward<AllocConvertible>(a))
       , m_size(initial_size)  //Size is initialized here...
    {
       //... and capacity here, so vector, must call uninitialized_xxx in the derived constructor
@@ -586,7 +599,7 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
 
    //Constructor, does not throw
    vector_alloc_holder(vector_uninitialized_size_t, size_type initial_size)
-      : Allocator()
+      : allocator_type()
       , m_size(initial_size)  //Size is initialized here...
    {
       //... and capacity here, so vector, must call uninitialized_xxx in the derived constructor
@@ -594,7 +607,7 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
    }
 
    vector_alloc_holder(BOOST_RV_REF(vector_alloc_holder) holder)
-      : Allocator(BOOST_MOVE_BASE(Allocator, holder))
+      : allocator_type(BOOST_MOVE_BASE(allocator_type, holder))
       , m_size(holder.m_size) //Size is initialized here so vector should only call uninitialized_xxx after this
    {
       ::boost::container::uninitialized_move_alloc_n
@@ -603,7 +616,7 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
 
    template<class OtherAllocator, class OtherStoredSizeType, class OtherAllocatorVersion>
    vector_alloc_holder(BOOST_RV_REF_BEG vector_alloc_holder<OtherAllocator, OtherStoredSizeType, OtherAllocatorVersion> BOOST_RV_REF_END holder)
-      : Allocator()
+      : allocator_type()
       , m_size(holder.m_size) //Initialize it to m_size as first_allocation can only succeed or abort
    {
       //Different allocator type so we must check we have enough storage
@@ -615,7 +628,7 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
 
    BOOST_CONTAINER_FORCEINLINE void priv_first_allocation(size_type cap)
    {
-      if(cap > Allocator::internal_capacity){
+      if(cap > allocator_type::internal_capacity){
          throw_bad_alloc();
       }
    }
@@ -628,7 +641,8 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
    template<class OtherAllocator, class OtherStoredSizeType, class OtherAllocatorVersion>
    void deep_swap(vector_alloc_holder<OtherAllocator, OtherStoredSizeType, OtherAllocatorVersion> &x)
    {
-      if(this->m_size > OtherAllocator::internal_capacity || x.m_size > Allocator::internal_capacity){
+      typedef typename real_allocator<value_type, OtherAllocator>::type other_allocator_type;
+      if(this->m_size > other_allocator_type::internal_capacity || x.m_size > allocator_type::internal_capacity){
          throw_bad_alloc();
       }
       this->priv_deep_swap(x);
@@ -645,17 +659,21 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
       throw_bad_alloc();
    }
 
-   BOOST_CONTAINER_FORCEINLINE Allocator &alloc() BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE allocator_type &alloc() BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this;  }
 
-   BOOST_CONTAINER_FORCEINLINE const Allocator &alloc() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE const allocator_type &alloc() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this;  }
 
    BOOST_CONTAINER_FORCEINLINE bool try_expand_fwd(size_type at_least)
    {  return !at_least;  }
 
-   BOOST_CONTAINER_FORCEINLINE pointer start() const       BOOST_NOEXCEPT_OR_NOTHROW {  return Allocator::internal_storage();  }
-   BOOST_CONTAINER_FORCEINLINE size_type  capacity() const BOOST_NOEXCEPT_OR_NOTHROW {  return Allocator::internal_capacity;  }
+   BOOST_CONTAINER_FORCEINLINE pointer start() const       BOOST_NOEXCEPT_OR_NOTHROW
+   {  return allocator_type::internal_storage();  }
+   
+   BOOST_CONTAINER_FORCEINLINE size_type  capacity() const BOOST_NOEXCEPT_OR_NOTHROW
+   {  return allocator_type::internal_capacity;  }
+   
    stored_size_type m_size;
 
    private:
@@ -663,7 +681,7 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
    template<class OtherAllocator, class OtherStoredSizeType, class OtherAllocatorVersion>
    void priv_deep_swap(vector_alloc_holder<OtherAllocator, OtherStoredSizeType, OtherAllocatorVersion> &x)
    {
-      const size_type MaxTmpStorage = sizeof(value_type)*Allocator::internal_capacity;
+      const size_type MaxTmpStorage = sizeof(value_type)*allocator_type::internal_capacity;
       value_type *const first_this = boost::movelib::to_raw_pointer(this->start());
       value_type *const first_x = boost::movelib::to_raw_pointer(x.start());
 
@@ -714,14 +732,39 @@ struct get_vector_opt<void, AllocatorSizeType>
 //! elements in a vector may vary dynamically; memory management is automatic.
 //!
 //! \tparam T The type of object that is stored in the vector
-//! \tparam Allocator The allocator used for all internal memory management
+//! \tparam A The allocator used for all internal memory management, use void
+//!   for the default allocator
 //! \tparam Options A type produced from \c boost::container::vector_options.
-template <class T, class Allocator BOOST_CONTAINER_DOCONLY(= new_allocator<T>), class Options BOOST_CONTAINER_DOCONLY(= void) >
+template <class T, class A BOOST_CONTAINER_DOCONLY(= void), class Options BOOST_CONTAINER_DOCONLY(= void) >
 class vector
 {
-   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+public:
+   //////////////////////////////////////////////
+   //
+   //                    types
+   //
+   //////////////////////////////////////////////
+   typedef T                                                               value_type;
+   typedef BOOST_CONTAINER_IMPDEF
+      (typename real_allocator<T BOOST_MOVE_I A>::type)            allocator_type;
+   typedef ::boost::container::allocator_traits<allocator_type>            allocator_traits_t;
+   typedef typename   allocator_traits<allocator_type>::pointer            pointer;
+   typedef typename   allocator_traits<allocator_type>::const_pointer      const_pointer;
+   typedef typename   allocator_traits<allocator_type>::reference          reference;
+   typedef typename   allocator_traits<allocator_type>::const_reference    const_reference;
+   typedef typename   allocator_traits<allocator_type>::size_type          size_type;
+   typedef typename   allocator_traits<allocator_type>::difference_type    difference_type;
+   typedef allocator_type                                                  stored_allocator_type;
+   typedef BOOST_CONTAINER_IMPDEF(vec_iterator<pointer BOOST_MOVE_I false>)       iterator;
+   typedef BOOST_CONTAINER_IMPDEF(vec_iterator<pointer BOOST_MOVE_I true >)       const_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
 
-   typedef typename boost::container::allocator_traits<Allocator>::size_type  alloc_size_type;
+private:
+
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+   typedef typename boost::container::
+      allocator_traits<allocator_type>::size_type                             alloc_size_type;
    typedef typename get_vector_opt<Options, alloc_size_type>::type            options_type;
    typedef typename options_type::growth_factor_type                          growth_factor_type;
    typedef typename options_type::stored_size_type                            stored_size_type;
@@ -731,51 +774,32 @@ class vector
    BOOST_STATIC_ASSERT( (sizeof(stored_size_type) < sizeof(alloc_size_type) ||
                         dtl::is_same<stored_size_type, alloc_size_type>::value) );
 
-   typedef typename dtl::version<Allocator>::type alloc_version;
-   typedef boost::container::vector_alloc_holder<Allocator, stored_size_type> alloc_holder_t;
+   typedef typename dtl::version<allocator_type>::type alloc_version;
+   typedef boost::container::vector_alloc_holder
+      <allocator_type, stored_size_type> alloc_holder_t;
+
    alloc_holder_t m_holder;
-   typedef allocator_traits<Allocator>                      allocator_traits_type;
-   template <class U, class UAllocator, class UOptions>
+
+   typedef allocator_traits<allocator_type>                      allocator_traits_type;
+   template <class U, class UA, class UOptions>
    friend class vector;
 
-   typedef typename allocator_traits_type::pointer  pointer_impl;
-   typedef vec_iterator<pointer_impl, false> iterator_impl;
-   typedef vec_iterator<pointer_impl, true > const_iterator_impl;
 
    protected:
-   static bool is_propagable_from(const Allocator &from_alloc, pointer_impl p, const Allocator &to_alloc, bool const propagate_allocator)
+   BOOST_CONTAINER_FORCEINLINE
+      static bool is_propagable_from(const allocator_type &from_alloc, pointer p, const allocator_type &to_alloc, bool const propagate_allocator)
    {  return alloc_holder_t::is_propagable_from(from_alloc, p, to_alloc, propagate_allocator);  }
 
-   static bool are_swap_propagable( const Allocator &l_a, pointer_impl l_p
-                                  , const Allocator &r_a, pointer_impl r_p, bool const propagate_allocator)
+   BOOST_CONTAINER_FORCEINLINE
+      static bool are_swap_propagable( const allocator_type &l_a, pointer l_p
+                                     , const allocator_type &r_a, pointer r_p, bool const propagate_allocator)
    {  return alloc_holder_t::are_swap_propagable(l_a, l_p, r_a, r_p, propagate_allocator);  }
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   public:
-   //////////////////////////////////////////////
-   //
-   //                    types
-   //
-   //////////////////////////////////////////////
-
-   typedef T                                                                           value_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_reference   const_reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
-   typedef Allocator                                                                   allocator_type;
-   typedef Allocator                                                                   stored_allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                                       iterator;
-   typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                                 const_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
-
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(vector)
-   typedef vector_value_traits<Allocator> value_traits;
+   typedef vector_value_traits<allocator_type> value_traits;
    typedef constant_iterator<T, difference_type>            cvalue_iterator;
 
    protected:
@@ -806,7 +830,7 @@ class vector
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   vector() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<Allocator>::value)
+   vector() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<allocator_type>::value)
       : m_holder()
    {}
 
@@ -1021,10 +1045,10 @@ class vector
    //! <b>Complexity</b>: Linear.
    //!
    //! <b>Note</b>: Non-standard extension to support static_vector
-   template<class OtherAllocator>
-   vector(BOOST_RV_REF_BEG vector<T, OtherAllocator> BOOST_RV_REF_END x
+   template<class OtherA>
+   vector(BOOST_RV_REF_BEG vector<T, OtherA, Options> BOOST_RV_REF_END x
          , typename dtl::enable_if_c
-            < dtl::is_version<OtherAllocator, 0>::value>::type * = 0
+            < dtl::is_version<typename real_allocator<T, OtherA>::type, 0>::value>::type * = 0
          )
       :  m_holder(boost::move(x.m_holder))
    {}
@@ -1099,7 +1123,7 @@ class vector
    //! <b>Complexity</b>: Linear to the number of elements in x.
    BOOST_CONTAINER_FORCEINLINE vector& operator=(BOOST_COPY_ASSIGN_REF(vector) x)
    {
-      if (&x != this){
+      if (BOOST_LIKELY(&x != this)){
          this->priv_copy_assign(x);
       }
       return *this;
@@ -1131,7 +1155,9 @@ class vector
       BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
                         || allocator_traits_type::is_always_equal::value)
    {
-      this->priv_move_assign(boost::move(x));
+      if (BOOST_LIKELY(&x != this)){
+         this->priv_move_assign(boost::move(x));
+      }
       return *this;
    }
 
@@ -1147,13 +1173,13 @@ class vector
    //! <b>Complexity</b>: Linear.
    //!
    //! <b>Note</b>: Non-standard extension to support static_vector
-   template<class OtherAllocator>
+   template<class OtherA>
    BOOST_CONTAINER_FORCEINLINE typename dtl::enable_if_and
                            < vector&
-                           , dtl::is_version<OtherAllocator, 0>
-                           , dtl::is_different<OtherAllocator, allocator_type>
+                           , dtl::is_version<typename real_allocator<T, OtherA>::type, 0>
+                           , dtl::is_different<typename real_allocator<T, OtherA>::type, allocator_type>
                            >::type
-      operator=(BOOST_RV_REF_BEG vector<value_type, OtherAllocator> BOOST_RV_REF_END x)
+      operator=(BOOST_RV_REF_BEG vector<value_type, OtherA, Options> BOOST_RV_REF_END x)
    {
       this->priv_move_assign(boost::move(x));
       return *this;
@@ -1169,13 +1195,13 @@ class vector
    //! <b>Complexity</b>: Linear.
    //!
    //! <b>Note</b>: Non-standard extension to support static_vector
-   template<class OtherAllocator>
+   template<class OtherA>
    BOOST_CONTAINER_FORCEINLINE typename dtl::enable_if_and
                            < vector&
-                           , dtl::is_version<OtherAllocator, 0>
-                           , dtl::is_different<OtherAllocator, allocator_type>
+                           , dtl::is_version<typename real_allocator<T, OtherA>::type, 0>
+                           , dtl::is_different<typename real_allocator<T, OtherA>::type, allocator_type>
                            >::type
-      operator=(const vector<value_type, OtherAllocator> &x)
+      operator=(const vector<value_type, OtherA, Options> &x)
    {
       this->priv_copy_assign(x);
       return *this;
@@ -1765,7 +1791,7 @@ class vector
          return *p;
       }
       else{
-         typedef dtl::insert_emplace_proxy<Allocator, T*, Args...> type;
+         typedef dtl::insert_emplace_proxy<allocator_type, T*, Args...> type;
          return *this->priv_forward_range_insert_no_capacity
             (this->back_ptr(), 1, type(::boost::forward<Args>(args)...), alloc_version());
       }
@@ -1806,7 +1832,7 @@ class vector
    {
       BOOST_ASSERT(this->priv_in_range_or_end(position));
       //Just call more general insert(pos, size, value) and return iterator
-      typedef dtl::insert_emplace_proxy<Allocator, T*, Args...> type;
+      typedef dtl::insert_emplace_proxy<allocator_type, T*, Args...> type;
       return this->priv_forward_range_insert( vector_iterator_get_ptr(position), 1
                                             , type(::boost::forward<Args>(args)...));
    }
@@ -1825,7 +1851,7 @@ class vector
          return *p;\
       }\
       else{\
-         typedef dtl::insert_emplace_proxy_arg##N<Allocator, T* BOOST_MOVE_I##N BOOST_MOVE_TARG##N> type;\
+         typedef dtl::insert_emplace_proxy_arg##N<allocator_type, T* BOOST_MOVE_I##N BOOST_MOVE_TARG##N> type;\
          return *this->priv_forward_range_insert_no_capacity\
             ( this->back_ptr(), 1, type(BOOST_MOVE_FWD##N), alloc_version());\
       }\
@@ -1847,7 +1873,7 @@ class vector
    iterator emplace(const_iterator pos BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
    {\
       BOOST_ASSERT(this->priv_in_range_or_end(pos));\
-      typedef dtl::insert_emplace_proxy_arg##N<Allocator, T* BOOST_MOVE_I##N BOOST_MOVE_TARG##N> type;\
+      typedef dtl::insert_emplace_proxy_arg##N<allocator_type, T* BOOST_MOVE_I##N BOOST_MOVE_TARG##N> type;\
       return this->priv_forward_range_insert(vector_iterator_get_ptr(pos), 1, type(BOOST_MOVE_FWD##N));\
    }\
    //
@@ -1913,7 +1939,7 @@ class vector
    iterator insert(const_iterator p, size_type n, const T& x)
    {
       BOOST_ASSERT(this->priv_in_range_or_end(p));
-      dtl::insert_n_copies_proxy<Allocator, T*> proxy(x);
+      dtl::insert_n_copies_proxy<allocator_type, T*> proxy(x);
       return this->priv_forward_range_insert(vector_iterator_get_ptr(p), n, proxy);
    }
 
@@ -1959,7 +1985,7 @@ class vector
       )
    {
       BOOST_ASSERT(this->priv_in_range_or_end(pos));
-      dtl::insert_range_proxy<Allocator, FwdIt, T*> proxy(first);
+      dtl::insert_range_proxy<allocator_type, FwdIt, T*> proxy(first);
       return this->priv_forward_range_insert(vector_iterator_get_ptr(pos), boost::container::iterator_distance(first, last), proxy);
    }
    #endif
@@ -1987,7 +2013,7 @@ class vector
       BOOST_ASSERT(dtl::is_input_iterator<InIt>::value ||
                    num == static_cast<size_type>(boost::container::iterator_distance(first, last)));
       (void)last;
-      dtl::insert_range_proxy<Allocator, InIt, T*> proxy(first);
+      dtl::insert_range_proxy<allocator_type, InIt, T*> proxy(first);
       return this->priv_forward_range_insert(vector_iterator_get_ptr(pos), num, proxy);
    }
    #endif
@@ -2066,9 +2092,9 @@ class vector
    BOOST_CONTAINER_FORCEINLINE void swap(vector& x)
       BOOST_NOEXCEPT_IF( ((allocator_traits_type::propagate_on_container_swap::value
                                     || allocator_traits_type::is_always_equal::value) &&
-                                    !dtl::is_version<Allocator, 0>::value))
+                                    !dtl::is_version<allocator_type, 0>::value))
    {
-      this->priv_swap(x, dtl::bool_<dtl::is_version<Allocator, 0>::value>());
+      this->priv_swap(x, dtl::bool_<dtl::is_version<allocator_type, 0>::value>());
    }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -2080,12 +2106,12 @@ class vector
    //! <b>Complexity</b>: Linear
    //!
    //! <b>Note</b>: Non-standard extension to support static_vector
-   template<class OtherAllocator>
-   BOOST_CONTAINER_FORCEINLINE void swap(vector<T, OtherAllocator> & x
+   template<class OtherA>
+   BOOST_CONTAINER_FORCEINLINE void swap(vector<T, OtherA, Options> & x
             , typename dtl::enable_if_and
                      < void
-                     , dtl::is_version<OtherAllocator, 0>
-                     , dtl::is_different<OtherAllocator, allocator_type>
+                     , dtl::is_version<typename real_allocator<T, OtherA>::type, 0>
+                     , dtl::is_different<typename real_allocator<T, OtherA>::type, allocator_type>
                      >::type * = 0
             )
    {  this->m_holder.deep_swap(x.m_holder); }
@@ -2380,12 +2406,12 @@ class vector
       return static_cast<size_type>(p - this->m_holder.start());
    }
 
-   template<class OtherAllocator>
-   void priv_move_assign(BOOST_RV_REF_BEG vector<T, OtherAllocator> BOOST_RV_REF_END x
+   template<class OtherA>
+   void priv_move_assign(BOOST_RV_REF_BEG vector<T, OtherA, Options> BOOST_RV_REF_END x
       , typename dtl::enable_if_c
-         < dtl::is_version<OtherAllocator, 0>::value >::type * = 0)
+         < dtl::is_version<typename real_allocator<T, OtherA>::type, 0>::value >::type * = 0)
    {
-      if(!dtl::is_same<OtherAllocator, allocator_type>::value &&
+      if(!dtl::is_same<typename real_allocator<T, OtherA>::type, allocator_type>::value &&
           this->capacity() < x.size()){
          throw_bad_alloc();
       }
@@ -2397,12 +2423,12 @@ class vector
       this->m_holder.m_size = other_sz;
    }
 
-   template<class OtherAllocator>
-   void priv_move_assign(BOOST_RV_REF_BEG vector<T, OtherAllocator> BOOST_RV_REF_END x
+   template<class OtherA>
+   void priv_move_assign(BOOST_RV_REF_BEG vector<T, OtherA, Options> BOOST_RV_REF_END x
       , typename dtl::disable_if_or
          < void
-         , dtl::is_version<OtherAllocator, 0>
-         , dtl::is_different<OtherAllocator, allocator_type>
+         , dtl::is_version<typename real_allocator<T, OtherA>::type, 0>
+         , dtl::is_different<typename real_allocator<T, OtherA>::type, allocator_type>
          >::type * = 0)
    {
       //for move assignment, no aliasing (&x != this) is assumed.
@@ -2432,12 +2458,12 @@ class vector
       dtl::move_alloc(this_alloc, x_alloc, dtl::bool_<propagate_alloc>());
    }
 
-   template<class OtherAllocator>
-   void priv_copy_assign(const vector<T, OtherAllocator> &x
+   template<class OtherA>
+   void priv_copy_assign(const vector<T, OtherA, Options> &x
       , typename dtl::enable_if_c
-         < dtl::is_version<OtherAllocator, 0>::value >::type * = 0)
+         < dtl::is_version<typename real_allocator<T, OtherA>::type, 0>::value >::type * = 0)
    {
-      if(!dtl::is_same<OtherAllocator, allocator_type>::value &&
+      if(!dtl::is_same<typename real_allocator<T, OtherA>::type, allocator_type>::value &&
          this->capacity() < x.size()){
          throw_bad_alloc();
       }
@@ -2449,13 +2475,13 @@ class vector
       this->m_holder.m_size = other_sz;
    }
 
-   template<class OtherAllocator>
+   template<class OtherA>
    typename dtl::disable_if_or
       < void
-      , dtl::is_version<OtherAllocator, 0>
-      , dtl::is_different<OtherAllocator, allocator_type>
+      , dtl::is_version<typename real_allocator<T, OtherA>::type, 0>
+      , dtl::is_different<typename real_allocator<T, OtherA>::type, allocator_type>
       >::type
-      priv_copy_assign(const vector<T, OtherAllocator> &x)
+      priv_copy_assign(const vector<T, OtherA, Options> &x)
    {
       allocator_type &this_alloc     = this->m_holder.alloc();
       const allocator_type &x_alloc  = x.m_holder.alloc();
@@ -2510,9 +2536,9 @@ class vector
    void priv_reserve_no_capacity(size_type, version_0)
    {  throw_bad_alloc();  }
 
-   dtl::insert_range_proxy<Allocator, boost::move_iterator<T*>, T*> priv_dummy_empty_proxy()
+   dtl::insert_range_proxy<allocator_type, boost::move_iterator<T*>, T*> priv_dummy_empty_proxy()
    {
-      return dtl::insert_range_proxy<Allocator, boost::move_iterator<T*>, T*>
+      return dtl::insert_range_proxy<allocator_type, boost::move_iterator<T*>, T*>
          (::boost::make_move_iterator((T *)0));
    }
 
@@ -2604,14 +2630,14 @@ class vector
    {
       BOOST_ASSERT(this->priv_in_range_or_end(p));
       return this->priv_forward_range_insert
-         ( vector_iterator_get_ptr(p), 1, dtl::get_insert_value_proxy<T*, Allocator>(::boost::forward<U>(x)));
+         ( vector_iterator_get_ptr(p), 1, dtl::get_insert_value_proxy<T*, allocator_type>(::boost::forward<U>(x)));
    }
 
-   dtl::insert_copy_proxy<Allocator, T*> priv_single_insert_proxy(const T &x)
-   {  return dtl::insert_copy_proxy<Allocator, T*> (x);  }
+   dtl::insert_copy_proxy<allocator_type, T*> priv_single_insert_proxy(const T &x)
+   {  return dtl::insert_copy_proxy<allocator_type, T*> (x);  }
 
-   dtl::insert_move_proxy<Allocator, T*> priv_single_insert_proxy(BOOST_RV_REF(T) x)
-   {  return dtl::insert_move_proxy<Allocator, T*> (x);  }
+   dtl::insert_move_proxy<allocator_type, T*> priv_single_insert_proxy(BOOST_RV_REF(T) x)
+   {  return dtl::insert_move_proxy<allocator_type, T*> (x);  }
 
    template <class U>
    void priv_push_back(BOOST_FWD_REF(U) u)
@@ -2629,14 +2655,14 @@ class vector
       }
    }
 
-   BOOST_CONTAINER_FORCEINLINE dtl::insert_n_copies_proxy<Allocator, T*> priv_resize_proxy(const T &x)
-   {  return dtl::insert_n_copies_proxy<Allocator, T*>(x);   }
+   BOOST_CONTAINER_FORCEINLINE dtl::insert_n_copies_proxy<allocator_type, T*> priv_resize_proxy(const T &x)
+   {  return dtl::insert_n_copies_proxy<allocator_type, T*>(x);   }
 
-   BOOST_CONTAINER_FORCEINLINE dtl::insert_default_initialized_n_proxy<Allocator, T*> priv_resize_proxy(default_init_t)
-   {  return dtl::insert_default_initialized_n_proxy<Allocator, T*>();  }
+   BOOST_CONTAINER_FORCEINLINE dtl::insert_default_initialized_n_proxy<allocator_type, T*> priv_resize_proxy(default_init_t)
+   {  return dtl::insert_default_initialized_n_proxy<allocator_type, T*>();  }
 
-   BOOST_CONTAINER_FORCEINLINE dtl::insert_value_initialized_n_proxy<Allocator, T*> priv_resize_proxy(value_init_t)
-   {  return dtl::insert_value_initialized_n_proxy<Allocator, T*>(); }
+   BOOST_CONTAINER_FORCEINLINE dtl::insert_value_initialized_n_proxy<allocator_type, T*> priv_resize_proxy(value_init_t)
+   {  return dtl::insert_value_initialized_n_proxy<allocator_type, T*>(); }
 
    template <class U>
    void priv_resize(size_type new_size, const U& u)
@@ -3384,10 +3410,11 @@ namespace boost {
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class T, class Allocator>
-struct has_trivial_destructor_after_move<boost::container::vector<T, Allocator> >
+template <class T, class Allocator, class Options>
+struct has_trivial_destructor_after_move<boost::container::vector<T, Allocator, Options> >
 {
-   typedef typename ::boost::container::allocator_traits<Allocator>::pointer pointer;
+   typedef typename ::boost::container::allocator_traits
+      <typename boost::container::real_allocator<T, Allocator>::type>::pointer pointer;
    static const bool value = ::boost::has_trivial_destructor_after_move<Allocator>::value &&
                              ::boost::has_trivial_destructor_after_move<pointer>::value;
 };

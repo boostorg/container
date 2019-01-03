@@ -94,8 +94,8 @@ template<class T>
 class new_allocator;
 
 template <class T
-         ,class Allocator = new_allocator<T>
-         ,class Options = void>
+         ,class Allocator = void
+         ,class Options   = void>
 class vector;
 
 template <class T
