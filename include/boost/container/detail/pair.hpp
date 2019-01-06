@@ -216,7 +216,7 @@ struct simple_pair
 
 template <class T1, class T2>
 struct pair
-#ifdef  _LIBCPP_VERSION
+#ifdef  _LIBCPP_DEPRECATED_ABI_DISABLE_PAIR_TRIVIAL_COPY_CTOR
    : pair_padding<T1, T2, sizeof(std::pair<T1, T2>) - sizeof(simple_pair<T1, T2>)>
 #endif
 {
