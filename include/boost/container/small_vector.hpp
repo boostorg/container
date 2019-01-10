@@ -50,7 +50,7 @@ namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
-template <class T, class Allocator = new_allocator<T> >
+template <class T, class Allocator = void >
 class small_vector_base;
 
 #endif
@@ -78,45 +78,47 @@ class small_vector_base;
 //! is being used to store vector elements.
 //!
 //! `small_vector_allocator` assumes that will be instantiated as
-//! `boost::container::vector< T, small_vector_allocator<Allocator> >`
+//! `boost::container::vector< T, small_vector_allocator<T, Allocator> >`
 //! and internal storage can be obtained downcasting that vector
 //! to `small_vector_base<T>`.
-template<class Allocator>
+template<class T, class VoidAllocator>
 class small_vector_allocator
-   : public Allocator
+   : public allocator_traits<typename real_allocator<T, VoidAllocator>::type>::template portable_rebind_alloc<T>::type
 {
    typedef unsigned int allocation_type;
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
 
+   typedef typename allocator_traits<typename real_allocator<T, VoidAllocator>::type>::template portable_rebind_alloc<T>::type allocator_type;
+
    BOOST_COPYABLE_AND_MOVABLE(small_vector_allocator)
 
-   BOOST_CONTAINER_FORCEINLINE const Allocator &as_base() const
-   {  return static_cast<const Allocator&>(*this);  }
+   BOOST_CONTAINER_FORCEINLINE const allocator_type &as_base() const
+   {  return static_cast<const allocator_type&>(*this);  }
 
-   BOOST_CONTAINER_FORCEINLINE Allocator &as_base() 
-   {  return static_cast<Allocator&>(*this);  }
+   BOOST_CONTAINER_FORCEINLINE allocator_type &as_base() 
+   {  return static_cast<allocator_type&>(*this);  }
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   typedef allocator_traits<Allocator> allocator_traits_type;
+   typedef allocator_traits<allocator_type> allocator_traits_type;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
-   typedef typename allocator_traits<Allocator>::value_type          value_type;
-   typedef typename allocator_traits<Allocator>::pointer             pointer;
-   typedef typename allocator_traits<Allocator>::const_pointer       const_pointer;
-   typedef typename allocator_traits<Allocator>::reference           reference;
-   typedef typename allocator_traits<Allocator>::const_reference     const_reference;
-   typedef typename allocator_traits<Allocator>::size_type           size_type;
-   typedef typename allocator_traits<Allocator>::difference_type     difference_type;
-   typedef typename allocator_traits<Allocator>::void_pointer        void_pointer;
-   typedef typename allocator_traits<Allocator>::const_void_pointer  const_void_pointer;
+   typedef typename allocator_traits<allocator_type>::value_type          value_type;
+   typedef typename allocator_traits<allocator_type>::pointer             pointer;
+   typedef typename allocator_traits<allocator_type>::const_pointer       const_pointer;
+   typedef typename allocator_traits<allocator_type>::reference           reference;
+   typedef typename allocator_traits<allocator_type>::const_reference     const_reference;
+   typedef typename allocator_traits<allocator_type>::size_type           size_type;
+   typedef typename allocator_traits<allocator_type>::difference_type     difference_type;
+   typedef typename allocator_traits<allocator_type>::void_pointer        void_pointer;
+   typedef typename allocator_traits<allocator_type>::const_void_pointer  const_void_pointer;
 
-   typedef typename allocator_traits<Allocator>::propagate_on_container_copy_assignment   propagate_on_container_copy_assignment;
-   typedef typename allocator_traits<Allocator>::propagate_on_container_move_assignment   propagate_on_container_move_assignment;
-   typedef typename allocator_traits<Allocator>::propagate_on_container_swap              propagate_on_container_swap;
+   typedef typename allocator_traits<allocator_type>::propagate_on_container_copy_assignment   propagate_on_container_copy_assignment;
+   typedef typename allocator_traits<allocator_type>::propagate_on_container_move_assignment   propagate_on_container_move_assignment;
+   typedef typename allocator_traits<allocator_type>::propagate_on_container_swap              propagate_on_container_swap;
    //! An integral constant with member `value == false`
    typedef BOOST_CONTAINER_IMPDEF(dtl::bool_<false>)                         is_always_equal;
    //! An integral constant with member `value == true`
@@ -129,20 +131,20 @@ class small_vector_allocator
    template<class T2>
    struct rebind
    {
-      typedef typename allocator_traits<Allocator>::template rebind_alloc<T2>::type other;
+      typedef typename allocator_traits<allocator_type>::template portable_rebind_alloc<T2>::type other;
    };
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
       //!Constructor from arbitrary arguments
       template<class ...Args>
       BOOST_CONTAINER_FORCEINLINE explicit small_vector_allocator(BOOST_FWD_REF(Args) ...args)
-         : Allocator(::boost::forward<Args>(args)...)
+         : allocator_type(::boost::forward<Args>(args)...)
       {}
    #else
       #define BOOST_CONTAINER_SMALL_VECTOR_ALLOCATOR_CTOR_CODE(N) \
       BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
       BOOST_CONTAINER_FORCEINLINE explicit small_vector_allocator(BOOST_MOVE_UREF##N)\
-         : Allocator(BOOST_MOVE_FWD##N)\
+         : allocator_type(BOOST_MOVE_FWD##N)\
       {}\
       //
       BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_SMALL_VECTOR_ALLOCATOR_CTOR_CODE)
@@ -153,57 +155,57 @@ class small_vector_allocator
    //!Never throws
    BOOST_CONTAINER_FORCEINLINE small_vector_allocator
       (const small_vector_allocator &other) BOOST_NOEXCEPT_OR_NOTHROW
-      : Allocator(other.as_base())
+      : allocator_type(other.as_base())
    {}
 
    //!Move constructor from small_vector_allocator.
    //!Never throws
    BOOST_CONTAINER_FORCEINLINE small_vector_allocator
       (BOOST_RV_REF(small_vector_allocator) other) BOOST_NOEXCEPT_OR_NOTHROW
-      : Allocator(::boost::move(other.as_base()))
+      : allocator_type(::boost::move(other.as_base()))
    {}
 
    //!Constructor from related small_vector_allocator.
    //!Never throws
-   template<class OtherAllocator>
+   template<class U, class OtherVoidAllocator>
    BOOST_CONTAINER_FORCEINLINE small_vector_allocator
-      (const small_vector_allocator<OtherAllocator> &other) BOOST_NOEXCEPT_OR_NOTHROW
-      : Allocator(other.as_base())
+      (const small_vector_allocator<U, OtherVoidAllocator> &other) BOOST_NOEXCEPT_OR_NOTHROW
+      : allocator_type(other.as_base())
    {}
 
    //!Move constructor from related small_vector_allocator.
    //!Never throws
-   template<class OtherAllocator>
+   template<class U, class OtherVoidAllocator>
    BOOST_CONTAINER_FORCEINLINE small_vector_allocator
-      (BOOST_RV_REF(small_vector_allocator<OtherAllocator>) other) BOOST_NOEXCEPT_OR_NOTHROW
-      : Allocator(::boost::move(other.as_base()))
+      (BOOST_RV_REF(small_vector_allocator<U BOOST_MOVE_I OtherVoidAllocator>) other) BOOST_NOEXCEPT_OR_NOTHROW
+      : allocator_type(::boost::move(other.as_base()))
    {}
 
    //!Assignment from other small_vector_allocator.
    //!Never throws
    BOOST_CONTAINER_FORCEINLINE small_vector_allocator &
       operator=(BOOST_COPY_ASSIGN_REF(small_vector_allocator) other) BOOST_NOEXCEPT_OR_NOTHROW
-   {  return static_cast<small_vector_allocator&>(this->Allocator::operator=(other.as_base()));  }
+   {  return static_cast<small_vector_allocator&>(this->allocator_type::operator=(other.as_base()));  }
 
    //!Move constructor from other small_vector_allocator.
    //!Never throws
    BOOST_CONTAINER_FORCEINLINE small_vector_allocator &
       operator=(BOOST_RV_REF(small_vector_allocator) other) BOOST_NOEXCEPT_OR_NOTHROW
-   {  return static_cast<small_vector_allocator&>(this->Allocator::operator=(::boost::move(other.as_base())));  }
+   {  return static_cast<small_vector_allocator&>(this->allocator_type::operator=(::boost::move(other.as_base())));  }
 
    //!Assignment from related small_vector_allocator.
    //!Never throws
-   template<class OtherAllocator>
+   template<class U, class OtherVoidAllocator>
    BOOST_CONTAINER_FORCEINLINE small_vector_allocator &
-      operator=(BOOST_COPY_ASSIGN_REF(small_vector_allocator<OtherAllocator>) other) BOOST_NOEXCEPT_OR_NOTHROW
-   {  return static_cast<small_vector_allocator&>(this->Allocator::operator=(other.as_base()));  }
+      operator=(BOOST_COPY_ASSIGN_REF(small_vector_allocator<U BOOST_MOVE_I OtherVoidAllocator>) other) BOOST_NOEXCEPT_OR_NOTHROW
+   {  return static_cast<small_vector_allocator&>(this->allocator_type::operator=(other.as_base()));  }
 
    //!Move assignment from related small_vector_allocator.
    //!Never throws
-   template<class OtherAllocator>
+   template<class U, class OtherVoidAllocator>
    BOOST_CONTAINER_FORCEINLINE small_vector_allocator &
-      operator=(BOOST_RV_REF(small_vector_allocator<OtherAllocator>) other) BOOST_NOEXCEPT_OR_NOTHROW
-   {  return static_cast<small_vector_allocator&>(this->Allocator::operator=(::boost::move(other.as_base())));  }
+      operator=(BOOST_RV_REF(small_vector_allocator<U BOOST_MOVE_I OtherVoidAllocator>) other) BOOST_NOEXCEPT_OR_NOTHROW
+   {  return static_cast<small_vector_allocator&>(this->allocator_type::operator=(::boost::move(other.as_base())));  }
 
    //!Allocates storage from the standard-conforming allocator
    BOOST_CONTAINER_FORCEINLINE pointer allocate(size_type count, const_void_pointer hint = const_void_pointer())
@@ -269,12 +271,16 @@ class small_vector_allocator
    //!must be deallocated only with deallocate_one().
    //!Throws bad_alloc if there is no enough memory
    //!This function is available only with Version == 2
-   using Allocator::allocate_one;
-   using Allocator::allocate_individual;
-   using Allocator::deallocate_one;
-   using Allocator::deallocate_individual;
-   using Allocator::allocate_many;
-   using Allocator::deallocate_many;*/
+   using allocator_type::allocate_one;
+   using allocator_type::allocate_individual;
+   using allocator_type::deallocate_one;
+   using allocator_type::deallocate_individual;
+   using allocator_type::allocate_many;
+   using allocator_type::deallocate_many;*/
+
+   typedef vector_alloc_holder< small_vector_allocator, size_type >  vector_alloc_holder_t;
+   typedef vector<value_type, small_vector_allocator>                vector_base;
+   typedef small_vector_base<value_type, allocator_type>                  derived_type;
 
    BOOST_CONTAINER_FORCEINLINE bool is_internal_storage(const_pointer p) const
    {  return this->internal_storage() == p;  }
@@ -282,12 +288,6 @@ class small_vector_allocator
    BOOST_CONTAINER_FORCEINLINE
    const_pointer internal_storage() const
    {
-      typedef typename Allocator::value_type                                              value_type;
-      typedef typename allocator_traits_type::size_type                                   size_type;
-      typedef vector_alloc_holder< small_vector_allocator<Allocator>, size_type >         vector_alloc_holder_t;
-      typedef vector<value_type, small_vector_allocator<Allocator> >                      vector_base;
-      typedef small_vector_base<value_type, Allocator>                                    derived_type;
-      //
       const vector_alloc_holder_t &v_holder = static_cast<const vector_alloc_holder_t &>(*this);
       const vector_base &v_base = reinterpret_cast<const vector_base &>(v_holder);
       const derived_type &d_base = static_cast<const derived_type &>(v_base);
@@ -297,12 +297,6 @@ class small_vector_allocator
    BOOST_CONTAINER_FORCEINLINE
    pointer internal_storage()
    {
-      typedef typename Allocator::value_type                                              value_type;
-      typedef typename allocator_traits_type::size_type                                   size_type;
-      typedef vector_alloc_holder< small_vector_allocator<Allocator>, size_type >         vector_alloc_holder_t;
-      typedef vector<value_type, small_vector_allocator<Allocator> >                      vector_base;
-      typedef small_vector_base<value_type, Allocator>                                    derived_type;
-      //
       vector_alloc_holder_t &v_holder = static_cast<vector_alloc_holder_t &>(*this);
       vector_base &v_base = reinterpret_cast<vector_base &>(v_holder);
       derived_type &d_base = static_cast<derived_type &>(v_base);
@@ -338,21 +332,31 @@ class small_vector_allocator
 //!
 template <class T, class SecondaryAllocator>
 class small_vector_base
-   : public vector<T, small_vector_allocator<SecondaryAllocator> >
+   : public vector
+      < T
+      , small_vector_allocator
+         < T
+         , typename allocator_traits<typename real_allocator<T, SecondaryAllocator>::type>::template portable_rebind_alloc<void>::type
+         >
+      >
 {
-   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKEDVECTOR
    public:
    //Make it public as it will be inherited by small_vector and container
    //must have this public member
-   typedef typename allocator_traits<SecondaryAllocator>::pointer       pointer;
-   typedef typename allocator_traits<SecondaryAllocator>::const_pointer const_pointer;
-   typedef typename allocator_traits<SecondaryAllocator>::void_pointer  void_pointer;
-   typedef typename allocator_traits<SecondaryAllocator>::const_void_pointer  const_void_pointer;
+   typedef typename real_allocator<T, SecondaryAllocator>::type            secondary_allocator_t;
+   typedef typename allocator_traits<secondary_allocator_t>::template portable_rebind_alloc<void>::type void_allocator_t;
+   typedef vector<T, small_vector_allocator<T, void_allocator_t> >         base_type;
+   typedef typename allocator_traits<secondary_allocator_t>::pointer       pointer;
+   typedef typename allocator_traits<secondary_allocator_t>::const_pointer const_pointer;
+   typedef typename allocator_traits<secondary_allocator_t>::void_pointer  void_pointer;
+   typedef typename allocator_traits<secondary_allocator_t>::const_void_pointer  const_void_pointer;
+   typedef small_vector_allocator<T, void_allocator_t>             allocator_type;
 
    private: 
    BOOST_COPYABLE_AND_MOVABLE(small_vector_base)
 
-   friend class small_vector_allocator<SecondaryAllocator>;
+   friend class small_vector_allocator<T, void_allocator_t>;
 
    BOOST_CONTAINER_FORCEINLINE
    const_pointer internal_storage() const BOOST_NOEXCEPT_OR_NOTHROW
@@ -374,14 +378,12 @@ class small_vector_base
       return boost::intrusive::pointer_traits<pointer>::static_cast_from(void_p);
    }
 
-   typedef vector<T, small_vector_allocator<SecondaryAllocator> > base_type;
          base_type &as_base()       { return static_cast<base_type&>(*this); }
    const base_type &as_base() const { return static_cast<const base_type&>(*this); }
 
    public:
    typedef typename dtl::aligned_storage
       <sizeof(T), dtl::alignment_of<T>::value>::type storage_type;
-   typedef small_vector_allocator<SecondaryAllocator>             allocator_type;
 
    protected:
 
@@ -451,7 +453,9 @@ template<class Storage, class Allocator, class T, std::size_t N>
 struct small_vector_storage_calculator
 {
    typedef small_vector_base<T, Allocator> svh_type;
-   typedef vector<T, small_vector_allocator<Allocator> > svhb_type;
+   typedef typename real_allocator<T, Allocator>::type value_allocator_t;
+   typedef typename allocator_traits<value_allocator_t>::template portable_rebind_alloc<void>::type void_allocator_t;
+   typedef vector<T, small_vector_allocator<T, void_allocator_t> > svhb_type;
    static const std::size_t s_align = dtl::alignment_of<Storage>::value;
    static const std::size_t s_size = sizeof(Storage);
    static const std::size_t svh_sizeof = sizeof(svh_type);
@@ -478,10 +482,10 @@ template<class Storage>
 struct small_vector_storage<Storage, 0>
 {};
 
-template<class Allocator, std::size_t N>
+template<class T, class Allocator, std::size_t N>
 struct small_vector_storage_definer
 {
-   typedef typename Allocator::value_type                                  value_type;
+   typedef T value_type;
    typedef typename small_vector_base<value_type, Allocator>::storage_type storage_type;
    static const std::size_t needed_extra_storages =
       small_vector_storage_calculator<storage_type, Allocator, value_type, N>::needed_extra_storages;
@@ -501,16 +505,17 @@ struct small_vector_storage_definer
 //!
 //! \tparam T The type of object that is stored in the small_vector
 //! \tparam N The number of preallocated elements stored inside small_vector. It shall be less than Allocator::max_size();
-//! \tparam Allocator The allocator used for memory management when the number of elements exceeds N.
-template <class T, std::size_t N, class Allocator BOOST_CONTAINER_DOCONLY(= new_allocator<T>) >
+//! \tparam Allocator The allocator used for memory management when the number of elements exceeds N. Use void
+//!   for the default allocator
+template <class T, std::size_t N, class Allocator BOOST_CONTAINER_DOCONLY(= void) >
 class small_vector : public small_vector_base<T, Allocator>
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   , private small_vector_storage_definer<Allocator, N>::type
+   , private small_vector_storage_definer<T, Allocator, N>::type
    #endif
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    typedef small_vector_base<T, Allocator> base_type;
-   typedef typename small_vector_storage_definer<Allocator, N>::type remaining_storage_holder;
+   typedef typename small_vector_storage_definer<T, Allocator, N>::type remaining_storage_holder;
 
    BOOST_COPYABLE_AND_MOVABLE(small_vector)
 

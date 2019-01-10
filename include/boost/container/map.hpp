@@ -72,7 +72,7 @@ namespace container {
 //!   (e.g. <i>allocator< std::pair<const Key, T> > </i>).
 //! \tparam Options is an packed option type generated using using boost::container::tree_assoc_options.
 template < class Key, class T, class Compare = std::less<Key>
-         , class Allocator = new_allocator< std::pair< const Key, T> >, class Options = tree_assoc_defaults >
+         , class Allocator = void, class Options = tree_assoc_defaults >
 #else
 template <class Key, class T, class Compare, class Allocator, class Options>
 #endif
@@ -80,7 +80,7 @@ class map
    ///@cond
    : public dtl::tree
       < std::pair<const Key, T>
-      , dtl::select1st<Key>
+      , int
       , Compare, Allocator, Options>
    ///@endcond
 {
@@ -88,11 +88,11 @@ class map
    private:
    BOOST_COPYABLE_AND_MOVABLE(map)
 
-   typedef dtl::select1st<Key>                                select_1st_t;
+   typedef int                                                             select_1st_t;
    typedef std::pair<const Key, T>                                         value_type_impl;
    typedef dtl::tree
       <value_type_impl, select_1st_t, Compare, Allocator, Options>         base_t;
-   typedef dtl::pair <Key, T>                                 movable_value_type_impl;
+   typedef dtl::pair <Key, T>                                              movable_value_type_impl;
    typedef typename base_t::value_compare                                  value_compare_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -103,26 +103,26 @@ class map
    //
    //////////////////////////////////////////////
 
-   typedef Key                                                                      key_type;
-   typedef ::boost::container::allocator_traits<Allocator>                          allocator_traits_type;
-   typedef T                                                                        mapped_type;
-   typedef typename boost::container::allocator_traits<Allocator>::value_type       value_type;
-   typedef typename boost::container::allocator_traits<Allocator>::pointer          pointer;
-   typedef typename boost::container::allocator_traits<Allocator>::const_pointer    const_pointer;
-   typedef typename boost::container::allocator_traits<Allocator>::reference        reference;
-   typedef typename boost::container::allocator_traits<Allocator>::const_reference  const_reference;
-   typedef typename boost::container::allocator_traits<Allocator>::size_type        size_type;
-   typedef typename boost::container::allocator_traits<Allocator>::difference_type  difference_type;
-   typedef Allocator                                                                allocator_type;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)           stored_allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(value_compare_impl)                               value_compare;
-   typedef Compare                                                                  key_compare;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                        iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                  const_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                reverse_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)          const_reverse_iterator;
-   typedef std::pair<key_type, mapped_type>                                         nonconst_value_type;
-   typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                          movable_value_type;
+   typedef Key                                                                            key_type;
+   typedef T                                                                              mapped_type;
+   typedef typename base_t::allocator_type                                                allocator_type;
+   typedef ::boost::container::allocator_traits<allocator_type>                           allocator_traits_type;
+   typedef typename boost::container::allocator_traits<allocator_type>::value_type        value_type;
+   typedef typename boost::container::allocator_traits<allocator_type>::pointer           pointer;
+   typedef typename boost::container::allocator_traits<allocator_type>::const_pointer     const_pointer;
+   typedef typename boost::container::allocator_traits<allocator_type>::reference         reference;
+   typedef typename boost::container::allocator_traits<allocator_type>::const_reference   const_reference;
+   typedef typename boost::container::allocator_traits<allocator_type>::size_type         size_type;
+   typedef typename boost::container::allocator_traits<allocator_type>::difference_type   difference_type;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)                 stored_allocator_type;
+   typedef BOOST_CONTAINER_IMPDEF(value_compare_impl)                                     value_compare;
+   typedef Compare                                                                        key_compare;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                              iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                        const_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                      reverse_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)                const_reverse_iterator;
+   typedef std::pair<key_type, mapped_type>                                               nonconst_value_type;
+   typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                                movable_value_type;
    typedef BOOST_CONTAINER_IMPDEF(node_handle<
       typename base_t::stored_allocator_type
       BOOST_MOVE_I pair_key_mapped_of_value
@@ -143,7 +143,7 @@ class map
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_FORCEINLINE 
-   map() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<Allocator>::value &&
+   map() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<allocator_type>::value &&
                            dtl::is_nothrow_default_constructible<Compare>::value)
       : base_t()
    {}
@@ -1405,7 +1405,7 @@ class multimap
    ///@cond
    : public dtl::tree
       < std::pair<const Key, T>
-      , dtl::select1st<Key>
+      , int
       , Compare, Allocator, Options>
    ///@endcond
 {
@@ -1413,15 +1413,13 @@ class multimap
    private:
    BOOST_COPYABLE_AND_MOVABLE(multimap)
 
-   typedef dtl::select1st<Key>                                      select_1st_t;
+   typedef int                                                                   select_1st_t;
    typedef std::pair<const Key, T>                                               value_type_impl;
    typedef dtl::tree
       <value_type_impl, select_1st_t, Compare, Allocator, Options>               base_t;
    typedef dtl::pair <Key, T>                                       movable_value_type_impl;
    typedef typename base_t::value_compare                                        value_compare_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-
-   typedef ::boost::container::allocator_traits<Allocator>                       allocator_traits_type;
 
    public:
    //////////////////////////////////////////////
@@ -1430,25 +1428,26 @@ class multimap
    //
    //////////////////////////////////////////////
 
-   typedef Key                                                                      key_type;
-   typedef T                                                                        mapped_type;
-   typedef typename boost::container::allocator_traits<Allocator>::value_type       value_type;
-   typedef typename boost::container::allocator_traits<Allocator>::pointer          pointer;
-   typedef typename boost::container::allocator_traits<Allocator>::const_pointer    const_pointer;
-   typedef typename boost::container::allocator_traits<Allocator>::reference        reference;
-   typedef typename boost::container::allocator_traits<Allocator>::const_reference  const_reference;
-   typedef typename boost::container::allocator_traits<Allocator>::size_type        size_type;
-   typedef typename boost::container::allocator_traits<Allocator>::difference_type  difference_type;
-   typedef Allocator                                                                allocator_type;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)           stored_allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(value_compare_impl)                               value_compare;
-   typedef Compare                                                                  key_compare;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                        iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                  const_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                reverse_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)          const_reverse_iterator;
-   typedef std::pair<key_type, mapped_type>                                         nonconst_value_type;
-   typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                          movable_value_type;
+   typedef Key                                                                            key_type;
+   typedef T                                                                              mapped_type;
+   typedef typename base_t::allocator_type                                                allocator_type;
+   typedef ::boost::container::allocator_traits<allocator_type>                           allocator_traits_type;
+   typedef typename boost::container::allocator_traits<allocator_type>::value_type        value_type;
+   typedef typename boost::container::allocator_traits<allocator_type>::pointer           pointer;
+   typedef typename boost::container::allocator_traits<allocator_type>::const_pointer     const_pointer;
+   typedef typename boost::container::allocator_traits<allocator_type>::reference         reference;
+   typedef typename boost::container::allocator_traits<allocator_type>::const_reference   const_reference;
+   typedef typename boost::container::allocator_traits<allocator_type>::size_type         size_type;
+   typedef typename boost::container::allocator_traits<allocator_type>::difference_type   difference_type;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)                 stored_allocator_type;
+   typedef BOOST_CONTAINER_IMPDEF(value_compare_impl)                                     value_compare;
+   typedef Compare                                                                        key_compare;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                              iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                        const_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                      reverse_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)                const_reverse_iterator;
+   typedef std::pair<key_type, mapped_type>                                               nonconst_value_type;
+   typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                                movable_value_type;
    typedef BOOST_CONTAINER_IMPDEF(node_handle<
       typename base_t::stored_allocator_type
       BOOST_MOVE_I pair_key_mapped_of_value
@@ -1467,7 +1466,7 @@ class multimap
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_FORCEINLINE multimap()
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<Allocator>::value &&
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<allocator_type>::value &&
                         dtl::is_nothrow_default_constructible<Compare>::value)
       : base_t()
    {}

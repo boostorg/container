@@ -67,14 +67,14 @@ template <class Key, class Compare, class Allocator, class Options>
 class set
    ///@cond
    : public dtl::tree
-      < Key, dtl::identity<Key>, Compare, Allocator, Options>
+      < Key, void, Compare, Allocator, Options>
    ///@endcond
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(set)
    typedef dtl::tree
-      < Key, dtl::identity<Key>, Compare, Allocator, Options> base_t;
+      < Key, void, Compare, Allocator, Options> base_t;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -83,25 +83,25 @@ class set
    //                    types
    //
    //////////////////////////////////////////////
-   typedef Key                                                                         key_type;
-   typedef Key                                                                         value_type;
-   typedef Compare                                                                     key_compare;
-   typedef Compare                                                                     value_compare;
-   typedef ::boost::container::allocator_traits<Allocator>                             allocator_traits_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_reference   const_reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
-   typedef Allocator                                                                   allocator_type;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)              stored_allocator_type;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                           iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                     const_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                   reverse_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)             const_reverse_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::node_type)                          node_type;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::insert_return_type)                 insert_return_type;
+   typedef Key                                                                            key_type;
+   typedef Key                                                                            value_type;
+   typedef Compare                                                                        key_compare;
+   typedef key_compare                                                                    value_compare;
+   typedef typename base_t::allocator_type                                                allocator_type;
+   typedef ::boost::container::allocator_traits<allocator_type>                           allocator_traits_type;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::pointer         pointer;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::const_pointer   const_pointer;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::reference       reference;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::const_reference const_reference;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::size_type       size_type;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::difference_type difference_type;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)                 stored_allocator_type;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                              iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                        const_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                      reverse_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)                const_reverse_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::node_type)                             node_type;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::insert_return_type)                    insert_return_type;
 
    //////////////////////////////////////////////
    //
@@ -114,7 +114,7 @@ class set
    //! <b>Complexity</b>: Constant.
    
    BOOST_CONTAINER_FORCEINLINE set()
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<Allocator>::value &&
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<allocator_type>::value &&
                         dtl::is_nothrow_default_constructible<Compare>::value)
       : base_t()
    {}
@@ -655,7 +655,7 @@ class set
    BOOST_CONTAINER_FORCEINLINE void merge(set<Key, C2, Allocator, Options>& source)
    {
       typedef dtl::tree
-         <Key, dtl::identity<Key>, C2, Allocator, Options> base2_t;
+         <Key, void, C2, Allocator, Options> base2_t;
       this->base_t::merge_unique(static_cast<base2_t&>(source));
    }
 
@@ -669,7 +669,7 @@ class set
    BOOST_CONTAINER_FORCEINLINE void merge(multiset<Key, C2, Allocator, Options>& source)
    {
       typedef dtl::tree
-         <Key, dtl::identity<Key>, C2, Allocator, Options> base2_t;
+         <Key, void, C2, Allocator, Options> base2_t;
       this->base_t::merge_unique(static_cast<base2_t&>(source));
    }
 
@@ -1058,14 +1058,14 @@ template <class Key, class Compare, class Allocator, class Options>
 class multiset
    /// @cond
    : public dtl::tree
-      <Key,dtl::identity<Key>, Compare, Allocator, Options>
+      <Key, void, Compare, Allocator, Options>
    /// @endcond
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(multiset)
    typedef dtl::tree
-      <Key,dtl::identity<Key>, Compare, Allocator, Options> base_t;
+      <Key, void, Compare, Allocator, Options> base_t;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -1075,24 +1075,24 @@ class multiset
    //                    types
    //
    //////////////////////////////////////////////
-   typedef Key                                                                         key_type;
-   typedef Key                                                                         value_type;
-   typedef Compare                                                                     key_compare;
-   typedef Compare                                                                     value_compare;
-   typedef ::boost::container::allocator_traits<Allocator>                             allocator_traits_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_reference   const_reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
-   typedef Allocator                                                                   allocator_type;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)              stored_allocator_type;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                           iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                     const_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                   reverse_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)             const_reverse_iterator;
-   typedef typename BOOST_CONTAINER_IMPDEF(base_t::node_type)                          node_type;
+   typedef Key                                                                            key_type;
+   typedef Key                                                                            value_type;
+   typedef Compare                                                                        key_compare;
+   typedef key_compare                                                                    value_compare;
+   typedef typename base_t::allocator_type                                                allocator_type;
+   typedef ::boost::container::allocator_traits<allocator_type>                           allocator_traits_type;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::pointer         pointer;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::const_pointer   const_pointer;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::reference       reference;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::const_reference const_reference;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::size_type       size_type;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::difference_type difference_type;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::stored_allocator_type)                 stored_allocator_type;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::iterator)                              iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                        const_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                      reverse_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)                const_reverse_iterator;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::node_type)                             node_type;
 
    //////////////////////////////////////////////
    //
@@ -1102,7 +1102,7 @@ class multiset
 
    //! @copydoc ::boost::container::set::set()
    BOOST_CONTAINER_FORCEINLINE multiset()
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<Allocator>::value &&
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<allocator_type>::value &&
                         dtl::is_nothrow_default_constructible<Compare>::value)
       : base_t()
    {}
@@ -1448,7 +1448,7 @@ class multiset
    BOOST_CONTAINER_FORCEINLINE void merge(multiset<Key, C2, Allocator, Options>& source)
    {
       typedef dtl::tree
-         <Key, dtl::identity<Key>, C2, Allocator, Options> base2_t;
+         <Key, void, C2, Allocator, Options> base2_t;
       this->base_t::merge_equal(static_cast<base2_t&>(source));
    }
 
@@ -1462,7 +1462,7 @@ class multiset
    BOOST_CONTAINER_FORCEINLINE void merge(set<Key, C2, Allocator, Options>& source)
    {
       typedef dtl::tree
-         <Key, dtl::identity<Key>, C2, Allocator, Options> base2_t;
+         <Key, void, C2, Allocator, Options> base2_t;
       this->base_t::merge_equal(static_cast<base2_t&>(source));
    }
 

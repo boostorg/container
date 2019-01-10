@@ -192,20 +192,23 @@ struct intrusive_slist_type
 //! then you should probably use list instead of slist.
 //!
 //! \tparam T The type of object that is stored in the list
-//! \tparam Allocator The allocator used for all internal memory management
+//! \tparam Allocator The allocator used for all internal memory management, use void
+//!   for the default allocator
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class T, class Allocator = new_allocator<T> >
+template <class T, class Allocator = void >
 #else
 template <class T, class Allocator>
 #endif
 class slist
    : protected dtl::node_alloc_holder
-      <Allocator, typename dtl::intrusive_slist_type<Allocator>::type>
+      < typename real_allocator<T, Allocator>::type
+      , typename dtl::intrusive_slist_type<typename real_allocator<T, Allocator>::type>::type>
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+   typedef typename real_allocator<T, Allocator>::type      ValueAllocator;
    typedef typename
-      dtl::intrusive_slist_type<Allocator>::type           Icont;
-   typedef dtl::node_alloc_holder<Allocator, Icont>        AllocHolder;
+      dtl::intrusive_slist_type<ValueAllocator>::type       Icont;
+   typedef dtl::node_alloc_holder<ValueAllocator, Icont>    AllocHolder;
    typedef typename AllocHolder::NodePtr                    NodePtr;
    typedef typename AllocHolder::NodeAlloc                  NodeAlloc;
    typedef typename AllocHolder::ValAlloc                   ValAlloc;
@@ -213,8 +216,9 @@ class slist
    typedef dtl::allocator_destroyer<NodeAlloc> Destroyer;
    typedef typename AllocHolder::alloc_version              alloc_version;
    typedef boost::container::
-      allocator_traits<Allocator>                           allocator_traits_type;
-   typedef boost::container::equal_to_value<Allocator>      equal_to_value_type;
+      allocator_traits<ValueAllocator>                           allocator_traits_type;
+   typedef boost::container::equal_to_value
+      <typename allocator_traits_type::value_type>          equal_to_value_type;
 
    BOOST_COPYABLE_AND_MOVABLE(slist)
    typedef dtl::iterator_from_iiterator<typename Icont::iterator, false>  iterator_impl;
@@ -229,13 +233,13 @@ class slist
    //////////////////////////////////////////////
 
    typedef T                                                                  value_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::pointer          pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer    const_pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::reference        reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_reference  const_reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::size_type        size_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::difference_type  difference_type;
-   typedef Allocator                                                                  allocator_type;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::pointer          pointer;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::const_pointer    const_pointer;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::reference        reference;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::const_reference  const_reference;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::size_type        size_type;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::difference_type  difference_type;
+   typedef ValueAllocator                                                                  allocator_type;
    typedef BOOST_CONTAINER_IMPDEF(NodeAlloc)                                  stored_allocator_type;
    typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                              iterator;
    typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                        const_iterator;
@@ -253,7 +257,7 @@ class slist
    //! <b>Throws</b>: If allocator_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   slist() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<Allocator>::value)
+   slist() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<ValueAllocator>::value)
       :  AllocHolder()
    {}
 
@@ -1710,11 +1714,11 @@ BOOST_CONTAINER_DOC1ST(namespace std {, BOOST_MOVE_STD_NS_BEG)
 
 //! A specialization of insert_iterator
 //! that works with slist
-template <class T, class Allocator>
-class insert_iterator<boost::container::slist<T, Allocator> >
+template <class T, class ValueAllocator>
+class insert_iterator<boost::container::slist<T, ValueAllocator> >
 {
    private:
-   typedef boost::container::slist<T, Allocator> Container;
+   typedef boost::container::slist<T, ValueAllocator> Container;
    Container* container;
    typename Container::iterator iter;
 

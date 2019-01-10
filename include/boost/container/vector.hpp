@@ -236,18 +236,6 @@ struct vector_value_traits_base
    static const bool nothrow_assign = dtl::is_nothrow_copy_assignable<T>::value || trivial_assign;
 };
 
-template<class T, class AllocatorOrVoid>
-struct real_allocator
-{
-   typedef AllocatorOrVoid type;
-};
-
-template<class T>
-struct real_allocator<T, void>
-{
-   typedef new_allocator<T> type;
-};
-
 template <class Allocator>
 struct vector_value_traits
    : public vector_value_traits_base<typename Allocator::value_type>

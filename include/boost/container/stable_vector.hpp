@@ -465,14 +465,15 @@ class stable_vector_iterator
 //! \tparam T The type of object that is stored in the stable_vector
 //! \tparam Allocator The allocator used for all internal memory management
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class T, class Allocator = new_allocator<T> >
+template <class T, class Allocator = void >
 #else
 template <class T, class Allocator>
 #endif
 class stable_vector
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   typedef allocator_traits<Allocator>                allocator_traits_type;
+   typedef typename real_allocator<T, Allocator>::type     ValueAllocator;
+   typedef allocator_traits<ValueAllocator>                allocator_traits_type;
    typedef boost::intrusive::
       pointer_traits
          <typename allocator_traits_type::pointer>    ptr_traits;
@@ -510,7 +511,7 @@ class stable_vector
 
    typedef ::boost::container::dtl::integral_constant
       <unsigned, boost::container::dtl::
-      version<Allocator>::value>                              alloc_version;
+      version<ValueAllocator>::value>                              alloc_version;
    typedef typename allocator_traits_type::
       template portable_rebind_alloc
          <node_type>::type                            node_allocator_type;
@@ -533,10 +534,10 @@ class stable_vector
 
    friend class stable_vector_detail::clear_on_destroy<stable_vector>;
    typedef stable_vector_iterator
-      < typename allocator_traits<Allocator>::pointer
+      < typename allocator_traits<ValueAllocator>::pointer
       , false>                                           iterator_impl;
    typedef stable_vector_iterator
-      < typename allocator_traits<Allocator>::pointer
+      < typename allocator_traits<ValueAllocator>::pointer
       , true>                                            const_iterator_impl;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    public:
@@ -547,13 +548,13 @@ class stable_vector
    //
    //////////////////////////////////////////////
    typedef T                                                                           value_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::pointer           pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_pointer     const_pointer;
-   typedef typename ::boost::container::allocator_traits<Allocator>::reference         reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::const_reference   const_reference;
-   typedef typename ::boost::container::allocator_traits<Allocator>::size_type         size_type;
-   typedef typename ::boost::container::allocator_traits<Allocator>::difference_type   difference_type;
-   typedef Allocator                                                                   allocator_type;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::pointer           pointer;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::const_pointer     const_pointer;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::reference         reference;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::const_reference   const_reference;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::size_type         size_type;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::difference_type   difference_type;
+   typedef ValueAllocator                                                                   allocator_type;
    typedef node_allocator_type                                                         stored_allocator_type;
    typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                                       iterator;
    typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                                 const_iterator;
@@ -584,7 +585,7 @@ class stable_vector
    //! <b>Throws</b>: If allocator_type's default constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   stable_vector() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<Allocator>::value)
+   stable_vector() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<ValueAllocator>::value)
       : internal_data(), index()
    {
       STABLE_VECTOR_CHECK_INVARIANT;

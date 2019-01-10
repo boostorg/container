@@ -427,13 +427,15 @@ class flat_tree_value_compare
       {  return *this;  }
 };
 
+
 ///////////////////////////////////////
 //
 //       select_container_type
 //
 ///////////////////////////////////////
 template < class Value, class AllocatorOrContainer
-         , bool = boost::container::dtl::is_container<AllocatorOrContainer>::value >
+         , bool = boost::container::dtl::is_container<AllocatorOrContainer>::value
+         >
 struct select_container_type
 {
    typedef AllocatorOrContainer type;
@@ -442,7 +444,7 @@ struct select_container_type
 template <class Value, class AllocatorOrContainer>
 struct select_container_type<Value, AllocatorOrContainer, false>
 {
-   typedef boost::container::vector<Value, AllocatorOrContainer> type;
+   typedef boost::container::vector<Value, typename real_allocator<Value, AllocatorOrContainer>::type> type;
 };
 
 
