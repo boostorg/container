@@ -1215,15 +1215,15 @@ class flat_tree
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge_unique(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
    {
-      this->insert( boost::make_move_iterator(source.begin())
-                  , boost::make_move_iterator(source.end()));
+      this->insert_unique( boost::make_move_iterator(source.begin())
+                         , boost::make_move_iterator(source.end()));
    }
 
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge_equal(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
    {
-      this->insert( boost::make_move_iterator(source.begin())
-                  , boost::make_move_iterator(source.end()));
+      this->insert_equal( boost::make_move_iterator(source.begin())
+                        , boost::make_move_iterator(source.end()));
    }
 
    BOOST_CONTAINER_FORCEINLINE void merge_unique(flat_tree& source)
