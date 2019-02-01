@@ -788,7 +788,7 @@ class flat_map
    //! Complexity: Logarithmic in the size of the container in general, but amortized constant if
    //! the new element is inserted just before hint.
    template <class M>
-   BOOST_CONTAINER_FORCEINLINE iterator insert_or_assign(const_iterator hint, const key_type& k, BOOST_FWD_REF(M) obj)
+   BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> insert_or_assign(const_iterator hint, const key_type& k, BOOST_FWD_REF(M) obj)
    {
       return dtl::force_copy< std::pair<iterator, bool> >
          (this->m_flat_tree.insert_or_assign
@@ -812,7 +812,7 @@ class flat_map
    //! Complexity: Logarithmic in the size of the container in general, but amortized constant if
    //! the new element is inserted just before hint.
    template <class M>
-   BOOST_CONTAINER_FORCEINLINE iterator insert_or_assign(const_iterator hint, BOOST_RV_REF(key_type) k, BOOST_FWD_REF(M) obj)
+   BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> insert_or_assign(const_iterator hint, BOOST_RV_REF(key_type) k, BOOST_FWD_REF(M) obj)
    {
       return dtl::force_copy< std::pair<iterator, bool> >
          (this->m_flat_tree.insert_or_assign

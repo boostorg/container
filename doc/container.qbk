@@ -1248,6 +1248,7 @@ use [*Boost.Container]? There are several reasons for that:
 * Fixed bugs:
    * [@https://github.com/boostorg/container/pull/96 GitHub #96: ['"Workaround: Intel compilers do not offer CTAD yet"]].
    * [@https://github.com/boostorg/container/issues/97 GitHub #97: ['"buffer overflow in boost::container::flat_map on FreeBSD"]].
+   * [@https://github.com/boostorg/container/issues/98 GitHub #98: ['"flat_map: insert_or_assign does not work with hint"]].
    * [@https://github.com/boostorg/container/issues/100 GitHub #100: ['"Compile error on Green Hills: container_detail::flat_tree has no member insert"]].
 
 [endsect]

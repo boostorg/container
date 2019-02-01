@@ -260,11 +260,27 @@ bool test_heterogeneous_lookups()
    const map_t &cmap1 = map1;
    const mmap_t &cmmap1 = mmap1;
 
-   map1.insert_or_assign(1, 'a');
-   map1.insert_or_assign(1, 'b');
-   map1.insert_or_assign(2, 'c');
-   map1.insert_or_assign(2, 'd');
-   map1.insert_or_assign(3, 'e');
+   if(!map1.insert_or_assign(1, 'a').second)
+      return false;
+   if( map1.insert_or_assign(1, 'b').second)
+      return false;
+   if(!map1.insert_or_assign(2, 'c').second)
+      return false;
+   if( map1.insert_or_assign(2, 'd').second)
+      return false;
+   if(!map1.insert_or_assign(3, 'e').second)
+      return false;
+
+   if(map1.insert_or_assign(1, 'a').second)
+      return false;
+   if(map1.insert_or_assign(1, 'b').second)
+      return false;
+   if(map1.insert_or_assign(2, 'c').second)
+      return false;
+   if(map1.insert_or_assign(2, 'd').second)
+      return false;
+   if(map1.insert_or_assign(3, 'e').second)
+      return false;
 
    mmap1.insert(value_type(1, 'a'));
    mmap1.insert(value_type(1, 'b'));
