@@ -2373,7 +2373,9 @@ private:
       pointer const old_p     = this->m_holder.start();
       size_type const old_cap = this->m_holder.capacity();
       boost::container::destroy_alloc_n(a, boost::movelib::to_raw_pointer(old_p), old_size);
-      this->m_holder.deallocate(old_p, old_cap);
+      if (old_cap > 0) {
+         this->m_holder.deallocate(old_p, old_cap);
+      }
       this->m_holder.m_size = old_size + added;
       this->m_holder.start(new_storage);
       this->m_holder.capacity(new_cap);
