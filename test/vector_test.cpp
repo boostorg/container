@@ -152,6 +152,47 @@ struct alloc_propagate_base<boost_container_vector>
 
 }}}   //namespace boost::container::test
 
+template<typename T>
+class check_dealloc_allocator : public std::allocator<T>
+{
+   public:
+   bool allocate_zero_called_;
+   bool deallocate_called_without_allocate_;
+
+   check_dealloc_allocator()
+      : std::allocator<T>()
+      , allocate_zero_called_(false)
+      , deallocate_called_without_allocate_(false)
+   {}
+
+   T* allocate(std::size_t n)
+   {
+      if (n == 0) {
+         allocate_zero_called_ = true;
+      }
+      return std::allocator<T>::allocate(n);
+   }
+
+   void deallocate(T* p, std::size_t n)
+   {
+      if (n == 0 && !allocate_zero_called_) {
+         deallocate_called_without_allocate_ = true;
+      }
+      return std::allocator<T>::deallocate(p, n);
+   }
+};
+
+bool test_merge_empty_free()
+{
+   vector<int> source;
+   source.emplace_back(1);
+
+   vector< int, check_dealloc_allocator<int> > empty;
+   empty.merge(source.begin(), source.end());
+
+   return empty.get_stored_allocator().deallocate_called_without_allocate_;
+}
+
 int main()
 {
    {
@@ -285,5 +326,11 @@ int main()
       }
    }
 #endif
+
+   if (test_merge_empty_free()) {
+      std::cerr << "Merge into empty vector test failed" << std::endl;
+      return 1;
+   }
+
    return 0;
 }
