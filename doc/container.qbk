@@ -1250,6 +1250,8 @@ use [*Boost.Container]? There are several reasons for that:
    * [@https://github.com/boostorg/container/issues/97 GitHub #97: ['"buffer overflow in boost::container::flat_map on FreeBSD"]].
    * [@https://github.com/boostorg/container/issues/98 GitHub #98: ['"flat_map: insert_or_assign does not work with hint"]].
    * [@https://github.com/boostorg/container/issues/100 GitHub #100: ['"Compile error on Green Hills: container_detail::flat_tree has no member insert"]].
+   * [@https://github.com/boostorg/container/pull/103 GitHub #103: ['"Fix deallocating never-allocated storage in vector.merge()"]].
+   * [@https://github.com/boostorg/container/pull/104 GitHub #104: ['"Fix -Wmissing-noreturn clang warnings"]].
 
 [endsect]
 
