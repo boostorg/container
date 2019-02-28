@@ -120,6 +120,15 @@ class vec_iterator
       :  m_ptr(other.get_ptr())
    {}
 
+   BOOST_CONTAINER_FORCEINLINE vec_iterator& operator=(vec_iterator<Pointer, false> const& other) BOOST_NOEXCEPT_OR_NOTHROW
+   {
+       if (&other != this){
+           this->m_ptr = other.get_ptr();
+       }
+       return *this;
+   }
+
+
    //Pointer like operators
    BOOST_CONTAINER_FORCEINLINE reference operator*()   const BOOST_NOEXCEPT_OR_NOTHROW
    {  BOOST_ASSERT(!!m_ptr);  return *m_ptr;  }
