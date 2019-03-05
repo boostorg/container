@@ -202,19 +202,19 @@ class list
    //
    //////////////////////////////////////////////
 
-   typedef T                                                                           value_type;
-   typedef typename ::boost::container::allocator_traits<ValueAllocator>::pointer           pointer;
-   typedef typename ::boost::container::allocator_traits<ValueAllocator>::const_pointer     const_pointer;
-   typedef typename ::boost::container::allocator_traits<ValueAllocator>::reference         reference;
-   typedef typename ::boost::container::allocator_traits<ValueAllocator>::const_reference   const_reference;
-   typedef typename ::boost::container::allocator_traits<ValueAllocator>::size_type         size_type;
-   typedef typename ::boost::container::allocator_traits<ValueAllocator>::difference_type   difference_type;
-   typedef ValueAllocator                                                                   allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(NodeAlloc)                                           stored_allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                                       iterator;
-   typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                                 const_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
+   typedef T                                                                              value_type;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::pointer         pointer;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::const_pointer   const_pointer;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::reference       reference;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::const_reference const_reference;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::size_type       size_type;
+   typedef typename ::boost::container::allocator_traits<ValueAllocator>::difference_type difference_type;
+   typedef ValueAllocator                                                                 allocator_type;
+   typedef BOOST_CONTAINER_IMPDEF(NodeAlloc)                                              stored_allocator_type;
+   typedef BOOST_CONTAINER_IMPDEF(iterator_impl)                                          iterator;
+   typedef BOOST_CONTAINER_IMPDEF(const_iterator_impl)                                    const_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)           reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)     const_reverse_iterator;
 
    //////////////////////////////////////////////
    //
