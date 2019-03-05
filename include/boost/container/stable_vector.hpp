@@ -297,12 +297,7 @@ class stable_vector_iterator
       >::type                                                                       pointer;
    typedef boost::intrusive::pointer_traits<pointer>                                ptr_traits;
    typedef typename ptr_traits::reference                                           reference;
-   class nat;
-   typedef typename dtl::if_c< IsConst
-                             , stable_vector_iterator<Pointer, false>
-                             , nat>::type                                           nonconst_iterator;
 
-   private:
    typedef typename non_const_ptr_traits::template
          rebind_pointer<void>::type             void_ptr;
    typedef stable_vector_detail::node<Pointer>         node_type;
@@ -315,6 +310,16 @@ class stable_vector_iterator
          rebind_pointer<node_base_type>::type   node_base_ptr;
    typedef typename non_const_ptr_traits::template
          rebind_pointer<node_base_ptr>::type    node_base_ptr_ptr;
+
+   class nat
+   {
+      public:
+      node_base_ptr node_pointer() const
+      { return node_base_ptr();  }
+   };
+   typedef typename dtl::if_c< IsConst
+                             , stable_vector_iterator<Pointer, false>
+                             , nat>::type                                           nonconst_iterator;
 
    node_base_ptr m_pn;
 

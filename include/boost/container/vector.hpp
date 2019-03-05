@@ -96,7 +96,13 @@ class vec_iterator
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    Pointer m_ptr;
-   class nat;
+
+   class nat
+   {
+      public:
+      Pointer get_ptr() const
+      { return Pointer();  }
+   };
    typedef typename dtl::if_c< IsConst
                              , vec_iterator<Pointer, false>
                              , nat>::type                                           nonconst_iterator;
