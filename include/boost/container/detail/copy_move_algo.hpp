@@ -522,9 +522,9 @@ inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, I>::type
 {
    F back = r;
    BOOST_TRY{
-      while (n--) {
+      while (n) {
          boost::container::construct_in_place(a, boost::movelib::iterator_to_raw_pointer(r), f);
-         ++f; ++r;
+         ++f; ++r; --n;
       }
    }
    BOOST_CATCH(...){
