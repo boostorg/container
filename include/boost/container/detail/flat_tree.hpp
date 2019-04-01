@@ -922,7 +922,7 @@ class flat_tree
    template <class... Args>
    std::pair<iterator, bool> emplace_unique(BOOST_FWD_REF(Args)... args)
    {
-      typename aligned_storage<sizeof(value_type), alignment_of<value_type>::value>::type v;
+      typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;
       value_type *pval = reinterpret_cast<value_type *>(v.data);
       get_stored_allocator_noconst_return_t a = this->get_stored_allocator();
       stored_allocator_traits::construct(a, pval, ::boost::forward<Args>(args)... );
@@ -934,7 +934,7 @@ class flat_tree
    iterator emplace_hint_unique(const_iterator hint, BOOST_FWD_REF(Args)... args)
    {
       //hint checked in insert_unique
-      typename aligned_storage<sizeof(value_type), alignment_of<value_type>::value>::type v;
+      typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;
       value_type *pval = reinterpret_cast<value_type *>(v.data);
       get_stored_allocator_noconst_return_t a = this->get_stored_allocator();
       stored_allocator_traits::construct(a, pval, ::boost::forward<Args>(args)... );
@@ -945,7 +945,7 @@ class flat_tree
    template <class... Args>
    iterator emplace_equal(BOOST_FWD_REF(Args)... args)
    {
-      typename aligned_storage<sizeof(value_type), alignment_of<value_type>::value>::type v;
+      typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;
       value_type *pval = reinterpret_cast<value_type *>(v.data);
       get_stored_allocator_noconst_return_t a = this->get_stored_allocator();
       stored_allocator_traits::construct(a, pval, ::boost::forward<Args>(args)... );
@@ -957,7 +957,7 @@ class flat_tree
    iterator emplace_hint_equal(const_iterator hint, BOOST_FWD_REF(Args)... args)
    {
       //hint checked in insert_equal
-      typename aligned_storage<sizeof(value_type), alignment_of<value_type>::value>::type v;
+      typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;
       value_type *pval = reinterpret_cast<value_type *>(v.data);
       get_stored_allocator_noconst_return_t a = this->get_stored_allocator();
       stored_allocator_traits::construct(a, pval, ::boost::forward<Args>(args)... );
@@ -994,7 +994,7 @@ class flat_tree
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    std::pair<iterator, bool> emplace_unique(BOOST_MOVE_UREF##N)\
    {\
-      typename aligned_storage<sizeof(value_type), alignment_of<value_type>::value>::type v;\
+      typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;\
       value_type *pval = reinterpret_cast<value_type *>(v.data);\
       get_stored_allocator_noconst_return_t a = this->get_stored_allocator();\
       stored_allocator_traits::construct(a, pval BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
@@ -1005,7 +1005,7 @@ class flat_tree
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    iterator emplace_hint_unique(const_iterator hint BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
    {\
-      typename aligned_storage<sizeof(value_type), alignment_of<value_type>::value>::type v;\
+      typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;\
       value_type *pval = reinterpret_cast<value_type *>(v.data);\
       get_stored_allocator_noconst_return_t a = this->get_stored_allocator();\
       stored_allocator_traits::construct(a, pval BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
@@ -1016,7 +1016,7 @@ class flat_tree
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    iterator emplace_equal(BOOST_MOVE_UREF##N)\
    {\
-      typename aligned_storage<sizeof(value_type), alignment_of<value_type>::value>::type v;\
+      typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;\
       value_type *pval = reinterpret_cast<value_type *>(v.data);\
       get_stored_allocator_noconst_return_t a = this->get_stored_allocator();\
       stored_allocator_traits::construct(a, pval BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
@@ -1027,7 +1027,7 @@ class flat_tree
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    iterator emplace_hint_equal(const_iterator hint BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
    {\
-      typename aligned_storage <sizeof(value_type), alignment_of<value_type>::value>::type v;\
+      typename dtl::aligned_storage <sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;\
       value_type *pval = reinterpret_cast<value_type *>(v.data);\
       get_stored_allocator_noconst_return_t a = this->get_stored_allocator();\
       stored_allocator_traits::construct(a, pval BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\

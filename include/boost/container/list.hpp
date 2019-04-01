@@ -76,7 +76,7 @@ struct list_node
    typedef T internal_type;
    typedef typename list_hook<VoidPointer>::type hook_type;
 
-   typedef typename aligned_storage<sizeof(T), alignment_of<T>::value>::type storage_t;
+   typedef typename dtl::aligned_storage<sizeof(T), dtl::alignment_of<T>::value>::type storage_t;
    storage_t m_storage;
 
    #if defined(BOOST_GCC) && (BOOST_GCC >= 40600) && (BOOST_GCC < 80000)
