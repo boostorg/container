@@ -70,7 +70,7 @@ class static_storage_allocator
    {  return true;  }
 
    private:
-   typename aligned_storage<sizeof(T)*N, alignment_of<T>::value>::type storage;
+   typename dtl::aligned_storage<sizeof(T)*N, dtl::alignment_of<T>::value>::type storage;
 };
 
 }  //namespace dtl {
