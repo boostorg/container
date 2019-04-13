@@ -48,13 +48,6 @@
 namespace boost {
 namespace container {
 
-#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-
-template <class T, class Allocator = void >
-class small_vector_base;
-
-#endif
-
 //! A non-standard allocator used to implement `small_vector`.
 //! Users should never use it directly. It is described here
 //! for documentation purposes.
