@@ -11,6 +11,8 @@
 #include <boost/container/flat_map.hpp>
 #include <boost/container/allocator.hpp>
 #include <boost/container/detail/container_or_allocator_rebind.hpp>
+#include <boost/container/small_vector.hpp>
+#include <boost/container/static_vector.hpp>
 
 #include "print_container.hpp"
 #include "dummy_test_allocator.hpp"
@@ -711,6 +713,32 @@ int main()
       cont_int a; a.insert(cont_int::value_type(0, 9)); a.insert(cont_int::value_type(1, 9)); a.insert(cont_int::value_type(2, 9));
       boost::intrusive::test::test_iterator_random< cont_int >(a);
       if(boost::report_errors() != 0) {
+         return 1;
+      }
+   }
+
+   ////////////////////////////////////
+   //    Testing container implementations
+   ////////////////////////////////////
+   {
+      typedef std::map<int, int>                                     MyStdMap;
+      typedef std::multimap<int, int>                                MyStdMultiMap;
+
+      if (0 != test::map_test
+         < GetMapContainer<small_vector<std::pair<int, int>, 7>>::apply<int>::map_type
+         , MyStdMap
+         , GetMapContainer<small_vector<std::pair<int, int>, 7>>::apply<int>::multimap_type
+         , MyStdMultiMap>()) {
+         std::cout << "Error in map_test<small_vector<std::pair<int, int>, 7>>" << std::endl;
+         return 1;
+      }
+
+      if (0 != test::map_test
+         < GetMapContainer<static_vector<std::pair<int, int>, MaxElem * 10>>::apply<int>::map_type
+         , MyStdMap
+         , GetMapContainer<static_vector<std::pair<int, int>, MaxElem * 10>>::apply<int>::multimap_type
+         , MyStdMultiMap>()) {
+         std::cout << "Error in map_test<static_vector<std::pair<int, int>, MaxElem * 10>>" << std::endl;
          return 1;
       }
    }
