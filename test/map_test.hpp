@@ -763,54 +763,122 @@ int map_test_indexing(MyBoostMap &boostmap, MyStdMap &stdmap, MyBoostMultiMap &b
    return 0;
 }
 
-
-
-template<class MyBoostMap
-        , class MyStdMap
-        , class MyBoostMultiMap
-        , class MyStdMultiMap>
-int map_test_insert_or_assign(MyBoostMap &boostmap, MyStdMap &stdmap, MyBoostMultiMap &boostmultimap, MyStdMultiMap &stdmultimap)
+template< class MyBoostMap, class StdMap, class MaybeMove>
+int map_test_insert_or_assign_impl()
 {
-   typedef typename MyBoostMap::key_type    IntType;
-   typedef dtl::pair<IntType, IntType>         IntPairType;
+   typedef typename MyBoostMap::key_type     IntType;
+   typedef dtl::pair<IntType, IntType>       IntPairType;
+   typedef typename MyBoostMap::iterator     Biterator;
+   typedef std::pair<Biterator, bool>        Bpair;
+
+   MaybeMove maybe_move;
 
    {  //insert_or_assign test
-      boostmap.clear();
-      boostmultimap.clear();
-      stdmap.clear();
-      stdmultimap.clear();
-
+      MyBoostMap boostmap;
+      StdMap stdmap;
       IntPairType aux_vect[MaxElem];
       for(int i = 0; i < MaxElem; ++i){
          IntType i1(i);
-         IntType i2(i);
-         new(&aux_vect[i])IntPairType(boost::move(i1), boost::move(i2));
+         IntType i2(MaxElem-i);
+         new(&aux_vect[i])IntPairType(maybe_move(i1), maybe_move(i2));
       }
 
       IntPairType aux_vect2[MaxElem];
       for(int i = 0; i < MaxElem; ++i){
          IntType i1(i);
-         IntType i2(MaxElem-i);
-         new(&aux_vect2[i])IntPairType(boost::move(i1), boost::move(i2));
+         IntType i2(i);
+         new(&aux_vect2[i])IntPairType(maybe_move(i1), maybe_move(i2));
       }
 
       for(int i = 0; i < MaxElem; ++i){
-         boostmap.insert_or_assign(boost::move(aux_vect[i].first), boost::move(aux_vect[i].second));
-         stdmap[i] = i;
-      }
-
-      if(!CheckEqualPairContainers(boostmap, stdmap)) return 1;
-      if(!CheckEqualPairContainers(boostmultimap, stdmultimap)) return 1;
-
-      for(int i = 0; i < MaxElem; ++i){
-         boostmap.insert_or_assign(boost::move(aux_vect2[i].first), boost::move(aux_vect2[i].second));
+         Bpair r = boostmap.insert_or_assign(maybe_move(aux_vect[i].first), maybe_move(aux_vect[i].second));
          stdmap[i] = MaxElem-i;
+         if(!r.second)
+            return 1;
+         const IntType key(i);
+         if(r.first->first != key)
+            return 1;
+         const IntType mapped(MaxElem-i);
+         if(r.first->second != mapped)
+            return 1;
       }
 
       if(!CheckEqualPairContainers(boostmap, stdmap)) return 1;
-      if(!CheckEqualPairContainers(boostmultimap, stdmultimap)) return 1;
+
+      for(int i = 0; i < MaxElem; ++i){
+         Bpair r = boostmap.insert_or_assign(maybe_move(aux_vect2[i].first), maybe_move(aux_vect2[i].second));
+         stdmap[i] = i;
+         if(r.second)
+            return 1;
+         const IntType key(i);
+         if(r.first->first != key)
+            return 1;
+         const IntType mapped(i);
+         if(r.first->second != mapped)
+            return 1;
+      }
+
+      if(!CheckEqualPairContainers(boostmap, stdmap)) return 1;
+   }
+   {  //insert_or_assign test with hint
+      MyBoostMap boostmap;
+      StdMap stdmap;
+      IntPairType aux_vect[MaxElem];
+      for(int i = 0; i < MaxElem; ++i){
+         IntType i1(i);
+         IntType i2(MaxElem-i);
+         new(&aux_vect[i])IntPairType(maybe_move(i1), maybe_move(i2));
+      }
+
+      IntPairType aux_vect2[MaxElem];
+      for(int i = 0; i < MaxElem; ++i){
+         IntType i1(i);
+         IntType i2(i);
+         new(&aux_vect2[i])IntPairType(maybe_move(i1), maybe_move(i2));
+      }
+
+      for(int i = 0; i < MaxElem; ++i){
+         Biterator r = boostmap.insert_or_assign(boostmap.end(), maybe_move(aux_vect[i].first), maybe_move(aux_vect[i].second));
+         stdmap[i] = MaxElem-i;
+         const IntType key(i);
+         if(r->first != key)
+            return 1;
+         const IntType mapped(MaxElem-i);
+         if(r->second != mapped)
+            return 1;
+      }
+
+      if(!CheckEqualPairContainers(boostmap, stdmap)) return 1;
+
+      for(int i = 0; i < MaxElem; ++i){
+         Biterator r = boostmap.insert_or_assign(boostmap.end(), maybe_move(aux_vect2[i].first), maybe_move(aux_vect2[i].second));
+         stdmap[i] = i;
+         const IntType key(i);
+         if(r->first != key)
+            return 1;
+         const IntType mapped(i);
+         if(r->second != mapped)
+            return 1;
+      }
+
+      if(!CheckEqualPairContainers(boostmap, stdmap)) return 1;
    }
    return 0;
+}
+
+template< class MyBoostMap, class StdMap>
+int map_test_insert_or_assign(dtl::bool_<false> )//noncopyable
+{
+   return map_test_insert_or_assign_impl<MyBoostMap, StdMap, move_op>();
+}
+
+template< class MyBoostMap, class StdMap>
+int map_test_insert_or_assign(dtl::bool_<true> )//copyable
+{
+   int r = map_test_insert_or_assign_impl<MyBoostMap, StdMap, const_ref_op>();
+   if (r)
+      r = map_test_insert_or_assign_impl<MyBoostMap, StdMap, move_op>();
+   return r;
 }
 
 template< class MyBoostMap
@@ -822,7 +890,7 @@ int map_test_try_emplace(MyBoostMap &boostmap, MyStdMap &stdmap, MyBoostMultiMap
    typedef typename MyBoostMap::key_type    IntType;
    typedef dtl::pair<IntType, IntType>         IntPairType;
 
-      {  //try_emplace
+   {  //try_emplace
       boostmap.clear();
       boostmultimap.clear();
       stdmap.clear();
@@ -1028,6 +1096,7 @@ int map_test()
    MyStdMap   &stdmap   = *pstdmap;
    MyBoostMultiMap &boostmultimap = *pboostmultimap;
    MyStdMultiMap   &stdmultimap   = *pstdmultimap;
+   typedef dtl::bool_<boost::container::test::is_copyable<IntType>::value> copyable_t;
 
    if (map_test_step(boostmap, stdmap, boostmultimap, stdmultimap))
       return 1;
@@ -1047,19 +1116,17 @@ int map_test()
    if (map_test_indexing(boostmap, stdmap, boostmultimap, stdmultimap))
       return 1;
 
-   if (map_test_insert_or_assign(boostmap, stdmap, boostmultimap, stdmultimap))
-      return 1;
-
    if (map_test_try_emplace(boostmap, stdmap, boostmultimap, stdmultimap))
       return 1;
 
    if (map_test_merge(boostmap, stdmap, boostmultimap, stdmultimap))
       return 1;
 
-   if(map_test_copyable<MyBoostMap, MyStdMap, MyBoostMultiMap, MyStdMultiMap>
-      (dtl::bool_<boost::container::test::is_copyable<IntType>::value>())){
+   if (map_test_insert_or_assign<MyBoostMap, MyStdMap>(copyable_t()))
       return 1;
-   }
+
+   if(map_test_copyable<MyBoostMap, MyStdMap, MyBoostMultiMap, MyStdMultiMap>(copyable_t()))
+      return 1;
    return 0;
 }
 

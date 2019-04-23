@@ -629,7 +629,7 @@ class map
    //! the new element is inserted just before hint.
    template <class M>
    BOOST_CONTAINER_FORCEINLINE iterator insert_or_assign(const_iterator hint, const key_type& k, BOOST_FWD_REF(M) obj)
-   {  return this->base_t::insert_or_assign(hint, k, ::boost::forward<M>(obj));  }
+   {  return this->base_t::insert_or_assign(hint, k, ::boost::forward<M>(obj)).first;  }
 
    //! <b>Effects</b>: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
    //! to the mapped_type corresponding to the key k. If the key does not exist, inserts the new value
@@ -647,7 +647,7 @@ class map
    //! the new element is inserted just before hint.
    template <class M>
    BOOST_CONTAINER_FORCEINLINE iterator insert_or_assign(const_iterator hint, BOOST_RV_REF(key_type) k, BOOST_FWD_REF(M) obj)
-   {  return this->base_t::insert_or_assign(hint, ::boost::move(k), ::boost::forward<M>(obj));  }
+   {  return this->base_t::insert_or_assign(hint, ::boost::move(k), ::boost::forward<M>(obj)).first;  }
 
    //! <b>Returns</b>: A reference to the element whose key is equivalent to x.
    //! Throws: An exception object of type out_of_range if no such element is present.

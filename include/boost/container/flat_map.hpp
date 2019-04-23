@@ -788,12 +788,12 @@ class flat_map
    //! Complexity: Logarithmic in the size of the container in general, but amortized constant if
    //! the new element is inserted just before hint.
    template <class M>
-   BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> insert_or_assign(const_iterator hint, const key_type& k, BOOST_FWD_REF(M) obj)
+   BOOST_CONTAINER_FORCEINLINE iterator insert_or_assign(const_iterator hint, const key_type& k, BOOST_FWD_REF(M) obj)
    {
-      return dtl::force_copy< std::pair<iterator, bool> >
+      return dtl::force_copy<iterator>
          (this->m_flat_tree.insert_or_assign
             ( dtl::force_copy<impl_const_iterator>(hint)
-            , k, ::boost::forward<M>(obj))
+            , k, ::boost::forward<M>(obj)).first
          );
    }
 
@@ -812,12 +812,12 @@ class flat_map
    //! Complexity: Logarithmic in the size of the container in general, but amortized constant if
    //! the new element is inserted just before hint.
    template <class M>
-   BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> insert_or_assign(const_iterator hint, BOOST_RV_REF(key_type) k, BOOST_FWD_REF(M) obj)
+   BOOST_CONTAINER_FORCEINLINE iterator insert_or_assign(const_iterator hint, BOOST_RV_REF(key_type) k, BOOST_FWD_REF(M) obj)
    {
-      return dtl::force_copy< std::pair<iterator, bool> >
+      return dtl::force_copy<iterator>
          (this->m_flat_tree.insert_or_assign
             ( dtl::force_copy<impl_const_iterator>(hint)
-            , ::boost::move(k), ::boost::forward<M>(obj))
+            , ::boost::move(k), ::boost::forward<M>(obj)).first
          );
    }
 

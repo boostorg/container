@@ -15,6 +15,7 @@
 #include <boost/container/detail/pair.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/move/unique_ptr.hpp>
+#include <boost/move/utility_core.hpp>
 
 #include <cstddef>
 #include <boost/container/detail/iterator.hpp>
@@ -128,6 +129,25 @@ struct equal_transparent
    {
       return t == u;
    }
+};
+
+struct move_op
+{
+   template<class T>
+   typename boost::move_detail::add_rvalue_reference<T>::type operator()(T &t)
+   {
+      return boost::move(t);
+   }
+};
+
+struct const_ref_op
+{
+   template<class T>
+   const T & operator()(const T &t)
+   {
+      return t;
+   }
+
 };
 
 }  //namespace test{
