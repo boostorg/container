@@ -337,7 +337,7 @@ class stable_vector_iterator
       :  m_pn(other.node_pointer())
    {}
 
-   stable_vector_iterator(const nonconst_iterator& other) BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE stable_vector_iterator(const nonconst_iterator& other) BOOST_NOEXCEPT_OR_NOTHROW
       :  m_pn(other.node_pointer())
    {}
 
