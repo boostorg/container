@@ -205,7 +205,7 @@ BOOST_CONTAINER_FORCEINLINE void flat_tree_merge_unique  //has_merge_unique == f
 
    size_type const old_sz = dest.size();
    iterator const first_new = dest.insert(dest.cend(), first, last );
-   iterator e = boost::movelib::inplace_set_difference(first_new, dest.end(), dest.begin(), first_new, comp);
+   iterator e = boost::movelib::inplace_set_unique_difference(first_new, dest.end(), dest.begin(), first_new, comp);
    dest.erase(e, dest.end());
    dtl::bool_<is_contiguous_container<SequenceContainer>::value> contiguous_tag;
    (flat_tree_container_inplace_merge)(dest, dest.begin()+old_sz, comp, contiguous_tag);
@@ -883,10 +883,14 @@ class flat_tree
       //Step 3: only left unique values from the back not already present in the original range
       typename container_type::iterator const e = boost::movelib::inplace_set_unique_difference
          (it, seq.end(), seq.begin(), it, val_cmp);
-      seq.erase(e, seq.cend());
 
-      //Step 4: merge both ranges
-      (flat_tree_container_inplace_merge)(seq, it, this->priv_value_comp(), contiguous_tag);
+      seq.erase(e, seq.cend());
+      //it might be invalidated by erasing [e, seq.end) if e == it
+      if (it != e)
+      {
+         //Step 4: merge both ranges
+         (flat_tree_container_inplace_merge)(seq, it, this->priv_value_comp(), contiguous_tag);
+      }
    }
 
    template <class InIt>
