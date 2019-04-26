@@ -74,7 +74,7 @@ namespace container {
 //! `boost::container::vector< T, small_vector_allocator<T, Allocator> >`
 //! and internal storage can be obtained downcasting that vector
 //! to `small_vector_base<T>`.
-template<class T, class VoidAllocator>
+template<class T, class VoidAllocator BOOST_CONTAINER_DOCONLY(= void)>
 class small_vector_allocator
    : public allocator_traits<typename real_allocator<T, VoidAllocator>::type>::template portable_rebind_alloc<T>::type
 {
@@ -86,10 +86,10 @@ class small_vector_allocator
 
    BOOST_COPYABLE_AND_MOVABLE(small_vector_allocator)
 
-   BOOST_CONTAINER_FORCEINLINE const allocator_type &as_base() const
+   BOOST_CONTAINER_FORCEINLINE const allocator_type &as_base() const BOOST_NOEXCEPT
    {  return static_cast<const allocator_type&>(*this);  }
 
-   BOOST_CONTAINER_FORCEINLINE allocator_type &as_base() 
+   BOOST_CONTAINER_FORCEINLINE allocator_type &as_base() BOOST_NOEXCEPT
    {  return static_cast<allocator_type&>(*this);  }
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -127,22 +127,8 @@ class small_vector_allocator
       typedef typename allocator_traits<allocator_type>::template portable_rebind_alloc<T2>::type other;
    };
 
-   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      //!Constructor from arbitrary arguments
-      template<class ...Args>
-      BOOST_CONTAINER_FORCEINLINE explicit small_vector_allocator(BOOST_FWD_REF(Args) ...args)
-         : allocator_type(::boost::forward<Args>(args)...)
-      {}
-   #else
-      #define BOOST_CONTAINER_SMALL_VECTOR_ALLOCATOR_CTOR_CODE(N) \
-      BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
-      BOOST_CONTAINER_FORCEINLINE explicit small_vector_allocator(BOOST_MOVE_UREF##N)\
-         : allocator_type(BOOST_MOVE_FWD##N)\
-      {}\
-      //
-      BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_SMALL_VECTOR_ALLOCATOR_CTOR_CODE)
-      #undef BOOST_CONTAINER_SMALL_VECTOR_ALLOCATOR_CTOR_CODE
-   #endif
+   BOOST_CONTAINER_FORCEINLINE small_vector_allocator() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<allocator_type>::value)
+   {}
 
    //!Constructor from other small_vector_allocator.
    //!Never throws
@@ -174,13 +160,20 @@ class small_vector_allocator
       : allocator_type(::boost::move(other.as_base()))
    {}
 
+   //!Constructor from allocator_type.
+   //!Never throws
+   BOOST_CONTAINER_FORCEINLINE explicit small_vector_allocator
+      (const allocator_type &other) BOOST_NOEXCEPT_OR_NOTHROW
+      : allocator_type(other)
+   {}
+
    //!Assignment from other small_vector_allocator.
    //!Never throws
    BOOST_CONTAINER_FORCEINLINE small_vector_allocator &
       operator=(BOOST_COPY_ASSIGN_REF(small_vector_allocator) other) BOOST_NOEXCEPT_OR_NOTHROW
    {  return static_cast<small_vector_allocator&>(this->allocator_type::operator=(other.as_base()));  }
 
-   //!Move constructor from other small_vector_allocator.
+   //!Move assignment from other small_vector_allocator.
    //!Never throws
    BOOST_CONTAINER_FORCEINLINE small_vector_allocator &
       operator=(BOOST_RV_REF(small_vector_allocator) other) BOOST_NOEXCEPT_OR_NOTHROW
@@ -199,6 +192,12 @@ class small_vector_allocator
    BOOST_CONTAINER_FORCEINLINE small_vector_allocator &
       operator=(BOOST_RV_REF(small_vector_allocator<U BOOST_MOVE_I OtherVoidAllocator>) other) BOOST_NOEXCEPT_OR_NOTHROW
    {  return static_cast<small_vector_allocator&>(this->allocator_type::operator=(::boost::move(other.as_base())));  }
+
+   //!Move assignment from allocator_type.
+   //!Never throws
+   BOOST_CONTAINER_FORCEINLINE small_vector_allocator &
+      operator=(const allocator_type &other) BOOST_NOEXCEPT_OR_NOTHROW
+   {  return static_cast<small_vector_allocator&>(this->allocator_type::operator=(other));  }
 
    //!Allocates storage from the standard-conforming allocator
    BOOST_CONTAINER_FORCEINLINE pointer allocate(size_type count, const_void_pointer hint = const_void_pointer())
@@ -537,7 +536,7 @@ class small_vector : public small_vector_base<T, Allocator>
 
    public:
    BOOST_CONTAINER_FORCEINLINE small_vector()
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<Allocator>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<allocator_type>::value)
       : base_type(initial_capacity_t(), internal_capacity())
    {}
 
