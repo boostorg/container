@@ -24,6 +24,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/container_fwd.hpp>
 #include <boost/intrusive/pack_options.hpp>
+#include <boost/static_assert.hpp>
 
 namespace boost {
 namespace container {
@@ -111,6 +112,22 @@ using tree_assoc_options_t = typename boost::container::tree_assoc_options<Optio
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
+template<class T, class Default>
+struct default_if_void
+{
+   typedef T type;
+};
+
+template<class Default>
+struct default_if_void<void, Default>
+{
+   typedef Default type;
+};
+
+#endif
+
+#if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
 template<class AllocTraits, class StoredSizeType>
 struct get_stored_size_type_with_alloctraits
 {
@@ -177,7 +194,7 @@ BOOST_INTRUSIVE_OPTION_TYPE(growth_factor, GrowthFactor, GrowthFactor, growth_fa
 //!This option specifies the unsigned integer type that a user wants the container
 //!to use to hold size-related information inside a container (e.g. current size, current capacity).
 //!
-//!\tparam StoredSizeType A unsigned integer type. It shall be smaller than than the size
+//!\tparam StoredSizeType An unsigned integer type. It shall be smaller than than the size
 //! of the size_type deduced from `allocator_traits<A>::size_type` or the same type.
 //!
 //!If the maximum capacity() to be used is limited, a user can try to use 8-bit, 16-bit 
@@ -185,7 +202,7 @@ BOOST_INTRUSIVE_OPTION_TYPE(growth_factor, GrowthFactor, GrowthFactor, growth_fa
 //!memory can be saved for empty vectors. This could potentially performance benefits due to better
 //!cache usage.
 //!
-//!Note that alignment requirements can disallow theoritical space savings. Example:
+//!Note that alignment requirements can disallow theoretical space savings. Example:
 //!\c vector holds a pointer and two size types (for size and capacity), in a 32 bit machine
 //!a 8 bit size type (total size: 4 byte pointer + 2 x 1 byte sizes = 6 bytes) 
 //!will not save space when comparing two 16-bit size types because usually
@@ -236,6 +253,75 @@ using vector_options_t = typename boost::container::vector_options<Options...>::
 
 #endif
 
+////////////////////////////////////////////////////////////////
+//
+//
+//          OPTIONS FOR DEQUE-BASED CONTAINERS
+//
+//
+////////////////////////////////////////////////////////////////
+
+#if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+template<std::size_t BlockBytes, std::size_t BlockSize>
+struct deque_opt
+{
+   static const std::size_t block_bytes = BlockBytes;
+   static const std::size_t block_size  = BlockSize;
+   BOOST_STATIC_ASSERT_MSG(!(block_bytes && block_size), "block_bytes and block_size can't be specified at the same time");
+};
+
+typedef deque_opt<0u, 0u> deque_null_opt;
+
+#endif
+
+//! Helper metafunction to combine options into a single type to be used
+//! by \c boost::container::deque.
+//! Supported options are: \c boost::container::block_bytes
+#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
+template<class ...Options>
+#else
+template<class O1 = void, class O2 = void, class O3 = void, class O4 = void>
+#endif
+struct deque_options
+{
+   /// @cond
+   typedef typename ::boost::intrusive::pack_options
+      < deque_null_opt,
+      #if !defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
+      O1, O2, O3, O4
+      #else
+      Options...
+      #endif
+      >::type packed_options;
+   typedef deque_opt< packed_options::block_bytes, packed_options::block_size > implementation_defined;
+   /// @endcond
+   typedef implementation_defined type;
+};
+
+#if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+
+//! Helper alias metafunction to combine options into a single type to be used
+//! by \c boost::container::deque.
+//! Supported options are: \c boost::container::block_bytes
+template<class ...Options>
+using deque_options_t = typename boost::container::deque_options<Options...>::type;
+
+#endif
+
+//!This option specifies the maximum size of a block in bytes: this delimites the number of contiguous elements
+//!that will be allocated by deque as min(1u, BlockBytes/sizeof(value_type))
+//!A value zero represents the default value.
+//!
+//!\tparam BlockBytes An unsigned integer value.
+BOOST_INTRUSIVE_OPTION_CONSTANT(block_bytes, std::size_t, BlockBytes, block_bytes)
+
+//!This option specifies the size of a block, delimites the number of contiguous elements
+//!that will be allocated by deque as BlockSize.
+//!A value zero represents the default value.
+//!
+//!\tparam BlockBytes An unsigned integer value.
+BOOST_INTRUSIVE_OPTION_CONSTANT(block_size, std::size_t, BlockSize, block_size)
 
 }  //namespace container {
 }  //namespace boost {

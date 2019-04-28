@@ -117,7 +117,8 @@ template < class T, std::size_t N
 class small_vector;
 
 template <class T
-         ,class Allocator = void >
+         ,class Allocator = void
+         ,class Options   = void>
 class deque;
 
 template <class T

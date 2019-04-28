@@ -33,7 +33,7 @@ In short, what does [*Boost.Container] offer?
 
 * Emplacement and move semantics are implemented, including emulation for pre-C++11 compilers.
 * Polymorphic allocators and memory resources, including implementation and emulation for pre-C++17 compilers
-* New advanced features (e.g. recursive containers, configuration options for containers) are present.
+* New advanced features (e.g. recursive containers) and configurability options [link container.configurable_containers] for containers.
 * Containers support stateful allocators and are compatible with [*Boost.Interprocess]
   (they can be safely placed in shared memory).
 * Users obtain a more uniform performance across all plataforms,
@@ -676,8 +676,8 @@ the last template parameter and defined using the utility class
    The rate at which the capacity of a vector grows is implementation dependent and
    implementations choose exponential growth in order to meet the amortized constant time requirement for push_back.
    A higher growth factor will make it faster as it will require less data movement, but it will have a greater memory
-   impact (on average, more memory will be unused). A user can provide it's own implementation and some predefined
-   policies are available: [classref boost::container::growth_factor_50 growth_factor_50],
+   impact (on average, more memory will be unused). A user can provide a custom implementation of the growth factor and some
+   predefined policies are available: [classref boost::container::growth_factor_50 growth_factor_50],
    [classref boost::container::growth_factor_60 growth_factor_60] and
    [classref boost::container::growth_factor_50 growth_factor_100].
 
@@ -692,6 +692,31 @@ used to customize `vector` container:
 
 [import ../example/doc_custom_vector.cpp]
 [doc_custom_vector]
+
+[endsect]
+
+[section:configurable_deques Configurable deques]
+
+[*Boost.Container] offers the possibility to configure at compile time some parameters of
+[classref boost::container::deque deque] implementation. This configuration is passed as
+the last template parameter and defined using the utility class
+[classref boost::container::deque_options deque_options].The following parameters can be configured:
+
+Parameters that control the size of deque's 'block' (deque allocates contiguous chunks of elements, called 'blocks').
+Only one of these paratemers can be specified:
+
+*  [classref boost::container::block_bytes block_bytes]: the number of bytes deque will allocate for store
+   elements contiguously: `deque::get_block_size()` will return aproximately `block_bytes/sizeof(value_type)`.
+   A value of zero means the default value.
+*  [classref boost::container::block_size  block_size]: the number of elements deque will allocate contiguously.
+   If this option is specified, `deque::get_block_size()` will return the specified `block_size`.
+   A value of zero means the default value.
+
+See the following example to see how [classref boost::container::deque_options deque_options] can be
+used to customize `deque` container:
+
+[import ../example/doc_custom_deque.cpp]
+[doc_custom_deque]
 
 [endsect]
 
@@ -1250,6 +1275,9 @@ use [*Boost.Container]? There are several reasons for that:
    * [@https://github.com/boostorg/container/issues/116 GitHub #116: ['"MSVC + boost 1.70 compilation error when windows.h is already included (detail/thread_mutex.hpp)"]].
    * [@https://github.com/boostorg/container/issues/117 GitHub #117: ['"flat_map/map::insert_or_assign with hint has wrong return types"]].
    * [@https://github.com/boostorg/container/issues/118 GitHub #118: ['"Non-unique inplace_set_difference used in in flat_tree_merge_unique and iterator invalidation in insert_unique"]].
+
+* ['deque] can now have options, using [classref boost::container::deque_options deque_options].
+  The block size/bytes can be be specified.
 
 [endsect]
 

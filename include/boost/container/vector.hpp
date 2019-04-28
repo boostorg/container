@@ -702,18 +702,6 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
 
 struct growth_factor_60;
 
-template<class T, class Default>
-struct default_if_void
-{
-   typedef T type;
-};
-
-template<class Default>
-struct default_if_void<void, Default>
-{
-   typedef Default type;
-};
-
 template<class Options, class AllocatorSizeType>
 struct get_vector_opt
 {
@@ -727,7 +715,6 @@ struct get_vector_opt<void, AllocatorSizeType>
 {
    typedef vector_opt<growth_factor_60, AllocatorSizeType> type;
 };
-
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
