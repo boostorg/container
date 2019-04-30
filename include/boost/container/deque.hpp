@@ -811,7 +811,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Complexity</b>: Linear to the number of elements in x.
    deque& operator= (BOOST_COPY_ASSIGN_REF(deque) x)
    {
-      if (&x != this){
+      if (BOOST_LIKELY(&x != this)){
          allocator_type &this_alloc     = this->alloc();
          const allocator_type &x_alloc  = x.alloc();
          dtl::bool_<allocator_traits_type::
@@ -839,28 +839,29 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
       BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
                                   || allocator_traits_type::is_always_equal::value)
    {
-      BOOST_ASSERT(this != &x);
-      allocator_type &this_alloc = this->alloc();
-      allocator_type &x_alloc    = x.alloc();
-      const bool propagate_alloc = allocator_traits_type::
-            propagate_on_container_move_assignment::value;
-      dtl::bool_<propagate_alloc> flag;
-      const bool allocators_equal = this_alloc == x_alloc; (void)allocators_equal;
-      //Resources can be transferred if both allocators are
-      //going to be equal after this function (either propagated or already equal)
-      if(propagate_alloc || allocators_equal){
-         //Destroy objects but retain memory in case x reuses it in the future
-         this->clear();
-         //Move allocator if needed
-         dtl::move_alloc(this_alloc, x_alloc, flag);
-         dtl::move_alloc(this->ptr_alloc(), x.ptr_alloc(), flag);
-         //Nothrow swap
-         this->swap_members(x);
-      }
-      //Else do a one by one move
-      else{
-         this->assign( boost::make_move_iterator(x.begin())
-                     , boost::make_move_iterator(x.end()));
+      if (BOOST_LIKELY(this != &x)) {
+         allocator_type &this_alloc = this->alloc();
+         allocator_type &x_alloc    = x.alloc();
+         const bool propagate_alloc = allocator_traits_type::
+               propagate_on_container_move_assignment::value;
+         dtl::bool_<propagate_alloc> flag;
+         const bool allocators_equal = this_alloc == x_alloc; (void)allocators_equal;
+         //Resources can be transferred if both allocators are
+         //going to be equal after this function (either propagated or already equal)
+         if(propagate_alloc || allocators_equal){
+            //Destroy objects but retain memory in case x reuses it in the future
+            this->clear();
+            //Move allocator if needed
+            dtl::move_alloc(this_alloc, x_alloc, flag);
+            dtl::move_alloc(this->ptr_alloc(), x.ptr_alloc(), flag);
+            //Nothrow swap
+            this->swap_members(x);
+         }
+         //Else do a one by one move
+         else{
+            this->assign( boost::make_move_iterator(x.begin())
+                        , boost::make_move_iterator(x.end()));
+         }
       }
       return *this;
    }
