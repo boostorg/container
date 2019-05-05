@@ -11,8 +11,12 @@
 #include <boost/core/lightweight_test.hpp>
 #include "propagation_test_allocator.hpp"
 #include "derived_from_memory_resource.hpp"
+#include <boost/container/new_allocator.hpp>
+#include <memory>
 
 using namespace boost::container::pmr;
+
+static const std::size_t max_alignment_value = boost::move_detail::alignment_of<boost::move_detail::max_align_t>::value;
 
 void test_default_constructor()
 {
@@ -138,23 +142,64 @@ struct derived_from_resource_adaptor_stateful
    using base_t::do_is_equal;
 };
 
-void test_do_allocate()
+void test_do_allocate_deallocate()
 {
-   derived_from_resource_adaptor_stateful dra;
-   char dummy = 0;
-   dra.get_allocator().allocate_return = &dummy;
-   void *allocate_ret = dra.do_allocate(998, 1234);
-   BOOST_TEST(allocate_ret == &dummy);
-   BOOST_TEST(dra.get_allocator().allocate_size == 998);
-}
+   {
+      derived_from_resource_adaptor_stateful dra;
+      char dummy = 0;
+      dra.get_allocator().allocate_return = &dummy;
+      void *allocate_ret = dra.do_allocate(998, 1);
+      BOOST_TEST(allocate_ret == &dummy);
+      BOOST_TEST(dra.get_allocator().allocate_size == 998);
+   }
+   {
+      derived_from_resource_adaptor_stateful dra;
+      char dummy = 0;
+      dra.do_deallocate(&dummy, 1234, 1);
+      BOOST_TEST(dra.get_allocator().deallocate_p == &dummy);
+      BOOST_TEST(dra.get_allocator().deallocate_size == 1234);
+   }
+   {
+      //Overaligned allocation
+      derived_from_resource_adaptor_stateful dra;
+      const std::size_t alignment = max_alignment_value*2u;
+      const std::size_t bytes = alignment/2;
+      char dummy[alignment*2u+sizeof(void*)];
+      dra.get_allocator().allocate_return = dummy;
 
-void test_do_deallocate()
-{
-   derived_from_resource_adaptor_stateful dra;
-   char dummy = 0;
-   dra.do_deallocate(&dummy, 1234, 753);
-   BOOST_TEST(dra.get_allocator().deallocate_p == &dummy);
-   BOOST_TEST(dra.get_allocator().deallocate_size == 1234);
+      //First allocate
+      void *allocate_ret = dra.do_allocate(bytes, alignment);
+      BOOST_TEST( (char*)allocate_ret >= (dummy+sizeof(void*)) && (char*)allocate_ret < (dummy + sizeof(dummy)) );
+      BOOST_TEST( (std::size_t(allocate_ret) & (alignment - 1u)) == 0 );
+      BOOST_TEST( dra.get_allocator().allocate_size >= (alignment/2+sizeof(void*)) );
+
+      //Then allocate
+      dra.do_deallocate(allocate_ret, bytes, alignment);
+      BOOST_TEST(dra.get_allocator().deallocate_p == dummy);
+      BOOST_TEST(dra.get_allocator().deallocate_size == dra.get_allocator().allocate_size);
+   }
+   {
+      typedef resource_adaptor< boost::container::new_allocator<int> > new_resource_alloc_t;
+      new_resource_alloc_t ra;
+      boost::container::pmr::memory_resource &mr = ra;
+
+      //new_allocator, low alignment
+      mr.deallocate(mr.allocate(16, 1), 16, 1);
+
+      //new_allocator, high alignment
+      mr.deallocate(mr.allocate(16, max_alignment_value*4u), 16, max_alignment_value*4u);
+   }
+   {
+      typedef resource_adaptor<std ::allocator<int> > new_resource_alloc_t;
+      new_resource_alloc_t ra;
+      boost::container::pmr::memory_resource &mr = ra;
+
+      //std::allocator, low alignment
+      mr.deallocate(mr.allocate(16, 1), 16, 1);
+
+      //std::allocator, high alignment
+      mr.deallocate(mr.allocate(16, max_alignment_value*4u), 16, max_alignment_value*4u);
+   }
 }
 
 void test_do_is_equal()
@@ -183,8 +228,7 @@ int main()
    test_copy_assign();
    test_move_assign();
    test_get_allocator();
-   test_do_allocate();
-   test_do_deallocate();
+   test_do_allocate_deallocate();
    test_do_is_equal();
    return ::boost::report_errors();
 }
