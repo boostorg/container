@@ -35,7 +35,7 @@ namespace boost { namespace container {
 
 namespace dtl {
 
-template<class T, std::size_t N, std::size_t Alignment, bool ThrowOnOverflow>
+template<class T, std::size_t N, std::size_t InplaceAlignment, bool ThrowOnOverflow>
 class static_storage_allocator
 {
    typedef bool_<ThrowOnOverflow> throw_on_overflow_t;
@@ -87,8 +87,8 @@ class static_storage_allocator
    {  return true;  }
 
    private:
-   BOOST_STATIC_ASSERT_MSG(!Alignment || (Alignment & (Alignment-1)) == 0, "Alignment option must be zero or power of two");
-   static const std::size_t final_alignment = Alignment ? Alignment : dtl::alignment_of<T>::value;
+   BOOST_STATIC_ASSERT_MSG(!InplaceAlignment || (InplaceAlignment & (InplaceAlignment-1)) == 0, "Alignment option must be zero or power of two");
+   static const std::size_t final_alignment = InplaceAlignment ? InplaceAlignment : dtl::alignment_of<T>::value;
    typename dtl::aligned_storage<sizeof(T)*N, final_alignment>::type storage;
 };
 
@@ -111,7 +111,7 @@ struct get_static_vector_allocator
    typedef dtl::static_storage_allocator
       < T
       , Capacity
-      , options_t::alignment
+      , options_t::inplace_alignment
       , options_t::throw_on_overflow
       > type;
 };
@@ -145,6 +145,7 @@ struct get_static_vector_allocator
 //!
 //!@tparam T    The type of element that will be stored.
 //!@tparam Capacity The maximum number of elements static_vector can store, fixed at compile time.
+//!@tparam Options A type produced from \c boost::container::static_vector_options.
 template <typename T, std::size_t Capacity, class Options BOOST_CONTAINER_DOCONLY(= void) >
 class static_vector
     : public vector<T, typename dtl::get_static_vector_allocator< T, Capacity, Options>::type>
