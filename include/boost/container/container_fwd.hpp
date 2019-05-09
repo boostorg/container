@@ -106,7 +106,7 @@ template <class T
          ,class Allocator = void >
 class stable_vector;
 
-template <class T, std::size_t Capacity>
+template <class T, std::size_t Capacity, class Options = void>
 class static_vector;
 
 template <class T, class Allocator = void >

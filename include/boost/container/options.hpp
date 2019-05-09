@@ -256,6 +256,137 @@ using vector_options_t = typename boost::container::vector_options<Options...>::
 ////////////////////////////////////////////////////////////////
 //
 //
+//          OPTIONS FOR SMALL-VECTOR CONTAINER
+//
+//
+////////////////////////////////////////////////////////////////
+
+//! This option specifies the desired alignment for the value_type stored
+//! in the container.
+//! A value zero represents the natural alignment.
+//!
+//!\tparam Alignment An unsigned integer value. Must be power of two.
+BOOST_INTRUSIVE_OPTION_CONSTANT(alignment, std::size_t, Alignment, alignment)
+
+#if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+template<class GrowthType, std::size_t Alignment>
+struct small_vector_opt
+{
+   typedef GrowthType      growth_factor_type;
+   static const std::size_t alignment = Alignment;
+};
+
+typedef small_vector_opt<void, 0u> small_vector_null_opt;
+
+#endif    //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+//! Helper metafunction to combine options into a single type to be used
+//! by \c boost::container::small_vector.
+//! Supported options are: \c boost::container::growth_factor and \c boost::container::alignment
+#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
+template<class ...Options>
+#else
+template<class O1 = void, class O2 = void, class O3 = void, class O4 = void>
+#endif
+struct small_vector_options
+{
+   /// @cond
+   typedef typename ::boost::intrusive::pack_options
+      < small_vector_null_opt,
+      #if !defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
+      O1, O2, O3, O4
+      #else
+      Options...
+      #endif
+      >::type packed_options;
+   typedef small_vector_opt< typename packed_options::growth_factor_type
+                           , packed_options::alignment> implementation_defined;
+   /// @endcond
+   typedef implementation_defined type;
+};
+
+#if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+
+//! Helper alias metafunction to combine options into a single type to be used
+//! by \c boost::container::small_vector.
+//! Supported options are: \c boost::container::growth_factor and \c boost::container::stored_size
+template<class ...Options>
+using small_vector_options_t = typename boost::container::small_vector_options<Options...>::type;
+
+#endif
+
+
+////////////////////////////////////////////////////////////////
+//
+//
+//          OPTIONS FOR STATIC-VECTOR CONTAINER
+//
+//
+////////////////////////////////////////////////////////////////
+
+//!This option specifies if the container will throw if in
+//!the static capacity is not sufficient to hold the required
+//!values. If false is specified, insufficient capacity will
+//!lead to BOOST_ASSERT, and if this assertion returns, to undefined behaviour,
+//!which potentially can lead to better static_vector performance.
+//!The default value is true.
+//!
+//!\tparam ThrowOnExhaustion A boolean value. True if throw is required.
+BOOST_INTRUSIVE_OPTION_CONSTANT(throw_on_overflow, bool, ThrowOnOverflow, throw_on_overflow)
+
+#if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+template<bool ThrowOnOverflow, std::size_t Alignment>
+struct static_vector_opt
+{
+   static const bool throw_on_overflow = ThrowOnOverflow;
+   static const std::size_t alignment = Alignment;
+};
+
+typedef static_vector_opt<true, 0u> static_vector_null_opt;
+
+#endif    //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+//! Helper metafunction to combine options into a single type to be used
+//! by \c boost::container::static_vector.
+//! Supported options are: \c boost::container::throw_on_overflow and \c boost::container::alignment
+#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
+template<class ...Options>
+#else
+template<class O1 = void, class O2 = void, class O3 = void, class O4 = void>
+#endif
+struct static_vector_options
+{
+   /// @cond
+   typedef typename ::boost::intrusive::pack_options
+      < static_vector_null_opt,
+      #if !defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
+      O1, O2, O3, O4
+      #else
+      Options...
+      #endif
+      >::type packed_options;
+   typedef static_vector_opt< packed_options::throw_on_overflow
+                            , packed_options::alignment> implementation_defined;
+   /// @endcond
+   typedef implementation_defined type;
+};
+
+#if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+
+//! Helper alias metafunction to combine options into a single type to be used
+//! by \c boost::container::static_vector.
+//! Supported options are: \c boost::container::growth_factor and \c boost::container::stored_size
+template<class ...Options>
+using static_vector_options_t = typename boost::container::static_vector_options<Options...>::type;
+
+#endif
+
+
+////////////////////////////////////////////////////////////////
+//
+//
 //          OPTIONS FOR DEQUE-BASED CONTAINERS
 //
 //

@@ -195,17 +195,17 @@ struct insert_move_proxy
    typedef typename alloc_traits::size_type size_type;
    typedef typename alloc_traits::value_type value_type;
 
-   explicit insert_move_proxy(value_type &v)
+   BOOST_CONTAINER_FORCEINLINE explicit insert_move_proxy(value_type &v)
       :  v_(v)
    {}
 
-   void uninitialized_copy_n_and_update(Allocator &a, Iterator p, size_type n) const
+   BOOST_CONTAINER_FORCEINLINE void uninitialized_copy_n_and_update(Allocator &a, Iterator p, size_type n) const
    {
       BOOST_ASSERT(n == 1);  (void)n;
       alloc_traits::construct( a, boost::movelib::iterator_to_raw_pointer(p), ::boost::move(v_) );
    }
 
-   void copy_n_and_update(Allocator &, Iterator p, size_type n) const
+   BOOST_CONTAINER_FORCEINLINE void copy_n_and_update(Allocator &, Iterator p, size_type n) const
    {
       BOOST_ASSERT(n == 1);  (void)n;
       *p = ::boost::move(v_);
