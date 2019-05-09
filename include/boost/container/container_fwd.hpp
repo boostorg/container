@@ -106,14 +106,20 @@ template <class T
          ,class Allocator = void >
 class stable_vector;
 
-template <class T, std::size_t Capacity, class Options = void>
+template < class T
+         , std::size_t Capacity
+         , class Options = void>
 class static_vector;
 
-template <class T, class Allocator = void >
+template < class T
+         , class Allocator = void
+         , class Options   = void >
 class small_vector_base;
 
-template < class T, std::size_t N
-         , class Allocator = void >
+template < class T
+         , std::size_t N
+         , class Allocator = void
+         , class Options   = void  >
 class small_vector;
 
 template <class T

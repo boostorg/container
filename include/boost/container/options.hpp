@@ -102,6 +102,65 @@ using tree_assoc_options_t = typename boost::container::tree_assoc_options<Optio
 
 #endif
 
+
+////////////////////////////////////////////////////////////////
+//
+//
+//       OPTIONS FOR ASSOCIATIVE HASH-BASED CONTAINERS
+//
+//
+////////////////////////////////////////////////////////////////
+
+#if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+template<bool StoreHash>
+struct hash_opt
+{
+   static const bool store_hash = StoreHash;
+};
+
+typedef hash_opt<false> hash_assoc_defaults;
+
+#endif   //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+//!This option setter specifies if node size is optimized
+//!storing rebalancing data masked into pointers for ordered associative containers
+BOOST_INTRUSIVE_OPTION_CONSTANT(store_hash, bool, Enabled, store_hash)
+
+//! Helper metafunction to combine options into a single type to be used
+//! by \c boost::container::hash_set, \c boost::container::hash_multiset
+//! \c boost::container::hash_map and \c boost::container::hash_multimap.
+//! Supported options are: \c boost::container::store_hash
+#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
+template<class ...Options>
+#else
+template<class O1 = void, class O2 = void, class O3 = void, class O4 = void>
+#endif
+struct hash_assoc_options
+{
+   /// @cond
+   typedef typename ::boost::intrusive::pack_options
+      < hash_assoc_defaults,
+      #if !defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
+      O1, O2, O3, O4
+      #else
+      Options...
+      #endif
+      >::type packed_options;
+   typedef hash_opt<packed_options::store_hash> implementation_defined;
+   /// @endcond
+   typedef implementation_defined type;
+};
+
+#if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+
+//! Helper alias metafunction to combine options into a single type to be used
+//! by hash-based associative containers
+template<class ...Options>
+using hash_assoc_options_t = typename boost::container::hash_assoc_options<Options...>::type;
+
+#endif
+
 ////////////////////////////////////////////////////////////////
 //
 //
@@ -266,15 +325,15 @@ using vector_options_t = typename boost::container::vector_options<Options...>::
 //! A value zero represents the natural alignment.
 //!
 //!\tparam Alignment An unsigned integer value. Must be power of two.
-BOOST_INTRUSIVE_OPTION_CONSTANT(alignment, std::size_t, Alignment, alignment)
+BOOST_INTRUSIVE_OPTION_CONSTANT(inplace_alignment, std::size_t, Alignment, inplace_alignment)
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-template<class GrowthType, std::size_t Alignment>
+template<class GrowthType, std::size_t InplaceAlignment>
 struct small_vector_opt
 {
    typedef GrowthType      growth_factor_type;
-   static const std::size_t alignment = Alignment;
+   static const std::size_t inplace_alignment = InplaceAlignment;
 };
 
 typedef small_vector_opt<void, 0u> small_vector_null_opt;
@@ -283,7 +342,7 @@ typedef small_vector_opt<void, 0u> small_vector_null_opt;
 
 //! Helper metafunction to combine options into a single type to be used
 //! by \c boost::container::small_vector.
-//! Supported options are: \c boost::container::growth_factor and \c boost::container::alignment
+//! Supported options are: \c boost::container::growth_factor and \c boost::container::inplace_alignment
 #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
 template<class ...Options>
 #else
@@ -301,7 +360,7 @@ struct small_vector_options
       #endif
       >::type packed_options;
    typedef small_vector_opt< typename packed_options::growth_factor_type
-                           , packed_options::alignment> implementation_defined;
+                           , packed_options::inplace_alignment> implementation_defined;
    /// @endcond
    typedef implementation_defined type;
 };
@@ -337,11 +396,11 @@ BOOST_INTRUSIVE_OPTION_CONSTANT(throw_on_overflow, bool, ThrowOnOverflow, throw_
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-template<bool ThrowOnOverflow, std::size_t Alignment>
+template<bool ThrowOnOverflow, std::size_t InplaceAlignment>
 struct static_vector_opt
 {
    static const bool throw_on_overflow = ThrowOnOverflow;
-   static const std::size_t alignment = Alignment;
+   static const std::size_t inplace_alignment = InplaceAlignment;
 };
 
 typedef static_vector_opt<true, 0u> static_vector_null_opt;
@@ -350,7 +409,7 @@ typedef static_vector_opt<true, 0u> static_vector_null_opt;
 
 //! Helper metafunction to combine options into a single type to be used
 //! by \c boost::container::static_vector.
-//! Supported options are: \c boost::container::throw_on_overflow and \c boost::container::alignment
+//! Supported options are: \c boost::container::throw_on_overflow and \c boost::container::inplace_alignment
 #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
 template<class ...Options>
 #else
@@ -368,7 +427,7 @@ struct static_vector_options
       #endif
       >::type packed_options;
    typedef static_vector_opt< packed_options::throw_on_overflow
-                            , packed_options::alignment> implementation_defined;
+                            , packed_options::inplace_alignment> implementation_defined;
    /// @endcond
    typedef implementation_defined type;
 };
