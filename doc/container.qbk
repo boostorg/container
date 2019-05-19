@@ -45,16 +45,20 @@ In short, what does [*Boost.Container] offer?
     [classref boost::container::flat_multiset flat_multiset]: drop-in
     replacements for standard associative containers but more memory friendly and with faster
     searches.
-  * [classref boost::container::stable_vector stable_vector]: a std::list and std::vector hybrid
+  * [classref boost::container::stable_vector stable_vector]: a `std::list` and `std::vector` hybrid
     container: vector-like random-access iterators and list-like iterator stability in insertions and erasures.
-  * [classref boost::container::static_vector static_vector ]: a vector-like container that internally embeds
+  * [classref boost::container::static_vector static_vector]: a vector-like container that internally embeds
     (statically allocates) all needed memory up to the maximum capacity. Maximum capacity can't be increased and
     it's specified at compile time.
-  * [classref boost::container::small_vector small_vector ]: a vector-like container that internally embeds
+  * [classref boost::container::small_vector small_vector]: a vector-like container that internally embeds
     (statically allocates) a minimum amount of memory, but dynamically allocates elements when capacity
     has to be increased. This minimum capacity is specified at compile time.
   * [classref boost::container::slist slist]: the classic pre-standard singly linked list implementation
     offering constant-time `size()`. Note that C++11 `forward_list` has no `size()`.
+  * [classref boost::container::ring_queue ring_queue] and [classref boost::container::small_ring_queue small_ring_queue]:
+    `std::queue`-like FIFO queues that use a circular buffer to store elements. `small_ring_queue` allows to statically
+    allocate an internal buffer for a (cmall) number of elements, but dynamically allocates elements when capacity
+    has to be increased. This minimum capacity is specified at compile time. These components require C++17.
 
 [section:introduction_building_container Building Boost.Container]
 
@@ -79,6 +83,9 @@ instructions, that's already been done for you.
 *  GCC >= 4.1.
 
 [warning GCC < 4.3 and MSVC < 9.0 are deprecated and will be removed in the next version.]
+
+[classref boost::container::ring_queue ring_queue] and [classref boost::container::small_ring_queue small_ring_queue] require
+a C++17 compiler.
 
 [endsect]
 
@@ -172,11 +179,13 @@ Finally C++17 added support for incomplete types in `std::vector`, `std::list` a
 for details), but no other containers like `std::set/map/unordered_set/unordered_map`, 
 
 Fortunately all [*Boost.Container] containers except
-[classref boost::container::static_vector static_vector] and
-[classref boost::container::small_vector small_vector] and
+[classref boost::container::static_vector static_vector],
+[classref boost::container::small_vector small_vector],
+[classref boost::container::small_ring_queue small_ring_queue] and
 [classref boost::container::basic_string basic_string] are designed to support incomplete types.
-[classref boost::container::static_vector static_vector] and 
-[classref boost::container::small_vector small_vector] are special because
+[classref boost::container::static_vector static_vector],
+[classref boost::container::small_vector small_vector] and
+[classref boost::container::small_ring_queue small_ring_queue] are special because
 they statically allocates memory for `value_type` and this requires complete types.
 [classref boost::container::basic_string basic_string] implements Small String Optimization which
 also requires complete types.
@@ -544,6 +553,27 @@ Unlike `static_vector`, `small_vector`'s capacity can grow beyond the initial pr
 from the preallocated element count, allowing client code that does not need to be templated on that N argument.
 `small_vector` inherits all `vector`'s member functions so it supports all standard features like emplacement,
 stateful allocators, etc.
+
+[endsect]
+
+[section:ring_queue ['ring_queue] and ['small_ring_queue]]
+
+[note These components require a C++17 compiler.]
+
+`ring_queue` is similar to `std::queue` container adapter, except that it uses a circular buffer to store
+elements instead of a standard container (typically, `std::deque`). In cases when the typical number of
+enqueued elements does not exceed a certain threshold, this practically removes the need for dynamic
+memory allocations once the queue reaches its optimal capacity. Since the buffer is contiguous, this may
+also improve CPU cache locality.
+
+`small_ring_queue` is similar to `ring_queue`, but it also allows to statically allocate internal storage
+for a small number of elements to avoid dynamic memory allocations altogether. However, this optimization
+has a downside in that swapping or moving `small_ring_queue` objects may have linear complexity on the
+number of elements in the internal storage.
+
+`small_ring_queue< T, N, Allocator >` is convertible to `small_ring_queue_base< T, Allocator >`, which is
+not dependent on the size of the internal buffer and can be used by consumers of elements from different queues.
+`small_ring_queue_base` offers a limited interface compared to `small_ring_queue`, and can only be used by consumers.
 
 [endsect]
 
@@ -950,7 +980,7 @@ past the end of the same empty sequence (example taken from N3644):
 
 [endsect]
 
-[section:polymorphic_memory_resources Polymorphic Memory Resources ]
+[section:polymorphic_memory_resources Polymorphic Memory Resources]
 
 The document
 [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4480.html C++ Extensions for Library Fundamentals (final draft)]
