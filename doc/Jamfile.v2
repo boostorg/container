@@ -70,7 +70,7 @@ boostbook standalone
         <xsl:param>chunk.first.sections=1
         <format>pdf:<xsl:param>img.src.path=$(images_location)/
         <dependency>autodoc
-        <format>pdf:<xsl:param>boost.url.prefix=http://www.boost.org/doc/libs/release/doc/html
+        <format>pdf:<xsl:param>boost.url.prefix="http://www.boost.org/doc/libs/release/doc/html"
 
         # Build requirements go here:
 
