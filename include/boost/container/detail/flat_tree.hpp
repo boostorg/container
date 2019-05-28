@@ -1622,11 +1622,11 @@ template <class T, class KeyOfValue,
 class Compare, class AllocatorOrContainer>
 struct has_trivial_destructor_after_move<boost::container::dtl::flat_tree<T, KeyOfValue, Compare, AllocatorOrContainer> >
 {
-   typedef typename boost::container::dtl::select_container_type<T, AllocatorOrContainer>::type container_type;
-   typedef typename container_type::allocator_type allocator_t;
-   typedef typename ::boost::container::allocator_traits<allocator_t>::pointer pointer;
-   static const bool value = ::boost::has_trivial_destructor_after_move<allocator_t>::value &&
-                             ::boost::has_trivial_destructor_after_move<pointer>::value;
+   typedef boost::container::dtl::flat_tree<T, KeyOfValue, Compare, AllocatorOrContainer> flat_tree;
+   typedef typename flat_tree::container_type container_type;
+   typedef typename flat_tree::key_compare key_compare;
+   static const bool value = ::boost::has_trivial_destructor_after_move<container_type>::value &&
+                             ::boost::has_trivial_destructor_after_move<key_compare>::value;
 };
 
 }  //namespace boost {

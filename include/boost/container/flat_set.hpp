@@ -1192,10 +1192,8 @@ flat_set(ordered_unique_range_t, InputIterator, InputIterator, Compare const&, A
 template <class Key, class Compare, class AllocatorOrContainer>
 struct has_trivial_destructor_after_move<boost::container::flat_set<Key, Compare, AllocatorOrContainer> >
 {
-   typedef typename ::boost::container::allocator_traits<AllocatorOrContainer>::pointer pointer;
-   static const bool value = ::boost::has_trivial_destructor_after_move<AllocatorOrContainer>::value &&
-                             ::boost::has_trivial_destructor_after_move<pointer>::value &&
-                             ::boost::has_trivial_destructor_after_move<Compare>::value;
+   typedef ::boost::container::dtl::flat_tree<Key, ::boost::container::dtl::identity<Key>, Compare, AllocatorOrContainer> tree;
+   static const bool value = ::boost::has_trivial_destructor_after_move<tree>::value;
 };
 
 namespace container {
@@ -1926,10 +1924,8 @@ flat_multiset(ordered_range_t, InputIterator, InputIterator, Compare const&, All
 template <class Key, class Compare, class AllocatorOrContainer>
 struct has_trivial_destructor_after_move<boost::container::flat_multiset<Key, Compare, AllocatorOrContainer> >
 {
-   typedef typename ::boost::container::allocator_traits<AllocatorOrContainer>::pointer pointer;
-   static const bool value = ::boost::has_trivial_destructor_after_move<AllocatorOrContainer>::value &&
-                             ::boost::has_trivial_destructor_after_move<pointer>::value &&
-                             ::boost::has_trivial_destructor_after_move<Compare>::value;
+   typedef ::boost::container::dtl::flat_tree<Key, ::boost::container::dtl::identity<Key>, Compare, AllocatorOrContainer> tree;
+   static const bool value = ::boost::has_trivial_destructor_after_move<tree>::value;
 };
 
 namespace container {
