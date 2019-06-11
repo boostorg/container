@@ -212,5 +212,25 @@ int main()
       }
    }
 
+   ////////////////////////////////////
+   //    has_trivial_destructor_after_move testing
+   ////////////////////////////////////
+   // default allocator
+   {
+      typedef boost::container::small_vector<int, 0> cont;
+      if (boost::has_trivial_destructor_after_move<cont>::value) {
+         std::cerr << "has_trivial_destructor_after_move(default allocator) test failed" << std::endl;
+         return 1;
+      }
+   }
+   // std::allocator
+   {
+      typedef boost::container::small_vector<int, 0, std::allocator<int> > cont;
+      if (boost::has_trivial_destructor_after_move<cont>::value) {
+         std::cerr << "has_trivial_destructor_after_move(std::allocator) test failed" << std::endl;
+         return 1;
+      }
+   }
+
    return 0;
 }

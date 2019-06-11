@@ -9,6 +9,10 @@
 //////////////////////////////////////////////////////////////////////////////
 #include <boost/container/detail/tree.hpp>
 #include <boost/container/adaptive_pool.hpp>
+#include <boost/container/new_allocator.hpp>
+#include <boost/move/traits.hpp>
+
+#include <iostream>
 
 #include "movable_int.hpp"
 #include "dummy_test_allocator.hpp"
@@ -79,5 +83,37 @@ template class tree
 
 int main ()
 {
+   ////////////////////////////////////
+   //    has_trivial_destructor_after_move testing
+   ////////////////////////////////////
+   // default
+   {
+      typedef boost::container::dtl::tree<int, void, std::less<int>, void, void> tree;
+      typedef tree::allocator_type allocator_type;
+      typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
+      typedef tree::key_compare key_compare;
+      if (boost::has_trivial_destructor_after_move<tree>::value !=
+          boost::has_trivial_destructor_after_move<allocator_type>::value &&
+          boost::has_trivial_destructor_after_move<pointer>::value &&
+          boost::has_trivial_destructor_after_move<key_compare>::value) {
+         std::cerr << "has_trivial_destructor_after_move(default allocator) test failed" << std::endl;
+         return 1;
+      }
+   }
+   // std::allocator
+   {
+      typedef boost::container::dtl::tree<int, void, std::less<int>, std::allocator<int>, void> tree;
+      typedef tree::allocator_type allocator_type;
+      typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
+      typedef tree::key_compare key_compare;
+      if (boost::has_trivial_destructor_after_move<tree>::value !=
+          boost::has_trivial_destructor_after_move<allocator_type>::value &&
+          boost::has_trivial_destructor_after_move<pointer>::value &&
+          boost::has_trivial_destructor_after_move<key_compare>::value) {
+         std::cerr << "has_trivial_destructor_after_move(std::allocator) test failed" << std::endl;
+         return 1;
+      }
+   }
+
    return 0;
 }
