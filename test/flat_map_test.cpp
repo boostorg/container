@@ -581,7 +581,7 @@ struct with_lookup_by_first
 
 bool test_heterogeneous_lookup_by_partial_key()
 {
-   flat_map<std::pair<int, int>, with_lookup_by_first> const map1
+   flat_map<std::pair<int, int>,int, with_lookup_by_first> const map1
    {
       {{0, 1}, 3},
       {{0, 2}, 3},
