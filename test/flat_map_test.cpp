@@ -22,6 +22,7 @@
 #include "../../intrusive/test/iterator_test.hpp"
 
 #include <map>
+#include <utility>
 
 
 using namespace boost::container;
@@ -557,6 +558,37 @@ bool test_heterogeneous_lookups()
    return true;
 }
 
+// An ordered sequence of std:pair is also ordered by std::pair::first.
+struct with_lookup_by_first
+{
+   typedef void is_transparent;
+   inline bool operator()(std::pair<int, int> a, std::pair<int, int> b) const
+   {
+      return a < b;
+   }
+   inline bool operator()(std::pair<int, int> a, int first) const
+   {
+      return a.first < first;
+   }
+   inline bool operator()(int first, std::pair<int, int> b) const
+   {
+      return first < b.first;
+   }
+};
+
+bool test_heterogeneous_lookup_by_partial_key()
+{
+   flat_set<std::pair<int, int>, with_lookup_by_first> const set1
+   {
+      {{0, 1}, 3},
+      {{0, 2}, 3},
+   };
+
+   auto const first_0_range = uut.equal_range(0);
+
+   return 2 == first_0_range.second - first_0_range.first;
+}
+
 }}}   //namespace boost::container::test
 
 int main()
@@ -615,6 +647,9 @@ int main()
       return 1;
 
    if (!test_heterogeneous_lookups())
+      return 1;
+
+   if (!test_heterogeneous_lookup_by_partial_key())
       return 1;
 
    ////////////////////////////////////

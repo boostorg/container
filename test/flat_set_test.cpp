@@ -11,6 +11,7 @@
 #include <boost/container/detail/config_begin.hpp>
 
 #include <set>
+#include <utility>
 
 #include <boost/container/flat_set.hpp>
 #include <boost/container/detail/container_or_allocator_rebind.hpp>
@@ -574,6 +575,37 @@ bool test_heterogeneous_lookups()
    return true;
 }
 
+// An ordered sequence of std:pair is also ordered by std::pair::first.
+struct with_lookup_by_first
+{
+   typedef void is_transparent;
+   inline bool operator()(std::pair<int, int> a, std::pair<int, int> b) const
+   {
+      return a < b;
+   }
+   inline bool operator()(std::pair<int, int> a, int first) const
+   {
+      return a.first < first;
+   }
+   inline bool operator()(int first, std::pair<int, int> b) const
+   {
+      return first < b.first;
+   }
+};
+
+bool test_heterogeneous_lookup_by_partial_key()
+{
+   flat_set<std::pair<int, int>, with_lookup_by_first> const set1
+   {
+      {0, 1},
+      {0, 2},
+   };
+
+   auto const first_0_range = uut.equal_range(0);
+
+   return 2 == first_0_range.second - first_0_range.first;
+}
+
 }}}
 
 template<class VoidAllocatorOrContainer>
@@ -712,6 +744,10 @@ int main()
       return 1;
 
    if(!test_heterogeneous_lookups()){
+      return 1;
+   }
+
+   if(!test_heterogeneous_lookup_by_partial_key()){
       return 1;
    }
 
