@@ -603,7 +603,7 @@ bool test_heterogeneous_lookup_by_partial_key()
       {0, 2},
    };
 
-   auto const first_0_range = uut.equal_range(0);
+   auto const first_0_range = set1.equal_range(0);
 
    return 2 == first_0_range.second - first_0_range.first;
 }
