@@ -597,13 +597,13 @@ struct with_lookup_by_first
 
 bool test_heterogeneous_lookup_by_partial_key()
 {
-   flat_set<std::pair<int, int>, with_lookup_by_first> const set1
-   {
-      {0, 1},
-      {0, 2},
-   };
+   typedef flat_set<std::pair<int, int>, with_lookup_by_first> set_t;
 
-   auto const first_0_range = set1.equal_range(0);
+   set_t set1;
+   set1.insert(std::pair<int, int>(0, 1));
+   set1.insert(std::pair<int, int>(0, 2));
+
+   std::pair<set_t::iterator, set_t::iterator> const first_0_range = set1.equal_range(0);
 
    return 2 == first_0_range.second - first_0_range.first;
 }
