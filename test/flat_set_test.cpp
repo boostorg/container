@@ -604,8 +604,12 @@ bool test_heterogeneous_lookup_by_partial_key()
    set1.insert(std::pair<int, int>(0, 2));
 
    std::pair<set_t::iterator, set_t::iterator> const first_0_range = set1.equal_range(0);
+   if(2 != (first_0_range.second - first_0_range.first))
+      return false;
 
-   return 2 == first_0_range.second - first_0_range.first;
+   if(2 != set1.count(0))
+      return false;
+   return true;
 }
 
 }}}

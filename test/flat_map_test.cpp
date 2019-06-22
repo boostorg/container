@@ -589,7 +589,12 @@ bool test_heterogeneous_lookup_by_partial_key()
 
    std::pair<map_t::iterator, map_t::iterator> const first_0_range = map1.equal_range(0);
 
-   return 2 == first_0_range.second - first_0_range.first;
+   if(2 != (first_0_range.second - first_0_range.first))
+      return false;
+
+   if(2 != map1.count(0))
+      return false;
+   return true;
 }
 
 }}}   //namespace boost::container::test

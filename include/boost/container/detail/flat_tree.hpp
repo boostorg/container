@@ -1605,7 +1605,7 @@ class flat_tree
       const Compare &key_cmp = this->m_data.get_comp();
       KeyOfValue key_extract;
       RanIt lb(this->priv_lower_bound(first, last, k)), ub(lb);
-      if(lb != last && static_cast<difference_type>(!key_cmp(k, key_extract(*lb)))){
+      if(lb != last && !key_cmp(k, key_extract(*lb))){
          ++ub;
       }
       return std::pair<RanIt, RanIt>(lb, ub);
