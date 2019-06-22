@@ -1343,9 +1343,7 @@ class flat_map
    //!
    //! <b>Complexity</b>: log(size())+count(k)
    BOOST_CONTAINER_FORCEINLINE size_type count(const key_type& x) const
-      //Don't use find() != end optimization here as transparent comparators with key K might
-      //return a different range than key_type (which can only return a single element range)
-      {  return m_flat_tree.count(x);  }
+      {  return static_cast<size_type>(m_flat_tree.find(x) != m_flat_tree.end());  }
 
    //! <b>Requires</b>: This overload is available only if
    //! key_compare::is_transparent exists.
@@ -1355,7 +1353,9 @@ class flat_map
    //! <b>Complexity</b>: log(size())+count(k)
    template<class K>
    BOOST_CONTAINER_FORCEINLINE size_type count(const K& x) const
-      {  return static_cast<size_type>(m_flat_tree.find(x) != m_flat_tree.end());  }
+      //Don't use find() != end optimization here as transparent comparators with key K might
+      //return a different range than key_type (which can only return a single element range)
+      {  return m_flat_tree.count(x);  }
 
    //! <b>Returns</b>: Returns true if there is an element with key
    //!   equivalent to key in the container, otherwise false.
