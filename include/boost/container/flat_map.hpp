@@ -1465,7 +1465,7 @@ class flat_map
    //! <b>Complexity</b>: Logarithmic.
    template<class K>
    BOOST_CONTAINER_FORCEINLINE std::pair<iterator,iterator> equal_range(const K& x)
-      {  return dtl::force_copy<std::pair<iterator,iterator> >(m_flat_tree.lower_bound_range(x)); }
+      {  return dtl::force_copy<std::pair<iterator,iterator> >(m_flat_tree.equal_range(x)); }
 
    //! <b>Requires</b>: This overload is available only if
    //! key_compare::is_transparent exists.
@@ -1475,7 +1475,7 @@ class flat_map
    //! <b>Complexity</b>: Logarithmic.
    template<class K>
    BOOST_CONTAINER_FORCEINLINE std::pair<const_iterator, const_iterator> equal_range(const K& x) const
-      {  return dtl::force_copy<std::pair<const_iterator,const_iterator> >(m_flat_tree.lower_bound_range(x)); }
+      {  return dtl::force_copy<std::pair<const_iterator,const_iterator> >(m_flat_tree.equal_range(x)); }
 
    //! <b>Effects</b>: Extracts the internal sequence container.
    //!
