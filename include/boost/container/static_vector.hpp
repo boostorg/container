@@ -1125,7 +1125,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    static size_type capacity() BOOST_NOEXCEPT_OR_NOTHROW;
+    size_type capacity() const BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns container's capacity.
     //!
@@ -1136,7 +1136,7 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    static size_type max_size() BOOST_NOEXCEPT_OR_NOTHROW;
+    size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @brief Returns the number of stored elements.
     //!
