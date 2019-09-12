@@ -8,6 +8,9 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 #include <boost/container/detail/config_begin.hpp>
+
+#include <vector>
+
 #include <boost/container/flat_map.hpp>
 #include <boost/container/allocator.hpp>
 #include <boost/container/detail/container_or_allocator_rebind.hpp>
@@ -22,6 +25,7 @@
 #include "../../intrusive/test/iterator_test.hpp"
 
 #include <map>
+#include <utility>
 
 
 using namespace boost::container;
@@ -557,6 +561,42 @@ bool test_heterogeneous_lookups()
    return true;
 }
 
+// An ordered sequence of std:pair is also ordered by std::pair::first.
+struct with_lookup_by_first
+{
+   typedef void is_transparent;
+   inline bool operator()(std::pair<int, int> a, std::pair<int, int> b) const
+   {
+      return a < b;
+   }
+   inline bool operator()(std::pair<int, int> a, int first) const
+   {
+      return a.first < first;
+   }
+   inline bool operator()(int first, std::pair<int, int> b) const
+   {
+      return first < b.first;
+   }
+};
+
+bool test_heterogeneous_lookup_by_partial_key()
+{
+   typedef flat_map<std::pair<int, int>,int, with_lookup_by_first> map_t;
+
+   map_t map1;
+   map1[std::pair<int, int>(0, 1)] = 3;
+   map1[std::pair<int, int>(0, 2)] = 3;
+
+   std::pair<map_t::iterator, map_t::iterator> const first_0_range = map1.equal_range(0);
+
+   if(2 != (first_0_range.second - first_0_range.first))
+      return false;
+
+   if(2 != map1.count(0))
+      return false;
+   return true;
+}
+
 }}}   //namespace boost::container::test
 
 int main()
@@ -615,6 +655,9 @@ int main()
       return 1;
 
    if (!test_heterogeneous_lookups())
+      return 1;
+
+   if (!test_heterogeneous_lookup_by_partial_key())
       return 1;
 
    ////////////////////////////////////
@@ -712,6 +755,80 @@ int main()
       boost::intrusive::test::test_iterator_random< cont_int >(a);
       if(boost::report_errors() != 0) {
          return 1;
+      }
+   }
+
+   ////////////////////////////////////
+   //    has_trivial_destructor_after_move testing
+   ////////////////////////////////////
+   {
+      typedef boost::container::dtl::pair<int, int> value_t;
+      typedef boost::container::dtl::select1st<int> key_of_value_t;
+      // flat_map, default
+      {
+         typedef boost::container::new_allocator<value_t> alloc_or_cont_t;
+         typedef boost::container::flat_map<int, int> cont;
+         typedef boost::container::dtl::flat_tree<value_t, key_of_value_t, std::less<int>, alloc_or_cont_t> tree;
+         if (boost::has_trivial_destructor_after_move<cont>::value !=
+             boost::has_trivial_destructor_after_move<tree>::value) {
+            std::cerr << "has_trivial_destructor_after_move(flat_map, default) test failed" << std::endl;
+            return 1;
+         }
+      }
+      // flat_map, vector
+      {
+         typedef boost::container::vector<value_t> alloc_or_cont_t;
+         typedef boost::container::flat_map<int, int, std::less<int>, alloc_or_cont_t> cont;
+         typedef boost::container::dtl::flat_tree<value_t, key_of_value_t, std::less<int>, alloc_or_cont_t> tree;
+         if (boost::has_trivial_destructor_after_move<cont>::value !=
+             boost::has_trivial_destructor_after_move<tree>::value) {
+            std::cerr << "has_trivial_destructor_after_move(flat_map, vector) test failed" << std::endl;
+            return 1;
+         }
+      }
+      // flat_map, std::vector
+      {
+         typedef std::vector<value_t> alloc_or_cont_t;
+         typedef boost::container::flat_map<int, int, std::less<int>, alloc_or_cont_t> cont;
+         typedef boost::container::dtl::flat_tree<value_t, key_of_value_t, std::less<int>, alloc_or_cont_t> tree;
+         if (boost::has_trivial_destructor_after_move<cont>::value !=
+             boost::has_trivial_destructor_after_move<tree>::value) {
+            std::cerr << "has_trivial_destructor_after_move(flat_map, std::vector) test failed" << std::endl;
+            return 1;
+         }
+      }
+      // flat_multimap, default
+      {
+         typedef boost::container::new_allocator<value_t> alloc_or_cont_t;
+         typedef boost::container::flat_multimap<int, int> cont;
+         typedef boost::container::dtl::flat_tree<value_t, key_of_value_t, std::less<int>, alloc_or_cont_t> tree;
+         if (boost::has_trivial_destructor_after_move<cont>::value !=
+             boost::has_trivial_destructor_after_move<tree>::value) {
+            std::cerr << "has_trivial_destructor_after_move(flat_multimap, default) test failed" << std::endl;
+            return 1;
+         }
+      }
+      // flat_multimap, vector
+      {
+         typedef boost::container::vector<value_t> alloc_or_cont_t;
+         typedef boost::container::flat_multimap<int, int, std::less<int>, alloc_or_cont_t> cont;
+         typedef boost::container::dtl::flat_tree<value_t, key_of_value_t, std::less<int>, alloc_or_cont_t> tree;
+         if (boost::has_trivial_destructor_after_move<cont>::value !=
+             boost::has_trivial_destructor_after_move<tree>::value) {
+            std::cerr << "has_trivial_destructor_after_move(flat_multimap, vector) test failed" << std::endl;
+            return 1;
+         }
+      }
+      // flat_multimap, std::vector
+      {
+         typedef std::vector<value_t> alloc_or_cont_t;
+         typedef boost::container::flat_multimap<int, int, std::less<int>, alloc_or_cont_t> cont;
+         typedef boost::container::dtl::flat_tree<value_t, key_of_value_t, std::less<int>, alloc_or_cont_t> tree;
+         if (boost::has_trivial_destructor_after_move<cont>::value !=
+             boost::has_trivial_destructor_after_move<tree>::value) {
+            std::cerr << "has_trivial_destructor_after_move(flat_multimap, std::vector) test failed" << std::endl;
+            return 1;
+         }
       }
    }
 

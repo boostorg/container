@@ -605,6 +605,50 @@ int main ()
    if(!node_type_test())
       return 1;
 
+   ////////////////////////////////////
+   //    has_trivial_destructor_after_move testing
+   ////////////////////////////////////
+   // set, default allocator
+   {
+      typedef boost::container::set<int> cont;
+      typedef boost::container::dtl::tree<int, void, std::less<int>, void, void> tree;
+      if (boost::has_trivial_destructor_after_move<cont>::value !=
+          boost::has_trivial_destructor_after_move<tree>::value) {
+         std::cerr << "has_trivial_destructor_after_move(set, default allocator) test failed" << std::endl;
+         return 1;
+      }
+   }
+   // set, std::allocator
+   {
+      typedef boost::container::set<int, std::less<int>, std::allocator<int> > cont;
+      typedef boost::container::dtl::tree<int, void, std::less<int>, std::allocator<int>, void> tree;
+      if (boost::has_trivial_destructor_after_move<cont>::value !=
+          boost::has_trivial_destructor_after_move<tree>::value) {
+         std::cerr << "has_trivial_destructor_after_move(set, std::allocator) test failed" << std::endl;
+         return 1;
+      }
+   }
+   // multiset, default allocator
+   {
+      typedef boost::container::multiset<int> cont;
+      typedef boost::container::dtl::tree<int, void, std::less<int>, void, void> tree;
+      if (boost::has_trivial_destructor_after_move<cont>::value !=
+          boost::has_trivial_destructor_after_move<tree>::value) {
+         std::cerr << "has_trivial_destructor_after_move(multiset, default allocator) test failed" << std::endl;
+         return 1;
+      }
+   }
+   // multiset, std::allocator
+   {
+      typedef boost::container::multiset<int, std::less<int>, std::allocator<int> > cont;
+      typedef boost::container::dtl::tree<int, void, std::less<int>, std::allocator<int>, void> tree;
+      if (boost::has_trivial_destructor_after_move<cont>::value !=
+          boost::has_trivial_destructor_after_move<tree>::value) {
+         std::cerr << "has_trivial_destructor_after_move(multiset, std::allocator) test failed" << std::endl;
+         return 1;
+      }
+   }
+
    return 0;
 }
 
