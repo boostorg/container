@@ -1319,6 +1319,14 @@ use [*Boost.Container]? There are several reasons for that:
 
 [section:release_notes Release Notes]
 
+[section:release_notes_boost_1_72_00 Boost 1.72 Release]
+
+* Fixed bugs:
+   * [@https://github.com/boostorg/container/issues/132    GitHub #132: ['"flat_map::lower_bound and upper_bound have wrong/misleading docs"]].
+
+
+[endsect]
+
 [section:release_notes_boost_1_71_00 Boost 1.71 Release]
 
 * Fixed bugs:
@@ -1341,7 +1349,7 @@ use [*Boost.Container]? There are several reasons for that:
 * [classref boost::container::static_vector static_vector] can now have options, using [classref boost::container::static_vector_options static_vector_options].
     Alignment and throwing behaviour can be be specified.
 
-  * [classref boost::container::small_vector small_vector] can now have options, using [classref boost::container::small_vector_options small_vector_options].
+* [classref boost::container::small_vector small_vector] can now have options, using [classref boost::container::small_vector_options small_vector_options].
     Alignment and growth factor can be be specified.
 
 [endsect]
