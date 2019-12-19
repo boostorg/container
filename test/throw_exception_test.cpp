@@ -9,8 +9,6 @@
 //////////////////////////////////////////////////////////////////////////////
 #define BOOST_CONTAINER_USER_DEFINED_THROW_CALLBACKS
 
-#include <boost/container/detail/config_begin.hpp>
-
 #include <boost/container/throw_exception.hpp>
 #include <boost/core/lightweight_test.hpp>
 
@@ -74,7 +72,5 @@ int main()
    //Check user-defined throw callbacks are called
    throw_bad_alloc();
    //Never reached
-   std::abort();
+   return 33;
 }
-
-#include <boost/container/detail/config_end.hpp>

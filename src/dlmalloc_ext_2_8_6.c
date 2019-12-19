@@ -791,21 +791,21 @@ static int internal_node_multialloc
 	/*Error if wrong element_size parameter */
 	if (!element_size ||
 		/*OR Error if n_elements less than contiguous_elements */
-		((contiguous_elements + 1) > (DL_MULTIALLOC_DEFAULT_CONTIGUOUS + 1) && n_elements < contiguous_elements) ||
+		((contiguous_elements + 1) > (BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS + 1) && n_elements < contiguous_elements) ||
 		/* OR Error if integer overflow */
 		(SQRT_MAX_SIZE_T < (element_req_size | contiguous_elements) &&
 		(MAX_SIZE_T / element_req_size) < contiguous_elements)) {
 		return 0;
 	}
 	switch (contiguous_elements) {
-	case DL_MULTIALLOC_DEFAULT_CONTIGUOUS:
+	case BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS:
 	{
 		/* Default contiguous, just check that we can store at least one element */
 		elements_per_segment = INTERNAL_MULTIALLOC_DEFAULT_CONTIGUOUS_MEM / element_req_size;
 		elements_per_segment += (size_t)(!elements_per_segment);
 	}
 	break;
-	case DL_MULTIALLOC_ALL_CONTIGUOUS:
+	case BOOST_CONTAINER_DL_MULTIALLOC_ALL_CONTIGUOUS:
 		/* All elements should be allocated in a single call */
 		elements_per_segment = n_elements;
 		break;
@@ -1002,11 +1002,11 @@ static int internal_multialloc_arrays
    max_size = MAX_REQUEST/element_size;
    /* Different sizes*/
    switch(contiguous_elements){
-      case DL_MULTIALLOC_DEFAULT_CONTIGUOUS:
+      case BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS:
          /* Use default contiguous mem */
          boost_cont_multialloc_segmented_malloc_size = INTERNAL_MULTIALLOC_DEFAULT_CONTIGUOUS_MEM;
       break;
-      case DL_MULTIALLOC_ALL_CONTIGUOUS:
+      case BOOST_CONTAINER_DL_MULTIALLOC_ALL_CONTIGUOUS:
          boost_cont_multialloc_segmented_malloc_size = MAX_REQUEST + CHUNK_OVERHEAD;
       break;
       default:

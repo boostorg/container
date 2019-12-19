@@ -512,7 +512,7 @@ bool test_many_equal_allocation()
       for(int i = 0; i != NumIt/10; ++i){
          dlmalloc_memchain chain;
          BOOST_CONTAINER_MEMCHAIN_INIT(&chain);
-         dlmalloc_multialloc_nodes((i+1)*2, i+1, DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain);
+         dlmalloc_multialloc_nodes((i+1)*2, i+1, BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain);
          dlmalloc_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&chain);
          if(BOOST_CONTAINER_MEMCHAIN_IS_END_IT(chain, it))
             break;
@@ -624,7 +624,7 @@ bool test_many_different_allocation()
       for(int i = 0; i != NumIt; ++i){
          dlmalloc_memchain chain;
          BOOST_CONTAINER_MEMCHAIN_INIT(&chain);
-         dlmalloc_multialloc_arrays(ArraySize, requested_sizes, 1, DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain);
+         dlmalloc_multialloc_arrays(ArraySize, requested_sizes, 1, BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain);
          dlmalloc_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&chain);
          if(BOOST_CONTAINER_MEMCHAIN_IS_END_IT(chain, it))
             break;
@@ -702,7 +702,7 @@ bool test_many_deallocation()
    for(int i = 0; i != NumIt; ++i){
       dlmalloc_memchain chain;
       BOOST_CONTAINER_MEMCHAIN_INIT(&chain);
-      dlmalloc_multialloc_arrays(ArraySize, requested_sizes, 1, DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain);
+      dlmalloc_multialloc_arrays(ArraySize, requested_sizes, 1, BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain);
       dlmalloc_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&chain);
       if(BOOST_CONTAINER_MEMCHAIN_IS_END_IT(chain, it))
          return false;
@@ -720,7 +720,7 @@ bool test_many_deallocation()
    for(int i = 0; i != NumIt; ++i){
       dlmalloc_memchain chain;
       BOOST_CONTAINER_MEMCHAIN_INIT(&chain);
-      dlmalloc_multialloc_nodes(ArraySize, i*4+1, DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain);
+      dlmalloc_multialloc_nodes(ArraySize, i*4+1, BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain);
       dlmalloc_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&chain);
       if(BOOST_CONTAINER_MEMCHAIN_IS_END_IT(chain, it))
          return false;
