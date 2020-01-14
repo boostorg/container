@@ -168,7 +168,7 @@ is used as a template argument when instantiating a template component,
 unless specifically allowed for that component]].
 
 Finally C++17 added support for incomplete types in `std::vector`, `std::list` and `std::forward_list`
-(see [@https://wg21.link/n4569 ['N4569: Minimal incomplete type support for standard containers, revision 4]]
+(see [@https://wg21.link/n4510 ['N4510: Minimal incomplete type support for standard containers, revision 4]]
 for details), but no other containers like `std::set/map/unordered_set/unordered_map`, 
 
 Fortunately all [*Boost.Container] containers except
