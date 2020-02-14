@@ -1324,6 +1324,7 @@ use [*Boost.Container]? There are several reasons for that:
 * Fixed bugs:
    * [@https://github.com/boostorg/container/pull/135      GitHub #135: ['"Missing BOOST_NORETURN for user defined functions"]].
    * [@https://github.com/boostorg/container/pull/138      GitHub #138: ['"Remove Classes from Global Namespace"]].
+   * [@https://github.com/boostorg/container/issues/142    GitHub #142: ['"memset called with null pointer"]].
 
 [endsect]
 
