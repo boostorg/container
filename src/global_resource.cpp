@@ -38,7 +38,7 @@ class new_delete_resource_imp
 
    virtual bool do_is_equal(const memory_resource& other) const BOOST_NOEXCEPT
    {  return &other == this;   }
-} new_delete_resource_instance;
+};
 
 struct null_memory_resource_imp
    : public memory_resource
@@ -60,26 +60,38 @@ struct null_memory_resource_imp
 
    virtual bool do_is_equal(const memory_resource& other) const BOOST_NOEXCEPT
    {  return &other == this;   }
-} null_memory_resource_instance;
+};
 
 BOOST_CONTAINER_DECL memory_resource* new_delete_resource() BOOST_NOEXCEPT
 {
-   return &new_delete_resource_instance;
+   static new_delete_resource_imp instance;
+   return &instance;
 }
 
 BOOST_CONTAINER_DECL memory_resource* null_memory_resource() BOOST_NOEXCEPT
 {
-   return &null_memory_resource_instance;
+   static null_memory_resource_imp instance;
+   return &instance;
 }
 
-static memory_resource *default_memory_resource = &new_delete_resource_instance;
+static memory_resource* default_memory_resource(memory_resource* new_instance)
+{
+   static memory_resource* storage = new_delete_resource();
+   if (new_instance)
+   {
+      return storage = new_instance;
+   }
+   else
+   {
+      return storage;
+   }
+}
 
 BOOST_CONTAINER_DECL memory_resource* set_default_resource(memory_resource* r) BOOST_NOEXCEPT
 {
    //TO-DO: synchronizes-with part using atomics
    if(dlmalloc_global_sync_lock()){
-      memory_resource *previous = default_memory_resource;
-      default_memory_resource = r ? r : new_delete_resource();
+      memory_resource *previous = default_memory_resource(r ? r : new_delete_resource());
       dlmalloc_global_sync_unlock();
       return previous;
    }
@@ -92,7 +104,7 @@ BOOST_CONTAINER_DECL memory_resource* get_default_resource() BOOST_NOEXCEPT
 {
    //TO-DO: synchronizes-with part using atomics
    if(dlmalloc_global_sync_lock()){
-      memory_resource *current = default_memory_resource;
+      memory_resource *current = default_memory_resource(nullptr);
       dlmalloc_global_sync_unlock();
       return current;
    }
