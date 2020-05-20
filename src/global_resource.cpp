@@ -79,7 +79,9 @@ static memory_resource* default_memory_resource(memory_resource* new_instance)
    static memory_resource* storage = new_delete_resource();
    if (new_instance)
    {
-      return storage = new_instance;
+      memory_resource* previous = storage;
+      storage = new_instance;
+      return previous;
    }
    else
    {
@@ -104,7 +106,7 @@ BOOST_CONTAINER_DECL memory_resource* get_default_resource() BOOST_NOEXCEPT
 {
    //TO-DO: synchronizes-with part using atomics
    if(dlmalloc_global_sync_lock()){
-      memory_resource *current = default_memory_resource(nullptr);
+      memory_resource *current = default_memory_resource(0);
       dlmalloc_global_sync_unlock();
       return current;
    }
