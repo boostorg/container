@@ -28,16 +28,16 @@ class new_delete_resource_imp
 {
    public:
 
-   virtual ~new_delete_resource_imp()
+   ~new_delete_resource_imp() BOOST_OVERRIDE
    {}
 
-   virtual void* do_allocate(std::size_t bytes, std::size_t alignment)
+   void* do_allocate(std::size_t bytes, std::size_t alignment) BOOST_OVERRIDE
    {  (void)bytes; (void)alignment; return new char[bytes];  }
 
-   virtual void do_deallocate(void* p, std::size_t bytes, std::size_t alignment)
+   void do_deallocate(void* p, std::size_t bytes, std::size_t alignment) BOOST_OVERRIDE
    {  (void)bytes; (void)alignment; delete[]((char*)p);  }
 
-   virtual bool do_is_equal(const memory_resource& other) const BOOST_NOEXCEPT
+   bool do_is_equal(const memory_resource& other) const BOOST_NOEXCEPT BOOST_OVERRIDE
    {  return &other == this;   }
 };
 
@@ -46,20 +46,20 @@ struct null_memory_resource_imp
 {
    public:
 
-   virtual ~null_memory_resource_imp()
+   ~null_memory_resource_imp() BOOST_OVERRIDE
    {}
 
-   virtual void* do_allocate(std::size_t bytes, std::size_t alignment)
+   void* do_allocate(std::size_t bytes, std::size_t alignment) BOOST_OVERRIDE
    {
       (void)bytes; (void)alignment;
       throw_bad_alloc();
       return 0;
    }
 
-   virtual void do_deallocate(void* p, std::size_t bytes, std::size_t alignment)
+   void do_deallocate(void* p, std::size_t bytes, std::size_t alignment) BOOST_OVERRIDE
    {  (void)p;  (void)bytes; (void)alignment;  }
 
-   virtual bool do_is_equal(const memory_resource& other) const BOOST_NOEXCEPT
+   bool do_is_equal(const memory_resource& other) const BOOST_NOEXCEPT BOOST_OVERRIDE
    {  return &other == this;   }
 };
 
