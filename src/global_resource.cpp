@@ -95,6 +95,10 @@ BOOST_CONTAINER_DECL memory_resource* get_default_resource() BOOST_NOEXCEPT
    //TO-DO: synchronizes-with part using atomics
    if(dlmalloc_global_sync_lock()){
       memory_resource *current = default_memory_resource;
+      if(!current){
+         //function called before main, default_memory resource was not initialied yet
+         current = new_delete_resource();
+      }
       dlmalloc_global_sync_unlock();
       return current;
    }
