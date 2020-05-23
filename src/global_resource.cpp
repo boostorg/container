@@ -14,6 +14,7 @@
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/container/throw_exception.hpp>
 #include <boost/container/detail/dlmalloc.hpp>  //For global lock
+#include <boost/container/detail/singleton.hpp>
 
 #include <cstddef>
 #include <new>
@@ -38,7 +39,7 @@ class new_delete_resource_imp
 
    virtual bool do_is_equal(const memory_resource& other) const BOOST_NOEXCEPT
    {  return &other == this;   }
-} new_delete_resource_instance;
+};
 
 struct null_memory_resource_imp
    : public memory_resource
@@ -60,19 +61,20 @@ struct null_memory_resource_imp
 
    virtual bool do_is_equal(const memory_resource& other) const BOOST_NOEXCEPT
    {  return &other == this;   }
-} null_memory_resource_instance;
+};
 
 BOOST_CONTAINER_DECL memory_resource* new_delete_resource() BOOST_NOEXCEPT
 {
-   return &new_delete_resource_instance;
+   return &boost::container::dtl::singleton_default<new_delete_resource_imp>::instance();
 }
 
 BOOST_CONTAINER_DECL memory_resource* null_memory_resource() BOOST_NOEXCEPT
 {
-   return &null_memory_resource_instance;
+   return &boost::container::dtl::singleton_default<null_memory_resource_imp>::instance();
 }
 
-static memory_resource *default_memory_resource = &new_delete_resource_instance;
+static memory_resource *default_memory_resource =
+   &boost::container::dtl::singleton_default<new_delete_resource_imp>::instance();
 
 BOOST_CONTAINER_DECL memory_resource* set_default_resource(memory_resource* r) BOOST_NOEXCEPT
 {
