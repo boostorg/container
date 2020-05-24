@@ -183,6 +183,43 @@ template <class Key
          ,class Allocator = void >
 class flat_multimap;
 
+#ifndef BOOST_NO_CXX11_TEMPLATE_ALIASES
+
+//! Alias templates for small_flat_[multi]{set|map} using small_vector as container
+
+template < class Key
+         , std::size_t N
+         , class Compare  = std::less<Key>
+         , class SmallVectorAllocator = void
+         , class SmallVectorOptions   = void  >
+using small_flat_set = flat_set<Key, Compare, small_vector<Key, N, SmallVectorAllocator, SmallVectorOptions>>;
+
+template < class Key
+         , std::size_t N
+         , class Compare  = std::less<Key>
+         , class SmallVectorAllocator = void
+         , class SmallVectorOptions   = void  >
+using small_flat_multiset = flat_multiset<Key, Compare, small_vector<Key, N, SmallVectorAllocator, SmallVectorOptions>>;
+
+template < class Key
+         , class T
+         , std::size_t N
+         , class Compare  = std::less<Key>
+         , class SmallVectorAllocator = void
+         , class SmallVectorOptions   = void  >
+using small_flat_map = flat_map<Key, T, Compare, small_vector<std::pair<Key, T>, N, SmallVectorAllocator, SmallVectorOptions>>;
+
+template < class Key
+         , class T
+         , std::size_t N
+         , class Compare  = std::less<Key>
+         , class SmallVectorAllocator = void
+         , class SmallVectorOptions   = void  >
+using small_flat_multimap = flat_multimap<Key, T, Compare, small_vector<std::pair<Key, T>, N, SmallVectorAllocator, SmallVectorOptions>>;
+
+#endif // #ifndef BOOST_NO_CXX11_TEMPLATE_ALIASES
+
+
 template <class CharT
          ,class Traits = std::char_traits<CharT>
          ,class Allocator  = void >
