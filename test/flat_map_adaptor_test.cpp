@@ -13,6 +13,7 @@
 #include <boost/container/stable_vector.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/deque.hpp>
+#include <boost/static_assert.hpp>
 
 #include <boost/container/detail/container_or_allocator_rebind.hpp>
 
@@ -98,6 +99,20 @@ int main()
          std::cout << "Error in map_test<deque<std::pair<int, int> > >" << std::endl;
          return 1;
       }
+   }
+   {
+      using namespace boost::container;
+      using boost::container::dtl::is_same;
+
+      typedef flat_map<int, float, std::less<int>, small_vector<std::pair<int, float>, 10> > map_container_t;
+      typedef flat_multimap<int, float, std::less<int>, small_vector<std::pair<int, float>, 10> > multimap_container_t;
+      #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+      BOOST_STATIC_ASSERT(( is_same<map_container_t, small_flat_map<int, float, 10> >::value ));
+      BOOST_STATIC_ASSERT(( is_same<multimap_container_t, small_flat_multimap<int, float, 10> >::value ));
+      #endif
+
+      BOOST_STATIC_ASSERT(( is_same<map_container_t, small_flat_map_of<int, float, 10>::type >::value ));
+      BOOST_STATIC_ASSERT(( is_same<multimap_container_t, small_flat_multimap_of<int, float, 10>::type >::value ));
    }
 
    return 0;
