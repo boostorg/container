@@ -110,7 +110,7 @@ template<class Selector>
 bool test_propagate_allocator()
 {
    {
-      typedef propagation_test_allocator<char, true, true, true, true>  AlwaysPropagate;
+      typedef propagation_test_allocator<char, true, true, true, true, true>  AlwaysPropagate;
       typedef alloc_propagate_wrapper<char, AlwaysPropagate, Selector>  PropagateCont;
       typedef typename get_real_stored_allocator<typename PropagateCont::Base>::type StoredAllocator;
       {
@@ -213,7 +213,7 @@ bool test_propagate_allocator()
    //Test NeverPropagate allocator propagation
    //////////////////////////////////////////
    {
-      typedef propagation_test_allocator<char, false, false, false, false> NeverPropagate;
+      typedef propagation_test_allocator<char, false, false, false, false, true> NeverPropagate;
       typedef alloc_propagate_wrapper<char, NeverPropagate, Selector>      NoPropagateCont;
       typedef typename get_real_stored_allocator<typename NoPropagateCont::Base>::type StoredAllocator;
       {
@@ -281,6 +281,15 @@ bool test_propagate_allocator()
          BOOST_TEST (c2.get_stored_allocator().assign_moves_ == 0);
          BOOST_TEST (c2.get_stored_allocator().swaps_ == 0);
       }
+      //And now allocator argument constructors
+      test_propagate_allocator_allocator_arg<NoPropagateCont>();
+   }
+   {
+      //Don't use unequal ids as unequal allocators -------------------------|,
+      //because swap requires equal allocators                               v
+      typedef propagation_test_allocator<char, false, false, false, false, false> NeverPropagate;
+      typedef alloc_propagate_wrapper<char, NeverPropagate, Selector>      NoPropagateCont;
+      typedef typename get_real_stored_allocator<typename NoPropagateCont::Base>::type StoredAllocator;
       {
          //swap
          StoredAllocator::reset_unique_id(666);
@@ -302,8 +311,6 @@ bool test_propagate_allocator()
          BOOST_TEST (c.get_stored_allocator().assign_moves_ == 0);
          BOOST_TEST (c.get_stored_allocator().swaps_ == 0);
       }
-      //And now allocator argument constructors
-      test_propagate_allocator_allocator_arg<NoPropagateCont>();
    }
 
    return report_errors() == 0;

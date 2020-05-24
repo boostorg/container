@@ -359,35 +359,6 @@ struct vector_alloc_holder
       holder.m_size = holder.m_capacity = 0;
    }
 
-   vector_alloc_holder(initial_capacity_t, pointer p, size_type capacity, BOOST_RV_REF(vector_alloc_holder) holder)
-      : allocator_type(BOOST_MOVE_BASE(allocator_type, holder))
-      , m_start(p)
-      , m_size(holder.m_size)
-      , m_capacity(static_cast<stored_size_type>(capacity))
-   {
-      allocator_type &this_alloc = this->alloc();
-      allocator_type &x_alloc = holder.alloc();
-      if(this->is_propagable_from(x_alloc, holder.start(), this_alloc, true)){
-         if(this->m_capacity){
-            this->deallocate(this->m_start, this->m_capacity);
-         }
-         m_start = holder.m_start;
-         m_capacity = holder.m_capacity;
-         holder.m_start = pointer();
-         holder.m_capacity = holder.m_size = 0;
-      }
-      else if(this->m_capacity < holder.m_size){
-         size_type const n = holder.m_size;
-         pointer reuse = pointer();
-         size_type final_cap = n;
-         m_start = this->allocation_command(allocate_new, n, final_cap, reuse);
-         m_capacity = static_cast<stored_size_type>(final_cap);
-         #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
-         this->num_alloc += n != 0;
-         #endif
-      }
-   }
-
    vector_alloc_holder(initial_capacity_t, pointer p, size_type n)
       BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<allocator_type>::value)
       : allocator_type()
@@ -1081,10 +1052,12 @@ private:
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    vector(BOOST_RV_REF(vector) x, const allocator_type &a)
       :  m_holder( vector_uninitialized_size, a
-                 , is_propagable_from(x.get_stored_allocator(), x.m_holder.start(), a, true) ? 0 : x.size()
+                 //In this allocator move constructor the allocator won't be propagated --v
+                 , is_propagable_from(x.get_stored_allocator(), x.m_holder.start(), a, false) ? 0 : x.size()
                  )
    {
-      if(is_propagable_from(x.get_stored_allocator(), x.m_holder.start(), a, true)){
+      //In this allocator move constructor the allocator won't be propagated ---v
+      if(is_propagable_from(x.get_stored_allocator(), x.m_holder.start(), a, false)){
          this->m_holder.steal_resources(x.m_holder);
       }
       else{
@@ -2438,6 +2411,7 @@ private:
       allocator_type &x_alloc    = x.m_holder.alloc();
       const bool propagate_alloc = allocator_traits_type::propagate_on_container_move_assignment::value;
 
+      //In this allocator move constructor the allocator maybe will be propagated -----------------------v
       const bool is_propagable_from_x = is_propagable_from(x_alloc, x.m_holder.start(), this_alloc, propagate_alloc);
 
       //Resources can be transferred if both allocators are
