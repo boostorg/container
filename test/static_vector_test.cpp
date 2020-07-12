@@ -495,11 +495,9 @@ void test_swap_and_move_nd()
 
       BOOST_TEST(v1.size() == N/2);
       BOOST_TEST(s1.size() == N);
-      //iG moving does not imply emptying source
-      //BOOST_TEST(v2.size() == 0);
+      BOOST_TEST(v2.size() == 0);
       BOOST_TEST(s2.size() == N);
-      //iG moving does not imply emptying source
-      //BOOST_TEST(v3.size() == 0);
+      BOOST_TEST(v3.size() == 0);
       BOOST_TEST(s3.size() == N);
       BOOST_TEST(v4.size() == N/2);
       BOOST_TEST(s4.size() == N);

@@ -591,6 +591,9 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
    {
       ::boost::container::uninitialized_move_alloc_n
          (this->alloc(), boost::movelib::to_raw_pointer(holder.start()), m_size, boost::movelib::to_raw_pointer(this->start()));
+      ::boost::container::destroy_alloc_n
+         (this->alloc(), boost::movelib::to_raw_pointer(holder.start()), m_size);
+      holder.m_size = 0;
    }
 
    template<class OtherAllocator, class OtherStoredSizeType, class OtherAllocatorVersion>
@@ -2385,6 +2388,9 @@ private:
       const size_type other_sz = static_cast<size_type>(x.m_holder.m_size);
       boost::container::move_assign_range_alloc_n(this->m_holder.alloc(), other_start, other_sz, this_start, this_sz);
       this->m_holder.m_size = other_sz;
+      //Not emptying the source container seems to be confusing for users as drop-in
+      //replacement for non-static vectors, so clear it.
+      x.clear();
    }
 
    template<class OtherA>
@@ -2413,11 +2419,13 @@ private:
             this->m_holder.deallocate(this->m_holder.m_start, this->m_holder.m_capacity);
          this->m_holder.steal_resources(x.m_holder);
       }
-      //Else do a one by one move
+      //Else do a one by one move. Also, clear the source as users find confusing
+      //elements are still alive in the source container.
       else{
          this->assign( boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(x.begin()))
                      , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(x.end()  ))
                      );
+         x.clear();
       }
       //Move allocator if needed
       dtl::move_alloc(this_alloc, x_alloc, dtl::bool_<propagate_alloc>());
