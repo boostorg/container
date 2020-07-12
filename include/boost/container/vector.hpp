@@ -713,19 +713,19 @@ public:
    //                    types
    //
    //////////////////////////////////////////////
-   typedef T                                                               value_type;
+   typedef T                                                                           value_type;
    typedef BOOST_CONTAINER_IMPDEF
-      (typename real_allocator<T BOOST_MOVE_I A>::type)            allocator_type;
-   typedef ::boost::container::allocator_traits<allocator_type>            allocator_traits_t;
-   typedef typename   allocator_traits<allocator_type>::pointer            pointer;
-   typedef typename   allocator_traits<allocator_type>::const_pointer      const_pointer;
-   typedef typename   allocator_traits<allocator_type>::reference          reference;
-   typedef typename   allocator_traits<allocator_type>::const_reference    const_reference;
-   typedef typename   allocator_traits<allocator_type>::size_type          size_type;
-   typedef typename   allocator_traits<allocator_type>::difference_type    difference_type;
-   typedef allocator_type                                                  stored_allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(vec_iterator<pointer BOOST_MOVE_I false>)       iterator;
-   typedef BOOST_CONTAINER_IMPDEF(vec_iterator<pointer BOOST_MOVE_I true >)       const_iterator;
+      (typename real_allocator<T BOOST_MOVE_I A>::type)                                allocator_type;
+   typedef ::boost::container::allocator_traits<allocator_type>                        allocator_traits_t;
+   typedef typename   allocator_traits<allocator_type>::pointer                        pointer;
+   typedef typename   allocator_traits<allocator_type>::const_pointer                  const_pointer;
+   typedef typename   allocator_traits<allocator_type>::reference                      reference;
+   typedef typename   allocator_traits<allocator_type>::const_reference                const_reference;
+   typedef typename   allocator_traits<allocator_type>::size_type                      size_type;
+   typedef typename   allocator_traits<allocator_type>::difference_type                difference_type;
+   typedef allocator_type                                                              stored_allocator_type;
+   typedef BOOST_CONTAINER_IMPDEF(vec_iterator<pointer BOOST_MOVE_I false>)            iterator;
+   typedef BOOST_CONTAINER_IMPDEF(vec_iterator<pointer BOOST_MOVE_I true >)            const_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
 
@@ -946,12 +946,6 @@ private:
    //!   throws or T's constructor taking a dereferenced InIt throws.
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
-//    template <class InIt>
-//    vector(InIt first, InIt last, const allocator_type& a
-//           BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename dtl::disable_if_c
-//                                  < dtl::is_convertible<InIt BOOST_MOVE_I size_type>::value
-//                                  BOOST_MOVE_I dtl::nat >::type * = 0)
-//           ) -> vector<typename iterator_traits<InIt>::value_type, new_allocator<typename iterator_traits<InIt>::value_type>>;
    template <class InIt>
    vector(InIt first, InIt last, const allocator_type& a
       BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename dtl::disable_if_c
@@ -999,9 +993,14 @@ private:
    //!
    //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
    vector(std::initializer_list<value_type> il, const allocator_type& a = allocator_type())
-      : m_holder(a)
+      :  m_holder(vector_uninitialized_size, a, il.size())
    {
-      this->assign(il.begin(), il.end());
+      #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
+      this->num_alloc += il.size() != 0;
+      #endif
+      ::boost::container::uninitialized_copy_alloc_n_source
+         ( this->m_holder.alloc(), il.begin()
+         , il.size(), this->priv_raw_begin());
    }
    #endif
 
@@ -2113,15 +2112,7 @@ private:
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator<(const vector& x, const vector& y)
-   {
-      const_iterator first1(x.cbegin()), first2(y.cbegin());
-      const const_iterator last1(x.cend()), last2(y.cend());
-      for ( ; (first1 != last1) && (first2 != last2); ++first1, ++first2 ) {
-         if (*first1 < *first2) return true;
-         if (*first2 < *first1) return false;
-      }
-      return (first1 == last1) && (first2 != last2);
-   }
+   {  return boost::container::algo_lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
 
    //! <b>Effects</b>: Returns true if x is greater than y
    //!
