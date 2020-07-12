@@ -7,9 +7,7 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/container/detail/config_begin.hpp>
 #include <boost/container/uses_allocator_fwd.hpp>
-
 #include <boost/container/uses_allocator.hpp>
 #include "propagation_test_allocator.hpp"
 

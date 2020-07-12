@@ -340,24 +340,24 @@ int main()
       typedef boost::container::vector<int> cont;
       typedef cont::allocator_type allocator_type;
       typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
-      if (boost::has_trivial_destructor_after_move<cont>::value !=
-          boost::has_trivial_destructor_after_move<allocator_type>::value &&
-          boost::has_trivial_destructor_after_move<pointer>::value) {
-         std::cerr << "has_trivial_destructor_after_move(default allocator) test failed" << std::endl;
-         return 1;
-      }
+      BOOST_STATIC_ASSERT_MSG
+         ( !boost::has_trivial_destructor_after_move<pointer>::value ||
+           (boost::has_trivial_destructor_after_move<cont>::value ==
+            boost::has_trivial_destructor_after_move<allocator_type>::value)
+         , "has_trivial_destructor_after_move(default allocator) test failed"
+         );
    }
    // std::allocator
    {
       typedef boost::container::vector<int, std::allocator<int> > cont;
       typedef cont::allocator_type allocator_type;
       typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
-      if (boost::has_trivial_destructor_after_move<cont>::value !=
-          boost::has_trivial_destructor_after_move<allocator_type>::value &&
-          boost::has_trivial_destructor_after_move<pointer>::value) {
-         std::cerr << "has_trivial_destructor_after_move(std::allocator) test failed" << std::endl;
-         return 1;
-      }
+      BOOST_STATIC_ASSERT_MSG
+         ( !boost::has_trivial_destructor_after_move<pointer>::value ||
+           (boost::has_trivial_destructor_after_move<cont>::value ==
+            boost::has_trivial_destructor_after_move<allocator_type>::value)
+         , "has_trivial_destructor_after_move(std::allocator) test failed"
+         );
    }
 
    return 0;

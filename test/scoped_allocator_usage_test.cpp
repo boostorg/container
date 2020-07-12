@@ -7,7 +7,6 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/container/detail/config_begin.hpp>
 #include <memory>
 
 #include <boost/move/utility_core.hpp>
@@ -464,5 +463,3 @@ int main()
       return 1;
    return 0;
 }
-
-#include <boost/container/detail/config_end.hpp>

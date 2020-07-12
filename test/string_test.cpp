@@ -8,7 +8,6 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <boost/container/detail/config_begin.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/string.hpp>
 #include <string>
@@ -592,5 +591,3 @@ int main()
 
    return boost::report_errors();
 }
-
-#include <boost/container/detail/config_end.hpp>

@@ -7,7 +7,6 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/container/detail/config_begin.hpp>
 #include <cstddef>
 #include <boost/container/allocator_traits.hpp>
 #include <boost/static_assert.hpp>
@@ -444,4 +443,3 @@ int main()
 
    return ::boost::report_errors();
 }
-#include <boost/container/detail/config_end.hpp>

@@ -7,7 +7,6 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/container/detail/config_begin.hpp>
 #include <boost/container/map.hpp>
 #include <boost/container/adaptive_pool.hpp>
 
@@ -689,5 +688,3 @@ int main ()
 
    return 0;
 }
-
-#include <boost/container/detail/config_end.hpp>

@@ -8,7 +8,6 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 #define STABLE_VECTOR_ENABLE_INVARIANT_CHECKING
-#include <boost/container/detail/config_begin.hpp>
 #include <memory>
 
 #include <boost/container/stable_vector.hpp>
@@ -223,5 +222,3 @@ int main()
 
    return 0;
 }
-
-#include <boost/container/detail/config_end.hpp>
