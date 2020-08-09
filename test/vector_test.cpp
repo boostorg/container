@@ -82,6 +82,10 @@ bool test_smart_ref_type()
 class recursive_vector
 {
    public:
+   recursive_vector (const recursive_vector &x)
+      : vector_(x.vector_)
+   {}
+
    recursive_vector & operator=(const recursive_vector &x)
    {  this->vector_ = x.vector_;   return *this; }
 

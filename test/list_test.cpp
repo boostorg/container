@@ -54,6 +54,10 @@ public:
    list<recursive_list>::reverse_iterator rit_;
    list<recursive_list>::const_reverse_iterator crit_;
 
+   recursive_list(const recursive_list &o)
+      : list_(o.list_)
+   {}
+
    recursive_list &operator=(const recursive_list &o)
    { list_ = o.list_;  return *this; }
 };
@@ -259,24 +263,22 @@ int main ()
       typedef boost::container::list<int> cont;
       typedef cont::allocator_type allocator_type;
       typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
-      if (boost::has_trivial_destructor_after_move<cont>::value !=
+      BOOST_STATIC_ASSERT_MSG(
+        !(boost::has_trivial_destructor_after_move<cont>::value !=
           boost::has_trivial_destructor_after_move<allocator_type>::value &&
-          boost::has_trivial_destructor_after_move<pointer>::value) {
-         std::cerr << "has_trivial_destructor_after_move(default allocator) test failed" << std::endl;
-         return 1;
-      }
+          boost::has_trivial_destructor_after_move<pointer>::value)
+        , "has_trivial_destructor_after_move(default allocator) test failed");
    }
    // std::allocator
    {
       typedef boost::container::list<int, std::allocator<int> > cont;
       typedef cont::allocator_type allocator_type;
       typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
-      if (boost::has_trivial_destructor_after_move<cont>::value !=
+      BOOST_STATIC_ASSERT_MSG(
+        !(boost::has_trivial_destructor_after_move<cont>::value !=
           boost::has_trivial_destructor_after_move<allocator_type>::value &&
-          boost::has_trivial_destructor_after_move<pointer>::value) {
-         std::cerr << "has_trivial_destructor_after_move(std::allocator) test failed" << std::endl;
-         return 1;
-      }
+          boost::has_trivial_destructor_after_move<pointer>::value)
+        , "has_trivial_destructor_after_move(std::allocator) test failed");
    }
 
    return 0;
