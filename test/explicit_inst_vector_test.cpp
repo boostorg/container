@@ -38,6 +38,12 @@ template class boost::container::vector
 template class vec_iterator<int*, true >;
 template class vec_iterator<int*, false>;
 
+//Test stored_size option
+template class boost::container::vector< test::movable_and_copyable_int
+                                       , new_allocator<test::movable_and_copyable_int>
+                                       , vector_options< stored_size<unsigned short> >::type
+                                       >;
+
 }  //namespace boost {
 }  //namespace container {
 
