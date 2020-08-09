@@ -13,6 +13,7 @@
 #include <boost/container/stable_vector.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/deque.hpp>
+#include <boost/container/devector.hpp>
 #include <boost/static_assert.hpp>
 
 #include <boost/container/detail/container_or_allocator_rebind.hpp>
@@ -92,6 +93,14 @@ int main()
          < GetSetContainer<deque<int> >::apply<int>::set_type
          , MyStdSet
          , GetSetContainer<deque<int> >::apply<int>::multiset_type
+         , MyStdMultiSet>()) {
+         std::cout << "Error in set_test<deque<int> >" << std::endl;
+         return 1;
+      }
+      if (0 != test::set_test
+         < GetSetContainer<devector<int> >::apply<int>::set_type
+         , MyStdSet
+         , GetSetContainer<devector<int> >::apply<int>::multiset_type
          , MyStdMultiSet>()) {
          std::cout << "Error in set_test<deque<int> >" << std::endl;
          return 1;

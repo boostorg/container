@@ -130,7 +130,8 @@ void flat_tree_container_inplace_merge //is_contiguous_container == true
    value_type *const braw = boost::movelib::iterator_to_raw_pointer(dest.begin());
    value_type *const iraw = boost::movelib::iterator_to_raw_pointer(it);
    value_type *const eraw = boost::movelib::iterator_to_raw_pointer(dest.end());
-   boost::movelib::adaptive_merge(braw, iraw, eraw, comp, eraw, dest.capacity()- dest.size());
+   boost::movelib::adaptive_merge
+      (braw, iraw, eraw, comp, eraw, back_free_capacity<SequenceContainer>::get(dest));
 }
 
 template<class SequenceContainer, class Compare>
@@ -152,7 +153,8 @@ void flat_tree_container_inplace_sort_ending //is_contiguous_container == true
    typedef typename SequenceContainer::value_type  value_type;
    value_type *const iraw = boost::movelib::iterator_to_raw_pointer(it);
    value_type *const eraw = boost::movelib::iterator_to_raw_pointer(dest.end());
-   boost::movelib::adaptive_sort(iraw, eraw, comp, eraw, dest.capacity()- dest.size());
+   boost::movelib::adaptive_sort
+      (iraw, eraw, comp, eraw, back_free_capacity<SequenceContainer>::get(dest));
 }
 
 template<class SequenceContainer, class Compare>
@@ -984,10 +986,7 @@ class flat_tree
          ret.first  = this->nth(data.position - this->cbegin());
       }
       else{
-         typedef typename emplace_functor_type<try_emplace_t, KeyType, Args...>::type func_t;
-         typedef emplace_iterator<value_type, func_t, difference_type> it_t;
-         func_t func(try_emplace_t(), ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
-         ret.first = this->m_data.m_seq.insert(data.position, it_t(func), it_t());
+         ret.first = this->m_data.m_seq.emplace(data.position, try_emplace_t(), ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
       }
       return ret;
    }
@@ -1053,10 +1052,7 @@ class flat_tree
          ret.first  = this->nth(data.position - this->cbegin());\
       }\
       else{\
-         typedef typename emplace_functor_type<try_emplace_t, KeyType BOOST_MOVE_I##N BOOST_MOVE_TARG##N>::type func_t;\
-         typedef emplace_iterator<value_type, func_t, difference_type> it_t;\
-         func_t func(try_emplace_t(), ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
-         ret.first = this->m_data.m_seq.insert(data.position, it_t(func), it_t());\
+         ret.first = this->m_data.m_seq.emplace(data.position, try_emplace_t(), ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
       }\
       return ret;\
    }\
@@ -1080,10 +1076,7 @@ class flat_tree
          ret.first->second = boost::forward<M>(obj);
       }
       else{
-         typedef typename emplace_functor_type<KeyType, M>::type func_t;
-         typedef emplace_iterator<value_type, func_t, difference_type> it_t;
-         func_t func(boost::forward<KeyType>(key), boost::forward<M>(obj));
-         ret.first = this->m_data.m_seq.insert(data.position, it_t(func), it_t());
+         ret.first = this->m_data.m_seq.emplace(data.position, boost::forward<KeyType>(key), boost::forward<M>(obj));
       }
       return ret;
    }

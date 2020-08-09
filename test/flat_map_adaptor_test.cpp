@@ -12,6 +12,7 @@
 #include <boost/container/static_vector.hpp>
 #include <boost/container/stable_vector.hpp>
 #include <boost/container/vector.hpp>
+#include <boost/container/devector.hpp>
 #include <boost/container/deque.hpp>
 #include <boost/static_assert.hpp>
 
@@ -97,6 +98,15 @@ int main()
          , GetMapContainer<deque<std::pair<int, int> > >::apply<int>::multimap_type
          , MyStdMultiMap>()) {
          std::cout << "Error in map_test<deque<std::pair<int, int> > >" << std::endl;
+         return 1;
+      }
+
+      if (0 != test::map_test
+         < GetMapContainer<devector<std::pair<int, int> > >::apply<int>::map_type
+         , MyStdMap
+         , GetMapContainer<devector<std::pair<int, int> > >::apply<int>::multimap_type
+         , MyStdMultiMap>()) {
+         std::cout << "Error in map_test<vector<std::pair<int, int> > >" << std::endl;
          return 1;
       }
    }

@@ -47,12 +47,14 @@ In short, what does [*Boost.Container] offer?
     searches.
   * [classref boost::container::stable_vector stable_vector]: a std::list and std::vector hybrid
     container: vector-like random-access iterators and list-like iterator stability in insertions and erasures.
-  * [classref boost::container::static_vector static_vector ]: a vector-like container that internally embeds
+  * [classref boost::container::static_vector static_vector]: a vector-like container that internally embeds
     (statically allocates) all needed memory up to the maximum capacity. Maximum capacity can't be increased and
     it's specified at compile time.
-  * [classref boost::container::small_vector small_vector ]: a vector-like container that internally embeds
+  * [classref boost::container::small_vector small_vector]: a vector-like container that internally embeds
     (statically allocates) a minimum amount of memory, but dynamically allocates elements when capacity
     has to be increased. This minimum capacity is specified at compile time.
+  * [classref boost::container::devector devector]: is a hybrid of the standard vector and deque containers.
+    It offers cheap (amortized constant time) insertion at both the front and back ends.
   * [classref boost::container::slist slist]: the classic pre-standard singly linked list implementation
     offering constant-time `size()`. Note that C++11 `forward_list` has no `size()`.
 
@@ -455,6 +457,21 @@ erasure times considerably. Flat associative containers have the following attri
 * Weaker exception safety than standard associative containers
 (copy/move constructors can throw when shifting values in erasures and insertions)
 * Slower insertion and erasure than standard associative containers (specially for non-movable types)
+
+[endsect]
+
+[section:devector ['devector]]
+
+`devector` is a hybrid of the standard vector and deque containers originally written by Thaler Benedek.
+It offers cheap (amortized constant time) insertion at both the front and back ends,
+while also providing the regular features of `vector`, in particular the contiguous underlying memory.
+
+Unlike `vector`, devector can have free capacity both before and after the elements. This enables efficient
+implementation of methods that modify the devector at the front. In general, `devector`'s available methods
+are a superset of those of `vector` with identical behaviour, barring a couple of iterator invalidation
+guarantees that differ.
+
+The overhead for devector is one extra `size_t` per container: Usually sizeof(devector) == 4*sizeof(T*).
 
 [endsect]
 
@@ -1305,6 +1322,10 @@ use [*Boost.Container]? There are several reasons for that:
 
 *  `static_vector` was based on Andrew Hundt's and Adam Wulkiewicz's high-performance `varray` class.
    Many performance improvements of `vector` were also inspired by their implementation. Thanks!
+
+*  `devector` is based on Thaler Benedek's high-performance `devector` implementation, then
+   adapted for [*Boost.Container]. Also inspired by similar implemenations by Orson Peters and Lars Hagen.
+   Thanks for such a great code and documentation!
 
 *  Howard Hinnant's help and advices were essential when implementing move semantics,
    improving allocator support or implementing small string optimization. Thanks Howard
