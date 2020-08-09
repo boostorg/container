@@ -329,7 +329,7 @@ struct vector_alloc_holder
          pointer reuse = pointer();
          size_type final_cap = initial_size;
          m_start = this->allocation_command(allocate_new, initial_size, final_cap, reuse);
-         m_capacity = static_cast<stored_size_type>(final_cap);
+         this->set_stored_capacity(final_cap);
       }
    }
 
@@ -345,7 +345,7 @@ struct vector_alloc_holder
          pointer reuse = pointer();
          size_type final_cap = initial_size;
          m_start = this->allocation_command(allocate_new, initial_size, final_cap, reuse);
-         m_capacity = static_cast<stored_size_type>(final_cap);
+         this->set_stored_capacity(final_cap);
       }
    }
 
@@ -382,6 +382,12 @@ struct vector_alloc_holder
          this->deallocate(this->m_start, this->m_capacity);
       }
    }
+
+   BOOST_CONTAINER_FORCEINLINE void set_stored_size(size_type s) BOOST_NOEXCEPT_OR_NOTHROW
+      {  this->m_size = static_cast<stored_size_type>(s);   }
+
+   BOOST_CONTAINER_FORCEINLINE void set_stored_capacity(size_type c) BOOST_NOEXCEPT_OR_NOTHROW
+      {  this->m_capacity = static_cast<stored_size_type>(c);  }
 
    BOOST_CONTAINER_FORCEINLINE pointer allocation_command(boost::container::allocation_type command,
                               size_type limit_size, size_type &prefer_in_recvd_out_size, pointer &reuse)
@@ -427,7 +433,7 @@ struct vector_alloc_holder
    {
       BOOST_ASSERT(additional_objects > size_type(this->m_capacity - this->m_size));
       size_type max = allocator_traits_type::max_size(this->alloc());
-      (clamp_by_stored_size_type)(max, stored_size_type());
+      (clamp_by_stored_size_type<size_type>)(max, stored_size_type());
       const size_type remaining_cap = max - size_type(this->m_capacity);
       const size_type min_additional_cap = additional_objects - size_type(this->m_capacity - this->m_size);
 
@@ -470,7 +476,7 @@ struct vector_alloc_holder
    BOOST_CONTAINER_FORCEINLINE void start(const pointer &p)       BOOST_NOEXCEPT_OR_NOTHROW
       {  m_start = p;  }
    BOOST_CONTAINER_FORCEINLINE void capacity(const size_type &c)  BOOST_NOEXCEPT_OR_NOTHROW
-      {  BOOST_ASSERT( c <= stored_size_type(-1)); m_capacity = c;  }
+      {  BOOST_ASSERT( c <= stored_size_type(-1)); this->set_stored_capacity(c);  }
 
    static BOOST_CONTAINER_FORCEINLINE void on_capacity_overflow()
    { }
@@ -488,16 +494,6 @@ struct vector_alloc_holder
       }
    }
 
-   BOOST_CONTAINER_FORCEINLINE static void clamp_by_stored_size_type(size_type &, size_type)
-   {}
-
-   template<class SomeStoredSizeType>
-   BOOST_CONTAINER_FORCEINLINE static void clamp_by_stored_size_type(size_type &s, SomeStoredSizeType)
-   {
-      if (s >= SomeStoredSizeType(-1) ) 
-         s = SomeStoredSizeType(-1);
-   }
-
    BOOST_CONTAINER_FORCEINLINE pointer priv_allocation_command(version_1, boost::container::allocation_type command,
                          size_type limit_size,
                          size_type &prefer_in_recvd_out_size,
@@ -510,7 +506,7 @@ struct vector_alloc_holder
       if (limit_size > stored_size_type(-1)){
          boost::container::throw_length_error("get_next_capacity, allocator's max size reached");
       }
-      (clamp_by_stored_size_type)(prefer_in_recvd_out_size, stored_size_type());
+      (clamp_by_stored_size_type<size_type>)(prefer_in_recvd_out_size, stored_size_type());
       pointer const p = this->allocate(prefer_in_recvd_out_size);
       reuse = pointer();
       return p;
@@ -525,11 +521,11 @@ struct vector_alloc_holder
       if (limit_size > stored_size_type(-1)){
          boost::container::throw_length_error("get_next_capacity, allocator's max size reached");
       }
-      (clamp_by_stored_size_type)(prefer_in_recvd_out_size, stored_size_type());
+      (clamp_by_stored_size_type<size_type>)(prefer_in_recvd_out_size, stored_size_type());
       //Allocate memory 
       pointer p = this->alloc().allocation_command(command, limit_size, prefer_in_recvd_out_size, reuse);
       //If after allocation prefer_in_recvd_out_size is not representable by stored_size_type, truncate it.
-      (clamp_by_stored_size_type)(prefer_in_recvd_out_size, stored_size_type());
+      (clamp_by_stored_size_type<size_type>)(prefer_in_recvd_out_size, stored_size_type());
       return p;
    }
 };
@@ -610,6 +606,9 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
 
    static BOOST_CONTAINER_FORCEINLINE void on_capacity_overflow()
    {  allocator_type::on_capacity_overflow();  }
+
+   BOOST_CONTAINER_FORCEINLINE void set_stored_size(size_type s) BOOST_NOEXCEPT_OR_NOTHROW
+      {  this->m_size = static_cast<stored_size_type>(s);   }
 
    BOOST_CONTAINER_FORCEINLINE void priv_first_allocation(size_type cap)
    {
@@ -1282,7 +1281,7 @@ private:
       }
 
       boost::container::copy_assign_range_alloc_n(this->m_holder.alloc(), first, input_sz, this->priv_raw_begin(), this->size());
-      this->m_holder.m_size = input_sz;
+      m_holder.set_stored_size(input_sz);
    }
 
    //! <b>Effects</b>: Assigns the n copies of val to *this.
@@ -1351,9 +1350,9 @@ private:
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_FORCEINLINE iterator end() BOOST_NOEXCEPT_OR_NOTHROW
    {
-      pointer   const bg = this->m_holder.start();
-      size_type const sz = this->m_holder.m_size;
-      return iterator(BOOST_LIKELY(sz) ? bg + sz : bg);  //Avoid UB on null-pointer arithmetic
+      iterator it (this->m_holder.start());
+      it += this->m_holder.m_size;
+      return it;  //Adding zero to null pointer is allowed (non-UB)
    }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the vector.
@@ -1415,11 +1414,10 @@ private:
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_FORCEINLINE const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW
    {
-      pointer   const bg = this->m_holder.start();
-      size_type const sz = this->m_holder.m_size;
-      return const_iterator(BOOST_LIKELY(sz) ? bg + sz : bg);  //Avoid UB on null-pointer arithmetic
+      const_iterator it (this->m_holder.start());
+      it += this->m_holder.m_size;
+      return it;  //Adding zero to null pointer is allowed (non-UB)
    }
-   //{ return const_iterator(this->m_holder.start() + this->m_holder.m_size); }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
    //! of the reversed vector.
@@ -2245,14 +2243,14 @@ private:
             else{
                //Hole was just filled, disable exception rollback and change vector size
                past_hole_values_destroyer.release();
-               this->m_holder.m_size += element_count;
+               this->m_holder.set_stored_size(this->size() + element_count);
             }
          }
          else{
             if(old_hole_size){
                //Hole was just filled by priv_insert_ordered_at_shift_range, disable exception rollback and change vector size
                past_hole_values_destroyer.release();
-               this->m_holder.m_size += element_count;
+               this->m_holder.set_stored_size(this->size() + element_count);
             }
             //Insert the new value in the already constructed range
             begin_ptr[pos + insertions_left - 1] = position_value.get_val();
@@ -2353,7 +2351,7 @@ private:
       if (old_cap > 0) {
          this->m_holder.deallocate(old_p, old_cap);
       }
-      this->m_holder.m_size = old_size + added;
+      m_holder.set_stored_size(old_size + added);
       this->m_holder.start(new_storage);
       this->m_holder.capacity(new_cap);
       new_buffer_deallocator.release();
@@ -2387,7 +2385,7 @@ private:
       const size_type this_sz  = m_holder.m_size;
       const size_type other_sz = static_cast<size_type>(x.m_holder.m_size);
       boost::container::move_assign_range_alloc_n(this->m_holder.alloc(), other_start, other_sz, this_start, this_sz);
-      this->m_holder.m_size = other_sz;
+      m_holder.set_stored_size(other_sz);
       //Not emptying the source container seems to be confusing for users as drop-in
       //replacement for non-static vectors, so clear it.
       x.clear();
@@ -2445,7 +2443,7 @@ private:
       const size_type this_sz  = m_holder.m_size;
       const size_type other_sz = static_cast<size_type>(x.m_holder.m_size);
       boost::container::copy_assign_range_alloc_n(this->m_holder.alloc(), other_start, other_sz, this_start, this_sz);
-      this->m_holder.m_size = other_sz;
+      m_holder.set_stored_size(other_sz);
    }
 
    template<class OtherA>
@@ -2520,6 +2518,9 @@ private:
       //There is not enough memory, allocate a new buffer
       //Pass the hint so that allocators can take advantage of this.
       pointer const p = this->m_holder.allocate(new_cap);
+      #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
+      ++this->num_alloc;
+      #endif
       //We will reuse insert code, so create a dummy input iterator
       this->priv_forward_range_insert_new_allocation
          ( boost::movelib::to_raw_pointer(p), new_cap, this->priv_raw_end(), 0, this->priv_dummy_empty_proxy());
@@ -2580,7 +2581,7 @@ private:
          T* const destroy_pos = this->priv_raw_begin() + (this->m_holder.m_size-n);
          boost::container::destroy_alloc_n(this->get_stored_allocator(), destroy_pos, n);
       }
-      this->m_holder.m_size -= n;
+      this->m_holder.set_stored_size(this->size() - n);
    }
 
    template<class InpIt>
@@ -2588,7 +2589,7 @@ private:
    {
       T* const old_end_pos = this->priv_raw_end();
       T* const new_end_pos = boost::container::uninitialized_copy_alloc(this->m_holder.alloc(), first, last, old_end_pos);
-      this->m_holder.m_size += new_end_pos - old_end_pos;
+      this->m_holder.set_stored_size(this->size() + new_end_pos - old_end_pos);
    }
 
    void priv_destroy_all() BOOST_NOEXCEPT_OR_NOTHROW
@@ -3040,9 +3041,9 @@ private:
          //Copy first old values before pos, after that the new objects
          T *const new_elem_pos =
             ::boost::container::uninitialized_move_alloc(this->m_holder.alloc(), old_start, pos, new_start);
-         this->m_holder.m_size = elemsbefore;
+         this->m_holder.set_stored_size(elemsbefore);
          insert_range_proxy.uninitialized_copy_n_and_update(this->m_holder.alloc(), new_elem_pos, n);
-         this->m_holder.m_size = before_plus_new;
+         this->m_holder.set_stored_size(before_plus_new);
          const size_type new_size = old_size + n;
          //Check if s_before is so big that even copying the old data + new data
          //there is a gap between the new data and the old data
@@ -3062,7 +3063,7 @@ private:
                ::boost::container::uninitialized_move_alloc
                   (this->m_holder.alloc(), pos, old_finish, new_start + before_plus_new);
                //All new elements correctly constructed, avoid new element destruction
-               this->m_holder.m_size = new_size;
+               this->m_holder.set_stored_size(new_size);
             }
             //Old values destroyed automatically with "old_values_destroyer"
             //when "old_values_destroyer" goes out of scope unless the have trivial
@@ -3093,7 +3094,7 @@ private:
                //Now we have a contiguous buffer so program trailing element destruction
                //and update size to the final size.
                old_values_destroyer.shrink_forward(new_size-s_before);
-               this->m_holder.m_size = new_size;
+               this->m_holder.set_stored_size(new_size);
                //Now move remaining last objects in the old buffer begin
                T * const remaining_pos = pos + raw_gap;
                if(remaining_pos != old_start){  //Make sure data has to be moved
@@ -3107,7 +3108,7 @@ private:
             else{ //If trivial destructor, we can uninitialized copy + copy in a single uninitialized copy
                ::boost::container::uninitialized_move_alloc_n
                   (this->m_holder.alloc(), pos, static_cast<size_type>(old_finish - pos), new_start + before_plus_new);
-               this->m_holder.m_size = new_size;
+               this->m_holder.set_stored_size(new_size);
                old_values_destroyer.release();
             }
          }
@@ -3180,7 +3181,7 @@ private:
                   old_values_destroyer.shrink_forward(old_size - (s_before - n));
                }
             }
-            this->m_holder.m_size = old_size + new_1st_range;
+            this->m_holder.set_stored_size(old_size + new_1st_range);
             //Now copy the second part of old_begin overwriting itself
             T *const next = ::boost::container::move(old_start + s_before, pos, old_start);
             //Now copy the new_beg elements
@@ -3221,12 +3222,12 @@ private:
             //First copy whole old_begin and part of new to raw_mem
             T * const new_pos = ::boost::container::uninitialized_move_alloc
                (this->m_holder.alloc(), old_start, pos, new_start);
-            this->m_holder.m_size = elemsbefore;
+            this->m_holder.set_stored_size(elemsbefore);
             const size_type mid_n = s_before - elemsbefore;
             insert_range_proxy.uninitialized_copy_n_and_update(this->m_holder.alloc(), new_pos, mid_n);
             //The buffer is all constructed until old_end,
             //release destroyer
-            this->m_holder.m_size = old_size + s_before;
+            this->m_holder.set_stored_size(old_size + s_before);
             old_values_destroyer.release();
 
             if(do_after){
@@ -3246,7 +3247,7 @@ private:
                size_type n_destroy = s_before - n;
                if(!value_traits::trivial_dctr_after_move)
                   boost::container::destroy_alloc_n(this->get_stored_allocator(), move_end, n_destroy);
-               this->m_holder.m_size -= n_destroy;
+               this->m_holder.set_stored_size(this->size() - n_destroy);
             }
          }
 
@@ -3290,7 +3291,7 @@ private:
                T* finish_n = old_finish - n_after;
                ::boost::container::uninitialized_move_alloc
                   (this->m_holder.alloc(), finish_n, old_finish, old_finish);
-               this->m_holder.m_size += n_after;
+               this->m_holder.set_stored_size(this->size() + n_after);
                //Displace the rest of old_end to the new position
                boost::container::move_backward(pos, finish_n, old_finish);
                //Now overwrite with new_end
@@ -3325,7 +3326,7 @@ private:
                insert_range_proxy.copy_n_and_update(this->m_holder.alloc(), pos, elemsafter);
                //Copy the rest to the uninitialized zone filling the gap
                insert_range_proxy.uninitialized_copy_n_and_update(this->m_holder.alloc(), old_finish, mid_last_dist);
-               this->m_holder.m_size += n_after;
+               this->m_holder.set_stored_size(this->size() + n_after);
                old_end_destroyer.release();
             }
          }
