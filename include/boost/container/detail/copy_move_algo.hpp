@@ -341,7 +341,8 @@ inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, F>::type
 {
    F back = r;
    BOOST_TRY{
-      while (n--) {
+      while (n) {
+         --n;
          allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), boost::move(*f));
          ++f; ++r;
       }
@@ -386,7 +387,8 @@ inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, I>::type
 {
    F back = r;
    BOOST_TRY{
-      while (n--) {
+      while (n) {
+         --n;
          allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), boost::move(*f));
          ++f; ++r;
       }
@@ -476,7 +478,8 @@ inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, F>::type
 {
    F back = r;
    BOOST_TRY{
-      while (n--) {
+      while (n) {
+         --n;
          allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), *f);
          ++f; ++r;
       }
@@ -565,7 +568,8 @@ inline typename dtl::disable_if_memzero_initializable<F, F>::type
 {
    F back = r;
    BOOST_TRY{
-      while (n--) {
+      while (n) {
+         --n;
          allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r));
          ++r;
       }
@@ -614,7 +618,8 @@ inline F uninitialized_default_init_alloc_n(Allocator &a, typename boost::contai
 {
    F back = r;
    BOOST_TRY{
-      while (n--) {
+      while (n) {
+         --n;
          allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), default_init);
          ++r;
       }
@@ -686,7 +691,8 @@ inline F uninitialized_fill_alloc_n(Allocator &a, const T &v, typename boost::co
 {
    F back = r;
    BOOST_TRY{
-      while (n--) {
+      while (n) {
+         --n;
          allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), v);
          ++r;
       }
@@ -769,7 +775,8 @@ typename F>   // F models ForwardIterator
 inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, I>::type
    copy_n_source(I f, U n, F r)
 {
-   while (n--) {
+   while (n) {
+      --n;
       boost::container::assign_in_place(r, f);
       ++f; ++r;
    }
@@ -797,7 +804,8 @@ typename F>   // F models ForwardIterator
 inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, I>::type
    copy_n_source_dest(I f, U n, F &r)
 {
-   while (n--) {
+   while (n) {
+      --n;
       *r = *f;
       ++f; ++r;
    }
@@ -851,7 +859,8 @@ typename F>   // F models ForwardIterator
 inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, F>::type
    move_n(I f, U n, F r)
 {
-   while (n--) {
+   while (n) {
+      --n;
       *r = ::boost::move(*f);
       ++f; ++r;
    }
@@ -914,7 +923,8 @@ template
 inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, I>::type
    move_n_source_dest(I f, U n, F &r)
 {
-   while (n--) {
+   while (n) {
+      --n;
       *r = ::boost::move(*f);
       ++f; ++r;
    }
@@ -942,7 +952,8 @@ template
 inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, I>::type
    move_n_source(I f, U n, F r)
 {
-   while (n--) {
+   while (n) {
+      --n;
       *r = ::boost::move(*f);
       ++f; ++r;
    }
