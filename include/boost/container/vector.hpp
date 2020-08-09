@@ -1473,8 +1473,8 @@ private:
    //! <b>Throws</b>: If memory allocation throws, or T's copy/move or value initialization throws.
    //!
    //! <b>Complexity</b>: Linear to the difference between size() and new_size.
-   void resize(size_type new_size)
-   {  this->priv_resize(new_size, value_init);  }
+   BOOST_CONTAINER_FORCEINLINE void resize(size_type new_size)
+   {  this->priv_resize(new_size, value_init, alloc_version());  }
 
    //! <b>Effects</b>: Inserts or erases elements at the end such that
    //!   the size becomes n. New elements are default initialized.
@@ -1484,8 +1484,8 @@ private:
    //! <b>Complexity</b>: Linear to the difference between size() and new_size.
    //!
    //! <b>Note</b>: Non-standard extension
-   void resize(size_type new_size, default_init_t)
-   {  this->priv_resize(new_size, default_init);  }
+   BOOST_CONTAINER_FORCEINLINE void resize(size_type new_size, default_init_t)
+   {  this->priv_resize(new_size, default_init, alloc_version());  }
 
    //! <b>Effects</b>: Inserts or erases elements at the end such that
    //!   the size becomes n. New elements are copy constructed from x.
@@ -1493,8 +1493,8 @@ private:
    //! <b>Throws</b>: If memory allocation throws, or T's copy/move constructor throws.
    //!
    //! <b>Complexity</b>: Linear to the difference between size() and new_size.
-   void resize(size_type new_size, const T& x)
-   {  this->priv_resize(new_size, x);  }
+   BOOST_CONTAINER_FORCEINLINE void resize(size_type new_size, const T& x)
+   {  this->priv_resize(new_size, x, alloc_version());  }
 
    //! <b>Effects</b>: Number of elements for which memory has been allocated.
    //!   capacity() is always greater than or equal to size().
@@ -1541,7 +1541,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reference         front() BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE reference front() BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!this->empty());
       return *this->m_holder.start();
@@ -1555,7 +1555,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reference   front() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE const_reference front() const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!this->empty());
       return *this->m_holder.start();
@@ -1569,7 +1569,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reference         back() BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE reference back() BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!this->empty());
       return this->m_holder.start()[this->m_holder.m_size - 1];
@@ -1583,7 +1583,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reference   back()  const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE const_reference back()  const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!this->empty());
       return this->m_holder.start()[this->m_holder.m_size - 1];
@@ -1597,7 +1597,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   reference operator[](size_type n) BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE reference operator[](size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->m_holder.m_size > n);
       return this->m_holder.start()[n];
@@ -1611,7 +1611,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const_reference operator[](size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE const_reference operator[](size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->m_holder.m_size > n);
       return this->m_holder.start()[n];
@@ -1628,7 +1628,7 @@ private:
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension
-   iterator nth(size_type n) BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE iterator nth(size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->m_holder.m_size >= n);
       return iterator(this->m_holder.start()+n);
@@ -1645,7 +1645,7 @@ private:
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension
-   const_iterator nth(size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE const_iterator nth(size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->m_holder.m_size >= n);
       return const_iterator(this->m_holder.start()+n);
@@ -1661,7 +1661,7 @@ private:
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension
-   size_type index_of(iterator p) BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE size_type index_of(iterator p) BOOST_NOEXCEPT_OR_NOTHROW
    {
       //Range check assert done in priv_index_of
       return this->priv_index_of(vector_iterator_get_ptr(p));
@@ -1677,7 +1677,7 @@ private:
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension
-   size_type index_of(const_iterator p) const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE size_type index_of(const_iterator p) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       //Range check assert done in priv_index_of
       return this->priv_index_of(vector_iterator_get_ptr(p));
@@ -1691,7 +1691,7 @@ private:
    //! <b>Throws</b>: std::range_error if n >= size()
    //!
    //! <b>Complexity</b>: Constant.
-   reference at(size_type n)
+   BOOST_CONTAINER_FORCEINLINE reference at(size_type n)
    {
       this->priv_throw_if_out_of_range(n);
       return this->m_holder.start()[n];
@@ -1705,7 +1705,7 @@ private:
    //! <b>Throws</b>: std::range_error if n >= size()
    //!
    //! <b>Complexity</b>: Constant.
-   const_reference at(size_type n) const
+   BOOST_CONTAINER_FORCEINLINE const_reference at(size_type n) const
    {
       this->priv_throw_if_out_of_range(n);
       return this->m_holder.start()[n];
@@ -1723,7 +1723,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   T* data() BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE T* data() BOOST_NOEXCEPT_OR_NOTHROW
    { return this->priv_raw_begin(); }
 
    //! <b>Returns</b>: A pointer such that [data(),data() + size()) is a valid range.
@@ -1732,7 +1732,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   const T * data()  const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE const T * data()  const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->priv_raw_begin(); }
 
    //////////////////////////////////////////////
@@ -1799,7 +1799,7 @@ private:
    //! <b>Complexity</b>: If position is end(), amortized constant time
    //!   Linear time otherwise.
    template<class ...Args>
-   iterator emplace(const_iterator position, BOOST_FWD_REF(Args) ...args)
+   BOOST_CONTAINER_FORCEINLINE iterator emplace(const_iterator position, BOOST_FWD_REF(Args) ...args)
    {
       BOOST_ASSERT(this->priv_in_range_or_end(position));
       //Just call more general insert(pos, size, value) and return iterator
@@ -1841,7 +1841,7 @@ private:
    }\
    \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
-   iterator emplace(const_iterator pos BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   BOOST_CONTAINER_FORCEINLINE iterator emplace(const_iterator pos BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
    {\
       BOOST_ASSERT(this->priv_in_range_or_end(pos));\
       typedef dtl::insert_emplace_proxy_arg##N<allocator_type, T* BOOST_MOVE_I##N BOOST_MOVE_TARG##N> type;\
@@ -1907,7 +1907,7 @@ private:
    //! <b>Throws</b>: If memory allocation throws or T's copy/move constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
-   iterator insert(const_iterator p, size_type n, const T& x)
+   BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, size_type n, const T& x)
    {
       BOOST_ASSERT(this->priv_in_range_or_end(p));
       dtl::insert_n_copies_proxy<allocator_type, T*> proxy(x);
@@ -1947,7 +1947,7 @@ private:
 
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    template <class FwdIt>
-   iterator insert(const_iterator pos, FwdIt first, FwdIt last
+   BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator pos, FwdIt first, FwdIt last
       , typename dtl::disable_if_or
          < void
          , dtl::is_convertible<FwdIt, size_type>
@@ -1978,7 +1978,7 @@ private:
    //!   a non-standard extension.
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    template <class InIt>
-   iterator insert(const_iterator pos, size_type num, InIt first, InIt last)
+   BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator pos, size_type num, InIt first, InIt last)
    {
       BOOST_ASSERT(this->priv_in_range_or_end(pos));
       BOOST_ASSERT(dtl::is_input_iterator<InIt>::value ||
@@ -2364,7 +2364,7 @@ private:
    BOOST_CONTAINER_FORCEINLINE pointer back_ptr() const
    {  return this->m_holder.start() + this->m_holder.m_size;  }
 
-   size_type priv_index_of(pointer p) const
+   BOOST_CONTAINER_FORCEINLINE size_type priv_index_of(pointer p) const
    {
       BOOST_ASSERT(this->m_holder.start() <= p);
       BOOST_ASSERT(p <= (this->m_holder.start()+this->size()));
@@ -2467,7 +2467,7 @@ private:
    }
 
    template<class Vector>  //Template it to avoid it in explicit instantiations
-   void priv_swap(Vector &x, dtl::true_type)   //version_0
+   BOOST_CONTAINER_FORCEINLINE void priv_swap(Vector &x, dtl::true_type)   //version_0
    {  this->m_holder.deep_swap(x.m_holder);  }
 
    template<class Vector>  //Template it to avoid it in explicit instantiations
@@ -2507,7 +2507,7 @@ private:
    void priv_reserve_no_capacity(size_type, version_0)
    {  alloc_holder_t::on_capacity_overflow();  }
 
-   dtl::insert_range_proxy<allocator_type, boost::move_iterator<T*>, T*> priv_dummy_empty_proxy()
+   BOOST_CONTAINER_FORCEINLINE dtl::insert_range_proxy<allocator_type, boost::move_iterator<T*>, T*> priv_dummy_empty_proxy()
    {
       return dtl::insert_range_proxy<allocator_type, boost::move_iterator<T*>, T*>
          (::boost::make_move_iterator((T *)0));
@@ -2614,7 +2614,7 @@ private:
    {  return dtl::insert_move_proxy<allocator_type, T*> (x);  }
 
    template <class U>
-   void priv_push_back(BOOST_FWD_REF(U) u)
+   BOOST_CONTAINER_FORCEINLINE void priv_push_back(BOOST_FWD_REF(U) u)
    {
       if (BOOST_LIKELY(this->room_enough())){
          //There is more memory, just construct a new object at the end
