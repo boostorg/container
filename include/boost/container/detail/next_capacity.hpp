@@ -18,6 +18,9 @@
 #  pragma once
 #endif
 
+#include <boost/container/detail/config_begin.hpp>
+#include <boost/container/detail/workaround.hpp>
+
 // container
 #include <boost/container/throw_exception.hpp>
 // container/detail
@@ -71,7 +74,20 @@ struct growth_factor_100
    : dtl::grow_factor_ratio<0, 2, 1>
 {};
 
+template<class SizeType>
+BOOST_CONTAINER_FORCEINLINE void clamp_by_stored_size_type(SizeType &, SizeType)
+{}
+
+template<class SizeType, class SomeStoredSizeType>
+BOOST_CONTAINER_FORCEINLINE void clamp_by_stored_size_type(SizeType &s, SomeStoredSizeType)
+{
+   if (s >= SomeStoredSizeType(-1) ) 
+      s = SomeStoredSizeType(-1);
+}
+
 }  //namespace container {
 }  //namespace boost {
+
+#include <boost/container/detail/config_end.hpp>
 
 #endif   //#ifndef BOOST_CONTAINER_DETAIL_NEXT_CAPACITY_HPP
