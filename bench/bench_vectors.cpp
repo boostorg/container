@@ -8,12 +8,6 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#ifdef _MSC_VER
-#pragma warning (disable : 4512)
-#pragma warning (disable : 4267)
-#pragma warning (disable : 4244)
-#endif
-
 #include <vector>
 #include <deque>
 #include <boost/container/vector.hpp>
@@ -47,21 +41,21 @@ class MyInt
    int int_;
 
    public:
-   explicit MyInt(int i = 0)
+   BOOST_CONTAINER_FORCEINLINE explicit MyInt(int i = 0)
       : int_(i)
    {}
 
-   MyInt(const MyInt &other)
+   BOOST_CONTAINER_FORCEINLINE MyInt(const MyInt &other)
       :  int_(other.int_)
    {}
 
-   MyInt & operator=(const MyInt &other)
+   BOOST_CONTAINER_FORCEINLINE MyInt & operator=(const MyInt &other)
    {
       int_ = other.int_;
       return *this;
    }
 
-   ~MyInt()
+   BOOST_CONTAINER_FORCEINLINE ~MyInt()
    {
       int_ = 0;
    }
@@ -71,20 +65,20 @@ template<class C, bool = boost::container::test::
          has_member_function_callable_with_capacity<C>::value>
 struct capacity_wrapper
 {
-   static typename C::size_type get_capacity(const C &c)
+   BOOST_CONTAINER_FORCEINLINE static typename C::size_type get_capacity(const C &c)
    {  return c.capacity(); }
 
-   static void set_reserve(C &c, typename C::size_type cp)
+   BOOST_CONTAINER_FORCEINLINE static void set_reserve(C &c, typename C::size_type cp)
    {  c.reserve(cp); }
 };
 
 template<class C>
 struct capacity_wrapper<C, false>
 {
-   static typename C::size_type get_capacity(const C &)
+   BOOST_CONTAINER_FORCEINLINE static typename C::size_type get_capacity(const C &)
    {  return 0u; }
 
-   static void set_reserve(C &, typename C::size_type )
+   BOOST_CONTAINER_FORCEINLINE static void set_reserve(C &, typename C::size_type )
    { }
 };
 
@@ -92,7 +86,7 @@ const std::size_t RangeSize = 5;
 
 struct insert_end_range
 {
-   std::size_t capacity_multiplier() const
+   BOOST_CONTAINER_FORCEINLINE std::size_t capacity_multiplier() const
    {  return RangeSize;  }
 
    template<class C>
@@ -107,14 +101,14 @@ struct insert_end_range
 
 struct insert_end_repeated
 {
-   std::size_t capacity_multiplier() const
+   BOOST_CONTAINER_FORCEINLINE std::size_t capacity_multiplier() const
    {  return RangeSize;  }
 
    template<class C>
    BOOST_CONTAINER_FORCEINLINE void operator()(C &c, int i)
    {  c.insert(c.end(), RangeSize, MyInt(i)); }
 
-   const char *name() const
+   BOOST_CONTAINER_FORCEINLINE const char *name() const
    {  return "insert_end_repeated"; }
 
    MyInt a[RangeSize];
@@ -122,47 +116,33 @@ struct insert_end_repeated
 
 struct push_back
 {
-   std::size_t capacity_multiplier() const
+   BOOST_CONTAINER_FORCEINLINE std::size_t capacity_multiplier() const
    {  return 1;  }
 
    template<class C>
    BOOST_CONTAINER_FORCEINLINE void operator()(C &c, int i)
    {  c.push_back(MyInt(i)); }
 
-   const char *name() const
+   BOOST_CONTAINER_FORCEINLINE const char *name() const
    {  return "push_back"; }
-};
-
-struct emplace_back
-{
-   std::size_t capacity_multiplier() const
-   {  return 1;  }
-
-   template<class C>
-   BOOST_CONTAINER_FORCEINLINE void operator()(C &c, int i)
-   {  c.emplace_back(MyInt(i)); }
-
-   const char *name() const
-   {  return "emplace_back"; }
 };
 
 struct insert_near_end_repeated
 {
-
-   std::size_t capacity_multiplier() const
+   BOOST_CONTAINER_FORCEINLINE std::size_t capacity_multiplier() const
    {  return RangeSize;  }
 
    template<class C>
    BOOST_CONTAINER_FORCEINLINE void operator()(C &c, int i)
    {  c.insert(c.size() >= RangeSize ? c.end()-RangeSize : c.begin(), RangeSize, MyInt(i)); }
 
-   const char *name() const
+   BOOST_CONTAINER_FORCEINLINE const char *name() const
    {  return "insert_near_end_repeated"; }
 };
 
 struct insert_near_end_range
 {
-   std::size_t capacity_multiplier() const
+   BOOST_CONTAINER_FORCEINLINE std::size_t capacity_multiplier() const
    {  return RangeSize;  }
 
    template<class C>
@@ -171,7 +151,7 @@ struct insert_near_end_range
       c.insert(c.size() >= RangeSize ? c.end()-RangeSize : c.begin(), &a[0], &a[0]+RangeSize);
    }
 
-   const char *name() const
+   BOOST_CONTAINER_FORCEINLINE const char *name() const
    {  return "insert_near_end_repeated"; }
 
    MyInt a[RangeSize];
@@ -179,7 +159,7 @@ struct insert_near_end_range
 
 struct insert_near_end
 {
-   std::size_t capacity_multiplier() const
+   BOOST_CONTAINER_FORCEINLINE std::size_t capacity_multiplier() const
    {  return 1;  }
 
    template<class C>
@@ -191,36 +171,45 @@ struct insert_near_end
       c.insert(it, MyInt(i));
    }
 
-   const char *name() const
+   BOOST_CONTAINER_FORCEINLINE const char *name() const
    {  return "insert_near_end"; }
 };
 
 
 template<class Container, class Operation>
-void vector_test_template(unsigned int num_iterations, unsigned int num_elements, const char *cont_name)
+void vector_test_template(std::size_t num_iterations, std::size_t num_elements, const char *cont_name)
 {
-   cpu_timer timer;
-   timer.resume();
-
-
-   unsigned int capacity = 0;
-   Operation op;
    typedef capacity_wrapper<Container> cpw_t;
+
+   Container c;
+   cpw_t::set_reserve(c, num_elements);
+
+   Operation op;
    const typename Container::size_type multiplier = op.capacity_multiplier();
 
-   for(unsigned int r = 0; r != num_iterations; ++r){
-      Container c;
-      cpw_t::set_reserve(c, num_elements);
+   //Warm-up operations
+   for(std::size_t e = 0, max = num_elements/multiplier; e != max; ++e){
+      op(c, static_cast<int>(e));
+   }
+   c.clear();
 
-      for(unsigned e = 0, max = num_elements/multiplier; e != max; ++e){
+   cpu_timer timer;
+   timer.start();
+
+   for(std::size_t r = 0; r != num_iterations; ++r){
+
+      for(std::size_t e = 0, max = num_elements/multiplier; e != max; ++e){
          op(c, static_cast<int>(e));
       }
 
-      capacity = static_cast<unsigned int>(cpw_t::get_capacity(c));
+      timer.stop();
+      c.clear();
+      timer.resume();
    }
 
    timer.stop();
 
+   std::size_t capacity = cpw_t::get_capacity(c);
 
    nanosecond_type nseconds = timer.elapsed().wall;
 
@@ -271,7 +260,6 @@ int main()
 {
    //end
    test_vectors<push_back>();
-   test_vectors<emplace_back>();
    test_vectors<insert_end_range>();
    test_vectors<insert_end_repeated>();
    //near end
