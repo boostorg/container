@@ -386,6 +386,12 @@ struct vector_alloc_holder
    BOOST_CONTAINER_FORCEINLINE void set_stored_size(size_type s) BOOST_NOEXCEPT_OR_NOTHROW
       {  this->m_size = static_cast<stored_size_type>(s);   }
 
+   BOOST_CONTAINER_FORCEINLINE void dec_stored_size(size_type s) BOOST_NOEXCEPT_OR_NOTHROW
+      {  this->m_size -= static_cast<stored_size_type>(s);   }
+
+   BOOST_CONTAINER_FORCEINLINE void inc_stored_size(size_type s) BOOST_NOEXCEPT_OR_NOTHROW
+      {  this->m_size += static_cast<stored_size_type>(s);   }
+
    BOOST_CONTAINER_FORCEINLINE void set_stored_capacity(size_type c) BOOST_NOEXCEPT_OR_NOTHROW
       {  this->m_capacity = static_cast<stored_size_type>(c);  }
 
@@ -610,6 +616,12 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
    BOOST_CONTAINER_FORCEINLINE void set_stored_size(size_type s) BOOST_NOEXCEPT_OR_NOTHROW
       {  this->m_size = static_cast<stored_size_type>(s);   }
 
+   BOOST_CONTAINER_FORCEINLINE void dec_stored_size(size_type s) BOOST_NOEXCEPT_OR_NOTHROW
+      {  this->m_size -= static_cast<stored_size_type>(s);   }
+
+   BOOST_CONTAINER_FORCEINLINE void inc_stored_size(size_type s) BOOST_NOEXCEPT_OR_NOTHROW
+      {  this->m_size += static_cast<stored_size_type>(s);   }
+
    BOOST_CONTAINER_FORCEINLINE void priv_first_allocation(size_type cap)
    {
       if(cap > allocator_type::internal_capacity){
@@ -655,7 +667,7 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
    BOOST_CONTAINER_FORCEINLINE pointer start() const       BOOST_NOEXCEPT_OR_NOTHROW
    {  return allocator_type::internal_storage();  }
    
-   BOOST_CONTAINER_FORCEINLINE size_type  capacity() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE size_type capacity() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return allocator_type::internal_capacity;  }
    
    stored_size_type m_size;
@@ -1754,9 +1766,9 @@ private:
    template<class ...Args>
    BOOST_CONTAINER_FORCEINLINE reference emplace_back(BOOST_FWD_REF(Args)...args)
    {
+      T* const p = this->priv_raw_end();
       if (BOOST_LIKELY(this->room_enough())){
          //There is more memory, just construct a new object at the end
-         T* const p = this->priv_raw_end();
          allocator_traits_type::construct(this->m_holder.alloc(), p, ::boost::forward<Args>(args)...);
          ++this->m_holder.m_size;
          return *p;
@@ -1764,7 +1776,7 @@ private:
       else{
          typedef dtl::insert_emplace_proxy<allocator_type, T*, Args...> proxy_t;
          return *this->priv_insert_forward_range_no_capacity
-            (this->back_ptr(), 1, proxy_t(::boost::forward<Args>(args)...), alloc_version());
+            (p, 1, proxy_t(::boost::forward<Args>(args)...), alloc_version());
       }
    }
 
@@ -1814,8 +1826,8 @@ private:
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    BOOST_CONTAINER_FORCEINLINE reference emplace_back(BOOST_MOVE_UREF##N)\
    {\
+      T* const p = this->priv_raw_end();\
       if (BOOST_LIKELY(this->room_enough())){\
-         T* const p = this->priv_raw_end();\
          allocator_traits_type::construct (this->m_holder.alloc()\
             , this->priv_raw_end() BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
          ++this->m_holder.m_size;\
@@ -1824,7 +1836,7 @@ private:
       else{\
          typedef dtl::insert_emplace_proxy_arg##N<allocator_type, T* BOOST_MOVE_I##N BOOST_MOVE_TARG##N> proxy_t;\
          return *this->priv_insert_forward_range_no_capacity\
-            ( this->back_ptr(), 1, proxy_t(BOOST_MOVE_FWD##N), alloc_version());\
+            ( p, 1, proxy_t(BOOST_MOVE_FWD##N), alloc_version());\
       }\
    }\
    \
@@ -2243,14 +2255,14 @@ private:
             else{
                //Hole was just filled, disable exception rollback and change vector size
                past_hole_values_destroyer.release();
-               this->m_holder.set_stored_size(this->size() + element_count);
+               this->m_holder.inc_stored_size(element_count);
             }
          }
          else{
             if(old_hole_size){
                //Hole was just filled by priv_insert_ordered_at_shift_range, disable exception rollback and change vector size
                past_hole_values_destroyer.release();
-               this->m_holder.set_stored_size(this->size() + element_count);
+               this->m_holder.inc_stored_size(element_count);
             }
             //Insert the new value in the already constructed range
             begin_ptr[pos + insertions_left - 1] = position_value.get_val();
@@ -2359,7 +2371,7 @@ private:
    }
 
    BOOST_CONTAINER_FORCEINLINE bool room_enough() const
-   {  return this->m_holder.m_size < this->m_holder.capacity();   }
+   {  return this->m_holder.m_size != this->m_holder.capacity();   }
 
    BOOST_CONTAINER_FORCEINLINE pointer back_ptr() const
    {  return this->m_holder.start() + this->m_holder.m_size;  }
@@ -2581,7 +2593,7 @@ private:
          T* const destroy_pos = this->priv_raw_begin() + (this->m_holder.m_size-n);
          boost::container::destroy_alloc_n(this->get_stored_allocator(), destroy_pos, n);
       }
-      this->m_holder.set_stored_size(this->size() - n);
+      this->m_holder.dec_stored_size(n);
    }
 
    template<class InpIt>
@@ -2589,7 +2601,7 @@ private:
    {
       T* const old_end_pos = this->priv_raw_end();
       T* const new_end_pos = boost::container::uninitialized_copy_alloc(this->m_holder.alloc(), first, last, old_end_pos);
-      this->m_holder.set_stored_size(this->size() + new_end_pos - old_end_pos);
+      this->m_holder.inc_stored_size(new_end_pos - old_end_pos);
    }
 
    void priv_destroy_all() BOOST_NOEXCEPT_OR_NOTHROW
@@ -2602,32 +2614,13 @@ private:
    template<class U>
    BOOST_CONTAINER_FORCEINLINE iterator priv_insert(const const_iterator &p, BOOST_FWD_REF(U) u)
    {
-      BOOST_ASSERT(this->priv_in_range_or_end(p));
-      typedef typename dtl::if_c < boost::move_detail::is_rvalue_reference<BOOST_FWD_REF(U)>::value
-                                 , dtl::insert_move_proxy<allocator_type, T*>
-                                 , dtl::insert_copy_proxy<allocator_type, T*>
-                                 >::type proxy_t;
-      return this->priv_insert_forward_range
-         ( vector_iterator_get_ptr(p), 1, proxy_t((reference)u));
+      return this->emplace(p, ::boost::forward<U>(u));
    }
 
    template <class U>
    BOOST_CONTAINER_FORCEINLINE void priv_push_back(BOOST_FWD_REF(U) u)
    {
-      if (BOOST_LIKELY(this->room_enough())){
-         //There is more memory, just construct a new object at the end
-         allocator_traits_type::construct
-            ( this->m_holder.alloc(), this->priv_raw_end(), ::boost::forward<U>(u) );
-         ++this->m_holder.m_size;
-      }
-      else{
-         typedef typename dtl::if_c < boost::move_detail::is_rvalue_reference<BOOST_FWD_REF(U)>::value
-                                    , dtl::insert_move_proxy<allocator_type, T*>
-                                    , dtl::insert_copy_proxy<allocator_type, T*>
-                                    >::type proxy_t;
-         this->priv_insert_forward_range_no_capacity
-            ( this->back_ptr(), 1, proxy_t((reference)u), alloc_version());
-      }
+      this->emplace_back(::boost::forward<U>(u));
    }
 
    BOOST_CONTAINER_FORCEINLINE dtl::insert_n_copies_proxy<allocator_type, T*> priv_resize_proxy(const T &x)
@@ -2686,18 +2679,17 @@ private:
 
    template <class InsertionProxy>
    BOOST_CONTAINER_FORCEINLINE iterator priv_insert_forward_range_no_capacity
-      (const pointer &, const size_type, const InsertionProxy , version_0)
+      (T * const, const size_type, const InsertionProxy , version_0)
    {
       return alloc_holder_t::on_capacity_overflow(), iterator();
    }
 
    template <class InsertionProxy>
-   BOOST_CONTAINER_FORCEINLINE iterator priv_insert_forward_range_no_capacity
-      (const pointer &pos, const size_type n, const InsertionProxy insert_range_proxy, version_1)
+   iterator priv_insert_forward_range_no_capacity
+      (T *const raw_pos, const size_type n, const InsertionProxy insert_range_proxy, version_1)
    {
       //Check if we have enough memory or try to expand current memory
-      const size_type n_pos = pos - this->m_holder.start();
-      T *const raw_pos = boost::movelib::to_raw_pointer(pos);
+      const size_type n_pos = raw_pos - this->priv_raw_begin();
 
       const size_type new_cap = this->m_holder.template next_capacity<growth_factor_type>(n);
       //Pass the hint so that allocators can take advantage of this.
@@ -2711,10 +2703,9 @@ private:
 
    template <class InsertionProxy>
    iterator priv_insert_forward_range_no_capacity
-      (const pointer &pos, const size_type n, const InsertionProxy insert_range_proxy, version_2)
+      (T *const raw_pos, const size_type n, const InsertionProxy insert_range_proxy, version_2)
    {
       //Check if we have enough memory or try to expand current memory
-      T *const raw_pos = boost::movelib::to_raw_pointer(pos);
       const size_type n_pos = raw_pos - this->priv_raw_begin();
 
       //There is not enough memory, allocate a new
@@ -2757,18 +2748,19 @@ private:
    }
 
    template <class InsertionProxy>
-   BOOST_CONTAINER_FORCEINLINE iterator priv_insert_forward_range
+   iterator priv_insert_forward_range
       (const pointer &pos, const size_type n, const InsertionProxy insert_range_proxy)
    {
       BOOST_ASSERT(this->m_holder.capacity() >= this->m_holder.m_size);
+      T *const p = boost::movelib::to_raw_pointer(pos);
       //Check if we have enough memory or try to expand current memory
       if (BOOST_LIKELY(n <= (this->m_holder.capacity() - this->m_holder.m_size))){
          //Expand forward
-         this->priv_insert_forward_range_expand_forward(boost::movelib::to_raw_pointer(pos), n, insert_range_proxy);
+         this->priv_insert_forward_range_expand_forward(p, n, insert_range_proxy);
          return iterator(pos);
       }
       else{
-         return this->priv_insert_forward_range_no_capacity(pos, n, insert_range_proxy, alloc_version());
+         return this->priv_insert_forward_range_no_capacity(p, n, insert_range_proxy, alloc_version());
       }
    }
 
@@ -2792,8 +2784,7 @@ private:
    }
 
    template <class U, class AllocVersion>
-   BOOST_CONTAINER_FORCEINLINE void priv_resize
-      (const size_type new_size, const U &u, AllocVersion)
+   void priv_resize(const size_type new_size, const U &u, AllocVersion)
    {
       const size_type sz = this->m_holder.m_size;
       if (new_size < sz){
@@ -2899,7 +2890,7 @@ private:
    {  return this->priv_raw_begin() + this->m_holder.m_size;  }
 
    template <class InsertionProxy>
-   BOOST_CONTAINER_FORCEINLINE void priv_insert_forward_range_expand_forward(T* const raw_pos, const size_type n, InsertionProxy insert_range_proxy)
+   void priv_insert_forward_range_expand_forward(T* const raw_pos, const size_type n, InsertionProxy insert_range_proxy)
    {
       //n can't be 0, because there is nothing to do in that case
       bool const single_value_proxy = dtl::is_single_value_proxy<InsertionProxy>::value;
@@ -3071,8 +3062,8 @@ private:
             //
             //Now initialize the rest of memory with the last old values
             //All new elements correctly constructed, avoid new element destruction
-            const size_type raw_gap = s_before - before_plus_new;
             BOOST_IF_CONSTEXPR(!value_traits::trivial_dctr){
+               const size_type raw_gap = s_before - before_plus_new;
                //Now initialize the rest of s_before memory with the
                //first of elements after new values
                ::boost::container::uninitialized_move_alloc_n(a, pos, raw_gap, new_start + before_plus_new);
@@ -3223,17 +3214,20 @@ private:
                //Copy all new elements
                const size_type rest_new = n - mid_n;
                insert_range_proxy.copy_n_and_update(a, old_start, rest_new);
+
                T* const move_start = old_start + rest_new;
                //Displace old_end, but make sure data has to be moved
                T* const move_end = move_start != pos ? ::boost::container::move(pos, old_finish, move_start)
                                                      : old_finish;
+               (void)move_end;   //To avoid warnings of unused initialization for move_end in case
+                                 //trivial_dctr_after_move is true
                //Destroy remaining moved elements from old_end except if they
                //have trivial destructor after being moved
-               size_type n_destroy = s_before - n;
+               const size_type n_destroy = s_before - n;
                BOOST_IF_CONSTEXPR(!value_traits::trivial_dctr_after_move){
                   boost::container::destroy_alloc_n(a, move_end, n_destroy);
                }
-               this->m_holder.set_stored_size(this->size() - n_destroy);
+               this->m_holder.dec_stored_size(n_destroy);
             }
          }
 
@@ -3276,7 +3270,7 @@ private:
                //First copy the part of old_end raw_mem
                T* finish_n = old_finish - n_after;
                ::boost::container::uninitialized_move_alloc(a, finish_n, old_finish, old_finish);
-               this->m_holder.set_stored_size(this->size() + n_after);
+               this->m_holder.inc_stored_size(n_after);
                //Displace the rest of old_end to the new position
                boost::container::move_backward(pos, finish_n, old_finish);
                //Now overwrite with new_end
@@ -3308,7 +3302,7 @@ private:
                insert_range_proxy.copy_n_and_update(a, pos, elemsafter);
                //Copy the rest to the uninitialized zone filling the gap
                insert_range_proxy.uninitialized_copy_n_and_update(a, old_finish, mid_last_dist);
-               this->m_holder.set_stored_size(this->size() + n_after);
+               this->m_holder.inc_stored_size(n_after);
                old_end_destroyer.release();
             }
          }
