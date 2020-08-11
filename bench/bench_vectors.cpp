@@ -134,7 +134,7 @@ struct insert_near_end_repeated
 
    template<class C>
    BOOST_CONTAINER_FORCEINLINE void operator()(C &c, int i)
-   {  c.insert(c.size() >= RangeSize ? c.end()-RangeSize : c.begin(), RangeSize, MyInt(i)); }
+   {  c.insert(c.size() >= 2*RangeSize ? c.end()-2*RangeSize : c.begin(), RangeSize, MyInt(i)); }
 
    BOOST_CONTAINER_FORCEINLINE const char *name() const
    {  return "insert_near_end_repeated"; }
@@ -148,11 +148,11 @@ struct insert_near_end_range
    template<class C>
    BOOST_CONTAINER_FORCEINLINE void operator()(C &c, int)
    {
-      c.insert(c.size() >= RangeSize ? c.end()-RangeSize : c.begin(), &a[0], &a[0]+RangeSize);
+      c.insert(c.size() >= 2*RangeSize ? c.end()-2*RangeSize : c.begin(), &a[0], &a[0]+RangeSize);
    }
 
    BOOST_CONTAINER_FORCEINLINE const char *name() const
-   {  return "insert_near_end_repeated"; }
+   {  return "insert_near_end_range"; }
 
    MyInt a[RangeSize];
 };
@@ -167,7 +167,7 @@ struct insert_near_end
    {
       typedef typename C::iterator it_t;
       it_t it (c.end());
-      it -= static_cast<typename C::size_type>(!c.empty());
+      it -= static_cast<typename C::size_type>(c.size() >= 2)*2;
       c.insert(it, MyInt(i));
    }
 
@@ -187,24 +187,41 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements, 
    Operation op;
    const typename Container::size_type multiplier = op.capacity_multiplier();
 
-   //Warm-up operations
+   //Warm-up operation
    for(std::size_t e = 0, max = num_elements/multiplier; e != max; ++e){
       op(c, static_cast<int>(e));
    }
    c.clear();
 
    cpu_timer timer;
-   timer.start();
 
+   const std::size_t max = num_elements/multiplier;
    for(std::size_t r = 0; r != num_iterations; ++r){
 
-      for(std::size_t e = 0, max = num_elements/multiplier; e != max; ++e){
-         op(c, static_cast<int>(e));
+      //Unrolll the loop to avoid noise from loop code
+      int i = 0;
+      timer.resume();
+      for(std::size_t e = 0; e < max/16; ++e){
+         op(c, static_cast<int>(i++));
+         op(c, static_cast<int>(i++));
+         op(c, static_cast<int>(i++));
+         op(c, static_cast<int>(i++));
+         op(c, static_cast<int>(i++));
+         op(c, static_cast<int>(i++));
+         op(c, static_cast<int>(i++));
+         op(c, static_cast<int>(i++));
+         op(c, static_cast<int>(i++));
+         op(c, static_cast<int>(i++));
+         op(c, static_cast<int>(i++));
+         op(c, static_cast<int>(i++));
+         op(c, static_cast<int>(i++));
+         op(c, static_cast<int>(i++));
+         op(c, static_cast<int>(i++));
+         op(c, static_cast<int>(i++));
       }
 
       timer.stop();
       c.clear();
-      timer.resume();
    }
 
    timer.stop();
@@ -216,7 +233,7 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements, 
    std::cout   << cont_name << "->" << op.name() <<" ns: "
                << float(nseconds)/(num_iterations*num_elements)
                << '\t'
-               << "Capacity: " << (unsigned int)capacity
+               << "Capacity: " << capacity
                << "\n";
 }
 
