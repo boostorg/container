@@ -107,8 +107,10 @@ struct insert_n_copies_proxy
 
    BOOST_CONTAINER_FORCEINLINE void copy_n_and_update(Allocator &, Iterator p, size_type n) const
    {
-      for (; 0 < n; --n, ++p){
+      while (n){
+         --n;
          *p = v_;
+         ++p;
       }
    }
 
@@ -121,18 +123,21 @@ struct insert_value_initialized_n_proxy
    typedef ::boost::container::allocator_traits<Allocator> alloc_traits;
    typedef typename allocator_traits<Allocator>::size_type size_type;
    typedef typename allocator_traits<Allocator>::value_type value_type;
+   typedef typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type storage_t;
 
    BOOST_CONTAINER_FORCEINLINE void uninitialized_copy_n_and_update(Allocator &a, Iterator p, size_type n) const
    {  boost::container::uninitialized_value_init_alloc_n(a, n, p);  }
 
    void copy_n_and_update(Allocator &a, Iterator p, size_type n) const
    {
-      for (; 0 < n; --n, ++p){
-         typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;
+      while (n){
+         --n;
+         storage_t v;
          value_type *vp = reinterpret_cast<value_type *>(v.data);
          alloc_traits::construct(a, vp);
          value_destructor<Allocator> on_exit(a, *vp); (void)on_exit;
          *p = ::boost::move(*vp);
+         ++p;
       }
    }
 };
@@ -143,6 +148,7 @@ struct insert_default_initialized_n_proxy
    typedef ::boost::container::allocator_traits<Allocator> alloc_traits;
    typedef typename allocator_traits<Allocator>::size_type size_type;
    typedef typename allocator_traits<Allocator>::value_type value_type;
+   typedef typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type storage_t;
 
    BOOST_CONTAINER_FORCEINLINE void uninitialized_copy_n_and_update(Allocator &a, Iterator p, size_type n) const
    {  boost::container::uninitialized_default_init_alloc_n(a, n, p);  }
@@ -150,12 +156,14 @@ struct insert_default_initialized_n_proxy
    void copy_n_and_update(Allocator &a, Iterator p, size_type n) const
    {
       if(!is_pod<value_type>::value){
-         for (; 0 < n; --n, ++p){
+         while (n){
+            --n;
             typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;
             value_type *vp = reinterpret_cast<value_type *>(v.data);
             alloc_traits::construct(a, vp, default_init);
             value_destructor<Allocator> on_exit(a, *vp); (void)on_exit;
             *p = ::boost::move(*vp);
+            ++p;
          }
       }
    }
