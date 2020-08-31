@@ -123,7 +123,7 @@ BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(stored_allocator_type)
 //
 ///////////////////////////////////////
 template<class SequenceContainer, class Compare>
-void flat_tree_container_inplace_merge //is_contiguous_container == true
+BOOST_CONTAINER_FORCEINLINE void flat_tree_container_inplace_merge //is_contiguous_container == true
    (SequenceContainer& dest, typename SequenceContainer::iterator it, Compare comp , dtl::true_)
 {
    typedef typename SequenceContainer::value_type  value_type;
@@ -135,7 +135,7 @@ void flat_tree_container_inplace_merge //is_contiguous_container == true
 }
 
 template<class SequenceContainer, class Compare>
-void flat_tree_container_inplace_merge //is_contiguous_container == false
+BOOST_CONTAINER_FORCEINLINE void flat_tree_container_inplace_merge //is_contiguous_container == false
    (SequenceContainer& dest, typename SequenceContainer::iterator it, Compare comp, dtl::false_)
 {
    boost::movelib::adaptive_merge(dest.begin(), it, dest.end(), comp);
@@ -147,7 +147,7 @@ void flat_tree_container_inplace_merge //is_contiguous_container == false
 //
 ///////////////////////////////////////
 template<class SequenceContainer, class Compare>
-void flat_tree_container_inplace_sort_ending //is_contiguous_container == true
+BOOST_CONTAINER_FORCEINLINE void flat_tree_container_inplace_sort_ending //is_contiguous_container == true
    (SequenceContainer& dest, typename SequenceContainer::iterator it, Compare comp, dtl::true_)
 {
    typedef typename SequenceContainer::value_type  value_type;
@@ -158,7 +158,7 @@ void flat_tree_container_inplace_sort_ending //is_contiguous_container == true
 }
 
 template<class SequenceContainer, class Compare>
-void flat_tree_container_inplace_sort_ending //is_contiguous_container == false
+BOOST_CONTAINER_FORCEINLINE void flat_tree_container_inplace_sort_ending //is_contiguous_container == false
    (SequenceContainer& dest, typename SequenceContainer::iterator it, Compare comp , dtl::false_)
 {
    boost::movelib::adaptive_sort(it, dest.end(), comp);
@@ -314,7 +314,7 @@ void flat_tree_sort_contiguous_to_adopt // is_contiguous_container == true
 }
 
 template<class SequenceContainer, class Compare>
-void flat_tree_adopt_sequence_equal // is_contiguous_container == true
+BOOST_CONTAINER_FORCEINLINE void flat_tree_adopt_sequence_equal // is_contiguous_container == true
    (SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, dtl::true_)
 {
    flat_tree_sort_contiguous_to_adopt(tseq, boost::move(seq), comp);
@@ -322,7 +322,7 @@ void flat_tree_adopt_sequence_equal // is_contiguous_container == true
 }
 
 template<class SequenceContainer, class Compare>
-void flat_tree_adopt_sequence_equal // is_contiguous_container == false
+BOOST_CONTAINER_FORCEINLINE void flat_tree_adopt_sequence_equal // is_contiguous_container == false
    (SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, dtl::false_)
 {
    boost::movelib::adaptive_sort(seq.begin(), seq.end(), comp);
@@ -408,24 +408,24 @@ class flat_tree_value_compare
    typedef Value              second_argument_type;
    typedef bool               return_type;
    public:
-   flat_tree_value_compare()
+   BOOST_CONTAINER_FORCEINLINE flat_tree_value_compare()
       : Compare()
    {}
 
-   flat_tree_value_compare(const Compare &pred)
+   BOOST_CONTAINER_FORCEINLINE flat_tree_value_compare(const Compare &pred)
       : Compare(pred)
    {}
 
-   bool operator()(const Value& lhs, const Value& rhs) const
+   BOOST_CONTAINER_FORCEINLINE bool operator()(const Value& lhs, const Value& rhs) const
    {
       KeyOfValue key_extract;
       return Compare::operator()(key_extract(lhs), key_extract(rhs));
    }
 
-   const Compare &get_comp() const
+   BOOST_CONTAINER_FORCEINLINE const Compare &get_comp() const
       {  return *this;  }
 
-   Compare &get_comp()
+   BOOST_CONTAINER_FORCEINLINE Compare &get_comp()
       {  return *this;  }
 };
 
@@ -479,35 +479,35 @@ class flat_tree
       BOOST_COPYABLE_AND_MOVABLE(Data)
 
       public:
-      Data()
+      BOOST_CONTAINER_FORCEINLINE Data()
          : value_compare(), m_seq()
       {}
 
-      explicit Data(const allocator_t &alloc)
+      BOOST_CONTAINER_FORCEINLINE explicit Data(const allocator_t &alloc)
          : value_compare(), m_seq(alloc)
       {}
 
-      explicit Data(const Compare &comp)
+      BOOST_CONTAINER_FORCEINLINE explicit Data(const Compare &comp)
          : value_compare(comp), m_seq()
       {}
 
-      Data(const Compare &comp, const allocator_t &alloc)
+      BOOST_CONTAINER_FORCEINLINE Data(const Compare &comp, const allocator_t &alloc)
          : value_compare(comp), m_seq(alloc)
       {}
 
-      explicit Data(const Data &d)
+      BOOST_CONTAINER_FORCEINLINE explicit Data(const Data &d)
          : value_compare(static_cast<const value_compare&>(d)), m_seq(d.m_seq)
       {}
 
-      Data(BOOST_RV_REF(Data) d)
+      BOOST_CONTAINER_FORCEINLINE Data(BOOST_RV_REF(Data) d)
          : value_compare(boost::move(static_cast<value_compare&>(d))), m_seq(boost::move(d.m_seq))
       {}
 
-      Data(const Data &d, const allocator_t &a)
+      BOOST_CONTAINER_FORCEINLINE Data(const Data &d, const allocator_t &a)
          : value_compare(static_cast<const value_compare&>(d)), m_seq(d.m_seq, a)
       {}
 
-      Data(BOOST_RV_REF(Data) d, const allocator_t &a)
+      BOOST_CONTAINER_FORCEINLINE Data(BOOST_RV_REF(Data) d, const allocator_t &a)
          : value_compare(boost::move(static_cast<value_compare&>(d))), m_seq(boost::move(d.m_seq), a)
       {}
 
