@@ -132,6 +132,10 @@ class adaptive_pool
    adaptive_pool(const adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
+   //!Copy assignment from other adaptive_pool.
+   adaptive_pool & operator=(const adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
+   {  return *this;  }
+
    //!Copy constructor from related adaptive_pool.
    template<class T2>
    adaptive_pool
@@ -251,7 +255,7 @@ class adaptive_pool
       BOOST_STATIC_ASSERT(( Version > 1 ));/*
       dlmalloc_memchain ch;
       BOOST_CONTAINER_MEMCHAIN_INIT(&ch);
-      if(BOOST_UNLIKELY(!dlmalloc_multialloc_nodes(n_elements, elem_size*sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch))){
+      if(BOOST_UNLIKELY(!dlmalloc_multialloc_nodes(n_elements, elem_size*sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch))){
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after(chain.before_begin()
@@ -259,7 +263,7 @@ class adaptive_pool
                              ,(T*)BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch)
                              ,BOOST_CONTAINER_MEMCHAIN_SIZE(&ch) );*/
       if(BOOST_UNLIKELY(!dlmalloc_multialloc_nodes
-            (n_elements, elem_size*sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<dlmalloc_memchain *>(&chain)))){
+            (n_elements, elem_size*sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<dlmalloc_memchain *>(&chain)))){
          boost::container::throw_bad_alloc();
       }
    }
@@ -271,7 +275,7 @@ class adaptive_pool
       BOOST_STATIC_ASSERT(( Version > 1 ));/*
       dlmalloc_memchain ch;
       BOOST_CONTAINER_MEMCHAIN_INIT(&ch);
-      if(BOOST_UNLIKELY(!dlmalloc_multialloc_arrays(n_elements, elem_sizes, sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch))){
+      if(BOOST_UNLIKELY(!dlmalloc_multialloc_arrays(n_elements, elem_sizes, sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch))){
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after(chain.before_begin()
@@ -279,7 +283,7 @@ class adaptive_pool
                              ,(T*)BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch)
                              ,BOOST_CONTAINER_MEMCHAIN_SIZE(&ch) );*/
       if(BOOST_UNLIKELY(!dlmalloc_multialloc_arrays
-         (n_elements, elem_sizes, sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<dlmalloc_memchain *>(&chain)))){
+         (n_elements, elem_sizes, sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<dlmalloc_memchain *>(&chain)))){
          boost::container::throw_bad_alloc();
       }
    }
@@ -442,6 +446,10 @@ class private_adaptive_pool
    private_adaptive_pool(const private_adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
+   //!Copy assignment from other adaptive_pool.
+   private_adaptive_pool & operator=(const private_adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
+   {  return *this;  }
+
    //!Copy constructor from related private_adaptive_pool.
    template<class T2>
    private_adaptive_pool
@@ -536,7 +544,7 @@ class private_adaptive_pool
    {
       BOOST_STATIC_ASSERT(( Version > 1 ));
       if(BOOST_UNLIKELY(!dlmalloc_multialloc_nodes
-            (n_elements, elem_size*sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<dlmalloc_memchain *>(&chain)))){
+            (n_elements, elem_size*sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<dlmalloc_memchain *>(&chain)))){
          boost::container::throw_bad_alloc();
       }
    }
@@ -547,7 +555,7 @@ class private_adaptive_pool
    {
       BOOST_STATIC_ASSERT(( Version > 1 ));
       if(BOOST_UNLIKELY(!dlmalloc_multialloc_arrays
-         (n_elements, elem_sizes, sizeof(T), DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<dlmalloc_memchain *>(&chain)))){
+         (n_elements, elem_sizes, sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<dlmalloc_memchain *>(&chain)))){
          boost::container::throw_bad_alloc();
       }
    }

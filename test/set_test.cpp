@@ -7,7 +7,6 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/container/detail/config_begin.hpp>
 #include <set>
 #include <boost/container/set.hpp>
 #include <boost/container/adaptive_pool.hpp>
@@ -26,6 +25,13 @@ using namespace boost::container;
 class recursive_set
 {
 public:
+   recursive_set()
+   {}
+
+   recursive_set(const recursive_set &x)
+      : set_(x.set_)
+   {}
+
    recursive_set & operator=(const recursive_set &x)
    {  id_ = x.id_;  set_ = x.set_; return *this; }
 
@@ -44,6 +50,13 @@ public:
 class recursive_multiset
 {
    public:
+   recursive_multiset()
+   {}
+
+   recursive_multiset(const recursive_multiset &x)
+      : multiset_(x.multiset_)
+   {}
+
    recursive_multiset & operator=(const recursive_multiset &x)
    {  id_ = x.id_;  multiset_ = x.multiset_; return *this;  }
 
@@ -612,44 +625,38 @@ int main ()
    {
       typedef boost::container::set<int> cont;
       typedef boost::container::dtl::tree<int, void, std::less<int>, void, void> tree;
-      if (boost::has_trivial_destructor_after_move<cont>::value !=
-          boost::has_trivial_destructor_after_move<tree>::value) {
-         std::cerr << "has_trivial_destructor_after_move(set, default allocator) test failed" << std::endl;
-         return 1;
-      }
+      BOOST_STATIC_ASSERT_MSG(
+        !(boost::has_trivial_destructor_after_move<cont>::value !=
+          boost::has_trivial_destructor_after_move<tree>::value)
+        , "has_trivial_destructor_after_move(set, default allocator) test failed");
    }
    // set, std::allocator
    {
       typedef boost::container::set<int, std::less<int>, std::allocator<int> > cont;
       typedef boost::container::dtl::tree<int, void, std::less<int>, std::allocator<int>, void> tree;
-      if (boost::has_trivial_destructor_after_move<cont>::value !=
-          boost::has_trivial_destructor_after_move<tree>::value) {
-         std::cerr << "has_trivial_destructor_after_move(set, std::allocator) test failed" << std::endl;
-         return 1;
-      }
+      BOOST_STATIC_ASSERT_MSG(
+        !(boost::has_trivial_destructor_after_move<cont>::value !=
+          boost::has_trivial_destructor_after_move<tree>::value)
+        , "has_trivial_destructor_after_move(set, std::allocator) test failed");
    }
    // multiset, default allocator
    {
       typedef boost::container::multiset<int> cont;
       typedef boost::container::dtl::tree<int, void, std::less<int>, void, void> tree;
-      if (boost::has_trivial_destructor_after_move<cont>::value !=
-          boost::has_trivial_destructor_after_move<tree>::value) {
-         std::cerr << "has_trivial_destructor_after_move(multiset, default allocator) test failed" << std::endl;
-         return 1;
-      }
+      BOOST_STATIC_ASSERT_MSG(
+        !(boost::has_trivial_destructor_after_move<cont>::value !=
+          boost::has_trivial_destructor_after_move<tree>::value)
+        , "has_trivial_destructor_after_move(multiset, default allocator) test failed");
    }
    // multiset, std::allocator
    {
       typedef boost::container::multiset<int, std::less<int>, std::allocator<int> > cont;
       typedef boost::container::dtl::tree<int, void, std::less<int>, std::allocator<int>, void> tree;
-      if (boost::has_trivial_destructor_after_move<cont>::value !=
-          boost::has_trivial_destructor_after_move<tree>::value) {
-         std::cerr << "has_trivial_destructor_after_move(multiset, std::allocator) test failed" << std::endl;
-         return 1;
-      }
+      BOOST_STATIC_ASSERT_MSG(
+        !(boost::has_trivial_destructor_after_move<cont>::value !=
+          boost::has_trivial_destructor_after_move<tree>::value)
+        , "has_trivial_destructor_after_move(multiset, std::allocator) test failed");
    }
 
    return 0;
 }
-
-#include <boost/container/detail/config_end.hpp>

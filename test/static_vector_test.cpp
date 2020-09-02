@@ -7,16 +7,12 @@
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
-#include <boost/container/detail/config_begin.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/container/vector.hpp>
-#include <boost/container/stable_vector.hpp>
+#include <boost/container/list.hpp>
 #include <boost/container/detail/iterator.hpp>
 #include "../../intrusive/test/iterator_test.hpp"
-
-#include <vector>
-#include <list>
 
 #include "static_vector_test.hpp"
 
@@ -43,12 +39,10 @@ void test_ctor_nc(size_t n)
    BOOST_TEST_THROWS( s.at(n), std::out_of_range );
    if ( 1 < n )
    {
-      T val10(10);
-      s[0] = val10;
+      s[0] = 10;
       BOOST_TEST(T(10) == s[0]);
       BOOST_TEST(T(10) == s.at(0));
-      T val20(20);
-      s.at(1) = val20;
+      s.at(1) = 20;
       BOOST_TEST(T(20) == s[1]);
       BOOST_TEST(T(20) == s.at(1));
    }
@@ -123,12 +117,10 @@ void test_resize_nc(size_t n)
    BOOST_TEST_THROWS( s.at(n), std::out_of_range );
    if ( 1 < n )
    {
-      T val10(10);
-      s[0] = val10;
+      s[0] = 10;
       BOOST_TEST(T(10) == s[0]);
       BOOST_TEST(T(10) == s.at(0));
-      T val20(20);
-      s.at(1) = val20;
+      s.at(1) = 20;
       BOOST_TEST(T(20) == s[1]);
       BOOST_TEST(T(20) == s.at(1));
    }
@@ -232,8 +224,8 @@ template <typename T, size_t N>
 void test_copy_and_assign_nd(T const& val)
 {
    static_vector<T, N> s;
-   std::vector<T> v;
-   std::list<T> l;
+   vector<T> v;
+   list<T> l;
 
    for ( size_t i = 0 ; i < N ; ++i )
    {
@@ -266,22 +258,17 @@ void test_copy_and_assign_nd(T const& val)
    {
       static_vector<T, N> s1(s);
       test_compare_ranges(s.begin(), s.end(), s1.begin(), s1.end());
-      std::vector<T> a(N, val);
+      vector<T> a(N, val);
       s1.assign(N, val);
       test_compare_ranges(a.begin(), a.end(), s1.begin(), s1.end());
    }
-
-   stable_vector<T> bsv(s.begin(), s.end());
-   vector<T> bv(s.begin(), s.end());
-   test_copy_and_assign<T, N>(bsv);
-   test_copy_and_assign<T, N>(bv);
 }
 
 template <typename T, size_t N>
 void test_iterators_nd()
 {
    static_vector<T, N> s;
-   std::vector<T> v;
+   vector<T> v;
 
    for ( size_t i = 0 ; i < N ; ++i )
    {
@@ -371,8 +358,8 @@ void test_insert_nd(T const& val)
    size_t h = N/2;
 
    static_vector<T, N> s, ss;
-   std::vector<T> v;
-   std::list<T> l;
+   vector<T> v;
+   list<T> l;
 
    typedef typename static_vector<T, N>::iterator It;
 
@@ -420,11 +407,6 @@ void test_insert_nd(T const& val)
    test_insert<T, N>(s, ss);
    test_insert<T, N>(s, v);
    test_insert<T, N>(s, l);
-
-   stable_vector<T> bsv(ss.begin(), ss.end());
-   vector<T> bv(ss.begin(), ss.end());
-   test_insert<T, N>(s, bv);
-   test_insert<T, N>(s, bsv);
 }
 
 template <typename T>
@@ -496,11 +478,9 @@ void test_swap_and_move_nd()
 
       BOOST_TEST(v1.size() == N/2);
       BOOST_TEST(s1.size() == N);
-      //iG moving does not imply emptying source
-      //BOOST_TEST(v2.size() == 0);
+      BOOST_TEST(v2.size() == 0);
       BOOST_TEST(s2.size() == N);
-      //iG moving does not imply emptying source
-      //BOOST_TEST(v3.size() == 0);
+      BOOST_TEST(v3.size() == 0);
       BOOST_TEST(s3.size() == N);
       BOOST_TEST(v4.size() == N/2);
       BOOST_TEST(s4.size() == N);
@@ -824,4 +804,45 @@ int main(int, char* [])
    return boost::report_errors();
 }
 
-#include <boost/container/detail/config_end.hpp>
+/*
+
+#include <boost/container/small_vector.hpp>
+#include <type_traits>
+
+struct S_trivial {
+int i;
+};
+static_assert(std::is_nothrow_move_constructible<S_trivial>::value, "");
+static_assert(std::is_nothrow_move_assignable<S_trivial>::value, "");
+
+struct S1 {
+int i = 0;
+};
+static_assert(std::is_nothrow_move_constructible<S1>::value, "");
+static_assert(std::is_nothrow_move_assignable<S1>::value, "");
+
+struct S2 {
+int i = 0;
+S2(S2&&) noexcept;
+S2& operator=(S2&&) noexcept;
+};
+static_assert(std::is_nothrow_move_constructible<S2>::value, "");
+static_assert(std::is_nothrow_move_assignable<S2>::value, "");
+
+// Succeed
+static_assert(std::is_nothrow_move_constructible<boost::container::small_vector<S_trivial, 1>>::value, "");
+static_assert(std::is_nothrow_move_assignable<boost::container::small_vector<S_trivial, 1>>::value, "");
+
+// Fail
+static_assert(std::is_nothrow_move_constructible<boost::container::small_vector<S1, 1>>::value, "");
+static_assert(std::is_nothrow_move_assignable<boost::container::small_vector<S1, 1>>::value, "");
+
+// Fail
+static_assert(std::is_nothrow_move_constructible<boost::container::small_vector<S2, 1>>::value, "");
+static_assert(std::is_nothrow_move_assignable<boost::container::small_vector<S2, 1>>::value, "");
+
+int main()
+{
+   return 0;
+}
+*/

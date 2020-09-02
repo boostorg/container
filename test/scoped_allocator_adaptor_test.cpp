@@ -7,7 +7,6 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/container/detail/config_begin.hpp>
 #include <boost/container/scoped_allocator_fwd.hpp>
 
 // container/detail
@@ -1374,4 +1373,3 @@ int main()
 
    return ::boost::report_errors();
 }
-#include <boost/container/detail/config_end.hpp>

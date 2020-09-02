@@ -25,9 +25,6 @@ void test_default_constructor()
 
 void test_resource_constructor()
 {
-   polymorphic_allocator<int> a(0);
-   BOOST_TEST(a.resource() == get_default_resource());
-
    derived_from_memory_resource d;
    polymorphic_allocator<int> b(&d);
    BOOST_TEST(&d == b.resource());

@@ -713,7 +713,7 @@ class flat_map
    //!
    //! Returns: A reference to the mapped_type corresponding to x in *this.
    //!
-   //! Complexity: Logarithmic.
+   //! Complexity: Logarithmic search time plus linear insertion time in case no equivalent key is present.
    mapped_type &operator[](const key_type& k);
 
    //! Effects: If there is no key equivalent to x in the flat_map, inserts
@@ -721,8 +721,8 @@ class flat_map
    //!
    //! Returns: A reference to the mapped_type corresponding to x in *this.
    //!
-   //! Complexity: Logarithmic.
-   mapped_type &operator[](key_type &&k) ;
+   //! Complexity: Logarithmic search time plus linear insertion time in case no equivalent key is present.
+   mapped_type &operator[](key_type &&k);
    #elif defined(BOOST_MOVE_HELPERS_RETURN_SFINAE_BROKEN)
       //in compilers like GCC 3.4, we can't catch temporaries
       BOOST_CONTAINER_FORCEINLINE mapped_type& operator[](const key_type &k)         {  return this->priv_subscript(k);  }
@@ -742,7 +742,7 @@ class flat_map
    //! Returns: The bool component is true if the insertion took place and false if the assignment
    //!   took place. The iterator component is pointing at the element that was inserted or updated.
    //!
-   //! Complexity: Logarithmic in the size of the container.
+   //! Complexity: Logarithmic search time plus linear insertion time in case no equivalent key is present.
    template <class M>
    BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> insert_or_assign(const key_type& k, BOOST_FWD_REF(M) obj)
    {
@@ -955,7 +955,7 @@ class flat_map
    //! <b>Returns</b>: The bool component of the returned pair is true if and only if the
    //! insertion took place. The returned iterator points to the map element whose key is equivalent to k.
    //! 
-   //! <b>Complexity</b>: Logarithmic.
+   //! <b>Complexity</b>: Logarithmic search time plus linear insertion time in case the key is not present.
    template <class... Args>
    BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> try_emplace(BOOST_RV_REF(key_type) k, BOOST_FWD_REF(Args)... args)
    {
@@ -973,7 +973,7 @@ class flat_map
    //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
    //! 
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if value
-   //!   is inserted right before p.
+   //!   is inserted right before p. Linear insertion time in case no equivalent key is present.
    template <class... Args>
    BOOST_CONTAINER_FORCEINLINE iterator try_emplace(const_iterator hint, BOOST_RV_REF(key_type) k, BOOST_FWD_REF(Args)... args)
    {
@@ -1199,7 +1199,7 @@ class flat_map
    //!
    //! <b>Throws</b>: Nothing unless the comparison object throws.
    //!
-   //! <b>Complexity</b>: N log(a.size() + N) (N has the value source.size())
+   //! <b>Complexity</b>: N log(size() + N) (N has the value source.size())
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge(flat_map<Key, T, C2, AllocatorOrContainer>& source)
    {  m_flat_tree.merge_unique(source.tree());   }
@@ -1269,7 +1269,7 @@ class flat_map
                                  && boost::container::dtl::is_nothrow_swappable<Compare>::value )
    { m_flat_tree.swap(x.m_flat_tree); }
 
-   //! <b>Effects</b>: erase(a.begin(),a.end()).
+   //! <b>Effects</b>: erase(begin(),end()).
    //!
    //! <b>Postcondition</b>: size() == 0.
    //!
@@ -1376,14 +1376,14 @@ class flat_map
       {  return m_flat_tree.find(x) != m_flat_tree.end();  }
 
    //! <b>Returns</b>: An iterator pointing to the first element with key not less
-   //!   than k, or a.end() if such an element is not found.
+   //!   than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic.
    BOOST_CONTAINER_FORCEINLINE iterator lower_bound(const key_type& x)
       {  return dtl::force_copy<iterator>(m_flat_tree.lower_bound(x)); }
 
    //! <b>Returns</b>: A const iterator pointing to the first element with key not
-   //!   less than k, or a.end() if such an element is not found.
+   //!   less than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic.
    BOOST_CONTAINER_FORCEINLINE const_iterator lower_bound(const key_type& x) const
@@ -1393,7 +1393,7 @@ class flat_map
    //! key_compare::is_transparent exists.
    //!
    //! <b>Returns</b>: An iterator pointing to the first element with key not less
-   //!   than k, or a.end() if such an element is not found.
+   //!   than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic.
    template<class K>
@@ -1404,22 +1404,22 @@ class flat_map
    //! key_compare::is_transparent exists.
    //!
    //! <b>Returns</b>: A const iterator pointing to the first element with key not
-   //!   less than k, or a.end() if such an element is not found.
+   //!   less than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic.
    template<class K>
    BOOST_CONTAINER_FORCEINLINE const_iterator lower_bound(const K& x) const
       {  return dtl::force_copy<const_iterator>(m_flat_tree.lower_bound(x)); }
 
-   //! <b>Returns</b>: An iterator pointing to the first element with key not less
+   //! <b>Returns</b>: An iterator pointing to the first element with key greater
    //!   than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic.
    BOOST_CONTAINER_FORCEINLINE iterator upper_bound(const key_type& x)
       {  return dtl::force_copy<iterator>(m_flat_tree.upper_bound(x)); }
 
-   //! <b>Returns</b>: A const iterator pointing to the first element with key not
-   //!   less than x, or end() if such an element is not found.
+   //! <b>Returns</b>: A const iterator pointing to the first element with key
+   //!   greater than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic.
    BOOST_CONTAINER_FORCEINLINE const_iterator upper_bound(const key_type& x) const
@@ -1428,7 +1428,7 @@ class flat_map
    //! <b>Requires</b>: This overload is available only if
    //! key_compare::is_transparent exists.
    //!
-   //! <b>Returns</b>: An iterator pointing to the first element with key not less
+   //! <b>Returns</b>: An iterator pointing to the first element with key greater
    //!   than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic.
@@ -1439,8 +1439,8 @@ class flat_map
    //! <b>Requires</b>: This overload is available only if
    //! key_compare::is_transparent exists.
    //!
-   //! <b>Returns</b>: A const iterator pointing to the first element with key not
-   //!   less than x, or end() if such an element is not found.
+   //! <b>Returns</b>: A const iterator pointing to the first element with key
+   //!   greater than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic.
    template<class K>
@@ -2539,7 +2539,7 @@ class flat_multimap
    //!
    //! <b>Throws</b>: Nothing unless the comparison object throws.
    //!
-   //! <b>Complexity</b>: N log(a.size() + N) (N has the value source.size())
+   //! <b>Complexity</b>: N log(size() + N) (N has the value source.size())
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge(flat_multimap<Key, T, C2, AllocatorOrContainer>& source)
    {  m_flat_tree.merge_equal(source.tree());   }
@@ -2609,7 +2609,7 @@ class flat_multimap
                                  && boost::container::dtl::is_nothrow_swappable<Compare>::value )
    { m_flat_tree.swap(x.m_flat_tree); }
 
-   //! <b>Effects</b>: erase(a.begin(),a.end()).
+   //! <b>Effects</b>: erase(begin(),end()).
    //!
    //! <b>Postcondition</b>: size() == 0.
    //!
@@ -2714,14 +2714,14 @@ class flat_multimap
       {  return m_flat_tree.find(x) != m_flat_tree.end();  }
 
    //! <b>Returns</b>: An iterator pointing to the first element with key not less
-   //!   than k, or a.end() if such an element is not found.
+   //!   than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic
    BOOST_CONTAINER_FORCEINLINE iterator lower_bound(const key_type& x)
       {  return dtl::force_copy<iterator>(m_flat_tree.lower_bound(x)); }
 
    //! <b>Returns</b>: An iterator pointing to the first element with key not less
-   //!   than k, or a.end() if such an element is not found.
+   //!   than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic
    BOOST_CONTAINER_FORCEINLINE const_iterator lower_bound(const key_type& x) const
@@ -2731,7 +2731,7 @@ class flat_multimap
    //! key_compare::is_transparent exists.
    //!
    //! <b>Returns</b>: An iterator pointing to the first element with key not less
-   //!   than k, or a.end() if such an element is not found.
+   //!   than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic
    template<class K>
@@ -2742,14 +2742,14 @@ class flat_multimap
    //! key_compare::is_transparent exists.
    //!
    //! <b>Returns</b>: An iterator pointing to the first element with key not less
-   //!   than k, or a.end() if such an element is not found.
+   //!   than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic
    template<class K>
    BOOST_CONTAINER_FORCEINLINE const_iterator lower_bound(const K& x) const
       {  return dtl::force_copy<const_iterator>(m_flat_tree.lower_bound(x)); }
 
-   //! <b>Returns</b>: An iterator pointing to the first element with key not less
+   //! <b>Returns</b>: An iterator pointing to the first element with key greater
    //!   than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic
@@ -2757,7 +2757,7 @@ class flat_multimap
       {return dtl::force_copy<iterator>(m_flat_tree.upper_bound(x)); }
 
    //! <b>Returns</b>: A const iterator pointing to the first element with key
-   //!   not less than x, or end() if such an element is not found.
+   //!   greater than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic
    BOOST_CONTAINER_FORCEINLINE const_iterator upper_bound(const key_type& x) const
@@ -2766,7 +2766,7 @@ class flat_multimap
    //! <b>Requires</b>: This overload is available only if
    //! key_compare::is_transparent exists.
    //!
-   //! <b>Returns</b>: An iterator pointing to the first element with key not less
+   //! <b>Returns</b>: An iterator pointing to the first element with key greater
    //!   than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic
@@ -2778,7 +2778,7 @@ class flat_multimap
    //! key_compare::is_transparent exists.
    //!
    //! <b>Returns</b>: A const iterator pointing to the first element with key
-   //!   not less than x, or end() if such an element is not found.
+   //!   greater than x, or end() if such an element is not found.
    //!
    //! <b>Complexity</b>: Logarithmic
    template<class K>

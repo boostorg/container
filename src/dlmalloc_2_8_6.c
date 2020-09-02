@@ -1515,7 +1515,7 @@ LONG __cdecl _InterlockedExchange(LONG volatile *Target, LONG Value);
 #pragma intrinsic (_InterlockedExchange)
 #define interlockedcompareexchange _InterlockedCompareExchange
 #define interlockedexchange _InterlockedExchange
-#elif defined(WIN32) && defined(__GNUC__)
+#elif defined(WIN32) && (defined(__GNUC__) || defined(__clang__))
 #define interlockedcompareexchange(a, b, c) __sync_val_compare_and_swap(a, c, b)
 #define interlockedexchange __sync_lock_test_and_set
 #endif /* Win32 */

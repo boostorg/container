@@ -7,9 +7,7 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/container/detail/config_begin.hpp>
 #include <boost/container/uses_allocator_fwd.hpp>
-
 #include <boost/container/uses_allocator.hpp>
 #include "propagation_test_allocator.hpp"
 
@@ -23,7 +21,7 @@ struct uses_allocator_and_not_convertible_to_int
 
 struct uses_allocator_and_convertible_to_int
 {
-   typedef char allocator_type;
+   typedef long allocator_type;
 };
 
 struct uses_erased_type_allocator

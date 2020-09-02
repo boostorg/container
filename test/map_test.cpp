@@ -7,7 +7,6 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/container/detail/config_begin.hpp>
 #include <boost/container/map.hpp>
 #include <boost/container/adaptive_pool.hpp>
 
@@ -28,6 +27,13 @@ typedef std::pair<const test::movable_and_copyable_int, test::movable_and_copyab
 class recursive_map
 {
    public:
+   recursive_map()
+   {}
+
+   recursive_map(const recursive_map &x)
+      : map_(x.map_)
+   {}
+
    recursive_map & operator=(const recursive_map &x)
    {  id_ = x.id_;  map_ = x.map_; return *this;  }
 
@@ -45,6 +51,13 @@ class recursive_map
 class recursive_multimap
 {
    public:
+   recursive_multimap()
+   {}
+
+   recursive_multimap(const recursive_multimap &x)
+      : multimap_(x.multimap_)
+   {}
+
    recursive_multimap & operator=(const recursive_multimap &x)
    {  id_ = x.id_;  multimap_ = x.multimap_; return *this;  }
 
@@ -645,21 +658,19 @@ int main ()
       {
          typedef boost::container::map<int, int> cont;
          typedef boost::container::dtl::tree<value_type, int, std::less<int>, void, void> tree;
-         if (boost::has_trivial_destructor_after_move<cont>::value !=
-             boost::has_trivial_destructor_after_move<tree>::value) {
-            std::cerr << "has_trivial_destructor_after_move(map, default allocator) test failed" << std::endl;
-            return 1;
-         }
+         BOOST_STATIC_ASSERT_MSG(
+           !(boost::has_trivial_destructor_after_move<cont>::value !=
+             boost::has_trivial_destructor_after_move<tree>::value)
+            , "has_trivial_destructor_after_move(map, default allocator) test failed");
       }
       // std::allocator
       {
          typedef boost::container::map<int, int, std::less<int>, std::allocator<value_type> > cont;
          typedef boost::container::dtl::tree<value_type, int, std::less<int>, std::allocator<value_type>, void> tree;
-         if (boost::has_trivial_destructor_after_move<cont>::value !=
-             boost::has_trivial_destructor_after_move<tree>::value) {
-            std::cerr << "has_trivial_destructor_after_move(map, std::allocator) test failed" << std::endl;
-            return 1;
-         }
+         BOOST_STATIC_ASSERT_MSG(
+            !(boost::has_trivial_destructor_after_move<cont>::value !=
+             boost::has_trivial_destructor_after_move<tree>::value)
+            , "has_trivial_destructor_after_move(map, std::allocator) test failed");
       }
       //
       // multimap
@@ -669,25 +680,21 @@ int main ()
          //       default allocator
          typedef boost::container::multimap<int, int> cont;
          typedef boost::container::dtl::tree<value_type, int, std::less<int>, void, void> tree;
-         if (boost::has_trivial_destructor_after_move<cont>::value !=
-             boost::has_trivial_destructor_after_move<tree>::value) {
-            std::cerr << "has_trivial_destructor_after_move(multimap, default allocator) test failed" << std::endl;
-            return 1;
-         }
+         BOOST_STATIC_ASSERT_MSG(
+           !(boost::has_trivial_destructor_after_move<cont>::value !=
+             boost::has_trivial_destructor_after_move<tree>::value)
+           , "has_trivial_destructor_after_move(multimap, default allocator) test failed");
       }
       // std::allocator
       {
          typedef boost::container::multimap<int, int, std::less<int>, std::allocator<value_type> > cont;
          typedef boost::container::dtl::tree<value_type, int, std::less<int>, std::allocator<value_type>, void> tree;
-         if (boost::has_trivial_destructor_after_move<cont>::value !=
-             boost::has_trivial_destructor_after_move<tree>::value) {
-            std::cerr << "has_trivial_destructor_after_move(multimap, std::allocator) test failed" << std::endl;
-            return 1;
-         }
+         BOOST_STATIC_ASSERT_MSG(
+           !(boost::has_trivial_destructor_after_move<cont>::value !=
+             boost::has_trivial_destructor_after_move<tree>::value)
+           , "has_trivial_destructor_after_move(multimap, std::allocator) test failed");
       }
    }
 
    return 0;
 }
-
-#include <boost/container/detail/config_end.hpp>

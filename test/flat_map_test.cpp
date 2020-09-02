@@ -7,8 +7,6 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/container/detail/config_begin.hpp>
-
 #include <vector>
 
 #include <boost/container/flat_map.hpp>
@@ -834,5 +832,3 @@ int main()
 
    return 0;
 }
-
-#include <boost/container/detail/config_end.hpp>

@@ -338,6 +338,10 @@ int vector_test()
       stdvector.erase(stdvector.begin());
       if(!test::CheckEqualContainers(boostvector, stdvector)) return 1;
 
+      boostvector.erase(boostvector.end()-1);
+      stdvector.erase(stdvector.end()-1);
+      if(!test::CheckEqualContainers(boostvector, stdvector)) return 1;
+
       {
          //Initialize values
          IntType aux_vect[50];

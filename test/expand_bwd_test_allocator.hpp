@@ -142,15 +142,12 @@ class expand_bwd_test_allocator
          reuse = 0;
          return (mp_buffer + m_offset);
       }
-      else if(m_allocations == 1){
-         if(limit_size > m_size){
-            assert(0);
-         }
-         ++m_allocations;
-         return mp_buffer;
-      }
       else{
-         throw_bad_alloc();
+         if(m_allocations != 1){
+            throw_bad_alloc();
+         }
+         assert(limit_size <= m_size);
+         ++m_allocations;
          return mp_buffer;
       }
    }

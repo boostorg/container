@@ -47,12 +47,14 @@ In short, what does [*Boost.Container] offer?
     searches.
   * [classref boost::container::stable_vector stable_vector]: a std::list and std::vector hybrid
     container: vector-like random-access iterators and list-like iterator stability in insertions and erasures.
-  * [classref boost::container::static_vector static_vector ]: a vector-like container that internally embeds
+  * [classref boost::container::static_vector static_vector]: a vector-like container that internally embeds
     (statically allocates) all needed memory up to the maximum capacity. Maximum capacity can't be increased and
     it's specified at compile time.
-  * [classref boost::container::small_vector small_vector ]: a vector-like container that internally embeds
+  * [classref boost::container::small_vector small_vector]: a vector-like container that internally embeds
     (statically allocates) a minimum amount of memory, but dynamically allocates elements when capacity
     has to be increased. This minimum capacity is specified at compile time.
+  * [classref boost::container::devector devector]: is a hybrid of the standard vector and deque containers.
+    It offers cheap (amortized constant time) insertion at both the front and back ends.
   * [classref boost::container::slist slist]: the classic pre-standard singly linked list implementation
     offering constant-time `size()`. Note that C++11 `forward_list` has no `size()`.
 
@@ -73,12 +75,10 @@ instructions, that's already been done for you.
 
 [section:tested_compilers Tested compilers]
 
-[*Boost.Container] requires a decent C++98 compatibility. Some compilers known to work are:
+[*Boost.Container] requires a decent C++03 compatibility. Some compilers known to work are:
 
-*  Visual C++ >= 7.1.
-*  GCC >= 4.1.
-
-[warning GCC < 4.3 and MSVC < 9.0 are deprecated and will be removed in the next version.]
+*  Visual C++ >= 10.0
+*  GCC >= 4.8
 
 [endsect]
 
@@ -168,7 +168,7 @@ is used as a template argument when instantiating a template component,
 unless specifically allowed for that component]].
 
 Finally C++17 added support for incomplete types in `std::vector`, `std::list` and `std::forward_list`
-(see [@https://wg21.link/n4569 ['N4569: Minimal incomplete type support for standard containers, revision 4]]
+(see [@https://wg21.link/n4510 ['N4510: Minimal incomplete type support for standard containers, revision 4]]
 for details), but no other containers like `std::set/map/unordered_set/unordered_map`, 
 
 Fortunately all [*Boost.Container] containers except
@@ -457,6 +457,21 @@ erasure times considerably. Flat associative containers have the following attri
 * Weaker exception safety than standard associative containers
 (copy/move constructors can throw when shifting values in erasures and insertions)
 * Slower insertion and erasure than standard associative containers (specially for non-movable types)
+
+[endsect]
+
+[section:devector ['devector]]
+
+`devector` is a hybrid of the standard vector and deque containers originally written by Thaler Benedek.
+It offers cheap (amortized constant time) insertion at both the front and back ends,
+while also providing the regular features of `vector`, in particular the contiguous underlying memory.
+
+Unlike `vector`, devector can have free capacity both before and after the elements. This enables efficient
+implementation of methods that modify the devector at the front. In general, `devector`'s available methods
+are a superset of those of `vector` with identical behaviour, barring a couple of iterator invalidation
+guarantees that differ.
+
+The overhead for devector is one extra `size_t` per container: Usually sizeof(devector) == 4*sizeof(T*).
 
 [endsect]
 
@@ -1308,6 +1323,10 @@ use [*Boost.Container]? There are several reasons for that:
 *  `static_vector` was based on Andrew Hundt's and Adam Wulkiewicz's high-performance `varray` class.
    Many performance improvements of `vector` were also inspired by their implementation. Thanks!
 
+*  `devector` is based on Thaler Benedek's high-performance `devector` implementation, then
+   adapted for [*Boost.Container]. Also inspired by similar implemenations by Orson Peters and Lars Hagen.
+   Thanks for such a great code and documentation!
+
 *  Howard Hinnant's help and advices were essential when implementing move semantics,
    improving allocator support or implementing small string optimization. Thanks Howard
    for your wonderful standard library implementations.
@@ -1318,6 +1337,45 @@ use [*Boost.Container]? There are several reasons for that:
 [endsect]
 
 [section:release_notes Release Notes]
+
+[section:release_notes_boost_1_75_00 Boost 1.75 Release]
+
+* New [classref boost::container::devector devector] container.
+* Fixed bugs/issues:
+   * [@https://github.com/boostorg/container/pull/157      GitHub #157: ['"Add missing include"]].
+   * [@https://github.com/boostorg/container/issues/160    GitHub #160: ['"Usage of uses_allocator needs a remove_cvref_t"]].
+   * [@https://github.com/boostorg/container/issues/161    GitHub #161: ['"polymorphic_allocator(memory_resource*) non-standard extension causes headache"]].
+
+[endsect]
+
+[section:release_notes_boost_1_74_00 Boost 1.74 Release]
+
+* Fixed bugs/issues:
+   * [@https://github.com/boostorg/container/issues/125    GitHub #125: ['"flat_map doc misleading complexity"]].
+   * [@https://github.com/boostorg/container/issues/126    GitHub #126: ['"flat_set.hpp and set.hpp in pmr have the same header guard"]].
+   * [@https://github.com/boostorg/container/issues/128    GitHub #128: ['"moved from small_vector and static_vector calls destructor on elements in static part"]].
+   * [@https://github.com/boostorg/container/issues/129    GitHub #129: ['"Alias templates for small_flat_[multi]{set|map} using small_vector as container"]].
+   * [@https://github.com/boostorg/container/pull/135      GitHub #135: ['"Missing BOOST_NORETURN for user defined functions"]].
+   * [@https://github.com/boostorg/container/pull/137      GitHub #137: ['"RandomAccessIterator + 0"]].
+   * [@https://github.com/boostorg/container/pull/138      GitHub #138: ['"Remove Classes from Global Namespace"]].
+   * [@https://github.com/boostorg/container/issues/142    GitHub #142: ['"memset called with null pointer"]].
+   * [@https://github.com/boostorg/container/issues/144    GitHub #144: ['"GCC suggest-override warnings"]].
+   * [@https://github.com/boostorg/container/issues/145    GitHub #145: ['"Allocations not handled correctly in some cases of vector move with unequal allocators"]].
+   * [@https://github.com/boostorg/container/pull/146      GitHub #146: ['"Changes for Embarcadero C++ clang-based compilers, targeting Boost 1.74. Addition needed for Embarcardero clang-based compilers"]].
+   * [@https://github.com/boostorg/container/pull/148      GitHub #148: ['"Fix static initialization issues in pmr global resources"]].
+   * [@https://github.com/boostorg/container/pull/149      GitHub #149: ['"InitializeCriticalSectionEx returns "BOOL" (int)"]].
+   * [@https://github.com/boostorg/container/issues/151    GitHub #151: ['"Buffer overflow in monotonic_buffer_resource::do_allocate"]].
+
+[endsect]
+
+[section:release_notes_boost_1_72_00 Boost 1.72 Release]
+
+* Fixed bugs:
+   * [@https://github.com/boostorg/container/issues/127    GitHub #127: ['"Fix docs for static_vector::max_size() and capacity()"]].
+   * [@https://github.com/boostorg/container/issues/132    GitHub #132: ['"flat_map::lower_bound and upper_bound have wrong/misleading docs"]].
+   * [@https://github.com/boostorg/container/issues/133    GitHub #133: ['"basic_string move constructor with allocator argument has incorrect allocator check"]].
+
+[endsect]
 
 [section:release_notes_boost_1_71_00 Boost 1.71 Release]
 
@@ -1341,7 +1399,7 @@ use [*Boost.Container]? There are several reasons for that:
 * [classref boost::container::static_vector static_vector] can now have options, using [classref boost::container::static_vector_options static_vector_options].
     Alignment and throwing behaviour can be be specified.
 
-  * [classref boost::container::small_vector small_vector] can now have options, using [classref boost::container::small_vector_options small_vector_options].
+* [classref boost::container::small_vector small_vector] can now have options, using [classref boost::container::small_vector_options small_vector_options].
     Alignment and growth factor can be be specified.
 
 [endsect]

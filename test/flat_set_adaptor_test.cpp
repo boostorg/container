@@ -13,6 +13,8 @@
 #include <boost/container/stable_vector.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/deque.hpp>
+#include <boost/container/devector.hpp>
+#include <boost/static_assert.hpp>
 
 #include <boost/container/detail/container_or_allocator_rebind.hpp>
 
@@ -95,6 +97,27 @@ int main()
          std::cout << "Error in set_test<deque<int> >" << std::endl;
          return 1;
       }
+      if (0 != test::set_test
+         < GetSetContainer<devector<int> >::apply<int>::set_type
+         , MyStdSet
+         , GetSetContainer<devector<int> >::apply<int>::multiset_type
+         , MyStdMultiSet>()) {
+         std::cout << "Error in set_test<deque<int> >" << std::endl;
+         return 1;
+      }
+   }
+   {
+      using namespace boost::container;
+      using boost::container::dtl::is_same;
+
+      typedef flat_set<int, std::less<int>, small_vector<int, 10> > set_container_t;
+      typedef flat_multiset<int, std::less<int>, small_vector<int, 10> > multiset_container_t;
+      #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+      BOOST_STATIC_ASSERT(( is_same<set_container_t, small_flat_set<int, 10> >::value ));
+      BOOST_STATIC_ASSERT(( is_same<multiset_container_t, small_flat_multiset<int, 10> >::value ));
+      #endif
+      BOOST_STATIC_ASSERT(( is_same<set_container_t, small_flat_set_of<int, 10>::type >::value ));
+      BOOST_STATIC_ASSERT(( is_same<multiset_container_t, small_flat_multiset_of<int, 10>::type >::value ));
    }
 
    return 0;

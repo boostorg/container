@@ -9,8 +9,6 @@
 //////////////////////////////////////////////////////////////////////////////
 #define BOOST_CONTAINER_USER_DEFINED_THROW_CALLBACKS
 
-#include <boost/container/detail/config_begin.hpp>
-
 #include <boost/container/throw_exception.hpp>
 #include <boost/core/lightweight_test.hpp>
 
@@ -22,24 +20,50 @@ static bool length_error_called  = false;
 static bool logic_error_called   = false;
 static bool runtime_error_called = false;
 
+BOOST_NORETURN static void validate_and_never_return()
+{
+   BOOST_TEST(bad_alloc_called == true);
+   BOOST_TEST(out_of_range_called == true);
+   BOOST_TEST(length_error_called == true);
+   BOOST_TEST(logic_error_called == true);
+   BOOST_TEST(runtime_error_called == true);
+   std::exit(::boost::report_errors());
+}
+
 //User defined throw implementations
 namespace boost {
 namespace container {
 
-   void throw_bad_alloc()
-   {  bad_alloc_called = true;   }
+   BOOST_NORETURN void throw_bad_alloc()
+   {
+      bad_alloc_called = true;
+      throw_out_of_range("dummy");
+   }
 
-   void throw_out_of_range(const char* str)
-   {  (void)str; out_of_range_called = true;   }
+   BOOST_NORETURN void throw_out_of_range(const char* str)
+   {
+      out_of_range_called = true;
+      throw_length_error(str);
+   }
 
-   void throw_length_error(const char* str)
-   {  (void)str; length_error_called = true;   }
+   BOOST_NORETURN void throw_length_error(const char* str)
+   {
+      length_error_called = true;
+      throw_logic_error(str);
+   }
 
-   void throw_logic_error(const char* str)
-   {  (void)str; logic_error_called = true; }
+   BOOST_NORETURN void throw_logic_error(const char* str)
+   {
+      logic_error_called = true;
+      throw_runtime_error(str);
+   }
 
-   void throw_runtime_error(const char* str)
-   {  (void)str; runtime_error_called = true;  }
+   BOOST_NORETURN void throw_runtime_error(const char* str)
+   {
+      (void)str;
+      runtime_error_called = true;
+      validate_and_never_return();
+   }
 
 }} //boost::container
 
@@ -47,16 +71,6 @@ int main()
 {
    //Check user-defined throw callbacks are called
    throw_bad_alloc();
-   BOOST_TEST(bad_alloc_called == true);
-   throw_out_of_range("dummy");
-   BOOST_TEST(out_of_range_called == true);
-   throw_length_error("dummy");
-   BOOST_TEST(length_error_called == true);
-   throw_logic_error("dummy");
-   BOOST_TEST(logic_error_called == true);
-   throw_runtime_error("dummy");
-   BOOST_TEST(runtime_error_called == true);
-   return ::boost::report_errors();
+   //Never reached
+   return 33;
 }
-
-#include <boost/container/detail/config_end.hpp>
