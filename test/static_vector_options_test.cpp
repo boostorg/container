@@ -10,8 +10,10 @@
 #define BOOST_ENABLE_ASSERT_HANDLER
 #include <boost/container/static_vector.hpp>
 #include <boost/core/lightweight_test.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 #include <new> //for bad_alloc
 #include <boost/assert.hpp>
+#include <cstdlib>
 using namespace boost::container;
 
 //User-defined assertion to test throw_on_overflow
@@ -21,12 +23,20 @@ struct throw_on_overflow_off
 namespace boost {
    void assertion_failed(char const *, char const *, char const *, long)
    {
+      #ifdef BOOST_NO_EXCEPTIONS
+      std::abort();
+      #else
       throw throw_on_overflow_off();
+      #endif
    }
 
    void assertion_failed_msg(char const *, char const *, char const *, char const *, long )
    {
+      #ifdef BOOST_NO_EXCEPTIONS
+      std::abort();
+      #else
       throw throw_on_overflow_off();
+      #endif
    }
 }
 
@@ -76,15 +86,18 @@ void test_throw_on_overflow()
 
       v.resize(Capacity);
       bool expected_type_thrown = false;
-      try{
+
+      BOOST_TRY{
          v.push_back(0);
       }
-      catch(std::bad_alloc&)
+      BOOST_CATCH(std::bad_alloc&)
       {
          expected_type_thrown = true;
       }
-      catch(...)
+      BOOST_CATCH(...)
       {}
+      BOOST_CATCH_END
+
       BOOST_TEST(expected_type_thrown == true);
       BOOST_TEST(v.capacity() == Capacity);
    }
@@ -101,15 +114,18 @@ void test_throw_on_overflow()
 
       v.resize(Capacity);
       bool expected_type_thrown = false;
-      try{
+
+      BOOST_TRY{
          v.push_back(0);
       }
-      catch(throw_on_overflow_off)
+      BOOST_CATCH(throw_on_overflow_off)
       {
          expected_type_thrown = true;
       }
-      catch(...)
+      BOOST_CATCH(...)
       {}
+      BOOST_CATCH_END
+
       BOOST_TEST(expected_type_thrown == true);
       BOOST_TEST(v.capacity() == Capacity);
    }

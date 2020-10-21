@@ -13,6 +13,7 @@
 
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/container/vector.hpp>
+#include <boost/container/throw_exception.hpp>
 #include <cstdlib>
 
 class memory_resource_logger
@@ -41,7 +42,7 @@ class memory_resource_logger
    {
       char *addr =(char*)std::malloc(bytes);
       if(!addr){
-         throw std::bad_alloc();
+         boost::container::throw_bad_alloc();
       }
       allocation_info info;
       info.address   = addr;

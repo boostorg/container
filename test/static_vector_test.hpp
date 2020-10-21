@@ -13,8 +13,6 @@
 
 #include <boost/container/static_vector.hpp>
 
-#define BOOST_SP_DISABLE_THREADS
-#include <boost/shared_ptr.hpp>
 #include "movable_int.hpp"
 
 using namespace boost::container;
@@ -90,19 +88,5 @@ struct has_nothrow_move<counting_value>
 };
 
 }
-
-class shptr_value
-{
-    typedef boost::shared_ptr<int> Ptr;
-public:
-    explicit shptr_value(int a = 0) : m_ptr(new int(a)) {}
-    shptr_value & operator=(int a)
-    {  m_ptr.reset(new int(a)); return *this; }
-
-    bool operator==(shptr_value const& v) const { return *m_ptr == *(v.m_ptr); }
-    bool operator<(shptr_value const& v) const { return *m_ptr < *(v.m_ptr); }
-private:
-    boost::shared_ptr<int> m_ptr;
-};
 
 #endif // BOOST_CONTAINER_TEST_STATIC_VECTOR_TEST_HPP

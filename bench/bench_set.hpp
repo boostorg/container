@@ -19,6 +19,7 @@
 #include <iomanip>
 #include <boost/container/vector.hpp>
 #include <boost/container/string.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 
 using boost::timer::cpu_timer;
 using boost::timer::cpu_times;
@@ -394,91 +395,87 @@ template<class BoostClass, class StdClass>
 void launch_tests(const char *BoostContName, const char *StdContName)
 {
    typedef range_provider<typename BoostClass::value_type> get_range_t;
-   try {
-      std::cout << "**********************************************" << '\n';
-      std::cout << "**********************************************" << '\n';
-      std::cout << '\n';
-      std::cout << BoostContName << " .VS " <<  StdContName         << '\n';
-      std::cout << '\n';
-      std::cout << "**********************************************" << '\n';
-      std::cout << "**********************************************" << '\n' << std::endl;
-      {
-         std::cout << "Copy/Assign/Destroy benchmark:" << BoostContName << std::endl;
-         cpu_times boost_set_time = copy_destroy_time< BoostClass >(get_range_t::sorted_unique());
 
-         std::cout << "Copy/Assign/Destroy benchmark:" << StdContName << std::endl;
-         cpu_times std_set_time = copy_destroy_time< StdClass >(get_range_t::sorted_unique());
+   std::cout << "**********************************************" << '\n';
+   std::cout << "**********************************************" << '\n';
+   std::cout << '\n';
+   std::cout << BoostContName << " .VS " <<  StdContName         << '\n';
+   std::cout << '\n';
+   std::cout << "**********************************************" << '\n';
+   std::cout << "**********************************************" << '\n' << std::endl;
+   {
+      std::cout << "Copy/Assign/Destroy benchmark:" << BoostContName << std::endl;
+      cpu_times boost_set_time = copy_destroy_time< BoostClass >(get_range_t::sorted_unique());
 
-         std::cout << BoostContName << "/" << StdContName << ": ";
-         compare_times(boost_set_time, std_set_time);
-      }
-      {
-         std::cout << "Ordered construct benchmark:" << BoostContName << std::endl;
-         cpu_times boost_set_time = construct_time< BoostClass >(get_range_t::sorted_unique(), get_range_t::sorted(), "(ord)");
+      std::cout << "Copy/Assign/Destroy benchmark:" << StdContName << std::endl;
+      cpu_times std_set_time = copy_destroy_time< StdClass >(get_range_t::sorted_unique());
 
-         std::cout << "Ordered construct benchmark:" << StdContName << std::endl;
-         cpu_times std_set_time = construct_time< StdClass >(get_range_t::sorted_unique(), get_range_t::sorted(), "(ord)");;
+      std::cout << BoostContName << "/" << StdContName << ": ";
+      compare_times(boost_set_time, std_set_time);
+   }
+   {
+      std::cout << "Ordered construct benchmark:" << BoostContName << std::endl;
+      cpu_times boost_set_time = construct_time< BoostClass >(get_range_t::sorted_unique(), get_range_t::sorted(), "(ord)");
 
-         std::cout << BoostContName << "/" << StdContName << ": ";
-         compare_times(boost_set_time, std_set_time);
-      }
-      {
-         std::cout << "Random construct benchmark:" << BoostContName << std::endl;
-         cpu_times boost_set_time = construct_time< BoostClass >(get_range_t::random_unique(), get_range_t::random(), "(rnd)");
+      std::cout << "Ordered construct benchmark:" << StdContName << std::endl;
+      cpu_times std_set_time = construct_time< StdClass >(get_range_t::sorted_unique(), get_range_t::sorted(), "(ord)");;
 
-         std::cout << "Random construct benchmark:" << StdContName << std::endl;
-         cpu_times std_set_time = construct_time< StdClass >(get_range_t::random_unique(), get_range_t::random(), "(rnd)");;
+      std::cout << BoostContName << "/" << StdContName << ": ";
+      compare_times(boost_set_time, std_set_time);
+   }
+   {
+      std::cout << "Random construct benchmark:" << BoostContName << std::endl;
+      cpu_times boost_set_time = construct_time< BoostClass >(get_range_t::random_unique(), get_range_t::random(), "(rnd)");
 
-         std::cout << BoostContName << "/" << StdContName << ": ";
-         compare_times(boost_set_time, std_set_time);
-      }
-      {
-         std::cout << "Ordered Insert benchmark:" << BoostContName << std::endl;
-         cpu_times boost_set_time = insert_time< BoostClass >(get_range_t::sorted_unique(), get_range_t::sorted(), "(ord)");
+      std::cout << "Random construct benchmark:" << StdContName << std::endl;
+      cpu_times std_set_time = construct_time< StdClass >(get_range_t::random_unique(), get_range_t::random(), "(rnd)");;
 
-         std::cout << "Ordered Insert benchmark:" << StdContName << std::endl;
-         cpu_times std_set_time = insert_time< StdClass >(get_range_t::sorted_unique(), get_range_t::sorted(), "(ord)");
+      std::cout << BoostContName << "/" << StdContName << ": ";
+      compare_times(boost_set_time, std_set_time);
+   }
+   {
+      std::cout << "Ordered Insert benchmark:" << BoostContName << std::endl;
+      cpu_times boost_set_time = insert_time< BoostClass >(get_range_t::sorted_unique(), get_range_t::sorted(), "(ord)");
 
-         std::cout << BoostContName << "/" << StdContName << ": ";
-         compare_times(boost_set_time, std_set_time);
-      }
-      {
-         std::cout << "Random Insert benchmark:" << BoostContName << std::endl;
-         cpu_times boost_set_time = insert_time< BoostClass >(get_range_t::random_unique(), get_range_t::random(), "(rnd)");
+      std::cout << "Ordered Insert benchmark:" << StdContName << std::endl;
+      cpu_times std_set_time = insert_time< StdClass >(get_range_t::sorted_unique(), get_range_t::sorted(), "(ord)");
 
-         std::cout << "Random Insert benchmark:" << StdContName << std::endl;
-         cpu_times std_set_time = insert_time< StdClass >(get_range_t::random_unique(), get_range_t::random(), "(rnd)");
+      std::cout << BoostContName << "/" << StdContName << ": ";
+      compare_times(boost_set_time, std_set_time);
+   }
+   {
+      std::cout << "Random Insert benchmark:" << BoostContName << std::endl;
+      cpu_times boost_set_time = insert_time< BoostClass >(get_range_t::random_unique(), get_range_t::random(), "(rnd)");
 
-         std::cout << BoostContName << "/" << StdContName << ": ";
-         compare_times(boost_set_time, std_set_time);
-      }
-      {
-         std::cout << "Ordered Search benchmark:" << BoostContName << std::endl;
-         cpu_times boost_set_time = search_time< BoostClass >(get_range_t::sorted_unique(), "(ord)");
+      std::cout << "Random Insert benchmark:" << StdContName << std::endl;
+      cpu_times std_set_time = insert_time< StdClass >(get_range_t::random_unique(), get_range_t::random(), "(rnd)");
 
-         std::cout << "Ordered Search benchmark:" << StdContName << std::endl;
-         cpu_times std_set_time = search_time< StdClass >(get_range_t::sorted_unique(), "(ord)");
+      std::cout << BoostContName << "/" << StdContName << ": ";
+      compare_times(boost_set_time, std_set_time);
+   }
+   {
+      std::cout << "Ordered Search benchmark:" << BoostContName << std::endl;
+      cpu_times boost_set_time = search_time< BoostClass >(get_range_t::sorted_unique(), "(ord)");
 
-         std::cout << BoostContName << "/" << StdContName << ": ";
-         compare_times(boost_set_time, std_set_time);
-      }
-      {
-         std::cout << "Random Search benchmark:" << BoostContName << std::endl;
-         cpu_times boost_set_time = search_time< BoostClass >(get_range_t::random_unique(), "(rnd)");
+      std::cout << "Ordered Search benchmark:" << StdContName << std::endl;
+      cpu_times std_set_time = search_time< StdClass >(get_range_t::sorted_unique(), "(ord)");
 
-         std::cout << "Random Search benchmark:" << StdContName << std::endl;
-         cpu_times std_set_time = search_time< StdClass >(get_range_t::random_unique(), "(rnd)");
+      std::cout << BoostContName << "/" << StdContName << ": ";
+      compare_times(boost_set_time, std_set_time);
+   }
+   {
+      std::cout << "Random Search benchmark:" << BoostContName << std::endl;
+      cpu_times boost_set_time = search_time< BoostClass >(get_range_t::random_unique(), "(rnd)");
 
-         std::cout << BoostContName << "/" << StdContName << ": ";
-         compare_times(boost_set_time, std_set_time);
-      }
-      {
-         std::cout << "Extensions benchmark:" << BoostContName << std::endl;
-         extensions_time< BoostClass >(get_range_t::sorted_unique());
-      }
+      std::cout << "Random Search benchmark:" << StdContName << std::endl;
+      cpu_times std_set_time = search_time< StdClass >(get_range_t::random_unique(), "(rnd)");
 
-   }catch(std::exception &e){
-      std::cout << e.what();
+      std::cout << BoostContName << "/" << StdContName << ": ";
+      compare_times(boost_set_time, std_set_time);
+   }
+   {
+      std::cout << "Extensions benchmark:" << BoostContName << std::endl;
+      extensions_time< BoostClass >(get_range_t::sorted_unique());
    }
 }
 

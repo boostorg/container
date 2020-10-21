@@ -86,20 +86,23 @@ void test_null_memory_resource()
 {
    //Make sure it throw or returns null
    memory_resource *mr = null_memory_resource();
+   BOOST_TEST(mr != 0);
+
    #if !defined(BOOST_NO_EXCEPTIONS)
    bool bad_allocexception_thrown = false;
-   try{
+
+   BOOST_TRY{
       mr->allocate(1, 1);
    }
-   catch(std::bad_alloc&) {
+   BOOST_CATCH(std::bad_alloc&) {
       bad_allocexception_thrown = true;
    }
-   catch(...) {
+   BOOST_CATCH(...) {
    }
+   BOOST_CATCH_END
+
    BOOST_TEST(bad_allocexception_thrown == true);
-   #else
-   BOOST_TEST(0 == mr->allocate(1, 1));
-   #endif
+   #endif   //BOOST_NO_EXCEPTIONS
 }
 
 void test_default_resource()

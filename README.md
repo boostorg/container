@@ -11,6 +11,7 @@ Distributed under the [Boost Software License, Version 1.0](http://www.boost.org
 
 * C++03
 * Mostly header-only, library compilation is required for few features.
+* Supports compiler modes without exceptions support (e.g. `-fno-exceptions`).
 
 ### Build Status
 

@@ -13,6 +13,7 @@
 #define BOOST_CONTAINER_TEST_TEST_ELEM_HPP
 
 #include <boost/utility/compare_pointees.hpp>
+#include <cstdlib>
 
 namespace boost {
 namespace container {
@@ -51,7 +52,11 @@ struct test_elem_throw
       if (counter == 0)
       {
          --counter;
+         #ifndef BOOST_NO_EXCEPTIONS
          throw test_exception();
+         #else
+         std::abort();
+         #endif
       }
       }
    }

@@ -7,9 +7,11 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
+#include <boost/core/no_exceptions_support.hpp>
 //[doc_custom_vector
 #include <boost/container/vector.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 
 //Make sure assertions are active
 #ifdef NDEBUG
@@ -32,8 +34,16 @@ int main ()
    //Requesting capacity for more elements than representable by "unsigned char"
    //is an error in the size optimized vector.
    bool exception_thrown = false;
-   try       { size_optimized_vector_t v(256); }
-   catch(...){ exception_thrown = true;        }
+   /*<-*/ 
+   #ifndef BOOST_NO_EXCEPTIONS
+   BOOST_TRY{ size_optimized_vector_t v(256); } BOOST_CATCH(...){ exception_thrown = true; } BOOST_CATCH_END
+   #else
+   exception_thrown = true;
+   #endif   //BOOST_NO_EXCEPTIONS
+   /*->*/
+   //=try       { size_optimized_vector_t v(256); }
+   //=catch(...){ exception_thrown = true;        }
+
    assert(exception_thrown == true);
 
    //This option specifies that a vector will increase its capacity 50%

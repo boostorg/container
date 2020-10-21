@@ -75,12 +75,12 @@ void test_support_for_initializer_list()
 {
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    {
-      static_vector<int, 2> sv = {10, 8};
+      typedef static_vector<int, 2> sv_cap_2;
+      sv_cap_2 sv = {10, 8};
       BOOST_TEST(10 == sv[0]);
       BOOST_TEST(8 == sv[1]);
 
-      typedef static_vector<int, 1> sv_cap_1;
-      BOOST_TEST_THROWS(sv_cap_1({1, 1}), std::bad_alloc);
+      BOOST_TEST_THROWS(sv_cap_2({1, 1, 1}), std::bad_alloc);
    }
 
    {
@@ -160,15 +160,15 @@ void test_push_back_nd()
 
    for ( size_t i = 0 ; i < N ; ++i )
    {
-      T t(i);
+      T t(static_cast<int>(i));
       s.push_back(t);
       BOOST_TEST(s.size() == i + 1);
       BOOST_TEST_THROWS( s.at(i + 1), std::out_of_range );
-      BOOST_TEST(T(i) == s.at(i));
-      BOOST_TEST(T(i) == s[i]);
-      BOOST_TEST(T(i) == s.back());
+      BOOST_TEST(T((int)i) == s.at(i));
+      BOOST_TEST(T((int)i) == s[i]);
+      BOOST_TEST(T((int)i) == s.back());
       BOOST_TEST(T(0) == s.front());
-      BOOST_TEST(T(i) == *(s.data() + i));
+      BOOST_TEST(T((int)i) == *(s.data() + i));
    }
 }
 
@@ -179,7 +179,7 @@ void test_pop_back_nd()
 
    for ( size_t i = 0 ; i < N ; ++i )
    {
-      T t(i);
+      T t((int)i);
       s.push_back(t);
    }
 
@@ -188,9 +188,9 @@ void test_pop_back_nd()
       s.pop_back();
       BOOST_TEST(s.size() == i - 1);
       BOOST_TEST_THROWS( s.at(i - 1), std::out_of_range );
-      BOOST_TEST(T(i - 2) == s.at(i - 2));
-      BOOST_TEST(T(i - 2) == s[i - 2]);
-      BOOST_TEST(T(i - 2) == s.back());
+      BOOST_TEST(T((int)i - 2) == s.at(i - 2));
+      BOOST_TEST(T((int)i - 2) == s[i - 2]);
+      BOOST_TEST(T((int)i - 2) == s.back());
       BOOST_TEST(T(0) == s.front());
    }
 }
@@ -229,7 +229,7 @@ void test_copy_and_assign_nd(T const& val)
 
    for ( size_t i = 0 ; i < N ; ++i )
    {
-      T t(i);
+      T t((int)i);
       s.push_back(t);
       v.push_back(t);
       l.push_back(t);
@@ -272,8 +272,8 @@ void test_iterators_nd()
 
    for ( size_t i = 0 ; i < N ; ++i )
    {
-      s.push_back(T(i));
-      v.push_back(T(i));
+      s.push_back(T((int)i));
+      v.push_back(T((int)i));
    }
 
    test_compare_ranges(s.begin(), s.end(), v.begin(), v.end());
@@ -292,7 +292,7 @@ void test_erase_nd()
    typedef typename static_vector<T, N>::iterator It;
 
    for ( size_t i = 0 ; i < N ; ++i )
-      s.push_back(T(i));
+      s.push_back(T((int)i));
 
    // erase(pos)
    {
@@ -303,9 +303,9 @@ void test_erase_nd()
           BOOST_TEST(s1.begin() + i == it);
           BOOST_TEST(s1.size() == N - 1);
           for ( size_t j = 0 ; j < i ; ++j )
-              BOOST_TEST(s1[j] == T(j));
+              BOOST_TEST(s1[j] == T((int)j));
           for ( size_t j = i+1 ; j < N ; ++j )
-              BOOST_TEST(s1[j-1] == T(j));
+              BOOST_TEST(s1[j-1] == T((int)j));
       }
    }
    // erase(first, last)
@@ -319,9 +319,9 @@ void test_erase_nd()
           BOOST_TEST(s1.begin() + i == it);
           BOOST_TEST(s1.size() == N - removed);
           for ( size_t j = 0 ; j < i ; ++j )
-              BOOST_TEST(s1[j] == T(j));
+              BOOST_TEST(s1[j] == T((int)j));
           for ( size_t j = i+n ; j < N ; ++j )
-              BOOST_TEST(s1[j-n] == T(j));
+              BOOST_TEST(s1[j-n] == T((int)j));
       }
    }
 }
@@ -344,11 +344,11 @@ void test_insert(SV const& s, C const& c)
       BOOST_TEST(s1.begin() + i == it1);
       BOOST_TEST(s1.size() == h+n);
       for ( size_t j = 0 ; j < i ; ++j )
-          BOOST_TEST(s1[j] == T(j));
+          BOOST_TEST(s1[j] == T((int)j));
       for ( size_t j = 0 ; j < n ; ++j )
-          BOOST_TEST(s1[j+i] == T(100 + j));
+          BOOST_TEST(s1[j+i] == T(100 + (int)j));
       for ( size_t j = 0 ; j < h-i ; ++j )
-          BOOST_TEST(s1[j+i+n] == T(j+i));
+          BOOST_TEST(s1[j+i+n] == T((int)j+(int)i));
    }
 }
 
@@ -365,10 +365,10 @@ void test_insert_nd(T const& val)
 
    for ( size_t i = 0 ; i < h ; ++i )
    {
-      s.push_back(T(i));
-      ss.push_back(T(100 + i));
-      v.push_back(T(100 + i));
-      l.push_back(T(100 + i));
+      s.push_back(T((int)i));
+      ss.push_back(T(100 + (int)i));
+      v.push_back(T(100 + (int)i));
+      l.push_back(T(100 + (int)i));
    }
 
    // insert(pos, val)
@@ -380,10 +380,10 @@ void test_insert_nd(T const& val)
           BOOST_TEST(s1.begin() + i == it);
           BOOST_TEST(s1.size() == h+1);
           for ( size_t j = 0 ; j < i ; ++j )
-              BOOST_TEST(s1[j] == T(j));
+              BOOST_TEST(s1[j] == T((int)j));
           BOOST_TEST(s1[i] == val);
           for ( size_t j = 0 ; j < h-i ; ++j )
-              BOOST_TEST(s1[j+i+1] == T(j+i));
+              BOOST_TEST(s1[j+i+1] == T((int)j+(int)i));
       }
    }
    // insert(pos, n, val)
@@ -396,11 +396,11 @@ void test_insert_nd(T const& val)
           BOOST_TEST(s1.begin() + i == it);
           BOOST_TEST(s1.size() == h+n);
           for ( size_t j = 0 ; j < i ; ++j )
-              BOOST_TEST(s1[j] == T(j));
+              BOOST_TEST(s1[j] == T((int)j));
           for ( size_t j = 0 ; j < n ; ++j )
               BOOST_TEST(s1[j+i] == val);
           for ( size_t j = 0 ; j < h-i ; ++j )
-              BOOST_TEST(s1[j+i+n] == T(j+i));
+              BOOST_TEST(s1[j+i+n] == T((int)j+(int)i));
       }
    }
    // insert(pos, first, last)
@@ -414,7 +414,8 @@ void test_capacity_0_nd()
 {
    static_vector<T, 10> v(5u, T(0));
 
-   static_vector<T, 0 > s;
+   typedef static_vector<T, 0> static_vector_0_t;
+   static_vector_0_t s;
    BOOST_TEST(s.size() == 0);
    BOOST_TEST(s.capacity() == 0);
    BOOST_TEST_THROWS(s.at(0), std::out_of_range);
@@ -426,7 +427,6 @@ void test_capacity_0_nd()
    BOOST_TEST_THROWS(s.assign(v.begin(), v.end()), std::bad_alloc);
    BOOST_TEST_THROWS(s.assign(5u, T(0)), std::bad_alloc);
    BOOST_TEST_THROWS(s.assign(5u, T(0)), std::bad_alloc);
-   typedef static_vector<T, 0> static_vector_0_t;
    BOOST_TEST_THROWS(static_vector_0_t s2(v.begin(), v.end()), std::bad_alloc);
    BOOST_TEST_THROWS(static_vector_0_t s1(5u, T(0)), std::bad_alloc);
 }
@@ -435,7 +435,8 @@ template <typename T, size_t N>
 void test_exceptions_nd()
 {
    static_vector<T, N> v(N, T(0));
-   static_vector<T, N/2> s(N/2, T(0));
+   typedef static_vector<T, N/2> static_vector_n_half_t;
+   static_vector_n_half_t s(N/2, T(0));
 
    BOOST_TEST_THROWS(s.resize(N, T(0)), std::bad_alloc);
    BOOST_TEST_THROWS(s.push_back(T(0)), std::bad_alloc);
@@ -444,7 +445,6 @@ void test_exceptions_nd()
    BOOST_TEST_THROWS(s.insert(s.end(), v.begin(), v.end()), std::bad_alloc);
    BOOST_TEST_THROWS(s.assign(v.begin(), v.end()), std::bad_alloc);
    BOOST_TEST_THROWS(s.assign(N, T(0)), std::bad_alloc);
-   typedef static_vector<T, N/2> static_vector_n_half_t;
    BOOST_TEST_THROWS(static_vector_n_half_t s2(v.begin(), v.end()), std::bad_alloc);
    BOOST_TEST_THROWS(static_vector_n_half_t s1(N/2+1, T(0)), std::bad_alloc);
 }
@@ -459,16 +459,16 @@ void test_swap_and_move_nd()
 
       for (size_t i = 0 ; i < N ; ++i )
       {
-          v1.push_back(T(i));
-          v2.push_back(T(i));
-          v3.push_back(T(i));
-          v4.push_back(T(i));
+          v1.push_back(T((int)i));
+          v2.push_back(T((int)i));
+          v3.push_back(T((int)i));
+          v4.push_back(T((int)i));
       }
       for (size_t i = 0 ; i < N/2 ; ++i )
       {
-          s1.push_back(T(100 + i));
-          s2.push_back(T(100 + i));
-          s4.push_back(T(100 + i));
+          s1.push_back(T(100 + (int)i));
+          s2.push_back(T(100 + (int)i));
+          s4.push_back(T(100 + (int)i));
       }
 
       s1.swap(v1);
@@ -486,15 +486,15 @@ void test_swap_and_move_nd()
       BOOST_TEST(s4.size() == N);
       for (size_t i = 0 ; i < N/2 ; ++i )
       {
-          BOOST_TEST(v1[i] == T(100 + i));
-          BOOST_TEST(v4[i] == T(100 + i));
+          BOOST_TEST(v1[i] == T(100 + (int)i));
+          BOOST_TEST(v4[i] == T(100 + (int)i));
       }
       for (size_t i = 0 ; i < N ; ++i )
       {
-          BOOST_TEST(s1[i] == T(i));
-          BOOST_TEST(s2[i] == T(i));
-          BOOST_TEST(s3[i] == T(i));
-          BOOST_TEST(s4[i] == T(i));
+          BOOST_TEST(s1[i] == T((int)i));
+          BOOST_TEST(s2[i] == T((int)i));
+          BOOST_TEST(s3[i] == T((int)i));
+          BOOST_TEST(s4[i] == T((int)i));
       }
    }
    {
@@ -503,14 +503,14 @@ void test_swap_and_move_nd()
 
       for (size_t i = 0 ; i < N/2 ; ++i )
       {
-          v1.push_back(T(i));
-          v2.push_back(T(i));
-          v3.push_back(T(i));
+          v1.push_back(T((int)i));
+          v2.push_back(T((int)i));
+          v3.push_back(T((int)i));
       }
       for (size_t i = 0 ; i < N/3 ; ++i )
       {
-          s1.push_back(T(100 + i));
-          s2.push_back(T(100 + i));
+          s1.push_back(T(100 + (int)i));
+          s2.push_back(T(100 + (int)i));
       }
 
       s1.swap(v1);
@@ -528,13 +528,13 @@ void test_swap_and_move_nd()
       //BOOST_TEST(v3.size() == 0);
       BOOST_TEST(s4.size() == N/2);
       for (size_t i = 0 ; i < N/3 ; ++i )
-          BOOST_TEST(v1[i] == T(100 + i));
+          BOOST_TEST(v1[i] == T(100 + (int)i));
       for (size_t i = 0 ; i < N/2 ; ++i )
       {
-          BOOST_TEST(s1[i] == T(i));
-          BOOST_TEST(s2[i] == T(i));
-          BOOST_TEST(s3[i] == T(i));
-          BOOST_TEST(s4[i] == T(i));
+          BOOST_TEST(s1[i] == T((int)i));
+          BOOST_TEST(s2[i] == T((int)i));
+          BOOST_TEST(s3[i] == T((int)i));
+          BOOST_TEST(s4[i] == T((int)i));
       }
    }
    {
@@ -574,7 +574,7 @@ void test_emplace_2p()
       for (int i = 0 ; i < int(N) ; ++i )
           v.emplace_back(i, 100 + i);
       BOOST_TEST(v.size() == N);
-      BOOST_TEST_THROWS(v.emplace_back(N, 100 + N), std::bad_alloc);
+      BOOST_TEST_THROWS(v.emplace_back((int)N, 100 + (int)N), std::bad_alloc);
       BOOST_TEST(v.size() == N);
       for (int i = 0 ; i < int(N) ; ++i )
           BOOST_TEST(v[i] == T(i, 100 + i));
@@ -681,98 +681,84 @@ int main(int, char* [])
    test_ctor_ndc<value_ndc, 10>();
    test_ctor_ndc<counting_value, 10>();
    BOOST_TEST(counting_value::count() == 0);
-   test_ctor_ndc<shptr_value, 10>();
    test_ctor_ndc<movable_and_copyable_int, 10>();
 
    test_ctor_nc<int, 10>(5);
    test_ctor_nc<value_nc, 10>(5);
    test_ctor_nc<counting_value, 10>(5);
    BOOST_TEST(counting_value::count() == 0);
-   test_ctor_nc<shptr_value, 10>(5);
    test_ctor_nc<movable_and_copyable_int, 10>(5);
 
    test_ctor_nd<int, 10>(5, 1);
    test_ctor_nd<value_nd, 10>(5, value_nd(1));
    test_ctor_nd<counting_value, 10>(5, counting_value(1));
    BOOST_TEST(counting_value::count() == 0);
-   test_ctor_nd<shptr_value, 10>(5, shptr_value(1));
    test_ctor_nd<movable_and_copyable_int, 10>(5, produce_movable_and_copyable_int());
 
    test_resize_nc<int, 10>(5);
    test_resize_nc<value_nc, 10>(5);
    test_resize_nc<counting_value, 10>(5);
    BOOST_TEST(counting_value::count() == 0);
-   test_resize_nc<shptr_value, 10>(5);
    test_resize_nc<movable_and_copyable_int, 10>(5);
 
    test_resize_nd<int, 10>(5, 1);
    test_resize_nd<value_nd, 10>(5, value_nd(1));
    test_resize_nd<counting_value, 10>(5, counting_value(1));
    BOOST_TEST(counting_value::count() == 0);
-   test_resize_nd<shptr_value, 10>(5, shptr_value(1));
    test_resize_nd<movable_and_copyable_int, 10>(5, produce_movable_and_copyable_int());
 
    test_push_back_nd<int, 10>();
    test_push_back_nd<value_nd, 10>();
    test_push_back_nd<counting_value, 10>();
    BOOST_TEST(counting_value::count() == 0);
-   test_push_back_nd<shptr_value, 10>();
    test_push_back_nd<movable_and_copyable_int, 10>();
 
    test_pop_back_nd<int, 10>();
    test_pop_back_nd<value_nd, 10>();
    test_pop_back_nd<counting_value, 10>();
    BOOST_TEST(counting_value::count() == 0);
-   test_pop_back_nd<shptr_value, 10>();
    test_pop_back_nd<movable_and_copyable_int, 10>();
 
    test_copy_and_assign_nd<int, 10>(1);
    test_copy_and_assign_nd<value_nd, 10>(value_nd(1));
    test_copy_and_assign_nd<counting_value, 10>(counting_value(1));
    BOOST_TEST(counting_value::count() == 0);
-   test_copy_and_assign_nd<shptr_value, 10>(shptr_value(1));
    test_copy_and_assign_nd<movable_and_copyable_int, 10>(produce_movable_and_copyable_int());
 
    test_iterators_nd<int, 10>();
    test_iterators_nd<value_nd, 10>();
    test_iterators_nd<counting_value, 10>();
    BOOST_TEST(counting_value::count() == 0);
-   test_iterators_nd<shptr_value, 10>();
    test_iterators_nd<movable_and_copyable_int, 10>();
 
    test_erase_nd<int, 10>();
    test_erase_nd<value_nd, 10>();
    test_erase_nd<counting_value, 10>();
    BOOST_TEST(counting_value::count() == 0);
-   test_erase_nd<shptr_value, 10>();
    test_erase_nd<movable_and_copyable_int, 10>();
 
    test_insert_nd<int, 10>(50);
    test_insert_nd<value_nd, 10>(value_nd(50));
    test_insert_nd<counting_value, 10>(counting_value(50));
    BOOST_TEST(counting_value::count() == 0);
-   test_insert_nd<shptr_value, 10>(shptr_value(50));
    test_insert_nd<movable_and_copyable_int, 10>(produce_movable_and_copyable_int());
 
    test_capacity_0_nd<int>();
    test_capacity_0_nd<value_nd>();
    test_capacity_0_nd<counting_value>();
    BOOST_TEST(counting_value::count() == 0);
-   test_capacity_0_nd<shptr_value>();
    test_capacity_0_nd<movable_and_copyable_int>();
 
    test_exceptions_nd<int, 10>();
    test_exceptions_nd<value_nd, 10>();
    test_exceptions_nd<counting_value, 10>();
    BOOST_TEST(counting_value::count() == 0);
-   test_exceptions_nd<shptr_value, 10>();
    test_exceptions_nd<movable_and_copyable_int, 10>();
 
    test_swap_and_move_nd<int, 10>();
    test_swap_and_move_nd<value_nd, 10>();
    test_swap_and_move_nd<counting_value, 10>();
    BOOST_TEST(counting_value::count() == 0);
-   test_swap_and_move_nd<shptr_value, 10>();
    test_swap_and_move_nd<movable_and_copyable_int, 10>();
 
    test_emplace_0p<counting_value, 10>();
@@ -785,7 +771,6 @@ int main(int, char* [])
    test_sv_elem<value_nd, 10>(value_nd(50));
    test_sv_elem<counting_value, 10>(counting_value(50));
    BOOST_TEST(counting_value::count() == 0);
-   test_sv_elem<shptr_value, 10>(shptr_value(50));
    test_sv_elem<movable_and_copyable_int, 10>(movable_and_copyable_int(50));
 
    BOOST_TEST(default_init_test() == true);

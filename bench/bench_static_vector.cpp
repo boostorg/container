@@ -14,8 +14,10 @@
 //  @brief  varray_benchmark.cpp compares the performance of boost::container::varray to boost::container::vector
 
 #include "varray.hpp"
-#include "boost/container/vector.hpp"
-#include "boost/container/static_vector.hpp"
+#include <boost/container/vector.hpp>
+#include <boost/container/static_vector.hpp>
+#include <boost/core/no_exceptions_support.hpp>
+
 #include "../test/movable_int.hpp"
 #include <vector>
 #include <iostream>
@@ -114,31 +116,28 @@ void compare_times(cpu_times time_numerator, cpu_times time_denominator){
 
 int main()
 {
-   try {
-      std::cout << "N = " << N << " Iter = " << Iter << "\n\n";
+   std::cout << "N = " << N << " Iter = " << Iter << "\n\n";
 
-      std::cout << "varray benchmark:" << std::endl;
-      cpu_times time_varray = time_it<boost::container::varray<boost::container::varray<basic_type_t,N>,N > >();
+   std::cout << "varray benchmark:" << std::endl;
+   cpu_times time_varray = time_it<boost::container::varray<boost::container::varray<basic_type_t,N>,N > >();
 
-      std::cout << "boost::container::static_vector benchmark" << std::endl;
-      cpu_times time_boost_static_vector = time_it<boost::container::static_vector<boost::container::static_vector<basic_type_t,N>,N > >();
+   std::cout << "boost::container::static_vector benchmark" << std::endl;
+   cpu_times time_boost_static_vector = time_it<boost::container::static_vector<boost::container::static_vector<basic_type_t,N>,N > >();
 
-      std::cout << "boost::container::vector benchmark"  << std::endl;
-      cpu_times time_boost_vector = time_it<boost::container::vector<boost::container::vector<basic_type_t> > >();
+   std::cout << "boost::container::vector benchmark"  << std::endl;
+   cpu_times time_boost_vector = time_it<boost::container::vector<boost::container::vector<basic_type_t> > >();
 
-      std::cout << "std::vector benchmark" << std::endl;
-      cpu_times time_standard_vector = time_it<std::vector<std::vector<basic_type_t> > >();
+   std::cout << "std::vector benchmark" << std::endl;
+   cpu_times time_standard_vector = time_it<std::vector<std::vector<basic_type_t> > >();
 
-      std::cout << "varray/boost::container::vector total time comparison:";
-      compare_times(time_varray, time_boost_vector);
+   std::cout << "varray/boost::container::vector total time comparison:";
+   compare_times(time_varray, time_boost_vector);
 
-      std::cout << "varray/boost::container::static_vector total time comparison:";
-      compare_times(time_varray, time_boost_static_vector);
+   std::cout << "varray/boost::container::static_vector total time comparison:";
+   compare_times(time_varray, time_boost_static_vector);
 
-      std::cout << "varray/std::vector total time comparison:";
-      compare_times(time_varray,time_standard_vector);
-   }catch(std::exception &e){
-      std::cout << e.what();
-   }
+   std::cout << "varray/std::vector total time comparison:";
+   compare_times(time_varray,time_standard_vector);
+
    return 0;
 }

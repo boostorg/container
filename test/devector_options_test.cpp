@@ -17,6 +17,7 @@ using namespace boost::container;
 template<class Unsigned, class DevectorType>
 void test_stored_size_type_impl()
 {
+   #ifndef BOOST_NO_EXCEPTIONS
    DevectorType v;
    typedef typename DevectorType::size_type    size_type;
    typedef typename DevectorType::value_type   value_type;
@@ -29,6 +30,7 @@ void test_stored_size_type_impl()
    BOOST_TEST_THROWS(v.emplace(v.begin(), value_type(1)),std::exception);
    BOOST_TEST_THROWS(v.reserve(max+1),                   std::exception);
    BOOST_TEST_THROWS(DevectorType v2(max+1),             std::exception);
+   #endif
 }
 
 template<class Unsigned>
