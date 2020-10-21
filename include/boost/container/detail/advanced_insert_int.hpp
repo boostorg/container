@@ -426,7 +426,6 @@ struct insert_emplace_proxy_arg##N\
    {\
       BOOST_ASSERT(n == 1); (void)n;\
       typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;\
-      BOOST_ASSERT((((size_type)(&v)) % alignment_of<value_type>::value) == 0);\
       value_type *vp = reinterpret_cast<value_type *>(v.data);\
       alloc_traits::construct(a, vp BOOST_MOVE_I##N BOOST_MOVE_MFWD##N);\
       BOOST_TRY{\

@@ -242,6 +242,72 @@ struct null_scoped_destructor_n
    {}
 };
 
+
+//!A deleter for scoped_ptr that destroys
+//!an object using a STL allocator.
+template <class Allocator>
+struct scoped_destructor_range
+{
+   typedef boost::container::allocator_traits<Allocator> AllocTraits;
+   typedef typename AllocTraits::pointer    pointer;
+   typedef typename AllocTraits::value_type value_type;
+   
+   BOOST_CONTAINER_FORCEINLINE scoped_destructor_range(pointer p, pointer e, Allocator& a)
+      : m_p(p), m_e(e), m_a(a)
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE void release()
+   {  m_p = pointer(); m_e = pointer(); }
+
+   BOOST_CONTAINER_FORCEINLINE void set_end(pointer e)
+   {  m_e = e;   }
+
+   BOOST_CONTAINER_FORCEINLINE void set_begin(pointer b)
+   {  m_p = b;  }
+
+   BOOST_CONTAINER_FORCEINLINE void set_range(pointer b, pointer e)
+   {  m_p = b; m_e = e;   }
+
+   ~scoped_destructor_range()
+   {
+      while(m_p != m_e){
+         value_type *raw_ptr = boost::movelib::to_raw_pointer(m_p);
+         AllocTraits::destroy(m_a, raw_ptr);
+         ++m_p;
+      }
+   }
+
+   private:
+   pointer     m_p;
+   pointer     m_e;
+   Allocator & m_a;
+};
+
+//!A deleter for scoped_ptr that destroys
+//!an object using a STL allocator.
+template <class Allocator>
+struct null_scoped_destructor_range
+{
+   typedef boost::container::allocator_traits<Allocator> AllocTraits;
+   typedef typename AllocTraits::pointer pointer;
+
+   BOOST_CONTAINER_FORCEINLINE null_scoped_destructor_range(pointer, pointer, Allocator&)
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE void release()
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE void set_end(pointer)
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE void set_begin(pointer)
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE void set_range(pointer, pointer)
+   {}
+};
+
+
 template<class Allocator>
 class scoped_destructor
 {

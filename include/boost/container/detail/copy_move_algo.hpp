@@ -26,6 +26,7 @@
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/construct_in_place.hpp>
+#include <boost/container/detail/destroyers.hpp>
 
 // move
 #include <boost/move/adl_move_swap.hpp>
@@ -180,7 +181,7 @@ BOOST_CONTAINER_FORCEINLINE F memmove(I f, I l, F r) BOOST_NOEXCEPT_OR_NOTHROW
    if(BOOST_LIKELY(beg_raw != end_raw && dest_raw && beg_raw)){
       const typename boost::container::iterator_traits<I>::difference_type n = end_raw - beg_raw;
       std::memmove(dest_raw, beg_raw, sizeof(value_type)*n);
-      boost::container::iterator_advance(r, n);
+      r += n;
    }
    return r;
 }
@@ -194,7 +195,7 @@ BOOST_CONTAINER_FORCEINLINE F memmove_n(I f, U n, F r) BOOST_NOEXCEPT_OR_NOTHROW
    typedef typename boost::container::iterator_traits<I>::value_type value_type;
    if(BOOST_LIKELY(n)){
       std::memmove(boost::movelib::iterator_to_raw_pointer(r), boost::movelib::iterator_to_raw_pointer(f), sizeof(value_type)*n);
-      boost::container::iterator_advance(r, n);
+      r += n;
    }
 
    return r;
@@ -209,7 +210,7 @@ BOOST_CONTAINER_FORCEINLINE I memmove_n_source(I f, U n, F r) BOOST_NOEXCEPT_OR_
    if(BOOST_LIKELY(n)){
       typedef typename boost::container::iterator_traits<I>::value_type value_type;
       std::memmove(boost::movelib::iterator_to_raw_pointer(r), boost::movelib::iterator_to_raw_pointer(f), sizeof(value_type)*n);
-      boost::container::iterator_advance(f, n);
+      f += n;
    }
    return f;
 }
@@ -223,8 +224,8 @@ BOOST_CONTAINER_FORCEINLINE I memmove_n_source_dest(I f, U n, F &r) BOOST_NOEXCE
    typedef typename boost::container::iterator_traits<I>::value_type value_type;
    if(BOOST_LIKELY(n)){
       std::memmove(boost::movelib::iterator_to_raw_pointer(r), boost::movelib::iterator_to_raw_pointer(f), sizeof(value_type)*n);
-      boost::container::iterator_advance(f, n);
-      boost::container::iterator_advance(r, n);
+      f += n;
+      r += n;
    }
    return f;
 }
@@ -593,7 +594,7 @@ BOOST_CONTAINER_FORCEINLINE typename dtl::enable_if_memzero_initializable<F, F>:
    typedef typename boost::container::iterator_traits<F>::value_type value_type;
    if (BOOST_LIKELY(n)){
       std::memset((void*)boost::movelib::iterator_to_raw_pointer(r), 0, sizeof(value_type)*n);
-      boost::container::iterator_advance(r, n);
+      r += n;
    }
    return r;
 }
@@ -1169,6 +1170,100 @@ void move_assign_range_alloc_n( Allocator &a, I inp_start, typename allocator_tr
    else{
       out_start = boost::container::move_n(inp_start, n_i, out_start);  // may throw
       boost::container::destroy_alloc_n(a, out_start, n_o - n_i);
+   }
+}
+
+template<class Allocator, class Iterator>
+struct array_destructor
+{
+   typedef typename ::boost::container::iterator_traits<Iterator>::value_type value_type;
+   typedef typename dtl::if_c
+      <dtl::is_trivially_destructible<value_type>::value
+      ,dtl::null_scoped_destructor_range<Allocator>
+      ,dtl::scoped_destructor_range<Allocator>
+      >::type type;
+};
+
+template
+   <typename Allocator
+   ,typename F // F models ForwardIterator
+   ,typename O // G models OutputIterator
+   ,typename InsertionProxy
+   >
+void uninitialized_move_and_insert_alloc
+   ( Allocator &a
+   , F first
+   , F pos
+   , F last
+   , O d_first
+   , typename allocator_traits<Allocator>::size_type n
+   , InsertionProxy insert_range_proxy)
+{
+   typedef typename array_destructor<Allocator, F>::type array_destructor_t;
+
+   //Anti-exception rollbacks
+   array_destructor_t new_values_destroyer(d_first, d_first, a);
+
+   //Initialize with [begin(), pos) old buffer
+   //the start of the new buffer
+   O d_last = ::boost::container::uninitialized_move_alloc(a, first, pos, d_first);
+   new_values_destroyer.set_end(d_last);
+   //Initialize new objects, starting from previous point
+   insert_range_proxy.uninitialized_copy_n_and_update(a, d_last, n);
+   d_last += n;
+   new_values_destroyer.set_end(d_last);
+   //Initialize from the rest of the old buffer,
+   //starting from previous point
+   (void) ::boost::container::uninitialized_move_alloc(a, pos, last, d_last);
+   //All construction successful, disable rollbacks
+   new_values_destroyer.release();
+}
+
+template
+   <typename Allocator
+   ,typename F // F models ForwardIterator
+   ,typename InsertionProxy
+   >
+void expand_forward_and_insert_alloc
+   ( Allocator &a
+   , F pos
+   , F last
+   , typename allocator_traits<Allocator>::size_type n
+   , InsertionProxy insert_range_proxy)
+{
+   typedef typename array_destructor<Allocator, F>::type array_destructor_t;
+
+   if (BOOST_UNLIKELY(!n)){
+      return;
+   }
+   else if (last == pos){
+      insert_range_proxy.uninitialized_copy_n_and_update(a, last, n);
+   }
+   else{
+      typedef typename allocator_traits<Allocator>::size_type alloc_size_type;
+      const alloc_size_type elems_after = static_cast<alloc_size_type>(last - pos);
+      if(elems_after >= n){
+         //New elements can be just copied.
+         //Move to uninitialized memory last objects
+         ::boost::container::uninitialized_move_alloc_n(a, last - n, n, last);
+         array_destructor_t on_exception(last, last, a);
+         //Copy previous to last objects to the initialized end
+         boost::container::move_backward(pos, last - n, last);
+         //Insert new objects in the pos
+         insert_range_proxy.copy_n_and_update(a, pos, n);
+         on_exception.release();
+      }
+      else {
+         //The new elements don't fit in the [pos, end()) range.
+         //Copy old [pos, end()) elements to the uninitialized memory (a gap is created)
+         F new_last = ::boost::container::uninitialized_move_alloc(a, pos, last, pos + n);
+         array_destructor_t on_exception(pos + n, new_last, a);
+         //Copy first new elements in pos (gap is still there)
+         insert_range_proxy.copy_n_and_update(a, pos, elems_after);
+         //Copy to the beginning of the unallocated zone the last new elements (the gap is closed).
+         insert_range_proxy.uninitialized_copy_n_and_update(a, last, n - elems_after);
+         on_exception.release();
+      }
    }
 }
 

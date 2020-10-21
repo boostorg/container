@@ -56,7 +56,12 @@ struct grow_factor_ratio
       else{
          new_cap *= Numerator;
       }
-      return max_value(SizeType(Minimum), max_value(cur_cap+add_min_cap, min_value(max_cap, new_cap)));
+      return max_value<SizeType>
+               ( SizeType(Minimum)
+               , max_value<SizeType>
+                  ( SizeType(cur_cap+add_min_cap)
+                  , min_value<SizeType>(max_cap, new_cap))
+               );
    }
 };
 
