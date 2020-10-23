@@ -26,11 +26,11 @@
 #include <boost/container/adaptive_pool.hpp>
 #include <boost/container/stable_vector.hpp>
 #include <boost/container/vector.hpp>
-#include <boost/timer/timer.hpp>
+#include <boost/move/detail/nsec_clock.hpp>
 
-using boost::timer::cpu_timer;
-using boost::timer::cpu_times;
-using boost::timer::nanosecond_type;
+using boost::move_detail::cpu_timer;
+using boost::move_detail::cpu_times;
+using boost::move_detail::nanosecond_type;
 
 namespace bc = boost::container;
 

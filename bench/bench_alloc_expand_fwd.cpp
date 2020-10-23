@@ -23,11 +23,11 @@
 #include <memory>    //std::allocator
 #include <iostream>  //std::cout, std::endl
 #include <cstring>   //std::strcmp
-#include <boost/timer/timer.hpp>
+#include <boost/move/detail/nsec_clock.hpp>
 #include <typeinfo>
-using boost::timer::cpu_timer;
-using boost::timer::cpu_times;
-using boost::timer::nanosecond_type;
+using boost::move_detail::cpu_timer;
+using boost::move_detail::cpu_times;
+using boost::move_detail::nanosecond_type;
 
 namespace bc = boost::container;
 

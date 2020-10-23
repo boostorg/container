@@ -19,7 +19,7 @@
 #include <memory>    //std::allocator
 #include <iostream>  //std::cout, std::endl
 #include <cstring>   //std::strcmp
-#include <boost/timer/timer.hpp>
+#include <boost/move/detail/nsec_clock.hpp>
 #include <typeinfo>
 
 //capacity
@@ -30,9 +30,9 @@
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 0
 #include <boost/intrusive/detail/has_member_function_callable_with.hpp>
 
-using boost::timer::cpu_timer;
-using boost::timer::cpu_times;
-using boost::timer::nanosecond_type;
+using boost::move_detail::cpu_timer;
+using boost::move_detail::cpu_times;
+using boost::move_detail::nanosecond_type;
 
 namespace bc = boost::container;
 

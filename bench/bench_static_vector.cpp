@@ -21,13 +21,14 @@
 #include "../test/movable_int.hpp"
 #include <vector>
 #include <iostream>
-#include <boost/timer/timer.hpp>
+#include <boost/move/detail/nsec_clock.hpp>
 #include <algorithm>
 #include <exception>
+#include <iomanip>
 
-using boost::timer::cpu_timer;
-using boost::timer::cpu_times;
-using boost::timer::nanosecond_type;
+using boost::move_detail::cpu_timer;
+using boost::move_detail::cpu_times;
+using boost::move_detail::nanosecond_type;
 
 static const std::size_t N = 500;
 
@@ -100,18 +101,18 @@ cpu_times time_it()
      destructionTime.stop();
    }
    totalTime.stop();
-   std::cout << "  construction took " << boost::timer::format(constructTime.elapsed(), 6, "%ws wall, %ts CPU (%p%)\n");
-   std::cout << "  sort took         " << boost::timer::format(sortTime.elapsed(), 6, "%ws wall, %ts CPU (%p%)\n");
-   std::cout << "  rotate took       " << boost::timer::format(rotateTime.elapsed(), 6, "%ws wall, %ts CPU (%p%)\n");
-   std::cout << "  destruction took  " << boost::timer::format(destructionTime.elapsed(), 6, "%ws wall, %ts CPU (%p%)\n");
-   std::cout << "  Total time =      " << boost::timer::format(totalTime.elapsed(), 6, "%ws wall, %ts CPU (%p%)\n") << std::endl;
+   std::cout << std::fixed << std::setw( 11 );
+   std::cout << "  construction took " << double(constructTime.elapsed().wall)/double(1000000000) << "s\n";
+   std::cout << "  sort took         " << double(sortTime.elapsed().wall)/double(1000000000) << "s\n";
+   std::cout << "  rotate took       " << double(rotateTime.elapsed().wall)/double(1000000000) << "s\n";
+   std::cout << "  destruction took  " << double(destructionTime.elapsed().wall)/double(1000000000) << "s\n";
+   std::cout << "  Total time =      " << double(totalTime.elapsed().wall)/double(1000000000) << "s\n";
    return totalTime.elapsed();
 }
 
 void compare_times(cpu_times time_numerator, cpu_times time_denominator){
    std::cout
-   << "\n  wall       = " << ((double)time_numerator.wall/(double)time_denominator.wall)
-   << "\n  (user+sys) = " << ((double)(time_numerator.system+time_numerator.user)/(double)(time_denominator.system+time_denominator.user)) << "\n\n";
+   << "\n  wall       = " << ((double)time_numerator.wall/(double)time_denominator.wall) << "\n\n";
 }
 
 int main()
