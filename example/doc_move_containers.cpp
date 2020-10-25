@@ -7,8 +7,7 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/container/detail/config_begin.hpp>
-#include <boost/container/detail/workaround.hpp>
+
 //[doc_move_containers
 #include <boost/container/vector.hpp>
 #include <boost/move/utility_core.hpp>
@@ -51,4 +50,3 @@ int main ()
    return 0;
 }
 //]
-#include <boost/container/detail/config_end.hpp>

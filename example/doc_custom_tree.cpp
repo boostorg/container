@@ -7,8 +7,6 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/container/detail/config_begin.hpp>
-#include <boost/container/detail/workaround.hpp>
 //[doc_custom_tree
 #include <boost/container/set.hpp>
 
@@ -66,4 +64,3 @@ int main ()
    return 0;
 }
 //]
-#include <boost/container/detail/config_end.hpp>

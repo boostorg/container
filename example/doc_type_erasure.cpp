@@ -7,8 +7,7 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/container/detail/config_begin.hpp>
-#include <boost/container/detail/workaround.hpp>
+
 //[doc_type_erasure_MyClassHolder_h
 #include <boost/container/vector.hpp>
 
@@ -87,5 +86,3 @@ const MyClass & MyClassHolder::GetLastObject() const
 {  return vector_.back();  }
 
 //]
-
-#include <boost/container/detail/config_end.hpp>
