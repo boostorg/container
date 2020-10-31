@@ -1342,6 +1342,7 @@ use [*Boost.Container]? There are several reasons for that:
 
 * New [classref boost::container::devector devector] container.
 * Fixed bugs/issues:
+   * [@https://github.com/boostorg/container/issues/152    GitHub #152: ['"Tree-based containers have troubles with move-only types"]].
    * [@https://github.com/boostorg/container/issues/156    GitHub #156: ['"Compile error with vector"]].
    * [@https://github.com/boostorg/container/pull/157      GitHub #157: ['"Add missing include"]].
    * [@https://github.com/boostorg/container/issues/159    GitHub #159: ['"pmr::monotonic_buffer_resource crashes on large single allocations"]].

@@ -112,7 +112,7 @@ int set_test_copyable(boost::container::dtl::true_type)
          return 1;
    }
    {
-      //Now, test copy constructor
+      //Now, test copy constructor with allocator
       MyBoostSet boostsetcopy(boostset, typename MyBoostSet::allocator_type());
       MyStdSet stdsetcopy(stdset);
 
@@ -347,28 +347,54 @@ int set_test ()
       return 1;
    }
 
-   //Swapping test
-   MyBoostSet tmpboosteset2;
-   MyStdSet tmpstdset2;
-   MyBoostMultiSet tmpboostemultiset2;
-   MyStdMultiSet tmpstdmultiset2;
-   boostset.swap(tmpboosteset2);
-   stdset.swap(tmpstdset2);
-   boostmultiset.swap(tmpboostemultiset2);
-   stdmultiset.swap(tmpstdmultiset2);
-   boostset.swap(tmpboosteset2);
-   stdset.swap(tmpstdset2);
-   boostmultiset.swap(tmpboostemultiset2);
-   stdmultiset.swap(tmpstdmultiset2);
-   if(!CheckEqualContainers(boostset, stdset)){
-      std::cout << "Error in boostset.swap(tmpboosteset2)" << std::endl;
-      return 1;
-   }
-   if(!CheckEqualContainers(boostmultiset, stdmultiset)){
-      std::cout << "Error in boostmultiset.swap(tmpboostemultiset2)" << std::endl;
-      return 1;
+   {
+      //Swapping test
+      MyBoostSet tmpboosteset2;
+      MyStdSet tmpstdset2;
+      MyBoostMultiSet tmpboostemultiset2;
+      MyStdMultiSet tmpstdmultiset2;
+      boostset.swap(tmpboosteset2);
+      stdset.swap(tmpstdset2);
+      boostmultiset.swap(tmpboostemultiset2);
+      stdmultiset.swap(tmpstdmultiset2);
+      boostset.swap(tmpboosteset2);
+      stdset.swap(tmpstdset2);
+      boostmultiset.swap(tmpboostemultiset2);
+      stdmultiset.swap(tmpstdmultiset2);
+      if(!CheckEqualContainers(boostset, stdset)){
+         std::cout << "Error in boostset.swap(tmpboosteset2)" << std::endl;
+         return 1;
+      }
+      if(!CheckEqualContainers(boostmultiset, stdmultiset)){
+         std::cout << "Error in boostmultiset.swap(tmpboostemultiset2)" << std::endl;
+         return 1;
+      }
    }
 
+   //move constructor/assignment
+   {
+      MyBoostSet tmpboosteset2(boost::move(boostset));
+      if(!CheckEqualContainers(tmpboosteset2, stdset)){
+         std::cout << "Error in boostset move constructor " << std::endl;
+         return 1;
+      }
+      MyBoostMultiSet tmpboostemultiset2(boost::move(boostmultiset));
+      if(!CheckEqualContainers(tmpboostemultiset2, stdmultiset)){
+         std::cout << "Error in boostmultiset move constructor" << std::endl;
+         return 1;
+      }
+
+      boostset = boost::move(tmpboosteset2);
+      if(!CheckEqualContainers(boostset, stdset)){
+         std::cout << "Error in boostset move assignment" << std::endl;
+         return 1;
+      }
+      boostmultiset = boost::move(tmpboostemultiset2);
+      if(!CheckEqualContainers(boostmultiset, stdmultiset)){
+         std::cout << "Error in boostmultiset move assignment" << std::endl;
+         return 1;
+      }
+   }
    //Insertion from other container
    //Initialize values
    {
