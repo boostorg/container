@@ -380,7 +380,7 @@ int set_test ()
       }
       MyBoostMultiSet tmpboostemultiset2(boost::move(boostmultiset));
       if(!CheckEqualContainers(tmpboostemultiset2, stdmultiset)){
-         std::cout << "Error in boostmultiset move constructor" << std::endl;
+         std::cout << "Error in boostmultiset move constructor " << std::endl;
          return 1;
       }
 
