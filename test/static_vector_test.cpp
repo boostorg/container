@@ -25,7 +25,7 @@ void test_ctor_ndc()
    BOOST_TEST_EQ(s.size() , 0u);
    BOOST_TEST(s.capacity() == N);
    BOOST_TEST(s.max_size() == N);
-   BOOST_TEST_THROWS( s.at(0u), std::out_of_range );
+   BOOST_TEST_THROWS( (void)s.at(0u), std::out_of_range );
 }
 
 template <typename T, size_t N>
@@ -36,7 +36,7 @@ void test_ctor_nc(size_t n)
    BOOST_TEST(s.size() == n);
    BOOST_TEST(s.capacity() == N);
    BOOST_TEST(s.max_size() == N);
-   BOOST_TEST_THROWS( s.at(n), std::out_of_range );
+   BOOST_TEST_THROWS( (void)s.at(n), std::out_of_range );
    if ( 1 < n )
    {
       s[0] = 10;
@@ -55,7 +55,7 @@ void test_ctor_nd(size_t n, T const& v)
    BOOST_STATIC_ASSERT((static_vector<T, N>::static_capacity) == N);
    BOOST_TEST(s.size() == n);
    BOOST_TEST(s.capacity() == N);
-   BOOST_TEST_THROWS( s.at(n), std::out_of_range );
+   BOOST_TEST_THROWS( (void)s.at(n), std::out_of_range );
    if ( 1 < n )
    {
       BOOST_TEST(v == s[0]);
@@ -114,7 +114,7 @@ void test_resize_nc(size_t n)
    s.resize(n);
    BOOST_TEST(s.size() == n);
    BOOST_TEST(s.capacity() == N);
-   BOOST_TEST_THROWS( s.at(n), std::out_of_range );
+   BOOST_TEST_THROWS( (void)s.at(n), std::out_of_range );
    if ( 1 < n )
    {
       s[0] = 10;
@@ -134,7 +134,7 @@ void test_resize_nd(size_t n, T const& v)
    s.resize(n, v);
    BOOST_TEST(s.size() == n);
    BOOST_TEST(s.capacity() == N);
-   BOOST_TEST_THROWS( s.at(n), std::out_of_range );
+   BOOST_TEST_THROWS( (void)s.at(n), std::out_of_range );
    if ( 1 < n )
    {
       BOOST_TEST(v == s[0]);
@@ -156,14 +156,14 @@ void test_push_back_nd()
    static_vector<T, N> s;
 
    BOOST_TEST(s.size() == 0);
-   BOOST_TEST_THROWS( s.at(0), std::out_of_range );
+   BOOST_TEST_THROWS( (void)s.at(0), std::out_of_range );
 
    for ( size_t i = 0 ; i < N ; ++i )
    {
       T t(static_cast<int>(i));
       s.push_back(t);
       BOOST_TEST(s.size() == i + 1);
-      BOOST_TEST_THROWS( s.at(i + 1), std::out_of_range );
+      BOOST_TEST_THROWS( (void)s.at(i + 1), std::out_of_range );
       BOOST_TEST(T((int)i) == s.at(i));
       BOOST_TEST(T((int)i) == s[i]);
       BOOST_TEST(T((int)i) == s.back());
@@ -187,7 +187,7 @@ void test_pop_back_nd()
    {
       s.pop_back();
       BOOST_TEST(s.size() == i - 1);
-      BOOST_TEST_THROWS( s.at(i - 1), std::out_of_range );
+      BOOST_TEST_THROWS( (void)s.at(i - 1), std::out_of_range );
       BOOST_TEST(T((int)i - 2) == s.at(i - 2));
       BOOST_TEST(T((int)i - 2) == s[i - 2]);
       BOOST_TEST(T((int)i - 2) == s.back());
@@ -418,7 +418,7 @@ void test_capacity_0_nd()
    static_vector_0_t s;
    BOOST_TEST(s.size() == 0);
    BOOST_TEST(s.capacity() == 0);
-   BOOST_TEST_THROWS(s.at(0), std::out_of_range);
+   BOOST_TEST_THROWS((void)s.at(0), std::out_of_range);
    BOOST_TEST_THROWS(s.resize(5u, T(0)), std::bad_alloc);
    BOOST_TEST_THROWS(s.push_back(T(0)), std::bad_alloc);
    BOOST_TEST_THROWS(s.insert(s.end(), T(0)), std::bad_alloc);

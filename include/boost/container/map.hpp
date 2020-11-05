@@ -664,7 +664,7 @@ class map
    //! <b>Returns</b>: A reference to the element whose key is equivalent to x.
    //! Throws: An exception object of type out_of_range if no such element is present.
    //! <b>Complexity</b>: logarithmic.
-   const T& at(const key_type& k) const
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD const T& at(const key_type& k) const
    {
       const_iterator i = this->find(k);
       if(i == this->end()){
@@ -1120,7 +1120,8 @@ class map
    //! <b>Returns</b>: The number of elements with key equivalent to x.
    //!
    //! <b>Complexity</b>: log(size())+count(k)
-   BOOST_CONTAINER_FORCEINLINE size_type count(const key_type& x) const
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
+      size_type count(const key_type& x) const
    {  return static_cast<size_type>(this->find(x) != this->cend());  }
 
    //! <b>Requires</b>: This overload is available only if
@@ -1130,7 +1131,8 @@ class map
    //!
    //! <b>Complexity</b>: log(size())+count(k)
    template<typename K>
-   BOOST_CONTAINER_FORCEINLINE size_type count(const K& x) const
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
+      size_type count(const K& x) const
    {  return static_cast<size_type>(this->find(x) != this->cend());  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)

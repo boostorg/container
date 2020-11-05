@@ -1844,7 +1844,7 @@ template <class Devector> void test_at()
       a.at(0) = T(100);
       BOOST_TEST(a.at(0) == 100);
 
-      BOOST_TEST_THROWS(a.at(3), std::out_of_range);
+      BOOST_TEST_THROWS((void)a.at(3), std::out_of_range);
    }
 
    { // const at
@@ -1853,7 +1853,7 @@ template <class Devector> void test_at()
 
       BOOST_TEST(a.at(0) == 1);
 
-      BOOST_TEST_THROWS(a.at(3), std::out_of_range);
+      BOOST_TEST_THROWS((void)a.at(3), std::out_of_range);
    }
    #endif   //#ifndef BOOST_NO_EXCEPTIONS
 }

@@ -19,12 +19,22 @@
 #include <boost/move/iterator.hpp>
 #include <boost/move/make_unique.hpp>
 
+#if defined(BOOST_GCC) && (BOOST_GCC >= 40500)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
+#endif
+
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_FUNCNAME rebalance
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_BEG namespace boost { namespace container { namespace test {
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_END   }}}
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MIN 0
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 0
 #include <boost/intrusive/detail/has_member_function_callable_with.hpp>
+
+//#pragma GCC diagnostic ignored "-Wunused-result"
+#if defined(BOOST_GCC) && (BOOST_GCC >= 40500)
+#pragma GCC diagnostic pop
+#endif
 
 namespace boost{
 namespace container {

@@ -774,7 +774,8 @@ class set
    //! <b>Returns</b>: The number of elements with key equivalent to x.
    //!
    //! <b>Complexity</b>: log(size())+count(k)
-   BOOST_CONTAINER_FORCEINLINE size_type count(const key_type& x) const
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
+      size_type count(const key_type& x) const
    {  return static_cast<size_type>(this->base_t::find(x) != this->base_t::cend());  }
 
    //! <b>Requires</b>: This overload is available only if
@@ -784,7 +785,8 @@ class set
    //!
    //! <b>Complexity</b>: log(size())+count(k)
    template<typename K>
-   BOOST_CONTAINER_FORCEINLINE size_type count(const K& x) const
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
+      size_type count(const K& x) const
    {  return static_cast<size_type>(this->find(x) != this->cend());  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
