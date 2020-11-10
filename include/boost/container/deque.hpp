@@ -1843,22 +1843,25 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Complexity</b>: Linear to the number of elements in the deque.
    void clear() BOOST_NOEXCEPT_OR_NOTHROW
    {
-      for (index_pointer node = this->members_.m_start.m_node + 1;
-            node < this->members_.m_finish.m_node;
-            ++node) {
-         this->priv_destroy_range(*node, *node + get_block_size());
-         this->priv_deallocate_node(*node);
-      }
+      if (this->members_.m_finish != this->members_.m_start) {
+  
+         for (index_pointer node = this->members_.m_start.m_node + 1;
+               node < this->members_.m_finish.m_node;
+               ++node) {
+            this->priv_destroy_range(*node, *node + get_block_size());
+            this->priv_deallocate_node(*node);
+         }
 
-      if (this->members_.m_start.m_node != this->members_.m_finish.m_node) {
-         this->priv_destroy_range(this->members_.m_start.m_cur, this->members_.m_start.m_last);
-         this->priv_destroy_range(this->members_.m_finish.m_first, this->members_.m_finish.m_cur);
-         this->priv_deallocate_node(this->members_.m_finish.m_first);
-      }
-      else
-         this->priv_destroy_range(this->members_.m_start.m_cur, this->members_.m_finish.m_cur);
+         if (this->members_.m_start.m_node != this->members_.m_finish.m_node) {
+            this->priv_destroy_range(this->members_.m_start.m_cur, this->members_.m_start.m_last);
+            this->priv_destroy_range(this->members_.m_finish.m_first, this->members_.m_finish.m_cur);
+            this->priv_deallocate_node(this->members_.m_finish.m_first);
+         }
+         else
+            this->priv_destroy_range(this->members_.m_start.m_cur, this->members_.m_finish.m_cur);
 
-      this->members_.m_finish = this->members_.m_start;
+         this->members_.m_finish = this->members_.m_start;
+      }
    }
 
    //! <b>Effects</b>: Returns true if x and y are equal
