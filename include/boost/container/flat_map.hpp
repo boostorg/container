@@ -1211,16 +1211,9 @@ class flat_map
 
    //! <b>Requires</b>: this->get_allocator() == source.get_allocator().
    //!
-   //! <b>Effects</b>: Attempts to extract each element in source and insert it into a using
+   //! <b>Effects</b>: Move-inserts each element from source into *this a using
    //!   the comparison object of *this. If there is an element in a with key equivalent to the
-   //!   key of an element from source, then that element is not extracted from source.
-   //! 
-   //! <b>Postcondition</b>: Pointers and references to the transferred elements of source refer
-   //!   to those same elements but as members of *this. Iterators referring to the transferred
-   //!   elements will continue to refer to their elements, but they now behave as iterators into *this,
-   //!   not into source.
-   //!
-   //! <b>Throws</b>: Nothing unless the comparison object throws.
+   //!   key of an element from source, then that element is not moved from source.
    //!
    //! <b>Complexity</b>: N log(size() + N) (N has the value source.size())
    template<class C2>
@@ -2580,15 +2573,8 @@ class flat_multimap
 
    //! <b>Requires</b>: this->get_allocator() == source.get_allocator().
    //!
-   //! <b>Effects</b>: Extracts each element in source and insert it into a using
+   //! <b>Effects</b>: Move-inserts each element from source into *this a using
    //!   the comparison object of *this.
-   //! 
-   //! <b>Postcondition</b>: Pointers and references to the transferred elements of source refer
-   //!   to those same elements but as members of *this. Iterators referring to the transferred
-   //!   elements will continue to refer to their elements, but they now behave as iterators into *this,
-   //!   not into source.
-   //!
-   //! <b>Throws</b>: Nothing unless the comparison object throws.
    //!
    //! <b>Complexity</b>: N log(size() + N) (N has the value source.size())
    template<class C2>
