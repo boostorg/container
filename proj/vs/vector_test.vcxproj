@@ -154,8 +154,8 @@
       <DebugInformationFormat />
       <LanguageStandard>Default</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessToFile>true</PreprocessToFile>
-      <PreprocessSuppressLineNumbers>true</PreprocessSuppressLineNumbers>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <ExceptionHandling>Sync</ExceptionHandling>
     </ClCompile>
     <Link>
@@ -182,8 +182,8 @@
       </DebugInformationFormat>
       <LanguageStandard>Default</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessToFile>true</PreprocessToFile>
-      <PreprocessSuppressLineNumbers>true</PreprocessSuppressLineNumbers>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <ExceptionHandling>Sync</ExceptionHandling>
     </ClCompile>
     <Link>
