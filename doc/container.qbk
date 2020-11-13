@@ -1343,6 +1343,7 @@ use [*Boost.Container]? There are several reasons for that:
 * Added [[no-discard]] attribute in all containers to catch bugs related to unused return values.
 * Fixed bugs/issues:
    * [@https://github.com/boostorg/container/issues/171    GitHub #171: ['"deque::clear() uses undefined behaviour"]].
+   * [@https://github.com/boostorg/container/issues/164    GitHub #164: ['"Compile error when using `pmr::map` with a `std::pair`; works when using a `std::tuple`"]].
 
 [endsect]
 
