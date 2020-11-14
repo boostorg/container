@@ -1215,7 +1215,9 @@ class flat_map
    //!   the comparison object of *this. If there is an element in a with key equivalent to the
    //!   key of an element from source, then that element is not moved from source.
    //!
-   //! <b>Complexity</b>: N log(size() + N) (N has the value source.size())
+   //! <b>Complexity</b>: Linear in this->size() + source.size().
+   //!
+   //! <b>Note</b>: Invalidates all iterators and references.
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge(flat_map<Key, T, C2, AllocatorOrContainer>& source)
    {  m_flat_tree.merge_unique(source.tree());   }
@@ -2576,7 +2578,9 @@ class flat_multimap
    //! <b>Effects</b>: Move-inserts each element from source into *this a using
    //!   the comparison object of *this.
    //!
-   //! <b>Complexity</b>: N log(size() + N) (N has the value source.size())
+   //! <b>Complexity</b>: Linear in this->size() + source.size().
+   //!
+   //! <b>Note</b>: Invalidates all iterators and references.
    template<class C2>
    BOOST_CONTAINER_FORCEINLINE void merge(flat_multimap<Key, T, C2, AllocatorOrContainer>& source)
    {  m_flat_tree.merge_equal(source.tree());   }
