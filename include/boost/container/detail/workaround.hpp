@@ -151,4 +151,13 @@
    #endif
 #endif
 
+
+//Configuration options:
+
+//Define this to use std exception types instead of boost::container's own exception types
+//#define BOOST_CONTAINER_USE_STD_EXCEPTIONS
+
+
+
+
 #endif   //#ifndef BOOST_CONTAINER_DETAIL_WORKAROUND_HPP

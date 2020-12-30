@@ -24,9 +24,102 @@
 #include <boost/core/ignore_unused.hpp>
 
 #ifndef BOOST_NO_EXCEPTIONS
+#include <exception> //for std exception base
+
+#  if defined(BOOST_CONTAINER_USE_STD_EXCEPTIONS)
    #include <stdexcept> //for std exception types
    #include <string>    //for implicit std::string conversion
    #include <new>       //for std::bad_alloc
+
+typedef std::bad_alloc bad_alloc_t;
+typedef std::out_of_range out_of_range_t;
+typedef std::out_of_range length_error_t;
+typedef std::logic_error logic_error_t;
+typedef std::runtime_error runtime_error_t;
+
+#  else	//!BOOST_CONTAINER_USE_STD_EXCEPTIONS
+
+namespace boost {
+namespace container {
+
+class exception
+   : public ::std::exception
+{
+   typedef ::std::exception std_exception_t;
+
+   public:
+
+   //msg must be a static string (guaranteed by callers)
+   explicit exception(const char *msg)
+      : std_exception_t(), m_msg(msg)
+   {}
+
+   virtual const char *what() const BOOST_NOEXCEPT_OR_NOTHROW
+   {  return m_msg ? m_msg : "unknown boost::container exception"; }
+
+   private:
+   const char *m_msg;
+};
+
+class bad_alloc
+   : public exception
+{
+   public:
+   bad_alloc()
+      : exception("boost::container::bad_alloc thrown")
+   {}
+};
+
+typedef bad_alloc bad_alloc_t;
+
+class out_of_range
+   : public exception
+{
+   public:
+   explicit out_of_range(const char *msg)
+      : exception(msg)
+   {}
+};
+
+typedef out_of_range out_of_range_t;
+
+class length_error
+   : public exception
+{
+   public:
+   explicit length_error(const char *msg)
+      : exception(msg)
+   {}
+};
+
+typedef out_of_range length_error_t;
+
+class logic_error
+   : public exception
+{
+   public:
+   explicit logic_error(const char *msg)
+      : exception(msg)
+   {}
+};
+
+typedef logic_error logic_error_t;
+
+class runtime_error
+   : public exception
+{
+   public:
+   explicit runtime_error(const char *msg)
+      : exception(msg)
+   {}
+};
+
+typedef runtime_error runtime_error_t;
+
+}  // namespace boost {
+}  // namespace container {
+
+#  endif
 #else
    #include <boost/assert.hpp>
    #include <cstdlib>   //for std::abort
@@ -99,7 +192,11 @@ namespace container {
    //! </ul>
    BOOST_NORETURN inline void throw_bad_alloc()
    {
+      #ifdef BOOST_CONTAINER_USE_STD_EXCEPTIONS
       throw std::bad_alloc();
+      #else
+      throw bad_alloc();
+      #endif
    }
 
    //! Exception callback called by Boost.Container to signal arguments out of range.
@@ -115,7 +212,11 @@ namespace container {
    //! </ul>
    BOOST_NORETURN inline void throw_out_of_range(const char* str)
    {
+      #ifdef BOOST_CONTAINER_USE_STD_EXCEPTIONS
       throw std::out_of_range(str);
+      #else
+      throw out_of_range(str);
+      #endif
    }
 
    //! Exception callback called by Boost.Container to signal errors resizing.
@@ -131,7 +232,11 @@ namespace container {
    //! </ul>
    BOOST_NORETURN inline void throw_length_error(const char* str)
    {
+      #ifdef BOOST_CONTAINER_USE_STD_EXCEPTIONS
       throw std::length_error(str);
+      #else
+      throw length_error(str);
+      #endif
    }
 
    //! Exception callback called by Boost.Container  to report errors in the internal logical
@@ -148,7 +253,11 @@ namespace container {
    //! </ul>
    BOOST_NORETURN inline void throw_logic_error(const char* str)
    {
+      #ifdef BOOST_CONTAINER_USE_STD_EXCEPTIONS
       throw std::logic_error(str);
+      #else
+      throw logic_error(str);
+      #endif
    }
 
    //! Exception callback called by Boost.Container  to report errors that can only be detected during runtime.
@@ -164,7 +273,11 @@ namespace container {
    //! </ul>
    BOOST_NORETURN inline void throw_runtime_error(const char* str)
    {
+      #ifdef BOOST_CONTAINER_USE_STD_EXCEPTIONS
       throw std::runtime_error(str);
+      #else
+      throw runtime_error(str);
+      #endif
    }
 
 #endif

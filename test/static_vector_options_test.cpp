@@ -90,7 +90,7 @@ void test_throw_on_overflow()
       BOOST_TRY{
          v.push_back(0);
       }
-      BOOST_CATCH(std::bad_alloc&)
+      BOOST_CATCH(bad_alloc_t&)
       {
          expected_type_thrown = true;
       }

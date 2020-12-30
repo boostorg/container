@@ -25,7 +25,7 @@ void test_ctor_ndc()
    BOOST_TEST_EQ(s.size() , 0u);
    BOOST_TEST(s.capacity() == N);
    BOOST_TEST(s.max_size() == N);
-   BOOST_TEST_THROWS( (void)s.at(0u), std::out_of_range );
+   BOOST_TEST_THROWS( (void)s.at(0u), out_of_range_t);
 }
 
 template <typename T, size_t N>
@@ -36,7 +36,7 @@ void test_ctor_nc(size_t n)
    BOOST_TEST(s.size() == n);
    BOOST_TEST(s.capacity() == N);
    BOOST_TEST(s.max_size() == N);
-   BOOST_TEST_THROWS( (void)s.at(n), std::out_of_range );
+   BOOST_TEST_THROWS( (void)s.at(n), out_of_range_t);
    if ( 1 < n )
    {
       s[0] = 10;
@@ -55,7 +55,7 @@ void test_ctor_nd(size_t n, T const& v)
    BOOST_STATIC_ASSERT((static_vector<T, N>::static_capacity) == N);
    BOOST_TEST(s.size() == n);
    BOOST_TEST(s.capacity() == N);
-   BOOST_TEST_THROWS( (void)s.at(n), std::out_of_range );
+   BOOST_TEST_THROWS( (void)s.at(n), out_of_range_t);
    if ( 1 < n )
    {
       BOOST_TEST(v == s[0]);
@@ -80,7 +80,7 @@ void test_support_for_initializer_list()
       BOOST_TEST(10 == sv[0]);
       BOOST_TEST(8 == sv[1]);
 
-      BOOST_TEST_THROWS(sv_cap_2({1, 1, 1}), std::bad_alloc);
+      BOOST_TEST_THROWS(sv_cap_2({1, 1, 1}), bad_alloc_t);
    }
 
    {
@@ -89,10 +89,10 @@ void test_support_for_initializer_list()
       BOOST_TEST(1 == sv[0]);
       BOOST_TEST(2 == sv[1]);
 
-      BOOST_TEST_THROWS(sv.assign({1, 2, 3}), std::bad_alloc);
+      BOOST_TEST_THROWS(sv.assign({1, 2, 3}), bad_alloc_t);
 
       static_vector<int, 3> greaterThanSv = {1, 2, 3};
-      BOOST_TEST_THROWS(sv = greaterThanSv, std::bad_alloc);
+      BOOST_TEST_THROWS(sv = greaterThanSv, bad_alloc_t);
    }
 
    {
@@ -101,7 +101,7 @@ void test_support_for_initializer_list()
       BOOST_TEST(99 == sv[0]);
       BOOST_TEST(95 == sv[1]);
 
-      BOOST_TEST_THROWS(sv.insert(sv.begin(), {101, 102, 103}), std::bad_alloc);
+      BOOST_TEST_THROWS(sv.insert(sv.begin(), {101, 102, 103}), bad_alloc_t);
    }
 #endif
 }
@@ -114,7 +114,7 @@ void test_resize_nc(size_t n)
    s.resize(n);
    BOOST_TEST(s.size() == n);
    BOOST_TEST(s.capacity() == N);
-   BOOST_TEST_THROWS( (void)s.at(n), std::out_of_range );
+   BOOST_TEST_THROWS( (void)s.at(n), out_of_range_t);
    if ( 1 < n )
    {
       s[0] = 10;
@@ -134,7 +134,7 @@ void test_resize_nd(size_t n, T const& v)
    s.resize(n, v);
    BOOST_TEST(s.size() == n);
    BOOST_TEST(s.capacity() == N);
-   BOOST_TEST_THROWS( (void)s.at(n), std::out_of_range );
+   BOOST_TEST_THROWS( (void)s.at(n), out_of_range_t);
    if ( 1 < n )
    {
       BOOST_TEST(v == s[0]);
@@ -156,14 +156,14 @@ void test_push_back_nd()
    static_vector<T, N> s;
 
    BOOST_TEST(s.size() == 0);
-   BOOST_TEST_THROWS( (void)s.at(0), std::out_of_range );
+   BOOST_TEST_THROWS( (void)s.at(0), out_of_range_t);
 
    for ( size_t i = 0 ; i < N ; ++i )
    {
       T t(static_cast<int>(i));
       s.push_back(t);
       BOOST_TEST(s.size() == i + 1);
-      BOOST_TEST_THROWS( (void)s.at(i + 1), std::out_of_range );
+      BOOST_TEST_THROWS( (void)s.at(i + 1), out_of_range_t);
       BOOST_TEST(T((int)i) == s.at(i));
       BOOST_TEST(T((int)i) == s[i]);
       BOOST_TEST(T((int)i) == s.back());
@@ -187,7 +187,7 @@ void test_pop_back_nd()
    {
       s.pop_back();
       BOOST_TEST(s.size() == i - 1);
-      BOOST_TEST_THROWS( (void)s.at(i - 1), std::out_of_range );
+      BOOST_TEST_THROWS( (void)s.at(i - 1), out_of_range_t);
       BOOST_TEST(T((int)i - 2) == s.at(i - 2));
       BOOST_TEST(T((int)i - 2) == s[i - 2]);
       BOOST_TEST(T((int)i - 2) == s.back());
@@ -418,17 +418,17 @@ void test_capacity_0_nd()
    static_vector_0_t s;
    BOOST_TEST(s.size() == 0);
    BOOST_TEST(s.capacity() == 0);
-   BOOST_TEST_THROWS((void)s.at(0), std::out_of_range);
-   BOOST_TEST_THROWS(s.resize(5u, T(0)), std::bad_alloc);
-   BOOST_TEST_THROWS(s.push_back(T(0)), std::bad_alloc);
-   BOOST_TEST_THROWS(s.insert(s.end(), T(0)), std::bad_alloc);
-   BOOST_TEST_THROWS(s.insert(s.end(), 5u, T(0)), std::bad_alloc);
-   BOOST_TEST_THROWS(s.insert(s.end(), v.begin(), v.end()), std::bad_alloc);
-   BOOST_TEST_THROWS(s.assign(v.begin(), v.end()), std::bad_alloc);
-   BOOST_TEST_THROWS(s.assign(5u, T(0)), std::bad_alloc);
-   BOOST_TEST_THROWS(s.assign(5u, T(0)), std::bad_alloc);
-   BOOST_TEST_THROWS(static_vector_0_t s2(v.begin(), v.end()), std::bad_alloc);
-   BOOST_TEST_THROWS(static_vector_0_t s1(5u, T(0)), std::bad_alloc);
+   BOOST_TEST_THROWS((void)s.at(0), out_of_range_t);
+   BOOST_TEST_THROWS(s.resize(5u, T(0)), bad_alloc_t);
+   BOOST_TEST_THROWS(s.push_back(T(0)), bad_alloc_t);
+   BOOST_TEST_THROWS(s.insert(s.end(), T(0)), bad_alloc_t);
+   BOOST_TEST_THROWS(s.insert(s.end(), 5u, T(0)), bad_alloc_t);
+   BOOST_TEST_THROWS(s.insert(s.end(), v.begin(), v.end()), bad_alloc_t);
+   BOOST_TEST_THROWS(s.assign(v.begin(), v.end()), bad_alloc_t);
+   BOOST_TEST_THROWS(s.assign(5u, T(0)), bad_alloc_t);
+   BOOST_TEST_THROWS(s.assign(5u, T(0)), bad_alloc_t);
+   BOOST_TEST_THROWS(static_vector_0_t s2(v.begin(), v.end()), bad_alloc_t);
+   BOOST_TEST_THROWS(static_vector_0_t s1(5u, T(0)), bad_alloc_t);
 }
 
 template <typename T, size_t N>
@@ -438,15 +438,15 @@ void test_exceptions_nd()
    typedef static_vector<T, N/2> static_vector_n_half_t;
    static_vector_n_half_t s(N/2, T(0));
 
-   BOOST_TEST_THROWS(s.resize(N, T(0)), std::bad_alloc);
-   BOOST_TEST_THROWS(s.push_back(T(0)), std::bad_alloc);
-   BOOST_TEST_THROWS(s.insert(s.end(), T(0)), std::bad_alloc);
-   BOOST_TEST_THROWS(s.insert(s.end(), 1, T(0)), std::bad_alloc);
-   BOOST_TEST_THROWS(s.insert(s.end(), v.begin(), v.end()), std::bad_alloc);
-   BOOST_TEST_THROWS(s.assign(v.begin(), v.end()), std::bad_alloc);
-   BOOST_TEST_THROWS(s.assign(N, T(0)), std::bad_alloc);
-   BOOST_TEST_THROWS(static_vector_n_half_t s2(v.begin(), v.end()), std::bad_alloc);
-   BOOST_TEST_THROWS(static_vector_n_half_t s1(N/2+1, T(0)), std::bad_alloc);
+   BOOST_TEST_THROWS(s.resize(N, T(0)), bad_alloc_t);
+   BOOST_TEST_THROWS(s.push_back(T(0)), bad_alloc_t);
+   BOOST_TEST_THROWS(s.insert(s.end(), T(0)), bad_alloc_t);
+   BOOST_TEST_THROWS(s.insert(s.end(), 1, T(0)), bad_alloc_t);
+   BOOST_TEST_THROWS(s.insert(s.end(), v.begin(), v.end()), bad_alloc_t);
+   BOOST_TEST_THROWS(s.assign(v.begin(), v.end()), bad_alloc_t);
+   BOOST_TEST_THROWS(s.assign(N, T(0)), bad_alloc_t);
+   BOOST_TEST_THROWS(static_vector_n_half_t s2(v.begin(), v.end()), bad_alloc_t);
+   BOOST_TEST_THROWS(static_vector_n_half_t s1(N/2+1, T(0)), bad_alloc_t);
 }
 
 template <typename T, size_t N>
@@ -541,12 +541,12 @@ void test_swap_and_move_nd()
       typedef static_vector<T, N/2> small_vector_t;
       static_vector<T, N> v(N, T(0));
       small_vector_t s(N/2, T(1));
-      BOOST_TEST_THROWS(s.swap(v), std::bad_alloc);
+      BOOST_TEST_THROWS(s.swap(v), bad_alloc_t);
       v.resize(N, T(0));
-      BOOST_TEST_THROWS(s = boost::move(v), std::bad_alloc);
-      BOOST_TEST_THROWS(s = v, std::bad_alloc);
+      BOOST_TEST_THROWS(s = boost::move(v), bad_alloc_t);
+      BOOST_TEST_THROWS(s = v, bad_alloc_t);
       v.resize(N, T(0));
-      BOOST_TEST_THROWS(small_vector_t s2(boost::move(v)), std::bad_alloc);
+      BOOST_TEST_THROWS(small_vector_t s2(boost::move(v)), bad_alloc_t);
    }
 }
 
@@ -560,7 +560,7 @@ void test_emplace_0p()
       for (int i = 0 ; i < int(N) ; ++i )
           v.emplace_back();
       BOOST_TEST(v.size() == N);
-      BOOST_TEST_THROWS(v.emplace_back(), std::bad_alloc);
+      BOOST_TEST_THROWS(v.emplace_back(), bad_alloc_t);
    }
 }
 
@@ -574,7 +574,7 @@ void test_emplace_2p()
       for (int i = 0 ; i < int(N) ; ++i )
           v.emplace_back(i, 100 + i);
       BOOST_TEST(v.size() == N);
-      BOOST_TEST_THROWS(v.emplace_back((int)N, 100 + (int)N), std::bad_alloc);
+      BOOST_TEST_THROWS(v.emplace_back((int)N, 100 + (int)N), bad_alloc_t);
       BOOST_TEST(v.size() == N);
       for (int i = 0 ; i < int(N) ; ++i )
           BOOST_TEST(v[i] == T(i, 100 + i));
