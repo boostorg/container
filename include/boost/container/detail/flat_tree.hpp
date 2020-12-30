@@ -1448,6 +1448,7 @@ class flat_tree
       {  return !(x < y);  }
 
    BOOST_CONTAINER_FORCEINLINE friend void swap(flat_tree& x, flat_tree& y)
+          BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
       {  x.swap(y);  }
 
    private:

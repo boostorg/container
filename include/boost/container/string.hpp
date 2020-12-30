@@ -3399,6 +3399,7 @@ operator>=( const basic_string<CharT,Traits,Allocator>& x, BasicStringView<CharT
 // Swap.
 template <class CharT, class Traits, class Allocator>
 inline void swap(basic_string<CharT,Traits,Allocator>& x, basic_string<CharT,Traits,Allocator>& y)
+    BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
 {  x.swap(y);  }
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

@@ -1602,6 +1602,7 @@ class flat_map
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_FORCEINLINE friend void swap(flat_map& x, flat_map& y)
+       BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
    {  x.swap(y);  }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -2959,6 +2960,7 @@ class flat_multimap
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_FORCEINLINE friend void swap(flat_multimap& x, flat_multimap& y)
+       BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
    {  x.swap(y);  }
 };
 
