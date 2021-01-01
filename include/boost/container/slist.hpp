@@ -1629,6 +1629,7 @@ class slist
    //!
    //! <b>Complexity</b>: Constant.
    friend void swap(slist& x, slist& y)
+       BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
    {  x.swap(y);  }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

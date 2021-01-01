@@ -947,7 +947,9 @@ class set
    //! <b>Effects</b>: x.swap(y)
    //!
    //! <b>Complexity</b>: Constant.
-   friend void swap(set& x, set& y);
+   friend void swap(set& x, set& y)
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 };
@@ -1600,7 +1602,9 @@ class multiset
    //! <b>Effects</b>: x.swap(y)
    //!
    //! <b>Complexity</b>: Constant.
-   friend void swap(multiset& x, multiset& y);
+   friend void swap(multiset& x, multiset& y)
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 };

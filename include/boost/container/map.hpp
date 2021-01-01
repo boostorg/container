@@ -1064,7 +1064,7 @@ class map
    //! <b>Complexity</b>: Constant.
    void swap(map& x)
       BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value )
+                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    //! <b>Effects</b>: erase(begin(),end()).
    //!
@@ -1285,7 +1285,9 @@ class map
    //! <b>Effects</b>: x.swap(y)
    //!
    //! <b>Complexity</b>: Constant.
-   friend void swap(map& x, map& y);
+   friend void swap(map& x, map& y)
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -2216,7 +2218,9 @@ class multimap
    //! <b>Effects</b>: x.swap(y)
    //!
    //! <b>Complexity</b>: Constant.
-   friend void swap(multimap& x, multimap& y);
+   friend void swap(multimap& x, multimap& y)
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 };
