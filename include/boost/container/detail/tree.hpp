@@ -670,7 +670,7 @@ class tree
       if(unique_insertion){
          const const_iterator end_it(this->cend());
          for ( ; first != last; ++first){
-            this->insert_unique_convertible(end_it, *first);
+            this->insert_unique_hint_convertible(end_it, *first);
          }
       }
       else{
@@ -694,7 +694,7 @@ class tree
       //for the constructor
       const const_iterator end_it(this->cend());
       for ( ; first != last; ++first){
-         this->insert_equal_convertible(end_it, *first);
+         this->insert_equal_hint_convertible(end_it, *first);
       }
    }
 
@@ -1006,7 +1006,7 @@ class tree
    }
 
    template<class MovableConvertible>
-   std::pair<iterator,bool> insert_unique(BOOST_FWD_REF(MovableConvertible) v)
+   std::pair<iterator,bool> insert_unique_convertible(BOOST_FWD_REF(MovableConvertible) v)
    {
       insert_commit_data data;
       std::pair<iterator,bool> ret =
@@ -1016,6 +1016,19 @@ class tree
       }
       return ret;
    }
+
+   template<class MovableConvertible>
+   iterator insert_unique_hint_convertible(const_iterator hint, BOOST_FWD_REF(MovableConvertible) v)
+   {
+      BOOST_ASSERT((priv_is_linked)(hint));
+      insert_commit_data data;
+      std::pair<iterator,bool> ret =
+         this->insert_unique_check(hint, key_of_value_t()(v), data);
+      if(!ret.second)
+         return ret.first;
+      return this->insert_unique_commit(boost::forward<MovableConvertible>(v), data);
+   }
+
 
    private:
 
@@ -1047,7 +1060,7 @@ class tree
       this->icont().push_back(*tmp);
    }
 
-   std::pair<iterator, bool> emplace_unique_impl(NodePtr p)
+   std::pair<iterator, bool> emplace_unique_node(NodePtr p)
    {
       value_type &v = p->get_data();
       insert_commit_data data;
@@ -1064,7 +1077,7 @@ class tree
          , true );
    }
 
-   iterator emplace_unique_hint_impl(const_iterator hint, NodePtr p)
+   iterator emplace_hint_unique_node(const_iterator hint, NodePtr p)
    {
       BOOST_ASSERT((priv_is_linked)(hint));
       value_type &v = p->get_data();
@@ -1072,6 +1085,7 @@ class tree
       std::pair<iterator,bool> ret =
          this->insert_unique_check(hint, key_of_value_t()(v), data);
       if(!ret.second){
+         //Destroy unneeded node
          Destroyer(this->node_alloc())(p);
          return ret.first;
       }
@@ -1084,11 +1098,11 @@ class tree
 
    template <class... Args>
    BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> emplace_unique(BOOST_FWD_REF(Args)... args)
-   {  return this->emplace_unique_impl(AllocHolder::create_node(boost::forward<Args>(args)...));   }
+   {  return this->emplace_unique_node(AllocHolder::create_node(boost::forward<Args>(args)...));   }
 
    template <class... Args>
    BOOST_CONTAINER_FORCEINLINE iterator emplace_hint_unique(const_iterator hint, BOOST_FWD_REF(Args)... args)
-   {  return this->emplace_unique_hint_impl(hint, AllocHolder::create_node(boost::forward<Args>(args)...));   }
+   {  return this->emplace_hint_unique_node(hint, AllocHolder::create_node(boost::forward<Args>(args)...));   }
 
    template <class... Args>
    iterator emplace_equal(BOOST_FWD_REF(Args)... args)
@@ -1132,11 +1146,11 @@ class tree
    #define BOOST_CONTAINER_TREE_EMPLACE_CODE(N) \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    std::pair<iterator, bool> emplace_unique(BOOST_MOVE_UREF##N)\
-   {  return this->emplace_unique_impl(AllocHolder::create_node(BOOST_MOVE_FWD##N));  }\
+   {  return this->emplace_unique_node(AllocHolder::create_node(BOOST_MOVE_FWD##N));  }\
    \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    iterator emplace_hint_unique(const_iterator hint BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
-   {  return this->emplace_unique_hint_impl(hint, AllocHolder::create_node(BOOST_MOVE_FWD##N)); }\
+   {  return this->emplace_hint_unique_node(hint, AllocHolder::create_node(BOOST_MOVE_FWD##N)); }\
    \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    iterator emplace_equal(BOOST_MOVE_UREF##N)\
@@ -1180,38 +1194,17 @@ class tree
 
    #endif   // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-   template<class MovableConvertible>
-   iterator insert_unique_convertible(const_iterator hint, BOOST_FWD_REF(MovableConvertible) v)
-   {
-      BOOST_ASSERT((priv_is_linked)(hint));
-      insert_commit_data data;
-      std::pair<iterator,bool> ret =
-         this->insert_unique_check(hint, key_of_value_t()(v), data);
-      if(!ret.second)
-         return ret.first;
-      return this->insert_unique_commit(boost::forward<MovableConvertible>(v), data);
-   }
-
-   BOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG(insert_unique, value_type, iterator, this->insert_unique_convertible, const_iterator, const_iterator)
+   //BOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG(insert_unique, value_type, iterator, this->insert_unique_hint_convertible, const_iterator, const_iterator)
 
    template <class InputIterator>
-   void insert_unique(InputIterator first, InputIterator last)
+   void insert_unique_range(InputIterator first, InputIterator last)
    {
       for( ; first != last; ++first)
-         this->insert_unique(*first);
-   }
-
-   iterator insert_equal(const value_type& v)
-   {
-      NodePtr tmp(AllocHolder::create_node(v));
-      scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
-      iterator ret(this->icont().insert_equal(this->icont().end(), *tmp));
-      destroy_deallocator.release();
-      return ret;
+         this->insert_unique_convertible(*first);
    }
 
    template<class MovableConvertible>
-   iterator insert_equal(BOOST_FWD_REF(MovableConvertible) v)
+   iterator insert_equal_convertible(BOOST_FWD_REF(MovableConvertible) v)
    {
       NodePtr tmp(AllocHolder::create_node(boost::forward<MovableConvertible>(v)));
       scoped_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
@@ -1221,7 +1214,7 @@ class tree
    }
 
    template<class MovableConvertible>
-   iterator insert_equal_convertible(const_iterator hint, BOOST_FWD_REF(MovableConvertible) v)
+   iterator insert_equal_hint_convertible(const_iterator hint, BOOST_FWD_REF(MovableConvertible) v)
    {
       BOOST_ASSERT((priv_is_linked)(hint));
       NodePtr tmp(AllocHolder::create_node(boost::forward<MovableConvertible>(v)));
@@ -1231,13 +1224,14 @@ class tree
       return ret;
    }
 
-   BOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG(insert_equal, value_type, iterator, this->insert_equal_convertible, const_iterator, const_iterator)
+   BOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG
+      (insert_equal, value_type, iterator, this->insert_equal_hint_convertible, const_iterator, const_iterator)
 
    template <class InputIterator>
-   void insert_equal(InputIterator first, InputIterator last)
+   void insert_equal_range(InputIterator first, InputIterator last)
    {
       for( ; first != last; ++first)
-         this->insert_equal(*first);
+         this->insert_equal_convertible(*first);
    }
 
    template<class KeyType, class M>

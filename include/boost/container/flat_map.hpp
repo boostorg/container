@@ -1077,10 +1077,12 @@ class flat_map
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    BOOST_CONTAINER_FORCEINLINE std::pair<iterator,bool> insert(BOOST_RV_REF(value_type) x)
-   {  return dtl::force_copy<std::pair<iterator,bool> >(
-      m_flat_tree.insert_unique(boost::move(dtl::force<impl_value_type>(x)))); }
+   {
+      return dtl::force_copy<std::pair<iterator,bool> >(
+         m_flat_tree.insert_unique(boost::move(dtl::force<impl_value_type>(x))));
+   }
 
-   //! <b>Effects</b>: Inserts a new value_type move constructed from the pair if and
+   //! <b>Effects</b>: Inserts a new value_type constructed from the pair if and
    //! only if there is no element in the container with key equivalent to the key of x.
    //!
    //! <b>Returns</b>: The bool component of the returned pair is true if and only
@@ -1091,10 +1093,15 @@ class flat_map
    //!   to the elements with bigger keys than x.
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
-   BOOST_CONTAINER_FORCEINLINE std::pair<iterator,bool> insert(BOOST_RV_REF(movable_value_type) x)
+   template <class Pair>
+   BOOST_CONTAINER_FORCEINLINE BOOST_CONTAINER_DOC1ST
+         ( std::pair<iterator BOOST_MOVE_I bool>
+         , typename dtl::enable_if_c<dtl::is_convertible<Pair BOOST_MOVE_I impl_value_type>::value
+            BOOST_MOVE_I std::pair<iterator BOOST_MOVE_I bool> >::type)
+      insert(BOOST_FWD_REF(Pair) x)
    {
       return dtl::force_copy<std::pair<iterator,bool> >
-      (m_flat_tree.insert_unique(boost::move(x)));
+         (m_flat_tree.emplace_unique(boost::forward<Pair>(x)));
    }
 
    //! <b>Effects</b>: Inserts a copy of x in the container if and only if there is
@@ -1131,7 +1138,7 @@ class flat_map
                                    , boost::move(dtl::force<impl_value_type>(x))));
    }
 
-   //! <b>Effects</b>: Inserts an element move constructed from x in the container.
+   //! <b>Effects</b>: Inserts an element constructed from x in the container.
    //!   p is a hint pointing to where the insert should start to search.
    //!
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent to the key of x.
@@ -1140,10 +1147,15 @@ class flat_map
    //!   right before p) plus insertion linear to the elements with bigger keys than x.
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
-   BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, BOOST_RV_REF(movable_value_type) x)
+   template <class Pair>
+   BOOST_CONTAINER_FORCEINLINE BOOST_CONTAINER_DOC1ST
+         ( iterator
+         , typename dtl::enable_if_c<dtl::is_convertible<Pair BOOST_MOVE_I impl_value_type>::value
+            BOOST_MOVE_I iterator>::type)
+      insert(const_iterator p, BOOST_FWD_REF(Pair) x)
    {
       return dtl::force_copy<iterator>(
-         m_flat_tree.insert_unique(dtl::force_copy<impl_const_iterator>(p), boost::move(x)));
+         m_flat_tree.emplace_hint_unique(dtl::force_copy<impl_const_iterator>(p), boost::forward<Pair>(x)));
    }
 
    //! <b>Requires</b>: first, last are not iterators into *this.
@@ -1608,22 +1620,24 @@ class flat_map
    private:
    mapped_type &priv_subscript(const key_type& k)
    {
-      iterator i = lower_bound(k);
+      iterator i = this->lower_bound(k);
       // i->first is greater than or equivalent to k.
       if (i == end() || key_comp()(k, (*i).first)){
          dtl::value_init<mapped_type> m;
-         i = insert(i, impl_value_type(k, ::boost::move(m.m_t)));
+         impl_value_type v(k, ::boost::move(m.m_t));
+         i = this->insert(i, ::boost::move(v));
       }
       return (*i).second;
    }
    mapped_type &priv_subscript(BOOST_RV_REF(key_type) mk)
    {
       key_type &k = mk;
-      iterator i = lower_bound(k);
+      iterator i = this->lower_bound(k);
       // i->first is greater than or equivalent to k.
       if (i == end() || key_comp()(k, (*i).first)){
          dtl::value_init<mapped_type> m;
-         i = insert(i, impl_value_type(boost::move(k), ::boost::move(m.m_t)));
+         impl_value_type v(::boost::move(k), ::boost::move(m.m_t));
+         i = this->insert(i, ::boost::move(v));
       }
       return (*i).second;
    }
@@ -2441,25 +2455,20 @@ class flat_multimap
          m_flat_tree.insert_equal(dtl::force<const impl_value_type>(x)));
    }
 
-   //! <b>Effects</b>: Inserts a new value move-constructed from x and returns
+   //! <b>Effects</b>: Inserts a new value constructed from x and returns
    //!   the iterator pointing to the newly inserted element.
    //!
    //! <b>Complexity</b>: Logarithmic search time plus linear insertion
    //!   to the elements with bigger keys than x.
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
-   BOOST_CONTAINER_FORCEINLINE iterator insert(BOOST_RV_REF(value_type) x)
-   { return dtl::force_copy<iterator>(m_flat_tree.insert_equal(boost::move(x))); }
-
-   //! <b>Effects</b>: Inserts a new value move-constructed from x and returns
-   //!   the iterator pointing to the newly inserted element.
-   //!
-   //! <b>Complexity</b>: Logarithmic search time plus linear insertion
-   //!   to the elements with bigger keys than x.
-   //!
-   //! <b>Note</b>: If an element is inserted it might invalidate elements.
-   BOOST_CONTAINER_FORCEINLINE iterator insert(BOOST_RV_REF(impl_value_type) x)
-      { return dtl::force_copy<iterator>(m_flat_tree.insert_equal(boost::move(x))); }
+   template<class Pair>
+   BOOST_CONTAINER_FORCEINLINE BOOST_CONTAINER_DOC1ST
+         ( iterator
+         , typename dtl::enable_if_c<dtl::is_convertible<Pair BOOST_MOVE_I impl_value_type>::value
+            BOOST_MOVE_I iterator >::type)
+      insert(BOOST_FWD_REF(Pair) x)
+   { return dtl::force_copy<iterator>(m_flat_tree.emplace_equal(boost::forward<Pair>(x))); }
 
    //! <b>Effects</b>: Inserts a copy of x in the container.
    //!   p is a hint pointing to where the insert should start to search.
@@ -2479,7 +2488,7 @@ class flat_multimap
                                   , dtl::force<const impl_value_type>(x)));
    }
 
-   //! <b>Effects</b>: Inserts a value move constructed from x in the container.
+   //! <b>Effects</b>: Inserts a value constructed from x in the container.
    //!   p is a hint pointing to where the insert should start to search.
    //!
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
@@ -2490,28 +2499,15 @@ class flat_multimap
    //!   to the elements with bigger keys than x.
    //!
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
-   BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, BOOST_RV_REF(value_type) x)
-   {
-      return dtl::force_copy<iterator>
-         (m_flat_tree.insert_equal(dtl::force_copy<impl_const_iterator>(p)
-                                  , boost::move(x)));
-   }
-
-   //! <b>Effects</b>: Inserts a value move constructed from x in the container.
-   //!   p is a hint pointing to where the insert should start to search.
-   //!
-   //! <b>Returns</b>: An iterator pointing to the element with key equivalent
-   //!   to the key of x.
-   //!
-   //! <b>Complexity</b>: Logarithmic search time (constant time if the value
-   //!   is to be inserted before p) plus linear insertion
-   //!   to the elements with bigger keys than x.
-   //!
-   //! <b>Note</b>: If an element is inserted it might invalidate elements.
-   BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, BOOST_RV_REF(impl_value_type) x)
+   template<class Pair>
+   BOOST_CONTAINER_FORCEINLINE BOOST_CONTAINER_DOC1ST
+         ( iterator
+         , typename dtl::enable_if_c<dtl::is_convertible<Pair BOOST_MOVE_I impl_value_type>::value
+            BOOST_MOVE_I iterator>::type)
+      insert(const_iterator p, BOOST_FWD_REF(Pair) x)
    {
       return dtl::force_copy<iterator>(
-         m_flat_tree.insert_equal(dtl::force_copy<impl_const_iterator>(p), boost::move(x)));
+         m_flat_tree.emplace_hint_equal(dtl::force_copy<impl_const_iterator>(p), boost::forward<Pair>(x)));
    }
 
    //! <b>Requires</b>: first, last are not iterators into *this.

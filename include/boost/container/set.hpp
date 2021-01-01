@@ -597,7 +597,8 @@ class set
    private:
    typedef std::pair<iterator, bool> insert_return_pair;
    public:
-   BOOST_MOVE_CONVERSION_AWARE_CATCH(insert, value_type, insert_return_pair, this->priv_insert)
+   BOOST_MOVE_CONVERSION_AWARE_CATCH
+      (insert, value_type, insert_return_pair, this->base_t::insert_unique_convertible)
    #endif
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -620,7 +621,8 @@ class set
    //! <b>Complexity</b>: Logarithmic.
    iterator insert(const_iterator p, value_type &&x);
    #else
-   BOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG(insert, value_type, iterator, this->priv_insert, const_iterator, const_iterator)
+   BOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG
+      (insert, value_type, iterator, this->base_t::insert_unique_hint_convertible, const_iterator, const_iterator)
    #endif
 
    //! <b>Requires</b>: first, last are not iterators into *this.
@@ -631,7 +633,7 @@ class set
    //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
    template <class InputIterator>
    BOOST_CONTAINER_FORCEINLINE void insert(InputIterator first, InputIterator last)
-   {  this->base_t::insert_unique(first, last);  }
+   {  this->base_t::insert_unique_range(first, last);  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: inserts each element from the range [il.begin(),il.end()) if and only
@@ -639,7 +641,7 @@ class set
    //!
    //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from il.begin() to il.end())
    BOOST_CONTAINER_FORCEINLINE void insert(std::initializer_list<value_type> il)
-   {  this->base_t::insert_unique(il.begin(), il.end()); }
+   {  this->base_t::insert_unique_range(il.begin(), il.end()); }
 #endif
 
    //! @copydoc ::boost::container::map::insert(node_type&&)
@@ -948,17 +950,6 @@ class set
    friend void swap(set& x, set& y);
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-
-   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   private:
-   template <class KeyType>
-   BOOST_CONTAINER_FORCEINLINE std::pair<iterator, bool> priv_insert(BOOST_FWD_REF(KeyType) x)
-   {  return this->base_t::insert_unique(::boost::forward<KeyType>(x));  }
-
-   template <class KeyType>
-   BOOST_CONTAINER_FORCEINLINE iterator priv_insert(const_iterator p, BOOST_FWD_REF(KeyType) x)
-   {  return this->base_t::insert_unique(p, ::boost::forward<KeyType>(x)); }
-   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD
@@ -1393,7 +1384,7 @@ class multiset
    //!   is inserted right before p.
    iterator insert(value_type &&x);
    #else
-   BOOST_MOVE_CONVERSION_AWARE_CATCH(insert, value_type, iterator, this->priv_insert)
+   BOOST_MOVE_CONVERSION_AWARE_CATCH(insert, value_type, iterator, this->base_t::insert_equal_convertible)
    #endif
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -1417,7 +1408,8 @@ class multiset
    //!   is inserted right before p.
    iterator insert(const_iterator p, value_type &&x);
    #else
-   BOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG(insert, value_type, iterator, this->priv_insert, const_iterator, const_iterator)
+   BOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG
+      (insert, value_type, iterator, this->base_t::insert_equal_hint_convertible, const_iterator, const_iterator)
    #endif
 
    //! <b>Requires</b>: first, last are not iterators into *this.
@@ -1427,12 +1419,12 @@ class multiset
    //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
    template <class InputIterator>
    BOOST_CONTAINER_FORCEINLINE void insert(InputIterator first, InputIterator last)
-   {  this->base_t::insert_equal(first, last);  }
+   {  this->base_t::insert_equal_range(first, last);  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! @copydoc ::boost::container::set::insert(std::initializer_list<value_type>)
    BOOST_CONTAINER_FORCEINLINE void insert(std::initializer_list<value_type> il)
-   {  this->base_t::insert_equal(il.begin(), il.end());  }
+   {  this->base_t::insert_equal_range(il.begin(), il.end());  }
 #endif
 
    //! @copydoc ::boost::container::multimap::insert(node_type&&)
@@ -1611,18 +1603,6 @@ class multiset
    friend void swap(multiset& x, multiset& y);
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-
-   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   private:
-   template <class KeyType>
-   BOOST_CONTAINER_FORCEINLINE iterator priv_insert(BOOST_FWD_REF(KeyType) x)
-   {  return this->base_t::insert_equal(::boost::forward<KeyType>(x));  }
-
-   template <class KeyType>
-   BOOST_CONTAINER_FORCEINLINE iterator priv_insert(const_iterator p, BOOST_FWD_REF(KeyType) x)
-   {  return this->base_t::insert_equal(p, ::boost::forward<KeyType>(x)); }
-
-   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD

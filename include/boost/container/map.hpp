@@ -121,7 +121,7 @@ class map
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                        const_iterator;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                      reverse_iterator;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)                const_reverse_iterator;
-   typedef std::pair<key_type, mapped_type>                                               nonconst_value_type;
+   //typedef std::pair<key_type, mapped_type>                                               nonconst_value_type;
    typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                                movable_value_type;
    typedef BOOST_CONTAINER_IMPDEF(node_handle<
       typename base_t::stored_allocator_type
@@ -688,40 +688,7 @@ class map
    //!
    //! <b>Complexity</b>: Logarithmic.
    BOOST_CONTAINER_FORCEINLINE std::pair<iterator,bool> insert(const value_type& x)
-   { return this->base_t::insert_unique(x); }
-
-   //! <b>Effects</b>: Inserts a new value_type created from the pair if and only if
-   //! there is no element in the container  with key equivalent to the key of x.
-   //!
-   //! <b>Returns</b>: The bool component of the returned pair is true if and only
-   //!   if the insertion takes place, and the iterator component of the pair
-   //!   points to the element with key equivalent to the key of x.
-   //!
-   //! <b>Complexity</b>: Logarithmic.
-   BOOST_CONTAINER_FORCEINLINE std::pair<iterator,bool> insert(const nonconst_value_type& x)
-   { return this->try_emplace(x.first, x.second); }
-
-   //! <b>Effects</b>: Inserts a new value_type move constructed from the pair if and
-   //! only if there is no element in the container with key equivalent to the key of x.
-   //!
-   //! <b>Returns</b>: The bool component of the returned pair is true if and only
-   //!   if the insertion takes place, and the iterator component of the pair
-   //!   points to the element with key equivalent to the key of x.
-   //!
-   //! <b>Complexity</b>: Logarithmic.
-   BOOST_CONTAINER_FORCEINLINE std::pair<iterator,bool> insert(BOOST_RV_REF(nonconst_value_type) x)
-   { return this->try_emplace(boost::move(x.first), boost::move(x.second)); }
-
-   //! <b>Effects</b>: Inserts a new value_type move constructed from the pair if and
-   //! only if there is no element in the container with key equivalent to the key of x.
-   //!
-   //! <b>Returns</b>: The bool component of the returned pair is true if and only
-   //!   if the insertion takes place, and the iterator component of the pair
-   //!   points to the element with key equivalent to the key of x.
-   //!
-   //! <b>Complexity</b>: Logarithmic.
-   BOOST_CONTAINER_FORCEINLINE std::pair<iterator,bool> insert(BOOST_RV_REF(movable_value_type) x)
-   { return this->try_emplace(boost::move(x.first), boost::move(x.second)); }
+   { return this->base_t::insert_unique_convertible(x); }
 
    //! <b>Effects</b>: Move constructs a new value from x if and only if there is
    //!   no element in the container with key equivalent to the key of x.
@@ -732,7 +699,28 @@ class map
    //!
    //! <b>Complexity</b>: Logarithmic.
    BOOST_CONTAINER_FORCEINLINE std::pair<iterator,bool> insert(BOOST_RV_REF(value_type) x)
-   { return this->base_t::insert_unique(boost::move(x)); }
+   { return this->base_t::insert_unique_convertible(boost::move(x)); }
+
+   //! <b>Effects</b>: Inserts a new value_type created from the pair if and only if
+   //! there is no element in the container  with key equivalent to the key of x.
+   //!
+   //! <b>Returns</b>: The bool component of the returned pair is true if and only
+   //!   if the insertion takes place, and the iterator component of the pair
+   //!   points to the element with key equivalent to the key of x.
+   //!
+   //! <b>Complexity</b>: Logarithmic.
+   template <class Pair>
+   BOOST_CONTAINER_FORCEINLINE BOOST_CONTAINER_DOC1ST
+         ( std::pair<iterator BOOST_MOVE_I bool>
+         , typename dtl::enable_if_c<
+               dtl::is_convertible<Pair BOOST_MOVE_I value_type>::value ||
+               dtl::is_convertible<Pair BOOST_MOVE_I movable_value_type>::value
+            BOOST_MOVE_I std::pair<iterator BOOST_MOVE_I bool> >::type)
+      insert(BOOST_FWD_REF(Pair) x)
+   {  return this->base_t::emplace_unique(boost::forward<Pair>(x)); }
+
+   BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, const value_type& x)
+   { return this->base_t::insert_unique_hint_convertible(p, x); }
 
    //! <b>Effects</b>: Inserts a copy of x in the container if and only if there is
    //!   no element in the container with key equivalent to the key of x.
@@ -743,9 +731,30 @@ class map
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
-   BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, const value_type& x)
-   { return this->base_t::insert_unique(p, x); }
+   BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, BOOST_RV_REF(value_type) x)
+   { return this->base_t::insert_unique_hint_convertible(p, boost::move(x)); }
 
+   //! <b>Effects</b>: Inserts a copy of x in the container if and only if there is
+   //!   no element in the container with key equivalent to the key of x.
+   //!   p is a hint pointing to where the insert should start to search.
+   //!
+   //! <b>Returns</b>: An iterator pointing to the element with key equivalent
+   //!   to the key of x.
+   //!
+   //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
+   //!   is inserted right before p.
+   template <class Pair>
+   BOOST_CONTAINER_FORCEINLINE BOOST_CONTAINER_DOC1ST
+         ( iterator
+         , typename dtl::enable_if_c<
+            dtl::is_convertible<Pair BOOST_MOVE_I value_type>::value  ||
+            dtl::is_convertible<Pair BOOST_MOVE_I movable_value_type>::value
+            BOOST_MOVE_I iterator >::type)
+      insert(const_iterator p, BOOST_FWD_REF(Pair) x)
+   {  return this->base_t::emplace_hint_unique(p, boost::forward<Pair>(x));  }
+
+
+/*
    //! <b>Effects</b>: Move constructs a new value from x if and only if there is
    //!   no element in the container with key equivalent to the key of x.
    //!   p is a hint pointing to where the insert should start to search.
@@ -776,18 +785,11 @@ class map
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent to the key of x.
    //!
    //! <b>Complexity</b>: Logarithmic.
-   iterator insert(const_iterator p, const nonconst_value_type& x)
+   BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, const nonconst_value_type& x)
    { return this->try_emplace(p, x.first, x.second); }
 
-   //! <b>Effects</b>: Inserts an element move constructed from x in the container.
-   //!   p is a hint pointing to where the insert should start to search.
-   //!
-   //! <b>Returns</b>: An iterator pointing to the element with key equivalent to the key of x.
-   //!
-   //! <b>Complexity</b>: Logarithmic.
-   BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, BOOST_RV_REF(value_type) x)
-   { return this->base_t::insert_unique(p, boost::move(x)); }
 
+*/
    //! <b>Requires</b>: first, last are not iterators into *this.
    //!
    //! <b>Effects</b>: inserts each element from the range [first,last) if and only
@@ -796,7 +798,7 @@ class map
    //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
    template <class InputIterator>
    BOOST_CONTAINER_FORCEINLINE void insert(InputIterator first, InputIterator last)
-   {  this->base_t::insert_unique(first, last);  }
+   {  this->base_t::insert_unique_range(first, last);  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()) if and only
@@ -804,7 +806,7 @@ class map
    //!
    //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from il.begin() to il.end())
    BOOST_CONTAINER_FORCEINLINE void insert(std::initializer_list<value_type> il)
-   {  this->base_t::insert_unique(il.begin(), il.end()); }
+   {  this->base_t::insert_unique_range(il.begin(), il.end()); }
 #endif
 
    //! <b>Requires</b>: nh is empty or this->get_allocator() == nh.get_allocator().
@@ -1446,7 +1448,7 @@ class multimap
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_iterator)                        const_iterator;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::reverse_iterator)                      reverse_iterator;
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)                const_reverse_iterator;
-   typedef std::pair<key_type, mapped_type>                                               nonconst_value_type;
+   //typedef std::pair<key_type, mapped_type>                                               nonconst_value_type;
    typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                                movable_value_type;
    typedef BOOST_CONTAINER_IMPDEF(node_handle<
       typename base_t::stored_allocator_type
@@ -1836,28 +1838,28 @@ class multimap
    //!
    //! <b>Complexity</b>: Logarithmic.
    BOOST_CONTAINER_FORCEINLINE iterator insert(const value_type& x)
-   { return this->base_t::insert_equal(x); }
+   { return this->base_t::insert_equal_convertible(x); }
+
+   //! <b>Effects</b>: Inserts a new value move-constructed from x and returns
+   //!   the iterator pointing to the newly inserted element.
+   //!
+   //! <b>Complexity</b>: Logarithmic.
+   BOOST_CONTAINER_FORCEINLINE iterator insert(BOOST_RV_REF(value_type) x)
+   { return this->base_t::insert_equal_convertible(boost::move(x)); }
 
    //! <b>Effects</b>: Inserts a new value constructed from x and returns
    //!   the iterator pointing to the newly inserted element.
    //!
    //! <b>Complexity</b>: Logarithmic.
-   BOOST_CONTAINER_FORCEINLINE iterator insert(const nonconst_value_type& x)
-   { return this->base_t::emplace_equal(x); }
-
-   //! <b>Effects</b>: Inserts a new value move-constructed from x and returns
-   //!   the iterator pointing to the newly inserted element.
-   //!
-   //! <b>Complexity</b>: Logarithmic.
-   BOOST_CONTAINER_FORCEINLINE iterator insert(BOOST_RV_REF(nonconst_value_type) x)
-   { return this->base_t::emplace_equal(boost::move(x)); }
-
-   //! <b>Effects</b>: Inserts a new value move-constructed from x and returns
-   //!   the iterator pointing to the newly inserted element.
-   //!
-   //! <b>Complexity</b>: Logarithmic.
-   iterator insert(BOOST_RV_REF(movable_value_type) x)
-   { return this->base_t::emplace_equal(boost::move(x)); }
+   template<class Pair>
+   BOOST_CONTAINER_FORCEINLINE BOOST_CONTAINER_DOC1ST
+         ( iterator
+         , typename dtl::enable_if_c<
+            dtl::is_convertible<Pair BOOST_MOVE_I value_type>::value  ||
+            dtl::is_convertible<Pair BOOST_MOVE_I movable_value_type>::value
+            BOOST_MOVE_I iterator >::type)
+      insert(BOOST_FWD_REF(Pair) x)
+   { return this->base_t::emplace_equal(boost::forward<Pair>(x)); }
 
    //! <b>Effects</b>: Inserts a copy of x in the container.
    //!   p is a hint pointing to where the insert should start to search.
@@ -1868,29 +1870,7 @@ class multimap
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, const value_type& x)
-   { return this->base_t::insert_equal(p, x); }
-
-   //! <b>Effects</b>: Inserts a new value constructed from x in the container.
-   //!   p is a hint pointing to where the insert should start to search.
-   //!
-   //! <b>Returns</b>: An iterator pointing to the element with key equivalent
-   //!   to the key of x.
-   //!
-   //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
-   //!   is inserted right before p.
-   BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, const nonconst_value_type& x)
-   { return this->base_t::emplace_hint_equal(p, x); }
-
-   //! <b>Effects</b>: Inserts a new value move constructed from x in the container.
-   //!   p is a hint pointing to where the insert should start to search.
-   //!
-   //! <b>Returns</b>: An iterator pointing to the element with key equivalent
-   //!   to the key of x.
-   //!
-   //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
-   //!   is inserted right before p.
-   BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, BOOST_RV_REF(nonconst_value_type) x)
-   { return this->base_t::emplace_hint_equal(p, boost::move(x)); }
+   { return this->base_t::insert_equal_hint_convertible(p, x); }
 
    //! <b>Effects</b>: Inserts a new value move constructed from x in the container.
    //!   p is a hint pointing to where the insert should start to search.
@@ -1901,7 +1881,25 @@ class multimap
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, BOOST_RV_REF(movable_value_type) x)
-   { return this->base_t::emplace_hint_equal(p, boost::move(x)); }
+   { return this->base_t::insert_equal_hint_convertible(p, boost::move(x)); }
+
+   //! <b>Effects</b>: Inserts a new value constructed from x in the container.
+   //!   p is a hint pointing to where the insert should start to search.
+   //!
+   //! <b>Returns</b>: An iterator pointing to the element with key equivalent
+   //!   to the key of x.
+   //!
+   //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
+   //!   is inserted right before p.
+   template<class Pair>
+   BOOST_CONTAINER_FORCEINLINE BOOST_CONTAINER_DOC1ST
+         ( iterator
+         , typename dtl::enable_if_c<
+            dtl::is_convertible<Pair BOOST_MOVE_I value_type>::value  ||
+            dtl::is_convertible<Pair BOOST_MOVE_I movable_value_type>::value
+            BOOST_MOVE_I iterator>::type)
+      insert(const_iterator p, BOOST_FWD_REF(Pair) x)
+   { return this->base_t::emplace_hint_equal(p, boost::forward<Pair>(x)); }
 
    //! <b>Requires</b>: first, last are not iterators into *this.
    //!
@@ -1910,14 +1908,14 @@ class multimap
    //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from first to last)
    template <class InputIterator>
    BOOST_CONTAINER_FORCEINLINE void insert(InputIterator first, InputIterator last)
-   {  this->base_t::insert_equal(first, last); }
+   {  this->base_t::insert_equal_range(first, last); }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end().
    //!
    //! <b>Complexity</b>: At most N log(size()+N) (N is the distance from il.begin() to il.end())
    BOOST_CONTAINER_FORCEINLINE void insert(std::initializer_list<value_type> il)
-   {  this->base_t::insert_equal(il.begin(), il.end()); }
+   {  this->base_t::insert_equal_range(il.begin(), il.end()); }
 #endif
 
    //! <b>Requires</b>: nh is empty or this->get_allocator() == nh.get_allocator().
