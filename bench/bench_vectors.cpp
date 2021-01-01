@@ -22,7 +22,7 @@
 #include <boost/move/detail/nsec_clock.hpp>
 #include <typeinfo>
 
-#if defined(BOOST_GCC) && (BOOST_GCC >= 40500)
+#if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-result"
 #endif
@@ -36,7 +36,7 @@
 #include <boost/intrusive/detail/has_member_function_callable_with.hpp>
 
 //#pragma GCC diagnostic ignored "-Wunused-result"
-#if defined(BOOST_GCC) && (BOOST_GCC >= 40500)
+#if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
 #pragma GCC diagnostic pop
 #endif
 
