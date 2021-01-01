@@ -103,6 +103,44 @@ int map_test_copyable(boost::container::dtl::true_type)
    }
    if(!CheckEqualContainers(boostmap, stdmap)) return 1;
    if(!CheckEqualContainers(boostmultimap, stdmultimap)) return 1;
+
+   boostmap.clear();
+   boostmap.clear();
+   boostmultimap.clear();
+   stdmultimap.clear();
+   //Now try from convertible pair
+   for(i = 0; i < MaxElem; ++i){
+      {
+      boostmap.insert(std::pair<unsigned, unsigned>(i, i));
+      stdmap.insert(StdPairType(i, i));
+      }
+      {
+      boostmultimap.insert(std::pair<unsigned, unsigned>(i, i));
+      stdmultimap.insert(StdPairType(i, i));
+      }
+   }
+   if(!CheckEqualContainers(boostmap, stdmap)) return 1;
+   if(!CheckEqualContainers(boostmultimap, stdmultimap)) return 1;
+
+   #if !defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+   boostmap.clear();
+   boostmap.clear();
+   boostmultimap.clear();
+   stdmultimap.clear();
+   //Now try from convertible pair
+   for(i = 0; i < MaxElem; ++i){
+      {
+      boostmap.insert({IntType(i), IntType(i)});
+      stdmap.insert(StdPairType(i, i));
+      }
+      {
+      boostmultimap.insert({IntType(i), IntType(i)});
+      stdmultimap.insert(StdPairType(i, i));
+      }
+   }
+   if(!CheckEqualContainers(boostmap, stdmap)) return 1;
+   if(!CheckEqualContainers(boostmultimap, stdmultimap)) return 1;
+   #endif   //BOOST_NO_CXX11_HDR_INITIALIZER_LIST
    {
       //Now, test copy constructor
       MyBoostMap boostmapcopy(boostmap);
