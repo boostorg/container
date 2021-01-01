@@ -351,9 +351,11 @@ class devector
       const size_type n = boost::container::iterator_distance(first, last);
       m_.buffer = n ? allocate(n) : pointer();
       m_.front_idx = 0u;
+      //this->allocate(n) will take care of overflows
       m_.set_back_idx(n);
       m_.set_capacity(n);
-      construct_from_range(first, last);
+      //construct_from_range releases memory on failure
+      this->construct_from_range(first, last);
       BOOST_ASSERT(invariants_ok());
    }
 
@@ -464,8 +466,18 @@ class devector
    * **Equivalent to**: `devector(il.begin(), il.end())` or `devector(il.begin(), il.end(), allocator)`.
    */
    devector(const std::initializer_list<T>& il, const allocator_type& allocator = allocator_type())
-      : devector(il.begin(), il.end(), allocator)
-   {}
+      : m_(allocator, pointer(), 0u, 0u, 0u)
+   {
+      const size_type n = il.size();
+      m_.buffer = n ? allocate(n) : pointer();
+      m_.front_idx = 0u;
+      //this->allocate(n) will take care of overflows
+      m_.set_back_idx(n);
+      m_.set_capacity(n);
+      //construct_from_range releases memory on failure
+      this->construct_from_range(il.begin(), il.end());
+      BOOST_ASSERT(invariants_ok());
+   }
    #endif
 
   /**

@@ -73,7 +73,7 @@ void print_range(std::ostream& out, Iterator b, Iterator e)
 template <typename Range>
 void print_range(std::ostream& out, const Range& range)
 {
-   print_range(out, range.cbegin(), range.cend());
+   print_range(out, range.begin(), range.end());
 }
 
 template <typename Array, std::size_t N>
