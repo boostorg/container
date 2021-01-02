@@ -2333,7 +2333,7 @@ class basic_string
    template<template <class, class> class BasicStringView>
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
       size_type find(BasicStringView<CharT, Traits> sv, size_type pos = 0) const
-   { return find(sv.data(), pos, sv.size()); }
+   { return this->find(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
    //!
@@ -2394,7 +2394,7 @@ class basic_string
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
       size_type rfind(const basic_string& str, size_type pos = npos) const
-      { return rfind(str.c_str(), pos, str.size()); }
+      { return this->rfind(str.c_str(), pos, str.size()); }
 
    //! <b>Effects</b>: Determines the highest position xpos, if possible, such
    //!   that both of the following conditions obtain:
@@ -2407,7 +2407,7 @@ class basic_string
    template<template <class, class> class BasicStringView>
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
       size_type rfind(BasicStringView<CharT, Traits> sv, size_type pos = npos) const
-      { return rfind(sv.data(), pos, sv.size()); }
+      { return this->rfind(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
    //!
@@ -2425,9 +2425,8 @@ class basic_string
          return dtl::min_value(len, pos);
       else {
          const const_iterator last = begin() + dtl::min_value(len - n, pos) + n;
-         const const_iterator result = find_end(begin(), last,
-                                                s, s + n,
-                                                Eq_traits<Traits>());
+         const const_iterator result = boost::container::find_end
+            (begin(), last, s, s + n, Eq_traits<Traits>());
          return result != last ? result - begin() : npos;
       }
    }
@@ -2440,7 +2439,7 @@ class basic_string
    //! <b>Returns</b>: rfind(basic_string(s), pos).
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
       size_type rfind(const CharT* s, size_type pos = npos) const
-      { return rfind(s, pos, Traits::length(s)); }
+      { return this->rfind(s, pos, Traits::length(s)); }
 
    //! <b>Throws</b>: Nothing
    //!
@@ -2574,14 +2573,14 @@ class basic_string
    //! <b>Returns</b>: find_last_of(basic_string<CharT,traits,allocator_type>(1,c),pos).
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
       size_type find_last_of(const CharT* s, size_type pos = npos) const
-      { return find_last_of(s, pos, Traits::length(s)); }
+      { return this->find_last_of(s, pos, Traits::length(s)); }
 
    //! <b>Throws</b>: Nothing
    //!
    //! <b>Returns</b>: find_last_of(basic_string(s), pos).
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
       size_type find_last_of(CharT c, size_type pos = npos) const
-      {  return rfind(c, pos);   }
+      {  return this->rfind(c, pos);   }
 
    //! <b>Effects</b>: Determines the lowest position xpos, if possible, such that
    //!   both of the following conditions obtain:
@@ -2593,7 +2592,7 @@ class basic_string
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
       size_type find_first_not_of(const basic_string& str, size_type pos = 0) const
-      { return find_first_not_of(str.c_str(), pos, str.size()); }
+      { return this->find_first_not_of(str.c_str(), pos, str.size()); }
 
    //! <b>Effects</b>: Determines the lowest position xpos, if possible, such that
    //!   both of the following conditions obtain:
@@ -2606,7 +2605,7 @@ class basic_string
    template<template <class, class> class BasicStringView>
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
       size_type find_first_not_of(BasicStringView<CharT, Traits> sv, size_type pos = 0) const
-      { return find_first_not_of(sv.data(), pos, sv.size()); }
+      { return this->find_first_not_of(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least traits::length(s) + 1 elements of CharT.
    //!
@@ -2634,7 +2633,7 @@ class basic_string
    //! <b>Returns</b>: find_first_not_of(basic_string(s), pos).
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
       size_type find_first_not_of(const CharT* s, size_type pos = 0) const
-      { return find_first_not_of(s, pos, Traits::length(s)); }
+      { return this->find_first_not_of(s, pos, Traits::length(s)); }
 
    //! <b>Throws</b>: Nothing
    //!
@@ -2663,7 +2662,7 @@ class basic_string
    //! <b>Returns</b>: xpos if the function can determine such a value for xpos. Otherwise, returns npos.
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
       size_type find_last_not_of(const basic_string& str, size_type pos = npos) const
-      { return find_last_not_of(str.c_str(), pos, str.size()); }
+      { return this->find_last_not_of(str.c_str(), pos, str.size()); }
 
    //! <b>Effects</b>: Determines the highest position xpos, if possible, such that
    //!   both of the following conditions obtain: a) xpos <= pos and xpos < size();
@@ -2675,7 +2674,7 @@ class basic_string
    template<template <class, class> class BasicStringView>
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
       size_type find_last_not_of(BasicStringView<CharT, Traits> sv, size_type pos = npos) const
-      { return find_last_not_of(sv.data(), pos, sv.size()); }
+      { return this->find_last_not_of(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
    //!
@@ -2705,7 +2704,7 @@ class basic_string
    //! <b>Returns</b>: find_last_not_of(basic_string(s), pos).
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
       size_type find_last_not_of(const CharT* s, size_type pos = npos) const
-      { return find_last_not_of(s, pos, Traits::length(s)); }
+      { return this->find_last_not_of(s, pos, Traits::length(s)); }
 
    //! <b>Throws</b>: Nothing
    //!
@@ -2758,7 +2757,7 @@ class basic_string
    {
       const pointer addr     = this->priv_addr();
       const pointer str_addr = str.priv_addr();
-      return s_compare(addr, addr + this->priv_size(), str_addr, str_addr + str.priv_size());
+      return this->s_compare(addr, addr + this->priv_size(), str_addr, str_addr + str.priv_size());
    }
 
    //! <b>Throws</b>: Nothing
@@ -2769,7 +2768,7 @@ class basic_string
       int compare(BasicStringView<CharT,Traits> sv) const
    {
       const pointer addr = this->priv_addr();
-      return s_compare(addr, addr + this->priv_size(), sv.data(), sv.data() + sv.size());
+      return this->s_compare(addr, addr + this->priv_size(), sv.data(), sv.data() + sv.size());
    }
 
    //! <b>Requires</b>: pos1 <= size()
@@ -2788,7 +2787,7 @@ class basic_string
          throw_out_of_range("basic_string::compare out of range position");
       const pointer addr    = this->priv_addr();
       const pointer str_addr = str.priv_addr();
-      return s_compare(addr + pos1,
+      return this->s_compare(addr + pos1,
                         addr + pos1 + dtl::min_value(n1, this->size() - pos1),
                         str_addr, str_addr + str.priv_size());
    }
@@ -2806,7 +2805,7 @@ class basic_string
          throw_out_of_range("basic_string::compare out of range position");
       const pointer addr    = this->priv_addr() + pos1;
       const CharT* str_addr = sv.data();
-      return s_compare(addr, addr + dtl::min_value(n1, this->size() - pos1),
+      return this->s_compare(addr, addr + dtl::min_value(n1, this->size() - pos1),
                        str_addr, str_addr + sv.size());
    }
 
@@ -2825,7 +2824,7 @@ class basic_string
          throw_out_of_range("basic_string::compare out of range position");
       const pointer addr     = this->priv_addr() + pos1;
       const pointer str_addr = str.priv_addr() + pos2;
-      return s_compare(addr, addr + dtl::min_value(n1, this->size() - pos1),
+      return this->s_compare(addr, addr + dtl::min_value(n1, this->size() - pos1),
                         str_addr, str_addr + dtl::min_value(n2, str.size() - pos2));
    }
 
@@ -2845,7 +2844,7 @@ class basic_string
          throw_out_of_range("basic_string::compare out of range position");
       const pointer addr     = this->priv_addr() + pos1;
       const CharT * str_addr = sv.data() + pos2;
-      return s_compare(addr, addr + dtl::min_value(n1, this->size() - pos1),
+      return this->s_compare(addr, addr + dtl::min_value(n1, this->size() - pos1),
                        str_addr, str_addr + dtl::min_value(n2, sv.size() - pos2));
    }
 
@@ -2856,7 +2855,7 @@ class basic_string
       int compare(const CharT* s) const
    {
       const pointer addr = this->priv_addr();
-      return s_compare(addr, addr + this->priv_size(), s, s + Traits::length(s));
+      return this->s_compare(addr, addr + this->priv_size(), s, s + Traits::length(s));
    }
 
    //! <b>Requires</b>: pos1 > size() and s points to an array of at least n2 elements of CharT.
@@ -2870,7 +2869,7 @@ class basic_string
       if (pos1 > this->size())
          throw_out_of_range("basic_string::compare out of range position");
       const pointer addr = this->priv_addr();
-      return s_compare( addr + pos1,
+      return this->s_compare( addr + pos1,
                         addr + pos1 + dtl::min_value(n1, this->size() - pos1),
                         s, s + n2);
    }
