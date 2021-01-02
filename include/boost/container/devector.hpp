@@ -2012,6 +2012,8 @@ class devector
    {  return !(x < y);  }
 
    BOOST_CONTAINER_FORCEINLINE friend void swap(devector& x, devector& y)
+      BOOST_NOEXCEPT_IF( allocator_traits_type::propagate_on_container_swap::value
+                        || allocator_traits_type::is_always_equal::value)
    {  x.swap(y);  }
 
    private:

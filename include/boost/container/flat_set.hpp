@@ -1084,7 +1084,9 @@ class flat_set
    //! <b>Effects</b>: x.swap(y)
    //!
    //! <b>Complexity</b>: Constant.
-   friend void swap(flat_set& x, flat_set& y);
+   friend void swap(flat_set& x, flat_set& y)
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    //! <b>Effects</b>: Extracts the internal sequence container.
    //!
@@ -1806,7 +1808,9 @@ class flat_multiset
    //! <b>Effects</b>: x.swap(y)
    //!
    //! <b>Complexity</b>: Constant.
-   friend void swap(flat_multiset& x, flat_multiset& y);
+   friend void swap(flat_multiset& x, flat_multiset& y)
+      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
+                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    //! <b>Effects</b>: Extracts the internal sequence container.
    //!
