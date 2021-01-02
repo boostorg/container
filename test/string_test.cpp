@@ -577,8 +577,8 @@ int main()
       typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
       BOOST_STATIC_ASSERT_MSG
       (  (boost::has_trivial_destructor_after_move<cont>::value ==
-          boost::has_trivial_destructor_after_move<allocator_type>::value ||
-          boost::has_trivial_destructor_after_move<pointer>::value),
+          (boost::has_trivial_destructor_after_move<allocator_type>::value &&
+           boost::has_trivial_destructor_after_move<pointer>::value)),
           "has_trivial_destructor_after_move(default allocator) test failed");
    }
    // std::allocator
@@ -588,8 +588,8 @@ int main()
       typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
       BOOST_STATIC_ASSERT_MSG
       (  (boost::has_trivial_destructor_after_move<cont>::value ==
-          boost::has_trivial_destructor_after_move<allocator_type>::value ||
-          boost::has_trivial_destructor_after_move<pointer>::value),
+          (boost::has_trivial_destructor_after_move<allocator_type>::value &&
+           boost::has_trivial_destructor_after_move<pointer>::value)),
           "has_trivial_destructor_after_move(std::allocator) test failed");
    }
 

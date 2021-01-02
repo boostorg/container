@@ -38,7 +38,6 @@
 #include <boost/move/detail/to_raw_pointer.hpp>
 #include <boost/container/detail/version_type.hpp>
 #include <boost/container/detail/type_traits.hpp>
-#include <boost/container/detail/minimal_char_traits_header.hpp>
 #include <boost/container/detail/algorithm.hpp>
 
 #include <boost/intrusive/pointer_traits.hpp>
@@ -51,7 +50,7 @@
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/container_hash/hash.hpp>
 
-#include <string>    //char_traits
+#include <boost/container/detail/minimal_char_traits_header.hpp>  // for char_traits
 #include <iosfwd> 
 #include <istream>   //
 #include <ostream>
