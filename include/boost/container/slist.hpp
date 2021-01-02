@@ -1038,7 +1038,7 @@ class slist
    //! <b>Effects</b>: Transfers all the elements of list x to this list, after the
    //!   the element pointed by p. No destructors or copy constructors are called.
    //!
-   //! <b>Throws</b>: std::runtime_error if this' allocator and x's allocator
+   //! <b>Throws</b>: runtime_error if this' allocator and x's allocator
    //!   are not equal.
    //!
    //! <b>Complexity</b>: Linear to the elements in x.
@@ -1058,7 +1058,7 @@ class slist
    //! <b>Effects</b>: Transfers all the elements of list x to this list, after the
    //!   the element pointed by p. No destructors or copy constructors are called.
    //!
-   //! <b>Throws</b>: std::runtime_error if this' allocator and x's allocator
+   //! <b>Throws</b>: runtime_error if this' allocator and x's allocator
    //!   are not equal.
    //!
    //! <b>Complexity</b>: Linear to the elements in x.

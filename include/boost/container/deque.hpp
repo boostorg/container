@@ -1395,7 +1395,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Effects</b>: Returns a reference to the nth element
    //!   from the beginning of the container.
    //!
-   //! <b>Throws</b>: std::range_error if n >= size()
+   //! <b>Throws</b>: range_error if n >= size()
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
@@ -1410,7 +1410,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Effects</b>: Returns a const reference to the nth element
    //!   from the beginning of the container.
    //!
-   //! <b>Throws</b>: std::range_error if n >= size()
+   //! <b>Throws</b>: range_error if n >= size()
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
