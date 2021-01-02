@@ -27,7 +27,6 @@
 #include "../../intrusive/test/iterator_test.hpp"
 #include <boost/utility/string_view.hpp>
 #include <boost/core/lightweight_test.hpp>
-#include <boost/static_string.hpp>
 
 using namespace boost::container;
 
