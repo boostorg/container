@@ -49,11 +49,11 @@
 
 #include <boost/static_assert.hpp>
 #include <boost/core/no_exceptions_support.hpp>
-#include <boost/functional/hash.hpp>
+#include <boost/container_hash/hash.hpp>
 
-#include <algorithm>
-#include <iosfwd>
-#include <istream>
+#include <string>    //char_traits
+#include <iosfwd> 
+#include <istream>   //
 #include <ostream>
 #include <ios>
 #include <locale>
@@ -1334,7 +1334,7 @@ class basic_string
    //! <b>Effects</b>: Returns a reference to the nth element
    //!   from the beginning of the container.
    //!
-   //! <b>Throws</b>: std::range_error if n >= size()
+   //! <b>Throws</b>: range_error if n >= size()
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
@@ -1350,7 +1350,7 @@ class basic_string
    //! <b>Effects</b>: Returns a const reference to the nth element
    //!   from the beginning of the container.
    //!
-   //! <b>Throws</b>: std::range_error if n >= size()
+   //! <b>Throws</b>: range_error if n >= size()
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
