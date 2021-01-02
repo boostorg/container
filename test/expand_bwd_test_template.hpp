@@ -89,7 +89,7 @@ bool test_insert_with_expand_bwd()
          std::vector<value_type> initial_data;
          initial_data.resize(InitialSize[iteration]);
          for(unsigned int i = 0; i < InitialSize[iteration]; ++i){
-            initial_data[i] = i;
+            initial_data[i] = static_cast<value_type>(i);
          }
 
          if(!life_count<value_type>::check(InitialSize[iteration]))
@@ -97,7 +97,7 @@ bool test_insert_with_expand_bwd()
          Vect data_to_insert;
          data_to_insert.resize(InsertSize[iteration]);
          for(unsigned int i = 0; i < InsertSize[iteration]; ++i){
-            data_to_insert[i] = -i;
+            data_to_insert[i] = static_cast<value_type>(-i);
          }
 
          if(!life_count<value_type>::check(InitialSize[iteration]+InsertSize[iteration]))
@@ -153,14 +153,14 @@ bool test_assign_with_expand_bwd()
       std::vector<value_type> initial_data;
       initial_data.resize(InitialSize[iteration]);
       for(unsigned int i = 0; i < InitialSize[iteration]; ++i){
-         initial_data[i] = i;
+         initial_data[i] = static_cast<value_type>(i);
       }
 
       //Create data to assign
       std::vector<value_type> data_to_insert;
       data_to_insert.resize(InsertSize[iteration]);
       for(unsigned int i = 0; i < InsertSize[iteration]; ++i){
-         data_to_insert[i] = -i;
+         data_to_insert[i] = static_cast<value_type>(-i);
       }
 
       //Insert initial data to the vector to test

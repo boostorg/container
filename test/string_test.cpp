@@ -27,6 +27,7 @@
 #include "../../intrusive/test/iterator_test.hpp"
 #include <boost/utility/string_view.hpp>
 #include <boost/core/lightweight_test.hpp>
+#include <boost/static_string.hpp>
 
 using namespace boost::container;
 
@@ -504,6 +505,12 @@ struct alloc_propagate_base<boost_container_string>
 
 int main()
 {
+   {
+      boost::container::string a = "abcdefghijklmnopqrstuvwxyz";
+      boost::container::hash_value(a);
+   }
+
+
    if(string_test<char>()){
       return 1;
    }
@@ -569,24 +576,22 @@ int main()
       typedef boost::container::basic_string<char> cont;
       typedef cont::allocator_type allocator_type;
       typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
-      if (boost::has_trivial_destructor_after_move<cont>::value !=
-          boost::has_trivial_destructor_after_move<allocator_type>::value &&
-          boost::has_trivial_destructor_after_move<pointer>::value) {
-         std::cerr << "has_trivial_destructor_after_move(default allocator) test failed" << std::endl;
-         return 1;
-      }
+      BOOST_STATIC_ASSERT_MSG
+      (  (boost::has_trivial_destructor_after_move<cont>::value ==
+          boost::has_trivial_destructor_after_move<allocator_type>::value ||
+          boost::has_trivial_destructor_after_move<pointer>::value),
+          "has_trivial_destructor_after_move(default allocator) test failed");
    }
    // std::allocator
    {
       typedef boost::container::basic_string<char, std::char_traits<char>, std::allocator<char> > cont;
       typedef cont::allocator_type allocator_type;
       typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
-      if (boost::has_trivial_destructor_after_move<cont>::value !=
-          boost::has_trivial_destructor_after_move<allocator_type>::value &&
-          boost::has_trivial_destructor_after_move<pointer>::value) {
-         std::cerr << "has_trivial_destructor_after_move(std::allocator) test failed" << std::endl;
-         return 1;
-      }
+      BOOST_STATIC_ASSERT_MSG
+      (  (boost::has_trivial_destructor_after_move<cont>::value ==
+          boost::has_trivial_destructor_after_move<allocator_type>::value ||
+          boost::has_trivial_destructor_after_move<pointer>::value),
+          "has_trivial_destructor_after_move(std::allocator) test failed");
    }
 
    return boost::report_errors();
