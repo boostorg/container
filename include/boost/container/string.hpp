@@ -48,7 +48,7 @@
 
 #include <boost/static_assert.hpp>
 #include <boost/core/no_exceptions_support.hpp>
-#include <boost/container_hash/hash.hpp>
+#include <boost/intrusive/detail/hash_combine.hpp>
 
 #include <boost/container/detail/minimal_char_traits_header.hpp>  // for char_traits
 #include <iosfwd> 
@@ -3546,7 +3546,16 @@ getline(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allocat
 template <class Ch, class Allocator>
 inline std::size_t hash_value(basic_string<Ch, std::char_traits<Ch>, Allocator> const& v)
 {
-   return hash_range(v.begin(), v.end());
+   std::size_t seed = 0;
+   const Ch *first = v.data();
+
+   for(std::size_t i = 0, i_max = v.size(); i != i_max; ++i)
+   {
+      boost::intrusive::detail::hash_combine_size_t(seed, static_cast<std::size_t>(*first));
+      ++first;
+   }
+
+   return seed;
 }
 
 }}
