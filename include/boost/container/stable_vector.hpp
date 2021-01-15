@@ -2005,7 +2005,7 @@ class stable_vector
       this->allocate_individual(n, m);
       holder.splice_after(holder.before_begin(), m, m.before_begin(), m.last(), n);
       this->internal_data.pool_size += n;
-      std::pair<node_ptr, node_ptr> data(holder.extract_data());
+      typename multiallocation_chain::pointer_pair data(holder.extract_data());
       pool_first_ref = data.first;
       pool_last_ref = data.second;
    }
@@ -2021,7 +2021,7 @@ class stable_vector
                               , internal_data.pool_size);
       holder.push_front(p);
       ++this->internal_data.pool_size;
-      std::pair<node_ptr, node_ptr> ret(holder.extract_data());
+      typename multiallocation_chain::pointer_pair ret(holder.extract_data());
       pool_first_ref = ret.first;
       pool_last_ref  = ret.second;
    }
@@ -2035,7 +2035,7 @@ class stable_vector
                           , node_ptr_traits::static_cast_from(pool_last_ref)
                           , internal_data.pool_size);
       this->internal_data.pool_size = ch.size();
-      const std::pair<node_ptr, node_ptr> ret(ch.extract_data());
+      const typename multiallocation_chain::pointer_pair ret(ch.extract_data());
       pool_first_ref = ret.first;
       pool_last_ref  = ret.second;
    }
@@ -2057,7 +2057,7 @@ class stable_vector
          pool_first_ref = pool_last_ref = node_ptr();
       }
       else{
-         const std::pair<node_ptr, node_ptr> data(holder.extract_data());
+         const typename multiallocation_chain::pointer_pair data(holder.extract_data());
          pool_first_ref = data.first;
          pool_last_ref  = data.second;
       }
