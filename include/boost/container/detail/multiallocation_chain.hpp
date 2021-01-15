@@ -31,6 +31,7 @@
 // intrusive
 #include <boost/intrusive/slist.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
+#include <boost/intrusive/detail/minimal_pair_header.hpp>
 // move
 #include <boost/move/utility_core.hpp>
 
