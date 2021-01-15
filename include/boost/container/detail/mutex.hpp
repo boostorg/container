@@ -74,19 +74,7 @@
    //...
 #elif BOOST_MUTEX_HELPER == BOOST_MUTEX_HELPER_SPINLOCKS
    #if defined(_MSC_VER)
-      #ifndef _M_AMD64
-         /* These are already defined on AMD64 builds */
-         #ifdef __cplusplus
-            extern "C" {
-         #endif /* __cplusplus */
-            long __cdecl _InterlockedCompareExchange(long volatile *Dest, long Exchange, long Comp);
-            long __cdecl _InterlockedExchange(long volatile *Target, long Value);
-         #ifdef __cplusplus
-            }
-         #endif /* __cplusplus */
-      #endif /* _M_AMD64 */
-      #pragma intrinsic (_InterlockedCompareExchange)
-      #pragma intrinsic (_InterlockedExchange)
+      #include <boost/detail/interlocked.hpp>
       #define interlockedcompareexchange _InterlockedCompareExchange
       #define interlockedexchange        _InterlockedExchange
    #elif defined(WIN32) && defined(__GNUC__)
