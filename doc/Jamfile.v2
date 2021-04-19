@@ -33,6 +33,7 @@ doxygen autodoc
                                    \"BOOST_CONTAINER_SEEDOC(T)=see_documentation\" \\
                                    \"BOOST_NOEXCEPT_OR_NOTHROW=noexcept\" \\
                                    \"BOOST_NOEXCEPT_IF(T)=noexcept(T)\" \\
+                                   \"BOOST_NOEXCEPT=noexcept\" \\
                                    \"BOOST_RV_REF(T)=T&&\" \\
                                    \"BOOST_RV_REF_BEG=\" \\
                                    \"BOOST_RV_REF_END=&&\" \\
