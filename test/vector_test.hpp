@@ -55,13 +55,13 @@ struct vector_hash_function_capacity
 };
 
 template<class V1, class V2>
-bool vector_vector_hash_function_capacity_only(V1&, V2&, boost::container::dtl::false_type)
+bool vector_capacity_test(V1&, V2&, boost::container::dtl::false_type)
 {
    return true;
 }
 
 template<class MyBoostVector, class MyStdVector>
-bool vector_vector_hash_function_capacity_only(MyBoostVector&boostvector, MyStdVector&stdvector, boost::container::dtl::true_type)
+bool vector_capacity_test(MyBoostVector&boostvector, MyStdVector&stdvector, boost::container::dtl::true_type)
 {
    //deque has no reserve
    boostvector.reserve(boostvector.size()*2);
@@ -496,7 +496,7 @@ int vector_test()
          if(!test::CheckEqualContainers(boostvector, stdvector)) return 1;
       }
    
-      if(!vector_vector_hash_function_capacity_only(boostvector, stdvector, dtl::bool_<vector_hash_function_capacity<MyBoostVector>::value>()))
+      if(!vector_capacity_test(boostvector, stdvector, dtl::bool_<vector_hash_function_capacity<MyBoostVector>::value>()))
          return 1;
 
       boostvector.clear();
