@@ -194,7 +194,25 @@ bool test_merge_empty_free()
    vector< int, check_dealloc_allocator<int> > empty;
    empty.merge(source.begin(), source.end());
 
-   return empty.get_stored_allocator().deallocate_called_without_allocate_;
+   return !empty.get_stored_allocator().deallocate_called_without_allocate_;
+}
+
+#ifdef __cpp_lib_span
+#include <span>
+#endif
+
+bool test_span_conversion()
+{
+   #ifdef __cpp_lib_span
+   {
+      boost::container::vector myVec{1, 2, 3, 4, 5};
+      std::span mySpan1{myVec};                                        // (1)
+      std::span mySpan2{myVec.data(), myVec.size()};                   // (2)
+      return mySpan1.size() == myVec.size() && mySpan1.size() == mySpan2.size();
+   }
+   #else
+   return true;
+   #endif
 }
 
 int main()
@@ -331,8 +349,13 @@ int main()
    }
 #endif
 
-   if (test_merge_empty_free()) {
+   if (!test_merge_empty_free()) {
       std::cerr << "Merge into empty vector test failed" << std::endl;
+      return 1;
+   }
+
+   if (!test_span_conversion()) {
+      std::cerr << "Span conversion failed" << std::endl;
       return 1;
    }
 
