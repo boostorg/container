@@ -47,7 +47,7 @@ typedef std::runtime_error runtime_error_t;
 namespace boost {
 namespace container {
 
-class BOOST_SYMBOL_EXPORT exception
+class BOOST_SYMBOL_VISIBLE exception
    : public ::std::exception
 {
    typedef ::std::exception std_exception_t;
@@ -66,7 +66,7 @@ class BOOST_SYMBOL_EXPORT exception
    const char *m_msg;
 };
 
-class BOOST_SYMBOL_EXPORT bad_alloc
+class BOOST_SYMBOL_VISIBLE bad_alloc
    : public exception
 {
    public:
@@ -77,7 +77,7 @@ class BOOST_SYMBOL_EXPORT bad_alloc
 
 typedef bad_alloc bad_alloc_t;
 
-class BOOST_SYMBOL_EXPORT out_of_range
+class BOOST_SYMBOL_VISIBLE out_of_range
    : public exception
 {
    public:
@@ -88,7 +88,7 @@ class BOOST_SYMBOL_EXPORT out_of_range
 
 typedef out_of_range out_of_range_t;
 
-class BOOST_SYMBOL_EXPORT length_error
+class BOOST_SYMBOL_VISIBLE length_error
    : public exception
 {
    public:
@@ -99,7 +99,7 @@ class BOOST_SYMBOL_EXPORT length_error
 
 typedef out_of_range length_error_t;
 
-class BOOST_SYMBOL_EXPORT logic_error
+class BOOST_SYMBOL_VISIBLE logic_error
    : public exception
 {
    public:
@@ -110,7 +110,7 @@ class BOOST_SYMBOL_EXPORT logic_error
 
 typedef logic_error logic_error_t;
 
-class BOOST_SYMBOL_EXPORT runtime_error
+class BOOST_SYMBOL_VISIBLE runtime_error
    : public exception
 {
    public:
