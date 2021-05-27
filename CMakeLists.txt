@@ -10,8 +10,6 @@ project(boost_container VERSION "${BOOST_SUPERPROJECT_VERSION}" LANGUAGES C CXX)
 add_library(boost_container
   src/alloc_lib.c
   src/dlmalloc.cpp
-  src/dlmalloc_2_8_6.c
-  src/dlmalloc_ext_2_8_6.c
   src/global_resource.cpp
   src/monotonic_buffer_resource.cpp
   src/pool_resource.cpp
