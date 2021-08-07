@@ -1260,6 +1260,15 @@ class tree
    BOOST_CONTAINER_FORCEINLINE size_type erase(const key_type& k)
    {  return AllocHolder::erase_key(k, KeyNodeCompare(key_comp()), alloc_version()); }
 
+   size_type erase_unique(const key_type& k)
+   {
+      iterator i = this->find(k);
+      size_type ret = static_cast<size_type>(i != this->end());
+      if (ret)
+         this->erase(i);
+      return ret;
+   }
+
    iterator erase(const_iterator first, const_iterator last)
    {
       BOOST_ASSERT(first == last || (first != this->cend() && (priv_is_linked)(first)));
