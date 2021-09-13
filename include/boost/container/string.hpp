@@ -95,31 +95,31 @@ class basic_string_base
    typedef typename allocator_traits_type::size_type   size_type;
    typedef ::boost::intrusive::pointer_traits<pointer> pointer_traits;
 
-   basic_string_base()
+   BOOST_CONTAINER_FORCEINLINE basic_string_base()
       : members_()
    {}
 
-   explicit basic_string_base(const allocator_type& a)
+   BOOST_CONTAINER_FORCEINLINE explicit basic_string_base(const allocator_type& a)
       : members_(a)
    {}
 
-   explicit basic_string_base(BOOST_RV_REF(allocator_type) a)
+   BOOST_CONTAINER_FORCEINLINE explicit basic_string_base(BOOST_RV_REF(allocator_type) a)
       :  members_(boost::move(a))
    {}
 
-   basic_string_base(const allocator_type& a, size_type n)
+   BOOST_CONTAINER_FORCEINLINE basic_string_base(const allocator_type& a, size_type n)
       : members_(a)
    {
       this->allocate_initial_block(n);
    }
 
-   explicit basic_string_base(size_type n)
+   BOOST_CONTAINER_FORCEINLINE explicit basic_string_base(size_type n)
       : members_()
    {
       this->allocate_initial_block(n);
    }
 
-   ~basic_string_base()
+   BOOST_CONTAINER_FORCEINLINE ~basic_string_base()
    {
       if(!this->is_short()){
          this->deallocate(this->priv_long_addr(), this->priv_long_storage());
@@ -136,15 +136,15 @@ class basic_string_base
       size_type      storage;
       pointer        start;
 
-      long_t()
+      BOOST_CONTAINER_FORCEINLINE long_t()
          : is_short(0)
       {}
 
-      long_t(size_type len, size_type stor, pointer ptr)
+      BOOST_CONTAINER_FORCEINLINE long_t(size_type len, size_type stor, pointer ptr)
          : is_short(0), length(len), storage(stor), start(ptr)
       {}
 
-      long_t(const long_t &other)
+      BOOST_CONTAINER_FORCEINLINE long_t(const long_t &other)
       {
          this->is_short = false;
          length   = other.length;
@@ -152,7 +152,7 @@ class basic_string_base
          start    = other.start;
       }
 
-      long_t &operator= (const long_t &other)
+      BOOST_CONTAINER_FORCEINLINE long_t &operator= (const long_t &other)
       {
          length   = other.length;
          storage  = other.storage;
@@ -208,41 +208,41 @@ class basic_string_base
    struct members_holder
       :  public allocator_type
    {
-      void init()
+      BOOST_CONTAINER_FORCEINLINE void init()
       {
          short_t &s = *::new(this->m_repr.data) short_t;
          s.h.is_short = 1;
          s.h.length = 0;
       }
 
-      members_holder()
+      BOOST_CONTAINER_FORCEINLINE members_holder()
          : allocator_type()
       { this->init(); }
 
       template<class AllocatorConvertible>
-      explicit members_holder(BOOST_FWD_REF(AllocatorConvertible) a)
+      BOOST_CONTAINER_FORCEINLINE explicit members_holder(BOOST_FWD_REF(AllocatorConvertible) a)
          :  allocator_type(boost::forward<AllocatorConvertible>(a))
       { this->init(); }
 
-      const short_t *pshort_repr() const
+      BOOST_CONTAINER_FORCEINLINE const short_t *pshort_repr() const
       {  return reinterpret_cast<const short_t*>(m_repr.data);  }
 
-      const long_t *plong_repr() const
+      BOOST_CONTAINER_FORCEINLINE const long_t *plong_repr() const
       {  return reinterpret_cast<const long_t*>(m_repr.data);  }
 
-      short_t *pshort_repr()
+      BOOST_CONTAINER_FORCEINLINE short_t *pshort_repr()
       {  return reinterpret_cast<short_t*>(m_repr.data);  }
 
-      long_t *plong_repr()
+      BOOST_CONTAINER_FORCEINLINE long_t *plong_repr()
       {  return reinterpret_cast<long_t*>(m_repr.data);  }
 
       repr_t m_repr;
    } members_;
 
-   const allocator_type &alloc() const
+   BOOST_CONTAINER_FORCEINLINE const allocator_type &alloc() const
    {  return members_;  }
 
-   allocator_type &alloc()
+   BOOST_CONTAINER_FORCEINLINE allocator_type &alloc()
    {  return members_;  }
 
    static const size_type InternalBufferChars = (sizeof(repr_t) - ShortDataOffset)/sizeof(value_type);
@@ -252,7 +252,7 @@ class basic_string_base
    static const size_type MinAllocation = InternalBufferChars*2;
 
    protected:
-   bool is_short() const
+   BOOST_CONTAINER_FORCEINLINE bool is_short() const
    {
       //Access and copy (to avoid UB) the first byte of the union to know if the
       //active representation is short or long
@@ -262,14 +262,14 @@ class basic_string_base
       return hdr.is_short != 0;
    }
 
-   short_t *construct_short()
+   BOOST_CONTAINER_FORCEINLINE short_t *construct_short()
    {
       short_t *ps = ::new(this->members_.m_repr.data) short_t;
       ps->h.is_short = 1;
       return ps;
    }
 
-   void destroy_short()
+   BOOST_CONTAINER_FORCEINLINE void destroy_short()
    {
       BOOST_ASSERT(this->is_short());
       this->members_.pshort_repr()->~short_t();
@@ -284,14 +284,14 @@ class basic_string_base
       return this->members_.pshort_repr();
    }
 
-   long_t *construct_long()
+   BOOST_CONTAINER_FORCEINLINE long_t *construct_long()
    {
       long_t *pl = ::new(this->members_.m_repr.data) long_t;
       //is_short flag is written in the constructor
       return pl;
    }
 
-   void destroy_long()
+   BOOST_CONTAINER_FORCEINLINE void destroy_long()
    {
       BOOST_ASSERT(!this->is_short());
       this->members_.plong_repr()->~long_t();
@@ -337,7 +337,7 @@ class basic_string_base
          this->alloc().deallocate(p, n);
    }
 
-   void construct(pointer p, const value_type &value = value_type())
+   BOOST_CONTAINER_FORCEINLINE void construct(pointer p, const value_type &value = value_type())
    {
       allocator_traits_type::construct
          ( this->alloc()
@@ -354,7 +354,7 @@ class basic_string_base
       }
    }
 
-   void destroy(pointer p)
+   BOOST_CONTAINER_FORCEINLINE void destroy(pointer p)
    {
       allocator_traits_type::destroy
          ( this->alloc()
@@ -381,17 +381,17 @@ class basic_string_base
       }
    }
 
-   void deallocate_block()
+   BOOST_CONTAINER_FORCEINLINE void deallocate_block()
    {  this->deallocate(this->priv_addr(), this->priv_storage());  }
 
-   size_type max_size() const
+   BOOST_CONTAINER_FORCEINLINE size_type max_size() const
    {  return allocator_traits_type::max_size(this->alloc()) - 1; }
 
    protected:
-   size_type priv_capacity() const
+   BOOST_CONTAINER_FORCEINLINE size_type priv_capacity() const
    { return this->priv_storage() - 1; }
 
-   pointer priv_short_addr() const
+   BOOST_CONTAINER_FORCEINLINE pointer priv_short_addr() const
    {  return pointer_traits::pointer_to(const_cast<value_type&>(this->members_.pshort_repr()->data[0]));  }
 
    //GCC seems a bit confused about uninitialized accesses
@@ -400,10 +400,10 @@ class basic_string_base
    #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
    #endif
 
-   pointer priv_long_addr() const
+   BOOST_CONTAINER_FORCEINLINE pointer priv_long_addr() const
    {  return this->members_.plong_repr()->start;  }
 
-   pointer priv_addr() const
+   BOOST_CONTAINER_FORCEINLINE pointer priv_addr() const
    {
       return this->is_short()
          ? priv_short_addr()
@@ -411,7 +411,7 @@ class basic_string_base
          ;
    }
 
-   pointer priv_end_addr() const
+   BOOST_CONTAINER_FORCEINLINE pointer priv_end_addr() const
    {
       return this->is_short()
          ? this->priv_short_addr() + this->priv_short_size()
@@ -419,39 +419,39 @@ class basic_string_base
          ;
    }
 
-   void priv_long_addr(pointer addr)
+   BOOST_CONTAINER_FORCEINLINE void priv_long_addr(pointer addr)
    {  this->members_.plong_repr()->start = addr;  }
 
-   size_type priv_storage() const
+   BOOST_CONTAINER_FORCEINLINE size_type priv_storage() const
    {  return this->is_short() ? priv_short_storage() : priv_long_storage();  }
 
-   size_type priv_short_storage() const
+   BOOST_CONTAINER_FORCEINLINE size_type priv_short_storage() const
    {  return InternalBufferChars;  }
 
-   size_type priv_long_storage() const
+   BOOST_CONTAINER_FORCEINLINE size_type priv_long_storage() const
    {  return this->members_.plong_repr()->storage;  }
 
-   void priv_storage(size_type storage)
+   BOOST_CONTAINER_FORCEINLINE void priv_storage(size_type storage)
    {
       if(!this->is_short())
          this->priv_long_storage(storage);
    }
 
-   void priv_long_storage(size_type storage)
+   BOOST_CONTAINER_FORCEINLINE void priv_long_storage(size_type storage)
    {
       this->members_.plong_repr()->storage = storage;
    }
 
-   size_type priv_size() const
+   BOOST_CONTAINER_FORCEINLINE size_type priv_size() const
    {  return this->is_short() ? this->priv_short_size() : this->priv_long_size();  }
 
-   size_type priv_short_size() const
+   BOOST_CONTAINER_FORCEINLINE size_type priv_short_size() const
    {  return this->members_.pshort_repr()->h.length;  }
 
-   size_type priv_long_size() const
+   BOOST_CONTAINER_FORCEINLINE size_type priv_long_size() const
    {  return this->members_.plong_repr()->length;  }
 
-   void priv_size(size_type sz)
+   BOOST_CONTAINER_FORCEINLINE void priv_size(size_type sz)
    {
       if(this->is_short())
          this->priv_short_size(sz);
@@ -459,10 +459,10 @@ class basic_string_base
          this->priv_long_size(sz);
    }
 
-   void priv_short_size(size_type sz)
+   BOOST_CONTAINER_FORCEINLINE void priv_short_size(size_type sz)
    {  this->members_.pshort_repr()->h.length = (unsigned char)sz; }
 
-   void priv_long_size(size_type sz)
+   BOOST_CONTAINER_FORCEINLINE void priv_long_size(size_type sz)
    {  this->members_.plong_repr()->length = sz;  }
 
    #if defined(BOOST_GCC) && (BOOST_GCC >= 40700)
@@ -1869,7 +1869,7 @@ class basic_string
    //!
    //! <b>Returns</b>: An iterator which refers to the copy of the first inserted
    //!   character, or p if i1 is empty.
-   iterator insert(const_iterator p, std::initializer_list<CharT> il)
+   BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator p, std::initializer_list<CharT> il)
    {
       return this->insert(p, il.begin(), il.end());
    }
@@ -1955,10 +1955,14 @@ class basic_string
    //! <b>Complexity</b>: Linear to the number of elements in the vector.
    void clear() BOOST_NOEXCEPT_OR_NOTHROW
    {
-      if (!this->empty()) {
-         Traits::assign(*this->priv_addr(), CharT(0));
-         this->priv_size(0);
-      }
+       if(this->is_short()) {
+           Traits::assign(*this->priv_short_addr(), CharT(0));
+           this->priv_short_size(0);
+       }
+       else {
+           Traits::assign(*this->priv_long_addr(), CharT(0));
+           this->priv_long_size(0);
+       }
    }
 
    //! <b>Requires</b>: pos1 <= size().
@@ -1984,7 +1988,7 @@ class basic_string
    //! <b>Effects</b>: Calls `return replace(pos1, n1, sv.data(), sv.size());`.
    //!
    template<template<class, class> class BasicStringView>
-   basic_string& replace(size_type pos1, size_type n1, BasicStringView<CharT, Traits> sv)
+   BOOST_CONTAINER_FORCEINLINE basic_string& replace(size_type pos1, size_type n1, BasicStringView<CharT, Traits> sv)
    {
       return this->replace(pos1, n1, sv.data(), sv.size());
    }
@@ -2061,7 +2065,7 @@ class basic_string
    //!   if the length of the resulting string would exceed max_size()
    //!
    //! <b>Returns</b>: *this
-   basic_string& replace(size_type pos, size_type n1, const CharT* s)
+   BOOST_CONTAINER_FORCEINLINE basic_string& replace(size_type pos, size_type n1, const CharT* s)
    {
       return this->replace(pos, n1, s, Traits::length(s));
    }
@@ -2092,7 +2096,7 @@ class basic_string
    //! <b>Throws</b>: if memory allocation throws
    //!
    //! <b>Returns</b>: *this
-   basic_string& replace(const_iterator i1, const_iterator i2, const basic_string& str)
+   BOOST_CONTAINER_FORCEINLINE basic_string& replace(const_iterator i1, const_iterator i2, const basic_string& str)
    { return this->replace(i1, i2, str.data(), str.data()+str.size()); }
 
    //! <b>Requires</b>: [begin(),i1) and [i1,i2) are valid ranges and
@@ -2103,7 +2107,7 @@ class basic_string
    //! <b>Throws</b>: if memory allocation throws
    //!
    //! <b>Returns</b>: *this
-   basic_string& replace(const_iterator i1, const_iterator i2, const CharT* s, size_type n)
+   BOOST_CONTAINER_FORCEINLINE basic_string& replace(const_iterator i1, const_iterator i2, const CharT* s, size_type n)
    { return this->replace(i1, i2, s, s + n); }
 
    //! <b>Requires</b>: [begin(),i1) and [i1,i2) are valid ranges and s points to an
@@ -2114,7 +2118,7 @@ class basic_string
    //! <b>Throws</b>: if memory allocation throws
    //!
    //! <b>Returns</b>: *this
-   basic_string& replace(const_iterator i1, const_iterator i2, const CharT* s)
+   BOOST_CONTAINER_FORCEINLINE basic_string& replace(const_iterator i1, const_iterator i2, const CharT* s)
    {  return this->replace(i1, i2, s, s + Traits::length(s));   }
 
    //! <b>Requires</b>: [begin(),i1) and [i1,i2) are valid ranges.
@@ -2199,7 +2203,7 @@ class basic_string
    //!
    //! <b>Returns</b>: *this.
    template<template <class, class> class BasicStringView>
-   basic_string& replace(const_iterator i1, const_iterator i2, BasicStringView<CharT, Traits> sv)
+   BOOST_CONTAINER_FORCEINLINE basic_string& replace(const_iterator i1, const_iterator i2, BasicStringView<CharT, Traits> sv)
    {
       return this->replace( static_cast<size_type>(i1 - this->cbegin())
                           , static_cast<size_type>(i2 - i1), sv);
@@ -2211,7 +2215,7 @@ class basic_string
    //! <b>Effects</b>: Calls replace(i1 - begin(), i2 - i1, il.begin(), il.size()).
    //!
    //! <b>Returns</b>: *this.
-   basic_string& replace(const_iterator i1, const_iterator i2, std::initializer_list<CharT> il)
+   BOOST_CONTAINER_FORCEINLINE basic_string& replace(const_iterator i1, const_iterator i2, std::initializer_list<CharT> il)
    {
       return this->replace( static_cast<size_type>(i1 - this->cbegin())
                           , static_cast<size_type>(i2 - i1)
@@ -2288,7 +2292,7 @@ class basic_string
    //!
    //! <b>Complexity</b>: constant time.
    template<template <class, class> class BasicStringView>
-   operator BasicStringView<CharT, Traits>() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_FORCEINLINE operator BasicStringView<CharT, Traits>() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->to_view< BasicStringView<CharT, Traits> >(); }
    #endif
 
@@ -3026,17 +3030,17 @@ class basic_string
          Traits::assign(*result, *first);
    }
 
-   void priv_copy(const CharT* first, const CharT* last, CharT* result)
+   BOOST_CONTAINER_FORCEINLINE void priv_copy(const CharT* first, const CharT* last, CharT* result)
    {  Traits::copy(result, first, last - first);  }
 
    template <class Integer>
-   basic_string& priv_replace_dispatch(const_iterator first, const_iterator last,
+   BOOST_CONTAINER_FORCEINLINE basic_string& priv_replace_dispatch(const_iterator first, const_iterator last,
                                        Integer n, Integer x,
                                        dtl::true_)
    {  return this->replace(first, last, (size_type) n, (CharT) x);   }
 
    template <class InputIter>
-   basic_string& priv_replace_dispatch(const_iterator first, const_iterator last,
+   BOOST_CONTAINER_FORCEINLINE basic_string& priv_replace_dispatch(const_iterator first, const_iterator last,
                                        InputIter f, InputIter l,
                                        dtl::false_)
    {
