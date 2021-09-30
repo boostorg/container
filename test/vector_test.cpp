@@ -19,6 +19,7 @@
 
 #include <boost/container/vector.hpp>
 #include <boost/container/allocator.hpp>
+#include <boost/type_traits/is_detected.hpp>
 
 #include <boost/move/utility_core.hpp>
 #include "check_equal_containers.hpp"
@@ -32,6 +33,18 @@
 #include "../../intrusive/test/iterator_test.hpp"
 
 using namespace boost::container;
+
+template<class T>
+using type_it_concept = typename T::iterator_concept;
+
+int test_iterator_concept_detected()
+{
+   return
+   #ifdef __cpp_lib_ranges
+      !
+   #endif
+   boost::is_detected_v<type_it_concept, vec_iterator<char *, true>>;
+}
 
 int test_expand_bwd()
 {
@@ -271,6 +284,9 @@ int main()
    }
 
    if (test_smart_ref_type())
+      return 1;
+
+   if (test_iterator_concept_detected())
       return 1;
 
    ////////////////////////////////////

@@ -65,6 +65,7 @@
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>
+#include <iterator>
 
 //std
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -82,7 +83,9 @@ class vec_iterator
 {
    public:
    typedef std::random_access_iterator_tag                                          iterator_category;
+   #ifdef __cpp_lib_ranges
    typedef std::contiguous_iterator_tag                                             iterator_concept;
+   #endif
    typedef typename boost::intrusive::pointer_traits<Pointer>::element_type         value_type;
 
    //Defining element_type to make libstdc++'s std::pointer_traits well-formed leads to ambiguity
