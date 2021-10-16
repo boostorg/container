@@ -147,13 +147,13 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
                   << ";"
                   << capacity
                   << ";"
-                  << float(nseconds)/(num_iterations*num_elements)
+                  << float(nseconds)/float(num_iterations*num_elements)
                   << ";"
-                  << (float(numalloc) + float(numexpand))/num_iterations
+                  << (float(numalloc) + float(numexpand))/float(num_iterations)
                   << ";"
-                  << float(numalloc)/num_iterations
+                  << float(numalloc)/float(num_iterations)
                   << ";"
-                  << float(numexpand)/num_iterations
+                  << float(numexpand)/float(num_iterations)
                   << std::endl;
    }
    else{
@@ -161,12 +161,12 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
                   << "Allocator: " << get_allocator_name<Allocator>::get()
                   << std::endl
                   << "  push_back ns:              "
-                  << float(nseconds)/(num_iterations*num_elements)
+                  << float(nseconds)/float(num_iterations*num_elements)
                   << std::endl
                   << "  capacity  -  alloc calls (new/expand):  "
                      << (unsigned int)capacity << "  -  "
-                     << (float(numalloc) + float(numexpand))/num_iterations
-                     << "(" << float(numalloc)/num_iterations << "/" << float(numexpand)/num_iterations << ")"
+                     << (float(numalloc) + float(numexpand))/float(num_iterations)
+                     << "(" << float(numalloc)/float(num_iterations) << "/" << float(numexpand)/float(num_iterations) << ")"
                   << std::endl;
       std::cout   << '\n'
                   << "    -----------------------------------    "

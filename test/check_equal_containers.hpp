@@ -69,11 +69,11 @@ bool CheckEqualContainers(const ContA &cont_a, const ContB &cont_b)
 
    typename ContA::const_iterator itcont_a(cont_a.begin()), itcont_a_end(cont_a.end());
    typename ContB::const_iterator itcont_b(cont_b.begin()), itcont_b_end(cont_b.end());;
-   typename ContB::size_type dist = (typename ContB::size_type)boost::container::iterator_distance(itcont_a, itcont_a_end);
+   typename ContB::size_type dist = boost::container::iterator_udistance(itcont_a, itcont_a_end);
    if(dist != cont_a.size()){
       return false;
    }
-   typename ContA::size_type dist2 = (typename ContA::size_type)boost::container::iterator_distance(itcont_b, itcont_b_end);
+   typename ContA::size_type dist2 = boost::container::iterator_udistance(itcont_b, itcont_b_end);
    if(dist2 != cont_b.size()){
       return false;
    }

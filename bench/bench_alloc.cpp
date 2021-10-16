@@ -120,12 +120,12 @@ void allocation_timing_test(unsigned int num_iterations, unsigned int num_elemen
       std::cout   << "  Malloc type:               " << malloc_name
                   << std::endl
                   << "  allocation ns:             "
-                  << float(nseconds)/(num_iterations*num_elements)
+                  << float(nseconds)/float(num_iterations*num_elements)
                   << std::endl
                   << "  capacity  -  alloc calls (new/expand):  "
                      << (unsigned int)capacity << "  -  "
-                     << (float(numalloc) + float(numexpand))/num_iterations
-                     << "(" << float(numalloc)/num_iterations << "/" << float(numexpand)/num_iterations << ")"
+                     << (float(numalloc) + float(numexpand))/float(num_iterations)
+                     << "(" << float(numalloc)/float(num_iterations) << "/" << float(numexpand)/float(num_iterations) << ")"
                   << std::endl << std::endl;
       dlmalloc_trim(0);
    }

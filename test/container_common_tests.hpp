@@ -29,6 +29,8 @@ bool test_nth_index_of(Container &c)
    typename Container::iterator it;
    typename Container::const_iterator cit;
    typename Container::size_type sz, csz;
+   typedef typename Container::difference_type difference_type;
+
    //index 0
    it = c.nth(0);
    sz = c.index_of(it);
@@ -51,9 +53,9 @@ bool test_nth_index_of(Container &c)
    cit = (as_const)(c).nth(sz_div_2);
    csz = (as_const)(c).index_of(cit);
 
-   if(it != (c.begin()+sz_div_2))
+   if(it != (c.begin()+difference_type(sz_div_2)))
       return false;
-   if(cit != (c.cbegin()+sz_div_2))
+   if(cit != (c.cbegin()+difference_type(sz_div_2)))
       return false;
    if(sz != sz_div_2)
       return false;

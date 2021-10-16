@@ -128,7 +128,7 @@ void test_equal_range(const C& a, std::initializer_list<unsigned> il)
 
   for (auto&& elem : il)
   {
-    b.emplace_back(elem);
+    b.emplace_back((int)elem);
   }
 
   test_equal_range(a, b);

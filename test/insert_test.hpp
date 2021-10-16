@@ -26,13 +26,13 @@ void
     BOOST_TEST(CheckEqualContainers(std_deque, seq_container));
 
     std_deque.insert(
-        std_deque.begin() + index
+        std_deque.begin() + std::ptrdiff_t(index)
       , input_deque.begin()
       , input_deque.end()
     );
 
     seq_container.insert(
-        seq_container.begin() + index
+        seq_container.begin() + std::ptrdiff_t(index)
       , input_deque.begin()
       , input_deque.end()
     );

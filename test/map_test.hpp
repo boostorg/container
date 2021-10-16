@@ -108,17 +108,19 @@ int map_test_copyable(boost::container::dtl::true_type)
    boostmap.clear();
    boostmultimap.clear();
    stdmultimap.clear();
+
    //Now try from convertible pair
    for(i = 0; i < MaxElem; ++i){
       {
-      boostmap.insert(std::pair<unsigned, unsigned>(i, i));
+      boostmap.insert(std::pair<signed short, signed short>((signed short)i, (signed short)i));
       stdmap.insert(StdPairType(i, i));
       }
       {
-      boostmultimap.insert(std::pair<unsigned, unsigned>(i, i));
+      boostmultimap.insert(std::pair<signed short, signed short>((signed short)i, (signed short)i));
       stdmultimap.insert(StdPairType(i, i));
       }
    }
+
    if(!CheckEqualContainers(boostmap, stdmap)) return 1;
    if(!CheckEqualContainers(boostmultimap, stdmultimap)) return 1;
 
@@ -692,8 +694,8 @@ int map_test_insert2(MyBoostMap &boostmap, MyStdMap &stdmap, MyBoostMultiMap &bo
          std::pair<typename MyStdMultiMap::iterator, typename MyStdMultiMap::iterator>   sret =
             stdmultimap.equal_range(stdmultimap.begin()->first);
 
-         if( boost::container::iterator_distance(bret.first, bret.second) !=
-               boost::container::iterator_distance(sret.first, sret.second) ){
+         if( boost::container::iterator_udistance(bret.first, bret.second) !=
+               boost::container::iterator_udistance(sret.first, sret.second) ){
             return 1;
          }
       }

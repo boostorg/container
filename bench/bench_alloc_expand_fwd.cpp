@@ -151,12 +151,12 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
                << "Allocator: " << typeid(typename Container::allocator_type).name()
                << std::endl
                << "  push_back ns:              "
-               << float(nseconds)/(num_iterations*num_elements)
+               << float(nseconds)/float(num_iterations*num_elements)
                << std::endl
                << "  capacity  -  alloc calls (new/expand):  "
                   << (unsigned int)capacity << "  -  "
-                  << (float(numalloc) + float(numexpand))/num_iterations
-                  << "(" << float(numalloc)/num_iterations << "/" << float(numexpand)/num_iterations << ")"
+                  << (float(numalloc) + float(numexpand))/float(num_iterations)
+                  << "(" << float(numalloc)/float(num_iterations) << "/" << float(numexpand)/float(num_iterations) << ")"
                << std::endl << std::endl;
    bc::dlmalloc_trim(0);
 }

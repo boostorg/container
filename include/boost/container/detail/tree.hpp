@@ -711,7 +711,7 @@ class tree
    {
       //Optimized allocation and construction
       this->allocate_many_and_construct
-         ( first, boost::container::iterator_distance(first, last)
+         ( first, boost::container::iterator_udistance(first, last)
          , insert_equal_end_hint_functor<Node, Icont>(this->icont()));
    }
 
@@ -728,7 +728,7 @@ class tree
    {
       //Optimized allocation and construction
       this->allocate_many_and_construct
-         ( first, boost::container::iterator_distance(first, last)
+         ( first, boost::container::iterator_udistance(first, last)
          , dtl::push_back_functor<Node, Icont>(this->icont()));
       //AllocHolder clears in case of exception
    }

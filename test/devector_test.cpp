@@ -1722,7 +1722,7 @@ template <class Devector> void test_reserve_front()
   Devector a;
 
   a.reserve_front(100);
-  for (unsigned i = 0; i < 100u; ++i)
+  for (int i = 0; i < 100; ++i)
   {
     a.push_front(value_type(i));
   }
@@ -1742,7 +1742,7 @@ template <class Devector> void test_reserve_back()
   Devector a;
   typedef typename Devector::value_type value_type;
   a.reserve_back(100);
-  for (unsigned i = 0; i < 100; ++i)
+  for (int i = 0; i < 100; ++i)
   {
     a.push_back(value_type(i));
   }
@@ -1760,19 +1760,20 @@ template <class Devector> void test_reserve_back()
 template <typename Devector>
 void test_shrink_to_fit_always()
 {
+   typedef typename Devector::value_type value_type;
    Devector a;
-   a.reserve(100);
+   a.reserve(100u);
 
-   a.push_back(1);
-   a.push_back(2);
-   a.push_back(3);
+   a.push_back(value_type(1));
+   a.push_back(value_type(2));
+   a.push_back(value_type(3));
 
    a.shrink_to_fit();
 
    boost::container::vector<unsigned> expected;
-   expected.push_back(1);
-   expected.push_back(2);
-   expected.push_back(3);
+   expected.push_back(1u);
+   expected.push_back(2u);
+   expected.push_back(3u);
    test_equal_range(a, expected);
 
    std::size_t exp_capacity = 3u;

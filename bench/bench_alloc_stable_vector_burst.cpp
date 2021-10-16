@@ -123,7 +123,7 @@ void stable_vector_test_template(unsigned int num_iterations, unsigned int num_e
                         << ";"
                         << num_elements
                         << ";"
-                        << float(nseconds)/(num_iterations*num_elements)
+                        << float(nseconds)/float(num_iterations*num_elements)
                         << ";";
          }
          else{
@@ -132,7 +132,7 @@ void stable_vector_test_template(unsigned int num_iterations, unsigned int num_e
                         << GetContainer<Allocator>::vector_name()
                         << std::endl
                         << "  allocation ns:   "
-                        << float(nseconds)/(num_iterations*num_elements);
+                        << float(nseconds)/float(num_iterations*num_elements);
          }
 //         top_capacity = l.capacity();
          //Now preprocess ranges to erase
@@ -160,13 +160,13 @@ void stable_vector_test_template(unsigned int num_iterations, unsigned int num_e
    }
 
    if(csv_output){
-      std::cout      << float(nseconds)/(num_iterations*num_elements)
+      std::cout      << float(nseconds)/float(num_iterations*num_elements)
                      << std::endl;
    }
    else{
       std::cout      << '\t'
                      << "  deallocation ns: "
-                     << float(nseconds)/(num_iterations*num_elements)/*
+                     << float(nseconds)/float(num_iterations*num_elements)/*
                      << std::endl
                      << "  max capacity:    "
                      << static_cast<unsigned int>(top_capacity)

@@ -198,7 +198,7 @@ void test_pop_back_nd()
 template <typename It1, typename It2>
 void test_compare_ranges(It1 first1, It1 last1, It2 first2, It2 last2)
 {
-   BOOST_TEST(boost::container::iterator_distance(first1, last1) == boost::container::iterator_distance(first2, last2));
+   BOOST_TEST(boost::container::iterator_udistance(first1, last1) == boost::container::iterator_udistance(first2, last2));
    for ( ; first1 != last1 && first2 != last2 ; ++first1, ++first2 )
       BOOST_TEST(*first1 == *first2);
 }
@@ -290,6 +290,7 @@ void test_erase_nd()
 {
    static_vector<T, N> s;
    typedef typename static_vector<T, N>::iterator It;
+   typedef typename static_vector<T, N>::difference_type dif_t;
 
    for ( size_t i = 0 ; i < N ; ++i )
       s.push_back(T((int)i));
@@ -299,8 +300,8 @@ void test_erase_nd()
       for ( size_t i = 0 ; i < N ; ++i )
       {
           static_vector<T, N> s1(s);
-          It it = s1.erase(s1.begin() + i);
-          BOOST_TEST(s1.begin() + i == it);
+          It it = s1.erase(s1.begin() + dif_t(i));
+          BOOST_TEST(s1.begin() + dif_t(i) == it);
           BOOST_TEST(s1.size() == N - 1);
           for ( size_t j = 0 ; j < i ; ++j )
               BOOST_TEST(s1[j] == T((int)j));
@@ -315,8 +316,8 @@ void test_erase_nd()
       {
           static_vector<T, N> s1(s);
           size_t removed = i + n < N ? n : N - i;
-          It it = s1.erase(s1.begin() + i, s1.begin() + i + removed);
-          BOOST_TEST(s1.begin() + i == it);
+          It it = s1.erase(s1.begin() + dif_t(i), s1.begin() + dif_t(i + removed));
+          BOOST_TEST(s1.begin() + dif_t(i) == it);
           BOOST_TEST(s1.size() == N - removed);
           for ( size_t j = 0 ; j < i ; ++j )
               BOOST_TEST(s1[j] == T((int)j));
@@ -330,18 +331,19 @@ template <typename T, size_t N, typename SV, typename C>
 void test_insert(SV const& s, C const& c)
 {
    size_t h = N/2;
-   size_t n = size_t(h/1.5f);
+   size_t n = size_t(float(h)/1.5f);
+   typedef typename static_vector<T, N>::difference_type dif_t;
 
    for ( size_t i = 0 ; i <= h ; ++i )
    {
       static_vector<T, N> s1(s);
 
       typename C::const_iterator it = c.begin();
-      boost::container::iterator_advance(it, n);
+      boost::container::iterator_uadvance(it, n);
       typename static_vector<T, N>::iterator
-          it1 = s1.insert(s1.begin() + i, c.begin(), it);
+          it1 = s1.insert(s1.begin() + dif_t(i), c.begin(), it);
 
-      BOOST_TEST(s1.begin() + i == it1);
+      BOOST_TEST(s1.begin() + dif_t(i) == it1);
       BOOST_TEST(s1.size() == h+n);
       for ( size_t j = 0 ; j < i ; ++j )
           BOOST_TEST(s1[j] == T((int)j));
@@ -362,6 +364,7 @@ void test_insert_nd(T const& val)
    list<T> l;
 
    typedef typename static_vector<T, N>::iterator It;
+   typedef typename static_vector<T, N>::difference_type dif_t;
 
    for ( size_t i = 0 ; i < h ; ++i )
    {
@@ -376,8 +379,8 @@ void test_insert_nd(T const& val)
       for ( size_t i = 0 ; i <= h ; ++i )
       {
           static_vector<T, N> s1(s);
-          It it = s1.insert(s1.begin() + i, val);
-          BOOST_TEST(s1.begin() + i == it);
+          It it = s1.insert(s1.begin() + dif_t(i), val);
+          BOOST_TEST(s1.begin() + dif_t(i) == it);
           BOOST_TEST(s1.size() == h+1);
           for ( size_t j = 0 ; j < i ; ++j )
               BOOST_TEST(s1[j] == T((int)j));
@@ -388,12 +391,12 @@ void test_insert_nd(T const& val)
    }
    // insert(pos, n, val)
    {
-      size_t n = size_t(h/1.5f);
+      size_t n = size_t(float(h)/1.5f);
       for ( size_t i = 0 ; i <= h ; ++i )
       {
           static_vector<T, N> s1(s);
-          It it = s1.insert(s1.begin() + i, n, val);
-          BOOST_TEST(s1.begin() + i == it);
+          It it = s1.insert(s1.begin() + dif_t(i), n, val);
+          BOOST_TEST(s1.begin() + dif_t(i) == it);
           BOOST_TEST(s1.size() == h+n);
           for ( size_t j = 0 ; j < i ; ++j )
               BOOST_TEST(s1[j] == T((int)j));
@@ -571,18 +574,19 @@ void test_emplace_2p()
    {
       static_vector<T, N> v;
 
-      for (int i = 0 ; i < int(N) ; ++i )
+      for (int i = 0 ; i < (int)N ; ++i )
           v.emplace_back(i, 100 + i);
       BOOST_TEST(v.size() == N);
       BOOST_TEST_THROWS(v.emplace_back((int)N, 100 + (int)N), bad_alloc_t);
       BOOST_TEST(v.size() == N);
-      for (int i = 0 ; i < int(N) ; ++i )
-          BOOST_TEST(v[i] == T(i, 100 + i));
+      for (int i = 0 ; i < (int)N ; ++i )
+          BOOST_TEST(v[std::size_t(i)] == T(i, 100 + i));
    }
 
    // emplace(pos, int, int)
    {
       typedef typename static_vector<T, N>::iterator It;
+      typedef typename static_vector<T, N>::difference_type dif_t;
 
       int h = N / 2;
 
@@ -593,14 +597,14 @@ void test_emplace_2p()
       for ( int i = 0 ; i <= h ; ++i )
       {
           static_vector<T, N> vv(v);
-          It it = vv.emplace(vv.begin() + i, i+100, i+200);
-          BOOST_TEST(vv.begin() + i == it);
+          It it = vv.emplace(vv.begin() + dif_t(i), i+100, i+200);
+          BOOST_TEST(vv.begin() + dif_t(i) == it);
           BOOST_TEST(vv.size() == size_t(h+1));
           for ( int j = 0 ; j < i ; ++j )
-              BOOST_TEST(vv[j] == T(j, j+100));
-          BOOST_TEST(vv[i] == T(i+100, i+200));
+              BOOST_TEST(vv[std::size_t(j)] == T(j, j+100));
+          BOOST_TEST(vv[std::size_t(i)] == T(i+100, i+200));
           for ( int j = 0 ; j < h-i ; ++j )
-              BOOST_TEST(vv[j+i+1] == T(j+i, j+i+100));
+              BOOST_TEST(vv[std::size_t(j+i+1)] == T(j+i, j+i+100));
       }
    }
 }

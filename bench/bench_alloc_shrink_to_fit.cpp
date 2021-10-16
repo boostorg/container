@@ -114,7 +114,7 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
                   << ";"
                   << num_shrink
                   << ";"
-                  << float(nseconds)/(num_iterations*num_elements)
+                  << float(nseconds)/float(num_iterations*num_elements)
                   << std::endl;
    }
    else{
@@ -124,7 +124,7 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
                   << "  num_shrink:         " << num_shrink
                   << std::endl
                   << "  shrink_to_fit ns:   "
-                  << float(nseconds)/(num_iterations*num_elements)
+                  << float(nseconds)/float(num_iterations*num_elements)
                   << std::endl << std::endl;
    }
    bc::dlmalloc_trim(0);

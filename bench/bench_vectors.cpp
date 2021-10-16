@@ -241,7 +241,7 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements, 
    nanosecond_type nseconds = timer.elapsed().wall;
 
    std::cout   << cont_name << "->" << op.name() <<" ns: "
-               << float(nseconds)/(num_iterations*num_elements)
+               << float(nseconds)/float(num_iterations*num_elements)
                << '\t'
                << "Capacity: " << capacity
                << "\n";

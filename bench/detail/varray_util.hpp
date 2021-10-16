@@ -175,7 +175,7 @@ template <typename I, typename O>
 inline O copy_dispatch(I first, I last, O dst, bcd::true_type const& /*use_memmove*/)
 {
    typedef typename ::boost::container::iterator_traits<I>::value_type value_type;
-   const std::size_t d = boost::container::iterator_distance(first, last);
+   const std::size_t d = boost::container::iterator_udistance(first, last);
    ::memmove(boost::container::dtl::addressof(*dst), boost::container::dtl::addressof(*first), sizeof(value_type) * d);
    return dst + d;
 }
@@ -205,7 +205,7 @@ O uninitialized_copy_dispatch(I first, I last, O dst,
                               bcd::true_type const& /*use_memcpy*/)
 {
    typedef typename ::boost::container::iterator_traits<I>::value_type value_type;
-   const std::size_t d = boost::container::iterator_distance(first, last);
+   const std::size_t d = boost::container::iterator_udistance(first, last);
    ::memcpy(boost::container::dtl::addressof(*dst), boost::container::dtl::addressof(*first), sizeof(value_type) * d);
    return dst + d;
 }
@@ -237,7 +237,7 @@ O uninitialized_move_dispatch(I first, I last, O dst,
                               bcd::true_type const& /*use_memcpy*/)
 {
    typedef typename ::boost::container::iterator_traits<I>::value_type value_type;
-   const std::size_t d = boost::container::iterator_distance(first, last);
+   const std::size_t d = boost::container::iterator_udistance(first, last);
    ::memcpy(boost::container::dtl::addressof(*dst), boost::container::dtl::addressof(*first), sizeof(value_type) * d);
    return dst + d;
 }
@@ -288,7 +288,7 @@ O move_dispatch(I first, I last, O dst,
                 bcd::true_type const& /*use_memmove*/)
 {
    typedef typename ::boost::container::iterator_traits<I>::value_type value_type;
-   const std::size_t d = boost::container::iterator_distance(first, last);
+   const std::size_t d = boost::container::iterator_udistance(first, last);
    ::memmove(boost::container::dtl::addressof(*dst), boost::container::dtl::addressof(*first), sizeof(value_type)*d );
    return dst + d;
 }
@@ -320,7 +320,7 @@ BDO move_backward_dispatch(BDI first, BDI last, BDO dst,
                            bcd::true_type const& /*use_memmove*/)
 {
     typedef typename ::boost::container::iterator_traits<BDI>::value_type value_type;
-    const std::size_t d = boost::container::iterator_distance(first, last);
+    const std::size_t d = boost::container::iterator_udistance(first, last);
     BDO foo(dst - d);
     ::memmove(boost::container::dtl::addressof(*foo), boost::container::dtl::addressof(*first), sizeof(value_type) * d);
     return foo;

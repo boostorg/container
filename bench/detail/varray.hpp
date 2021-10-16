@@ -1617,7 +1617,7 @@ private:
     //   Linear O(N).
     void swap_dispatch_impl(iterator first_sm, iterator last_sm, iterator first_la, iterator last_la, true_type const& /*use_memop*/)
     {
-        //BOOST_ASSERT_MSG(boost::container::iterator_distance(first_sm, last_sm) <= boost::container::iterator_distance(first_la, last_la));
+        //BOOST_ASSERT_MSG(boost::container::iterator_udistance(first_sm, last_sm) <= boost::container::iterator_udistance(first_la, last_la));
 
         namespace sv = varray_detail;
         for (; first_sm != last_sm ; ++first_sm, ++first_la)
@@ -1632,7 +1632,7 @@ private:
             ::memcpy((addressof)(*first_la), temp_ptr, sizeof(value_type));
         }
 
-        ::memcpy(first_sm, first_la, sizeof(value_type) * boost::container::iterator_distance(first_la, last_la));
+        ::memcpy(first_sm, first_la, sizeof(value_type) * boost::container::iterator_udistance(first_la, last_la));
     }
 
     // @par Throws
@@ -1641,7 +1641,7 @@ private:
     //   Linear O(N).
     void swap_dispatch_impl(iterator first_sm, iterator last_sm, iterator first_la, iterator last_la, false_type const& /*use_memop*/)
     {
-        //BOOST_ASSERT_MSG(boost::container::iterator_distance(first_sm, last_sm) <= boost::container::iterator_distance(first_la, last_la));
+        //BOOST_ASSERT_MSG(boost::container::iterator_udistance(first_sm, last_sm) <= boost::container::iterator_udistance(first_la, last_la));
 
         namespace sv = varray_detail;
         for (; first_sm != last_sm ; ++first_sm, ++first_la)
@@ -1704,7 +1704,7 @@ private:
     {
         errh::check_iterator_end_eq(*this, position);
 
-        size_type count = boost::container::iterator_distance(first, last);
+        size_type count = boost::container::iterator_udistance(first, last);
 
         errh::check_capacity(*this, m_size + count);                                             // may throw
 
@@ -1736,16 +1736,16 @@ private:
         {
             namespace sv = varray_detail;
 
-            std::ptrdiff_t d = boost::container::iterator_distance(position, this->begin() + Capacity);
+            std::size_t d = boost::container::iterator_udistance(position, this->begin() + Capacity);
             std::size_t count = sv::uninitialized_copy_s(first, last, position, d);                     // may throw
 
-            errh::check_capacity(*this, count <= static_cast<std::size_t>(d) ? m_size + count : Capacity + 1);  // may throw
+            errh::check_capacity(*this, count <= d ? m_size + count : Capacity + 1);  // may throw
 
             m_size += count;
         }
         else
         {
-            size_type count = boost::container::iterator_distance(first, last);
+            size_type count = boost::container::iterator_udistance(first, last);
 
             errh::check_capacity(*this, m_size + count);                                                // may throw
 
@@ -1799,7 +1799,7 @@ private:
     {
         namespace sv = varray_detail;
 
-        size_type s = boost::container::iterator_distance(first, last);
+        size_type s = boost::container::iterator_udistance(first, last);
 
         errh::check_capacity(*this, s);                                     // may throw
 
@@ -1835,11 +1835,11 @@ private:
 
         sv::destroy(it, this->end());
 
-        std::ptrdiff_t d = boost::container::iterator_distance(it, this->begin() + Capacity);
+        std::size_t d = boost::container::iterator_udistance(it, this->begin() + Capacity);
         std::size_t count = sv::uninitialized_copy_s(first, last, it, d);                                   // may throw
         s += count;
 
-        errh::check_capacity(*this, count <= static_cast<std::size_t>(d) ? s : Capacity + 1);               // may throw
+        errh::check_capacity(*this, count <= d ? s : Capacity + 1);               // may throw
 
         m_size = s; // update end
     }
