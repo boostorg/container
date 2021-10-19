@@ -33,7 +33,7 @@ namespace bc = boost::container;
 
 class MyInt
 {
-   std::size_t int_; //Use a type that will grow on 64 bit machines
+   std::ptrdiff_t int_; //Use a type that will grow on 64 bit machines
 
    public:
    MyInt(int i = 0) : int_(i){}
@@ -71,13 +71,13 @@ void print_header()
 }
 
 template<class Allocator>
-void vector_test_template(unsigned int num_iterations, unsigned int num_elements, bool csv_output)
+void vector_test_template(std::size_t num_iterations, std::size_t num_elements, bool csv_output)
 {
    typedef Allocator IntAllocator;
 
-   unsigned int capacity = 0;
+   std::size_t capacity = 0;
    const std::size_t Step = 5;
-   unsigned int num_shrink = 0;
+   std::size_t num_shrink = 0;
    (void)capacity;
 
    cpu_timer timer;
@@ -88,12 +88,12 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
       <unsigned, bc::dtl::version<Allocator>::value> alloc_version;
    #endif
 
-   for(unsigned int r = 0; r != num_iterations; ++r){
+   for(std::size_t r = 0; r != num_iterations; ++r){
       bc::vector<MyInt, IntAllocator> v(num_elements);
       v.reset_alloc_stats();
       num_shrink = 0;
-      for(unsigned int e = num_elements; e != 0; e -= Step){
-         v.erase(v.end() - Step, v.end());
+      for(std::size_t e = num_elements; e != 0; e -= Step){
+         v.erase(v.end() - std::ptrdiff_t(Step), v.end());
          v.shrink_to_fit();
          assert( (alloc_version::value != 2) || (e == Step) || (v.num_shrink > num_shrink) );
          num_shrink = v.num_shrink;
@@ -136,39 +136,39 @@ int main(int argc, const char *argv[])
    #define SIMPLE_IT
    #ifdef SINGLE_TEST
       #ifdef NDEBUG
-      unsigned int numit [] =  { 10 };
+      std::size_t numit [] =  { 10 };
       #else
-      unsigned int numit [] =  { 50 };
-      unsigned int numele[] = { 2000 };
+      std::size_t numit [] =  { 50 };
+      std::size_t numele[] = { 2000 };
       #endif
    #elif defined SIMPLE_IT
-      unsigned int numit [] =  { 3 };
-      unsigned int numele[] = { 2000 };
+      std::size_t numit [] =  { 3 };
+      std::size_t numele[] = { 2000 };
    #else
       #ifdef NDEBUG
-      unsigned int numit [] =  { 100,   1000, 10000 };
+      std::size_t numit [] =  { 100,   1000, 10000 };
       #else
-      unsigned int numit [] =  { 10,   100, 1000 };
+      std::size_t numit [] =  { 10,   100, 1000 };
       #endif
-      unsigned int numele [] = { 10000, 2000, 500   };
+      std::size_t numele [] = { 10000, 2000, 500   };
    #endif
 
    bool csv_output = argc == 2 && (strcmp(argv[1], "--csv-output") == 0);
 
    if(csv_output){
       print_header();
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          vector_test_template<StdAllocator>(numit[i], numele[i], csv_output);
       }
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          vector_test_template<AllocatorPlusV1>(numit[i], numele[i], csv_output);
       }
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          vector_test_template<AllocatorPlusV2>(numit[i], numele[i], csv_output);
       }
    }
    else{
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          std::cout   << "\n    -----------------------------------    \n"
                      <<   "  Iterations/Elements:         " << numit[i] << "/" << numele[i]
                      << "\n    -----------------------------------    \n";

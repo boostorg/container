@@ -93,7 +93,7 @@ cpu_times time_it()
       std::sort(v.begin(), v.end());
       sortTime.stop();
       rotateTime.resume();
-      std::rotate(v.begin(), v.begin() + v.size()/2, v.end());
+      std::rotate(v.begin(), v.begin() + std::ptrdiff_t(v.size()/2), v.end());
       rotateTime.stop();
       destructionTime.resume();
       delete &v;

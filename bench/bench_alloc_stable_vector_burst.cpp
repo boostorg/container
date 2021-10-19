@@ -96,7 +96,7 @@ struct get_stable_vector
 };
 
 template<template<class> class GetContainer, class Allocator>
-void stable_vector_test_template(unsigned int num_iterations, unsigned int num_elements, bool csv_output)
+void stable_vector_test_template(std::size_t num_iterations, std::size_t num_elements, bool csv_output)
 {
    typedef typename GetContainer<Allocator>::type vector_type;
    //std::size_t top_capacity = 0;
@@ -107,8 +107,8 @@ void stable_vector_test_template(unsigned int num_iterations, unsigned int num_e
          cpu_timer timer;
          timer.resume();
 
-         for(unsigned int r = 0; r != num_iterations; ++r){
-            l.insert(l.end(), num_elements, MyInt(r));
+         for(std::size_t r = 0; r != num_iterations; ++r){
+            l.insert(l.end(), num_elements, MyInt((int)r));
          }
 
          timer.stop();
@@ -138,7 +138,7 @@ void stable_vector_test_template(unsigned int num_iterations, unsigned int num_e
          //Now preprocess ranges to erase
          std::vector<typename vector_type::iterator> ranges_to_erase;
          ranges_to_erase.push_back(l.begin());
-         for(unsigned int r = 0; r != num_iterations; ++r){
+         for(std::size_t r = 0; r != num_iterations; ++r){
             typename vector_type::iterator next_pos(ranges_to_erase[r]);
             std::size_t n = num_elements;
             while(n--){ ++next_pos; }
@@ -149,7 +149,7 @@ void stable_vector_test_template(unsigned int num_iterations, unsigned int num_e
          timer.stop();
          timer.start();
 
-         for(unsigned int r = 0; r != num_iterations; ++r){
+         for(std::size_t r = 0; r != num_iterations; ++r){
             std::size_t init_pos = (num_iterations-1)-r;
             l.erase(ranges_to_erase[init_pos], l.end());
          }
@@ -169,10 +169,10 @@ void stable_vector_test_template(unsigned int num_iterations, unsigned int num_e
                      << float(nseconds)/float(num_iterations*num_elements)/*
                      << std::endl
                      << "  max capacity:    "
-                     << static_cast<unsigned int>(top_capacity)
+                     << static_cast<std::size_t>(top_capacity)
                      << std::endl
                      << "  remaining cap.   "
-                     << static_cast<unsigned int>(top_capacity - num_iterations*num_elements)
+                     << static_cast<std::size_t>(top_capacity - num_iterations*num_elements)
                      << " (" << (float(top_capacity)/float(num_iterations*num_elements) - 1)*100 << " %)"*/
                      << std::endl << std::endl;
    }
@@ -224,21 +224,21 @@ int main(int argc, const char *argv[])
    #define SIMPLE_IT
    #ifdef SINGLE_TEST
       #ifdef NDEBUG
-      unsigned int numit [] = { 40 };
+      std::size_t numit [] = { 40 };
       #else
-      unsigned int numit [] = { 4 };
+      std::size_t numit [] = { 4 };
       #endif
-      unsigned int numele [] = { 10000 };
+      std::size_t numele [] = { 10000 };
    #elif defined(SIMPLE_IT)
-      unsigned int numit [] = { 3 };
-      unsigned int numele [] = { 10000 };
+      std::size_t numit [] = { 3 };
+      std::size_t numele [] = { 10000 };
    #else
       #ifdef NDEBUG
-      unsigned int numit [] = { 40, 400, 4000, 40000 };
+      std::size_t numit [] = { 40, 400, 4000, 40000 };
       #else
-      unsigned int numit [] = { 4,   40,   400,   4000 };
+      std::size_t numit [] = { 4,   40,   400,   4000 };
       #endif
-      unsigned int numele [] = { 10000, 1000, 100,   10     };
+      std::size_t numele [] = { 10000, 1000, 100,   10     };
    #endif
 
    //Warning: range erasure is buggy. Vector iterators are not stable, so it is not
@@ -248,33 +248,33 @@ int main(int argc, const char *argv[])
 
    if(csv_output){
       print_header();
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          stable_vector_test_template<get_stable_vector, StdAllocator>(numit[i], numele[i], csv_output);
       }
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          stable_vector_test_template<get_vector, StdAllocator>(numit[i], numele[i], csv_output);
       }
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          stable_vector_test_template<get_stable_vector, AllocatorPlusV1>(numit[i], numele[i], csv_output);
       }
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          stable_vector_test_template<get_vector, AllocatorPlusV1>(numit[i], numele[i], csv_output);
       }
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          stable_vector_test_template<get_stable_vector, AllocatorPlusV2>(numit[i], numele[i], csv_output);
       }
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          stable_vector_test_template<get_vector, AllocatorPlusV2>(numit[i], numele[i], csv_output);
       }
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          stable_vector_test_template<get_stable_vector, AdPool2PercentV2>(numit[i], numele[i], csv_output);
       }
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          stable_vector_test_template<get_vector, AdPool2PercentV2>(numit[i], numele[i], csv_output);
       }
    }
    else{
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          std::cout   << "\n    -----------------------------------    \n"
                      <<   "  Iterations/Elements:         " << numit[i] << "/" << numele[i]
                      << "\n    -----------------------------------    \n";

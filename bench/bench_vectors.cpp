@@ -177,7 +177,7 @@ struct insert_near_end
    {
       typedef typename C::iterator it_t;
       it_t it (c.end());
-      it -= static_cast<typename C::size_type>(c.size() >= 2)*2;
+      it -= static_cast<typename C::difference_type>(c.size() >= 2)*2;
       c.insert(it, MyInt(i));
    }
 

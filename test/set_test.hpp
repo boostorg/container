@@ -764,16 +764,16 @@ int set_test ()
       stdmultiset.clear();
 
       {
-         IntType aux_vect[MaxElem];
+         IntType aux_vect[(std::size_t)MaxElem];
          for(int i = 0; i < MaxElem; ++i){
             aux_vect[i] = i;
          }
 
-         IntType aux_vect2[MaxElem];
+         IntType aux_vect2[(std::size_t)MaxElem];
          for(int i = 0; i < MaxElem; ++i){
             aux_vect2[i] = MaxElem/2+i;
          }
-         IntType aux_vect3[MaxElem];
+         IntType aux_vect3[(std::size_t)MaxElem];
          for(int i = 0; i < MaxElem; ++i){
             aux_vect3[i] = MaxElem*2/2+i;
          }
@@ -805,16 +805,16 @@ int set_test ()
       stdset.clear();
       stdmultiset.clear();
       {
-         IntType aux_vect[MaxElem];
+         IntType aux_vect[(std::size_t)MaxElem];
          for(int i = 0; i < MaxElem; ++i){
             aux_vect[i] = i;
          }
 
-         IntType aux_vect2[MaxElem];
+         IntType aux_vect2[(std::size_t)MaxElem];
          for(int i = 0; i < MaxElem; ++i){
             aux_vect2[i] = MaxElem/2+i;
          }
-         IntType aux_vect3[MaxElem];
+         IntType aux_vect3[(std::size_t)MaxElem];
          for(int i = 0; i < MaxElem; ++i){
             aux_vect3[i] = MaxElem*2/2+i;
          }

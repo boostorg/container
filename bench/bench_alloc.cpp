@@ -30,10 +30,10 @@ using boost::move_detail::nanosecond_type;
 using namespace boost::container;
 
 template <class POD>
-void allocation_timing_test(unsigned int num_iterations, unsigned int num_elements)
+void allocation_timing_test(std::size_t num_iterations, std::size_t num_elements)
 {
    size_t capacity = 0;
-   unsigned int numalloc = 0, numexpand = 0;
+   std::size_t numalloc = 0, numexpand = 0;
 
    std::cout
       << "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~   \n"
@@ -52,7 +52,7 @@ void allocation_timing_test(unsigned int num_iterations, unsigned int num_elemen
       cpu_timer timer;
       timer.resume();
 
-      for(unsigned int r = 0; r != num_iterations; ++r){
+      for(std::size_t r = 0; r != num_iterations; ++r){
          void *first_mem = 0;
          if(m_mode != BOOST_CONTAINER_EXPAND_FWD)
             first_mem = dlmalloc_malloc(sizeof(POD)*num_elements*3/2);
@@ -123,7 +123,7 @@ void allocation_timing_test(unsigned int num_iterations, unsigned int num_elemen
                   << float(nseconds)/float(num_iterations*num_elements)
                   << std::endl
                   << "  capacity  -  alloc calls (new/expand):  "
-                     << (unsigned int)capacity << "  -  "
+                     << (std::size_t)capacity << "  -  "
                      << (float(numalloc) + float(numexpand))/float(num_iterations)
                      << "(" << float(numalloc)/float(num_iterations) << "/" << float(numexpand)/float(num_iterations) << ")"
                   << std::endl << std::endl;
@@ -152,24 +152,24 @@ int allocation_loop()
    #define SIMPLE_IT
    #ifdef SINGLE_TEST
       #ifdef NDEBUG
-      unsigned int numrep [] = { 50000 };
+      std::size_t numrep [] = { 50000 };
       #else
-      unsigned int numrep [] = { 5000 };
+      std::size_t numrep [] = { 5000 };
       #endif
-      unsigned int numele [] = { 100 };
+      std::size_t numele [] = { 100 };
    #elif defined(SIMPLE_IT)
-      unsigned int numrep [] = { 3 };
-      unsigned int numele [] = { 100 };
+      std::size_t numrep [] = { 3 };
+      std::size_t numele [] = { 100 };
    #else
       #ifdef NDEBUG
-      unsigned int numrep [] = { /*10000, */10000, 100000, 1000000 };
+      std::size_t numrep [] = { /*10000, */10000, 100000, 1000000 };
       #else
-      unsigned int numrep [] = { /*10000, */1000, 10000, 100000 };
+      std::size_t numrep [] = { /*10000, */1000, 10000, 100000 };
       #endif
-      unsigned int numele [] = { /*10000,  */1000,    100,      10 };
+      std::size_t numele [] = { /*10000,  */1000,    100,      10 };
    #endif
 
-   for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+   for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
       allocation_timing_test<POD>(numrep[i], numele[i]);
    }
 

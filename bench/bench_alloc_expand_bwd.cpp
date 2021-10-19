@@ -101,16 +101,16 @@ void print_header()
 }
 
 template<class Allocator>
-void vector_test_template(unsigned int num_iterations, unsigned int num_elements, bool csv_output)
+void vector_test_template(std::size_t num_iterations, std::size_t num_elements, bool csv_output)
 {
    typedef Allocator IntAllocator;
-   unsigned int numalloc = 0, numexpand = 0;
+   std::size_t numalloc = 0, numexpand = 0;
 
    cpu_timer timer;
    timer.resume();
 
-   unsigned int capacity = 0;
-   for(unsigned int r = 0; r != num_iterations; ++r){
+   std::size_t capacity = 0;
+   for(std::size_t r = 0; r != num_iterations; ++r){
       bc::vector<MyInt, IntAllocator> v;
       v.reset_alloc_stats();
       void *first_mem = 0;
@@ -119,12 +119,12 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
          v.push_back(MyInt(0));
          bc::dlmalloc_free(first_mem);
 
-         for(unsigned int e = 0; e != num_elements; ++e){
-            v.push_back(MyInt(e));
+         for(std::size_t e = 0; e != num_elements; ++e){
+            v.push_back(MyInt((int)e));
          }
          numalloc  += v.num_alloc;
          numexpand += v.num_expand_bwd;
-         capacity = static_cast<unsigned int>(v.capacity());
+         capacity = static_cast<std::size_t>(v.capacity());
       }
       BOOST_CATCH(...){
          bc::dlmalloc_free(first_mem);
@@ -164,7 +164,7 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
                   << float(nseconds)/float(num_iterations*num_elements)
                   << std::endl
                   << "  capacity  -  alloc calls (new/expand):  "
-                     << (unsigned int)capacity << "  -  "
+                     << (std::size_t)capacity << "  -  "
                      << (float(numalloc) + float(numexpand))/float(num_iterations)
                      << "(" << float(numalloc)/float(num_iterations) << "/" << float(numexpand)/float(num_iterations) << ")"
                   << std::endl;
@@ -181,42 +181,42 @@ int main(int argc, const char *argv[])
    #define SIMPLE_IT
    #ifdef SINGLE_TEST
       #ifdef NDEBUG
-      unsigned int numit [] = { 10 };
+      std::size_t numit [] = { 10 };
       #else
-      unsigned int numit [] = { 10 };
+      std::size_t numit [] = { 10 };
       #endif
-      unsigned int numele [] = { 10000 };
+      std::size_t numele [] = { 10000 };
    #elif defined(SIMPLE_IT)
-      unsigned int numit [] = { 3 };
-      unsigned int numele[] = { 10000 };
+      std::size_t numit [] = { 3 };
+      std::size_t numele[] = { 10000 };
    #else
       #ifdef NDEBUG
-      unsigned int numit [] = { 2000, 20000, 200000, 2000000 };
+      std::size_t numit [] = { 2000, 20000, 200000, 2000000 };
       #else
-      unsigned int numit [] = { 100, 1000, 10000, 100000 };
+      std::size_t numit [] = { 100, 1000, 10000, 100000 };
       #endif
-      unsigned int numele [] = { 10000, 1000,   100,     10       };
+      std::size_t numele [] = { 10000, 1000,   100,     10       };
    #endif
 
    bool csv_output = argc == 2 && (strcmp(argv[1], "--csv-output") == 0);
 
    if(csv_output){
       print_header();
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          vector_test_template<StdAllocator>(numit[i], numele[i], csv_output);
       }
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          vector_test_template<AllocatorPlusV1>(numit[i], numele[i], csv_output);
       }
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          vector_test_template<AllocatorPlusV2Mask>(numit[i], numele[i], csv_output);
       }
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          vector_test_template<AllocatorPlusV2>(numit[i], numele[i], csv_output);
       }
    }
    else{
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+      for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
          std::cout   << "\n    -----------------------------------    \n"
                      <<   "  Iterations/Elements:         " << numit[i] << "/" << numele[i]
                      << "\n    -----------------------------------    \n";

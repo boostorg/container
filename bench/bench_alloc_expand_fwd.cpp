@@ -85,15 +85,15 @@ class MyInt
 };
 
 template<class Container>
-void vector_test_template(unsigned int num_iterations, unsigned int num_elements)
+void vector_test_template(std::size_t num_iterations, std::size_t num_elements)
 {
-   unsigned int numalloc = 0, numexpand = 0;
+   std::size_t numalloc = 0, numexpand = 0;
 
    cpu_timer timer;
    timer.resume();
 
-   unsigned int capacity = 0;
-   for(unsigned int r = 0; r != num_iterations; ++r){
+   std::size_t capacity = 0;
+   for(std::size_t r = 0; r != num_iterations; ++r){
       Container v;
       #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
          reset_alloc_stats(v);
@@ -101,47 +101,47 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
       //v.reserve(num_elements);
       //MyInt a[3];
 /*
-      for(unsigned int e = 0; e != num_elements/3; ++e){
+      for(std::size_t e = 0; e != num_elements/3; ++e){
          v.insert(v.end(), &a[0], &a[0]+3);
       }*/
 /*
-      for(unsigned int e = 0; e != num_elements/3; ++e){
-         v.insert(v.end(), 3, MyInt(e));
+      for(std::size_t e = 0; e != num_elements/3; ++e){
+         v.insert(v.end(), 3, MyInt((int)e));
       }*/
 /*
-      for(unsigned int e = 0; e != num_elements/3; ++e){
+      for(std::size_t e = 0; e != num_elements/3; ++e){
          v.insert(v.empty() ? v.end() : --v.end(), &a[0], &a[0]+3);
       }*/
 /*
-      for(unsigned int e = 0; e != num_elements/3; ++e){
-         v.insert(v.empty() ? v.end() : --v.end(), 3, MyInt(e));
+      for(std::size_t e = 0; e != num_elements/3; ++e){
+         v.insert(v.empty() ? v.end() : --v.end(), 3, MyInt((int)e));
       }*/
 /*
-      for(unsigned int e = 0; e != num_elements/3; ++e){
+      for(std::size_t e = 0; e != num_elements/3; ++e){
          v.insert(v.size() >= 3 ? v.end()-3 : v.begin(), &a[0], &a[0]+3);
       }*/
 /*
-      for(unsigned int e = 0; e != num_elements/3; ++e){
-         v.insert(v.size() >= 3 ? v.end()-3 : v.begin(), 3, MyInt(e));
+      for(std::size_t e = 0; e != num_elements/3; ++e){
+         v.insert(v.size() >= 3 ? v.end()-3 : v.begin(), 3, MyInt((int)e));
       }*/
 /*
-      for(unsigned int e = 0; e != num_elements; ++e){
-         v.insert(v.end(), MyInt(e));
+      for(std::size_t e = 0; e != num_elements; ++e){
+         v.insert(v.end(), MyInt((int)e));
       }*/
 /*
-      for(unsigned int e = 0; e != num_elements; ++e){
-         v.insert(v.empty() ? v.end() : --v.end(), MyInt(e));
+      for(std::size_t e = 0; e != num_elements; ++e){
+         v.insert(v.empty() ? v.end() : --v.end(), MyInt((int)e));
       }*/
 
-      for(unsigned int e = 0; e != num_elements; ++e){
-         v.push_back(MyInt(e));
+      for(std::size_t e = 0; e != num_elements; ++e){
+         v.push_back(MyInt((int)e));
       }
 
       #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
          numalloc  += get_num_alloc(v);
          numexpand += get_num_expand(v);
       #endif
-      capacity = static_cast<unsigned int>(v.capacity());
+      capacity = static_cast<std::size_t>(v.capacity());
    }
 
    timer.stop();
@@ -154,7 +154,7 @@ void vector_test_template(unsigned int num_iterations, unsigned int num_elements
                << float(nseconds)/float(num_iterations*num_elements)
                << std::endl
                << "  capacity  -  alloc calls (new/expand):  "
-                  << (unsigned int)capacity << "  -  "
+                  << (std::size_t)capacity << "  -  "
                   << (float(numalloc) + float(numexpand))/float(num_iterations)
                   << "(" << float(numalloc)/float(num_iterations) << "/" << float(numexpand)/float(num_iterations) << ")"
                << std::endl << std::endl;
@@ -184,15 +184,15 @@ int main()
       std::size_t numele [] = { 10000 };
    #else
       #ifdef NDEBUG
-      unsigned int numit []  = { 1000, 10000, 100000, 1000000 };
+      std::size_t numit []  = { 1000, 10000, 100000, 1000000 };
       #else
-      unsigned int numit []  = { 100, 1000, 10000, 100000 };
+      std::size_t numit []  = { 100, 1000, 10000, 100000 };
       #endif
-      unsigned int numele [] = { 10000, 1000,   100,     10       };
+      std::size_t numele [] = { 10000, 1000,   100,     10       };
    #endif
 
    print_header();
-   for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
+   for(std::size_t i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
       vector_test_template< bc::vector<MyInt, std::allocator<MyInt> > >(numit[i], numele[i]);
       vector_test_template< bc::vector<MyInt, bc::allocator<MyInt, 1> > >(numit[i], numele[i]);
       vector_test_template<bc::vector<MyInt, bc::allocator<MyInt, 2, bc::expand_bwd | bc::expand_fwd> > >(numit[i], numele[i]);
