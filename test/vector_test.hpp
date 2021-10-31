@@ -43,7 +43,7 @@ namespace container {
 namespace test{
 
 template<class Vector>
-struct vector_hash_function_capacity
+struct vector_has_function_capacity
 {
    typedef typename Vector::size_type size_type;
    template <typename U, size_type (U::*)() const> struct Check;
@@ -57,32 +57,57 @@ struct vector_hash_function_capacity
 template<class V1, class V2>
 bool vector_capacity_test(V1&, V2&, boost::container::dtl::false_type)
 {
+   //deque has no reserve
    return true;
 }
 
 template<class MyBoostVector, class MyStdVector>
 bool vector_capacity_test(MyBoostVector&boostvector, MyStdVector&stdvector, boost::container::dtl::true_type)
 {
-   //deque has no reserve
-   boostvector.reserve(boostvector.size()*2);
-   stdvector.reserve(stdvector.size()*2);
-   if(!test::CheckEqualContainers(boostvector, stdvector)) return false;
+   {
+      boostvector.reserve(boostvector.size()*2);
+      stdvector.reserve(stdvector.size()*2);
+      if(!test::CheckEqualContainers(boostvector, stdvector)) return false;
 
-   std::size_t cap = boostvector.capacity();
-   boostvector.reserve(cap*2);
-   stdvector.reserve(cap*2);
-   if(!test::CheckEqualContainers(boostvector, stdvector)) return false;
-   boostvector.resize(0);
-   stdvector.resize(0);
-   if(!test::CheckEqualContainers(boostvector, stdvector)) return false;
+      std::size_t cap = boostvector.capacity();
+      boostvector.reserve(cap*2);
+      stdvector.reserve(cap*2);
+      if(!test::CheckEqualContainers(boostvector, stdvector)) return false;
+      boostvector.resize(0);
+      stdvector.resize(0);
+      if(!test::CheckEqualContainers(boostvector, stdvector)) return false;
 
-   boostvector.resize(cap*2);
-   stdvector.resize(cap*2);
-   if(!test::CheckEqualContainers(boostvector, stdvector)) return false;
+      boostvector.resize(cap*2);
+      stdvector.resize(cap*2);
+      if(!test::CheckEqualContainers(boostvector, stdvector)) return false;
 
-   boostvector.resize(cap*2);
-   stdvector.resize(cap*2);
-   if(!test::CheckEqualContainers(boostvector, stdvector)) return false;
+      boostvector.resize(cap*2);
+      stdvector.resize(cap*2);
+      if(!test::CheckEqualContainers(boostvector, stdvector)) return false;
+   }
+
+   //test capacity swapping in swap
+   {
+      MyBoostVector a, b;
+      a.resize(1000);
+
+      const std::size_t sz = a.size();
+      const std::size_t cap = a.capacity();
+
+      a.resize(1000);
+      a.swap(b);
+      if( !(b.capacity() == cap) ) return false;
+      if( !(b.size() == sz) ) return false;
+      if( !(a.capacity() != cap) ) return false;
+      if( !(a.empty()) ) return false;
+
+      a.swap(b);
+
+      if( !(a.capacity() == cap) ) return false;
+      if( !(a.size() == sz) ) return false;
+      if( !(b.capacity() != cap) ) return false;
+      if( !(b.empty()) ) return false;
+   }
 
    return true;
 }
@@ -161,21 +186,21 @@ bool vector_copyable_only(MyBoostVector &boostvector, MyStdVector &stdvector, bo
       stdvector.clear();
       boostvector.assign(v1.begin(), v1.end());
       stdvector.assign(v2.begin(), v2.end());
-      if(!test::CheckEqualContainers(boostvector, stdvector)) return 1;
+      if(!test::CheckEqualContainers(boostvector, stdvector)) return false;
    }
    {  //Vector(n, T)
       ::boost::movelib::unique_ptr<MyStdVector> const stdvectorp =
          ::boost::movelib::make_unique<MyStdVector>(100u, int(5));
       ::boost::movelib::unique_ptr<MyBoostVector> const boostvectorp =
          ::boost::movelib::make_unique<MyBoostVector>(100u, IntType(5));
-      if(!test::CheckEqualContainers(*boostvectorp, *stdvectorp)) return 1;
+      if(!test::CheckEqualContainers(*boostvectorp, *stdvectorp)) return false;
    }
    {  //Vector(n, T, alloc)
       ::boost::movelib::unique_ptr<MyStdVector> const stdvectorp =
          ::boost::movelib::make_unique<MyStdVector>(100u, int(5));
       ::boost::movelib::unique_ptr<MyBoostVector> const boostvectorp =
          ::boost::movelib::make_unique<MyBoostVector>(100u, IntType(5), typename MyBoostVector::allocator_type());
-      if(!test::CheckEqualContainers(*boostvectorp, *stdvectorp)) return 1;
+      if(!test::CheckEqualContainers(*boostvectorp, *stdvectorp)) return false;
    }
    {  //Vector(It, It)
       ::boost::movelib::unique_ptr<MyStdVector> const stdvectorp =
@@ -184,7 +209,7 @@ bool vector_copyable_only(MyBoostVector &boostvector, MyStdVector &stdvector, bo
          ::boost::movelib::make_unique<MyBoostVector>(100u);
       ::boost::movelib::unique_ptr<MyBoostVector> const boostvectorp2 =
          ::boost::movelib::make_unique<MyBoostVector>(boostvectorp->begin(), boostvectorp->end());
-      if(!test::CheckEqualContainers(*boostvectorp2, *stdvectorp)) return 1;
+      if(!test::CheckEqualContainers(*boostvectorp2, *stdvectorp)) return false;
    }
    {  //Vector(It, It, alloc)
       ::boost::movelib::unique_ptr<MyStdVector> const stdvectorp =
@@ -193,7 +218,7 @@ bool vector_copyable_only(MyBoostVector &boostvector, MyStdVector &stdvector, bo
          ::boost::movelib::make_unique<MyBoostVector>(100u);
       ::boost::movelib::unique_ptr<MyBoostVector> const boostvectorp2 =
          ::boost::movelib::make_unique<MyBoostVector>(boostvectorp->begin(), boostvectorp->end(), typename MyBoostVector::allocator_type());
-      if(!test::CheckEqualContainers(*boostvectorp2, *stdvectorp)) return 1;
+      if(!test::CheckEqualContainers(*boostvectorp2, *stdvectorp)) return false;
    }
    {  //resize(n, T)
       ::boost::movelib::unique_ptr<MyStdVector> const stdvectorp =
@@ -202,7 +227,7 @@ bool vector_copyable_only(MyBoostVector &boostvector, MyStdVector &stdvector, bo
          ::boost::movelib::make_unique<MyBoostVector>();
       stdvectorp->resize(100u, int(9));
       boostvectorp->resize(100u, IntType(9));
-      if(!test::CheckEqualContainers(*boostvectorp, *stdvectorp)) return 1;
+      if(!test::CheckEqualContainers(*boostvectorp, *stdvectorp)) return false;
    }
    //operator=
    {
@@ -498,7 +523,7 @@ int vector_test()
          if(!test::CheckEqualContainers(boostvector, stdvector)) return 1;
       }
    
-      if(!vector_capacity_test(boostvector, stdvector, dtl::bool_<vector_hash_function_capacity<MyBoostVector>::value>()))
+      if(!vector_capacity_test(boostvector, stdvector, dtl::bool_<vector_has_function_capacity<MyBoostVector>::value>()))
          return 1;
 
       boostvector.clear();

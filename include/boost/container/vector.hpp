@@ -87,8 +87,8 @@ class vec_iterator
 
    //Defining element_type to make libstdc++'s std::pointer_traits well-formed leads to ambiguity
    //due to LWG3446. So we need to specialize std::pointer_traits. See 
-   //https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96416 for details. /Many thanks to Jonathan Wakely
-   //for explaning the issue.
+   //https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96416 for details. Many thanks to Jonathan Wakely
+   //for explaining the issue.
    #ifndef BOOST_GNU_STDLIB
    //Define element_
    typedef typename boost::intrusive::pointer_traits<Pointer>::element_type         element_type;
@@ -317,7 +317,8 @@ struct vector_alloc_holder
       (void)propagate_allocator; (void)p; (void)to_alloc; (void)from_alloc;
       const bool all_storage_propagable = !allocator_traits_type::is_partially_propagable::value ||
                                           !allocator_traits_type::storage_is_unpropagable(from_alloc, p);
-      return all_storage_propagable && (propagate_allocator || allocator_traits_type::equal(from_alloc, to_alloc));
+      return all_storage_propagable &&
+         (propagate_allocator || allocator_traits_type::is_always_equal::value || allocator_traits_type::equal(from_alloc, to_alloc));
    }
 
    BOOST_CONTAINER_FORCEINLINE
@@ -2549,31 +2550,40 @@ private:
    void priv_swap(Vector &x, dtl::false_type)  //version_N
    {
       const bool propagate_alloc = allocator_traits_type::propagate_on_container_swap::value;
-      if(are_swap_propagable( this->get_stored_allocator(), this->m_holder.start()
-                            , x.get_stored_allocator(), x.m_holder.start(), propagate_alloc)){
+      if (BOOST_UNLIKELY(&x == this)){
+         return;
+      }
+      else if(are_swap_propagable( this->get_stored_allocator(), this->m_holder.start()
+                                 , x.get_stored_allocator(), x.m_holder.start(), propagate_alloc)){
          //Just swap internals
          this->m_holder.swap_resources(x.m_holder);
       }
       else{
-         if (BOOST_UNLIKELY(&x == this))
-            return;
-
          //Else swap element by element...
          bool const t_smaller = this->size() < x.size();
          vector &sml = t_smaller ? *this : x;
          vector &big = t_smaller ? x : *this;
 
-         size_type const common_elements = sml.size();
-         for(size_type i = 0; i != common_elements; ++i){
-            boost::adl_move_swap(sml[i], big[i]);
+         //For empty containers, maybe storage can be moved from the other (just like in the move constructor)         
+         if(sml.empty() && is_propagable_from(big.get_stored_allocator(), big.data(), sml.get_allocator(), propagate_alloc)){
+            if(BOOST_LIKELY(0u != sml.capacity()))
+               sml.m_holder.deallocate(sml.m_holder.m_start, sml.m_holder.m_capacity);
+            sml.steal_resources(big);
          }
-         //... and move-insert the remaining range
-         sml.insert( sml.cend()
-                   , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(big.nth(common_elements)))
-                   , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(big.end()))
-                   );
-         //Destroy remaining elements
-         big.erase(big.nth(common_elements), big.cend());
+         else {
+            //Else swap element by element...
+            size_type const common_elements = sml.size();
+            for(size_type i = 0; i != common_elements; ++i){
+               boost::adl_move_swap(sml[i], big[i]);
+            }
+            //... and move-insert the remaining range
+            sml.insert( sml.cend()
+                      , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(big.nth(common_elements)))
+                      , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(big.end()))
+                      );
+            //Destroy remaining elements
+            big.erase(big.nth(common_elements), big.cend());
+         }
       }
       //And now swap the allocator
       dtl::swap_alloc(this->m_holder.alloc(), x.m_holder.alloc(), dtl::bool_<propagate_alloc>());
