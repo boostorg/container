@@ -824,12 +824,12 @@ private:
    {  return this->m_holder.steal_resources(x.m_holder);   }
 
    template<class AllocFwd>
-   BOOST_CONTAINER_FORCEINLINE vector(initial_capacity_t, pointer initial_memory, size_type capacity, BOOST_FWD_REF(AllocFwd) a)
-      : m_holder(initial_capacity_t(), initial_memory, capacity, ::boost::forward<AllocFwd>(a))
+   BOOST_CONTAINER_FORCEINLINE vector(initial_capacity_t, pointer initial_memory, size_type cap, BOOST_FWD_REF(AllocFwd) a)
+      : m_holder(initial_capacity_t(), initial_memory, cap, ::boost::forward<AllocFwd>(a))
    {}
 
-   BOOST_CONTAINER_FORCEINLINE vector(initial_capacity_t, pointer initial_memory, size_type capacity)
-      : m_holder(initial_capacity_t(), initial_memory, capacity)
+   BOOST_CONTAINER_FORCEINLINE vector(initial_capacity_t, pointer initial_memory, size_type cap)
+      : m_holder(initial_capacity_t(), initial_memory, cap)
    {}
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

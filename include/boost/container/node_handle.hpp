@@ -418,8 +418,8 @@ struct insert_return_type_base
    {}
 
    template<class RelatedIt, class RelatedNode>
-   insert_return_type_base(bool insert, RelatedIt it, BOOST_RV_REF(RelatedNode) node)
-      : inserted(insert), position(it), node(boost::move(node))
+   insert_return_type_base(bool insert, RelatedIt it, BOOST_RV_REF(RelatedNode) n)
+      : inserted(insert), position(it), node(boost::move(n))
    {}
 
    insert_return_type_base & operator=(BOOST_RV_REF(insert_return_type_base) other)

@@ -61,7 +61,7 @@ struct X;
 template<typename T>
 struct XRef
 {
-   explicit XRef(T* ptr)  : ptr(ptr) {}
+   explicit XRef(T* p)  : ptr(p) {}
    operator T*() const { return ptr; }
    T* ptr;
 };

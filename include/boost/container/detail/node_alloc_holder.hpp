@@ -394,9 +394,8 @@ struct node_alloc_holder
 
    icont_iterator erase_range(const icont_iterator &first, const icont_iterator &last, version_2)
    {
-      typedef typename NodeAlloc::multiallocation_chain multiallocation_chain;
       NodeAlloc & nalloc = this->node_alloc();
-      multiallocation_chain chain;
+      typename NodeAlloc::multiallocation_chain chain;
       allocator_destroyer_and_chain_builder<NodeAlloc> chain_builder(nalloc, chain);
       icont_iterator ret_it = this->icont().erase_and_dispose(first, last, chain_builder);
       nalloc.deallocate_individual(chain);
