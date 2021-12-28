@@ -33,6 +33,8 @@
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/move/adl_move_swap.hpp> //adl_move_swap
 
+#include <boost/move/detail/force_ptr.hpp> //adl_move_swap
+
 
 #include "varray_util.hpp"
 
@@ -2105,12 +2107,12 @@ private:
 
     pointer ptr()
     {
-        return pointer(reinterpret_cast<Value*>(this));
+        return pointer(move_detail::force_ptr<Value*>(this));
     }
 
     const_pointer ptr() const
     {
-        return const_pointer(reinterpret_cast<const Value*>(this));
+        return const_pointer(move_detail::force_ptr<const Value*>(this));
     }
 };
 

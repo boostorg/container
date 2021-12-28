@@ -47,6 +47,7 @@
 #include <boost/move/utility_core.hpp>
 #include <boost/move/detail/to_raw_pointer.hpp>
 #include <boost/move/algo/detail/merge.hpp>
+#include <boost/move/detail/force_ptr.hpp>
 
 #include <boost/type_traits/is_nothrow_move_constructible.hpp>
 
@@ -2549,7 +2550,7 @@ class devector
       {\
          BOOST_ASSERT(size() >= 1);\
          typename dtl::aligned_storage<sizeof(T), dtl::alignment_of<T>::value>::type v;\
-         T *vp = reinterpret_cast<T *>(v.data);\
+         T *vp = move_detail::force_ptr<T *>(v.data);\
          allocator_traits_type::construct(get_stored_allocator(), vp BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
          T &tmp = *vp;\
          dtl::value_destructor<allocator_type> on_exit(get_stored_allocator(), tmp); (void)on_exit;\
@@ -2564,7 +2565,7 @@ class devector
       else if (back_free_capacity()) {\
          BOOST_ASSERT(size() >= 1);\
          typename dtl::aligned_storage<sizeof(T), dtl::alignment_of<T>::value>::type v;\
-         T *vp = reinterpret_cast<T *>(v.data);\
+         T *vp = move_detail::force_ptr<T *>(v.data);\
          allocator_traits_type::construct(get_stored_allocator(), vp BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
          T &tmp = *vp;\
          dtl::value_destructor<allocator_type> on_exit(get_stored_allocator(), tmp); (void)on_exit;\

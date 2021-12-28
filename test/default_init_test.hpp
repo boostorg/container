@@ -13,6 +13,7 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/throw_exception.hpp>
+#include <boost/move/detail/force_ptr.hpp>
 #include <cstddef>
 
 
@@ -77,7 +78,7 @@ class default_init_allocator
             puc_raw[i] = static_cast<unsigned char>(s_pattern--);
          }
       }
-      return (Integral*)puc_raw;;
+      return move_detail::force_ptr<Integral*>(puc_raw);
    }
 
    void deallocate(Integral *p, std::size_t)

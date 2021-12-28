@@ -39,18 +39,19 @@
 #include <boost/container/detail/version_type.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/algorithm.hpp>
-
+#include <boost/container/detail/minimal_char_traits_header.hpp>  // for char_traits
+//intrusive
 #include <boost/intrusive/pointer_traits.hpp>
-
+#include <boost/intrusive/detail/hash_combine.hpp>
+#include <boost/move/detail/force_ptr.hpp>
+//move
 #include <boost/move/utility_core.hpp>
 #include <boost/move/adl_move_swap.hpp>
 #include <boost/move/traits.hpp>
 
 #include <boost/static_assert.hpp>
 #include <boost/core/no_exceptions_support.hpp>
-#include <boost/intrusive/detail/hash_combine.hpp>
 
-#include <boost/container/detail/minimal_char_traits_header.hpp>  // for char_traits
 #include <iosfwd> 
 #include <istream>   //
 #include <ostream>
@@ -227,16 +228,16 @@ class basic_string_base
       { this->init(); }
 
       BOOST_CONTAINER_FORCEINLINE const short_t *pshort_repr() const
-      {  return reinterpret_cast<const short_t*>(m_repr.data);  }
+      {  return move_detail::force_ptr<const short_t*>(m_repr.data);  }
 
       BOOST_CONTAINER_FORCEINLINE const long_t *plong_repr() const
-      {  return reinterpret_cast<const long_t*>(m_repr.data);  }
+      {  return move_detail::force_ptr<const long_t*>(m_repr.data);  }
 
       BOOST_CONTAINER_FORCEINLINE short_t *pshort_repr()
-      {  return reinterpret_cast<short_t*>(m_repr.data);  }
+      {  return move_detail::force_ptr<short_t*>(m_repr.data);  }
 
       BOOST_CONTAINER_FORCEINLINE long_t *plong_repr()
-      {  return reinterpret_cast<long_t*>(m_repr.data);  }
+      {  return move_detail::force_ptr<long_t*>(m_repr.data);  }
 
       repr_t m_repr;
    } members_;

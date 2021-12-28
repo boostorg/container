@@ -19,6 +19,7 @@
 #include <boost/container/detail/algorithm.hpp> //equal()
 #include "movable_int.hpp"
 #include <boost/move/make_unique.hpp>
+#include <boost/move/detail/force_ptr.hpp>
 
 namespace boost { namespace container { namespace test {
 
@@ -85,7 +86,7 @@ bool test_insert_with_expand_bwd()
       {
          boost::movelib::unique_ptr<char[]> memptr =
             boost::movelib::make_unique_definit<char[]>(MemorySize*sizeof(value_type));
-         value_type *memory = (value_type*)memptr.get();
+         value_type *memory = move_detail::force_ptr<value_type*>(memptr.get());
          std::vector<value_type> initial_data;
          initial_data.resize(InitialSize[iteration]);
          for(unsigned int i = 0; i < InitialSize[iteration]; ++i){
@@ -148,7 +149,7 @@ bool test_assign_with_expand_bwd()
    {
       boost::movelib::unique_ptr<char[]> memptr =
          boost::movelib::make_unique_definit<char[]>(MemorySize*sizeof(value_type));
-      value_type *memory = (value_type*)memptr.get();
+      value_type *memory = move_detail::force_ptr<value_type*>(memptr.get());
       //Create initial data
       std::vector<value_type> initial_data;
       initial_data.resize(InitialSize[iteration]);

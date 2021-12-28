@@ -34,7 +34,7 @@
 
 #include <boost/move/utility_core.hpp>
 #include <boost/move/adl_move_swap.hpp>
-
+#include <boost/move/detail/force_ptr.hpp>
 #include <boost/assert.hpp>
 
 #include <memory>
@@ -61,7 +61,7 @@ class simple_allocator
    {}
 
    T* allocate(std::size_t n)
-   { return (T*)::new char[sizeof(T)*n];  }
+   { return move_detail::force_ptr<T*>(::new char[sizeof(T)*n]);  }
 
    void deallocate(T*p, std::size_t)
    { delete[] ((char*)p);}
@@ -176,7 +176,7 @@ class propagation_test_allocator
    {  unique_id_ = id;  }
 
    T* allocate(std::size_t n)
-   {  return (T*)::new char[sizeof(T)*n];  }
+   {  return move_detail::force_ptr<T*>(::new char[sizeof(T)*n]);  }
 
    void deallocate(T*p, std::size_t)
    { delete[] ((char*)p);}

@@ -14,6 +14,7 @@
 #include <boost/container/uses_allocator.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/move/core.hpp>
+#include <boost/move/detail/force_ptr.hpp>
 
 template<class T, unsigned int Id, bool HasTrueTypes = false>
 class propagation_test_allocator
@@ -69,7 +70,7 @@ class propagation_test_allocator
    {  return std::size_t(-1);  }
 
    T* allocate(std::size_t n)
-   {  return (T*)::new char[n*sizeof(T)];  }
+   {  return boost::move_detail::force_ptr<T*>(::new char[n*sizeof(T)]);  }
 
    void deallocate(T*p, std::size_t)
    {  delete []static_cast<char*>(static_cast<void*>(p));  }

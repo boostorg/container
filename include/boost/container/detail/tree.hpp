@@ -52,6 +52,7 @@
 #include <boost/move/detail/fwd_macros.hpp>
 #endif
 #include <boost/move/detail/move_helpers.hpp>
+#include <boost/move/detail/force_ptr.hpp>
 // other
 #include <boost/core/no_exceptions_support.hpp>
 
@@ -145,31 +146,31 @@ struct tree_node
    #  endif
 
    BOOST_CONTAINER_FORCEINLINE T &get_data()
-   {  return *reinterpret_cast<T*>(this->m_storage.data);   }
+   {  return *move_detail::force_ptr<T*>(this->m_storage.data);   }
 
    BOOST_CONTAINER_FORCEINLINE const T &get_data() const
-   {  return *reinterpret_cast<const T*>(this->m_storage.data);  }
+   {  return *move_detail::force_ptr<const T*>(this->m_storage.data);  }
 
    BOOST_CONTAINER_FORCEINLINE T *get_data_ptr()
-   {  return reinterpret_cast<T*>(this->m_storage.data);  }
+   {  return move_detail::force_ptr<T*>(this->m_storage.data);  }
 
    BOOST_CONTAINER_FORCEINLINE const T *get_data_ptr() const
-   {  return reinterpret_cast<T*>(this->m_storage.data);  }
+   {  return move_detail::force_ptr<T*>(this->m_storage.data);  }
 
    BOOST_CONTAINER_FORCEINLINE internal_type &get_real_data()
-   {  return *reinterpret_cast<internal_type*>(this->m_storage.data);   }
+   {  return *move_detail::force_ptr<internal_type*>(this->m_storage.data);   }
 
    BOOST_CONTAINER_FORCEINLINE const internal_type &get_real_data() const
-   {  return *reinterpret_cast<const internal_type*>(this->m_storage.data);  }
+   {  return *move_detail::force_ptr<const internal_type*>(this->m_storage.data);  }
 
    BOOST_CONTAINER_FORCEINLINE internal_type *get_real_data_ptr()
-   {  return reinterpret_cast<internal_type*>(this->m_storage.data);  }
+   {  return move_detail::force_ptr<internal_type*>(this->m_storage.data);  }
 
    BOOST_CONTAINER_FORCEINLINE const internal_type *get_real_data_ptr() const
-   {  return reinterpret_cast<internal_type*>(this->m_storage.data);  }
+   {  return move_detail::force_ptr<internal_type*>(this->m_storage.data);  }
 
    BOOST_CONTAINER_FORCEINLINE ~tree_node()
-   {  reinterpret_cast<internal_type*>(this->m_storage.data)->~internal_type();  }
+   {  move_detail::force_ptr<internal_type*>(this->m_storage.data)->~internal_type();  }
 
    #if defined(BOOST_CONTAINER_DISABLE_ALIASING_WARNING)
       #pragma GCC diagnostic pop
