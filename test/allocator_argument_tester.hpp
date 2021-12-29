@@ -193,19 +193,31 @@ struct allocator_argument_tester
 
    //Move constructors
    allocator_argument_tester(BOOST_RV_REF(allocator_argument_tester) other)
-      : construction_type(NotUsesAllocator), value(other.value)
-   {  other.value = 0;  other.construction_type = NotUsesAllocator;  }
+      : construction_type(NotUsesAllocator), value(((allocator_argument_tester &)other).value)
+   {
+      allocator_argument_tester &o = other;
+      o.value = 0;
+      o.construction_type = NotUsesAllocator;
+   }
 
    allocator_argument_tester( BOOST_RV_REF(allocator_argument_tester) other
                             , typename base_type::allocator_constructor_type)
-      : construction_type(ConstructibleSuffix), value(other.value)
-   {  other.value = 0;  other.construction_type = ConstructibleSuffix;  }
+      : construction_type(ConstructibleSuffix), value(((allocator_argument_tester &)other).value)
+   {
+      allocator_argument_tester &o = other;
+      o.value = 0;
+      o.construction_type = ConstructibleSuffix;
+   }
 
    allocator_argument_tester( typename base_type::allocator_arg_type
                             , typename base_type::allocator_constructor_type
                             , BOOST_RV_REF(allocator_argument_tester) other)
-      : construction_type(ConstructiblePrefix), value(other.value)
-   {  other.value = 0;  other.construction_type = ConstructiblePrefix;  }
+      : construction_type(ConstructiblePrefix), value(((allocator_argument_tester &)other).value)
+   {
+      allocator_argument_tester &o = other;
+      o.value = 0;
+      o.construction_type = ConstructiblePrefix;
+   }
 
    ConstructionTypeEnum construction_type;
    int                  value;
