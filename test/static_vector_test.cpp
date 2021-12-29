@@ -425,7 +425,6 @@ void test_capacity_0_nd()
    BOOST_TEST_THROWS(s.resize(5u, T(0)), bad_alloc_t);
    BOOST_TEST_THROWS(s.push_back(T(0)), bad_alloc_t);
    BOOST_TEST_THROWS(s.insert(s.end(), T(0)), bad_alloc_t);
-   BOOST_TEST_THROWS(s.insert(s.end(), 5u, T(0)), bad_alloc_t);
    BOOST_TEST_THROWS(s.insert(s.end(), v.begin(), v.end()), bad_alloc_t);
    BOOST_TEST_THROWS(s.assign(v.begin(), v.end()), bad_alloc_t);
    BOOST_TEST_THROWS(s.assign(5u, T(0)), bad_alloc_t);
