@@ -2057,8 +2057,8 @@ class basic_string
       if (pos1 > this->size())
          throw_out_of_range("basic_string::replace out of range position");
       const size_type len = dtl::min_value(n1, this->size() - pos1);
-      const size_type max_size = this->max_size();
-      if (n2 > max_size || (this->size() - len) >= (max_size - n2))
+      const size_type max_sz = this->max_size();
+      if (n2 > max_sz || (this->size() - len) >= (max_sz - n2))
          throw_length_error("basic_string::replace max_size() exceeded");
       const pointer addr = this->priv_addr() + pos1;
       return this->replace(addr, addr + difference_type(len), s, s + difference_type(n2));
