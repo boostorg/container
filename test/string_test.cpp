@@ -109,6 +109,14 @@ struct string_literals<char>
    {
       std::sprintf(buf, "%lu", number);
    }
+   static void sprintf_number(char *buf, long long number)
+   {
+      std::sprintf(buf, "%lli", number);
+   }
+   static void sprintf_number(char *buf, unsigned long long number)
+   {
+      std::sprintf(buf, "%llu", number);
+   }
 };
 
 template<>
