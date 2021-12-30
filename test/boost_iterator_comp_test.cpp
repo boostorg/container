@@ -7,7 +7,6 @@ int main()
     using Iterator = boost::archive::iterators::binary_from_base64<String::iterator>;
 
     String s;
-    s.resize(111);
-    String s2;
-    s2.assign(Iterator{s.begin()},Iterator{s.end()});
+    s.assign(Iterator{s.begin()},Iterator{s.end()});
+    return 0;
 }
