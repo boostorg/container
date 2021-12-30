@@ -189,14 +189,16 @@ BOOST_CONTAINER_FORCEINLINE F memmove(I f, I l, F r) BOOST_NOEXCEPT_OR_NOTHROW
 
 template
    <typename I, // I models InputIterator
-    typename U, // U models unsigned integral constant
     typename F> // F models ForwardIterator
-BOOST_CONTAINER_FORCEINLINE F memmove_n(I f, U n, F r) BOOST_NOEXCEPT_OR_NOTHROW
+BOOST_CONTAINER_FORCEINLINE F memmove_n(I f, std::size_t n, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {
    typedef typename boost::container::iterator_traits<I>::value_type value_type;
    typedef typename boost::container::iterator_traits<F>::difference_type r_difference_type;
    if(BOOST_LIKELY(n != 0)){
-      std::memmove(boost::movelib::iterator_to_raw_pointer(r), boost::movelib::iterator_to_raw_pointer(f), sizeof(value_type)*n);
+      void *dst = boost::movelib::iterator_to_raw_pointer(r);
+      const void *src = boost::movelib::iterator_to_raw_pointer(f);
+      if (dst && src)
+         std::memmove(dst, src, sizeof(value_type)*n);
       r += static_cast<r_difference_type>(n);
    }
 
@@ -211,7 +213,10 @@ BOOST_CONTAINER_FORCEINLINE I memmove_n_source(I f, std::size_t n, F r) BOOST_NO
    if(BOOST_LIKELY(n != 0)){
       typedef typename boost::container::iterator_traits<I>::value_type value_type;
       typedef typename boost::container::iterator_traits<I>::difference_type i_difference_type;
-      std::memmove(boost::movelib::iterator_to_raw_pointer(r), boost::movelib::iterator_to_raw_pointer(f), sizeof(value_type)*n);
+      void *dst = boost::movelib::iterator_to_raw_pointer(r);
+      const void *src = boost::movelib::iterator_to_raw_pointer(f);
+      if (dst && src)
+         std::memmove(dst, src, sizeof(value_type)*n);
       f += static_cast<i_difference_type>(n);
    }
    return f;
@@ -227,7 +232,10 @@ BOOST_CONTAINER_FORCEINLINE I memmove_n_source_dest(I f, std::size_t n, F &r) BO
    typedef typename boost::container::iterator_traits<F>::difference_type f_difference_type;
 
    if(BOOST_LIKELY(n != 0)){
-      std::memmove(boost::movelib::iterator_to_raw_pointer(r), boost::movelib::iterator_to_raw_pointer(f), sizeof(value_type)*n);
+      void *dst = boost::movelib::iterator_to_raw_pointer(r);
+      const void *src = boost::movelib::iterator_to_raw_pointer(f);
+      if (dst && src)
+         std::memmove(dst, src, sizeof(value_type)*n);
       f += i_difference_type(n);
       r += f_difference_type(n);
    }
