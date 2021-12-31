@@ -32,21 +32,21 @@ int main()
 
    {
       //slist
-      boost::transform_iterator<func, typename slist<int>::iterator>
+      boost::transform_iterator<func, slist<int>::iterator>
          ti(s.begin()), ti2(s.end()), ti3(ti);
       boost::intrusive::iterator_uadvance(ti3, v.size());
       BOOST_TEST(ti3 == ti2);
    }
    {
       //list
-      boost::transform_iterator<func, typename list<int>::iterator>
+      boost::transform_iterator<func, list<int>::iterator>
          ti(l.begin()), ti2(l.end()), ti3(ti);
       boost::intrusive::iterator_uadvance(ti3, v.size());
       BOOST_TEST(ti3 == ti2);
    }
    {
       //vector
-      boost::transform_iterator<func, typename vector<int>::iterator>
+      boost::transform_iterator<func, vector<int>::iterator>
          ti(v.begin()), ti2(v.end()), ti3(ti);
       boost::intrusive::iterator_uadvance(ti3, v.size());
       BOOST_TEST(ti3 == ti2);
