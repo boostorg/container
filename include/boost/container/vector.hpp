@@ -435,7 +435,7 @@ struct vector_alloc_holder
       return this->priv_allocation_command(alloc_version(), command, limit_size, prefer_in_recvd_out_size, reuse);
    }
 
-   BOOST_CONTAINER_FORCEINLINE pointer allocate(size_type n)
+   pointer allocate(size_type n)
    {
       const size_type max_alloc = allocator_traits_type::max_size(this->alloc());
       const size_type max = max_alloc <= stored_size_type(-1) ? max_alloc : stored_size_type(-1);
@@ -663,9 +663,7 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
    }
 
    BOOST_CONTAINER_FORCEINLINE void deep_swap(vector_alloc_holder &x)
-   {
-      this->priv_deep_swap(x);
-   }
+      {  this->priv_deep_swap(x);   }
 
    template<class OtherAllocator, class OtherStoredSizeType, class OtherAllocatorVersion>
    void deep_swap(vector_alloc_holder<OtherAllocator, OtherStoredSizeType, OtherAllocatorVersion> &x)
@@ -681,7 +679,6 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
    {  //Containers with version 0 allocators can't be moved without moving elements one by one
       on_capacity_overflow();
    }
-
 
    BOOST_CONTAINER_FORCEINLINE void steal_resources(vector_alloc_holder &)
    {  //Containers with version 0 allocators can't be moved without moving elements one by one
