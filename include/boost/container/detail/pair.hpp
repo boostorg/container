@@ -246,7 +246,7 @@ struct pair
 
    //pair move constructor
    pair(BOOST_RV_REF(pair) p)
-      : first(::boost::move(p.first)), second(::boost::move(p.second))
+      : first(::boost::move(BOOST_MOVE_TO_LV(p).first)), second(::boost::move(BOOST_MOVE_TO_LV(p).second))
    {
       BOOST_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
    }
@@ -260,7 +260,7 @@ struct pair
 
    template <class D, class S>
    pair(BOOST_RV_REF_BEG pair<D, S> BOOST_RV_REF_END p)
-      : first(::boost::move(p.first)), second(::boost::move(p.second))
+      : first(::boost::move(BOOST_MOVE_TO_LV(p).first)), second(::boost::move(BOOST_MOVE_TO_LV(p).second))
    {
       BOOST_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
    }
@@ -296,14 +296,14 @@ struct pair
    }
 
    pair(BOOST_RV_REF_BEG std::pair<T1, T2> BOOST_RV_REF_END p)
-      : first(::boost::move(p.first)), second(::boost::move(p.second))
+      : first(::boost::move(BOOST_MOVE_TO_LV(p).first)), second(::boost::move(BOOST_MOVE_TO_LV(p).second))
    {
       BOOST_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
    }
 
    template <class D, class S>
    pair(BOOST_RV_REF_BEG std::pair<D, S> BOOST_RV_REF_END p)
-      : first(::boost::move(p.first)), second(::boost::move(p.second))
+      : first(::boost::move(BOOST_MOVE_TO_LV(p).first)), second(::boost::move(BOOST_MOVE_TO_LV(p).second))
    {
       BOOST_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
    }
@@ -440,8 +440,8 @@ struct pair
    //pair move assignment
    pair& operator=(BOOST_RV_REF(pair) p)
    {
-      first  = ::boost::move(p.first);
-      second = ::boost::move(p.second);
+      first  = ::boost::move(BOOST_MOVE_TO_LV(p).first);
+      second = ::boost::move(BOOST_MOVE_TO_LV(p).second);
       return *this;
    }
 
@@ -466,8 +466,8 @@ struct pair
       >::type
       operator=(BOOST_RV_REF_BEG pair<D, S> BOOST_RV_REF_END p)
    {
-      first  = ::boost::move(p.first);
-      second = ::boost::move(p.second);
+      first  = ::boost::move(BOOST_MOVE_TO_LV(p).first);
+      second = ::boost::move(BOOST_MOVE_TO_LV(p).second);
       return *this;
    }
 //std::pair copy assignment
@@ -489,16 +489,16 @@ struct pair
    //std::pair move assignment
    pair& operator=(BOOST_RV_REF_BEG std::pair<T1, T2> BOOST_RV_REF_END p)
    {
-      first  = ::boost::move(p.first);
-      second = ::boost::move(p.second);
+      first  = ::boost::move(BOOST_MOVE_TO_LV(p).first);
+      second = ::boost::move(BOOST_MOVE_TO_LV(p).second);
       return *this;
    }
 
    template <class D, class S>
    pair& operator=(BOOST_RV_REF_BEG std::pair<D, S> BOOST_RV_REF_END p)
    {
-      first  = ::boost::move(p.first);
-      second = ::boost::move(p.second);
+      first  = ::boost::move(BOOST_MOVE_TO_LV(p).first);
+      second = ::boost::move(BOOST_MOVE_TO_LV(p).second);
       return *this;
    }
 
