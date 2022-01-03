@@ -14,6 +14,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/pair.hpp>
 #include <boost/container/detail/mpl.hpp>
+#include <boost/container/detail/is_pair.hpp>
 #include <boost/move/unique_ptr.hpp>
 #include <boost/move/utility_core.hpp>
 

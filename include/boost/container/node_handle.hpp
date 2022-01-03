@@ -123,7 +123,7 @@ class node_handle
 
    void destroy_deallocate_node()
    {
-      nator_traits::destroy(this->node_alloc(), boost::movelib::to_raw_pointer(m_ptr));
+      boost::movelib::to_raw_pointer(m_ptr)->destructor(this->node_alloc());
       nator_traits::deallocate(this->node_alloc(), m_ptr, 1u);
    }
 

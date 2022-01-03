@@ -18,6 +18,7 @@
 #include "propagate_allocator_test.hpp"
 #include "emplace_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
+#include <utility> //for std::pair
 
 using namespace boost::container;
 

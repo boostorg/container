@@ -140,15 +140,18 @@ struct node
       ++count;
    }
 
-   ~node()
-   {
-      --count;
-   }
+   template<class Alloc>
+   void destructor(Alloc &)
+   {  this->~node(); }
 
    static unsigned int count;
 
    static void reset_count()
    {  count = 0;  }
+
+   ~node()
+   {  --count; }
+
 };
 
 template<class T1, class T2>
