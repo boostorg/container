@@ -82,7 +82,9 @@ class vec_iterator
 {
    public:
    typedef std::random_access_iterator_tag                                          iterator_category;
+   #ifdef BOOST_MOVE_CONTIGUOUS_ITERATOR_TAG
    typedef std::contiguous_iterator_tag                                             iterator_concept;
+   #endif
    typedef typename boost::intrusive::pointer_traits<Pointer>::element_type         value_type;
 
    //Defining element_type to make libstdc++'s std::pointer_traits well-formed leads to ambiguity
