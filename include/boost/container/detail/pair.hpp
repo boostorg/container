@@ -77,19 +77,7 @@ struct is_tuple_null<boost::tuples::null_type>
    static const bool value = true;
 };
 
-}}}
-
-#if defined(BOOST_MSVC) && (_CPPLIB_VER == 520)
-//MSVC 2010 tuple marker
-namespace std { namespace tr1 { struct _Nil; }}
-#elif defined(BOOST_MSVC) && (_CPPLIB_VER == 540)
-//MSVC 2012 tuple marker
-namespace std { struct _Nil; }
-#endif
-
-
-namespace boost {
-namespace container {
+}  //namespace detail {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
