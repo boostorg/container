@@ -197,23 +197,28 @@ bool test_merge_empty_free()
    return !empty.get_stored_allocator().deallocate_called_without_allocate_;
 }
 
-#ifdef __cpp_lib_span
-#include <span>
+#if defined(__cpp_lib_span)
+#     define BOOST_VECTOR_TEST_HAS_SPAN
 #endif
+
+#ifdef BOOST_VECTOR_TEST_HAS_SPAN
+#include <span>
 
 bool test_span_conversion()
 {
-   #ifdef __cpp_lib_span
-   {
-      boost::container::vector myVec{1, 2, 3, 4, 5};
-      std::span mySpan1{myVec};                                        // (1)
-      std::span mySpan2{myVec.data(), myVec.size()};                   // (2)
-      return mySpan1.size() == myVec.size() && mySpan1.size() == mySpan2.size();
-   }
-   #else
-   return true;
-   #endif
+   boost::container::vector myVec{1, 2, 3, 4, 5};
+   std::span mySpan1{myVec};                                        // (1)
+   std::span mySpan2{myVec.data(), myVec.size()};                   // (2)
+   return mySpan1.size() == myVec.size() && mySpan1.size() == mySpan2.size();
 }
+
+#else //BOOST_VECTOR_TEST_HAS_SPAN
+bool test_span_conversion()
+{
+   return true;
+}
+
+#endif   //BOOST_VECTOR_TEST_HAS_SPAN
 
 int main()
 {
