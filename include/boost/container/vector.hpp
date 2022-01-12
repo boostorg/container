@@ -1292,7 +1292,7 @@ private:
          >::type * = 0)
       )
    {
-      typedef typename iterator_traits<FwdIt>::size_type it_size_type;
+      typedef typename iter_size<FwdIt>::type it_size_type;
       //For Fwd iterators the standard only requires EmplaceConstructible and assignable from *first
       //so we can't do any backwards allocation
       const it_size_type sz = boost::container::iterator_udistance(first, last);
@@ -2012,7 +2012,7 @@ private:
          >::type * = 0
       )
    {
-      typedef typename iterator_traits<FwdIt>::size_type it_size_type;
+      typedef typename iter_size<FwdIt>::type it_size_type;
       BOOST_ASSERT(this->priv_in_range_or_end(pos));
       const it_size_type sz = boost::container::iterator_udistance(first, last);
       if (sz > size_type(-1)){
@@ -3375,11 +3375,11 @@ private:
 
 template <typename InputIterator>
 vector(InputIterator, InputIterator) ->
-   vector<typename iterator_traits<InputIterator>::value_type>;
+   vector<typename iter_value<InputIterator>::type>;
 
 template <typename InputIterator, typename Allocator>
 vector(InputIterator, InputIterator, Allocator const&) ->
-   vector<typename iterator_traits<InputIterator>::value_type, Allocator>;
+   vector<typename iter_value<InputIterator>::type, Allocator>;
 
 #endif
 

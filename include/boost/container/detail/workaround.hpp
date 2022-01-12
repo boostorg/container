@@ -130,13 +130,7 @@
 #endif
 
 
-#if (__cplusplus >= 201703L)
-   //CTAD supported
-   #ifdef __INTEL_COMPILER
-      //Intel compilers do not offer this feature yet
-      #define BOOST_CONTAINER_NO_CXX17_CTAD
-   #endif
-#else
+#if (BOOST_CXX_VERSION < 201703L) || !defined(__cpp_deduction_guides)
    #define BOOST_CONTAINER_NO_CXX17_CTAD
 #endif
 
