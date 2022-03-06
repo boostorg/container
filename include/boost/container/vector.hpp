@@ -1751,7 +1751,7 @@ private:
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE reference at(size_type n)
    {
       this->priv_throw_if_out_of_range(n);
-      return this->m_holder.start()[n];
+      return this->m_holder.start()[difference_type(n)];
    }
 
    //! <b>Requires</b>: size() > n.
