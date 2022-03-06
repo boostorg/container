@@ -1347,6 +1347,7 @@ use [*Boost.Container]? There are several reasons for that:
    * [@https://github.com/boostorg/container/issues/204    GitHub #204: ['"Inconsistent noexcept-ness of static_vector::reserve"]].
    * [@https://github.com/boostorg/container/issues/206    GitHub #206: ['"operator-> on static_vector::iterator causes cast alignment warning"]].
    * [@https://github.com/boostorg/container/issues/207    GitHub #207: ['"boost.vector doesn't work with common_iterator"]].
+   * [@https://github.com/boostorg/container/issues/214    GitHub #214: ['"string is not properly null-terminated in assignments"]].
 
 [endsect]
 

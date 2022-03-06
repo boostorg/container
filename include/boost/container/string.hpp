@@ -1806,16 +1806,17 @@ class basic_string
          if(enough_capacity){
             const size_type elems_after = old_size - size_type(p - old_start);
             const size_type old_length = old_size;
+            size_type new_size = 0;
             if (elems_after >= n) {
                const pointer pointer_past_last = old_start + difference_type(old_size + 1u);
                priv_uninitialized_copy(old_start + difference_type(old_size - n + 1u),
                                        pointer_past_last, pointer_past_last);
 
-               this->priv_size(old_size+n);
                Traits::move(const_cast<CharT*>(boost::movelib::to_raw_pointer(p + difference_type(n))),
                            boost::movelib::to_raw_pointer(p),
                            (elems_after - n) + 1u);
-               this->priv_copy(first, last, const_cast<CharT*>(boost::movelib::to_raw_pointer(p)));
+               (priv_copy)(first, last, const_cast<CharT*>(boost::movelib::to_raw_pointer(p)));
+               new_size = old_size + n;
             }
             else {
                ForwardIter mid = first;
@@ -1827,9 +1828,11 @@ class basic_string
                priv_uninitialized_copy
                   (p, const_iterator(old_start + difference_type(old_length + 1u)),
                   old_start + difference_type(newer_size));
-               this->priv_size(newer_size + elems_after);
-               this->priv_copy(first, mid, const_cast<CharT*>(boost::movelib::to_raw_pointer(p)));
+               (priv_copy)(first, mid, const_cast<CharT*>(boost::movelib::to_raw_pointer(p)));
+               new_size = newer_size + elems_after;
             }
+            this->priv_size(new_size);
+            this->priv_construct_null(old_start + difference_type(new_size));
          }
          else{
             pointer new_start = allocation_ret;
@@ -2982,12 +2985,12 @@ class basic_string
       }
    }
 
-   void priv_construct_null(pointer p)
+   BOOST_CONTAINER_FORCEINLINE void priv_construct_null(pointer p)
    {  this->construct(p, CharT(0));  }
 
    // Helper functions used by constructors.  It is a severe error for
    // any of them to be called anywhere except from within constructors.
-   void priv_terminate_string()
+   BOOST_CONTAINER_FORCEINLINE void priv_terminate_string()
    {  this->priv_construct_null(this->priv_end_addr());  }
 
    template<class FwdIt, class Count> inline
@@ -3037,13 +3040,13 @@ class basic_string
    }
 
    template <class InputIterator, class OutIterator>
-   void priv_copy(InputIterator first, InputIterator last, OutIterator result)
+   static void priv_copy(InputIterator first, InputIterator last, OutIterator result)
    {
       for ( ; first != last; ++first, ++result)
          Traits::assign(*result, *first);
    }
 
-   BOOST_CONTAINER_FORCEINLINE void priv_copy(const CharT* first, const CharT* last, CharT* result)
+   static BOOST_CONTAINER_FORCEINLINE void priv_copy(const CharT* first, const CharT* last, CharT* result)
    {  Traits::copy(result, first, std::size_t(last - first));  }
 
    template <class Integer>
