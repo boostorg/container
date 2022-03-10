@@ -221,10 +221,10 @@ struct node_alloc_holder
       , ICont, hasher, dtl::nat3)                    intrusive_val_hasher;
    typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT
    (boost::container::dtl::
-      , ICont, bucket_traits, dtl::nat)              intrusive_bucket_traits;
+      , ICont, bucket_traits, dtl::natN<0>)              intrusive_bucket_traits;
    typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT
    (boost::container::dtl::
-      , ICont, bucket_type, dtl::nat2)                intrusive_bucket_type;
+      , ICont, bucket_type, dtl::natN<1>)            intrusive_bucket_type;
    //In that case obtain the value predicate from the node predicate via predicate_type
    //if intrusive_val_compare is node_compare<>, nat otherwise
    typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT
