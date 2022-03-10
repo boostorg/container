@@ -256,7 +256,7 @@ struct node_alloc_holder
    public:
 
    //Constructors for sequence containers
-   node_alloc_holder()
+   BOOST_CONTAINER_FORCEINLINE node_alloc_holder()
    {}
 
    explicit node_alloc_holder(const ValAlloc &a)
@@ -330,30 +330,30 @@ struct node_alloc_holder
                , typename ICont::key_equal(eql))
    {  this->icont().swap(BOOST_MOVE_TO_LV(x).icont());   }
 
-   void copy_assign_alloc(const node_alloc_holder &x)
+   BOOST_CONTAINER_FORCEINLINE void copy_assign_alloc(const node_alloc_holder &x)
    {
       dtl::bool_<allocator_traits_type::propagate_on_container_copy_assignment::value> flag;
       dtl::assign_alloc( static_cast<NodeAlloc &>(*this)
                        , static_cast<const NodeAlloc &>(x), flag);
    }
 
-   void move_assign_alloc( node_alloc_holder &x)
+   BOOST_CONTAINER_FORCEINLINE void move_assign_alloc( node_alloc_holder &x)
    {
       dtl::bool_<allocator_traits_type::propagate_on_container_move_assignment::value> flag;
       dtl::move_alloc( static_cast<NodeAlloc &>(*this)
                      , static_cast<NodeAlloc &>(x), flag);
    }
 
-   ~node_alloc_holder()
+   BOOST_CONTAINER_FORCEINLINE ~node_alloc_holder()
    {  this->clear(alloc_version()); }
 
-   size_type max_size() const
+   BOOST_CONTAINER_FORCEINLINE size_type max_size() const
    {  return allocator_traits_type::max_size(this->node_alloc());  }
 
-   NodePtr allocate_one()
+   BOOST_CONTAINER_FORCEINLINE NodePtr allocate_one()
    {  return AllocVersionTraits::allocate_one(this->node_alloc());   }
 
-   void deallocate_one(const NodePtr &p)
+   BOOST_CONTAINER_FORCEINLINE void deallocate_one(const NodePtr &p)
    {  AllocVersionTraits::deallocate_one(this->node_alloc(), p);  }
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
@@ -488,7 +488,7 @@ struct node_alloc_holder
       }
    }
 
-   void clear(version_1)
+   BOOST_CONTAINER_FORCEINLINE void clear(version_1)
    {  this->icont().clear_and_dispose(Destroyer(this->node_alloc()));   }
 
    void clear(version_2)
@@ -515,24 +515,37 @@ struct node_alloc_holder
    }
 
    template<class Key, class Comparator>
-   size_type erase_key(const Key& k, const Comparator &comp, version_1)
+   BOOST_CONTAINER_FORCEINLINE size_type erase_key(const Key& k, const Comparator &comp, version_1)
    {  return this->icont().erase_and_dispose(k, comp, Destroyer(this->node_alloc())); }
 
    template<class Key, class Comparator>
-   size_type erase_key(const Key& k, const Comparator &comp, version_2)
+   BOOST_CONTAINER_FORCEINLINE size_type erase_key(const Key& k, const Comparator &comp, version_2)
    {
       allocator_multialloc_chain_node_deallocator<NodeAlloc> chain_holder(this->node_alloc());
       return this->icont().erase_and_dispose(k, comp, chain_holder.get_chain_builder());
    }
 
+   template<class Key, class Equality, class Hasher>
+   BOOST_CONTAINER_FORCEINLINE size_type erase_key(const Key& k, const Equality& eq, const Hasher &h, version_1)
+   {
+      return this->icont().erase_and_dispose(k, eq, h, Destroyer(this->node_alloc()));
+   }
+
+   template<class Key, class Equality, class Hasher>
+   size_type erase_key(const Key& k, const Equality& eq, const Hasher& h, version_2)
+   {
+      allocator_multialloc_chain_node_deallocator<NodeAlloc> chain_holder(this->node_alloc());
+      return this->icont().erase_and_dispose(k, eq, h, chain_holder.get_chain_builder());
+   }
+
    protected:
    struct cloner
    {
-      explicit cloner(node_alloc_holder &holder)
+      BOOST_CONTAINER_FORCEINLINE explicit cloner(node_alloc_holder &holder)
          :  m_holder(holder)
       {}
 
-      NodePtr operator()(const Node &other) const
+      BOOST_CONTAINER_FORCEINLINE NodePtr operator()(const Node &other) const
       {  return m_holder.create_node(other.get_real_data());  }
 
       node_alloc_holder &m_holder;
@@ -540,11 +553,11 @@ struct node_alloc_holder
 
    struct move_cloner
    {
-      move_cloner(node_alloc_holder &holder)
+      BOOST_CONTAINER_FORCEINLINE move_cloner(node_alloc_holder &holder)
          :  m_holder(holder)
       {}
 
-      NodePtr operator()(Node &other)
+      BOOST_CONTAINER_FORCEINLINE NodePtr operator()(Node &other)
       {  //Use get_real_data() instead of get_real_data to allow moving const key in [multi]map
          return m_holder.create_node(::boost::move(other.get_real_data()));
       }
@@ -552,20 +565,20 @@ struct node_alloc_holder
       node_alloc_holder &m_holder;
    };
 
-   ICont &non_const_icont() const
+   BOOST_CONTAINER_FORCEINLINE ICont &non_const_icont() const
    {  return const_cast<ICont&>(this->m_icont);   }
 
-   NodeAlloc &node_alloc()
+   BOOST_CONTAINER_FORCEINLINE NodeAlloc &node_alloc()
    {  return static_cast<NodeAlloc &>(*this);   }
 
-   const NodeAlloc &node_alloc() const
+   BOOST_CONTAINER_FORCEINLINE const NodeAlloc &node_alloc() const
    {  return static_cast<const NodeAlloc &>(*this);   }
 
    public:
-   ICont &icont()
+      BOOST_CONTAINER_FORCEINLINE ICont &icont()
    {  return this->m_icont;   }
 
-   const ICont &icont() const
+      BOOST_CONTAINER_FORCEINLINE const ICont &icont() const
    {  return this->m_icont;   }
 
    private:
