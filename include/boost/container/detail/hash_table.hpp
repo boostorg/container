@@ -285,7 +285,8 @@ struct hash_table_types
 
 template <class T, class KeyOfValue, class KeyHash, class KeyEqual, class Allocator, class Options>
 class hash_table
-   : public hash_table_types<KeyOfValue, KeyHash, KeyEqual, Allocator, Options>::bucket_holder_t
+   : public hash_table_types<KeyOfValue, KeyHash, KeyEqual, Allocator, Options>::bucket_type
+   , public hash_table_types<KeyOfValue, KeyHash, KeyEqual, Allocator, Options>::bucket_holder_t
    , public hash_table_types<KeyOfValue, KeyHash, KeyEqual, Allocator, Options>::AllocHolder
 {
    typedef hash_table_types<KeyOfValue, KeyHash, KeyEqual, Allocator, Options> hash_table_types_t;
@@ -365,7 +366,7 @@ class hash_table
    public:
 
    BOOST_CONTAINER_FORCEINLINE hash_table()
-      : AllocHolder()
+      : AllocHolder(bucket_traits(this, 1))
    {  this->reserve(0);  }
 
    BOOST_CONTAINER_FORCEINLINE explicit hash_table(const allocator_type& a)
