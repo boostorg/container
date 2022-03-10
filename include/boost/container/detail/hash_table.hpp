@@ -271,8 +271,8 @@ struct hash_table_types
       < Allocator, ValHash, ValEqual
       , options_type::store_hash
       >::type                                               Icont;
-   typedef Icont::bucket_type                               bucket_type;
-   typedef Icont::bucket_traits                             bucket_traits;
+   typedef typename Icont::bucket_type                      bucket_type;
+   typedef typename Icont::bucket_traits                    bucket_traits;
    typedef dtl::node_alloc_holder
       <Allocator, Icont>                                    AllocHolder;
 
@@ -310,8 +310,8 @@ class hash_table
    typedef dtl::allocator_node_destroyer<NodeAlloc>         Destroyer;
    typedef typename AllocHolder::alloc_version              alloc_version;
 
-   typedef Icont::bucket_type                               bucket_type;
-   typedef Icont::bucket_traits                             bucket_traits;
+   typedef typename Icont::bucket_type                      bucket_type;
+   typedef typename Icont::bucket_traits                    bucket_traits;
    typedef typename hash_table_types
       <KeyOfValue, KeyHash, KeyEqual, Allocator, Options>
          ::bucket_holder_t                                  bucket_holder_t;
