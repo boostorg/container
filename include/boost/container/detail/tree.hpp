@@ -391,25 +391,25 @@ struct get_tree_opt<void>
 };
 
 template<class, class KeyOfValue>
-struct real_key_of_value
+struct tree_key_of_value
 {
    typedef KeyOfValue type;
 };
 
 template<class T>
-struct real_key_of_value<T, void>
+struct tree_key_of_value<T, void>
 {
    typedef dtl::identity<T> type;
 };
 
 template<class T1, class T2>
-struct real_key_of_value<std::pair<T1, T2>, int>
+struct tree_key_of_value<std::pair<T1, T2>, int>
 {
    typedef dtl::select1st<T1> type;
 };
 
 template<class T1, class T2>
-struct real_key_of_value<boost::container::dtl::pair<T1, T2>, int>
+struct tree_key_of_value<boost::container::dtl::pair<T1, T2>, int>
 {
    typedef dtl::select1st<T1> type;
 };
@@ -421,7 +421,7 @@ class tree
       , typename dtl::intrusive_tree_type
          < typename real_allocator<T, Allocator>::type
          , tree_value_compare
-            <typename allocator_traits<typename real_allocator<T, Allocator>::type>::pointer, Compare, typename real_key_of_value<T, KeyOfValue>::type>
+            <typename allocator_traits<typename real_allocator<T, Allocator>::type>::pointer, Compare, typename tree_key_of_value<T, KeyOfValue>::type>
          , get_tree_opt<Options>::type::tree_type
          , get_tree_opt<Options>::type::optimize_size
          >::type
@@ -434,7 +434,7 @@ class tree
 
    private:
    typedef allocator_traits<allocator_type>                 allocator_traits_t;
-   typedef typename real_key_of_value<T, KeyOfValue>::type  key_of_value_t;
+   typedef typename tree_key_of_value<T, KeyOfValue>::type  key_of_value_t;
    typedef tree_value_compare
       < typename allocator_traits_t::pointer
       , Compare
