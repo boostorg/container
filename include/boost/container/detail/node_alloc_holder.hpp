@@ -221,7 +221,7 @@ struct node_alloc_holder
       , ICont, hasher, dtl::nat3)                    intrusive_val_hasher;
    typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT
    (boost::container::dtl::
-      , ICont, bucket_traits, dtl::natN<0>)              intrusive_bucket_traits;
+      , ICont, bucket_traits, dtl::natN<0>)           intrusive_bucket_traits;
    typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT
    (boost::container::dtl::
       , ICont, bucket_type, dtl::natN<1>)            intrusive_bucket_type;
@@ -592,10 +592,10 @@ struct node_alloc_holder
    {  return static_cast<const NodeAlloc &>(*this);   }
 
    public:
-      BOOST_CONTAINER_FORCEINLINE ICont &icont()
+   BOOST_CONTAINER_FORCEINLINE ICont &icont()
    {  return this->m_icont;   }
 
-      BOOST_CONTAINER_FORCEINLINE const ICont &icont() const
+   BOOST_CONTAINER_FORCEINLINE const ICont &icont() const
    {  return this->m_icont;   }
 
    private:
