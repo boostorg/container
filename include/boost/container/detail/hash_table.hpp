@@ -97,6 +97,18 @@ struct iiterator_node_value_type< base_node<T, intrusive_hash_table_hook<VoidPoi
    typedef T type;
 };
 
+template<class Options>
+struct get_hash_opt
+{
+   typedef Options type;
+};
+
+template<>
+struct get_hash_opt<void>
+{
+   typedef hash_assoc_defaults type;
+};
+
 
 template<class, class KeyOfValue>
 struct hash_key_of_value
@@ -141,7 +153,7 @@ class hash_insert_equal_end_hint_functor
 namespace dtl {
 
 template< class NodeType, class NodeHashType, class NodeCompareType
-        , class SizeType,  class HookType>
+        , class SizeType,  class HookType, bool CompareHash, bool CacheBegin, bool LinearBuckets>
 struct intrusive_hash_table_dispatch
 {
    typedef typename dtl::bi::make_hashtable
@@ -151,10 +163,14 @@ struct intrusive_hash_table_dispatch
       ,dtl::bi::base_hook<HookType>
       ,dtl::bi::constant_time_size<true>
       ,dtl::bi::size_type<SizeType>
+      ,dtl::bi::cache_begin<CacheBegin>
+      ,dtl::bi::compare_hash<CompareHash>
+      ,dtl::bi::linear_buckets<LinearBuckets>
       >::type  type;
 };
 
-template<class Allocator, class ValueHash, class ValueCompare, bool StoreHash>
+template<class Allocator, class ValueHash, class ValueCompare
+        ,bool StoreHash, bool CacheBegin, bool LinearBuckets>
 struct intrusive_hash_table_type
 {
    private:
@@ -174,11 +190,12 @@ struct intrusive_hash_table_type
    //provoke an early instantiation of node_t that could ruin recursive
    //hash_table definitions, so retype the complete type to avoid any problem.
    typedef typename intrusive_hash_table_hook
-      <void_pointer, StoreHash>::type                      hook_type;
+      <void_pointer, StoreHash>::type                       hook_type;
    public:
    typedef typename intrusive_hash_table_dispatch
       < node_t, node_hash_type, node_equal_type
-      , size_type, hook_type>::type                      type;
+      , size_type, hook_type, StoreHash
+      , CacheBegin, LinearBuckets>::type                    type;
 };
 
 }  //namespace dtl {
@@ -241,19 +258,6 @@ class HashRecyclingCloner
    intrusive_container &m_icont;
 };
 
-
-template<class Options>
-struct get_hash_table_opt
-{
-   typedef Options type;
-};
-
-template<>
-struct get_hash_table_opt<void>
-{
-   typedef hash_assoc_defaults type;
-};
-
 template <class KeyOfValue, class KeyHash, class KeyEqual, class Allocator, class Options>
 struct hash_table_types
 {
@@ -266,10 +270,12 @@ struct hash_table_types
    typedef tree_value_compare
       < typename allocator_traits<Allocator>::pointer
       , KeyEqual, key_of_value_t, bool>                         ValEqual;
-   typedef typename get_hash_table_opt<Options>::type       options_type;
+   typedef typename get_hash_opt<Options>::type                options_type;
    typedef typename dtl::intrusive_hash_table_type
       < Allocator, ValHash, ValEqual
       , options_type::store_hash
+      , options_type::cache_begin
+      , options_type::linear_buckets
       >::type                                               Icont;
    typedef typename Icont::bucket_type                      bucket_type;
    typedef typename Icont::bucket_traits                    bucket_traits;
@@ -283,9 +289,17 @@ struct hash_table_types
 
 };
 
+template<class Bucket, std::size_t N>
+struct static_buckets
+{
+   static const std::size_t size = N;
+   Bucket buckets_[N];
+};
+
 template <class T, class KeyOfValue, class KeyHash, class KeyEqual, class Allocator, class Options>
 class hash_table
-   : public hash_table_types<KeyOfValue, KeyHash, KeyEqual, Allocator, Options>::bucket_type
+   : public static_buckets< typename hash_table_types<KeyOfValue, KeyHash, KeyEqual, Allocator, Options>::bucket_type
+                          , hash_table_types<KeyOfValue, KeyHash, KeyEqual, Allocator, Options>::Icont::bucket_overhead+1u>
    , public hash_table_types<KeyOfValue, KeyHash, KeyEqual, Allocator, Options>::bucket_holder_t
    , public hash_table_types<KeyOfValue, KeyHash, KeyEqual, Allocator, Options>::AllocHolder
 {
@@ -315,6 +329,8 @@ class hash_table
    typedef typename hash_table_types
       <KeyOfValue, KeyHash, KeyEqual, Allocator, Options>
          ::bucket_holder_t                                  bucket_holder_t;
+   typedef static_buckets< typename Icont::bucket_type
+                         , Icont::bucket_overhead + 1u >    static_buckets_t;
 
 
    BOOST_COPYABLE_AND_MOVABLE(hash_table)
@@ -366,7 +382,7 @@ class hash_table
    public:
 
    BOOST_CONTAINER_FORCEINLINE hash_table()
-      : AllocHolder(bucket_traits(this, 1))
+      : AllocHolder(bucket_traits( ((static_buckets_t&)*this).buckets_, static_buckets_t::size))
    {  this->reserve(0);  }
 
    BOOST_CONTAINER_FORCEINLINE explicit hash_table(const allocator_type& a)
@@ -731,10 +747,7 @@ class hash_table
       (BOOST_FWD_REF(MovableConvertible) v, insert_commit_data &data)
    {
       NodePtr tmp = AllocHolder::create_node(boost::forward<MovableConvertible>(v));
-      scoped_node_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
-      iterator ret(this->icont().insert_unique_commit(*tmp, data));
-      destroy_deallocator.release();
-      return ret;
+      return iterator(this->icont().insert_unique_commit(*tmp, data));
    }
 
    template<class MovableConvertible>
@@ -950,7 +963,8 @@ class hash_table
    //IOG temp
    BOOST_CONTAINER_FORCEINLINE iterator insert(const value_type& v)
    {
-      this->reserve(this->size() + 1u);
+      if(BOOST_UNLIKELY(this->size() == this->bucket_count()))
+         this->reserve(this->size() + 1u);
       return this->insert_unique(v).first;
    }
 
@@ -1005,7 +1019,7 @@ class hash_table
       return std::pair<iterator, bool>(iterator(ret.first), ret.second);
    }
 
-   void erase(const_iterator position)
+   BOOST_CONTAINER_FORCEINLINE void erase(const_iterator position)
    {
       BOOST_ASSERT(position != this->cend() && (priv_is_linked)(position));
       return this->icont().erase_and_dispose(position.get(), Destroyer(this->node_alloc()));
@@ -1185,11 +1199,11 @@ class hash_table
 
    void reserve(size_type n)
    {
-      if (!n || this->bucket_count() < n) {
+      if (this->bucket_count() < n) {
          std::size_t sc = Icont::suggested_upper_bucket_count(n);
          bucket_holder_t& this_buckets = *this;
-         bucket_holder_t new_buckets(sc, this_buckets.get_allocator());
-         this->icont().rehash(bucket_traits(new_buckets.data(), sc));
+         bucket_holder_t new_buckets(sc + Icont::bucket_overhead, this_buckets.get_allocator());
+         this->icont().rehash(bucket_traits(new_buckets.data(), new_buckets.size()));
          this_buckets.swap(new_buckets);
       }
    }
