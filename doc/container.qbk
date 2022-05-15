@@ -807,7 +807,7 @@ general purpose allocator since new and delete don't offer expansion and burst c
 [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1953.html N1953: Upgrading the Interface of Allocators using API Versioning],
 [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2045.html N2045: Improving STL allocators]
 and the article
-[@http://www.drivehq.com/web/igaztanaga/allocplus/ Applying classic memory allocation strategies to C++ containers].
+[@../allocplus/index.html Applying classic memory allocation strategies to C++ containers].
 The extended allocator interface is implemented by [classref boost::container::allocator allocator],
 [classref boost::container::adaptive_pool adaptive_pool] and [classref boost::container::node_allocator node_allocator]
 classes.
