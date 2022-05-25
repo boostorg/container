@@ -545,7 +545,7 @@ struct small_vector_storage_definer
 //! \tparam N The number of preallocated elements stored inside small_vector. It shall be less than Allocator::max_size();
 //! \tparam Allocator The allocator used for memory management when the number of elements exceeds N. Use void
 //!   for the default allocator
-//! |tparam Options A type produced from \c boost::container::small_vector_options.
+//! \tparam Options A type produced from \c boost::container::small_vector_options.
 template <class T, std::size_t N, class Allocator BOOST_CONTAINER_DOCONLY(= void), class Options BOOST_CONTAINER_DOCONLY(= void) >
 class small_vector : public small_vector_base<T, Allocator, Options>
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
