@@ -541,6 +541,9 @@ struct small_vector_storage_definer
 //!
 //! All `boost::container::vector` member functions are inherited. See `vector` documentation for details.
 //!
+//! Any change to the capacity of the vector, including decreasing its size such as with the shrink_to_fit method, will
+//! cause the vector to permanently switch to dynamically allocated storage.
+//!
 //! \tparam T The type of object that is stored in the small_vector
 //! \tparam N The number of preallocated elements stored inside small_vector. It shall be less than Allocator::max_size();
 //! \tparam Allocator The allocator used for memory management when the number of elements exceeds N. Use void
