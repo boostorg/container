@@ -2,7 +2,7 @@
 # Distributed under the Boost Software License, Version 1.0.
 # https://www.boost.org/LICENSE_1_0.txt
 
-cmake_minimum_required(VERSION 3.5...3.16)
+cmake_minimum_required(VERSION 3.16...3.23)
 
 project(boost_container VERSION "${BOOST_SUPERPROJECT_VERSION}" LANGUAGES C CXX)
 
@@ -19,17 +19,13 @@ add_library(boost_container
 add_library(Boost::container ALIAS boost_container)
 
 target_include_directories(boost_container PUBLIC include)
+target_compile_features(boost_container PUBLIC cxx_std_20)
+
+find_package(Boost 1.78)
 
 target_link_libraries(boost_container
   PUBLIC
-    Boost::assert
-    Boost::config
-    Boost::core
-    Boost::intrusive
-    Boost::move
-    Boost::static_assert
-    Boost::type_traits
-    Boost::winapi
+    Boost::headers
 )
 
 target_compile_definitions(boost_container
@@ -45,6 +41,8 @@ else()
 endif()
 
 if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/CMakeLists.txt")
+
+  enable_testing()
 
   add_subdirectory(test)
 

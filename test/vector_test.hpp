@@ -232,20 +232,20 @@ bool vector_copyable_only(MyBoostVector &boostvector, MyStdVector &stdvector, bo
    //operator=
    {
       //Copy constructor test
-      MyBoostVector bcopy((const MyBoostVector&) boostvector);
+      MyBoostVector bcopy1((const MyBoostVector&) boostvector);
       MyStdVector   scopy((const MyStdVector&)   stdvector);
       MyBoostVector bcopy2(boostvector);
       MyStdVector   scopy2(stdvector);
 
-      if(!test::CheckEqualContainers(bcopy, scopy)) return false;
+      if(!test::CheckEqualContainers(bcopy1, scopy)) return false;
       if(!test::CheckEqualContainers(bcopy2, scopy2)) return false;
 
       //Assignment from a smaller vector
       bcopy2.erase(bcopy2.begin() + difference_type(bcopy2.size()/2), bcopy2.end());
       scopy2.erase(scopy2.begin() + difference_type(scopy2.size()/2), scopy2.end());
-      bcopy = bcopy2;
+      bcopy1 = bcopy2;
       scopy = scopy2;
-      if(!test::CheckEqualContainers(bcopy, scopy)) return false;
+      if(!test::CheckEqualContainers(bcopy1, scopy)) return false;
 
       //Assignment from a bigger vector with capacity
       bcopy2  = boostvector;
@@ -260,7 +260,7 @@ bool vector_copyable_only(MyBoostVector &boostvector, MyStdVector &stdvector, bo
 
       bcopy2 = boostvector;
       scopy2 = stdvector;
-      if(!test::CheckEqualContainers(bcopy, scopy)) return false;
+      if(!test::CheckEqualContainers(bcopy1, scopy)) return false;
 
       //Assignment with equal capacity
       bcopy2 = boostvector;
