@@ -6,7 +6,8 @@ cmake_minimum_required(VERSION 3.16...3.23)
 
 project(boost_container VERSION "${BOOST_SUPERPROJECT_VERSION}" LANGUAGES C CXX)
 
-add_library(boost_container
+add_library(
+  boost_container
   src/alloc_lib.c
   src/dlmalloc.cpp
   src/global_resource.cpp
@@ -16,22 +17,24 @@ add_library(boost_container
   src/unsynchronized_pool_resource.cpp
 )
 
-add_library(Boost::container ALIAS boost_container)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/boost-cmake/CMakeLists.txt")
+  add_subdirectory(boost-cmake)
+
+  include(boost-cmake/cmake/Modules/ccache.cmake)
+else()
+  add_library(Boost::container ALIAS boost_container)
+
+  find_package(Boost 1.78)
+endif()
 
 target_include_directories(boost_container PUBLIC include)
 target_compile_features(boost_container PUBLIC cxx_std_20)
 
-find_package(Boost 1.78)
+target_link_libraries(boost_container PUBLIC Boost::headers)
 
-target_link_libraries(boost_container
-  PUBLIC
-    Boost::headers
-)
-
-target_compile_definitions(boost_container
-  PUBLIC BOOST_CONTAINER_NO_LIB
-  # Source files already define BOOST_CONTAINER_SOURCE
-  # PRIVATE BOOST_CONTAINER_SOURCE
+target_compile_definitions(
+  boost_container PUBLIC BOOST_CONTAINER_NO_LIB # Source files already define BOOST_CONTAINER_SOURCE
+                                                # PRIVATE BOOST_CONTAINER_SOURCE
 )
 
 if(BUILD_SHARED_LIBS)
@@ -40,10 +43,9 @@ else()
   target_compile_definitions(boost_container PUBLIC BOOST_CONTAINER_STATIC_LINK)
 endif()
 
+option(BUILD_TESTING "" ${PROJECT_IS_TOP_LEVEL})
 if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/CMakeLists.txt")
-
   enable_testing()
 
   add_subdirectory(test)
-
 endif()
