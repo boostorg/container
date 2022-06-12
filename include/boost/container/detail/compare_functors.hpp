@@ -79,6 +79,9 @@ struct key_node_pred
       :  base_t(comp)
    {}
 
+   BOOST_CONTAINER_FORCEINLINE explicit key_node_pred()
+   {}
+
    typedef boost::intrusive::detail::ebo_functor_holder<KeyPred> base_t;
    typedef KeyPred                     key_predicate;
    typedef KeyOfValue                  key_of_value;
