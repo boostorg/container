@@ -138,7 +138,7 @@ struct base_node
    #  endif
 
    template<class Alloc>
-   void destructor(Alloc &a) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE void destructor(Alloc &a) BOOST_NOEXCEPT
    {
       allocator_traits<Alloc>::destroy
          (a, &this->get_real_data());
@@ -203,13 +203,7 @@ struct node_alloc_holder
    //be of type node_compare<>. If not an associative container val_compare will be a "nat" type.
    typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT
       ( boost::container::dtl::
-      , ICont, key_compare, dtl::nat)                 intrusive_val_compare;
-   //In that case obtain the value predicate from the node predicate via predicate_type
-   //if intrusive_val_compare is node_compare<>, nat otherwise
-   typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT
-      ( boost::container::dtl::
-      , intrusive_val_compare
-      , predicate_type, dtl::nat)                    val_compare;
+      , ICont, key_compare, dtl::nat)                 intrusive_key_compare;
 
    //If the intrusive container is a hash container, obtain the predicate, which will
    //be of type node_compare<>. If not an associative container val_equal will be a "nat" type.
@@ -226,7 +220,7 @@ struct node_alloc_holder
    (boost::container::dtl::
       , ICont, bucket_type, dtl::natN<1>)            intrusive_bucket_type;
    //In that case obtain the value predicate from the node predicate via predicate_type
-   //if intrusive_val_compare is node_compare<>, nat otherwise
+   //if intrusive_key_compare is node_compare<>, nat otherwise
    typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT
    (boost::container::dtl::
       , intrusive_val_equal
@@ -281,8 +275,8 @@ struct node_alloc_holder
    {}
 
    //Constructors for associative containers
-   node_alloc_holder(const val_compare &c, const ValAlloc &a)
-      : NodeAlloc(a), m_icont(typename ICont::key_compare(c))
+   node_alloc_holder(const intrusive_key_compare &c, const ValAlloc &a)
+      : NodeAlloc(a), m_icont(c)
    {}
 
    node_alloc_holder(const intrusive_bucket_traits & bt, const val_hasher &hf, const val_equal &eql, const ValAlloc &a)
@@ -309,9 +303,9 @@ struct node_alloc_holder
       : NodeAlloc(NodeAllocTraits::select_on_container_copy_construction(x.node_alloc()))
    {}
 
-   node_alloc_holder(const node_alloc_holder &x, const val_compare &c)
+   node_alloc_holder(const node_alloc_holder &x, const intrusive_key_compare &c)
       : NodeAlloc(NodeAllocTraits::select_on_container_copy_construction(x.node_alloc()))
-      , m_icont(typename ICont::key_compare(c))
+      , m_icont(c)
    {}
 
    node_alloc_holder(const node_alloc_holder &x, const intrusive_bucket_traits& bt, const val_hasher &hf, const val_equal &eql)
@@ -331,13 +325,13 @@ struct node_alloc_holder
       : NodeAlloc(boost::move(BOOST_MOVE_TO_LV(x).node_alloc()))
    {  this->icont().swap(x.icont());  }
 
-   explicit node_alloc_holder(const val_compare &c)
-      : m_icont(typename ICont::key_compare(c))
+   explicit node_alloc_holder(const intrusive_key_compare &c)
+      : m_icont(c)
    {}
 
    //helpers for move assignments
-   explicit node_alloc_holder(BOOST_RV_REF(node_alloc_holder) x, const val_compare &c)
-      : NodeAlloc(boost::move(BOOST_MOVE_TO_LV(x).node_alloc())), m_icont(typename ICont::key_compare(c))
+   explicit node_alloc_holder(BOOST_RV_REF(node_alloc_holder) x, const intrusive_key_compare &c)
+      : NodeAlloc(boost::move(BOOST_MOVE_TO_LV(x).node_alloc())), m_icont(c)
    {  this->icont().swap(x.icont());  }
 
    explicit node_alloc_holder(BOOST_RV_REF(node_alloc_holder) x, const intrusive_bucket_traits& bt, const val_hasher &hf, const val_equal &eql)
@@ -531,28 +525,15 @@ struct node_alloc_holder
       return ret_it;
    }
 
-   template<class Key, class Comparator>
-   BOOST_CONTAINER_FORCEINLINE size_type erase_key(const Key& k, const Comparator &comp, version_1)
-   {  return this->icont().erase_and_dispose(k, comp, Destroyer(this->node_alloc())); }
+   template<class Key>
+   BOOST_CONTAINER_FORCEINLINE size_type erase_key(const Key& k, version_1)
+   {  return this->icont().erase_and_dispose(k, Destroyer(this->node_alloc())); }
 
-   template<class Key, class Comparator>
-   BOOST_CONTAINER_FORCEINLINE size_type erase_key(const Key& k, const Comparator &comp, version_2)
+   template<class Key>
+   BOOST_CONTAINER_FORCEINLINE size_type erase_key(const Key& k, version_2)
    {
       allocator_multialloc_chain_node_deallocator<NodeAlloc> chain_holder(this->node_alloc());
-      return this->icont().erase_and_dispose(k, comp, chain_holder.get_chain_builder());
-   }
-
-   template<class Key, class Equality, class Hasher>
-   BOOST_CONTAINER_FORCEINLINE size_type erase_key(const Key& k, const Equality& eq, const Hasher &h, version_1)
-   {
-      return this->icont().erase_and_dispose(k, eq, h, Destroyer(this->node_alloc()));
-   }
-
-   template<class Key, class Equality, class Hasher>
-   size_type erase_key(const Key& k, const Equality& eq, const Hasher& h, version_2)
-   {
-      allocator_multialloc_chain_node_deallocator<NodeAlloc> chain_holder(this->node_alloc());
-      return this->icont().erase_and_dispose(k, eq, h, chain_holder.get_chain_builder());
+      return this->icont().erase_and_dispose(k, chain_holder.get_chain_builder());
    }
 
    protected:
@@ -598,10 +579,23 @@ struct node_alloc_holder
    BOOST_CONTAINER_FORCEINLINE const ICont &icont() const
    {  return this->m_icont;   }
 
-   private:
+   protected:
    //The intrusive container
    ICont m_icont;
 };
+
+template<class Node, class KeyOfValue>
+struct key_of_node : KeyOfValue
+{
+   typedef typename KeyOfValue::type type;
+
+   BOOST_CONTAINER_FORCEINLINE key_of_node()
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE const type& operator()(const Node& x) const
+   {  return this->KeyOfValue::operator()(x.get_data());  }
+};
+
 
 }  //namespace dtl {
 }  //namespace container {

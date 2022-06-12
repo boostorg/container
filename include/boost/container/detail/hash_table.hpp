@@ -26,6 +26,7 @@
 #include <boost/container/container_fwd.hpp>
 #include <boost/container/options.hpp>
 #include <boost/container/node_handle.hpp>
+#include <boost/container/vector.hpp>
 
 // container/detail
 #include <boost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
@@ -152,12 +153,14 @@ class hash_insert_equal_end_hint_functor
 
 namespace dtl {
 
-template< class NodeType, class NodeHashType, class NodeCompareType
-        , class SizeType,  class HookType, bool CompareHash, bool CacheBegin, bool LinearBuckets>
+template< class NodeType, class KeyOfNode, class NodeHashType, class NodeCompareType
+        , class SizeType,  class HookType, bool CompareHash
+        , bool CacheBegin, bool LinearBuckets, bool FastmodBuckets>
 struct intrusive_hash_table_dispatch
 {
    typedef typename dtl::bi::make_hashtable
       <NodeType
+      ,dtl::bi::key_of_value<KeyOfNode>
       ,dtl::bi::hash<NodeHashType>
       ,dtl::bi::equal<NodeCompareType>
       ,dtl::bi::base_hook<HookType>
@@ -166,11 +169,12 @@ struct intrusive_hash_table_dispatch
       ,dtl::bi::cache_begin<CacheBegin>
       ,dtl::bi::compare_hash<CompareHash>
       ,dtl::bi::linear_buckets<LinearBuckets>
+      ,dtl::bi::fastmod_buckets<FastmodBuckets>
       >::type  type;
 };
 
-template<class Allocator, class ValueHash, class ValueCompare
-        ,bool StoreHash, bool CacheBegin, bool LinearBuckets>
+template<class Allocator, class KeyOfValue, class KeyHash, class KeyCompare
+        ,bool StoreHash, bool CacheBegin, bool LinearBuckets, bool FastmodBuckets>
 struct intrusive_hash_table_type
 {
    private:
@@ -182,20 +186,20 @@ struct intrusive_hash_table_type
       allocator_traits<Allocator>::size_type               size_type;
    typedef base_node<value_type, intrusive_hash_table_hook
       <void_pointer, StoreHash> >                          node_t;
-   typedef value_to_node_compare
-      <node_t, ValueHash, std::size_t>                     node_hash_type;
-   typedef value_to_node_compare
-      <node_t, ValueCompare>                               node_equal_type;
    //Deducing the hook type from node_t (e.g. node_t::hook_type) would
    //provoke an early instantiation of node_t that could ruin recursive
    //hash_table definitions, so retype the complete type to avoid any problem.
    typedef typename intrusive_hash_table_hook
       <void_pointer, StoreHash>::type                       hook_type;
+
+   typedef key_of_node
+      <node_t, KeyOfValue>                                  key_of_node_t;
+
    public:
    typedef typename intrusive_hash_table_dispatch
-      < node_t, node_hash_type, node_equal_type
+      < node_t, key_of_node_t, KeyHash, KeyCompare
       , size_type, hook_type, StoreHash
-      , CacheBegin, LinearBuckets>::type                    type;
+      , CacheBegin, LinearBuckets, FastmodBuckets>::type    type;
 };
 
 }  //namespace dtl {
@@ -263,30 +267,31 @@ struct hash_table_types
 {
    typedef typename hash_key_of_value
          < typename allocator_traits<Allocator>::value_type
-         , KeyOfValue>::type                                   key_of_value_t;
+         , KeyOfValue>::type                                key_of_value_t;
    typedef tree_value_compare
       < typename allocator_traits<Allocator>::pointer
-      , KeyHash, key_of_value_t, std::size_t>                   ValHash;
+      , KeyHash, key_of_value_t, std::size_t>               ValHash;
    typedef tree_value_compare
       < typename allocator_traits<Allocator>::pointer
-      , KeyEqual, key_of_value_t, bool>                         ValEqual;
-   typedef typename get_hash_opt<Options>::type                options_type;
+      , KeyEqual, key_of_value_t, bool>                     ValEqual;
+   typedef typename get_hash_opt<Options>::type             options_type;
    typedef typename dtl::intrusive_hash_table_type
-      < Allocator, ValHash, ValEqual
+      < Allocator, key_of_value_t, KeyHash, ValEqual
       , options_type::store_hash
       , options_type::cache_begin
       , options_type::linear_buckets
+      , options_type::fastmod_buckets
       >::type                                               Icont;
    typedef typename Icont::bucket_type                      bucket_type;
    typedef typename Icont::bucket_traits                    bucket_traits;
-   typedef dtl::node_alloc_holder
-      <Allocator, Icont>                                    AllocHolder;
 
    typedef typename boost::container::
       allocator_traits<Allocator>::template
          portable_rebind_alloc<bucket_type>::type           bucket_allocator;
-   typedef std::vector<bucket_type, bucket_allocator>       bucket_holder_t;
-
+   typedef boost::container::vector
+      <bucket_type, bucket_allocator>                       bucket_holder_t;
+   typedef dtl::node_alloc_holder
+      <Allocator, Icont>                                    AllocHolder;
 };
 
 template<class Bucket, std::size_t N>
@@ -296,10 +301,12 @@ struct static_buckets
    Bucket buckets_[N];
 };
 
+const std::size_t SmallestBucketSize = 3u;
+
 template <class T, class KeyOfValue, class KeyHash, class KeyEqual, class Allocator, class Options>
 class hash_table
    : public static_buckets< typename hash_table_types<KeyOfValue, KeyHash, KeyEqual, Allocator, Options>::bucket_type
-                          , hash_table_types<KeyOfValue, KeyHash, KeyEqual, Allocator, Options>::Icont::bucket_overhead+1u>
+                          , hash_table_types<KeyOfValue, KeyHash, KeyEqual, Allocator, Options>::Icont::bucket_overhead+SmallestBucketSize>
    , public hash_table_types<KeyOfValue, KeyHash, KeyEqual, Allocator, Options>::bucket_holder_t
    , public hash_table_types<KeyOfValue, KeyHash, KeyEqual, Allocator, Options>::AllocHolder
 {
@@ -330,7 +337,7 @@ class hash_table
       <KeyOfValue, KeyHash, KeyEqual, Allocator, Options>
          ::bucket_holder_t                                  bucket_holder_t;
    typedef static_buckets< typename Icont::bucket_type
-                         , Icont::bucket_overhead + 1u >    static_buckets_t;
+                         , Icont::bucket_overhead + SmallestBucketSize >   static_buckets_t;
 
 
    BOOST_COPYABLE_AND_MOVABLE(hash_table)
@@ -538,7 +545,7 @@ class hash_table
       //Optimized allocation and construction
       this->allocate_many_and_construct
          ( first, boost::container::iterator_udistance(first, last)
-         , hash_insert_equal_end_hint_functor<Node, Icont>(this->icont()));
+         , hash_insert_equal_end_hint_functor<Node, Icont>(this->m_icont));
    }
 
    public:
@@ -546,7 +553,7 @@ class hash_table
    BOOST_CONTAINER_FORCEINLINE hash_table(const hash_table& x)
       :  AllocHolder(x, x.value_hash_function(), x.value_eq())
    {
-      this->icont().clone_from
+      this->m_icont.clone_from
          (x.icont(), typename AllocHolder::cloner(*this), Destroyer(this->node_alloc()));
    }
 
@@ -559,19 +566,19 @@ class hash_table
    BOOST_CONTAINER_FORCEINLINE hash_table(const hash_table& x, const allocator_type &a)
       :  AllocHolder(x.value_hash_function(), x.value_eq(), a)
    {
-      this->icont().clone_from
+      this->m_icont.clone_from
          (x.icont(), typename AllocHolder::cloner(*this), Destroyer(this->node_alloc()));
       //AllocHolder clears in case of exception
    }
 
    hash_table(BOOST_RV_REF(hash_table) x, const allocator_type &a)
-      :  AllocHolder(x.value_hash_function(), x.value_eq(), a)
+      :  AllocHolder(x.hash_function(), x.key_eq(), a)
    {
       if(this->node_alloc() == x.node_alloc()){
-         this->icont().swap(x.icont());
+         this->m_icont.swap(x.icont());
       }
       else{
-         this->icont().clone_from
+         this->m_icont.clone_from
             (boost::move(x.icont()), typename AllocHolder::move_cloner(*this), Destroyer(this->node_alloc()));
       }
       //AllocHolder clears in case of exception
@@ -595,10 +602,10 @@ class hash_table
          //Transfer all the nodes to a temporary hash_table
          //If anything goes wrong, all the nodes will be destroyed
          //automatically
-         Icont other_hash_table(::boost::move(this->icont()));
+         Icont other_hash_table(::boost::move(this->m_icont));
 
          //Now recreate the source hash_table reusing nodes stored by other_hash_table
-         this->icont().clone_from
+         this->m_icont.clone_from
             (x.icont()
             , HashRecyclingCloner<AllocHolder, false>(*this, other_hash_table)
             , Destroyer(this->node_alloc()));
@@ -629,17 +636,17 @@ class hash_table
          //Move allocator if needed
          this->AllocHolder::move_assign_alloc(x);
          //Obtain resources
-         this->icont() = boost::move(x.icont());
+         this->m_icont = boost::move(x.icont());
       }
       //Else do a one by one move
       else{
          //Transfer all the nodes to a temporary hash_table
          //If anything goes wrong, all the nodes will be destroyed
          //automatically
-         Icont other_hash_table(::boost::move(this->icont()));
+         Icont other_hash_table(::boost::move(this->m_icont));
 
          //Now recreate the source hash_table reusing nodes stored by other_hash_table
-         this->icont().clone_from
+         this->m_icont.clone_from
             (::boost::move(x.icont())
             , HashRecyclingCloner<AllocHolder, true>(*this, other_hash_table)
             , Destroyer(this->node_alloc()));
@@ -653,13 +660,13 @@ class hash_table
    public:
    // accessors:
    BOOST_CONTAINER_FORCEINLINE key_equal key_eq() const
-   {  return this->icont().key_eq().predicate().key_comp(); }
+   {  return this->m_icont.key_eq(); }
 
    BOOST_CONTAINER_FORCEINLINE value_equal value_eq() const
    {  return value_equal(this->key_eq());  }
 
    BOOST_CONTAINER_FORCEINLINE hasher hash_function() const
-   {  return this->icont().hash_function().predicate().key_comp();  }
+   {  return this->m_icont.hash_function();  }
 
    BOOST_CONTAINER_FORCEINLINE value_hasher value_hash_function() const
    {  return value_hasher(this->hash_function());  }
@@ -674,13 +681,13 @@ class hash_table
    {  return this->node_alloc(); }
 
    BOOST_CONTAINER_FORCEINLINE iterator begin()
-   { return iterator(this->icont().begin()); }
+   { return iterator(this->m_icont.begin()); }
 
    BOOST_CONTAINER_FORCEINLINE const_iterator begin() const
    {  return this->cbegin();  }
 
    BOOST_CONTAINER_FORCEINLINE iterator end()
-   {  return iterator(this->icont().end());  }
+   {  return iterator(this->m_icont.end());  }
 
    BOOST_CONTAINER_FORCEINLINE const_iterator end() const
    {  return this->cend();  }
@@ -705,7 +712,7 @@ class hash_table
    {  return !this->size();  }
 
    BOOST_CONTAINER_FORCEINLINE size_type size() const
-   {  return this->icont().size();   }
+   {  return this->m_icont.size();   }
 
    BOOST_CONTAINER_FORCEINLINE size_type max_size() const
    {  return AllocHolder::max_size();  }
@@ -725,8 +732,8 @@ class hash_table
       (const key_type& key, insert_commit_data &data)
    {
       std::pair<iiterator, bool> ret =
-         this->icont().insert_unique_check
-            (key, KeyNodeHash(hash_function()), KeyNodeEqual(key_eq()), data);
+         this->m_icont.insert_unique_check
+            (key, data);
       return std::pair<iterator, bool>(iterator(ret.first), ret.second);
    }
 
@@ -737,8 +744,8 @@ class hash_table
       (void)hint;
       BOOST_ASSERT((priv_is_linked)(hint));
       std::pair<iiterator, bool> ret =
-         this->icont().insert_unique_check
-            (key, KeyNodeHash(hash_function()), KeyNodeEqual(key_eq()), data);
+         this->m_icont.insert_unique_check
+            (key, data);
       return std::pair<iterator, bool>(iterator(ret.first), ret.second);
    }
 
@@ -747,7 +754,7 @@ class hash_table
       (BOOST_FWD_REF(MovableConvertible) v, insert_commit_data &data)
    {
       NodePtr tmp = AllocHolder::create_node(boost::forward<MovableConvertible>(v));
-      return iterator(this->icont().insert_unique_commit(*tmp, data));
+      return iterator(this->m_icont.insert_unique_commit(*tmp, data));
    }
 
    template<class MovableConvertible>
@@ -770,7 +777,7 @@ class hash_table
    {
       NodePtr tmp = AllocHolder::create_node(boost::forward<KeyConvertible>(key), boost::forward<M>(obj));
       scoped_node_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
-      iiterator ret(this->icont().insert_unique_commit(*tmp, data));
+      iiterator ret(this->m_icont.insert_unique_commit(*tmp, data));
       destroy_deallocator.release();
       return ret;
    }
@@ -778,7 +785,7 @@ class hash_table
    bool priv_is_linked(const_iterator const position) const
    {
       iiterator const cur(position.get());
-      return   cur == this->icont().end() ||
+      return   cur == this->m_icont.end() ||
                 (++iiterator(cur) != cur &&
                  ++iiterator(cur) != iiterator());
    }
@@ -788,7 +795,7 @@ class hash_table
    {
       NodePtr tmp(AllocHolder::create_node(boost::forward<MovableConvertible>(v)));
       //push_back has no-throw guarantee so avoid any deallocator/destroyer
-      this->icont().push_back(*tmp);
+      this->m_icont.push_back(*tmp);
    }
 
    std::pair<iterator, bool> emplace_unique_impl(NodePtr p)
@@ -804,7 +811,7 @@ class hash_table
       //No throw insertion part, release rollback
       destroy_deallocator.release();
       return std::pair<iterator,bool>
-         ( iterator(this->icont().insert_unique_commit(*p, data))
+         ( iterator(this->m_icont.insert_unique_commit(*p, data))
          , true );
    }
 
@@ -819,7 +826,7 @@ class hash_table
          Destroyer(this->node_alloc())(p);
          return ret.first;
       }
-      return iterator(this->icont().insert_unique_commit(*p, data));
+      return iterator(this->m_icont.insert_unique_commit(*p, data));
    }
 
    public:
@@ -839,7 +846,7 @@ class hash_table
    {
       NodePtr tmp(AllocHolder::create_node(boost::forward<Args>(args)...));
       scoped_node_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
-      iterator ret(this->icont().insert_equal(*tmp));
+      iterator ret(this->m_icont.insert_equal(*tmp));
       destroy_deallocator.release();
       return ret;
    }
@@ -851,7 +858,7 @@ class hash_table
       NodePtr tmp(AllocHolder::create_node(boost::forward<Args>(args)...));
       scoped_node_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
       //to-do: take advantage of hint: just check for equality and insert after if equal
-      iterator ret(this->icont().insert_equal(*tmp));
+      iterator ret(this->m_icont.insert_equal(*tmp));
       destroy_deallocator.release();
       return ret;
    }
@@ -863,12 +870,12 @@ class hash_table
       insert_commit_data data;
       const key_type & k = key;  //Support emulated rvalue references
       std::pair<iiterator, bool> ret =
-         hint == const_iterator() ? this->icont().insert_unique_check\
-                                       (k, KeyNodeHash(hash_function()), KeyNodeEqual(key_eq()), data)
-                                  : this->icont().insert_unique_check\
-                                       (hint.get(), k, KeyNodeHash(hash_function()), KeyNodeEqual(key_eq()), data);
+         hint == const_iterator() ? this->m_icont.insert_unique_check\
+                                       (k, data)
+                                  : this->m_icont.insert_unique_check\
+                                       (hint.get(), k, data);
       if(ret.second){
-         ret.first = this->icont().insert_unique_commit
+         ret.first = this->m_icont.insert_unique_commit
             (*AllocHolder::create_node(try_emplace_t(), boost::forward<KeyType>(key), boost::forward<Args>(args)...), data);
       }
       return std::pair<iterator, bool>(iterator(ret.first), ret.second);
@@ -890,7 +897,7 @@ class hash_table
    {\
       NodePtr tmp(AllocHolder::create_node(BOOST_MOVE_FWD##N));\
       scoped_node_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());\
-      iterator ret(this->icont().insert_equal(this->icont().end(), *tmp));\
+      iterator ret(this->m_icont.insert_equal(this->m_icont.end(), *tmp));\
       destroy_deallocator.release();\
       return ret;\
    }\
@@ -901,7 +908,7 @@ class hash_table
       BOOST_ASSERT((priv_is_linked)(hint));\
       NodePtr tmp(AllocHolder::create_node(BOOST_MOVE_FWD##N));\
       scoped_node_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());\
-      iterator ret(this->icont().insert_equal(hint.get(), *tmp));\
+      iterator ret(this->m_icont.insert_equal(hint.get(), *tmp));\
       destroy_deallocator.release();\
       return ret;\
    }\
@@ -913,12 +920,12 @@ class hash_table
       insert_commit_data data;\
       const key_type & k = key;\
       std::pair<iiterator, bool> ret =\
-         hint == const_iterator() ? this->icont().insert_unique_check\
-                                       (            k, KeyNodeHash(hash_function()), KeyNodeEqual(key_eq()), data)\
-                                  : this->icont().insert_unique_check\
-                                       (hint.get(), k, KeyNodeHash(hash_function()), KeyNodeEqual(key_eq()), data);\
+         hint == const_iterator() ? this->m_icont.insert_unique_check\
+                                       (            k, data)\
+                                  : this->m_icont.insert_unique_check\
+                                       (hint.get(), k, data);\
       if(ret.second){\
-         ret.first = this->icont().insert_unique_commit\
+         ret.first = this->m_icont.insert_unique_commit\
             (*AllocHolder::create_node(try_emplace_t(), boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N), data);\
       }\
       return std::pair<iterator, bool>(iterator(ret.first), ret.second);\
@@ -955,7 +962,7 @@ class hash_table
       NodePtr tmp(AllocHolder::create_node(v));
       scoped_node_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
       //to-do: take advantage of hint: just check for equality and insert after if equal
-      iterator ret(this->icont().insert_equal(*tmp)); //
+      iterator ret(this->m_icont.insert_equal(*tmp)); //
       destroy_deallocator.release();
       return ret;
    }
@@ -973,7 +980,7 @@ class hash_table
    {
       NodePtr tmp(AllocHolder::create_node(boost::forward<MovableConvertible>(v)));
       scoped_node_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
-      iterator ret(this->icont().insert_equal(*tmp));
+      iterator ret(this->m_icont.insert_equal(*tmp));
       destroy_deallocator.release();
       return ret;
    }
@@ -986,7 +993,7 @@ class hash_table
       scoped_node_destroy_deallocator<NodeAlloc> destroy_deallocator(tmp, this->node_alloc());
       //to-do: take advantage of hint: just check for equality and insert after if equal
       (void)hint;
-      iterator ret(this->icont().insert_equal(*tmp));
+      iterator ret(this->m_icont.insert_equal(*tmp));
       destroy_deallocator.release();
       return ret;
    }
@@ -1006,10 +1013,10 @@ class hash_table
       insert_commit_data data;
       const key_type & k = key;  //Support emulated rvalue references
       std::pair<iiterator, bool> ret =
-         hint == const_iterator() ? this->icont().insert_unique_check\
-                                       (k, KeyNodeHash(hash_function()), KeyNodeEqual(key_eq()), data)
-                                  : this->icont().insert_unique_check\
-                                       (hint.get(), k, KeyNodeHash(hash_function()), KeyNodeEqual(key_eq()), data);
+         hint == const_iterator() ? this->m_icont.insert_unique_check\
+                                       (k, data)
+                                  : this->m_icont.insert_unique_check\
+                                       (hint.get(), k, data);
       if(ret.second){
          ret.first = this->priv_insert_or_assign_commit(boost::forward<KeyType>(key), boost::forward<M>(obj), data);
       }
@@ -1022,11 +1029,11 @@ class hash_table
    BOOST_CONTAINER_FORCEINLINE void erase(const_iterator position)
    {
       BOOST_ASSERT(position != this->cend() && (priv_is_linked)(position));
-      return this->icont().erase_and_dispose(position.get(), Destroyer(this->node_alloc()));
+      return this->m_icont.erase_and_dispose(position.get(), Destroyer(this->node_alloc()));
    }
 
    BOOST_CONTAINER_FORCEINLINE size_type erase(const key_type& k)
-   {  return AllocHolder::erase_key(k, KeyNodeHash(hash_function()), KeyNodeEqual(key_eq()), alloc_version()); }
+   {  return AllocHolder::erase_key(k, alloc_version()); }
 
    iterator erase(const_iterator first, const_iterator last)
    {
@@ -1048,7 +1055,7 @@ class hash_table
    {
       BOOST_ASSERT(position != this->cend() && (priv_is_linked)(position));
       iiterator const iit(position.get());
-      this->icont().erase(iit);
+      this->m_icont.erase(iit);
       return node_type(iit.operator->(), this->node_alloc());
    }
 
@@ -1066,7 +1073,7 @@ class hash_table
             this->insert_unique_check(hint, key_of_value_type()(nh.value()), data);
          if(ret.second){
             irt.inserted = true;
-            irt.position = iterator(this->icont().insert_unique_commit(*nh.get(), data));
+            irt.position = iterator(this->m_icont.insert_unique_commit(*nh.get(), data));
             nh.release();
          }
          else{
@@ -1087,7 +1094,7 @@ class hash_table
       }
       else{
          NodePtr const p(nh.release());
-         return iterator(this->icont().insert_equal(*p));
+         return iterator(this->m_icont.insert_equal(*p));
       }
    }
 
@@ -1099,7 +1106,7 @@ class hash_table
       else{
          NodePtr const p(nh.release());
          //to-do: take advantage of hint: just check for equality and insert after if equal
-         return iterator(this->icont().insert_equal(*p)); (void)hint;
+         return iterator(this->m_icont.insert_equal(*p)); (void)hint;
       }
    }
 
@@ -1117,13 +1124,13 @@ class hash_table
    // search operations. Const and non-const overloads even if no iterator is returned
    // so splay implementations can to their rebalancing when searching in non-const versions
    BOOST_CONTAINER_FORCEINLINE iterator find(const key_type& k)
-   {  return iterator(this->icont().find(k, KeyNodeHash(hash_function()), KeyNodeEqual(key_eq())));  }
+   {  return iterator(this->m_icont.find(k));  }
 
    BOOST_CONTAINER_FORCEINLINE const_iterator find(const key_type& k) const
-   {  return const_iterator(this->non_const_icont().find(k, KeyNodeHash(hash_function()), KeyNodeEqual(key_eq())));  }
+   {  return const_iterator(this->non_const_icont().find(k));  }
 
    BOOST_CONTAINER_FORCEINLINE size_type count(const key_type& k) const
-   {  return size_type(this->icont().count(k, KeyNodeHash(hash_function()), KeyNodeEqual(key_eq()))); }
+   {  return size_type(this->m_icont.count(k)); }
 
    BOOST_CONTAINER_FORCEINLINE bool contains(const key_type& x) const
    {  return this->find(x) != this->cend();  }
@@ -1131,14 +1138,14 @@ class hash_table
    std::pair<iterator,iterator> equal_range(const key_type& k)
    {
       std::pair<iiterator, iiterator> ret =
-         this->icont().equal_range(k, KeyNodeHash(hash_function()), KeyNodeEqual(key_eq()));
+         this->m_icont.equal_range(k);
       return std::pair<iterator,iterator>(iterator(ret.first), iterator(ret.second));
    }
 
    std::pair<const_iterator, const_iterator> equal_range(const key_type& k) const
    {
       std::pair<iiterator, iiterator> ret =
-         this->non_const_icont().equal_range(k, KeyNodeHash(hash_function()), KeyNodeEqual(key_eq()));
+         this->non_const_icont().equal_range(k);
       return std::pair<const_iterator,const_iterator>
          (const_iterator(ret.first), const_iterator(ret.second));
    }
@@ -1150,42 +1157,48 @@ class hash_table
    {  return priv_equal_range_unique<const_iterator>(*this, k); }
 
    BOOST_CONTAINER_FORCEINLINE size_type bucket_count() const BOOST_NOEXCEPT
-   {  return this->icont().bucket_count();  }
+   {  return this->m_icont.bucket_count();  }
 
    BOOST_CONTAINER_FORCEINLINE size_type max_bucket_count() const BOOST_NOEXCEPT
    {  return this->max_size();   }
 
    BOOST_CONTAINER_FORCEINLINE size_type bucket_size(size_type n) const
-   {  return this->icont().bucket_size(n);  }
+   {  return this->m_icont.bucket_size(n);  }
 
    BOOST_CONTAINER_FORCEINLINE size_type bucket(const key_type& k) const
-   {  return this->icont().bucket(k, KeyNodeHash(hash_function()));  }
-
+   {  return this->m_icont.bucket(k, KeyNodeHash());  }
+/*
    BOOST_CONTAINER_FORCEINLINE local_iterator begin(size_type n)
-   {  return local_iterator(this->icont().begin(n));  }
+   {  return local_iterator(this->m_icont.begin(n));  }
 
    BOOST_CONTAINER_FORCEINLINE const_local_iterator begin(size_type n) const
-   {  return const_local_iterator(this->non_const_icont().begin(n));  }
-
-   BOOST_CONTAINER_FORCEINLINE const_local_iterator cbegin(size_type n) const
    {  return this->cbegin(n);   }
 
+   BOOST_CONTAINER_FORCEINLINE const_local_iterator cbegin(size_type n) const
+   {  return const_local_iterator(this->non_const_icont().begin(n));  }
+
    BOOST_CONTAINER_FORCEINLINE local_iterator end(size_type n)
-   {  return local_iterator(this->icont().end(n));  }
+   {  return local_iterator(this->m_icont.end(n));  }
 
    BOOST_CONTAINER_FORCEINLINE const_local_iterator end(size_type n) const
-   {  return const_local_iterator(this->non_const_icont().end(n));  }
-
-   BOOST_CONTAINER_FORCEINLINE const_local_iterator cend(size_type n) const
    {  return this->cend(n);   }
 
+   BOOST_CONTAINER_FORCEINLINE const_local_iterator cend(size_type n) const
+   {  return const_local_iterator(this->non_const_icont().end(n));  }
+*/
    float load_factor() const BOOST_NOEXCEPT
-   {  return this->icont().load_factor();  }
+   {
+      assert(0);
+      return 0.0f;
+   }
 
    float max_load_factor() const BOOST_NOEXCEPT
-   {  return this->icont().max_load_factor();  }
+   {
+      assert(0);
+      return 0.0f;
+   }
 
-   void max_load_factor(float z)
+   void max_load_factor(float)
    {
       assert(0);
    }
@@ -1200,10 +1213,10 @@ class hash_table
    void reserve(size_type n)
    {
       if (this->bucket_count() < n) {
-         std::size_t sc = Icont::suggested_upper_bucket_count(n);
+         std::size_t sc = Icont::suggested_lower_bucket_count(n);
          bucket_holder_t& this_buckets = *this;
          bucket_holder_t new_buckets(sc + Icont::bucket_overhead, this_buckets.get_allocator());
-         this->icont().rehash(bucket_traits(new_buckets.data(), new_buckets.size()));
+         this->m_icont.rehash(bucket_traits(new_buckets.data(), new_buckets.size()));
          this_buckets.swap(new_buckets);
       }
    }

@@ -113,15 +113,16 @@ using tree_assoc_options_t = typename boost::container::tree_assoc_options<Optio
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-template<bool StoreHash, bool CacheBegin, bool LinearBuckets>
+template<bool StoreHash, bool CacheBegin, bool LinearBuckets, bool FastmodBuckets>
 struct hash_opt
 {
    static const bool store_hash  = StoreHash;
    static const bool cache_begin = CacheBegin;
    static const bool linear_buckets = LinearBuckets;
+   static const bool fastmod_buckets = FastmodBuckets;
 };
 
-typedef hash_opt<false, false, false> hash_assoc_defaults;
+typedef hash_opt<false, false, false, false> hash_assoc_defaults;
 
 #endif   //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -135,8 +136,9 @@ BOOST_INTRUSIVE_OPTION_CONSTANT(store_hash, bool, Enabled, store_hash)
 //!first non-empty bucket (which can be O(bucket_size()))
 BOOST_INTRUSIVE_OPTION_CONSTANT(cache_begin, bool, Enabled, cache_begin)
 
-
 BOOST_INTRUSIVE_OPTION_CONSTANT(linear_buckets, bool, Enabled, linear_buckets)
+
+BOOST_INTRUSIVE_OPTION_CONSTANT(fastmod_buckets, bool, Enabled, fastmod_buckets)
 
 //! Helper metafunction to combine options into a single type to be used
 //! by \c boost::container::hash_set, \c boost::container::hash_multiset
@@ -161,6 +163,7 @@ struct hash_assoc_options
    typedef hash_opt<packed_options::store_hash
                    ,packed_options::cache_begin
                    ,packed_options::linear_buckets
+                   ,packed_options::fastmod_buckets
                    > implementation_defined;
    /// @endcond
    typedef implementation_defined type;
