@@ -122,7 +122,7 @@ struct tree_internal_data_type< std::pair<T1, T2> >
 };
 
 template <class T, class VoidPointer, boost::container::tree_type_enum tree_type_value, bool OptimizeSize>
-struct iiterator_node_value_type< base_node<T, intrusive_tree_hook<VoidPointer, tree_type_value, OptimizeSize> > >
+struct iiterator_node_value_type< base_node<T, intrusive_tree_hook<VoidPointer, tree_type_value, OptimizeSize>, true > >
 {
   typedef T type;
 };
@@ -231,7 +231,7 @@ struct intrusive_tree_type
    typedef typename boost::container::
       allocator_traits<Allocator>::void_pointer             void_pointer;
    typedef base_node<value_type, intrusive_tree_hook
-      <void_pointer, tree_type_value, OptimizeSize> >       node_t;
+      <void_pointer, tree_type_value, OptimizeSize>, true > node_t;
    //Deducing the hook type from node_t (e.g. node_t::hook_type) would
    //provoke an early instantiation of node_t that could ruin recursive
    //tree definitions, so retype the complete type to avoid any problem.

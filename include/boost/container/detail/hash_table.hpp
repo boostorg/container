@@ -93,7 +93,7 @@ struct hash_table_internal_data_type< std::pair<T1, T2> >
 };
 
 template <class T, class VoidPointer, bool StoreHash>
-struct iiterator_node_value_type< base_node<T, intrusive_hash_table_hook<VoidPointer, StoreHash> > >
+struct iiterator_node_value_type< base_node<T, intrusive_hash_table_hook<VoidPointer, StoreHash>, true > >
 {
    typedef T type;
 };
@@ -185,7 +185,7 @@ struct intrusive_hash_table_type
    typedef typename boost::container::
       allocator_traits<Allocator>::size_type               size_type;
    typedef base_node<value_type, intrusive_hash_table_hook
-      <void_pointer, StoreHash> >                          node_t;
+      <void_pointer, StoreHash>, true >                    node_t;
    //Deducing the hook type from node_t (e.g. node_t::hook_type) would
    //provoke an early instantiation of node_t that could ruin recursive
    //hash_table definitions, so retype the complete type to avoid any problem.

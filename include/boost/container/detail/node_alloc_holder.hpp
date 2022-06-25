@@ -54,7 +54,7 @@ namespace container {
 
 //This trait is used to type-pun std::pair because in C++03
 //compilers std::pair is useless for C++11 features
-template<class T, bool = dtl::is_pair<T>::value >
+template<class T, bool>
 struct node_internal_data_type
 {
    typedef T type;
@@ -68,13 +68,13 @@ struct node_internal_data_type< T, true>
                      type;
 };
 
-template <class T, class HookDefiner>
+template <class T, class HookDefiner, bool PairBased = false>
 struct base_node
    :  public HookDefiner::type
 {
    public:
    typedef T value_type;
-   typedef typename node_internal_data_type<T>::type internal_type;
+   typedef typename node_internal_data_type<T, PairBased && dtl::is_pair<T>::value>::type internal_type;
    typedef typename HookDefiner::type hook_type;
 
    typedef typename dtl::aligned_storage<sizeof(T), dtl::alignment_of<T>::value>::type storage_t;
