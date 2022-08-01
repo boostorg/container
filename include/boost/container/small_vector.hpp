@@ -449,19 +449,21 @@ BOOST_CONTAINER_FORCEINLINE typename small_vector_allocator<T, VoidAlloc, Option
    typedef small_vector_storage_strawman<T, allocator_type, Options> strawman_t;
    typedef typename strawman_t::sm_storage_t sm_storage_t;
 
+   //These warnings are false positives, as we know the alignment is correct
+   //and aligned storage is allowed to hold any type
    #if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
    #pragma GCC diagnostic push
    #pragma GCC diagnostic ignored "-Wcast-align"
+   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
    #endif
    const vector_type& v = reinterpret_cast<const vector_type&>(*this);
    BOOST_ASSERT((std::size_t(this) % dtl::alignment_of<strawman_t>::value) == 0);
+   const strawman_t &straw   = static_cast<const strawman_t&>(v);
+   const sm_storage_t& stor = static_cast<const sm_storage_t&>(straw);
+   return boost::intrusive::pointer_traits<const_pointer>::pointer_to(*((const T*)stor.m_storage.data));
    #if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
    #pragma GCC diagnostic pop
    #endif
-
-   const strawman_t &straw   = static_cast<const strawman_t&>(v);
-   const sm_storage_t& stor = static_cast<const sm_storage_t&>(straw);
-   return boost::intrusive::pointer_traits<pointer>::pointer_to(*((T*)&stor.m_storage));
 }
 
 template <class T, class VoidAlloc, class Options>
@@ -474,16 +476,16 @@ BOOST_CONTAINER_FORCEINLINE typename small_vector_allocator<T, VoidAlloc, Option
    #if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
    #pragma GCC diagnostic push
    #pragma GCC diagnostic ignored "-Wcast-align"
+   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
    #endif
    vector_type& v = reinterpret_cast<vector_type&>(*this);
    BOOST_ASSERT((std::size_t(this) % dtl::alignment_of<strawman_t>::value) == 0);
+   strawman_t &straw   = static_cast<strawman_t&>(v);
+   sm_storage_t& stor = static_cast<sm_storage_t&>(straw);
+   return boost::intrusive::pointer_traits<pointer>::pointer_to(*((T*)stor.m_storage.data));
    #if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
    #pragma GCC diagnostic pop
    #endif
-
-   strawman_t &straw   = static_cast<strawman_t&>(v);
-   sm_storage_t& stor = static_cast<sm_storage_t&>(straw);
-   return boost::intrusive::pointer_traits<pointer>::pointer_to(*((T*)&stor.m_storage));
 }
 
 
