@@ -127,8 +127,8 @@ namespace boost {
 namespace container {
 namespace pmr {
 
-static std::atomic<memory_resource*> default_memory_resource = 
-   &boost::container::dtl::singleton_default<new_delete_resource_imp>::instance();
+static std::atomic<memory_resource*> default_memory_resource( 
+   &boost::container::dtl::singleton_default<new_delete_resource_imp>::instance());
 
 BOOST_CONTAINER_DECL memory_resource* set_default_resource(memory_resource* r) BOOST_NOEXCEPT
 {
