@@ -468,7 +468,7 @@ while also providing the regular features of `vector`, in particular the contigu
 
 Unlike `vector`, devector can have free capacity both before and after the elements. This enables efficient
 implementation of methods that modify the devector at the front. In general, `devector`'s available methods
-are a superset of those of `vector` with identical behaviour, barring a couple of iterator invalidation
+are a superset of those of `vector` with similar behaviour, barring a couple of iterator invalidation
 guarantees that differ.
 
 The overhead for devector is one extra `size_t` per container: Usually sizeof(devector) == 4*sizeof(T*).
@@ -697,14 +697,17 @@ the last template parameter and defined using the utility class
    A higher growth factor will make it faster as it will require less data movement, but it will have a greater memory
    impact (on average, more memory will be unused). A user can provide a custom implementation of the growth factor and some
    predefined policies are available: [classref boost::container::growth_factor_50 growth_factor_50],
-   [classref boost::container::growth_factor_60 growth_factor_60] and
-   [classref boost::container::growth_factor_50 growth_factor_100].
+   [classref boost::container::growth_factor_60 growth_factor_60] (usually the default) and
+   [classref boost::container::growth_factor_100 growth_factor_100].
 
 *  [classref boost::container::stored_size stored_size]: the type that will be used to store size-related
    parameters inside of the vector. Sometimes, when the maximum capacity to be used is much less than the
    theoretical maximum that a vector can hold, it's interesting to use smaller unsigned integer types to represent
    `size()` and `capacity()` inside vector, so that the size of an empty vector is minimized and cache 
    performance might be improved. See [classref boost::container::stored_size stored_size] for more details.
+
+*  [classref boost::container::devector devector] supports an addicional [classref boost::container::relocation_limit relocation_limit]
+   options to control container's behaviour when back or front free capacity is exhausted.
 
 See the following example to see how [classref boost::container::vector_options vector_options] can be
 used to customize `vector` container:
@@ -1323,8 +1326,8 @@ use [*Boost.Container]? There are several reasons for that:
 *  `static_vector` was based on Andrew Hundt's and Adam Wulkiewicz's high-performance `varray` class.
    Many performance improvements of `vector` were also inspired by their implementation. Thanks!
 
-*  `devector` is based on Thaler Benedek's high-performance `devector` implementation, then
-   adapted for [*Boost.Container]. Also inspired by similar implemenations by Orson Peters and Lars Hagen.
+*  `devector`'s initial implementation is based on Thaler Benedek's high-performance `devector` implementation,
+   then adapted for [*Boost.Container]. Also inspired by similar implemenations by Orson Peters and Lars Hagen.
    Thanks for such a great code and documentation!
 
 *  Howard Hinnant's help and advices were essential when implementing move semantics,
@@ -1337,6 +1340,15 @@ use [*Boost.Container]? There are several reasons for that:
 [endsect]
 
 [section:release_notes Release Notes]
+
+[section:release_notes_boost_1_81_00 Boost 1.81 Release]
+
+* [classref boost::container::devector devector]'s insertion logic has been reimplemented to move elements to the center of the devector if an insertion at one end
+  has no free capacity but there is free capacity on the other end. Current implementation keeps reallocating memory when only inserting at one end and poping from the
+  other, provoking very high memory usage. The new strategy is based on the article
+  [@http://larshagencpp.github.io/blog/2016/05/22/devector Double-ended vector - is it useful?] by Lars Greger Nordland Hagen.
+
+[endsect]
 
 [section:release_notes_boost_1_80_00 Boost 1.80 Release]
 

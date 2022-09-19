@@ -232,24 +232,17 @@ class default_next_capacity;
 
 typedef vector_opt<void, void> vector_null_opt;
 
-template<class GrowthType, class StoredSizeType>
-struct devector_opt
-   : vector_opt<GrowthType, StoredSizeType>
-{};
-
-typedef devector_opt<void, void> devector_null_opt;
-
 #else    //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-//!This growth factor argument specifies that the container should increase it's
+//!This growth factor argument specifies that the container should increase its
 //!capacity a 50% when existing capacity is exhausted.
 struct growth_factor_50{};
 
-//!This growth factor argument specifies that the container should increase it's
+//!This growth factor argument specifies that the container should increase its
 //!capacity a 60% when existing capacity is exhausted.
 struct growth_factor_60{};
 
-//!This growth factor argument specifies that the container should increase it's
+//!This growth factor argument specifies that the container should increase its
 //!capacity a 100% (doubling its capacity) when existing capacity is exhausted.
 struct growth_factor_100{};
 
@@ -466,9 +459,82 @@ using static_vector_options_t = typename boost::container::static_vector_options
 
 #endif
 
+
+////////////////////////////////////////////////////////////////
+//
+//
+//          OPTIONS FOR DEVECTOR CONTAINER
+//
+//
+////////////////////////////////////////////////////////////////
+
+//!This option setter specifies the relocation strategy of the underlying devector.
+//!
+//!\tparam RelocationLimit A predefined occupation limit, used in insertions, that will determine
+//! if the currently used memory buffer will be reused relocating all elements to the middle. If
+//! the new occupation ratio (size()/current_buffer_size) is lower or equal than the limit, relocation
+//! is performed reusing the same buffer. If the ratio is higher, a new buffer is allocated to hold
+//! elements.
+//! 
+//!Predefined relocation limits that can be passed as arguments to this option are:
+//!\c boost::container::relocation_limit_66
+//!\c boost::container::relocation_limit_75
+//!\c boost::container::relocation_limit_80
+//!\c boost::container::relocation_limit_86
+//!\c boost::container::relocation_limit_90
+//!
+//!If this option is not specified, a default will be used by the container.
+//!
+//!Note: Repeated insertions at only one end (only back insertions or only front insertions) usually will
+//!lead to a single relocation when `relocation_limit_66` is used and two relocations when `relocation_limit_90`
+//!is used.
+BOOST_INTRUSIVE_OPTION_TYPE(relocation_limit, RelocLimit, RelocLimit, relocation_limit_type)
+
+#if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+template<class GrowthType, class StoredSizeType, class RelocLimit>
+struct devector_opt
+   : vector_opt<GrowthType, StoredSizeType>
+{
+   typedef RelocLimit      relocation_limit_type;
+};
+
+typedef devector_opt<void, void, void> devector_null_opt;
+
+#else
+
+//!This relocation limit argument specifies that the container will relocate
+//!all elements when there is no space at the side the insertion should
+//!take place and memory usage is below 66% (2/3)
+struct relocation_limit_66{};
+
+//!This relocation limit argument specifies that the container will relocate
+//!all elements when there is no space at the side the insertion should
+//!take place and memory usage is below 75% (3/4)
+struct relocation_limit_75 {};
+
+//!This relocation limit argument specifies that the container will relocate
+//!all elements when there is no space at the side the insertion should
+//!take place and memory usage is below 80% (4/5)
+struct relocation_limit_80 {};
+
+//!This relocation limit argument specifies that the container will relocate
+//!all elements when there is no space at the side the insertion should
+//!take place and memory usage is below 86% (6/7)
+struct relocation_limit_86 {};
+
+//!This relocation limit argument specifies that the container will relocate
+//!all elements when there is no space at the side the insertion should
+//!take place and memory usage is below 90% (9/10)
+struct relocation_limit_90 {};
+
+#endif
+
+
 //! Helper metafunction to combine options into a single type to be used
 //! by \c boost::container::devector.
-//! Supported options are: \c boost::container::growth_factor and \c boost::container::stored_size
+//! Supported options are: \c boost::container::growth_factor, \c boost::container::stored_size
+//! and \c boost::container::relocation_limit
 #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
 template<class ...Options>
 #else
@@ -486,7 +552,9 @@ struct devector_options
       #endif
       >::type packed_options;
    typedef devector_opt< typename packed_options::growth_factor_type
-                       , typename packed_options::stored_size_type> implementation_defined;
+                       , typename packed_options::stored_size_type
+                       , typename packed_options::relocation_limit_type
+                       > implementation_defined;
    /// @endcond
    typedef implementation_defined type;
 };

@@ -319,8 +319,7 @@ void test_vectors()
          vector_test_template< bc::vector<MyInt, std::allocator<MyInt> >, Operation >(numit[i], numele[i]        ,  "vector       ", bp);
          vector_test_template< bc::small_vector<MyInt, 0, std::allocator<MyInt> >, Operation >(numit[i], numele[i], "small_vector ", bp);
          vector_test_template< bc::devector<MyInt, std::allocator<MyInt> >, Operation >(numit[i], numele[i],        "devector     ", bp);
-
-         vector_test_template< std::deque<MyInt, std::allocator<MyInt> >, Operation >(numit[i], numele[i],          "std::deque   ", bp);
+         //vector_test_template< std::deque<MyInt, std::allocator<MyInt> >, Operation >(numit[i], numele[i],          "std::deque   ", bp);
          vector_test_template< bc::deque<MyInt, std::allocator<MyInt> >, Operation >(numit[i], numele[i],           "deque        ", bp);
       }
       std::cout << "---------------------------------\n---------------------------------\n";
