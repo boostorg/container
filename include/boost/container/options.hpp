@@ -200,6 +200,20 @@ struct default_if_void<void, Default>
    typedef Default type;
 };
 
+template<std::size_t N, std::size_t DefaultN>
+struct default_if_zero
+{
+   static const std::size_t value = N;
+};
+
+template<std::size_t DefaultN>
+struct default_if_zero<0u, DefaultN>
+{
+   static const std::size_t value = DefaultN;
+};
+
+
+
 #endif
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -468,65 +482,75 @@ using static_vector_options_t = typename boost::container::static_vector_options
 //
 ////////////////////////////////////////////////////////////////
 
-//!This option setter specifies the relocation strategy of the underlying devector.
+//!Thse options specify the relocation strategy of devector.
 //!
-//!\tparam RelocationLimit A predefined occupation limit, used in insertions, that will determine
-//! if the currently used memory buffer will be reused relocating all elements to the middle. If
-//! the new occupation ratio (size()/current_buffer_size) is lower or equal than the limit, relocation
-//! is performed reusing the same buffer. If the ratio is higher, a new buffer is allocated to hold
-//! elements.
-//! 
 //!Predefined relocation limits that can be passed as arguments to this option are:
-//!\c boost::container::relocation_limit_66
-//!\c boost::container::relocation_limit_75
-//!\c boost::container::relocation_limit_80
-//!\c boost::container::relocation_limit_86
-//!\c boost::container::relocation_limit_90
+//!\c boost::container::relocate_on_66
+//!\c boost::container::relocate_on_75
+//!\c boost::container::relocate_on_80
+//!\c boost::container::relocate_on_85
+//!\c boost::container::relocate_on_90
 //!
 //!If this option is not specified, a default will be used by the container.
 //!
 //!Note: Repeated insertions at only one end (only back insertions or only front insertions) usually will
-//!lead to a single relocation when `relocation_limit_66` is used and two relocations when `relocation_limit_90`
+//!lead to a single relocation when `relocate_on_66` is used and two relocations when `relocate_on_90`
 //!is used.
-BOOST_INTRUSIVE_OPTION_TYPE(relocation_limit, RelocLimit, RelocLimit, relocation_limit_type)
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-template<class GrowthType, class StoredSizeType, class RelocLimit>
+BOOST_INTRUSIVE_OPTION_CONSTANT(relocate_on, std::size_t, Fraction, free_fraction)
+
+struct relocate_on_66 : public relocate_on<3U>{};
+
+struct relocate_on_75 : public relocate_on<4U> {};
+
+struct relocate_on_80 : public relocate_on<5U> {};
+
+struct relocate_on_85 : public relocate_on<7U> {};
+
+struct relocate_on_90 : public relocate_on<10U> {};
+
+template<class GrowthType, class StoredSizeType, std::size_t FreeFraction>
 struct devector_opt
    : vector_opt<GrowthType, StoredSizeType>
 {
-   typedef RelocLimit      relocation_limit_type;
+   static const std::size_t free_fraction = FreeFraction;
 };
 
-typedef devector_opt<void, void, void> devector_null_opt;
+typedef devector_opt<void, void, 0u> devector_null_opt;
 
 #else
 
-//!This relocation limit argument specifies that the container will relocate
+//!This relocation condition option specifies that the container will never relocate
+//!elements when there is no space at the side the insertion should
+//!take place
+struct relocate_never;
+
+//!This relocation condition option specifies that the container will relocate
 //!all elements when there is no space at the side the insertion should
 //!take place and memory usage is below 66% (2/3)
-struct relocation_limit_66{};
+struct relocate_on_66;
 
-//!This relocation limit argument specifies that the container will relocate
+//!This relocation condition option specifies that the container will relocate
 //!all elements when there is no space at the side the insertion should
 //!take place and memory usage is below 75% (3/4)
-struct relocation_limit_75 {};
+struct relocate_on_75;
 
-//!This relocation limit argument specifies that the container will relocate
+//!This relocation condition option specifies that the container will relocate
 //!all elements when there is no space at the side the insertion should
 //!take place and memory usage is below 80% (4/5)
-struct relocation_limit_80 {};
+struct relocate_on_80;
 
-//!This relocation limit argument specifies that the container will relocate
+//!This relocation condition option specifies that the container will relocate
 //!all elements when there is no space at the side the insertion should
-//!take place and memory usage is below 86% (6/7)
-struct relocation_limit_86 {};
+//!take place and memory usage is below 85% (6/7)
+struct relocate_on_85;
 
-//!This relocation limit argument specifies that the container will relocate
+//!This relocation condition option specifies that the container will relocate
 //!all elements when there is no space at the side the insertion should
 //!take place and memory usage is below 90% (9/10)
-struct relocation_limit_90 {};
+struct relocate_on_90;
 
 #endif
 
@@ -534,7 +558,7 @@ struct relocation_limit_90 {};
 //! Helper metafunction to combine options into a single type to be used
 //! by \c boost::container::devector.
 //! Supported options are: \c boost::container::growth_factor, \c boost::container::stored_size
-//! and \c boost::container::relocation_limit
+//! and \c boost::container::relocate_on
 #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
 template<class ...Options>
 #else
@@ -553,7 +577,7 @@ struct devector_options
       >::type packed_options;
    typedef devector_opt< typename packed_options::growth_factor_type
                        , typename packed_options::stored_size_type
-                       , typename packed_options::relocation_limit_type
+                       , packed_options::free_fraction
                        > implementation_defined;
    /// @endcond
    typedef implementation_defined type;

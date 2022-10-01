@@ -111,13 +111,14 @@ void test_growth_factor_100()
    BOOST_TEST(new_capacity == 2*old_capacity);
 }
 
-void  test_stored_relloc_limit_66()
+
+void  test_stored_reloc_on_66()
 {
    #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
-   using options_t = devector_options_t< relocation_limit<relocation_limit_66> >;
+   using options_t = devector_options_t< relocate_on_66 >;
    #else
    typedef devector_options
-      < relocation_limit<relocation_limit_66> >::type options_t;
+      < relocate_on_66 >::type options_t;
    #endif
    const std::size_t buffer_size = 32u;
    const std::size_t initial_side = buffer_size/2u;
@@ -147,17 +148,16 @@ void  test_stored_relloc_limit_66()
 
    //New insertion should reallocate
    v.push_back(-1);
-   BOOST_TEST(v.back_free_capacity() > 8);
+   BOOST_TEST(v.back_free_capacity() > initial_side/2u);
    BOOST_TEST(v.capacity() > old_cp);
 }
 
-void  test_stored_relloc_limit_90()
+void  test_stored_reloc_on_90()
 {
    #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
-   using options_t = devector_options_t< relocation_limit<relocation_limit_90> >;
+   using options_t = devector_options_t< relocate_on_90 >;
    #else
-   typedef devector_options
-      < relocation_limit<relocation_limit_90> >::type options_t;
+   typedef devector_options< relocate_on_90 >::type options_t;
    #endif
 
    const std::size_t buffer_size = 32u;
@@ -210,7 +210,7 @@ int main()
    test_growth_factor_100();
    test_stored_size_type<unsigned char>();
    test_stored_size_type<unsigned short>();
-   test_stored_relloc_limit_66();
-   test_stored_relloc_limit_90();
+   test_stored_reloc_on_66();
+   test_stored_reloc_on_90();
    return ::boost::report_errors();
 }

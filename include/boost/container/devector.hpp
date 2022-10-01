@@ -62,31 +62,6 @@ namespace container {
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-struct relocation_limit_66
-{
-   static const std::size_t free_fraction = 3u;
-};
-
-struct relocation_limit_75
-{
-   static const std::size_t free_fraction = 4u;
-};
-
-struct relocation_limit_80
-{
-   static const std::size_t free_fraction = 5u;
-};
-
-struct relocation_limit_86
-{
-   static const std::size_t free_fraction = 7u;
-};
-
-struct relocation_limit_90
-{
-   static const std::size_t free_fraction = 10u;
-};
-
 struct growth_factor_60;
 
 template<class Options, class AllocatorSizeType>
@@ -94,14 +69,14 @@ struct get_devector_opt
 {
     typedef devector_opt< typename default_if_void<typename Options::growth_factor_type, growth_factor_60>::type
                         , typename default_if_void<typename Options::stored_size_type, AllocatorSizeType>::type
-                        , typename default_if_void<typename Options::relocation_limit_type, relocation_limit_90>::type
+                        , default_if_zero<Options::free_fraction, relocate_on_90::value>::value
                         > type;
 };
 
 template<class AllocatorSizeType>
 struct get_devector_opt<void, AllocatorSizeType>
 {
-    typedef devector_opt< growth_factor_60, AllocatorSizeType, relocation_limit_90> type;
+    typedef devector_opt< growth_factor_60, AllocatorSizeType, relocate_on_90::value> type;
 };
 
 #endif    //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -178,7 +153,7 @@ class devector
    typedef typename options_type::growth_factor_type                             growth_factor_type;
    typedef typename options_type::stored_size_type                               stored_size_type;
    static const std::size_t devector_min_free_fraction =
-      options_type::relocation_limit_type::free_fraction;
+      options_type::free_fraction;
 
    #endif // ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -984,9 +959,9 @@ class devector
    /**
    * **Returns**: The *minimum* number of elements that can be inserted into devector using
    *   position-based insertions without requiring a reallocation. Note that, unlike in 
-   *   typical sequence containers like `vector`, `capacity()` can be smaller than `size()`.
+   *   typical sequence containers like `vector`, `capacity()`, `capacity()` can be smaller than `size()`.
    *   This can happen if a user inserts elements in a particular way (usually inserting at
-   *   front up to fron_free_capacity() and at back up to back_free_capacity()).
+   *   front up to front_free_capacity() and at back up to back_free_capacity()).
    * 
    * **Complexity**: Constant.
    */

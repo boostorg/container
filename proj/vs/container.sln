@@ -208,6 +208,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hash_map_test", "hash_map_t
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "copy_move_algo_test", "copy_move_algo_test.vcxproj", "{5CE11C83-84A7-093A-4FA2-A6BA20A30592}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "doc_custom_devector", "doc_custom_devector.vcxproj", "{DB7B1CED-5670-8478-4C9D-F3BCF4A4209A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -996,6 +998,14 @@ Global
 		{5CE11C83-84A7-093A-4FA2-A6BA20A30592}.Release|x64.Build.0 = Release|x64
 		{5CE11C83-84A7-093A-4FA2-A6BA20A30592}.Release|x86.ActiveCfg = Release|Win32
 		{5CE11C83-84A7-093A-4FA2-A6BA20A30592}.Release|x86.Build.0 = Release|Win32
+		{DB7B1CED-5670-8478-4C9D-F3BCF4A4209A}.Debug|x64.ActiveCfg = Debug|x64
+		{DB7B1CED-5670-8478-4C9D-F3BCF4A4209A}.Debug|x64.Build.0 = Debug|x64
+		{DB7B1CED-5670-8478-4C9D-F3BCF4A4209A}.Debug|x86.ActiveCfg = Debug|Win32
+		{DB7B1CED-5670-8478-4C9D-F3BCF4A4209A}.Debug|x86.Build.0 = Debug|Win32
+		{DB7B1CED-5670-8478-4C9D-F3BCF4A4209A}.Release|x64.ActiveCfg = Release|x64
+		{DB7B1CED-5670-8478-4C9D-F3BCF4A4209A}.Release|x64.Build.0 = Release|x64
+		{DB7B1CED-5670-8478-4C9D-F3BCF4A4209A}.Release|x86.ActiveCfg = Release|Win32
+		{DB7B1CED-5670-8478-4C9D-F3BCF4A4209A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
