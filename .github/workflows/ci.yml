@@ -159,10 +159,6 @@ jobs:
             cxxstd: "03,11,14,17,2a"
             addrmd: 64
             os: windows-2019
-          - toolset: gcc
-            cxxstd: "03,11,14,17,2a"
-            addrmd: 64
-            os: windows-2022
 
     runs-on: ${{matrix.os}}
 
