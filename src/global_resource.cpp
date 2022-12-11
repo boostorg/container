@@ -128,7 +128,7 @@ namespace container {
 namespace pmr {
 
 std::atomic<memory_resource*>& default_memory_resource_instance() {
-    static std::atomic<memory_resource*> instance = new_delete_resource();
+    static std::atomic<memory_resource*> instance(new_delete_resource());
     return instance;
 }
 
