@@ -15,11 +15,9 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 
-//#include <algorithm>
 #include <cstring> // memcpy
 
 #include <boost/assert.hpp>
-#include <boost/type_traits/aligned_storage.hpp>
 
 #include <boost/container/detail/copy_move_algo.hpp>
 #include <boost/container/new_allocator.hpp> //new_allocator
