@@ -425,7 +425,8 @@ class tree
 
    public:
 
-   typedef typename key_of_value_t::type                    key_type;
+   typedef typename dtl::remove_const
+      <typename key_of_value_t::type>::type                 key_type;
    typedef T                                                value_type;
    typedef Compare                                          key_compare;
    typedef ValComp                                          value_compare;
