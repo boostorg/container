@@ -152,6 +152,14 @@
 //#define BOOST_CONTAINER_USE_STD_EXCEPTIONS
 
 
+namespace boost {
+namespace container {
+
+template <typename T1>
+BOOST_FORCEINLINE BOOST_CXX14_CONSTEXPR void ignore(T1 const&)
+{}
+
+}} //namespace boost::container {
 
 
 #endif   //#ifndef BOOST_CONTAINER_DETAIL_WORKAROUND_HPP
