@@ -65,6 +65,13 @@
 #include <initializer_list>   //for std::initializer_list
 #endif
 
+//GCC 12 has a regression for array-bounds warnings
+#if defined(BOOST_GCC) && (BOOST_GCC >= 120000) && (BOOST_GCC < 130000)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+
+
 namespace boost {
 namespace container {
 
@@ -3588,6 +3595,11 @@ inline std::size_t hash_value(basic_string<Ch, std::char_traits<Ch>, Allocator> 
 }
 
 }}
+
+//GCC 12 has a regression for array-bounds warnings
+#if defined(BOOST_GCC) && (BOOST_GCC >= 120000) && (BOOST_GCC < 130000)
+#pragma GCC diagnostic pop
+#endif
 
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
