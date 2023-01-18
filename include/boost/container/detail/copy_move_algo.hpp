@@ -35,6 +35,7 @@
 #include <boost/move/traits.hpp>
 // other
 #include <boost/core/no_exceptions_support.hpp>
+#include <boost/assert.hpp>
 // std
 #include <cstring> //for memmove/memcpy
 

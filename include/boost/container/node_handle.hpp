@@ -31,6 +31,7 @@
 #include <boost/move/adl_move_swap.hpp>
 
 #include <boost/type_traits/aligned_storage.hpp>
+#include <boost/assert.hpp>
 
 
 //!\file
