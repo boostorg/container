@@ -53,8 +53,6 @@
 #endif
 #include <boost/move/detail/move_helpers.hpp>
 #include <boost/move/detail/force_ptr.hpp>
-// other
-#include <boost/core/no_exceptions_support.hpp>
 
 
 
@@ -311,20 +309,20 @@ class RecyclingCloner
    {
       if(node_ptr_type p = m_icont.unlink_leftmost_without_rebalance()){
          //First recycle a node (this can't throw)
-         BOOST_TRY{
+         BOOST_CONTAINER_TRY{
             //This can throw
             this->do_assign(p, other, bool_<DoMove>());
             return p;
          }
-         BOOST_CATCH(...){
+         BOOST_CONTAINER_CATCH(...){
             //If there is an exception destroy the whole source
             m_holder.destroy_node(p);
             while((p = m_icont.unlink_leftmost_without_rebalance())){
                m_holder.destroy_node(p);
             }
-            BOOST_RETHROW
+            BOOST_CONTAINER_RETHROW
          }
-         BOOST_CATCH_END
+         BOOST_CONTAINER_CATCH_END
       }
       else{
          return m_holder.create_node(boost::move(other.get_real_data()));

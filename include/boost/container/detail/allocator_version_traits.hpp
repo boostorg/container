@@ -29,7 +29,6 @@
 #include <boost/container/detail/allocation_type.hpp>       //allocation_type
 #include <boost/container/detail/mpl.hpp>                   //integral_constant
 #include <boost/intrusive/pointer_traits.hpp>               //pointer_traits
-#include <boost/core/no_exceptions_support.hpp>             //BOOST_TRY
 
 namespace boost {
 namespace container {
@@ -139,15 +138,15 @@ struct allocator_version_traits<Allocator, 1>
          throw_logic_error("version 1 allocator without allocate_new flag");
       }
       else{
-         BOOST_TRY{
+         BOOST_CONTAINER_TRY{
             ret = a.allocate(prefer_in_recvd_out_size);
          }
-         BOOST_CATCH(...){
+         BOOST_CONTAINER_CATCH(...){
             if(!(command & nothrow_allocation)){
-               BOOST_RETHROW
+               BOOST_CONTAINER_RETHROW
             }
          }
-         BOOST_CATCH_END
+         BOOST_CONTAINER_CATCH_END
          reuse = pointer();
       }
       return ret;

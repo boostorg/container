@@ -62,7 +62,6 @@
 #include <boost/move/algo/predicate.hpp>
 #include <boost/move/algo/detail/set_difference.hpp>
 // other
-#include <boost/core/no_exceptions_support.hpp>
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>
 

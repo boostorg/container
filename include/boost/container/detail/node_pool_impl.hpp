@@ -33,7 +33,6 @@
 #include <boost/intrusive/set.hpp>
 #include <boost/intrusive/slist.hpp>
 
-#include <boost/core/no_exceptions_support.hpp>
 #include <boost/assert.hpp>
 #include <cstddef>
 
@@ -310,7 +309,7 @@ class private_node_pool_impl
       size_type blocksize =
          (get_rounded_size)(m_real_node_size*m_nodes_per_block, (size_type)alignment_of<node_t>::value);
 
-      BOOST_TRY{
+      BOOST_CONTAINER_TRY{
          for(size_type i = 0; i != num_blocks; ++i){
             //We allocate a new NodeBlock and put it as first
             //element in the free Node list
@@ -326,11 +325,11 @@ class private_node_pool_impl
             }
          }
       }
-      BOOST_CATCH(...){
+      BOOST_CONTAINER_CATCH(...){
          //to-do: if possible, an efficient way to deallocate allocated blocks
-         BOOST_RETHROW
+         BOOST_CONTAINER_RETHROW
       }
-      BOOST_CATCH_END
+      BOOST_CONTAINER_CATCH_END
    }
 
    //!Deprecated, use deallocate_free_blocks

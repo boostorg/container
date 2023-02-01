@@ -22,7 +22,6 @@
 #include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/make_unique.hpp>
-#include <boost/core/no_exceptions_support.hpp>
 #include <boost/static_assert.hpp>
 
 #include "print_container.hpp"

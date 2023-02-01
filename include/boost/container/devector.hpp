@@ -48,8 +48,6 @@
 #include <boost/move/algo/detail/merge.hpp>
 #include <boost/move/detail/force_ptr.hpp>
 
-#include <boost/type_traits/is_nothrow_move_constructible.hpp>
-
 //std
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>    //for std::initializer_list
@@ -348,17 +346,17 @@ class devector
       )
       : m_(allocator)
    {
-      BOOST_TRY{
+      BOOST_CONTAINER_TRY{
          while (first != last) {
             this->emplace_back(*first++);
          }
          BOOST_ASSERT(invariants_ok());
       }
-      BOOST_CATCH(...){
+      BOOST_CONTAINER_CATCH(...){
          this->destroy_elements(m_.buffer + m_.front_idx, m_.buffer + m_.back_idx);
          this->deallocate_buffer();
       }
-      BOOST_CATCH_END
+      BOOST_CONTAINER_CATCH_END
    }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

@@ -11,7 +11,6 @@
 #define BOOST_CONTAINER_SOURCE
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/container/pmr/global_resource.hpp>
-#include <boost/core/no_exceptions_support.hpp>
 #include <boost/container/throw_exception.hpp>
 #include <boost/container/detail/dlmalloc.hpp>  //For global lock
 #include <boost/container/detail/singleton.hpp>

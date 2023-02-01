@@ -34,7 +34,6 @@
 #include <boost/move/utility_core.hpp>
 #include <boost/move/traits.hpp>
 // other
-#include <boost/core/no_exceptions_support.hpp>
 #include <boost/assert.hpp>
 // std
 #include <cstring> //for memmove/memcpy
@@ -351,19 +350,19 @@ inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, F>::type
    uninitialized_move_alloc(Allocator &a, I f, I l, F r)
 {
    F back = r;
-   BOOST_TRY{
+   BOOST_CONTAINER_TRY{
       while (f != l) {
          allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), boost::move(*f));
          ++f; ++r;
       }
    }
-   BOOST_CATCH(...){
+   BOOST_CONTAINER_CATCH(...){
       for (; back != r; ++back){
          allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
       }
-      BOOST_RETHROW;
+      BOOST_CONTAINER_RETHROW;
    }
-   BOOST_CATCH_END
+   BOOST_CONTAINER_CATCH_END
    return r;
 }
 
@@ -396,20 +395,20 @@ inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, F>::type
    uninitialized_move_alloc_n(Allocator &a, I f, std::size_t n, F r)
 {
    F back = r;
-   BOOST_TRY{
+   BOOST_CONTAINER_TRY{
       while (n) {
          --n;
          allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), boost::move(*f));
          ++f; ++r;
       }
    }
-   BOOST_CATCH(...){
+   BOOST_CONTAINER_CATCH(...){
       for (; back != r; ++back){
          allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
       }
-      BOOST_RETHROW;
+      BOOST_CONTAINER_RETHROW;
    }
-   BOOST_CATCH_END
+   BOOST_CONTAINER_CATCH_END
    return r;
 }
 
@@ -442,20 +441,20 @@ inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, I>::type
    uninitialized_move_alloc_n_source(Allocator &a, I f, std::size_t n, F r)
 {
    F back = r;
-   BOOST_TRY{
+   BOOST_CONTAINER_TRY{
       while (n) {
          --n;
          allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), boost::move(*f));
          ++f; ++r;
       }
    }
-   BOOST_CATCH(...){
+   BOOST_CONTAINER_CATCH(...){
       for (; back != r; ++back){
          allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
       }
-      BOOST_RETHROW;
+      BOOST_CONTAINER_RETHROW;
    }
-   BOOST_CATCH_END
+   BOOST_CONTAINER_CATCH_END
    return f;
 }
 
@@ -488,19 +487,19 @@ inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, F>::type
    uninitialized_copy_alloc(Allocator &a, I f, I l, F r)
 {
    F back = r;
-   BOOST_TRY{
+   BOOST_CONTAINER_TRY{
       while (f != l) {
          allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), *f);
          ++f; ++r;
       }
    }
-   BOOST_CATCH(...){
+   BOOST_CONTAINER_CATCH(...){
       for (; back != r; ++back){
          allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
       }
-      BOOST_RETHROW;
+      BOOST_CONTAINER_RETHROW;
    }
-   BOOST_CATCH_END
+   BOOST_CONTAINER_CATCH_END
    return r;
 }
 
@@ -533,20 +532,20 @@ inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, F>::type
    uninitialized_copy_alloc_n(Allocator &a, I f, std::size_t n, F r)
 {
    F back = r;
-   BOOST_TRY{
+   BOOST_CONTAINER_TRY{
       while (n) {
          --n;
          allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), *f);
          ++f; ++r;
       }
    }
-   BOOST_CATCH(...){
+   BOOST_CONTAINER_CATCH(...){
       for (; back != r; ++back){
          allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
       }
-      BOOST_RETHROW;
+      BOOST_CONTAINER_RETHROW;
    }
-   BOOST_CATCH_END
+   BOOST_CONTAINER_CATCH_END
    return r;
 }
 
@@ -579,19 +578,19 @@ inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, I>::type
    uninitialized_copy_alloc_n_source(Allocator &a, I f, std::size_t n, F r)
 {
    F back = r;
-   BOOST_TRY{
+   BOOST_CONTAINER_TRY{
       while (n) {
          boost::container::construct_in_place(a, boost::movelib::iterator_to_raw_pointer(r), f);
          ++f; ++r; --n;
       }
    }
-   BOOST_CATCH(...){
+   BOOST_CONTAINER_CATCH(...){
       for (; back != r; ++back){
          allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
       }
-      BOOST_RETHROW;
+      BOOST_CONTAINER_RETHROW;
    }
-   BOOST_CATCH_END
+   BOOST_CONTAINER_CATCH_END
    return f;
 }
 
@@ -623,20 +622,20 @@ inline typename dtl::disable_if_memzero_initializable<F, F>::type
    uninitialized_value_init_alloc_n(Allocator &a, std::size_t n, F r)
 {
    F back = r;
-   BOOST_TRY{
+   BOOST_CONTAINER_TRY{
       while (n) {
          --n;
          allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r));
          ++r;
       }
    }
-   BOOST_CATCH(...){
+   BOOST_CONTAINER_CATCH(...){
       for (; back != r; ++back){
          allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
       }
-      BOOST_RETHROW;
+      BOOST_CONTAINER_RETHROW;
    }
-   BOOST_CATCH_END
+   BOOST_CONTAINER_CATCH_END
    return r;
 }
 
@@ -675,20 +674,20 @@ template
 inline F uninitialized_default_init_alloc_n(Allocator &a, std::size_t n, F r)
 {
    F back = r;
-   BOOST_TRY{
+   BOOST_CONTAINER_TRY{
       while (n) {
          --n;
          allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), default_init);
          ++r;
       }
    }
-   BOOST_CATCH(...){
+   BOOST_CONTAINER_CATCH(...){
       for (; back != r; ++back){
          allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
       }
-      BOOST_RETHROW;
+      BOOST_CONTAINER_RETHROW;
    }
-   BOOST_CATCH_END
+   BOOST_CONTAINER_CATCH_END
    return r;
 }
 
@@ -712,19 +711,19 @@ template
 inline void uninitialized_fill_alloc(Allocator &a, F f, F l, const T &t)
 {
    F back = f;
-   BOOST_TRY{
+   BOOST_CONTAINER_TRY{
       while (f != l) {
          allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(f), t);
          ++f;
       }
    }
-   BOOST_CATCH(...){
+   BOOST_CONTAINER_CATCH(...){
       for (; back != l; ++back){
          allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
       }
-      BOOST_RETHROW;
+      BOOST_CONTAINER_RETHROW;
    }
-   BOOST_CATCH_END
+   BOOST_CONTAINER_CATCH_END
 }
 
 
@@ -748,20 +747,20 @@ template
 inline F uninitialized_fill_alloc_n(Allocator &a, const T &v, std::size_t n, F r)
 {
    F back = r;
-   BOOST_TRY{
+   BOOST_CONTAINER_TRY{
       while (n) {
          --n;
          allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), v);
          ++r;
       }
    }
-   BOOST_CATCH(...){
+   BOOST_CONTAINER_CATCH(...){
       for (; back != r; ++back){
          allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
       }
-      BOOST_RETHROW;
+      BOOST_CONTAINER_RETHROW;
    }
-   BOOST_CATCH_END
+   BOOST_CONTAINER_CATCH_END
    return r;
 }
 
