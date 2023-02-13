@@ -1129,8 +1129,8 @@ class flat_tree
 
    size_type erase_unique(const key_type& k)
    {
-      iterator i = this->find(k);
-      size_type ret = static_cast<size_type>(i != this->end());
+      const_iterator i = static_cast<const flat_tree &>(*this).find(k);
+      size_type ret = static_cast<size_type>(i != this->cend());
       if (ret)
          this->erase(i);
       return ret;
