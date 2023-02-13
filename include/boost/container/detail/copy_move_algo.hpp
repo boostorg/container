@@ -296,9 +296,6 @@ struct is_memzero_initializable
       #if defined(BOOST_CONTAINER_MEMZEROED_FLOATING_POINT_IS_ZERO)
       || dtl::is_floating_point<value_type>::value
       #endif
-      #if defined(BOOST_CONTAINER_MEMZEROED_FLOATING_POINT_IS_ZERO) && defined(BOOST_CONTAINER_MEMZEROED_POINTER_IS_NULL)
-      || dtl::is_pod<value_type>::value
-      #endif
       );
 };
 

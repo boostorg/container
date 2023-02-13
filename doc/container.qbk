@@ -1276,10 +1276,6 @@ member object and member function pointers) to be initializable using `std::mems
 Most platforms are compatible with this initialization, but in case this initialization is not desired the
 user can `#define BOOST_CONTAINER_MEMZEROED_POINTER_IS_NOT_ZERO` before including library headers.
 
-If neither `BOOST_CONTAINER_MEMZEROED_FLOATING_POINT_IS_NOT_ZERO` nor
-`BOOST_CONTAINER_MEMZEROED_POINTER_IS_NOT_ZERO` is defined [*Boost.Container] also considers POD
-types to be value initializable via `std::memset` with value zero.
-
 [endsect]
 
 [endsect]
