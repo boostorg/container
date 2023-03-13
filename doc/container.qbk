@@ -1413,6 +1413,7 @@ use [*Boost.Container]? There are several reasons for that:
 
 * Fixed bugs/issues:
    * [@https://github.com/boostorg/container/issues/232 GitHub #232: ['"Fix using pmr::polymorphic_allocator in pre-main"]].
+   * [@https://github.com/boostorg/container/issues/233 GitHub #233: ['"Can't std::move small_vector with move-only type"]].
    * [@https://github.com/boostorg/container/issues/238 GitHub #238: ['"Containers should not be using memset to value-initialize POD types"]].
    * [@https://github.com/boostorg/container/issues/236 GitHub #236: ['"flat_tree::erase_unique uses wrong iterator"]].
    * [@https://github.com/boostorg/container/issues/240 GitHub #240: ['"_GLIBCXX_DEBUG detects issues in flat_set/map"]].
