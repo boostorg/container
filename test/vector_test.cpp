@@ -127,6 +127,7 @@ int test_cont_variants()
    typedef typename GetAllocatorCont<VoidAllocator>::template apply<test::movable_int>::type MyMoveCont;
    typedef typename GetAllocatorCont<VoidAllocator>::template apply<test::movable_and_copyable_int>::type MyCopyMoveCont;
    typedef typename GetAllocatorCont<VoidAllocator>::template apply<test::copyable_int>::type MyCopyCont;
+   typedef typename GetAllocatorCont<VoidAllocator>::template apply<test::moveconstruct_int>::type MyMoveConstructCont;
 
    if(test::vector_test<MyCont>())
       return 1;
@@ -135,6 +136,8 @@ int test_cont_variants()
    if(test::vector_test<MyCopyMoveCont>())
       return 1;
    if(test::vector_test<MyCopyCont>())
+      return 1;
+   if (test::vector_test<MyMoveConstructCont>())
       return 1;
 
    return 0;
