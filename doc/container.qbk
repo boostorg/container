@@ -1414,6 +1414,7 @@ use [*Boost.Container]? There are several reasons for that:
 * Disabled forceinline for Clang due to code bloat issues, see [@https://lists.boost.org/boost-users/2023/04/91445.php Boost mailing list report]
 
 * Fixed bugs/issues:
+   * [@https://github.com/boostorg/container/issues/225 GitHub #225: ['"variable set but not used in dlmalloc_ext_2_8_6.c"]].
    * [@https://github.com/boostorg/container/issues/242 GitHub #242: ['"Issue with string::rfind"]].
 
 [endsect]
