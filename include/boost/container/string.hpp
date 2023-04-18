@@ -2458,7 +2458,7 @@ class basic_string
       else if (n == 0)
          return dtl::min_value(len, pos);
       else {
-         const const_iterator last = begin() + difference_type(dtl::min_value(len - n, pos + n));
+         const const_iterator last = begin() + difference_type(dtl::min_value(len - n, pos) + n);
          const const_iterator result = boost::container::find_end
             (begin(), last, s, s + difference_type(n), Eq_traits<Traits>());
          return result != last ? size_type(result - begin()) : npos;
