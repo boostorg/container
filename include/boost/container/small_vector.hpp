@@ -345,17 +345,17 @@ class small_vector_base
    public:
    //Make it public as it will be inherited by small_vector and container
    //must have this public member
-   typedef typename real_allocator<T, SecAlloc>::type                            secondary_allocator_t;
-   typedef typename allocator_traits<secondary_allocator_t>::
-      template portable_rebind_alloc<void>::type                                 void_allocator_t;
-   typedef typename dtl::get_small_vector_opt<Options>::type                     options_t;
+   typedef typename real_allocator<T, SecAlloc>::type                     allocator_type;
+   typedef typename allocator_traits<allocator_type>::
+      template portable_rebind_alloc<void>::type                          void_allocator_t;
+   typedef typename dtl::get_small_vector_opt<Options>::type              options_t;
    typedef typename dtl::vector_for_small_vector
-      <T, SecAlloc, Options>::type                                               base_type;
-   typedef typename allocator_traits<secondary_allocator_t>::pointer             pointer;
-   typedef typename allocator_traits<secondary_allocator_t>::const_pointer       const_pointer;
-   typedef typename allocator_traits<secondary_allocator_t>::void_pointer        void_pointer;
-   typedef typename allocator_traits<secondary_allocator_t>::const_void_pointer  const_void_pointer;
-   typedef small_vector_allocator<T, void_allocator_t, Options>                  allocator_type;
+      <T, SecAlloc, Options>::type                                        base_type;
+   typedef typename allocator_traits<allocator_type>::pointer             pointer;
+   typedef typename allocator_traits<allocator_type>::const_pointer       const_pointer;
+   typedef typename allocator_traits<allocator_type>::void_pointer        void_pointer;
+   typedef typename allocator_traits<allocator_type>::const_void_pointer  const_void_pointer;
+   typedef small_vector_allocator<T, void_allocator_t, Options>           small_allocator_type;
 
    private: 
    BOOST_COPYABLE_AND_MOVABLE(small_vector_base)
@@ -420,9 +420,9 @@ class small_vector_base
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    protected:
-   void move_construct_impl(base_type &x, const allocator_type &a)
+   void move_construct_impl(base_type &x)
    {
-      if(base_type::is_propagable_from(x.get_stored_allocator(), x.data(), a, true)){
+      if(base_type::is_propagable_from(x.get_stored_allocator(), x.data(), this->base_type::get_stored_allocator(), true)){
          this->steal_resources(x);
       }
       else{
@@ -540,9 +540,9 @@ class small_vector
 
    public:
    typedef small_vector_base<T, Allocator, Options>   base_type;
-   typedef typename base_type::allocator_type   allocator_type;
-   typedef typename base_type::size_type        size_type;
-   typedef typename base_type::value_type       value_type;
+   typedef typename base_type::allocator_type         allocator_type;
+   typedef typename base_type::size_type              size_type;
+   typedef typename base_type::value_type             value_type;
 
    BOOST_CONTAINER_FORCEINLINE static std::size_t internal_capacity()
    {  return static_capacity;  }
@@ -622,16 +622,16 @@ class small_vector
 
    BOOST_CONTAINER_FORCEINLINE explicit small_vector(BOOST_RV_REF(base_type) other)
       : base_type(initial_capacity_t(), internal_capacity(), ::boost::move(other.get_stored_allocator()))
-   {  this->move_construct_impl(other, other.get_stored_allocator());   }
+   {  this->base_type::move_construct_impl(other);   }
 
    BOOST_CONTAINER_FORCEINLINE small_vector(BOOST_RV_REF(small_vector) other)
       BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_constructible<value_type>::value)
       : base_type(initial_capacity_t(), internal_capacity(), ::boost::move(other.get_stored_allocator()))
-   {  this->move_construct_impl(other, other.get_stored_allocator());   }
+   {  this->base_type::move_construct_impl(other);   }
 
    BOOST_CONTAINER_FORCEINLINE small_vector(BOOST_RV_REF(small_vector) other, const allocator_type &a)
       : base_type(initial_capacity_t(), internal_capacity(), a)
-   {  this->move_construct_impl(other, a);   }
+   {  this->base_type::move_construct_impl(other);   }
 
    #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    BOOST_CONTAINER_FORCEINLINE small_vector(std::initializer_list<value_type> il, const allocator_type& a = allocator_type())
