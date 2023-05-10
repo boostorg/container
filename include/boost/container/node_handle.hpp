@@ -33,6 +33,12 @@
 #include <boost/container/detail/mpl.hpp>
 #include <boost/assert.hpp>
 
+//GCC 12 is confused about maybe uninitialized allocators
+#if defined(BOOST_GCC) && (BOOST_GCC >= 120000) && (BOOST_GCC < 130000)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
 
 //!\file
 
@@ -60,11 +66,11 @@ class node_handle_friend
    public:
 
    template<class NH>
-   BOOST_CONTAINER_FORCEINLINE static void destroy_alloc(NH &nh) BOOST_NOEXCEPT
+   inline static void destroy_alloc(NH &nh) BOOST_NOEXCEPT
    {  nh.destroy_alloc();  }
 
    template<class NH>
-   BOOST_CONTAINER_FORCEINLINE static typename NH::node_pointer &get_node_pointer(NH &nh) BOOST_NOEXCEPT
+   inline static typename NH::node_pointer &get_node_pointer(NH &nh) BOOST_NOEXCEPT
    {  return nh.get_node_pointer();  }
 };
 
@@ -299,10 +305,10 @@ class node_handle
    //! <b>Returns</b>: m_ptr != nullptr.
    //!
    #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-   BOOST_CONTAINER_FORCEINLINE explicit operator bool
+   inline explicit operator bool
    #else
    private: struct bool_conversion {int for_bool; int for_arg(); }; typedef int bool_conversion::* explicit_bool_arg;
-   public: BOOST_CONTAINER_FORCEINLINE operator explicit_bool_arg
+   public: inline operator explicit_bool_arg
    #endif
       ()const BOOST_NOEXCEPT
    {  return m_ptr ? &bool_conversion::for_bool  : explicit_bool_arg(0);  }
@@ -343,6 +349,7 @@ class node_handle
          nh.move_construct_alloc(this->node_alloc());
          this->destroy_alloc();
       }
+
       ::boost::adl_move_swap(m_ptr, nh.m_ptr);
    }
 
@@ -439,6 +446,10 @@ struct insert_return_type_base
 
 }  //namespace container {
 }  //namespace boost {
+
+#if defined(BOOST_GCC) && (BOOST_GCC >= 120000) && (BOOST_GCC < 130000)
+#pragma GCC diagnostic pop
+#endif
 
 #include <boost/container/detail/config_end.hpp>
 
