@@ -633,15 +633,13 @@ bool default_init_test()//Test for default initialization
       di_vector_t v(Capacity, default_init);
    }
    {
-      di_vector_t v;
+      typename dtl::aligned_storage<sizeof(di_vector_t)>::type as;
+      di_vector_t& v = *::new(as.data) di_vector_t;
       int *p = v.data();
 
       for(std::size_t i = 0; i != Capacity; ++i, ++p){
          *p = static_cast<int>(i);
       }
-
-      //Destroy the vector, p still pointing to the storage
-      v.~di_vector_t();
 
       di_vector_t &rv = *::new(&v)di_vector_t(Capacity, default_init);
       di_vector_t::iterator it = rv.begin();
