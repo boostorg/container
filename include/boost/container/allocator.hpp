@@ -193,17 +193,17 @@ class allocator
 
    //!Deallocates previously allocated memory.
    //!Never throws
-   BOOST_CONTAINER_FORCEINLINE void deallocate(pointer ptr, size_type) BOOST_NOEXCEPT_OR_NOTHROW
+   inline void deallocate(pointer ptr, size_type) BOOST_NOEXCEPT_OR_NOTHROW
    {  dlmalloc_free(ptr);  }
 
    //!Returns the maximum number of elements that could be allocated.
    //!Never throws
-   BOOST_CONTAINER_FORCEINLINE size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
+   inline size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return size_type(-1)/(2u*sizeof(T));   }
 
    //!Swaps two allocators, does nothing
    //!because this allocator is stateless
-   BOOST_CONTAINER_FORCEINLINE friend void swap(self_t &, self_t &) BOOST_NOEXCEPT_OR_NOTHROW
+   inline friend void swap(self_t &, self_t &) BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
    //!An allocator always compares to true, as memory allocated with one
@@ -214,7 +214,7 @@ class allocator
 
    //!An allocator always compares to false, as memory allocated with one
    //!instance can be deallocated by another instance
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
       friend bool operator!=(const allocator &, const allocator &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return false;   }
 
@@ -251,7 +251,7 @@ class allocator
    //!must be deallocated only with deallocate_one().
    //!Throws bad_alloc if there is no enough memory
    //!This function is available only with Version == 2
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD BOOST_CONTAINER_FORCEINLINE pointer allocate_one()
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline pointer allocate_one()
    {
       BOOST_STATIC_ASSERT(( Version > 1 ));
       return this->allocate(1);
@@ -260,7 +260,7 @@ class allocator
    //!Allocates many elements of size == 1.
    //!Elements must be individually deallocated with deallocate_one()
    //!This function is available only with Version == 2
-   BOOST_CONTAINER_FORCEINLINE void allocate_individual(std::size_t num_elements, multiallocation_chain &chain)
+   inline void allocate_individual(std::size_t num_elements, multiallocation_chain &chain)
    {
       BOOST_STATIC_ASSERT(( Version > 1 ));
       this->allocate_many(1, num_elements, chain);
@@ -278,7 +278,7 @@ class allocator
 
    //!Deallocates memory allocated with allocate_one() or allocate_individual().
    //!This function is available only with Version == 2
-   BOOST_CONTAINER_FORCEINLINE
+   inline
       void deallocate_individual(multiallocation_chain &chain) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_STATIC_ASSERT(( Version > 1 ));

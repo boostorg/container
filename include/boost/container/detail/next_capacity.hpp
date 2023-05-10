@@ -80,11 +80,11 @@ struct growth_factor_100
 {};
 
 template<class SizeType>
-BOOST_CONTAINER_FORCEINLINE void clamp_by_stored_size_type(SizeType &, SizeType)
+inline void clamp_by_stored_size_type(SizeType &, SizeType)
 {}
 
 template<class SizeType, class SomeStoredSizeType>
-BOOST_CONTAINER_FORCEINLINE void clamp_by_stored_size_type(SizeType &s, SomeStoredSizeType)
+inline void clamp_by_stored_size_type(SizeType &s, SomeStoredSizeType)
 {
    if (s >= SomeStoredSizeType(-1) ) 
       s = SomeStoredSizeType(-1);
