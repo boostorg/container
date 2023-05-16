@@ -200,7 +200,8 @@ bool test_merge_empty_free()
    return !empty.get_stored_allocator().deallocate_called_without_allocate_;
 }
 
-#if defined(__cpp_lib_span)
+#if defined(__cpp_lib_span) && (!defined(_LIBCPP_VERSION) || (_LIBCPP_VERSION >= 15000))
+//libcpp 14 does not correctly support deduction guides for Span
 #     define BOOST_VECTOR_TEST_HAS_SPAN
 #endif
 
