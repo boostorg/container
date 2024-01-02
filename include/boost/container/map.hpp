@@ -44,8 +44,6 @@
 // intrusive/detail
 #include <boost/intrusive/detail/minimal_pair_header.hpp>      //pair
 #include <boost/intrusive/detail/minimal_less_equal_header.hpp>//less, equal
-// other
-#include <boost/static_assert.hpp>
 // std
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
@@ -130,7 +128,7 @@ class map
       (insert_return_type_base<iterator BOOST_MOVE_I node_type>)                    insert_return_type;
 
    //allocator_type::value_type type must be std::pair<CONST Key, T>
-   BOOST_STATIC_ASSERT((dtl::is_same<typename allocator_type::value_type, std::pair<const Key, T> >::value));
+   BOOST_CONTAINER_STATIC_ASSERT((dtl::is_same<typename allocator_type::value_type, std::pair<const Key, T> >::value));
 
    //////////////////////////////////////////////
    //
@@ -1460,7 +1458,7 @@ class multimap
          <key_type BOOST_MOVE_I mapped_type> >)                                     node_type;
 
    //allocator_type::value_type type must be std::pair<CONST Key, T>
-   BOOST_STATIC_ASSERT((dtl::is_same<typename allocator_type::value_type, std::pair<const Key, T> >::value));
+   BOOST_CONTAINER_STATIC_ASSERT((dtl::is_same<typename allocator_type::value_type, std::pair<const Key, T> >::value));
 
    //////////////////////////////////////////////
    //

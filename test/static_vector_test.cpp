@@ -21,7 +21,7 @@ template <typename T, size_t N>
 void test_ctor_ndc()
 {
    static_vector<T, N> s;
-   BOOST_STATIC_ASSERT((static_vector<T, N>::static_capacity) == N);
+   BOOST_CONTAINER_STATIC_ASSERT((static_vector<T, N>::static_capacity) == N);
    BOOST_TEST_EQ(s.size() , 0u);
    BOOST_TEST(s.capacity() == N);
    BOOST_TEST(s.max_size() == N);
@@ -32,7 +32,7 @@ template <typename T, size_t N>
 void test_ctor_nc(size_t n)
 {
    static_vector<T, N> s(n);
-   BOOST_STATIC_ASSERT((static_vector<T, N>::static_capacity) == N);
+   BOOST_CONTAINER_STATIC_ASSERT((static_vector<T, N>::static_capacity) == N);
    BOOST_TEST(s.size() == n);
    BOOST_TEST(s.capacity() == N);
    BOOST_TEST(s.max_size() == N);
@@ -52,7 +52,7 @@ template <typename T, size_t N>
 void test_ctor_nd(size_t n, T const& v)
 {
    static_vector<T, N> s(n, v);
-   BOOST_STATIC_ASSERT((static_vector<T, N>::static_capacity) == N);
+   BOOST_CONTAINER_STATIC_ASSERT((static_vector<T, N>::static_capacity) == N);
    BOOST_TEST(s.size() == n);
    BOOST_TEST(s.capacity() == N);
    BOOST_TEST_THROWS( (void)s.at(n), out_of_range_t);

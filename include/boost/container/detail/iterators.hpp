@@ -27,7 +27,6 @@
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/value_init.hpp>
-#include <boost/static_assert.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/intrusive/detail/reverse_iterator.hpp>
 
@@ -868,7 +867,7 @@ class iterator_from_iiterator
    inline iterator_from_iiterator& operator--() BOOST_NOEXCEPT_OR_NOTHROW
    {
       //If the iterator_from_iiterator is not a bidirectional iterator, operator-- should not exist
-      BOOST_STATIC_ASSERT((is_bidirectional_iterator<iterator_from_iiterator>::value));
+      BOOST_CONTAINER_STATIC_ASSERT((is_bidirectional_iterator<iterator_from_iiterator>::value));
       --this->m_iit;   return *this;
    }
 

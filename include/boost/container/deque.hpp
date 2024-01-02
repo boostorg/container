@@ -75,7 +75,7 @@ struct deque_value_traits
 template<class T, std::size_t BlockBytes, std::size_t BlockSize>
 struct deque_block_size
 {
-   BOOST_STATIC_ASSERT_MSG(!(BlockBytes && BlockSize), "BlockBytes and BlockSize can't be specified at the same time");
+   BOOST_CONTAINER_STATIC_ASSERT_MSG(!(BlockBytes && BlockSize), "BlockBytes and BlockSize can't be specified at the same time");
    static const std::size_t block_bytes = BlockBytes ? BlockBytes : 512u;
    static const std::size_t value       = BlockSize ? BlockSize : (sizeof(T) < block_bytes ? (block_bytes/sizeof(T)) : std::size_t(1));
 };

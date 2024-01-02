@@ -49,8 +49,6 @@
 #include <boost/move/adl_move_swap.hpp>
 #include <boost/move/traits.hpp>
 
-#include <boost/static_assert.hpp>
-
 #include <iosfwd> 
 #include <istream>   //
 #include <ostream>
@@ -275,7 +273,7 @@ class basic_string_base
       //Access and copy (to avoid UB) the first byte of the union to know if the
       //active representation is short or long
       short_header hdr;
-      BOOST_STATIC_ASSERT((sizeof(short_header) == 1));
+      BOOST_CONTAINER_STATIC_ASSERT((sizeof(short_header) == 1));
       *(unsigned char*)&hdr = *(unsigned char*)&this->members_.m_repr;
       return hdr.is_short != 0;
    }

@@ -44,8 +44,6 @@
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #include <boost/move/detail/fwd_macros.hpp>
 #endif
-// other boost
-#include <boost/static_assert.hpp>
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 

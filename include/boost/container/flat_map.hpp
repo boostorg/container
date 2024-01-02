@@ -198,7 +198,7 @@ class flat_map
    typedef BOOST_CONTAINER_IMPDEF(impl_value_type)                                  movable_value_type;
 
    //AllocatorOrContainer::value_type must be std::pair<Key, T>
-   BOOST_STATIC_ASSERT((dtl::is_same<std::pair<Key, T>, value_type>::value));
+   BOOST_CONTAINER_STATIC_ASSERT((dtl::is_same<std::pair<Key, T>, value_type>::value));
 
    //////////////////////////////////////////////
    //
@@ -1851,7 +1851,7 @@ class flat_multimap
    typedef BOOST_CONTAINER_IMPDEF(impl_value_type)                                  movable_value_type;
 
    //AllocatorOrContainer::value_type must be std::pair<Key, T>
-   BOOST_STATIC_ASSERT((dtl::is_same<std::pair<Key, T>, value_type>::value));
+   BOOST_CONTAINER_STATIC_ASSERT((dtl::is_same<std::pair<Key, T>, value_type>::value));
 
    //////////////////////////////////////////////
    //

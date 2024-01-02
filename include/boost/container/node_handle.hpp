@@ -21,7 +21,6 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
-#include <boost/static_assert.hpp>
 #include <boost/container/detail/placement_new.hpp>
 #include <boost/move/detail/to_raw_pointer.hpp>
 #include <boost/container/allocator_traits.hpp>
@@ -258,7 +257,7 @@ class node_handle
    //! <b>Throws</b>: Nothing.
    value_type& value() const BOOST_NOEXCEPT
    {
-      BOOST_STATIC_ASSERT((dtl::is_same<KeyMapped, void>::value));
+      BOOST_CONTAINER_STATIC_ASSERT((dtl::is_same<KeyMapped, void>::value));
       BOOST_ASSERT(!empty());
       return m_ptr->get_data();
    }
@@ -273,7 +272,7 @@ class node_handle
    //! <b>Requires</b>: Modifying the key through the returned reference is permitted.
    key_type& key() const BOOST_NOEXCEPT
    {
-      BOOST_STATIC_ASSERT((!dtl::is_same<KeyMapped, void>::value));
+      BOOST_CONTAINER_STATIC_ASSERT((!dtl::is_same<KeyMapped, void>::value));
       BOOST_ASSERT(!empty());
       return const_cast<key_type &>(KeyMapped().key_of_value(m_ptr->get_data()));
    }
@@ -286,7 +285,7 @@ class node_handle
    //! <b>Throws</b>: Nothing.
    mapped_type& mapped() const BOOST_NOEXCEPT
    {
-      BOOST_STATIC_ASSERT((!dtl::is_same<KeyMapped, void>::value));
+      BOOST_CONTAINER_STATIC_ASSERT((!dtl::is_same<KeyMapped, void>::value));
       BOOST_ASSERT(!empty());
       return KeyMapped().mapped_of_value(m_ptr->get_data());
    }

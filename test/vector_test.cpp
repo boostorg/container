@@ -225,7 +225,7 @@ bool test_span_conversion()
 #endif   //BOOST_VECTOR_TEST_HAS_SPAN
 
 struct POD { int POD::*ptr; };
-BOOST_STATIC_ASSERT_MSG
+BOOST_CONTAINER_STATIC_ASSERT_MSG
    ( boost::container::dtl::is_pod<POD>::value
    , "POD test failed"
    );
@@ -382,7 +382,7 @@ int main()
       typedef boost::container::vector<int> cont;
       typedef cont::allocator_type allocator_type;
       typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
-      BOOST_STATIC_ASSERT_MSG
+      BOOST_CONTAINER_STATIC_ASSERT_MSG
          ( !boost::has_trivial_destructor_after_move<pointer>::value ||
            (boost::has_trivial_destructor_after_move<cont>::value ==
             boost::has_trivial_destructor_after_move<allocator_type>::value)
@@ -394,7 +394,7 @@ int main()
       typedef boost::container::vector<int, std::allocator<int> > cont;
       typedef cont::allocator_type allocator_type;
       typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
-      BOOST_STATIC_ASSERT_MSG
+      BOOST_CONTAINER_STATIC_ASSERT_MSG
          ( !boost::has_trivial_destructor_after_move<pointer>::value ||
            (boost::has_trivial_destructor_after_move<cont>::value ==
             boost::has_trivial_destructor_after_move<allocator_type>::value)

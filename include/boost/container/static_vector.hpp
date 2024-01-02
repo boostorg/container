@@ -87,7 +87,7 @@ class static_storage_allocator
    {  return true;  }
 
    private:
-   BOOST_STATIC_ASSERT_MSG(!InplaceAlignment || (InplaceAlignment & (InplaceAlignment-1)) == 0, "Alignment option must be zero or power of two");
+   BOOST_CONTAINER_STATIC_ASSERT_MSG(!InplaceAlignment || (InplaceAlignment & (InplaceAlignment-1)) == 0, "Alignment option must be zero or power of two");
    static const std::size_t final_alignment = InplaceAlignment ? InplaceAlignment : dtl::alignment_of<T>::value;
    typename dtl::aligned_storage<sizeof(T)*N, final_alignment>::type storage;
 };

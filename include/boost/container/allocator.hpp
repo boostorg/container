@@ -26,7 +26,6 @@
 #include <boost/container/throw_exception.hpp>
 #include <boost/container/detail/dlmalloc.hpp>
 #include <boost/container/detail/multiallocation_chain.hpp>
-#include <boost/static_assert.hpp>
 
 #include <boost/move/detail/force_ptr.hpp>
 
@@ -120,10 +119,10 @@ class allocator
       BOOST_CONTAINER_ALLOCATE_NEW | BOOST_CONTAINER_EXPAND_BWD | BOOST_CONTAINER_EXPAND_FWD ;
 
    //The mask can't disable all the allocation types
-   BOOST_STATIC_ASSERT((  (AllocationDisableMask & ForbiddenMask) != ForbiddenMask  ));
+   BOOST_CONTAINER_STATIC_ASSERT((  (AllocationDisableMask & ForbiddenMask) != ForbiddenMask  ));
 
    //The mask is only valid for version 2 allocators
-   BOOST_STATIC_ASSERT((  Version != 1 || (AllocationDisableMask == 0)  ));
+   BOOST_CONTAINER_STATIC_ASSERT((  Version != 1 || (AllocationDisableMask == 0)  ));
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -227,7 +226,7 @@ class allocator
                          size_type &prefer_in_recvd_out_size,
                          pointer &reuse)
    {
-      BOOST_STATIC_ASSERT(( Version > 1 ));
+      BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       const allocation_type mask(AllocationDisableMask);
       command &= ~mask;
       pointer ret = this->priv_allocation_command(command, limit_size, prefer_in_recvd_out_size, reuse);
@@ -243,7 +242,7 @@ class allocator
    //!This function is available only with Version == 2
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD size_type size(pointer p) const BOOST_NOEXCEPT_OR_NOTHROW
    {
-      BOOST_STATIC_ASSERT(( Version > 1 ));
+      BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       return dlmalloc_size(p);
    }
 
@@ -253,7 +252,7 @@ class allocator
    //!This function is available only with Version == 2
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline pointer allocate_one()
    {
-      BOOST_STATIC_ASSERT(( Version > 1 ));
+      BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       return this->allocate(1);
    }
 
@@ -262,7 +261,7 @@ class allocator
    //!This function is available only with Version == 2
    inline void allocate_individual(std::size_t num_elements, multiallocation_chain &chain)
    {
-      BOOST_STATIC_ASSERT(( Version > 1 ));
+      BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       this->allocate_many(1, num_elements, chain);
    }
 
@@ -272,7 +271,7 @@ class allocator
    //Never throws
    void deallocate_one(pointer p) BOOST_NOEXCEPT_OR_NOTHROW
    {
-      BOOST_STATIC_ASSERT(( Version > 1 ));
+      BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       return this->deallocate(p, 1);
    }
 
@@ -281,7 +280,7 @@ class allocator
    inline
       void deallocate_individual(multiallocation_chain &chain) BOOST_NOEXCEPT_OR_NOTHROW
    {
-      BOOST_STATIC_ASSERT(( Version > 1 ));
+      BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       return this->deallocate_many(chain);
    }
 
@@ -290,7 +289,7 @@ class allocator
    //!This function is available only with Version == 2
    void allocate_many(size_type elem_size, std::size_t n_elements, multiallocation_chain &chain)
    {
-      BOOST_STATIC_ASSERT(( Version > 1 ));
+      BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       dlmalloc_memchain ch;
       BOOST_CONTAINER_MEMCHAIN_INIT(&ch);
       if(!dlmalloc_multialloc_nodes(n_elements, elem_size*sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch)){
@@ -312,7 +311,7 @@ class allocator
    //!This function is available only with Version == 2
    void allocate_many(const size_type *elem_sizes, size_type n_elements, multiallocation_chain &chain)
    {
-      BOOST_STATIC_ASSERT(( Version > 1 ));
+      BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       dlmalloc_memchain ch;
       BOOST_CONTAINER_MEMCHAIN_INIT(&ch);
       if(!dlmalloc_multialloc_arrays(n_elements, elem_sizes, sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch)){
@@ -334,7 +333,7 @@ class allocator
    //!This function is available only with Version == 2
    void deallocate_many(multiallocation_chain &chain) BOOST_NOEXCEPT_OR_NOTHROW
    {
-      BOOST_STATIC_ASSERT(( Version > 1 ));
+      BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       dlmalloc_memchain ch;
       void *beg(&*chain.begin()), *last(&*chain.last());
       size_t size(chain.size());

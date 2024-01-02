@@ -505,7 +505,7 @@ struct node_alloc_holder
       typename NodeAlloc::multiallocation_chain chain;
       allocator_node_destroyer_and_chain_builder<NodeAlloc> builder(this->node_alloc(), chain);
       this->icont().clear_and_dispose(builder);
-      //BOOST_STATIC_ASSERT((::boost::has_move_emulation_enabled<typename NodeAlloc::multiallocation_chain>::value == true));
+      //BOOST_CONTAINER_STATIC_ASSERT((::boost::has_move_emulation_enabled<typename NodeAlloc::multiallocation_chain>::value == true));
       if(!chain.empty())
          this->node_alloc().deallocate_individual(chain);
    }

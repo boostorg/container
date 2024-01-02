@@ -822,7 +822,7 @@ private:
    typedef value_less<T>                                                      value_less_t;
 
    //If provided the stored_size option must specify a type that is equal or a type that is smaller.
-   BOOST_STATIC_ASSERT( (sizeof(stored_size_type) < sizeof(alloc_size_type) ||
+   BOOST_CONTAINER_STATIC_ASSERT( (sizeof(stored_size_type) < sizeof(alloc_size_type) ||
                         dtl::is_same<stored_size_type, alloc_size_type>::value) );
 
    typedef typename dtl::version<allocator_type>::type alloc_version;
@@ -1094,7 +1094,7 @@ private:
    //! <b>Complexity</b>: Constant.
    vector(BOOST_RV_REF(vector) x) BOOST_NOEXCEPT_OR_NOTHROW
       :  m_holder(boost::move(x.m_holder))
-   {  BOOST_STATIC_ASSERT((!allocator_traits_type::is_partially_propagable::value));  }
+   {  BOOST_CONTAINER_STATIC_ASSERT((!allocator_traits_type::is_partially_propagable::value));  }
 
    #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: Constructs a vector that will use a copy of allocator a
