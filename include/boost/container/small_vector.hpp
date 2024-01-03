@@ -46,6 +46,8 @@
 #include <initializer_list>   //for std::initializer_list
 #endif
 
+#include <cstddef> //offsetof
+
 namespace boost {
 namespace container {
 
@@ -452,61 +454,65 @@ struct small_vector_storage_definer
    typedef small_vector_storage<T, N, final_alignment> type;
 };
 
+
+/// Figure out the offset of the first element. Idea taken from LLVM's SmallVector
 template <class T, class SecAlloc, class Options>
-struct small_vector_storage_strawman
-   : public small_vector_base<T, SecAlloc, Options>
-   , public small_vector_storage_definer<T, 1, Options>::type
+struct small_vector_storage_offset
 {
-   typedef typename small_vector_storage_definer<T, 1, Options>::type sm_storage_t;
+   typedef small_vector_base<T, SecAlloc, Options>                    base_type;
+   typedef typename small_vector_storage_definer<T, 1, Options>::type storage_type;
+   typename dtl::aligned_storage
+      < sizeof(base_type), dtl::alignment_of<base_type>::value
+      >::type base;
+
+   typename dtl::aligned_storage
+      < sizeof(storage_type), dtl::alignment_of<storage_type>::value
+      > ::type storage;
 };
+
+template <class T, class SecAlloc, class Options>
+inline std::size_t get_small_vector_storage_offset()
+{
+   typedef small_vector_storage_offset<T, SecAlloc, Options> struct_type;
+   return offsetof(struct_type, storage);
+}
+
+#if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
 
 //Internal storage hack
 template<class T, class VoidAlloc, class Options>
 inline typename small_vector_allocator<T, VoidAlloc, Options>::const_pointer
    small_vector_allocator<T, VoidAlloc, Options>::internal_storage() const BOOST_NOEXCEPT_OR_NOTHROW
 {
-   typedef small_vector_storage_strawman<T, allocator_type, Options> strawman_t;
-   typedef typename strawman_t::sm_storage_t sm_storage_t;
-
-   //These warnings are false positives, as we know the alignment is correct
-   //and aligned storage is allowed to hold any type
-   #if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
-   #pragma GCC diagnostic push
-   #pragma GCC diagnostic ignored "-Wcast-align"
-   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
-   #endif
    const vector_type& v = reinterpret_cast<const vector_type&>(*this);
-   BOOST_ASSERT((std::size_t(this) % dtl::alignment_of<strawman_t>::value) == 0);
-   const strawman_t &straw   = static_cast<const strawman_t&>(v);
-   const sm_storage_t& stor = static_cast<const sm_storage_t&>(straw);
-   return boost::intrusive::pointer_traits<const_pointer>::pointer_to(*((const T*)stor.m_storage.data));
-   #if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
-   #pragma GCC diagnostic pop
-   #endif
+   BOOST_ASSERT((std::size_t(this) % dtl::alignment_of< small_vector_storage_offset<T, allocator_type, Options> >::value) == 0);
+   const char *addr = reinterpret_cast<const char*>(&v);
+   typedef typename boost::intrusive::pointer_traits<pointer>::template rebind_pointer<const char>::type const_char_pointer;
+   const_void_pointer vptr = boost::intrusive::pointer_traits<const_char_pointer>::pointer_to(*addr)
+      + get_small_vector_storage_offset<T, allocator_type, Options>();
+   return boost::intrusive::pointer_traits<const_pointer>::static_cast_from(vptr);
 }
 
 template <class T, class VoidAlloc, class Options>
 inline typename small_vector_allocator<T, VoidAlloc, Options>::pointer
    small_vector_allocator<T, VoidAlloc, Options>::internal_storage() BOOST_NOEXCEPT_OR_NOTHROW
 {
-   typedef small_vector_storage_strawman<T, allocator_type, Options> strawman_t;
-   typedef typename strawman_t::sm_storage_t sm_storage_t;
-
-   #if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
-   #pragma GCC diagnostic push
-   #pragma GCC diagnostic ignored "-Wcast-align"
-   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
-   #endif
    vector_type& v = reinterpret_cast<vector_type&>(*this);
-   BOOST_ASSERT((std::size_t(this) % dtl::alignment_of<strawman_t>::value) == 0);
-   strawman_t &straw   = static_cast<strawman_t&>(v);
-   sm_storage_t& stor = static_cast<sm_storage_t&>(straw);
-   return boost::intrusive::pointer_traits<pointer>::pointer_to(*((T*)stor.m_storage.data));
-   #if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
-   #pragma GCC diagnostic pop
-   #endif
+   BOOST_ASSERT((std::size_t(this) % dtl::alignment_of< small_vector_storage_offset<T, allocator_type, Options> >::value) == 0);
+   char* addr = reinterpret_cast<char*>(&v);
+   typedef typename boost::intrusive::pointer_traits<pointer>::template rebind_pointer<char>::type char_pointer;
+   void_pointer vptr = boost::intrusive::pointer_traits<char_pointer>::pointer_to(*addr)
+                     + get_small_vector_storage_offset<T, allocator_type, Options>();
+   return boost::intrusive::pointer_traits<pointer>::static_cast_from(vptr);
 }
 
+#if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
+#pragma GCC diagnostic pop
+#endif
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
