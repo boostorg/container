@@ -14,7 +14,6 @@
 #include "default_init_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 
-#include <boost/container/allocator.hpp>
 #include <boost/container/allocator_traits.hpp>
 
 #include <iostream>
