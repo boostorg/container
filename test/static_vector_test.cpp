@@ -627,43 +627,43 @@ bool default_init_test()//Test for default initialization
 {
    const std::size_t Capacity = 100;
 
-   typedef static_vector<int, Capacity> di_vector_t;
+   typedef static_vector<unsigned char, Capacity> di_vector_t;
 
-   {
-      di_vector_t v(Capacity, default_init);
-   }
    {
       typename dtl::aligned_storage<sizeof(di_vector_t)>::type as;
-      di_vector_t& v = *::new(as.data) di_vector_t;
-      int *p = v.data();
+      di_vector_t *pv = ::new(as.data)di_vector_t(Capacity);
 
-      for(std::size_t i = 0; i != Capacity; ++i, ++p){
-         *p = static_cast<int>(i);
+      //Use volatile pointer to make compiler's job harder, as we are riding on UB
+      volatile unsigned char * pch_data = pv->data();
+
+      for (std::size_t i = 0; i != Capacity; ++i) {
+         pch_data[i] = static_cast<unsigned char>(i);
       }
+      pv->~di_vector_t();
 
-      di_vector_t &rv = *::new(&v)di_vector_t(Capacity, default_init);
-      di_vector_t::iterator it = rv.begin();
+      pv = ::new(as.data) di_vector_t(Capacity, default_init);
+      pv->~di_vector_t();
 
-      for(std::size_t i = 0; i != Capacity; ++i, ++it){
-         if(*it != static_cast<int>(i))
+      for(std::size_t i = 0; i != Capacity; ++i){
+         if (pch_data[i] != static_cast<unsigned char>(i)){
+            std::cout << "failed in iteration" << i << std::endl;
             return false;
+         }
       }
-
-      v.~di_vector_t();
    }
    {
       di_vector_t v;
 
-      int *p = v.data();
+      unsigned char *p = v.data();
       for(std::size_t i = 0; i != Capacity; ++i, ++p){
-         *p = static_cast<int>(i+100);
+         *p = static_cast<unsigned char>(i+100);
       }
 
       v.resize(Capacity, default_init);
 
       di_vector_t::iterator it = v.begin();
       for(std::size_t i = 0; i != Capacity; ++i, ++it){
-         if(*it != static_cast<int>(i+100))
+         if(*it != static_cast<unsigned char>(i+100))
             return false;
       }
    }
