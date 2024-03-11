@@ -1,0 +1,25 @@
+# Copyright René Ferdinand Rivera Morell 2023
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
+import project ;
+
+project /boost/container
+    : common-requirements
+        <source>/boost/assert//boost_assert
+        <source>/boost/config//boost_config
+        <source>/boost/intrusive//boost_intrusive
+        <source>/boost/move//boost_move
+        <source>/boost/static_assert//boost_static_assert
+        <include>include
+    ;
+
+explicit
+    [ alias boost_container : build//boost_container ]
+    [ alias all : boost_container example test ]
+    ;
+
+call-if : boost-library container
+    : install boost_container
+    ;
