@@ -6,7 +6,7 @@
  /]
 
 [library Boost.Container
-    [quickbook 1.5]
+    [quickbook 1.7]
     [authors [Gaztanaga, Ion]]
     [copyright 2009-2018 Ion Gaztanaga]
     [id container]
@@ -662,9 +662,9 @@ implementations could achieve O(1) range splice when the range size was known to
 
 [: `void splice(iterator position, list& x, iterator first, iterator last, size_type n);`
 
-   [*Effects]: Inserts elements in the range [first, last) before position and removes the elements from x.
+   [*Effects]: Inserts elements in the range `[first, last)` before position and removes the elements from x.
 
-   [*Requires]: [first, last) is a valid range in x. The result is undefined if position is an iterator in the range [first, last). Invalidates only the iterators and references to the spliced elements. n == distance(first, last).
+   [*Requires]: `[first, last)` is a valid range in x. The result is undefined if position is an iterator in the range `[first, last)`. Invalidates only the iterators and references to the spliced elements. `n == distance(first, last)`.
 
    [*Throws]: Nothing.
 
@@ -1363,7 +1363,7 @@ use [*Boost.Container]? There are several reasons for that:
 
 [endsect]
 
-[include auto_index_helpers.qbk]
+[import ../../../tools/auto_index/include/auto_index_helpers.qbk]
 
 [section:index Indexes]
 
