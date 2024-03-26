@@ -876,7 +876,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
          const bool allocators_equal = this_alloc == x_alloc; (void)allocators_equal;
          //Resources can be transferred if both allocators are
          //going to be equal after this function (either propagated or already equal)
-         if(propagate_alloc || allocators_equal){
+         BOOST_IF_CONSTEXPR(propagate_alloc || allocators_equal){
             //Destroy objects but retain memory in case x reuses it in the future
             this->clear();
             //Move allocator if needed
@@ -2043,7 +2043,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
 
    void priv_destroy_range(iterator p, iterator p2)
    {
-      if(!Base::traits_t::trivial_dctr){
+      BOOST_IF_CONSTEXPR(!Base::traits_t::trivial_dctr){
          for(;p != p2; ++p){
             allocator_traits_type::destroy(this->alloc(), boost::movelib::iterator_to_raw_pointer(p));
          }
@@ -2052,7 +2052,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
 
    void priv_destroy_range(pointer p, pointer p2)
    {
-      if(!Base::traits_t::trivial_dctr){
+      BOOST_IF_CONSTEXPR(!Base::traits_t::trivial_dctr){
          for(;p != p2; ++p){
             allocator_traits_type::destroy(this->alloc(), boost::movelib::iterator_to_raw_pointer(p));
          }
