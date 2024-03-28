@@ -921,7 +921,7 @@ class basic_string
          const bool allocators_equal = this_alloc == x_alloc; (void)allocators_equal;
          //Resources can be transferred if both allocators are
          //going to be equal after this function (either propagated or already equal)
-         if(propagate_alloc || allocators_equal){
+         BOOST_IF_CONSTEXPR(propagate_alloc || allocators_equal){
             //Destroy objects but retain memory in case x reuses it in the future
             this->clear();
             //Move allocator if needed

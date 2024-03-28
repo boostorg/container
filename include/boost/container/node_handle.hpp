@@ -231,7 +231,7 @@ class node_handle
       if(was_nh_non_null){
          if(was_this_non_null){
             this->destroy_deallocate_node();
-            if(nator_traits::propagate_on_container_move_assignment::value){
+            BOOST_IF_CONSTEXPR(nator_traits::propagate_on_container_move_assignment::value){
                this->node_alloc() = ::boost::move(nh.node_alloc());
             }
          }
@@ -335,7 +335,7 @@ class node_handle
 
       if(was_nh_non_null){
          if(was_this_non_null){
-            if(nator_traits::propagate_on_container_swap::value){
+            BOOST_IF_CONSTEXPR(nator_traits::propagate_on_container_swap::value){
                ::boost::adl_move_swap(this->node_alloc(), nh.node_alloc());
             }
          }
