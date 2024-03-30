@@ -7,11 +7,11 @@ import project ;
 
 project /boost/container
     : common-requirements
-        <source>/boost/assert//boost_assert
-        <source>/boost/config//boost_config
-        <source>/boost/intrusive//boost_intrusive
-        <source>/boost/move//boost_move
-        <source>/boost/static_assert//boost_static_assert
+        <library>/boost/assert//boost_assert
+        <library>/boost/config//boost_config
+        <library>/boost/intrusive//boost_intrusive
+        <library>/boost/move//boost_move
+        <library>/boost/static_assert//boost_static_assert
         <include>include
     ;
 
