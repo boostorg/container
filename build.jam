@@ -11,7 +11,6 @@ project /boost/container
         <library>/boost/config//boost_config
         <library>/boost/intrusive//boost_intrusive
         <library>/boost/move//boost_move
-        <library>/boost/static_assert//boost_static_assert
         <include>include
     ;
 
