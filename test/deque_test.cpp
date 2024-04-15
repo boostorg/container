@@ -366,11 +366,13 @@ int main ()
       std::cerr << "test_cont_variants< std::allocator<void> > failed" << std::endl;
       return 1;
    }
+
    //       boost::container::allocator
    if(test_cont_variants< allocator<void> >()){
       std::cerr << "test_cont_variants< allocator<void> > failed" << std::endl;
       return 1;
    }
+
    ////////////////////////////////////
    //    Default init test
    ////////////////////////////////////
@@ -406,10 +408,14 @@ int main ()
    ////////////////////////////////////
    {
       typedef boost::container::deque<int> cont_int;
-      cont_int a; a.push_back(0); a.push_back(1); a.push_back(2);
-      boost::intrusive::test::test_iterator_random< cont_int >(a);
-      if(boost::report_errors() != 0) {
-         return 1;
+      for(std::size_t i = 1; i <= 10000; i*=10){
+         cont_int a;
+         for (int j = 0; j < (int)i; ++j)
+            a.push_back((int)j);
+         boost::intrusive::test::test_iterator_random< cont_int >(a);
+         if(boost::report_errors() != 0) {
+            return 1;
+         }
       }
    }
 

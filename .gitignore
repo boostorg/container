@@ -118,3 +118,5 @@
 /proj/vs/vector_test.vcxproj.user
 /doc/html
 /doc/autodoc.xml
+/proj/vs/deque_test.vcxproj
+/proj/vs/stable_vector_test.vcxproj

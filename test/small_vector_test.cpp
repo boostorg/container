@@ -244,11 +244,15 @@ int main()
    //    Iterator testing
    ////////////////////////////////////
    {
-      typedef boost::container::small_vector<int, 0> cont_int;
-      cont_int a; a.push_back(0); a.push_back(1); a.push_back(2);
-      boost::intrusive::test::test_iterator_random< cont_int >(a);
-      if(boost::report_errors() != 0) {
-         return 1;
+      typedef boost::container::small_vector<int, 10> cont_int;
+      for (std::size_t i = 10; i <= 10000; i *= 10) {
+         cont_int a;
+         for (int j = 0; j < (int)i; ++j)
+            a.push_back((int)j);
+         boost::intrusive::test::test_iterator_random< cont_int >(a);
+         if (boost::report_errors() != 0) {
+            return 1;
+         }
       }
    }
 
