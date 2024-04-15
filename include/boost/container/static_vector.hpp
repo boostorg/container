@@ -22,6 +22,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/detail/type_traits.hpp>
+#include <boost/move/detail/launder.hpp>
 #include <boost/container/vector.hpp>
 
 #include <cstddef>
@@ -63,10 +64,7 @@ class static_storage_allocator
    {  return *this;  }
 
    inline T* internal_storage() const BOOST_NOEXCEPT_OR_NOTHROW
-   {  return const_cast<T*>(static_cast<const T*>(static_cast<const void*>(storage.data)));  }
-
-   inline T* internal_storage() BOOST_NOEXCEPT_OR_NOTHROW
-   {  return static_cast<T*>(static_cast<void*>(storage.data));  }
+   {  return move_detail::launder_cast<T*>(&storage);  }
 
    static const std::size_t internal_capacity = N;
 

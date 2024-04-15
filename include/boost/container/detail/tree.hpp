@@ -52,7 +52,6 @@
 #include <boost/move/detail/fwd_macros.hpp>
 #endif
 #include <boost/move/detail/move_helpers.hpp>
-#include <boost/move/detail/force_ptr.hpp>
 
 
 
