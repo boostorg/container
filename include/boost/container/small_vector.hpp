@@ -39,7 +39,6 @@
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #include <boost/move/detail/fwd_macros.hpp>
 #endif
-#include <boost/move/detail/force_ptr.hpp>
 
 //std
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -488,7 +487,7 @@ template<class T, class VoidAlloc, class Options>
 inline typename small_vector_allocator<T, VoidAlloc, Options>::const_pointer
    small_vector_allocator<T, VoidAlloc, Options>::internal_storage() const BOOST_NOEXCEPT_OR_NOTHROW
 {
-   const vector_type& v = reinterpret_cast<const vector_type&>(*this);
+   const vector_type& v = *static_cast<const vector_type*>(static_cast<const void *>(this));
    BOOST_ASSERT((std::size_t(this) % dtl::alignment_of< small_vector_storage_offset<T, allocator_type, Options> >::value) == 0);
    const char *addr = reinterpret_cast<const char*>(&v);
    typedef typename boost::intrusive::pointer_traits<pointer>::template rebind_pointer<const char>::type const_char_pointer;
@@ -501,7 +500,7 @@ template <class T, class VoidAlloc, class Options>
 inline typename small_vector_allocator<T, VoidAlloc, Options>::pointer
    small_vector_allocator<T, VoidAlloc, Options>::internal_storage() BOOST_NOEXCEPT_OR_NOTHROW
 {
-   vector_type& v = reinterpret_cast<vector_type&>(*this);
+   vector_type& v = *static_cast<vector_type*>(static_cast<void*>(this));
    BOOST_ASSERT((std::size_t(this) % dtl::alignment_of< small_vector_storage_offset<T, allocator_type, Options> >::value) == 0);
    char* addr = reinterpret_cast<char*>(&v);
    typedef typename boost::intrusive::pointer_traits<pointer>::template rebind_pointer<char>::type char_pointer;

@@ -48,6 +48,7 @@
 #include <boost/move/adl_move_swap.hpp>
 #include <boost/move/detail/iterator_to_raw_pointer.hpp>
 #include <boost/move/detail/force_ptr.hpp>
+#include <boost/move/detail/launder.hpp>
 #include <boost/move/algo/adaptive_sort.hpp>
 #include <boost/move/algo/detail/pdqsort.hpp>
 
@@ -975,8 +976,8 @@ class flat_tree
    {
       typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;
       get_stored_allocator_noconst_return_t a = this->get_stored_allocator();
-      stored_allocator_traits::construct(a, move_detail::force_ptr<value_type *>(&v), ::boost::forward<Args>(args)... );
-      value_type *pval = move_detail::force_ptr<value_type *>(&v);
+      stored_allocator_traits::construct(a, (value_type *)(&v), ::boost::forward<Args>(args)... );
+      value_type *pval = move_detail::launder_cast<value_type *>(&v);
       value_destructor<stored_allocator_type, value_type> d(a, *pval);
       return this->insert_unique(::boost::move(*pval));
    }
@@ -987,8 +988,8 @@ class flat_tree
       //hint checked in insert_unique
       typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;
       get_stored_allocator_noconst_return_t a = this->get_stored_allocator();
-      stored_allocator_traits::construct(a, move_detail::force_ptr<value_type *>(&v), ::boost::forward<Args>(args)... );
-      value_type *pval = move_detail::force_ptr<value_type *>(&v);
+      stored_allocator_traits::construct(a, (value_type*)(&v), ::boost::forward<Args>(args)... );
+      value_type *pval = move_detail::launder_cast<value_type *>(&v);
       value_destructor<stored_allocator_type, value_type> d(a, *pval);
       return this->insert_unique(hint, ::boost::move(*pval));
    }
@@ -998,8 +999,8 @@ class flat_tree
    {
       typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;
       get_stored_allocator_noconst_return_t a = this->get_stored_allocator();
-      stored_allocator_traits::construct(a, move_detail::force_ptr<value_type *>(&v), ::boost::forward<Args>(args)... );
-      value_type *pval = move_detail::force_ptr<value_type *>(&v);
+      stored_allocator_traits::construct(a, (value_type*)(&v), ::boost::forward<Args>(args)... );
+      value_type *pval = move_detail::launder_cast<value_type *>(&v);
       value_destructor<stored_allocator_type, value_type> d(a, *pval);
       return this->insert_equal(::boost::move(*pval));
    }
@@ -1010,8 +1011,8 @@ class flat_tree
       //hint checked in insert_equal
       typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;
       get_stored_allocator_noconst_return_t a = this->get_stored_allocator();
-      stored_allocator_traits::construct(a, move_detail::force_ptr<value_type *>(&v), ::boost::forward<Args>(args)... );
-      value_type *pval = move_detail::force_ptr<value_type *>(&v);
+      stored_allocator_traits::construct(a, (value_type*)(&v), ::boost::forward<Args>(args)... );
+      value_type *pval = move_detail::launder_cast<value_type *>(&v);
       value_destructor<stored_allocator_type, value_type> d(a, *pval);
       return this->insert_equal(hint, ::boost::move(*pval));
    }
@@ -1044,8 +1045,8 @@ class flat_tree
    {\
       typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;\
       get_stored_allocator_noconst_return_t a = this->get_stored_allocator();\
-      stored_allocator_traits::construct(a, move_detail::force_ptr<value_type *>(&v) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
-      value_type *pval = move_detail::force_ptr<value_type *>(&v);\
+      stored_allocator_traits::construct(a, (value_type *)(&v) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+      value_type *pval = move_detail::launder_cast<value_type *>(&v);\
       value_destructor<stored_allocator_type, value_type> d(a, *pval);\
       return this->insert_unique(::boost::move(*pval));\
    }\
@@ -1055,8 +1056,8 @@ class flat_tree
    {\
       typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;\
       get_stored_allocator_noconst_return_t a = this->get_stored_allocator();\
-      stored_allocator_traits::construct(a, move_detail::force_ptr<value_type *>(&v) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
-      value_type *pval = move_detail::force_ptr<value_type *>(&v);\
+      stored_allocator_traits::construct(a, (value_type *)(&v) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+      value_type *pval = move_detail::launder_cast<value_type *>(&v);\
       value_destructor<stored_allocator_type, value_type> d(a, *pval);\
       return this->insert_unique(hint, ::boost::move(*pval));\
    }\
@@ -1066,8 +1067,8 @@ class flat_tree
    {\
       typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;\
       get_stored_allocator_noconst_return_t a = this->get_stored_allocator();\
-      stored_allocator_traits::construct(a, move_detail::force_ptr<value_type *>(&v) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
-      value_type *pval = move_detail::force_ptr<value_type *>(&v);\
+      stored_allocator_traits::construct(a, (value_type *)(&v) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+      value_type *pval = move_detail::launder_cast<value_type *>(&v);\
       value_destructor<stored_allocator_type, value_type> d(a, *pval);\
       return this->insert_equal(::boost::move(*pval));\
    }\
@@ -1077,8 +1078,8 @@ class flat_tree
    {\
       typename dtl::aligned_storage <sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;\
       get_stored_allocator_noconst_return_t a = this->get_stored_allocator();\
-      stored_allocator_traits::construct(a, move_detail::force_ptr<value_type *>(&v) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
-      value_type *pval = move_detail::force_ptr<value_type *>(&v);\
+      stored_allocator_traits::construct(a, (value_type *)(&v) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+      value_type *pval = move_detail::launder_cast<value_type *>(&v);\
       value_destructor<stored_allocator_type, value_type> d(a, *pval);\
       return this->insert_equal(hint, ::boost::move(*pval));\
    }\

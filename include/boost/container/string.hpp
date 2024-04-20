@@ -43,7 +43,7 @@
 //intrusive
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/intrusive/detail/hash_combine.hpp>
-#include <boost/move/detail/force_ptr.hpp>
+#include <boost/move/detail/launder.hpp>
 //move
 #include <boost/move/utility_core.hpp>
 #include <boost/move/adl_move_swap.hpp>
@@ -226,7 +226,7 @@ class basic_string_base
    {
       inline void init()
       {
-         short_t &s = *::new(this->m_repr.data) short_t;
+         short_t &s = *::new(&this->m_repr) short_t;
          s.h.is_short = 1;
          s.h.length = 0;
       }
@@ -241,16 +241,16 @@ class basic_string_base
       { this->init(); }
 
       inline const short_t *pshort_repr() const
-      {  return move_detail::force_ptr<const short_t*>(m_repr.data);  }
+      {  return move_detail::launder_cast<const short_t*>(&m_repr);  }
 
       inline const long_t *plong_repr() const
-      {  return move_detail::force_ptr<const long_t*>(m_repr.data);  }
+      {  return move_detail::launder_cast<const long_t*>(&m_repr);  }
 
       inline short_t *pshort_repr()
-      {  return move_detail::force_ptr<short_t*>(m_repr.data);  }
+      {  return move_detail::launder_cast<short_t*>(&m_repr);  }
 
       inline long_t *plong_repr()
-      {  return move_detail::force_ptr<long_t*>(m_repr.data);  }
+      {  return move_detail::launder_cast<long_t*>(&m_repr);  }
 
       repr_t m_repr;
    } members_;
@@ -280,7 +280,7 @@ class basic_string_base
 
    inline short_t *construct_short()
    {
-      short_t *ps = ::new(this->members_.m_repr.data) short_t;
+      short_t *ps = ::new(&this->members_.m_repr) short_t;
       ps->h.is_short = 1;
       return ps;
    }
@@ -302,7 +302,7 @@ class basic_string_base
 
    inline long_t *construct_long()
    {
-      long_t *pl = ::new(this->members_.m_repr.data) long_t;
+      long_t *pl = ::new(&this->members_.m_repr) long_t;
       //is_short flag is written in the constructor
       return pl;
    }

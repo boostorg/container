@@ -545,7 +545,7 @@ struct vector_alloc_holder
    inline const allocator_type &alloc() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this;  }
 
-   inline const pointer   &start() const     BOOST_NOEXCEPT_OR_NOTHROW
+   inline pointer   start() const     BOOST_NOEXCEPT_OR_NOTHROW
       {  return m_start;  }
    inline       size_type capacity() const     BOOST_NOEXCEPT_OR_NOTHROW
       {  return m_capacity;  }
@@ -2807,12 +2807,19 @@ private:
       }
    }
 
+   #ifdef _MSC_VER
+   #pragma warning (push)
+   #pragma warning(disable: 4702)   //Disable unreachable code warning
+   #endif
    template <class InsertionProxy>
    inline iterator priv_insert_forward_range_no_capacity
       (T * const, const size_type, const InsertionProxy , version_0)
    {
       return alloc_holder_t::on_capacity_overflow(), iterator();
    }
+   #ifdef _MSC_VER
+   #pragma warning (pop)
+   #endif
 
    template <class InsertionProxy>
    BOOST_CONTAINER_NOINLINE iterator priv_insert_forward_range_no_capacity
