@@ -872,31 +872,14 @@ class stable_vector
       BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
                                   || allocator_traits_type::is_always_equal::value)
    {
-      //for move constructor, no aliasing (&x != this) is assumed.
       if (BOOST_LIKELY(this != &x)) {
-         node_allocator_type &this_alloc = this->priv_node_alloc();
-         node_allocator_type &x_alloc    = x.priv_node_alloc();
-         const bool propagate_alloc = allocator_traits_type::
-               propagate_on_container_move_assignment::value;
-         dtl::bool_<propagate_alloc> flag;
-         const bool allocators_equal = this_alloc == x_alloc; (void)allocators_equal;
-         //Resources can be transferred if both allocators are
-         //going to be equal after this function (either propagated or already equal)
-         if(propagate_alloc || allocators_equal){
-            BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT
-            //Destroy objects but retain memory in case x reuses it in the future
-            this->clear();
-            //Move allocator if needed
-            dtl::move_alloc(this_alloc, x_alloc, flag);
-            //Take resources
-            this->index.swap(x.index);
-            this->priv_swap_members(x);
-         }
-         //Else do a one by one move
-         else{
-            this->assign( boost::make_move_iterator(x.begin())
-                        , boost::make_move_iterator(x.end()));
-         }
+         //We know resources can be transferred at comiple time if both allocators are
+         //always equal or the allocator is going to be propagated
+         const bool can_steal_resources_alloc
+            =  allocator_traits_type::propagate_on_container_move_assignment::value
+            || allocator_traits_type::is_always_equal::value;
+         dtl::bool_<can_steal_resources_alloc> flag;
+         this->priv_move_assign(boost::move(x), flag);
       }
       return *this;
    }
@@ -1851,6 +1834,35 @@ class stable_vector
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
+
+   void priv_move_assign(BOOST_RV_REF(stable_vector) x, dtl::bool_<true> /*steal_resources*/)
+   {
+      //Resources can be transferred if both allocators are
+      //going to be equal after this function (either propagated or already equal)
+      BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT
+      //Destroy objects but retain memory in case x reuses it in the future
+      this->clear();
+      //Move allocator if needed
+      dtl::bool_<allocator_traits_type::
+                 propagate_on_container_move_assignment::value> flag;
+      dtl::move_alloc(this->priv_node_alloc(), x.priv_node_alloc(), flag);
+
+      //Take resources
+      this->index = boost::move(x.index); //this also moves the vector's allocator if needed
+      this->priv_swap_members(x);
+   }
+
+   void priv_move_assign(BOOST_RV_REF(stable_vector) x, dtl::bool_<false> /*steal_resources*/)
+   {
+      //We can't guarantee a compile-time equal allocator or propagation so fallback to runtime
+      //Resources can be transferred if both allocators are equal
+      if (this->priv_node_alloc() == x.priv_node_alloc()) {
+         this->priv_move_assign(boost::move(x), dtl::true_());
+      }
+      else {
+         this->assign(boost::make_move_iterator(x.begin()), boost::make_move_iterator(x.end()));
+      }
+   }
 
    bool priv_in_range(const_iterator pos) const
    {

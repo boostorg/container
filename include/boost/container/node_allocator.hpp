@@ -8,8 +8,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef BOOST_CONTAINER_POOLED_NODE_ALLOCATOR_HPP
-#define BOOST_CONTAINER_POOLED_NODE_ALLOCATOR_HPP
+#ifndef BOOST_CONTAINER_NODE_ALLOCATOR_HPP
+#define BOOST_CONTAINER_NODE_ALLOCATOR_HPP
 
 #ifndef BOOST_CONFIG_HPP
 #  include <boost/config.hpp>
@@ -337,4 +337,4 @@ class node_allocator
 
 #include <boost/container/detail/config_end.hpp>
 
-#endif   //#ifndef BOOST_CONTAINER_POOLED_NODE_ALLOCATOR_HPP
+#endif   //#ifndef BOOST_CONTAINER_NODE_ALLOCATOR_HPP
