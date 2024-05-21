@@ -688,13 +688,40 @@ class tree
                            boost::container::dtl::is_nothrow_move_assignable<Compare>::value)
    {
       if (BOOST_LIKELY(this != &x)) {
-         //We know resources can be transferred at comiple time if both allocators are
-         //always equal or the allocator is going to be propagated
-         const bool can_steal_resources_alloc
-            =  allocator_traits_type::propagate_on_container_move_assignment::value
-            || allocator_traits_type::is_always_equal::value;
-         dtl::bool_<can_steal_resources_alloc> flag;
-         this->priv_move_assign(boost::move(x), flag);
+         NodeAlloc &this_alloc = this->node_alloc();
+         NodeAlloc &x_alloc    = x.node_alloc();
+         const bool propagate_alloc = allocator_traits<NodeAlloc>::
+               propagate_on_container_move_assignment::value;
+         const bool allocators_equal = this_alloc == x_alloc; (void)allocators_equal;
+         //Resources can be transferred if both allocators are
+         //going to be equal after this function (either propagated or already equal)
+         if(propagate_alloc || allocators_equal){
+            //Destroy
+            this->clear();
+            //Move allocator if needed
+            this->AllocHolder::move_assign_alloc(x);
+            //Obtain resources
+            this->icont() = boost::move(x.icont());
+         }
+         //Else do a one by one move
+         else{
+            //Transfer all the nodes to a temporary tree
+            //If anything goes wrong, all the nodes will be destroyed
+            //automatically
+            Icont other_tree(::boost::move(this->icont()));
+
+            //Now recreate the source tree reusing nodes stored by other_tree
+            this->icont().clone_from
+               (::boost::move(x.icont())
+               , RecyclingCloner<AllocHolder, true>(*this, other_tree)
+               , Destroyer(this->node_alloc()));
+
+            //If there are remaining nodes, destroy them
+            NodePtr p;
+            while((p = other_tree.unlink_leftmost_without_rebalance())){
+               AllocHolder::destroy_node(p);
+            }
+         }
       }
       return *this;
    }
@@ -868,42 +895,6 @@ class tree
 
 
    private:
-   void priv_move_assign(BOOST_RV_REF(tree) x, dtl::bool_<true> /*steal_resources*/)
-   {
-      //Destroy objects but retain memory in case x reuses it in the future
-      this->clear();
-      //Move allocator if needed
-      this->AllocHolder::move_assign_alloc(x);
-      //Obtain resources
-      this->icont() = boost::move(x.icont());
-   }
-
-   void priv_move_assign(BOOST_RV_REF(tree) x, dtl::bool_<false> /*steal_resources*/)
-   {
-      //We can't guarantee a compile-time equal allocator or propagation so fallback to runtime
-      //Resources can be transferred if both allocators are equal
-      if (this->node_alloc() == x.node_alloc()) {
-         this->priv_move_assign(boost::move(x), dtl::true_());
-      }
-      else {
-         //Transfer all the nodes to a temporary tree
-         //If anything goes wrong, all the nodes will be destroyed
-         //automatically
-         Icont other_tree(::boost::move(this->icont()));
-
-         //Now recreate the source tree reusing nodes stored by other_tree
-         this->icont().clone_from
-         (::boost::move(x.icont())
-            , RecyclingCloner<AllocHolder, true>(*this, other_tree)
-            , Destroyer(this->node_alloc()));
-
-         //If there are remaining nodes, destroy them
-         NodePtr p;
-         while ((p = other_tree.unlink_leftmost_without_rebalance())) {
-            AllocHolder::destroy_node(p);
-         }
-      }
-   }
 
    template<class KeyConvertible, class M>
    iiterator priv_insert_or_assign_commit

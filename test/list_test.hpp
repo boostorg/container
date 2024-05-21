@@ -166,61 +166,6 @@ struct list_pop_back_function<false>
    }
 };
 
-template<class
-        , bool>
-int list_move_assignable_only(boost::container::dtl::false_type)
-{
-   return 0;
-}
-
-//Function to check if both sets are equal
-template < class MyBoostList
-         , bool  DoublyLinked >
-int list_move_assignable_only(boost::container::dtl::true_type)
-{
-   typedef std::list<int> MyStdList;
-   typedef typename MyBoostList::value_type IntType;
-   const std::size_t max = 100u;
-   typedef list_push_data_function<DoublyLinked> push_data_t;
-
-   {
-      ::boost::movelib::unique_ptr<MyStdList> const stdlistp = ::boost::movelib::make_unique<MyStdList>(100u);
-      ::boost::movelib::unique_ptr<MyBoostList> const boostlistp = ::boost::movelib::make_unique<MyBoostList>(100u);
-      MyBoostList& boostlist = *boostlistp;
-      MyStdList& stdlist = *stdlistp;
-
-      if (push_data_t::execute(max, boostlist, stdlist)) {
-         return 1;
-      }
-
-      IntType aux_vect[50];
-      for (int i = 0; i < 50; ++i) {
-         aux_vect[i] = -1;
-      }
-      int aux_vect2[50];
-      for (int i = 0; i < 50; ++i) {
-         aux_vect2[i] = -1;
-      }
-      boostlist.assign(boost::make_move_iterator(&aux_vect[0])
-         , boost::make_move_iterator(&aux_vect[50]));
-      stdlist.assign(&aux_vect2[0], &aux_vect2[50]);
-      if (!CheckEqualContainers(boostlist, stdlist)) return 1;
-
-      for (int i = 0; i < 50; ++i) {
-         aux_vect[i] = -1;
-      }
-
-      for (int i = 0; i < 50; ++i) {
-         aux_vect2[i] = -1;
-      }
-      boostlist.assign(boost::make_move_iterator(make_input_from_forward_iterator(&aux_vect[0]))
-         , boost::make_move_iterator(make_input_from_forward_iterator(&aux_vect[50])));
-      stdlist.assign(&aux_vect2[0], &aux_vect2[50]);
-      if (!CheckEqualContainers(boostlist, stdlist)) return 1;
-   }
-   return 0;
-}
-
 template<class MyBoostList
         ,bool  DoublyLinked>
 int list_test (bool copied_allocators_equal = true)
@@ -258,9 +203,8 @@ int list_test (bool copied_allocators_equal = true)
       ::boost::movelib::unique_ptr<MyBoostList> const boostlistp = ::boost::movelib::make_unique<MyBoostList>(100u);
       ::boost::movelib::unique_ptr<MyBoostList> const boostlistp2 = ::boost::movelib::make_unique<MyBoostList>();
       *boostlistp2 = ::boost::move(*boostlistp);
-      if (!test::CheckEqualContainers(*boostlistp2, *stdlistp)) return 1;
+      if(!test::CheckEqualContainers(*boostlistp2, *stdlistp)) return 1;
    }
-
 
    ::boost::movelib::unique_ptr<MyBoostList> const pboostlist = ::boost::movelib::make_unique<MyBoostList>();
    ::boost::movelib::unique_ptr<MyStdList>   const pstdlist   = ::boost::movelib::make_unique<MyStdList>();
@@ -284,9 +228,35 @@ int list_test (bool copied_allocators_equal = true)
    stdlist.pop_front();
    if(!CheckEqualContainers(boostlist, stdlist)) return 1;
 
-   if (0 != list_move_assignable_only<MyBoostList, DoublyLinked>(dtl::bool_<boost::container::test::is_move_assignable<IntType>::value>()))
-      return 1;
-   
+   {
+      IntType aux_vect[50];
+      for(int i = 0; i < 50; ++i){
+         IntType move_me(-1);
+         aux_vect[i] = boost::move(move_me);
+      }
+      int aux_vect2[50];
+      for(int i = 0; i < 50; ++i){
+         aux_vect2[i] = -1;
+      }
+      boostlist.assign(boost::make_move_iterator(&aux_vect[0])
+                        ,boost::make_move_iterator(&aux_vect[50]));
+      stdlist.assign(&aux_vect2[0], &aux_vect2[50]);
+      if(!CheckEqualContainers(boostlist, stdlist)) return 1;
+
+      for(int i = 0; i < 50; ++i){
+         IntType move_me(-1);
+         aux_vect[i] = boost::move(move_me);
+      }
+
+      for(int i = 0; i < 50; ++i){
+         aux_vect2[i] = -1;
+      }
+      boostlist.assign(boost::make_move_iterator(make_input_from_forward_iterator(&aux_vect[0]))
+                        ,boost::make_move_iterator(make_input_from_forward_iterator(&aux_vect[50])));
+      stdlist.assign(&aux_vect2[0], &aux_vect2[50]);
+      if(!CheckEqualContainers(boostlist, stdlist)) return 1;
+   }
+
    if(copied_allocators_equal){
       boostlist.sort();
       stdlist.sort();
@@ -304,7 +274,8 @@ int list_test (bool copied_allocators_equal = true)
    {
       IntType aux_vect[50];
       for(int i = 0; i < 50; ++i){
-         aux_vect[i] = -1;
+         IntType move_me(-1);
+         aux_vect[i] = boost::move(move_me);
       }
       int aux_vect2[50];
       for(int i = 0; i < 50; ++i){
@@ -323,7 +294,8 @@ int list_test (bool copied_allocators_equal = true)
          return 1;
 
       for(int i = 0; i < 50; ++i){
-         aux_vect[i] = -1;
+         IntType move_me(-1);
+         aux_vect[i] = boost::move(move_me);
       }
 
       for(int i = 0; i < 50; ++i){

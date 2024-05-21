@@ -19,8 +19,6 @@
 
 #include <boost/container/vector.hpp>
 #include <boost/container/allocator.hpp>
-#include <boost/container/node_allocator.hpp>
-#include <boost/container/adaptive_pool.hpp>
 
 #include <boost/move/utility_core.hpp>
 #include "check_equal_containers.hpp"
@@ -131,13 +129,13 @@ int test_cont_variants()
    typedef typename GetAllocatorCont<VoidAllocator>::template apply<test::copyable_int>::type MyCopyCont;
    typedef typename GetAllocatorCont<VoidAllocator>::template apply<test::moveconstruct_int>::type MyMoveConstructCont;
 
-   if (test::vector_test<MyCont>())
+   if(test::vector_test<MyCont>())
       return 1;
-   if (test::vector_test<MyMoveCont>())
+   if(test::vector_test<MyMoveCont>())
       return 1;
-   if (test::vector_test<MyCopyMoveCont>())
+   if(test::vector_test<MyCopyMoveCont>())
       return 1;
-   if (test::vector_test<MyCopyCont>())
+   if(test::vector_test<MyCopyCont>())
       return 1;
    if (test::vector_test<MyMoveConstructCont>())
       return 1;

@@ -557,15 +557,6 @@ int main ()
          std::cout << "Error in map_test<new_allocator<void>, red_black_tree>" << std::endl;
          return 1;
       }
-
-      if (0 != test::map_test
-         < GetAllocatorMap<new_allocator<void>, red_black_tree>::apply<test::moveconstruct_int>::map_type
-         , MyStdMap
-         , GetAllocatorMap<new_allocator<void>, red_black_tree>::apply<test::moveconstruct_int>::multimap_type
-         , MyStdMultiMap>()) {
-         std::cout << "Error in map_test<new_allocator<void>, red_black_tree>" << std::endl;
-         return 1;
-      }
    }
 
    ////////////////////////////////////

@@ -346,10 +346,9 @@ class small_vector_base
    public:
    //Make it public as it will be inherited by small_vector and container
    //must have this public member
-   typedef typename real_allocator<T, SecAlloc>::type                     underlying_allocator_t;
-   typedef typename allocator_traits<underlying_allocator_t>::
-      template portable_rebind_alloc<void>::type                          void_underlying_allocator_t;
-   typedef small_vector_allocator<T, void_underlying_allocator_t, Options>allocator_type;
+   typedef typename real_allocator<T, SecAlloc>::type                     allocator_type;
+   typedef typename allocator_traits<allocator_type>::
+      template portable_rebind_alloc<void>::type                          void_allocator_t;
    typedef typename dtl::get_small_vector_opt<Options>::type              options_t;
    typedef typename dtl::vector_for_small_vector
       <T, SecAlloc, Options>::type                                        base_type;
@@ -357,12 +356,12 @@ class small_vector_base
    typedef typename allocator_traits<allocator_type>::const_pointer       const_pointer;
    typedef typename allocator_traits<allocator_type>::void_pointer        void_pointer;
    typedef typename allocator_traits<allocator_type>::const_void_pointer  const_void_pointer;
-
+   typedef small_vector_allocator<T, void_allocator_t, Options>           small_allocator_type;
 
    private: 
    BOOST_COPYABLE_AND_MOVABLE(small_vector_base)
 
-   friend class small_vector_allocator<T, void_underlying_allocator_t, Options>;
+   friend class small_vector_allocator<T, void_allocator_t, Options>;
 
    inline
    const_pointer internal_storage() const BOOST_NOEXCEPT_OR_NOTHROW

@@ -1318,13 +1318,28 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
                                   || allocator_traits_type::is_always_equal::value)
    {
       if (BOOST_LIKELY(this != &x)) {
-         //We know resources can be transferred at comiple time if both allocators are
-         //always equal or the allocator is going to be propagated
-         const bool can_steal_resources_alloc
-            =  allocator_traits_type::propagate_on_container_move_assignment::value
-            || allocator_traits_type::is_always_equal::value;
-         dtl::bool_<can_steal_resources_alloc> flag;
-         this->priv_move_assign(boost::move(x), flag);
+         allocator_type &this_alloc = this->alloc();
+         allocator_type &x_alloc    = x.alloc();
+         const bool propagate_alloc = allocator_traits_type::
+               propagate_on_container_move_assignment::value;
+         dtl::bool_<propagate_alloc> flag;
+         const bool allocators_equal = this_alloc == x_alloc; (void)allocators_equal;
+         //Resources can be transferred if both allocators are
+         //going to be equal after this function (either propagated or already equal)
+         if(propagate_alloc || allocators_equal){
+            //Destroy objects but retain memory in case x reuses it in the future
+            this->clear();
+            //Move allocator if needed
+            dtl::move_alloc(this_alloc, x_alloc, flag);
+            dtl::move_alloc(this->ptr_alloc(), x.ptr_alloc(), flag);
+            //Nothrow swap
+            this->swap_members(x);
+         }
+         //Else do a one by one move
+         else{
+            this->assign( boost::make_move_iterator(x.begin())
+                        , boost::make_move_iterator(x.end()));
+         }
       }
       return *this;
    }
@@ -2363,30 +2378,6 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
 
-   void priv_move_assign(BOOST_RV_REF(deque) x, dtl::bool_<true> /*steal_resources*/)
-   {
-      //Destroy objects but retain memory in case x reuses it in the future
-      this->clear();
-      //Move allocator if needed
-      dtl::bool_<allocator_traits_type::propagate_on_container_move_assignment::value> flag;
-      dtl::move_alloc(this->alloc(), x.alloc(), flag);
-      dtl::move_alloc(this->ptr_alloc(), x.ptr_alloc(), flag);
-      //Nothrow swap
-      this->swap_members(x);
-   }
-
-   void priv_move_assign(BOOST_RV_REF(deque) x, dtl::bool_<false> /*steal_resources*/)
-   {
-      //We can't guarantee a compile-time equal allocator or propagation so fallback to runtime
-      //Resources can be transferred if both allocators are equal
-      if (this->alloc() == x.alloc()) {
-         this->priv_move_assign(boost::move(x), dtl::true_());
-      }
-      else {
-         this->assign(boost::make_move_iterator(x.begin()), boost::make_move_iterator(x.end()));
-      }
-   }
-
    inline size_type priv_index_of(const_iterator p) const
    {
       BOOST_ASSERT(this->cbegin() <= p);
@@ -2502,8 +2493,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
 
    void priv_destroy_range(iterator p, iterator p2)
    {
-      (void)p; (void)p2;
-      BOOST_IF_CONSTEXPR(!Base::traits_t::trivial_dctr){
+      if(!Base::traits_t::trivial_dctr){
          for(;p != p2; ++p){
             allocator_traits_type::destroy(this->alloc(), boost::movelib::iterator_to_raw_pointer(p));
          }
@@ -2512,8 +2502,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
 
    void priv_destroy_range(pointer p, pointer p2)
    {
-      (void)p; (void)p2;
-      BOOST_IF_CONSTEXPR(!Base::traits_t::trivial_dctr){
+      if(!Base::traits_t::trivial_dctr){
          for(;p != p2; ++p){
             allocator_traits_type::destroy(this->alloc(), boost::movelib::iterator_to_raw_pointer(p));
          }

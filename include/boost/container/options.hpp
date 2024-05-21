@@ -617,7 +617,7 @@ typedef deque_opt<0u, 0u> deque_null_opt;
 
 //! Helper metafunction to combine options into a single type to be used
 //! by \c boost::container::deque.
-//! Supported options are: \c boost::container::block_bytes and \c boost::container::block_size
+//! Supported options are: \c boost::container::block_bytes
 #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
 template<class ...Options>
 #else

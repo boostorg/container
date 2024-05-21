@@ -2532,38 +2532,6 @@ private:
    }
 
    template<class OtherA>
-   void priv_move_assign_steal_or_assign(BOOST_RV_REF_BEG vector<T, OtherA, Options> BOOST_RV_REF_END x, dtl::true_type /*data_can_be_always_stolen*/)
-   {
-      this->clear();
-      if (BOOST_LIKELY(!!this->m_holder.m_start))
-         this->m_holder.deallocate(this->m_holder.m_start, this->m_holder.m_capacity);
-      this->m_holder.steal_resources(x.m_holder);
-   }
-
-   template<class OtherA>
-   void priv_move_assign_steal_or_assign(BOOST_RV_REF_BEG vector<T, OtherA, Options> BOOST_RV_REF_END x, dtl::false_type /*data_can_be_always_stolen*/)
-   {
-      const bool propagate_alloc = allocator_traits_type::propagate_on_container_move_assignment::value;
-      allocator_type& this_alloc = this->m_holder.alloc();
-      allocator_type& x_alloc = x.m_holder.alloc();
-
-      //In this allocator move constructor the allocator might will be propagated, but to support small_vector-like
-      //types, we need to check the currently owned buffers to know if they are propagable.
-      const bool is_buffer_propagable_from_x = is_propagable_from(x_alloc, x.m_holder.start(), this_alloc, propagate_alloc);
-
-      if (is_buffer_propagable_from_x) {
-         this->priv_move_assign_steal_or_assign(boost::move(x), dtl::true_type());
-      }
-      //Else do a one by one move. Also, clear the source as users find confusing
-      //elements are still alive in the source container.
-      else {
-         this->assign( boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(x.begin()))
-                     , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(x.end()))   );
-         x.clear();
-      }
-   }
-
-   template<class OtherA>
    void priv_move_assign(BOOST_RV_REF_BEG vector<T, OtherA, Options> BOOST_RV_REF_END x
       , typename dtl::disable_if_or
          < void
@@ -2574,16 +2542,30 @@ private:
       //for move assignment, no aliasing (&x != this) is assumed.
       //x.size() == 0 is allowed for buggy std libraries.
       BOOST_ASSERT(this != &x || x.size() == 0);
-      const bool alloc_is_always_equal = allocator_traits_type::is_always_equal::value;
+      allocator_type &this_alloc = this->m_holder.alloc();
+      allocator_type &x_alloc    = x.m_holder.alloc();
       const bool propagate_alloc = allocator_traits_type::propagate_on_container_move_assignment::value;
-      const bool partially_propagable_alloc = allocator_traits_type::is_partially_propagable::value;
-      const bool data_can_be_always_be_stolen = alloc_is_always_equal || (propagate_alloc && !partially_propagable_alloc);
 
-      this->priv_move_assign_steal_or_assign(boost::move(x), dtl::bool_<data_can_be_always_be_stolen>());
+      //In this allocator move constructor the allocator maybe will be propagated -----------------------v
+      const bool is_propagable_from_x = is_propagable_from(x_alloc, x.m_holder.start(), this_alloc, propagate_alloc);
 
+      //Resources can be transferred if both allocators are
+      //going to be equal after this function (either propagated or already equal)
+      if(is_propagable_from_x){
+         this->clear();
+         if(BOOST_LIKELY(!!this->m_holder.m_start))
+            this->m_holder.deallocate(this->m_holder.m_start, this->m_holder.m_capacity);
+         this->m_holder.steal_resources(x.m_holder);
+      }
+      //Else do a one by one move. Also, clear the source as users find confusing
+      //elements are still alive in the source container.
+      else{
+         this->assign( boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(x.begin()))
+                     , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(x.end()  ))
+                     );
+         x.clear();
+      }
       //Move allocator if needed
-      allocator_type& this_alloc = this->m_holder.alloc();
-      allocator_type& x_alloc    = x.m_holder.alloc();
       dtl::move_alloc(this_alloc, x_alloc, dtl::bool_<propagate_alloc>());
    }
 
