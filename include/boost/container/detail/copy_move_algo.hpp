@@ -50,7 +50,7 @@
 #     pragma GCC diagnostic ignored "-Wstringop-overflow"
 #  endif
 //GCC 12 seems a bit confused about array access error with small_vector
-#  if defined(BOOST_GCC) && ((BOOST_GCC >= 120000) && (BOOST_GCC < 130000))
+#  if defined(BOOST_GCC) && ((BOOST_GCC >= 110000) && (BOOST_GCC < 130000))
 #     pragma GCC diagnostic ignored "-Wstringop-overread"
 #     pragma GCC diagnostic ignored "-Wstringop-overflow"
 #  endif
