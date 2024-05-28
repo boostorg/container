@@ -226,11 +226,13 @@ bool test_span_conversion()
 
 #endif   //BOOST_VECTOR_TEST_HAS_SPAN
 
+#if !defined(_MSC_VER)
 struct POD { int POD::*ptr; };
 BOOST_CONTAINER_STATIC_ASSERT_MSG
    ( boost::container::dtl::is_pod<POD>::value
    , "POD test failed"
    );
+#endif
 
 int main()
 {
@@ -409,7 +411,7 @@ int main()
    }
 
    ////////////////////////////////////
-   //    POD types should not be 0-filled testing
+   //    POD types should not be 0-filled
    ////////////////////////////////////
 #if !defined(_MSC_VER)
    // MSVC miscompiles value initialization of pointers to data members,
