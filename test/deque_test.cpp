@@ -104,7 +104,6 @@ public:
    recursive_deque & operator=(const recursive_deque &x)
    {  this->deque_ = x.deque_;   return *this; }
 
-   int id_;
    deque<recursive_deque> deque_;
    deque<recursive_deque>::iterator it_;
    deque<recursive_deque>::const_iterator cit_;

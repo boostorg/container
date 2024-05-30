@@ -48,7 +48,6 @@ template class iterator_from_iiterator
 class recursive_list
 {
 public:
-   int id_;
    list<recursive_list> list_;
    list<recursive_list>::iterator it_;
    list<recursive_list>::const_iterator cit_;

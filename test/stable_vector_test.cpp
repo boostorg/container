@@ -28,7 +28,6 @@ using namespace boost::container;
 class recursive_vector
 {
    public:
-   int id_;
    stable_vector<recursive_vector> vector_;
    stable_vector<recursive_vector>::iterator it_;
    stable_vector<recursive_vector>::const_iterator cit_;

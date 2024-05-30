@@ -91,7 +91,6 @@ class recursive_vector
    recursive_vector & operator=(const recursive_vector &x)
    {  this->vector_ = x.vector_;   return *this; }
 
-   int id_;
    vector<recursive_vector> vector_;
    vector<recursive_vector>::iterator it_;
    vector<recursive_vector>::const_iterator cit_;

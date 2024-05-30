@@ -24,7 +24,6 @@ using namespace boost::container;
 class recursive_slist
 {
 public:
-   int id_;
    slist<recursive_slist> slist_;
    slist<recursive_slist>::iterator it_;
    slist<recursive_slist>::const_iterator cit_;
