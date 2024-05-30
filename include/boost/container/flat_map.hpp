@@ -52,6 +52,12 @@
 #define BOOST_CONTAINER_STD_PAIR_IS_MOVABLE
 #endif
 
+//for C++03 compilers, were type-puning is the only option for std::pair
+//disable strict aliasing to reduce problems.
+#if defined(BOOST_GCC) && (BOOST_GCC >= 100000) && !defined(BOOST_CONTAINER_STD_PAIR_IS_MOVABLE)
+#pragma GCC push_options
+#pragma GCC optimize("no-strict-aliasing")
+#endif
 
 namespace boost {
 namespace container {
@@ -3013,6 +3019,10 @@ class flat_multimap
        BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
    {  x.swap(y);  }
 };
+
+#if defined(BOOST_GCC) && (BOOST_GCC >= 100000) && !defined(BOOST_CONTAINER_STD_PAIR_IS_MOVABLE)
+#pragma GCC pop_options
+#endif
 
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD
 
