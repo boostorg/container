@@ -544,6 +544,15 @@ int main ()
          std::cout << "Error in set_test<new_allocator<void>, red_black_tree>" << std::endl;
          return 1;
       }
+
+      if (0 != test::set_test
+         < GetAllocatorSet<new_allocator<void>, red_black_tree>::apply<test::moveconstruct_int>::set_type
+         , MyStdSet
+         , GetAllocatorSet<new_allocator<void>, red_black_tree>::apply<test::moveconstruct_int>::multiset_type
+         , MyStdMultiSet>()) {
+         std::cout << "Error in set_test<new_allocator<void>, red_black_tree>" << std::endl;
+         return 1;
+      }
    }
 
    ////////////////////////////////////

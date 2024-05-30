@@ -193,10 +193,10 @@ int main()
    if(!test_swap())
       return 1;
 
-   if(test::vector_test< small_vector<int, 0> >())
+   if (test::vector_test< small_vector<int, 0> >())
       return 1;
 
-   if(test::vector_test< small_vector<int, 2000> >())
+   if (test::vector_test< small_vector<int, 2000> >())
       return 1;
 
    if (test_cont_variants< new_allocator<void> >())
