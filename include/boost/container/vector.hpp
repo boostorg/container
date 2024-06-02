@@ -51,6 +51,7 @@
 #include <boost/move/iterator.hpp>
 #include <boost/move/traits.hpp>
 #include <boost/move/utility_core.hpp>
+#include <boost/move/detail/launder.hpp>
 // move/detail
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #include <boost/move/detail/fwd_macros.hpp>
@@ -351,23 +352,23 @@ struct vector_alloc_holder
 
    public:
 
-   inline
-      static bool is_propagable_from(const allocator_type &from_alloc, pointer p, const allocator_type &to_alloc, bool const propagate_allocator)
+   template <bool PropagateAllocator>
+   inline static bool is_propagable_from(const allocator_type &from_alloc, pointer p, const allocator_type &to_alloc)
    {
-      (void)propagate_allocator; (void)p; (void)to_alloc; (void)from_alloc;
+      (void)p; (void)to_alloc; (void)from_alloc;
       const bool all_storage_propagable = !allocator_traits_type::is_partially_propagable::value ||
                                           !allocator_traits_type::storage_is_unpropagable(from_alloc, p);
       return all_storage_propagable &&
-         (propagate_allocator || allocator_traits_type::is_always_equal::value || allocator_traits_type::equal(from_alloc, to_alloc));
+         (PropagateAllocator || allocator_traits_type::is_always_equal::value || allocator_traits_type::equal(from_alloc, to_alloc));
    }
 
-   inline
-      static bool are_swap_propagable(const allocator_type &l_a, pointer l_p, const allocator_type &r_a, pointer r_p, bool const propagate_allocator)
+   template <bool PropagateAllocator>
+   inline static bool are_swap_propagable(const allocator_type &l_a, pointer l_p, const allocator_type &r_a, pointer r_p)
    {
-      (void)propagate_allocator; (void)l_p; (void)r_p; (void)l_a; (void)r_a;
+      (void)l_p; (void)r_p; (void)l_a; (void)r_a;
       const bool all_storage_propagable = !allocator_traits_type::is_partially_propagable::value || 
               !(allocator_traits_type::storage_is_unpropagable(l_a, l_p) || allocator_traits_type::storage_is_unpropagable(r_a, r_p));
-      return all_storage_propagable && (propagate_allocator || allocator_traits_type::equal(l_a, r_a));
+      return all_storage_propagable && (PropagateAllocator || allocator_traits_type::is_always_equal::value || allocator_traits_type::equal(l_a, r_a));
    }
 
    //Constructor, does not throw
@@ -837,14 +838,14 @@ private:
 
 
    protected:
-   inline
-      static bool is_propagable_from(const allocator_type &from_alloc, pointer p, const allocator_type &to_alloc, bool const propagate_allocator)
-   {  return alloc_holder_t::is_propagable_from(from_alloc, p, to_alloc, propagate_allocator);  }
+   template <bool PropagateAllocator>
+   inline static bool is_propagable_from(const allocator_type &from_alloc, pointer p, const allocator_type &to_alloc)
+   {  return alloc_holder_t::template is_propagable_from<PropagateAllocator>(from_alloc, p, to_alloc);  }
 
-   inline
-      static bool are_swap_propagable( const allocator_type &l_a, pointer l_p
-                                     , const allocator_type &r_a, pointer r_p, bool const propagate_allocator)
-   {  return alloc_holder_t::are_swap_propagable(l_a, l_p, r_a, r_p, propagate_allocator);  }
+   template <bool PropagateAllocator>
+   inline static bool are_swap_propagable( const allocator_type &l_a, pointer l_p
+                                         , const allocator_type &r_a, pointer r_p)
+   {  return alloc_holder_t::template are_swap_propagable<PropagateAllocator>(l_a, l_p, r_a, r_p);  }
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -865,6 +866,25 @@ private:
    inline vector(initial_capacity_t, pointer initial_memory, size_type cap, BOOST_FWD_REF(AllocFwd) a)
       : m_holder(initial_capacity_t(), initial_memory, cap, ::boost::forward<AllocFwd>(a))
    {}
+
+   template<class AllocFwd>
+   inline vector(initial_capacity_t, pointer initial_memory, size_type cap, BOOST_FWD_REF(AllocFwd) a, vector &x)
+      : m_holder(initial_capacity_t(), initial_memory, cap, ::boost::forward<AllocFwd>(a))
+   {
+      allocator_type &this_al = this->get_stored_allocator();
+      if (this->template is_propagable_from<true>(x.get_stored_allocator(), x.data(), this_al)) {
+         this->steal_resources(x);
+      }
+      else {
+         const size_type sz = x.size();
+         ::boost::container::uninitialized_move_alloc_n_source
+            ( this_al, x.priv_raw_begin(), sz
+            //Use launder to stop false positives from -Warray-bounds
+            , boost::move_detail::launder(this->priv_raw_begin()));
+         this->protected_set_size(sz);
+         x.clear();
+      }
+   }
 
    inline vector(initial_capacity_t, pointer initial_memory, size_type cap)
       : m_holder(initial_capacity_t(), initial_memory, cap)
@@ -1163,11 +1183,11 @@ private:
    vector(BOOST_RV_REF(vector) x, const allocator_type &a)
       :  m_holder( vector_uninitialized_size, a
                  //In this allocator move constructor the allocator won't be propagated --v
-                 , is_propagable_from(x.get_stored_allocator(), x.m_holder.start(), a, false) ? 0 : x.size()
+                 , is_propagable_from<false>(x.get_stored_allocator(), x.m_holder.start(), a) ? 0 : x.size()
                  )
    {
       //In this allocator move constructor the allocator won't be propagated ---v
-      if(is_propagable_from(x.get_stored_allocator(), x.m_holder.start(), a, false)){
+      if(is_propagable_from<false>(x.get_stored_allocator(), x.m_holder.start(), a)){
          this->m_holder.steal_resources(x.m_holder);
       }
       else{
@@ -2549,7 +2569,7 @@ private:
 
       //In this allocator move constructor the allocator might will be propagated, but to support small_vector-like
       //types, we need to check the currently owned buffers to know if they are propagable.
-      const bool is_buffer_propagable_from_x = is_propagable_from(x_alloc, x.m_holder.start(), this_alloc, propagate_alloc);
+      const bool is_buffer_propagable_from_x = is_propagable_from<propagate_alloc>(x_alloc, x.m_holder.start(), this_alloc);
 
       if (is_buffer_propagable_from_x) {
          this->priv_move_assign_steal_or_assign(boost::move(x), dtl::true_type());
@@ -2631,46 +2651,115 @@ private:
    template<class Vector>  //Template it to avoid it in explicit instantiations
    void priv_swap(Vector &x, dtl::false_type)  //version_N
    {
-      const bool propagate_alloc = allocator_traits_type::propagate_on_container_swap::value;
+      BOOST_ASSERT(allocator_traits_type::propagate_on_container_swap::value ||
+                   allocator_traits_type::is_always_equal::value ||
+                   this->get_stored_allocator() == x.get_stored_allocator());
+
+      if (BOOST_UNLIKELY(&x == this)) {
+         return;
+      }
+
+      //Just swap internals
+      this->m_holder.swap_resources(x.m_holder);
+      //And now swap the allocator
+      dtl::bool_<allocator_traits_type::propagate_on_container_swap::value> flag;
+      dtl::swap_alloc(this->m_holder.alloc(), x.m_holder.alloc(), flag);
+   }
+
+   protected:
+   template<class Vector>  //Template it to avoid it in explicit instantiations
+   void prot_swap_small(Vector &x, std::size_t internal_capacity)  //version_N
+   {
       if (BOOST_UNLIKELY(&x == this)){
          return;
       }
-      else if(are_swap_propagable( this->get_stored_allocator(), this->m_holder.start()
-                                 , x.get_stored_allocator(), x.m_holder.start(), propagate_alloc)){
-         //Just swap internals
-         this->m_holder.swap_resources(x.m_holder);
+
+      const bool propagate_alloc = allocator_traits_type::propagate_on_container_swap::value;
+      if(are_swap_propagable<propagate_alloc>
+         ( this->get_stored_allocator(), this->m_holder.start(), x.get_stored_allocator(), x.m_holder.start())){
+         this->priv_swap(x, dtl::false_());
+         return;
       }
-      else{
-         //Else swap element by element...
+
+      allocator_type &th_al = this->get_stored_allocator();
+      allocator_type &ot_al = x.get_stored_allocator();
+
+      const bool is_this_data_propagable = is_propagable_from<propagate_alloc>(th_al, this->data(), ot_al);
+      const bool is_that_data_propagable = is_propagable_from<propagate_alloc>(ot_al, x.data(), th_al);
+
+      if(internal_capacity && (is_this_data_propagable || is_that_data_propagable)) {
+         //steal memory from src to dst, but move elements from dst to src
+         vector& extmem = is_this_data_propagable ? *this : x;
+         vector& intmem = is_this_data_propagable ? x : *this;
+
+         //Reset extmem to the internal storage and backup data
+         pointer const orig_extdata = extmem.data();
+         const size_type orig_extmem_size = extmem.size();
+         const size_type orig_extmem_cap = extmem.capacity();
+
+         //New safe state for extmem -> empty, internal storage
+         extmem.m_holder.m_start = extmem.get_stored_allocator().internal_storage();
+         extmem.m_holder.set_stored_size(0u);
+         extmem.m_holder.set_stored_capacity(internal_capacity);
+
+         {
+            //Deallocate on exception
+            typename value_traits::ArrayDeallocator new_buffer_deallocator(orig_extdata, extmem.get_stored_allocator(), orig_extmem_cap);
+            typename value_traits::ArrayDestructor  new_values_destroyer(orig_extdata, extmem.get_stored_allocator(), orig_extmem_size);
+
+            //Move internal memory data to the internal memory data of the target, this can throw
+            BOOST_ASSERT(extmem.capacity() >= intmem.size());
+            ::boost::container::uninitialized_move_alloc_n
+               (intmem.get_stored_allocator(), this->priv_raw_begin(), intmem.size(), extmem.priv_raw_begin());
+
+            //Exception not thrown, commit new state
+            extmem.m_holder.set_stored_size(intmem.size());
+            //Throwing part passed, disable rollback
+            new_buffer_deallocator.release();
+            new_values_destroyer.release();
+         }
+
+         //Destroy moved elements from intmem
+         boost::container::destroy_alloc_n
+            ( intmem.get_stored_allocator(), this->priv_raw_begin()
+            , intmem.size());
+
+         //Adopt dynamic buffer
+         intmem.m_holder.m_start = orig_extdata;
+         intmem.m_holder.set_stored_size(orig_extmem_size);
+         intmem.m_holder.set_stored_capacity(orig_extmem_cap);
+
+         //And now swap the allocator
+         dtl::swap_alloc(this->m_holder.alloc(), x.m_holder.alloc(), dtl::bool_<propagate_alloc>());
+      }
+      else {   //swap element by element and insert rest
          bool const t_smaller = this->size() < x.size();
          vector &sml = t_smaller ? *this : x;
          vector &big = t_smaller ? x : *this;
 
-         //For empty containers, maybe storage can be moved from the other (just like in the move constructor)         
-         if(sml.empty() && is_propagable_from(big.get_stored_allocator(), big.data(), sml.get_allocator(), propagate_alloc)){
-            if(BOOST_LIKELY(0u != sml.capacity()))
-               sml.m_holder.deallocate(sml.m_holder.m_start, sml.m_holder.m_capacity);
-            sml.steal_resources(big);
+         //swap element by element until common size
+         size_type const common_elements = sml.size();
+         for(size_type i = 0; i != common_elements; ++i){
+            boost::adl_move_swap(sml[i], big[i]);
          }
-         else {
-            //Else swap element by element...
-            size_type const common_elements = sml.size();
-            for(size_type i = 0; i != common_elements; ++i){
-               boost::adl_move_swap(sml[i], big[i]);
-            }
-            //... and move-insert the remaining range
-            sml.insert( sml.cend()
-                      , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(big.nth(common_elements)))
-                      , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(big.end()))
-                      );
-            //Destroy remaining elements
-            big.erase(big.nth(common_elements), big.cend());
-         }
-      }
-      //And now swap the allocator
-      dtl::swap_alloc(this->m_holder.alloc(), x.m_holder.alloc(), dtl::bool_<propagate_alloc>());
-   }
 
+         //And now swap the allocator to be able to construct new elements in sml with the proper allocator
+         dtl::swap_alloc(this->m_holder.alloc(), x.m_holder.alloc(), dtl::bool_<propagate_alloc>());
+
+         //move-insert the remaining range
+         T *const raw_big_nth = boost::movelib::iterator_to_raw_pointer(big.nth(common_elements));
+         sml.insert(sml.cend()
+            , boost::make_move_iterator(raw_big_nth)
+            , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(big.end())));
+
+         //Destroy remaining, moved, elements with their original allocator
+         boost::container::destroy_alloc_n
+            ( sml.get_stored_allocator(), raw_big_nth
+            , std::size_t(big.m_holder.m_size - common_elements));
+         big.m_holder.set_stored_size(common_elements);
+      }
+   }
+   private:
    inline void priv_move_to_new_buffer(size_type, version_0)
    {  alloc_holder_t::on_capacity_overflow();  }
 
@@ -2780,6 +2869,41 @@ private:
    inline dtl::insert_value_initialized_n_proxy<allocator_type> priv_resize_proxy(value_init_t)
    {  return dtl::insert_value_initialized_n_proxy<allocator_type>(); }
 
+   protected:
+   void prot_shrink_to_fit_small(pointer const small_buffer, const size_type small_capacity)
+   {
+      const size_type cp = this->m_holder.capacity();
+      if (cp && this->m_holder.m_start != small_buffer) {   //Do something only if a dynamic buffer is used
+         const size_type sz = this->size();
+         if (!sz) {
+            if (BOOST_LIKELY(!!this->m_holder.m_start))
+               this->m_holder.deallocate(this->m_holder.m_start, cp);
+            this->m_holder.m_start = small_buffer;
+            this->m_holder.set_stored_capacity(small_capacity);
+         }
+         else if(sz <= small_capacity) {
+            T *const oldbuf = boost::movelib::to_raw_pointer(this->m_holder.m_start);
+            ::boost::container::uninitialized_move_alloc_n
+               ( this->get_stored_allocator()
+               , oldbuf
+               , sz
+               , boost::movelib::to_raw_pointer(small_buffer)
+               );
+            boost::container::destroy_alloc_n(this->get_stored_allocator(), oldbuf, sz);
+
+            this->m_holder.m_start = small_buffer;
+            this->m_holder.set_stored_capacity(small_capacity);
+
+            if (BOOST_LIKELY(!!this->m_holder.m_start))
+               this->m_holder.deallocate(this->m_holder.m_start, cp);
+         }
+         else if (sz < cp) {
+            this->priv_move_to_new_buffer(sz, alloc_version());
+         }
+      }
+   }
+
+   private:
    inline void priv_shrink_to_fit(version_0) BOOST_NOEXCEPT_OR_NOTHROW
    {}
 

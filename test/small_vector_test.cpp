@@ -84,6 +84,140 @@ bool test_small_vector_base_test()
       if (!boost::container::test::CheckEqualContainers(sm5_move, sm5_copy))
          return false;
    }
+   {
+      typedef boost::container::small_vector<int, 5> sm5_t;
+      typedef boost::container::small_vector<int, 7> sm7_t;
+
+      {
+         //Both in static memory
+         sm5_t sm5;
+         sm5.push_back(1);
+
+         sm7_t sm7;
+         sm7.push_back(2);
+
+         sm5_t sm5_copy(sm5);
+         sm7_t sm7_copy(sm7);
+         smb_t& smb5 = sm5_copy;
+         smb_t& smb7 = sm7_copy;
+         if (!sm5.is_small() || !sm7.is_small())
+            return false;
+
+         smb5.swap(smb7);
+         if (!boost::container::test::CheckEqualContainers(sm5_copy, sm7))
+            return false;
+         if (!boost::container::test::CheckEqualContainers(sm7_copy, sm5))
+            return false;
+
+         if (!sm5.is_small() || !sm7.is_small())
+            return false;
+
+         smb5.swap(smb7);
+         if (!boost::container::test::CheckEqualContainers(sm7_copy, sm7))
+            return false;
+         if (!boost::container::test::CheckEqualContainers(sm5_copy, sm5))
+            return false;
+
+         if (!sm5.is_small() || !sm7.is_small())
+            return false;
+      }
+      {
+         //Both in dynamic memory
+         sm5_t sm5;
+         for(std::size_t i = 0, max = sm5.capacity()+1; i != max; ++i){
+            sm5.push_back(int(i));
+         }
+
+         sm7_t sm7;
+         for(std::size_t i = 0, max = sm7.capacity()+1; i != max; ++i){
+            sm7.push_back(int(i));
+         }
+
+         sm5_t sm5_copy(sm5);
+         sm7_t sm7_copy(sm7);
+         smb_t& smb5 = sm5_copy;
+         smb_t& smb7 = sm7_copy;
+
+         if (smb5.is_small() || smb7.is_small())
+            return false;
+
+         smb5.swap(smb7);
+         if (!boost::container::test::CheckEqualContainers(sm5_copy, sm7))
+            return false;
+         if (!boost::container::test::CheckEqualContainers(sm7_copy, sm5))
+            return false;
+
+         if (smb5.is_small() || smb7.is_small())
+            return false;
+
+         smb5.swap(smb7);
+         if (!boost::container::test::CheckEqualContainers(sm7_copy, sm7))
+            return false;
+         if (!boost::container::test::CheckEqualContainers(sm5_copy, sm5))
+            return false;
+
+         if (smb5.is_small() || smb7.is_small())
+            return false;
+      }
+      {
+         //sm7 in dynamic memory
+         sm5_t sm5;
+         for(std::size_t i = 0, max = sm5.capacity()-1; i != max; ++i){
+            sm5.push_back(int(i));
+         }
+
+         sm7_t sm7;
+         for(std::size_t i = 0, max = sm7.capacity()+1; i != max; ++i){
+            sm7.push_back(int(i));
+         }
+
+         sm5_t sm5_copy(sm5);
+         sm7_t sm7_copy(sm7);
+         smb_t& smb5 = sm5_copy;
+         smb_t& smb7 = sm7_copy;
+
+         if (!smb5.is_small() || smb7.is_small())
+            return false;
+
+         //As small_vector_base is capacity-erased, will make an element-wise swap,
+         //remaining smb7 elements won't fit in smb5's internal buffer so both will be dynamic
+         smb5.swap(smb7);
+         if (!boost::container::test::CheckEqualContainers(sm5_copy, sm7))
+            return false;
+         if (!boost::container::test::CheckEqualContainers(sm7_copy, sm5))
+            return false;
+
+         if (smb5.is_small() || smb7.is_small())
+            return false;
+
+         //Swap them again (both dynamic)
+         smb5.swap(smb7);
+         if (!boost::container::test::CheckEqualContainers(sm7_copy, sm7))
+            return false;
+         if (!boost::container::test::CheckEqualContainers(sm5_copy, sm5))
+            return false;
+
+         if (smb5.is_small() || smb7.is_small())
+            return false;
+
+         //Try again with one dynamic, but the reverse option
+         //shrink to fit should free the dynamic buffer after clear
+         //and both should be small again using the internal buffer
+         sm5_copy.clear();
+         sm5_copy.shrink_to_fit();
+         sm7_copy.clear();
+         sm7_copy.shrink_to_fit();
+      
+         if (!smb5.is_small() || !smb7.is_small())
+            return false;
+
+         sm5_copy = sm5;
+         sm7_copy = sm7;
+
+         if (!smb5.is_small() || smb7.is_small())
+            return false;
+      }
+   }
 
    return true;
 }
@@ -116,13 +250,28 @@ bool test_swap()
       if(v.size() != w_size || w.size() != v_size)
          return false;
    }
+   {  //v bigger than static capacity, w enough capacity for static
+      vec v;
+      for (std::size_t i = 0, max = v.capacity() + 1; i != max; ++i) {
+         v.push_back(int(i));
+      }
+      vec w;
+      for (std::size_t i = 0, max = w.capacity() / 2; i != max; ++i) {
+         w.push_back(int(i));
+      }
+      const std::size_t v_size = v.size();
+      const std::size_t w_size = w.size();
+      v.swap(w);
+      if (v.size() != w_size || w.size() != v_size)
+         return false;
+   }
    {  //v & w smaller than static capacity
       vec v;
       for(std::size_t i = 0, max = v.capacity()-1; i != max; ++i){
          v.push_back(int(i));
       }
       vec w;
-      for(std::size_t i = 0, max = v.capacity()/2; i != max; ++i){
+      for(std::size_t i = 0, max = w.capacity()/2; i != max; ++i){
          w.push_back(int(i));
       }
       const std::size_t v_size = v.size();
@@ -137,7 +286,7 @@ bool test_swap()
          v.push_back(int(i));
       }
       vec w;
-      for(std::size_t i = 0, max = v.capacity()*2; i != max; ++i){
+      for(std::size_t i = 0, max = w.capacity()*2; i != max; ++i){
          w.push_back(int(i));
       }
       const std::size_t v_size = v.size();
@@ -145,6 +294,73 @@ bool test_swap()
       v.swap(w);
       if(v.size() != w_size || w.size() != v_size)
          return false;
+   }
+
+   //Now test internal buffer/dynamic buffer swapping
+   {
+      typedef boost::container::small_vector<int, 5> sm5_t;
+
+      {
+         sm5_t sm5;
+         for (std::size_t i = 0, max = sm5.capacity() - 1; i != max; ++i) {
+            sm5.push_back(int(i));
+         }
+
+         sm5_t sm5_copy(sm5);
+         {
+            sm5_t sm5_dyn(sm5);
+            sm5_dyn.resize(sm5_dyn.capacity() + 1u);
+            sm5_dyn.resize(sm5.size());
+
+            if (sm5_dyn != sm5 || sm5_dyn.is_small())
+               return false;
+
+            //Swap derived small vector one static one dynamic
+            sm5_copy.swap(sm5_dyn);
+
+            if (sm5_dyn != sm5)
+               return false;
+
+            //Dynamic buffer should be transferred, the old dynamic should be small now
+            if (sm5_copy.is_small() || !sm5_dyn.is_small())
+               return false;
+
+            //Swap derived small vector one static one dynamic
+            sm5_copy.swap(sm5_dyn);
+
+            if (sm5_dyn != sm5)
+               return false;
+
+            //Dynamic buffer should be transferred, the old dynamic should be small now
+            if (!sm5_copy.is_small() || sm5_dyn.is_small())
+               return false;
+         }
+         {
+            sm5_t sm5_int(sm5);
+            if (sm5_int != sm5 || !sm5_int.is_small())
+               return false;
+
+            //Swap derived small vector one static one dynamic
+            sm5_copy.swap(sm5_int);
+
+            if (sm5_int != sm5)
+               return false;
+
+            //No dynamic memory should be present as small capacity is enough
+            if (!sm5_copy.is_small() || !sm5_int.is_small())
+               return false;
+
+            //Swap derived small vector one static one dynamic
+            sm5_copy.swap(sm5_int);
+
+            if (sm5_int != sm5)
+               return false;
+
+            //No dynamic memory should be present as small capacity is enough
+            if (!sm5_copy.is_small() || !sm5_int.is_small())
+               return false;
+         }
+      }
    }
    return true;
 }
