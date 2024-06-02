@@ -91,7 +91,6 @@ class recursive_vector
    recursive_vector & operator=(const recursive_vector &x)
    {  this->vector_ = x.vector_;   return *this; }
 
-   int id_;
    vector<recursive_vector> vector_;
    vector<recursive_vector>::iterator it_;
    vector<recursive_vector>::const_iterator cit_;
@@ -226,11 +225,13 @@ bool test_span_conversion()
 
 #endif   //BOOST_VECTOR_TEST_HAS_SPAN
 
+#if !defined(_MSC_VER)
 struct POD { int POD::*ptr; };
 BOOST_CONTAINER_STATIC_ASSERT_MSG
    ( boost::container::dtl::is_pod<POD>::value
    , "POD test failed"
    );
+#endif
 
 int main()
 {
@@ -409,7 +410,7 @@ int main()
    }
 
    ////////////////////////////////////
-   //    POD types should not be 0-filled testing
+   //    POD types should not be 0-filled
    ////////////////////////////////////
 #if !defined(_MSC_VER)
    // MSVC miscompiles value initialization of pointers to data members,

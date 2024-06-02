@@ -3881,7 +3881,6 @@ class recursive_devector
    recursive_devector & operator=(const recursive_devector &x)
    {  this->devector_ = x.devector_;   return *this; }
 
-   int id_;
    devector<recursive_devector> devector_;
    devector<recursive_devector>::iterator it_;
    devector<recursive_devector>::const_iterator cit_;
