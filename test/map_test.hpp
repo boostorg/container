@@ -318,7 +318,7 @@ int map_test_range()
 
       ::boost::movelib::unique_ptr<MyBoostMultiMap> const pboostmultimap = ::boost::movelib::make_unique<MyBoostMultiMap>
                ( boost::make_move_iterator(&aux_vect3[0])
-               , boost::make_move_iterator(&aux_vect3[0] + MaxElem), typename MyBoostMap::allocator_type());
+               , boost::make_move_iterator(&aux_vect3[0] + MaxElem));
       ::boost::movelib::unique_ptr<MyStdMultiMap> const pstdmultimap = ::boost::movelib::make_unique<MyStdMultiMap>
          (&aux_vect2[0], &aux_vect2[0] + MaxElem, typename MyStdMap::key_compare());
       if(!CheckEqualContainers(*pboostmultimap, *pstdmultimap)) return 1;
