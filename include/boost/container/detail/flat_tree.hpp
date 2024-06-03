@@ -43,7 +43,6 @@
 
 #include <boost/intrusive/detail/minimal_pair_header.hpp>      //pair
 
-#include <boost/move/make_unique.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/adl_move_swap.hpp>
 #include <boost/move/detail/iterator_to_raw_pointer.hpp>

@@ -2891,11 +2891,11 @@ private:
                );
             boost::container::destroy_alloc_n(this->get_stored_allocator(), oldbuf, sz);
 
-            this->m_holder.m_start = small_buffer;
-            this->m_holder.set_stored_capacity(small_capacity);
-
             if (BOOST_LIKELY(!!this->m_holder.m_start))
                this->m_holder.deallocate(this->m_holder.m_start, cp);
+
+            this->m_holder.m_start = small_buffer;
+            this->m_holder.set_stored_capacity(small_capacity);
          }
          else if (sz < cp) {
             this->priv_move_to_new_buffer(sz, alloc_version());

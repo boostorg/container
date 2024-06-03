@@ -34,6 +34,71 @@ struct alloc_propagate_base<boost_container_small_vector>
 
 }}}   //namespace boost::container::test
 
+
+bool test_small_vector_shrink_to_fit()
+{
+   boost::container::small_vector<int, 5> sm5;
+   boost::container::vector<int> v;
+   sm5.push_back(1);
+   sm5.push_back(2);
+   sm5.push_back(3);
+   sm5.push_back(4);
+   sm5.push_back(5);
+
+   v.push_back(1);
+   v.push_back(2);
+   v.push_back(3);
+   v.push_back(4);
+   v.push_back(5);
+
+   if (!sm5.is_small())
+      return false;
+   if (!boost::container::algo_equal(sm5.begin(), sm5.end(), v.begin(), v.end()))
+      return false;
+
+   //Shrinking a when internal storage is used is a no-op
+   sm5.shrink_to_fit();
+
+   if (!sm5.is_small())
+      return false;
+   if (!boost::container::algo_equal(sm5.begin(), sm5.end(), v.begin(), v.end()))
+      return false;
+
+   //If dynamic memory is used, shrink_to_fit will move elements to the internal storage
+   sm5.push_back(6);
+   v.push_back(6);
+   if (sm5.is_small())
+      return false;
+   sm5.pop_back();
+   v.pop_back();
+   if (sm5.is_small())
+      return false;
+
+   sm5.shrink_to_fit();
+   if (!sm5.is_small())
+      return false;
+   if (!boost::container::algo_equal(sm5.begin(), sm5.end(), v.begin(), v.end()))
+      return false;
+
+   //If dynamic memory is used, and size is zero the dynamic storage is deallocated
+   sm5.push_back(6);
+   v.push_back(6);
+   if (sm5.is_small())
+      return false;
+   sm5.clear();
+   v.clear();
+   if (sm5.is_small())
+      return false;
+
+   sm5.shrink_to_fit();
+   if (!sm5.is_small())
+      return false;
+   if (!boost::container::algo_equal(sm5.begin(), sm5.end(), v.begin(), v.end()))
+      return false;
+
+   return true;
+}
+
 bool test_small_vector_base_test()
 {
    typedef boost::container::small_vector_base<int> smb_t;
@@ -452,7 +517,7 @@ int main()
    ////////////////////////////////////
    //       Small vector base
    ////////////////////////////////////
-   if (!test_small_vector_base_test()){
+   if (!test_small_vector_shrink_to_fit()){
       return 1;
    }
 

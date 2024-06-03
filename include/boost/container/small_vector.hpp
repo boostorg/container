@@ -415,9 +415,7 @@ class small_vector_base
    {}
 
    void prot_shrink_to_fit_small(const size_type small_capacity)
-   {
-      this->base_type::prot_shrink_to_fit_small(this->internal_storage(), small_capacity);
-   }
+   {  this->base_type::prot_shrink_to_fit_small(this->internal_storage(), small_capacity);  }
 
    using base_type::protected_set_size;
 
@@ -667,9 +665,7 @@ class small_vector
    {  return this->base_type::prot_swap(other, static_capacity);  }
 
    inline void shrink_to_fit()
-   {
-      this->base_type::prot_shrink_to_fit_small(this->internal_capacity());
-   }
+   {  this->base_type::prot_shrink_to_fit_small(this->internal_capacity());   }
 };
 
 }}
