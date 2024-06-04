@@ -2248,7 +2248,7 @@ private:
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
-   //! <b>Effects</b>: Erases all the elements of the vector.
+   //! <b>Effects</b>: Erases all the elements of the vector. Leaves the capacity() of the vector unchanged.
    //!
    //! <b>Throws</b>: Nothing.
    //!
