@@ -66,7 +66,7 @@ class static_storage_allocator
    inline T* internal_storage() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return move_detail::launder_cast<T*>(&storage);  }
 
-   static const std::size_t internal_capacity = N;
+   BOOST_STATIC_CONSTEXPR std::size_t internal_capacity = N;
 
    std::size_t max_size() const
    {  return N;   }
@@ -86,7 +86,7 @@ class static_storage_allocator
 
    private:
    BOOST_CONTAINER_STATIC_ASSERT_MSG(!InplaceAlignment || (InplaceAlignment & (InplaceAlignment-1)) == 0, "Alignment option must be zero or power of two");
-   static const std::size_t final_alignment = InplaceAlignment ? InplaceAlignment : dtl::alignment_of<T>::value;
+   BOOST_STATIC_CONSTEXPR std::size_t final_alignment = InplaceAlignment ? InplaceAlignment : dtl::alignment_of<T>::value;
    typename dtl::aligned_storage<sizeof(T)*N, final_alignment>::type storage;
 };
 
@@ -188,7 +188,7 @@ public:
     typedef typename base_t::const_reverse_iterator const_reverse_iterator;
 
     //! @brief The capacity/max size of the container
-    static const size_type static_capacity = Capacity;
+    BOOST_STATIC_CONSTEXPR size_type static_capacity = Capacity;
 
     //! @brief Constructs an empty static_vector.
     //!

@@ -277,10 +277,10 @@ class basic_string;
 typedef basic_string <char>   string;
 typedef basic_string<wchar_t> wstring;
 
-static const std::size_t ADP_nodes_per_block    = 256u;
-static const std::size_t ADP_max_free_blocks    = 2u;
-static const std::size_t ADP_overhead_percent   = 1u;
-static const std::size_t ADP_only_alignment     = 0u;
+BOOST_STATIC_CONSTEXPR std::size_t ADP_nodes_per_block    = 256u;
+BOOST_STATIC_CONSTEXPR std::size_t ADP_max_free_blocks    = 2u;
+BOOST_STATIC_CONSTEXPR std::size_t ADP_overhead_percent   = 1u;
+BOOST_STATIC_CONSTEXPR std::size_t ADP_only_alignment     = 0u;
 
 template < class T
          , std::size_t NodesPerBlock   = ADP_nodes_per_block
@@ -295,7 +295,7 @@ template < class T
          , unsigned int AllocationDisableMask = 0>
 class allocator;
 
-static const std::size_t NodeAlloc_nodes_per_block = 256u;
+BOOST_STATIC_CONSTEXPR std::size_t NodeAlloc_nodes_per_block = 256u;
 
 template
    < class T

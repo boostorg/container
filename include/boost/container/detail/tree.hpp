@@ -251,13 +251,13 @@ struct intrusive_tree_type
 //Trait to detect manually rebalanceable tree types
 template<boost::container::tree_type_enum tree_type_value>
 struct is_manually_balanceable
-{  static const bool value = true;  };
+{  BOOST_STATIC_CONSTEXPR bool value = true;  };
 
 template<>  struct is_manually_balanceable<red_black_tree>
-{  static const bool value = false; };
+{  BOOST_STATIC_CONSTEXPR bool value = false; };
 
 template<>  struct is_manually_balanceable<avl_tree>
-{  static const bool value = false; };
+{  BOOST_STATIC_CONSTEXPR bool value = false; };
 
 //Proxy traits to implement different operations depending on the
 //is_manually_balanceable<>::value
@@ -1433,9 +1433,10 @@ struct has_trivial_destructor_after_move
 {
    typedef typename ::boost::container::dtl::tree<T, KeyOfValue, Compare, Allocator, Options>::allocator_type allocator_type;
    typedef typename ::boost::container::allocator_traits<allocator_type>::pointer pointer;
-   static const bool value = ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
-                             ::boost::has_trivial_destructor_after_move<pointer>::value &&
-                             ::boost::has_trivial_destructor_after_move<Compare>::value;
+   BOOST_STATIC_CONSTEXPR bool value =
+      ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
+      ::boost::has_trivial_destructor_after_move<pointer>::value &&
+      ::boost::has_trivial_destructor_after_move<Compare>::value;
 };
 
 } //namespace boost  {

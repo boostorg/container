@@ -304,13 +304,13 @@ struct small_vector_storage
    typedef typename dtl::aligned_storage
       <sizeof(T)*N, Alignment>::type storage_type;
    storage_type m_storage;
-   static const std::size_t sms_size = sizeof(storage_type)/sizeof(T);
+   BOOST_STATIC_CONSTEXPR std::size_t sms_size = sizeof(storage_type)/sizeof(T);
 };
 
 template<class T, std::size_t Alignment>
 struct small_vector_storage<T, 0u, Alignment>
 {
-   static const std::size_t sms_size = 0u;
+   BOOST_STATIC_CONSTEXPR std::size_t sms_size = 0u;
 };
 
 //! This class consists of common code from all small_vector<T, N> types that don't depend on the
@@ -448,7 +448,7 @@ template<class T, std::size_t N, class Options>
 struct small_vector_storage_definer
 {
    typedef typename dtl::get_small_vector_opt<Options>::type options_t;
-   static const std::size_t final_alignment =
+   BOOST_STATIC_CONSTEXPR std::size_t final_alignment =
       options_t::inplace_alignment ? options_t::inplace_alignment : dtl::alignment_of<T>::value;
    typedef small_vector_storage<T, N, final_alignment> type;
 };
@@ -557,7 +557,7 @@ class small_vector
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    //! @brief The capacity/max size of the container
-   static const size_type static_capacity = small_vector_storage_definer<T, N, Options>::type::sms_size;
+   BOOST_STATIC_CONSTEXPR size_type static_capacity = small_vector_storage_definer<T, N, Options>::type::sms_size;
 
    public:
    inline small_vector()
@@ -680,7 +680,7 @@ template <class T, class Allocator>
 struct has_trivial_destructor_after_move<boost::container::vector<T, Allocator> >
 {
    typedef typename ::boost::container::allocator_traits<Allocator>::pointer pointer;
-   static const bool value = ::boost::has_trivial_destructor_after_move<Allocator>::value &&
+   BOOST_STATIC_CONSTEXPR bool value = ::boost::has_trivial_destructor_after_move<Allocator>::value &&
                              ::boost::has_trivial_destructor_after_move<pointer>::value;
 };
 

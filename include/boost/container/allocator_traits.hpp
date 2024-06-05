@@ -240,19 +240,19 @@ namespace dtl {
 //supporting rvalue references
 template<class Allocator>
 struct is_std_allocator
-{  static const bool value = false; };
+{  BOOST_STATIC_CONSTEXPR bool value = false; };
 
 template<class T>
 struct is_std_allocator< std::allocator<T> >
-{  static const bool value = true; };
+{  BOOST_STATIC_CONSTEXPR bool value = true; };
 
 template<class T, class Options>
 struct is_std_allocator< small_vector_allocator<T, std::allocator<T>, Options > >
-{  static const bool value = true; };
+{  BOOST_STATIC_CONSTEXPR bool value = true; };
 
 template<class Allocator>
 struct is_not_std_allocator
-{  static const bool value = !is_std_allocator<Allocator>::value; };
+{  BOOST_STATIC_CONSTEXPR bool value = !is_std_allocator<Allocator>::value; };
 
 BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(pointer)
 BOOST_INTRUSIVE_INSTANTIATE_EVAL_DEFAULT_TYPE_TMPLT(const_pointer)
@@ -498,7 +498,7 @@ struct allocator_traits
       template <class T, class ...Args>
       inline static void construct(Allocator & a, T* p, BOOST_FWD_REF(Args)... args)
       {
-         static const bool value = ::boost::move_detail::and_
+         BOOST_STATIC_CONSTEXPR bool value = ::boost::move_detail::and_
             < dtl::is_not_std_allocator<Allocator>
             , boost::container::dtl::has_member_function_callable_with_construct
                   < Allocator, T*, Args... >
@@ -567,7 +567,7 @@ struct allocator_traits
       template<class T BOOST_MOVE_I##N BOOST_MOVE_CLASS##N >\
       inline static void construct(Allocator &a, T *p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
       {\
-         static const bool value = ::boost::move_detail::and_ \
+         BOOST_STATIC_CONSTEXPR bool value = ::boost::move_detail::and_ \
             < dtl::is_not_std_allocator<Allocator> \
             , boost::container::dtl::has_member_function_callable_with_construct \
                   < Allocator, T* BOOST_MOVE_I##N BOOST_MOVE_FWD_T##N > \

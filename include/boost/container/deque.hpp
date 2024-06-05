@@ -68,16 +68,16 @@ template <class T>
 struct deque_value_traits
 {
    typedef T value_type;
-   static const bool trivial_dctr = dtl::is_trivially_destructible<value_type>::value;
-   static const bool trivial_dctr_after_move = ::boost::has_trivial_destructor_after_move<value_type>::value;
+   BOOST_STATIC_CONSTEXPR bool trivial_dctr = dtl::is_trivially_destructible<value_type>::value;
+   BOOST_STATIC_CONSTEXPR bool trivial_dctr_after_move = ::boost::has_trivial_destructor_after_move<value_type>::value;
 };
 
 template<class T, std::size_t BlockBytes, std::size_t BlockSize>
 struct deque_block_size
 {
    BOOST_CONTAINER_STATIC_ASSERT_MSG(!(BlockBytes && BlockSize), "BlockBytes and BlockSize can't be specified at the same time");
-   static const std::size_t block_bytes = BlockBytes ? BlockBytes : 512u;
-   static const std::size_t value       = BlockSize ? BlockSize : (sizeof(T) < block_bytes ? (block_bytes/sizeof(T)) : std::size_t(1));
+   BOOST_STATIC_CONSTEXPR std::size_t block_bytes = BlockBytes ? BlockBytes : 512u;
+   BOOST_STATIC_CONSTEXPR std::size_t value       = BlockSize ? BlockSize : (sizeof(T) < block_bytes ? (block_bytes/sizeof(T)) : std::size_t(1));
 };
 
 namespace dtl {
@@ -2870,7 +2870,7 @@ struct has_trivial_destructor_after_move<boost::container::deque<T, Allocator, O
 {
    typedef typename boost::container::deque<T, Allocator, Options>::allocator_type allocator_type;
    typedef typename ::boost::container::allocator_traits<allocator_type>::pointer pointer;
-   static const bool value = ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
+   BOOST_STATIC_CONSTEXPR bool value = ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
                              ::boost::has_trivial_destructor_after_move<pointer>::value;
 };
 
