@@ -469,7 +469,7 @@ class basic_string_base
    inline void priv_short_size(size_type sz)
    {
       typedef unsigned char uchar_type;
-      static const uchar_type mask = uchar_type(uchar_type(-1) >> 1U);
+      BOOST_STATIC_CONSTEXPR uchar_type mask = uchar_type(uchar_type(-1) >> 1U);
       BOOST_ASSERT( sz <= mask );
       //Make -Wconversion happy
       this->members_.pshort_repr()->h.length = uchar_type(uchar_type(sz) & mask);
@@ -3084,10 +3084,6 @@ typedef basic_string
 wstring;
 
 #else
-
-template <class CharT, class Traits, class Allocator>
-const typename basic_string<CharT,Traits,Allocator>::size_type
-   basic_string<CharT,Traits,Allocator>::npos;
 
 template<class S>
 struct is_string

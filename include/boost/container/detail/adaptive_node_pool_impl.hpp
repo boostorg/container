@@ -49,10 +49,10 @@ namespace container {
 
 namespace adaptive_pool_flag {
 
-static const unsigned int none            = 0u;
-static const unsigned int align_only      = 1u << 0u;
-static const unsigned int size_ordered    = 1u << 1u;
-static const unsigned int address_ordered = 1u << 2u;
+BOOST_CONTAINER_CONSTANT_VAR unsigned int none            = 0u;
+BOOST_CONTAINER_CONSTANT_VAR unsigned int align_only      = 1u << 0u;
+BOOST_CONTAINER_CONSTANT_VAR unsigned int size_ordered    = 1u << 1u;
+BOOST_CONTAINER_CONSTANT_VAR unsigned int address_ordered = 1u << 2u;
 
 }  //namespace adaptive_pool_flag{
 

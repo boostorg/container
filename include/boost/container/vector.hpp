@@ -269,7 +269,7 @@ inline Pointer &get_ptr(vec_iterator<Pointer, IsConst> &it) BOOST_NOEXCEPT_OR_NO
 struct initial_capacity_t {};
 
 struct vector_uninitialized_size_t {};
-static const vector_uninitialized_size_t vector_uninitialized_size = vector_uninitialized_size_t();
+BOOST_CONTAINER_CONSTANT_VAR vector_uninitialized_size_t vector_uninitialized_size = vector_uninitialized_size_t();
 
 struct maybe_initial_capacity_t {};
 

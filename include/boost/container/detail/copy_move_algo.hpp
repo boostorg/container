@@ -1111,7 +1111,7 @@ inline typename dtl::disable_if_memtransfer_copy_assignable<F, G, void>::type
    boost::container::destroy_alloc_n(a, large_range_f, std::size_t(n_j - n_i));
 }
 
-static const std::size_t DeepSwapAllocNMaxStorage = std::size_t(1) << std::size_t(11); //2K bytes
+BOOST_CONTAINER_CONSTANT_VAR std::size_t DeepSwapAllocNMaxStorage = std::size_t(1) << std::size_t(11); //2K bytes
 
 template
    <std::size_t MaxTmpBytes
