@@ -192,13 +192,13 @@ class basic_string_base
       <sizeof(long_t), dtl::alignment_of<long_t>::value>::type   long_raw_t;
 
    protected:
-   static const size_type  MinInternalBufferChars = 8;
-   static const size_type  AlignmentOfValueType =
+   BOOST_STATIC_CONSTEXPR size_type  MinInternalBufferChars = 8;
+   BOOST_STATIC_CONSTEXPR size_type  AlignmentOfValueType =
       alignment_of<value_type>::value;
-   static const size_type  ShortDataOffset = ((sizeof(short_header)-1)/AlignmentOfValueType+1)*AlignmentOfValueType;
-   static const size_type  ZeroCostInternalBufferChars =
+   BOOST_STATIC_CONSTEXPR size_type  ShortDataOffset = ((sizeof(short_header)-1)/AlignmentOfValueType+1)*AlignmentOfValueType;
+   BOOST_STATIC_CONSTEXPR size_type  ZeroCostInternalBufferChars =
       (sizeof(long_t) - ShortDataOffset)/sizeof(value_type);
-   static const size_type  UnalignedFinalInternalBufferChars =
+   BOOST_STATIC_CONSTEXPR size_type  UnalignedFinalInternalBufferChars =
       (ZeroCostInternalBufferChars > MinInternalBufferChars) ?
                 ZeroCostInternalBufferChars : MinInternalBufferChars;
 
@@ -261,11 +261,11 @@ class basic_string_base
    inline allocator_type &alloc()
    {  return members_;  }
 
-   static const size_type InternalBufferChars = (sizeof(repr_t) - ShortDataOffset)/sizeof(value_type);
+   BOOST_STATIC_CONSTEXPR size_type InternalBufferChars = (sizeof(repr_t) - ShortDataOffset)/sizeof(value_type);
 
    private:
 
-   static const size_type MinAllocation = InternalBufferChars*2;
+   BOOST_STATIC_CONSTEXPR size_type MinAllocation = InternalBufferChars*2;
 
    protected:
    inline bool is_short() const
@@ -469,7 +469,7 @@ class basic_string_base
    inline void priv_short_size(size_type sz)
    {
       typedef unsigned char uchar_type;
-      static const uchar_type mask = uchar_type(uchar_type(-1) >> 1U);
+      BOOST_STATIC_CONSTEXPR uchar_type mask = uchar_type(uchar_type(-1) >> 1U);
       BOOST_ASSERT( sz <= mask );
       //Make -Wconversion happy
       this->members_.pshort_repr()->h.length = uchar_type(uchar_type(sz) & mask);
@@ -477,7 +477,7 @@ class basic_string_base
 
    inline void priv_long_size(size_type sz)
    {
-      static const size_type mask = size_type(-1) >> 1U;
+      BOOST_STATIC_CONSTEXPR size_type mask = size_type(-1) >> 1U;
       BOOST_ASSERT( sz <= mask );
       //Make -Wconversion happy
       this->members_.plong_repr()->length = sz & mask;
@@ -566,7 +566,7 @@ class basic_string
    BOOST_COPYABLE_AND_MOVABLE(basic_string)
    typedef dtl::basic_string_base<typename real_allocator<CharT, Allocator>::type> base_t;
    typedef typename base_t::allocator_traits_type allocator_traits_type;
-   static const typename base_t::size_type InternalBufferChars = base_t::InternalBufferChars;
+   BOOST_STATIC_CONSTEXPR typename base_t::size_type InternalBufferChars = base_t::InternalBufferChars;
 
    protected:
    // Allocator helper class to use a char_traits as a function object.
@@ -624,7 +624,7 @@ class basic_string
    typedef BOOST_CONTAINER_IMPDEF(const_pointer)                                       const_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
-   static const size_type npos = size_type(-1);
+   BOOST_STATIC_CONSTEXPR size_type npos = size_type(-1);
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
@@ -3085,20 +3085,16 @@ wstring;
 
 #else
 
-template <class CharT, class Traits, class Allocator>
-const typename basic_string<CharT,Traits,Allocator>::size_type
-   basic_string<CharT,Traits,Allocator>::npos;
-
 template<class S>
 struct is_string
 {
-   static const bool value = false;
+   BOOST_STATIC_CONSTEXPR bool value = false;
 };
 
 template<class C, class T, class A>
 struct is_string< basic_string<C, T, A> >
 {
-   static const bool value = true;
+   BOOST_STATIC_CONSTEXPR bool value = true;
 };
 
 #endif
@@ -3583,8 +3579,9 @@ struct has_trivial_destructor_after_move<boost::container::basic_string<C, T, Al
 {
    typedef typename boost::container::basic_string<C, T, Allocator>::allocator_type allocator_type;
    typedef typename ::boost::container::allocator_traits<allocator_type>::pointer pointer;
-   static const bool value = ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
-                             ::boost::has_trivial_destructor_after_move<pointer>::value;
+   BOOST_STATIC_CONSTEXPR bool value =
+      ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
+      ::boost::has_trivial_destructor_after_move<pointer>::value;
 };
 
 }

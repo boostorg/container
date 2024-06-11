@@ -269,15 +269,15 @@ inline Pointer &get_ptr(vec_iterator<Pointer, IsConst> &it) BOOST_NOEXCEPT_OR_NO
 struct initial_capacity_t {};
 
 struct vector_uninitialized_size_t {};
-static const vector_uninitialized_size_t vector_uninitialized_size = vector_uninitialized_size_t();
+BOOST_CONTAINER_CONSTANT_VAR vector_uninitialized_size_t vector_uninitialized_size = vector_uninitialized_size_t();
 
 struct maybe_initial_capacity_t {};
 
 template <class T>
 struct vector_value_traits_base
 {
-   static const bool trivial_dctr = dtl::is_trivially_destructible<T>::value;
-   static const bool trivial_dctr_after_move = has_trivial_destructor_after_move<T>::value;
+   BOOST_STATIC_CONSTEXPR bool trivial_dctr = dtl::is_trivially_destructible<T>::value;
+   BOOST_STATIC_CONSTEXPR bool trivial_dctr_after_move = has_trivial_destructor_after_move<T>::value;
 };
 
 template <class Allocator>
@@ -2248,7 +2248,7 @@ private:
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
-   //! <b>Effects</b>: Erases all the elements of the vector.
+   //! <b>Effects</b>: Erases all the elements of the vector. Leaves the capacity() of the vector unchanged.
    //!
    //! <b>Throws</b>: Nothing.
    //!
@@ -3310,8 +3310,8 @@ struct has_trivial_destructor_after_move<boost::container::vector<T, Allocator, 
 {
    typedef typename boost::container::vector<T, Allocator, Options>::allocator_type allocator_type;
    typedef typename ::boost::container::allocator_traits<allocator_type>::pointer pointer;
-   static const bool value = ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
-                             ::boost::has_trivial_destructor_after_move<pointer>::value;
+   BOOST_STATIC_CONSTEXPR bool value = ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
+                                                ::boost::has_trivial_destructor_after_move<pointer>::value;
 };
 
 }

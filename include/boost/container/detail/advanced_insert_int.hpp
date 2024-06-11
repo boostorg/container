@@ -182,7 +182,7 @@ struct insert_copy_proxy
    typedef boost::container::allocator_traits<Allocator> alloc_traits;
    typedef typename alloc_traits::value_type value_type;
 
-   static const bool single_value = true;
+   BOOST_STATIC_CONSTEXPR bool single_value = true;
 
    inline explicit insert_copy_proxy(const value_type &v)
       :  v_(v)
@@ -212,7 +212,7 @@ struct insert_move_proxy
    typedef boost::container::allocator_traits<Allocator> alloc_traits;
    typedef typename alloc_traits::value_type value_type;
 
-   static const bool single_value = true;
+   BOOST_STATIC_CONSTEXPR bool single_value = true;
 
    inline explicit insert_move_proxy(value_type &v)
       :  v_(v)
@@ -265,7 +265,7 @@ struct insert_nonmovable_emplace_proxy
    typedef typename alloc_traits::value_type       value_type;
    typedef typename build_number_seq<sizeof...(Args)>::type index_tuple_t;
 
-   static const bool single_value = true;
+   BOOST_STATIC_CONSTEXPR bool single_value = true;
 
    inline explicit insert_nonmovable_emplace_proxy(BOOST_FWD_REF(Args)... args)
       : args_(args...)
@@ -296,7 +296,7 @@ struct insert_emplace_proxy
    typedef typename base_t::value_type             value_type;
    typedef typename base_t::index_tuple_t          index_tuple_t;
 
-   static const bool single_value = true;
+   BOOST_STATIC_CONSTEXPR bool single_value = true;
 
    inline explicit insert_emplace_proxy(BOOST_FWD_REF(Args)... args)
       : base_t(::boost::forward<Args>(args)...)
@@ -332,7 +332,7 @@ template<class Allocator>
 struct insert_emplace_proxy<Allocator, typename boost::container::allocator_traits<Allocator>::value_type>
    : public insert_move_proxy<Allocator>
 {
-   static const bool single_value = true;
+   BOOST_STATIC_CONSTEXPR bool single_value = true;
 
    inline explicit insert_emplace_proxy(typename boost::container::allocator_traits<Allocator>::value_type &&v)
    : insert_move_proxy<Allocator>(v)
@@ -349,7 +349,7 @@ struct insert_emplace_proxy<Allocator
    : public insert_copy_proxy<Allocator>
 {
 
-   static const bool single_value = true;
+   BOOST_STATIC_CONSTEXPR bool single_value = true;
 
    inline explicit insert_emplace_proxy(const typename boost::container::allocator_traits<Allocator>::value_type &v)
    : insert_copy_proxy<Allocator>(v)
@@ -360,7 +360,7 @@ template<class Allocator>
 struct insert_emplace_proxy<Allocator, typename boost::container::allocator_traits<Allocator>::value_type &>
    : public insert_copy_proxy<Allocator>
 {
-   static const bool single_value = true;
+   BOOST_STATIC_CONSTEXPR bool single_value = true;
 
    inline explicit insert_emplace_proxy(const typename boost::container::allocator_traits<Allocator>::value_type &v)
    : insert_copy_proxy<Allocator>(v)
@@ -373,7 +373,7 @@ struct insert_emplace_proxy<Allocator
    >
    : public insert_copy_proxy<Allocator>
 {
-   static const bool single_value = true;
+   BOOST_STATIC_CONSTEXPR bool single_value = true;
 
    inline explicit insert_emplace_proxy(const typename boost::container::allocator_traits<Allocator>::value_type &v)
    : insert_copy_proxy<Allocator>(v)
@@ -397,7 +397,7 @@ struct insert_nonmovable_emplace_proxy##N\
    typedef boost::container::allocator_traits<Allocator> alloc_traits;\
    typedef typename alloc_traits::value_type value_type;\
    \
-   static const bool single_value = true;\
+   BOOST_STATIC_CONSTEXPR bool single_value = true;\
    \
    inline explicit insert_nonmovable_emplace_proxy##N(BOOST_MOVE_UREF##N)\
       BOOST_MOVE_COLON##N BOOST_MOVE_FWD_INIT##N {}\
@@ -426,7 +426,7 @@ struct insert_emplace_proxy_arg##N\
    typedef typename base_t::value_type value_type;\
    typedef boost::container::allocator_traits<Allocator> alloc_traits;\
    \
-   static const bool single_value = true;\
+   BOOST_STATIC_CONSTEXPR bool single_value = true;\
    \
    inline explicit insert_emplace_proxy_arg##N(BOOST_MOVE_UREF##N)\
       : base_t(BOOST_MOVE_FWD##N){}\
@@ -460,7 +460,7 @@ template<class Allocator>
 struct insert_emplace_proxy_arg1<Allocator, ::boost::rv<typename boost::container::allocator_traits<Allocator>::value_type> >
    : public insert_move_proxy<Allocator>
 {
-   static const bool single_value = true;
+   BOOST_STATIC_CONSTEXPR bool single_value = true;
 
    inline explicit insert_emplace_proxy_arg1(typename boost::container::allocator_traits<Allocator>::value_type &v)
    : insert_move_proxy<Allocator>(v)
@@ -471,7 +471,7 @@ template<class Allocator>
 struct insert_emplace_proxy_arg1<Allocator, typename boost::container::allocator_traits<Allocator>::value_type>
    : public insert_copy_proxy<Allocator>
 {
-   static const bool single_value = true;
+   BOOST_STATIC_CONSTEXPR bool single_value = true;
 
    inline explicit insert_emplace_proxy_arg1(const typename boost::container::allocator_traits<Allocator>::value_type &v)
    : insert_copy_proxy<Allocator>(v)
@@ -485,7 +485,7 @@ template<class Allocator>
 struct insert_emplace_proxy_arg1<Allocator, typename boost::container::allocator_traits<Allocator>::value_type>
    : public insert_move_proxy<Allocator>
 {
-   static const bool single_value = true;
+   BOOST_STATIC_CONSTEXPR bool single_value = true;
 
    inline explicit insert_emplace_proxy_arg1(typename boost::container::allocator_traits<Allocator>::value_type &&v)
    : insert_move_proxy<Allocator>(v)
@@ -501,7 +501,7 @@ struct insert_emplace_proxy_arg1<Allocator
    >
    : public insert_copy_proxy<Allocator>
 {
-   static const bool single_value = true;
+   BOOST_STATIC_CONSTEXPR bool single_value = true;
 
    inline explicit insert_emplace_proxy_arg1(const typename boost::container::allocator_traits<Allocator>::value_type &v)
    : insert_copy_proxy<Allocator>(v)
@@ -512,7 +512,7 @@ template<class Allocator>
 struct insert_emplace_proxy_arg1<Allocator, typename boost::container::allocator_traits<Allocator>::value_type &>
    : public insert_copy_proxy<Allocator>
 {
-   static const bool single_value = true;
+   BOOST_STATIC_CONSTEXPR bool single_value = true;
 
    inline explicit insert_emplace_proxy_arg1(const typename boost::container::allocator_traits<Allocator>::value_type &v)
    : insert_copy_proxy<Allocator>(v)
@@ -525,7 +525,7 @@ struct insert_emplace_proxy_arg1<Allocator
    >
    : public insert_copy_proxy<Allocator>
 {
-   static const bool single_value = true;
+  BOOST_STATIC_CONSTEXPR bool single_value = true;
 
    inline explicit insert_emplace_proxy_arg1(const typename boost::container::allocator_traits<Allocator>::value_type &v)
    : insert_copy_proxy<Allocator>(v)

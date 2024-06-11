@@ -147,7 +147,7 @@ class devector
    typedef typename get_devector_opt<Options, alloc_size_type>::type             options_type;
    typedef typename options_type::growth_factor_type                             growth_factor_type;
    typedef typename options_type::stored_size_type                               stored_size_type;
-   static const std::size_t devector_min_free_fraction =
+   BOOST_STATIC_CONSTEXPR std::size_t devector_min_free_fraction =
       options_type::free_fraction;
 
    #endif // ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -3030,8 +3030,9 @@ struct has_trivial_destructor_after_move<boost::container::devector<T, Allocator
 {
     typedef typename boost::container::devector<T, Allocator, Options>::allocator_type allocator_type;
     typedef typename ::boost::container::allocator_traits<allocator_type>::pointer pointer;
-    static const bool value = ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
-                                           ::boost::has_trivial_destructor_after_move<pointer>::value;
+    BOOST_STATIC_CONSTEXPR bool value =
+      ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
+      ::boost::has_trivial_destructor_after_move<pointer>::value;
 };
 
 }

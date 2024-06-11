@@ -583,7 +583,7 @@ class flat_tree
       (boost::container::dtl::, container_type
       ,stored_allocator_type, allocator_type)               stored_allocator_type;
 
-   static const bool has_stored_allocator_type =
+   BOOST_STATIC_CONSTEXPR bool has_stored_allocator_type =
       BOOST_INTRUSIVE_HAS_TYPE(boost::container::dtl::, container_type, stored_allocator_type);
 
    private:
@@ -1700,7 +1700,7 @@ struct has_trivial_destructor_after_move<boost::container::dtl::flat_tree<T, Key
    typedef boost::container::dtl::flat_tree<T, KeyOfValue, Compare, AllocatorOrContainer> flat_tree;
    typedef typename flat_tree::container_type container_type;
    typedef typename flat_tree::key_compare key_compare;
-   static const bool value = ::boost::has_trivial_destructor_after_move<container_type>::value &&
+   BOOST_STATIC_CONSTEXPR bool value = ::boost::has_trivial_destructor_after_move<container_type>::value &&
                              ::boost::has_trivial_destructor_after_move<key_compare>::value;
 };
 

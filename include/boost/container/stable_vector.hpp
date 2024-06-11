@@ -214,7 +214,7 @@ struct index_traits
    typedef typename index_type::const_iterator        const_index_iterator;
    typedef typename index_type::size_type             size_type;
 
-   static const size_type ExtraPointers = 3;
+   BOOST_STATIC_CONSTEXPR size_type ExtraPointers = 3;
    //Stable vector stores metadata at the end of the index (node_base_ptr vector) with additional 3 pointers:
    //    back() is this->index.back() - ExtraPointers;
    //    end node index is    *(this->index.end() - 3)
@@ -598,7 +598,7 @@ class stable_vector
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(stable_vector)
-   static const size_type ExtraPointers = index_traits_type::ExtraPointers;
+   BOOST_STATIC_CONSTEXPR size_type ExtraPointers = index_traits_type::ExtraPointers;
 
    class insert_rollback;
    friend class insert_rollback;
@@ -2255,7 +2255,7 @@ struct has_trivial_destructor_after_move<boost::container::stable_vector<T, Allo
 {
    typedef typename boost::container::stable_vector<T, Allocator>::allocator_type allocator_type;
    typedef typename ::boost::container::allocator_traits<allocator_type>::pointer pointer;
-   static const bool value = ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
+   BOOST_STATIC_CONSTEXPR bool value = ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
                              ::boost::has_trivial_destructor_after_move<pointer>::value;
 };
 

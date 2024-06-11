@@ -1413,8 +1413,11 @@ use [*Boost.Container]? There are several reasons for that:
 
 * Fixed bugs/issues:
    * [@https://github.com/boostorg/container/issues/280 GitHub #280: ['"Several containers don't support non-movable types when move assigning"]].
+   * [@https://github.com/boostorg/container/issues/279 GitHub #279: ['"small_vector cannot go back to use stack space"]].
    * [@https://github.com/boostorg/container/issues/277 GitHub #277: ['"Remove dep on boost::static_assert"]].
+   * [@https://github.com/boostorg/container/issues/275 GitHub #275: ['"Compilation fails if custom key comparison is used"]].
    * [@https://github.com/boostorg/container/issues/273 GitHub #273: ['"flat_map/vector crashes on appends (memory corruption)"]].
+   * [@https://github.com/boostorg/container/issues/269 GitHub #269: ['"flat_multimap::emplace not sorting elements under GCC"]].
    * [@https://github.com/boostorg/container/issues/269 GitHub #269: ['"flat_multimap::emplace not sorting elements under GCC"]].
 
 [endsect]

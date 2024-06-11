@@ -251,13 +251,13 @@ struct intrusive_tree_type
 //Trait to detect manually rebalanceable tree types
 template<boost::container::tree_type_enum tree_type_value>
 struct is_manually_balanceable
-{  static const bool value = true;  };
+{  BOOST_STATIC_CONSTEXPR bool value = true;  };
 
 template<>  struct is_manually_balanceable<red_black_tree>
-{  static const bool value = false; };
+{  BOOST_STATIC_CONSTEXPR bool value = false; };
 
 template<>  struct is_manually_balanceable<avl_tree>
-{  static const bool value = false; };
+{  BOOST_STATIC_CONSTEXPR bool value = false; };
 
 //Proxy traits to implement different operations depending on the
 //is_manually_balanceable<>::value
@@ -1240,13 +1240,13 @@ class tree
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
       typename dtl::enable_if_transparent<key_compare, K, iterator>::type
          find(const K& k)
-   {  return iterator(this->icont().find(k, KeyNodeCompare()));  }
+   {  return iterator(this->icont().find(k, KeyNodeCompare(key_comp())));  }
 
    template <class K>
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
       typename dtl::enable_if_transparent<key_compare, K, const_iterator>::type
          find(const K& k) const
-   {  return const_iterator(this->non_const_icont().find(k, KeyNodeCompare()));  }
+   {  return const_iterator(this->non_const_icont().find(k, KeyNodeCompare(key_comp())));  }
 
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
       size_type count(const key_type& k) const
@@ -1256,7 +1256,7 @@ class tree
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
       typename dtl::enable_if_transparent<key_compare, K, size_type>::type
          count(const K& k) const
-   {  return size_type(this->icont().count(k, KeyNodeCompare())); }
+   {  return size_type(this->icont().count(k, KeyNodeCompare(key_comp()))); }
 
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
       bool contains(const key_type& x) const
@@ -1280,13 +1280,13 @@ class tree
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
       typename dtl::enable_if_transparent<key_compare, K, iterator>::type
          lower_bound(const K& k)
-   {  return iterator(this->icont().lower_bound(k, KeyNodeCompare()));  }
+   {  return iterator(this->icont().lower_bound(k, KeyNodeCompare(key_comp())));  }
 
    template <class K>
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
       typename dtl::enable_if_transparent<key_compare, K, const_iterator>::type
          lower_bound(const K& k) const
-   {  return const_iterator(this->non_const_icont().lower_bound(k, KeyNodeCompare()));  }
+   {  return const_iterator(this->non_const_icont().lower_bound(k, KeyNodeCompare(key_comp())));  }
 
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
       iterator upper_bound(const key_type& k)
@@ -1300,13 +1300,13 @@ class tree
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
       typename dtl::enable_if_transparent<key_compare, K, iterator>::type
          upper_bound(const K& k)
-   {  return iterator(this->icont().upper_bound(k, KeyNodeCompare()));   }
+   {  return iterator(this->icont().upper_bound(k, KeyNodeCompare(key_comp())));   }
 
    template <class K>
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
       typename dtl::enable_if_transparent<key_compare, K, const_iterator>::type
          upper_bound(const K& k) const
-   {  return const_iterator(this->non_const_icont().upper_bound(k, KeyNodeCompare()));  }
+   {  return const_iterator(this->non_const_icont().upper_bound(k, KeyNodeCompare(key_comp())));  }
 
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
       std::pair<iterator,iterator> equal_range(const key_type& k)
@@ -1330,7 +1330,7 @@ class tree
          equal_range(const K& k)
    {
       std::pair<iiterator, iiterator> ret =
-         this->icont().equal_range(k, KeyNodeCompare());
+         this->icont().equal_range(k, KeyNodeCompare(key_comp()));
       return std::pair<iterator,iterator>(iterator(ret.first), iterator(ret.second));
    }
 
@@ -1340,7 +1340,7 @@ class tree
          equal_range(const K& k) const
    {
       std::pair<iiterator, iiterator> ret =
-         this->non_const_icont().equal_range(k, KeyNodeCompare());
+         this->non_const_icont().equal_range(k, KeyNodeCompare(key_comp()));
       return std::pair<const_iterator,const_iterator>
          (const_iterator(ret.first), const_iterator(ret.second));
    }
@@ -1368,7 +1368,7 @@ class tree
          lower_bound_range(const K& k)
    {
       std::pair<iiterator, iiterator> ret =
-         this->icont().lower_bound_range(k, KeyNodeCompare());
+         this->icont().lower_bound_range(k, KeyNodeCompare(key_comp()));
       return std::pair<iterator,iterator>(iterator(ret.first), iterator(ret.second));
    }
 
@@ -1378,7 +1378,7 @@ class tree
          lower_bound_range(const K& k) const
    {
       std::pair<iiterator, iiterator> ret =
-         this->non_const_icont().lower_bound_range(k, KeyNodeCompare());
+         this->non_const_icont().lower_bound_range(k, KeyNodeCompare(key_comp()));
       return std::pair<const_iterator,const_iterator>
          (const_iterator(ret.first), const_iterator(ret.second));
    }
@@ -1433,9 +1433,10 @@ struct has_trivial_destructor_after_move
 {
    typedef typename ::boost::container::dtl::tree<T, KeyOfValue, Compare, Allocator, Options>::allocator_type allocator_type;
    typedef typename ::boost::container::allocator_traits<allocator_type>::pointer pointer;
-   static const bool value = ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
-                             ::boost::has_trivial_destructor_after_move<pointer>::value &&
-                             ::boost::has_trivial_destructor_after_move<Compare>::value;
+   BOOST_STATIC_CONSTEXPR bool value =
+      ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
+      ::boost::has_trivial_destructor_after_move<pointer>::value &&
+      ::boost::has_trivial_destructor_after_move<Compare>::value;
 };
 
 } //namespace boost  {

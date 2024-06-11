@@ -63,7 +63,7 @@ class node_allocator
    typedef unsigned int allocation_type;
    typedef node_allocator<T, NodesPerBlock, Version>   self_t;
 
-   static const std::size_t nodes_per_block = NodesPerBlock;
+   BOOST_STATIC_CONSTEXPR std::size_t nodes_per_block = NodesPerBlock;
 
    BOOST_CONTAINER_STATIC_ASSERT((Version <=2));
    #endif
