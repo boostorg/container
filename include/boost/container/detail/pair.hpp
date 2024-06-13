@@ -29,7 +29,7 @@
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/std_fwd.hpp>
-#include <boost/container/detail/is_pair.hpp>
+#include <boost/container/detail/is_pair.hpp>   //Forward declares boost::tuples::tuple
 #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #  include <boost/container/detail/variadic_templates_tools.hpp>
 #endif
