@@ -26,7 +26,6 @@
 
 #include <boost/move/utility_core.hpp>
 
-#include <boost/container/detail/pair.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/allocator_traits.hpp>
 
