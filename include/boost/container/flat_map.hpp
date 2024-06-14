@@ -1673,8 +1673,9 @@ class flat_map
       iterator i = this->lower_bound(k);
       // i->first is greater than or equivalent to k.
       if (i == end() || key_comp()(k, (*i).first)){
-         impl_value_type v(k, mapped_type());
-         i = this->m_flat_tree.insert_equal(::boost::move(v));
+         dtl::value_init<mapped_type> m;
+         impl_value_type v(k, ::boost::move(m.m_t));
+         i = dtl::force_copy<iterator>(this->m_flat_tree.insert_equal(::boost::move(v)));
       }
       return (*i).second;
    }
@@ -1684,8 +1685,9 @@ class flat_map
       iterator i = this->lower_bound(k);
       // i->first is greater than or equivalent to k.
       if (i == end() || key_comp()(k, (*i).first)) {
-         impl_value_type v(boost::move(k), mapped_type());
-         i = this->m_flat_tree.insert_equal(::boost::move(v));
+         dtl::value_init<mapped_type> m;
+         impl_value_type v(::boost::move(k), ::boost::move(m.m_t));
+         i = dtl::force_copy<iterator>(this->m_flat_tree.insert_equal(::boost::move(v)));
       }
       return (*i).second;
    }
