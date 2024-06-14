@@ -954,6 +954,7 @@ class flat_tree
    template <class InIt>
    void insert_equal(ordered_range_t, InIt first, InIt last)
    {
+      BOOST_ASSERT((is_sorted)(first, last, this->priv_value_comp()));
       const bool value = boost::container::dtl::
          has_member_function_callable_with_merge_unique<container_type, InIt, InIt, value_compare>::value;
       (flat_tree_merge_equal)(this->m_data.m_seq, first, last, this->priv_value_comp(), dtl::bool_<value>());
@@ -962,6 +963,7 @@ class flat_tree
    template <class InIt>
    void insert_unique(ordered_unique_range_t, InIt first, InIt last)
    {
+      BOOST_ASSERT((is_sorted_and_unique)(this->m_data.m_seq.cbegin(), this->m_data.m_seq.cend(), this->priv_value_comp()));
       const bool value = boost::container::dtl::
          has_member_function_callable_with_merge_unique<container_type, InIt, InIt, value_compare>::value;
       (flat_tree_merge_unique)(this->m_data.m_seq, first, last, this->priv_value_comp(), dtl::bool_<value>());
