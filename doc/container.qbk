@@ -1418,7 +1418,8 @@ use [*Boost.Container]? There are several reasons for that:
    * [@https://github.com/boostorg/container/issues/275 GitHub #275: ['"Compilation fails if custom key comparison is used"]].
    * [@https://github.com/boostorg/container/issues/273 GitHub #273: ['"flat_map/vector crashes on appends (memory corruption)"]].
    * [@https://github.com/boostorg/container/issues/269 GitHub #269: ['"flat_multimap::emplace not sorting elements under GCC"]].
-   * [@https://github.com/boostorg/container/issues/269 GitHub #269: ['"flat_multimap::emplace not sorting elements under GCC"]].
+   * [@https://github.com/boostorg/container/issues/266 GitHub #266: ['"small_vector<T> is misaligned on the stack in 32 bits"]].
+   * [@https://github.com/boostorg/container/issues/245 GitHub #245: ['"flat_tree::insert ordered range doesn't assert sorting"]].
 
 [endsect]
 

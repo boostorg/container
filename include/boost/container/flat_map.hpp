@@ -31,6 +31,7 @@
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/algorithm.hpp> //equal()
 #include <boost/container/detail/container_or_allocator_rebind.hpp>
+#include <boost/container/detail/pair.hpp>
 // move
 #include <boost/move/utility_core.hpp>
 #include <boost/move/traits.hpp>
@@ -43,6 +44,7 @@
 // intrusive
 #include <boost/intrusive/detail/minimal_pair_header.hpp>      //pair
 #include <boost/intrusive/detail/minimal_less_equal_header.hpp>//less, equal
+
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
@@ -1673,7 +1675,7 @@ class flat_map
       if (i == end() || key_comp()(k, (*i).first)){
          dtl::value_init<mapped_type> m;
          impl_value_type v(k, ::boost::move(m.m_t));
-         i = this->insert(i, ::boost::move(v));
+         i = dtl::force_copy<iterator>(this->m_flat_tree.insert_equal(::boost::move(v)));
       }
       return (*i).second;
    }
@@ -1682,10 +1684,10 @@ class flat_map
       key_type &k = mk;
       iterator i = this->lower_bound(k);
       // i->first is greater than or equivalent to k.
-      if (i == end() || key_comp()(k, (*i).first)){
+      if (i == end() || key_comp()(k, (*i).first)) {
          dtl::value_init<mapped_type> m;
          impl_value_type v(::boost::move(k), ::boost::move(m.m_t));
-         i = this->insert(i, ::boost::move(v));
+         i = dtl::force_copy<iterator>(this->m_flat_tree.insert_equal(::boost::move(v)));
       }
       return (*i).second;
    }
@@ -1765,7 +1767,7 @@ flat_map(ordered_unique_range_t, InputIterator, InputIterator, Compare const&, A
 template <class Key, class T, class Compare, class AllocatorOrContainer>
 struct has_trivial_destructor_after_move<boost::container::flat_map<Key, T, Compare, AllocatorOrContainer> >
 {
-   typedef ::boost::container::dtl::pair<Key, T> value_t;
+   typedef typename boost::container::flat_map<Key, T, Compare, AllocatorOrContainer>::value_type value_t;
    typedef typename ::boost::container::dtl::container_or_allocator_rebind<AllocatorOrContainer, value_t>::type alloc_or_cont_t;
    typedef ::boost::container::dtl::flat_tree<value_t,::boost::container::dtl::select1st<Key>, Compare, alloc_or_cont_t> tree;
    BOOST_STATIC_CONSTEXPR bool value = ::boost::has_trivial_destructor_after_move<tree>::value;
@@ -3099,7 +3101,7 @@ namespace boost {
 template <class Key, class T, class Compare, class AllocatorOrContainer>
 struct has_trivial_destructor_after_move< boost::container::flat_multimap<Key, T, Compare, AllocatorOrContainer> >
 {
-   typedef ::boost::container::dtl::pair<Key, T> value_t;
+   typedef typename boost::container::flat_multimap<Key, T, Compare, AllocatorOrContainer>::value_type value_t;
    typedef typename ::boost::container::dtl::container_or_allocator_rebind<AllocatorOrContainer, value_t>::type alloc_or_cont_t;
    typedef ::boost::container::dtl::flat_tree<value_t,::boost::container::dtl::select1st<Key>, Compare, alloc_or_cont_t> tree;
    BOOST_STATIC_CONSTEXPR bool value = ::boost::has_trivial_destructor_after_move<tree>::value;

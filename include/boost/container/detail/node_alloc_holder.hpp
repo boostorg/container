@@ -38,6 +38,7 @@
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/version_type.hpp>
 #include <boost/container/detail/is_pair.hpp>
+#include <boost/container/detail/pair.hpp>
 // intrusive
 #include <boost/intrusive/detail/mpl.hpp>
 #include <boost/intrusive/options.hpp>
