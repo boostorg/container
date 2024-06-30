@@ -368,7 +368,6 @@ jobs:
                 fi
             fi
             git config --global pack.threads 0
-      - uses: actions/checkout@v3
 
       - name: Install packages
         if: matrix.install
@@ -565,7 +564,6 @@ jobs:
     runs-on: ${{matrix.os}}
 
     steps:
-      - uses: actions/checkout@v3
 
       - name: Setup Boost
         shell: cmd
