@@ -326,10 +326,6 @@ jobs:
           #------------------
           # MacOS, clang
           #------------------
-          # Macos 11, clang
-          - toolset: clang
-            cxxstd: "11,14,17,2a"
-            os: macos-11
           # Macos 12, clang
           - toolset: clang
             cxxstd: "11,14,17,20,2b"
@@ -338,6 +334,10 @@ jobs:
           - toolset: clang
             cxxstd: "11,14,17,20,2b"
             os: macos-13
+          # Macos 17, clang
+          - toolset: clang
+            cxxstd: "11,14,17,20,2b"
+            os: macos-14
 
     timeout-minutes: 180
     runs-on: ${{matrix.os}}
