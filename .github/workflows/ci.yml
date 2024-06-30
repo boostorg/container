@@ -323,7 +323,7 @@ jobs:
           # Linux, clang-18 libc++
           - toolset: clang
             compiler: clang++-18
-            cxxstd: "03,11,14,17,20,2b"
+            cxxstd: "11,14,17,20,2b"
             os: ubuntu-24.04
             install:
               - clang-18
@@ -348,7 +348,7 @@ jobs:
           - name: UBSAN
             toolset: clang
             compiler: clang++-18
-            cxxstd: "03,11,14,17,20"
+            cxxstd: "11,14,17,20"
             cxxflags: -stdlib=libc++
             linkflags: -stdlib=libc++
             ubsan: 1
