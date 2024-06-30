@@ -49,9 +49,10 @@
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
-#if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
+#if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-result"
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_FUNCNAME allocate
@@ -75,7 +76,7 @@
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 9
 #include <boost/intrusive/detail/has_member_function_callable_with.hpp>
 
-#if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
+#if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
 #pragma GCC diagnostic pop
 #endif
 
