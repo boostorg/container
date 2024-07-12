@@ -560,6 +560,15 @@ bool test_heterogeneous_lookups()
    if(cmmap1.equal_range(find_me).second->second != 'e')
       return false;
 
+   //erase
+   if (map1.erase(find_me) != 1)
+      return false;
+   if (map1.erase(find_me) != 0)
+      return false;
+   if (mmap1.erase(find_me) != 2)
+      return false;
+   if (mmap1.erase(find_me) != 0)
+      return false;
    return true;
 }
 

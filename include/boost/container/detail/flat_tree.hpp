@@ -1127,9 +1127,6 @@ class flat_tree
       return ret;
    }
 
-   inline iterator erase(const_iterator position)
-   {  return this->m_data.m_seq.erase(position);  }
-
    size_type erase(const key_type& k)
    {
       std::pair<iterator,iterator > itp = this->equal_range(k);
@@ -1148,6 +1145,40 @@ class flat_tree
          this->erase(i);
       return ret;
    }
+
+   template <class K>
+   inline typename dtl::enable_if_c<
+      dtl::is_transparent<key_compare>::value &&      //transparent
+      !dtl::is_convertible<K, iterator>::value &&     //not convertible to iterator
+      !dtl::is_convertible<K, const_iterator>::value  //not convertible to const_iterator
+      , size_type>::type
+      erase(const K& k)
+   {
+      std::pair<iterator, iterator > itp = this->equal_range(k);
+      size_type ret = static_cast<size_type>(itp.second - itp.first);
+      if (ret) {
+         this->m_data.m_seq.erase(itp.first, itp.second);
+      }
+      return ret;
+   }
+
+   template <class K>
+   inline typename dtl::enable_if_c<
+      dtl::is_transparent<key_compare>::value &&      //transparent
+      !dtl::is_convertible<K, iterator>::value &&     //not convertible to iterator
+      !dtl::is_convertible<K, const_iterator>::value  //not convertible to const_iterator
+      , size_type>::type
+      erase_unique(const K& k)
+   {
+      const_iterator i = static_cast<const flat_tree&>(*this).find(k);
+      size_type ret = static_cast<size_type>(i != this->cend());
+      if (ret)
+         this->erase(i);
+      return ret;
+   }
+
+   inline iterator erase(const_iterator position)
+   {  return this->m_data.m_seq.erase(position);  }
 
    inline iterator erase(const_iterator first, const_iterator last)
    {  return this->m_data.m_seq.erase(first, last);  }

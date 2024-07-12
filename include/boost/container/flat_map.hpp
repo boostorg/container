@@ -1315,6 +1315,23 @@ class flat_map
    inline size_type erase(const key_type& x)
       { return m_flat_tree.erase_unique(x); }
 
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Effects</b>: If present, erases the element in the container with key equivalent to x.
+   //!
+   //! <b>Returns</b>: Returns the number of erased elements (0/1).
+   template <class K>
+   inline BOOST_CONTAINER_DOC1ST
+   (size_type
+      , typename dtl::enable_if_c<
+      dtl::is_transparent<key_compare>::value &&                  //transparent
+      !dtl::is_convertible<K BOOST_MOVE_I iterator>::value &&     //not convertible to iterator
+      !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
+      BOOST_MOVE_I size_type>::type)
+      erase(const K& x)
+   {  return m_flat_tree.erase_unique(x); }
+
    //! <b>Effects</b>: Erases all the elements in the range [first, last).
    //!
    //! <b>Returns</b>: Returns last.
@@ -2676,6 +2693,23 @@ class flat_multimap
    //! <b>Complexity</b>: Logarithmic search time plus erasure time
    //!   linear to the elements with bigger keys.
    inline size_type erase(const key_type& x)
+      { return m_flat_tree.erase(x); }
+
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Effects</b>: Erases all elements in the container with key equivalent to x.
+   //!
+   //! <b>Returns</b>: Returns the number of erased elements.
+   template <class K>
+   inline BOOST_CONTAINER_DOC1ST
+   (size_type
+      , typename dtl::enable_if_c<
+      dtl::is_transparent<key_compare>::value &&                  //transparent
+      !dtl::is_convertible<K BOOST_MOVE_I iterator>::value &&     //not convertible to iterator
+      !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
+      BOOST_MOVE_I size_type>::type)
+      erase(const K& x)
       { return m_flat_tree.erase(x); }
 
    //! <b>Effects</b>: Erases all the elements in the range [first, last).

@@ -536,6 +536,19 @@ struct node_alloc_holder
       return this->icont().erase_and_dispose(k, chain_holder.get_chain_builder());
    }
 
+   template<class Key, class KeyCompare>
+   inline size_type erase_key(const Key& k, KeyCompare cmp, version_1)
+   {
+      return this->icont().erase_and_dispose(k, cmp, Destroyer(this->node_alloc()));
+   }
+
+   template<class Key, class KeyCompare>
+   inline size_type erase_key(const Key& k, KeyCompare cmp, version_2)
+   {
+      allocator_multialloc_chain_node_deallocator<NodeAlloc> chain_holder(this->node_alloc());
+      return this->icont().erase_and_dispose(k, cmp, chain_holder.get_chain_builder());
+   }
+
    protected:
    struct cloner
    {
