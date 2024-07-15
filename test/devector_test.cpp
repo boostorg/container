@@ -25,7 +25,7 @@
 #include "check_equal_containers.hpp"
 #include "movable_int.hpp"
 
-#include <boost/algorithm/cxx14/equal.hpp>
+#include <boost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
 
 #define BOOST_CONTAINER_DEVECTOR_ALLOC_STATS
 #include <boost/container/devector.hpp>
@@ -1136,17 +1136,17 @@ template <class Devector> void test_begin_end()
    {
       Devector actual; get_range<Devector>(10, actual);
 
-      BOOST_TEST(boost::algorithm::equal(expected.begin(), expected.end(), actual.begin(), actual.end()));
-      BOOST_TEST(boost::algorithm::equal(expected.rbegin(), expected.rend(), actual.rbegin(), actual.rend()));
-      BOOST_TEST(boost::algorithm::equal(expected.cbegin(), expected.cend(), actual.cbegin(), actual.cend()));
-      BOOST_TEST(boost::algorithm::equal(expected.crbegin(), expected.crend(), actual.crbegin(), actual.crend()));
+      BOOST_TEST(::boost::container::algo_equal(expected.begin(), expected.end(), actual.begin(), actual.end()));
+      BOOST_TEST(::boost::container::algo_equal(expected.rbegin(), expected.rend(), actual.rbegin(), actual.rend()));
+      BOOST_TEST(::boost::container::algo_equal(expected.cbegin(), expected.cend(), actual.cbegin(), actual.cend()));
+      BOOST_TEST(::boost::container::algo_equal(expected.crbegin(), expected.crend(), actual.crbegin(), actual.crend()));
    }
 
    {
       Devector cactual; get_range<Devector>(10, cactual);
 
-      BOOST_TEST(boost::algorithm::equal(expected.begin(), expected.end(), cactual.begin(), cactual.end()));
-      BOOST_TEST(boost::algorithm::equal(expected.rbegin(), expected.rend(), cactual.rbegin(), cactual.rend()));
+      BOOST_TEST(::boost::container::algo_equal(expected.begin(), expected.end(), cactual.begin(), cactual.end()));
+      BOOST_TEST(::boost::container::algo_equal(expected.rbegin(), expected.rend(), cactual.rbegin(), cactual.rend()));
    }
 }
 
