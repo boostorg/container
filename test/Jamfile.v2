@@ -12,13 +12,13 @@
 # LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 project
-    : requirements 
-      <source>/boost/algorithm//boost_algorithm
-      <source>/boost/iterator//boost_iterator
-      <source>/boost/utility//boost_utility
-      <source>/boost/tuple//boost_tuple
+    : requirements
+      <library>/boost/algorithm//boost_algorithm
+      <library>/boost/iterator//boost_iterator
+      <library>/boost/utility//boost_utility
+      <library>/boost/tuple//boost_tuple
 
-      <link>shared:<define>BOOST_CONTAINER_DYN_LINK=1 
+      <link>shared:<define>BOOST_CONTAINER_DYN_LINK=1
       <toolset>gcc-cygwin:<link>static
     ;
 
