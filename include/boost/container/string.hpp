@@ -3545,21 +3545,6 @@ getline(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allocat
    return getline(is, s, '\n');
 }
 
-template <class Ch, class Allocator>
-inline std::size_t hash_value(basic_string<Ch, std::char_traits<Ch>, Allocator> const& v)
-{
-   std::size_t seed = 0;
-   const Ch *first = v.data();
-
-   for(std::size_t i = 0, i_max = v.size(); i != i_max; ++i)
-   {
-      boost::intrusive::detail::hash_combine_size_t(seed, static_cast<std::size_t>(*first));
-      ++first;
-   }
-
-   return seed;
-}
-
 }}
 
 //GCC 12 has a regression for array-bounds warnings
