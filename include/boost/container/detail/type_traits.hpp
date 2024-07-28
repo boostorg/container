@@ -68,6 +68,14 @@ using ::boost::move_detail::natN;
 using ::boost::move_detail::max_align_t;
 using ::boost::move_detail::is_convertible;
 
+// TODO: Move this trait into <boost/move/detail/type_traits.hpp>
+
+#if __cpp_lib_trivially_relocatable
+  using ::std::is_trivially_relocatable;
+#else
+  template <class T> struct is_trivially_relocatable : std::is_trivially_copyable<T> {};
+#endif
+
 }  //namespace dtl {
 }  //namespace container {
 }  //namespace boost {
