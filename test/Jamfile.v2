@@ -13,7 +13,6 @@
 
 project
     : requirements
-      <library>/boost/algorithm//boost_algorithm
       <library>/boost/iterator//boost_iterator
       <library>/boost/utility//boost_utility
       <library>/boost/tuple//boost_tuple
