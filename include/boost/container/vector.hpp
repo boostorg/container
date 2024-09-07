@@ -2315,6 +2315,7 @@ private:
       return cp >= new_cap || (alloc_version::value == 2 && this->m_holder.try_expand_fwd(size_type(new_cap - cp)));
    }
 
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    //Absolutely experimental. This function might change, disappear or simply crash!
    template<class BiDirPosConstIt, class BiDirValueIt>
    inline void insert_ordered_at(const size_type element_count, BiDirPosConstIt last_position_it, BiDirValueIt last_value_it)
@@ -2328,24 +2329,35 @@ private:
    {  this->merge(first, last, value_less_t());  }
 
    template<class InputIt, class Compare>
-   inline void merge(InputIt first, InputIt last, Compare comp)
+   inline 
+      typename dtl::enable_if_c
+         < !dtl::is_input_iterator<InputIt>::value &&
+           dtl::is_same<value_type, typename iterator_traits<InputIt>::value_type>::value
+         , void>::type
+      merge(InputIt first, InputIt last, Compare comp)
    {
       size_type const s = this->size();
       size_type const c = this->capacity();
       size_type n = 0;
       size_type const free_cap = c - s;
       //If not input iterator and new elements don't fit in the remaining capacity, merge in new buffer
-      if(!dtl::is_input_iterator<InputIt>::value &&
-         free_cap < (n = boost::container::iterator_udistance(first, last))){
+      if(free_cap < (n = boost::container::iterator_udistance(first, last))){
          this->priv_merge_in_new_buffer(first, n, comp, alloc_version());
       }
       else{
-         this->insert(this->cend(), first, last);
-         T *const raw_beg = this->priv_raw_begin();
-         T *const raw_end = this->priv_raw_end();
-         T *const raw_pos = raw_beg + s;
-         boost::movelib::adaptive_merge(raw_beg, raw_pos, raw_end, comp, raw_end, free_cap - n);
+         this->priv_merge_generic(first, last, comp);
       }
+   }
+
+   template<class InputIt, class Compare>
+   inline 
+      typename dtl::enable_if_c
+         < dtl::is_input_iterator<InputIt>::value ||
+           !dtl::is_same<value_type, typename iterator_traits<InputIt>::value_type>::value
+         , void>::type
+      merge(InputIt first, InputIt last, Compare comp)
+   {
+      this->priv_merge_generic(first, last, comp);
    }
 
    template<class InputIt>
@@ -2353,7 +2365,12 @@ private:
    {  this->merge_unique(first, last, value_less_t());  }
 
    template<class InputIt, class Compare>
-   inline void merge_unique(InputIt first, InputIt last, Compare comp)
+   inline 
+      typename dtl::enable_if_c
+         < !dtl::is_input_iterator<InputIt>::value &&
+           dtl::is_same<value_type, typename iterator_traits<InputIt>::value_type>::value
+         , void>::type
+      merge_unique(InputIt first, InputIt last, Compare comp)
    {
       size_type const old_size = this->size();
       this->priv_set_difference_back(first, last, comp);
@@ -2363,7 +2380,34 @@ private:
       boost::movelib::adaptive_merge(raw_beg, raw_pos, raw_end, comp, raw_end, this->capacity() - this->size());
    }
 
+   template<class InputIt, class Compare>
+   inline 
+      typename dtl::enable_if_c
+         < dtl::is_input_iterator<InputIt>::value ||
+           !dtl::is_same<value_type, typename iterator_traits<InputIt>::value_type>::value
+         , void>::type
+      merge_unique(InputIt first, InputIt last, Compare comp)
+   {
+      iterator pos = this->insert(this->end(), first, last);
+      const iterator e = boost::movelib::inplace_set_unique_difference(pos, this->end(), this->begin(), pos, comp);
+      this->erase(e, this->end());
+      boost::movelib::adaptive_merge( this->begin(), pos, e, comp
+                                    , this->priv_raw_end(), this->capacity() - this->size());
+   }
+   #endif
+
    private:
+   template<class InputIt, class Compare>
+   inline void priv_merge_generic(InputIt first, InputIt last, Compare comp)
+   {
+      size_type const old_s = this->size();
+      this->insert(this->cend(), first, last);
+      T* const raw_beg = this->priv_raw_begin();
+      T* const raw_end = this->priv_raw_end();
+      T* const raw_pos = raw_beg + old_s;
+      boost::movelib::adaptive_merge(raw_beg, raw_pos, raw_end, comp, raw_end, this->capacity() - this->size());
+   }
+
    template<class PositionValue>
    void priv_insert_ordered_at(const size_type element_count, PositionValue position_value)
    {
