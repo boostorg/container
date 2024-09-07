@@ -45,6 +45,7 @@
 #include <boost/move/iterator.hpp>
 #include <boost/move/adl_move_swap.hpp>
 #include <boost/move/detail/iterator_to_raw_pointer.hpp>
+#include <boost/move/detail/to_raw_pointer.hpp>
 #include <boost/move/detail/force_ptr.hpp>
 #include <boost/move/detail/launder.hpp>
 #include <boost/move/algo/adaptive_sort.hpp>
@@ -199,7 +200,8 @@ inline void flat_tree_merge_equal   //has_merge_unique == false
 {
    if(first != last) {
       typedef typename SequenceContainer::iterator    iterator;
-      iterator const it = dest.insert( dest.end(), first, last );
+      iterator const it = dest.insert( dest.end(), first, last);
+      BOOST_ASSERT((is_sorted)(it, dest.end(), comp));
       dtl::bool_<is_contiguous_container<SequenceContainer>::value> contiguous_tag;
       (flat_tree_container_inplace_merge)(dest, it, comp, contiguous_tag);
    }
@@ -227,7 +229,9 @@ inline void flat_tree_merge_unique  //has_merge_unique == false
       typedef typename SequenceContainer::difference_type   difference_type;
 
       size_type const old_sz = dest.size();
-      iterator const first_new = dest.insert(dest.cend(), first, last );
+      iterator const first_new = dest.insert(dest.cend(), first, last);
+      //We can't assert "is_sorted_and_unique" because the sequence can come from a multiset
+      BOOST_ASSERT((is_sorted)(first_new, dest.end(), comp));
       iterator e = boost::movelib::inplace_set_unique_difference(first_new, dest.end(), dest.begin(), first_new, comp);
       dest.erase(e, dest.end());
       dtl::bool_<is_contiguous_container<SequenceContainer>::value> contiguous_tag;
@@ -954,7 +958,6 @@ class flat_tree
    template <class InIt>
    void insert_equal(ordered_range_t, InIt first, InIt last)
    {
-      BOOST_ASSERT((is_sorted)(first, last, this->priv_value_comp()));
       const bool value = boost::container::dtl::
          has_member_function_callable_with_merge_unique<container_type, InIt, InIt, value_compare>::value;
       (flat_tree_merge_equal)(this->m_data.m_seq, first, last, this->priv_value_comp(), dtl::bool_<value>());
@@ -963,7 +966,6 @@ class flat_tree
    template <class InIt>
    void insert_unique(ordered_unique_range_t, InIt first, InIt last)
    {
-      BOOST_ASSERT((is_sorted_and_unique)(this->m_data.m_seq.cbegin(), this->m_data.m_seq.cend(), this->priv_value_comp()));
       const bool value = boost::container::dtl::
          has_member_function_callable_with_merge_unique<container_type, InIt, InIt, value_compare>::value;
       (flat_tree_merge_unique)(this->m_data.m_seq, first, last, this->priv_value_comp(), dtl::bool_<value>());
