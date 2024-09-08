@@ -96,7 +96,7 @@ template class flat_tree
 }  //dtl {
 }} //boost::container
 
-#if (__cplusplus > 201103L)
+#if (BOOST_CXX_VERSION >= 201103L)
 #include <vector>
 
 namespace boost{
