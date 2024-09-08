@@ -2170,6 +2170,28 @@ class devector
                                  || allocator_traits_type::is_always_equal::value)
    {   x.swap(y);   }
 
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
+   //Functions for optimizations, not for users
+   T *unused_storage(size_type &size)
+   {
+      T *const storage_addr = boost::movelib::to_raw_pointer(m_.buffer);
+      if(this->empty()){
+         size = m_.capacity;
+         return storage_addr;
+      }
+      else if(this->back_free_capacity() > this->front_free_capacity()){
+         size = this->back_free_capacity();
+         return storage_addr + m_.back_idx;
+      }
+      else{
+         size = this->front_free_capacity();
+         return storage_addr;
+      }
+   }
+
+   #endif
+
    private:
 
    void priv_move_assign(BOOST_RV_REF(devector) x, dtl::bool_<true> /*steal_resources*/)

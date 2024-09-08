@@ -2394,6 +2394,14 @@ private:
       boost::movelib::adaptive_merge( this->begin(), pos, e, comp
                                     , this->priv_raw_end(), this->capacity() - this->size());
    }
+
+   //Function for optimizations, not for users
+   T *unused_storage(size_type &size)
+   {
+      size = static_cast<size_type>(this->capacity() - this->size());
+      return this->priv_raw_end();
+   }
+  
    #endif
 
    private:
