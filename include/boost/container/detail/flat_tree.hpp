@@ -121,6 +121,7 @@ namespace boost {
 namespace container {
 namespace dtl {
 
+
 ///////////////////////////////////////
 //
 // Helper functions to merge elements
@@ -138,14 +139,19 @@ template<class SequenceContainer, class Compare>
 inline void flat_tree_container_inplace_merge //is_contiguous_container == true
    (SequenceContainer& dest, typename SequenceContainer::iterator it, Compare comp , dtl::true_)
 {
-   typedef typename SequenceContainer::value_type  value_type;
+   typedef typename SequenceContainer::value_type value_type;
+   typedef typename SequenceContainer::size_type  size_type;
+
    value_type *const braw = boost::movelib::to_raw_pointer(dest.data());
    value_type *const iraw = boost::movelib::iterator_to_raw_pointer(it);
    //Don't use iterator_to_raw_pointer for end as debug iterators can assert when
    //"operator ->" is used with the end iterator
    value_type *const eraw = braw + dest.size();
+   size_type dest_unused_storage_size = 0;
+   value_type *const dest_unused_storage_addr =
+      unused_storage<SequenceContainer>::get(dest, dest_unused_storage_size);
    boost::movelib::adaptive_merge
-      (braw, iraw, eraw, comp, eraw, back_free_capacity<SequenceContainer>::get(dest));
+      (braw, iraw, eraw, comp, dest_unused_storage_addr, dest_unused_storage_size);
 }
 
 template<class SequenceContainer, class Compare>
@@ -164,15 +170,19 @@ template<class SequenceContainer, class Compare>
 inline void flat_tree_container_inplace_sort_ending //is_contiguous_container == true
    (SequenceContainer& dest, typename SequenceContainer::iterator it, Compare comp, dtl::true_)
 {
-   typedef typename SequenceContainer::value_type  value_type;
+   typedef typename SequenceContainer::value_type value_type;
+   typedef typename SequenceContainer::size_type  size_type;
+
    value_type *const iraw = boost::movelib::iterator_to_raw_pointer(it);
    //Don't use iterator_to_raw_pointer for end as debug iterators can assert when
    //"operator ->" is used with the end iterator
    value_type* const eraw = boost::movelib::to_raw_pointer(dest.data()) + dest.size();
 
-
+   size_type dest_unused_storage_size;
+   value_type* const dest_unused_storage_addr =
+      unused_storage<SequenceContainer>::get(dest, dest_unused_storage_size);
    boost::movelib::adaptive_sort
-      (iraw, eraw, comp, eraw, back_free_capacity<SequenceContainer>::get(dest));
+      (iraw, eraw, comp, dest_unused_storage_addr, dest_unused_storage_size);
 }
 
 template<class SequenceContainer, class Compare>
@@ -320,23 +330,24 @@ template<class SequenceContainer, class Compare>
 void flat_tree_sort_contiguous_to_adopt // is_contiguous_container == true
    (SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp)
 {
-   if(tseq.capacity() >= (seq.capacity() - seq.size())) {
-      tseq.clear();
-      boost::movelib::adaptive_sort
-      (boost::movelib::iterator_to_raw_pointer(seq.begin())
-         , boost::movelib::iterator_to_raw_pointer(seq.end())
-         , comp
-         , boost::movelib::iterator_to_raw_pointer(tseq.begin())
-         , tseq.capacity());
-   }
-   else{
-      boost::movelib::adaptive_sort
-      (boost::movelib::iterator_to_raw_pointer(seq.begin())
-         , boost::movelib::iterator_to_raw_pointer(seq.end())
-         , comp
-         , boost::movelib::iterator_to_raw_pointer(seq.end())
-         , seq.capacity() - seq.size());
-   }
+   typedef typename SequenceContainer::value_type value_type;
+   typedef typename SequenceContainer::size_type  size_type;
+
+   size_type tseq_unused_storage_size, seq_unused_storage_size;
+   value_type* const tseq_unused_storage_addr =
+      unused_storage<SequenceContainer>::get(tseq, tseq_unused_storage_size);
+   value_type* const seq_unused_storage_addr  =
+      unused_storage<SequenceContainer>::get(seq,  seq_unused_storage_size);
+
+   tseq.clear();
+   const bool use_tseq_storage = tseq_unused_storage_size > seq_unused_storage_size;
+
+   boost::movelib::adaptive_sort
+      ( boost::movelib::iterator_to_raw_pointer(seq.begin())
+      , boost::movelib::iterator_to_raw_pointer(seq.end())
+      , comp
+      , use_tseq_storage ? tseq_unused_storage_addr : seq_unused_storage_addr
+      , use_tseq_storage ? tseq_unused_storage_size : seq_unused_storage_size);
 }
 
 template<class SequenceContainer, class Compare>
