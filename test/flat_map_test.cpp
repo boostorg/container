@@ -612,6 +612,8 @@ int main()
                                   boost::has_trivial_destructor_after_move<tree>::value
                                 , "has_trivial_destructor_after_move(flat_map, vector) test failed");
       }
+      //Old GCCs have problems (compiler bugs) with std::vector and flat_xxx
+      #if !defined(BOOST_GCC) || (BOOST_GCC < 50000)
       // flat_map, std::vector
       {
          typedef std::vector<value_t> alloc_or_cont_t;
@@ -621,6 +623,7 @@ int main()
                                   boost::has_trivial_destructor_after_move<tree>::value
                                 , "has_trivial_destructor_after_move(flat_map, std::vector) test failed");
       }
+      #endif
       // flat_multimap, default
       {
          typedef boost::container::new_allocator<value_t> alloc_or_cont_t;
@@ -639,6 +642,8 @@ int main()
                                   boost::has_trivial_destructor_after_move<tree>::value
                                 , "has_trivial_destructor_after_move(flat_multimap, vector) test failed");
       }
+      //Old GCCs have problems (compiler bugs) with std::vector and flat_xxx
+      #if !defined(BOOST_GCC) || (BOOST_GCC < 50000)
       // flat_multimap, std::vector
       {
          typedef std::vector<value_t> alloc_or_cont_t;
@@ -648,6 +653,7 @@ int main()
                                   boost::has_trivial_destructor_after_move<tree>::value
                                  , "has_trivial_destructor_after_move(flat_multimap, std::vector) test failed");
       }
+      #endif
    }
 
    return 0;
