@@ -17,6 +17,7 @@
 #include <boost/move/iterator.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/move/adl_move_swap.hpp>
+#include <cstdlib>
 
 #include <map>
 #include "map_test.hpp"
