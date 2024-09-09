@@ -98,7 +98,7 @@ template class flat_tree
 
 #if (BOOST_CXX_VERSION >= 201103L)
 //Old GCCs have problems (compiler bugs) with std::vector and flat_xxx
-#if !defined(BOOST_GCC) || (BOOST_GCC < 50000)
+#if !defined(BOOST_GCC) || (BOOST_GCC >= 50000)
 // flat_map, std::vector
 
 #include <vector>
