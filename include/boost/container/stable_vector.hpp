@@ -597,6 +597,11 @@ class stable_vector
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
+
+   //`allocator_type::value_type` must match container's `value type`. If this
+   //assertion fails, please review your allocator definition. 
+   BOOST_CONTAINER_STATIC_ASSERT((dtl::is_same<value_type, typename allocator_traits<allocator_type>::value_type>::value));
+
    BOOST_COPYABLE_AND_MOVABLE(stable_vector)
    BOOST_STATIC_CONSTEXPR size_type ExtraPointers = index_traits_type::ExtraPointers;
 

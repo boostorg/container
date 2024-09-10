@@ -813,8 +813,11 @@ public:
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
 
 private:
-
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+   //`allocator_type::value_type` must match container's `value type`. If this
+   //assertion fails, please review your allocator definition. 
+   BOOST_CONTAINER_STATIC_ASSERT((dtl::is_same<value_type, typename allocator_traits_t::value_type>::value));
+
    typedef typename boost::container::
       allocator_traits<allocator_type>::size_type                             alloc_size_type;
    typedef typename get_vector_opt<Options, alloc_size_type>::type            options_type;

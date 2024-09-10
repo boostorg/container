@@ -592,6 +592,10 @@ class flat_tree
    typedef typename container_type::reverse_iterator         reverse_iterator;
    typedef typename container_type::const_reverse_iterator   const_reverse_iterator;
 
+   //`allocator_type::value_type` must match container's `value type`. If this
+   //assertion fails, please review your allocator definition. 
+   BOOST_CONTAINER_STATIC_ASSERT((is_same<value_type, typename allocator_traits_type::value_type>::value));
+
    //!Standard extension
    typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT
       (boost::container::dtl::, container_type
@@ -733,7 +737,8 @@ class flat_tree
    }
 
    inline ~flat_tree()
-   {}
+   {
+   }
 
    inline flat_tree&  operator=(BOOST_COPY_ASSIGN_REF(flat_tree) x)
    {  m_data = x.m_data;   return *this;  }
