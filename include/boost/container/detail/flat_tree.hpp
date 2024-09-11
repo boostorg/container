@@ -469,21 +469,21 @@ class flat_tree_value_compare
 
 ///////////////////////////////////////
 //
-//       select_container_type
+//       select_flat_tree_container_type
 //
 ///////////////////////////////////////
 template < class Value, class AllocatorOrContainer
          , bool = boost::container::dtl::is_container<AllocatorOrContainer>::value
          >
-struct select_container_type
+struct select_flat_tree_container_type
 {
    typedef AllocatorOrContainer type;
 };
 
-template <class Value, class AllocatorOrContainer>
-struct select_container_type<Value, AllocatorOrContainer, false>
+template <class Value, class AllocatorOrVoid>
+struct select_flat_tree_container_type<Value, AllocatorOrVoid, false>
 {
-   typedef boost::container::vector<Value, typename real_allocator<Value, AllocatorOrContainer>::type> type;
+   typedef boost::container::vector<Value, AllocatorOrVoid> type;
 };
 
 
@@ -497,7 +497,7 @@ template <class Value, class KeyOfValue,
 class flat_tree
 {
    public:
-   typedef typename select_container_type<Value, AllocatorOrContainer>::type container_type;
+   typedef typename select_flat_tree_container_type<Value, AllocatorOrContainer>::type container_type;
    typedef container_type sequence_type;  //For backwards compatibility
 
    private:
@@ -577,20 +577,20 @@ class flat_tree
 
    public:
 
-   typedef typename container_type::value_type               value_type;
-   typedef typename container_type::pointer                  pointer;
-   typedef typename container_type::const_pointer            const_pointer;
-   typedef typename container_type::reference                reference;
-   typedef typename container_type::const_reference          const_reference;
+   typedef typename container_type::value_type              value_type;
+   typedef typename container_type::pointer                 pointer;
+   typedef typename container_type::const_pointer           const_pointer;
+   typedef typename container_type::reference               reference;
+   typedef typename container_type::const_reference         const_reference;
    typedef typename KeyOfValue::type                        key_type;
    typedef Compare                                          key_compare;
-   typedef typename container_type::allocator_type           allocator_type;
-   typedef typename container_type::size_type                size_type;
-   typedef typename container_type::difference_type          difference_type;
-   typedef typename container_type::iterator                 iterator;
-   typedef typename container_type::const_iterator           const_iterator;
-   typedef typename container_type::reverse_iterator         reverse_iterator;
-   typedef typename container_type::const_reverse_iterator   const_reverse_iterator;
+   typedef typename container_type::allocator_type          allocator_type;
+   typedef typename container_type::size_type               size_type;
+   typedef typename container_type::difference_type         difference_type;
+   typedef typename container_type::iterator                iterator;
+   typedef typename container_type::const_iterator          const_iterator;
+   typedef typename container_type::reverse_iterator        reverse_iterator;
+   typedef typename container_type::const_reverse_iterator  const_reverse_iterator;
 
    //`allocator_type::value_type` must match container's `value type`. If this
    //assertion fails, please review your allocator definition. 
