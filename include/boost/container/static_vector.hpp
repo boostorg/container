@@ -147,7 +147,7 @@ struct get_static_vector_allocator
 //!@tparam Options A type produced from \c boost::container::static_vector_options. If no option
 //! is specified, by default throw_on_overflow<true> option is set.
 template <typename T, std::size_t Capacity, class Options BOOST_CONTAINER_DOCONLY(= void) >
-class static_vector
+class BOOST_CONTAINER_ATTRIBUTE_TRIVIALLY_RELOCATABLE_IF(dtl::is_trivially_relocatable<T>::value) static_vector
     : public vector<T, typename dtl::get_static_vector_allocator< T, Capacity, Options>::type>
 {
    public:
