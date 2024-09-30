@@ -2399,9 +2399,9 @@ private:
    }
 
    //Function for optimizations, not for users
-   T *unused_storage(size_type &size)
+   T *unused_storage(size_type &sz)
    {
-      size = static_cast<size_type>(this->capacity() - this->size());
+      sz = static_cast<size_type>(this->capacity() - this->size());
       return this->priv_raw_end();
    }
   

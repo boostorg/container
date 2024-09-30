@@ -2182,11 +2182,11 @@ class stable_vector
                               , node_ptr_traits::static_cast_from(pool_first_ref)
                               , node_ptr_traits::static_cast_from(pool_last_ref)
                               , internal_data.pool_size);
-      typename multiallocation_chain::iterator beg(holder.begin()), end(holder.end());
+      typename multiallocation_chain::iterator b(holder.begin()), e(holder.end());
       size_type num_pool = 0;
-      while(beg != end){
+      while(b != e){
          ++num_pool;
-         ++beg;
+         ++b;
       }
       return n >= num_pool && num_pool == internal_data.pool_size;
    }

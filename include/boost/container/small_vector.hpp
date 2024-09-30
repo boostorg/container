@@ -389,13 +389,13 @@ class small_vector_base
    {}
 
    template<class AllocFwd>
-   inline explicit small_vector_base(initial_capacity_t, size_type capacity, BOOST_FWD_REF(AllocFwd) a)
-      : base_type(initial_capacity_t(), this->internal_storage(), capacity, ::boost::forward<AllocFwd>(a))
+   inline explicit small_vector_base(initial_capacity_t, size_type initial_capacity, BOOST_FWD_REF(AllocFwd) a)
+      : base_type(initial_capacity_t(), this->internal_storage(), initial_capacity, ::boost::forward<AllocFwd>(a))
    {}
 
    template<class AllocFwd>
-   inline explicit small_vector_base(initial_capacity_t, size_type capacity, BOOST_FWD_REF(AllocFwd) a, small_vector_base &x)
-      : base_type(initial_capacity_t(), this->internal_storage(), capacity, ::boost::forward<AllocFwd>(a), x)
+   inline explicit small_vector_base(initial_capacity_t, size_type initial_capacity, BOOST_FWD_REF(AllocFwd) a, small_vector_base &x)
+      : base_type(initial_capacity_t(), this->internal_storage(), initial_capacity, ::boost::forward<AllocFwd>(a), x)
    {}
 
    inline explicit small_vector_base(maybe_initial_capacity_t, size_type initial_capacity, size_type initial_size)
