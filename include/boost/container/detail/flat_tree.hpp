@@ -342,9 +342,11 @@ void flat_tree_sort_contiguous_to_adopt // is_contiguous_container == true
    tseq.clear();
    const bool use_tseq_storage = tseq_unused_storage_size > seq_unused_storage_size;
 
+   value_type * const seq_beg = boost::movelib::iterator_to_raw_pointer(seq.data());
+
    boost::movelib::adaptive_sort
-      ( boost::movelib::iterator_to_raw_pointer(seq.begin())
-      , boost::movelib::iterator_to_raw_pointer(seq.end())
+      ( seq_beg
+      , seq_beg + seq.size()
       , comp
       , use_tseq_storage ? tseq_unused_storage_addr : seq_unused_storage_addr
       , use_tseq_storage ? tseq_unused_storage_size : seq_unused_storage_size);
@@ -375,9 +377,11 @@ template<class SequenceContainer, class Compare>
 void flat_tree_adopt_sequence_unique// is_contiguous_container == true
    (SequenceContainer &tseq, BOOST_RV_REF(SequenceContainer) seq, Compare comp, dtl::true_)
 {
+   typedef typename SequenceContainer::value_type value_type;
+   value_type * const seq_beg = boost::movelib::iterator_to_raw_pointer(seq.data());
    boost::movelib::pdqsort
-      ( boost::movelib::iterator_to_raw_pointer(seq.begin())
-      , boost::movelib::iterator_to_raw_pointer(seq.end())
+      ( seq_beg
+      , seq_beg + seq.size()
       , comp);
    seq.erase(boost::movelib::unique
       (seq.begin(), seq.end(), boost::movelib::negate<Compare>(comp)), seq.cend());
