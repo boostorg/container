@@ -281,9 +281,11 @@ void hash_test()
 
    const boost::container::string s1 = "0125925123";
    const boost::container::string s2 = "25925123";
+   typedef boost::hash<boost::container::string> shash_t;
+   typedef boost::hash<StringViewType> svhash_t;
 
-   BOOST_TEST(boost::hash_value(s1) == boost::hash_value(StringViewType(s1)));
-   BOOST_TEST(boost::hash_value(s2) == boost::hash_value(StringViewType(s2)));
+   BOOST_TEST(shash_t()(s1) == svhash_t()(StringViewType(s1)));
+   BOOST_TEST(shash_t()(s2) == svhash_t()(StringViewType(s2)));
 }
 
 #else
