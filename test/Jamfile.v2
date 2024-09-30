@@ -16,6 +16,7 @@ project
       <library>/boost/iterator//boost_iterator
       <library>/boost/utility//boost_utility
       <library>/boost/tuple//boost_tuple
+      <library>/boost/container_hash//boost_container_hash
 
       <link>shared:<define>BOOST_CONTAINER_DYN_LINK=1
       <toolset>gcc-cygwin:<link>static
