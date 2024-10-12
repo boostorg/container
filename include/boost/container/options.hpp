@@ -359,20 +359,23 @@ BOOST_INTRUSIVE_OPTION_CONSTANT(inplace_alignment, std::size_t, Alignment, inpla
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-template<class GrowthType, std::size_t InplaceAlignment>
+template<class GrowthType, std::size_t InplaceAlignment, class StoredSizeType>
 struct small_vector_opt
 {
-   typedef GrowthType      growth_factor_type;
+   typedef GrowthType     growth_factor_type;
    BOOST_STATIC_CONSTEXPR std::size_t inplace_alignment = InplaceAlignment;
+   typedef StoredSizeType stored_size_type;
 };
 
-typedef small_vector_opt<void, 0u> small_vector_null_opt;
+typedef small_vector_opt<void, 0u, void> small_vector_null_opt;
 
 #endif    //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
 //! Helper metafunction to combine options into a single type to be used
 //! by \c boost::container::small_vector.
-//! Supported options are: \c boost::container::growth_factor and \c boost::container::inplace_alignment
+//! Supported options are: \c boost::container::growth_factor,
+//! \c boost::container::inplace_alignment and
+//! \c boost::container::stored_size.
 #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
 template<class ...Options>
 #else
@@ -390,7 +393,9 @@ struct small_vector_options
       #endif
       >::type packed_options;
    typedef small_vector_opt< typename packed_options::growth_factor_type
-                           , packed_options::inplace_alignment> implementation_defined;
+                           , packed_options::inplace_alignment
+                           , typename packed_options::stored_size_type
+                           > implementation_defined;
    /// @endcond
    typedef implementation_defined type;
 };
