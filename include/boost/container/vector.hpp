@@ -643,7 +643,7 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
    template<class AllocConvertible>
    vector_alloc_holder(vector_uninitialized_size_t, BOOST_FWD_REF(AllocConvertible) a, size_type initial_size)
       : allocator_type(boost::forward<AllocConvertible>(a))
-      , m_size(initial_size)  //Size is initialized here...
+      , m_size(static_cast<stored_size_type>(initial_size))  //Size is initialized here...
    {
       //... and capacity here, so vector, must call uninitialized_xxx in the derived constructor
       this->priv_first_allocation(initial_size);
@@ -652,7 +652,7 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
    //Constructor, does not throw
    vector_alloc_holder(vector_uninitialized_size_t, size_type initial_size)
       : allocator_type()
-      , m_size(initial_size)  //Size is initialized here...
+      , m_size(static_cast<stored_size_type>(initial_size))  //Size is initialized here...
    {
       //... and capacity here, so vector, must call uninitialized_xxx in the derived constructor
       this->priv_first_allocation(initial_size);
