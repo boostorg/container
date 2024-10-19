@@ -3374,6 +3374,8 @@ struct has_trivial_destructor_after_move<boost::container::vector<T, Allocator, 
 //See comments on vec_iterator::element_type to know why is this needed
 #ifdef BOOST_GNU_STDLIB
 
+#include <boost/move/detail/std_ns_begin.hpp>
+
 BOOST_MOVE_STD_NS_BEG
 
 template <class Pointer, bool IsConst>
@@ -3382,6 +3384,8 @@ struct pointer_traits< boost::container::vec_iterator<Pointer, IsConst> >
 {};
 
 BOOST_MOVE_STD_NS_END
+
+#include <boost/move/detail/std_ns_end.hpp>
 
 #endif   //BOOST_GNU_STDLIB
 
