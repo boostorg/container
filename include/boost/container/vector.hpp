@@ -2765,7 +2765,7 @@ private:
             //Move internal memory data to the internal memory data of the target, this can throw
             BOOST_ASSERT(extmem.capacity() >= intmem.size());
             ::boost::container::uninitialized_move_alloc_n
-               (intmem.get_stored_allocator(), this->priv_raw_begin(), intmem.size(), extmem.priv_raw_begin());
+               (intmem.get_stored_allocator(), intmem.priv_raw_begin(), intmem.size(), extmem.priv_raw_begin());
 
             //Exception not thrown, commit new state
             extmem.m_holder.set_stored_size(intmem.size());
@@ -2776,7 +2776,7 @@ private:
 
          //Destroy moved elements from intmem
          boost::container::destroy_alloc_n
-            ( intmem.get_stored_allocator(), this->priv_raw_begin()
+            ( intmem.get_stored_allocator(), intmem.priv_raw_begin()
             , intmem.size());
 
          //Adopt dynamic buffer
