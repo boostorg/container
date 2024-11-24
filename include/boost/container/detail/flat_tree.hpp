@@ -952,9 +952,10 @@ class flat_tree
       typename container_type::iterator const e = boost::movelib::inplace_set_unique_difference
          (it, seq.end(), seq.begin(), it, val_cmp);
 
+      //it might be invalidated by erasing [e, seq.end) if e == it, so check it before
+      const bool remaining = e != it;
       seq.erase(e, seq.cend());
-      //it might be invalidated by erasing [e, seq.end) if e == it
-      if (it != e)
+      if (remaining)
       {
          //Step 4: merge both ranges
          (flat_tree_container_inplace_merge)(seq, it, this->priv_value_comp(), contiguous_tag);
