@@ -533,16 +533,34 @@ struct allocator_traits
    inline static pointer priv_allocate(dtl::false_type, Allocator &a, size_type n, const_void_pointer)
    {  return a.allocate(n);  }
 
+   #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
+   #pragma GCC diagnostic push
+   #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+   #endif
+
    template<class T>
    inline static void priv_destroy(dtl::true_type, Allocator &a, T* p) BOOST_NOEXCEPT_OR_NOTHROW
    {  a.destroy(p);  }
+
+   #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
+   #pragma GCC diagnostic pop
+   #endif
 
    template<class T>
    inline static void priv_destroy(dtl::false_type, Allocator &, T* p) BOOST_NOEXCEPT_OR_NOTHROW
    {  p->~T(); (void)p;  }
 
+   #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
+   #pragma GCC diagnostic push
+   #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+   #endif
+
    inline static size_type priv_max_size(dtl::true_type, const Allocator &a) BOOST_NOEXCEPT_OR_NOTHROW
    {  return a.max_size();  }
+
+   #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
+   #pragma GCC diagnostic pop
+   #endif
 
    inline static size_type priv_max_size(dtl::false_type, const Allocator &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return size_type(-1)/sizeof(value_type);  }
@@ -552,6 +570,12 @@ struct allocator_traits
 
    inline static const Allocator &priv_select_on_container_copy_construction(dtl::false_type, const Allocator &a) BOOST_NOEXCEPT_OR_NOTHROW
    {  return a;  }
+
+
+   #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
+   #pragma GCC diagnostic push
+   #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+   #endif
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
       template<class T, class ...Args>
@@ -597,6 +621,11 @@ struct allocator_traits
       #undef BOOST_CONTAINER_ALLOCATOR_TRAITS_PRIV_CONSTRUCT_IMPL
 
    #endif   // #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+
+   #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
+   #pragma GCC diagnostic pop
+   #endif
+
 
    template<class T>
    inline static void priv_construct(dtl::false_type, Allocator &, T *p, const ::boost::container::default_init_t&)
