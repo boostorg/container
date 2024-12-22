@@ -94,23 +94,6 @@ BOOST_CONTAINER_FORCEINLINE void construct_type(T *p, BOOST_FWD_REF(Args) ...arg
    ::new((void*)p, boost_container_new_t()) T(::boost::forward<Args>(args)...);
 }
 
-template < class Pair, class KeyType, class ... Args>
-typename dtl::enable_if< dtl::is_pair<Pair>, void >::type
-construct_type
-   (Pair* p, try_emplace_t, BOOST_FWD_REF(KeyType) k, BOOST_FWD_REF(Args) ...args)
-{
-   construct_type(dtl::addressof(p->first), ::boost::forward<KeyType>(k));
-   BOOST_CONTAINER_TRY{
-      construct_type(dtl::addressof(p->second), ::boost::forward<Args>(args)...);
-   }
-   BOOST_CONTAINER_CATCH(...) {
-      typedef typename Pair::first_type first_type;
-      dtl::addressof(p->first)->~first_type();
-      BOOST_CONTAINER_RETHROW
-   }
-   BOOST_CONTAINER_CATCH_END
-}
-
 #else
 
 #define BOOST_CONTAINER_ALLOCATOR_TRAITS_CONSTRUCT_TYPEJ(N) \
@@ -125,32 +108,12 @@ construct_type(T *p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
 BOOST_MOVE_ITERATE_0TO8(BOOST_CONTAINER_ALLOCATOR_TRAITS_CONSTRUCT_TYPEJ)
 #undef BOOST_CONTAINER_ALLOCATOR_TRAITS_CONSTRUCT_TYPEJ
 
-#define BOOST_CONTAINER_ALLOCATOR_TRAITS_CONSTRUCT_TYPE(N) \
-template < class Pair, class KeyType BOOST_MOVE_I##N BOOST_MOVE_CLASS##N>\
-typename dtl::enable_if< dtl::is_pair<Pair>, void >::type construct_type\
-   (Pair* p, try_emplace_t, BOOST_FWD_REF(KeyType) k BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
-{\
-   construct_type(dtl::addressof(p->first), ::boost::forward<KeyType>(k));\
-   BOOST_CONTAINER_TRY{\
-      construct_type(dtl::addressof(p->second) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
-   }\
-   BOOST_CONTAINER_CATCH(...) {\
-      typedef typename Pair::first_type first_type;\
-      dtl::addressof(p->first)->~first_type();\
-      BOOST_CONTAINER_RETHROW\
-   }\
-   BOOST_CONTAINER_CATCH_END\
-}\
-//
-BOOST_MOVE_ITERATE_0TO8(BOOST_CONTAINER_ALLOCATOR_TRAITS_CONSTRUCT_TYPE)
-#undef BOOST_CONTAINER_ALLOCATOR_TRAITS_CONSTRUCT_TYPE
-
 #endif
 
 template<class T>
 inline
 typename dtl::enable_if<dtl::is_pair<T>, void >::type
-construct_type(T* p)
+   construct_type(T* p)
 {
    dtl::construct_type(dtl::addressof(p->first));
    BOOST_CONTAINER_TRY{
@@ -163,7 +126,6 @@ construct_type(T* p)
    }
    BOOST_CONTAINER_CATCH_END
 }
-
 
 template<class T, class U>
 inline
@@ -509,6 +471,25 @@ struct allocator_traits
       }
    #endif
 
+   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+      template < class Pair, class KeyType, class ... Args>
+      static typename dtl::enable_if< dtl::is_pair<Pair>, void >::type construct
+         (Allocator & a, Pair* p, try_emplace_t, BOOST_FWD_REF(KeyType) k, BOOST_FWD_REF(Args) ...args)
+      {
+         allocator_traits::construct(a, dtl::addressof(p->first), ::boost::forward<KeyType>(k));
+         BOOST_CONTAINER_TRY{
+            allocator_traits::construct(a, dtl::addressof(p->second), ::boost::forward<Args>(args)...);
+         }
+         BOOST_CONTAINER_CATCH(...) {
+            typedef typename Pair::first_type first_type;
+            dtl::addressof(p->first)->~first_type();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
+      }
+   #endif
+
    //! <b>Returns</b>: <code>a.storage_is_unpropagable(p)</code> if is_partially_propagable::value is true; otherwise,
    //! <code>false</code>.
    inline static bool storage_is_unpropagable(const Allocator &a, pointer p) BOOST_NOEXCEPT_OR_NOTHROW
@@ -582,6 +563,22 @@ struct allocator_traits
       inline static void priv_construct(dtl::true_type, Allocator &a, T *p, BOOST_FWD_REF(Args) ...args)
       {  a.construct( p, ::boost::forward<Args>(args)...);  }
 
+      template<class T, class KeyType, class ...Args>
+      inline static typename dtl::enable_if< dtl::is_pair<T>, void >::type
+         priv_construct(dtl::true_type, Allocator &a, T *p, try_emplace_t, BOOST_FWD_REF(KeyType) k, BOOST_FWD_REF(Args) ...args)
+      {
+         a.construct(dtl::addressof(p->first), ::boost::forward<KeyType>(k));
+         BOOST_CONTAINER_TRY{
+            a.construct(dtl::addressof(p->second), ::boost::forward<Args>(args)...);
+         }
+         BOOST_CONTAINER_CATCH(...) {
+            typedef typename T::first_type first_type;
+            dtl::addressof(p->first)->~first_type();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
+      }
+
       template<class T, class ...Args>
       inline static void priv_construct(dtl::false_type, Allocator &, T *p, BOOST_FWD_REF(Args) ...args)
       {  dtl::construct_type(p, ::boost::forward<Args>(args)...); }
@@ -600,6 +597,28 @@ struct allocator_traits
          dtl::bool_<value> flag;\
          (priv_construct)(flag, a, p BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
       }\
+      \
+      //
+      BOOST_MOVE_ITERATE_0TO8(BOOST_CONTAINER_ALLOCATOR_TRAITS_CONSTRUCT_IMPL)
+      #undef BOOST_CONTAINER_ALLOCATOR_TRAITS_CONSTRUCT_IMPL
+
+      #define BOOST_CONTAINER_ALLOCATOR_TRAITS_CONSTRUCT_IMPL(N) \
+      template<class T, class KeyType BOOST_MOVE_I##N BOOST_MOVE_CLASS##N >\
+      inline static typename dtl::enable_if< dtl::is_pair<T>, void >::type\
+         construct(Allocator &a, T *p, try_emplace_t, BOOST_FWD_REF(KeyType) k BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+      {\
+         allocator_traits::construct(a, dtl::addressof(p->first), ::boost::forward<KeyType>(k));\
+         BOOST_CONTAINER_TRY{\
+            allocator_traits::construct(a, dtl::addressof(p->second) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+         }\
+         BOOST_CONTAINER_CATCH(...) {\
+            typedef typename T::first_type first_type;\
+            dtl::addressof(p->first)->~first_type();\
+            BOOST_CONTAINER_RETHROW\
+         }\
+         BOOST_CONTAINER_CATCH_END\
+      }\
+      \
       //
       BOOST_MOVE_ITERATE_0TO8(BOOST_CONTAINER_ALLOCATOR_TRAITS_CONSTRUCT_IMPL)
       #undef BOOST_CONTAINER_ALLOCATOR_TRAITS_CONSTRUCT_IMPL
