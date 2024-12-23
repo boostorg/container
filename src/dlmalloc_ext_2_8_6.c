@@ -51,12 +51,12 @@
 #pragma warning (disable : 4127) /*conditional expression is constant*/
 #elif defined(__GNUC__)
 
-# if ((__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 48000)
+# if ((__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40800)
    //Disable false positives triggered by -Waggressive-loop-optimizations
 #  pragma GCC diagnostic ignored "-Waggressive-loop-optimizations"
 #  endif
 
-# if ((__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 46000)
+# if ((__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600)
    //Disable false positives triggered by -Warray-bounds
 #  pragma GCC diagnostic ignored "-Warray-bounds"
 #  endif
