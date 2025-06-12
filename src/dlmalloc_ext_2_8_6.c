@@ -1038,8 +1038,8 @@ static int internal_multialloc_arrays
    }
 
    {
-      size_t    i;
-      size_t next_i;
+      ssize_t    i;
+      ssize_t next_i;
       /*
          Allocate the aggregate chunk.  First disable direct-mmapping so
          malloc won't use it, since we would not be able to later
