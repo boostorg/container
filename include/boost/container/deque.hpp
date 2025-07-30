@@ -91,9 +91,6 @@ namespace dtl {
 //    i.cur is a pointer in the range [i.first, i.last).  NOTE:
 //      the implication of this is that i.cur is always a dereferenceable
 //      pointer, even if i is a past-the-end iterator.
-//  Start and Finish are always nonsingular iterators.  NOTE: this means
-//    that an empty deque must have one node, and that a deque
-//    with N elements, where N is the buffer size, must have two nodes.
 //  For every node other than start.node and finish.node, every element
 //    in the node is an initialized object.  If start.node == finish.node,
 //    then [start.cur, finish.cur) are initialized objects, and
@@ -255,8 +252,7 @@ class deque_iterator
             offset > 0 ? (offset / block_size)
                        : (-difference_type((-offset - 1) / block_size) - 1);
          this->priv_set_node(this->m_node + node_offset, size_type(block_size));
-         this->m_cur = this->m_first +
-         (offset - node_offset * block_size);
+         this->m_cur = this->m_first + (offset - node_offset * block_size);
       }
       return *this;
    }

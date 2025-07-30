@@ -481,7 +481,7 @@ inserted predominantly on one extreme (e.g. pushed at one extreme and popped fro
 To avoid unbounded memory waste, Boost.Container's `devector` uses a different strategy:
 
 * If elements are inserted near a extreme and there is free space on that extreme, the insertion is performed
-  without any additional data movement (only the elements between the insertion point and the extreme are moved.
+  without any additional data movement (only the elements between the insertion point and the extreme are moved).
   
 * If elements are inserted near one extreme and the free space on that extreme is exhausted, all existing elements
   are relocated (moved) to the center of the internal memory buffer. This makes room in the exhausted extreme
@@ -492,7 +492,7 @@ To avoid unbounded memory waste, Boost.Container's `devector` uses a different s
   relocations must be limited ('relocation limit') and a reallocation (allocation of a new memory buffer) will be
   performed if the load-factor of the container defined as (size()/length_of_buffer) surpasses the relocation limit (see
   Lars Greger Nordland Hagen's [@http://larshagencpp.github.io/blog/2016/05/22/devector "Double-ended vector - is it useful?"]
-  article for more details.
+  article for more details).
 
 * This approach offers a reasonable balance between a reasonable memory overhead and performance.
 
