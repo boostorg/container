@@ -15,5 +15,7 @@
 /bench/fxa_common.hpp
 /bench/hash_map.hpp
 /bench/hash_set.hpp
+/bench/new_deque.hpp
 /bench/detail/hash_table.hpp
 /Bin/
+/include/boost/container/new_deque.hpp
