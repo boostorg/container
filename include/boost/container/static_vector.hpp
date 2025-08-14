@@ -64,7 +64,8 @@ class static_storage_allocator
    {  return *this;  }
 
    inline T* internal_storage() const BOOST_NOEXCEPT_OR_NOTHROW
-   {  return move_detail::launder_cast<T*>(&storage);  }
+   //Avoiding launder due to performance regressions, see https://github.com/boostorg/container/issues/309
+   {  return const_cast<T*>(static_cast<const T*>(static_cast<const void*>(storage.data)));  }
 
    BOOST_STATIC_CONSTEXPR std::size_t internal_capacity = N;
 
