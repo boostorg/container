@@ -943,7 +943,7 @@ class flat_map
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-   //! <b>Effects</b>: Inserts an object x of type T constructed with
+   //! <b>Effects</b>: Inserts an object x of type value_type constructed with
    //!   std::forward<Args>(args)... if and only if there is no element in the container
    //!   with key equivalent to the key of x.
    //!
@@ -959,7 +959,7 @@ class flat_map
    inline std::pair<iterator,bool> emplace(BOOST_FWD_REF(Args)... args)
    {  return dtl::force_copy< std::pair<iterator, bool> >(m_flat_tree.emplace_unique(boost::forward<Args>(args)...)); }
 
-   //! <b>Effects</b>: Inserts an object of type T constructed with
+   //! <b>Effects</b>: Inserts an object of type value_type constructed with
    //!   std::forward<Args>(args)... in the container if and only if there is
    //!   no element in the container with key equivalent to the key of x.
    //!   p is a hint pointing to where the insert should start to search.
@@ -2478,7 +2478,7 @@ class flat_multimap
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-   //! <b>Effects</b>: Inserts an object of type T constructed with
+   //! <b>Effects</b>: Inserts an object of type value_type constructed with
    //!   std::forward<Args>(args)... and returns the iterator pointing to the
    //!   newly inserted element.
    //!
@@ -2491,7 +2491,7 @@ class flat_multimap
    iterator emplace(BOOST_FWD_REF(Args)... args)
    {  return dtl::force_copy<iterator>(m_flat_tree.emplace_equal(boost::forward<Args>(args)...)); }
 
-   //! <b>Effects</b>: Inserts an object of type T constructed with
+   //! <b>Effects</b>: Inserts an object of type value_type constructed with
    //!   std::forward<Args>(args)... in the container.
    //!   p is a hint pointing to where the insert should start to search.
    //!

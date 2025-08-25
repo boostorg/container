@@ -1426,6 +1426,7 @@ use [*Boost.Container]? There are several reasons for that:
 * Fixed bugs/issues:
    * [@https://github.com/boostorg/container/pull/307 GitHub #307: ['"Fix all instances of MSVC warning C4146 (unsigned negation)"]].
    * [@https://github.com/boostorg/container/issues/309 GitHub #309: ['"Performance regression of boost::container::static_vector introduced in boost v1.86"]].
+   * [@https://github.com/boostorg/container/issues/310 GitHub #310: ['"flat_map: Mention correct type in documentation of emplace and emplace_hint"]].
 
 [endsect]
 
