@@ -228,7 +228,7 @@ inline F memmove(I f, I l, F r) BOOST_NOEXCEPT_OR_NOTHROW
    const value_type *const end_raw = boost::movelib::iterator_to_raw_pointer(l);
    if(BOOST_LIKELY(beg_raw != end_raw && dest_raw && beg_raw)){
       const std::size_t n = std::size_t(end_raw - beg_raw)   ;
-      std::memmove(dest_raw, beg_raw, sizeof(value_type)*n);
+      std::memmove(reinterpret_cast<void *>(dest_raw), beg_raw, sizeof(value_type)*n);
       r += static_cast<r_difference_type>(n);
    }
    return r;
@@ -961,7 +961,7 @@ inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, F>::type
    const std::size_t n = boost::container::iterator_udistance(f, l);
    if (BOOST_LIKELY(n != 0)){
       r -= n;
-      std::memmove((boost::movelib::iterator_to_raw_pointer)(r), (boost::movelib::iterator_to_raw_pointer)(f), sizeof(value_type)*n);
+      std::memmove(reinterpret_cast<void *>((boost::movelib::iterator_to_raw_pointer)(r)), (boost::movelib::iterator_to_raw_pointer)(f), sizeof(value_type)*n);
    }
    return r;
 }
