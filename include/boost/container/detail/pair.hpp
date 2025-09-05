@@ -555,7 +555,7 @@ template<class A, class B>
 struct is_trivially_copy_assignable
    <boost::container::dtl::pair<A,B> >
 {
-   BOOST_STATIC_CONSTEXPR bool value = false ;
+   BOOST_STATIC_CONSTEXPR bool value = false;
 };
 
 template<class T>
@@ -593,7 +593,7 @@ template<class A, class B>
 struct is_trivially_destructible<boost::container::dtl::pair<A,B> >
 {
    BOOST_STATIC_CONSTEXPR bool value = boost::move_detail::is_trivially_destructible<A>::value &&
-                             boost::move_detail::is_trivially_destructible<B>::value ;
+                             boost::move_detail::is_trivially_destructible<B>::value;
 };
 
 
