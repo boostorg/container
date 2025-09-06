@@ -19,3 +19,4 @@
 /bench/detail/hash_table.hpp
 /Bin/
 /include/boost/container/new_deque.hpp
+/test/new_deque_test.cpp
