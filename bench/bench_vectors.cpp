@@ -12,6 +12,7 @@
 #include <deque>
 #include <boost/container/vector.hpp>
 #include <boost/container/deque.hpp>
+#include "new_deque.hpp"
 #include <boost/container/devector.hpp>
 #include <boost/container/small_vector.hpp>
 #include <boost/container/stable_vector.hpp>
@@ -93,8 +94,9 @@ struct capacity_wrapper<C, false>
    { }
 };
 
-const std::size_t RangeSize = 5;
+const std::size_t RangeSize = 8;
 
+template <class IntType>
 struct insert_end_range
 {
    inline std::size_t capacity_multiplier() const
@@ -105,11 +107,12 @@ struct insert_end_range
    {  c.insert(c.end(), &a[0], &a[0]+RangeSize); }
 
    const char *name() const
-   {  return "insert_end_range"; }
+   {  return "insert_end_range(8)"; }
 
-   MyInt a[RangeSize];
+   IntType a[RangeSize];
 };
 
+template <class IntType>
 struct insert_end_repeated
 {
    inline std::size_t capacity_multiplier() const
@@ -117,14 +120,15 @@ struct insert_end_repeated
 
    template<class C>
    inline void operator()(C &c, int i)
-   {  c.insert(c.end(), RangeSize, MyInt(i)); }
+   {  c.insert(c.end(), RangeSize, IntType(i)); }
 
    inline const char *name() const
-   {  return "insert_end_repeated"; }
+   {  return "insert_end_repeated(8)"; }
 
-   MyInt a[RangeSize];
+   IntType a[RangeSize];
 };
 
+template <class IntType>
 struct push_back
 {
    inline std::size_t capacity_multiplier() const
@@ -132,12 +136,13 @@ struct push_back
 
    template<class C>
    inline void operator()(C &c, int i)
-   {  c.push_back(MyInt(i)); }
+   {  c.push_back(IntType(i)); }
 
    inline const char *name() const
    {  return "push_back"; }
 };
 
+template <class IntType>
 struct emplace_back
 {
    inline std::size_t capacity_multiplier() const
@@ -151,6 +156,7 @@ struct emplace_back
    {  return "emplace_back"; }
 };
 
+template <class IntType>
 struct insert_near_end_repeated
 {
    inline std::size_t capacity_multiplier() const
@@ -158,12 +164,13 @@ struct insert_near_end_repeated
 
    template<class C>
    inline void operator()(C &c, int i)
-   {  c.insert(c.size() >= 2*RangeSize ? c.end()-2*RangeSize : c.begin(), RangeSize, MyInt(i)); }
+   {  c.insert(c.size() >= 2*RangeSize ? c.end()-2*RangeSize : c.begin(), RangeSize, IntType(i)); }
 
    inline const char *name() const
-   {  return "insert_near_end_repeated"; }
+   {  return "insert_near_end_repeated(8)"; }
 };
 
+template <class IntType>
 struct insert_near_end_range
 {
    inline std::size_t capacity_multiplier() const
@@ -176,11 +183,12 @@ struct insert_near_end_range
    }
 
    inline const char *name() const
-   {  return "insert_near_end_range"; }
+   {  return "insert_near_end_range(8)"; }
 
-   MyInt a[RangeSize];
+   IntType a[RangeSize];
 };
 
+template <class IntType>
 struct insert_near_end
 {
    inline std::size_t capacity_multiplier() const
@@ -192,13 +200,14 @@ struct insert_near_end
       typedef typename C::iterator it_t;
       it_t it (c.end());
       it -= static_cast<typename C::difference_type>(c.size() >= 2)*2;
-      c.insert(it, MyInt(i));
+      c.insert(it, IntType(i));
    }
 
    inline const char *name() const
    {  return "insert_near_end"; }
 };
 
+template <class IntType>
 struct emplace_near_end
 {
    inline std::size_t capacity_multiplier() const
@@ -272,7 +281,7 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements, 
 
    nanosecond_type nseconds = timer.elapsed().wall;
 
-   std::cout   << cont_name << "->" << op.name() <<" ns: "
+   std::cout   << cont_name << "->" << " ns: "
                << std::setw(8)
                << float(nseconds)/float((num_iterations-1)*num_elements)
                << '\t'
@@ -280,8 +289,8 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements, 
                << std::endl;
 }
 
-template<class Operation>
-void test_vectors()
+template<class IntType, class Operation>
+void test_vectors_impl()
 {
    //#define SINGLE_TEST
    #define SIMPLE_IT
@@ -293,7 +302,11 @@ void test_vectors()
       #endif
       std::size_t numele [] = { 100000 };
    #elif defined SIMPLE_IT
+      #ifdef NDEBUG
+      std::size_t numit [] = { 50 };
+      #else
       std::size_t numit [] = { 10 };
+      #endif
       std::size_t numele [] = { 100000 };
    #else
       #ifdef NDEBUG
@@ -304,42 +317,69 @@ void test_vectors()
       unsigned int numele [] = { 10000, 1000,   100,     10       };
    #endif
 
-   //#define PRERESERVE_ONLY
-   #ifdef PRERESERVE_ONLY
-   #define P_INIT 1
-   #else
-   #define P_INIT 0
-   #endif
 
-   for (unsigned p = P_INIT; p != 2; ++p) {
-      std::cout << Operation().name() << ", prereserve: " << (p ? "1" : "0") << "\n" << std::endl;
-      const bool bp =p != 0;
-      for(unsigned int i = 0; i < sizeof(numele)/sizeof(numele[0]); ++i){
-         vector_test_template< std::vector<MyInt, std::allocator<MyInt> >, Operation >(numit[i], numele[i], "std::vector  ", bp);
-         vector_test_template< bc::vector<MyInt, std::allocator<MyInt> >, Operation >(numit[i], numele[i]        ,  "vector       ", bp);
-         vector_test_template< bc::small_vector<MyInt, 0, std::allocator<MyInt> >, Operation >(numit[i], numele[i], "small_vector ", bp);
-         vector_test_template< bc::devector<MyInt, std::allocator<MyInt> >, Operation >(numit[i], numele[i],        "devector     ", bp);
-         //vector_test_template< std::deque<MyInt, std::allocator<MyInt> >, Operation >(numit[i], numele[i],          "std::deque   ", bp);
-         vector_test_template< bc::deque<MyInt, std::allocator<MyInt> >, Operation >(numit[i], numele[i],           "deque        ", bp);
+#define RESERVE_ONLY 0
+#define NORESERVE_ONLY 1
+
+//#define RESERVE_STRATEGY NORESERVE_ONLY
+#define RESERVE_STRATEGY RESERVE_ONLY
+
+#ifndef RESERVE_STRATEGY
+   #define P_INIT 0
+   #define P_END  2
+#elif RESERVE_STRATEGY == PRERESERVE_ONLY
+   #define P_INIT 1
+   #define P_END  2
+#elif RESERVE_STRATEGY == NORESERVE_ONLY
+   #define P_INIT 0
+   #define P_END  1 
+#endif
+
+   for (unsigned p = P_INIT; p != P_END; ++p) {
+      std::cout << "---------------------------------\n";
+      std::cout << "IntType:" << typeid(IntType).name() << " op:" << Operation().name() << ", prereserve: " << (p ? "1" : "0") << "\n";
+      std::cout << "---------------------------------\n";
+      const bool bp = p != 0;
+      const std::size_t it_count = sizeof(numele)/sizeof(numele[0]);
+      for(unsigned int i = 0; i < it_count; ++i){
+         std::cout << "\n" << " ----  numit[i]: " << numit[i] << "   numele[i] : " << numele[i] << " ---- \n";
+         vector_test_template< std::vector<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],         "std::vector  ", bp);
+         vector_test_template< bc::vector<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i]        ,  "vector       ", bp);
+         vector_test_template< bc::small_vector<IntType, 0, std::allocator<IntType> >, Operation >(numit[i], numele[i], "small_vector ", bp);
+         vector_test_template< bc::devector<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],        "devector     ", bp);
+         vector_test_template< std::deque<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],          "std::deque   ", bp);
+         vector_test_template< bc::deque<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],           "deque        ", bp);
+         vector_test_template< bc::new_deque<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],       "new_deque    ", bp);
       }
       std::cout << "---------------------------------\n---------------------------------\n";
    }
 }
 
-int main()
+template<class IntType>
+void test_vectors()
 {
    //end
-   test_vectors<push_back>();
-   test_vectors<insert_end_range>();
-   test_vectors<insert_end_repeated>();
-   //near end
-   test_vectors<insert_near_end>();
-   test_vectors<insert_near_end_range>();
-   test_vectors<insert_near_end_repeated>();
+   test_vectors_impl<IntType, push_back<IntType> >();
    #if BOOST_CXX_VERSION  >= 201103L 
-   test_vectors<emplace_back>();
-   test_vectors<emplace_near_end>();
+   test_vectors_impl<IntType, emplace_back<IntType> >();
    #endif
+
+   test_vectors_impl<IntType, insert_end_range<IntType> >();
+   test_vectors_impl<IntType, insert_end_repeated<IntType> >();
+
+   //near end
+   test_vectors_impl<IntType, insert_near_end<IntType> >();
+   #if BOOST_CXX_VERSION  >= 201103L 
+   test_vectors_impl<IntType, emplace_near_end<IntType> >();
+   #endif
+   test_vectors_impl<IntType, insert_near_end_range<IntType> >();
+   test_vectors_impl<IntType, insert_near_end_repeated<IntType> >();
+}
+
+int main()
+{
+   //test_vectors<MyInt>();
+   test_vectors<int>();
 
    return 0;
 }

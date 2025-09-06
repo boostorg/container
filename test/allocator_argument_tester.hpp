@@ -74,7 +74,7 @@ class propagation_test_allocator
    void deallocate(value_type *ptr, std::size_t n)
    {
       (void)n;
-      # if __cpp_sized_deallocation
+      # if defined(__cpp_sized_deallocation)
       ::operator delete((void*)ptr, n * sizeof(value_type));
       #else
       ::operator delete((void*)ptr);
