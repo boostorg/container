@@ -94,7 +94,7 @@ struct intrusive_slist_type
       , dtl::bi::size_type
          <typename allocator_traits_type::size_type>
       >::type                                   container_type;
-   typedef container_type                       type ;
+   typedef container_type                       type;
 };
 
 }  //namespace dtl {
