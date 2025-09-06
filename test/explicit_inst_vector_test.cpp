@@ -38,7 +38,7 @@ class CustomAllocator
 	void deallocate(pointer ptr, size_type n)
    {
       (void)n;
-      # if __cpp_sized_deallocation
+      # if defined(__cpp_sized_deallocation)
       ::operator delete((void*)ptr, n * sizeof(value_type));
       #else
       ::operator delete((void*)ptr);

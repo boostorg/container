@@ -163,7 +163,7 @@ class new_allocator
    void deallocate(pointer ptr, size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {
       (void)n;
-      # if __cpp_sized_deallocation
+      # if defined(__cpp_sized_deallocation)
       ::operator delete((void*)ptr, n * sizeof(T));
       #else
       ::operator delete((void*)ptr);
