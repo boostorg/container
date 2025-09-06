@@ -65,7 +65,7 @@ class simple_allocator
    void deallocate(T *ptr, std::size_t n) BOOST_NOEXCEPT_OR_NOTHROW
    {
       (void)n;
-      # if __cpp_sized_deallocation
+      # if defined(__cpp_sized_deallocation)
       ::operator delete((void*)ptr, n * sizeof(T));
       #else
       ::operator delete((void*)ptr);
@@ -187,7 +187,7 @@ class propagation_test_allocator
    void deallocate(T *ptr, std::size_t n) BOOST_NOEXCEPT_OR_NOTHROW
    {
       (void)n;
-      # if __cpp_sized_deallocation
+      # if defined(__cpp_sized_deallocation)
       ::operator delete((void*)ptr, n * sizeof(T));
       #else
       ::operator delete((void*)ptr);
