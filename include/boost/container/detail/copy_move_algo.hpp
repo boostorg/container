@@ -989,7 +989,9 @@ inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, F>::type
    typedef typename boost::container::iter_value<I>::type value_type;
    if (BOOST_LIKELY(n != 0)){
       r -= n;
-      std::memmove((boost::movelib::iterator_to_raw_pointer)(r), (boost::movelib::iterator_to_raw_pointer)(l) - n, sizeof(value_type)*n);
+      std::memmove (reinterpret_cast<void *>((boost::movelib::iterator_to_raw_pointer)(r))
+                  , reinterpret_cast<const void *>((boost::movelib::iterator_to_raw_pointer)(l) - n)
+                  , sizeof(value_type)*n);
    }
    return r;
 }
@@ -1025,7 +1027,9 @@ inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, I>::type
    if (BOOST_LIKELY(n != 0)){
       r -= n;
       l -= n;
-      std::memmove((boost::movelib::iterator_to_raw_pointer)(r), l, sizeof(value_type)*n);
+      std::memmove( reinterpret_cast<void *>((boost::movelib::iterator_to_raw_pointer)(r))
+                  , l
+                  , sizeof(value_type)*n);
    }
    return l;
 }
