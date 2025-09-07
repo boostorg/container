@@ -566,10 +566,7 @@ struct is_trivially_copy_assignable<boost::container::dtl::pair<A,B> >
 template<class A, class B>
 struct is_trivially_copy_assignable<std::pair<A,B> >
    : is_trivially_copy_assignable<boost::container::dtl::pair<A,B> >
-{
-   BOOST_STATIC_CONSTEXPR bool value = boost::move_detail::is_trivially_copy_assignable<A>::value &&
-                                       boost::move_detail::is_trivially_copy_assignable<B>::value;
-};
+{};
 
 //
 // is_trivially_move_assignable
