@@ -321,8 +321,8 @@ void test_vectors_impl()
 #define RESERVE_ONLY 0
 #define NORESERVE_ONLY 1
 
-//#define RESERVE_STRATEGY NORESERVE_ONLY
-#define RESERVE_STRATEGY RESERVE_ONLY
+#define RESERVE_STRATEGY NORESERVE_ONLY
+//#define RESERVE_STRATEGY RESERVE_ONLY
 
 #ifndef RESERVE_STRATEGY
    #define P_INIT 0
@@ -335,6 +335,8 @@ void test_vectors_impl()
    #define P_END  1 
 #endif
 
+   typedef bc::vector_options< bc::growth_factor<bc::growth_factor_100> >::type growth_100_option_t;
+
    for (unsigned p = P_INIT; p != P_END; ++p) {
       std::cout << "---------------------------------\n";
       std::cout << "IntType:" << typeid(IntType).name() << " op:" << Operation().name() << ", prereserve: " << (p ? "1" : "0") << "\n";
@@ -343,13 +345,14 @@ void test_vectors_impl()
       const std::size_t it_count = sizeof(numele)/sizeof(numele[0]);
       for(unsigned int i = 0; i < it_count; ++i){
          std::cout << "\n" << " ----  numit[i]: " << numit[i] << "   numele[i] : " << numele[i] << " ---- \n";
-         vector_test_template< std::vector<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],         "std::vector  ", bp);
-         vector_test_template< bc::vector<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i]        ,  "vector       ", bp);
-         vector_test_template< bc::small_vector<IntType, 0, std::allocator<IntType> >, Operation >(numit[i], numele[i], "small_vector ", bp);
-         vector_test_template< bc::devector<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],        "devector     ", bp);
-         vector_test_template< std::deque<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],          "std::deque   ", bp);
-         vector_test_template< bc::deque<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],           "deque        ", bp);
-         vector_test_template< bc::new_deque<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],       "new_deque    ", bp);
+         vector_test_template< std::vector<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                              "std::vector  ", bp);
+         vector_test_template< bc::vector<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i]        ,                       "vector       ", bp);
+         vector_test_template< bc::vector<IntType, std::allocator<IntType>, growth_100_option_t >, Operation >(numit[i], numele[i],          "vector(2x)   ", bp);
+         vector_test_template< bc::small_vector<IntType, 0, std::allocator<IntType> >, Operation >(numit[i], numele[i],                      "small_vector ", bp);
+         vector_test_template< bc::devector<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                             "devector     ", bp);
+         vector_test_template< std::deque<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                               "std::deque   ", bp);
+         vector_test_template< bc::deque<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                                "deque        ", bp);
+         vector_test_template< bc::new_deque<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                            "new_deque    ", bp);
       }
       std::cout << "---------------------------------\n---------------------------------\n";
    }
