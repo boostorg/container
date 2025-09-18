@@ -820,7 +820,8 @@ public:
     //!   Nothing.
     //!
     //! @par Complexity
-    //!   Constant O(1).
+    //!   @li If \c is_trivially_destructible<T>::value is \c true Constant O(1)
+    //!   @li If \c is_trivially_destructible<T>::value is \c false Linear O(N) 
     void clear()  BOOST_NOEXCEPT_OR_NOTHROW;
 
     //! @pre <tt>i < size()</tt>
