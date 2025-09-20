@@ -63,9 +63,19 @@ class static_storage_allocator
    inline static_storage_allocator & operator=(const static_storage_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this;  }
 
-   inline T* internal_storage() const BOOST_NOEXCEPT_OR_NOTHROW
+   //GCC in C++03 regressions fails, due to a bug in strict-aliasing optimizations
+   #if defined(BOOST_GCC) && (BOOST_GCC >= 120000) && (BOOST_CXX_VERSION < 201103L)
+   #pragma GCC push_options
+   #pragma GCC optimize("no-strict-aliasing")
+   #endif
+
+   BOOST_CONTAINER_FORCEINLINE T* internal_storage() const BOOST_NOEXCEPT_OR_NOTHROW
    //Avoiding launder due to performance regressions, see https://github.com/boostorg/container/issues/309
    {  return const_cast<T*>(static_cast<const T*>(static_cast<const void*>(storage.data)));  }
+
+   #if defined(BOOST_GCC) && (BOOST_GCC >= 100000) && (BOOST_CXX_VERSION < 201103L)
+   #pragma GCC pop_options
+   #endif
 
    BOOST_STATIC_CONSTEXPR std::size_t internal_capacity = N;
 
