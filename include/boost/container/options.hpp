@@ -654,14 +654,15 @@ using deque_options_t = typename boost::container::deque_options<Options...>::ty
 #endif
 
 //!This option specifies the maximum size of a block in bytes: this delimites the number of contiguous elements
-//!that will be allocated by deque as min(1u, BlockBytes/sizeof(value_type))
+//!that will be allocated by some containers as min(1u, BlockBytes/sizeof(value_type))
 //!A value zero represents the default value.
 //!
 //!\tparam BlockBytes An unsigned integer value.
 BOOST_INTRUSIVE_OPTION_CONSTANT(block_bytes, std::size_t, BlockBytes, block_bytes)
 
 //!This option specifies the size of a block, delimites the number of contiguous elements
-//!that will be allocated by deque as BlockSize.
+//!that will be allocated by some containersas BlockSize.
+//!For some containers (like deque), a power of two value can improve performance.
 //!A value zero represents the default value.
 //!
 //!\tparam BlockBytes An unsigned integer value.

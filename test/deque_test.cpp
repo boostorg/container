@@ -15,6 +15,7 @@
 #include <boost/container/deque.hpp>
 #include <boost/container/allocator.hpp>
 
+
 #include "print_container.hpp"
 #include "check_equal_containers.hpp"
 #include "dummy_test_allocator.hpp"
@@ -127,6 +128,11 @@ bool do_test()
       move_assign = boost::move(move_ctor);
       move_assign.swap(original);
    }
+   {
+   typedef deque<IntType>  MyCntDeque;
+      ::boost::movelib::unique_ptr<MyCntDeque> const pcntdeque = ::boost::movelib::make_unique<MyCntDeque>();
+      pcntdeque->erase(pcntdeque->cbegin(), pcntdeque->cend());
+   }
 
    //Alias deque types
    typedef deque<IntType>  MyCntDeque;
@@ -172,8 +178,28 @@ bool do_test()
       stddeque.erase(stddeque.begin()++);
       if(!test::CheckEqualContainers(cntdeque, stddeque)) return false;
 
+      cntdeque.erase(cntdeque.erase(cntdeque.begin()++));
+      stddeque.erase(stddeque.erase(stddeque.begin()++));
+      if(!test::CheckEqualContainers(cntdeque, stddeque)) return false;
+
+      cntdeque.erase(cntdeque.erase(cntdeque.begin()+3));
+      stddeque.erase(stddeque.erase(stddeque.begin()+3));
+      if(!test::CheckEqualContainers(cntdeque, stddeque)) return false;
+
+      cntdeque.erase(cntdeque.erase(cntdeque.end()-2));
+      stddeque.erase(stddeque.erase(stddeque.end()-2));
+      if(!test::CheckEqualContainers(cntdeque, stddeque)) return false;
+
+      cntdeque.erase(cntdeque.erase(cntdeque.end()-4));
+      stddeque.erase(stddeque.erase(stddeque.end()-4));
+      if(!test::CheckEqualContainers(cntdeque, stddeque)) return false;
+
       cntdeque.erase(cntdeque.begin());
       stddeque.erase(stddeque.begin());
+      if(!test::CheckEqualContainers(cntdeque, stddeque)) return false;
+
+      cntdeque.erase(cntdeque.end()-1);
+      stddeque.erase(stddeque.end()-1);
       if(!test::CheckEqualContainers(cntdeque, stddeque)) return false;
 
       {
