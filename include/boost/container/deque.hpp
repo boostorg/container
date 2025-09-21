@@ -87,9 +87,6 @@ struct deque_block_traits
                                                                                    ;
 };
 
-namespace dtl {
-
-
 // Class invariants:
 //  For any nonsingular iterator i:
 //    i.node is the address of an element in the map array.  The
@@ -117,13 +114,13 @@ class deque_iterator
    typedef typename boost::intrusive::pointer_traits<Pointer>::element_type         value_type;
    typedef typename boost::intrusive::pointer_traits<Pointer>::difference_type      difference_type;
    typedef typename boost::intrusive::pointer_traits<Pointer>::size_type            size_type;
-   typedef typename if_c
+   typedef typename dtl::if_c
       < IsConst
       , typename boost::intrusive::pointer_traits<Pointer>::template
                                  rebind_pointer<const value_type>::type
       , Pointer
       >::type                                                                       pointer;
-   typedef typename if_c
+   typedef typename dtl::if_c
       < IsConst
       , const value_type&
       , value_type&
@@ -330,7 +327,6 @@ class deque_iterator
    {  this->m_node = new_node;  }
 };
 
-}  //namespace dtl {
 
 template<class Options>
 struct get_deque_opt
@@ -378,8 +374,8 @@ class deque_base
    typedef typename get_deque_opt<Options>::type              options_type;
 
    protected:
-   typedef dtl::deque_iterator<val_alloc_ptr, false, options_type::block_bytes, options_type::block_size> iterator;
-   typedef dtl::deque_iterator<val_alloc_ptr, true, options_type::block_bytes, options_type::block_size> const_iterator;
+   typedef deque_iterator<val_alloc_ptr, false, options_type::block_bytes, options_type::block_size>  iterator;
+   typedef deque_iterator<val_alloc_ptr, true, options_type::block_bytes, options_type::block_size>   const_iterator;
 
    BOOST_CONSTEXPR inline static val_alloc_diff get_block_ssize() BOOST_NOEXCEPT_OR_NOTHROW
       { return val_alloc_diff((get_block_size())); }
