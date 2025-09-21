@@ -135,14 +135,21 @@ class deque_iterator
    BOOST_CONSTEXPR inline static difference_type get_block_ssize() BOOST_NOEXCEPT_OR_NOTHROW
       { return difference_type((get_block_size())); }
 
-   class nat;
-   typedef typename dtl::if_c< IsConst
-                             , deque_iterator<Pointer, false, BlockBytes, BlockSize>
-                             , nat>::type                                           nonconst_iterator;
-
    typedef Pointer                                                                  val_alloc_ptr;
    typedef typename boost::intrusive::pointer_traits<Pointer>::
       template rebind_pointer<Pointer>::type                                        index_pointer;
+
+   class nat
+   {
+      public:
+      inline Pointer get_cur()          const  {  return Pointer();  }
+      inline index_pointer get_node()   const  {  return index_pointer();  }
+   };
+
+   typedef typename dtl::if_c< IsConst
+                             , deque_iterator<Pointer, false, BlockBytes, BlockSize>
+                             , nat>::type                                           nonconst_iterator_arg;
+
 
    Pointer m_cur;
    index_pointer  m_node;
@@ -150,9 +157,9 @@ class deque_iterator
    public:
 
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline Pointer get_cur()          const  {  return m_cur;  }
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline index_pointer get_node()   const  {  return m_node;  }
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline Pointer get_first()        const  {  return *m_node;  }
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline Pointer get_last()         const  {  return *m_node + get_block_ssize(); }
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline index_pointer get_node()   const  {  return m_node;  }
 
    inline deque_iterator(val_alloc_ptr x, index_pointer y) BOOST_NOEXCEPT_OR_NOTHROW
       : m_cur(x), m_node(y)
@@ -166,16 +173,19 @@ class deque_iterator
       : m_cur(x.get_cur()), m_node(x.get_node())
    {}
 
-   inline deque_iterator(const nonconst_iterator& x) BOOST_NOEXCEPT_OR_NOTHROW
+   inline deque_iterator(const nonconst_iterator_arg& x) BOOST_NOEXCEPT_OR_NOTHROW
       : m_cur(x.get_cur()), m_node(x.get_node())
    {}
 
    inline deque_iterator& operator=(const deque_iterator& x) BOOST_NOEXCEPT_OR_NOTHROW
    {  m_cur = x.get_cur(); m_node = x.get_node(); return *this; }
 
-   inline nonconst_iterator unconst() const BOOST_NOEXCEPT_OR_NOTHROW
+   inline deque_iterator& operator=(const nonconst_iterator_arg& x) BOOST_NOEXCEPT_OR_NOTHROW
+   {  m_cur = x.get_cur(); m_node = x.get_node(); return *this; }
+
+   inline deque_iterator<Pointer, false, BlockBytes, BlockSize> unconst() const BOOST_NOEXCEPT_OR_NOTHROW
    {
-      return nonconst_iterator(this->get_cur(), this->get_node());
+      return deque_iterator<Pointer, false, BlockBytes, BlockSize>(this->get_cur(), this->get_node());
    }
 
    inline reference operator*() const BOOST_NOEXCEPT_OR_NOTHROW
