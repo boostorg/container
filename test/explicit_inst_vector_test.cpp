@@ -45,7 +45,7 @@ template class boost::container::vector< test::movable_and_copyable_int
                                        >;
 
 //test custom allocator with small size_type
-template class boost::container::vector<int, test::small_size_type_allocator>;
+template class boost::container::vector<int, test::small_size_type_allocator<int> >;
 
 }  //namespace boost {
 }  //namespace container {

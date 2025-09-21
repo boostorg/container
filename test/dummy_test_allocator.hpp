@@ -240,11 +240,11 @@ unsigned int propagation_test_allocator< T
                                        , EqualIfEqualIds
                                        >::unique_id_ = 0;
 
-
+template<class T>
 class small_size_type_allocator
 {
    public:
-	typedef int value_type;
+	typedef T value_type;
 	typedef value_type* pointer;
 	typedef const value_type* const_pointer;
 	typedef unsigned short size_type;
