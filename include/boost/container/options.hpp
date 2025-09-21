@@ -608,15 +608,22 @@ using devector_options_t = typename boost::container::devector_options<Options..
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-template<std::size_t BlockBytes, std::size_t BlockSize>
+template<std::size_t BlockBytes, std::size_t BlockSize, class StoredSizeType>
 struct deque_opt
 {
    BOOST_STATIC_CONSTEXPR std::size_t block_bytes = BlockBytes;
    BOOST_STATIC_CONSTEXPR std::size_t block_size  = BlockSize;
    BOOST_CONTAINER_STATIC_ASSERT_MSG(!(block_bytes && block_size), "block_bytes and block_size can't be specified at the same time");
+
+   typedef StoredSizeType  stored_size_type;
+
+   template<class AllocTraits>
+   struct get_stored_size_type
+      : get_stored_size_type_with_alloctraits<AllocTraits, StoredSizeType>
+   {};
 };
 
-typedef deque_opt<0u, 0u> deque_null_opt;
+typedef deque_opt<0u, 0u, void> deque_null_opt;
 
 #endif
 
@@ -639,7 +646,10 @@ struct deque_options
       Options...
       #endif
       >::type packed_options;
-   typedef deque_opt< packed_options::block_bytes, packed_options::block_size > implementation_defined;
+   typedef deque_opt< packed_options::block_bytes
+                    , packed_options::block_size
+                    , typename packed_options::stored_size_type
+                    > implementation_defined;
    /// @endcond
    typedef implementation_defined type;
 };

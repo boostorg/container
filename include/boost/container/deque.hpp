@@ -71,20 +71,27 @@ struct deque_value_traits
    BOOST_STATIC_CONSTEXPR bool trivial_dctr_after_move = ::boost::has_trivial_destructor_after_move<value_type>::value;
 };
 
-template<class T, std::size_t BlockBytes, std::size_t BlockSize>
+template<class T, std::size_t BlockBytes, std::size_t BlockSize, class StoredSizeType>
 struct deque_block_traits
 {
    BOOST_CONTAINER_STATIC_ASSERT_MSG(!(BlockBytes && BlockSize), "BlockBytes and BlockSize can't be specified at the same time");
    BOOST_STATIC_CONSTEXPR std::size_t default_block_bytes = sizeof(void*)*128u;
    BOOST_STATIC_CONSTEXPR std::size_t default_block_start = default_block_bytes/sizeof(T);
    BOOST_STATIC_CONSTEXPR std::size_t default_min_block_size = 16u;
-   BOOST_STATIC_CONSTEXPR std::size_t default_block_size  = default_block_start < default_min_block_size
-                                                               ? default_min_block_size
-                                                               : dtl::upper_power_of_2_ct<std::size_t, default_block_start>::value;
+   BOOST_STATIC_CONSTEXPR std::size_t default_block_size_initial  = default_block_start < default_min_block_size
+                                                                  ? default_min_block_size
+                                                                  : dtl::upper_power_of_2_ct<std::size_t, default_block_start>::value;
+   BOOST_STATIC_CONSTEXPR std::size_t max_stored_size_block_size  = std::size_t(1u) << (sizeof(StoredSizeType)*CHAR_BIT - 4u);
+   BOOST_STATIC_CONSTEXPR std::size_t default_block_size  = default_block_size_initial > max_stored_size_block_size
+                                                                  ? max_stored_size_block_size
+                                                                  : default_block_size_initial;
+
    BOOST_STATIC_CONSTEXPR std::size_t value               = BlockSize ? BlockSize
                                                                       : BlockBytes ? (BlockBytes-1u)/sizeof(T) + 1u
                                                                                    : default_block_size
                                                                                    ;
+   BOOST_CONTAINER_STATIC_ASSERT_MSG(value <= max_stored_size_block_size, "BlockSize or BlockBytes is too big for the stored_size_type");
+
 };
 
 // Class invariants:
@@ -106,7 +113,7 @@ struct deque_block_traits
 //    [map, map + map_size).
 //  A pointer in the range [map, map + map_size) points to an allocated node
 //    if and only if the pointer is in the range [start.node, finish.node].
-template<class Pointer, bool IsConst, unsigned BlockBytes, unsigned BlockSize>
+template<class Pointer, bool IsConst, unsigned BlockBytes, unsigned BlockSize, class StoredSizeType>
 class deque_iterator
 {
    public:
@@ -128,8 +135,7 @@ class deque_iterator
 
    BOOST_CONSTEXPR inline static size_type get_block_size() BOOST_NOEXCEPT_OR_NOTHROW
    {
-      BOOST_CONTAINER_STATIC_ASSERT((deque_block_traits<value_type, BlockBytes, BlockSize>::value));
-      return deque_block_traits<value_type, BlockBytes, BlockSize>::value;
+      return deque_block_traits<value_type, BlockBytes, BlockSize, StoredSizeType>::value;
    }
 
    BOOST_CONSTEXPR inline static difference_type get_block_ssize() BOOST_NOEXCEPT_OR_NOTHROW
@@ -147,9 +153,10 @@ class deque_iterator
    };
 
    typedef typename dtl::if_c< IsConst
-                             , deque_iterator<Pointer, false, BlockBytes, BlockSize>
+                             , deque_iterator<Pointer, false, BlockBytes, BlockSize, StoredSizeType>
                              , nat>::type                                           nonconst_iterator_arg;
 
+   typedef deque_iterator<Pointer, false, BlockBytes, BlockSize, StoredSizeType> nonconst_iterator;
 
    Pointer m_cur;
    index_pointer  m_node;
@@ -183,9 +190,9 @@ class deque_iterator
    inline deque_iterator& operator=(const nonconst_iterator_arg& x) BOOST_NOEXCEPT_OR_NOTHROW
    {  m_cur = x.get_cur(); m_node = x.get_node(); return *this; }
 
-   inline deque_iterator<Pointer, false, BlockBytes, BlockSize> unconst() const BOOST_NOEXCEPT_OR_NOTHROW
+   inline nonconst_iterator unconst() const BOOST_NOEXCEPT_OR_NOTHROW
    {
-      return deque_iterator<Pointer, false, BlockBytes, BlockSize>(this->get_cur(), this->get_node());
+      return nonconst_iterator(this->get_cur(), this->get_node());
    }
 
    inline reference operator*() const BOOST_NOEXCEPT_OR_NOTHROW
@@ -338,17 +345,20 @@ class deque_iterator
 };
 
 
-template<class Options>
+template<class Options, class AllocatorSizeType>
 struct get_deque_opt
 {
-   typedef Options type;
+   typedef deque_opt< Options::block_bytes, Options::block_size
+                    , typename default_if_void<typename Options::stored_size_type, AllocatorSizeType>::type
+                    > type;
 };
 
-template<>
-struct get_deque_opt<void>
+template<class AllocatorSizeType>
+struct get_deque_opt<void, AllocatorSizeType>
 {
-   typedef deque_null_opt type;
+   typedef deque_opt<0, 0, AllocatorSizeType> type;
 };
+
 
 // Deque base class.  It has two purposes.  First, its constructor
 //  and destructor allocate (but don't initialize) storage.  This makes
@@ -378,20 +388,26 @@ class deque_base
    typedef allocator_type                                         stored_allocator_type;
    typedef val_alloc_size                                         size_type;
    typedef val_alloc_diff                                         difference_type;
-   typedef val_alloc_size                                         stored_size_type;
 
    private:
-   typedef typename get_deque_opt<Options>::type              options_type;
+   typedef typename get_deque_opt<Options, val_alloc_size>::type  options_type;
 
    protected:
-   typedef deque_iterator<val_alloc_ptr, false, options_type::block_bytes, options_type::block_size>  iterator;
-   typedef deque_iterator<val_alloc_ptr, true, options_type::block_bytes, options_type::block_size>   const_iterator;
+   typedef typename options_type::stored_size_type                stored_size_type;
+   typedef deque_iterator< val_alloc_ptr, false
+                         , options_type::block_bytes
+                         , options_type::block_size
+                         , stored_size_type>                      iterator;
+   typedef deque_iterator< val_alloc_ptr, true
+                         , options_type::block_bytes
+                         , options_type::block_size
+                         , stored_size_type>                      const_iterator;
 
    BOOST_CONSTEXPR inline static val_alloc_diff get_block_ssize() BOOST_NOEXCEPT_OR_NOTHROW
       { return val_alloc_diff((get_block_size())); }
 
    BOOST_CONSTEXPR inline static size_type get_block_size() BOOST_NOEXCEPT_OR_NOTHROW
-      { return deque_block_traits<val_alloc_val, options_type::block_bytes, options_type::block_size>::value; }
+      { return deque_block_traits<val_alloc_val, options_type::block_bytes, options_type::block_size, stored_size_type>::value; }
 
    typedef deque_value_traits<val_alloc_val>             traits_t;
    typedef ptr_alloc_t                                   map_allocator_type;
@@ -443,16 +459,36 @@ class deque_base
       this->members_.swap(x.members_);
    }
 
+   void test_size_against_max(size_type n)
+   {
+      const size_type max_alloc = val_alloc_traits_type::max_size(this->alloc());
+      const size_type max = max_alloc <= stored_size_type(-1) ? max_alloc : stored_size_type(-1);
+      if (BOOST_UNLIKELY(max < n) )
+         boost::container::throw_length_error("get_next_capacity, allocator's max size reached");
+   }
+
+   void test_size_against_n_nodes(size_type n_nodes)
+   {
+      test_size_against_max(size_type(size_type(n_nodes * get_block_size()) - 1u));
+   }
+
    void prot_initialize_map_and_nodes(size_type num_elements)
    {
+      BOOST_CONSTEXPR_OR_CONST size_type block_size = get_block_size();
       //Even a zero element initialized map+nodes needs at least 1 node (for sentinel finish position)
-      size_type num_nodes = num_elements / get_block_size() + 1u;
+      size_type num_nodes = size_type(num_elements / block_size + 1u);
 
       //Allocate at least one extra slot on each end to avoid inmediate map reallocation on push/front insertions
-      this->members_.m_map_size = dtl::max_value((size_type) InitialMapSize, num_nodes + 2);
-      this->members_.m_map = this->prot_allocate_map(this->members_.m_map_size);
+      const size_type map_size = dtl::max_value(size_type(InitialMapSize), size_type(num_nodes + 2u));
+      const size_type start_map_pos = size_type(map_size - num_nodes)/2u;
 
-      ptr_alloc_ptr nstart = this->members_.m_map + difference_type(this->members_.m_map_size - num_nodes) / 2;
+      //The end position must be representable in stored_size_type
+      this->test_size_against_n_nodes(map_size);
+
+      this->members_.m_map = this->prot_allocate_map(map_size);
+      this->members_.m_map_size = static_cast<stored_size_type>(map_size);
+
+      ptr_alloc_ptr nstart = this->members_.m_map + difference_type(start_map_pos);
       ptr_alloc_ptr nfinish = nstart + difference_type(num_nodes);
 
       BOOST_CONTAINER_TRY {
@@ -466,8 +502,7 @@ class deque_base
       }
       BOOST_CONTAINER_CATCH_END
 
-      this->members_.m_start_off  = this->prot_non_null_node_to_off(nstart);
-      this->members_.m_finish_off = this->members_.m_start_off + num_elements;
+      this->prot_set_start_finish_from_node(start_map_pos, num_elements);
    }
 
    void prot_create_nodes(ptr_alloc_ptr nstart, ptr_alloc_ptr nfinish)
@@ -559,21 +594,21 @@ class deque_base
 
    static BOOST_CONTAINER_FORCEINLINE val_alloc_ptr prot_node_last(ptr_alloc_ptr idx)
    {
-      BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_block_traits<val_alloc_val, options_type::block_bytes, options_type::block_size>::value;
+      BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_base::get_block_size();
       return *idx + (block_size - 1u);
    }
 
-   BOOST_CONTAINER_FORCEINLINE std::size_t prot_front_capacity() const
+   BOOST_CONTAINER_FORCEINLINE size_type prot_front_capacity() const
    {
-      BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_block_traits<val_alloc_val, options_type::block_bytes, options_type::block_size>::value;
-      return this->members_.m_start_off % block_size;
+      BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_base::get_block_size();
+      return static_cast<size_type>(this->members_.m_start_off % block_size);
    }
 
-   BOOST_CONTAINER_FORCEINLINE std::size_t prot_back_capacity() const
+   BOOST_CONTAINER_FORCEINLINE size_type prot_back_capacity() const
    {
       //m_finish_off points to positions [0....block_size-1], and one position is always needed as the sentinel node resulting [block_size-1....0] capacity
-      BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_block_traits<val_alloc_val, options_type::block_bytes, options_type::block_size>::value;
-      return this->members_.m_map ? (block_size - 1u) - (this->members_.m_finish_off % block_size) : 0u;
+      BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_base::get_block_size();
+      return static_cast<size_type>(this->members_.m_map ? (block_size - 1u) - (this->members_.m_finish_off % block_size) : 0u);
    }
 
    //////////////////////////
@@ -585,7 +620,7 @@ class deque_base
       const ptr_alloc_ptr n = it.get_node();
       BOOST_ASSERT(!this->members_.m_map == !n);  //Both should be null or both non-null
       if (n) {
-         BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_block_traits<val_alloc_val, options_type::block_bytes, options_type::block_size>::value;
+         BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_base::get_block_size();
          return static_cast<stored_size_type>(std::size_t(n - this->members_.m_map)*block_size + std::size_t(it.get_cur() - *n));
       }
       else{
@@ -595,7 +630,7 @@ class deque_base
 
    BOOST_CONTAINER_FORCEINLINE iterator prot_off_to_it(std::size_t off) const
    {
-      BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_block_traits<val_alloc_val, options_type::block_bytes, options_type::block_size>::value;
+      BOOST_CONSTEXPR_OR_CONST std::size_t block_size  = deque_base::get_block_size();
       const ptr_alloc_ptr node = this->members_.m_map + off/block_size;
       return iterator(node ? *node + (off%block_size) : val_alloc_ptr(), node);
    }
@@ -604,7 +639,7 @@ class deque_base
    {
       const size_type off = this->prot_it_to_off(it);
       BOOST_ASSERT(off >= this->members_.m_start_off);
-      return off - this->members_.m_start_off;
+      return static_cast<stored_size_type>(off - this->members_.m_start_off);
    }
 
    /////////////
@@ -613,7 +648,7 @@ class deque_base
 
    BOOST_CONTAINER_FORCEINLINE ptr_alloc_ptr prot_off_to_node(std::size_t off) const
    {
-      BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_block_traits<val_alloc_val, options_type::block_bytes, options_type::block_size>::value;
+      BOOST_CONSTEXPR_OR_CONST std::size_t block_size  = deque_base::get_block_size();
       return this->members_.m_map + off/block_size;
    }
 
@@ -633,7 +668,7 @@ class deque_base
    BOOST_CONTAINER_FORCEINLINE val_alloc_ptr prot_off_to_cur_unchecked(std::size_t off) const
    {
       BOOST_ASSERT(!!this->members_.m_map);
-      BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_block_traits<val_alloc_val, options_type::block_bytes, options_type::block_size>::value;
+      BOOST_CONSTEXPR_OR_CONST std::size_t block_size  = deque_base::get_block_size();
       const ptr_alloc_ptr node = this->members_.m_map + off/block_size;
       return *node + off%block_size;
    }
@@ -670,21 +705,21 @@ class deque_base
    {  return this->prot_off_to_it(members_.m_finish_off);  }
 
    BOOST_CONTAINER_FORCEINLINE const_iterator prot_nth(size_type n) const
-   {  return this->prot_off_to_it(members_.m_start_off+n);  }
+   {  return this->prot_off_to_it(size_type(members_.m_start_off + n));  }
 
    BOOST_CONTAINER_FORCEINLINE iterator prot_nth(size_type n)
-   {  return this->prot_off_to_it(members_.m_start_off+n);  }
+   {  return this->prot_off_to_it(size_type(members_.m_start_off + n));  }
 
    BOOST_CONTAINER_FORCEINLINE iterator prot_back_it()
    {
       BOOST_ASSERT(members_.m_start_off != members_.m_finish_off);
-      return this->prot_off_to_it(members_.m_finish_off-1u);
+      return this->prot_off_to_it(size_type(members_.m_finish_off - 1u));
    }
 
    //
    //  size/empty
    //
-   BOOST_CONTAINER_FORCEINLINE std::size_t prot_size() const
+   BOOST_CONTAINER_FORCEINLINE size_type prot_size() const
    {  return size_type(this->members_.m_finish_off - this->members_.m_start_off);  }
 
    BOOST_CONTAINER_FORCEINLINE bool prot_empty() const
@@ -722,18 +757,25 @@ class deque_base
    //
    BOOST_CONTAINER_FORCEINLINE stored_size_type prot_non_null_node_to_off(ptr_alloc_ptr n) const
    {
-      BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_block_traits<val_alloc_val, options_type::block_bytes, options_type::block_size>::value;
+      BOOST_CONSTEXPR_OR_CONST std::size_t block_size  = deque_base::get_block_size();
       return static_cast<stored_size_type>(std::size_t(n - this->members_.m_map)*block_size);
    }
 
-   inline void prot_start_set_node(ptr_alloc_ptr new_start)
+   void prot_set_start_finish_from_node(size_type node_idx, size_type n_elements)
+   {
+      BOOST_CONSTEXPR_OR_CONST std::size_t block_size  = deque_base::get_block_size();
+      this->members_.m_start_off  = static_cast<stored_size_type>(node_idx*block_size);
+      this->members_.m_finish_off = static_cast<stored_size_type>(this->members_.m_start_off + n_elements);
+   }
+
+   inline void prot_start_update_node(ptr_alloc_ptr new_start)
    {
       //iG: to-do: optimizable avoiding some division/remainder
       std::size_t new_block_off = prot_non_null_node_to_off(new_start);
       this->members_.m_start_off = static_cast<stored_size_type>(new_block_off + (this->members_.m_start_off % get_block_size()));
    }
 
-   inline void prot_finish_set_node(ptr_alloc_ptr new_finish)
+   inline void prot_finish_update_node(ptr_alloc_ptr new_finish)
    {
       //iG: to-do: optimizable avoiding some division/remainder
       std::size_t new_block_off = prot_non_null_node_to_off(new_finish);
@@ -748,20 +790,22 @@ class deque_base
 
    inline val_alloc_val *prot_push_back_simple_pos() const
    {
-      BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_block_traits<val_alloc_val, options_type::block_bytes, options_type::block_size>::value;
+      BOOST_CONSTEXPR_OR_CONST std::size_t block_size  = deque_base::get_block_size();
       const std::size_t last_in_block = block_size - 1u;
-      const ptr_alloc_val *const node = boost::movelib::to_raw_pointer(this->members_.m_map);
-      const std::size_t off = node ? this->members_.m_finish_off : last_in_block;
-      const std::size_t rem = off % block_size;
-      if(BOOST_LIKELY(rem != last_in_block)){
-         return boost::movelib::to_raw_pointer(node[off/block_size]) + rem;
+      const ptr_alloc_val *const map = boost::movelib::to_raw_pointer(this->members_.m_map);
+      if(BOOST_LIKELY(map != 0)) {
+         const std::size_t off = this->members_.m_finish_off;
+         const std::size_t rem = off % block_size;
+         if(BOOST_LIKELY(rem != last_in_block)){
+            return boost::movelib::to_raw_pointer(map[off/block_size]) + rem;
+         }
       }
       return 0;
    }
 
    inline val_alloc_val *prot_push_front_simple_pos() const
    {
-      BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_block_traits<val_alloc_val, options_type::block_bytes, options_type::block_size>::value;
+      BOOST_CONSTEXPR_OR_CONST std::size_t block_size  = deque_base::get_block_size();
       //No need to check !m_map, as m_start_off is zero in that case
       const std::size_t off = this->members_.m_start_off;
       const std::size_t rem = off % block_size;
@@ -778,7 +822,7 @@ class deque_base
 
    BOOST_CONTAINER_FORCEINLINE bool prot_pop_front_simple_available() const
    {
-      return (this->members_.m_start_off % get_block_size()) != (get_block_size() - 1u);
+      return size_type(this->members_.m_start_off % get_block_size()) != size_type(get_block_size() - 1u);
    }
 
 };
@@ -836,8 +880,9 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    BOOST_CONTAINER_STATIC_ASSERT((dtl::is_same<value_type, typename allocator_traits<ValAllocator>::value_type>::value));
 
    BOOST_COPYABLE_AND_MOVABLE(deque)
-   typedef typename Base::ptr_alloc_ptr index_pointer;
-   typedef allocator_traits<ValAllocator>                  allocator_traits_type;
+   typedef typename Base::ptr_alloc_ptr                     index_pointer;
+   typedef allocator_traits<ValAllocator>                   allocator_traits_type;
+   typedef typename Base::stored_size_type                  stored_size_type;
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -1200,7 +1245,12 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
          >::type * = 0
       )
    {
-      const size_type n = boost::container::iterator_udistance(first, last);
+      typedef typename iter_size<FwdIt>::type it_size_type;
+      const it_size_type sz = boost::container::iterator_udistance(first, last);
+      if (BOOST_UNLIKELY(sz > size_type(-1))){
+         boost::container::throw_length_error("vector::insert, FwdIt's max length reached");
+      }
+      const size_type n = static_cast<size_type>(sz);
       dtl::insert_range_proxy<ValAllocator, FwdIt> proxy(first);
       this->priv_assign(n, proxy);
    }
@@ -1411,9 +1461,9 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    {
       const size_type len = this->size();
       if (new_size < len)
-         this->priv_erase_last_n(len - new_size);
+         this->priv_erase_last_n(size_type(len - new_size));
       else{
-         const size_type n = new_size - this->size();
+         const size_type n = size_type(new_size - this->size());
          dtl::insert_value_initialized_n_proxy<ValAllocator> proxy;
          this->priv_insert_back_aux_impl(n, proxy);
       }
@@ -1431,9 +1481,9 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    {
       const size_type len = size();
       if (new_size < len)
-         this->priv_erase_last_n(len - new_size);
+         this->priv_erase_last_n(size_type(len - new_size));
       else{
-         const size_type n = new_size - this->size();
+         const size_type n = size_type(new_size - this->size());
          dtl::insert_default_initialized_n_proxy<ValAllocator> proxy;
          this->priv_insert_back_aux_impl(n, proxy);
       }
@@ -1449,9 +1499,9 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    {
       const size_type sz = this->size();
       if (new_size < sz)
-         this->priv_erase_last_n(sz - new_size);
+         this->priv_erase_last_n(size_type(sz - new_size));
       else {
-         const size_type n = new_size - sz;
+         const size_type n = size_type(new_size - sz);
          dtl::insert_n_copies_proxy<ValAllocator> proxy(x);
          this->priv_insert_back_aux_impl(n, proxy);
       }
@@ -1968,8 +2018,16 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
       )
    {
       BOOST_ASSERT(this->priv_in_range_or_end(p));
+
+      typedef typename iter_size<FwdIt>::type it_size_type;
+      const it_size_type sz = boost::container::iterator_udistance(first, last);
+      if (BOOST_UNLIKELY(sz > size_type(-1))){
+         boost::container::throw_length_error("vector::insert, FwdIt's max length reached");
+      }
+      const size_type n = static_cast<size_type>(sz);
+
       dtl::insert_range_proxy<ValAllocator, FwdIt> proxy(first);
-      return this->priv_insert_aux_impl(p, boost::container::iterator_udistance(first, last), proxy);
+      return this->priv_insert_aux_impl( p, n, proxy);
    }
    #endif
 
@@ -2025,14 +2083,14 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
       iterator next = pos.unconst();
       ++next;
       const size_type index = this->prot_it_to_start_off(pos);
-
-      if (index < (this->size()/2)) {
+      const size_type sz    = this->prot_size();
+      if (index < sz/2u) {
          this->priv_segmented_move_backward_n(pos.unconst(), index, next);
          pop_front();
          return next;
       }
       else {
-         this->priv_segmented_move_n(next, this->size() - index - 1u, pos.unconst());
+         this->priv_segmented_move_n(next, size_type(sz - size_type(index + 1u)), pos.unconst());
          pop_back();
          return pos.unconst();
       }
@@ -2057,7 +2115,8 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
       }
       else {
          const size_type elems_before = this->prot_it_to_start_off(first);
-         if (elems_before < (this->size() - n) - elems_before) {
+         const size_type elems_after  = size_type(this->prot_size() - n - elems_before);
+         if (elems_before < elems_after) {
             const iterator old_start = this->begin();
             iterator new_start = this->priv_segmented_move_backward_n(first.unconst(), elems_before, last.unconst());
             this->prot_destroy_range(old_start, new_start);
@@ -2066,7 +2125,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
          }
          else {
             const iterator old_finish = this->end();
-            iterator new_finish = this->priv_segmented_move_n(last.unconst(), this->prot_size() - n - elems_before, first.unconst());
+            iterator new_finish = this->priv_segmented_move_n(last.unconst(), elems_after, first.unconst());
             this->prot_destroy_range(new_finish, old_finish);
             this->prot_destroy_nodes(new_finish.m_node + 1, old_finish.get_node() + 1);
             this->prot_dec_finish(n);
@@ -2177,10 +2236,10 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
       const size_type sz  = this->prot_size();
       this->priv_segmented_proxy_copy_n_and_update(this->begin(), sz < n ? sz : n, proxy);
       if (n > sz) {
-         this->priv_insert_back_aux_impl(n - sz, proxy);
+         this->priv_insert_back_aux_impl(size_type(n - sz), proxy);
       }
       else{
-         this->priv_erase_last_n(sz - n);
+         this->priv_erase_last_n(size_type(sz - n));
       }
    }
 
@@ -2248,35 +2307,19 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    template <class U>
    BOOST_CONTAINER_FORCEINLINE iterator priv_insert(const_iterator p, BOOST_FWD_REF(U) x)
    {
-      return this->priv_insert_aux_impl(p, 1, dtl::get_insert_value_proxy<iterator, ValAllocator>(::boost::forward<U>(x)));
+      return this->emplace(p, ::boost::forward<U>(x));
    }
 
    template <class U>
-   void priv_push_back(BOOST_FWD_REF(U) u)
+   BOOST_CONTAINER_FORCEINLINE void priv_push_back(BOOST_FWD_REF(U) u)
    {
-      value_type *pr = this->prot_push_back_simple_pos();
-      if(BOOST_LIKELY(pr != 0)){
-         allocator_traits_type::construct
-            (this->alloc(), pr, boost::forward<U>(u));
-         this->prot_inc_finish();
-      }
-      else{
-         this->priv_insert_back_aux_impl(1, dtl::get_insert_value_proxy<iterator, ValAllocator>(::boost::forward<U>(u)));
-      }
+      this->emplace_back(::boost::forward<U>(u));
    }
 
    template <class U>
    BOOST_CONTAINER_FORCEINLINE void priv_push_front(BOOST_FWD_REF(U) u)
    {
-      value_type *pr = this->prot_push_front_simple_pos();
-      if(BOOST_LIKELY(pr != 0)){
-         allocator_traits_type::construct
-            (this->alloc(), pr, boost::forward<U>(u));
-         this->prot_dec_start();
-      }
-      else{
-         this->priv_insert_front_aux_impl(1, dtl::get_insert_value_proxy<iterator, ValAllocator>(::boost::forward<U>(u)));
-      }
+      this->emplace_front(::boost::forward<U>(u));
    }
 
    void prot_destroy_range(iterator start, iterator finish)
@@ -2341,12 +2384,12 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
             BOOST_CONTAINER_CATCH_END
 
             this->prot_dec_start(n);
-            iterator p = this->priv_segmented_move_n(start_n, elemsbefore-n, old_start);
+            iterator p = this->priv_segmented_move_n(start_n, size_type(elemsbefore - n), old_start);
             this->priv_segmented_proxy_copy_n_and_update(p, n, proxy);
             return p;
          }
          else {
-            const size_type mid_count = n - elemsbefore;
+            const size_type mid_count = size_type(n - elemsbefore);
             iterator mid_start = old_start - difference_type(mid_count);
 
             BOOST_CONTAINER_TRY {
@@ -2359,7 +2402,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
                BOOST_CONTAINER_RETHROW
             }
             BOOST_CONTAINER_CATCH_END
-            this->prot_dec_start(n - mid_count);
+            this->prot_dec_start(size_type(n - mid_count));
             this->priv_segmented_proxy_copy_n_and_update(old_start, elemsbefore, proxy);
             return mid_start;
          }
@@ -2367,7 +2410,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
       else {
          this->priv_reserve_elements_at_back(n);
          const iterator old_finish  = this->prot_finish();
-         const size_type elemsafter = length - elemsbefore;
+         const size_type elemsafter = size_type(length - elemsbefore);
 
          BOOST_ASSERT(!single_t::value || elemsafter >= 1);
 
@@ -2384,14 +2427,14 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
             BOOST_CONTAINER_CATCH_END
 
             this->prot_inc_finish(n);
-            const size_type move_n = elemsafter - n;
+            const size_type move_n = size_type(elemsafter - n);
             this->priv_segmented_move_backward_n(finish_n, move_n, old_finish);
             finish_n -= difference_type(move_n);
             this->priv_segmented_proxy_copy_n_and_update(finish_n, n, proxy);
             return finish_n;
          }
          else {
-            const size_type raw_gap = n - elemsafter;
+            const size_type raw_gap = size_type(n - elemsafter);
             iterator pos            = old_finish - difference_type(elemsafter);
 
             BOOST_CONTAINER_TRY{
@@ -2447,16 +2490,16 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
 
          BOOST_CONTAINER_TRY{
             const pointer cur = first.get_cur();
-            const size_type block = block_size - size_type(cur - *current_node);
+            const size_type block = size_type(block_size - size_type(cur - *current_node));
             size_type cnt = n < block ? n: block;
             proxy.uninitialized_copy_n_and_update(this->alloc(), boost::movelib::to_raw_pointer(cur), cnt);
-            n -= cnt;
+            n = size_type(n - cnt);
 
             while (n) {
                ++current_node;
                cnt = n < block_size ? n: block_size;
                proxy.uninitialized_copy_n_and_update(this->alloc(), boost::movelib::to_raw_pointer(*current_node), cnt);
-               n -= cnt;
+               n = size_type(n - cnt);
             }
          }
          BOOST_CONTAINER_CATCH(...) {
@@ -2481,16 +2524,16 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
          index_pointer current_node = first.get_node();
 
          const pointer cur = first.get_cur();
-         const size_type block = block_size - size_type(cur - *current_node);
+         const size_type block = size_type(block_size - size_type(cur - *current_node));
          size_type cnt = n < block ? n: block;
          proxy.copy_n_and_update(this->alloc(), boost::movelib::to_raw_pointer(cur), cnt);
-         n -= cnt;
+         n = size_type(n - cnt);
 
          while (n) {
             ++current_node;
             cnt = n < block_size ? n: block_size;
             proxy.copy_n_and_update(this->alloc(), boost::movelib::to_raw_pointer(*current_node), cnt);
-            n -= cnt;
+            n = size_type(n - cnt);
          }
       }
    }
@@ -2524,7 +2567,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    static BOOST_CONTAINER_FORCEINLINE void priv_itsub(It &it, size_type n, dtl::bool_<false> /*!single element*/)
    {  it -= difference_type(n); }
 
-   void priv_segmented_uninitialized_move_alloc_n(iterator first, std::size_t n, iterator dest, dtl::bool_<true> /*single element*/)
+   void priv_segmented_uninitialized_move_alloc_n(iterator first, size_type n, iterator dest, dtl::bool_<true> /*single element*/)
    {
       BOOST_ASSERT(n == 1); (void)n;
       allocator_traits_type::construct
@@ -2533,7 +2576,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
          , boost::move(*first));
    }
 
-   void priv_segmented_uninitialized_move_alloc_n(iterator first, std::size_t n, iterator dest, dtl::bool_<false> /*!single element*/)
+   void priv_segmented_uninitialized_move_alloc_n(iterator first, size_type n, iterator dest, dtl::bool_<false> /*!single element*/)
    {
       if (BOOST_LIKELY(n != 0)) { //Check for empty range, current_node might be null
          BOOST_CONSTEXPR_OR_CONST size_type block_size = get_block_size();
@@ -2542,16 +2585,16 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
 
          BOOST_CONTAINER_TRY{
             const pointer cur = first.get_cur();
-            const size_type block = block_size - size_type(cur - *current_node);
+            const size_type block = size_type(block_size - size_type(cur - *current_node));
             size_type cnt = n < block ? n: block;
             dest = ::boost::container::uninitialized_move_alloc_n(this->alloc(), boost::movelib::to_raw_pointer(cur), cnt, dest);
-            n -= cnt;
+            n = size_type(n - cnt);
 
             while (n) {
                ++current_node;
                cnt = n < block_size ? n: block_size;
                dest = ::boost::container::uninitialized_move_alloc_n(this->alloc(), boost::movelib::to_raw_pointer(*current_node), cnt, dest);
-               n -= cnt;
+               n = size_type(n - cnt);
             }
          }
          BOOST_CONTAINER_CATCH(...) {
@@ -2562,12 +2605,12 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
       }
    }
 
-   BOOST_CONTAINER_FORCEINLINE void priv_segmented_uninitialized_move_alloc_n(iterator first, std::size_t n, iterator dest)
+   BOOST_CONTAINER_FORCEINLINE void priv_segmented_uninitialized_move_alloc_n(iterator first, size_type n, iterator dest)
    {
       this->priv_segmented_uninitialized_move_alloc_n(first, n, dest, dtl::bool_<false>());
    }
 
-   void priv_segmented_uninitialized_copy_alloc_n(const_iterator first, std::size_t n, iterator dest)
+   void priv_segmented_uninitialized_copy_alloc_n(const_iterator first, size_type n, iterator dest)
    {
       if (BOOST_LIKELY(n != 0)) { //We might initialize an empty range and current_node might be null
          BOOST_CONSTEXPR_OR_CONST size_type block_size = get_block_size();
@@ -2576,16 +2619,16 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
 
          BOOST_CONTAINER_TRY{
             const pointer cur = first.get_cur();
-            const size_type block = block_size - size_type(cur - *current_node);
+            const size_type block = size_type(block_size - size_type(cur - *current_node));
             size_type cnt = n < block ? n: block;
             dest = ::boost::container::uninitialized_copy_alloc_n(this->alloc(), boost::movelib::to_raw_pointer(cur), cnt, dest);
-            n -= cnt;
+            n = size_type(n - cnt);
 
             while (n) {
                ++current_node;
                cnt = n < block_size ? n: block_size;
                dest = ::boost::container::uninitialized_copy_alloc_n(this->alloc(), boost::movelib::to_raw_pointer(*current_node), cnt, dest);
-               n -= cnt;
+               n = size_type(n - cnt);
             }
          }
          BOOST_CONTAINER_CATCH(...) {
@@ -2596,7 +2639,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
       }
    }
 
-   static iterator priv_segmented_move_n(const_iterator first, std::size_t n, iterator dest)
+   static iterator priv_segmented_move_n(const_iterator first, size_type n, iterator dest)
    {
       index_pointer current_node = first.get_node();
       BOOST_ASSERT(current_node != index_pointer());
@@ -2604,21 +2647,21 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
       const pointer cur = first.get_cur();
       BOOST_CONSTEXPR_OR_CONST size_type block_size = get_block_size();
 
-      const size_type block = block_size - size_type(cur - *current_node);
+      const size_type block = size_type(block_size - size_type(cur - *current_node));
       size_type cnt = n < block ? n: block;
       dest = ::boost::container::move_n(boost::movelib::to_raw_pointer(cur), cnt, dest);
-      n -= cnt;
+      n = size_type(n - cnt);
 
       while (n) {
          ++current_node;
          cnt = n < block_size ? n: block_size;
          dest = ::boost::container::move_n(boost::movelib::to_raw_pointer(*current_node), cnt, dest);
-         n -= cnt;
+         n = size_type(n - cnt);
       }
       return dest;
    }
 
-   static iterator priv_segmented_move_backward_n(iterator last, std::size_t n, iterator dest_last)
+   static iterator priv_segmented_move_backward_n(iterator last, size_type n, iterator dest_last)
    {
       index_pointer current_node = last.get_node();
       BOOST_ASSERT(current_node != index_pointer());
@@ -2627,7 +2670,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
       const size_type block = size_type(cur - *current_node);
       size_type cnt = n < block ? n: block;
       dest_last = ::boost::container::move_backward_n(boost::movelib::to_raw_pointer(cur), cnt, dest_last);
-      n -= cnt;
+      n = size_type(n - cnt);
 
       BOOST_CONSTEXPR_OR_CONST size_type block_size = get_block_size();
 
@@ -2635,7 +2678,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
          --current_node;
          cnt = n < block_size ? n: block_size;
          dest_last = ::boost::container::move_backward_n(boost::movelib::to_raw_pointer(*current_node + block_size), cnt, dest_last);
-         n -= cnt;
+         n = size_type(n - cnt);
       }
       return dest_last;
    }
@@ -2672,7 +2715,6 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    template <class InIt>
    void priv_range_initialize(InIt first, InIt last, typename iterator_enable_if_tag<InIt, std::input_iterator_tag>::type* =0)
    {
-      this->prot_initialize_map_and_nodes(0);
       BOOST_CONTAINER_TRY {
          for ( ; first != last; ++first)
             this->emplace_back(*first);
@@ -2687,7 +2729,12 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    template <class FwdIt>
    void priv_range_initialize(FwdIt first, FwdIt last, typename iterator_disable_if_tag<FwdIt, std::input_iterator_tag>::type* =0)
    {
-      const size_type n = boost::container::iterator_udistance(first, last);
+      typedef typename iter_size<FwdIt>::type it_size_type;
+      const it_size_type sz = boost::container::iterator_udistance(first, last);
+      if (BOOST_UNLIKELY(sz > size_type(-1))){
+         boost::container::throw_length_error("vector::insert, FwdIt's max length reached");
+      }
+      const size_type n = static_cast<size_type>(sz);
       this->prot_initialize_map_and_nodes(n);
 
       dtl::insert_range_proxy<ValAllocator, FwdIt> proxy(first);
@@ -2743,17 +2790,17 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
 
       if (n > vacancies){  //n == 0 handled in the else part
          if(this->members_.m_map){
-            size_type new_elems = size_type(n - vacancies);
-            size_type new_nodes = size_type(new_elems + get_block_size() - 1u)/get_block_size();
+            const size_type new_elems = size_type(n - vacancies);
+            const size_type additional_nodes = size_type((new_elems - 1u)/get_block_size() + 1u);
             index_pointer start_node = this->prot_start_node();
-            size_type s = (size_type)(start_node - this->members_.m_map);
-            if (new_nodes > s){
+            size_type front_unused_slots = size_type(start_node - this->members_.m_map);
+            if (additional_nodes > front_unused_slots){
                //Start node might have changed when reallocating the map
                index_pointer finish_node;
-               this->priv_reallocate_map(new_nodes, true, start_node, finish_node);
+               this->priv_reallocate_map(additional_nodes, true, start_node, finish_node);
                (void) finish_node;
             }
-            this->priv_allocate_nodes(start_node - difference_type(new_nodes), new_nodes);
+            this->priv_allocate_nodes(start_node - difference_type(additional_nodes), additional_nodes);
          }
          else {
             this->prot_initialize_map_and_nodes(n);
@@ -2768,17 +2815,18 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
 
       if (n > vacancies){  //n == 0 handled in the else part
          if(this->members_.m_map){
-            size_type new_elems = size_type(n - vacancies);
-            size_type new_nodes = size_type(new_elems + get_block_size() - 1u)/get_block_size();
+            const size_type new_elems = size_type(n - vacancies);
+            const size_type additional_nodes = size_type((new_elems - 1u)/get_block_size() + 1u);
             index_pointer finish_node = this->prot_finish_node();
-            size_type s = (size_type)(this->members_.m_map_size - size_type(finish_node - this->members_.m_map));
-            if (new_nodes + 1 > s){
+            //Finish node is already allocated so the unused slots are [finish_node + 1, m_map + map_size)
+            const size_type back_unused_slots = size_type(this->members_.m_map_size - 1u - size_type(finish_node - this->members_.m_map));
+            if (additional_nodes > back_unused_slots){
                index_pointer start_node;
                //Finish node might have changed when reallocating the map
-               this->priv_reallocate_map(new_nodes, false, start_node, finish_node);
+               this->priv_reallocate_map(additional_nodes, false, start_node, finish_node);
                (void) start_node;
             }
-            this->priv_allocate_nodes(finish_node + 1, new_nodes);
+            this->priv_allocate_nodes(finish_node + 1, additional_nodes);
          }
          else{
             this->prot_initialize_map_and_nodes(n);
@@ -2791,39 +2839,43 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    {
       const index_pointer start_node = this->prot_start_node();
       const index_pointer finish_node = this->prot_finish_node();
-      size_type old_num_nodes = size_type(finish_node - start_node + 1);
-      size_type new_num_nodes = old_num_nodes + nodes_to_add;
+      const index_pointer next_finish_node = finish_node + 1u;
+      size_type old_num_nodes = size_type(next_finish_node - start_node);
+      size_type new_num_nodes = size_type(old_num_nodes + nodes_to_add);
 
       index_pointer new_nstart;
-      if (this->members_.m_map_size > 2 * new_num_nodes) {
-         new_nstart = this->members_.m_map + difference_type(this->members_.m_map_size - new_num_nodes) / 2
-                           + difference_type(add_at_front ? nodes_to_add : 0u);
+      const size_type map_size = this->members_.m_map_size;
+      if (map_size/2u >= new_num_nodes) {
+         new_nstart = this->members_.m_map + difference_type((map_size - new_num_nodes) / 2)
+                                           + difference_type(add_at_front ? nodes_to_add : 0u);
          if (new_nstart < start_node)
-            boost::container::move(start_node, finish_node + 1, new_nstart);
+            boost::container::move_n(start_node, old_num_nodes, new_nstart);
          else
-            boost::container::move_backward
-               (start_node, finish_node + 1, new_nstart + difference_type(old_num_nodes));
+            boost::container::move_backward_n(next_finish_node, old_num_nodes, new_nstart + difference_type(old_num_nodes));
       }
       else {
          //Doubling size, but at least one spare slot on each end
-         size_type new_map_size =
-            this->members_.m_map_size + dtl::max_value(this->members_.m_map_size, nodes_to_add + 2u);
+         const size_type new_map_size = dtl::max_value(size_type(map_size*2), size_type(nodes_to_add + 2u));
 
-         index_pointer new_map = this->prot_allocate_map(new_map_size);
-         new_nstart = new_map + difference_type(new_map_size - new_num_nodes) / 2
-                              + difference_type(add_at_front ? nodes_to_add : 0u);
-         boost::container::move(start_node, finish_node + 1, new_nstart);
+         //The end position must be representable in stored_size_type
+         this->test_size_against_n_nodes(new_map_size);
+
+         const index_pointer new_map = this->prot_allocate_map(new_map_size);
+         new_nstart = new_map + difference_type((new_map_size - new_num_nodes) / 2)
+                              + difference_type(add_at_front ? nodes_to_add : 0u);;
+         boost::container::move_n(start_node, old_num_nodes, new_nstart);
          this->prot_deallocate_map(this->members_.m_map, this->members_.m_map_size);
 
          this->members_.m_map = new_map;
-         this->members_.m_map_size = new_map_size;
+         this->members_.m_map_size = static_cast<stored_size_type>(new_map_size);
       }
 
       new_start_segment = new_nstart;
       new_finish_segment = new_nstart + difference_type(old_num_nodes - 1u);
-      this->prot_start_set_node(new_start_segment);
-      this->prot_finish_set_node(new_finish_segment);
+      this->prot_start_update_node(new_start_segment);
+      this->prot_finish_update_node(new_finish_segment);
    }
+
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
