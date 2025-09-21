@@ -2100,8 +2100,8 @@ private:
          >::type * = 0
       )
    {
-      typedef typename iter_size<FwdIt>::type it_size_type;
       BOOST_ASSERT(this->priv_in_range_or_end(pos));
+      typedef typename iter_size<FwdIt>::type it_size_type;
       const it_size_type sz = boost::container::iterator_udistance(first, last);
       if (BOOST_UNLIKELY(sz > size_type(-1))){
          boost::container::throw_length_error("vector::insert, FwdIt's max length reached");
