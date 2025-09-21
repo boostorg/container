@@ -209,6 +209,16 @@ bool vector_copyable_only(MyBoostVector &boostvector, MyStdVector &stdvector, bo
          ::boost::movelib::make_unique<MyBoostVector>(boostvectorp->begin(), boostvectorp->end());
       if(!test::CheckEqualContainers(*boostvectorp2, *stdvectorp)) return false;
    }
+   {  //Vector(It, It), input_iterator
+      ::boost::movelib::unique_ptr<MyStdVector> const stdvectorp =
+         ::boost::movelib::make_unique<MyStdVector>(100u);
+      ::boost::movelib::unique_ptr<MyBoostVector> const boostvectorp =
+         ::boost::movelib::make_unique<MyBoostVector>(100u);
+      ::boost::movelib::unique_ptr<MyBoostVector> const boostvectorp2 =
+         ::boost::movelib::make_unique<MyBoostVector>( make_input_from_forward_iterator(boostvectorp->begin())
+                                                     , make_input_from_forward_iterator(boostvectorp->end()));
+      if(!test::CheckEqualContainers(*boostvectorp2, *stdvectorp)) return false;
+   }
    {  //Vector(It, It, alloc)
       ::boost::movelib::unique_ptr<MyStdVector> const stdvectorp =
          ::boost::movelib::make_unique<MyStdVector>(100u);
@@ -216,6 +226,17 @@ bool vector_copyable_only(MyBoostVector &boostvector, MyStdVector &stdvector, bo
          ::boost::movelib::make_unique<MyBoostVector>(100u);
       ::boost::movelib::unique_ptr<MyBoostVector> const boostvectorp2 =
          ::boost::movelib::make_unique<MyBoostVector>(boostvectorp->begin(), boostvectorp->end(), typename MyBoostVector::allocator_type());
+      if(!test::CheckEqualContainers(*boostvectorp2, *stdvectorp)) return false;
+   }
+   {  //Vector(It, It, alloc), input_iterator
+      ::boost::movelib::unique_ptr<MyStdVector> const stdvectorp =
+         ::boost::movelib::make_unique<MyStdVector>(100u);
+      ::boost::movelib::unique_ptr<MyBoostVector> const boostvectorp =
+         ::boost::movelib::make_unique<MyBoostVector>(100u);
+      ::boost::movelib::unique_ptr<MyBoostVector> const boostvectorp2 =
+         ::boost::movelib::make_unique<MyBoostVector>( make_input_from_forward_iterator(boostvectorp->begin())
+                                                     , make_input_from_forward_iterator(boostvectorp->end())
+                                                     , typename MyBoostVector::allocator_type());
       if(!test::CheckEqualContainers(*boostvectorp2, *stdvectorp)) return false;
    }
    {  //resize(n, T)
