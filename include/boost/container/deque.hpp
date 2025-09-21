@@ -75,7 +75,7 @@ template<class T, std::size_t BlockBytes, std::size_t BlockSize>
 struct deque_block_traits
 {
    BOOST_CONTAINER_STATIC_ASSERT_MSG(!(BlockBytes && BlockSize), "BlockBytes and BlockSize can't be specified at the same time");
-   BOOST_STATIC_CONSTEXPR std::size_t default_block_bytes = 512u;
+   BOOST_STATIC_CONSTEXPR std::size_t default_block_bytes = sizeof(void*)*128u;
    BOOST_STATIC_CONSTEXPR std::size_t default_block_start = default_block_bytes/sizeof(T);
    BOOST_STATIC_CONSTEXPR std::size_t default_min_block_size = 16u;
    BOOST_STATIC_CONSTEXPR std::size_t default_block_size  = default_block_start < default_min_block_size
