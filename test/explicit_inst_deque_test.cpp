@@ -36,6 +36,9 @@ template class boost::container::deque
    < test::movable_and_copyable_int
    , allocator<test::movable_and_copyable_int> >;
 
+template class deque_iterator<int*, true, 0, 0>;
+template class deque_iterator<int*, false, 0, 0>;
+
 }  //namespace boost {
 }  //namespace container {
 
