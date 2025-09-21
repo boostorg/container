@@ -250,6 +250,13 @@ class small_size_type_allocator
 	typedef unsigned short size_type;
 	typedef short difference_type;
 
+   small_size_type_allocator()
+   {}
+
+   template<class U>
+   small_size_type_allocator(const small_size_type_allocator<U>&)
+   {}
+
 	pointer allocate(size_type count)
    {  return static_cast<value_type*>(::operator new(count * sizeof(value_type))); }
 
