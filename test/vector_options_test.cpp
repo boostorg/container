@@ -43,7 +43,7 @@ void test_stored_size_type()
       < stored_size<Unsigned> >::type options_t;
    #endif
 
-   typedef vector<unsigned char, new_allocator<unsigned char>> default_vector_t;
+   typedef vector<unsigned char, new_allocator<unsigned char> > default_vector_t;
    //Test first with a typical allocator
    {
       typedef vector<unsigned char, new_allocator<unsigned char>, options_t> vector_t;
