@@ -31,6 +31,8 @@
 #include "default_init_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 
+#include <boost/core/lightweight_test.hpp>
+
 using namespace boost::container;
 
 //Function to check if both sets are equal
@@ -347,6 +349,37 @@ int test_cont_variants()
    return 0;
 }
 
+template<std::size_t N>
+struct char_holder
+{
+   char chars[N];
+};
+
+bool do_test_default_block_size()
+{
+   //Check power of two sizes by default
+   BOOST_TEST(deque<char_holder<8>  >::get_block_size() == 16*sizeof(void*));
+   BOOST_TEST(deque<char_holder<12> >::get_block_size() == 16*sizeof(void*));
+   BOOST_TEST(deque<char_holder<16> >::get_block_size() == 8*sizeof(void*));
+   BOOST_TEST(deque<char_holder<20> >::get_block_size() == 8*sizeof(void*));
+   BOOST_TEST(deque<char_holder<24> >::get_block_size() == 8*sizeof(void*));
+   BOOST_TEST(deque<char_holder<28> >::get_block_size() == 8*sizeof(void*));
+   BOOST_TEST(deque<char_holder<32> >::get_block_size() == 4*sizeof(void*));
+   BOOST_TEST(deque<char_holder<36> >::get_block_size() == 4*sizeof(void*));
+   BOOST_TEST(deque<char_holder<40> >::get_block_size() == 4*sizeof(void*));
+   BOOST_TEST(deque<char_holder<44> >::get_block_size() == 4*sizeof(void*));
+   BOOST_TEST(deque<char_holder<48> >::get_block_size() == 4*sizeof(void*));
+   BOOST_TEST(deque<char_holder<52> >::get_block_size() == 4*sizeof(void*));
+   BOOST_TEST(deque<char_holder<56> >::get_block_size() == 4*sizeof(void*));
+   BOOST_TEST(deque<char_holder<60> >::get_block_size() == 4*sizeof(void*));
+   BOOST_TEST(deque<char_holder<64> >::get_block_size() == 2*sizeof(void*));
+   BOOST_TEST(deque<char_holder<68> >::get_block_size() == 2*sizeof(void*));
+   BOOST_TEST(deque<char_holder<72> >::get_block_size() == 2*sizeof(void*));
+   //Minimal 8 elements
+   BOOST_TEST(deque<char_holder<148> >::get_block_size() == 8u);
+   return 0 == boost::report_errors();
+}
+
 struct boost_container_deque;
 
 namespace boost { namespace container {   namespace test {
@@ -375,6 +408,9 @@ int main ()
       return 1;
 
    if(!do_test<test::copyable_int>())
+      return 1;
+
+   if(!do_test_default_block_size())
       return 1;
 
    //Test non-copy-move operations
