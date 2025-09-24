@@ -75,20 +75,27 @@ template<class T, std::size_t BlockBytes, std::size_t BlockSize, class StoredSiz
 struct deque_block_traits
 {
    BOOST_CONTAINER_STATIC_ASSERT_MSG(!(BlockBytes && BlockSize), "BlockBytes and BlockSize can't be specified at the same time");
+   //Calculate default block size
    BOOST_STATIC_CONSTEXPR std::size_t default_block_bytes = sizeof(void*)*128u;
-   BOOST_STATIC_CONSTEXPR std::size_t default_block_start = default_block_bytes/sizeof(T);
-   BOOST_STATIC_CONSTEXPR std::size_t default_min_block_size = 16u;
-   BOOST_STATIC_CONSTEXPR std::size_t default_block_size_initial  = default_block_start < default_min_block_size
-                                                                  ? default_min_block_size
-                                                                  : dtl::upper_power_of_2_ct<std::size_t, default_block_start>::value;
-   BOOST_STATIC_CONSTEXPR std::size_t max_stored_size_block_size  = std::size_t(1u) << (sizeof(StoredSizeType)*CHAR_BIT - 4u);
-   BOOST_STATIC_CONSTEXPR std::size_t default_block_size  = default_block_size_initial > max_stored_size_block_size
-                                                                  ? max_stored_size_block_size
-                                                                  : default_block_size_initial;
+   BOOST_STATIC_CONSTEXPR std::size_t default_block_start = (default_block_bytes - 1u)/sizeof(T) + 1u;
+   //Round to the next power of two
+   BOOST_STATIC_CONSTEXPR std::size_t default_block_size_upp_pow2  = dtl::upper_power_of_2_ct<std::size_t, default_block_start>::value;
 
-   BOOST_STATIC_CONSTEXPR std::size_t value               = BlockSize ? BlockSize
-                                                                      : BlockBytes ? (BlockBytes-1u)/sizeof(T) + 1u
-                                                                                   : default_block_size
+   //Check minimal size
+   BOOST_STATIC_CONSTEXPR std::size_t default_min_block_size_pow = 3u;
+   BOOST_STATIC_CONSTEXPR std::size_t default_min_block_size = 8u;
+   BOOST_STATIC_CONSTEXPR std::size_t default_block_size_initial  = default_block_size_upp_pow2 < default_min_block_size
+                                                                  ? default_min_block_size
+                                                                  : default_block_size_upp_pow2;
+
+   //Limit by stored size max value
+   BOOST_STATIC_CONSTEXPR std::size_t max_stored_size_block_size  = std::size_t(1u) << (sizeof(StoredSizeType)*CHAR_BIT - default_min_block_size_pow);
+   BOOST_STATIC_CONSTEXPR std::size_t default_block_size  = default_block_size_initial > max_stored_size_block_size
+                                                                                       ? max_stored_size_block_size
+                                                                                       : default_block_size_initial;
+   //Now select between the default or the specified by the user
+   BOOST_STATIC_CONSTEXPR std::size_t value  = BlockSize  ? BlockSize
+                                             : BlockBytes ? (BlockBytes-1u)/sizeof(T) + 1u : default_block_size
                                                                                    ;
    BOOST_CONTAINER_STATIC_ASSERT_MSG(value <= max_stored_size_block_size, "BlockSize or BlockBytes is too big for the stored_size_type");
 
