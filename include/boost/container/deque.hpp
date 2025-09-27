@@ -1449,6 +1449,30 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
       size_type size() const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->prot_size(); }
 
+   //! <b>Effects</b>: Returns the number of the elements that can be inserted
+   //!   at the back without allocating additional memory.
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+      size_type back_capacity() const BOOST_NOEXCEPT_OR_NOTHROW
+      { return this->prot_back_capacity(); }
+
+   //! <b>Effects</b>: Returns the number of the elements that can be inserted
+   //!   at the front without allocating additional memory.
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+      size_type front_capacity() const BOOST_NOEXCEPT_OR_NOTHROW
+      { return this->prot_front_capacity(); }
+
    //! <b>Effects</b>: Returns the largest possible size of the deque.
    //!
    //! <b>Throws</b>: Nothing.
