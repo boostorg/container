@@ -36,6 +36,23 @@
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 0
 #include <boost/intrusive/detail/has_member_function_callable_with.hpp>
 
+
+//reserve
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_FUNCNAME reserve
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_BEG namespace boost { namespace container { namespace test {
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_END   }}}
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MIN 1
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 1
+#include <boost/intrusive/detail/has_member_function_callable_with.hpp>
+
+//back_reserve
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_FUNCNAME reserve_back
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_BEG namespace boost { namespace container { namespace test {
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_END   }}}
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MIN 1
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 1
+#include <boost/intrusive/detail/has_member_function_callable_with.hpp>
+
 //#pragma GCC diagnostic ignored "-Wunused-result"
 #if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
 #pragma GCC diagnostic pop
@@ -132,9 +149,19 @@ class MyFatInt
    }
 };
 
-template<class C, bool = boost::container::test::
-         has_member_function_callable_with_capacity<C>::value>
-struct capacity_wrapper
+template<class C, bool Capacity = false, bool BackCapacity = false>
+struct capacity_wrapper_impl
+{
+   inline static typename C::size_type get_capacity(const C &)
+   {  return 0u; }
+
+   inline static void set_reserve(C &, typename C::size_type )
+   { }
+};
+
+
+template<class C>
+struct capacity_wrapper_impl<C, true, false>
 {
    inline static typename C::size_type get_capacity(const C &c)
    {  return c.capacity(); }
@@ -143,15 +170,25 @@ struct capacity_wrapper
    {  c.reserve(cp); }
 };
 
-template<class C>
-struct capacity_wrapper<C, false>
+template<class C, bool Capacity>
+struct capacity_wrapper_impl<C, Capacity, true>
 {
-   inline static typename C::size_type get_capacity(const C &)
-   {  return 0u; }
+   inline static typename C::size_type get_capacity(const C &c)
+   {  return c.back_capacity(); }
 
-   inline static void set_reserve(C &, typename C::size_type )
-   { }
+   inline static void set_reserve(C &c, typename C::size_type cp)
+   {  c.reserve_back(cp); }
 };
+
+template<class C>
+struct capacity_wrapper
+   : capacity_wrapper_impl
+      < C
+      , bc::test::has_member_function_callable_with_reserve<C, std::size_t>::value
+      , bc::test::has_member_function_callable_with_reserve_back<C, std::size_t>::value
+      >
+{};
+
 
 const std::size_t RangeSize = 8;
 
@@ -304,6 +341,8 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements, 
    cpu_timer timer;
 
    const std::size_t max = num_elements/multiplier;
+   std::size_t capacity = 0u;
+
    for(std::size_t r = 0; r != num_iterations; ++r){
       //Unroll the loop to avoid noise from loop code
       int i = 0;
@@ -330,12 +369,10 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements, 
 
       if (r > num_iterations/10)
          timer.stop();
+      if(r == (num_iterations-1u))
+         capacity = cpw_t::get_capacity(c);
       c.clear();
    }
-
-   timer.stop();
-
-   std::size_t capacity = cpw_t::get_capacity(c);
 
    nanosecond_type nseconds = timer.elapsed().wall;
 
@@ -379,7 +416,7 @@ void test_vectors_impl()
 #define RESERVE_ONLY 0
 #define NORESERVE_ONLY 1
 
-#define RESERVE_STRATEGY NORESERVE_ONLY
+//#define RESERVE_STRATEGY NORESERVE_ONLY
 //#define RESERVE_STRATEGY RESERVE_ONLY
 
 #ifndef RESERVE_STRATEGY
@@ -407,6 +444,8 @@ void test_vectors_impl()
          vector_test_template< bc::devector<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                             "devector       ", bp);
          vector_test_template< std::deque<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                               "std::deque     ", bp);
          vector_test_template< bc::deque<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                                "deque          ", bp);
+         vector_test_template< bc::deque<IntType, std::allocator<IntType>,
+            typename bc::deque_options<bc::reservable<true> >::type       >, Operation >(numit[i], numele[i],                                "deque(reserv)  ", bp);
       }
       std::cout << "---------------------------------\n---------------------------------\n";
    }
