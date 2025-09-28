@@ -73,7 +73,7 @@ class static_storage_allocator
    //Avoiding launder due to performance regressions, see https://github.com/boostorg/container/issues/309
    {  return const_cast<T*>(static_cast<const T*>(static_cast<const void*>(storage.data)));  }
 
-   #if defined(BOOST_GCC) && (BOOST_GCC >= 100000) && (BOOST_CXX_VERSION < 201103L)
+   #if defined(BOOST_GCC) && (BOOST_GCC >= 120000) && (BOOST_CXX_VERSION < 201103L)
    #pragma GCC pop_options
    #endif
 
