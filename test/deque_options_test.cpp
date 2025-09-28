@@ -76,11 +76,34 @@ void test_block_elements()
    BOOST_TEST(deque_t::get_block_size() == 64U);
 }
 
+void test_reservable()
+{
+   {
+      #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+      using options_t = deque_options_t< reservable<true> >;
+      #else
+      typedef deque_options< reservable<true> >::type options_t;
+      #endif
+      typedef deque<unsigned short, void, options_t> deque_t;
+      BOOST_CONTAINER_STATIC_ASSERT(deque_t::is_reservable == true);
+   }
+   {
+      #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+      using options_t = deque_options_t< reservable<false> >;
+      #else
+      typedef deque_options< reservable<false> >::type options_t;
+      #endif
+      typedef deque<unsigned short, void, options_t> deque_t;
+      BOOST_CONTAINER_STATIC_ASSERT(deque_t::is_reservable == false);
+   }
+}
+
 int main()
 {
    test_block_bytes();
    test_block_elements();
    test_stored_size_type<unsigned char>();
    test_stored_size_type<unsigned short>();
+   test_reservable();
    return ::boost::report_errors();
 }

@@ -41,6 +41,7 @@
 #include <boost/container/detail/math_functions.hpp>
 // move
 #include <boost/move/adl_move_swap.hpp>
+#include <boost/move/algo/detail/merge.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/traits.hpp>
 #include <boost/move/utility_core.hpp>
@@ -357,13 +358,13 @@ struct get_deque_opt
 {
    typedef deque_opt< Options::block_bytes, Options::block_size
                     , typename default_if_void<typename Options::stored_size_type, AllocatorSizeType>::type
-                    > type;
+                    , Options::reservable> type;
 };
 
 template<class AllocatorSizeType>
 struct get_deque_opt<void, AllocatorSizeType>
 {
-   typedef deque_opt<0, 0, AllocatorSizeType> type;
+   typedef deque_opt<deque_null_opt::block_bytes, deque_null_opt::block_size, AllocatorSizeType, deque_null_opt::reservable> type;
 };
 
 
@@ -410,6 +411,8 @@ class deque_base
                          , options_type::block_size
                          , stored_size_type>                      const_iterator;
 
+   static const bool is_reservable = options_type::reservable;
+
    BOOST_CONSTEXPR inline static val_alloc_diff get_block_ssize() BOOST_NOEXCEPT_OR_NOTHROW
       { return val_alloc_diff((get_block_size())); }
 
@@ -420,16 +423,24 @@ class deque_base
    typedef ptr_alloc_t                                   map_allocator_type;
 
    inline val_alloc_ptr prot_allocate_node()
-      {  return this->alloc().allocate(get_block_size());  }
+   {
+      return this->alloc().allocate(get_block_size());
+   }
 
    inline void prot_deallocate_node(val_alloc_ptr p) BOOST_NOEXCEPT_OR_NOTHROW
-      {  this->alloc().deallocate(p, get_block_size());  }
+   {
+      this->alloc().deallocate(p, get_block_size());
+   }
 
    inline ptr_alloc_ptr prot_allocate_map(size_type n)
-      { return this->ptr_alloc().allocate(n); }
+   {
+      return this->ptr_alloc().allocate(n);
+   }
 
    inline void prot_deallocate_map(ptr_alloc_ptr p, size_type n) BOOST_NOEXCEPT_OR_NOTHROW
-   {  this->ptr_alloc().deallocate(p, n); }
+   {
+        this->ptr_alloc().deallocate(p, n);
+   }
 
    inline deque_base(size_type num_elements, const allocator_type& a)
       :  members_(a)
@@ -451,7 +462,7 @@ class deque_base
    ~deque_base()
    {
       if (this->members_.m_map) {
-         this->prot_destroy_nodes(this->prot_start_node(), this->prot_finish_node() + 1);
+         this->prot_deallocate_all_nodes();
          this->prot_deallocate_map(this->members_.m_map, this->members_.m_map_size);
       }
    }
@@ -495,11 +506,14 @@ class deque_base
       this->members_.m_map = this->prot_allocate_map(map_size);
       this->members_.m_map_size = static_cast<stored_size_type>(map_size);
 
-      ptr_alloc_ptr nstart = this->members_.m_map + difference_type(start_map_pos);
-      ptr_alloc_ptr nfinish = nstart + difference_type(num_nodes);
 
       BOOST_CONTAINER_TRY {
-         this->prot_create_nodes(nstart, nfinish);
+         BOOST_IF_CONSTEXPR(is_reservable){   //reservable implies all slots are allocated with nodes
+            this->prot_allocate_nodes(this->members_.m_map, map_size);
+         }
+         else{  //Otherwise only create the nodes that will hold values
+            this->prot_allocate_nodes(this->members_.m_map + difference_type(start_map_pos), num_nodes);
+         }
       }
       BOOST_CONTAINER_CATCH(...){
          this->prot_deallocate_map(this->members_.m_map, this->members_.m_map_size);
@@ -512,30 +526,135 @@ class deque_base
       this->prot_set_start_finish_from_node(start_map_pos, num_elements);
    }
 
-   void prot_create_nodes(ptr_alloc_ptr nstart, ptr_alloc_ptr nfinish)
+   void prot_reallocate_map_and_nodes(size_type nodes_to_add, bool add_at_front, ptr_alloc_ptr &new_start_segment, ptr_alloc_ptr &new_finish_segment)
    {
-      ptr_alloc_ptr cur = nstart;
-      BOOST_CONTAINER_TRY {
-         for (; cur < nfinish; ++cur)
-            *cur = this->prot_allocate_node();
+      const ptr_alloc_ptr start_node = this->prot_start_node();
+      const ptr_alloc_ptr finish_node = this->prot_finish_node();
+      const ptr_alloc_ptr next_finish_node = finish_node + 1u;
+      const size_type old_active_nodes = size_type(next_finish_node - start_node);
+      const size_type new_active_nodes = size_type(old_active_nodes + nodes_to_add);
+
+      ptr_alloc_ptr new_nstart;
+      const size_type old_map_size = this->members_.m_map_size;
+      const ptr_alloc_ptr old_map  = this->members_.m_map;
+      if (old_map_size/2u >= new_active_nodes) {
+         new_nstart = old_map + difference_type((old_map_size - new_active_nodes) / 2)
+                              + difference_type(add_at_front ? nodes_to_add : 0u);;
+         BOOST_IF_CONSTEXPR(is_reservable){
+            if (new_nstart < start_node)
+               boost::movelib::rotate_gcd(new_nstart, start_node, start_node + old_active_nodes);
+            else
+               boost::movelib::rotate_gcd(start_node, start_node + old_active_nodes, new_nstart + old_active_nodes);
+         }
+         else {
+            if (new_nstart < start_node)
+               boost::container::move_n(start_node, old_active_nodes, new_nstart);
+            else
+               boost::container::move_backward_n(next_finish_node, old_active_nodes, new_nstart + difference_type(old_active_nodes));
+         }
       }
-      BOOST_CONTAINER_CATCH(...){
-         this->prot_destroy_nodes(nstart, cur);
+      else {
+         //Doubling size, but at least one spare slot on each end
+         const size_type new_map_size = dtl::max_value(size_type(old_map_size*2), size_type(nodes_to_add + 2u));
+
+         //The end position must be representable in stored_size_type
+         this->test_size_against_n_nodes(new_map_size);
+
+         const ptr_alloc_ptr new_map = this->prot_allocate_map(new_map_size);
+         const size_type new_active_off = size_type((new_map_size - new_active_nodes) / 2 + (add_at_front ? +nodes_to_add : +0));
+         new_nstart = new_map + difference_type(new_active_off);
+
+         //
+         BOOST_IF_CONSTEXPR(is_reservable){
+            const size_type old_active_off = size_type(start_node - old_map);
+            const size_type new_move_off = size_type(new_active_off - old_active_off);
+            const ptr_alloc_ptr new_move_pos = new_map + difference_type(new_move_off);
+
+            BOOST_CONTAINER_TRY {
+               BOOST_CONTAINER_TRY {
+                  this->prot_allocate_nodes(new_map, new_move_off);
+               }
+               BOOST_CONTAINER_CATCH(...){
+                  this->prot_deallocate_map(new_map, new_map_size);
+                  BOOST_CONTAINER_RETHROW
+               }
+               BOOST_CONTAINER_CATCH_END
+               this->prot_allocate_nodes(new_move_pos + old_map_size, size_type (new_map_size - old_map_size - new_move_off));
+            }
+            BOOST_CONTAINER_CATCH(...){
+               this->prot_deallocate_nodes(new_map, new_move_pos);
+               this->prot_deallocate_map(new_map, new_map_size);
+               BOOST_CONTAINER_RETHROW
+            }
+            BOOST_CONTAINER_CATCH_END
+            boost::container::move_n(old_map, old_map_size, new_move_pos);
+         }
+         else {
+            boost::container::move_n(start_node, old_active_nodes, new_nstart);
+         }
+
+         this->prot_deallocate_map(old_map, old_map_size);
+
+         this->members_.m_map = new_map;
+         this->members_.m_map_size = static_cast<stored_size_type>(new_map_size);
+      }
+
+      new_start_segment = new_nstart;
+      new_finish_segment = new_nstart + difference_type(old_active_nodes - 1u);
+      this->prot_start_update_node(new_start_segment);
+      this->prot_finish_update_node(new_finish_segment);
+   }
+
+   void prot_allocate_nodes(ptr_alloc_ptr start, size_type n)
+   {
+      size_type i = 0;
+      BOOST_CONTAINER_TRY {
+         for (; i < n; ++i)
+            start[i] = this->prot_allocate_node();
+      }
+      BOOST_CONTAINER_CATCH(...) {
+         for (size_type j = 0; j < i; ++j)
+            this->prot_deallocate_node(start[j]);
          BOOST_CONTAINER_RETHROW
       }
       BOOST_CONTAINER_CATCH_END
    }
 
-   void prot_destroy_nodes(ptr_alloc_ptr nstart, ptr_alloc_ptr nfinish) BOOST_NOEXCEPT_OR_NOTHROW
+
+   void prot_deallocate_nodes(ptr_alloc_ptr nstart, ptr_alloc_ptr nfinish) BOOST_NOEXCEPT_OR_NOTHROW
    {
-      for (ptr_alloc_ptr n = nstart; n < nfinish; ++n)
+      for (ptr_alloc_ptr n = nstart; n < nfinish; ++n){
          this->prot_deallocate_node(*n);
+      }
    }
+
+   void prot_deallocate_nodes_if_not_reservable(ptr_alloc_ptr nstart, ptr_alloc_ptr nfinish) BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      (void)nstart; (void)nfinish;
+      BOOST_IF_CONSTEXPR(!is_reservable)
+         this->prot_deallocate_nodes(nstart, nfinish);
+   }
+
+   void prot_deallocate_node_if_not_reservable(val_alloc_ptr p) BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      (void)p;
+      BOOST_IF_CONSTEXPR(!is_reservable)
+         this->prot_deallocate_node(p);
+   }
+
+   void prot_deallocate_all_nodes()
+   {
+      BOOST_IF_CONSTEXPR(is_reservable)
+         this->prot_deallocate_nodes(this->members_.m_map, this->members_.m_map + difference_type(this->members_.m_map_size));
+      else
+         this->prot_deallocate_nodes(this->prot_start_node(), this->prot_finish_node() + 1);
+   }
+
 
    void prot_clear_map() BOOST_NOEXCEPT_OR_NOTHROW
    {
       if (this->members_.m_map) {
-         this->prot_destroy_nodes(this->prot_start_node(), this->prot_finish_node() + 1);
+         this->prot_deallocate_all_nodes();
          this->prot_deallocate_map(this->members_.m_map, this->members_.m_map_size);
          this->members_.m_map = ptr_alloc_ptr();
          this->members_.m_map_size = 0u;
@@ -605,17 +724,29 @@ class deque_base
       return *idx + (block_size - 1u);
    }
 
-   BOOST_CONTAINER_FORCEINLINE size_type prot_front_capacity() const
+   BOOST_CONTAINER_FORCEINLINE size_type prot_front_free_capacity() const
    {
-      BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_base::get_block_size();
-      return static_cast<size_type>(this->members_.m_start_off % block_size);
+      BOOST_IF_CONSTEXPR(is_reservable){
+         return static_cast<size_type>(this->members_.m_start_off);
+      }
+      else{
+         BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_base::get_block_size();
+         return static_cast<size_type>(this->members_.m_start_off % block_size);
+      }
    }
 
-   BOOST_CONTAINER_FORCEINLINE size_type prot_back_capacity() const
+   BOOST_CONTAINER_FORCEINLINE size_type prot_back_free_capacity() const
    {
-      //m_finish_off points to positions [0....block_size-1], and one position is always needed as the sentinel node resulting [block_size-1....0] capacity
       BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_base::get_block_size();
-      return static_cast<size_type>(this->members_.m_map ? (block_size - 1u) - (this->members_.m_finish_off % block_size) : 0u);
+
+      BOOST_IF_CONSTEXPR(is_reservable){
+         return static_cast<size_type>
+            (size_type(this->members_.m_map_size*block_size) - size_type(this->members_.m_map != ptr_alloc_ptr()) - this->members_.m_finish_off);
+      }
+      else {
+         //m_finish_off points to positions [0....block_size-1], and one position is always needed as the sentinel node resulting [block_size-1....0] capacity
+         return static_cast<size_type>(this->members_.m_map ? (block_size - 1u) - (this->members_.m_finish_off % block_size) : 0u);
+      }
    }
 
    //////////////////////////
@@ -899,6 +1030,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
 
    using Base::get_block_size;
 
+   static const std::size_t is_reservable = Base::is_reservable;
 
    //////////////////////////////////////////////
    //
@@ -1459,7 +1591,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Note</b>: Non-standard extension.
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
       size_type back_capacity() const BOOST_NOEXCEPT_OR_NOTHROW
-      { return this->prot_back_capacity(); }
+      { return size_type(this->size() + this->prot_back_free_capacity()); }
 
    //! <b>Effects</b>: Returns the number of the elements that can be inserted
    //!   at the front without allocating additional memory.
@@ -1471,7 +1603,51 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Note</b>: Non-standard extension.
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
       size_type front_capacity() const BOOST_NOEXCEPT_OR_NOTHROW
-      { return this->prot_front_capacity(); }
+      { return size_type(this->size() + this->prot_front_free_capacity()); }
+
+   //! <b>Requires</b>: The container must be "reservable" (is_reservable == true)
+   //!
+   //! <b>Effects</b>: If n is less than or equal to back_capacity() or the container is not reservable,
+   //!   this call has no effect. Otherwise, if it is a request for allocation of additional memory.
+   //!   If the request is successful, then back_capacity() is greater than or equal to
+   //!   n; otherwise, back_capacity() is unchanged. In either case, size() is unchanged.
+   //!
+   //! <b>Throws</b>: If memory allocation throws.
+   //!
+   //! <b>Complexity</b>: Linear to n.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   void reserve_back(size_type n)
+   {
+      (void)n;
+      BOOST_IF_CONSTEXPR(is_reservable){
+         const size_type cur_back_cap = this->back_capacity();
+         if (this->back_capacity() < n)
+            this->priv_reserve_elements_at_back(size_type(n - cur_back_cap) );
+      }
+   }
+
+   //! <b>Requires</b>: The container must be "reservable" (is_reservable == true)
+   //!
+   //! <b>Effects</b>: If n is less than or equal to back_capacity() or the container is not reservable,
+   //!   this call has no effect. Otherwise, if it is a request for allocation of additional memory.
+   //!   If the request is successful, then back_capacity() is greater than or equal to
+   //!   n; otherwise, back_capacity() is unchanged. In either case, size() is unchanged.
+   //!
+   //! <b>Throws</b>: If memory allocation throws.
+   //!
+   //! <b>Complexity</b>: Linear to n.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   void reserve_front(size_type n)
+   {
+      (void)n;
+      BOOST_IF_CONSTEXPR(is_reservable){
+         const size_type cur_back_cap = this->front_capacity();
+         if (this->front_capacity() < n)
+            this->priv_reserve_elements_at_front(size_type(n - cur_back_cap) );
+      }
+   }
 
    //! <b>Effects</b>: Returns the largest possible size of the deque.
    //!
@@ -2151,14 +2327,14 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
             const iterator old_start = this->begin();
             iterator new_start = this->priv_segmented_move_backward_n(first.unconst(), elems_before, last.unconst());
             this->prot_destroy_range(old_start, new_start);
-            this->prot_destroy_nodes(old_start.get_node(), new_start.m_node);
+            this->prot_deallocate_nodes_if_not_reservable(old_start.get_node(), new_start.m_node);
             this->prot_inc_start(n);
          }
          else {
             const iterator old_finish = this->end();
             iterator new_finish = this->priv_segmented_move_n(last.unconst(), elems_after, first.unconst());
             this->prot_destroy_range(new_finish, old_finish);
-            this->prot_destroy_nodes(new_finish.m_node + 1, old_finish.get_node() + 1);
+            this->prot_deallocate_nodes_if_not_reservable(new_finish.m_node + 1, old_finish.get_node() + 1);
             this->prot_dec_finish(n);
          }
          return this->nth(elems_before);
@@ -2194,13 +2370,13 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
          const index_pointer finish_node = finish.get_node();
          for (index_pointer node = start_node + 1; node < finish_node; ++node) {
             this->prot_destroy_range(*node, *node + get_block_ssize());
-            this->prot_deallocate_node(*node);
+            this->prot_deallocate_node_if_not_reservable(*node);
          }
 
          if (start_node != finish_node) {
             this->prot_destroy_range(start.get_cur(), start.get_last());
             this->prot_destroy_range(finish.get_first(), finish.get_cur());
-            this->prot_deallocate_node(finish.get_first());
+            this->prot_deallocate_node_if_not_reservable(finish.get_first());
          }
          else
             this->prot_destroy_range(start.get_cur(), finish.get_cur());
@@ -2314,7 +2490,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
          const iterator old_finish = this->prot_finish();
          const iterator new_finish = old_finish - difference_type(n);
          this->prot_destroy_range(new_finish, old_finish);
-         this->prot_destroy_nodes(new_finish.get_node() + 1, old_finish.get_node() + 1);
+         this->prot_deallocate_nodes_if_not_reservable(new_finish.get_node() + 1, old_finish.get_node() + 1);
          this->prot_dec_finish(n);
       }
    }
@@ -2409,7 +2585,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
                this->priv_segmented_uninitialized_move_alloc_n(old_start, n, new_start, single_t());
             }
             BOOST_CONTAINER_CATCH(...) {
-               this->prot_destroy_nodes(new_start.m_node, old_start.m_node);
+               this->prot_deallocate_nodes_if_not_reservable(new_start.m_node, old_start.m_node);
                BOOST_CONTAINER_RETHROW
             }
             BOOST_CONTAINER_CATCH_END
@@ -2429,7 +2605,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
                this->priv_segmented_uninitialized_move_alloc_n(old_start, elemsbefore, new_start);
             }
             BOOST_CONTAINER_CATCH(...) {
-               this->prot_destroy_nodes(new_start.m_node, old_start.get_node());
+               this->prot_deallocate_nodes_if_not_reservable(new_start.m_node, old_start.get_node());
                BOOST_CONTAINER_RETHROW
             }
             BOOST_CONTAINER_CATCH_END
@@ -2452,7 +2628,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
                this->priv_segmented_uninitialized_move_alloc_n(finish_n, n, old_finish, single_t());
             }
             BOOST_CONTAINER_CATCH(...) {
-               this->prot_destroy_nodes(old_finish.get_node() + 1, (old_finish + difference_type(n)).m_node + 1);
+               this->prot_deallocate_nodes_if_not_reservable(old_finish.get_node() + 1, (old_finish + difference_type(n)).m_node + 1);
                BOOST_CONTAINER_RETHROW
             }
             BOOST_CONTAINER_CATCH_END
@@ -2481,7 +2657,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
                BOOST_CONTAINER_CATCH_END
             }
             BOOST_CONTAINER_CATCH(...) {
-               this->prot_destroy_nodes(old_finish.get_node() + 1, (old_finish + difference_type(n)).m_node + 1);
+               this->prot_deallocate_nodes_if_not_reservable(old_finish.get_node() + 1, (old_finish + difference_type(n)).m_node + 1);
                BOOST_CONTAINER_RETHROW
             }
             BOOST_CONTAINER_CATCH_END
@@ -2576,7 +2752,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
          this->priv_segmented_proxy_uninitialized_copy_n_and_update(first, n, proxy);
       }
       BOOST_CONTAINER_CATCH(...) {
-         this->prot_destroy_nodes(first.get_node() + 1, (first+difference_type(n)).get_node() + 1);
+         this->prot_deallocate_nodes_if_not_reservable(first.get_node() + 1, (first+difference_type(n)).get_node() + 1);
          BOOST_CONTAINER_RETHROW
       }
       BOOST_CONTAINER_CATCH_END
@@ -2776,7 +2952,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    void priv_pop_back_aux() BOOST_NOEXCEPT_OR_NOTHROW
    {
       index_pointer ip = this->prot_finish_node();
-      this->prot_deallocate_node(*ip);
+      this->prot_deallocate_node_if_not_reservable(*ip);
       this->prot_dec_finish();
       --ip;
       allocator_traits_type::destroy
@@ -2796,42 +2972,34 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
          ( this->alloc()
          , boost::movelib::to_raw_pointer(this->prot_node_last(ip))
          );
-      this->prot_deallocate_node(*ip);
+      this->prot_deallocate_node_if_not_reservable(*ip);
       this->prot_inc_start();
-   }
-
-   void priv_allocate_nodes(index_pointer start, size_type n)
-   {
-      size_type i = 0;
-      BOOST_CONTAINER_TRY {
-         for (; i < n; ++i)
-            start[i] = this->prot_allocate_node();
-      }
-      BOOST_CONTAINER_CATCH(...) {
-         for (size_type j = 0; j < i; ++j)
-            this->prot_deallocate_node(start[j]);
-         BOOST_CONTAINER_RETHROW
-      }
-      BOOST_CONTAINER_CATCH_END
    }
 
    void priv_reserve_elements_at_front(size_type n)
    {
-      const size_type vacancies = this->prot_front_capacity();
+      const size_type vacancies = this->prot_front_free_capacity();
 
       if (n > vacancies){  //n == 0 handled in the else part
          if(this->members_.m_map){
             const size_type new_elems = size_type(n - vacancies);
             const size_type additional_nodes = size_type((new_elems - 1u)/get_block_size() + 1u);
             index_pointer start_node = this->prot_start_node();
-            size_type front_unused_slots = size_type(start_node - this->members_.m_map);
-            if (additional_nodes > front_unused_slots){
-               //Start node might have changed when reallocating the map
+            BOOST_IF_CONSTEXPR(is_reservable) {
                index_pointer finish_node;
-               this->priv_reallocate_map(additional_nodes, true, start_node, finish_node);
+               this->prot_reallocate_map_and_nodes(additional_nodes, true, start_node, finish_node);
                (void) finish_node;
             }
-            this->priv_allocate_nodes(start_node - difference_type(additional_nodes), additional_nodes);
+            else {
+               size_type front_unused_slots = size_type(start_node - this->members_.m_map);
+               if (additional_nodes > front_unused_slots){
+                  //Start node might have changed when reallocating the map
+                  index_pointer finish_node;
+                  this->prot_reallocate_map_and_nodes(additional_nodes, true, start_node, finish_node);
+                  (void) finish_node;
+               }
+               this->prot_allocate_nodes(start_node - difference_type(additional_nodes), additional_nodes);
+            }
          }
          else {
             this->prot_initialize_map_and_nodes(n);
@@ -2842,69 +3010,36 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
 
    void priv_reserve_elements_at_back(size_type n)
    {
-      const size_type vacancies = this->prot_back_capacity();
+      const size_type vacancies = this->prot_back_free_capacity();
 
       if (n > vacancies){  //n == 0 handled in the else part
          if(this->members_.m_map){
             const size_type new_elems = size_type(n - vacancies);
             const size_type additional_nodes = size_type((new_elems - 1u)/get_block_size() + 1u);
             index_pointer finish_node = this->prot_finish_node();
-            //Finish node is already allocated so the unused slots are [finish_node + 1, m_map + map_size)
-            const size_type back_unused_slots = size_type(this->members_.m_map_size - 1u - size_type(finish_node - this->members_.m_map));
-            if (additional_nodes > back_unused_slots){
+            BOOST_IF_CONSTEXPR(is_reservable) {
                index_pointer start_node;
-               //Finish node might have changed when reallocating the map
-               this->priv_reallocate_map(additional_nodes, false, start_node, finish_node);
+               this->prot_reallocate_map_and_nodes(additional_nodes, false, start_node, finish_node);
                (void) start_node;
             }
-            this->priv_allocate_nodes(finish_node + 1, additional_nodes);
+            else{
+               //Finish node is already allocated so the unused slots are [finish_node + 1, m_map + map_size)
+               const size_type back_unused_slots =
+                  size_type(this->members_.m_map_size - 1u - size_type(finish_node - this->members_.m_map));
+               if (additional_nodes > back_unused_slots){
+                  index_pointer start_node;
+                  //Finish node might have changed when reallocating the map
+                  this->prot_reallocate_map_and_nodes(additional_nodes, false, start_node, finish_node);
+                  (void) start_node;
+               }
+               this->prot_allocate_nodes(finish_node + 1, additional_nodes);
+            }
          }
          else{
             this->prot_initialize_map_and_nodes(n);
             this->prot_reset_finish_to_start();
          }
       }
-   }
-
-   void priv_reallocate_map(size_type nodes_to_add, bool add_at_front, index_pointer &new_start_segment, index_pointer &new_finish_segment)
-   {
-      const index_pointer start_node = this->prot_start_node();
-      const index_pointer finish_node = this->prot_finish_node();
-      const index_pointer next_finish_node = finish_node + 1u;
-      size_type old_num_nodes = size_type(next_finish_node - start_node);
-      size_type new_num_nodes = size_type(old_num_nodes + nodes_to_add);
-
-      index_pointer new_nstart;
-      const size_type map_size = this->members_.m_map_size;
-      if (map_size/2u >= new_num_nodes) {
-         new_nstart = this->members_.m_map + difference_type((map_size - new_num_nodes) / 2)
-                                           + difference_type(add_at_front ? nodes_to_add : 0u);
-         if (new_nstart < start_node)
-            boost::container::move_n(start_node, old_num_nodes, new_nstart);
-         else
-            boost::container::move_backward_n(next_finish_node, old_num_nodes, new_nstart + difference_type(old_num_nodes));
-      }
-      else {
-         //Doubling size, but at least one spare slot on each end
-         const size_type new_map_size = dtl::max_value(size_type(map_size*2), size_type(nodes_to_add + 2u));
-
-         //The end position must be representable in stored_size_type
-         this->test_size_against_n_nodes(new_map_size);
-
-         const index_pointer new_map = this->prot_allocate_map(new_map_size);
-         new_nstart = new_map + difference_type((new_map_size - new_num_nodes) / 2)
-                              + difference_type(add_at_front ? nodes_to_add : 0u);;
-         boost::container::move_n(start_node, old_num_nodes, new_nstart);
-         this->prot_deallocate_map(this->members_.m_map, this->members_.m_map_size);
-
-         this->members_.m_map = new_map;
-         this->members_.m_map_size = static_cast<stored_size_type>(new_map_size);
-      }
-
-      new_start_segment = new_nstart;
-      new_finish_segment = new_nstart + difference_type(old_num_nodes - 1u);
-      this->prot_start_update_node(new_start_segment);
-      this->prot_finish_update_node(new_finish_segment);
    }
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

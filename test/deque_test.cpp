@@ -114,8 +114,7 @@ public:
    deque<recursive_deque>::const_reverse_iterator crit_;
 };
 
-template<class IntType>
-bool do_test()
+bool do_recursive_deque_test()
 {
    //Test for recursive types
    {
@@ -130,14 +129,21 @@ bool do_test()
       move_assign = boost::move(move_ctor);
       move_assign.swap(original);
    }
+   return true;
+}
+
+template<class IntType, bool Reservable>
+bool do_test()
+{
+   typedef typename deque_options<reservable<Reservable> >::type DequeOptions;
    {
-   typedef deque<IntType>  MyCntDeque;
+   typedef deque<IntType, void, DequeOptions>  MyCntDeque;
       ::boost::movelib::unique_ptr<MyCntDeque> const pcntdeque = ::boost::movelib::make_unique<MyCntDeque>();
       pcntdeque->erase(pcntdeque->cbegin(), pcntdeque->cend());
    }
 
    //Alias deque types
-   typedef deque<IntType>  MyCntDeque;
+   typedef deque<IntType, void, DequeOptions>  MyCntDeque;
    typedef std::deque<int> MyStdDeque;
    const int max = 100;
    {
@@ -149,6 +155,8 @@ bool do_test()
          IntType move_me(i);
          cntdeque.insert(cntdeque.end(), boost::move(move_me));
          stddeque.insert(stddeque.end(), i);
+         if(!test::CheckEqualContainers(cntdeque, stddeque))
+            return false;
       }
       if(!test::CheckEqualContainers(cntdeque, stddeque)) return false;
 
@@ -159,6 +167,7 @@ bool do_test()
          IntType move_me(i);
          cntdeque.push_back(boost::move(move_me));
          stddeque.push_back(i);
+         if(!test::CheckEqualContainers(cntdeque, stddeque)) return false;
       }
       if(!test::CheckEqualContainers(cntdeque, stddeque)) return false;
 
@@ -169,6 +178,8 @@ bool do_test()
          IntType move_me(i);
          cntdeque.push_front(boost::move(move_me));
          stddeque.push_front(i);
+         if(!test::CheckEqualContainers(cntdeque, stddeque))
+            return false;
       }
       if(!test::CheckEqualContainers(cntdeque, stddeque)) return false;
 
@@ -314,7 +325,7 @@ bool do_test()
    return true;
 }
 
-template<class VoidAllocator>
+template<class VoidAllocator, bool Reservable>
 struct GetAllocatorCont
 {
    template<class ValueType>
@@ -323,18 +334,19 @@ struct GetAllocatorCont
       typedef deque< ValueType
                     , typename allocator_traits<VoidAllocator>
                         ::template portable_rebind_alloc<ValueType>::type
+                    , typename deque_options<reservable<Reservable> >::type
                     > type;
    };
 };
 
-template<class VoidAllocator>
+template<class VoidAllocator, bool Reservable>
 int test_cont_variants()
 {
-   typedef typename GetAllocatorCont<VoidAllocator>::template apply<int>::type MyCont;
-   typedef typename GetAllocatorCont<VoidAllocator>::template apply<test::movable_int>::type MyMoveCont;
-   typedef typename GetAllocatorCont<VoidAllocator>::template apply<test::movable_and_copyable_int>::type MyCopyMoveCont;
-   typedef typename GetAllocatorCont<VoidAllocator>::template apply<test::copyable_int>::type MyCopyCont;
-   typedef typename GetAllocatorCont<VoidAllocator>::template apply<test::moveconstruct_int>::type MyMoveConstructCont;
+   typedef typename GetAllocatorCont<VoidAllocator, Reservable>::template apply<int>::type MyCont;
+   typedef typename GetAllocatorCont<VoidAllocator, Reservable>::template apply<test::movable_int>::type MyMoveCont;
+   typedef typename GetAllocatorCont<VoidAllocator, Reservable>::template apply<test::movable_and_copyable_int>::type MyCopyMoveCont;
+   typedef typename GetAllocatorCont<VoidAllocator, Reservable>::template apply<test::copyable_int>::type MyCopyCont;
+   typedef typename GetAllocatorCont<VoidAllocator, Reservable>::template apply<test::moveconstruct_int>::type MyMoveConstructCont;
 
    if (test::vector_test<MyCont>())
       return 1;
@@ -375,6 +387,11 @@ bool do_test_default_block_size()
    BOOST_TEST(deque<char_holder<64> >::get_block_size() == 2*sizeof(void*));
    BOOST_TEST(deque<char_holder<68> >::get_block_size() == 2*sizeof(void*));
    BOOST_TEST(deque<char_holder<72> >::get_block_size() == 2*sizeof(void*));
+   BOOST_TEST(deque<char_holder<76> >::get_block_size() == 2*sizeof(void*));
+   BOOST_TEST(deque<char_holder<80> >::get_block_size() == 2*sizeof(void*));
+   BOOST_TEST(deque<char_holder<84> >::get_block_size() == 2*sizeof(void*));
+   BOOST_TEST(deque<char_holder<88> >::get_block_size() == 2*sizeof(void*));
+   BOOST_TEST(deque<char_holder<92> >::get_block_size() == 2*sizeof(void*));
    //Minimal 8 elements
    BOOST_TEST(deque<char_holder<148> >::get_block_size() == 8u);
    return 0 == boost::report_errors();
@@ -398,18 +415,23 @@ struct alloc_propagate_base<boost_container_deque>
 
 int main ()
 {
-   if(!do_test<int>())
+   if(!do_recursive_deque_test())
       return 1;
 
-   if(!do_test<test::movable_int>())
+   //Non-reservable deque
+   if(!do_test<int, false>())
       return 1;
 
-   if(!do_test<test::movable_and_copyable_int>())
+   if(!do_test<test::movable_int, true>())
       return 1;
 
-   if(!do_test<test::copyable_int>())
+   if(!do_test<test::movable_and_copyable_int, false>())
       return 1;
 
+   if(!do_test<test::copyable_int, true>())
+      return 1;
+
+   //Default block size
    if(!do_test_default_block_size())
       return 1;
 
@@ -422,17 +444,18 @@ int main ()
       d.resize(1);
    }
 
+
    ////////////////////////////////////
    //    Allocator implementations
    ////////////////////////////////////
    //       std:allocator
-   if(test_cont_variants< std::allocator<void> >()){
+   if(test_cont_variants< std::allocator<void>, false >()){
       std::cerr << "test_cont_variants< std::allocator<void> > failed" << std::endl;
       return 1;
    }
 
    //       boost::container::allocator
-   if(test_cont_variants< allocator<void> >()){
+   if(test_cont_variants< allocator<void>, true >()){
       std::cerr << "test_cont_variants< allocator<void> > failed" << std::endl;
       return 1;
    }
