@@ -1230,6 +1230,15 @@ class devector
       BOOST_ASSERT(invariants_ok());
    }
 
+   inline size_type front_capacity() const
+   {
+      return m_.back_idx;
+   }
+
+   inline size_type back_capacity() const
+   {
+      return size_type(m_.capacity - m_.front_idx);
+   }
 
    /**
     * [MoveInsertable]: http://en.cppreference.com/w/cpp/concept/MoveInsertable
@@ -2261,16 +2270,6 @@ class devector
    inline static iterator unconst_iterator(const_iterator i)
    {
       return boost::intrusive::pointer_traits<pointer>::const_cast_from(i);
-   }
-
-   inline size_type front_capacity() const
-   {
-      return m_.back_idx;
-   }
-
-   inline size_type back_capacity() const
-   {
-      return size_type(m_.capacity - m_.front_idx);
    }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
