@@ -1238,8 +1238,6 @@ public:
 
 //! @brief Checks if contents of two static_vectors are equal.
 //!
-//! @ingroup static_vector_non_member
-//!
 //! @param x    The first static_vector.
 //! @param y    The second static_vector.
 //!
@@ -1251,8 +1249,6 @@ template<typename V, std::size_t C1, std::size_t C2, class O1, class O2>
 bool operator== (static_vector<V, C1, O1> const& x, static_vector<V, C2, O2> const& y);
 
 //! @brief Checks if contents of two static_vectors are not equal.
-//!
-//! @ingroup static_vector_non_member
 //!
 //! @param x    The first static_vector.
 //! @param y    The second static_vector.
@@ -1266,8 +1262,6 @@ bool operator!= (static_vector<V, C1, O1> const& x, static_vector<V, C2, O2> con
 
 //! @brief Lexicographically compares static_vectors.
 //!
-//! @ingroup static_vector_non_member
-//!
 //! @param x    The first static_vector.
 //! @param y    The second static_vector.
 //!
@@ -1279,8 +1273,6 @@ template<typename V, std::size_t C1, std::size_t C2, class O1, class O2>
 bool operator< (static_vector<V, C1, O1> const& x, static_vector<V, C2, O2> const& y);
 
 //! @brief Lexicographically compares static_vectors.
-//!
-//! @ingroup static_vector_non_member
 //!
 //! @param x    The first static_vector.
 //! @param y    The second static_vector.
@@ -1294,8 +1286,6 @@ bool operator> (static_vector<V, C1, O1> const& x, static_vector<V, C2, O2> cons
 
 //! @brief Lexicographically compares static_vectors.
 //!
-//! @ingroup static_vector_non_member
-//!
 //! @param x    The first static_vector.
 //! @param y    The second static_vector.
 //!
@@ -1307,8 +1297,6 @@ template<typename V, std::size_t C1, std::size_t C2, class O1, class O2>
 bool operator<= (static_vector<V, C1, O1> const& x, static_vector<V, C2, O2> const& y);
 
 //! @brief Lexicographically compares static_vectors.
-//!
-//! @ingroup static_vector_non_member
 //!
 //! @param x    The first static_vector.
 //! @param y    The second static_vector.
@@ -1323,8 +1311,6 @@ bool operator>= (static_vector<V, C1, O1> const& x, static_vector<V, C2, O2> con
 //! @brief Swaps contents of two static_vectors.
 //!
 //! This function calls static_vector::swap().
-//!
-//! @ingroup static_vector_non_member
 //!
 //! @param x    The first static_vector.
 //! @param y    The second static_vector.
