@@ -33,7 +33,7 @@ In short, what does [*Boost.Container] offer?
 
 * Emplacement and move semantics are implemented, including emulation for pre-C++11 compilers.
 * Polymorphic allocators and memory resources, including implementation and emulation for pre-C++17 compilers
-* New advanced features (e.g. recursive containers) and configurability options [link container.configurable_containers] for containers.
+* New advanced features (e.g. recursive containers) and [link container.configurable_containers configurability options for containers].
 * Containers support stateful allocators and are compatible with [*Boost.Interprocess]
   (they can be safely placed in shared memory).
 * Users obtain a more uniform performance across all plataforms,
@@ -1377,6 +1377,8 @@ use [*Boost.Container]? There are several reasons for that:
 
 [import ../../../tools/auto_index/include/auto_index_helpers.qbk]
 
+[section:index_reference Indexes and Reference]
+
 [section:index Indexes]
 
 [named_index class_name Class Index]
@@ -1388,6 +1390,10 @@ use [*Boost.Container]? There are several reasons for that:
 [endsect]
 
 [xinclude autodoc.xml]
+
+[endsect]
+
+[section:ack_notes Acknowledgements and Release Notes]
 
 [section:acknowledgements_notes Acknowledgements, notes and links]
 
@@ -2025,6 +2031,8 @@ use [*Boost.Container]? There are several reasons for that:
 
 *  First release. Container code from [*Boost.Interprocess] was deleted
    and redirected to [*Boost.Container ] via using directives.
+
+[endsect]
 
 [endsect]
 
