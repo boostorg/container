@@ -124,8 +124,6 @@ struct hash_opt
 
 typedef hash_opt<false, false, false, false> hash_assoc_defaults;
 
-#endif   //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-
 //!This option setter specifies if nodes also store the hash value
 //!so that search and rehashing for hash-expensive types is improved.
 //!This option might degrade performance for easy to hash types (like integers)
@@ -178,6 +176,8 @@ using hash_assoc_options_t = typename boost::container::hash_assoc_options<Optio
 
 #endif
 
+#endif   //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
 ////////////////////////////////////////////////////////////////
 //
 //
@@ -212,9 +212,7 @@ struct default_if_zero<0u, DefaultN>
    BOOST_STATIC_CONSTEXPR std::size_t value = DefaultN;
 };
 
-
-
-#endif
+#endif   //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -246,7 +244,7 @@ class default_next_capacity;
 
 typedef vector_opt<void, void> vector_null_opt;
 
-#else    //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+#else
 
 //!This growth factor argument specifies that the container should increase its
 //!capacity a 50% when existing capacity is exhausted.
@@ -262,20 +260,30 @@ struct growth_factor_100{};
 
 #endif   //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-//!This option setter specifies the growth factor strategy of the underlying vector.
+//!This option setter specifies the growth factor strategy of the
+//!underlying vector.
 //!
-//!\tparam GrowthFactor A function object that has the following signature:<br/><br/>
-//!`template<class SizeType>`<br/>
-//!`SizeType operator()(SizeType cur_cap, SizeType add_min_cap, SizeType max_cap) const;`.<br/><br/>
-//!`cur_cap` is the current capacity, `add_min_cap` is the minimum additional capacity
-//!we want to achieve and `max_cap` is the maximum capacity that the allocator or other 
-//!factors allow. The implementation should return a value between `cur_cap` + `add_min_cap`
-//!and `max_cap`. `cur_cap` + `add_min_cap` is guaranteed not to overflow/wraparound,
-//! but the implementation should handle wraparound produced by the growth factor.
+//!\tparam GrowthFactor The function object that implements the growth factor
+//!
+//! The GrowthFactor function object must offer the following interface:
+//!
+//!\code
+//!template<class SizeType>
+//!SizeType operator()(SizeType cur_cap, SizeType add_min_cap, SizeType max_cap) const;
+//!\endcode
+//!
+//!Where:
+//!   * `cur_cap` is the current capacity
+//!   * `add_min_cap` is the minimum additional capacity we want to achieve
+//!   * `max_cap` is the maximum capacity that the allocator or other factors allow.
+//!
+//!The implementation should return a value between `cur_cap + add_min_cap`
+//!and `max_cap`. The implementation should handle the potential wraparound produced
+//!by the growth factor and always succeed with a correct value.
 //!
 //!Predefined growth factors that can be passed as arguments to this option are:
-//!\c boost::container::growth_factor_50
-//!\c boost::container::growth_factor_60
+//!\c boost::container::growth_factor_50,
+//!\c boost::container::growth_factor_60 and
 //!\c boost::container::growth_factor_100
 //!
 //!If this option is not specified, a default will be used by the container.
@@ -630,7 +638,8 @@ typedef deque_opt<0u, 0u, void, false> deque_null_opt;
 
 //! Helper metafunction to combine options into a single type to be used
 //! by \c boost::container::deque.
-//! Supported options are: \c boost::container::block_bytes and \c boost::container::block_size
+//! Supported options are: \c boost::container::block_bytes, \c boost::container::block_size,
+//! \c boost::container::stored_size and \c boost::container::reservable
 #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
 template<class ...Options>
 #else
@@ -682,8 +691,9 @@ BOOST_INTRUSIVE_OPTION_CONSTANT(block_size, std::size_t, BlockSize, block_size)
 
 //!This option specifies if the container has reserve/capacity-like features
 //!
-//!For some containers (like deque) this value changes the internal representation
-//!so that memory for elements can be allocated in advance to improve performance.
+//!For some containers (like deque) this option might change the internal representation or
+//!behavior so that memory for elements can be allocated in advance in
+//!order to improve performance.
 //!
 //!\tparam Reservable An boolean value.
 BOOST_INTRUSIVE_OPTION_CONSTANT(reservable, bool, Reservable, reservable)
