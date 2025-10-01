@@ -834,6 +834,13 @@ Only one of these paratemers can be specified:
    If this option is specified, `deque::get_block_size()` will return the specified `block_size`.
    A value of zero means the default value.
 
+*  [classref boost::container::stored_size stored_size]: the type that will be used to store size-related
+   parameters inside the deque. Sometimes, when the maximum deque capacity to be used is much less than
+   `std::size_t` capacity, it may be beneficial to use a smaller unsigned integer type to represent
+   positions and offsets inside the deque, so that the size of an empty deque object is minimized and cache 
+   performance is possibly improved. See [classref boost::container::stored_size stored_size] for more details.
+
+
 See the following example to see how [classref boost::container::deque_options deque_options] can be
 used to customize `deque`:
 
