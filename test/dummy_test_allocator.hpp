@@ -31,6 +31,7 @@
 #include <boost/container/detail/multiallocation_chain.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/version_type.hpp>
+#include <boost/container/detail/operator_new_helpers.hpp>
 
 #include <boost/move/utility_core.hpp>
 #include <boost/move/adl_move_swap.hpp>
@@ -59,18 +60,11 @@ class simple_allocator
    simple_allocator(const simple_allocator<U> &)
    {}
 
-   T* allocate(std::size_t n)
-   { return (T*) ::operator new(sizeof(T) * n);  }
+   value_type* allocate(std::size_t count)
+   {  return boost::container::dtl::operator_new_allocate<value_type>(count);  }
 
-   void deallocate(T *ptr, std::size_t n) BOOST_NOEXCEPT_OR_NOTHROW
-   {
-      (void)n;
-      # if defined(__cpp_sized_deallocation)
-      ::operator delete((void*)ptr, n * sizeof(T));
-      #else
-      ::operator delete((void*)ptr);
-      # endif
-   }
+   void deallocate(value_type *ptr, std::size_t n)
+   {  return boost::container::dtl::operator_delete_deallocate<T>(ptr, n);  }
 
    friend bool operator==(const simple_allocator &, const simple_allocator &)
    {  return true;  }
@@ -181,18 +175,11 @@ class propagation_test_allocator
    static void reset_unique_id(unsigned id = 0)
    {  unique_id_ = id;  }
 
-   T* allocate(std::size_t n)
-   {  return static_cast<T*>(::operator new(n * sizeof(T)));  }
+   value_type* allocate(std::size_t count)
+   {  return boost::container::dtl::operator_new_allocate<value_type>(count);  }
 
-   void deallocate(T *ptr, std::size_t n) BOOST_NOEXCEPT_OR_NOTHROW
-   {
-      (void)n;
-      # if defined(__cpp_sized_deallocation)
-      ::operator delete((void*)ptr, n * sizeof(T));
-      #else
-      ::operator delete((void*)ptr);
-      # endif
-   }
+   void deallocate(value_type *ptr, std::size_t n)
+   {  return boost::container::dtl::operator_delete_deallocate<T>(ptr, n);  }
 
    friend bool operator==(const propagation_test_allocator &a, const propagation_test_allocator &b)
    {  return EqualIfEqualIds ? a.id_ == b.id_ : true;  }
