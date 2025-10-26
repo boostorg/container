@@ -19,6 +19,7 @@
 #endif
 
 #include <boost/container/detail/std_fwd.hpp>
+#include <boost/container/throw_exception.hpp>
 
 namespace boost {
 namespace container {
