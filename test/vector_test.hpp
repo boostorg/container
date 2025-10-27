@@ -626,8 +626,11 @@ int vector_test()
       if(!test::CheckEqualContainers(*boostvectorp2, *stdvectorp)) return 1;
    }
 
-   if (0 != vector_test_fully_propagable<MyBoostVector>
-         ( dtl::bool_< !allocator_traits<typename MyBoostVector::allocator_type>::is_partially_propagable::value >() ))   return 1;
+   typedef BOOST_INTRUSIVE_OBTAIN_TYPE_WITH_DEFAULT(boost::container::dtl::, MyBoostVector,
+      is_partially_propagable, dtl::false_type)
+         is_partially_propagable_t;
+
+   if (0 != vector_test_fully_propagable<MyBoostVector>( dtl::bool_< !is_partially_propagable_t::value >() ))   return 1;
 
    if (0 != vector_move_assignable_only< MyBoostVector>(dtl::bool_<boost::container::test::is_move_assignable<IntType>::value>()))
       return 1;

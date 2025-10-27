@@ -127,10 +127,11 @@ class small_vector_allocator
 {
    typedef unsigned int allocation_type;
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   private:
 
+   public:
    typedef typename allocator_traits<VoidAlloc>::template portable_rebind_alloc<T>::type allocator_type;
 
+   private:
    BOOST_COPYABLE_AND_MOVABLE(small_vector_allocator)
 
    inline const allocator_type &as_base() const BOOST_NOEXCEPT
@@ -353,7 +354,8 @@ class small_vector_base
    typedef typename real_allocator<T, SecAlloc>::type                     underlying_allocator_t;
    typedef typename allocator_traits<underlying_allocator_t>::
       template portable_rebind_alloc<void>::type                          void_underlying_allocator_t;
-   typedef small_vector_allocator<T, void_underlying_allocator_t, Options>allocator_type;
+   typedef typename small_vector_allocator
+      <T, void_underlying_allocator_t, Options>::allocator_type           allocator_type;
    typedef typename dtl::get_small_vector_opt<Options>::type              options_t;
    typedef typename dtl::vector_for_small_vector
       <T, SecAlloc, Options>::type                                        base_type;
@@ -548,6 +550,7 @@ class small_vector
    BOOST_COPYABLE_AND_MOVABLE(small_vector)
 
    public:
+   typedef dtl::true_type is_partially_propagable;
    typedef small_vector_base<T, Allocator, Options>   base_type;
    typedef typename base_type::allocator_type         allocator_type;
    typedef typename base_type::size_type              size_type;
