@@ -1450,7 +1450,7 @@ use [*Boost.Container]? There are several reasons for that:
    * [@https://github.com/boostorg/container/pull/317/ GitHub #293: ['"UBSAN reports unaligned access error"]].
    * [@https://github.com/boostorg/container/pull/294 GitHub #294: ['"CMake: Add option to use header-only Boost::container"]].
    * [@https://github.com/boostorg/container/issues/300 GitHub #300: ['"Warnings when building with clang-20"]].
-   * [@https://github.com/boostorg/container/issues/300 GitHub #304: ['"Usage of boost::container::small_vector with custom allocator"]].
+   * [@https://github.com/boostorg/container/issues/304 GitHub #304: ['"Usage of boost::container::small_vector with custom allocator"]].
    * [@https://github.com/boostorg/container/pull/305 GitHub #305: ['"Warnings with -Wstrict-prototypes"]].
    * [@https://github.com/boostorg/container/pull/307 GitHub #307: ['"Fix all instances of MSVC warning C4146 (unsigned negation)"]].
    * [@https://github.com/boostorg/container/issues/309 GitHub #309: ['"Performance regression of boost::container::static_vector introduced in boost v1.86"]].
@@ -1458,6 +1458,7 @@ use [*Boost.Container]? There are several reasons for that:
    * [@https://github.com/boostorg/container/issues/310 GitHub #310: ['"flat_map: Mention correct type in documentation of emplace and emplace_hint"]].
    * [@https://github.com/boostorg/container/issues/312 GitHub #312: ['"flat_map std::allocator::is_always_equal is deprecated"]].
    * [@https://github.com/boostorg/container/pull/317/ GitHub #317: ['"Partial revert of changes for Issue #209 - compiler warnings"]].
+   * [@https://github.com/boostorg/container/pull/321/ GitHub #321: ['"devector does not work with pmr allocators"]].
 
 [endsect]
 
