@@ -675,6 +675,28 @@ class small_vector
    {  this->base_type::prot_shrink_to_fit_small(this->internal_capacity());   }
 };
 
+//! <b>Effects</b>: Erases all elements that compare equal to v from the container c.
+//!
+//! <b>Complexity</b>: Linear.
+template <class T, std::size_t N, class A, class O, class U>
+inline typename small_vector<T, N, A, O>::size_type erase(small_vector<T, N, A, O>& c, const U& v)
+{
+  typename small_vector<T, N, A, O>::size_type old_size = c.size();
+  c.erase(boost::container::remove(c.begin(), c.end(), v), c.end());
+  return old_size - c.size();
+}
+
+//! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
+//!
+//! <b>Complexity</b>: Linear.
+template <class T, std::size_t N, class A, class O, class Pred>
+inline typename small_vector<T, N, A, O>::size_type erase_if(small_vector<T, N, A, O>& c, Pred pred)
+{
+  typename small_vector<T, N, A, O>::size_type old_size = c.size();
+  c.erase(boost::container::remove_if(c.begin(), c.end(), pred), c.end());
+  return old_size - c.size();
+}
+
 }}
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

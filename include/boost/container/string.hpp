@@ -3550,6 +3550,28 @@ getline(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allocat
    return getline(is, s, '\n');
 }
 
+//! <b>Effects</b>: Erases all elements that compare equal to v from the container c.
+//!
+//! <b>Complexity</b>: Linear.
+template <class T, class Tr, class A, class U>
+inline typename basic_string<T, Tr, A>::size_type erase(basic_string<T, Tr, A>& c, const U& v)
+{
+  typename basic_string<T, Tr, A>::size_type old_size = c.size();
+  c.erase(boost::container::remove(c.begin(), c.end(), v), c.end());
+  return old_size - c.size();
+}
+
+//! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
+//!
+//! <b>Complexity</b>: Linear.
+template <class T, class Tr, class A, class Pred>
+inline typename basic_string<T, Tr, A>::size_type erase_if(basic_string<T, Tr, A>& c, Pred pred)
+{
+  typename basic_string<T, Tr, A>::size_type old_size = c.size();
+  c.erase(boost::container::remove_if(c.begin(), c.end(), pred), c.end());
+  return old_size - c.size();
+}
+
 }}
 
 //GCC 12 has a regression for array-bounds warnings

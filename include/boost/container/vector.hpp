@@ -3351,6 +3351,27 @@ vector(InputIterator, InputIterator, Allocator const&) ->
 
 #endif
 
+//! <b>Effects</b>: Erases all elements that compare equal to v from the container c.
+//!
+//! <b>Complexity</b>: Linear.
+template <class T, class A, class O, class U>
+inline typename vector<T, A, O>::size_type erase(vector<T, A, O>& c, const U& v)
+{
+  typename vector<T, A, O>::size_type old_size = c.size();
+  c.erase(boost::container::remove(c.begin(), c.end(), v), c.end());
+  return old_size - c.size();
+}
+
+//! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
+//!
+//! <b>Complexity</b>: Linear.
+template <class T, class A, class O, class Pred>
+inline typename vector<T, A, O>::size_type erase_if(vector<T, A, O>& c, Pred pred)
+{
+  typename vector<T, A, O>::size_type old_size = c.size();
+  c.erase(boost::container::remove_if(c.begin(), c.end(), pred), c.end());
+  return old_size - c.size();
+}
 
 }} //namespace boost::container
 

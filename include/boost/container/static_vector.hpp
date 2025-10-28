@@ -1333,6 +1333,28 @@ inline void swap(static_vector<V, C1, O1> & x, static_vector<V, C2, O2> & y
 
 #endif // BOOST_CONTAINER_DOXYGEN_INVOKED
 
+//! <b>Effects</b>: Erases all elements that compare equal to v from the container c.
+//!
+//! <b>Complexity</b>: Linear.
+template <class T, std::size_t N, class O, class U>
+inline typename static_vector<T, N, O>::size_type erase(static_vector<T, N, O>& c, const U& v)
+{
+  typename static_vector<T, N, O>::size_type old_size = c.size();
+  c.erase(boost::container::remove(c.begin(), c.end(), v), c.end());
+  return old_size - c.size();
+}
+
+//! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
+//!
+//! <b>Complexity</b>: Linear.
+template <class T, std::size_t N, class O, class Pred>
+inline typename static_vector<T, N, O>::size_type erase_if(static_vector<T, N, O>& c, Pred pred)
+{
+  typename static_vector<T, N, O>::size_type old_size = c.size();
+  c.erase(boost::container::remove_if(c.begin(), c.end(), pred), c.end());
+  return old_size - c.size();
+}
+
 }} // namespace boost::container
 
 #include <boost/container/detail/config_end.hpp>
