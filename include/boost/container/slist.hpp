@@ -1629,8 +1629,8 @@ class slist
       Icont &icont_;
       typedef typename Icont::iterator       iiterator;
       typedef typename Icont::const_iterator iconst_iterator;
-      const iconst_iterator prev_;
-      iiterator   ret_;
+      iconst_iterator prev_;
+      iiterator ret_;
 
       public:
       insertion_functor(Icont &icont, typename Icont::const_iterator prev)
@@ -1639,11 +1639,16 @@ class slist
 
       void operator()(Node &n)
       {
-         ret_ = this->icont_.insert_after(prev_, n);
+         prev_ = this->icont_.insert_after(prev_, n);
+         if(!ret_)
+            ret_ = prev_.unconst();
       }
 
       iiterator inserted_first() const
-      {  return ret_;   }
+      {
+         iiterator f(ret_);
+         return ++f;
+      }
    };
 
    //Functors for member algorithm defaults
