@@ -36,8 +36,11 @@ class equal_to_value
       :  t_(t)
    {}
 
-   inline bool operator()(const value_type &t)const
-   {  return t_ == t;   }
+   template <class U>
+   inline bool operator()(const U &t)const
+   {
+      return t_ == t;
+   }
 };
 
 template<class Node, class Pred, class Ret = bool>
