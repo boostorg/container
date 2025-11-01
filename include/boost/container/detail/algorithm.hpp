@@ -213,6 +213,28 @@ FwdIt remove_if(FwdIt first, FwdIt last, Pred p)
     return first;
 }
 
+template <class Cont, class Pred>
+typename Cont::size_type container_erase_if(Cont& c, Pred p)
+{
+   typedef typename Cont::size_type size_type;
+   typedef typename Cont::iterator  it_t;
+
+   size_type prev_size = c.size();
+   it_t it         = c.begin();
+
+   //end() must be called each loop for non-node containers
+   while ( it != c.end() ) {
+      if (p(*it)) {
+         it = c.erase(it);
+      }
+      else {
+         ++it;
+      }
+   }
+
+   return prev_size - c.size();
+}
+
 }  //namespace container {
 }  //namespace boost {
 
