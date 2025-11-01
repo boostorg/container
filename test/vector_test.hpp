@@ -20,6 +20,7 @@
 #include <boost/move/utility_core.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/algorithm.hpp>
+#include <boost/container/detail/compare_functors.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/make_unique.hpp>
@@ -577,13 +578,21 @@ int vector_move_assignable_only(boost::container::dtl::true_type)
                      ,boost::make_move_iterator(aux_vect + 50));
       stdvector.insert(stdvector.end(), aux_vect2, aux_vect2 + 50);
 
+      //erase
       if (1 != erase(boostvector, 25))
+         return 1;
+      if (0 != erase(boostvector, 25))
          return 1;
       stdvector.erase(boost::container::find(stdvector.begin(), stdvector.end(), 25));
       if(!test::CheckEqualContainers(boostvector, stdvector)) return false;
 
-      if (0 != erase(boostvector, 25))
+      //erase_if
+      if (1 != erase_if(boostvector, equal_to_value<int>(24)))
          return 1;
+      if (0 != erase_if(boostvector, equal_to_value<int>(24)))
+         return 1;
+      stdvector.erase(boost::container::find(stdvector.begin(), stdvector.end(), 24));
+      if(!test::CheckEqualContainers(boostvector, stdvector)) return false;
    }
    return 0;
 }

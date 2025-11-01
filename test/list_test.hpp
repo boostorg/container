@@ -13,6 +13,7 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/iterator.hpp>
+#include <boost/container/detail/compare_functors.hpp>
 #include "check_equal_containers.hpp"
 #include "print_container.hpp"
 #include "input_from_forward_iterator.hpp"
@@ -102,13 +103,22 @@ bool list_copyable_only(V1 &boostlist, V2 &stdlist, boost::container::dtl::true_
       stdlist.insert(stdlist.end(), aux_vect2, aux_vect2 + 50);
       if(!test::CheckEqualContainers(boostlist, stdlist)) return false;
 
+      //erase
       if (1 != erase(boostlist, 25))
          return 1;
+      if (0 != erase(boostlist, 25))
+         return 1;
+
       stdlist.erase(boost::container::find(stdlist.begin(), stdlist.end(), 25));
       if(!test::CheckEqualContainers(boostlist, stdlist)) return false;
 
-      if (0 != erase(boostlist, 25))
+      //erase_if
+      if (1 != erase_if(boostlist, equal_to_value<int>(24)))
          return 1;
+      if (0 != erase_if(boostlist, equal_to_value<int>(24)))
+         return 1;
+      stdlist.erase(boost::container::find(stdlist.begin(), stdlist.end(), 24));
+      if(!test::CheckEqualContainers(boostlist, stdlist)) return false;
    }
    {  //List(const List &, alloc)
       ::boost::movelib::unique_ptr<V1> const pv1 = ::boost::movelib::make_unique<V1>(boostlist, typename V1::allocator_type());
