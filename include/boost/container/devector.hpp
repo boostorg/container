@@ -3046,9 +3046,9 @@ class devector
 template <class T, class A, class O, class U>
 inline typename devector<T, A, O>::size_type erase(devector<T, A, O>& c, const U& v)
 {
-  typename devector<T, A, O>::size_type old_size = c.size();
-  c.erase(boost::container::remove(c.begin(), c.end(), v), c.end());
-  return old_size - c.size();
+   typename devector<T, A, O>::size_type old_size = c.size();
+   c.erase(boost::container::remove(c.begin(), c.end(), v), c.end());
+   return old_size - c.size();
 }
 
 //! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
@@ -3057,9 +3057,9 @@ inline typename devector<T, A, O>::size_type erase(devector<T, A, O>& c, const U
 template <class T, class A, class O, class Pred>
 inline typename devector<T, A, O>::size_type erase_if(devector<T, A, O>& c, Pred pred)
 {
-  typename devector<T, A, O>::size_type old_size = c.size();
-  c.erase(boost::container::remove_if(c.begin(), c.end(), pred), c.end());
-  return old_size - c.size();
+   typename devector<T, A, O>::size_type old_size = c.size();
+   c.erase(boost::container::remove_if(c.begin(), c.end(), pred), c.end());
+   return old_size - c.size();
 }
 
 }} // namespace boost::container

@@ -1664,9 +1664,9 @@ class slist
 template <class T, class A, class U>
 inline typename slist<T, A>::size_type erase(slist<T, A>& c, const U& v)
 {
-  typename slist<T, A>::size_type old_size = c.size();
-  c.remove_if(equal_to_value<U>(v));
-  return old_size - c.size();
+   typename slist<T, A>::size_type old_size = c.size();
+   c.remove_if(equal_to_value<U>(v));
+   return old_size - c.size();
 }
 
 //! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
@@ -1675,9 +1675,9 @@ inline typename slist<T, A>::size_type erase(slist<T, A>& c, const U& v)
 template <class T, class A, class Pred>
 inline typename slist<T, A>::size_type erase_if(slist<T, A>& c, Pred pred)
 {
-  typename slist<T, A>::size_type old_size = c.size();
-  c.remove_if(pred);
-  return old_size - c.size();
+   typename slist<T, A>::size_type old_size = c.size();
+   c.remove_if(pred);
+   return old_size - c.size();
 }
 
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD

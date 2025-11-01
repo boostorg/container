@@ -2257,9 +2257,9 @@ stable_vector(InputIterator, InputIterator, Allocator const&) ->
 template <class T, class A, class U>
 inline typename stable_vector<T, A>::size_type erase(stable_vector<T, A>& c, const U& v)
 {
-  typename stable_vector<T, A>::size_type old_size = c.size();
-  c.erase(boost::container::remove(c.begin(), c.end(), v), c.end());
-  return old_size - c.size();
+   typename stable_vector<T, A>::size_type old_size = c.size();
+   c.erase(boost::container::remove(c.begin(), c.end(), v), c.end());
+   return old_size - c.size();
 }
 
 //! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
@@ -2268,9 +2268,9 @@ inline typename stable_vector<T, A>::size_type erase(stable_vector<T, A>& c, con
 template <class T, class A, class Pred>
 inline typename stable_vector<T, A>::size_type erase_if(stable_vector<T, A>& c, Pred pred)
 {
-  typename stable_vector<T, A>::size_type old_size = c.size();
-  c.erase(boost::container::remove_if(c.begin(), c.end(), pred), c.end());
-  return old_size - c.size();
+   typename stable_vector<T, A>::size_type old_size = c.size();
+   c.erase(boost::container::remove_if(c.begin(), c.end(), pred), c.end());
+   return old_size - c.size();
 }
 
 }  //namespace container {

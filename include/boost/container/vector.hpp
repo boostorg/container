@@ -3368,9 +3368,9 @@ inline typename vector<T, A, O>::size_type erase(vector<T, A, O>& c, const U& v)
 template <class T, class A, class O, class Pred>
 inline typename vector<T, A, O>::size_type erase_if(vector<T, A, O>& c, Pred pred)
 {
-  typename vector<T, A, O>::size_type old_size = c.size();
-  c.erase(boost::container::remove_if(c.begin(), c.end(), pred), c.end());
-  return old_size - c.size();
+   typename vector<T, A, O>::size_type old_size = c.size();
+   c.erase(boost::container::remove_if(c.begin(), c.end(), pred), c.end());
+   return old_size - c.size();
 }
 
 }} //namespace boost::container

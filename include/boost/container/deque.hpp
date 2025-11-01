@@ -3071,9 +3071,9 @@ deque(InputIterator, InputIterator, Allocator const&) -> deque<typename iterator
 template <class T, class A, class O, class U>
 inline typename deque<T, A, O>::size_type erase(deque<T, A, O>& c, const U& v)
 {
-  typename deque<T, A, O>::size_type old_size = c.size();
-  c.erase(boost::container::remove(c.begin(), c.end(), v), c.end());
-  return old_size - c.size();
+   typename deque<T, A, O>::size_type old_size = c.size();
+   c.erase(boost::container::remove(c.begin(), c.end(), v), c.end());
+   return old_size - c.size();
 }
 
 //! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
@@ -3082,9 +3082,9 @@ inline typename deque<T, A, O>::size_type erase(deque<T, A, O>& c, const U& v)
 template <class T, class A, class O, class Pred>
 inline typename deque<T, A, O>::size_type erase_if(deque<T, A, O>& c, Pred pred)
 {
-  typename deque<T, A, O>::size_type old_size = c.size();
-  c.erase(boost::container::remove_if(c.begin(), c.end(), pred), c.end());
-  return old_size - c.size();
+   typename deque<T, A, O>::size_type old_size = c.size();
+   c.erase(boost::container::remove_if(c.begin(), c.end(), pred), c.end());
+   return old_size - c.size();
 }
 
 }  //namespace container
