@@ -32,6 +32,7 @@
 #include <boost/container/detail/value_init.hpp>
 #include <boost/container/detail/pair.hpp>
 #include <boost/container/detail/pair_key_mapped_of_value.hpp>
+#include <boost/container/detail/algorithm.hpp>
 
 // move
 #include <boost/move/traits.hpp>
@@ -1318,6 +1319,15 @@ class map
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
+//! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
+//!
+//! <b>Complexity</b>: Linear.
+template <class K, class M, class C, class A, class O, class Pred>
+inline typename map<K, M, C, A, O>::size_type erase_if(map<K, M, C, A, O>& c, Pred pred)
+{
+   return container_erase_if(c, pred);
+}
+
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD
 
 template <typename InputIterator>
@@ -2241,6 +2251,15 @@ class multimap
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 };
+
+//! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
+//!
+//! <b>Complexity</b>: Linear.
+template <class K, class M, class C, class A, class O, class Pred>
+inline typename multimap<K, M, C, A, O>::size_type erase_if(multimap<K, M, C, A, O>& c, Pred pred)
+{
+   return container_erase_if(c, pred);
+}
 
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD
 

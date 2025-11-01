@@ -1717,6 +1717,15 @@ class flat_map
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
+//! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
+//!
+//! <b>Complexity</b>: Linear.
+template <class K, class M, class C, class A, class Pred>
+inline typename flat_map<K, M, C, A>::size_type erase_if(flat_map<K, M, C, A>& c, Pred pred)
+{
+   return container_erase_if(c, pred);
+}
+
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD
 
 template <typename InputIterator>
@@ -3073,6 +3082,15 @@ class flat_multimap
 #if defined(BOOST_GCC) && (BOOST_GCC >= 100000) && !defined(BOOST_CONTAINER_STD_PAIR_IS_MOVABLE)
 #pragma GCC pop_options
 #endif
+
+//! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
+//!
+//! <b>Complexity</b>: Linear.
+template <class K, class M, class C, class A, class Pred>
+inline typename flat_multimap<K, M, C, A>::size_type erase_if(flat_multimap<K, M, C, A>& c, Pred pred)
+{
+   return container_erase_if(c, pred);
+}
 
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD
 
