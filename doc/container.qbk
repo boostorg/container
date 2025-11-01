@@ -1447,7 +1447,8 @@ use [*Boost.Container]? There are several reasons for that:
 
 * Fixed bugs/issues:
    * [@https://github.com/boostorg/container/issues/248 GitHub #248: ['"flat_map slow insertion introduced in boost-1.80.0"]].
-   * [@https://github.com/boostorg/container/pull/317/ GitHub #293: ['"UBSAN reports unaligned access error"]].
+   * [@https://github.com/boostorg/container/issues/254 GitHub #254: ['"C++20 std::erase_if"]].
+   * [@https://github.com/boostorg/container/issues/293/ GitHub #293: ['"UBSAN reports unaligned access error"]].
    * [@https://github.com/boostorg/container/pull/294 GitHub #294: ['"CMake: Add option to use header-only Boost::container"]].
    * [@https://github.com/boostorg/container/issues/300 GitHub #300: ['"Warnings when building with clang-20"]].
    * [@https://github.com/boostorg/container/issues/304 GitHub #304: ['"Usage of boost::container::small_vector with custom allocator"]].
