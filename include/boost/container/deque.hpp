@@ -283,7 +283,7 @@ class deque_iterator
                offset > 0 ? (offset / block_size)
                           : (-difference_type((-offset - 1) / block_size) - 1);
             this->m_node += node_offset;
-            this->m_cur = *this->m_node + (offset - node_offset * block_size);
+            this->m_cur = *this->m_node + difference_type(offset - node_offset * block_size);
          }
       }
       return *this;
@@ -657,11 +657,11 @@ class deque_base
       size_type i = 0;
       BOOST_CONTAINER_TRY {
          for (; i < n; ++i)
-            start[i] = this->prot_allocate_node();
+            start[difference_type(i)] = this->prot_allocate_node();
       }
       BOOST_CONTAINER_CATCH(...) {
          for (size_type j = 0; j < i; ++j)
-            this->prot_deallocate_node(start[j]);
+            this->prot_deallocate_node(start[difference_type(j)]);
          BOOST_CONTAINER_RETHROW
       }
       BOOST_CONTAINER_CATCH_END
@@ -768,7 +768,7 @@ class deque_base
    static BOOST_CONTAINER_FORCEINLINE val_alloc_ptr prot_node_last(ptr_alloc_ptr idx)
    {
       BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_base::get_block_size();
-      return *idx + (block_size - 1u);
+      return *idx + difference_type(block_size - 1u);
    }
 
    BOOST_CONTAINER_FORCEINLINE size_type prot_front_free_capacity() const
@@ -816,8 +816,8 @@ class deque_base
    BOOST_CONTAINER_FORCEINLINE iterator prot_off_to_it(std::size_t off) const
    {
       BOOST_CONSTEXPR_OR_CONST std::size_t block_size  = deque_base::get_block_size();
-      const ptr_alloc_ptr node = this->members_.m_map + off/block_size;
-      return iterator(node ? *node + (off%block_size) : val_alloc_ptr(), node);
+      const ptr_alloc_ptr node = this->members_.m_map + difference_type(off/block_size);
+      return iterator(node ? *node + difference_type(off%block_size) : val_alloc_ptr(), node);
    }
 
    stored_size_type prot_it_to_start_off(const_iterator it) const
@@ -834,7 +834,7 @@ class deque_base
    BOOST_CONTAINER_FORCEINLINE ptr_alloc_ptr prot_off_to_node(std::size_t off) const
    {
       BOOST_CONSTEXPR_OR_CONST std::size_t block_size  = deque_base::get_block_size();
-      return this->members_.m_map + off/block_size;
+      return this->members_.m_map + difference_type(off/block_size);
    }
 
    BOOST_CONTAINER_FORCEINLINE ptr_alloc_ptr prot_start_node() const
@@ -854,8 +854,8 @@ class deque_base
    {
       BOOST_ASSERT(!!this->members_.m_map);
       BOOST_CONSTEXPR_OR_CONST std::size_t block_size  = deque_base::get_block_size();
-      const ptr_alloc_ptr node = this->members_.m_map + off/block_size;
-      return *node + off%block_size;
+      const ptr_alloc_ptr node = this->members_.m_map + difference_type(off/block_size);
+      return *node + difference_type(off%block_size);
    }
 
    BOOST_CONTAINER_FORCEINLINE val_alloc_ptr prot_start_cur_unchecked() const
@@ -982,7 +982,7 @@ class deque_base
          const std::size_t off = this->members_.m_finish_off;
          const std::size_t rem = off % block_size;
          if(BOOST_LIKELY(rem != last_in_block)){
-            return boost::movelib::to_raw_pointer(map[off/block_size]) + rem;
+            return boost::movelib::to_raw_pointer(map[difference_type(off/block_size)]) + difference_type(rem);
          }
       }
       return 0;
@@ -995,7 +995,7 @@ class deque_base
       const std::size_t off = this->members_.m_start_off;
       const std::size_t rem = off % block_size;
       if(BOOST_LIKELY(rem != 0u)){
-         return boost::movelib::to_raw_pointer(this->members_.m_map[off / block_size]) + (rem-1u);
+         return boost::movelib::to_raw_pointer(this->members_.m_map[difference_type(off/block_size)]) + difference_type(rem-1u);
       }
       return 0;
    }
@@ -2931,7 +2931,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
       while (n) {
          --current_node;
          cnt = n < block_size ? n: block_size;
-         dest_last = ::boost::container::move_backward_n(boost::movelib::to_raw_pointer(*current_node + block_size), cnt, dest_last);
+         dest_last = ::boost::container::move_backward_n(boost::movelib::to_raw_pointer(*current_node + difference_type(block_size)), cnt, dest_last);
          n = size_type(n - cnt);
       }
       return dest_last;
