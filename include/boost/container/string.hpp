@@ -274,7 +274,7 @@ class basic_string_base
       //active representation is short or long
       short_header hdr;
       BOOST_CONTAINER_STATIC_ASSERT((sizeof(short_header) == 1));
-      *(unsigned char*)&hdr = *(unsigned char*)&this->members_.m_repr;
+      *(unsigned char*)&hdr = *static_cast<const unsigned char*>(static_cast<const void *>(&this->members_.m_repr));
       return hdr.is_short != 0;
    }
 

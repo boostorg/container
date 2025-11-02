@@ -91,7 +91,7 @@ namespace dtl {
 template<class T, class ...Args>
 BOOST_CONTAINER_FORCEINLINE void construct_type(T *p, BOOST_FWD_REF(Args) ...args)
 {
-   ::new((void*)p, boost_container_new_t()) T(::boost::forward<Args>(args)...);
+   ::new(const_cast<void*>(static_cast<const volatile void*>(p)), boost_container_new_t()) T(::boost::forward<Args>(args)...);
 }
 
 #else
@@ -102,7 +102,7 @@ BOOST_CONTAINER_FORCEINLINE \
    typename dtl::disable_if_c<dtl::is_pair<T>::value, void >::type \
 construct_type(T *p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
 {\
-   ::new((void*)p, boost_container_new_t()) T( BOOST_MOVE_FWD##N );\
+   ::new(const_cast<void*>(static_cast<const volatile void*>(p)), boost_container_new_t()) T( BOOST_MOVE_FWD##N );\
 }\
 //
 BOOST_MOVE_ITERATE_0TO8(BOOST_CONTAINER_ALLOCATOR_TRAITS_CONSTRUCT_TYPEJ)
