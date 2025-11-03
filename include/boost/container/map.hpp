@@ -620,8 +620,7 @@ class map
    //! to the element obtained while it is held in the node handle are invalidated, and pointers and
    //! references obtained to that element before it was extracted become valid.
    //!
-   //! <b>Returns</b>: The bool component is true if the insertion took place and false if the assignment
-   //!   took place. The iterator component is pointing at the element that was inserted or updated.
+   //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
    //!
    //! <b>Complexity</b>: Logarithmic in the size of the container in general, but amortized constant if
    //! the new element is inserted just before hint.
@@ -638,8 +637,7 @@ class map
    //! to the element obtained while it is held in the node handle are invalidated, and pointers and
    //! references obtained to that element before it was extracted become valid.
    //!
-   //! <b>Returns</b>: The bool component is true if the insertion took place and false if the assignment
-   //!   took place. The iterator component is pointing at the element that was inserted or updated.
+   //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
    //!
    //! <b>Complexity</b>: Logarithmic in the size of the container in general, but amortized constant if
    //! the new element is inserted just before hint.
