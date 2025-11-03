@@ -1152,8 +1152,11 @@ class tree
       !dtl::is_convertible<K, iterator>::value &&     //not convertible to iterator
       !dtl::is_convertible<K, const_iterator>::value  //not convertible to const_iterator
       , size_type>::type
-      erase(const K& k)
-   {  return AllocHolder::erase_key(k, KeyNodeCompare(key_comp()), alloc_version()); }
+      erase(BOOST_FWD_REF(K) key)
+   {
+      const typename remove_cvref<K>::type & k = key;  //Support emulated rvalue references
+      return AllocHolder::erase_key(k, KeyNodeCompare(key_comp()), alloc_version());
+   }
 
    template <class K>
    inline typename dtl::enable_if_c<

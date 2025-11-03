@@ -1032,7 +1032,7 @@ class map
             !dtl::is_convertible<K BOOST_MOVE_I iterator>::value &&     //not convertible to iterator
             !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
             BOOST_MOVE_I size_type>::type)
-      erase(const K& x)
+      erase(BOOST_FWD_REF(K) x)
       { return this->base_t::erase_unique(x); }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)

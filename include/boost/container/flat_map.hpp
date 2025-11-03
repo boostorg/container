@@ -1333,7 +1333,7 @@ class flat_map
       !dtl::is_convertible<K BOOST_MOVE_I iterator>::value &&     //not convertible to iterator
       !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
       BOOST_MOVE_I size_type>::type)
-      erase(const K& x)
+      erase(BOOST_FWD_REF(K) x)
    {  return m_flat_tree.erase_unique(x); }
 
    //! <b>Effects</b>: Erases all the elements in the range [first, last).
