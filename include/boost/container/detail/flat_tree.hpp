@@ -1134,7 +1134,7 @@ class flat_tree
    template<class KeyType, class M>
    std::pair<iterator, bool> insert_or_assign(const_iterator hint, BOOST_FWD_REF(KeyType) key, BOOST_FWD_REF(M) obj)
    {
-      const key_type& k = key;
+      const typename remove_cvref<KeyType>::type & k = key;  //Support emulated rvalue references
       std::pair<iterator,bool> ret;
       insert_commit_data data;
       ret.second = hint == const_iterator()
@@ -1583,20 +1583,23 @@ class flat_tree
       }
    }
 
+   template<class K>
    bool priv_insert_unique_prepare
-      (const_iterator b, const_iterator e, const key_type& k, insert_commit_data &commit_data)
+      (const_iterator b, const_iterator e, const K& k, insert_commit_data &commit_data)
    {
       const key_compare &key_cmp  = this->priv_key_comp();
       commit_data.position = this->priv_lower_bound(b, e, k);
       return commit_data.position == e || key_cmp(k, KeyOfValue()(*commit_data.position));
    }
 
+   template<class K>
    inline bool priv_insert_unique_prepare
-      (const key_type& k, insert_commit_data &commit_data)
+      (const K& k, insert_commit_data &commit_data)
    {  return this->priv_insert_unique_prepare(this->cbegin(), this->cend(), k, commit_data);   }
 
+   template<class K>
    bool priv_insert_unique_prepare
-      (const_iterator pos, const key_type& k, insert_commit_data &commit_data)
+      (const_iterator pos, const K& k, insert_commit_data &commit_data)
    {
       //N1780. Props to Howard Hinnant!
       //To insert k at pos:

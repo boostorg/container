@@ -831,6 +831,31 @@ class flat_map
          );
    }
 
+   //! <b>Requires</b>: This overload is available only if key_compare::is_transparent exists.
+   //!
+   //! <b>Effects</b>: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
+   //! to the mapped_type corresponding to the key k. If the key does not exist, inserts the new value
+   //! as if by insert, constructing it from value_type(k, move(obj)).
+   //! 
+   //! <b>Returns</b>: The bool component is true if the insertion took place and false if the assignment
+   //!   took place. The iterator component is pointing at the element that was inserted or updated.
+   //!
+   //! <b>Complexity</b>: Logarithmic in the size of the container.
+   template <class K, class M>
+   BOOST_CONTAINER_DOC1ST
+      ( std::pair<iterator BOOST_MOVE_I bool>
+      , typename dtl::enable_if_transparent< key_compare
+                                             BOOST_MOVE_I K
+                                             BOOST_MOVE_I std::pair<iterator BOOST_MOVE_I bool>
+                                           >::type)  //transparent
+      insert_or_assign(BOOST_FWD_REF(K) k, BOOST_FWD_REF(M) obj)
+   {
+      return dtl::force_copy< std::pair<iterator, bool> >
+         (this->m_flat_tree.insert_or_assign
+            ( impl_const_iterator(), ::boost::forward<K>(k), ::boost::forward<M>(obj))
+         );
+   }
+
    //! Effects: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
    //! to the mapped_type corresponding to the key k. If the key does not exist, inserts the new value
    //! as if by insert, constructing it from value_type(k, forward<M>(obj)) and the new element
@@ -866,6 +891,33 @@ class flat_map
          (this->m_flat_tree.insert_or_assign
             ( dtl::force_copy<impl_const_iterator>(hint)
             , ::boost::move(k), ::boost::forward<M>(obj)).first
+         );
+   }
+
+   //! <b>Requires</b>: This overload is available only if key_compare::is_transparent exists.
+   //!
+   //! <b>Effects</b>: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
+   //! to the mapped_type corresponding to the key k. If the key does not exist, inserts the new value
+   //! as if by insert, constructing it from value_type(k, move(obj)) and the new element
+   //! to the container as close as possible to the position just before hint.
+   //! 
+   //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
+   //!
+   //! <b>Complexity</b>: Logarithmic in the size of the container in general, but amortized constant if
+   //! the new element is inserted just before hint.
+   template <class K, class M>
+   BOOST_CONTAINER_DOC1ST
+      ( iterator
+      , typename dtl::enable_if_transparent< key_compare
+                                             BOOST_MOVE_I K
+                                             BOOST_MOVE_I iterator
+                                           >::type)  //transparent
+      insert_or_assign(const_iterator hint, BOOST_FWD_REF(K) k, BOOST_FWD_REF(M) obj)
+   {
+      return dtl::force_copy<iterator>
+         (this->m_flat_tree.insert_or_assign
+            ( dtl::force_copy<impl_const_iterator>(hint)
+            , ::boost::forward<K>(k), ::boost::forward<M>(obj)).first
          );
    }
 
