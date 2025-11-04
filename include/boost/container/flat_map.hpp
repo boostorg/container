@@ -801,10 +801,6 @@ class flat_map
    //! to the mapped_type corresponding to the key k. If the key does not exist, inserts the new value
    //! as if by insert, constructing it from value_type(k, forward<M>(obj)).
    //! 
-   //! No iterators or references are invalidated. If the insertion is successful, pointers and references
-   //! to the element obtained while it is held in the node handle are invalidated, and pointers and
-   //! references obtained to that element before it was extracted become valid.
-   //!
    //! Returns: The bool component is true if the insertion took place and false if the assignment
    //!   took place. The iterator component is pointing at the element that was inserted or updated.
    //!
@@ -822,10 +818,6 @@ class flat_map
    //! to the mapped_type corresponding to the key k. If the key does not exist, inserts the new value
    //! as if by insert, constructing it from value_type(k, move(obj)).
    //! 
-   //! No iterators or references are invalidated. If the insertion is successful, pointers and references
-   //! to the element obtained while it is held in the node handle are invalidated, and pointers and
-   //! references obtained to that element before it was extracted become valid.
-   //!
    //! Returns: The bool component is true if the insertion took place and false if the assignment
    //!   took place. The iterator component is pointing at the element that was inserted or updated.
    //!
@@ -844,10 +836,6 @@ class flat_map
    //! as if by insert, constructing it from value_type(k, forward<M>(obj)) and the new element
    //! to the container as close as possible to the position just before hint.
    //! 
-   //! No iterators or references are invalidated. If the insertion is successful, pointers and references
-   //! to the element obtained while it is held in the node handle are invalidated, and pointers and
-   //! references obtained to that element before it was extracted become valid.
-   //!
    //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
    //!
    //! Complexity: Logarithmic in the size of the container in general, but amortized constant if
@@ -867,10 +855,6 @@ class flat_map
    //! as if by insert, constructing it from value_type(k, move(obj)) and the new element
    //! to the container as close as possible to the position just before hint.
    //! 
-   //! No iterators or references are invalidated. If the insertion is successful, pointers and references
-   //! to the element obtained while it is held in the node handle are invalidated, and pointers and
-   //! references obtained to that element before it was extracted become valid.
-   //!
    //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
    //!
    //! Complexity: Logarithmic in the size of the container in general, but amortized constant if
