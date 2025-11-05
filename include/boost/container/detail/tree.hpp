@@ -1190,6 +1190,21 @@ class tree
       return node_type();
    }
 
+   template<class K>
+   inline typename dtl::enable_if_c<
+      dtl::is_transparent<key_compare>::value &&      //transparent
+      !dtl::is_convertible<K, iterator>::value &&     //not convertible to iterator
+      !dtl::is_convertible<K, const_iterator>::value  //not convertible to const_iterator
+      , node_type>::type
+      extract(BOOST_FWD_REF(K) k)
+   {
+      iterator const it = this->find(k);
+      if(this->end() != it){
+         return this->extract(it);
+      }
+      return node_type();
+   }
+
    node_type extract(const_iterator position)
    {
       BOOST_ASSERT(position != this->cend() && (priv_is_linked)(position));

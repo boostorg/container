@@ -1069,6 +1069,29 @@ class map
       return BOOST_MOVE_RET(node_type, nh);
    }
 
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Effects</b>: Removes the first element in the container with key equivalent to k.
+   //!
+   //! <b>Returns</b>: A node_type owning the element if found, otherwise an empty node_type.
+   //!
+   //! <b>Complexity</b>: log(size()).
+   template<class K>
+   inline BOOST_CONTAINER_DOC1ST
+         (node_type
+         , typename dtl::enable_if_c<
+            dtl::is_transparent<key_compare>::value &&                  //transparent
+            !dtl::is_convertible<K BOOST_MOVE_I iterator>::value &&     //not convertible to iterator
+            !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
+            BOOST_MOVE_I node_type>::type)
+      extract(BOOST_FWD_REF(K) k)
+   {
+      typename base_t::node_type base_nh(this->base_t::extract(k));
+      node_type nh(boost::move(base_nh));
+      return BOOST_MOVE_RET(node_type, nh);
+   }
+
    //! <b>Effects</b>: Removes the element pointed to by "position".
    //!
    //! <b>Returns</b>: A node_type owning the element, otherwise an empty node_type.
@@ -2041,6 +2064,22 @@ class multimap
    {
       typename base_t::node_type base_nh(this->base_t::extract(k));
       return node_type(boost::move(base_nh));
+   }
+
+   //! @copydoc ::boost::container::map::extract(K&&)
+   template<class K>
+   inline BOOST_CONTAINER_DOC1ST
+         (node_type
+         , typename dtl::enable_if_c<
+            dtl::is_transparent<key_compare>::value &&                  //transparent
+            !dtl::is_convertible<K BOOST_MOVE_I iterator>::value &&     //not convertible to iterator
+            !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
+            BOOST_MOVE_I node_type>::type)
+      extract(BOOST_FWD_REF(K) k)
+   {
+      typename base_t::node_type base_nh(this->base_t::extract(k));
+      node_type nh(boost::move(base_nh));
+      return BOOST_MOVE_RET(node_type, nh);
    }
 
    //! @copydoc ::boost::container::map::extract(const_iterator)

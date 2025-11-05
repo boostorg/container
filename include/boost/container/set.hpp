@@ -722,6 +722,10 @@ class set
    //! @copydoc ::boost::container::map::extract(const key_type&)
    node_type extract(const key_type& x);
 
+   //! @copydoc ::boost::container::map::extract(K&&)
+   template <class K>
+   node_type extract(BOOST_FWD_REF(K) x);
+
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
    //! <b>Throws</b>: Nothing.
@@ -1507,6 +1511,10 @@ class multiset
 
    //! @copydoc ::boost::container::multimap::extract(const key_type&)
    node_type extract(const key_type& x);
+
+   //! @copydoc ::boost::container::multimap::extract(K&&)
+   template <class K>
+   node_type extract(BOOST_FWD_REF(K) x);
 
    //! @copydoc ::boost::container::set::swap
    void swap(multiset& x)

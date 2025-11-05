@@ -447,6 +447,27 @@ bool test_heterogeneous_lookups()
    if (mset1.erase(find_me) != 0)
       return false;
 
+   //extract
+   set1.clear();
+   set1.insert(1);
+   mset1.clear();
+   mset1.insert(1);
+   mset1.insert(1);
+
+   const test::non_copymovable_int extract_me(1);
+
+   if (!set1.extract(extract_me))
+      return false;
+   if (set1.extract(extract_me))
+      return false;
+
+   if (!mset1.extract(extract_me))
+      return false;
+   if (!mset1.extract(extract_me))
+      return false;
+   if (mset1.extract(extract_me))
+      return false;
+
    return true;
 }
 

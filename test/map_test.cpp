@@ -371,6 +371,27 @@ bool test_heterogeneous_lookups()
          return false;
       if (mmap1.erase(find_me) != 0)
          return false;
+
+      //extract
+      map1.clear();
+      map1.insert(value_type(1, 'a'));
+      mmap1.clear();
+      mmap1.insert(value_type(1, 'a'));
+      mmap1.insert(value_type(1, 'b'));
+
+      const test::non_copymovable_int extract_me(1);
+
+      if (!map1.extract(extract_me))
+         return false;
+      if (map1.extract(extract_me))
+         return false;
+
+      if (!mmap1.extract(extract_me))
+         return false;
+      if (!mmap1.extract(extract_me))
+         return false;
+      if (mmap1.extract(extract_me))
+         return false;
    }
    {
       typedef map<test::movable_int, char, less_transparent> map_t;
