@@ -681,9 +681,9 @@ class set
    inline void merge(BOOST_RV_REF_BEG multiset<Key, C2, Allocator, Options> BOOST_RV_REF_END source)
    {  return this->merge(static_cast<multiset<Key, C2, Allocator, Options>&>(source));   }
 
-   //! <b>Effects</b>: If present, erases the element in the container with key equivalent to x.
+   //! <b>Effects</b>: If present, erases the elements in the container with key equivalent to x.
    //!
-   //! <b>Returns</b>: Returns the number of erased elements (0/1).
+   //! <b>Returns</b>: Returns the number of erased elements.
    //!
    //! <b>Complexity</b>: log(size()) + count(k)
    inline size_type erase(const key_type& x)
@@ -706,6 +706,15 @@ class set
    //!
    //! <b>Complexity</b>: log(size())+N where N is the distance from first to last.
    iterator erase(const_iterator first, const_iterator last);
+
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Effects</b>: If present, erases the element in the container with key equivalent to x.
+   //!
+   //! <b>Returns</b>: Returns the number of erased elements.
+   template<class K>
+   size_type erase(K && k);
 
    //! @copydoc ::boost::container::map::extract(const_iterator)
    node_type extract(const_iterator p);
@@ -1488,6 +1497,10 @@ class multiset
 
    //! @copydoc ::boost::container::set::erase(const_iterator,const_iterator)
    iterator erase(const_iterator first, const_iterator last);
+
+   //! @copydoc ::boost::container::set::erase(K&&)
+   template<class K>
+   size_type erase(K && k);
 
    //! @copydoc ::boost::container::multimap::extract(const_iterator)
    node_type extract(const_iterator p);

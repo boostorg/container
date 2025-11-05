@@ -770,7 +770,7 @@ class flat_set
 
    //! <b>Effects</b>: If present, erases the element in the container with key equivalent to x.
    //!
-   //! <b>Returns</b>: Returns the number of erased elements (0/1).
+   //! <b>Returns</b>: Returns the number of erased elements.
    //!
    //! <b>Complexity</b>: Logarithmic search time plus erasure time
    //!   linear to the elements with bigger keys.

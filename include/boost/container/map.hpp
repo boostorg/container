@@ -1010,9 +1010,9 @@ class map
 
    #endif   // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-   //! <b>Effects</b>: If present, erases the element in the container with key equivalent to x.
+   //! <b>Effects</b>: If present, erases the elements in the container with key equivalent to x.
    //!
-   //! <b>Returns</b>: Returns the number of erased elements (0/1).
+   //! <b>Returns</b>: Returns the number of erased elements.
    //!
    //! <b>Complexity</b>: log(size()) + count(k)
    inline size_type erase(const key_type& x)
@@ -1021,9 +1021,9 @@ class map
    //! <b>Requires</b>: This overload is available only if
    //! key_compare::is_transparent exists.
    //!
-   //! <b>Effects</b>: If present, erases the element in the container with key equivalent to x.
+   //! <b>Effects</b>: If present, erases the elements in the container with key equivalent to x.
    //!
-   //! <b>Returns</b>: Returns the number of erased elements (0/1).
+   //! <b>Returns</b>: Returns the number of erased elements.
    template <class K>
    inline BOOST_CONTAINER_DOC1ST
          (size_type
@@ -2030,6 +2030,10 @@ class multimap
 
    //! @copydoc ::boost::container::set::erase(const_iterator,const_iterator)
    iterator erase(const_iterator first, const_iterator last);
+
+   //! @copydoc ::boost::container::set::erase(K&&)
+   template<class K>
+   size_type erase(K && k);
    #endif
 
    //! @copydoc ::boost::container::map::extract(const key_type&)

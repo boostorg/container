@@ -1346,9 +1346,9 @@ class flat_map
          (m_flat_tree.erase(dtl::force_copy<impl_const_iterator>(p)));
    }
 
-   //! <b>Effects</b>: If present, erases the element in the container with key equivalent to x.
+   //! <b>Effects</b>: If present, erases the elements in the container with key equivalent to x.
    //!
-   //! <b>Returns</b>: Returns the number of erased elements (0/1).
+   //! <b>Returns</b>: Returns the number of erased elements.
    //!
    //! <b>Complexity</b>: Logarithmic search time plus erasure time
    //!   linear to the elements with bigger keys.
@@ -1358,9 +1358,9 @@ class flat_map
    //! <b>Requires</b>: This overload is available only if
    //! key_compare::is_transparent exists.
    //!
-   //! <b>Effects</b>: If present, erases the element in the container with key equivalent to x.
+   //! <b>Effects</b>: If present, erases the elements in the container with key equivalent to x.
    //!
-   //! <b>Returns</b>: Returns the number of erased elements (0/1).
+   //! <b>Returns</b>: Returns the number of erased elements.
    template <class K>
    inline BOOST_CONTAINER_DOC1ST
    (size_type
