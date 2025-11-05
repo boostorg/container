@@ -801,6 +801,15 @@ class flat_set
    //!   linear to the elements with bigger keys.
    iterator erase(const_iterator first, const_iterator last);
 
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Effects</b>: If present, erases the element in the container with key equivalent to x.
+   //!
+   //! <b>Returns</b>: Returns the number of erased elements.
+   template<class K>
+   size_type erase(K && k);
+
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
    //! <b>Throws</b>: Nothing.
@@ -1735,6 +1744,10 @@ class flat_multiset
 
    //! @copydoc ::boost::container::flat_set::erase(const_iterator,const_iterator)
    iterator erase(const_iterator first, const_iterator last);
+
+   //! @copydoc ::boost::container::flat_set::erase(K&&)
+   template<class K>
+   size_type erase(K && k);
 
    //! @copydoc ::boost::container::flat_set::swap
    void swap(flat_multiset& x)

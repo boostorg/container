@@ -437,6 +437,16 @@ bool test_heterogeneous_lookups()
    if(*cmset1.equal_range(find_me).second != 3)
       return false;
 
+   //erase
+   if (set1.erase(find_me) != 1)
+      return false;
+   if (set1.erase(find_me) != 0)
+      return false;
+   if (mset1.erase(find_me) != 2)
+      return false;
+   if (mset1.erase(find_me) != 0)
+      return false;
+
    return true;
 }
 
