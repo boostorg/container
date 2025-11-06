@@ -1046,7 +1046,7 @@ class flat_tree
    {
       std::pair<iterator,bool> ret;
       insert_commit_data data;
-      const key_type & k = key;
+      const typename remove_cvref<KeyType>::type & k = key;  //Support emulated rvalue references
       ret.second = hint == const_iterator()
          ? this->priv_insert_unique_prepare(k, data)
          : this->priv_insert_unique_prepare(hint, k, data);
@@ -1112,7 +1112,7 @@ class flat_tree
    {\
       std::pair<iterator,bool> ret;\
       insert_commit_data data;\
-      const key_type & k = key;\
+      const typename remove_cvref<KeyType>::type & k = key;\
       ret.second = hint == const_iterator()\
          ? this->priv_insert_unique_prepare(k, data)\
          : this->priv_insert_unique_prepare(hint, k, data);\

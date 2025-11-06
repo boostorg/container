@@ -842,12 +842,14 @@ class flat_map
    //!
    //! <b>Complexity</b>: Logarithmic in the size of the container.
    template <class K, class M>
-   BOOST_CONTAINER_DOC1ST
-      ( std::pair<iterator BOOST_MOVE_I bool>
-      , typename dtl::enable_if_transparent< key_compare
-                                             BOOST_MOVE_I K
-                                             BOOST_MOVE_I std::pair<iterator BOOST_MOVE_I bool>
-                                           >::type)  //transparent
+   inline BOOST_CONTAINER_DOC1ST
+      (std::pair<iterator BOOST_MOVE_I bool>
+         , typename dtl::enable_if_c<
+               dtl::is_transparent<key_compare>::value &&                  //transparent
+               !dtl::is_convertible<K BOOST_MOVE_I iterator>::value &&     //not convertible to iterator
+               !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
+         BOOST_MOVE_I std::pair<iterator BOOST_MOVE_I bool>
+       >::type)
       insert_or_assign(BOOST_FWD_REF(K) k, BOOST_FWD_REF(M) obj)
    {
       return dtl::force_copy< std::pair<iterator, bool> >
@@ -1086,6 +1088,61 @@ class flat_map
             <impl_const_iterator>(hint), boost::move(k), boost::forward<Args>(args)...).first);
    }
 
+   //! <b>Precondition</b>: This overload is available only if key_compare::is_transparent exists.
+   //!
+   //! <b>Requires</b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
+   //! forward_as_tuple(move(k)), forward_as_tuple(forward<Args>(args)...).
+   //! 
+   //! <b>Effects</b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
+   //! inserts an object of type value_type constructed with piecewise_construct, forward_as_tuple(move(k)),
+   //! forward_as_tuple(forward<Args>(args)...).
+   //! 
+   //! <b>Returns</b>: The bool component of the returned pair is true if and only if the
+   //! insertion took place. The returned iterator points to the map element whose key is equivalent to k.
+   //! 
+   //! <b>Complexity</b>: Logarithmic search time plus linear insertion time in case the key is not present.
+   template <class K, class... Args>
+   inline BOOST_CONTAINER_DOC1ST
+      (std::pair<iterator BOOST_MOVE_I bool>
+         , typename dtl::enable_if_c<
+         dtl::is_transparent<key_compare>::value &&                  //transparent
+         !dtl::is_convertible<K BOOST_MOVE_I iterator>::value &&     //not convertible to iterator
+         !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
+         BOOST_MOVE_I std::pair<iterator BOOST_MOVE_I bool>
+       >::type)
+      try_emplace(BOOST_FWD_REF(K) k, BOOST_FWD_REF(Args)... args)
+   {
+      return dtl::force_copy< std::pair<iterator, bool> >
+         (m_flat_tree.try_emplace(impl_const_iterator(), boost::forward<K>(k), boost::forward<Args>(args)...));
+   }
+
+   //! <b>Precondition</b>: This overload is available only if key_compare::is_transparent exists.
+   //!
+   //! <b>Requires</b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
+   //! forward_as_tuple(move(k)), forward_as_tuple(forward<Args>(args)...).
+   //! 
+   //! <b>Effects</b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
+   //! inserts an object of type value_type constructed with piecewise_construct, forward_as_tuple(move(k)),
+   //! forward_as_tuple(forward<Args>(args)...).
+   //! 
+   //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
+   //! 
+   //! <b>Complexity</b>: Logarithmic in general, but amortized constant if value
+   //!   is inserted right before p. Linear insertion time in case no equivalent key is present.
+   template <class K, class... Args>
+   inline BOOST_CONTAINER_DOC1ST
+      ( iterator
+      , typename dtl::enable_if_transparent< key_compare
+                                             BOOST_MOVE_I K
+                                             BOOST_MOVE_I iterator
+                                           >::type)  //transparent
+      try_emplace(const_iterator hint, BOOST_FWD_REF(K) k, BOOST_FWD_REF(Args)... args)
+   {
+      return dtl::force_copy<iterator>
+         (m_flat_tree.try_emplace(dtl::force_copy
+            <impl_const_iterator>(hint), boost::forward<K>(k), boost::forward<Args>(args)...).first);
+   }
+
    #else // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #define BOOST_CONTAINER_FLAT_MAP_EMPLACE_CODE(N) \
@@ -1125,6 +1182,31 @@ class flat_map
    inline iterator try_emplace(const_iterator hint, BOOST_RV_REF(key_type) k BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
    {  return dtl::force_copy<iterator>(m_flat_tree.try_emplace\
       (dtl::force_copy<impl_const_iterator>(hint), boost::move(k) BOOST_MOVE_I##N BOOST_MOVE_FWD##N).first); }\
+   \
+   template <class K BOOST_MOVE_I##N BOOST_MOVE_CLASS##N> \
+          typename dtl::enable_if_c< \
+                                    dtl::is_transparent<key_compare>::value &&  \
+                                    !dtl::is_convertible<K BOOST_MOVE_I iterator>::value && \
+                                    !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value \
+                                    BOOST_MOVE_I std::pair<iterator BOOST_MOVE_I bool> \
+                                    >::type \
+      try_emplace(BOOST_FWD_REF(K) k BOOST_MOVE_I##N BOOST_MOVE_UREF##N) \
+   { \
+      return dtl::force_copy< std::pair<iterator BOOST_MOVE_I bool> > \
+         (m_flat_tree.try_emplace(impl_const_iterator() BOOST_MOVE_I boost::forward<K>(k) BOOST_MOVE_I##N BOOST_MOVE_FWD##N)); \
+   } \
+   \
+   template <class K BOOST_MOVE_I##N BOOST_MOVE_CLASS##N> \
+       typename dtl::enable_if_transparent< key_compare \
+                                             BOOST_MOVE_I K \
+                                             BOOST_MOVE_I iterator \
+                                           >::type \
+      try_emplace(const_iterator hint BOOST_MOVE_I BOOST_FWD_REF(K) k BOOST_MOVE_I##N BOOST_MOVE_UREF##N) \
+   { \
+      return dtl::force_copy<iterator> \
+         (m_flat_tree.try_emplace(dtl::force_copy \
+            <impl_const_iterator>(hint) BOOST_MOVE_I boost::forward<K>(k) BOOST_MOVE_I##N BOOST_MOVE_FWD##N).first); \
+   }
    //
    BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_FLAT_MAP_EMPLACE_CODE)
    #undef BOOST_CONTAINER_FLAT_MAP_EMPLACE_CODE
@@ -1363,12 +1445,12 @@ class flat_map
    //! <b>Returns</b>: Returns the number of erased elements.
    template <class K>
    inline BOOST_CONTAINER_DOC1ST
-   (size_type
-      , typename dtl::enable_if_c<
-      dtl::is_transparent<key_compare>::value &&                  //transparent
-      !dtl::is_convertible<K BOOST_MOVE_I iterator>::value &&     //not convertible to iterator
-      !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
-      BOOST_MOVE_I size_type>::type)
+      (size_type
+         , typename dtl::enable_if_c<
+         dtl::is_transparent<key_compare>::value &&                  //transparent
+         !dtl::is_convertible<K BOOST_MOVE_I iterator>::value &&     //not convertible to iterator
+         !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
+         BOOST_MOVE_I size_type>::type)
       erase(BOOST_FWD_REF(K) x)
    {  return m_flat_tree.erase_unique(x); }
 

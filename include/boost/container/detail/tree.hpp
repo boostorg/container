@@ -1007,10 +1007,10 @@ class tree
       (const_iterator hint, BOOST_FWD_REF(KeyType) key, BOOST_FWD_REF(Args)... args)
    {
       insert_commit_data data;
-      const key_type & k = key;  //Support emulated rvalue references
+      const typename remove_cvref<KeyType>::type & k = key;  //Support emulated rvalue references
       std::pair<iiterator, bool> ret =
-         hint == const_iterator() ? this->icont().insert_unique_check(            k, data)
-                                  : this->icont().insert_unique_check(hint.get(), k, data);
+         hint == const_iterator() ? this->icont().insert_unique_check(            k, KeyNodeCompare(key_comp()), data)
+                                  : this->icont().insert_unique_check(hint.get(), k, KeyNodeCompare(key_comp()), data);
       if(ret.second){
          ret.first = this->icont().insert_unique_commit
             (*AllocHolder::create_node(try_emplace_t(), boost::forward<KeyType>(key), boost::forward<Args>(args)...), data);
@@ -1055,10 +1055,10 @@ class tree
       try_emplace(const_iterator hint, BOOST_FWD_REF(KeyType) key BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
    {\
       insert_commit_data data;\
-      const key_type & k = key;\
+      const typename remove_cvref<KeyType>::type & k = key;\
       std::pair<iiterator, bool> ret =\
-         hint == const_iterator() ? this->icont().insert_unique_check(            k, data)\
-                                  : this->icont().insert_unique_check(hint.get(), k, data);\
+         hint == const_iterator() ? this->icont().insert_unique_check(            k, KeyNodeCompare(key_comp()), data)\
+                                  : this->icont().insert_unique_check(hint.get(), k, KeyNodeCompare(key_comp()), data);\
       if(ret.second){\
          ret.first = this->icont().insert_unique_commit\
             (*AllocHolder::create_node(try_emplace_t(), boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N), data);\
