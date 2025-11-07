@@ -1575,6 +1575,7 @@ bool test_heterogeneous_lookup()
       mmap1.insert(value_type(3, 'e'));
 
       const test::non_copymovable_int find_me(2);
+      const test::non_copymovable_int not_present(5);
 
       //find
       if(map1.find(find_me)->second != 'd')
@@ -1585,6 +1586,15 @@ bool test_heterogeneous_lookup()
          return false;
       if(cmmap1.find(find_me)->second != 'c')
          return false;
+      if(map1.find(not_present)   != map1.end())
+         return false;
+      if(cmap1.find(not_present)  != cmap1.end())
+         return false;
+      if(mmap1.find(not_present)  != mmap1.end())
+         return false;
+      if(cmmap1.find(not_present) != mmap1.cend())
+         return false;
+
 
       //count
       if(map1.count(find_me) != 1)
@@ -1595,6 +1605,14 @@ bool test_heterogeneous_lookup()
          return false;
       if(cmmap1.count(find_me) != 2)
          return false;
+      if(map1.count(not_present) != 0)
+         return false;
+      if(cmap1.count(not_present) != 0)
+         return false;
+      if(mmap1.count(not_present) != 0)
+         return false;
+      if(cmmap1.count(not_present) != 0)
+         return false;
 
       //contains
       if(!map1.contains(find_me))
@@ -1604,6 +1622,20 @@ bool test_heterogeneous_lookup()
       if(!mmap1.contains(find_me))
          return false;
       if(!cmmap1.contains(find_me))
+         return false;
+      if(map1.contains(not_present))
+         return false;
+      if(cmap1.contains(not_present))
+         return false;
+      if(mmap1.contains(not_present))
+         return false;
+      if(cmmap1.contains(not_present))
+         return false;
+
+      //at
+      if(map1.at(find_me)  != 'd')
+         return false;
+      if(cmap1.at(find_me) != 'd')
          return false;
 
       //lower_bound

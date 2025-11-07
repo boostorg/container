@@ -982,7 +982,55 @@ class flat_map
    BOOST_CONTAINER_ATTRIBUTE_NODISCARD const T& at(const key_type& k) const
    {
       const_iterator i = this->find(k);
+      if(i == this->cend()){
+         throw_out_of_range("flat_map::at key not found");
+      }
+      return i->second;
+   }
+
+   //! <b>Precondition</b>: This overload is available only if key_compare::is_transparent exists.
+   //!
+   //! Returns: A reference to the element whose key is equivalent to x.
+   //!
+   //! Throws: An exception object of type out_of_range if no such element is present.
+   //!
+   //! Complexity: logarithmic.
+   template<class K>
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
+      BOOST_CONTAINER_DOC1ST
+         ( T&
+         , typename dtl::enable_if_transparent< key_compare
+                                                BOOST_MOVE_I K
+                                                BOOST_MOVE_I T&
+                                              >::type)  //transparent
+      at(const K& k)
+   {
+      iterator i = this->find(k);
       if(i == this->end()){
+         throw_out_of_range("flat_map::at key not found");
+      }
+      return i->second;
+   }
+
+   //! <b>Precondition</b>: This overload is available only if key_compare::is_transparent exists.
+   //!
+   //! Returns: A reference to the element whose key is equivalent to x.
+   //!
+   //! Throws: An exception object of type out_of_range if no such element is present.
+   //!
+   //! Complexity: logarithmic.
+   template<class K>
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
+      BOOST_CONTAINER_DOC1ST
+         ( const T&
+         , typename dtl::enable_if_transparent< key_compare
+                                                BOOST_MOVE_I K
+                                                BOOST_MOVE_I const T&
+                                              >::type)  //transparent
+      at(const K& k) const
+   {
+      const_iterator i = this->find(k);
+      if(i == this->cend()){
          throw_out_of_range("flat_map::at key not found");
       }
       return i->second;
