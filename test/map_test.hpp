@@ -1697,6 +1697,30 @@ bool test_heterogeneous_insert()
          return false;
       if (cmap1.find(2)->second != 'c')
          return false;
+
+      //operator[]
+      typename map_t::mapped_type const *pm = &map1.find(2)->second;
+      typename map_t::mapped_type &m = map1[2];
+      if(m != 'c')
+         return false;
+      if(&m != pm)
+         return false;
+      
+      map1[2] = 'd';
+      if (cmap1.find(2)->second != 'd')
+         return false;
+      if(&m != &map1[2])
+         return false;
+
+      map1[3] = 'e';
+      if (cmap1.find(3)->second != 'e')
+         return false;
+      if(map1[3] != map1[3])
+         return false;
+
+      if (map1[4] != 0)
+         return false;
+
    }
    return true;
 }

@@ -555,26 +555,41 @@ class map
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || (defined(BOOST_CXX_VERSION) &&(BOOST_CXX_VERSION >= 201103L))
    //! <b>Effects</b>: If there is no key equivalent to x in the map, inserts
-   //! value_type(x, T()) into the map.
+   //! value_type(k, T()) into the map.
    //!
-   //! <b>Returns</b>: A reference to the mapped_type corresponding to x in *this.
+   //! <b>Returns</b>: A reference to the mapped_type corresponding to k in *this.
    //!
    //! <b>Complexity</b>: Logarithmic.
-   mapped_type& operator[](const key_type &k);
+   mapped_type& operator[](const key_type& k)
+   {  return this->priv_subscript(k);  }
 
    //! <b>Effects</b>: If there is no key equivalent to x in the map, inserts
-   //! value_type(boost::move(x), T()) into the map (the key is move-constructed)
+   //! value_type(boost::move(k), T()) into the map (the key is move-constructed)
    //!
-   //! <b>Returns</b>: A reference to the mapped_type corresponding to x in *this.
+   //! <b>Returns</b>: A reference to the mapped_type corresponding to k in *this.
    //!
    //! <b>Complexity</b>: Logarithmic.
-   mapped_type& operator[](key_type &&k);
-   #elif defined(BOOST_MOVE_HELPERS_RETURN_SFINAE_BROKEN)
-      //in compilers like GCC 3.4, we can't catch temporaries
-      inline mapped_type& operator[](const key_type &k)         {  return this->priv_subscript(k);  }
-      inline mapped_type& operator[](BOOST_RV_REF(key_type) k)  {  return this->priv_subscript(::boost::move(k));  }
+   mapped_type& operator[](key_type&& k)
+   {  return this->priv_subscript(boost::move(k)); }
+
+   //! <b>Precondition</b>: This overload is available only if key_compare::is_transparent exists.
+   //!
+   //! <b>Effects</b>: If there is no key equivalent to x in the map, inserts
+   //! value_type(boost::forward<K>(k), T()) into the map
+   //!
+   //! <b>Returns</b>: A reference to the mapped_type corresponding to k in *this.
+   //!
+   //! <b>Complexity</b>: Logarithmic.
+   template <class K>
+   inline BOOST_CONTAINER_DOC1ST
+      ( mapped_type&
+      , typename dtl::enable_if_transparent<key_compare BOOST_MOVE_I K BOOST_MOVE_I mapped_type&>::type
+      )
+      operator[](K&& k)
+   {  return this->priv_subscript(boost::forward<K>(k)); }
+
    #else
       BOOST_MOVE_CONVERSION_AWARE_CATCH( operator[] , key_type, mapped_type&, this->priv_subscript)
    #endif
@@ -948,7 +963,7 @@ class map
    //! forward_as_tuple(move(k)), forward_as_tuple(forward<Args>(args)...).
    //! 
    //! <b>Effects</b>: If the map already contains an element whose key is equivalent to k, there is no effect. Otherwise
-   //! inserts an object of type value_type constructed with piecewise_construct, forward_as_tuple(move(k)),
+   //! inserts an object of type value_type constructed with piecewise_construct, forward_as_tuple(forward<K>(k)),
    //! forward_as_tuple(forward<Args>(args)...).
    //! 
    //! <b>Returns</b>: The bool component of the returned pair is true if and only if the

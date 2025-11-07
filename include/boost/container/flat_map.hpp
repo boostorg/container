@@ -773,26 +773,43 @@ class flat_map
    //
    //////////////////////////////////////////////
 
-   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-   //! Effects: If there is no key equivalent to x in the flat_map, inserts
-   //!   value_type(x, T()) into the flat_map.
+   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || (defined(BOOST_CXX_VERSION) &&(BOOST_CXX_VERSION >= 201103L))
+   //! Effects: If there is no key equivalent to k in the flat_map, inserts
+   //!   value_type(k, T()) into the flat_map.
    //!
-   //! Returns: A reference to the mapped_type corresponding to x in *this.
+   //! Returns: A reference to the mapped_type corresponding to k in *this.
    //!
    //! Complexity: Logarithmic search time plus linear insertion time in case no equivalent key is present.
-   mapped_type &operator[](const key_type& k);
+   mapped_type &operator[](const key_type& k)
+   {  return this->priv_subscript(k); }
 
-   //! Effects: If there is no key equivalent to x in the flat_map, inserts
-   //! value_type(move(x), T()) into the flat_map (the key is move-constructed)
+   //! Effects: If there is no key equivalent to k in the flat_map, inserts
+   //! value_type(move(k), T()) into the flat_map (the key is move-constructed)
    //!
-   //! Returns: A reference to the mapped_type corresponding to x in *this.
+   //! Returns: A reference to the mapped_type corresponding to k in *this.
    //!
    //! Complexity: Logarithmic search time plus linear insertion time in case no equivalent key is present.
-   mapped_type &operator[](key_type &&k);
-   #elif defined(BOOST_MOVE_HELPERS_RETURN_SFINAE_BROKEN)
-      //in compilers like GCC 3.4, we can't catch temporaries
-      inline mapped_type& operator[](const key_type &k)         {  return this->priv_subscript(k);  }
-      inline mapped_type& operator[](BOOST_RV_REF(key_type) k)  {  return this->priv_subscript(::boost::move(k));  }
+   mapped_type &operator[](key_type &&k)
+   {  return this->priv_subscript(boost::move(k)); }
+
+   //! <b>Precondition</b>: This overload is available only if key_compare::is_transparent exists.
+   //!
+   //! <b>Effects</b>: If there is no key equivalent to x in the map, inserts
+   //! value_type(boost::forward<K>(k), T()) into the map
+   //!
+   //! <b>Returns</b>: A reference to the mapped_type corresponding to k in *this.
+   //!
+   //! <b>Complexity</b>: Logarithmic search time plus linear insertion time in case no equivalent key is present
+   template <class K>
+   inline BOOST_CONTAINER_DOC1ST
+         ( mapped_type&
+         , typename dtl::enable_if_transparent< key_compare
+                                                BOOST_MOVE_I K
+                                                BOOST_MOVE_I mapped_type&
+                                              >::type)  //transparent
+      operator[](K &&k)
+   {  return this->priv_subscript(boost::forward<K>(k)); }
+
    #else
       BOOST_MOVE_CONVERSION_AWARE_CATCH( operator[] , key_type, mapped_type&, this->priv_subscript)
    #endif
@@ -1807,29 +1824,26 @@ class flat_map
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
-   mapped_type &priv_subscript(const key_type& k)
+   template<class K>
+   inline mapped_type& priv_subscript(BOOST_FWD_REF(K) key)
    {
+      const typename dtl::remove_cvref<K>::type & k = key;  //Support emulated rvalue references
       iterator i = this->lower_bound(k);
-      // i->first is greater than or equivalent to k.
-      if (i == end() || key_comp()(k, (*i).first)){
-         dtl::value_init<mapped_type> m;
-         impl_value_type v(k, ::boost::move(m.m_t));
-         i = dtl::force_copy<iterator>(this->m_flat_tree.insert_equal(::boost::move(v)));
-      }
-      return (*i).second;
-   }
-   mapped_type &priv_subscript(BOOST_RV_REF(key_type) mk)
-   {
-      key_type &k = mk;
-      iterator i = this->lower_bound(k);
-      // i->first is greater than or equivalent to k.
+
       if (i == end() || key_comp()(k, (*i).first)) {
-         dtl::value_init<mapped_type> m;
-         impl_value_type v(::boost::move(k), ::boost::move(m.m_t));
-         i = dtl::force_copy<iterator>(this->m_flat_tree.insert_equal(::boost::move(v)));
+         typename dtl::aligned_storage<sizeof(impl_value_type), dtl::alignment_of<impl_value_type>::value>::type v;
+         impl_value_type *vp = move_detail::launder_cast<impl_value_type *>(&v);
+
+         impl_get_stored_allocator_noconst_return_t r = m_flat_tree.get_stored_allocator();
+         boost::container::allocator_traits<impl_stored_allocator_type>::construct
+            (r, vp, try_emplace_t(), ::boost::forward<K>(key));
+         i = dtl::force_copy<iterator> (this->m_flat_tree.insert_equal
+               (dtl::force_copy<impl_iterator>(i), ::boost::move(*vp)));
+         vp->~impl_value_type();
       }
       return (*i).second;
    }
+
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
