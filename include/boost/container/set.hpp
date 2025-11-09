@@ -574,7 +574,7 @@ class set
 
    #endif   // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //! <b>Effects</b>: Inserts x if and only if there is no element in the container
    //!   with key equivalent to the key of x.
    //!
@@ -583,7 +583,8 @@ class set
    //!   points to the element with key equivalent to the key of x.
    //!
    //! <b>Complexity</b>: Logarithmic.
-   std::pair<iterator, bool> insert(const value_type &x);
+   std::pair<iterator, bool> insert(const value_type &x)
+   {  return this->base_t::insert_unique_convertible(x); }
 
    //! <b>Effects</b>: Move constructs a new value from x if and only if there is
    //!   no element in the container with key equivalent to the key of x.
@@ -593,16 +594,32 @@ class set
    //!   points to the element with key equivalent to the key of x.
    //!
    //! <b>Complexity</b>: Logarithmic.
-   std::pair<iterator, bool> insert(value_type &&x);
-   #else
-   private:
-   typedef std::pair<iterator, bool> insert_return_pair;
-   public:
-   BOOST_MOVE_CONVERSION_AWARE_CATCH
-      (insert, value_type, insert_return_pair, this->base_t::insert_unique_convertible)
-   #endif
+   std::pair<iterator, bool> insert(value_type &&x)
+   {  return this->base_t::insert_unique_convertible(boost::move(x)); }
 
-   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Effects</b>: Forward constructs a new value from x if and only if there is
+   //!   no element in the container with key equivalent to the key of x.
+   //!
+   //! <b>Returns</b>: The bool component of the returned pair is true if and only
+   //!   if the insertion takes place, and the iterator component of the pair
+   //!   points to the element with key equivalent to the key of x.
+   //!
+   //! <b>Complexity</b>: Logarithmic.
+   template <class K>
+   inline BOOST_CONTAINER_DOC1ST
+      (std::pair<iterator BOOST_MOVE_I bool>
+         , typename dtl::enable_if_c<
+         dtl::is_transparent<key_compare>::value &&                  //transparent
+         !dtl::is_convertible<K BOOST_MOVE_I iterator>::value &&     //not convertible to iterator
+         !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
+         BOOST_MOVE_I std::pair<iterator BOOST_MOVE_I bool>
+       >::type)
+      insert(K &&x)
+   {  return this->base_t::insert_unique_convertible(boost::forward<K>(x)); }
+
    //! <b>Effects</b>: Inserts a copy of x in the container if and only if there is
    //!   no element in the container with key equivalent to the key of x.
    //!   p is a hint pointing to where the insert should start to search.
@@ -612,7 +629,8 @@ class set
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
-   iterator insert(const_iterator p, const value_type &x);
+   iterator insert(const_iterator p, const value_type &x)
+   {  return this->base_t::insert_unique_hint_convertible(p, x); }
 
    //! <b>Effects</b>: Inserts an element move constructed from x in the container.
    //!   p is a hint pointing to where the insert should start to search.
@@ -620,8 +638,38 @@ class set
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent to the key of x.
    //!
    //! <b>Complexity</b>: Logarithmic.
-   iterator insert(const_iterator p, value_type &&x);
+   iterator insert(const_iterator p, value_type &&x)
+   {  return this->base_t::insert_unique_hint_convertible(p, boost::move(x)); }
+
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Requires</b>: This overload is available only if
+   //! key_compare::is_transparent exists.
+   //!
+   //! <b>Effects</b>: Inserts an element forward constructed from x in the container.
+   //!   p is a hint pointing to where the insert should start to search.
+   //!
+   //! <b>Returns</b>: An iterator pointing to the element with key equivalent to the key of x.
+   //!
+   //! <b>Complexity</b>: Logarithmic.
+   template <class K>
+   inline BOOST_CONTAINER_DOC1ST
+      ( iterator
+      , typename dtl::enable_if_transparent< key_compare
+                                             BOOST_MOVE_I K
+                                             BOOST_MOVE_I iterator
+                                           >::type)  //transparent
+      insert(const_iterator p, K &&x)
+   {  return this->base_t::insert_unique_hint_convertible(p, boost::forward<K>(x)); }
+
    #else
+   private:
+   typedef std::pair<iterator, bool> insert_return_pair;
+   public:
+   BOOST_MOVE_CONVERSION_AWARE_CATCH
+      (insert, value_type, insert_return_pair, this->base_t::insert_unique_convertible)
+
    BOOST_MOVE_CONVERSION_AWARE_CATCH_1ARG
       (insert, value_type, iterator, this->base_t::insert_unique_hint_convertible, const_iterator, const_iterator)
    #endif

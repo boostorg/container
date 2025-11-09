@@ -1396,7 +1396,7 @@ class flat_map
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    template <class InputIterator>
    inline void insert(InputIterator first, InputIterator last)
-   {  m_flat_tree.insert_unique(first, last);  }
+   {  m_flat_tree.insert_unique_range(first, last);  }
 
    //! <b>Requires</b>: first, last are not iterators into *this.
    //!
@@ -1414,7 +1414,7 @@ class flat_map
    //! <b>Note</b>: Non-standard extension.
    template <class InputIterator>
    inline void insert(ordered_unique_range_t, InputIterator first, InputIterator last)
-      {  m_flat_tree.insert_unique(ordered_unique_range, first, last); }
+      {  m_flat_tree.insert_unique_range(ordered_unique_range, first, last); }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()) if and only
@@ -1425,8 +1425,8 @@ class flat_map
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    inline void insert(std::initializer_list<value_type> il)
    {
-      m_flat_tree.insert_unique( dtl::force<impl_initializer_list>(il).begin()
-                               , dtl::force<impl_initializer_list>(il).end());
+      m_flat_tree.insert_unique_range( dtl::force<impl_initializer_list>(il).begin()
+                                     , dtl::force<impl_initializer_list>(il).end());
    }
 
    //! <b>Requires</b>: [il.begin(), il.end()) must be ordered according to the predicate and must be
@@ -1443,9 +1443,9 @@ class flat_map
    //! <b>Note</b>: Non-standard extension.
    inline void insert(ordered_unique_range_t, std::initializer_list<value_type> il)
    {
-      m_flat_tree.insert_unique(ordered_unique_range
-                               , dtl::force<impl_initializer_list>(il).begin()
-                               , dtl::force<impl_initializer_list>(il).end());
+      m_flat_tree.insert_unique_range(ordered_unique_range
+                                     , dtl::force<impl_initializer_list>(il).begin()
+                                     , dtl::force<impl_initializer_list>(il).end());
    }
 #endif
 
@@ -2794,7 +2794,7 @@ class flat_multimap
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    template <class InputIterator>
    inline void insert(InputIterator first, InputIterator last)
-      {  m_flat_tree.insert_equal(first, last); }
+      {  m_flat_tree.insert_equal_range(first, last); }
 
    //! <b>Requires</b>: first, last are not iterators into *this.
    //!
@@ -2811,7 +2811,7 @@ class flat_multimap
    //! <b>Note</b>: Non-standard extension.
    template <class InputIterator>
    inline void insert(ordered_range_t, InputIterator first, InputIterator last)
-      {  m_flat_tree.insert_equal(ordered_range, first, last); }
+      {  m_flat_tree.insert_equal_range(ordered_range, first, last); }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: inserts each element from the range [il.begin(), il.end()) .
@@ -2821,8 +2821,8 @@ class flat_multimap
    //! <b>Note</b>: If an element is inserted it might invalidate elements.
    inline void insert(std::initializer_list<value_type> il)
    {
-      m_flat_tree.insert_equal( dtl::force<impl_initializer_list>(il).begin()
-                              , dtl::force<impl_initializer_list>(il).end());
+      m_flat_tree.insert_equal_range( dtl::force<impl_initializer_list>(il).begin()
+                                    , dtl::force<impl_initializer_list>(il).end());
    }
 
    //! <b>Requires</b>: [il.begin(), il.end()) must be ordered according to the predicate.
@@ -2838,9 +2838,9 @@ class flat_multimap
    //! <b>Note</b>: Non-standard extension.
    inline void insert(ordered_range_t, std::initializer_list<value_type> il)
    {
-      m_flat_tree.insert_equal( ordered_range
-                              , dtl::force<impl_initializer_list>(il).begin()
-                              , dtl::force<impl_initializer_list>(il).end());
+      m_flat_tree.insert_equal_range( ordered_range
+                                    , dtl::force<impl_initializer_list>(il).begin()
+                                    , dtl::force<impl_initializer_list>(il).end());
    }
 #endif
 

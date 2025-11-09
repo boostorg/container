@@ -813,25 +813,27 @@ class tree
                                  && boost::container::dtl::is_nothrow_swappable<Compare>::value )
    {  AllocHolder::swap(x);   }
 
-   public:
+   protected:
 
    typedef typename Icont::insert_commit_data insert_commit_data;
 
    // insert/erase
+   template <class Comparable>
    std::pair<iterator,bool> insert_unique_check
-      (const key_type& key, insert_commit_data &data)
+      (const Comparable& key, insert_commit_data &data)
    {
       std::pair<iiterator, bool> ret =
-         this->icont().insert_unique_check(key, data);
+         this->icont().insert_unique_check(key, KeyNodeCompare(key_comp()), data);
       return std::pair<iterator, bool>(iterator(ret.first), ret.second);
    }
 
+   template <class Comparable>
    std::pair<iterator,bool> insert_unique_check
-      (const_iterator hint, const key_type& key, insert_commit_data &data)
+      (const_iterator hint, const Comparable& key, insert_commit_data &data)
    {
       BOOST_ASSERT((priv_is_linked)(hint));
       std::pair<iiterator, bool> ret =
-         this->icont().insert_unique_check(hint.get(), key, data);
+         this->icont().insert_unique_check(hint.get(), key, KeyNodeCompare(key_comp()), data);
       return std::pair<iterator, bool>(iterator(ret.first), ret.second);
    }
 
@@ -850,8 +852,9 @@ class tree
    std::pair<iterator,bool> insert_unique_convertible(BOOST_FWD_REF(MovableConvertible) v)
    {
       insert_commit_data data;
+      const typename remove_cvref<MovableConvertible>::type & k = v;  //Support emulated rvalue references
       std::pair<iterator,bool> ret =
-         this->insert_unique_check(key_of_value_t()(v), data);
+         this->insert_unique_check(key_of_value_t()(k), data);
       if(ret.second){
          ret.first = this->insert_unique_commit(boost::forward<MovableConvertible>(v), data);
       }

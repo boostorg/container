@@ -885,6 +885,18 @@ class flat_tree
       return ret;
    }
 
+   template<class Convertible>
+   std::pair<iterator,bool> insert_unique(BOOST_FWD_REF(Convertible) val)
+   {
+      std::pair<iterator,bool> ret;
+      insert_commit_data data;
+      ret.second = this->priv_insert_unique_prepare(KeyOfValue()(val), data);
+      ret.first = ret.second ? this->priv_insert_commit(data, boost::move(val))
+                             : this->begin() + (data.position - this->cbegin());
+                             //: iterator(vector_iterator_get_ptr(data.position));
+      return ret;
+   }
+
    iterator insert_equal(const value_type& val)
    {
       iterator i = this->upper_bound(KeyOfValue()(val));
@@ -919,6 +931,21 @@ class flat_tree
          //: iterator(vector_iterator_get_ptr(data.position));
    }
 
+   template<class K>
+   inline typename dtl::enable_if_c<
+      !dtl::is_convertible<K, iterator>::value &&     //not convertible to iterator
+      !dtl::is_convertible<K, const_iterator>::value  //not convertible to const_iterator
+      , iterator>::type
+    insert_unique(const_iterator hint, BOOST_FWD_REF(K) val)
+   {
+      BOOST_ASSERT(this->priv_in_range_or_end(hint));
+      insert_commit_data data;
+      return this->priv_insert_unique_prepare(hint, KeyOfValue()(val), data)
+         ? this->priv_insert_commit(data, boost::move(val))
+         : this->begin() + (data.position - this->cbegin());
+         //: iterator(vector_iterator_get_ptr(data.position));
+   }
+
    iterator insert_equal(const_iterator hint, const value_type& val)
    {
       BOOST_ASSERT(this->priv_in_range_or_end(hint));
@@ -936,7 +963,7 @@ class flat_tree
    }
 
    template <class InIt>
-   void insert_unique(InIt first, InIt last)
+   void insert_unique_range(InIt first, InIt last)
    {
       dtl::bool_<is_contiguous_container<container_type>::value> contiguous_tag;
       container_type &seq = this->m_data.m_seq;
@@ -963,7 +990,7 @@ class flat_tree
    }
 
    template <class InIt>
-   void insert_equal(InIt first, InIt last)
+   void insert_equal_range(InIt first, InIt last)
    {
       if (first != last) {
          dtl::bool_<is_contiguous_container<container_type>::value> contiguous_tag;
@@ -977,7 +1004,7 @@ class flat_tree
    //Ordered
 
    template <class InIt>
-   void insert_equal(ordered_range_t, InIt first, InIt last)
+   void insert_equal_range(ordered_range_t, InIt first, InIt last)
    {
       const bool value = boost::container::dtl::
          has_member_function_callable_with_merge_unique<container_type, InIt, InIt, value_compare>::value;
@@ -985,7 +1012,7 @@ class flat_tree
    }
 
    template <class InIt>
-   void insert_unique(ordered_unique_range_t, InIt first, InIt last)
+   void insert_unique_range(ordered_unique_range_t, InIt first, InIt last)
    {
       const bool value = boost::container::dtl::
          has_member_function_callable_with_merge_unique<container_type, InIt, InIt, value_compare>::value;
@@ -1331,15 +1358,15 @@ class flat_tree
    template<class C2>
    inline void merge_unique(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
    {
-      this->insert_unique( boost::make_move_iterator(source.begin())
-                         , boost::make_move_iterator(source.end()));
+      this->insert_unique_range( boost::make_move_iterator(source.begin())
+                               , boost::make_move_iterator(source.end()));
    }
 
    template<class C2>
    inline void merge_equal(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
    {
-      this->insert_equal( boost::make_move_iterator(source.begin())
-                        , boost::make_move_iterator(source.end()));
+      this->insert_equal_range( boost::make_move_iterator(source.begin())
+                              , boost::make_move_iterator(source.end()));
    }
 
    inline void merge_unique(flat_tree& source)
@@ -1541,10 +1568,10 @@ class flat_tree
       //for the constructor
       //Call end() every iteration as reallocation might have invalidated iterators
       if(unique_insertion){
-         this->insert_unique(first, last);
+         this->insert_unique_range(first, last);
       }
       else{
-         this->insert_equal (first, last);
+         this->insert_equal_range(first, last);
       }
    }
 
@@ -1645,7 +1672,7 @@ class flat_tree
    inline iterator priv_insert_commit
       (insert_commit_data &commit_data, BOOST_FWD_REF(Convertible) convertible)
    {
-      return this->m_data.m_seq.insert
+      return this->m_data.m_seq.emplace
          ( commit_data.position
          , boost::forward<Convertible>(convertible));
    }
