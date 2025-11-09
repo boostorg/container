@@ -200,9 +200,7 @@ bool node_type_test()
       mmap_t mmap1;
 
       //extract
-      map1.clear();
       map1.try_emplace(1, 'a');
-      mmap1.clear();
       mmap1.emplace(1, 'a');
       mmap1.emplace(1, 'b');
 
