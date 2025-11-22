@@ -343,7 +343,7 @@ class list
                                   || allocator_traits_type::is_always_equal::value)
    {
       if (BOOST_LIKELY(this != &x)) {
-         //We know resources can be transferred at comiple time if both allocators are
+         //We know resources can be transferred at compile time if both allocators are
          //always equal or the allocator is going to be propagated
          const bool can_steal_resources_alloc
             =  allocator_traits_type::propagate_on_container_move_assignment::value
