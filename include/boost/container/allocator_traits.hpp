@@ -86,6 +86,15 @@ namespace boost {
 namespace container {
 namespace dtl {
 
+template <class T>
+class allocator_traits_dummy
+{
+   public:
+   typedef T value_type;
+   T *allocate(std::size_t){ return 0;  }
+   void deallocate(T *, std::size_t){}
+};
+
 #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 template<class T, class ...Args>
