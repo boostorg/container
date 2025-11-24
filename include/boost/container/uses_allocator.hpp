@@ -128,7 +128,7 @@ struct uses_allocator_imp
    template <class U>
    static yes_type test(typename U::allocator_type);
 
-   // Match this function if T::allocator_type exists and it's type is `erased_type`.
+   // Match this function if T::allocator_type exists and its type is `erased_type`.
    template <class U, class V>
    static typename dtl::enable_if
       < dtl::is_same<typename U::allocator_type, erased_type>
