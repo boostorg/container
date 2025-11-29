@@ -76,6 +76,32 @@ namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
+template<class SizeType, class LimitSizeType>
+struct vec_on_type_overflow
+{
+   BOOST_CONTAINER_STATIC_ASSERT(sizeof(SizeType) >= sizeof(LimitSizeType));
+
+   typedef dtl::limit_by_stored_size_type<SizeType, LimitSizeType> check_t;
+   struct throw_length_error
+   {
+      const char * const m_str;
+
+      throw_length_error(const char* str)
+         : m_str(str)
+      {}
+
+      void operator()()
+      {
+         boost::container::throw_length_error(m_str);
+      }
+   };
+
+   static void throw_length(SizeType v, const char *str)
+   {
+      check_t::call_if_overflows(v, throw_length_error(str));
+   }
+};
+
 
 template <class Pointer, bool IsConst>
 class vec_iterator
@@ -321,10 +347,8 @@ struct vector_alloc_holder
    template<class SizeType>
    void do_initial_capacity(SizeType initial_capacity)
    {
-      if (BOOST_UNLIKELY(initial_capacity > size_type(-1))) {
-         boost::container::throw_length_error("get_next_capacity, allocator's max size reached");
-      }
-      else if (initial_capacity) {
+      vec_on_type_overflow<SizeType, size_type>::throw_length(initial_capacity, "get_next_capacity, allocator's max size reached");
+      if (initial_capacity) {
          pointer reuse = pointer();
          size_type final_cap = static_cast<size_type>(initial_capacity);
          m_start = this->allocation_command(allocate_new, final_cap, final_cap, reuse);
@@ -335,10 +359,8 @@ struct vector_alloc_holder
    template<class SizeType>
    void do_maybe_initial_capacity(pointer p, SizeType initial_capacity)
    {
-      if (BOOST_UNLIKELY(initial_capacity > size_type(-1))) {
-         boost::container::throw_length_error("get_next_capacity, allocator's max size reached");
-      }
-      else if (p) {
+      vec_on_type_overflow<SizeType, size_type>::throw_length(initial_capacity, "get_next_capacity, allocator's max size reached");
+      if (p) {
          m_start = p;
       }
       else {
@@ -464,7 +486,7 @@ struct vector_alloc_holder
       {  this->m_size = static_cast<stored_size_type>(this->m_size + s);   }
 
    BOOST_CONTAINER_FORCEINLINE void set_stored_capacity(size_type c) BOOST_NOEXCEPT_OR_NOTHROW
-      {  this->m_capacity = static_cast<stored_size_type>(c);  }
+   {  dtl::limit_by_stored_size_type<size_type, stored_size_type>::set(this->m_capacity, c);   }
 
    inline pointer allocation_command(boost::container::allocation_type command,
                                  size_type limit_size, size_type &prefer_in_recvd_out_size, pointer &reuse)
@@ -476,7 +498,7 @@ struct vector_alloc_holder
    inline pointer allocate(size_type n)
    {
       const size_type max_alloc = allocator_traits_type::max_size(this->alloc());
-      const size_type max = max_alloc <= stored_size_type(-1) ? max_alloc : stored_size_type(-1);
+      const size_type max = dtl::limit_by_stored_size_type<size_type, stored_size_type>::clamp(max_alloc);;
       if (BOOST_UNLIKELY(max < n) )
          boost::container::throw_length_error("get_next_capacity, allocator's max size reached");
 
@@ -553,7 +575,7 @@ struct vector_alloc_holder
    BOOST_CONTAINER_FORCEINLINE void start(const pointer &p)       BOOST_NOEXCEPT_OR_NOTHROW
       {  m_start = p;  }
    BOOST_CONTAINER_FORCEINLINE void capacity(const size_type &c)  BOOST_NOEXCEPT_OR_NOTHROW
-      {  BOOST_ASSERT( c <= stored_size_type(-1)); this->set_stored_capacity(c);  }
+   {  this->set_stored_capacity(c); }
 
    static inline void on_capacity_overflow()
    { }
@@ -580,9 +602,7 @@ struct vector_alloc_holder
       BOOST_ASSERT( (command & allocate_new));
       BOOST_ASSERT(!(command & nothrow_allocation));
       //First detect overflow on smaller stored_size_types
-      if (BOOST_UNLIKELY(limit_size > stored_size_type(-1))){
-         boost::container::throw_length_error("get_next_capacity, allocator's max size reached");
-      }
+      vec_on_type_overflow<size_type, stored_size_type>::throw_length(limit_size, "get_next_capacity, allocator's max size reached");
       (clamp_by_stored_size_type<size_type>)(prefer_in_recvd_out_size, stored_size_type());
       pointer const p = this->allocate(prefer_in_recvd_out_size);
       reuse = pointer();
@@ -595,9 +615,7 @@ struct vector_alloc_holder
                          pointer &reuse)
    {
       //First detect overflow on smaller stored_size_types
-      if (BOOST_UNLIKELY(limit_size > stored_size_type(-1))){
-         boost::container::throw_length_error("get_next_capacity, allocator's max size reached");
-      }
+      vec_on_type_overflow<size_type, stored_size_type>::throw_length(limit_size, "get_next_capacity, allocator's max size reached");
       (clamp_by_stored_size_type<size_type>)(prefer_in_recvd_out_size, stored_size_type());
       //Allocate memory 
       pointer p = this->alloc().allocation_command(command, limit_size, prefer_in_recvd_out_size, reuse);
@@ -1058,12 +1076,6 @@ private:
    //!   throws or T's constructor taking a dereferenced InIt throws.
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
-//    template <class InIt>
-//    vector(InIt first, InIt last
-//           BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename dtl::disable_if_c
-//                                  < dtl::is_convertible<InIt BOOST_MOVE_I size_type>::value
-//                                  BOOST_MOVE_I dtl::nat >::type * = 0)
-//           ) -> vector<typename iterator_traits<InIt>::value_type, new_allocator<typename iterator_traits<InIt>::value_type>>;
    template <class InIt>
    vector(InIt first, InIt last
       BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename dtl::disable_if_c
@@ -1384,9 +1396,7 @@ private:
       //For Fwd iterators the standard only requires EmplaceConstructible and assignable from *first
       //so we can't do any backwards allocation
       const it_size_type sz = boost::container::iterator_udistance(first, last);
-      if (BOOST_UNLIKELY(sz > size_type(-1))){
-         boost::container::throw_length_error("vector::assign, FwdIt's max length reached");
-      }
+      vec_on_type_overflow<it_size_type, size_type>::throw_length(sz, "vector::assign, FwdIt's max length reached");
 
       const size_type input_sz = static_cast<size_type>(sz);
       const size_type old_capacity = this->capacity();
@@ -2103,10 +2113,7 @@ private:
       BOOST_ASSERT(this->priv_in_range_or_end(pos));
       typedef typename iter_size<FwdIt>::type it_size_type;
       const it_size_type sz = boost::container::iterator_udistance(first, last);
-      if (BOOST_UNLIKELY(sz > size_type(-1))){
-         boost::container::throw_length_error("vector::insert, FwdIt's max length reached");
-      }
-
+      vec_on_type_overflow<it_size_type, size_type>::throw_length(sz, "vector::insert, FwdIt's max length reached");
       dtl::insert_range_proxy<allocator_type, FwdIt> proxy(first);
       return this->priv_insert_forward_range(vector_iterator_get_ptr(pos), static_cast<size_type>(sz), proxy);
    }

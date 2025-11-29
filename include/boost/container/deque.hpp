@@ -480,7 +480,7 @@ class deque_base
    void test_size_against_max(size_type n)
    {
       const size_type max_alloc = val_alloc_traits_type::max_size(this->alloc());
-      const size_type max = max_alloc <= stored_size_type(-1) ? max_alloc : stored_size_type(-1);
+      const size_type max = dtl::limit_by_stored_size_type<size_type, stored_size_type>::clamp(max_alloc);;
       if (BOOST_UNLIKELY(max < n) )
          boost::container::throw_length_error("get_next_capacity, allocator's max size reached");
    }
