@@ -38,45 +38,8 @@ namespace boost { namespace container {
 
 namespace dtl {
 
-
 // Check if we can detect is_convertible using advanced SFINAE expressions
-#if !defined(BOOST_NO_CXX11_DECLTYPE) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-
-   //! Code inspired by Mathias Gaunard's is_convertible.cpp found in the Boost mailing list
-   //! http://boost.2283326.n4.nabble.com/type-traits-is-constructible-when-decltype-is-supported-td3575452.html
-   //! Thanks Mathias!
-
-   //With variadic templates, we need a single class to implement the trait
-   template<class T, class ...Args>
-   struct is_constructible
-   {
-      typedef char yes_type;
-      struct no_type
-      { char padding[2]; };
-
-      template<std::size_t N>
-      struct dummy;
-
-      template<class X>
-      static decltype(X(boost::move_detail::declval<Args>()...), true_type()) test(int);
-
-      template<class X>
-      static no_type test(...);
-
-      BOOST_STATIC_CONSTEXPR bool value = sizeof(test<T>(0)) == sizeof(yes_type);
-   };
-
-   template <class T, class InnerAlloc, class ...Args>
-   struct is_constructible_with_allocator_prefix
-      : is_constructible<T, allocator_arg_t, InnerAlloc, Args...>
-   {};
-
-#else    // #if !defined(BOOST_NO_SFINAE_EXPR) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-
-   //Without advanced SFINAE expressions, we can't use is_constructible
-   //so backup to constructible_with_allocator_xxx
-
-   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    template <class T, class InnerAlloc, class ...Args>
    struct is_constructible_with_allocator_prefix
@@ -92,13 +55,9 @@ namespace dtl {
 
    template<class T, class InnerAlloc, BOOST_MOVE_CLASSDFLT9, class = void>
    struct is_constructible_with_allocator_prefix;
-      : constructible_with_allocator_prefix<T>
-   {};
 
    template<class T, class InnerAlloc, BOOST_MOVE_CLASSDFLT9, class = void>
    struct is_constructible_with_allocator_suffix;
-      : constructible_with_allocator_suffix<T>
-   {};
 
    #define BOOST_INTRUSIVE_IS_CONSTRUCTIBLE_WITH_ALLOCATOR(N) \
       template <typename T, class InnerAlloc BOOST_MOVE_I##N BOOST_MOVE_CLASS##N>\
@@ -166,11 +125,32 @@ inline typename dtl::enable_if_and
    , dtl::is_not_pair<T>
    , uses_allocator<T, typename remove_cvref<ArgAlloc>::type>
    , dtl::not_<is_constructible_with_allocator_prefix<T, ArgAlloc, Args...> >
+   , is_constructible_with_allocator_suffix<T, ArgAlloc, Args...>
    >::type dispatch_uses_allocator
    ( ConstructAlloc& construct_alloc, BOOST_FWD_REF(ArgAlloc) arg_alloc, T* p, BOOST_FWD_REF(Args)...args)
 {
    allocator_traits<ConstructAlloc>::construct
-      (construct_alloc, p, ::boost::forward<Args>(args)..., ::boost::forward<ArgAlloc>(arg_alloc));
+      ( construct_alloc, p, ::boost::forward<Args>(args)...
+      , ::boost::forward<ArgAlloc>(arg_alloc));
+}
+
+// allocator suffix
+template < typename ConstructAlloc
+         , typename ArgAlloc
+         , typename T
+         , class ...Args
+         >
+inline typename dtl::enable_if_and
+   < void
+   , dtl::is_not_pair<T>
+   , uses_allocator<T, typename remove_cvref<ArgAlloc>::type>
+   , dtl::not_<is_constructible_with_allocator_prefix<T, ArgAlloc, Args...> >
+   , dtl::not_<is_constructible_with_allocator_suffix<T, ArgAlloc, Args...> >
+   >::type dispatch_uses_allocator
+   ( ConstructAlloc& construct_alloc, BOOST_FWD_REF(ArgAlloc) arg_alloc, T* p, BOOST_FWD_REF(Args)...args)
+{
+   (void)arg_alloc;
+   allocator_traits<ConstructAlloc>::construct(construct_alloc, p, ::boost::forward<Args>(args)...);
 }
 
 #else    //#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
@@ -217,6 +197,7 @@ BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_SCOPED_ALLOCATOR_DISPATCH_USES_ALLOCATOR
       , dtl::is_not_pair<T>\
       , uses_allocator<T, typename remove_cvref<ArgAlloc>::type>\
       , dtl::not_<is_constructible_with_allocator_prefix<T, ArgAlloc BOOST_MOVE_I##N BOOST_MOVE_TARG##N> >\
+      , is_constructible_with_allocator_suffix<T, ArgAlloc BOOST_MOVE_I##N BOOST_MOVE_TARG##N>\
       >::type\
       dispatch_uses_allocator\
       (ConstructAlloc& construct_alloc, BOOST_FWD_REF(ArgAlloc) arg_alloc, T* p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
@@ -227,6 +208,26 @@ BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_SCOPED_ALLOCATOR_DISPATCH_USES_ALLOCATOR
 //
 BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_SCOPED_ALLOCATOR_DISPATCH_USES_ALLOCATOR_CODE)
 #undef BOOST_CONTAINER_SCOPED_ALLOCATOR_DISPATCH_USES_ALLOCATOR_CODE
+
+#define BOOST_CONTAINER_SCOPED_ALLOCATOR_DISPATCH_USES_ALLOCATOR_CODE(N) \
+   template < typename ConstructAlloc, typename ArgAlloc, typename T BOOST_MOVE_I##N BOOST_MOVE_CLASS##N >\
+   inline typename dtl::enable_if_and\
+      < void\
+      , dtl::is_not_pair<T>\
+      , uses_allocator<T, typename remove_cvref<ArgAlloc>::type>\
+      , dtl::not_<is_constructible_with_allocator_prefix<T, ArgAlloc BOOST_MOVE_I##N BOOST_MOVE_TARG##N> >\
+      , dtl::not_<is_constructible_with_allocator_suffix<T, ArgAlloc BOOST_MOVE_I##N BOOST_MOVE_TARG##N> >\
+      >::type\
+      dispatch_uses_allocator\
+      (ConstructAlloc& construct_alloc, BOOST_FWD_REF(ArgAlloc) arg_alloc, T* p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {\
+      (void)arg_alloc;\
+      allocator_traits<ConstructAlloc>::construct(construct_alloc, p BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+   }\
+//
+BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_SCOPED_ALLOCATOR_DISPATCH_USES_ALLOCATOR_CODE)
+#undef BOOST_CONTAINER_SCOPED_ALLOCATOR_DISPATCH_USES_ALLOCATOR_CODE
+
 
 #endif   //#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
