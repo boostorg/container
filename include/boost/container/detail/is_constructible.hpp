@@ -19,8 +19,8 @@
 #  pragma once
 #endif
 
-#include <boost/interprocess/detail/config_begin.hpp>
-#include <boost/interprocess/detail/workaround.hpp>
+#include <boost/container/detail/config_begin.hpp>
+#include <boost/container/detail/workaround.hpp>
 
 #include <cstddef> // for size_t
 #include <boost/move/utility_core.hpp> //declval
@@ -42,7 +42,7 @@ namespace boost_container_is_constructible {
    namespace container {
 
    template <typename T, typename ...Args>
-   struct is_constructible\
+   struct is_constructible
    {
       private:
       typedef char yes_type;
@@ -175,6 +175,6 @@ namespace boost_container_is_constructible {
 
 #endif
 
-#include <boost/interprocess/detail/config_end.hpp>
+#include <boost/container/detail/config_end.hpp>
 
 #endif   //BOOST_CONTAINER_DETAIL_IS_CONSTRUCTIBLE_HPP
