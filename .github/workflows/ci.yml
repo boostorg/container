@@ -525,7 +525,7 @@ jobs:
             fi
             if [ "$GIT_HAS_JOBS" -ne 0 ]
             then
-                DEPINST_ARGS+=("-C" "--git_args" "--jobs $GIT_FETCH_JOBS")
+                DEPINST_ARGS+=("--git_args" "--jobs $GIT_FETCH_JOBS")
             fi
             mkdir -p snapshot
             cd snapshot
@@ -548,7 +548,7 @@ jobs:
             rm -rf "../snapshot"
             git submodule update --init tools/boostdep
             DEPINST_ARGS+=("$LIBRARY")
-            python tools/boostdep/depinst/depinst.py "${DEPINST_ARGS[@]}"
+            python tools/boostdep/depinst/depinst.py -C "${DEPINST_ARGS[@]}"
             ./bootstrap.sh
             ./b2 headers
             if [ -n "${{matrix.compiler}}" -o -n "$GCC_TOOLCHAIN_ROOT" ]
