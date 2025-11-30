@@ -101,9 +101,8 @@ inline typename dtl::enable_if_and
    , dtl::is_not_pair<T>
    , dtl::not_< uses_allocator<T, typename remove_cvref<ArgAlloc>::type > >
    >::type dispatch_uses_allocator
-   ( ConstructAlloc & construct_alloc, BOOST_FWD_REF(ArgAlloc) arg_alloc, T* p, BOOST_FWD_REF(Args)...args)
+   ( ConstructAlloc & construct_alloc, BOOST_FWD_REF(ArgAlloc), T* p, BOOST_FWD_REF(Args)...args)
 {
-   (void)arg_alloc;
    allocator_traits<ConstructAlloc>::construct(construct_alloc, p, ::boost::forward<Args>(args)...);
 }
 
@@ -156,7 +155,7 @@ inline typename dtl::enable_if_and
 
 /////////////////////////////////////////////////////////////////////////
 //
-//    fallback_to_dispatch_uses_allocator (original args constructible)
+//    dispatch_uses_allocator (NOT pair, uses-allocator no viable constructor)
 //
 /////////////////////////////////////////////////////////////////////////
 template < typename ConstructAlloc
@@ -167,32 +166,13 @@ template < typename ConstructAlloc
 inline typename dtl::enable_if_and
    < void
    , dtl::is_not_pair<T>
-   , is_constructible<T, Args...>
-   >::type fallback_to_dispatch_uses_allocator
-   ( ConstructAlloc & construct_alloc, BOOST_FWD_REF(ArgAlloc) arg_alloc, T* p, BOOST_FWD_REF(Args)...args)
+   , uses_allocator<T, typename remove_cvref<ArgAlloc>::type>
+   , dtl::not_<is_constructible_with_allocator_prefix<T, ArgAlloc, Args...> >
+   , dtl::not_<is_constructible_with_allocator_suffix<T, ArgAlloc, Args...> >
+   >::type dispatch_uses_allocator
+   ( ConstructAlloc& construct_alloc, BOOST_FWD_REF(ArgAlloc), T* p, BOOST_FWD_REF(Args)...args)
 {
-   (void)arg_alloc;
    allocator_traits<ConstructAlloc>::construct(construct_alloc, p, ::boost::forward<Args>(args)...);
-}
-
-/////////////////////////////////////////////////////////////////////////
-//
-//    fallback_to_dispatch_uses_allocator (original args NOT constructible)
-//
-/////////////////////////////////////////////////////////////////////////
-template < typename ConstructAlloc
-         , typename ArgAlloc
-         , typename T
-         , class ...Args
-         >
-inline typename dtl::enable_if_and
-   < void
-   , dtl::is_not_pair<T>
-   , dtl::not_<is_constructible<T, Args...> >
-   >::type fallback_to_dispatch_uses_allocator
-   ( ConstructAlloc & construct_alloc, BOOST_FWD_REF(ArgAlloc) arg_alloc, T* p, BOOST_FWD_REF(Args)...args)
-{
-   (dispatch_uses_allocator)(construct_alloc, ::boost::forward<ArgAlloc>(arg_alloc), p, ::boost::forward<Args>(args)...);
 }
 
 #else    //#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
@@ -210,9 +190,8 @@ inline typename dtl::enable_if_and
       , dtl::not_<uses_allocator<T, typename remove_cvref<ArgAlloc>::type> >\
       >::type\
       dispatch_uses_allocator\
-      (ConstructAlloc &construct_alloc, BOOST_FWD_REF(ArgAlloc) arg_alloc, T* p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+      (ConstructAlloc &construct_alloc, BOOST_FWD_REF(ArgAlloc), T* p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
    {\
-      (void)arg_alloc;\
       allocator_traits<ConstructAlloc>::construct(construct_alloc, p BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
    }\
 //
@@ -268,7 +247,7 @@ BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_SCOPED_ALLOCATOR_DISPATCH_USES_ALLOCATOR
 
 /////////////////////////////////////////////////////////////////////////
 //
-//    fallback_to_dispatch_uses_allocator (original args constructible)
+//    dispatch_uses_allocator (NOT pair, uses-allocator no viable constructor)
 //
 /////////////////////////////////////////////////////////////////////////
 #define BOOST_CONTAINER_SCOPED_ALLOCATOR_DISPATCH_USES_ALLOCATOR_CODE(N) \
@@ -276,40 +255,18 @@ BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_SCOPED_ALLOCATOR_DISPATCH_USES_ALLOCATOR
    inline typename dtl::enable_if_and\
       < void\
       , dtl::is_not_pair<T>\
-      , is_constructible<T BOOST_MOVE_I##N BOOST_MOVE_TARG##N>\
+      , uses_allocator<T, typename remove_cvref<ArgAlloc>::type>\
+      , dtl::not_<is_constructible_with_allocator_prefix<T, ArgAlloc BOOST_MOVE_I##N BOOST_MOVE_TARG##N> >\
+      , dtl::not_<is_constructible_with_allocator_suffix<T, ArgAlloc BOOST_MOVE_I##N BOOST_MOVE_TARG##N> >\
       >::type\
-      fallback_to_dispatch_uses_allocator\
-      (ConstructAlloc& construct_alloc, BOOST_FWD_REF(ArgAlloc) arg_alloc, T* p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+      dispatch_uses_allocator\
+      (ConstructAlloc& construct_alloc, BOOST_FWD_REF(ArgAlloc), T* p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
    {\
-      (void)arg_alloc;\
       allocator_traits<ConstructAlloc>::construct(construct_alloc, p BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
    }\
 //
 BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_SCOPED_ALLOCATOR_DISPATCH_USES_ALLOCATOR_CODE)
 #undef BOOST_CONTAINER_SCOPED_ALLOCATOR_DISPATCH_USES_ALLOCATOR_CODE
-
-
-/////////////////////////////////////////////////////////////////////////
-//
-//    fallback_to_dispatch_uses_allocator (original args NOT constructible)
-//
-/////////////////////////////////////////////////////////////////////////
-#define BOOST_CONTAINER_SCOPED_ALLOCATOR_DISPATCH_USES_ALLOCATOR_CODE(N) \
-   template < typename ConstructAlloc, typename ArgAlloc, typename T BOOST_MOVE_I##N BOOST_MOVE_CLASS##N >\
-   inline typename dtl::enable_if_and\
-      < void\
-      , dtl::is_not_pair<T>\
-      , dtl::not_<is_constructible<T BOOST_MOVE_I##N BOOST_MOVE_TARG##N> >\
-      >::type\
-      fallback_to_dispatch_uses_allocator\
-      (ConstructAlloc& construct_alloc, BOOST_FWD_REF(ArgAlloc) arg_alloc, T* p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
-   {\
-      (dispatch_uses_allocator)(construct_alloc, ::boost::forward<ArgAlloc>(arg_alloc), p BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
-   }\
-//
-BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_SCOPED_ALLOCATOR_DISPATCH_USES_ALLOCATOR_CODE)
-#undef BOOST_CONTAINER_SCOPED_ALLOCATOR_DISPATCH_USES_ALLOCATOR_CODE
-
 
 #endif   //#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
