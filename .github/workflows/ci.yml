@@ -135,6 +135,7 @@ jobs:
           # Linux, gcc-15
           - toolset: gcc-15
             cxxstd: "11,14,17,20,23,2c"
+            cxxflags: -pipe
             os: ubuntu-latest
             container: ubuntu:26.04
             install: g++-15-multilib
@@ -325,6 +326,7 @@ jobs:
           - toolset: clang
             compiler: clang++-19
             cxxstd: "03,11,14,17,20,2b"
+            cxxflags: -pipe
             container: ubuntu:24.04
             os: ubuntu-latest
             install: clang-19
@@ -332,6 +334,7 @@ jobs:
           - toolset: clang
             compiler: clang++-20
             cxxstd: "11,14,17,20,23,2c"
+            cxxflags: -pipe
             container: ubuntu:26.04
             os: ubuntu-latest
             install: clang-20
