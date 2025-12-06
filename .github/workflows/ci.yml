@@ -118,7 +118,7 @@ jobs:
               - g++-12-multilib
           # Linux, gcc-13
           - toolset: gcc-13
-            cxxstd: "11,14,17,20,2b"
+            cxxstd: "03,11,14,17,20,2b"
             cxxflags: -pipe
             os: ubuntu-latest
             container: ubuntu:24.04
@@ -126,7 +126,7 @@ jobs:
             address-model: 32,64
           # Linux, gcc-14
           - toolset: gcc-14
-            cxxstd: "11,14,17,20,2b"
+            cxxstd: "03,11,14,17,20,2b"
             cxxflags: -pipe
             os: ubuntu-latest
             container: ubuntu:24.04
@@ -134,23 +134,30 @@ jobs:
             address-model: 32,64
           # Linux, gcc-15
           - toolset: gcc-15
-            cxxstd: "11,14,17,20,23,2c"
+            cxxstd: "03,11,14,17,20,23,2c"
             cxxflags: -pipe
             os: ubuntu-latest
             container: ubuntu:25.04
             install: g++-15-multilib
             address-model: 32,64
-          # Linux, gcc-12, ubsan, asan
-          - name: SAN
-            toolset: gcc-12
+          # Linux, gcc-15, ubsan
+          - name: UBSAN
+            toolset: gcc-15
             cxxstd: "03,11,14,17,20,23"
             cxxflags: -pipe
             ubsan: 1
+            os: ubuntu-latest
+            container: ubuntu:25.04
+            install: g++-15
+          # Linux, gcc-15, asan
+          - name: ASAN
+            toolset: gcc-15
+            cxxstd: "11,14,17,20,23"
+            cxxflags: -pipe
             asan: 1
             os: ubuntu-latest
-            container: ubuntu:22.04
-            install:
-              - g++-12
+            container: ubuntu:25.04
+            install: g++-15
           #------------------
           # Linux, clang
           #------------------
@@ -376,44 +383,27 @@ jobs:
               - libc++abi-20-dev
             cxxflags: -pipe -stdlib=libc++
             linkflags: -stdlib=libc++
-          # Linux, clang-14 libc++, ubsan, asan
-          - name: SAN
-            toolset: clang
-            compiler: clang++-14
-            cxxstd: "11,14,17,20"
-            cxxflags: -pipe -stdlib=libc++
-            linkflags: -stdlib=libc++
-            ubsan: 1
-            asan: 1
-            os: ubuntu-latest
-            container: ubuntu:22.04
-            install:
-              - clang-14
-              - libc++-14-dev
-              - libc++abi-14-dev
-          # Linux, clang-18 libc++, ubsan, asan
-          - name: SAN
-            toolset: clang
-            compiler: clang++-18
-            cxxstd: "11,14,17,20,2b"
-            cxxflags: -pipe -stdlib=libc++
-            linkflags: -stdlib=libc++
-            ubsan: 1
-            asan: 1
-            os: ubuntu-latest
-            container: ubuntu:24.04
-            install:
-              - clang-18
-              - libc++-18-dev
-              - libc++abi-18-dev
-          # Linux, clang-20 libc++, ubsan, asan
-          - name: SAN
+          # Linux, clang-20 libc++, ubsan
+          - name: UBSAN
             toolset: clang
             compiler: clang++-20
             cxxstd: "11,14,17,20,23,2c"
             cxxflags: -pipe -stdlib=libc++
             linkflags: -stdlib=libc++
             ubsan: 1
+            os: ubuntu-latest
+            container: ubuntu:25.04
+            install:
+              - clang-20
+              - libc++-20-dev
+              - libc++abi-20-dev
+          # Linux, clang-20 libc++, asan
+          - name: ASAN
+            toolset: clang
+            compiler: clang++-20
+            cxxstd: "11,14,17,20,23,2c"
+            cxxflags: -pipe -stdlib=libc++
+            linkflags: -stdlib=libc++
             asan: 1
             os: ubuntu-latest
             container: ubuntu:25.04
