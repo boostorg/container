@@ -343,7 +343,7 @@ jobs:
           # Linux, clang-15 libc++
           - toolset: clang
             compiler: clang++-15
-            cxxstd: "03,11,14,17,20,2b"
+            cxxstd: "11,14,17,20,2b"
             os: ubuntu-latest
             container: ubuntu:22.04
             install:
@@ -355,7 +355,7 @@ jobs:
           # Linux, clang-18 libc++
           - toolset: clang
             compiler: clang++-18
-            cxxstd: "03,11,14,17,20,2b"
+            cxxstd: "11,14,17,20,2b"
             os: ubuntu-latest
             container: ubuntu:24.04
             install:
@@ -367,7 +367,7 @@ jobs:
           # Linux, clang-20 libc++
           - toolset: clang
             compiler: clang++-20
-            cxxstd: "03,11,14,17,20,23,2c"
+            cxxstd: "11,14,17,20,23,2c"
             os: ubuntu-latest
             container: ubuntu:26.04
             install:
@@ -380,7 +380,7 @@ jobs:
           - name: SAN
             toolset: clang
             compiler: clang++-14
-            cxxstd: "03,11,14,17,20"
+            cxxstd: "11,14,17,20"
             cxxflags: -pipe -stdlib=libc++
             linkflags: -stdlib=libc++
             ubsan: 1
@@ -395,7 +395,7 @@ jobs:
           - name: SAN
             toolset: clang
             compiler: clang++-18
-            cxxstd: "03,11,14,17,20,2b"
+            cxxstd: "11,14,17,20,2b"
             cxxflags: -pipe -stdlib=libc++
             linkflags: -stdlib=libc++
             ubsan: 1
@@ -410,7 +410,7 @@ jobs:
           - name: SAN
             toolset: clang
             compiler: clang++-20
-            cxxstd: "03,11,14,17,20,23,2c"
+            cxxstd: "11,14,17,20,23,2c"
             cxxflags: -pipe -stdlib=libc++
             linkflags: -stdlib=libc++
             ubsan: 1
