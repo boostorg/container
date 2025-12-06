@@ -137,7 +137,7 @@ jobs:
             cxxstd: "11,14,17,20,23,2c"
             cxxflags: -pipe
             os: ubuntu-latest
-            container: ubuntu:26.04
+            container: ubuntu:25.04
             install: g++-15-multilib
             address-model: 32,64
           # Linux, gcc-12, ubsan, asan
@@ -337,7 +337,7 @@ jobs:
             compiler: clang++-20
             cxxstd: "03,11,14,17,20,23,2c"
             cxxflags: -pipe
-            container: ubuntu:26.04
+            container: ubuntu:25.04
             os: ubuntu-latest
             install: clang-20
           # Linux, clang-15 libc++
@@ -369,7 +369,7 @@ jobs:
             compiler: clang++-20
             cxxstd: "11,14,17,20,23,2c"
             os: ubuntu-latest
-            container: ubuntu:26.04
+            container: ubuntu:25.04
             install:
               - clang-20
               - libc++-20-dev
@@ -416,7 +416,7 @@ jobs:
             ubsan: 1
             asan: 1
             os: ubuntu-latest
-            container: ubuntu:26.04
+            container: ubuntu:25.04
             install:
               - clang-20
               - libc++-20-dev
