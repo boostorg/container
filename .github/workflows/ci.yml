@@ -334,6 +334,8 @@ jobs:
             cxxstd: "11,14,17,20,23,2c"
             container: ubuntu:25.04
             os: ubuntu-latest
+            install:
+              - clang-20
           # Linux, clang-15 libc++
           - toolset: clang
             compiler: clang++-15
