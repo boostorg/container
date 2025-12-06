@@ -152,7 +152,7 @@ jobs:
           # Linux, gcc-15, asan
           - name: ASAN
             toolset: gcc-15
-            cxxstd: "11,14,17,20,23"
+            cxxstd: "03,11,14,17,20,23"
             cxxflags: -pipe
             asan: 1
             os: ubuntu-latest
