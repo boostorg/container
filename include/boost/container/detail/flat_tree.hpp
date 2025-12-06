@@ -1069,14 +1069,30 @@ class flat_tree
 
    template <class KeyType, class... Args>
    inline std::pair<iterator, bool> try_emplace
+      (BOOST_FWD_REF(KeyType) key, BOOST_FWD_REF(Args)... args)
+   {
+      std::pair<iterator,bool> ret;
+      insert_commit_data data;
+      const typename remove_cvref<KeyType>::type & k = key;  //Support emulated rvalue references
+      ret.second = this->priv_insert_unique_prepare(k, data);
+
+      if(!ret.second){
+         ret.first  = this->nth(size_type(data.position - this->cbegin()));
+      }
+      else{
+         ret.first = this->m_data.m_seq.emplace(data.position, try_emplace_t(), ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
+      }
+      return ret;
+   }
+
+   template <class KeyType, class... Args>
+   inline std::pair<iterator, bool> try_emplace
       (const_iterator hint, BOOST_FWD_REF(KeyType) key, BOOST_FWD_REF(Args)... args)
    {
       std::pair<iterator,bool> ret;
       insert_commit_data data;
       const typename remove_cvref<KeyType>::type & k = key;  //Support emulated rvalue references
-      ret.second = hint == const_iterator()
-         ? this->priv_insert_unique_prepare(k, data)
-         : this->priv_insert_unique_prepare(hint, k, data);
+      ret.second = this->priv_insert_unique_prepare(hint, k, data);
 
       if(!ret.second){
          ret.first  = this->nth(size_type(data.position - this->cbegin()));
@@ -1135,14 +1151,29 @@ class flat_tree
    }\
    template <class KeyType BOOST_MOVE_I##N BOOST_MOVE_CLASS##N>\
    inline std::pair<iterator, bool>\
+      try_emplace(BOOST_FWD_REF(KeyType) key BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {\
+      std::pair<iterator,bool> ret;\
+      insert_commit_data data;\
+      const typename remove_cvref<KeyType>::type & k = key;\
+      ret.second = this->priv_insert_unique_prepare(k, data);\
+      \
+      if(!ret.second){\
+         ret.first  = this->nth(size_type(data.position - this->cbegin()));\
+      }\
+      else{\
+         ret.first = this->m_data.m_seq.emplace(data.position, try_emplace_t(), ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+      }\
+      return ret;\
+   }\
+   template <class KeyType BOOST_MOVE_I##N BOOST_MOVE_CLASS##N>\
+   inline std::pair<iterator, bool>\
       try_emplace(const_iterator hint, BOOST_FWD_REF(KeyType) key BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
    {\
       std::pair<iterator,bool> ret;\
       insert_commit_data data;\
       const typename remove_cvref<KeyType>::type & k = key;\
-      ret.second = hint == const_iterator()\
-         ? this->priv_insert_unique_prepare(k, data)\
-         : this->priv_insert_unique_prepare(hint, k, data);\
+      ret.second = this->priv_insert_unique_prepare(hint, k, data);\
       \
       if(!ret.second){\
          ret.first  = this->nth(size_type(data.position - this->cbegin()));\
@@ -1159,14 +1190,29 @@ class flat_tree
    #endif   // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    template<class KeyType, class M>
+   std::pair<iterator, bool> insert_or_assign(BOOST_FWD_REF(KeyType) key, BOOST_FWD_REF(M) obj)
+   {
+      const typename remove_cvref<KeyType>::type & k = key;  //Support emulated rvalue references
+      std::pair<iterator,bool> ret;
+      insert_commit_data data;
+      ret.second = this->priv_insert_unique_prepare(k, data);
+      if(!ret.second){
+         ret.first  = this->nth(size_type(data.position - this->cbegin()));
+         ret.first->second = boost::forward<M>(obj);
+      }
+      else{
+         ret.first = this->m_data.m_seq.emplace(data.position, boost::forward<KeyType>(key), boost::forward<M>(obj));
+      }
+      return ret;
+   }
+
+   template<class KeyType, class M>
    std::pair<iterator, bool> insert_or_assign(const_iterator hint, BOOST_FWD_REF(KeyType) key, BOOST_FWD_REF(M) obj)
    {
       const typename remove_cvref<KeyType>::type & k = key;  //Support emulated rvalue references
       std::pair<iterator,bool> ret;
       insert_commit_data data;
-      ret.second = hint == const_iterator()
-         ? this->priv_insert_unique_prepare(k, data)
-         : this->priv_insert_unique_prepare(hint, k, data);
+      ret.second = this->priv_insert_unique_prepare(hint, k, data);
       if(!ret.second){
          ret.first  = this->nth(size_type(data.position - this->cbegin()));
          ret.first->second = boost::forward<M>(obj);

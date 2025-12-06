@@ -826,9 +826,7 @@ class flat_map
    inline std::pair<iterator, bool> insert_or_assign(const key_type& k, BOOST_FWD_REF(M) obj)
    {
       return dtl::force_copy< std::pair<iterator, bool> >
-         (this->m_flat_tree.insert_or_assign
-            ( impl_const_iterator(), k, ::boost::forward<M>(obj))
-         );
+         (this->m_flat_tree.insert_or_assign(k, ::boost::forward<M>(obj)));
    }
 
    //! Effects: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
@@ -843,9 +841,7 @@ class flat_map
    inline std::pair<iterator, bool> insert_or_assign(BOOST_RV_REF(key_type) k, BOOST_FWD_REF(M) obj)
    {
       return dtl::force_copy< std::pair<iterator, bool> >
-         (this->m_flat_tree.insert_or_assign
-            ( impl_const_iterator(), ::boost::move(k), ::boost::forward<M>(obj))
-         );
+         (this->m_flat_tree.insert_or_assign(::boost::move(k), ::boost::forward<M>(obj)));
    }
 
    //! <b>Requires</b>: This overload is available only if key_compare::is_transparent exists.
@@ -870,9 +866,7 @@ class flat_map
       insert_or_assign(BOOST_FWD_REF(K) k, BOOST_FWD_REF(M) obj)
    {
       return dtl::force_copy< std::pair<iterator, bool> >
-         (this->m_flat_tree.insert_or_assign
-            ( impl_const_iterator(), ::boost::forward<K>(k), ::boost::forward<M>(obj))
-         );
+         (this->m_flat_tree.insert_or_assign(::boost::forward<K>(k), ::boost::forward<M>(obj)));
    }
 
    //! Effects: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
@@ -1095,7 +1089,7 @@ class flat_map
    inline std::pair<iterator, bool> try_emplace(const key_type& k, BOOST_FWD_REF(Args)... args)
    {
       return dtl::force_copy< std::pair<iterator, bool> >(
-         m_flat_tree.try_emplace(impl_const_iterator(), k, boost::forward<Args>(args)...));
+         m_flat_tree.try_emplace(k, boost::forward<Args>(args)...));
    }
 
    //! <b>Requires</b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
@@ -1131,7 +1125,7 @@ class flat_map
    inline std::pair<iterator, bool> try_emplace(BOOST_RV_REF(key_type) k, BOOST_FWD_REF(Args)... args)
    {
       return dtl::force_copy< std::pair<iterator, bool> >
-         (m_flat_tree.try_emplace(impl_const_iterator(), boost::move(k), boost::forward<Args>(args)...));
+         (m_flat_tree.try_emplace(boost::move(k), boost::forward<Args>(args)...));
    }
 
    //! <b>Requires</b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
@@ -1178,7 +1172,7 @@ class flat_map
       try_emplace(BOOST_FWD_REF(K) k, BOOST_FWD_REF(Args)... args)
    {
       return dtl::force_copy< std::pair<iterator, bool> >
-         (m_flat_tree.try_emplace(impl_const_iterator(), boost::forward<K>(k), boost::forward<Args>(args)...));
+         (m_flat_tree.try_emplace(boost::forward<K>(k), boost::forward<Args>(args)...));
    }
 
    //! <b>Precondition</b>: This overload is available only if key_compare::is_transparent exists.
@@ -1228,7 +1222,7 @@ class flat_map
    inline std::pair<iterator, bool> try_emplace(const key_type& k BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
    {\
       return dtl::force_copy< std::pair<iterator, bool> >\
-         (m_flat_tree.try_emplace(impl_const_iterator(), k BOOST_MOVE_I##N BOOST_MOVE_FWD##N));\
+         (m_flat_tree.try_emplace(k BOOST_MOVE_I##N BOOST_MOVE_FWD##N));\
    }\
    \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
@@ -1240,7 +1234,7 @@ class flat_map
    inline std::pair<iterator, bool> try_emplace(BOOST_RV_REF(key_type) k BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
    {\
       return dtl::force_copy< std::pair<iterator, bool> >\
-         (m_flat_tree.try_emplace(impl_const_iterator(), boost::move(k) BOOST_MOVE_I##N BOOST_MOVE_FWD##N));\
+         (m_flat_tree.try_emplace(boost::move(k) BOOST_MOVE_I##N BOOST_MOVE_FWD##N));\
    }\
    \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
@@ -1258,7 +1252,7 @@ class flat_map
       try_emplace(BOOST_FWD_REF(K) k BOOST_MOVE_I##N BOOST_MOVE_UREF##N) \
    { \
       return dtl::force_copy< std::pair<iterator BOOST_MOVE_I bool> > \
-         (m_flat_tree.try_emplace(impl_const_iterator() BOOST_MOVE_I boost::forward<K>(k) BOOST_MOVE_I##N BOOST_MOVE_FWD##N)); \
+         (m_flat_tree.try_emplace(boost::forward<K>(k) BOOST_MOVE_I##N BOOST_MOVE_FWD##N)); \
    } \
    \
    template <class K BOOST_MOVE_I##N BOOST_MOVE_CLASS##N> \

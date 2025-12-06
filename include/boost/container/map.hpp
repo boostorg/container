@@ -608,7 +608,7 @@ class map
    //! <b>Complexity</b>: Logarithmic in the size of the container.
    template <class M>
    inline std::pair<iterator, bool> insert_or_assign(const key_type& k, BOOST_FWD_REF(M) obj)
-   {  return this->base_t::insert_or_assign(const_iterator(), k, ::boost::forward<M>(obj));  }
+   {  return this->base_t::insert_or_assign(k, ::boost::forward<M>(obj));  }
 
    //! <b>Effects</b>: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
    //! to the mapped_type corresponding to the key k. If the key does not exist, inserts the new value
@@ -624,7 +624,7 @@ class map
    //! <b>Complexity</b>: Logarithmic in the size of the container.
    template <class M>
    inline std::pair<iterator, bool> insert_or_assign(BOOST_RV_REF(key_type) k, BOOST_FWD_REF(M) obj)
-   {  return this->base_t::insert_or_assign(const_iterator(), ::boost::move(k), ::boost::forward<M>(obj));  }
+   {  return this->base_t::insert_or_assign(::boost::move(k), ::boost::forward<M>(obj));  }
 
    //! <b>Requires</b>: This overload is available only if key_compare::is_transparent exists.
    //!
@@ -649,7 +649,7 @@ class map
                                              BOOST_MOVE_I std::pair<iterator BOOST_MOVE_I bool>
                                            >::type)  //transparent
       insert_or_assign(BOOST_FWD_REF(K) k, BOOST_FWD_REF(M) obj)
-   {  return this->base_t::insert_or_assign(const_iterator(), ::boost::forward<K>(k), ::boost::forward<M>(obj));  }
+   {  return this->base_t::insert_or_assign(::boost::forward<K>(k), ::boost::forward<M>(obj));  }
 
    //! <b>Effects</b>: If a key equivalent to k already exists in the container, assigns forward<M>(obj)
    //! to the mapped_type corresponding to the key k. If the key does not exist, inserts the new value
@@ -958,7 +958,7 @@ class map
    //! <b>Complexity</b>: Logarithmic.
    template <class... Args>
    inline std::pair<iterator, bool> try_emplace(const key_type& k, BOOST_FWD_REF(Args)... args)
-   {  return this->base_t::try_emplace(const_iterator(), k, boost::forward<Args>(args)...); }
+   {  return this->base_t::try_emplace(k, boost::forward<Args>(args)...); }
 
    //! <b>Requires</b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
    //! forward_as_tuple(k), forward_as_tuple(forward<Args>(args)...).
@@ -988,7 +988,7 @@ class map
    //! <b>Complexity</b>: Logarithmic.
    template <class... Args>
    inline std::pair<iterator, bool> try_emplace(BOOST_RV_REF(key_type) k, BOOST_FWD_REF(Args)... args)
-   {  return this->base_t::try_emplace(const_iterator(), boost::move(k), boost::forward<Args>(args)...); }
+   {  return this->base_t::try_emplace(boost::move(k), boost::forward<Args>(args)...); }
 
    //! <b>Requires</b>: value_type shall be EmplaceConstructible into map from piecewise_construct, 
    //! forward_as_tuple(move(k)), forward_as_tuple(forward<Args>(args)...).
@@ -1028,7 +1028,7 @@ class map
          BOOST_MOVE_I std::pair<iterator BOOST_MOVE_I bool>
        >::type)
       try_emplace(BOOST_FWD_REF(K) k, BOOST_FWD_REF(Args)... args)
-   {  return this->base_t::try_emplace(const_iterator(), boost::forward<K>(k), boost::forward<Args>(args)...); }
+   {  return this->base_t::try_emplace(boost::forward<K>(k), boost::forward<Args>(args)...); }
 
    //! <b>Precondition</b>: This overload is available only if key_compare::is_transparent exists.
    //!
@@ -1066,7 +1066,7 @@ class map
    \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    inline std::pair<iterator, bool> try_emplace(const key_type& k BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
-   {  return this->base_t::try_emplace(const_iterator(), k BOOST_MOVE_I##N BOOST_MOVE_FWD##N); }\
+   {  return this->base_t::try_emplace(k BOOST_MOVE_I##N BOOST_MOVE_FWD##N); }\
    \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    inline iterator try_emplace(const_iterator hint, const key_type &k BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
@@ -1074,7 +1074,7 @@ class map
    \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    inline std::pair<iterator, bool> try_emplace(BOOST_RV_REF(key_type) k BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
-   {  return this->base_t::try_emplace(const_iterator(), boost::move(k) BOOST_MOVE_I##N BOOST_MOVE_FWD##N); }\
+   {  return this->base_t::try_emplace(boost::move(k) BOOST_MOVE_I##N BOOST_MOVE_FWD##N); }\
    \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    inline iterator try_emplace(const_iterator hint, BOOST_RV_REF(key_type) k BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
@@ -1088,7 +1088,7 @@ class map
                                     BOOST_MOVE_I std::pair<iterator BOOST_MOVE_I bool> \
        >::type \
       try_emplace(BOOST_FWD_REF(K) k BOOST_MOVE_I##N BOOST_MOVE_UREF##N) \
-   {  return this->base_t::try_emplace(const_iterator() BOOST_MOVE_I boost::forward<K>(k) BOOST_MOVE_I##N BOOST_MOVE_FWD##N); } \
+   {  return this->base_t::try_emplace(boost::forward<K>(k) BOOST_MOVE_I##N BOOST_MOVE_FWD##N); } \
    \
    template <class K BOOST_MOVE_I##N BOOST_MOVE_CLASS##N> \
        typename dtl::enable_if_transparent< key_compare \
