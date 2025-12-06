@@ -139,12 +139,14 @@ jobs:
             os: ubuntu-latest
             container: ubuntu:26.04
             install: g++-15-multilib
-          # Linux, gcc-12 UBSAN
-          - name: UBSAN
+            address-model: 32,64
+          # Linux, gcc-12, ubsan, asan
+          - name: SAN
             toolset: gcc-12
             cxxstd: "03,11,14,17,20,23"
             cxxflags: -pipe
             ubsan: 1
+            asan: 1
             os: ubuntu-latest
             container: ubuntu:22.04
             install:
@@ -333,7 +335,7 @@ jobs:
           # Linux, clang-20
           - toolset: clang
             compiler: clang++-20
-            cxxstd: "11,14,17,20,23,2c"
+            cxxstd: "03,11,14,17,20,23,2c"
             cxxflags: -pipe
             container: ubuntu:26.04
             os: ubuntu-latest
@@ -353,7 +355,7 @@ jobs:
           # Linux, clang-18 libc++
           - toolset: clang
             compiler: clang++-18
-            cxxstd: "11,14,17,20,2b"
+            cxxstd: "03,11,14,17,20,2b"
             os: ubuntu-latest
             container: ubuntu:24.04
             install:
@@ -364,52 +366,55 @@ jobs:
             linkflags: -stdlib=libc++
           # Linux, clang-20 libc++
           - toolset: clang
-            compiler: clang++-18
-            cxxstd: "11,14,17,20,23,2c"
+            compiler: clang++-20
+            cxxstd: "03,11,14,17,20,23,2c"
             os: ubuntu-latest
-            container: ubuntu:24.04
+            container: ubuntu:26.04
             install:
               - clang-20
               - libc++-20-dev
               - libc++abi-20-dev
             cxxflags: -pipe -stdlib=libc++
             linkflags: -stdlib=libc++
-          # Linux, clang-14 libc++, ubsan
-          - name: UBSAN
+          # Linux, clang-14 libc++, ubsan, asan
+          - name: SAN
             toolset: clang
             compiler: clang++-14
             cxxstd: "03,11,14,17,20"
             cxxflags: -pipe -stdlib=libc++
             linkflags: -stdlib=libc++
             ubsan: 1
+            asan: 1
             os: ubuntu-latest
             container: ubuntu:22.04
             install:
               - clang-14
               - libc++-14-dev
               - libc++abi-14-dev
-          # Linux, clang-18 libc++, ubsan
-          - name: UBSAN
+          # Linux, clang-18 libc++, ubsan, asan
+          - name: SAN
             toolset: clang
             compiler: clang++-18
-            cxxstd: "11,14,17,20"
+            cxxstd: "03,11,14,17,20,2b"
             cxxflags: -pipe -stdlib=libc++
             linkflags: -stdlib=libc++
             ubsan: 1
+            asan: 1
             os: ubuntu-latest
             container: ubuntu:24.04
             install:
               - clang-18
               - libc++-18-dev
               - libc++abi-18-dev
-          # Linux, clang-20 libc++, ubsan
-          - name: UBSAN
+          # Linux, clang-20 libc++, ubsan, asan
+          - name: SAN
             toolset: clang
             compiler: clang++-20
-            cxxstd: "11,14,17,20,23,2c"
+            cxxstd: "03,11,14,17,20,23,2c"
             cxxflags: -pipe -stdlib=libc++
             linkflags: -stdlib=libc++
             ubsan: 1
+            asan: 1
             os: ubuntu-latest
             container: ubuntu:26.04
             install:
@@ -612,29 +617,46 @@ jobs:
         run: |
             cd boost-root
             B2_ARGS=("-j" "$BUILD_JOBS" "toolset=${{matrix.toolset}}" "cxxstd=${{matrix.cxxstd}}" "debug-symbols=off")
+            #Build variant
             if [ -n "${{matrix.build_variant}}" ]
             then
                 B2_ARGS+=("variant=${{matrix.build_variant}}")
             else
                 B2_ARGS+=("variant=$DEFAULT_BUILD_VARIANT")
             fi
+            #Threading
             if [ -n "${{matrix.threading}}" ]
             then
                 B2_ARGS+=("threading=${{matrix.threading}}")
             fi
+            #UBSAN options
             if [ -n "${{matrix.ubsan}}" ]
             then
-                export UBSAN_OPTIONS="print_stacktrace=1"
-                B2_ARGS+=("undefined-sanitizer=norecover" "linkflags=-fuse-ld=gold" "define=UBSAN=1" "debug-symbols=on" "visibility=global")
+                export UBSAN_OPTIONS="verbosity=1:print_stacktrace=1"
+                B2_ARGS+=("undefined-sanitizer=norecover" "define=UBSAN=1")
             fi
+            #ASAN options
+            if [ -n "${{matrix.asan}}" ]
+            then
+                export ASAN_OPTIONS="verbosity=1:print_stacktrace=1"
+                B2_ARGS+=("address-sanitizer=norecover" "define=ASAN=1")
+            fi
+            #Common UBSAN / ASAN options
+            if [ -n "${{matrix.asan}}" ] || [ -n "${{matrix.ubsan}}" ]
+            then
+                B2_ARGS+=("debug-symbols=on" "visibility=global")
+            fi
+            #cxxflags
             if [ -n "${{matrix.cxxflags}}" ]
             then
                 B2_ARGS+=("cxxflags=${{matrix.cxxflags}}")
             fi
+            #address-model
             if [ -n "${{matrix.address-model}}" ]
             then
                 B2_ARGS+=("address-model=${{matrix.address-model}}")
             fi
+            #link-flags
             if [ -n "${{matrix.linkflags}}" ]
             then
                 B2_ARGS+=("linkflags=${{matrix.linkflags}}")
