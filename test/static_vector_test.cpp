@@ -92,6 +92,7 @@ void test_support_for_initializer_list()
       BOOST_TEST_THROWS(sv.assign({1, 2, 3}), bad_alloc_t);
 
       static_vector<int, 3> greaterThanSv = {1, 2, 3};
+      BOOST_TEST(greaterThanSv.size() == 3u);
       BOOST_TEST_THROWS(sv = greaterThanSv, bad_alloc_t);
    }
 
