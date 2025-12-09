@@ -76,6 +76,28 @@ namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
+namespace dtl {
+
+template<class Alloc, bool AllocV0 = (version<Alloc>::value == 0)>
+struct is_version_0_alloc_and_trivially_destructible
+   : boost::move_detail::is_trivially_destructible<typename Alloc::value_type>
+{ };
+
+template<bool AllocV0>
+struct is_version_0_alloc_and_trivially_destructible<void, AllocV0>
+{
+   BOOST_STATIC_CONSTEXPR bool value = false;
+};
+
+template<class Alloc>
+struct is_version_0_alloc_and_trivially_destructible<Alloc, false>
+{
+   BOOST_STATIC_CONSTEXPR bool value = false;
+};
+
+
+}  //namespace dtl {
+
 template<class SizeType, class LimitSizeType>
 struct vec_on_type_overflow
 {
@@ -1224,7 +1246,7 @@ private:
    //! <b>Complexity</b>: Linear to the number of elements.
    ~vector() BOOST_NOEXCEPT_OR_NOTHROW
    #if defined(BOOST_INTRUSIVE_CONCEPTS_BASED_OVERLOADING)
-      requires (dtl::version<allocator_type>::value != 0 || !::boost::move_detail::is_trivially_destructible<T>::value)
+      requires (!dtl::is_version_0_alloc_and_trivially_destructible<allocator_type>::value)
    #endif
    {
       boost::container::destroy_alloc_n
@@ -1235,7 +1257,7 @@ private:
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED) && defined(BOOST_INTRUSIVE_CONCEPTS_BASED_OVERLOADING)
    //Default destructor for normal links (allows conditional triviality)
    ~vector()
-      requires (dtl::version<allocator_type>::value == 0 && ::boost::move_detail::is_trivially_destructible<T>::value)
+      requires (dtl::is_version_0_alloc_and_trivially_destructible<allocator_type>::value)
       = default;
    #endif
 
