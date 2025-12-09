@@ -242,4 +242,8 @@ namespace boost {
 #define BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED
 #endif
 
+#if defined(__cpp_concepts) && (__cpp_concepts >= 202002L)
+#  define BOOST_CONTAINER_CONCEPTS_BASED_OVERLOADING
+#endif
+
 #endif   //#ifndef BOOST_CONTAINER_DETAIL_WORKAROUND_HPP

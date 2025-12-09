@@ -1223,11 +1223,21 @@ private:
    //!
    //! <b>Complexity</b>: Linear to the number of elements.
    ~vector() BOOST_NOEXCEPT_OR_NOTHROW
+   #if defined(BOOST_INTRUSIVE_CONCEPTS_BASED_OVERLOADING)
+      requires (dtl::version<allocator_type>::value != 0 || !::boost::move_detail::is_trivially_destructible<T>::value)
+   #endif
    {
       boost::container::destroy_alloc_n
          (this->get_stored_allocator(), this->priv_raw_begin(), this->m_holder.m_size);
       //vector_alloc_holder deallocates the data
    }
+
+   #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED) && defined(BOOST_INTRUSIVE_CONCEPTS_BASED_OVERLOADING)
+   //Default destructor for normal links (allows conditional triviality)
+   ~vector()
+      requires (dtl::version<allocator_type>::value == 0 && ::boost::move_detail::is_trivially_destructible<T>::value)
+      = default;
+   #endif
 
    //! <b>Effects</b>: Makes *this contain the same elements as x.
    //!
