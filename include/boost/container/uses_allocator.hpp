@@ -76,7 +76,9 @@ struct constructible_with_allocator_suffix
 //! is an alias of `erased_type`. False otherwise.
 template <typename T, typename Allocator>
 struct uses_allocator
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    : dtl::uses_allocator_imp<T, Allocator>
+#endif   //BOOST_CONTAINER_DOXYGEN_INVOKED
 {};
 
 }} //namespace boost::container
