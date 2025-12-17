@@ -12,6 +12,14 @@
 #ifndef BOOST_CONTAINER_DEVECTOR_HPP
 #define BOOST_CONTAINER_DEVECTOR_HPP
 
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 
