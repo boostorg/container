@@ -49,6 +49,8 @@
 #include <initializer_list>
 #endif
 
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 #define BOOST_CONTAINER_STD_PAIR_IS_MOVABLE
 #endif
@@ -63,6 +65,8 @@
 #pragma GCC push_options
 #pragma GCC optimize("no-strict-aliasing")
 #endif
+
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 namespace boost {
 namespace container {
@@ -87,7 +91,7 @@ template<class D>
 BOOST_CONTAINER_FORCEINLINE static D force_copy(D s)
 {  return s; }
 
-#else //!BOOST_CONTAINER_DOXYGEN_INVOKED
+#else //!BOOST_CONTAINER_STD_PAIR_IS_MOVABLE
 
 template<class D, class S>
 BOOST_CONTAINER_FORCEINLINE static D &force(S &s)
@@ -104,7 +108,7 @@ BOOST_CONTAINER_FORCEINLINE static D force_copy(const S &s)
    D ret_val(*vp);
    return ret_val;
 }
-#endif   //BOOST_CONTAINER_DOXYGEN_INVOKED
+#endif   //BOOST_CONTAINER_STD_PAIR_IS_MOVABLE
 
 }  //namespace dtl{
 

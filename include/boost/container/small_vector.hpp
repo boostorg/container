@@ -47,6 +47,8 @@
 
 #include <cstddef> //offsetof
 
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 namespace boost {
 namespace container {
 
@@ -315,6 +317,8 @@ struct small_vector_storage<T, 0u, Alignment>
 {
    BOOST_STATIC_CONSTEXPR std::size_t sms_size = 0u;
 };
+
+#endif   //BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! This class consists of common code from all small_vector<T, N> types that don't depend on the
 //! "N" template parameter. This class is non-copyable and non-destructible, so this class typically

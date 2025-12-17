@@ -80,8 +80,6 @@
 #pragma GCC diagnostic pop
 #endif
 
-#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-
 namespace boost {
 namespace container {
 namespace dtl {
@@ -193,8 +191,6 @@ construct_type(T* p, BOOST_FWD_REF(U) x, BOOST_FWD_REF(V) y)
 }
 
 }  //namespace dtl
-
-#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 template<class T, class VoidAllocator, class Options>
 class small_vector_allocator;
