@@ -41,7 +41,7 @@ class BOOST_CONTAINER_NOVTABLE memory_resource
 
    //! <b>Effects</b>: Equivalent to
    //! `return do_allocate(bytes, alignment);`
-   void* allocate(std::size_t bytes, std::size_t alignment = max_align)
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD void* allocate(std::size_t bytes, std::size_t alignment = max_align)
    {  
       //Obtain a pointer to enough storage and initialize the lifetime 
       //of an array object of the given size in the address
