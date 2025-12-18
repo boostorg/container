@@ -201,15 +201,15 @@ class vec_iterator
    {  m_ptr = other.get_ptr();   return *this;  }
 
    //Pointer like operators
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       reference operator*()   const BOOST_NOEXCEPT_OR_NOTHROW
    {  BOOST_ASSERT(!!m_ptr);  return *m_ptr;  }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       pointer operator->()  const BOOST_NOEXCEPT_OR_NOTHROW
    {  return m_ptr;  }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       reference operator[](difference_type off) const BOOST_NOEXCEPT_OR_NOTHROW
    {  BOOST_ASSERT(!!m_ptr);  return m_ptr[off];  }
 
@@ -233,45 +233,45 @@ class vec_iterator
    inline vec_iterator& operator-=(difference_type off) BOOST_NOEXCEPT_OR_NOTHROW
    {  BOOST_ASSERT(m_ptr || !off); m_ptr -= off; return *this;   }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend vec_iterator operator+(const vec_iterator &x, difference_type off) BOOST_NOEXCEPT_OR_NOTHROW
    {  BOOST_ASSERT(x.m_ptr || !off); return vec_iterator(x.m_ptr+off);  }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend vec_iterator operator+(difference_type off, vec_iterator right) BOOST_NOEXCEPT_OR_NOTHROW
    {  BOOST_ASSERT(right.m_ptr || !off); right.m_ptr += off;  return right; }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend vec_iterator operator-(vec_iterator left, difference_type off) BOOST_NOEXCEPT_OR_NOTHROW
    {  BOOST_ASSERT(left.m_ptr || !off); left.m_ptr -= off;  return left; }
 
    //Difference
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend difference_type operator-(const vec_iterator &left, const vec_iterator& right) BOOST_NOEXCEPT_OR_NOTHROW
    {  return left.m_ptr - right.m_ptr;   }
 
    //Comparison operators
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator==   (const vec_iterator& l, const vec_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
    {  return l.m_ptr == r.m_ptr;  }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator!=   (const vec_iterator& l, const vec_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
    {  return l.m_ptr != r.m_ptr;  }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator<    (const vec_iterator& l, const vec_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
    {  return l.m_ptr < r.m_ptr;  }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator<=   (const vec_iterator& l, const vec_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
    {  return l.m_ptr <= r.m_ptr;  }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator>    (const vec_iterator& l, const vec_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
    {  return l.m_ptr > r.m_ptr;  }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator>=   (const vec_iterator& l, const vec_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
    {  return l.m_ptr >= r.m_ptr;  }
 };
@@ -1478,7 +1478,7 @@ private:
    //! <b>Throws</b>: If allocator's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->m_holder.alloc();  }
 
    //! <b>Effects</b>: Returns a reference to the internal allocator.
@@ -1488,7 +1488,7 @@ private:
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline 
+   BOOST_CONTAINER_NODISCARD inline 
       stored_allocator_type &get_stored_allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->m_holder.alloc(); }
 
@@ -1499,7 +1499,7 @@ private:
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const stored_allocator_type &get_stored_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->m_holder.alloc(); }
 
@@ -1514,7 +1514,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline iterator begin() BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline iterator begin() BOOST_NOEXCEPT_OR_NOTHROW
    { return iterator(this->m_holder.start()); }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the vector.
@@ -1522,7 +1522,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline const_iterator begin() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline const_iterator begin() const BOOST_NOEXCEPT_OR_NOTHROW
    { return const_iterator(this->m_holder.start()); }
 
    //! <b>Effects</b>: Returns an iterator to the end of the vector.
@@ -1530,7 +1530,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline iterator end() BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline iterator end() BOOST_NOEXCEPT_OR_NOTHROW
    {
       iterator it (this->m_holder.start());
       it += difference_type(this->m_holder.m_size);
@@ -1542,7 +1542,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline const_iterator end() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline const_iterator end() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->cend(); }
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the beginning
@@ -1551,7 +1551,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline reverse_iterator rbegin() BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline reverse_iterator rbegin() BOOST_NOEXCEPT_OR_NOTHROW
    { return reverse_iterator(this->end());      }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the beginning
@@ -1560,7 +1560,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline const_reverse_iterator rbegin() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline const_reverse_iterator rbegin() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->crbegin(); }
 
    //! <b>Effects</b>: Returns a reverse_iterator pointing to the end
@@ -1569,7 +1569,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline reverse_iterator rend() BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline reverse_iterator rend() BOOST_NOEXCEPT_OR_NOTHROW
    { return reverse_iterator(this->begin());       }
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
@@ -1578,7 +1578,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline const_reverse_iterator rend() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline const_reverse_iterator rend() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->crend(); }
 
    //! <b>Effects</b>: Returns a const_iterator to the first element contained in the vector.
@@ -1586,7 +1586,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline const_iterator cbegin() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline const_iterator cbegin() const BOOST_NOEXCEPT_OR_NOTHROW
    { return const_iterator(this->m_holder.start()); }
 
    //! <b>Effects</b>: Returns a const_iterator to the end of the vector.
@@ -1594,7 +1594,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW
    {
       const_iterator it (this->m_holder.start());
       it += difference_type(this->m_holder.m_size);
@@ -1607,7 +1607,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline const_reverse_iterator crbegin() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline const_reverse_iterator crbegin() const BOOST_NOEXCEPT_OR_NOTHROW
    { return const_reverse_iterator(this->end());}
 
    //! <b>Effects</b>: Returns a const_reverse_iterator pointing to the end
@@ -1616,7 +1616,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline const_reverse_iterator crend() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline const_reverse_iterator crend() const BOOST_NOEXCEPT_OR_NOTHROW
    { return const_reverse_iterator(this->begin()); }
 
    //////////////////////////////////////////////
@@ -1630,7 +1630,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline bool empty() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline bool empty() const BOOST_NOEXCEPT_OR_NOTHROW
    { return !this->m_holder.m_size; }
 
    //! <b>Effects</b>: Returns the number of the elements contained in the vector.
@@ -1638,7 +1638,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline size_type size() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline size_type size() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->m_holder.m_size; }
 
    //! <b>Effects</b>: Returns the largest possible size of the vector.
@@ -1646,7 +1646,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
    { return allocator_traits_type::max_size(this->m_holder.alloc()); }
 
    //! <b>Effects</b>: Inserts or erases elements at the end such that
@@ -1684,7 +1684,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline size_type capacity() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline size_type capacity() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->m_holder.capacity(); }
 
    //! <b>Effects</b>: If n is less than or equal to capacity(), this call has no
@@ -1723,7 +1723,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline reference front() BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline reference front() BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!this->empty());
       return *this->m_holder.start();
@@ -1737,7 +1737,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline const_reference front() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline const_reference front() const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!this->empty());
       return *this->m_holder.start();
@@ -1751,7 +1751,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline reference back() BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline reference back() BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!this->empty());
       return this->m_holder.start()[difference_type(this->m_holder.m_size - 1u)];
@@ -1765,7 +1765,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline const_reference back()  const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline const_reference back()  const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!this->empty());
       return this->m_holder.start()[this->m_holder.m_size - 1];
@@ -1779,7 +1779,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline reference operator[](size_type n) BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline reference operator[](size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->m_holder.m_size > n);
       return this->m_holder.start()[difference_type(n)];
@@ -1793,7 +1793,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_reference operator[](size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->m_holder.m_size > n);
@@ -1811,7 +1811,7 @@ private:
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       iterator nth(size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->m_holder.m_size >= n);
@@ -1829,7 +1829,7 @@ private:
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_iterator nth(size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->m_holder.m_size >= n);
@@ -1846,7 +1846,7 @@ private:
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       size_type index_of(iterator p) BOOST_NOEXCEPT_OR_NOTHROW
    {
       //Range check assert done in priv_index_of
@@ -1863,7 +1863,7 @@ private:
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       size_type index_of(const_iterator p) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       //Range check assert done in priv_index_of
@@ -1878,7 +1878,7 @@ private:
    //! <b>Throws</b>: range_error if n >= size()
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline reference at(size_type n)
+   BOOST_CONTAINER_NODISCARD inline reference at(size_type n)
    {
       this->priv_throw_if_out_of_range(n);
       return this->m_holder.start()[difference_type(n)];
@@ -1892,7 +1892,7 @@ private:
    //! <b>Throws</b>: range_error if n >= size()
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline const_reference at(size_type n) const
+   BOOST_CONTAINER_NODISCARD inline const_reference at(size_type n) const
    {
       this->priv_throw_if_out_of_range(n);
       return this->m_holder.start()[n];
@@ -1910,7 +1910,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline T* data() BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline T* data() BOOST_NOEXCEPT_OR_NOTHROW
    { return this->priv_raw_begin(); }
 
    //! <b>Returns</b>: A pointer such that [data(),data() + size()) is a valid range.
@@ -1919,7 +1919,7 @@ private:
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline const T * data()  const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline const T * data()  const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->priv_raw_begin(); }
 
    //////////////////////////////////////////////
@@ -2301,37 +2301,37 @@ private:
    //! <b>Effects</b>: Returns true if x and y are equal
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline friend bool operator==(const vector& x, const vector& y)
+   BOOST_CONTAINER_NODISCARD inline friend bool operator==(const vector& x, const vector& y)
    {  return x.size() == y.size() && ::boost::container::algo_equal(x.begin(), x.end(), y.begin());  }
 
    //! <b>Effects</b>: Returns true if x and y are unequal
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline friend bool operator!=(const vector& x, const vector& y)
+   BOOST_CONTAINER_NODISCARD inline friend bool operator!=(const vector& x, const vector& y)
    {  return !(x == y); }
 
    //! <b>Effects</b>: Returns true if x is less than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD friend bool operator<(const vector& x, const vector& y)
+   BOOST_CONTAINER_NODISCARD friend bool operator<(const vector& x, const vector& y)
    {  return boost::container::algo_lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
 
    //! <b>Effects</b>: Returns true if x is greater than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline friend bool operator>(const vector& x, const vector& y)
+   BOOST_CONTAINER_NODISCARD inline friend bool operator>(const vector& x, const vector& y)
    {  return y < x;  }
 
    //! <b>Effects</b>: Returns true if x is equal or less than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline friend bool operator<=(const vector& x, const vector& y)
+   BOOST_CONTAINER_NODISCARD inline friend bool operator<=(const vector& x, const vector& y)
    {  return !(y < x);  }
 
    //! <b>Effects</b>: Returns true if x is equal or greater than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline friend bool operator>=(const vector& x, const vector& y)
+   BOOST_CONTAINER_NODISCARD inline friend bool operator>=(const vector& x, const vector& y)
    {  return !(x < y);  }
 
    //! <b>Effects</b>: x.swap(y)

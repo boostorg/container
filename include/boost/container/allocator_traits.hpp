@@ -423,7 +423,7 @@ struct allocator_traits
 
    //! <b>Returns</b>: <code>a.allocate(n)</code>
    //!
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
+   BOOST_CONTAINER_NODISCARD
    inline static pointer allocate(Allocator &a, size_type n)
    {  return a.allocate(n);  }
 
@@ -435,7 +435,7 @@ struct allocator_traits
 
    //! <b>Effects</b>: calls <code>a.allocate(n, p)</code> if that call is well-formed;
    //! otherwise, invokes <code>a.allocate(n)</code>
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
+   BOOST_CONTAINER_NODISCARD
    inline static pointer allocate(Allocator &a, size_type n, const_void_pointer p)
    {
       const bool value = boost::container::dtl::
@@ -460,7 +460,7 @@ struct allocator_traits
 
    //! <b>Returns</b>: <code>a.max_size()</code> if that expression is well-formed; otherwise,
    //! <code>numeric_limits<size_type>::max()</code>.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
+   BOOST_CONTAINER_NODISCARD
    inline static size_type max_size(const Allocator &a) BOOST_NOEXCEPT_OR_NOTHROW
    {
       const bool value = allocator_traits_detail::has_max_size<Allocator, size_type (Allocator::*)() const>::value;

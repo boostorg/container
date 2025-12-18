@@ -841,7 +841,7 @@ class set
    //! <b>Returns</b>: The number of elements with key equivalent to x.
    //!
    //! <b>Complexity</b>: log(size())+count(k)
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       size_type count(const key_type& x) const
    {  return static_cast<size_type>(this->base_t::find(x) != this->base_t::cend());  }
 
@@ -852,7 +852,7 @@ class set
    //!
    //! <b>Complexity</b>: log(size())+count(k)
    template<typename K>
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       size_type count(const K& x) const
    {  return static_cast<size_type>(this->find(x) != this->cend());  }
 

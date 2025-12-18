@@ -389,7 +389,7 @@ class small_vector_base
 
    public:
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD bool is_small() const
+   BOOST_CONTAINER_NODISCARD bool is_small() const
    {  return this->internal_storage() == this->data();   }
 
    protected:

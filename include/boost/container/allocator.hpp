@@ -179,7 +179,7 @@ class allocator
    //!Throws bad_alloc if there is no enough memory
    //!If Version is 2, this allocated memory can only be deallocated
    //!with deallocate() or (for Version == 2) deallocate_many()
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD pointer allocate(size_type count, const void * hint= 0)
+   BOOST_CONTAINER_NODISCARD pointer allocate(size_type count, const void * hint= 0)
    {
       (void)hint;
       if(count > size_type(-1)/(2u*sizeof(T)))
@@ -197,7 +197,7 @@ class allocator
 
    //!Returns the maximum number of elements that could be allocated.
    //!Never throws
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD inline size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return size_type(-1)/(2u*sizeof(T));   }
 
    //!Swaps two allocators, does nothing
@@ -207,13 +207,13 @@ class allocator
 
    //!An allocator always compares to true, as memory allocated with one
    //!instance can be deallocated by another instance
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
+   BOOST_CONTAINER_NODISCARD
       friend bool operator==(const allocator &, const allocator &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return true;   }
 
    //!An allocator always compares to false, as memory allocated with one
    //!instance can be deallocated by another instance
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator!=(const allocator &, const allocator &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return false;   }
 
@@ -221,7 +221,7 @@ class allocator
    //!capabilities. Memory allocated with this function can only be deallocated with deallocate()
    //!or deallocate_many().
    //!This function is available only with Version == 2
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD pointer allocation_command(allocation_type command,
+   BOOST_CONTAINER_NODISCARD pointer allocation_command(allocation_type command,
                          size_type limit_size,
                          size_type &prefer_in_recvd_out_size,
                          pointer &reuse)
@@ -240,7 +240,7 @@ class allocator
    //!Memory must not have been allocated with
    //!allocate_one or allocate_individual.
    //!This function is available only with Version == 2
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD size_type size(pointer p) const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD size_type size(pointer p) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       return dlmalloc_size(p);
@@ -250,7 +250,7 @@ class allocator
    //!must be deallocated only with deallocate_one().
    //!Throws bad_alloc if there is no enough memory
    //!This function is available only with Version == 2
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline pointer allocate_one()
+   BOOST_CONTAINER_NODISCARD inline pointer allocate_one()
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       return this->allocate(1);

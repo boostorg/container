@@ -171,10 +171,10 @@ class deque_iterator
 
    public:
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline Pointer get_cur()          const  {  return m_cur;  }
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline index_pointer get_node()   const  {  return m_node;  }
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline Pointer get_first()        const  {  return *m_node;  }
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline Pointer get_last()         const  {  return *m_node + get_block_ssize(); }
+   BOOST_CONTAINER_NODISCARD inline Pointer get_cur()          const  {  return m_cur;  }
+   BOOST_CONTAINER_NODISCARD inline index_pointer get_node()   const  {  return m_node;  }
+   BOOST_CONTAINER_NODISCARD inline Pointer get_first()        const  {  return *m_node;  }
+   BOOST_CONTAINER_NODISCARD inline Pointer get_last()         const  {  return *m_node + get_block_ssize(); }
 
    inline deque_iterator(val_alloc_ptr x, index_pointer y) BOOST_NOEXCEPT_OR_NOTHROW
       : m_cur(x), m_node(y)
@@ -209,7 +209,7 @@ class deque_iterator
    inline pointer operator->() const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->m_cur; }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD difference_type operator-(const deque_iterator& x) const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_NODISCARD difference_type operator-(const deque_iterator& x) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       if(this->m_cur == x.m_cur){ //Includes when both are null
          return 0;
@@ -289,7 +289,7 @@ class deque_iterator
       return *this;
    }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       deque_iterator operator+(difference_type n) const BOOST_NOEXCEPT_OR_NOTHROW
       {  deque_iterator tmp(*this); return tmp += n;  }
 
@@ -297,11 +297,11 @@ class deque_iterator
       deque_iterator& operator-=(difference_type n) BOOST_NOEXCEPT_OR_NOTHROW
       { return *this += -n; }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       deque_iterator operator-(difference_type n) const BOOST_NOEXCEPT_OR_NOTHROW
       {  deque_iterator tmp(*this); return tmp -= n;  }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       reference operator[](difference_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!!m_cur);
@@ -320,31 +320,31 @@ class deque_iterator
    }
 
    //Comparisons
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator==(const deque_iterator& l, const deque_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
       { return l.m_cur == r.m_cur; }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator!=(const deque_iterator& l, const deque_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
       { return l.m_cur != r.m_cur; }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator<(const deque_iterator& l, const deque_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
       {  return (l.m_node == r.m_node) ? (l.m_cur < r.m_cur) : (l.m_node < r.m_node);  }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator>(const deque_iterator& l, const deque_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
       { return r < l; }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator<=(const deque_iterator& l, const deque_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
       { return !(r < l); }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator>=(const deque_iterator& l, const deque_iterator& r) BOOST_NOEXCEPT_OR_NOTHROW
       { return !(l < r); }
 
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend deque_iterator operator+(difference_type n, deque_iterator x) BOOST_NOEXCEPT_OR_NOTHROW
       {  return x += n;  }
 
@@ -1458,7 +1458,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: If allocator's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    { return Base::alloc(); }
 
@@ -1469,7 +1469,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const stored_allocator_type &get_stored_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return Base::alloc(); }
 
@@ -1486,7 +1486,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       stored_allocator_type &get_stored_allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {  return Base::alloc(); }
 
@@ -1495,7 +1495,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       iterator begin() BOOST_NOEXCEPT_OR_NOTHROW
       { return this->prot_start(); }
 
@@ -1504,7 +1504,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_iterator begin() const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->prot_start(); }
 
@@ -1513,7 +1513,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       iterator end() BOOST_NOEXCEPT_OR_NOTHROW
       { return this->prot_finish(); }
 
@@ -1522,7 +1522,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_iterator end() const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->prot_finish(); }
 
@@ -1532,7 +1532,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       reverse_iterator rbegin() BOOST_NOEXCEPT_OR_NOTHROW
       { return reverse_iterator(this->prot_finish()); }
 
@@ -1542,7 +1542,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_reverse_iterator rbegin() const BOOST_NOEXCEPT_OR_NOTHROW
       { return const_reverse_iterator(this->prot_finish()); }
 
@@ -1552,7 +1552,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       reverse_iterator rend() BOOST_NOEXCEPT_OR_NOTHROW
       { return reverse_iterator(this->prot_start()); }
 
@@ -1562,7 +1562,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_reverse_iterator rend() const BOOST_NOEXCEPT_OR_NOTHROW
       { return const_reverse_iterator(this->prot_start()); }
 
@@ -1571,7 +1571,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_iterator cbegin() const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->prot_start(); }
 
@@ -1580,7 +1580,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->prot_finish(); }
 
@@ -1590,7 +1590,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_reverse_iterator crbegin() const BOOST_NOEXCEPT_OR_NOTHROW
       { return const_reverse_iterator(this->prot_finish()); }
 
@@ -1600,7 +1600,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_reverse_iterator crend() const BOOST_NOEXCEPT_OR_NOTHROW
       { return const_reverse_iterator(this->prot_start()); }
 
@@ -1615,7 +1615,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       bool empty() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->prot_empty(); }
 
@@ -1624,7 +1624,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       size_type size() const BOOST_NOEXCEPT_OR_NOTHROW
       { return this->prot_size(); }
 
@@ -1636,7 +1636,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       size_type back_capacity() const BOOST_NOEXCEPT_OR_NOTHROW
       { return size_type(this->size() + this->prot_back_free_capacity()); }
 
@@ -1648,7 +1648,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       size_type front_capacity() const BOOST_NOEXCEPT_OR_NOTHROW
       { return size_type(this->size() + this->prot_front_free_capacity()); }
 
@@ -1701,7 +1701,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
       { return allocator_traits_type::max_size(this->alloc()); }
 
@@ -1792,7 +1792,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       reference front() BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!this->empty());
@@ -1807,7 +1807,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_reference front() const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!this->empty());
@@ -1822,7 +1822,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       reference back() BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!this->empty());
@@ -1837,7 +1837,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_reference back() const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!this->empty());
@@ -1852,7 +1852,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       reference operator[](size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->size() > n);
@@ -1867,7 +1867,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_reference operator[](size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->size() > n);
@@ -1885,7 +1885,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       iterator nth(size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->size() >= n);
@@ -1903,7 +1903,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_iterator nth(size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(this->size() >= n);
@@ -1920,7 +1920,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       size_type index_of(iterator p) BOOST_NOEXCEPT_OR_NOTHROW
    {
       //Range checked priv_index_of
@@ -1937,7 +1937,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       size_type index_of(const_iterator p) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       //Range checked priv_index_of
@@ -1952,7 +1952,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: range_error if n >= size()
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       reference at(size_type n)
    {
       this->priv_throw_if_out_of_range(n);
@@ -1967,7 +1967,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Throws</b>: range_error if n >= size()
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_reference at(size_type n) const
    {
       this->priv_throw_if_out_of_range(n);
@@ -2435,42 +2435,42 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //! <b>Effects</b>: Returns true if x and y are equal
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator==(const deque& x, const deque& y)
    {  return x.size() == y.size() && ::boost::container::algo_equal(x.begin(), x.end(), y.begin());  }
 
    //! <b>Effects</b>: Returns true if x and y are unequal
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator!=(const deque& x, const deque& y)
    {  return !(x == y); }
 
    //! <b>Effects</b>: Returns true if x is less than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator<(const deque& x, const deque& y)
    {  return ::boost::container::algo_lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
 
    //! <b>Effects</b>: Returns true if x is greater than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator>(const deque& x, const deque& y)
    {  return y < x;  }
 
    //! <b>Effects</b>: Returns true if x is equal or less than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator<=(const deque& x, const deque& y)
    {  return !(y < x);  }
 
    //! <b>Effects</b>: Returns true if x is equal or greater than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator>=(const deque& x, const deque& y)
    {  return !(x < y);  }
 

@@ -41,7 +41,7 @@ class BOOST_CONTAINER_NOVTABLE memory_resource
 
    //! <b>Effects</b>: Equivalent to
    //! `return do_allocate(bytes, alignment);`
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD void* allocate(std::size_t bytes, std::size_t alignment = max_align)
+   BOOST_CONTAINER_NODISCARD void* allocate(std::size_t bytes, std::size_t alignment = max_align)
    {  
       //Obtain a pointer to enough storage and initialize the lifetime 
       //of an array object of the given size in the address
@@ -62,13 +62,13 @@ class BOOST_CONTAINER_NOVTABLE memory_resource
 
    //! <b>Returns</b>:
    //!   `&a == &b || a.is_equal(b)`.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD   
+   BOOST_CONTAINER_NODISCARD   
    friend bool operator==(const memory_resource& a, const memory_resource& b) BOOST_NOEXCEPT
    {  return &a == &b || a.is_equal(b);   }
 
    //! <b>Returns</b>:
    //!   !(a == b).
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
+   BOOST_CONTAINER_NODISCARD
    friend bool operator!=(const memory_resource& a, const memory_resource& b) BOOST_NOEXCEPT
    {  return !(a == b); }
    

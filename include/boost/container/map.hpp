@@ -713,7 +713,7 @@ class map
    //! <b>Returns</b>: A reference to the element whose key is equivalent to x.
    //! Throws: An exception object of type out_of_range if no such element is present.
    //! <b>Complexity</b>: logarithmic.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD T& at(const key_type& k)
+   BOOST_CONTAINER_NODISCARD T& at(const key_type& k)
    {
       iterator i = this->find(k);
       if(i == this->end()){
@@ -725,7 +725,7 @@ class map
    //! <b>Returns</b>: A reference to the element whose key is equivalent to x.
    //! Throws: An exception object of type out_of_range if no such element is present.
    //! <b>Complexity</b>: logarithmic.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD const T& at(const key_type& k) const
+   BOOST_CONTAINER_NODISCARD const T& at(const key_type& k) const
    {
       const_iterator i = this->find(k);
       if(i == this->cend()){
@@ -742,7 +742,7 @@ class map
    //!
    //! Complexity: logarithmic.
    template<class K>
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
+   BOOST_CONTAINER_NODISCARD
       BOOST_CONTAINER_DOC1ST
          ( T&
          , typename dtl::enable_if_transparent< key_compare
@@ -766,7 +766,7 @@ class map
    //!
    //! Complexity: logarithmic.
    template<class K>
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
+   BOOST_CONTAINER_NODISCARD
       BOOST_CONTAINER_DOC1ST
          ( const T&
          , typename dtl::enable_if_transparent< key_compare
@@ -1304,7 +1304,7 @@ class map
    //! <b>Returns</b>: The number of elements with key equivalent to x.
    //!
    //! <b>Complexity</b>: log(size())+count(k)
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       size_type count(const key_type& x) const
    {  return static_cast<size_type>(this->find(x) != this->cend());  }
 
@@ -1315,7 +1315,7 @@ class map
    //!
    //! <b>Complexity</b>: log(size())+count(k)
    template<typename K>
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       size_type count(const K& x) const
    {  return static_cast<size_type>(this->find(x) != this->cend());  }
 

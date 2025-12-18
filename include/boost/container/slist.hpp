@@ -452,7 +452,7 @@ class slist
    //! <b>Throws</b>: If allocator's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       allocator_type get_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return allocator_type(this->node_alloc()); }
 
@@ -463,7 +463,7 @@ class slist
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       stored_allocator_type &get_stored_allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->node_alloc(); }
 
@@ -474,7 +474,7 @@ class slist
    //! <b>Complexity</b>: Constant.
    //!
    //! <b>Note</b>: Non-standard extension.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const stored_allocator_type &get_stored_allocator() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->node_alloc(); }
 
@@ -491,7 +491,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       iterator before_begin() BOOST_NOEXCEPT_OR_NOTHROW
    {  return iterator(end());  }
 
@@ -502,7 +502,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_iterator before_begin() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->cbefore_begin();  }
 
@@ -511,7 +511,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       iterator begin() BOOST_NOEXCEPT_OR_NOTHROW
    { return iterator(this->icont().begin()); }
 
@@ -520,7 +520,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_iterator begin() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->cbegin();   }
 
@@ -529,7 +529,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       iterator end() BOOST_NOEXCEPT_OR_NOTHROW
    { return iterator(this->icont().end()); }
 
@@ -538,7 +538,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_iterator end() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->cend();   }
 
@@ -549,7 +549,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_iterator cbefore_begin() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return const_iterator(end());  }
 
@@ -558,7 +558,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_iterator cbegin() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return const_iterator(this->non_const_icont().begin());   }
 
@@ -567,7 +567,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_iterator cend() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return const_iterator(this->non_const_icont().end());   }
 
@@ -580,7 +580,7 @@ class slist
    //! <b>Complexity</b>: Linear to the number of elements before i.
    //!
    //! <b>Note</b>: Non-standard extension.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       iterator previous(iterator p) BOOST_NOEXCEPT_OR_NOTHROW
    {  return iterator(this->icont().previous(p.get())); }
 
@@ -593,7 +593,7 @@ class slist
    //! <b>Complexity</b>: Linear to the number of elements before i.
    //!
    //! <b>Note</b>: Non-standard extension.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_iterator previous(const_iterator p)
    {  return const_iterator(this->icont().previous(p.get())); }
 
@@ -608,7 +608,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       bool empty() const
    {  return !this->size();   }
 
@@ -617,7 +617,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       size_type size() const
    {  return this->icont().size(); }
 
@@ -626,7 +626,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       size_type max_size() const
    {  return AllocHolder::max_size();  }
 
@@ -673,7 +673,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       reference front()
    {
       BOOST_ASSERT(!this->empty());
@@ -688,7 +688,7 @@ class slist
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       const_reference front() const
    {
       BOOST_ASSERT(!this->empty());
@@ -1524,35 +1524,35 @@ class slist
    //! <b>Effects</b>: Returns true if x and y are unequal
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator!=(const slist& x, const slist& y)
    {  return !(x == y); }
 
    //! <b>Effects</b>: Returns true if x is less than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator<(const slist& x, const slist& y)
    {  return ::boost::container::algo_lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());  }
 
    //! <b>Effects</b>: Returns true if x is greater than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator>(const slist& x, const slist& y)
    {  return y < x;  }
 
    //! <b>Effects</b>: Returns true if x is equal or less than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator<=(const slist& x, const slist& y)
    {  return !(y < x);  }
 
    //! <b>Effects</b>: Returns true if x is equal or greater than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
-   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline
+   BOOST_CONTAINER_NODISCARD inline
       friend bool operator>=(const slist& x, const slist& y)
    {  return !(x < y);  }
 
