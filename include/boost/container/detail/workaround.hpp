@@ -246,4 +246,10 @@ namespace boost {
 #  define BOOST_CONTAINER_CONCEPTS_BASED_OVERLOADING
 #endif
 
+#ifdef _MSC_VER
+    #define BOOST_CONTAINER_NOVTABLE __declspec(novtable)
+#else
+    #define BOOST_CONTAINER_NOVTABLE
+#endif
+
 #endif   //#ifndef BOOST_CONTAINER_DETAIL_WORKAROUND_HPP
