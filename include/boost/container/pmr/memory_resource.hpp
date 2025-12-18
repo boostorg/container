@@ -62,11 +62,13 @@ class BOOST_CONTAINER_NOVTABLE memory_resource
 
    //! <b>Returns</b>:
    //!   `&a == &b || a.is_equal(b)`.
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD   
    friend bool operator==(const memory_resource& a, const memory_resource& b) BOOST_NOEXCEPT
    {  return &a == &b || a.is_equal(b);   }
 
    //! <b>Returns</b>:
    //!   !(a == b).
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    friend bool operator!=(const memory_resource& a, const memory_resource& b) BOOST_NOEXCEPT
    {  return !(a == b); }
    

@@ -197,7 +197,7 @@ class allocator
 
    //!Returns the maximum number of elements that could be allocated.
    //!Never throws
-   inline size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD inline size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return size_type(-1)/(2u*sizeof(T));   }
 
    //!Swaps two allocators, does nothing

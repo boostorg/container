@@ -137,11 +137,13 @@ class node_allocator
 
    //!Returns the number of elements that could be allocated.
    //!Never throws
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    size_type max_size() const
    {  return size_type(-1)/sizeof(T);   }
 
    //!Allocate memory for an array of count elements.
    //!Throws bad_alloc if there is no enough memory
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    pointer allocate(size_type count, const void * = 0)
    {
       if(BOOST_UNLIKELY(count > this->max_size()))
@@ -186,6 +188,7 @@ class node_allocator
       singleton_t::instance().deallocate_free_blocks();
    }
 
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    pointer allocation_command
       (allocation_type command, size_type limit_size, size_type &prefer_in_recvd_out_size, pointer &reuse)
    {
@@ -198,6 +201,7 @@ class node_allocator
 
    //!Returns maximum the number of objects the previously allocated memory
    //!pointed by p can hold.
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    size_type size(pointer p) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
@@ -207,6 +211,7 @@ class node_allocator
    //!Allocates just one object. Memory allocated with this function
    //!must be deallocated only with deallocate_one().
    //!Throws bad_alloc if there is no enough memory
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    pointer allocate_one()
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
@@ -307,11 +312,13 @@ class node_allocator
 
    //!An allocator always compares to true, as memory allocated with one
    //!instance can be deallocated by another instance
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD   
    friend bool operator==(const node_allocator &, const node_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return true;   }
 
    //!An allocator always compares to false, as memory allocated with one
    //!instance can be deallocated by another instance
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    friend bool operator!=(const node_allocator &, const node_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return false;   }
 

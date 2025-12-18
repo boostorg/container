@@ -150,11 +150,13 @@ class adaptive_pool
 
    //!Returns the number of elements that could be allocated.
    //!Never throws
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return size_type(-1)/(2u*sizeof(T));   }
 
    //!Allocate memory for an array of count elements.
    //!Throws bad_alloc if there is no enough memory
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    pointer allocate(size_type count, const void * = 0)
    {
       if(BOOST_UNLIKELY(count > size_type(-1)/(2u*sizeof(T))))
@@ -187,6 +189,7 @@ class adaptive_pool
       }
    }
 
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    pointer allocation_command(allocation_type command,
                          size_type limit_size,
                          size_type &prefer_in_recvd_out_size,
@@ -206,6 +209,7 @@ class adaptive_pool
    //!Allocates just one object. Memory allocated with this function
    //!must be deallocated only with deallocate_one().
    //!Throws bad_alloc if there is no enough memory
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    pointer allocate_one()
    {
       typedef dtl::shared_adaptive_node_pool
@@ -317,11 +321,13 @@ class adaptive_pool
 
    //!An allocator always compares to true, as memory allocated with one
    //!instance can be deallocated by another instance
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    friend bool operator==(const adaptive_pool &, const adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return true;   }
 
    //!An allocator always compares to false, as memory allocated with one
    //!instance can be deallocated by another instance
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    friend bool operator!=(const adaptive_pool &, const adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return false;   }
 
@@ -466,11 +472,13 @@ class private_adaptive_pool
 
    //!Returns the number of elements that could be allocated.
    //!Never throws
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return size_type(-1)/(2u*sizeof(T));   }
 
    //!Allocate memory for an array of count elements.
    //!Throws bad_alloc if there is no enough memory
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    pointer allocate(size_type count, const void * = 0)
    {
       if(BOOST_UNLIKELY(count > size_type(-1)/(2u*sizeof(T))))
@@ -497,6 +505,7 @@ class private_adaptive_pool
       }
    }
 
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    pointer allocation_command(allocation_type command,
                          size_type limit_size,
                          size_type &prefer_in_recvd_out_size,
@@ -516,6 +525,7 @@ class private_adaptive_pool
    //!Allocates just one object. Memory allocated with this function
    //!must be deallocated only with deallocate_one().
    //!Throws bad_alloc if there is no enough memory
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    pointer allocate_one()
    {
       return (pointer)m_pool.allocate_node();
@@ -583,11 +593,13 @@ class private_adaptive_pool
 
    //!An allocator always compares to true, as memory allocated with one
    //!instance can be deallocated by another instance
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    friend bool operator==(const private_adaptive_pool &, const private_adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return true;   }
 
    //!An allocator always compares to false, as memory allocated with one
    //!instance can be deallocated by another instance
+   BOOST_CONTAINER_ATTRIBUTE_NODISCARD
    friend bool operator!=(const private_adaptive_pool &, const private_adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
    {  return false;   }
 
