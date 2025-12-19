@@ -937,11 +937,11 @@ Use them simply specifying the new allocator in the corresponding template argum
 
 [endsect]
 
-[section:cpp_conformance C++11/C++14/C++17 Conformance]
+[section:cpp_conformance C++ Conformance]
 
 [*Boost.Container] aims for full C++11 conformance except reasoned deviations,
 backporting as much as possible for C++03. Obviously, this conformance is a work
-in progress so this section explains what C++11/C++14/C++17 features are implemented and which
+in progress so this section explains what C++ features are implemented and which
 of them have been backported to earlier standard conformig compilers.
 
 [section:move_emplace Move and Emplace]
@@ -958,7 +958,7 @@ a finite number of parameters.
 
 [endsect]
 
-[section:alloc_traits_move_traits Stateful allocators]
+[section:stateful_allocators Stateful allocators and uses-allocator protocol]
 
 C++03 was not stateful-allocator friendly. For compactness of container objects and for
 simplicity, it did not require containers to support allocators with state: Allocator objects
@@ -968,8 +968,9 @@ to suppose two allocators of the same type always compare equal (that means that
 by one allocator object could be deallocated by another instance of the same type) and
 allocators were not swapped when the container was swapped.
 
-C++11 further improves stateful allocator support through
-[@http://en.cppreference.com/w/cpp/memory/allocator_traits `std::allocator_traits`].
+C++11 further improves stateful allocator support through:
+
+* [@http://en.cppreference.com/w/cpp/memory/allocator_traits `std::allocator_traits`].
 `std::allocator_traits` is the protocol between a container and an allocator, and
 an allocator writer can customize its behaviour (should the container propagate it in
 move constructor, swap, etc.?) following `allocator_traits` requirements. [*Boost.Container]
@@ -979,7 +980,15 @@ C++17 changes. This class
 offers some workarounds for C++03 compilers to achieve the same allocator guarantees as
 `std::allocator_traits`.
 
-In [Boost.Container] containers, if possible, a single allocator is hold to construct
+* [@https://en.cppreference.com/w/cpp/memory/uses_allocator.html `The uses-allocator protocol`]
+   allows types to declare they can work with allocators, even when constructed through intermediary
+   code that doesn't know about them. [*Boost.Container] implements the trait
+   [classref boost::container::uses_allocator uses_allocator] and also implements utilities inspired
+   by C++20's additions:
+   [funcref boost::container::uninitialized_construct_using_allocator uninitialized_construct_using_allocator]
+   and [funcref boost::container::make_obj_using_allocator make_obj_using_allocator].
+
+Additionally, in [*Boost.Container] containers, if possible, a single allocator is hold to construct
 `value_type`s. If the container needs an auxiliary
 allocator (e.g. an array allocator used by `deque` or `stable_vector`), that allocator is also
 stored in the container and initialized from the user-supplied allocator when the
