@@ -610,7 +610,6 @@ jobs:
         if: matrix.cmake_tests == ''
         run: |
             cd boost-root
-            ${{matrix.toolset}} --version
             B2_ARGS=("-j" "$BUILD_JOBS" "toolset=${{matrix.toolset}}" "debug-symbols=off")
             #Build variant
             if [ -n "${{matrix.build_variant}}" ]
@@ -821,7 +820,6 @@ jobs:
             /usr/sbin/cygserver &
             sleep 2
             cd boost-root
-            ${{matrix.toolset}} --version
             B2_ARGS=("-j" "$BUILD_JOBS" "toolset=${{matrix.toolset}}" "debug-symbols=off")
             #Build variant
             if [ -n "${{matrix.build_variant}}" ]
@@ -1004,7 +1002,6 @@ jobs:
                 echo " ;" >> ~/user-config.jam
             fi
             # Run tests
-            ${{matrix.toolset}} --version
             B2_ARGS=("-j" "$BUILD_JOBS" "toolset=${{matrix.toolset}}" "debug-symbols=off")
             #Build variant
             if [ -n "${{matrix.build_variant}}" ]
