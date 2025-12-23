@@ -610,7 +610,8 @@ jobs:
         if: matrix.cmake_tests == ''
         run: |
             cd boost-root
-            B2_ARGS=("-j" "$BUILD_JOBS" "toolset=${{matrix.toolset}}" "cxxstd=${{matrix.cxxstd}}" "debug-symbols=off")
+            ${{matrix.toolset}} --version
+            B2_ARGS=("-j" "$BUILD_JOBS" "toolset=${{matrix.toolset}}" "debug-symbols=off")
             #Build variant
             if [ -n "${{matrix.build_variant}}" ]
             then
@@ -655,6 +656,12 @@ jobs:
             then
                 B2_ARGS+=("linkflags=${{matrix.linkflags}}")
             fi
+            #cxxstd
+            if [ -n "${{matrix.cxxstd}}" ]
+            then
+                B2_ARGS+=("cxxstd=${{matrix.cxxstd}}")
+            fi
+
             B2_ARGS+=("libs/$LIBRARY/test")
             ./b2 "${B2_ARGS[@]}"
 
@@ -815,7 +822,7 @@ jobs:
             sleep 2
             cd boost-root
             ${{matrix.toolset}} --version
-            B2_ARGS=("-j" "$BUILD_JOBS" "toolset=${{matrix.toolset}}" "cxxstd=${{matrix.cxxstd}}" "debug-symbols=off")
+            B2_ARGS=("-j" "$BUILD_JOBS" "toolset=${{matrix.toolset}}" "debug-symbols=off")
             #Build variant
             if [ -n "${{matrix.build_variant}}" ]
             then
@@ -859,6 +866,11 @@ jobs:
             if [ -n "${{matrix.linkflags}}" ]
             then
                 B2_ARGS+=("linkflags=${{matrix.linkflags}}")
+            fi
+            #cxxstd
+            if [ -n "${{matrix.cxxstd}}" ]
+            then
+                B2_ARGS+=("cxxstd=${{matrix.cxxstd}}")
             fi
             B2_ARGS+=("libs/$LIBRARY/test")
             ./b2 "${B2_ARGS[@]}"
@@ -910,7 +922,7 @@ jobs:
             pwd
             ls -la
             set -e
-            
+
             # Install required packages
             echo "Installing packages..."
             if [ "${{matrix.vm}}" == "freebsd" ]
@@ -957,7 +969,6 @@ jobs:
             echo BUILD_JOBS: $BUILD_JOBS
             DEPINST_ARGS=()
             DEPINST_ARGS+=("--git_args" "--jobs $GIT_FETCH_JOBS")
-
             mkdir -p snapshot
             cd snapshot
             echo "Downloading library snapshot: https://github.com/${GITHUB_REPOSITORY}/archive/${GITHUB_SHA}.tar.gz"
@@ -971,7 +982,6 @@ jobs:
             fi
             rm -f "${LIBRARY}-${GITHUB_SHA}.tar.gz"
             cd ..
-
             git clone -b "$BOOST_BRANCH" --depth 1 "https://github.com/boostorg/boost.git" "boost-root"
             cd boost-root
             mkdir -p libs
@@ -984,7 +994,6 @@ jobs:
             python3 tools/boostdep/depinst/depinst.py "${DEPINST_ARGS[@]}"
             ./bootstrap.sh
             ./b2 headers
-
             if [ -n "${{matrix.compiler}}" -o -n "$GCC_TOOLCHAIN_ROOT" ]
             then
                 echo -n "using ${{matrix.toolset}} : : ${{matrix.compiler}}" > ~/user-config.jam
@@ -994,62 +1003,61 @@ jobs:
                 fi
                 echo " ;" >> ~/user-config.jam
             fi
-
             # Run tests
             ${{matrix.toolset}} --version
-            B2_ARGS=("-j" "$BUILD_JOBS" "toolset=${{matrix.toolset}}" "cxxstd=${{matrix.cxxstd}}" "debug-symbols=off")
-
-            # Build variant
+            B2_ARGS=("-j" "$BUILD_JOBS" "toolset=${{matrix.toolset}}" "debug-symbols=off")
+            #Build variant
             if [ -n "${{matrix.build_variant}}" ]
             then
                 B2_ARGS+=("variant=${{matrix.build_variant}}")
             else
                 B2_ARGS+=("variant=$DEFAULT_BUILD_VARIANT")
             fi
-
-            # Threading
+            #Threading
             if [ -n "${{matrix.threading}}" ]
             then
                 B2_ARGS+=("threading=${{matrix.threading}}")
             fi
-
-            # UBSAN options
+            #UBSAN options
             if [ -n "${{matrix.ubsan}}" ]
             then
                 export UBSAN_OPTIONS="verbosity=1:print_stacktrace=1"
                 B2_ARGS+=("undefined-sanitizer=norecover" "define=UBSAN=1")
             fi
-
-            # ASAN options
+            #ASAN options
             if [ -n "${{matrix.asan}}" ]
             then
                 export ASAN_OPTIONS="verbosity=1:print_stacktrace=1"
                 B2_ARGS+=("address-sanitizer=norecover" "define=ASAN=1")
             fi
-
-            # Common UBSAN / ASAN options
+            #Common UBSAN / ASAN options
             if [ -n "${{matrix.asan}}" ] || [ -n "${{matrix.ubsan}}" ]
             then
                 B2_ARGS+=("debug-symbols=on" "visibility=global")
             fi
-
-            # cxxflags
+            #cxxflags
             if [ -n "${{matrix.cxxflags}}" ]
             then
                 B2_ARGS+=("cxxflags=${{matrix.cxxflags}}")
             fi
-
-            # address-model
+            #address-model
             if [ -n "${{matrix.address-model}}" ]
             then
                 B2_ARGS+=("address-model=${{matrix.address-model}}")
             fi
-
-            # link-flags
+            #link-flags
             if [ -n "${{matrix.linkflags}}" ]
             then
                 B2_ARGS+=("linkflags=${{matrix.linkflags}}")
             fi
+            #cxxstd
+            if [ -n "${{matrix.cxxstd}}" ]
+            then
+                B2_ARGS+=("cxxstd=${{matrix.cxxstd}}")
+            fi
+
+            B2_ARGS+=("libs/$LIBRARY/test")
+            ./b2 "${B2_ARGS[@]}"
 
             B2_ARGS+=("libs/$LIBRARY/test")
             ./b2 "${B2_ARGS[@]}"
