@@ -67,7 +67,15 @@ void test_allocate_various_sizes()
       const std::size_t sz = sizes[i];
       void* p = mr->allocate(sz);
       BOOST_TEST(p != 0);
-      BOOST_TEST(is_aligned(p, max_align));
+      //See:
+      //       WG14 N2293: Alignment requirements for memory management functions
+      //
+      //The alignment requirements of malloc, calloc, and realloc are ambiguously phrased for small
+      //allocations. The "strong-alignment" reading demands _Alignof(max_align_t) alignment regardless
+      //of size, while the "weak-alignment" reading requires only enough alignment to accommodate
+      //types that could fit in the allocated memory—meaning small allocations need only align to the largest
+      //power of two not exceeding the requested size. Many implementations use weak alignment
+      BOOST_TEST(is_aligned(p, sz < max_align ? sz : max_align));
 
       // Write to allocated memory
       std::memset(p, 0xCD, sz);
