@@ -23,7 +23,7 @@ namespace boost {
 namespace container {
 namespace pmr {
 
-class new_delete_resource_imp
+class new_delete_resource_imp BOOST_FINAL
    : public memory_resource
 {
    public:
@@ -41,7 +41,7 @@ class new_delete_resource_imp
    {  return &other == this;   }
 };
 
-struct null_memory_resource_imp
+struct null_memory_resource_imp BOOST_FINAL
    : public memory_resource
 {
    public:
