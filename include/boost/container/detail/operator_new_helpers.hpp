@@ -20,46 +20,61 @@
 
 #include <boost/container/detail/std_fwd.hpp>
 #include <boost/container/throw_exception.hpp>
+#include <boost/container/detail/type_traits.hpp>
 
 namespace boost {
 namespace container {
 namespace dtl {
 
-template <class T>
-T* operator_new_allocate(std::size_t count)
+BOOST_CONTAINER_FORCEINLINE void* operator_new_raw_allocate(const std::size_t size, const std::size_t alignment)
 {
-   const std::size_t max_count = std::size_t(-1)/(2*sizeof(T));
-   if(BOOST_UNLIKELY(count > max_count))
-      throw_bad_alloc();
+   (void)alignment;
    #if defined(__cpp_aligned_new)
-   BOOST_IF_CONSTEXPR(__STDCPP_DEFAULT_NEW_ALIGNMENT__ < alignof(T)) {
-      return static_cast<T*>(::operator new(count*sizeof(T), std::align_val_t(alignof(T))));
+   if(__STDCPP_DEFAULT_NEW_ALIGNMENT__ < alignment) {
+      return ::operator new(size, std::align_val_t(alignment));
    }
    #endif
-   return static_cast<T*>(::operator new(count*sizeof(T)));
+   return ::operator new(size);
 }
 
-template <class T>
-void operator_delete_deallocate(T* ptr, std::size_t n) BOOST_NOEXCEPT_OR_NOTHROW
+BOOST_CONTAINER_FORCEINLINE void operator_delete_raw_deallocate
+   (void* const ptr, const std::size_t size, const std::size_t alignment) BOOST_NOEXCEPT_OR_NOTHROW
 {
-   (void)n;
+   (void)size;
+   (void)alignment;
    #ifdef __cpp_aligned_new
-   BOOST_IF_CONSTEXPR(__STDCPP_DEFAULT_NEW_ALIGNMENT__ < alignof(T)) {
+   if(__STDCPP_DEFAULT_NEW_ALIGNMENT__ < alignment) {
       # if defined(__cpp_sized_deallocation)
-      ::operator delete((void*)ptr, n * sizeof(T), std::align_val_t(alignof(T)));
+      ::operator delete(ptr, size, std::align_val_t(alignment));
       #else
-      ::operator delete((void*)ptr, std::align_val_t(alignof(T)));
+      ::operator delete(ptr, std::align_val_t(alignment));
       # endif
       return;
    }
    #endif
 
    # if defined(__cpp_sized_deallocation)
-   ::operator delete((void*)ptr, n * sizeof(T));
+   ::operator delete(ptr, size);
    #else
-   ::operator delete((void*)ptr);
+   ::operator delete(ptr);
    # endif
 }
+
+template <class T>
+BOOST_CONTAINER_FORCEINLINE T* operator_new_allocate(std::size_t count)
+{
+   const std::size_t max_count = std::size_t(-1)/(2*sizeof(T));
+   if(BOOST_UNLIKELY(count > max_count))
+      throw_bad_alloc();
+   return static_cast<T*>(operator_new_raw_allocate(count*sizeof(T), alignment_of<T>::value));
+}
+
+template <class T>
+BOOST_CONTAINER_FORCEINLINE void operator_delete_deallocate(T* ptr, std::size_t n) BOOST_NOEXCEPT_OR_NOTHROW
+{
+   operator_delete_raw_deallocate((void*)ptr, n * sizeof(T), alignment_of<T>::value);
+}
+
 
 }  //namespace dtl {
 }  //namespace container {
