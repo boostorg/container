@@ -61,10 +61,9 @@ void test_allocate_various_sizes()
 {
    boost::container::pmr::memory_resource* mr = boost::container::pmr::new_delete_resource();
 
-   std::size_t sizes[] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 4096, 8192 };
+   std::size_t sz = 1u;
 
-   for (std::size_t i = 0, max = sizeof(sizes)/sizeof(sizes[0]); i != max; ++i) {
-      const std::size_t sz = sizes[i];
+   while (sz <= 8192u) {
       void* p = mr->allocate(sz);
       BOOST_TEST(p != 0);
       //See:
@@ -79,8 +78,8 @@ void test_allocate_various_sizes()
 
       // Write to allocated memory
       std::memset(p, 0xCD, sz);
-
       mr->deallocate(p, sz);
+      sz *= 2u;
    }
 }
 
