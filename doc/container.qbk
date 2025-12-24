@@ -1450,10 +1450,9 @@ use [*Boost.Container]? There are several reasons for that:
 * Uses-allocator construction now handles prefix and suffix allocator conventions even in C++03.
 * Implemented C++20's [funcref boost::container::uninitialized_construct_using_allocator uninitialized_construct_using_allocator]
   and [funcref boost::container::make_obj_using_allocator make_obj_using_allocator].
-* Added [[nodiscard]] to several allocator and PMR utilities.
-* Implemented overaligned operator new/delete support for `new_allocator` and ``pmr::new_delete_resource()`
+* Added `[[nodiscard]]` to several allocator and PMR utilities.
+* Implemented overaligned operator new/delete support for `new_allocator` and `pmr::new_delete_resource()`
   when C++17's `cpp_aligned_new` is available.
-  and [funcref boost::container::make_obj_using_allocator make_obj_using_allocator].
 * Fixed bugs/issues:
    * [@https://github.com/boostorg/container/issues/323 GitHub #323: ['"flat_tree::try_emplace UB"]].
 
