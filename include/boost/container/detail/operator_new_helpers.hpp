@@ -32,23 +32,15 @@ namespace dtl {
 
 BOOST_CONTAINER_FORCEINLINE bool operator_new_raw_overaligned(std::size_t alignment)
 {
+   //In MacOs, the default allocator can return data aligned to 8 bytes
+   #if defined(__APPLE__)
+   return alignment > 8u;
    //GCC-clang on Mingw-w64 has problems with malloc (MSVCRT / UCRT) alignment not matching
    //__STDCPP_DEFAULT_NEW_ALIGNMENT__, since HeapAlloc alignment is 8 for 32 bit targets 
-   #if !defined(__cpp_aligned_new) || (defined(_WIN32) && !defined(_WIN64) && !defined(_MSC_VER))
-   return alignment > 2u*sizeof(void*);
+   #elif !defined(__cpp_aligned_new) || (defined(_WIN32) && !defined(_WIN64) && !defined(_MSC_VER))
+   return alignment > 2*sizeof(void*);
    #else
    return alignment > __STDCPP_DEFAULT_NEW_ALIGNMENT__;
-   #endif
-}
-
-BOOST_CONTAINER_FORCEINLINE bool operator_new_raw_overaligned_tricky()
-{
-   //GCC-clang on Mingw-w64 has problems with malloc (MSVCRT / UCRT) alignment not matching
-   //__STDCPP_DEFAULT_NEW_ALIGNMENT__, since HeapAlloc alignment is 8 for 32 bit targets 
-   #if !defined(__cpp_aligned_new) || (defined(_WIN32) && !defined(_WIN64) && !defined(_MSC_VER))
-   return true;
-   #else
-   return false;
    #endif
 }
 
