@@ -22,19 +22,50 @@
 #include <boost/container/throw_exception.hpp>
 #include <boost/container/detail/type_traits.hpp>
 
+#if !defined(__cpp_aligned_new)
+#include <boost/container/detail/aligned_alloc.hpp>
+#endif
+
 namespace boost {
 namespace container {
 namespace dtl {
 
+BOOST_CONTAINER_FORCEINLINE bool operator_new_raw_overaligned(std::size_t alignment)
+{
+   //GCC-clang on Mingw-w64 has problems with malloc (MSVCRT / UCRT) alignment not matching
+   //__STDCPP_DEFAULT_NEW_ALIGNMENT__, since HeapAlloc alignment is 8 for 32 bit targets 
+   #if !defined(__cpp_aligned_new) || (defined(_WIN32) && !defined(_WIN64) && !defined(_MSC_VER))
+   return alignment > 2u*sizeof(void*);
+   #else
+   return alignment > __STDCPP_DEFAULT_NEW_ALIGNMENT__;
+   #endif
+}
+
+BOOST_CONTAINER_FORCEINLINE bool operator_new_raw_overaligned_tricky()
+{
+   //GCC-clang on Mingw-w64 has problems with malloc (MSVCRT / UCRT) alignment not matching
+   //__STDCPP_DEFAULT_NEW_ALIGNMENT__, since HeapAlloc alignment is 8 for 32 bit targets 
+   #if !defined(__cpp_aligned_new) || (defined(_WIN32) && !defined(_WIN64) && !defined(_MSC_VER))
+   return true;
+   #else
+   return false;
+   #endif
+}
+
 BOOST_CONTAINER_FORCEINLINE void* operator_new_raw_allocate(const std::size_t size, const std::size_t alignment)
 {
    (void)alignment;
-   #if defined(__cpp_aligned_new)
-   if(__STDCPP_DEFAULT_NEW_ALIGNMENT__ < alignment) {
+   if(operator_new_raw_overaligned(alignment)) {
+      #if defined(__cpp_aligned_new)
       return ::operator new(size, std::align_val_t(alignment));
+      #else
+      //C++ requires zero-sized allocations to return a non-null pointer
+      return aligned_allocate(alignment, !size ? 1 : size);
+      #endif
    }
-   #endif
-   return ::operator new(size);
+   else{
+      return ::operator new(size);
+   }
 }
 
 BOOST_CONTAINER_FORCEINLINE void operator_delete_raw_deallocate
@@ -42,22 +73,24 @@ BOOST_CONTAINER_FORCEINLINE void operator_delete_raw_deallocate
 {
    (void)size;
    (void)alignment;
-   #ifdef __cpp_aligned_new
-   if(__STDCPP_DEFAULT_NEW_ALIGNMENT__ < alignment) {
-      # if defined(__cpp_sized_deallocation)
-      ::operator delete(ptr, size, std::align_val_t(alignment));
+   if(operator_new_raw_overaligned(alignment)) {
+      #if defined(__cpp_aligned_new)
+         # if defined(__cpp_sized_deallocation)
+         ::operator delete(ptr, size, std::align_val_t(alignment));
+         #else
+         ::operator delete(ptr, std::align_val_t(alignment));
+         # endif
       #else
-      ::operator delete(ptr, std::align_val_t(alignment));
-      # endif
-      return;
+         aligned_deallocate(ptr);
+      #endif
    }
-   #endif
-
-   # if defined(__cpp_sized_deallocation)
-   ::operator delete(ptr, size);
-   #else
-   ::operator delete(ptr);
-   # endif
+   else {
+      # if defined(__cpp_sized_deallocation)
+      ::operator delete(ptr, size);
+      #else
+      ::operator delete(ptr);
+      # endif
+   }
 }
 
 template <class T>
