@@ -7,8 +7,8 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#ifndef BOOST_CONTAINER_DETAIL_ALIGNED_ALLOC_HPP
-#define BOOST_CONTAINER_DETAIL_ALIGNED_ALLOC_HPP
+#ifndef BOOST_CONTAINER_DETAIL_ALIGNED_ALLOCATION_HPP
+#define BOOST_CONTAINER_DETAIL_ALIGNED_ALLOCATION_HPP
 
 #ifndef BOOST_CONFIG_HPP
 #  include <boost/config.hpp>
@@ -24,8 +24,6 @@
 #else
    #include <unistd.h>  //Include it to detect POSIX features
    #if defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200112L)
-      #define BOOST_CONTAINER_HAS_POSIX_MEMALIGN
-   #elif defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 600)
       #define BOOST_CONTAINER_HAS_POSIX_MEMALIGN
    #elif defined(__APPLE__)
       #include <Availability.h>
@@ -86,7 +84,7 @@ inline void* aligned_allocate(std::size_t al, std::size_t sz)
    std::size_t rounded_size = std::size_t(sz + al - 1u) & ~std::size_t(al - 1);
 
    //Check for rounded size overflow
-   return rounded_size ? aligned_allocate(al, rounded_size) : 0;
+   return rounded_size ? ::aligned_alloc(al, rounded_size) : 0;
 }
 
 #elif defined(BOOST_CONTAINER_HAS_ALIGNED_MALLOC)
@@ -106,12 +104,12 @@ inline void* aligned_allocate(std::size_t al, std::size_t sz)
       return 0;
 
    //Now align the returned pointer (which will be aligned at least to sizeof(void*)
-   std::size_t raw_addr = reinterpret_cast<std::size_t>(mptr);
-   std::size_t offset = sizeof(void*);
+   const std::size_t raw_addr = reinterpret_cast<std::size_t>(mptr);
+   const std::size_t offset = sizeof(void*);
    void *const ptr = reinterpret_cast<void*>((raw_addr + offset + al - 1u) & ~(al - 1u));
 
    // Store the original pointer just before the aligned address
-   void** backpointer = reinterpret_cast<void**>(ptr) - 1;
+   void** const backpointer = reinterpret_cast<void**>(ptr) - 1;
    *backpointer = mptr;
    return ptr;
 }
@@ -149,4 +147,4 @@ inline void aligned_deallocate(void* ptr)
 }  //namespace container {
 }  //namespace boost {
 
-#endif   //#ifndef BOOST_CONTAINER_DETAIL_ALIGNED_ALLOC_HPP
+#endif   //#ifndef BOOST_CONTAINER_DETAIL_ALIGNED_ALLOCATION_HPP

@@ -23,13 +23,24 @@
 #include <boost/container/detail/type_traits.hpp>
 
 #if !defined(__cpp_aligned_new)
-#include <boost/container/detail/aligned_alloc.hpp>
+#include <boost/container/detail/aligned_allocation.hpp>
 #endif
 
 namespace boost {
 namespace container {
 namespace dtl {
 
+//For GCC and clang there are several cases where __STDCPP_DEFAULT_NEW_ALIGNMENT__
+//is not properly synchronized with the default alignment of malloc. Examples:
+//
+// - On Unix platforms, a programmer uses jemalloc, mimalloc that have historically a lower
+//    default alignment (to waste less memory)
+//
+// - On Windows platforms, the allocator is provided by MSVCRT o UCRT that uses HeapAlloc
+//    (e.g. 8 byte alignment for x86 and 16 bytes for x64)
+//
+// - On Apple platforms the default malloc implementation has a reduced defaykt alignment
+//    even on ARM64 platforms.
 BOOST_CONTAINER_FORCEINLINE bool operator_new_raw_overaligned(std::size_t alignment)
 {
    //In MacOs, the default allocator can return data aligned to 8 bytes
