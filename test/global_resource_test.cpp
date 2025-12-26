@@ -44,7 +44,13 @@ std::size_t allocation_count = 0;
 void* operator new[](std::size_t count) BOOST_CONTAINER_NEW_EXCEPTION_SPECIFIER
 {
    ++allocation_count;
-   return std::malloc(count);
+   return std::malloc(count ? count : 1u);
+}
+
+void* operator new(std::size_t count) BOOST_CONTAINER_NEW_EXCEPTION_SPECIFIER
+{
+   ++allocation_count;
+   return std::malloc(count ? count : 1u);
 }
 
 void operator delete[](void *p) BOOST_CONTAINER_DELETE_EXCEPTION_SPECIFIER
@@ -53,6 +59,39 @@ void operator delete[](void *p) BOOST_CONTAINER_DELETE_EXCEPTION_SPECIFIER
    return std::free(p);
 }
 
+void operator delete(void *p) BOOST_CONTAINER_DELETE_EXCEPTION_SPECIFIER
+{
+   --allocation_count;
+   return std::free(p);
+}
+
+#if defined __cpp_aligned_new
+
+void* operator new[](std::size_t count, std::align_val_t) BOOST_CONTAINER_NEW_EXCEPTION_SPECIFIER
+{
+   ++allocation_count;
+   return std::malloc(count ? count : 1u);
+}
+
+void* operator new(std::size_t count, std::align_val_t) BOOST_CONTAINER_NEW_EXCEPTION_SPECIFIER
+{
+   ++allocation_count;
+   return std::malloc(count ? count : 1u);
+}
+
+void operator delete[](void *p, std::align_val_t) BOOST_CONTAINER_DELETE_EXCEPTION_SPECIFIER
+{
+   --allocation_count;
+   return std::free(p);
+}
+
+void operator delete(void *p, std::align_val_t) BOOST_CONTAINER_DELETE_EXCEPTION_SPECIFIER
+{
+   --allocation_count;
+   return std::free(p);
+}
+
+#endif
 #endif   //BOOST_CONTAINER_ASAN
 
 #ifdef BOOST_MSVC
