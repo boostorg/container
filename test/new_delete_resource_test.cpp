@@ -12,6 +12,7 @@
 #include <boost/container/pmr/global_resource.hpp>
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/container/pmr/vector.hpp>
+#include <boost/container/detail/operator_new_helpers.hpp>
 
 #include <cstddef>
 #include <cstring>
@@ -252,9 +253,7 @@ int main()
    test_allocate_default_alignment();
    test_allocate_various_sizes();
    test_allocate_with_alignment();
-   #ifdef BOOST_CONTAINER_ALIGNED_NEW_PRESENT
    test_allocate_over_aligned();
-   #endif
    test_is_equal_same();
    test_is_equal_different();
    test_equality_operators();
