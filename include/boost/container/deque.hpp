@@ -2061,7 +2061,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
       }
    }
 
-   #else //!defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+   #else //   !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #define BOOST_CONTAINER_DEQUE_EMPLACE_CODE(N) \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N\

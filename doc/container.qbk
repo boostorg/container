@@ -490,7 +490,7 @@ To avoid unbounded memory waste, Boost.Container's `devector` uses a different s
 * Potentially, the maximum number of possible relocations (movements) reusing the memory buffer are Olog(N),
   but that would lead non-amortized constant-time insertion at the extremes. In consequence, the number of
   relocations must be limited ('relocation limit') and a reallocation (allocation of a new memory buffer) will be
-  performed if the load-factor of the container defined as (size()/length_of_buffer) surpasses the relocation limit (see
+  performed if the load-factor of the container defined as (`size()/length_of_internal_buffer`) surpasses the relocation limit (see
   Lars Greger Nordland Hagen's [@http://larshagencpp.github.io/blog/2016/05/22/devector "Double-ended vector - is it useful?"]
   article for more details).
 

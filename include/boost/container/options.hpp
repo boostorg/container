@@ -58,7 +58,7 @@ struct tree_opt
 
 typedef tree_opt<red_black_tree, true> tree_assoc_defaults;
 
-#endif   //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+#endif   // !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
 //!This option setter specifies the underlying tree type
 //!(red-black, AVL, Scapegoat or Splay) for ordered associative containers
@@ -176,7 +176,7 @@ using hash_assoc_options_t = typename boost::container::hash_assoc_options<Optio
 
 #endif
 
-#endif   //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+#endif   // !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
 ////////////////////////////////////////////////////////////////
 //
@@ -212,7 +212,7 @@ struct default_if_zero<0u, DefaultN>
    BOOST_STATIC_CONSTEXPR std::size_t value = DefaultN;
 };
 
-#endif   //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+#endif   // !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -258,7 +258,7 @@ struct growth_factor_60{};
 //!capacity a 100% (doubling its capacity) when existing capacity is exhausted.
 struct growth_factor_100{};
 
-#endif   //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+#endif   // !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
 //!This option setter specifies the growth factor strategy of the
 //!underlying vector.
@@ -377,7 +377,7 @@ struct small_vector_opt
 
 typedef small_vector_opt<void, 0u, void> small_vector_null_opt;
 
-#endif    //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+#endif    //   !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
 //! Helper metafunction to combine options into a single type to be used
 //! by \c boost::container::small_vector.
@@ -448,7 +448,7 @@ struct static_vector_opt
 
 typedef static_vector_opt<true, 0u, void> static_vector_null_opt;
 
-#endif    //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+#endif    //   !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
 //! Helper metafunction to combine options into a single type to be used
 //! by \c boost::container::static_vector.

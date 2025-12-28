@@ -1501,7 +1501,7 @@ class devector
    * [EmplaceConstructible]: http://en.cppreference.com/w/cpp/concept/EmplaceConstructible
    * [MoveInsertable]: http://en.cppreference.com/w/cpp/concept/MoveInsertable
    */
-   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
    template <class... Args>
    reference emplace_front(Args&&... args)
    {
@@ -1520,7 +1520,7 @@ class devector
       }
    }
 
-   #else //!defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #else //defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #define BOOST_CONTAINER_DEVECTOR_EMPLACE_FRONT(N) \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
@@ -1617,7 +1617,7 @@ class devector
    * [MoveInsertable]: http://en.cppreference.com/w/cpp/concept/MoveInsertable
    * [MoveAssignable]: http://en.cppreference.com/w/cpp/concept/MoveAssignable
    */
-   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
    template <class... Args>
    inline reference emplace_back(Args&&... args)
    {
@@ -1634,7 +1634,7 @@ class devector
       }
    }
 
-   #else //!defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #else //defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #define BOOST_CONTAINER_DEVECTOR_EMPLACE_BACK(N) \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
@@ -1655,7 +1655,7 @@ class devector
    BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_DEVECTOR_EMPLACE_BACK)
    #undef BOOST_CONTAINER_DEVECTOR_EMPLACE_BACK
 
-   #endif    //!defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #endif    //defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -1731,7 +1731,7 @@ class devector
    * [MoveInsertable]: http://en.cppreference.com/w/cpp/concept/MoveInsertable
    * [MoveAssignable]: http://en.cppreference.com/w/cpp/concept/MoveAssignable
    */
-   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
    template <class... Args>
    iterator emplace(const_iterator position, Args&&... args)
    {
@@ -1789,7 +1789,7 @@ class devector
       return this->insert_range_slow_path(position, 1, proxy_t(::boost::forward<Args>(args)...));
    }
 
-   #else //!defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #else //defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
    #define BOOST_CONTAINER_DEVECTOR_EMPLACE(N) \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
@@ -1852,7 +1852,7 @@ class devector
    BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_DEVECTOR_EMPLACE)
    #undef BOOST_CONTAINER_DEVECTOR_EMPLACE
 
-   #endif    //!defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #endif    //defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -2212,8 +2212,6 @@ class devector
       }
    }
 
-   #endif
-
    private:
 
    void priv_move_assign(BOOST_RV_REF(devector) x, dtl::bool_<true> /*steal_resources*/)
@@ -2279,8 +2277,6 @@ class devector
    {
       return boost::intrusive::pointer_traits<pointer>::const_cast_from(i);
    }
-
-   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    inline T* priv_raw_begin() BOOST_NOEXCEPT
    {   return boost::movelib::to_raw_pointer(m_.buffer) + m_.front_idx;   }
@@ -2372,7 +2368,7 @@ class devector
       }
    }
 
-   #else //!defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #else //   !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    #define BOOST_CONTAINER_DEVECTOR_ALLOC_CONSTRUCT(N) \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
@@ -2402,7 +2398,7 @@ class devector
    BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_DEVECTOR_ALLOC_CONSTRUCT)
    #undef BOOST_CONTAINER_DEVECTOR_ALLOC_CONSTRUCT
 
-   #endif    //!defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #endif    //   !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    size_type calculate_new_capacity(size_type requested_capacity)
    {
@@ -2576,7 +2572,7 @@ class devector
       m_.set_back_idx(m_.back_idx + n);
    }
 
-   #else //!defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #else //   !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    #define BOOST_CONTAINER_DEVECTOR_SLOW_PATH(N) \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
@@ -2675,7 +2671,7 @@ class devector
    BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_DEVECTOR_SLOW_PATH)
    #undef BOOST_CONTAINER_DEVECTOR_SLOW_PATH
 
-   #endif    //!defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #endif    //   !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
    void reallocate_at(size_type new_capacity, size_type buffer_offset)
    {
