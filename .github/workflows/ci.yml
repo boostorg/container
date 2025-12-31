@@ -1059,3 +1059,43 @@ jobs:
             B2_ARGS+=("libs/$LIBRARY/test")
             ./b2 "${B2_ARGS[@]}"
 
+
+  docs:
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            container: cppalliance/boost_superproject_build:24.04-v4
+
+    timeout-minutes: 240
+    runs-on: ${{matrix.os}}
+    container: ${{matrix.container}}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 3
+
+      - name: Git safe.directory
+        run: |
+          git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            src:
+              - 'doc/**'
+
+      - if: steps.changes.outputs.src == 'true'
+        name: Build docs
+        run: |
+            set -xe
+            curl  --retry-all-errors --connect-timeout 15 -sSL --retry 5 -o linuxdocs.sh https://raw.githubusercontent.com/boostorg/release-tools/refs/heads/master/build_docs/linuxdocs.sh
+            chmod 755 linuxdocs.sh
+            ./linuxdocs.sh --skip-packages
