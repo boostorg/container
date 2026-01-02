@@ -2156,7 +2156,7 @@ class devector
    void clear() BOOST_NOEXCEPT
    {
       destroy_elements(begin(), end());
-      m_.front_idx = m_.back_idx = 0;
+      m_.back_idx = m_.front_idx;
    }
 
    BOOST_CONTAINER_NODISCARD inline
