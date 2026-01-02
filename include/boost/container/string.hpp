@@ -3441,7 +3441,7 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const basic_string<CharT,Trait
       typename basic_string<CharT,Traits,Allocator>::size_type n = s.size();
       typename basic_string<CharT,Traits,Allocator>::size_type pad_len = 0;
       const bool left = (os.flags() & std::ios::left) != 0;
-      const std::size_t w = os.width(0);
+      const std::size_t w = static_cast<std::size_t>(os.width(0));
       std::basic_streambuf<CharT, Traits>* buf = os.rdbuf();
 
       if (w != 0 && n < w)
@@ -3475,7 +3475,7 @@ operator>>(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allo
       const std::ctype<CharT>& ctype = std::use_facet<std::ctype<CharT> >(is.getloc());
 
       s.clear();
-      std::size_t n = is.width(0);
+      std::size_t n = static_cast<std::size_t>(is.width(0));
       if (n == 0)
          n = static_cast<std::size_t>(-1);
       else
