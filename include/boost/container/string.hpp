@@ -1437,6 +1437,23 @@ class basic_string
                           s.begin() + pos + dtl::min_value(n, s.size() - pos));
    }
 
+   //! <b>Requires</b>: pos <= sv.size()
+   //!
+   //! <b>Effects</b>: Determines the effective length rlen of the string to append
+   //! as the smaller of n and sv.size() - pos and calls append(sv.data() + pos, rlen).
+   //!
+   //! <b>Throws</b>: If memory allocation throws and out_of_range if pos > sv.size()
+   //!
+   //! <b>Returns</b>: *this
+   template<template<class, class> class BasicStringView>   
+   basic_string& append(BasicStringView<CharT, Traits> sv, size_type pos, size_type n = npos)
+   {
+      if (pos > sv.size())
+         throw_out_of_range("basic_string::append out of range position");
+      return this->append(sv.begin() + pos,
+                          sv.begin() + pos + dtl::min_value(n, sv.size() - pos));
+   }
+
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
    //!
    //! <b>Effects</b>: The function replaces the string controlled by *this with
@@ -1499,11 +1516,17 @@ class basic_string
       }
    }
 
-   //! <b>Effects</b>: Equivalent to assign(str, 0, npos).
+   //! <b>Effects</b>: return *this = s;
    //!
    //! <b>Returns</b>: *this
    basic_string& assign(const basic_string& s)
    {  return this->operator=(s); }
+
+   //! <b>Effects</b>: return *this = move(s);
+   //!
+   //! <b>Returns</b>: *this
+   basic_string& assign(BOOST_RV_REF(basic_string) s) BOOST_NOEXCEPT_OR_NOTHROW
+   {  return this->operator=(boost::move(s)); }
 
    //! <b>Effects</b>: Equivalent to return assign(sv.data(), sv.size()).
    //!
@@ -1512,15 +1535,22 @@ class basic_string
    basic_string& assign(BasicStringView<CharT, Traits> sv)
    {  return this->operator=(sv); }
 
-   //! <b>Effects</b>: The function replaces the string controlled by *this
-   //!    with a string of length str.size() whose elements are a copy of the string
-   //!   controlled by str. Leaves str in a valid but unspecified state.
+   //! <b>Requires</b>: pos <= sv.size()
    //!
-   //! <b>Throws</b>: Nothing
+   //! <b>Effects</b>: Determines the effective length rlen of the string to assign as
+   //!   the smaller of n and sv.size() - pos and calls assign(sv.data() + pos rlen).
+   //!
+   //! <b>Throws</b>: If memory allocation throws or out_of_range if pos > sv.size().
    //!
    //! <b>Returns</b>: *this
-   basic_string& assign(BOOST_RV_REF(basic_string) ms) BOOST_NOEXCEPT_OR_NOTHROW
-   {  return this->swap_data(ms), *this;  }
+   template<template <class, class> class BasicStringView>
+   basic_string& assign(BasicStringView<CharT, Traits> sv, size_type pos, size_type n = npos)
+   {
+      if (pos > sv.size())
+         throw_out_of_range("basic_string::assign out of range position");
+      return this->assign(sv.begin() + pos,
+                          sv.begin() + pos + dtl::min_value(n, sv.size() - pos));
+   }
 
    //! <b>Requires</b>: pos <= str.size()
    //!
@@ -1715,6 +1745,31 @@ class basic_string
    template<template<class, class> class BasicStringView>
    basic_string& insert(size_type pos, BasicStringView<CharT, Traits> sv)
    {  return this->insert(pos, sv.data(), sv.size());  }
+
+
+   //! <b>Requires</b>: pos1 <= size() and pos2 <= sv.size()
+   //!
+   //! <b>Effects</b>: Determines the effective length rlen of the string to insert as
+   //!   the smaller of n and sv.size() - pos2 and calls insert(pos1, sv.data() + pos2, rlen).
+   //!
+   //! <b>Throws</b>: If memory allocation throws or out_of_range if pos1 > size() or pos2 > sv.size().
+   //!
+   //! <b>Returns</b>: *this
+   template<template<class, class> class BasicStringView>
+   basic_string& insert(size_type pos1, BasicStringView<CharT, Traits> sv, size_type pos2, size_type n = npos)
+   {
+      const size_type sz = this->size();
+      const size_type str_size = sv.size();
+      if (pos1 > sz || pos2 > str_size)
+         throw_out_of_range("basic_string::insert out of range position");
+      size_type len = dtl::min_value(n, str_size - pos2);
+      if (sz > this->max_size() - len)
+         throw_length_error("basic_string::insert max_size() exceeded");
+      const CharT *beg_ptr = boost::movelib::to_raw_pointer(sv.begin()) + pos2;
+      const CharT *end_ptr = beg_ptr + len;
+      this->insert(this->priv_addr() + pos1, beg_ptr, end_ptr);
+      return *this;
+   }
 
    //! <b>Requires</b>: p is a valid iterator on *this.
    //!
