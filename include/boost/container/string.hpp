@@ -1307,7 +1307,7 @@ class basic_string
       return *(this->priv_addr() + (this->size() - 1u) );
    }
 
-   //! <b>Requires</b>: size() > n.
+   //! <b>Requires</b>: size() >= n.
    //!
    //! <b>Effects</b>: Returns a reference to the nth element
    //!   from the beginning of the container.
@@ -1318,11 +1318,11 @@ class basic_string
    BOOST_CONTAINER_NODISCARD inline
       reference operator[](size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {
-      BOOST_ASSERT(this->size() > n);
+      BOOST_ASSERT(this->size() >= n);
       return *(this->priv_addr() + difference_type(n));
    }
 
-   //! <b>Requires</b>: size() > n.
+   //! <b>Requires</b>: size() >= n.
    //!
    //! <b>Effects</b>: Returns a const reference to the nth element
    //!   from the beginning of the container.
@@ -1333,7 +1333,7 @@ class basic_string
    BOOST_CONTAINER_NODISCARD inline
       const_reference operator[](size_type n) const BOOST_NOEXCEPT_OR_NOTHROW
    {
-      BOOST_ASSERT(this->size() > n);
+      BOOST_ASSERT(this->size() >= n);
       return *(this->priv_addr() + difference_type(n));
    }
 
