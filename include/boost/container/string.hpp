@@ -624,7 +624,7 @@ class basic_string
    typedef BOOST_CONTAINER_IMPDEF(const_pointer)                                       const_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
-   BOOST_STATIC_CONSTEXPR size_type npos = size_type(-1);
+   static const size_type npos = size_type(-1);
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
@@ -3144,6 +3144,10 @@ typedef basic_string
 wstring;
 
 #else
+
+template <class CharT, class Traits, class Allocator>
+const typename basic_string<CharT, Traits, Allocator>::size_type
+    basic_string<CharT, Traits, Allocator>::npos;
 
 template<class S>
 struct is_string
