@@ -1530,7 +1530,7 @@ class basic_string
    //! <b>Throws</b>: If memory allocation throws or out_of_range if pos > str.size().
    //!
    //! <b>Returns</b>: *this
-   basic_string& assign(const basic_string& s, size_type pos, size_type n)
+   basic_string& assign(const basic_string& s, size_type pos, size_type n = npos)
    {
       if (pos > s.size())
          throw_out_of_range("basic_string::assign out of range position");
@@ -2853,7 +2853,7 @@ class basic_string
    //! <b>Returns</b>: basic_string(*this, pos1, n1).compare(BasicStringView<CharT, Traits>(sv, pos2, n2)).
    template<template <class, class> class BasicStringView>
    BOOST_CONTAINER_NODISCARD inline
-      int compare(size_type pos1, size_type n1, BasicStringView<CharT,Traits> sv, size_type pos2, size_type n2) const
+      int compare(size_type pos1, size_type n1, BasicStringView<CharT,Traits> sv, size_type pos2, size_type n2 = npos) const
    {
       if (pos1 > this->size() || pos2 > sv.size())
          throw_out_of_range("basic_string::compare out of range position");
