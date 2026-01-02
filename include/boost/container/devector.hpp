@@ -494,8 +494,8 @@ class devector
    */
 ~devector() BOOST_NOEXCEPT
 {
-   destroy_elements(m_.buffer + m_.front_idx, m_.buffer + m_.back_idx);
-   deallocate_buffer();
+   this->destroy_elements(m_.buffer + m_.front_idx, m_.buffer + m_.back_idx);
+   this->deallocate_buffer();
 }
 
 /**
@@ -543,12 +543,10 @@ class devector
       }
 
       size_type n = x.size();
-      if (m_.capacity >= n)
-      {
+      if (m_.capacity >= n) {
             this->overwrite_buffer(x.begin(), x.end());
       }
-      else
-      {
+      else {
             this->allocate_and_copy_range(x.begin(), x.end());
       }
 
@@ -675,13 +673,11 @@ class devector
    {
       const size_type n = boost::container::iterator_udistance(first, last);
 
-      if (m_.capacity >= n)
-      {
-         overwrite_buffer(first, last);
+      if (m_.capacity >= n) {
+         this->overwrite_buffer(first, last);
       }
-      else
-      {
-         allocate_and_copy_range(first, last);
+      else {
+         this->allocate_and_copy_range(first, last);
       }
 
       BOOST_ASSERT(invariants_ok());
@@ -2253,10 +2249,10 @@ class devector
          dtl::move_alloc(this->get_allocator_ref(), x.get_allocator_ref(), flag);
 
          if (m_.capacity >= x.size()) {
-            overwrite_buffer(xbegin, xend);
+            this->overwrite_buffer(xbegin, xend);
          }
          else {
-            allocate_and_copy_range(xbegin, xend);
+            this->allocate_and_copy_range(xbegin, xend);
          }
       }
    }
@@ -2326,16 +2322,14 @@ class devector
 
    void destroy_elements(pointer b, pointer e)
    {
-      for (; b != e; ++b)
-      {
+      for (; b != e; ++b) {
          allocator_traits_type::destroy(get_allocator_ref(), boost::movelib::to_raw_pointer(b));
       }
    }
 
    void deallocate_buffer()
    {
-      if (m_.buffer)
-      {
+      if (m_.buffer) {
          allocator_traits_type::deallocate(get_allocator_ref(), m_.buffer, m_.capacity);
       }
    }
@@ -2681,8 +2675,8 @@ class devector
          boost::container::uninitialized_move_alloc(get_allocator_ref(), this->begin(), this->end(), new_buffer + buffer_offset);
          new_buffer_guard.release();
       }
-      destroy_elements(m_.buffer + m_.front_idx, m_.buffer + m_.back_idx);
-      deallocate_buffer();
+      this->destroy_elements(m_.buffer + m_.front_idx, m_.buffer + m_.back_idx);
+      this->deallocate_buffer();
 
       m_.buffer = new_buffer;
       //Safe cast, allocate() will handle stored_size_type overflow
@@ -2827,8 +2821,8 @@ class devector
       pointer new_buffer = n ? allocate(n) : pointer();
       allocation_guard new_buffer_guard(new_buffer, n, get_allocator_ref());
       boost::container::uninitialized_copy_alloc(get_allocator_ref(), first, last, new_buffer);
-      destroy_elements(begin(), end());
-      deallocate_buffer();
+      this->destroy_elements(begin(), end());
+      this->deallocate_buffer();
 
       m_.set_capacity(n);
       m_.buffer = new_buffer;
