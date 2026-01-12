@@ -38,7 +38,10 @@ namespace dtl {
 //!a reference count but the class does not delete itself, this is
 //!responsibility of user classes. Node size (NodeSize) and the number of
 //!nodes allocated per block (NodesPerBlock) are known at compile time
-template< std::size_t NodeSize, std::size_t NodesPerBlock >
+template< std::size_t NodeSize
+        , std::size_t NodesPerBlock
+        , std::size_t NodeAlign = 0
+        >
 class private_node_pool
    //Inherit from the implementation to avoid template bloat
    :  public boost::container::dtl::
@@ -63,12 +66,13 @@ class private_node_pool
 
 template< std::size_t NodeSize
         , std::size_t NodesPerBlock
+        , std::size_t NodeAlign = 0
         >
 class shared_node_pool
-   : public private_node_pool<NodeSize, NodesPerBlock>
+   : public private_node_pool<NodeSize, NodesPerBlock, NodeAlign>
 {
    private:
-   typedef private_node_pool<NodeSize, NodesPerBlock> private_node_allocator_t;
+   typedef private_node_pool<NodeSize, NodesPerBlock, NodeAlign> private_node_allocator_t;
 
    public:
    typedef typename private_node_allocator_t::free_nodes_t  free_nodes_t;
