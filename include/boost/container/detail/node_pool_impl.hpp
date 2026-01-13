@@ -295,11 +295,12 @@ class private_node_pool_impl
    {
       packed_3n_bits_ref_t packer(m_real_node_size, m_nodes_per_block, m_allocated);
       size_type allocated        = packer.high2_unpacked();
+      size_type nodes_per_block  = packer.high1_unpacked();
 
       //Preallocate all needed blocks to fulfill the request
       size_type cur_nodes = m_freelist.size();
       if(cur_nodes < n){
-         this->priv_alloc_block(((n - cur_nodes) - 1)/m_nodes_per_block + 1);
+         this->priv_alloc_block(((n - cur_nodes) - 1)/nodes_per_block + 1);
       }
 
       //We just iterate the needed nodes to get the last we'll erase
