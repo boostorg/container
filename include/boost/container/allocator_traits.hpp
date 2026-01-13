@@ -47,6 +47,8 @@
 #include <boost/move/detail/fwd_macros.hpp>
 #endif
 
+#include <boost/assert.hpp>
+
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
@@ -488,6 +490,7 @@ struct allocator_traits
       template <class T, class ...Args>
       inline static void construct(Allocator & a, T* p, BOOST_FWD_REF(Args)... args)
       {
+         BOOST_ASSERT(std::size_t(p) % dtl::alignment_of<T>::value == 0);
          BOOST_STATIC_CONSTEXPR bool value = ::boost::move_detail::and_
             < dtl::is_not_std_allocator<Allocator>
             , boost::container::dtl::has_member_function_callable_with_construct
