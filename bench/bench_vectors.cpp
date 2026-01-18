@@ -395,14 +395,14 @@ void test_vectors_impl()
       #else
       std::size_t numit [] = { 20 };
       #endif
-      std::size_t numele [] = { 100000 };
+      std::size_t numele [] = { 10000 };
    #elif defined SIMPLE_IT
       #ifdef NDEBUG
       std::size_t numit [] = { 150 };
       #else
       std::size_t numit [] = { 10 };
       #endif
-      std::size_t numele [] = { 500000 };
+      std::size_t numele [] = { 10000 };
    #else
       #ifdef NDEBUG
       unsigned int numit []  = { 1000, 10000, 100000, 1000000 };
