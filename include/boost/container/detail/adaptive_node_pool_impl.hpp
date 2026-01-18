@@ -1167,11 +1167,11 @@ struct private_adaptive_node_pool_impl_rt_data
 {
    typedef SizeType size_type;
 
-   BOOST_STATIC_CONSTEXPR size_type node_align = alignment_of<void*>::value;
-   BOOST_STATIC_CONSTEXPR size_type node_align_bits
-      = boost::container::dtl::log2_pow2<node_align>::value;
+   BOOST_STATIC_CONSTEXPR size_type PtrAlign = alignment_of<void*>::value;
+   BOOST_STATIC_CONSTEXPR size_type PtrAlignBits
+      = boost::container::dtl::log2_pow2<PtrAlign>::value;
 
-   typedef packed_3n_bits_ref<node_align_bits, size_type> packed_bits_t;
+   typedef packed_3n_bits_ref<PtrAlignBits, size_type> packed_bits_t;
 
    private_adaptive_node_pool_impl_rt_data(size_type max_free_blocks)
       : m_max_free_blocks(max_free_blocks)
@@ -1183,13 +1183,13 @@ struct private_adaptive_node_pool_impl_rt_data
 
    void set_node_alignment(size_type alignment)
    {
-      const size_type aligned_multiplier = alignment/node_align;
+      const size_type aligned_multiplier = alignment/PtrAlign;
       const size_type aligned_shift = log2_ceil<size_type>(aligned_multiplier);
       return packed_bits().store(aligned_shift);
    }
 
    size_type get_node_alignment() const
-   {  return node_align << packed_bits().load();   }
+   {  return PtrAlign << packed_bits().load();   }
 
    size_type get_max_free_blocks() const
    {  return m_max_free_blocks;  }
