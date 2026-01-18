@@ -24,6 +24,7 @@
 #include <boost/container/throw_exception.hpp>
 
 #include <boost/intrusive/slist.hpp>
+#include <boost/container/detail/multiallocation_chain.hpp>
 #include <boost/container/detail/pool_common.hpp>
 #include <boost/container/detail/dlmalloc.hpp>
 #include <cstddef>
