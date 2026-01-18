@@ -47,6 +47,7 @@ template< std::size_t NodeSize
         , std::size_t NodesPerBlock
         , std::size_t MaxFreeBlocks
         , std::size_t OverheadPercent
+        , std::size_t NodeAlign
         >
 class private_adaptive_node_pool
    :  public private_adaptive_node_pool_impl_ct
@@ -55,6 +56,7 @@ class private_adaptive_node_pool
             , NodeSize
             , NodesPerBlock
             , OverheadPercent
+            , NodeAlign
             , unsigned(OverheadPercent == 0)*::boost::container::adaptive_pool_flag::align_only
                | ::boost::container::adaptive_pool_flag::size_ordered
                | ::boost::container::adaptive_pool_flag::address_ordered
@@ -66,6 +68,7 @@ class private_adaptive_node_pool
             , NodeSize
             , NodesPerBlock
             , OverheadPercent
+            , NodeAlign
             , unsigned(OverheadPercent == 0)*::boost::container::adaptive_pool_flag::align_only
                | ::boost::container::adaptive_pool_flag::size_ordered
                | ::boost::container::adaptive_pool_flag::address_ordered
@@ -92,14 +95,15 @@ template< std::size_t NodeSize
         , std::size_t NodesPerBlock
         , std::size_t MaxFreeBlocks
         , std::size_t OverheadPercent
+        , std::size_t NodeAlign = 0
         >
 class shared_adaptive_node_pool
    : public private_adaptive_node_pool
-      <NodeSize, NodesPerBlock, MaxFreeBlocks, OverheadPercent>
+      <NodeSize, NodesPerBlock, MaxFreeBlocks, OverheadPercent, NodeAlign>
 {
  private:
    typedef private_adaptive_node_pool
-      <NodeSize, NodesPerBlock, MaxFreeBlocks, OverheadPercent> private_node_allocator_t;
+      <NodeSize, NodesPerBlock, MaxFreeBlocks, OverheadPercent, NodeAlign> private_node_allocator_t;
  public:
    typedef typename private_node_allocator_t::multiallocation_chain multiallocation_chain;
 

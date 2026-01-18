@@ -354,30 +354,11 @@ class adaptive_pool
    }
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 template < class T
          , std::size_t NodesPerBlock   = ADP_nodes_per_block
          , std::size_t MaxFreeBlocks   = ADP_max_free_blocks
          , std::size_t OverheadPercent = ADP_overhead_percent
-         , unsigned Version = 2
+         BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I unsigned Version = 2)
          >
 class private_adaptive_pool
 {
@@ -398,7 +379,8 @@ class private_adaptive_pool
    BOOST_CONTAINER_DOCIGN(BOOST_CONTAINER_STATIC_ASSERT((Version <=2)));
 
    typedef dtl::private_adaptive_node_pool
-      <sizeof(T), NodesPerBlock, MaxFreeBlocks, OverheadPercent> pool_t;
+      < sizeof(T), NodesPerBlock, MaxFreeBlocks
+      , OverheadPercent, dtl::alignment_of<T>::value>    pool_t;
    pool_t m_pool;
 
    public:

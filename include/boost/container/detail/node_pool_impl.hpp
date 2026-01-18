@@ -171,10 +171,12 @@ public:
    size_type& raw_high2()       { return m_high2; }
    size_type  raw_high2() const { return m_high2; }
 
+   packed_3n_bits_ref(const packed_3n_bits_ref& v)
+      : m_low(v.m_low), m_high1(v.m_high1), m_high2(v.m_high2)
+   {}
 private:
-   // Non-copyable (references can't be reseated)
-   packed_3n_bits_ref(const packed_3n_bits_ref&);
-   packed_3n_bits_ref& operator=(const packed_3n_bits_ref&);
+
+   //packed_3n_bits_ref& operator=(const packed_3n_bits_ref&);
 };
 
 //This class uses packed_3n_bits_ref to store overalignment
