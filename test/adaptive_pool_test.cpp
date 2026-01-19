@@ -19,8 +19,7 @@ using namespace boost::container;
 
 typedef test::overaligned_copyable_int oint_t;
 
-//We will work with wide characters for shared memory objects
-//Alias an adaptive pool that allocates ints
+//Alias adaptive pools that allocates ints
 typedef adaptive_pool<int> adapt_node_allocator_t;
 typedef adaptive_pool<oint_t> adapt_onode_allocator_t;
 
@@ -34,10 +33,7 @@ namespace container {
 template class adaptive_pool<int>;
 template class adaptive_pool<oint_t>;
 
-//template class adaptive_pool<int, 256, 2, 1, 1>;
-//template class adaptive_pool<oint_t, 256, 2, 1, 1>;
-
-}}
+}} //boost::container
 
 //Alias list types
 typedef boost::container::list<int, adapt_node_allocator_t>       MyList;
