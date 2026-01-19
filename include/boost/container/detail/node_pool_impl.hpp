@@ -224,7 +224,7 @@ class private_node_pool_impl
    typedef SegmentManagerBase segment_manager_base_type;
 
    //!Constructor from a segment manager. Never throws
-   private_node_pool_impl(segment_manager_base_type *segment_mngr_base, size_type node_size, size_type nodes_per_block, size_type node_alignment = 0)
+   private_node_pool_impl(segment_manager_base_type *segment_mngr_base, size_type node_size, size_type nodes_per_block, size_type node_alignment)
       : m_nodes_per_block(0)
       , m_real_node_size(0)
       , mp_segment_mngr_base(segment_mngr_base)

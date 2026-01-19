@@ -59,7 +59,7 @@ class private_node_pool
 
    //!Constructor from a segment manager. Never throws
    private_node_pool()
-      :  base_t(0, NodeSize, NodesPerBlock)
+      :  base_t(0, NodeSize, NodesPerBlock, NodeAlign)
    {}
 
 };
