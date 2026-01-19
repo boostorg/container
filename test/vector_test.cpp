@@ -21,11 +21,9 @@
 #include <boost/container/allocator.hpp>
 
 #include <boost/move/utility_core.hpp>
-#include "check_equal_containers.hpp"
 #include "movable_int.hpp"
 #include "expand_bwd_test_allocator.hpp"
 #include "expand_bwd_test_template.hpp"
-#include "dummy_test_allocator.hpp"
 #include "propagate_allocator_test.hpp"
 #include "vector_test.hpp"
 #include "default_init_test.hpp"
