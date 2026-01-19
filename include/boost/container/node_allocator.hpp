@@ -151,7 +151,7 @@ class node_allocator
 
       if(Version == 1 && count == 1){
          typedef dtl::shared_node_pool
-            <sizeof(T), NodesPerBlock> shared_pool_t;
+            <sizeof(T), NodesPerBlock, dtl::alignment_of<T>::value> shared_pool_t;
          typedef dtl::singleton_default<shared_pool_t> singleton_t;
          return pointer(static_cast<T*>(singleton_t::instance().allocate_node()));
       }
@@ -170,7 +170,7 @@ class node_allocator
       (void)count;
       if(Version == 1 && count == 1){
          typedef dtl::shared_node_pool
-            <sizeof(T), NodesPerBlock> shared_pool_t;
+            <sizeof(T), NodesPerBlock, dtl::alignment_of<T>::value> shared_pool_t;
          typedef dtl::singleton_default<shared_pool_t> singleton_t;
          singleton_t::instance().deallocate_node(ptr);
       }
@@ -183,7 +183,7 @@ class node_allocator
    static void deallocate_free_blocks() BOOST_NOEXCEPT_OR_NOTHROW
    {
       typedef dtl::shared_node_pool
-         <sizeof(T), NodesPerBlock> shared_pool_t;
+         <sizeof(T), NodesPerBlock, dtl::alignment_of<T>::value> shared_pool_t;
       typedef dtl::singleton_default<shared_pool_t> singleton_t;
       singleton_t::instance().deallocate_free_blocks();
    }
@@ -216,7 +216,7 @@ class node_allocator
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       typedef dtl::shared_node_pool
-         <sizeof(T), NodesPerBlock> shared_pool_t;
+         <sizeof(T), NodesPerBlock, dtl::alignment_of<T>::value> shared_pool_t;
       typedef dtl::singleton_default<shared_pool_t> singleton_t;
       return (pointer)singleton_t::instance().allocate_node();
    }
@@ -227,13 +227,13 @@ class node_allocator
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       typedef dtl::shared_node_pool
-         <sizeof(T), NodesPerBlock> shared_pool_t;
+         <sizeof(T), NodesPerBlock, dtl::alignment_of<T>::value> shared_pool_t;
       typedef dtl::singleton_default<shared_pool_t> singleton_t;
       typename shared_pool_t::multiallocation_chain ch;
       singleton_t::instance().allocate_nodes(num_elements, ch);
       chain.incorporate_after(chain.before_begin()
-                             , (T*)boost::movelib::iterator_to_raw_pointer(ch.begin())
-                             , (T*)boost::movelib::iterator_to_raw_pointer(ch.last())
+                             , (T*)static_cast<void*>(boost::movelib::iterator_to_raw_pointer(ch.begin()))
+                             , (T*)static_cast<void*>(boost::movelib::iterator_to_raw_pointer(ch.last()))
                              , ch.size());
    }
 
@@ -244,7 +244,7 @@ class node_allocator
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       typedef dtl::shared_node_pool
-         <sizeof(T), NodesPerBlock> shared_pool_t;
+         <sizeof(T), NodesPerBlock, dtl::alignment_of<T>::value> shared_pool_t;
       typedef dtl::singleton_default<shared_pool_t> singleton_t;
       singleton_t::instance().deallocate_node(p);
    }
@@ -253,7 +253,7 @@ class node_allocator
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       typedef dtl::shared_node_pool
-         <sizeof(T), NodesPerBlock> shared_pool_t;
+         <sizeof(T), NodesPerBlock, dtl::alignment_of<T>::value> shared_pool_t;
       typedef dtl::singleton_default<shared_pool_t> singleton_t;
       typename shared_pool_t::multiallocation_chain ch
          ( boost::movelib::iterator_to_raw_pointer(chain.begin())
@@ -273,8 +273,8 @@ class node_allocator
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after( chain.before_begin()
-                             , (T*)BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch)
-                             , (T*)BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch)
+                             , (T*)static_cast<void*>(BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch))
+                             , (T*)static_cast<void*>(BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch))
                              , BOOST_CONTAINER_MEMCHAIN_SIZE(&ch));
    }
 
@@ -289,8 +289,8 @@ class node_allocator
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after( chain.before_begin()
-                             , (T*)BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch)
-                             , (T*)BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch)
+                             , (T*)static_cast<void*>(BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch))
+                             , (T*)static_cast<void*>(BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch))
                              , BOOST_CONTAINER_MEMCHAIN_SIZE(&ch));
    }
 
