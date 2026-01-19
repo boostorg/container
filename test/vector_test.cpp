@@ -19,8 +19,6 @@
 
 #include <boost/container/vector.hpp>
 #include <boost/container/allocator.hpp>
-#include <boost/container/node_allocator.hpp>
-#include <boost/container/adaptive_pool.hpp>
 
 #include <boost/move/utility_core.hpp>
 #include "check_equal_containers.hpp"
