@@ -156,7 +156,7 @@ class node_allocator
          return pointer(static_cast<T*>(singleton_t::instance().allocate_node()));
       }
       else{
-         void *ret = dlmalloc_malloc(count*sizeof(T));
+         void *ret = dlmalloc_memalign(count*sizeof(T), dtl::alignment_of<T>::value);
          if(BOOST_UNLIKELY(!ret))
             boost::container::throw_bad_alloc();
          return static_cast<pointer>(ret);
@@ -338,7 +338,8 @@ class node_allocator
       std::size_t r_size;
       {
          void* reuse_ptr_void = reuse;
-         ret = dlmalloc_allocation_command(command, sizeof(T), l_size, p_size, &r_size, reuse_ptr_void);
+         ret = dlmalloc_allocation_command( command, sizeof(T), dtl::alignment_of<T>::value
+                                          , l_size, p_size, &r_size, reuse_ptr_void);
          reuse = static_cast<T*>(reuse_ptr_void);
       }
       prefer_in_recvd_out_size = r_size/sizeof(T);

@@ -169,7 +169,7 @@ class adaptive_pool
          return pointer(static_cast<T*>(singleton_t::instance().allocate_node()));
       }
       else{
-         return static_cast<pointer>(dlmalloc_malloc(count*sizeof(T)));
+         return static_cast<pointer>(dlmalloc_memalign(count*sizeof(T), dtl::alignment_of<T>::value));
       }
    }
 
@@ -346,7 +346,8 @@ class adaptive_pool
       std::size_t r_size;
       {
          void* reuse_ptr_void = reuse_ptr;
-         ret = dlmalloc_allocation_command(command, sizeof(T), l_size, p_size, &r_size, reuse_ptr_void);
+         ret = dlmalloc_allocation_command( command, sizeof(T), dtl::alignment_of<T>::value
+                                          , l_size, p_size, &r_size, reuse_ptr_void);
          reuse_ptr = ret.second ? static_cast<T*>(reuse_ptr_void) : 0;
       }
       prefer_in_recvd_out_size = r_size/sizeof(T);
@@ -470,7 +471,7 @@ class private_adaptive_pool
          return pointer(static_cast<T*>(m_pool.allocate_node()));
       }
       else{
-         return static_cast<pointer>(dlmalloc_malloc(count*sizeof(T)));
+         return static_cast<pointer>(dlmalloc_memalign(count*sizeof(T), dtl::alignment_of<T>::value));
       }
    }
 
@@ -600,7 +601,8 @@ class private_adaptive_pool
       std::size_t r_size;
       {
          void* reuse_ptr_void = reuse_ptr;
-         ret = dlmalloc_allocation_command(command, sizeof(T), l_size, p_size, &r_size, reuse_ptr_void);
+         ret = dlmalloc_allocation_command( command, sizeof(T), dtl::alignment_of<T>::value
+                                          , l_size, p_size, &r_size, reuse_ptr_void);
          reuse_ptr = ret.second ? static_cast<T*>(reuse_ptr_void) : 0;
       }
       prefer_in_recvd_out_size = r_size/sizeof(T);
