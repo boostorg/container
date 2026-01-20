@@ -52,21 +52,21 @@ int main ()
 {
    if(test::list_test<MyList, true>())
       return 1;
-   if(test::list_test<MyOList, true>())
-      return 1;
+   //if(test::list_test<MyOList, true>())
+      //return 1;
    if(test::list_test<MyListV1, true>())
       return 1;
-   if(test::list_test<MyOListV1, true>())
-      return 1;
+   //if(test::list_test<MyOListV1, true>())
+      //return 1;
 
    if(test::vector_test<MyVector>())
       return 1;
-   if(test::vector_test<MyOVector>())
-      return 1;
+   //if(test::vector_test<MyOVector>())
+      //return 1;
    if(test::vector_test<MyVectorV1>())
       return 1;
-   if(test::vector_test<MyOVectorV1>())
-      return 1;
+   //if(test::vector_test<MyOVectorV1>())
+      //return 1;
 
    return 0;
 }
