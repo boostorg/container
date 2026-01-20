@@ -19,11 +19,11 @@ using namespace boost::container;
 typedef test::overaligned_copyable_int oint_t;
 
 //Alias adaptive pools that allocates ints
-typedef node_allocator<int> node_allocator_t;
-typedef node_allocator<oint_t> adapt_onode_allocator_t;
+typedef node_allocator<int>      node_allocator_t;
+typedef node_allocator<oint_t>   onode_allocator_t;
 
-typedef node_allocator<int, 256, 1> node_allocator_v1_t;
-typedef node_allocator<oint_t, 256, 1> adapt_onode_allocator_v1_t;
+typedef node_allocator<int, 256, 1>    node_allocator_v1_t;
+typedef node_allocator<oint_t, 256, 1> onode_allocator_v1_t;
 
 namespace boost {
 namespace container {
@@ -35,18 +35,18 @@ template class node_allocator<oint_t>;
 }} //boost::container
 
 //Alias list types
-typedef boost::container::list<int, node_allocator_t>                MyList;
-typedef boost::container::list<oint_t, adapt_onode_allocator_t>      MyOList;
+typedef boost::container::list<int, node_allocator_t>          MyList;
+typedef boost::container::list<oint_t, onode_allocator_t>      MyOList;
 
-typedef boost::container::list<int, node_allocator_v1_t>             MyListV1;
-typedef boost::container::list<oint_t, adapt_onode_allocator_v1_t>   MyOListV1;
+typedef boost::container::list<int, node_allocator_v1_t>       MyListV1;
+typedef boost::container::list<oint_t, onode_allocator_v1_t>   MyOListV1;
 
 //Alias vector types
-typedef boost::container::vector<int, node_allocator_t>              MyVector;
-typedef boost::container::vector<oint_t, adapt_onode_allocator_t>    MyOVector;
+typedef boost::container::vector<int, node_allocator_t>        MyVector;
+typedef boost::container::vector<oint_t, onode_allocator_t>    MyOVector;
 
-typedef boost::container::vector<int, node_allocator_v1_t>           MyVectorV1;
-typedef boost::container::vector<oint_t, adapt_onode_allocator_v1_t> MyOVectorV1;
+typedef boost::container::vector<int, node_allocator_v1_t>     MyVectorV1;
+typedef boost::container::vector<oint_t, onode_allocator_v1_t> MyOVectorV1;
 
 int main ()
 {

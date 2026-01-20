@@ -72,15 +72,15 @@ class shared_node_pool
    : public private_node_pool<NodeSize, NodesPerBlock, NodeAlign>
 {
    private:
-   typedef private_node_pool<NodeSize, NodesPerBlock, NodeAlign> private_node_allocator_t;
+   typedef private_node_pool<NodeSize, NodesPerBlock, NodeAlign> private_node_pool_t;
 
    public:
-   typedef typename private_node_allocator_t::free_nodes_t  free_nodes_t;
-   typedef typename private_node_allocator_t::multiallocation_chain multiallocation_chain;
+   typedef typename private_node_pool_t::free_nodes_t  free_nodes_t;
+   typedef typename private_node_pool_t::multiallocation_chain multiallocation_chain;
 
    //!Constructor from a segment manager. Never throws
    shared_node_pool()
-   : private_node_allocator_t(){}
+   : private_node_pool_t(){}
 
    //!Destructor. Deallocates all allocated blocks. Never throws
    ~shared_node_pool()
@@ -92,7 +92,7 @@ class shared_node_pool
       //-----------------------
       scoped_lock<default_mutex> guard(mutex_);
       //-----------------------
-      return private_node_allocator_t::allocate_node();
+      return private_node_pool_t::allocate_node();
    }
 
    //!Deallocates an array pointed by ptr. Never throws
@@ -101,7 +101,7 @@ class shared_node_pool
       //-----------------------
       scoped_lock<default_mutex> guard(mutex_);
       //-----------------------
-      private_node_allocator_t::deallocate_node(ptr);
+      private_node_pool_t::deallocate_node(ptr);
    }
 
    //!Allocates a singly linked list of n nodes ending in null pointer.
@@ -111,7 +111,7 @@ class shared_node_pool
       //-----------------------
       scoped_lock<default_mutex> guard(mutex_);
       //-----------------------
-      return private_node_allocator_t::allocate_nodes(n, chain);
+      return private_node_pool_t::allocate_nodes(n, chain);
    }
 
    void deallocate_nodes(multiallocation_chain &chain)
@@ -119,7 +119,7 @@ class shared_node_pool
       //-----------------------
       scoped_lock<default_mutex> guard(mutex_);
       //-----------------------
-      private_node_allocator_t::deallocate_nodes(chain);
+      private_node_pool_t::deallocate_nodes(chain);
    }
 
    //!Deallocates all the free blocks of memory. Never throws
@@ -128,7 +128,7 @@ class shared_node_pool
       //-----------------------
       scoped_lock<default_mutex> guard(mutex_);
       //-----------------------
-      private_node_allocator_t::deallocate_free_blocks();
+      private_node_pool_t::deallocate_free_blocks();
    }
 
    //!Deallocates all blocks. Never throws
@@ -137,7 +137,7 @@ class shared_node_pool
       //-----------------------
       scoped_lock<default_mutex> guard(mutex_);
       //-----------------------
-      private_node_allocator_t::purge_blocks();
+      private_node_pool_t::purge_blocks();
    }
 
    std::size_t num_free_nodes()
@@ -145,7 +145,7 @@ class shared_node_pool
       //-----------------------
       scoped_lock<default_mutex> guard(mutex_);
       //-----------------------
-      return private_node_allocator_t::num_free_nodes();
+      return private_node_pool_t::num_free_nodes();
    }
 
    private:
