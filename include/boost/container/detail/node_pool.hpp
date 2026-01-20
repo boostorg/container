@@ -40,7 +40,7 @@ namespace dtl {
 //!nodes allocated per block (NodesPerBlock) are known at compile time
 template< std::size_t NodeSize
         , std::size_t NodesPerBlock
-        , std::size_t NodeAlign = 0
+        , std::size_t NodeAlign
         >
 class private_node_pool
    //Inherit from the implementation to avoid template bloat
@@ -66,7 +66,7 @@ class private_node_pool
 
 template< std::size_t NodeSize
         , std::size_t NodesPerBlock
-        , std::size_t NodeAlign = 0
+        , std::size_t NodeAlign
         >
 class shared_node_pool
    : public private_node_pool<NodeSize, NodesPerBlock, NodeAlign>
