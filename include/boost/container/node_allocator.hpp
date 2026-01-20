@@ -138,8 +138,8 @@ class node_allocator
    //!Returns the number of elements that could be allocated.
    //!Never throws
    BOOST_CONTAINER_NODISCARD
-   size_type max_size() const
-   {  return size_type(-1)/sizeof(T);   }
+   size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
+   {  return size_type(-1)/(2u*sizeof(T));   }
 
    //!Allocate memory for an array of count elements.
    //!Throws bad_alloc if there is no enough memory
@@ -325,22 +325,21 @@ class node_allocator
    private:
    pointer priv_allocation_command
       (allocation_type command,   std::size_t limit_size
-      ,size_type &prefer_in_recvd_out_size
-      ,pointer &reuse)
+      ,size_type &prefer_in_recvd_out_size, pointer &reuse_ptr)
    {
       std::size_t const preferred_size = prefer_in_recvd_out_size;
       dlmalloc_command_ret_t ret = {0 , 0};
-      if((limit_size > this->max_size()) || (preferred_size > this->max_size())){
+      if(BOOST_UNLIKELY(limit_size > this->max_size() || preferred_size > this->max_size())){
          return pointer();
       }
       std::size_t l_size = limit_size*sizeof(T);
       std::size_t p_size = preferred_size*sizeof(T);
       std::size_t r_size;
       {
-         void* reuse_ptr_void = reuse;
+         void* reuse_ptr_void = reuse_ptr;
          ret = dlmalloc_allocation_command( command, sizeof(T), dtl::alignment_of<T>::value
                                           , l_size, p_size, &r_size, reuse_ptr_void);
-         reuse = static_cast<T*>(reuse_ptr_void);
+         reuse_ptr = ret.second ? static_cast<T*>(reuse_ptr_void) : 0;
       }
       prefer_in_recvd_out_size = r_size/sizeof(T);
       return (pointer)ret.first;
