@@ -179,9 +179,8 @@ class allocator
    //!Throws bad_alloc if there is no enough memory
    //!If Version is 2, this allocated memory can only be deallocated
    //!with deallocate() or (for Version == 2) deallocate_many()
-   BOOST_CONTAINER_NODISCARD pointer allocate(size_type count, const void * hint= 0)
+   BOOST_CONTAINER_NODISCARD pointer allocate(size_type count)
    {
-      (void)hint;
       if(count > size_type(-1)/(2u*sizeof(T)))
          boost::container::throw_bad_alloc();
       void *ret = dlmalloc_memalign(count*sizeof(T), dtl::alignment_of<T>::value);

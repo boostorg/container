@@ -144,7 +144,7 @@ class node_allocator
    //!Allocate memory for an array of count elements.
    //!Throws bad_alloc if there is no enough memory
    BOOST_CONTAINER_NODISCARD
-   pointer allocate(size_type count, const void * = 0)
+   pointer allocate(size_type count)
    {
       if(BOOST_UNLIKELY(count > this->max_size()))
          boost::container::throw_bad_alloc();
