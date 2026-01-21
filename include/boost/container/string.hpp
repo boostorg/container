@@ -2953,6 +2953,34 @@ class basic_string
       int compare(size_type pos1, size_type n1, const CharT* s) const
    {  return this->compare(pos1, n1, s, Traits::length(s)); }
 
+   //! <b>Effects</b>: Equivalent to find(sv) != npos
+   //!
+   //! <b>Throws</b>: Nothing
+   //!
+   //! <b>Returns</b>: true if the string contains the provided substring, false otherwise.
+   template<template <class, class> class BasicStringView>
+   BOOST_CONTAINER_NODISCARD inline
+      bool contains(BasicStringView<CharT, Traits> sv) const BOOST_NOEXCEPT
+   {  return this->find(sv) != npos; }
+
+   //! <b>Effects</b>: Equivalent to find(c) != npos
+   //!
+   //! <b>Throws</b>: Nothing
+   //!
+   //! <b>Returns</b>: true if the string contains the provided substring, false otherwise.
+   BOOST_CONTAINER_NODISCARD inline
+      bool contains(CharT c) const BOOST_NOEXCEPT
+   {  return this->find(c) != npos; }
+
+   //! <b>Effects</b>: Equivalent to find(c) != npos
+   //!
+   //! <b>Throws</b>: Nothing
+   //!
+   //! <b>Returns</b>: true if the string contains the provided substring, false otherwise.
+   BOOST_CONTAINER_NODISCARD inline
+      bool contains(const CharT* s) const BOOST_NOEXCEPT
+   {  return this->find(s) != npos; }
+
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    void priv_move_assign(BOOST_RV_REF(basic_string) x, dtl::bool_<true> /*steal_resources*/)

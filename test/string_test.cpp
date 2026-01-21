@@ -1537,16 +1537,15 @@ void test_contains()
 {
    string s("Hello, World!");
 
-   using test_helpers::contains;
-   BOOST_TEST(contains(s, "World"));
-   BOOST_TEST(contains(s, "Hello"));
-   BOOST_TEST(contains(s, ", "));
-   BOOST_TEST(contains(s, ""));
-   BOOST_TEST(contains(s, 'W'));
+   BOOST_TEST(s.contains("World"));
+   BOOST_TEST(s.contains("Hello"));
+   BOOST_TEST(s.contains(", "));
+   BOOST_TEST(s.contains(""));
+   BOOST_TEST(s.contains('W'));
 
-   BOOST_TEST(!contains(s, "world")); // case-sensitive
-   BOOST_TEST(!contains(s, "xyz"));
-   BOOST_TEST(!contains(s, 'X'));
+   BOOST_TEST(!s.contains("world")); // case-sensitive
+   BOOST_TEST(!s.contains("xyz"));
+   BOOST_TEST(!s.contains('X'));
 }
 
 //==============================================================================
