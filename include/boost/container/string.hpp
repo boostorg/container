@@ -2989,7 +2989,11 @@ class basic_string
    template<template <class, class> class BasicStringView>
    BOOST_CONTAINER_NODISCARD inline
       bool starts_with(BasicStringView<CharT, Traits> sv) const BOOST_NOEXCEPT
-   {  return this->size() >= sv.size() && Traits::compare(this->data(), sv.data(), sv.size()) == 0;  }
+   {
+      const std::size_t s_sz = sv.size();
+      const std::size_t t_sz = this->size();
+      return t_sz >= s_sz && Traits::compare(this->data(), sv.data(), s_sz) == 0;
+   }
 
    //! <b>Effects</b>: Checks if the string begins with the given prefix
    //!
@@ -3008,9 +3012,45 @@ class basic_string
    BOOST_CONTAINER_NODISCARD inline
       bool starts_with(const CharT* s) const BOOST_NOEXCEPT
    {
-      const size_type s_sz = Traits::length(s);
-      const size_type t_sz = this->size();
+      const std::size_t s_sz = Traits::length(s);
+      const std::size_t t_sz = this->size();
       return t_sz >= s_sz && Traits::compare(this->data(), s, s_sz) == 0;
+   }
+
+   //! <b>Effects</b>: Checks if the string begins with the given suffix
+   //!
+   //! <b>Throws</b>: Nothing
+   //!
+   //! <b>Returns</b>: true if the string begins with the provided suffix, false otherwise.
+   template<template <class, class> class BasicStringView>
+   BOOST_CONTAINER_NODISCARD inline
+      bool ends_with(BasicStringView<CharT, Traits> sv) const BOOST_NOEXCEPT
+   {
+      const std::size_t s_sz = sv.size();
+      const std::size_t t_sz = this->size();
+      return t_sz >= s_sz && Traits::compare(this->data() + std::ptrdiff_t(t_sz - s_sz), sv.data(), s_sz) == 0;
+   }
+
+   //! <b>Effects</b>: Checks if the string begins with the given suffix
+   //!
+   //! <b>Throws</b>: Nothing
+   //!
+   //! <b>Returns</b>: true if the string begins with the provided suffix, false otherwise.
+   BOOST_CONTAINER_NODISCARD inline
+      bool ends_with(CharT c) const BOOST_NOEXCEPT
+   {  return !empty() && Traits::eq(back(), c);  }
+
+   //! <b>Effects</b>: Checks if the string begins with the given suffix
+   //!
+   //! <b>Throws</b>: Nothing
+   //!
+   //! <b>Returns</b>: true if the string begins with the provided suffix, false otherwise.
+   BOOST_CONTAINER_NODISCARD inline
+      bool ends_with(const CharT* s) const BOOST_NOEXCEPT
+   {
+      const std::size_t s_sz = Traits::length(s);
+      const std::size_t t_sz = this->size();
+      return t_sz >= s_sz && Traits::compare(this->data() + std::ptrdiff_t(t_sz - s_sz), s, s_sz) == 0;
    }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED

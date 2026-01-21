@@ -1473,23 +1473,8 @@ void test_compare()
 }
 
 //==============================================================================
-// SECTION 11: Operations - starts_with, ends_with, contains (helper functions)
-// Note: boost::container::string may not have these methods, so we implement
-// them using find/compare for testing purposes
+// SECTION 11: Operations - starts_with, ends_with, contains
 //==============================================================================
-
-// Helper functions for starts_with/ends_with/contains since boost::container::string
-// might not have these methods in older versions
-namespace test_helpers {
-
-   bool ends_with(const string& s, const char* suffix) {
-      string::size_type len = std::strlen(suffix);
-      return s.size() >= len && s.compare(s.size() - len, len, suffix) == 0;
-   }
-   bool ends_with(const string& s, char c) {
-      return !s.empty() && s[s.size() - 1] == c;
-   }
-}
 
 void test_starts_with()
 {
@@ -1509,15 +1494,14 @@ void test_ends_with()
 {
    string s("Hello, World!");
 
-   using test_helpers::ends_with;
-   BOOST_TEST(ends_with(s, "World!"));
-   BOOST_TEST(ends_with(s, "!"));
-   BOOST_TEST(ends_with(s, ""));
-   BOOST_TEST(ends_with(s, '!'));
+   BOOST_TEST(s.ends_with("World!"));
+   BOOST_TEST(s.ends_with("!"));
+   BOOST_TEST(s.ends_with(""));
+   BOOST_TEST(s.ends_with('!'));
 
-   BOOST_TEST(!ends_with(s, "Hello"));
-   BOOST_TEST(!ends_with(s, "world!")); // case-sensitive
-   BOOST_TEST(!ends_with(s, 'H'));
+   BOOST_TEST(!s.ends_with("Hello"));
+   BOOST_TEST(!s.ends_with("world!")); // case-sensitive
+   BOOST_TEST(!s.ends_with('H'));
 }
 
 void test_contains()
