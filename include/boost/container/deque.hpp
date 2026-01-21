@@ -420,7 +420,6 @@ class deque_base
       { return deque_block_traits<val_alloc_val, options_type::block_bytes, options_type::block_size, stored_size_type>::value; }
 
    typedef deque_value_traits<val_alloc_val>             traits_t;
-   typedef ptr_alloc_t                                   map_allocator_type;
 
    inline val_alloc_ptr prot_allocate_node()
    {
@@ -434,12 +433,14 @@ class deque_base
 
    inline ptr_alloc_ptr prot_allocate_map(size_type n)
    {
-      return this->ptr_alloc().allocate(n);
+      ptr_alloc_t palloc(this->alloc());
+      return palloc.allocate(n);
    }
 
    inline void prot_deallocate_map(ptr_alloc_ptr p, size_type n) BOOST_NOEXCEPT_OR_NOTHROW
    {
-        this->ptr_alloc().deallocate(p, n);
+      ptr_alloc_t palloc(this->alloc());
+      return palloc.deallocate(p, n);
    }
 
    inline deque_base(size_type num_elements, const allocator_type& a)
@@ -455,8 +456,7 @@ class deque_base
    {}
 
    inline explicit deque_base(BOOST_RV_REF(deque_base) x)
-      :  members_( boost::move(x.ptr_alloc())
-                 , boost::move(x.alloc()) )
+      :  members_( boost::move(x.alloc()) )
    {}
 
    ~deque_base()
@@ -714,26 +714,18 @@ class deque_base
 
    protected:
    struct members_holder
-      :  public ptr_alloc_t
-      ,  public allocator_type
+      :  public allocator_type
    {
       friend class deque_base;
       members_holder()
-         :  map_allocator_type(), allocator_type()
+         :  allocator_type()
          ,  m_map(), m_map_size()
          ,  m_start_off(), m_finish_off()
       {}
 
-      explicit members_holder(const allocator_type &a)
-         :  map_allocator_type(a), allocator_type(a)
-         ,  m_map(), m_map_size()
-         ,  m_start_off(), m_finish_off()
-      {}
-
-      template<class ValAllocConvertible, class PtrAllocConvertible>
-      members_holder(BOOST_FWD_REF(PtrAllocConvertible) pa, BOOST_FWD_REF(ValAllocConvertible) va)
-         : map_allocator_type(boost::forward<PtrAllocConvertible>(pa))
-         , allocator_type    (boost::forward<ValAllocConvertible>(va))
+      template<class ValAllocConvertible>
+      explicit members_holder(BOOST_FWD_REF(ValAllocConvertible) va)
+         : allocator_type(boost::forward<ValAllocConvertible>(va))
          , m_map(), m_map_size()
          , m_start_off(), m_finish_off()
       {}
@@ -752,12 +744,6 @@ class deque_base
       stored_size_type  m_start_off;
       stored_size_type  m_finish_off;
    } members_;
-
-   inline ptr_alloc_t &ptr_alloc() BOOST_NOEXCEPT_OR_NOTHROW
-   {  return members_;  }
-
-   inline const ptr_alloc_t &ptr_alloc() const BOOST_NOEXCEPT_OR_NOTHROW
-   {  return members_;  }
 
    inline allocator_type &alloc() BOOST_NOEXCEPT_OR_NOTHROW
    {  return members_;  }
@@ -1335,7 +1321,6 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
             this->shrink_to_fit();
          }
          dtl::assign_alloc(this->alloc(), x.alloc(), flag);
-         dtl::assign_alloc(this->ptr_alloc(), x.ptr_alloc(), flag);
          this->assign(x.cbegin(), x.cend());
       }
       return *this;
@@ -2400,7 +2385,6 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
       this->swap_members(x);
       dtl::bool_<allocator_traits_type::propagate_on_container_swap::value> flag;
       dtl::swap_alloc(this->alloc(), x.alloc(), flag);
-      dtl::swap_alloc(this->ptr_alloc(), x.ptr_alloc(), flag);
    }
 
    //! <b>Effects</b>: Erases all the elements of the deque.
@@ -2504,7 +2488,6 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
       //Move allocator if needed
       dtl::bool_<allocator_traits_type::propagate_on_container_move_assignment::value> flag;
       dtl::move_alloc(this->alloc(), x.alloc(), flag);
-      dtl::move_alloc(this->ptr_alloc(), x.ptr_alloc(), flag);
       //Nothrow swap
       this->swap_members(x);
    }
