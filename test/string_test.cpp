@@ -1291,6 +1291,9 @@ void test_insert_initializer_list()
 
    s.insert(s.end(), {'d', 'e', 'f'});
    BOOST_TEST(s == "abcdef");
+
+   s.insert(s.end(), {});
+   BOOST_TEST(s == "abcdef");
    #endif
 }
 
@@ -1412,6 +1415,9 @@ void test_append_initializer_list()
 
    s.append({',', ' ', 'W', 'o', 'r', 'l', 'd', '!'});
    BOOST_TEST(s == "Hello, World!");
+
+   s.append({});
+   BOOST_TEST(s == "Hello, World!");
    #endif
 }
 
@@ -1434,6 +1440,8 @@ void test_operator_plus_equals()
    #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    // += initializer_list
    s += {'!', '!'};
+   BOOST_TEST(s == "Hello, World!!!");
+   s += {};
    BOOST_TEST(s == "Hello, World!!!");
    #endif
 }
@@ -1587,6 +1595,8 @@ void test_replace_iterator()
    s = "Hello, World!";
    s.replace(s.begin() + 7, s.begin() + 12, {'S', 'u', 'n'});
    BOOST_TEST(s == "Hello, Sun!");
+   s.replace(s.begin() + 5, s.begin() + 10, {});
+   BOOST_TEST(s == "Hello!");
    #endif
 }
 
