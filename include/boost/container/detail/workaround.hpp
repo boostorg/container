@@ -252,4 +252,18 @@ namespace boost {
     #define BOOST_CONTAINER_NOVTABLE
 #endif
 
+#if defined(__has_feature)
+#  if __has_feature(nullability)
+#     define BOOST_CONTAINER_NONNULL_SUPPORTED
+#     define BOOST_CONTAINER_NONNULL  _Nonnull
+#     define BOOST_CONTAINER_NULLABLE _Nullable
+#  endif
+#endif
+
+#if !defined(BOOST_CONTAINER_NONNULL_SUPPORTED)
+#  define BOOST_CONTAINER_NONNULL
+#  define BOOST_CONTAINER_NULLABLE
+#  undef BOOST_CONTAINER_NONNULL_SUPPORTED
+#endif
+
 #endif   //#ifndef BOOST_CONTAINER_DETAIL_WORKAROUND_HPP

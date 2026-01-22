@@ -240,16 +240,16 @@ class basic_string_base
          :  allocator_type(boost::forward<AllocatorConvertible>(a))
       { this->init(); }
 
-      inline const short_t *pshort_repr() const
+      inline const short_t * BOOST_CONTAINER_NONNULL pshort_repr() const
       {  return move_detail::launder_cast<const short_t*>(&m_repr);  }
 
-      inline const long_t *plong_repr() const
+      inline const long_t * BOOST_CONTAINER_NONNULL plong_repr() const
       {  return move_detail::launder_cast<const long_t*>(&m_repr);  }
 
-      inline short_t *pshort_repr()
+      inline short_t *BOOST_CONTAINER_NONNULL pshort_repr()
       {  return move_detail::launder_cast<short_t*>(&m_repr);  }
 
-      inline long_t *plong_repr()
+      inline long_t *BOOST_CONTAINER_NONNULL plong_repr()
       {  return move_detail::launder_cast<long_t*>(&m_repr);  }
 
       repr_t m_repr;
@@ -278,7 +278,7 @@ class basic_string_base
       return hdr.is_short != 0;
    }
 
-   inline short_t *construct_short()
+   inline short_t *BOOST_CONTAINER_NONNULL construct_short()
    {
       short_t *ps = ::new(&this->members_.m_repr) short_t;
       ps->h.is_short = 1;
@@ -291,7 +291,7 @@ class basic_string_base
       this->members_.pshort_repr()->~short_t();
    }
 
-   short_t *assure_short()
+   short_t *BOOST_CONTAINER_NONNULL assure_short()
    {
       if (!this->is_short()){
          this->destroy_long();
@@ -300,7 +300,7 @@ class basic_string_base
       return this->members_.pshort_repr();
    }
 
-   inline long_t *construct_long()
+   inline long_t *BOOST_CONTAINER_NONNULL construct_long()
    {
       long_t *pl = ::new(&this->members_.m_repr) long_t;
       //is_short flag is written in the constructor
@@ -313,7 +313,7 @@ class basic_string_base
       this->members_.plong_repr()->~long_t();
    }
 
-   long_t *assure_long()
+   long_t *BOOST_CONTAINER_NONNULL assure_long()
    {
       if (this->is_short()){
          this->destroy_short();
@@ -590,10 +590,10 @@ class basic_string
       typedef bool                     result_type;
 
       typedef const typename Tr::char_type* Pointer;
-      const Pointer m_first;
-      const Pointer m_last;
+      const Pointer BOOST_CONTAINER_NONNULL m_first;
+      const Pointer BOOST_CONTAINER_NONNULL m_last;
 
-      Not_within_traits(Pointer f, Pointer l)
+      Not_within_traits(Pointer BOOST_CONTAINER_NONNULL f, Pointer BOOST_CONTAINER_NONNULL l)
          : m_first(f), m_last(l) {}
 
       bool operator()(const typename Tr::char_type& x) const
@@ -769,7 +769,7 @@ class basic_string
 
    //! <b>Effects</b>: Constructs a basic_string taking a default-constructed allocator,
    //!   and is initialized by a specific number of characters of the s c-string.
-   basic_string(const CharT* s, size_type n)
+   basic_string(const CharT* BOOST_CONTAINER_NONNULL s, size_type n)
       : base_t()
    {
       this->priv_terminate_string();
@@ -778,7 +778,7 @@ class basic_string
 
    //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
    //!   and is initialized by a specific number of characters of the s c-string.
-   basic_string(const CharT* s, size_type n, const allocator_type& a)
+   basic_string(const CharT* BOOST_CONTAINER_NONNULL s, size_type n, const allocator_type& a)
       : base_t(a)
    {
       this->priv_terminate_string();
@@ -787,7 +787,7 @@ class basic_string
 
    //! <b>Effects</b>: Constructs a basic_string with a default-constructed allocator,
    //!   and is initialized by the null-terminated s c-string.
-   basic_string(const CharT* s)
+   basic_string(const CharT* BOOST_CONTAINER_NONNULL s)
       : base_t()
    {
       this->priv_terminate_string();
@@ -796,7 +796,7 @@ class basic_string
 
    //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
    //!   and is initialized by the null-terminated s c-string.
-   basic_string(const CharT* s, const allocator_type& a)
+   basic_string(const CharT* BOOST_CONTAINER_NONNULL s, const allocator_type& a)
       : base_t(a)
    {
       this->priv_terminate_string();
@@ -931,7 +931,7 @@ class basic_string
 
    //! <b>Effects</b>: Assignment from a null-terminated c-string.
    //!
-   basic_string& operator=(const CharT* s)
+   basic_string& operator=(const CharT* BOOST_CONTAINER_NONNULL s)
    { return this->assign(s, s + Traits::length(s)); }
 
    //! <b>Effects</b>: Returns *this = basic_string(1, c).
@@ -1391,7 +1391,7 @@ class basic_string
    //! <b>Effects</b>: Calls append(s).
    //!
    //! <b>Returns</b>: *this
-   basic_string& operator+=(const CharT* s)
+   basic_string& operator+=(const CharT* BOOST_CONTAINER_NONNULL s)
    {  return this->append(s); }
 
    //! <b>Effects</b>: Calls append(1, c).
@@ -1464,7 +1464,7 @@ class basic_string
    //! <b>Throws</b>: If memory allocation throws length_error if size() + n > max_size().
    //!
    //! <b>Returns</b>: *this
-   basic_string& append(const CharT* s, size_type n)
+   basic_string& append(const CharT* BOOST_CONTAINER_NONNULL s, size_type n)
    {  return this->append(s, s + difference_type(n));  }
 
    //! <b>Requires</b>: s points to an array of at least traits::length(s) + 1 elements of CharT.
@@ -1472,7 +1472,7 @@ class basic_string
    //! <b>Effects</b>: Calls append(s, traits::length(s)).
    //!
    //! <b>Returns</b>: *this
-   basic_string& append(const CharT* s)
+   basic_string& append(const CharT* BOOST_CONTAINER_NONNULL s)
    {  return this->append(s, s + Traits::length(s));  }
 
    //! <b>Effects</b>: Equivalent to append(basic_string(n, c)).
@@ -1576,7 +1576,7 @@ class basic_string
    //! <b>Throws</b>: If memory allocation throws or length_error if n > max_size().
    //!
    //! <b>Returns</b>: *this
-   basic_string& assign(const CharT* s, size_type n)
+   basic_string& assign(const CharT* BOOST_CONTAINER_NONNULL s, size_type n)
    {  return this->assign(s, s + difference_type(n));   }
 
    //! <b>Requires</b>: s points to an array of at least traits::length(s) + 1 elements of CharT.
@@ -1584,7 +1584,7 @@ class basic_string
    //! <b>Effects</b>: Calls assign(s, traits::length(s)).
    //!
    //! <b>Returns</b>: *this
-   basic_string& assign(const CharT* s)
+   basic_string& assign(const CharT* BOOST_CONTAINER_NONNULL s)
    { return this->assign(s, s + Traits::length(s)); }
 
    //! <b>Effects</b>: Equivalent to assign(basic_string(n, c)).
@@ -1596,11 +1596,11 @@ class basic_string
    //! <b>Effects</b>: Equivalent to assign(basic_string(first, last)).
     //!
     //! <b>Returns</b>: *this
-    basic_string& assign(const CharT* first, const CharT* last)
+    basic_string& assign(const CharT* BOOST_CONTAINER_NULLABLE first, const CharT* BOOST_CONTAINER_NULLABLE last)
     {
        size_type n = static_cast<size_type>(last - first);
        this->reserve(n);
-       CharT* ptr = boost::movelib::to_raw_pointer(this->priv_addr());
+       CharT* BOOST_CONTAINER_NONNULL ptr = boost::movelib::to_raw_pointer(this->priv_addr());
        Traits::copy(ptr, first, n);
        this->priv_construct_null(ptr + difference_type(n));
        this->priv_size(n);
@@ -1613,7 +1613,7 @@ class basic_string
    template <class InputIter>
    basic_string& assign(InputIter first, InputIter last
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename dtl::disable_if_convertible<InputIter, size_type>::type * = 0
+      , typename dtl::disable_if_convertible<InputIter, size_type>::type * BOOST_CONTAINER_NULLABLE = 0
       #endif
       )
    {
@@ -1695,7 +1695,7 @@ class basic_string
    //!   length_error if size() + n > max_size().
    //!
    //! <b>Returns</b>: *this
-   basic_string& insert(size_type pos, const CharT* s, size_type n)
+   basic_string& insert(size_type pos, const CharT* BOOST_CONTAINER_NONNULL s, size_type n)
    {
       if (pos > this->size())
          throw_out_of_range("basic_string::insert out of range position");
@@ -1713,7 +1713,7 @@ class basic_string
    //!   length_error if size() > max_size() - Traits::length(s)
    //!
    //! <b>Returns</b>: *this
-   basic_string& insert(size_type pos, const CharT* s)
+   basic_string& insert(size_type pos, const CharT* BOOST_CONTAINER_NONNULL s)
    {
       if (pos > this->size())
          throw_out_of_range("basic_string::insert out of range position");
@@ -1803,7 +1803,7 @@ class basic_string
          < void
          , dtl::is_convertible<InputIter, size_type>
          , dtl::is_not_input_iterator<InputIter>
-         >::type * = 0
+         >::type * BOOST_CONTAINER_NULLABLE = 0
       #endif
       )
    {
@@ -1821,7 +1821,7 @@ class basic_string
          < void
          , dtl::is_convertible<ForwardIter, size_type>
          , dtl::is_input_iterator<ForwardIter>
-         >::type * = 0
+         >::type * BOOST_CONTAINER_NULLABLE = 0
       )
    {
       const size_type n_pos = size_type(p - this->cbegin());
@@ -2106,7 +2106,7 @@ class basic_string
    //!   if the length of the resulting string would exceed max_size()
    //!
    //! <b>Returns</b>: *this
-   basic_string& replace(size_type pos1, size_type n1, const CharT* s, size_type n2)
+   basic_string& replace(size_type pos1, size_type n1, const CharT* BOOST_CONTAINER_NONNULL s, size_type n2)
    {
       if (pos1 > this->size())
          throw_out_of_range("basic_string::replace out of range position");
@@ -2132,7 +2132,7 @@ class basic_string
    //!   if the length of the resulting string would exceed max_size()
    //!
    //! <b>Returns</b>: *this
-   inline basic_string& replace(size_type pos, size_type n1, const CharT* s)
+   inline basic_string& replace(size_type pos, size_type n1, const CharT* BOOST_CONTAINER_NONNULL s)
    {
       return this->replace(pos, n1, s, Traits::length(s));
    }
@@ -2174,7 +2174,7 @@ class basic_string
    //! <b>Throws</b>: if memory allocation throws
    //!
    //! <b>Returns</b>: *this
-   inline basic_string& replace(const_iterator i1, const_iterator i2, const CharT* s, size_type n)
+   inline basic_string& replace(const_iterator i1, const_iterator i2, const CharT* BOOST_CONTAINER_NONNULL s, size_type n)
    { return this->replace(i1, i2, s, s + difference_type(n)); }
 
    //! <b>Requires</b>: [begin(),i1) and [i1,i2) are valid ranges and s points to an
@@ -2185,7 +2185,7 @@ class basic_string
    //! <b>Throws</b>: if memory allocation throws
    //!
    //! <b>Returns</b>: *this
-   inline basic_string& replace(const_iterator i1, const_iterator i2, const CharT* s)
+   inline basic_string& replace(const_iterator i1, const_iterator i2, const CharT* BOOST_CONTAINER_NONNULL s)
    {  return this->replace(i1, i2, s, s + Traits::length(s));   }
 
    //! <b>Requires</b>: [begin(),i1) and [i1,i2) are valid ranges.
@@ -2223,7 +2223,7 @@ class basic_string
          < void
          , dtl::is_convertible<InputIter, size_type>
          , dtl::is_input_iterator<InputIter>
-         >::type * = 0
+         >::type * BOOST_CONTAINER_NULLABLE = 0
       #endif
       )
    {
@@ -2245,7 +2245,7 @@ class basic_string
          < void
          , dtl::is_convertible<ForwardIter, size_type>
          , dtl::is_not_input_iterator<ForwardIter>
-         >::type * = 0
+         >::type * BOOST_CONTAINER_NULLABLE = 0
       )
    {
       difference_type n = boost::container::iterator_distance(j1, j2);
@@ -2301,7 +2301,7 @@ class basic_string
    //! <b>Throws</b>: if memory allocation throws, out_of_range if pos > size().
    //!
    //! <b>Returns</b>: rlen
-   size_type copy(CharT* s, size_type n, size_type pos = 0) const
+   size_type copy(CharT* BOOST_CONTAINER_NONNULL s, size_type n, size_type pos = 0) const
    {
       if (pos > this->size())
          throw_out_of_range("basic_string::copy out of range position");
@@ -2335,7 +2335,7 @@ class basic_string
    //!
    //! <b>Complexity</b>: constant time.
    BOOST_CONTAINER_NODISCARD inline
-      const CharT* c_str() const BOOST_NOEXCEPT_OR_NOTHROW
+      const CharT* BOOST_CONTAINER_NONNULL c_str() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return boost::movelib::to_raw_pointer(this->priv_addr()); }
 
    //! <b>Requires</b>: The program shall not alter any of the values stored in the character array.
@@ -2344,14 +2344,14 @@ class basic_string
    //!
    //! <b>Complexity</b>: constant time.
    BOOST_CONTAINER_NODISCARD inline
-      const CharT* data()  const BOOST_NOEXCEPT_OR_NOTHROW
+      const CharT* BOOST_CONTAINER_NONNULL data()  const BOOST_NOEXCEPT_OR_NOTHROW
    {  return boost::movelib::to_raw_pointer(this->priv_addr()); }
 
    //! <b>Returns</b>: A pointer p such that p + i == &operator[](i) for each i in [0,size()].
    //!
    //! <b>Complexity</b>: constant time.
    BOOST_CONTAINER_NODISCARD inline
-      CharT* data()  BOOST_NOEXCEPT_OR_NOTHROW
+      CharT* BOOST_CONTAINER_NONNULL data()  BOOST_NOEXCEPT_OR_NOTHROW
    {  return boost::movelib::to_raw_pointer(this->priv_addr()); }
 
    #ifndef BOOST_CONTAINER_TEMPLATED_CONVERSION_OPERATOR_BROKEN
@@ -2411,7 +2411,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find(basic_string<CharT,traits,allocator_type>(s,n),pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find(const CharT* s, size_type pos, size_type n) const
+      size_type find(const CharT* BOOST_CONTAINER_NONNULL s, size_type pos, size_type n) const
    {
       if (pos + n > this->size())
          return npos;
@@ -2432,7 +2432,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find(basic_string(s), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find(const CharT* s, size_type pos = 0) const
+      size_type find(const CharT* BOOST_CONTAINER_NONNULL s, size_type pos = 0) const
    { return this->find(s, pos, Traits::length(s)); }
 
    //! <b>Throws</b>: Nothing
@@ -2485,7 +2485,7 @@ class basic_string
    //!
    //! <b>Returns</b>: rfind(basic_string(s, n), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type rfind(const CharT* s, size_type pos, size_type n) const
+      size_type rfind(const CharT* BOOST_CONTAINER_NONNULL s, size_type pos, size_type n) const
    {
       const size_type len = this->size();
 
@@ -2508,7 +2508,7 @@ class basic_string
    //!
    //! <b>Returns</b>: rfind(basic_string(s), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type rfind(const CharT* s, size_type pos = npos) const
+      size_type rfind(const CharT* BOOST_CONTAINER_NONNULL s, size_type pos = npos) const
       { return this->rfind(s, pos, Traits::length(s)); }
 
    //! <b>Throws</b>: Nothing
@@ -2559,7 +2559,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_first_of(basic_string(s, n), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_first_of(const CharT* s, size_type pos, size_type n) const
+      size_type find_first_of(const CharT* BOOST_CONTAINER_NONNULL s, size_type pos, size_type n) const
    {
       const size_type sz = this->size();
       if (pos >= sz)
@@ -2579,7 +2579,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_first_of(basic_string(s), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_first_of(const CharT* s, size_type pos = 0) const
+      size_type find_first_of(const CharT* BOOST_CONTAINER_NONNULL s, size_type pos = 0) const
       { return this->find_first_of(s, pos, Traits::length(s)); }
 
    //! <b>Requires</b>: s points to an array of at least traits::length(s) + 1 elements of CharT.
@@ -2620,7 +2620,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_last_of(basic_string(s, n), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_last_of(const CharT* s, size_type pos, size_type n) const
+      size_type find_last_of(const CharT* BOOST_CONTAINER_NONNULL s, size_type pos, size_type n) const
    {
       const size_type len = this->size();
 
@@ -2642,7 +2642,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_last_of(basic_string<CharT,traits,allocator_type>(1,c),pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_last_of(const CharT* s, size_type pos = npos) const
+      size_type find_last_of(const CharT* BOOST_CONTAINER_NONNULL s, size_type pos = npos) const
       { return this->find_last_of(s, pos, Traits::length(s)); }
 
    //! <b>Throws</b>: Nothing
@@ -2683,7 +2683,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_first_not_of(basic_string(s, n), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_first_not_of(const CharT* s, size_type pos, size_type n) const
+      size_type find_first_not_of(const CharT* BOOST_CONTAINER_NONNULL s, size_type pos, size_type n) const
    {
       if (pos > this->size())
          return npos;
@@ -2702,7 +2702,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_first_not_of(basic_string(s), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_first_not_of(const CharT* s, size_type pos = 0) const
+      size_type find_first_not_of(const CharT* BOOST_CONTAINER_NONNULL s, size_type pos = 0) const
       { return this->find_first_not_of(s, pos, Traits::length(s)); }
 
    //! <b>Throws</b>: Nothing
@@ -2752,7 +2752,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_last_not_of(basic_string(s, n), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_last_not_of(const CharT* s, size_type pos, size_type n) const
+      size_type find_last_not_of(const CharT* BOOST_CONTAINER_NONNULL s, size_type pos, size_type n) const
    {
       const size_type len = this->size();
 
@@ -2773,7 +2773,7 @@ class basic_string
    //!
    //! <b>Returns</b>: find_last_not_of(basic_string(s), pos).
    BOOST_CONTAINER_NODISCARD inline
-      size_type find_last_not_of(const CharT* s, size_type pos = npos) const
+      size_type find_last_not_of(const CharT* BOOST_CONTAINER_NONNULL s, size_type pos = npos) const
       { return this->find_last_not_of(s, pos, Traits::length(s)); }
 
    //! <b>Throws</b>: Nothing
@@ -2874,7 +2874,7 @@ class basic_string
       if (pos1 > this->size())
          throw_out_of_range("basic_string::compare out of range position");
       const pointer addr    = this->priv_addr() + pos1;
-      const CharT* str_addr = sv.data();
+      const CharT* BOOST_CONTAINER_NONNULL str_addr = sv.data();
       return this->s_compare(addr, addr + difference_type(dtl::min_value(n1, this->size() - pos1)),
                        str_addr, str_addr + sv.size());
    }
@@ -2922,7 +2922,7 @@ class basic_string
    //!
    //! <b>Returns</b>: compare(basic_string(s)).
    BOOST_CONTAINER_NODISCARD inline
-      int compare(const CharT* s) const
+      int compare(const CharT* BOOST_CONTAINER_NONNULL s) const
    {
       const pointer addr = this->priv_addr();
       return this->s_compare(addr, addr + difference_type(this->priv_size()), s, s + Traits::length(s));
@@ -2934,7 +2934,7 @@ class basic_string
    //!
    //! <b>Returns</b>: basic_string(*this, pos, n1).compare(basic_string(s, n2)).
    BOOST_CONTAINER_NODISCARD inline
-      int compare(size_type pos1, size_type n1, const CharT* s, size_type n2) const
+      int compare(size_type pos1, size_type n1, const CharT* BOOST_CONTAINER_NONNULL s, size_type n2) const
    {
       if (pos1 > this->size())
          throw_out_of_range("basic_string::compare out of range position");
@@ -2950,7 +2950,7 @@ class basic_string
    //!
    //! <b>Returns</b>: basic_string(*this, pos, n1).compare(basic_string(s, n2)).
    BOOST_CONTAINER_NODISCARD inline
-      int compare(size_type pos1, size_type n1, const CharT* s) const
+      int compare(size_type pos1, size_type n1, const CharT* BOOST_CONTAINER_NONNULL s) const
    {  return this->compare(pos1, n1, s, Traits::length(s)); }
 
    //! <b>Effects</b>: Equivalent to find(sv) != npos
@@ -2978,7 +2978,7 @@ class basic_string
    //!
    //! <b>Returns</b>: true if the string contains the provided substring, false otherwise.
    BOOST_CONTAINER_NODISCARD inline
-      bool contains(const CharT* s) const BOOST_NOEXCEPT
+      bool contains(const CharT* BOOST_CONTAINER_NONNULL s) const BOOST_NOEXCEPT
    {  return this->find(s) != npos; }
 
    //! <b>Effects</b>: Checks if the string begins with the given prefix
@@ -3010,7 +3010,7 @@ class basic_string
    //!
    //! <b>Returns</b>: true if the string begins with the provided prefix, false otherwise.
    BOOST_CONTAINER_NODISCARD inline
-      bool starts_with(const CharT* s) const BOOST_NOEXCEPT
+      bool starts_with(const CharT* BOOST_CONTAINER_NONNULL s) const BOOST_NOEXCEPT
    {
       const std::size_t s_sz = Traits::length(s);
       const std::size_t t_sz = this->size();
@@ -3046,7 +3046,7 @@ class basic_string
    //!
    //! <b>Returns</b>: true if the string begins with the provided suffix, false otherwise.
    BOOST_CONTAINER_NODISCARD inline
-      bool ends_with(const CharT* s) const BOOST_NOEXCEPT
+      bool ends_with(const CharT* BOOST_CONTAINER_NONNULL s) const BOOST_NOEXCEPT
    {
       const std::size_t s_sz = Traits::length(s);
       const std::size_t t_sz = this->size();
@@ -3125,7 +3125,7 @@ class basic_string
    template<class AllocVersion>
    void priv_shrink_to_fit_dynamic_buffer
       ( AllocVersion
-      , typename dtl::enable_if<dtl::is_same<AllocVersion, version_1> >::type* = 0)
+      , typename dtl::enable_if<dtl::is_same<AllocVersion, version_1> >::type* BOOST_CONTAINER_NULLABLE = 0)
    {
       //Allocate a new buffer.
       size_type real_cap = 0;
@@ -3155,7 +3155,7 @@ class basic_string
    template<class AllocVersion>
    void priv_shrink_to_fit_dynamic_buffer
       ( AllocVersion
-      , typename dtl::enable_if<dtl::is_same<AllocVersion, version_2> >::type* = 0)
+      , typename dtl::enable_if<dtl::is_same<AllocVersion, version_2> >::type* BOOST_CONTAINER_NULLABLE = 0)
    {
       size_type received_size = this->priv_long_size()+1;
       pointer hint = this->priv_long_addr();
@@ -3192,7 +3192,9 @@ class basic_string
          Traits::assign(*result, *first);
    }
 
-   static inline void priv_copy(const CharT* first, const CharT* last, CharT* result)
+   static inline void priv_copy( const CharT* BOOST_CONTAINER_NULLABLE first
+                               , const CharT* BOOST_CONTAINER_NULLABLE last
+                               , CharT* BOOST_CONTAINER_NONNULL result)
    {  Traits::copy(result, first, std::size_t(last - first));  }
 
    template <class Integer>
@@ -3311,7 +3313,7 @@ template <class CharT, class Traits, class Allocator> inline
 
 template <class CharT, class Traits, class Allocator> inline
    basic_string<CharT, Traits, Allocator> operator+
-      (const CharT* s, basic_string<CharT, Traits, Allocator> y)
+      (const CharT* BOOST_CONTAINER_NONNULL s, basic_string<CharT, Traits, Allocator> y)
 {
    y.insert(y.begin(), s, s + Traits::length(s));
    return y;
@@ -3319,7 +3321,7 @@ template <class CharT, class Traits, class Allocator> inline
 
 template <class CharT, class Traits, class Allocator> inline
    basic_string<CharT,Traits,Allocator> operator+
-      (basic_string<CharT,Traits,Allocator> x, const CharT* s)
+      (basic_string<CharT,Traits,Allocator> x, const CharT* BOOST_CONTAINER_NONNULL s)
 {
    x += s;
    return x;
@@ -3353,7 +3355,7 @@ operator==(const basic_string<CharT,Traits,Allocator>& x, const basic_string<Cha
 
 template <class CharT, class Traits, class Allocator>
 inline bool
-operator==(const CharT* s, const basic_string<CharT,Traits,Allocator>& y)
+operator==(const CharT* BOOST_CONTAINER_NONNULL s, const basic_string<CharT,Traits,Allocator>& y)
 {
    typename basic_string<CharT,Traits,Allocator>::size_type n = Traits::length(s);
    return n == y.size() && Traits::compare(s, y.data(), n) == 0;
@@ -3361,7 +3363,7 @@ operator==(const CharT* s, const basic_string<CharT,Traits,Allocator>& y)
 
 template <class CharT, class Traits, class Allocator>
 inline bool
-operator==(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
+operator==(const basic_string<CharT,Traits,Allocator>& x, const CharT* BOOST_CONTAINER_NONNULL s)
 {
    typename basic_string<CharT,Traits,Allocator>::size_type n = Traits::length(s);
    return x.size() == n && Traits::compare(x.data(), s, n) == 0;
@@ -3396,12 +3398,12 @@ operator!=(const basic_string<CharT,Traits,Allocator>& x, const basic_string<Cha
 
 template <class CharT, class Traits, class Allocator>
 inline bool
-operator!=(const CharT* s, const basic_string<CharT,Traits,Allocator>& y)
+operator!=(const CharT* BOOST_CONTAINER_NONNULL s, const basic_string<CharT,Traits,Allocator>& y)
    {  return !(s == y); }
 
 template <class CharT, class Traits, class Allocator>
 inline bool
-operator!=(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
+operator!=(const basic_string<CharT,Traits,Allocator>& x, const CharT* BOOST_CONTAINER_NONNULL s)
    {  return !(x == s);   }
 
 
@@ -3431,14 +3433,14 @@ operator<(const basic_string<CharT,Traits,Allocator>& x, const basic_string<Char
 
 template <class CharT, class Traits, class Allocator>
 inline bool
-operator<(const CharT* s, const basic_string<CharT,Traits,Allocator>& y)
+operator<(const CharT* BOOST_CONTAINER_NONNULL s, const basic_string<CharT,Traits,Allocator>& y)
 {
    return y.compare(s) > 0;
 }
 
 template <class CharT, class Traits, class Allocator>
 inline bool
-operator<(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
+operator<(const basic_string<CharT,Traits,Allocator>& x, const CharT* BOOST_CONTAINER_NONNULL s)
 {
    return x.compare(s) < 0;
 }
@@ -3467,13 +3469,13 @@ operator>(const basic_string<CharT,Traits,Allocator>& x, const basic_string<Char
 
 template <class CharT, class Traits, class Allocator>
 inline bool
-operator>(const CharT* s, const basic_string<CharT,Traits,Allocator>& y) {
+operator>(const CharT* BOOST_CONTAINER_NONNULL s, const basic_string<CharT,Traits,Allocator>& y) {
    return y < s;
 }
 
 template <class CharT, class Traits, class Allocator>
 inline bool
-operator>(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
+operator>(const basic_string<CharT,Traits,Allocator>& x, const CharT* BOOST_CONTAINER_NONNULL s)
 {
    return s < x;
 }
@@ -3503,12 +3505,12 @@ operator<=(const basic_string<CharT,Traits,Allocator>& x, const basic_string<Cha
 
 template <class CharT, class Traits, class Allocator>
 inline bool
-operator<=(const CharT* s, const basic_string<CharT,Traits,Allocator>& y)
+operator<=(const CharT* BOOST_CONTAINER_NONNULL s, const basic_string<CharT,Traits,Allocator>& y)
    {  return !(y < s);  }
 
 template <class CharT, class Traits, class Allocator>
 inline bool
-operator<=(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
+operator<=(const basic_string<CharT,Traits,Allocator>& x, const CharT* BOOST_CONTAINER_NONNULL s)
    {  return !(s < x);  }
 
 
@@ -3536,12 +3538,12 @@ operator>=(const basic_string<CharT,Traits,Allocator>& x,
 
 template <class CharT, class Traits, class Allocator>
 inline bool
-operator>=(const CharT* s, const basic_string<CharT,Traits,Allocator>& y)
+operator>=(const CharT* BOOST_CONTAINER_NONNULL s, const basic_string<CharT,Traits,Allocator>& y)
    {  return !(s < y);  }
 
 template <class CharT, class Traits, class Allocator>
 inline bool
-operator>=(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
+operator>=(const basic_string<CharT,Traits,Allocator>& x, const CharT* BOOST_CONTAINER_NONNULL s)
    {  return !(x < s);  }
 
 template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
@@ -3573,7 +3575,7 @@ namespace dtl {
 template <class CharT, class Traits>
 inline bool
 string_fill(std::basic_ostream<CharT, Traits>& os,
-                  std::basic_streambuf<CharT, Traits>* buf,
+                  std::basic_streambuf<CharT, Traits>* BOOST_CONTAINER_NONNULL buf,
                   std::size_t n)
 {
    CharT f = os.fill();
