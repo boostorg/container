@@ -380,7 +380,7 @@ class basic_string_base
             this->construct_long();
             this->priv_long_addr(p);
             this->priv_long_size(0);
-            this->priv_storage(new_cap);
+            this->priv_long_storage(new_cap);
          }
       }
       else{
@@ -437,12 +437,6 @@ class basic_string_base
 
    inline size_type priv_long_storage() const
    {  return this->members_.plong_repr()->storage;  }
-
-   inline void priv_storage(size_type storage)
-   {
-      if(!this->is_short())
-         this->priv_long_storage(storage);
-   }
 
    inline void priv_long_storage(size_type storage)
    {
@@ -1860,10 +1854,9 @@ class basic_string
          //Check if we have enough capacity
          pointer hint = pointer();
          pointer allocation_ret = pointer();
-         if (remaining >= n){
-            enough_capacity = true;
-         }
-         else {
+         bool enough_capacity = remaining >= n;
+
+         if (!enough_capacity) {
             //Otherwise expand current buffer or allocate new storage
             new_cap  = this->next_capacity(n);
             hint = old_start;
@@ -1871,9 +1864,9 @@ class basic_string
                   (allocate_new | expand_fwd | expand_bwd, old_size + n + 1u, new_cap, hint);
 
             //Check forward expansion
-            if(old_start == allocation_ret){
-               enough_capacity = true;
-               this->priv_storage(new_cap);
+            enough_capacity = old_start == allocation_ret;
+            if(enough_capacity){
+               this->priv_long_storage(new_cap);
             }
          }
 
@@ -3164,7 +3157,7 @@ class basic_string
          this->assure_long();
          this->priv_long_addr(new_start);
          this->priv_long_size(new_length);
-         this->priv_storage(new_cap);
+         this->priv_long_storage(new_cap);
       }
       return do_alloc;
    }
@@ -3206,7 +3199,7 @@ class basic_string
                      , boost::movelib::to_raw_pointer(this->priv_long_addr())
                      , long_size+1);
          this->priv_long_addr(ret);
-         this->priv_storage(real_cap);
+         this->priv_long_storage(real_cap);
          //And release old buffer
          this->alloc().deallocate(long_addr, long_storage);
       }
