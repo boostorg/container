@@ -8,7 +8,7 @@
 [library Boost.Container
     [quickbook 1.7]
     [authors [Gaztanaga, Ion]]
-    [copyright 2009-2018 Ion Gaztanaga]
+    [copyright 2009-2026 Ion Gaztanaga]
     [id container]
     [dirname container]
     [purpose Containers library]
@@ -172,7 +172,7 @@ Finally C++17 added support for incomplete types in `std::vector`, `std::list` a
 for details), but no other containers like `std::set/map/unordered_set/unordered_map`, 
 
 Fortunately all [*Boost.Container] containers except
-[classref boost::container::static_vector static_vector] and
+[classref boost::container::static_vector static_vector],
 [classref boost::container::small_vector small_vector] and
 [classref boost::container::basic_string basic_string] are designed to support incomplete types.
 [classref boost::container::static_vector static_vector] and 
@@ -734,19 +734,21 @@ the last template parameter and defined using the utility class
 [classref boost::container::vector_options vector_options]. The following parameters can be configured:
 
 *  [classref boost::container::growth_factor growth_factor]: the growth policy of the vector.
-   The rate at which the capacity of a vector grows is implementation dependent and
-   implementations choose exponential growth in order to meet the amortized constant time requirement for push_back.
+   The rate at which the capacity grows is implementation dependent and
+   implementations choose exponential growth in order to meet the amortized constant time requirements.
    A higher growth factor will make it faster as it will require less data movement, but it will have a greater memory
    impact (on average, more memory will be unused). A user can provide a custom implementation of the growth factor and some
    predefined policies are available: [classref boost::container::growth_factor_50 growth_factor_50],
-   [classref boost::container::growth_factor_60 growth_factor_60] (usually the default) and
+   [classref boost::container::growth_factor_60 growth_factor_60] (usually the default in Boost.Container) and
    [classref boost::container::growth_factor_100 growth_factor_100].
 
 *  [classref boost::container::stored_size stored_size]: the type that will be used to store size-related
    parameters inside the vector. Sometimes, when the maximum vector capacity to be used is much less than
    `std::size_t` capacity, it may be beneficial to use a smaller unsigned integer type to represent
    `size()` and `capacity()` values inside the vector, so that the size of an empty vector object is minimized and cache 
-   performance is possibly improved. See [classref boost::container::stored_size stored_size] for more details.
+   performance is possibly improved. See [classref boost::container::stored_size stored_size] for more details. Note
+   that due to alignment issues, using a unsigned type smaller than std::size_t to store size-related parameters might
+   not bring any size gains and will severely limit the maximum size of the container.
 
 See the following example to see how [classref boost::container::vector_options vector_options] can be
 used to customize `vector`:
@@ -771,10 +773,8 @@ the last template parameter and defined using the utility class
    does not throw or abort, undefined behavior is triggered.
 
 *  [classref boost::container::stored_size stored_size]: the type that will be used to store size-related
-   parameters inside the vector. Sometimes, when the static size to be used is much less than `std::size_t` capacity,
-   it may be beneficial to use a smaller unsigned integer type to represent the `size()` value inside `static_vector`,
-   so that the object size of an empty vector is minimized and cache 
-   performance is possibly improved. See [classref boost::container::stored_size stored_size] for more details.
+   parameters inside the vector. See `stored_size` option in [link container.configurable_containers.configurable_vector Configurable vector]
+   chapter and [classref boost::container::stored_size stored_size] for more details.
 
 See the following example to see how [classref boost::container::static_vector_options static_vector_options] can be
 used to customize `static_vector`:
@@ -795,19 +795,12 @@ the last template parameter and defined using the utility class
    and it is not affected by this option].
 
 *  [classref boost::container::growth_factor growth_factor]: the growth policy of the vector.
-   The rate at which the capacity of a vector grows is implementation dependent and
-   implementations choose exponential growth in order to meet the amortized constant time requirement for push_back.
-   A higher growth factor will make it faster as it will require less data movement, but it will have a greater memory
-   impact (on average, more memory will be unused). A user can provide a custom implementation of the growth factor and some
-   predefined policies are available: [classref boost::container::growth_factor_50 growth_factor_50],
-   [classref boost::container::growth_factor_60 growth_factor_60] and
-   [classref boost::container::growth_factor_50 growth_factor_100].
+   See `growth_factor` option in [link container.configurable_containers.configurable_vector Configurable vector]
+   chapter and [classref boost::container::growth_factor growth_factor] for more details.
 
 *  [classref boost::container::stored_size stored_size]: the type that will be used to store size-related
-   parameters inside the vector. Sometimes, when the maximum vector capacity to be used is much less than
-   `std::size_t` capacity, it may be beneficial to use a smaller unsigned integer type to represent
-   `size()` and `capacity()` values inside the vector, so that the size of an empty vector object is minimized and cache 
-   performance is possibly improved. See [classref boost::container::stored_size stored_size] for more details.
+   parameters inside the vector. See `stored_size` option in [link container.configurable_containers.configurable_vector Configurable vector]
+   chapter and [classref boost::container::stored_size stored_size] for more details.
 
 See the following example to see how [classref boost::container::small_vector_options small_vector_options] can be
 used to customize `small_vector`:
@@ -835,10 +828,8 @@ Only one of these paratemers can be specified:
    A value of zero means the default value.
 
 *  [classref boost::container::stored_size stored_size]: the type that will be used to store size-related
-   parameters inside the deque. Sometimes, when the maximum deque capacity to be used is much less than
-   `std::size_t` capacity, it may be beneficial to use a smaller unsigned integer type to represent
-   positions and offsets inside the deque, so that the size of an empty deque object is minimized and cache 
-   performance is possibly improved. See [classref boost::container::stored_size stored_size] for more details.
+   parameters inside the vector. See `stored_size` option in [link container.configurable_containers.configurable_vector Configurable vector]
+   chapter and [classref boost::container::stored_size stored_size] for more details.
 
 
 See the following example to see how [classref boost::container::deque_options deque_options] can be
@@ -855,20 +846,13 @@ The configuration for [classref boost::container::devector devector] is passed a
 the last template parameter and defined using the utility class
 [classref boost::container::devector_options devector_options]. The following parameters can be configured:
 
-*  [classref boost::container::growth_factor growth_factor]: the growth policy of the devector.
-   The rate at which the capacity of a devector grows is implementation dependent and
-   implementations choose exponential growth in order to meet the amortized constant time requirement for push_back.
-   A higher growth factor will make it faster as it will require less data movement, but it will have a greater memory
-   impact (on average, more memory will be unused). A user can provide a custom implementation of the growth factor and some
-   predefined policies are available: [classref boost::container::growth_factor_50 growth_factor_50],
-   [classref boost::container::growth_factor_60 growth_factor_60] (usually the default) and
-   [classref boost::container::growth_factor_100 growth_factor_100].
+*  [classref boost::container::growth_factor growth_factor]: the growth policy of the vector.
+   See `growth_factor` option in [link container.configurable_containers.configurable_vector Configurable vector]
+   chapter and [classref boost::container::growth_factor growth_factor] for more details.
 
 *  [classref boost::container::stored_size stored_size]: the type that will be used to store size-related
-   parameters inside of the devector. Sometimes, when the maximum devector capacity to be used is much less than
-   `std::size_t` capacity, it may be beneficial to use a smaller unsigned integer type to represent
-   `size()` and `capacity()` values inside the devector, so that the size of an empty devector object is minimized and cache 
-   performance is possibly improved. See [classref boost::container::stored_size stored_size] for more details.
+   parameters inside the vector. See `stored_size` option in [link container.configurable_containers.configurable_vector Configurable vector]
+   chapter and [classref boost::container::stored_size stored_size] for more details.
 
 *  [classref boost::container::relocate_on_66 relocate_on_XX]: load factor limit that will determine if
    new memory should be allocated or elements should relocated inside existing memory, when the free space
@@ -879,6 +863,30 @@ used to customize `devector`:
 
 [import ../example/doc_custom_devector.cpp]
 [doc_custom_devector]
+
+[endsect]
+
+[section:configurable_string Configurable basic_string]
+
+The configuration for [classref boost::container::basic_string basic_string] is passed as
+the last template parameter and defined using the utility class
+[classref boost::container::string_options string_options]. The following parameters can be configured:
+
+*  [classref boost::container::growth_factor growth_factor]: the growth policy of the vector.
+   See `growth_factor` option in [link container.configurable_containers.configurable_vector Configurable vector]
+   chapter and [classref boost::container::growth_factor growth_factor] for more details.
+
+*  [classref boost::container::stored_size stored_size]: the type that will be used to store size-related
+   parameters inside the vector. See `stored_size` option in [link container.configurable_containers.configurable_vector Configurable vector]
+   chapter and [classref boost::container::stored_size stored_size] for more details. Note that the internal
+   small string optimization buffer might be reduced in size if a smaller than `std::size_t` `stored_size` unsigned
+   type is used.
+
+See the following example to see how [classref boost::container::string_options string_options] can be
+used to customize `string_options`:
+
+[import ../example/doc_custom_string.cpp]
+[doc_custom_string]
 
 [endsect]
 
