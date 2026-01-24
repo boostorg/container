@@ -244,11 +244,12 @@ class default_next_capacity;
 
 typedef vector_opt<void, void> vector_null_opt;
 
-template<class GrowthType, class StoredSizeType>
+template<class GrowthType, class StoredSizeType, std::size_t InlineChars>
 struct string_opt
 {
    typedef GrowthType      growth_factor_type;
    typedef StoredSizeType  stored_size_type;
+   static const std::size_t inline_chars = InlineChars;
 
    template<class AllocTraits>
    struct get_stored_size_type
@@ -256,7 +257,7 @@ struct string_opt
    {};
 };
 
-typedef string_opt<void, void> string_null_opt;
+typedef string_opt<void, void, 0u> string_null_opt;
 
 struct growth_factor_50;
 
@@ -695,6 +696,24 @@ using deque_options_t = typename boost::container::deque_options<Options...>::ty
 
 #endif
 
+////////////////////////////////////////////////////////////////
+//
+//
+//          OPTIONS FOR STRING CONTAINER
+//
+//
+////////////////////////////////////////////////////////////////
+
+//! This option specifies the desired number of characters to be hold inline
+//! in the container.
+//!
+//! A value zero represents the default value
+//! (typically 10 chars in 32-bit systems and 22 chars in 64-bit systems).
+//!
+//!\tparam InlineChars An unsigned integer value. Values greater than 127 are not supported
+//!                    duet to the internal data structure design.
+BOOST_INTRUSIVE_OPTION_CONSTANT(inline_chars, std::size_t, InlineChars, inline_chars)
+
 //! Helper metafunction to combine options into a single type to be used
 //! by \c boost::container::string.
 //! Supported options are: \c boost::container::growth_factor and \c boost::container::stored_size
@@ -715,7 +734,9 @@ struct string_options
       #endif
       >::type packed_options;
    typedef string_opt< typename packed_options::growth_factor_type
-                     , typename packed_options::stored_size_type> implementation_defined;
+                     , typename packed_options::stored_size_type
+                     , packed_options::inline_chars
+                     > implementation_defined;
    /// @endcond
    typedef implementation_defined type;
 };

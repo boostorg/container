@@ -20,6 +20,10 @@ int main ()
 {
    using namespace boost::container;
 
+//--------------------------
+//    Option "stored_size"
+//--------------------------
+
    //This option specifies that a string that will use "unsigned char" as
    //the type to store capacity or size internally.
    typedef string_options< stored_size<unsigned char> >::type size_option_t;
@@ -37,15 +41,35 @@ int main ()
    bool exception_thrown = false;
    /*<-*/ 
    #ifndef BOOST_NO_EXCEPTIONS
-   BOOST_CONTAINER_TRY{ size_optimized_string_t v(127, '\0');} BOOST_CONTAINER_CATCH(...) { exception_thrown = true; } BOOST_CONTAINER_CATCH_END
+   BOOST_CONTAINER_TRY{ size_optimized_string_t v(127, 'a');} BOOST_CONTAINER_CATCH(...) { exception_thrown = true; } BOOST_CONTAINER_CATCH_END
    #else
    exception_thrown = true;
    #endif   //BOOST_NO_EXCEPTIONS
    /*->*/
-   //=try       { size_optimized_string_t v(127, '\0'); }
+   //=try       { size_optimized_string_t v(127, 'a'); }
    //=catch(...){ exception_thrown = true;        }
 
    assert(exception_thrown == true);
+
+//--------------------------
+//    Option "inline_chars"
+//--------------------------
+
+   //This option specifies the capacity of the internally stored buffer
+   //The maximum value due to internal data organization is 127 chars
+   typedef string_options< inline_chars<100> >::type inline_chars_option_t;
+   typedef basic_string<char, std::char_traits<char>, void, inline_chars_option_t > inline100_string_t;
+
+   //The size of the object will grow accordingly
+   assert(( sizeof(inline100_string_t) > sizeof(basic_string<char>) ));
+   assert(( sizeof(inline100_string_t) > 100 ));
+
+   //Internal capacity will be at least the specified one
+   assert((inline100_string_t().capacity() >= 100));
+
+//--------------------------
+//    Option "growth_factor"
+//--------------------------
 
    //This option specifies that a string will increase its capacity 50%
    //each time the previous capacity was exhausted.

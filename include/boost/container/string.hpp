@@ -80,13 +80,14 @@ struct get_string_opt
 {
    typedef string_opt< typename default_if_void<typename Options::growth_factor_type, growth_factor_60>::type
                      , typename default_if_void<typename Options::stored_size_type, AllocatorSizeType>::type
+                     , Options::inline_chars
                      > type;
 };
 
 template<class AllocatorSizeType>
 struct get_string_opt<void, AllocatorSizeType>
 {
-   typedef string_opt<growth_factor_60, AllocatorSizeType> type;
+   typedef string_opt<growth_factor_60, AllocatorSizeType, 0u> type;
 };
 
 namespace dtl {
@@ -122,6 +123,8 @@ class basic_string_base
    typedef typename options_type::stored_size_type          stored_size_type;
 
    typedef ::boost::intrusive::pointer_traits<pointer> pointer_traits;
+
+   static const std::size_t inline_chars = options_type::inline_chars;
 
    inline basic_string_base()
       : members_()
@@ -209,24 +212,43 @@ class basic_string_base
 
    //This type has the same alignment and size as long_t but it's POD
    //so, unlike long_t, it can be placed in a union
-
    typedef typename dtl::aligned_storage
       <sizeof(long_t), dtl::alignment_of<long_t>::value>::type   long_raw_t;
 
+   template <std::size_t NChar>
+   union short_type_test
+   {
+      long_raw_t l;
+      struct short_t
+      {
+         short_header   h;
+         value_type     data[NChar+1u];
+      } s;
+   };
+
    protected:
-   BOOST_STATIC_CONSTEXPR size_type  MinInternalBufferChars = 0;
-   BOOST_STATIC_CONSTEXPR size_type  AlignmentOfValueType = alignment_of<value_type>::value;
-   BOOST_STATIC_CONSTEXPR size_type  ShortDataOffset = ((sizeof(short_header)-1)/AlignmentOfValueType+1)*AlignmentOfValueType;
-   BOOST_STATIC_CONSTEXPR size_type  ZeroCostInternalBufferChars =
-      (sizeof(long_t) - ShortDataOffset)/sizeof(value_type);
-   BOOST_STATIC_CONSTEXPR size_type  UnalignedFinalInternalBufferChars =
-      (ZeroCostInternalBufferChars > MinInternalBufferChars) ?
-                ZeroCostInternalBufferChars : MinInternalBufferChars;
+   //Due to internal data representation constraints, inline chars cannot be bigger than this
+   BOOST_STATIC_CONSTEXPR size_type  MaxInlineChars = 127u;
+   BOOST_CONTAINER_STATIC_ASSERT(inline_chars <= MaxInlineChars);
+
+   BOOST_STATIC_CONSTEXPR size_type  SizeOfValueType = sizeof(value_type);
+   BOOST_STATIC_CONSTEXPR size_type  ShortDataOffset = ((sizeof(short_header)-1)/SizeOfValueType+1)*SizeOfValueType;
+   BOOST_STATIC_CONSTEXPR size_type  ZeroCostInternalStorage = (sizeof(long_t) - ShortDataOffset)/sizeof(value_type);
+   BOOST_STATIC_CONSTEXPR size_type  InlineCharsStorage = (sizeof(short_type_test<inline_chars>) - ShortDataOffset)/sizeof(value_type);
+
+   //Select the biggest internal buffer between zero-cost SSO and user-requested SSO
+   BOOST_STATIC_CONSTEXPR size_type  CandidateInternalStorageChars =
+      ZeroCostInternalStorage > InlineCharsStorage ? ZeroCostInternalStorage : InlineCharsStorage;
+
+   //Clamp internal buffer chars to MaxInlineChars
+   BOOST_STATIC_CONSTEXPR size_type  MaxInlineStorage = MaxInlineChars+1u;
+   BOOST_STATIC_CONSTEXPR size_type  FinalInternalStorage =
+      CandidateInternalStorageChars < MaxInlineStorage ? CandidateInternalStorageChars : MaxInlineStorage;
 
    struct short_t
    {
       short_header   h;
-      value_type     data[UnalignedFinalInternalBufferChars];
+      value_type     data[FinalInternalStorage];
    };
 
    union repr_t_size_t
@@ -282,7 +304,7 @@ class basic_string_base
    inline allocator_type &alloc()
    {  return members_;  }
 
-   BOOST_STATIC_CONSTEXPR size_type InternalBufferChars = (sizeof(repr_t) - ShortDataOffset)/sizeof(value_type);
+   BOOST_STATIC_CONSTEXPR size_type InternalBufferChars = FinalInternalStorage;
 
    private:
 
@@ -581,6 +603,7 @@ class basic_string_base
 //! \tparam CharT The type of character it contains.
 //! \tparam Traits The Character Traits type, which encapsulates basic character operations
 //! \tparam Allocator The allocator, used for internal memory management.
+//! \tparam Options A type produced from \c boost::container::string_options.
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class CharT, class Traits = std::char_traits<CharT>, class Allocator = void, class Options = void >
 #else
