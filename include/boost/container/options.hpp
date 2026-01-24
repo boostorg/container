@@ -327,7 +327,8 @@ BOOST_INTRUSIVE_OPTION_TYPE(growth_factor, GrowthFactor, GrowthFactor, growth_fa
 //!a 32 bit alignment is required for vector and the size will be rounded to 8 bytes. In a 64-bit
 //!machine a 16 bit size type does not usually save memory when comparing to a 32-bit size type.
 //!Measure the size of the resulting container and do not assume a smaller \c stored_size
-//!will always lead to a smaller sizeof(container).
+//!will always lead to a smaller sizeof(container). You might end up not obtaining any `sizeof`
+//!reduction while severily limiting the maximum size of the container.
 //!
 //!If a user tries to insert more elements than representable by \c stored_size, the container
 //!will throw a length_error.
