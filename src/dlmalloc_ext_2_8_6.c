@@ -1416,8 +1416,9 @@ boost_cont_command_ret_t boost_cont_allocation_command
          }
 
          if(command & BOOST_CONTAINER_ALLOCATE_NEW){
+            void* addr;
             disable_lock(ms);
-            void *addr = mspace_memalign(ms, alignof_object, preferred_size);
+            addr = mspace_memalign(ms, alignof_object, preferred_size);
             if(!addr)   addr = mspace_memalign(ms, alignof_object, limit_size);
             if(addr){
                s_allocated_memory += chunksize(mem2chunk(addr));
