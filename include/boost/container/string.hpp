@@ -885,7 +885,10 @@ class basic_string
    //! <b>Effects</b>: Constructs a basic_string with a default-constructed allocator,
    //!   and a range of iterators.
    template <class InputIterator>
-   basic_string(InputIterator f, InputIterator l)
+   basic_string(InputIterator f, InputIterator l
+      BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename dtl::disable_if_c
+         < dtl::is_convertible<InputIterator BOOST_MOVE_I size_type>::value
+         BOOST_MOVE_I dtl::nat >::type * = 0))
       : base_t()
    {
       this->priv_terminate_string();
@@ -895,7 +898,10 @@ class basic_string
    //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
    //!   and a range of iterators.
    template <class InputIterator>
-   basic_string(InputIterator f, InputIterator l, const allocator_type& a)
+   basic_string(InputIterator f, InputIterator l, const allocator_type& a
+      BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename dtl::disable_if_c
+         < dtl::is_convertible<InputIterator BOOST_MOVE_I size_type>::value
+         BOOST_MOVE_I dtl::nat >::type * = 0))
       : base_t(a)
    {
       this->priv_terminate_string();
