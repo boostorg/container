@@ -20,6 +20,10 @@ int main ()
 {
    using namespace boost::container;
 
+//--------------------------------------------
+//          'stored_size' option
+//--------------------------------------------
+
    //This option specifies that a deque that will use "unsigned char" as
    //the type to store capacity or size internally.
    typedef deque_options< stored_size<unsigned char> >::type size_option_t;
@@ -43,12 +47,20 @@ int main ()
 
    assert(exception_thrown == true);
 
+//--------------------------------------------
+//          'block_size' option
+//--------------------------------------------
+
    //This option specifies the desired block size for deque
    typedef deque_options< block_size<128u> >::type block_128_option_t;
 
    //This deque will allocate blocks of 128 elements
    typedef deque<int, void, block_128_option_t > block_128_deque_t;
    assert(block_128_deque_t::get_block_size() == 128u);
+
+//--------------------------------------------
+//          'block_bytes' option
+//--------------------------------------------
 
    //This option specifies the maximum block size for deque
    //in bytes
