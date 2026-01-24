@@ -560,16 +560,16 @@ void test_type_traits()
    typedef string::const_reverse_iterator criter;
 
    BOOST_TEST_TRAIT_TRUE((dtl::is_same<
-      typename std::iterator_traits<iter>::iterator_category,
+      std::iterator_traits<iter>::iterator_category,
       std::random_access_iterator_tag>));
    BOOST_TEST_TRAIT_TRUE((dtl::is_same<
-      typename std::iterator_traits<citer>::iterator_category,
+      std::iterator_traits<citer>::iterator_category,
       std::random_access_iterator_tag>));
    BOOST_TEST_TRAIT_TRUE((dtl::is_same<
-      typename std::iterator_traits<riter>::iterator_category,
+      std::iterator_traits<riter>::iterator_category,
       std::random_access_iterator_tag>));
    BOOST_TEST_TRAIT_TRUE((dtl::is_same<
-      typename std::iterator_traits<criter>::iterator_category,
+      std::iterator_traits<criter>::iterator_category,
       std::random_access_iterator_tag>));
 
    // npos
