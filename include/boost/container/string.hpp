@@ -26,6 +26,7 @@
 #include <boost/container/allocator_traits.hpp>
 #include <boost/container/new_allocator.hpp> //new_allocator
 #include <boost/container/throw_exception.hpp>
+#include <boost/container/options.hpp>
 // container/detail
 #include <boost/container/detail/alloc_helpers.hpp>
 #include <boost/container/detail/allocator_version_traits.hpp>
@@ -73,6 +74,21 @@ namespace boost {
 namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
+template<class Options, class AllocatorSizeType>
+struct get_string_opt
+{
+   typedef string_opt< typename default_if_void<typename Options::growth_factor_type, growth_factor_60>::type
+                     , typename default_if_void<typename Options::stored_size_type, AllocatorSizeType>::type
+                     > type;
+};
+
+template<class AllocatorSizeType>
+struct get_string_opt<void, AllocatorSizeType>
+{
+   typedef string_opt<growth_factor_60, AllocatorSizeType> type;
+};
+
 namespace dtl {
 // ------------------------------------------------------------
 // Class basic_string_base.
@@ -84,7 +100,7 @@ namespace dtl {
 // memory. The destructor assumes that the memory either is the internal buffer,
 // or else points to a block of memory that was allocated using string_base's
 // allocator and whose size is this->m_storage.
-template <class Allocator>
+template <class Allocator, class Options>
 class basic_string_base
 {
    basic_string_base & operator=(const basic_string_base &);
@@ -98,6 +114,12 @@ class basic_string_base
    typedef typename allocator_traits_type::value_type       value_type;
    typedef typename allocator_traits_type::size_type        size_type;
    typedef typename allocator_traits_type::difference_type  difference_type;
+   typedef typename boost::container::
+      allocator_traits<allocator_type>::size_type           alloc_size_type;
+   typedef typename get_string_opt
+      <Options, alloc_size_type>::type                      options_type;
+   typedef typename options_type::growth_factor_type        growth_factor_type;
+   typedef typename options_type::stored_size_type          stored_size_type;
 
    typedef ::boost::intrusive::pointer_traits<pointer> pointer_traits;
 
@@ -142,10 +164,10 @@ class basic_string_base
    //This is the structure controlling a long string
    struct long_t
    {
-      size_type      is_short  : 1;
-      size_type      length    : (sizeof(size_type)*CHAR_BIT - 1);
-      size_type      storage;
-      pointer        start;
+      stored_size_type  is_short  : 1;
+      stored_size_type  length    : (sizeof(stored_size_type)*CHAR_BIT - 1);
+      stored_size_type  storage;
+      pointer           start;
 
       inline long_t()
          : is_short(0)
@@ -192,9 +214,8 @@ class basic_string_base
       <sizeof(long_t), dtl::alignment_of<long_t>::value>::type   long_raw_t;
 
    protected:
-   BOOST_STATIC_CONSTEXPR size_type  MinInternalBufferChars = 8;
-   BOOST_STATIC_CONSTEXPR size_type  AlignmentOfValueType =
-      alignment_of<value_type>::value;
+   BOOST_STATIC_CONSTEXPR size_type  MinInternalBufferChars = 0;
+   BOOST_STATIC_CONSTEXPR size_type  AlignmentOfValueType = alignment_of<value_type>::value;
    BOOST_STATIC_CONSTEXPR size_type  ShortDataOffset = ((sizeof(short_header)-1)/AlignmentOfValueType+1)*AlignmentOfValueType;
    BOOST_STATIC_CONSTEXPR size_type  ZeroCostInternalBufferChars =
       (sizeof(long_t) - ShortDataOffset)/sizeof(value_type);
@@ -322,7 +343,6 @@ class basic_string_base
       return this->members_.plong_repr();
    }
 
-  
    protected:
 
    typedef dtl::integral_constant<unsigned,
@@ -341,10 +361,23 @@ class basic_string_base
          (this->alloc(), command, limit_size, prefer_in_recvd_out_size, reuse);
    }
 
-   size_type next_capacity(size_type additional_objects) const
+   size_type next_storage(size_type additional_objects, size_type current_storage) const
    {
-      return growth_factor_100()
-            ( this->priv_storage(), additional_objects, allocator_traits_type::max_size(this->alloc()));
+      const size_type cur_cap = this->priv_capacity();
+      const size_type spare_cap = size_type(cur_cap - this->priv_size());
+      BOOST_ASSERT(additional_objects > spare_cap);
+      size_type max_storage = allocator_traits_type::max_size(this->alloc());
+      //We need a bit to store the short/ong bit so we can only use half of the stored_size_type capacity
+      (clamp_by_half_stored_size_type<size_type>)(max_storage, stored_size_type());
+      const size_type max_cap = max_storage - 1u;  //we need to save space for null terminator
+      const size_type achievable_additional_obj = size_type(max_cap - size_type(cur_cap));
+      const size_type min_additional_obj = size_type(additional_objects - spare_cap);
+
+      if ( achievable_additional_obj < min_additional_obj )
+         boost::container::throw_length_error("get_next_capacity, allocator or storage_size_type's max size reached");
+
+      return growth_factor_type()
+            ( current_storage, min_additional_obj, max_storage);
    }
 
    void deallocate(pointer p, size_type n)
@@ -373,17 +406,17 @@ class basic_string_base
    {
       if (n <= this->max_size()) {
          if(n > InternalBufferChars){
-            size_type new_cap = this->next_capacity(n);
+            size_type new_storage = n + 1u;
             pointer reuse = 0;
-            pointer p = this->allocation_command(allocate_new, n, new_cap, reuse);
+            pointer p = this->allocation_command(allocate_new, n, new_storage, reuse);
             BOOST_ASSERT(this->is_short());
             this->construct_long();
             this->priv_long_addr(p);
             this->priv_long_size(0);
-            this->priv_long_storage(new_cap);
+            this->priv_long_storage(new_storage);
          }
       }
-      else{
+      else {
          throw_length_error("basic_string::allocate_initial_block max_size() exceeded");
       }
    }
@@ -440,7 +473,7 @@ class basic_string_base
 
    inline void priv_long_storage(size_type storage)
    {
-      this->members_.plong_repr()->storage = storage;
+      this->members_.plong_repr()->storage = static_cast<stored_size_type>(storage);
    }
 
    inline size_type priv_size() const
@@ -463,6 +496,7 @@ class basic_string_base
    inline void priv_short_size(size_type sz)
    {
       typedef unsigned char uchar_type;
+      BOOST_ASSERT(sz < uchar_type(-1));
       BOOST_STATIC_CONSTEXPR uchar_type mask = uchar_type(uchar_type(-1) >> 1U);
       BOOST_ASSERT( sz <= mask );
       //Make -Wconversion happy
@@ -471,10 +505,10 @@ class basic_string_base
 
    inline void priv_long_size(size_type sz)
    {
-      BOOST_STATIC_CONSTEXPR size_type mask = size_type(-1) >> 1U;
+      BOOST_STATIC_CONSTEXPR stored_size_type mask = static_cast<stored_size_type>(stored_size_type(-1) >> 1U);
       BOOST_ASSERT( sz <= mask );
       //Make -Wconversion happy
-      this->members_.plong_repr()->length = sz & mask;
+      this->members_.plong_repr()->length = static_cast<stored_size_type>(sz & mask);
    }
    #if defined(BOOST_GCC) && (BOOST_GCC >= 40700)
    #pragma GCC diagnostic pop
@@ -548,21 +582,22 @@ class basic_string_base
 //! \tparam Traits The Character Traits type, which encapsulates basic character operations
 //! \tparam Allocator The allocator, used for internal memory management.
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class CharT, class Traits = std::char_traits<CharT>, class Allocator = void >
+template <class CharT, class Traits = std::char_traits<CharT>, class Allocator = void, class Options = void >
 #else
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 #endif
 class basic_string
-   :  private dtl::basic_string_base<typename real_allocator<CharT, Allocator>::type>
+   :  private dtl::basic_string_base<typename real_allocator<CharT, Allocator>::type, Options>
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
    BOOST_COPYABLE_AND_MOVABLE(basic_string)
-   typedef dtl::basic_string_base<typename real_allocator<CharT, Allocator>::type> base_t;
+   typedef dtl::basic_string_base<typename real_allocator<CharT, Allocator>::type, Options> base_t;
    typedef typename base_t::allocator_traits_type allocator_traits_type;
+
    BOOST_STATIC_CONSTEXPR typename base_t::size_type InternalBufferChars = base_t::InternalBufferChars;
 
-   protected:
+   private:
    // Allocator helper class to use a char_traits as a function object.
 
    template <class Tr>
@@ -604,23 +639,29 @@ class basic_string
    //                    types
    //
    //////////////////////////////////////////////
-   typedef Traits                                                                      traits_type;
-   typedef CharT                                                                       value_type;
-   typedef typename real_allocator<CharT, Allocator>::type                             allocator_type;
-   typedef typename ::boost::container::allocator_traits<allocator_type>::pointer           pointer;
-   typedef typename ::boost::container::allocator_traits<allocator_type>::const_pointer     const_pointer;
-   typedef typename ::boost::container::allocator_traits<allocator_type>::reference         reference;
-   typedef typename ::boost::container::allocator_traits<allocator_type>::const_reference   const_reference;
-   typedef typename ::boost::container::allocator_traits<allocator_type>::size_type         size_type;
-   typedef typename ::boost::container::allocator_traits<allocator_type>::difference_type   difference_type;
-   typedef BOOST_CONTAINER_IMPDEF(allocator_type)                                      stored_allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(pointer)                                             iterator;
-   typedef BOOST_CONTAINER_IMPDEF(const_pointer)                                       const_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
+   typedef Traits                                                                         traits_type;
+   typedef CharT                                                                          value_type;
+   typedef typename real_allocator<CharT, Allocator>::type                                allocator_type;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::pointer         pointer;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::const_pointer   const_pointer;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::reference       reference;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::const_reference const_reference;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::size_type       size_type;
+   typedef typename ::boost::container::allocator_traits<allocator_type>::difference_type difference_type;
+   typedef BOOST_CONTAINER_IMPDEF(allocator_type)                                         stored_allocator_type;
+   typedef BOOST_CONTAINER_IMPDEF(pointer)                                                iterator;
+   typedef BOOST_CONTAINER_IMPDEF(const_pointer)                                          const_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)           reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)     const_reverse_iterator;
    static const size_type npos = size_type(-1);
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
+   typedef typename base_t::alloc_size_type                                               alloc_size_type;
+   typedef typename base_t::options_type                                                  options_type;
+   typedef typename base_t::growth_factor_type                                            growth_factor_type;
+   typedef typename base_t::stored_size_type                                              stored_size_type;
+
    private:
 
    //`allocator_type::value_type` must match container's `value type`. If this
@@ -651,6 +692,7 @@ class basic_string
 
    #if !defined( BOOST_NO_CXX11_NULLPTR )
    BOOST_DELETED_FUNCTION(basic_string( decltype(nullptr) ))
+   public:
    #endif   //!defined( BOOST_NO_CXX11_NULLPTR )
 
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -1846,10 +1888,10 @@ class basic_string
       if (first != last) {
          const size_type n = boost::container::iterator_udistance(first, last);
          const size_type old_size = this->priv_size();
-         const size_type remaining = this->capacity() - old_size;
+         const size_type old_cap  = this->capacity();
+         const size_type remaining = old_cap - old_size;
          const pointer old_start = this->priv_addr();
-         bool enough_capacity = false;
-         size_type new_cap = 0;
+         size_type new_storage = 0;
 
          //Check if we have enough capacity
          pointer hint = pointer();
@@ -1858,15 +1900,15 @@ class basic_string
 
          if (!enough_capacity) {
             //Otherwise expand current buffer or allocate new storage
-            new_cap  = this->next_capacity(n);
+            new_storage  = this->next_storage(n, old_cap+1u);
             hint = old_start;
             allocation_ret = this->allocation_command
-                  (allocate_new | expand_fwd | expand_bwd, old_size + n + 1u, new_cap, hint);
+                  (allocate_new | expand_fwd | expand_bwd, old_size + n + 1u, new_storage, hint);
 
             //Check forward expansion
             enough_capacity = old_start == allocation_ret;
             if(enough_capacity){
-               this->priv_long_storage(new_cap);
+               this->priv_long_storage(new_storage);
             }
          }
 
@@ -1921,7 +1963,7 @@ class basic_string
                this->assure_long();
                this->priv_long_addr(new_start);
                this->priv_long_size(new_length);
-               this->priv_long_storage(new_cap);
+               this->priv_long_storage(new_storage);
             }
             else{
                //value_type is POD, so backwards expansion is much easier
@@ -1940,7 +1982,7 @@ class basic_string
                this->assure_long();
                this->priv_long_addr(new_start);
                this->priv_long_size(old_size + n);
-               this->priv_long_storage(new_cap);
+               this->priv_long_storage(new_storage);
             }
          }
       }
@@ -3146,9 +3188,9 @@ class basic_string
       if (do_alloc){
          //size_type n = dtl::max_value(res_arg, this->size()) + 1;
          size_type n = res_arg + 1;
-         size_type new_cap = this->next_capacity(n);
+         size_type new_storage = this->next_storage(n, this->priv_storage());
          pointer reuse = 0;
-         pointer new_start = this->allocation_command(allocate_new, n, new_cap, reuse);
+         pointer new_start = this->allocation_command(allocate_new, n, new_storage, reuse);
 
          const pointer addr = this->priv_addr();
          size_type new_length = priv_uninitialized_copy
@@ -3157,7 +3199,7 @@ class basic_string
          this->assure_long();
          this->priv_long_addr(new_start);
          this->priv_long_size(new_length);
-         this->priv_long_storage(new_cap);
+         this->priv_long_storage(new_storage);
       }
       return do_alloc;
    }
@@ -3302,9 +3344,9 @@ wstring;
 
 #else
 
-template <class CharT, class Traits, class Allocator>
-const typename basic_string<CharT, Traits, Allocator>::size_type
-    basic_string<CharT, Traits, Allocator>::npos;
+template <class CharT, class Traits, class Allocator, class Options>
+const typename basic_string<CharT, Traits, Allocator, Options>::size_type
+    basic_string<CharT, Traits, Allocator, Options>::npos;
 
 template<class S>
 struct is_string
@@ -3325,12 +3367,12 @@ struct is_string< basic_string<C, T, A> >
 
 // Operator+
 
-template <class CharT, class Traits, class Allocator> inline
-   basic_string<CharT,Traits,Allocator>
-   operator+(const basic_string<CharT,Traits,Allocator>& x
-            ,const basic_string<CharT,Traits,Allocator>& y)
+template <class CharT, class Traits, class Allocator, class Options> inline
+   basic_string<CharT,Traits,Allocator,Options>
+   operator+(const basic_string<CharT,Traits,Allocator,Options>& x
+            ,const basic_string<CharT,Traits,Allocator,Options>& y)
 {
-   typedef basic_string<CharT,Traits,Allocator> str_t;
+   typedef basic_string<CharT,Traits,Allocator,Options> str_t;
    typedef typename str_t::reserve_t reserve_t;
    reserve_t reserve;
    str_t result(reserve, x.size() + y.size(), x.get_stored_allocator());
@@ -3339,61 +3381,61 @@ template <class CharT, class Traits, class Allocator> inline
    return result;
 }
 
-template <class CharT, class Traits, class Allocator> inline
-   basic_string<CharT, Traits, Allocator> operator+
-      ( BOOST_RV_REF_BEG basic_string<CharT, Traits, Allocator> BOOST_RV_REF_END x
-      , BOOST_RV_REF_BEG basic_string<CharT, Traits, Allocator> BOOST_RV_REF_END y)
+template <class CharT, class Traits, class Allocator, class Options> inline
+   basic_string<CharT, Traits, Allocator, Options> operator+
+      ( BOOST_RV_REF_BEG basic_string<CharT, Traits, Allocator, Options> BOOST_RV_REF_END x
+      , BOOST_RV_REF_BEG basic_string<CharT, Traits, Allocator, Options> BOOST_RV_REF_END y)
 {
    x += y;
    return boost::move(x);
 }
 
-template <class CharT, class Traits, class Allocator> inline
-   basic_string<CharT, Traits, Allocator> operator+
-      ( BOOST_RV_REF_BEG basic_string<CharT, Traits, Allocator> BOOST_RV_REF_END x
-      , const basic_string<CharT,Traits,Allocator>& y)
+template <class CharT, class Traits, class Allocator, class Options> inline
+   basic_string<CharT, Traits, Allocator, Options> operator+
+      ( BOOST_RV_REF_BEG basic_string<CharT, Traits, Allocator, Options> BOOST_RV_REF_END x
+      , const basic_string<CharT,Traits,Allocator,Options>& y)
 {
    x += y;
    return boost::move(x);
 }
 
-template <class CharT, class Traits, class Allocator> inline
-   basic_string<CharT, Traits, Allocator> operator+
-      (const basic_string<CharT,Traits,Allocator>& x
-      ,BOOST_RV_REF_BEG basic_string<CharT, Traits, Allocator> BOOST_RV_REF_END y)
+template <class CharT, class Traits, class Allocator, class Options> inline
+   basic_string<CharT, Traits, Allocator, Options> operator+
+      (const basic_string<CharT,Traits,Allocator,Options>& x
+      ,BOOST_RV_REF_BEG basic_string<CharT, Traits, Allocator, Options> BOOST_RV_REF_END y)
 {
    y.insert(y.begin(), x.begin(), x.end());
    return boost::move(y);
 }
 
-template <class CharT, class Traits, class Allocator> inline
-   basic_string<CharT, Traits, Allocator> operator+
-      (const CharT* s, basic_string<CharT, Traits, Allocator> y)
+template <class CharT, class Traits, class Allocator, class Options> inline
+   basic_string<CharT, Traits, Allocator, Options> operator+
+      (const CharT* s, basic_string<CharT, Traits, Allocator, Options> y)
 {
    BOOST_ASSERT(s != 0);
    y.insert(y.begin(), s, s + Traits::length(s));
    return y;
 }
 
-template <class CharT, class Traits, class Allocator> inline
-   basic_string<CharT,Traits,Allocator> operator+
-      (basic_string<CharT,Traits,Allocator> x, const CharT* s)
+template <class CharT, class Traits, class Allocator, class Options> inline
+   basic_string<CharT,Traits,Allocator,Options> operator+
+      (basic_string<CharT,Traits,Allocator,Options> x, const CharT* s)
 {
    x += s;  //operator+= checks s != 0
    return x;
 }
 
-template <class CharT, class Traits, class Allocator> inline
-   basic_string<CharT,Traits,Allocator> operator+
-      (CharT c, basic_string<CharT,Traits,Allocator> y)
+template <class CharT, class Traits, class Allocator, class Options> inline
+   basic_string<CharT,Traits,Allocator,Options> operator+
+      (CharT c, basic_string<CharT,Traits,Allocator,Options> y)
 {
    y.insert(y.begin(), c);
    return y;
 }
 
-template <class CharT, class Traits, class Allocator> inline
-   basic_string<CharT,Traits,Allocator> operator+
-      (basic_string<CharT,Traits,Allocator> x, const CharT c)
+template <class CharT, class Traits, class Allocator, class Options> inline
+   basic_string<CharT,Traits,Allocator,Options> operator+
+      (basic_string<CharT,Traits,Allocator,Options> x, const CharT c)
 {
    x += c;
    return x;
@@ -3401,227 +3443,227 @@ template <class CharT, class Traits, class Allocator> inline
 
 // Operator== and operator!=
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator==(const basic_string<CharT,Traits,Allocator>& x, const basic_string<CharT,Traits,Allocator>& y)
+operator==(const basic_string<CharT,Traits,Allocator,Options>& x, const basic_string<CharT,Traits,Allocator,Options>& y)
 {
    return x.size() == y.size() &&
           Traits::compare(x.data(), y.data(), x.size()) == 0;
 }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator==(const CharT* s, const basic_string<CharT,Traits,Allocator>& y)
+operator==(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y)
 {
    BOOST_ASSERT(s != 0);
-   typename basic_string<CharT,Traits,Allocator>::size_type n = Traits::length(s);
+   typename basic_string<CharT,Traits,Allocator,Options>::size_type n = Traits::length(s);
    return n == y.size() && Traits::compare(s, y.data(), n) == 0;
 }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator==(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
+operator==(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s)
 {
    BOOST_ASSERT(s != 0);
-   typename basic_string<CharT,Traits,Allocator>::size_type n = Traits::length(s);
+   typename basic_string<CharT,Traits,Allocator,Options>::size_type n = Traits::length(s);
    return x.size() == n && Traits::compare(x.data(), s, n) == 0;
 }
 
-template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
+template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
 inline 
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-      operator==( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator>& y)
+      operator==( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y)
 {
    return x.size() == y.size() &&
           Traits::compare(x.data(), y.data(), x.size()) == 0;
 }
 
-template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
+template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
 inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-      operator==( const basic_string<CharT,Traits,Allocator>& x, BasicStringView<CharT,Traits> y)
+      operator==( const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y)
 {
    return x.size() == y.size() &&
           Traits::compare(x.data(), y.data(), x.size()) == 0;
 }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator!=(const basic_string<CharT,Traits,Allocator>& x, const basic_string<CharT,Traits,Allocator>& y)
+operator!=(const basic_string<CharT,Traits,Allocator,Options>& x, const basic_string<CharT,Traits,Allocator,Options>& y)
    {  return !(x == y);  }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator!=(const CharT* s, const basic_string<CharT,Traits,Allocator>& y)
+operator!=(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y)
 {
    return !(s == y);
 }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator!=(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
+operator!=(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s)
 {
    return !(x == s);
 }
 
-template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
+template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
 inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator!=( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator>& y)
+operator!=( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y)
    {  return !(x == y);  }
 
-template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
+template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
 inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator!=( const basic_string<CharT,Traits,Allocator>& x, BasicStringView<CharT,Traits> y)
+operator!=( const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y)
    {  return !(x == y);  }
 
 // Operator< (and also >, <=, and >=).
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator<(const basic_string<CharT,Traits,Allocator>& x, const basic_string<CharT,Traits,Allocator>& y)
+operator<(const basic_string<CharT,Traits,Allocator,Options>& x, const basic_string<CharT,Traits,Allocator,Options>& y)
 {
    return x.compare(y) < 0;
 }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator<(const CharT* s, const basic_string<CharT,Traits,Allocator>& y)
+operator<(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y)
 {
    return y.compare(s) > 0;
 }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator<(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
+operator<(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s)
 {
    return x.compare(s) < 0;
 }
 
-template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
+template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
 inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator<( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator>& y)
+operator<( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y)
    {  return y.compare(x) > 0;  }
 
-template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
+template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
 inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator<(  const basic_string<CharT,Traits,Allocator>& x, BasicStringView<CharT,Traits> y)
+operator<(  const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y)
    {  return x.compare(y) < 0;  }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator>(const basic_string<CharT,Traits,Allocator>& x, const basic_string<CharT,Traits,Allocator>& y)
+operator>(const basic_string<CharT,Traits,Allocator,Options>& x, const basic_string<CharT,Traits,Allocator,Options>& y)
 {  return y < x;  }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator>(const CharT* s, const basic_string<CharT,Traits,Allocator>& y)
+operator>(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y)
 {  return y < s;  }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator>(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
+operator>(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s)
 {  return s < x;  }
 
-template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
+template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
 inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator>( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator>& y)
+operator>( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y)
    {  return y < x;  }
 
-template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
+template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
 inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator>( const basic_string<CharT,Traits,Allocator>& x, BasicStringView<CharT,Traits> y)
+operator>( const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y)
    {  return y < x;  }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator<=(const basic_string<CharT,Traits,Allocator>& x, const basic_string<CharT,Traits,Allocator>& y)
+operator<=(const basic_string<CharT,Traits,Allocator,Options>& x, const basic_string<CharT,Traits,Allocator,Options>& y)
 {
   return !(y < x);
 }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator<=(const CharT* s, const basic_string<CharT,Traits,Allocator>& y)
+operator<=(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y)
    {  return !(y < s);  }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator<=(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
+operator<=(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s)
    {  return !(s < x);  }
 
 
-template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
+template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
 inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator<=( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator>& y)
+operator<=( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y)
    {  return !(y < x);  }
 
-template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
+template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
 inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator<=( const basic_string<CharT,Traits,Allocator>& x, BasicStringView<CharT,Traits> y)
+operator<=( const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y)
    {  return !(y < x);  }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator>=(const basic_string<CharT,Traits,Allocator>& x,
-           const basic_string<CharT,Traits,Allocator>& y)
+operator>=(const basic_string<CharT,Traits,Allocator,Options>& x,
+           const basic_string<CharT,Traits,Allocator,Options>& y)
    {  return !(x < y);  }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator>=(const CharT* s, const basic_string<CharT,Traits,Allocator>& y)
+operator>=(const CharT* s, const basic_string<CharT,Traits,Allocator,Options>& y)
    {  return !(s < y);  }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline bool
-operator>=(const basic_string<CharT,Traits,Allocator>& x, const CharT* s)
+operator>=(const basic_string<CharT,Traits,Allocator,Options>& x, const CharT* s)
    {  return !(x < s);  }
 
-template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
+template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
 inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator>=( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator>& y)
+operator>=( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y)
    {  return !(x < y);  }
 
-template <class CharT, class Traits, class Allocator, template <class, class> class BasicStringView>
+template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
 inline
    BOOST_CONTAINER_DOC1ST( bool, 
                            typename dtl::disable_if
                               <is_string< BasicStringView<CharT BOOST_MOVE_I Traits> > BOOST_MOVE_I bool >::type)
-operator>=( const basic_string<CharT,Traits,Allocator>& x, BasicStringView<CharT,Traits> y)
+operator>=( const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y)
    {  return !(x < y);  }
 
 // Swap.
-template <class CharT, class Traits, class Allocator>
-inline void swap(basic_string<CharT,Traits,Allocator>& x, basic_string<CharT,Traits,Allocator>& y)
+template <class CharT, class Traits, class Allocator, class Options>
+inline void swap(basic_string<CharT,Traits,Allocator,Options>& x, basic_string<CharT,Traits,Allocator,Options>& y)
     BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
 {  x.swap(y);  }
 
@@ -3647,17 +3689,17 @@ string_fill(std::basic_ostream<CharT, Traits>& os,
 }  //namespace dtl {
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 std::basic_ostream<CharT, Traits>&
-operator<<(std::basic_ostream<CharT, Traits>& os, const basic_string<CharT,Traits,Allocator>& s)
+operator<<(std::basic_ostream<CharT, Traits>& os, const basic_string<CharT,Traits,Allocator,Options>& s)
 {
    typename std::basic_ostream<CharT, Traits>::sentry sentry(os);
    bool ok = false;
 
    if (sentry) {
       ok = true;
-      typename basic_string<CharT,Traits,Allocator>::size_type n = s.size();
-      typename basic_string<CharT,Traits,Allocator>::size_type pad_len = 0;
+      typename basic_string<CharT,Traits,Allocator,Options>::size_type n = s.size();
+      typename basic_string<CharT,Traits,Allocator,Options>::size_type pad_len = 0;
       const bool left = (os.flags() & std::ios::left) != 0;
       const std::size_t w = static_cast<std::size_t>(os.width(0));
       std::basic_streambuf<CharT, Traits>* buf = os.rdbuf();
@@ -3682,9 +3724,9 @@ operator<<(std::basic_ostream<CharT, Traits>& os, const basic_string<CharT,Trait
 }
 
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 std::basic_istream<CharT, Traits>&
-operator>>(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allocator>& s)
+operator>>(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allocator,Options>& s)
 {
    typename std::basic_istream<CharT, Traits>::sentry sentry(is);
 
@@ -3729,11 +3771,11 @@ operator>>(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allo
    return is;
 }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 std::basic_istream<CharT, Traits>&
-getline(std::istream& is, basic_string<CharT,Traits,Allocator>& s,CharT delim)
+getline(std::istream& is, basic_string<CharT,Traits,Allocator,Options>& s,CharT delim)
 {
-   typename basic_string<CharT,Traits,Allocator>::size_type nread = 0;
+   typename basic_string<CharT,Traits,Allocator,Options>::size_type nread = 0;
    typename std::basic_istream<CharT, Traits>::sentry sentry(is, true);
    if (sentry) {
       std::basic_streambuf<CharT, Traits>* buf = is.rdbuf();
@@ -3761,9 +3803,9 @@ getline(std::istream& is, basic_string<CharT,Traits,Allocator>& s,CharT delim)
    return is;
 }
 
-template <class CharT, class Traits, class Allocator>
+template <class CharT, class Traits, class Allocator, class Options>
 inline std::basic_istream<CharT, Traits>&
-getline(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allocator>& s)
+getline(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allocator,Options>& s)
 {
    return getline(is, s, '\n');
 }

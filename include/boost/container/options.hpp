@@ -244,6 +244,26 @@ class default_next_capacity;
 
 typedef vector_opt<void, void> vector_null_opt;
 
+template<class GrowthType, class StoredSizeType>
+struct string_opt
+{
+   typedef GrowthType      growth_factor_type;
+   typedef StoredSizeType  stored_size_type;
+
+   template<class AllocTraits>
+   struct get_stored_size_type
+      : get_stored_size_type_with_alloctraits<AllocTraits, StoredSizeType>
+   {};
+};
+
+typedef string_opt<void, void> string_null_opt;
+
+struct growth_factor_50;
+
+struct growth_factor_60;
+
+struct growth_factor_100;
+
 #else
 
 //!This growth factor argument specifies that the container should increase its
@@ -671,6 +691,40 @@ struct deque_options
 //! by \c boost::container::deque.
 template<class ...Options>
 using deque_options_t = typename boost::container::deque_options<Options...>::type;
+
+#endif
+
+//! Helper metafunction to combine options into a single type to be used
+//! by \c boost::container::string.
+//! Supported options are: \c boost::container::growth_factor and \c boost::container::stored_size
+#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
+template<class ...Options>
+#else
+template<class O1 = void, class O2 = void, class O3 = void, class O4 = void>
+#endif
+struct string_options
+{
+   /// @cond
+   typedef typename ::boost::intrusive::pack_options
+      < string_null_opt,
+      #if !defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
+      O1, O2, O3, O4
+      #else
+      Options...
+      #endif
+      >::type packed_options;
+   typedef string_opt< typename packed_options::growth_factor_type
+                     , typename packed_options::stored_size_type> implementation_defined;
+   /// @endcond
+   typedef implementation_defined type;
+};
+
+#if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+
+//! Helper alias metafunction to combine options into a single type to be used
+//! by \c boost::container::string.
+template<class ...Options>
+using string_options_t = typename boost::container::string_options<Options...>::type;
 
 #endif
 

@@ -799,9 +799,6 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
    }
 };
 
-struct growth_factor_60;
-struct growth_factor_100;
-
 template<class Options, class AllocatorSizeType>
 struct get_vector_opt
 {

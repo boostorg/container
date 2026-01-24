@@ -272,8 +272,9 @@ struct small_flat_multimap_of
 };
 
 template <class CharT
-         ,class Traits = std::char_traits<CharT>
-         ,class Allocator  = void >
+         ,class Traits     = std::char_traits<CharT>
+         ,class Allocator  = void
+         ,class Options    = void >
 class basic_string;
 
 typedef basic_string <char>   string;
