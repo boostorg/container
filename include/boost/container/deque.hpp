@@ -2024,7 +2024,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //!
    //! <b>Throws</b>: If memory allocation throws or the in-place constructor throws.
    //!
-   //! <b>Complexity</b>: If p is end(), amortized constant time
+   //! <b>Complexity</b>: If p is end() or begin() or begin(), amortized constant time
    //!   Linear time otherwise.
    template <class... Args>
    iterator emplace(const_iterator p, BOOST_FWD_REF(Args)... args)
@@ -2159,7 +2159,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //!
    //! <b>Throws</b>: If memory allocation throws or x's copy constructor throws.
    //!
-   //! <b>Complexity</b>: If p is end(), amortized constant time
+   //! <b>Complexity</b>: If p is end() or begin(), amortized constant time
    //!   Linear time otherwise.
    iterator insert(const_iterator p, const T &x);
 
@@ -2171,7 +2171,7 @@ class deque : protected deque_base<typename real_allocator<T, Allocator>::type, 
    //!
    //! <b>Throws</b>: If memory allocation throws.
    //!
-   //! <b>Complexity</b>: If p is end(), amortized constant time
+   //! <b>Complexity</b>: If p is end() or begin(), amortized constant time
    //!   Linear time otherwise.
    iterator insert(const_iterator p, T &&x);
    #else
