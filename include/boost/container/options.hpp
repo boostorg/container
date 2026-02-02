@@ -699,6 +699,52 @@ using deque_options_t = typename boost::container::deque_options<Options...>::ty
 ////////////////////////////////////////////////////////////////
 //
 //
+//          OPTIONS FOR SEGMENTED_VECTOR CONTAINERS
+//
+//
+////////////////////////////////////////////////////////////////
+
+#if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+template<std::size_t BlockBytes, std::size_t BlockSize, class StoredSizeType, bool Reservable>
+struct segmented_vector_opt : public deque_opt<BlockBytes, BlockSize, StoredSizeType, Reservable>
+{};
+
+typedef segmented_vector_opt<0u, 0u, void, false> segmented_vector_null_opt;
+
+#endif
+
+//! Helper metafunction to combine options into a single type to be used
+//! by \c boost::container::deque.
+//! Supported options are: \c boost::container::block_bytes, \c boost::container::block_size,
+//! \c boost::container::stored_size and \c boost::container::reservable
+#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
+template<class ...Options>
+struct segmented_vector_options
+   : deque_options<Options...>
+#else
+template<class O1 = void, class O2 = void, class O3 = void, class O4 = void>
+struct segmented_vector_options
+   : deque_options<O1, O2, O3, O4>
+#endif
+{};
+
+#if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+
+//! Helper alias metafunction to combine options into a single type to be used
+//! by \c boost::container::deque.
+template<class ...Options>
+using segmented_vector_options_t = typename boost::container::deque_options<Options...>::type;
+
+#endif
+
+
+
+
+
+////////////////////////////////////////////////////////////////
+//
+//
 //          OPTIONS FOR STRING CONTAINER
 //
 //

@@ -15,6 +15,7 @@
 #include <boost/container/devector.hpp>
 #include <boost/container/small_vector.hpp>
 #include <boost/container/stable_vector.hpp>
+#include <boost/container/segmented_vector.hpp>
 #include <iomanip>
 
 #include <memory>    //std::allocator
@@ -446,6 +447,9 @@ void test_vectors_impl()
          vector_test_template< bc::deque<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                                "deque          ", bp);
          vector_test_template< bc::deque<IntType, std::allocator<IntType>,
             typename bc::deque_options<bc::reservable<true> >::type       >, Operation >(numit[i], numele[i],                                "deque(reserv)  ", bp);
+         vector_test_template< bc::segmented_vector<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                     "segmented_vec  ", bp);
+         vector_test_template< bc::segmented_vector<IntType, std::allocator<IntType>,
+            typename bc::deque_options<bc::reservable<true> >::type       >, Operation >(numit[i], numele[i],                                "seg_vec(reserv)", bp);
       }
       std::cout << "---------------------------------\n---------------------------------\n";
    }
