@@ -63,7 +63,7 @@ void test_stored_size_type()
       BOOST_CONTAINER_STATIC_ASSERT(sizeof(string_t)  == theoretical_long_repr_t);
       const std::size_t theoretical_sso_cap = theoretical_long_repr_t - 2u;   //-2 --> 1 for short header, 1 for null terminator
       string_t s;
-      BOOST_ASSERT(s.capacity() == theoretical_sso_cap);
+      BOOST_TEST(s.capacity() == theoretical_sso_cap);
    }
 }
 
