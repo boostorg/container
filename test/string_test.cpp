@@ -2394,6 +2394,10 @@ void test_with_lightweight_test()
    test_reserve_and_shrink();
 }
 
+//Test the expected sizeof()
+BOOST_CONTAINER_STATIC_ASSERT_MSG(3*sizeof(void*) == sizeof(string), "sizeof has an unexpected value");
+
+
 int main()
 {
    if(string_test<char>()){

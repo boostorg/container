@@ -379,6 +379,10 @@ void test_merge_from_different_comparison()
    set1.merge(set2);
 }
 
+//Test the expected sizeof()
+BOOST_CONTAINER_STATIC_ASSERT_MSG(4*sizeof(void*) == sizeof(set<int>), "sizeof has an unexpected value");
+BOOST_CONTAINER_STATIC_ASSERT_MSG(4*sizeof(void*) == sizeof(multiset<int>), "sizeof has an unexpected value");
+
 int main ()
 {
    using namespace boost::container::test;

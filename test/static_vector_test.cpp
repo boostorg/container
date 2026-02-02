@@ -702,6 +702,10 @@ void static_vector_triviality(){}
 
 #endif   //BOOST_INTRUSIVE_CONCEPTS_BASED_OVERLOADING
 
+//Test the expected sizeof()
+BOOST_CONTAINER_STATIC_ASSERT_MSG(5*sizeof(void*) == sizeof(static_vector<void*, 4>), "sizeof has an unexpected value");
+
+
 int main(int, char* [])
 {
    using boost::container::test::movable_and_copyable_int;

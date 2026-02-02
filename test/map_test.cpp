@@ -386,6 +386,10 @@ bool constructor_template_auto_deduction_test()
 
 }}}   //namespace boost::container::test
 
+//Test the expected sizeof()
+BOOST_CONTAINER_STATIC_ASSERT_MSG(4*sizeof(void*) == sizeof(map<int, int>), "sizeof has an unexpected value");
+BOOST_CONTAINER_STATIC_ASSERT_MSG(4*sizeof(void*) == sizeof(multimap<int, int>), "sizeof has an unexpected value");
+
 int main ()
 {
    using namespace boost::container::test;

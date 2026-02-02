@@ -413,6 +413,9 @@ struct alloc_propagate_base<boost_container_deque>
 
 }}}   //namespace boost::container::test
 
+//Test the expected sizeof()
+BOOST_CONTAINER_STATIC_ASSERT_MSG(4*sizeof(void*) == sizeof(deque<int>), "sizeof has an unexpected value");
+
 int main ()
 {
    if(!do_recursive_deque_test())
