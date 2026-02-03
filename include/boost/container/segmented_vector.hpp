@@ -40,8 +40,6 @@ namespace container {
 //! \tparam Allocator The allocator used for all internal memory management, use void
 //!   for the default allocator
 //! \tparam Options A type produced from \c boost::container::segmented_vector_options.
-//!
-//! Warning: segmented_vector is EXPERIMENTAL, API and ABI will change.
 template <class T, class Allocator = void, class Options = void>
 #else
 template <class T, class Allocator, class Options>

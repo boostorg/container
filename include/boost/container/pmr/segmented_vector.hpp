@@ -24,7 +24,6 @@ namespace pmr {
 
 #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
-//! Warning: segmented_vector is EXPERIMENTAL, API and ABI will change.
 template <class T>
 using segmented_vector = boost::container::segmented_vector<T, polymorphic_allocator<T>>;
 
@@ -32,7 +31,6 @@ using segmented_vector = boost::container::segmented_vector<T, polymorphic_alloc
 
 //! A portable metafunction to obtain a segmented_vector
 //! that uses a polymorphic allocator.
-//! Warning: segmented_vector is EXPERIMENTAL, API and ABI will change.
 template<class T>
 struct segmented_vector_of
 {
