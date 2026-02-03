@@ -46,11 +46,11 @@ template <class T, class Allocator = void, class Options = void>
 #else
 template <class T, class Allocator, class Options>
 #endif
-class segmented_vector : public deque_impl<T, Allocator, Options>
+class segmented_vector : public deque_impl<T, Allocator, true, Options>
 {
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    BOOST_COPYABLE_AND_MOVABLE(segmented_vector)
-   typedef deque_impl<T, Allocator, Options> base_type;
+   typedef deque_impl<T, Allocator, true, Options> base_type;
 #endif
 
    public:
@@ -865,7 +865,7 @@ namespace boost {
 
 template <class T, class Allocator, class Options>
 struct has_trivial_destructor_after_move<boost::container::segmented_vector<T, Allocator, Options> >
-   : has_trivial_destructor_after_move<boost::container::deque_impl<T, Allocator, Options> >
+   : has_trivial_destructor_after_move<boost::container::deque_impl<T, Allocator, true, Options> >
 {};
 
 }  //namespace boost {

@@ -47,12 +47,12 @@ template <class T, class Allocator = void, class Options = void>
 #else
 template <class T, class Allocator, class Options>
 #endif
-class deque : public deque_impl<T, Allocator, Options>
+class deque : public deque_impl<T, Allocator, false, Options>
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    BOOST_COPYABLE_AND_MOVABLE(deque)
    private:
-   typedef deque_impl<T, Allocator, Options> base_type;
+   typedef deque_impl<T, Allocator, false, Options> base_type;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -967,7 +967,7 @@ namespace boost {
 
 template <class T, class Allocator, class Options>
 struct has_trivial_destructor_after_move<boost::container::deque<T, Allocator, Options> >
-   : has_trivial_destructor_after_move<boost::container::deque_impl<T, Allocator, Options> >
+   : has_trivial_destructor_after_move<boost::container::deque_impl<T, Allocator, false, Options> >
 {};
 
 }  //namespace boost {

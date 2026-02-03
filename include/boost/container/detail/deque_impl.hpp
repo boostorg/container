@@ -376,11 +376,119 @@ struct get_deque_opt<void, AllocatorSizeType>
    typedef deque_opt<deque_null_opt::block_bytes, deque_null_opt::block_size, AllocatorSizeType, deque_null_opt::reservable> type;
 };
 
+// External members holder: holds m_start_off when not single-ended; specialization for single-ended has no start offset member.
+template <class Allocator, class StoredSizeType, bool SingleEnded>
+struct deque_members_holder;
+
+template <class Allocator, class StoredSizeType>
+struct deque_members_holder<Allocator, StoredSizeType, false> : Allocator
+{
+   typedef typename allocator_traits<Allocator>::pointer    pointer;
+   typedef typename allocator_traits<Allocator>::size_type  size_type;
+   typedef typename allocator_traits<Allocator>::template rebind_traits<pointer>::pointer PtrAllocPtr;
+
+   PtrAllocPtr     m_map;
+   StoredSizeType  m_map_size;
+   StoredSizeType  m_start_off;
+   StoredSizeType  m_finish_off;
+
+   deque_members_holder()
+      : Allocator()
+      , m_map(), m_map_size()
+      , m_start_off(), m_finish_off()
+   {}
+
+   template<class ValAllocConvertible>
+   explicit deque_members_holder(BOOST_FWD_REF(ValAllocConvertible) va)
+      : Allocator(boost::forward<ValAllocConvertible>(va))
+      , m_map(), m_map_size()
+      , m_start_off(), m_finish_off()
+   {}
+
+   void swap(deque_members_holder &x) BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      ::boost::adl_move_swap(this->m_map, x.m_map);
+      ::boost::adl_move_swap(this->m_map_size, x.m_map_size);
+      ::boost::adl_move_swap(this->m_start_off, x.m_start_off);
+      ::boost::adl_move_swap(this->m_finish_off, x.m_finish_off);
+   }
+
+   BOOST_CONTAINER_FORCEINLINE StoredSizeType get_start_off() const BOOST_NOEXCEPT_OR_NOTHROW
+   {  return m_start_off;  }
+
+   BOOST_CONTAINER_FORCEINLINE void set_start_off(size_type v) BOOST_NOEXCEPT_OR_NOTHROW
+   {  m_start_off = static_cast<StoredSizeType>(v);  }
+
+   BOOST_CONTAINER_FORCEINLINE void inc_start() BOOST_NOEXCEPT_OR_NOTHROW
+   {  ++m_start_off;  }
+
+   BOOST_CONTAINER_FORCEINLINE void dec_start() BOOST_NOEXCEPT_OR_NOTHROW
+   {  --m_start_off;  }
+
+   BOOST_CONTAINER_FORCEINLINE void inc_start(size_type n) BOOST_NOEXCEPT_OR_NOTHROW
+   {  m_start_off = static_cast<StoredSizeType>(m_start_off + n);  }
+
+   BOOST_CONTAINER_FORCEINLINE void dec_start(size_type n) BOOST_NOEXCEPT_OR_NOTHROW
+   {  m_start_off = static_cast<StoredSizeType>(m_start_off - n);  }
+};
+
+template <class Allocator, class StoredSizeType>
+struct deque_members_holder<Allocator, StoredSizeType, true> : Allocator
+{
+   typedef typename allocator_traits<Allocator>::pointer    pointer;
+   typedef typename allocator_traits<Allocator>::size_type  size_type;
+   typedef typename allocator_traits<Allocator>::template rebind_traits<pointer>::pointer PtrAllocPtr;
+
+   PtrAllocPtr     m_map;
+   StoredSizeType  m_map_size;
+   StoredSizeType  m_finish_off;
+
+   deque_members_holder()
+      : Allocator()
+      , m_map(), m_map_size()
+      , m_finish_off()
+   {}
+
+   template<class ValAllocConvertible>
+   explicit deque_members_holder(BOOST_FWD_REF(ValAllocConvertible) va)
+      : Allocator(boost::forward<ValAllocConvertible>(va))
+      , m_map(), m_map_size()
+      , m_finish_off()
+   {}
+
+   void swap(deque_members_holder &x) BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      ::boost::adl_move_swap(this->m_map, x.m_map);
+      ::boost::adl_move_swap(this->m_map_size, x.m_map_size);
+      ::boost::adl_move_swap(this->m_finish_off, x.m_finish_off);
+   }
+
+   BOOST_CONTAINER_FORCEINLINE StoredSizeType get_start_off() const BOOST_NOEXCEPT_OR_NOTHROW
+   {  return 0;  }
+
+   BOOST_CONTAINER_FORCEINLINE void set_start_off(size_type s) BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      BOOST_ASSERT(s == 0);
+      (void)s;
+   }
+
+   BOOST_CONTAINER_FORCEINLINE void inc_start() BOOST_NOEXCEPT_OR_NOTHROW
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE void dec_start() BOOST_NOEXCEPT_OR_NOTHROW
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE void inc_start(size_type) BOOST_NOEXCEPT_OR_NOTHROW
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE void dec_start(size_type) BOOST_NOEXCEPT_OR_NOTHROW
+   {}
+};
 
 // Deque base class.  It has two purposes.  First, its constructor
 //  and destructor allocate (but don't initialize) storage.  This makes
 //  exception safety easier.
-template <class Allocator, class Options>
+template <class Allocator, class Options, bool SingleEnded>
 class deque_base
 {
    BOOST_COPYABLE_AND_MOVABLE(deque_base)
@@ -481,6 +589,9 @@ class deque_base
 
    protected:
 
+   BOOST_STATIC_CONSTEXPR bool is_single_ended = SingleEnded;
+   typedef dtl::bool_<is_single_ended> is_single_ended_t;
+
    void swap_members(deque_base &x) BOOST_NOEXCEPT_OR_NOTHROW
    {
       this->members_.swap(x.members_);
@@ -494,7 +605,7 @@ class deque_base
          boost::container::throw_length_error("get_next_capacity, allocator's max size reached");
    }
 
-   void test_size_against_n_nodes(size_type n_nodes)
+   BOOST_CONTAINER_FORCEINLINE void test_size_against_n_nodes(size_type n_nodes)
    {
       test_size_against_max(size_type(size_type(n_nodes * get_block_size()) - 1u));
    }
@@ -505,9 +616,9 @@ class deque_base
       //Even a zero element initialized map+nodes needs at least 1 node (for sentinel finish position)
       size_type num_nodes = size_type(num_elements / block_size + 1u);
 
-      //Allocate at least one extra slot on each end to avoid inmediate map reallocation on push/front insertions
-      const size_type map_size = dtl::max_value(size_type(InitialMapSize), size_type(num_nodes + 2u));
-      const size_type start_map_pos = size_type(map_size - num_nodes)/2u;
+      //Allocate at least one extra slot on each used end to avoid inmediate map reallocation on push/front insertions
+      const size_type map_size = dtl::max_value(size_type(InitialMapSize), size_type(num_nodes + 1u + size_type(is_single_ended)));
+      const size_type start_map_pos = is_single_ended ? 0u : size_type(map_size - num_nodes)/2u;
 
       //The end position must be representable in stored_size_type
       this->test_size_against_n_nodes(map_size);
@@ -532,17 +643,28 @@ class deque_base
       }
       BOOST_CONTAINER_CATCH_END
 
-      this->prot_set_start_finish_from_node(start_map_pos, num_elements);
+      this->members_.set_start_off(static_cast<stored_size_type>(start_map_pos*block_size));
+      this->members_.m_finish_off = static_cast<stored_size_type>(members_.get_start_off() + num_elements);
    }
 
-   static size_type priv_new_offset(bool add_at_front, size_type map_size, size_type active_nodes, size_type additional_nodes)
+   BOOST_CONTAINER_FORCEINLINE static difference_type priv_new_offset   //!single_ended overload
+      (dtl::bool_<false>, bool add_at_front, size_type map_size, size_type active_nodes, size_type additional_nodes)
    {
-      return size_type(size_type(map_size - active_nodes) / 2 + (add_at_front ? +additional_nodes : +0));
+      return difference_type(size_type(map_size - active_nodes) / 2 + (add_at_front ? +additional_nodes : +0));
+   }
+
+   BOOST_CONTAINER_FORCEINLINE static difference_type priv_new_offset   //single_ended overload
+      (dtl::bool_<true>, bool add_at_front, size_type , size_type , size_type )
+   {
+      (void)add_at_front;
+      BOOST_ASSERT(!add_at_front);  //logic_error
+      return 0;
    }
 
    void prot_reallocate_map_and_nodes  //is_reservable == true
       (dtl::bool_<true>, const size_type new_elems, const bool add_at_front)
    {
+      BOOST_ASSERT(!(is_single_ended && add_at_front));  //logic_error
       const ptr_alloc_ptr start_node = this->prot_start_node();
       const ptr_alloc_ptr finish_node = this->prot_finish_node();
       const ptr_alloc_ptr next_finish_node = finish_node + 1u;
@@ -561,7 +683,7 @@ class deque_base
 
       //Check for 1.5 factor
       if (old_map_size/3u >= new_active_nodes/2u) {
-         new_nstart = old_map + difference_type(priv_new_offset(add_at_front, old_map_size, new_active_nodes, additional_nodes + unused_slots));
+         new_nstart = old_map + priv_new_offset(is_single_ended_t(), add_at_front, old_map_size, new_active_nodes, additional_nodes + unused_slots);
          const ptr_alloc_ptr end_node = start_node + difference_type(old_active_nodes);
          if (new_nstart < start_node)
             boost::movelib::rotate_gcd(new_nstart, start_node, end_node);
@@ -569,15 +691,15 @@ class deque_base
             boost::movelib::rotate_gcd(start_node, end_node, new_nstart + old_active_nodes);
       }
       else {
-         //1.5 increase, but at least one spare slot on each end
-         const size_type new_map_size = dtl::max_value(size_type(old_map_size + old_map_size/2u), size_type(new_active_nodes + 2u));
+         //1.5 increase, but at least one spare slot on each used end
+         const size_type new_map_size =
+            dtl::max_value(size_type(old_map_size + old_map_size/2u), size_type(new_active_nodes + 1u + size_type(is_single_ended)));
 
          //The end position must be representable in stored_size_type
          this->test_size_against_n_nodes(new_map_size);
 
          const ptr_alloc_ptr new_map = this->prot_allocate_map(new_map_size);
-         const size_type new_active_off = priv_new_offset(add_at_front, new_map_size, new_active_nodes, additional_nodes + unused_slots);
-         new_nstart = new_map + difference_type(new_active_off);
+         new_nstart = new_map + priv_new_offset(is_single_ended_t(), add_at_front, new_map_size, new_active_nodes, additional_nodes + unused_slots);
 
          const size_type new_nodes = size_type(new_map_size - old_map_size);
 
@@ -616,6 +738,7 @@ class deque_base
    void prot_reallocate_map_and_nodes  //is_reservable == false
       (dtl::bool_<false>, const size_type new_elems, const bool add_at_front)
    {
+      BOOST_ASSERT(!(is_single_ended && add_at_front));  //logic_error
       const size_type additional_nodes = size_type((new_elems - 1u)/get_block_size() + 1u);
 
       const ptr_alloc_ptr start_node  = this->prot_start_node();
@@ -634,7 +757,7 @@ class deque_base
          ptr_alloc_ptr new_nstart;
 
          if (old_map_size/2u >= new_active_nodes) {
-            new_nstart = old_map + difference_type(priv_new_offset(add_at_front, old_map_size, new_active_nodes, additional_nodes));
+            new_nstart = old_map + priv_new_offset(is_single_ended_t(), add_at_front, old_map_size, new_active_nodes, additional_nodes);
             if (new_nstart < start_node)
                boost::container::move_n(start_node, old_active_nodes, new_nstart);
             else
@@ -642,14 +765,14 @@ class deque_base
          }
          else {
             //Doubling size, but at least one spare slot on each end
-            const size_type new_map_size = dtl::max_value(size_type(old_map_size*2), size_type(new_active_nodes + 2u));
+            const size_type new_map_size = dtl::max_value(size_type(old_map_size*2), size_type(new_active_nodes + 1u + size_type(is_single_ended)));
 
             //The end position must be representable in stored_size_type
             this->test_size_against_n_nodes(new_map_size);
 
             const ptr_alloc_ptr new_map = this->prot_allocate_map(new_map_size);
 
-            new_nstart = new_map + difference_type(priv_new_offset(add_at_front, new_map_size, new_active_nodes, additional_nodes));
+            new_nstart = new_map + priv_new_offset(is_single_ended_t(), add_at_front, new_map_size, new_active_nodes, additional_nodes);
             boost::container::move_n(start_node, old_active_nodes, new_nstart);
 
             this->prot_deallocate_map(old_map, old_map_size);
@@ -721,7 +844,7 @@ class deque_base
          this->prot_deallocate_map(this->members_.m_map, this->members_.m_map_size);
          this->members_.m_map = ptr_alloc_ptr();
          this->members_.m_map_size = 0u;
-         this->members_.m_start_off = 0u;
+         this->members_.set_start_off(0u);
          this->members_.m_finish_off = 0u;
       }
    }
@@ -729,37 +852,8 @@ class deque_base
    enum { InitialMapSize = 4 };
 
    protected:
-   struct members_holder
-      :  public allocator_type
-   {
-      friend class deque_base;
-      members_holder()
-         :  allocator_type()
-         ,  m_map(), m_map_size()
-         ,  m_start_off(), m_finish_off()
-      {}
-
-      template<class ValAllocConvertible>
-      explicit members_holder(BOOST_FWD_REF(ValAllocConvertible) va)
-         : allocator_type(boost::forward<ValAllocConvertible>(va))
-         , m_map(), m_map_size()
-         , m_start_off(), m_finish_off()
-      {}
-
-      void swap(members_holder &x) BOOST_NOEXCEPT_OR_NOTHROW
-      {
-         ::boost::adl_move_swap(this->m_map, x.m_map);
-         ::boost::adl_move_swap(this->m_map_size, x.m_map_size);
-         ::boost::adl_move_swap(this->m_start_off, x.m_start_off);
-         ::boost::adl_move_swap(this->m_finish_off, x.m_finish_off);
-      }
-
-      ptr_alloc_ptr     m_map;
-      stored_size_type  m_map_size;
-      private:
-      stored_size_type  m_start_off;
-      stored_size_type  m_finish_off;
-   } members_;
+   typedef deque_members_holder<allocator_type, stored_size_type, is_single_ended> members_holder;
+   members_holder members_;
 
    inline allocator_type &alloc() BOOST_NOEXCEPT_OR_NOTHROW
    {  return members_;  }
@@ -775,12 +869,13 @@ class deque_base
 
    BOOST_CONTAINER_FORCEINLINE size_type prot_front_free_capacity() const
    {
+      BOOST_ASSERT(!is_single_ended);
       BOOST_IF_CONSTEXPR(is_reservable){
-         return static_cast<size_type>(this->members_.m_start_off);
+         return static_cast<size_type>(this->members_.get_start_off());
       }
       else{
          BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_base::get_block_size();
-         return static_cast<size_type>(this->members_.m_start_off % block_size);
+         return static_cast<size_type>(this->members_.get_start_off() % block_size);
       }
    }
 
@@ -825,8 +920,8 @@ class deque_base
    stored_size_type prot_it_to_start_off(const_iterator it) const
    {
       const size_type off = this->prot_it_to_off(it);
-      BOOST_ASSERT(off >= this->members_.m_start_off);
-      return static_cast<stored_size_type>(off - this->members_.m_start_off);
+      BOOST_ASSERT(off >= this->members_.get_start_off());
+      return static_cast<stored_size_type>(off - this->members_.get_start_off());
    }
 
    /////////////
@@ -841,7 +936,7 @@ class deque_base
 
    BOOST_CONTAINER_FORCEINLINE ptr_alloc_ptr prot_start_node() const
    {
-      return this->prot_off_to_node(this->members_.m_start_off);
+      return this->prot_off_to_node(this->members_.get_start_off());
    }
 
    BOOST_CONTAINER_FORCEINLINE ptr_alloc_ptr prot_finish_node() const
@@ -862,7 +957,7 @@ class deque_base
 
    BOOST_CONTAINER_FORCEINLINE val_alloc_ptr prot_start_cur_unchecked() const
    {
-      return this->prot_off_to_cur_unchecked(this->members_.m_start_off);
+      return this->prot_off_to_cur_unchecked(this->members_.get_start_off());
    }
 
    BOOST_CONTAINER_FORCEINLINE val_alloc_ptr prot_finish_cur_unchecked() const
@@ -872,7 +967,7 @@ class deque_base
 
    BOOST_CONTAINER_FORCEINLINE val_alloc_ptr prot_last_cur_unchecked() const
    {
-      BOOST_ASSERT(members_.m_start_off != members_.m_finish_off);
+      BOOST_ASSERT(members_.get_start_off() != members_.m_finish_off);
       return this->prot_off_to_cur_unchecked(this->members_.m_finish_off-1u);
    }
 
@@ -880,10 +975,10 @@ class deque_base
    //    functions returning iterators to different positions
    //
    BOOST_CONTAINER_FORCEINLINE const_iterator prot_start() const
-   {  return this->prot_off_to_it(members_.m_start_off);  }
+   {  return this->prot_off_to_it(members_.get_start_off());  }
 
    BOOST_CONTAINER_FORCEINLINE iterator prot_start()
-   {  return this->prot_off_to_it(members_.m_start_off);  }
+   {  return this->prot_off_to_it(members_.get_start_off());  }
 
    BOOST_CONTAINER_FORCEINLINE const_iterator prot_finish() const
    {  return this->prot_off_to_it(members_.m_finish_off);  }
@@ -892,14 +987,14 @@ class deque_base
    {  return this->prot_off_to_it(members_.m_finish_off);  }
 
    BOOST_CONTAINER_FORCEINLINE const_iterator prot_nth(size_type n) const
-   {  return this->prot_off_to_it(size_type(members_.m_start_off + n));  }
+   {  return this->prot_off_to_it(size_type(members_.get_start_off() + n));  }
 
    BOOST_CONTAINER_FORCEINLINE iterator prot_nth(size_type n)
-   {  return this->prot_off_to_it(size_type(members_.m_start_off + n));  }
+   {  return this->prot_off_to_it(size_type(members_.get_start_off() + n));  }
 
    BOOST_CONTAINER_FORCEINLINE iterator prot_back_it()
    {
-      BOOST_ASSERT(members_.m_start_off != members_.m_finish_off);
+      BOOST_ASSERT(members_.get_start_off() != members_.m_finish_off);
       return this->prot_off_to_it(size_type(members_.m_finish_off - 1u));
    }
 
@@ -907,20 +1002,14 @@ class deque_base
    //  size/empty
    //
    BOOST_CONTAINER_FORCEINLINE size_type prot_size() const
-   {  return size_type(this->members_.m_finish_off - this->members_.m_start_off);  }
+   {  return size_type(this->members_.m_finish_off - this->members_.get_start_off());  }
 
    BOOST_CONTAINER_FORCEINLINE bool prot_empty() const
-   {  return this->members_.m_finish_off == this->members_.m_start_off;  }
+   {  return this->members_.m_finish_off == this->members_.get_start_off();  }
 
    //
    //  Functions to move start/finish indexes
    //
-   BOOST_CONTAINER_FORCEINLINE void prot_inc_start()
-   {  ++this->members_.m_start_off;  }
-
-   BOOST_CONTAINER_FORCEINLINE void prot_dec_start()
-   {  --this->members_.m_start_off;  }
-
    BOOST_CONTAINER_FORCEINLINE void prot_inc_finish()
    {  ++this->members_.m_finish_off;  }
 
@@ -933,12 +1022,6 @@ class deque_base
    BOOST_CONTAINER_FORCEINLINE void prot_inc_finish(std::size_t n)
    {  this->members_.m_finish_off = static_cast<stored_size_type>(this->members_.m_finish_off + n);  }
 
-   BOOST_CONTAINER_FORCEINLINE void prot_dec_start(std::size_t n)
-   {  this->members_.m_start_off = static_cast<stored_size_type>(this->members_.m_start_off - n);  }
-
-   BOOST_CONTAINER_FORCEINLINE void prot_inc_start(std::size_t n)
-   {  this->members_.m_start_off = static_cast<stored_size_type>(this->members_.m_start_off + n);  }
-
    //
    //  Functions to obtain indexes from nodes
    //
@@ -948,18 +1031,11 @@ class deque_base
       return static_cast<stored_size_type>(std::size_t(n - this->members_.m_map)*block_size);
    }
 
-   void prot_set_start_finish_from_node(size_type node_idx, size_type n_elements)
-   {
-      BOOST_CONSTEXPR_OR_CONST std::size_t block_size  = deque_base::get_block_size();
-      this->members_.m_start_off  = static_cast<stored_size_type>(node_idx*block_size);
-      this->members_.m_finish_off = static_cast<stored_size_type>(this->members_.m_start_off + n_elements);
-   }
-
    inline void prot_start_update_node(ptr_alloc_ptr new_start)
    {
       //iG: to-do: optimizable avoiding some division/remainder
       std::size_t new_block_off = prot_non_null_node_to_off(new_start);
-      this->members_.m_start_off = static_cast<stored_size_type>(new_block_off + (this->members_.m_start_off % get_block_size()));
+      this->members_.set_start_off(static_cast<stored_size_type>(new_block_off + (members_.get_start_off() % get_block_size())));
    }
 
    inline void prot_finish_update_node(ptr_alloc_ptr new_finish)
@@ -970,10 +1046,10 @@ class deque_base
    }
 
    inline void prot_reset_finish_to_start()
-   {  this->members_.m_finish_off = this->members_.m_start_off;  }
+   {  this->members_.m_finish_off = members_.get_start_off();  }
 
    inline void prot_reset_start_to_finish()
-   {  this->members_.m_start_off = this->members_.m_finish_off;  }
+   {  this->members_.set_start_off(this->members_.m_finish_off);  }
 
    inline val_alloc_val *prot_push_back_simple_pos() const
    {
@@ -994,7 +1070,7 @@ class deque_base
    {
       BOOST_CONSTEXPR_OR_CONST std::size_t block_size  = deque_base::get_block_size();
       //No need to check !m_map, as m_start_off is zero in that case
-      const std::size_t off = this->members_.m_start_off;
+      const std::size_t off = members_.get_start_off();
       const std::size_t rem = off % block_size;
       if(BOOST_LIKELY(rem != 0u)){
          return boost::movelib::to_raw_pointer(this->members_.m_map[difference_type(off/block_size)]) + difference_type(rem-1u);
@@ -1009,17 +1085,17 @@ class deque_base
 
    BOOST_CONTAINER_FORCEINLINE bool prot_pop_front_simple_available() const
    {
-      return size_type(this->members_.m_start_off % get_block_size()) != size_type(get_block_size() - 1u);
+      return size_type(members_.get_start_off() % get_block_size()) != size_type(get_block_size() - 1u);
    }
 
 };
 
-template <class T, class Allocator, class Options>
-class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::type, Options>
+template <class T, class Allocator, bool SingleEnded, class Options>
+class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::type, typename get_deque_opt<Options, typename allocator_traits<typename real_allocator<T, Allocator>::type>::size_type>::type, SingleEnded>
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
-   typedef deque_base<typename real_allocator<T, Allocator>::type, Options> Base;
+   typedef deque_base<typename real_allocator<T, Allocator>::type, typename get_deque_opt<Options, typename allocator_traits<typename real_allocator<T, Allocator>::type>::size_type>::type, SingleEnded> Base;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    typedef typename real_allocator<T, Allocator>::type ValAllocator;
    typedef constant_iterator<T> c_it;
@@ -1032,19 +1108,19 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    //
    //////////////////////////////////////////////
 
-   typedef T                                                                           value_type;
-   typedef ValAllocator                                                                allocator_type;
+   typedef T                                                                              value_type;
+   typedef ValAllocator                                                                   allocator_type;
    typedef typename ::boost::container::allocator_traits<ValAllocator>::pointer           pointer;
    typedef typename ::boost::container::allocator_traits<ValAllocator>::const_pointer     const_pointer;
    typedef typename ::boost::container::allocator_traits<ValAllocator>::reference         reference;
    typedef typename ::boost::container::allocator_traits<ValAllocator>::const_reference   const_reference;
    typedef typename ::boost::container::allocator_traits<ValAllocator>::size_type         size_type;
    typedef typename ::boost::container::allocator_traits<ValAllocator>::difference_type   difference_type;
-   typedef BOOST_CONTAINER_IMPDEF(allocator_type)                                      stored_allocator_type;
-   typedef BOOST_CONTAINER_IMPDEF(typename Base::iterator)                             iterator;
-   typedef BOOST_CONTAINER_IMPDEF(typename Base::const_iterator)                       const_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)        reverse_iterator;
-   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)  const_reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(allocator_type)                                         stored_allocator_type;
+   typedef BOOST_CONTAINER_IMPDEF(typename Base::iterator)                                iterator;
+   typedef BOOST_CONTAINER_IMPDEF(typename Base::const_iterator)                          const_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)           reverse_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>)     const_reverse_iterator;
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -1062,6 +1138,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    using Base::get_block_ssize;
+   using Base::is_single_ended;
 
    public:
 
@@ -1393,6 +1470,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
 
    void reserve_front(size_type n)
    {
+      BOOST_CONTAINER_STATIC_ASSERT(!is_single_ended);
       (void)n;
       BOOST_IF_CONSTEXPR(is_reservable){
          const size_type cur_back_cap = this->front_capacity();
@@ -1553,13 +1631,14 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    template <class... Args>
    reference emplace_front(BOOST_FWD_REF(Args)... args)
    {
+      BOOST_ASSERT(!is_single_ended);
       value_type *pr = this->prot_push_front_simple_pos();
       if(BOOST_LIKELY(pr != 0)){
          allocator_traits_type::construct
             ( this->alloc()
             , pr
             , boost::forward<Args>(args)...);
-         this->prot_dec_start();
+         this->members_.dec_start();
          return *pr;
       }
       else{
@@ -1588,13 +1667,15 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    iterator emplace(const_iterator p, BOOST_FWD_REF(Args)... args)
    {
       const size_type elemsbefore = this->prot_it_to_start_off(p);
-      const size_type length      = this->prot_size();
+      const size_type length = this->prot_size();
 
+      BOOST_IF_CONSTEXPR(!is_single_ended)
       if (!elemsbefore) {
          this->emplace_front(boost::forward<Args>(args)...);
          return this->begin();
       }
-      else if (elemsbefore == length) {
+
+      if (elemsbefore == length) {
          this->emplace_back(boost::forward<Args>(args)...);
          return this->prot_back_it();
       }
@@ -1614,7 +1695,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       if(BOOST_LIKELY(pr != 0)){\
          allocator_traits_type::construct\
             ( this->alloc(), pr BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
-         this->prot_dec_start();\
+         this->members_.dec_start();\
          return *pr;\
       }\
       else{\
@@ -1647,11 +1728,13 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       const size_type elemsbefore = this->prot_it_to_start_off(p);\
       const size_type length      = this->prot_size();\
       \
+      BOOST_IF_CONSTEXPR(!is_single_ended)\
       if (!elemsbefore) {\
          this->emplace_front(BOOST_MOVE_FWD##N);\
          return this->begin();\
       }\
-      else if (elemsbefore == length) {\
+      \
+      if (elemsbefore == length) {\
          this->emplace_back(BOOST_MOVE_FWD##N);\
          return this->prot_back_it();\
       }\
@@ -1725,7 +1808,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    inline iterator insert(const_iterator pos, std::initializer_list<value_type> il)
    {
       //Range check os pos is done in insert()
-      return insert(pos, il.begin(), il.end());
+      return this->insert(pos, il.begin(), il.end());
    }
 #endif
 
@@ -1751,19 +1834,20 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       const size_type n = static_cast<size_type>(sz);
 
       dtl::insert_range_proxy<ValAllocator, FwdIt> proxy(first);
-      return this->priv_insert_aux_impl( p, n, proxy);
+      return this->priv_insert_aux_impl(p, n, proxy);
    }
    #endif
 
    void pop_front() BOOST_NOEXCEPT_OR_NOTHROW
    {
+      BOOST_ASSERT(!is_single_ended);
       BOOST_ASSERT(!this->empty());
       if (BOOST_LIKELY(this->prot_pop_front_simple_available())) {
          allocator_traits_type::destroy
             ( this->alloc()
             , boost::movelib::to_raw_pointer(this->prot_start_cur_unchecked())
             );
-         this->prot_inc_start();
+         this->members_.inc_start();
       }
       else
          this->priv_pop_front_aux();
@@ -1790,16 +1874,17 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       ++next;
       const size_type index = this->prot_it_to_start_off(pos);
       const size_type sz    = this->prot_size();
+
+      BOOST_IF_CONSTEXPR(!is_single_ended)
       if (index < sz/2u) {
          this->priv_segmented_move_backward_n(pos.unconst(), index, next);
-         pop_front();
+         this->pop_front();
          return next;
       }
-      else {
-         this->priv_segmented_move_n(next, size_type(sz - size_type(index + 1u)), pos.unconst());
-         pop_back();
-         return pos.unconst();
-      }
+
+      this->priv_segmented_move_n(next, size_type(sz - size_type(index + 1u)), pos.unconst());
+      this->pop_back();
+      return pos.unconst();
    }
 
    iterator erase(const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW
@@ -1814,20 +1899,22 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       else {
          const size_type elems_before = this->prot_it_to_start_off(first);
          const size_type elems_after  = size_type(this->prot_size() - n - elems_before);
+
+         BOOST_IF_CONSTEXPR(!is_single_ended)
          if (elems_before < elems_after) {
             const iterator old_start = this->begin();
             iterator new_start = this->priv_segmented_move_backward_n(first.unconst(), elems_before, last.unconst());
             this->prot_destroy_range(old_start, new_start);
             this->prot_deallocate_nodes_if_not_reservable(old_start.get_node(), new_start.m_node);
-            this->prot_inc_start(n);
+            this->members_.inc_start(n);
+            return this->nth(elems_before);
          }
-         else {
-            const iterator old_finish = this->end();
-            iterator new_finish = this->priv_segmented_move_n(last.unconst(), elems_after, first.unconst());
-            this->prot_destroy_range(new_finish, old_finish);
-            this->prot_deallocate_nodes_if_not_reservable(new_finish.m_node + 1, old_finish.get_node() + 1);
-            this->prot_dec_finish(n);
-         }
+
+         const iterator old_finish = this->end();
+         iterator new_finish = this->priv_segmented_move_n(last.unconst(), elems_after, first.unconst());
+         this->prot_destroy_range(new_finish, old_finish);
+         this->prot_deallocate_nodes_if_not_reservable(new_finish.m_node + 1, old_finish.get_node() + 1);
+         this->prot_dec_finish(n);
          return this->nth(elems_before);
       }
    }
@@ -2028,6 +2115,8 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       BOOST_ASSERT(!single_t::value || n == 1);
 
       const size_type length = this->prot_size();
+
+      BOOST_IF_CONSTEXPR(!is_single_ended)
       if (elemsbefore < length / 2) {
          this->priv_reserve_elements_at_front(n);
          const iterator old_start = this->prot_start();
@@ -2048,7 +2137,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
             }
             BOOST_CONTAINER_CATCH_END
 
-            this->prot_dec_start(n);
+            this->members_.dec_start(n);
             iterator p = this->priv_segmented_move_n(start_n, size_type(elemsbefore - n), old_start);
             this->priv_segmented_proxy_copy_n_and_update(p, n, proxy);
             return p;
@@ -2059,7 +2148,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
 
             BOOST_CONTAINER_TRY {
                this->priv_segmented_proxy_uninitialized_copy_n_and_update(mid_start, mid_count, proxy);
-               this->prot_dec_start(mid_count);
+               this->members_.dec_start(mid_count);
                this->priv_segmented_uninitialized_move_alloc_n(old_start, elemsbefore, new_start);
             }
             BOOST_CONTAINER_CATCH(...) {
@@ -2067,61 +2156,60 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
                BOOST_CONTAINER_RETHROW
             }
             BOOST_CONTAINER_CATCH_END
-            this->prot_dec_start(size_type(n - mid_count));
+            this->members_.dec_start(size_type(n - mid_count));
             this->priv_segmented_proxy_copy_n_and_update(old_start, elemsbefore, proxy);
             return mid_start;
          }
       }
+
+      this->priv_reserve_elements_at_back(n);
+      const iterator old_finish  = this->prot_finish();
+      const size_type elemsafter = size_type(length - elemsbefore);
+
+      BOOST_ASSERT(!single_t::value || elemsafter >= 1);
+
+      if(single_t::value || elemsafter >= n) {
+         iterator finish_n = old_finish;
+         priv_itsub(finish_n, n, single_t());
+         BOOST_CONTAINER_TRY {
+            this->priv_segmented_uninitialized_move_alloc_n(finish_n, n, old_finish, single_t());
+         }
+         BOOST_CONTAINER_CATCH(...) {
+            this->prot_deallocate_nodes_if_not_reservable(old_finish.get_node() + 1, (old_finish + difference_type(n)).m_node + 1);
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
+
+         this->prot_inc_finish(n);
+         const size_type move_n = size_type(elemsafter - n);
+         this->priv_segmented_move_backward_n(finish_n, move_n, old_finish);
+         finish_n -= difference_type(move_n);
+         this->priv_segmented_proxy_copy_n_and_update(finish_n, n, proxy);
+         return finish_n;
+      }
       else {
-         this->priv_reserve_elements_at_back(n);
-         const iterator old_finish  = this->prot_finish();
-         const size_type elemsafter = size_type(length - elemsbefore);
+         const size_type raw_gap = size_type(n - elemsafter);
+         iterator pos            = old_finish - difference_type(elemsafter);
 
-         BOOST_ASSERT(!single_t::value || elemsafter >= 1);
-
-         if(single_t::value || elemsafter >= n) {
-            iterator finish_n = old_finish;
-            priv_itsub(finish_n, n, single_t());
-            BOOST_CONTAINER_TRY {
-               this->priv_segmented_uninitialized_move_alloc_n(finish_n, n, old_finish, single_t());
-            }
-            BOOST_CONTAINER_CATCH(...) {
-               this->prot_deallocate_nodes_if_not_reservable(old_finish.get_node() + 1, (old_finish + difference_type(n)).m_node + 1);
-               BOOST_CONTAINER_RETHROW
-            }
-            BOOST_CONTAINER_CATCH_END
-
-            this->prot_inc_finish(n);
-            const size_type move_n = size_type(elemsafter - n);
-            this->priv_segmented_move_backward_n(finish_n, move_n, old_finish);
-            finish_n -= difference_type(move_n);
-            this->priv_segmented_proxy_copy_n_and_update(finish_n, n, proxy);
-            return finish_n;
-         }
-         else {
-            const size_type raw_gap = size_type(n - elemsafter);
-            iterator pos            = old_finish - difference_type(elemsafter);
-
+         BOOST_CONTAINER_TRY{
+            this->priv_segmented_uninitialized_move_alloc_n(pos, elemsafter, old_finish + difference_type(raw_gap));
             BOOST_CONTAINER_TRY{
-               this->priv_segmented_uninitialized_move_alloc_n(pos, elemsafter, old_finish + difference_type(raw_gap));
-               BOOST_CONTAINER_TRY{
-                  this->priv_segmented_proxy_copy_n_and_update(pos, elemsafter, proxy);
-                  this->priv_segmented_proxy_uninitialized_copy_n_and_update(old_finish, raw_gap, proxy);
-               }
-               BOOST_CONTAINER_CATCH(...) {
-                  this->prot_destroy_range(old_finish, old_finish + difference_type(elemsafter));
-                  BOOST_CONTAINER_RETHROW
-               }
-               BOOST_CONTAINER_CATCH_END
+               this->priv_segmented_proxy_copy_n_and_update(pos, elemsafter, proxy);
+               this->priv_segmented_proxy_uninitialized_copy_n_and_update(old_finish, raw_gap, proxy);
             }
             BOOST_CONTAINER_CATCH(...) {
-               this->prot_deallocate_nodes_if_not_reservable(old_finish.get_node() + 1, (old_finish + difference_type(n)).m_node + 1);
+               this->prot_destroy_range(old_finish, old_finish + difference_type(elemsafter));
                BOOST_CONTAINER_RETHROW
             }
             BOOST_CONTAINER_CATCH_END
-            this->prot_inc_finish(n);
-            return pos;
          }
+         BOOST_CONTAINER_CATCH(...) {
+            this->prot_deallocate_nodes_if_not_reservable(old_finish.get_node() + 1, (old_finish + difference_type(n)).m_node + 1);
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
+         this->prot_inc_finish(n);
+         return pos;
       }
    }
 
@@ -2130,10 +2218,12 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    {
       const size_type elemsbefore = this->prot_it_to_start_off(p);
 
-      if (!elemsbefore) {
-         return this->priv_insert_front_aux_impl(n, proxy);
+      BOOST_IF_CONSTEXPR(!is_single_ended)
+         if(!elemsbefore) {
+            return this->priv_insert_front_aux_impl(n, proxy);
       }
-      else if (elemsbefore == this->prot_size()) {
+
+      if (elemsbefore == this->prot_size()) {
          return this->priv_insert_back_aux_impl(n, proxy);
       }
       else {
@@ -2361,11 +2451,12 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    template <class InsertProxy>
    iterator priv_insert_front_aux_impl(size_type n, InsertProxy proxy)
    {
+      BOOST_ASSERT(!is_single_ended);
       this->priv_reserve_elements_at_front(n);
       const iterator old_start = this->prot_start();
       const iterator new_start = old_start - difference_type(n);
       this->priv_insert_segmented_uninitialized_copy_n_and_update(new_start, n, proxy);
-      this->prot_dec_start(n);
+      this->members_.dec_start(n);
       return new_start;
    }
 
@@ -2425,17 +2516,19 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    // must have at least two nodes.
    void priv_pop_front_aux() BOOST_NOEXCEPT_OR_NOTHROW
    {
+      BOOST_ASSERT(!is_single_ended);
       const index_pointer ip = this->prot_start_node();
       allocator_traits_type::destroy
          ( this->alloc()
          , boost::movelib::to_raw_pointer(this->prot_node_last(ip))
          );
       this->prot_deallocate_node_if_not_reservable(*ip);
-      this->prot_inc_start();
+      this->members_.inc_start();
    }
 
    void priv_reserve_elements_at_front(size_type n)
    {
+      BOOST_ASSERT(!is_single_ended);
       const size_type vacancies = this->prot_front_free_capacity();
       typedef dtl::bool_<is_reservable> res_t;
 
@@ -2475,10 +2568,10 @@ namespace boost {
 
 //!has_trivial_destructor_after_move<> == true_type
 //!specialization for optimizations
-template <class T, class Allocator, class Options>
-struct has_trivial_destructor_after_move<boost::container::deque_impl<T, Allocator, Options> >
+template <class T, class Allocator, bool SingleEnded, class Options>
+struct has_trivial_destructor_after_move<boost::container::deque_impl<T, Allocator, SingleEnded, Options> >
 {
-   typedef typename boost::container::deque_impl<T, Allocator, Options>::allocator_type allocator_type;
+   typedef typename boost::container::deque_impl<T, Allocator, SingleEnded, Options>::allocator_type allocator_type;
    typedef typename boost::container::allocator_traits<allocator_type>::pointer pointer;
    BOOST_STATIC_CONSTEXPR bool value = ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
                              ::boost::has_trivial_destructor_after_move<pointer>::value;

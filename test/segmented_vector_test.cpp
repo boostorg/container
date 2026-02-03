@@ -96,36 +96,36 @@ bool segmented_vector_copyable_only(V1 &cntc, V2 &stdc, dtl::true_type)
 }
 
 //Test recursive structures
-class recursive_deque
+class recursive_segmented_vector
 {
 public:
 
-   recursive_deque (const recursive_deque &x)
-      : deque_(x.deque_)
+   recursive_segmented_vector (const recursive_segmented_vector &x)
+      : segmented_vector_(x.segmented_vector_)
    {}
 
-   recursive_deque & operator=(const recursive_deque &x)
-   {  this->deque_ = x.deque_;   return *this; }
+   recursive_segmented_vector & operator=(const recursive_segmented_vector &x)
+   {  this->segmented_vector_ = x.segmented_vector_;   return *this; }
 
-   segmented_vector<recursive_deque> deque_;
-   segmented_vector<recursive_deque>::iterator it_;
-   segmented_vector<recursive_deque>::const_iterator cit_;
-   segmented_vector<recursive_deque>::reverse_iterator rit_;
-   segmented_vector<recursive_deque>::const_reverse_iterator crit_;
+   segmented_vector<recursive_segmented_vector> segmented_vector_;
+   segmented_vector<recursive_segmented_vector>::iterator it_;
+   segmented_vector<recursive_segmented_vector>::const_iterator cit_;
+   segmented_vector<recursive_segmented_vector>::reverse_iterator rit_;
+   segmented_vector<recursive_segmented_vector>::const_reverse_iterator crit_;
 };
 
-bool do_recursive_deque_test()
+bool do_recursive_segmented_vector_test()
 {
    //Test for recursive types
    {
-      segmented_vector<recursive_deque> recursive_deque_deque;
+      segmented_vector<recursive_segmented_vector> recursive_segmented_vector_segmented_vector;
    }
 
    {
       //Now test move semantics
-      segmented_vector<recursive_deque> original;
-      segmented_vector<recursive_deque> move_ctor(boost::move(original));
-      segmented_vector<recursive_deque> move_assign;
+      segmented_vector<recursive_segmented_vector> original;
+      segmented_vector<recursive_segmented_vector> move_ctor(boost::move(original));
+      segmented_vector<recursive_segmented_vector> move_assign;
       move_assign = boost::move(move_ctor);
       move_assign.swap(original);
    }
@@ -135,14 +135,14 @@ bool do_recursive_deque_test()
 template<class IntType, bool Reservable>
 bool do_test()
 {
-   typedef typename deque_options<reservable<Reservable> >::type Options;
+   typedef typename segmented_vector_options<reservable<Reservable> >::type Options;
    {
       typedef segmented_vector<IntType, void, Options>  MyCnt;
       ::boost::movelib::unique_ptr<MyCnt> const pcntc = ::boost::movelib::make_unique<MyCnt>();
       pcntc->erase(pcntc->cbegin(), pcntc->cend());
    }
 
-   //Alias deque types
+   //Alias types
    typedef segmented_vector<IntType, void, Options>  MyCnt;
    typedef std::vector<int> MyStd;
    const int max = 100;
@@ -322,7 +322,7 @@ struct GetAllocatorCont
       typedef segmented_vector< ValueType
                     , typename allocator_traits<VoidAllocator>
                         ::template portable_rebind_alloc<ValueType>::type
-                    , typename deque_options<reservable<Reservable> >::type
+                    , typename segmented_vector_options<reservable<Reservable> >::type
                     > type;
    };
 };
@@ -401,9 +401,13 @@ struct alloc_propagate_base<boost_container_segmented_vector>
 
 }}}   //namespace boost::container::test
 
+
+//Test segmented_vector has the expected size --> 3 words
+BOOST_CONTAINER_STATIC_ASSERT_MSG(3*sizeof(void*) == sizeof(segmented_vector<int>), "sizeof(segmented_vector<int> should be 3 words");
+
 int main ()
 {
-   if(!do_recursive_deque_test())
+   if(!do_recursive_segmented_vector_test())
       return 1;
 
    if(!do_test<int, false>())
