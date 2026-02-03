@@ -80,6 +80,7 @@ class deque : public deque_impl<T, Allocator, false, Options>
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    using base_type::get_block_size;
+   using base_type::get_segment_size;
    using base_type::is_reservable;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -322,6 +323,23 @@ class deque : public deque_impl<T, Allocator, false, Options>
    #endif
 
    #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
+
+   //! <b>Effects</b>: Returns the number of continguous elements per segment/block.
+   //! Same as get_block_size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   static size_type get_segment_size() BOOST_NOEXCEPT_OR_NOTHROW;
+
+   //! <b>Effects</b>: Returns the number of continguous elements per segment/block.
+   //! Same as get_segment_size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   static size_type get_block_size() BOOST_NOEXCEPT_OR_NOTHROW;
+
    //! <b>Effects</b>: Assigns the n copies of val to *this.
    //!
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
