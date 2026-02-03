@@ -828,10 +828,15 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
 
 
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD
+
 template <typename InputIterator>
-segmented_vector(InputIterator, InputIterator) -> segmented_vector<typename iterator_traits<InputIterator>::value_type>;
+segmented_vector(InputIterator, InputIterator) ->
+   segmented_vector<typename iter_value<InputIterator>::type>;
+
 template <typename InputIterator, typename Allocator>
-segmented_vector(InputIterator, InputIterator, Allocator const&) -> segmented_vector<typename iterator_traits<InputIterator>::value_type, Allocator>;
+segmented_vector(InputIterator, InputIterator, Allocator const&) ->
+   segmented_vector<typename iter_value<InputIterator>::type, Allocator>;
+
 #endif
 
 //! <b>Effects</b>: Erases all elements that compare equal to v from the container c.
