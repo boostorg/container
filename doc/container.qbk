@@ -55,6 +55,8 @@ In short, what does [*Boost.Container] offer?
     has to be increased. This minimum capacity is specified at compile time.
   * [classref boost::container::devector devector]: is a hybrid of the standard vector and deque containers.
     It offers cheap (amortized constant time) insertion at both the front and back ends.
+  * [classref boost::container::segmented_vector segmented_vector]: a sequence container with segmented
+    (block-based) storage like deque but only growth at the back; constant-time push_back/pop_back, random access.
   * [classref boost::container::slist slist]: the classic pre-standard singly linked list implementation
     offering constant-time `size()`. Note that C++11 `forward_list` has no `size()`.
 
@@ -344,24 +346,24 @@ want to advance it by n positions, we simply do:
 
 That is, we go "up" to the pointer array, add n there and then go "down" to the resulting node.
 
-[*General properties]. `stable_vector` satisfies all the requirements of a container, a reversible container and a sequence
-and provides all the optional operations present in vector. Like vector, iterators are random access. `stable_vector`
+[*General properties]. [classref boost::container::stable_vector stable_vector] satisfies all the requirements of a container, a reversible container and a sequence
+and provides all the optional operations present in vector. Like vector, iterators are random access. [classref boost::container::stable_vector stable_vector]
 does not provide element contiguity; in exchange for this absence, the container is stable, i.e. references and iterators
-to an element of a `stable_vector` remain valid as long as the element is not erased, and an iterator that has been
-assigned the return value of end() always remain valid until the destruction of the associated `stable_vector`.
+to an element of a [classref boost::container::stable_vector stable_vector] remain valid as long as the element is not erased, and an iterator that has been
+assigned the return value of end() always remain valid until the destruction of the associated [classref boost::container::stable_vector stable_vector].
 
-[*Operation complexity]. The big-O complexities of `stable_vector` operations match exactly those of vector. In general,
-insertion/deletion is constant time at the end of the sequence and linear elsewhere. Unlike vector, `stable_vector`
+[*Operation complexity]. The big-O complexities of [classref boost::container::stable_vector stable_vector] operations match exactly those of vector. In general,
+insertion/deletion is constant time at the end of the sequence and linear elsewhere. Unlike vector, [classref boost::container::stable_vector stable_vector]
 does not internally perform any value_type destruction, copy/move construction/assignment operations other than those exactly
 corresponding to the insertion of new elements or deletion of stored elements, which can sometimes compensate in terms of
 performance for the extra burden of doing more pointer manipulation and an additional allocation per element.
 
 [*Exception safety]. (according to [@http://www.boost.org/community/exception_safety.html Abrahams' terminology])
-As `stable_vector` does not internally copy/move elements around, some
+As [classref boost::container::stable_vector stable_vector] does not internally copy/move elements around, some
 operations provide stronger exception safety guarantees than in vector:
 
 [table:stable_vector_req Exception safety
-    [[operation] [exception safety for `vector<T>`] [exception safety for `stable_vector<T>`]]
+    [[operation] [exception safety for `vector<T>`] [exception safety for [classref boost::container::stable_vector stable_vector]`<T>`]]
     [[insert]    [strong unless copy/move construction/assignment of `T` throw (basic)]     [strong]]
     [[erase]     [no-throw unless copy/move construction/assignment  of `T` throw (basic)]     [no-throw]]
 ]
@@ -374,7 +376,7 @@ m[sub v] = c\u2219e,
 
 where c is `v.capacity()` and e is `sizeof(T)`. c can be as low as n if the user has explicitly reserved the exact capacity
 required; otherwise, the average value c for a growing `vector` oscillates between 1.25\u2219n and 1.5\u2219n for typical resizing
-policies. For `stable_vector`, the memory usage is
+policies. For [classref boost::container::stable_vector stable_vector], the memory usage is
 
 m[sub sv] = (c + 1)p + (n + 1)(e + p),
 
@@ -383,17 +385,17 @@ the sequence. If we call f the capacity to size ratio c/n and assume that n is l
 
 m[sub sv]/m[sub v] \u2243 (fp + e + p)/fe.
 
-So, `stable_vector` uses less memory than `vector` only when e > p and the capacity to size ratio exceeds a given threshold:
+So, [classref boost::container::stable_vector stable_vector] uses less memory than `vector` only when e > p and the capacity to size ratio exceeds a given threshold:
 
 m[sub sv] < m[sub v] <-> f > (e + p)/(e - p). (provided e > p)
 
 This threshold approaches typical values of f below 1.5 when e > 5p; in a 32-bit architecture, when e > 20 bytes.
 
-[*Summary]. `stable_vector` is a drop-in replacement for `vector` providing stability of references and iterators, in exchange
+[*Summary]. [classref boost::container::stable_vector stable_vector] is a drop-in replacement for `vector` providing stability of references and iterators, in exchange
 for missing element contiguity and also some performance and memory overhead. When the element objects are expensive to
-move around, the performance overhead can turn into a net performance gain for `stable_vector` if many middle insertions
+move around, the performance overhead can turn into a net performance gain for [classref boost::container::stable_vector stable_vector] if many middle insertions
 or deletions are performed or if resizing is very frequent. Similarly, if the elements are large there are situations when
-the memory used by `stable_vector` can actually be less than required by vector.
+the memory used by [classref boost::container::stable_vector stable_vector] can actually be less than required by vector.
 
 ['Note: Text and explanations taken from [@http://bannalia.blogspot.com/2008/09/introducing-stablevector.html Joaqu\u00EDn's blog]]
 
@@ -442,7 +444,7 @@ functions), implemented on top of std::vector. AssocVector differs from a map in
 its erase functions (AssocVector::erase invalidates all iterators into the object) and in the
 complexity guarantees of insert and erase (linear as opposed to constant). ]]
 
-[*Boost.Container] `flat_[multi]map/set` containers are ordered, vector-like container based, associative
+[*Boost.Container] [classref boost::container::flat_map flat_map], [classref boost::container::flat_set flat_set], [classref boost::container::flat_multimap flat_multimap] and [classref boost::container::flat_multiset flat_multiset] containers are ordered, vector-like container based, associative
 containers following  Austern's and Alexandrescu's guidelines. These ordered vector containers have also
 benefited with the addition of `move semantics` to C++11, speeding up insertion and
 erasure times considerably. Flat associative containers have the following attributes:
@@ -462,23 +464,23 @@ erasure times considerably. Flat associative containers have the following attri
 
 [section:devector ['devector]]
 
-`devector` is a hybrid of the standard vector and deque containers originally written by Thaler Benedek.
+[classref boost::container::devector devector] is a hybrid of the standard vector and deque containers originally written by Thaler Benedek.
 It offers cheap (amortized constant time) insertion at both the front and back ends,
 while also providing the regular features of `vector`, in particular the contiguous underlying memory.
 
-Unlike `vector`, devector can have free capacity both before and after the elements. This enables efficient
-implementation of methods that modify the devector at the front. In general, `devector`'s available methods
+Unlike `vector`, [classref boost::container::devector devector] can have free capacity both before and after the elements. This enables efficient
+implementation of methods that modify the [classref boost::container::devector devector] at the front. In general, [classref boost::container::devector devector]'s available methods
 are a superset of those of `vector` with similar behaviour, barring a couple of iterator invalidation
 guarantees that differ.
 
-The static size overhead for boost's devector is one extra `size_t` per container: Usually sizeof(devector) == 4*sizeof(T*).
+The static size overhead for boost's [classref boost::container::devector devector] is one extra `size_t` per container: Usually sizeof([classref boost::container::devector devector]) == 4*sizeof(T*).
 
 There are different strategies when elements are to be inserted at one extreme of the container and there is
 no room for additional elements at that extreme. One simple strategy would be to reallocate a bigger buffer
 and move all elements to the new memory. However, this would lead to unbounded memory waste when elements are
 inserted predominantly on one extreme (e.g. pushed at one extreme and popped from the other, like a LIFO pattern).
 
-To avoid unbounded memory waste, Boost.Container's `devector` uses a different strategy:
+To avoid unbounded memory waste, Boost.Container's [classref boost::container::devector devector] uses a different strategy:
 
 * If elements are inserted near a extreme and there is free space on that extreme, the insertion is performed
   without any additional data movement (only the elements between the insertion point and the extreme are moved).
@@ -519,62 +521,62 @@ However, this strategy has also some downsides:
 
 [section:slist ['slist]]
 
-When the standard template library was designed, it contained a singly linked list called `slist`.
+When the standard template library was designed, it contained a singly linked list called [classref boost::container::slist slist].
 Unfortunately, this container was not standardized and remained as an extension for many standard
 library implementations until C++11 introduced `forward_list`, which is a bit different from the
-the original SGI `slist`. According to [@http://www.sgi.com/tech/stl/Slist.html SGI STL documentation]:
+the original SGI [classref boost::container::slist slist]. According to [@http://www.sgi.com/tech/stl/Slist.html SGI STL documentation]:
 
-["['An `slist` is a singly linked list: a list where each element is linked to the next element, but
+["['An [classref boost::container::slist slist] is a singly linked list: a list where each element is linked to the next element, but
 not to the previous element. That is, it is a Sequence that supports forward but not backward traversal,
 and (amortized) constant time insertion and removal of elements. Slists, like lists, have the important
 property that insertion and splicing do not invalidate iterators to list elements, and that even removal
 invalidates only the iterators that point to the elements that are removed. The ordering of iterators
-may be changed (that is, slist<T>::iterator might have a different predecessor or successor after a list
+may be changed (that is, [classref boost::container::slist slist]`<T>::iterator` might have a different predecessor or successor after a list
 operation than it did before), but the iterators themselves will not be invalidated or made to point to
 different elements unless that invalidation or mutation is explicit.]]
 
-["['The main difference between `slist` and list is that list's iterators are bidirectional iterators,
-while slist's iterators are forward iterators. This means that `slist` is less versatile than list;
-frequently, however, bidirectional iterators are unnecessary. You should usually use `slist` unless
+["['The main difference between [classref boost::container::slist slist] and list is that list's iterators are bidirectional iterators,
+while [classref boost::container::slist slist]'s iterators are forward iterators. This means that [classref boost::container::slist slist] is less versatile than list;
+frequently, however, bidirectional iterators are unnecessary. You should usually use [classref boost::container::slist slist] unless
 you actually need the extra functionality of list, because singly linked lists are smaller and faster
 than double linked lists.]]
 
-["['Important performance note: like every other Sequence, `slist` defines the member functions insert and erase.
+["['Important performance note: like every other Sequence, [classref boost::container::slist slist] defines the member functions insert and erase.
 Using these member functions carelessly, however, can result in disastrously slow programs. The problem is that
 insert's first argument is an iterator pos, and that it inserts the new element(s) before pos. This means that
 insert must find the iterator just before pos; this is a constant-time operation for list, since list has
-bidirectional iterators, but for `slist` it must find that iterator by traversing the list from the beginning
-up to pos. In other words: insert and erase are slow operations anywhere but near the beginning of the slist.]]
+bidirectional iterators, but for [classref boost::container::slist slist] it must find that iterator by traversing the list from the beginning
+up to pos. In other words: insert and erase are slow operations anywhere but near the beginning of the [classref boost::container::slist slist].]]
 
 ["['Slist provides the member functions insert_after and erase_after, which are constant time operations: you should
 always use insert_after and erase_after whenever possible. If you find that insert_after and erase_after aren't
 adequate for your needs, and that you often need to use insert and erase in the middle of the list, then you
-should probably use list instead of slist.]]
+should probably use list instead of [classref boost::container::slist slist].]]
 
-[*Boost.Container] updates the classic `slist` container with C++11 features like move semantics and placement
+[*Boost.Container] updates the classic [classref boost::container::slist slist] container with C++11 features like move semantics and placement
 insertion and implements it a bit differently than the standard C++ `forward_list`. `forward_list` has no `size()`
 method, so it's been designed to allow (or in practice, encourage) implementations without tracking list size
 with every insertion/erasure, allowing constant-time
-`splice_after(iterator, forward_list &, iterator, iterator)`-based list merging. On the other hand `slist` offers
-constant-time `size()` for those that don't care about linear-time `splice_after(iterator, slist &, iterator, iterator)`
-`size()` and offers an additional `splice_after(iterator, slist &, iterator, iterator, size_type)` method that
-can speed up `slist` merging when the programmer already knows the size. `slist` and `forward_list` are therefore
+`splice_after(iterator, forward_list &, iterator, iterator)`-based list merging. On the other hand [classref boost::container::slist slist] offers
+constant-time `size()` for those that don't care about linear-time `splice_after(iterator, [classref boost::container::slist slist] &, iterator, iterator)`
+`size()` and offers an additional `splice_after(iterator, [classref boost::container::slist slist] &, iterator, iterator, size_type)` method that
+can speed up [classref boost::container::slist slist] merging when the programmer already knows the size. [classref boost::container::slist slist] and `forward_list` are therefore
 complementary.
 
 [endsect]
 
 [section:static_vector ['static_vector]]
 
-`static_vector` is an hybrid between `vector` and `array`: like `vector`, it's a sequence container
+[classref boost::container::static_vector static_vector] is an hybrid between `vector` and `array`: like `vector`, it's a sequence container
 with contiguous storage that can change in size, along with the static allocation, low overhead,
-and fixed capacity of `array`. `static_vector` is based on Adam Wulkiewicz and Andrew Hundt's
+and fixed capacity of `array`. [classref boost::container::static_vector static_vector] is based on Adam Wulkiewicz and Andrew Hundt's
 high-performance [@https://svn.boost.org/svn/boost/sandbox/varray/doc/html/index.html varray]
 class.
 
-The number of elements in a `static_vector` may vary dynamically up to a fixed capacity
+The number of elements in a [classref boost::container::static_vector static_vector] may vary dynamically up to a fixed capacity
 because elements are stored within the object itself similarly to an array. However, objects are
-initialized as they are inserted into `static_vector` unlike C arrays or `std::array` which must construct
-all elements on instantiation. The behavior of `static_vector` enables the use of statically allocated
+initialized as they are inserted into [classref boost::container::static_vector static_vector] unlike C arrays or `std::array` which must construct
+all elements on instantiation. The behavior of [classref boost::container::static_vector static_vector] enables the use of statically allocated
 elements in cases with complex object lifetime requirements that would otherwise not be trivially
 possible. Some other properties:
 
@@ -582,25 +584,44 @@ possible. Some other properties:
 * Constant time insertion and removal of elements at the end
 * Linear time insertion and removal of elements at the beginning or in the middle.
 
-`static_vector` is well suited for use in a buffer, the internal implementation of other
+[classref boost::container::static_vector static_vector] is well suited for use in a buffer, the internal implementation of other
 classes, or use cases where there is a fixed limit to the number of elements that must be stored.
 Embedded and realtime applications where allocation either may not be available or acceptable
-are a particular case where `static_vector` can be beneficial.
+are a particular case where [classref boost::container::static_vector static_vector] can be beneficial.
 
 [endsect]
 
 [section:small_vector ['small_vector]]
 
-`small_vector` is a vector-like container optimized for the case when it contains few elements.
+[classref boost::container::small_vector small_vector] is a vector-like container optimized for the case when it contains few elements.
 It contains some preallocated elements in-place, which allows it to avoid the use of dynamic storage allocation
-when the actual number of elements is below that preallocated threshold. `small_vector` is inspired by
+when the actual number of elements is below that preallocated threshold. [classref boost::container::small_vector small_vector] is inspired by
 [@http://llvm.org/docs/ProgrammersManual.html#llvm-adt-smallvector-h LLVM's `SmallVector`] container.
-Unlike `static_vector`, `small_vector`'s capacity can grow beyond the initial preallocated capacity.
+Unlike [classref boost::container::static_vector static_vector], [classref boost::container::small_vector small_vector]'s capacity can grow beyond the initial preallocated capacity.
 
-`small_vector<T, N, Allocator>` is convertible to `small_vector_base<T, Allocator>`, a type that is independent
+[classref boost::container::small_vector small_vector]`<T, N, Allocator>` is convertible to `small_vector_base<T, Allocator>`, a type that is independent
 from the preallocated element count, allowing client code that does not need to be templated on that N argument.
-`small_vector` inherits all `vector`'s member functions so it supports all standard features like emplacement,
+[classref boost::container::small_vector small_vector] inherits all `vector`'s member functions so it supports all standard features like emplacement,
 stateful allocators, etc.
+
+[endsect]
+
+[section:segmented_vector ['segmented_vector]]
+
+[classref boost::container::segmented_vector segmented_vector] is a sequence container that supports random access to elements, constant-time insertion and
+removal at the end, and linear-time insertion and removal in the middle. It uses the same segmented (block-based)
+storage as `deque` but only allows growth at the back: it provides `push_back`, `pop_back`, `emplace_back`, and the
+like, but does not provide `push_front`, `pop_front`, or `emplace_front`. In that sense it is the single-ended
+counterpart of [classref boost::container::deque deque].
+
+Unlike a single contiguous buffer, segmented storage avoids reallocating and moving all elements when the container
+grows: new blocks are allocated as needed. This can reduce peak memory and improve performance when elements are
+expensive to move or when growth is large. Inserting or erasing at the end does not invalidate iterators or
+references/pointers to existing elements. Insertions and erasures in the middle invalidate iterators and references
+in the same way as for `deque`.
+
+The container can be configured via [classref boost::container::segmented_vector_options segmented_vector_options]
+to control block size and other parameters.
 
 [endsect]
 
@@ -810,33 +831,41 @@ used to customize `small_vector`:
 
 [endsect]
 
-[section:configurable_deques Configurable deques]
+[section:configurable_deque Configurable deque / segmented_vector]
 
-The configuration for [classref boost::container::deque deque] is passed as
-the last template parameter and defined using the utility class
-[classref boost::container::deque_options deque_options]. The following parameters can be configured:
+The configuration for [classref boost::container::deque deque] / [classref boost::container::segmented_vector segmented_vector]
+is passed as the last template parameter and defined using the utility class
+[classref boost::container::deque_options deque_options] and [classref boost::container::segmented_vector_options segmented_vector_options] respectively.
+The following parameters can be configured:
 
-Parameters that control the size of deque's 'block' (deque allocates contiguous chunks of elements, called 'blocks').
+Parameters that control the size of container's 'block'/'segment' (the container allocates contiguous chunks of elements, called 'blocks'/'segments').
 Only one of these paratemers can be specified:
 
-*  [classref boost::container::block_bytes block_bytes]: the number of bytes deque will allocate for store
-   elements contiguously: `deque::get_block_size()` will return aproximately `block_bytes/sizeof(value_type)`.
+*  [classref boost::container::block_bytes block_bytes]/[classref boost::container::segment_bytes segment_bytes]:
+   the number of bytes the container will allocate to store
+   elements contiguously: `deque::get_block_size()` will return aproximately `block_bytes/sizeof(value_type)` / `segment_bytes/sizeof(value_type)`.
    A value of zero means the default value.
 
-*  [classref boost::container::block_size  block_size]: the number of elements deque will allocate contiguously.
-   If this option is specified, `deque::get_block_size()` will return the specified `block_size`.
+*  [classref boost::container::block_size block_size]/[classref boost::container::segment_size segment_size]: the number of elements
+   the container will allocate contiguously.
+   If this option is specified, `deque::get_block_size()` will return the specified `block_size`/`segment_size`.
    A value of zero means the default value.
 
 *  [classref boost::container::stored_size stored_size]: the type that will be used to store size-related
    parameters inside the vector. See `stored_size` option in [link container.configurable_containers.configurable_vector Configurable vector]
    chapter and [classref boost::container::stored_size stored_size] for more details.
 
-
 See the following example to see how [classref boost::container::deque_options deque_options] can be
 used to customize `deque`:
 
 [import ../example/doc_custom_deque.cpp]
 [doc_custom_deque]
+
+See the following example to see how [classref boost::container::segmented_vector_options segmented_vector_options] can be
+used to customize `segmented_vector`:
+
+[import ../example/doc_custom_segmented_vector.cpp]
+[doc_custom_segmented_vector]
 
 [endsect]
 
@@ -1481,7 +1510,9 @@ use [*Boost.Container]? There are several reasons for that:
    * Added [classref boost::container::inline_chars inline_chars],
      [classref boost::container::growth_factor growth_factor] and
      [classref boost::container::stored_size stored_size] options to [classref boost::container::basic_string basic_string].
-
+   * New [classref boost::container::segmented_vector segmented_vector] container: the single ended brother of
+     [classref boost::container::deque deque]: a random-access sequence container with segmented
+      (block-based) storage like deque but only growth at the back.
 * Fixed bugs/issues:
    * [@https://github.com/boostorg/container/issues/323 GitHub #323: ['"flat_tree::try_emplace UB"]].
    * [@https://github.com/boostorg/container/issues/328 GitHub #328: ['"boost::container::deque stores a redundant copy of the allocator, increasing size"]].

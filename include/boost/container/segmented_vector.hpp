@@ -73,6 +73,9 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
    typedef typename base_type::stored_allocator_type                          stored_allocator_type;
 
    using base_type::get_block_size;
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+   using base_type::get_segment_size;
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    static const std::size_t is_reservable = base_type::is_reservable;
 
    //////////////////////////////////////////////
@@ -347,12 +350,29 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
       return this->back_capacity();
    }
 
+   #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
+
+   //! <b>Effects</b>: Returns the number of continguous elements per segment/block.
+   //! Same as get_block_size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   static size_type get_segment_size() BOOST_NOEXCEPT_OR_NOTHROW;
+
+   //! <b>Effects</b>: Returns the number of continguous elements per segment/block.
+   //! Same as get_segment_size().
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Constant.
+   static size_type get_block_size() BOOST_NOEXCEPT_OR_NOTHROW;
+
    //////////////////////////////////////////////
    //
    //                iterators
    //
    //////////////////////////////////////////////
-   #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    //! <b>Effects</b>: Returns an iterator to the first element contained in the container.
    //!
