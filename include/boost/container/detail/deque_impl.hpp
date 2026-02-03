@@ -536,6 +536,9 @@ class deque_base
    BOOST_CONSTEXPR inline static size_type get_block_size() BOOST_NOEXCEPT_OR_NOTHROW
       { return deque_block_traits<val_alloc_val, options_type::block_bytes, options_type::block_size, stored_size_type>::value; }
 
+   BOOST_CONSTEXPR inline static size_type get_segment_size() BOOST_NOEXCEPT_OR_NOTHROW
+      { return get_block_size(); }
+
    typedef deque_value_traits<val_alloc_val>             traits_t;
 
    inline val_alloc_ptr prot_allocate_node()
@@ -1143,6 +1146,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    public:
 
    using Base::get_block_size;
+   using Base::get_segment_size;
 
    static const std::size_t is_reservable = Base::is_reservable;
 
