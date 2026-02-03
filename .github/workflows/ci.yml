@@ -756,6 +756,15 @@ jobs:
       - name: Setup environment
         uses: cygwin/cygwin-install-action@master
         with:
+           site: |
+             https://mirrors.kernel.org/sourceware/cygwin/
+             https://cygwin.mirror.constant.com/
+             https://cygwin.osuosl.org/
+             https://mirrors.xmission.com/cygwin/
+             https://ftp.osuosl.org/pub/cygwin/
+             https://mirror.csclub.uwaterloo.ca/cygwin/
+             https://mirrors.rit.edu/cygwin/
+             https://mirror.steadfast.net/cygwin/
            packages: gcc-g++ make python3 git wget curl
       - name: Setup Boost
         shell: C:\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
