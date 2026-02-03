@@ -295,23 +295,30 @@ bool do_test()
       if(!test::CheckEqualContainers(cntc, stdc)) return 1;
    }
 
-#ifndef BOOST_CONTAINER_NO_CXX17_CTAD
-   //Check Constructor Template Auto Deduction
-   {
-      auto gold = MyStd{ 1, 2, 3 };
-      auto test = segmented_vector(gold.begin(), gold.end());
-      if(!test::CheckEqualContainers(gold, test)) return false;
-   }
-   {
-      auto gold = MyStd{ 1, 2, 3 };
-      auto test = segmented_vector(gold.begin(), gold.end(), new_allocator<int>());
-      if(!test::CheckEqualContainers(gold, test)) return false;
-   }
-#endif
-
    std::cout << std::endl << "Test OK!" << std::endl;
    return true;
 }
+
+bool test_ctad()  //Older clang versions suffer from ICE here
+#if !defined(BOOST_CONTAINER_NO_CXX17_CTAD) && (!defined(BOOST_CLANG) || (BOOST_CLANG_VERSION >= 80000))
+{
+   typedef std::vector<int> MyStd;
+   //Check Constructor Template Auto Deduction
+   {
+      MyStd gold = MyStd{ 1, 2, 3 };
+      segmented_vector<int> test = segmented_vector(gold.begin(), gold.end());
+      if (!test::CheckEqualContainers(gold, test)) return false;
+   }
+   {
+      MyStd gold = MyStd{ 1, 2, 3 };
+      segmented_vector<int>  test = segmented_vector<int>(gold.begin(), gold.end(), new_allocator<int>());
+      if (!test::CheckEqualContainers(gold, test)) return false;
+   }
+   return true;
+}
+#else
+{ return true;  }
+#endif
 
 template<class VoidAllocator, bool Reservable>
 struct GetAllocatorCont
@@ -424,6 +431,9 @@ int main ()
 
    //Default block size
    if(!do_test_default_block_size())
+      return 1;
+
+   if (!test_ctad())
       return 1;
 
    //Test non-copy-move operations (back only; no emplace_front)

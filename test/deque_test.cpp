@@ -307,23 +307,30 @@ bool do_test()
       if(!test::CheckEqualContainers(cntc, stdc)) return 1;
    }
 
-#ifndef BOOST_CONTAINER_NO_CXX17_CTAD
-   //Check Constructor Template Auto Deduction
-   {
-      auto gold = MyStd{ 1, 2, 3 };
-      auto test = deque(gold.begin(), gold.end());
-      if(!test::CheckEqualContainers(gold, test)) return false;
-   }
-   {
-      auto gold = MyStd{ 1, 2, 3 };
-      auto test = deque(gold.begin(), gold.end(), new_allocator<int>());
-      if(!test::CheckEqualContainers(gold, test)) return false;
-   }
-#endif
-
    std::cout << std::endl << "Test OK!" << std::endl;
    return true;
 }
+
+bool test_ctad()  //Older clang versions suffer from ICE here
+#if !defined(BOOST_CONTAINER_NO_CXX17_CTAD) && (!defined(BOOST_CLANG) || (BOOST_CLANG_VERSION >= 80000))
+{
+   typedef std::vector<int> MyStd;
+   //Check Constructor Template Auto Deduction
+   {
+      MyStd gold = MyStd{ 1, 2, 3 };
+      deque<int> test = deque(gold.begin(), gold.end());
+      if (!test::CheckEqualContainers(gold, test)) return false;
+   }
+   {
+      MyStd gold = MyStd{ 1, 2, 3 };
+      deque<int>  test = deque<int>(gold.begin(), gold.end(), new_allocator<int>());
+      if (!test::CheckEqualContainers(gold, test)) return false;
+   }
+   return true;
+}
+#else
+{ return true;  }
+#endif
 
 template<class VoidAllocator, bool Reservable>
 struct GetAllocatorCont
@@ -432,6 +439,9 @@ int main ()
       return 1;
 
    if(!do_test<test::copyable_int, true>())
+      return 1;
+
+   if (!test_ctad())
       return 1;
 
    //Default block size
