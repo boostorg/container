@@ -31,13 +31,21 @@ that don't comply with the latest C++ standard.
 
 In short, what does [*Boost.Container] offer?
 
-* Emplacement and move semantics are implemented, including emulation for pre-C++11 compilers.
-* Polymorphic allocators and memory resources, including implementation and emulation for pre-C++17 compilers
-* New advanced features (e.g. recursive containers) and [link container.configurable_containers configurability options for containers].
-* Containers support stateful allocators and are compatible with [*Boost.Interprocess]
-  (they can be safely placed in shared memory).
+* Access to many of the latest C++ standard features and have an easy code migration when you change your compiler.
+* A portable, high performance implementation that works when compiling without exceptions support and
+  offers customized error handling when a container needs to signal an exceptional error.
 * Users obtain a more uniform performance across all plataforms,
   including [link container.main_features.scary_iterators SCARY iterators].
+* Userful polymorphic allocators and memory resources, including implementation and emulation for pre-C++17 compilers
+* New advanced features (e.g. recursive containers) and [link container.configurable_containers configurability options for containers].
+* Containers support stateful allocators and are compatible with [*Boost.Interprocess]
+  (they can be safely placed in shared memory) offering improved performance vs standard containers when using Boost.Interprocess.
+* You have very useful non-standard containers like `[stable/static/small]_vector`, `flat_[multi]set/map`, `devector` or `segmented_vector`.
+* If you work on multiple platforms, you'll have a portable behaviour without depending
+  on the std-lib implementation conformance for each platform. Some examples:
+* [link container.extended_functionality Extended functionality] beyond the standard based
+   on user feedback to improve code performance.
+* [link container.configurable_containers Configuration options] that allow tweaking containers to fit users needs.
 * The library offers new useful containers:
   * [classref boost::container::flat_map flat_map],
     [classref boost::container::flat_set flat_set],
@@ -1349,41 +1357,25 @@ user can `#define BOOST_CONTAINER_MEMZEROED_POINTER_IS_NOT_ZERO` before includin
 
 [endsect]
 
-[section:known_issues Known Issues]
+[import ../../../tools/auto_index/include/auto_index_helpers.qbk]
 
-[section:move_emulation_limitations Move emulation limitations in C++03 compilers]
+[section:index_reference Indexes and Reference]
 
-[*Boost.Container] uses [*Boost.Move] to implement move semantics both in C++03 and C++11 compilers.
-However, as explained in
-[@http://www.boost.org/doc/libs/release/doc/html/move/emulation_limitations.html Emulation limitations],
-there are some limitations in C++03 compilers that might surprise [*Boost.Container] users.
+[section:index Indexes]
 
-The most noticeable problem is when [*Boost.Container] containers are placed in a struct with a
-compiler-generated assignment operator:
-
-[c++]
-
-   class holder
-   {
-      boost::container::vector<MyType> vect;
-   };
-
-   void func(const holder& h)
-   {
-      holder copy_h(h); //<--- ERROR: can't convert 'const holder&' to 'holder&'
-      //Compiler-generated copy constructor is non-const:
-      // holder& operator(holder &)
-      //!!!
-   }
-
-This limitation forces the user to define a const version of the copy assignment, in all classes
-holding containers, which might be annoying in some cases.
+[named_index class_name Class Index]
+[named_index typedef_name Typedef Index]
+[named_index function_name Function Index]
+[/named_index macro_name Macro Index]
+[/index]
 
 [endsect]
 
+[xinclude autodoc.xml]
+
 [endsect]
 
-[section:history_and_reasons History and reasons to use Boost.Container]
+[section:ack_notes History, acknowledgements and Release Notes]
 
 [section:boost_container_history Boost.Container history]
 
@@ -1407,50 +1399,6 @@ with success. As containers were mature enough to get their own library, it was 
 collect them containers and build [*Boost.Container], a library targeted to a wider audience.
 
 [endsect]
-
-
-[section:Why_boost_container Why Boost.Container?]
-
-With so many high quality standard library implementations out there, why would you want to
-use [*Boost.Container]? There are several reasons for that:
-
-* Even if you have a earlier standard conforming compiler, you still can have access to many
-  of the latest C++ standard features and have an easy code migration when you change your compiler.
-* It's compatible with [*Boost.Interprocess] shared memory allocators.
-* You have extremely useful new containers like `[stable/static/small]_vector` and `flat_[multi]set/map`.
-* If you work on multiple platforms, you'll have a portable behaviour without depending
-  on the std-lib implementation conformance of each platform. Some examples:
-   * Default constructors don't allocate memory at all, which improves performance and
-   usually implies a no-throw guarantee (if predicate's or allocator's default constructor doesn't throw).
-   * Small string optimization for [classref boost::container::basic_string basic_string].
-* [link container.extended_functionality Extended functionality] beyond the standard based
-   on user feedback to improve code performance.
-* You need a portable implementation that works when compiling without exceptions support or
-  you need to customize the error handling when a container needs to signal an exceptional error.
-
-[endsect]
-
-[endsect]
-
-[import ../../../tools/auto_index/include/auto_index_helpers.qbk]
-
-[section:index_reference Indexes and Reference]
-
-[section:index Indexes]
-
-[named_index class_name Class Index]
-[named_index typedef_name Typedef Index]
-[named_index function_name Function Index]
-[/named_index macro_name Macro Index]
-[/index]
-
-[endsect]
-
-[xinclude autodoc.xml]
-
-[endsect]
-
-[section:ack_notes Acknowledgements and Release Notes]
 
 [section:acknowledgements_notes Acknowledgements, notes and links]
 
