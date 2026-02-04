@@ -1168,10 +1168,12 @@ class list
    //!
    //! <b>Complexity</b>: Linear time. It performs exactly size() comparisons for equality.
    //!
+   //! <b>Returns</b>: The number of removed elements.
+   //!
    //! <b>Note</b>: The relative order of elements that are not removed is unchanged,
    //!   and iterators to elements that are not removed remain valid.
-   void remove(const T& value)
-   {  this->remove_if(equal_to_value_type(value));  }
+   size_type remove(const T& value)
+   {  return this->remove_if(equal_to_value_type(value));  }
 
    //! <b>Effects</b>: Removes all the elements for which a specified
    //!   predicate is satisfied.
@@ -1180,17 +1182,21 @@ class list
    //!
    //! <b>Complexity</b>: Linear time. It performs exactly size() calls to the predicate.
    //!
+   //! <b>Returns</b>: The number of removed elements.
+   //!
    //! <b>Note</b>: The relative order of elements that are not removed is unchanged,
    //!   and iterators to elements that are not removed remain valid.
    template <class Pred>
-   void remove_if(Pred pred)
+   size_type remove_if(Pred pred)
    {
       typedef value_to_node_compare<Node, Pred> value_to_node_compare_type;
-      this->icont().remove_and_dispose_if(value_to_node_compare_type(pred), Destroyer(this->node_alloc()));
+      return this->icont().remove_and_dispose_if(value_to_node_compare_type(pred), Destroyer(this->node_alloc()));
    }
 
    //! <b>Effects</b>: Removes adjacent duplicate elements or adjacent
    //!   elements that are equal from the list.
+   //!
+   //! <b>Returns</b>: The number of removed elements.
    //!
    //! <b>Throws</b>: If comparison throws.
    //!
@@ -1198,11 +1204,13 @@ class list
    //!
    //! <b>Note</b>: The relative order of elements that are not removed is unchanged,
    //!   and iterators to elements that are not removed remain valid.
-   void unique()
-   {  this->unique(value_equal_t());  }
+   size_type unique()
+   {  return this->unique(value_equal_t());  }
 
    //! <b>Effects</b>: Removes adjacent duplicate elements or adjacent
    //!   elements that satisfy some binary predicate from the list.
+   //!
+   //! <b>Returns</b>: The number of removed elements.
    //!
    //! <b>Throws</b>: If pred throws.
    //!
@@ -1211,10 +1219,10 @@ class list
    //! <b>Note</b>: The relative order of elements that are not removed is unchanged,
    //!   and iterators to elements that are not removed remain valid.
    template <class BinaryPredicate>
-   void unique(BinaryPredicate binary_pred)
+   size_type unique(BinaryPredicate binary_pred)
    {
       typedef value_to_node_compare<Node, BinaryPredicate> value_to_node_compare_type;
-      this->icont().unique_and_dispose(value_to_node_compare_type(binary_pred), Destroyer(this->node_alloc()));
+      return this->icont().unique_and_dispose(value_to_node_compare_type(binary_pred), Destroyer(this->node_alloc()));
    }
 
    //! <b>Requires</b>: The lists x and *this must be distinct.
@@ -1492,22 +1500,14 @@ class list
 //! <b>Complexity</b>: Linear.
 template <class T, class A, class U>
 inline typename list<T, A>::size_type erase(list<T, A>& c, const U& v)
-{
-   typename list<T, A>::size_type old_size = c.size();
-   c.remove_if(equal_to_value<U>(v));
-   return old_size - c.size();
-}
+{  return c.remove_if(equal_to_value<U>(v)); }
 
 //! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
 //!
 //! <b>Complexity</b>: Linear.
 template <class T, class A, class Pred>
 inline typename list<T, A>::size_type erase_if(list<T, A>& c, Pred pred)
-{
-   typename list<T, A>::size_type old_size = c.size();
-   c.remove_if(pred);
-   return old_size - c.size();
-}
+{  return c.remove_if(pred);  }
 
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD
 template <typename InputIterator>

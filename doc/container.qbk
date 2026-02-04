@@ -1401,6 +1401,7 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
    * If available, uses C++17's utilities under the `__cpp_aligned_new` feature.
    * Uses alternative aligned allocation functions (`posix_memalign`, `aligned_alloc`, `_aligned_malloc`...) otherwise.
 * Implemented overaligned allocation support for `adaptive_pool`and `node_allocator`
+* Changed return type of `erase`/`erase_if`/`unique` members of `list` and `slist` to `size_type` to follow C++20 changes to `std::list`.
 * Updated `basic_string`:
    * Added missing `string_view` members and updated `operator[]` to be able to return the terminating null.
    * Added C++20 `starts_with`/`ends_with` and C++23 `contains` overloads.
