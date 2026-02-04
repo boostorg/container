@@ -1031,12 +1031,6 @@ offers some workarounds for C++03 compilers to achieve the same allocator guaran
    [funcref boost::container::uninitialized_construct_using_allocator uninitialized_construct_using_allocator]
    and [funcref boost::container::make_obj_using_allocator make_obj_using_allocator].
 
-Additionally, in [*Boost.Container] containers, if possible, a single allocator is hold to construct
-`value_type`s. If the container needs an auxiliary
-allocator (e.g. an array allocator used by `deque` or `stable_vector`), that allocator is also
-stored in the container and initialized from the user-supplied allocator when the
-container is constructed (i.e. it's not constructed on the fly when auxiliary memory is needed).
-
 [endsect]
 
 [section:scoped_allocator Scoped allocators]
