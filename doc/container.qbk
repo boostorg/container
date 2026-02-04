@@ -35,7 +35,7 @@ In short, what does [*Boost.Container] offer?
 * A portable, high performance implementation that works when compiling without exceptions support and
   offers customized error handling when a container needs to signal an exceptional error.
 * Users obtain a more uniform performance across all plataforms,
-  including [link container.main_features.scary_iterators SCARY iterators].
+  including [link container.unique_features.scary_iterators SCARY iterators].
 * Userful polymorphic allocators and memory resources, including implementation and emulation for pre-C++17 compilers
 * New advanced features (e.g. recursive containers) and [link container.configurable_containers configurability options for containers].
 * Containers support stateful allocators and are compatible with [*Boost.Interprocess]
@@ -94,50 +94,7 @@ instructions, that's already been done for you.
 
 [endsect]
 
-[section:main_features Main features]
-
-[section:move_emplace Efficient insertion]
-
-Move semantics and placement insertion are two features brought by C++11 containers
-that can have a very positive impact in your C++ applications. Boost.Container implements
-both techniques both for C++11 and C++03 compilers.
-
-[section:move_containers Move-aware containers]
-
-All containers offered by [*Boost.Container] can store movable-only types
-and actual requirements for `value_type` depend on each container operations.
-Following C++11 requirements even for C++03 compilers, many operations now require
-movable or default constructible types instead of just copy constructible types.
-
-Containers themselves are also movable, with no-throw guarantee if allocator
-or predicate (if present) copy operations are no-throw. This allows
-high performance operations when transferring data between vectors.
-Let's see an example:
-
-[import ../example/doc_move_containers.cpp]
-[doc_move_containers]
-
-[endsect]
-
-[section:emplace Emplace: Placement insertion]
-
-All containers offered by [*Boost.Container] implement placement insertion,
-which means that  objects can be built directly into the container from user arguments
-without creating any temporary object. For compilers without variadic templates support
-placement insertion is emulated up to a finite (10) number of arguments.
-
-Expensive to move types are perfect candidates emplace functions and in case of node containers
-([classref boost::container::list list], [classref boost::container::set set], ...)
-emplace allows storing non-movable and non-copyable types in containers! Let's
-see an example:
-
-[import ../example/doc_emplace.cpp]
-[doc_emplace]
-
-[endsect]
-
-[endsect]
-
+[section:unique_features Unique features]
 
 [section:containers_of_incomplete_types Containers of Incomplete Types]
 
@@ -1967,7 +1924,7 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
 
 [section:release_notes_boost_1_55_00 Boost 1.55 Release]
 
-*  Implemented [link container.main_features.scary_iterators SCARY iterators].
+*  Implemented [link container.unique_features.scary_iterators SCARY iterators].
 
 *  Fixed bugs [@https://svn.boost.org/trac/boost/ticket/8269 #8269],
               [@https://svn.boost.org/trac/boost/ticket/8473 #8473],
