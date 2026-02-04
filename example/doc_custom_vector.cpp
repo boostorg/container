@@ -26,6 +26,9 @@ int main ()
 
    //This option specifies that a vector that will use "unsigned char" as
    //the type to store capacity or size internally.
+   //Note: You can also use 'unsigned short' (saves 6 bytes, max size 65,535),
+   //'unsigned int' (saves 4 bytes, max size ~4 billion), etc.
+   //This trades memory efficiency for maximum representable capacity.
    typedef vector_options< stored_size<unsigned char> >::type size_option_t;
 
    //Size-optimized vector is smaller than the default one.

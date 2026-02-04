@@ -33,14 +33,23 @@ namespace boost {
 namespace container {
 namespace dtl {
 
-// Greatest common divisor and least common multiple
+//! Calculates greatest common divisor using Euclid's algorithm
+//! 
+//! @tparam Integer Integral type supporting modulo and comparison
+//! @param A First positive integer (recommended: A > B for efficiency)
+//! @param B Second positive integer
+//! @return GCD of A and B
+//! @pre A > 0 && B > 0
+//! 
+//! @par Complexity:
+//! O(log(min(A,B))) worst case
+//!
+//! @par Example:
+//! @code
+//! std::size_t g = gcd(48, 18); // returns 6
+//! std::size_t h = gcd(100, 35); // returns 5
+//! @endcode
 
-//
-// gcd is an algorithm that calculates the greatest common divisor of two
-//  integers, using Euclid's algorithm.
-//
-// Pre: A > 0 && B > 0
-// Recommended: A > B
 template <typename Integer>
 inline Integer gcd(Integer A, Integer B)
 {
