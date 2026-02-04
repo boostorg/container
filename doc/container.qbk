@@ -212,25 +212,7 @@ iterators.
 
 [endsect]
 
-[section:other_features Other features]
-
-* Default constructors don't allocate memory which improves performance and
-  usually implies a no-throw guarantee (if predicate's or allocator's default constructor doesn't throw).
-
-* Small string optimization for [classref boost::container::basic_string basic_string],
-  with an internal buffer of 11/23 bytes (32/64 bit systems)
-  [*without] increasing the usual `sizeof` of the string (3 words).
-
-* `[multi]set/map` containers are size optimized embedding the color bit of the red-black tree nodes
-   in the parent pointer.
-
-* `[multi]set/map` containers use no recursive functions so stack problems are avoided.
-
-[endsect]
-
-[endsect]
-
-[section:exception_handling Boost.Container and C++ exceptions]
+[section:exception_handling C++ exception handling]
 
 In some environments, such as game development or embedded systems, C++ exceptions are disabled or a customized error handling is needed.
 According to document [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2271.html N2271 EASTL -- Electronic Arts Standard Template Library]
@@ -270,6 +252,24 @@ a throw-callback declared in [headerref boost/container/throw_exception.hpp]:
    (see [@http://www.boost.org/libs/utility/assert.html Boost.Assert] for more information).
    If this assertion returns, then `std::abort` is called.
 *  Else, an appropriate standard library exception is thrown (like `std::out_of_range`).
+
+[endsect]
+
+[section:other_features Other features]
+
+* Default constructors don't allocate memory which improves performance and
+  usually implies a no-throw guarantee (if predicate's or allocator's default constructor doesn't throw).
+
+* Small string optimization for [classref boost::container::basic_string basic_string],
+  with an internal buffer of 11/23 bytes (32/64 bit systems)
+  [*without] increasing the usual `sizeof` of the string (3 words).
+
+* `[multi]set/map` containers are size optimized embedding the color bit of the red-black tree nodes
+   in the parent pointer.
+
+* `[multi]set/map` containers use no recursive functions so stack problems are avoided.
+
+[endsect]
 
 [endsect]
 
