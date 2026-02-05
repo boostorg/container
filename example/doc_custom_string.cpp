@@ -47,7 +47,7 @@ int main ()
    #endif   //BOOST_NO_EXCEPTIONS
    /*->*/
    //=try       { size_optimized_string_t v(127, 'a'); }
-   //=catch(...){ exception_thrown = true;        }
+   //=catch(...){ exception_thrown = true;             }
 
    assert(exception_thrown == true);
 
