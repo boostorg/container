@@ -1314,6 +1314,79 @@ user can `#define BOOST_CONTAINER_MEMZEROED_POINTER_IS_NOT_ZERO` before includin
 
 [endsect]
 
+[section:some_comparisons Boost container attributes and comparison with standard library implementations]
+
+[section:sizeof `sizeof` comparison across major implementations]
+
+These two tables compare `sizeof(container)` across major implementations and Boost.Container.
+
+[table:sizeof_comparison sizeof comparison in 32/64 bit systems
+[[Container]      [Boost.Container ]  [libstdc++ (GCC)] [libc++ (Clang)] [Microsoft STL [footnote Uses heap-allocated sentinels for `list` and `[multi_]set/map`, resulting in a smaller `sizeof` but requiring allocation on construction.]]]
+[[`vector`]         [12 / 24]         [12 / 24]         [12 / 24]        [12 / 24]  ]
+[[`deque`]          [16 / 32]         [40 / 80]         [24 / 48]        [20 / 40]  ]
+[[`list`]           [12 / 24]         [12 / 24]         [12 / 24]        [8 / 16]   ]
+[[`multi_set/map`]  [16 / 32]         [24 / 48]         [12 / 24]        [8 / 16]   ]
+[[`string` [footnote Boost.Container has a SSO size option
+                  ([classref boost::container::inline_chars inline_chars]) that changes the `sizeof`.
+                   The number shown is the `sizeof` for the default SSO size]]
+                    [12 / 24]         [24 / 32]         [12 / 24]        [24 / 32]  ]
+]
+
+[endsect]
+
+[section:string_sso String Small String Optimization (SSO) comparison across major implementation]
+
+This tables shows the number of characters (excluding the null terminator) that can be hold inline across major implementations and Boost.Container.
+
+[table:sso_capacity SSO capacity for string
+[[Mode]     [Boost.Container [footnote Boost.Container has a SSO size selection (up to 127 characters) option called [classref boost::container::inline_chars inline_chars] ]]
+                             [libstdc++ (GCC)] [libc++ (Clang)] [Microsoft STL]]
+[[32 bit]   [10]              [15]         [10]        [15]]
+[[64 bit]   [22]              [15]         [22]        [15]]
+]
+
+[endsect]
+
+[section:deque_blocks `deque` implementation block/segment size comparison ]
+
+`deque` implementations are based on a segmented array of blocks, and the block size is an important parameter that affects performance.
+This table shows the block size in bytes for `deque` implementations across major implementations and Boost.Container.
+
+[table:block_sizes Deque Block Sizes
+[[Implementation]   [Block Size in bytes]                   ]
+[[Boost.Container]  [512 (32-bit) / 1024 (64-bit) [footnote Boost.Container has an option to select the [classref boost::container::block_size block_size] ] ] ]
+[[libstdc++ (GCC)]  [512 ]                                  ]
+[[libc++ (Clang)]   [4096]                                  ]
+[[Microsoft STL]    [16]                                    ]
+]
+
+[endsect]
+
+[section:boost_sizeof `sizeof` value of Boost.Container containers]
+
+[table:sizeof_comparison `sizeof` comparison between Boost Containers (in bytes)
+
+This table shows the `sizeof` value of Boost.Container containers in 32 and 64 bit systems. Note that these values can be changed by configuration options
+(like [classref boost::container::stored_size stored_size]) so they are shown here for the default configuration.
+
+[[Container]         [32-bit] [64-bit] ]
+[[`vector`]            [12]     [24] ]
+[[`deque`]             [16]     [32] ]
+[[`devector`]          [16]     [32] ]
+[[`segmented_vector`]  [12]     [24] ]
+[[`stable_vector`]     [20]     [40] ]
+[[`list`]              [12]     [24] ]
+[[`slist`]             [8]      [16] ]
+[[`map/set`]           [16]     [32] ]
+[[`flat_[multi_]map/set` [footnote `boost::containter::flat_xxx` containers are by default ordered `vector`s, but these containers can be configure to use another container as the underlying sequence ] ]
+                       [12]     [24] ]
+[[`string`]            [12]     [24] ]
+]
+
+[endsect]
+
+[endsect]
+
 [import ../../../tools/auto_index/include/auto_index_helpers.qbk]
 
 [section:index_reference Indexes and Reference]
