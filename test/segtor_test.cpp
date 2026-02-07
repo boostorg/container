@@ -12,7 +12,7 @@
 #include <iostream>
 #include <list>
 
-#include <boost/container/segmented_vector.hpp>
+#include <boost/container/segtor.hpp>
 #include <boost/container/allocator.hpp>
 
 
@@ -36,15 +36,15 @@
 using namespace boost::container;
 
 //Function to check if both sets are equal
-// segmented_vector does not provide front operations; only back/middle tests
+// segtor does not provide front operations; only back/middle tests
 template<class V1, class V2>
-bool segmented_vector_copyable_only(V1 &, V2 &, dtl::false_type)
+bool segtor_copyable_only(V1 &, V2 &, dtl::false_type)
 {
    return true;
 }
 
 template<class V1, class V2>
-bool segmented_vector_copyable_only(V1 &cntc, V2 &stdc, dtl::true_type)
+bool segtor_copyable_only(V1 &cntc, V2 &stdc, dtl::true_type)
 {
    typedef typename V1::value_type IntType;
    std::size_t size = cntc.size();
@@ -96,36 +96,36 @@ bool segmented_vector_copyable_only(V1 &cntc, V2 &stdc, dtl::true_type)
 }
 
 //Test recursive structures
-class recursive_segmented_vector
+class recursive_segtor
 {
 public:
 
-   recursive_segmented_vector (const recursive_segmented_vector &x)
-      : segmented_vector_(x.segmented_vector_)
+   recursive_segtor (const recursive_segtor &x)
+      : segtor_(x.segtor_)
    {}
 
-   recursive_segmented_vector & operator=(const recursive_segmented_vector &x)
-   {  this->segmented_vector_ = x.segmented_vector_;   return *this; }
+   recursive_segtor & operator=(const recursive_segtor &x)
+   {  this->segtor_ = x.segtor_;   return *this; }
 
-   segmented_vector<recursive_segmented_vector> segmented_vector_;
-   segmented_vector<recursive_segmented_vector>::iterator it_;
-   segmented_vector<recursive_segmented_vector>::const_iterator cit_;
-   segmented_vector<recursive_segmented_vector>::reverse_iterator rit_;
-   segmented_vector<recursive_segmented_vector>::const_reverse_iterator crit_;
+   segtor<recursive_segtor> segtor_;
+   segtor<recursive_segtor>::iterator it_;
+   segtor<recursive_segtor>::const_iterator cit_;
+   segtor<recursive_segtor>::reverse_iterator rit_;
+   segtor<recursive_segtor>::const_reverse_iterator crit_;
 };
 
-bool do_recursive_segmented_vector_test()
+bool do_recursive_segtor_test()
 {
    //Test for recursive types
    {
-      segmented_vector<recursive_segmented_vector> recursive_segmented_vector_segmented_vector;
+      segtor<recursive_segtor> recursive_segtor_segtor;
    }
 
    {
       //Now test move semantics
-      segmented_vector<recursive_segmented_vector> original;
-      segmented_vector<recursive_segmented_vector> move_ctor(boost::move(original));
-      segmented_vector<recursive_segmented_vector> move_assign;
+      segtor<recursive_segtor> original;
+      segtor<recursive_segtor> move_ctor(boost::move(original));
+      segtor<recursive_segtor> move_assign;
       move_assign = boost::move(move_ctor);
       move_assign.swap(original);
    }
@@ -135,15 +135,15 @@ bool do_recursive_segmented_vector_test()
 template<class IntType, bool Reservable>
 bool do_test()
 {
-   typedef typename segmented_vector_options<reservable<Reservable> >::type Options;
+   typedef typename segtor_options<reservable<Reservable> >::type Options;
    {
-      typedef segmented_vector<IntType, void, Options>  MyCnt;
+      typedef segtor<IntType, void, Options>  MyCnt;
       ::boost::movelib::unique_ptr<MyCnt> const pcntc = ::boost::movelib::make_unique<MyCnt>();
       pcntc->erase(pcntc->cbegin(), pcntc->cend());
    }
 
    //Alias types
-   typedef segmented_vector<IntType, void, Options>  MyCnt;
+   typedef segtor<IntType, void, Options>  MyCnt;
    typedef std::vector<int> MyStd;
    const int max = 100;
    {
@@ -258,7 +258,7 @@ bool do_test()
          if(!test::CheckEqualContainers(cntc, stdc)) return false;
       }
 
-      if(!segmented_vector_copyable_only(cntc, stdc
+      if(!segtor_copyable_only(cntc, stdc
                      ,dtl::bool_<boost::container::test::is_copyable<IntType>::value>())){
          return false;
       }
@@ -306,12 +306,12 @@ bool test_ctad()  //Older clang versions suffer from ICE here
    //Check Constructor Template Auto Deduction
    {
       MyStd gold = MyStd{ 1, 2, 3 };
-      segmented_vector<int> test = segmented_vector(gold.begin(), gold.end());
+      segtor<int> test = segtor(gold.begin(), gold.end());
       if (!test::CheckEqualContainers(gold, test)) return false;
    }
    {
       MyStd gold = MyStd{ 1, 2, 3 };
-      segmented_vector<int>  test = segmented_vector<int>(gold.begin(), gold.end(), new_allocator<int>());
+      segtor<int>  test = segtor<int>(gold.begin(), gold.end(), new_allocator<int>());
       if (!test::CheckEqualContainers(gold, test)) return false;
    }
    return true;
@@ -326,10 +326,10 @@ struct GetAllocatorCont
    template<class ValueType>
    struct apply
    {
-      typedef segmented_vector< ValueType
+      typedef segtor< ValueType
                     , typename allocator_traits<VoidAllocator>
                         ::template portable_rebind_alloc<ValueType>::type
-                    , typename segmented_vector_options<reservable<Reservable> >::type
+                    , typename segtor_options<reservable<Reservable> >::type
                     > type;
    };
 };
@@ -365,56 +365,56 @@ struct char_holder
 bool do_test_default_block_size()
 {
    //Check power of two sizes by default
-   BOOST_TEST(segmented_vector<char_holder<8>  >::get_block_size() == 16*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<12> >::get_block_size() == 16*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<16> >::get_block_size() == 8*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<20> >::get_block_size() == 8*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<24> >::get_block_size() == 8*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<28> >::get_block_size() == 8*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<32> >::get_block_size() == 4*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<36> >::get_block_size() == 4*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<40> >::get_block_size() == 4*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<44> >::get_block_size() == 4*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<48> >::get_block_size() == 4*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<52> >::get_block_size() == 4*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<56> >::get_block_size() == 4*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<60> >::get_block_size() == 4*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<64> >::get_block_size() == 2*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<68> >::get_block_size() == 2*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<72> >::get_block_size() == 2*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<76> >::get_block_size() == 2*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<80> >::get_block_size() == 2*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<84> >::get_block_size() == 2*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<88> >::get_block_size() == 2*sizeof(void*));
-   BOOST_TEST(segmented_vector<char_holder<92> >::get_block_size() == 2*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<8>  >::get_block_size() == 16*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<12> >::get_block_size() == 16*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<16> >::get_block_size() == 8*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<20> >::get_block_size() == 8*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<24> >::get_block_size() == 8*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<28> >::get_block_size() == 8*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<32> >::get_block_size() == 4*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<36> >::get_block_size() == 4*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<40> >::get_block_size() == 4*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<44> >::get_block_size() == 4*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<48> >::get_block_size() == 4*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<52> >::get_block_size() == 4*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<56> >::get_block_size() == 4*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<60> >::get_block_size() == 4*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<64> >::get_block_size() == 2*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<68> >::get_block_size() == 2*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<72> >::get_block_size() == 2*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<76> >::get_block_size() == 2*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<80> >::get_block_size() == 2*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<84> >::get_block_size() == 2*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<88> >::get_block_size() == 2*sizeof(void*));
+   BOOST_TEST(segtor<char_holder<92> >::get_block_size() == 2*sizeof(void*));
    //Minimal 8 elements
-   BOOST_TEST(segmented_vector<char_holder<148> >::get_block_size() == 8u);
+   BOOST_TEST(segtor<char_holder<148> >::get_block_size() == 8u);
    return 0 == boost::report_errors();
 }
 
-struct boost_container_segmented_vector;
+struct boost_container_segtor;
 
 namespace boost { namespace container {   namespace test {
 
 template<>
-struct alloc_propagate_base<boost_container_segmented_vector>
+struct alloc_propagate_base<boost_container_segtor>
 {
    template <class T, class Allocator>
    struct apply
    {
-      typedef boost::container::segmented_vector<T, Allocator> type;
+      typedef boost::container::segtor<T, Allocator> type;
    };
 };
 
 }}}   //namespace boost::container::test
 
 
-//Test segmented_vector has the expected size --> 3 words
-BOOST_CONTAINER_STATIC_ASSERT_MSG(3*sizeof(void*) == sizeof(segmented_vector<int>), "sizeof(segmented_vector<int> should be 3 words");
+//Test segtor has the expected size --> 3 words
+BOOST_CONTAINER_STATIC_ASSERT_MSG(3*sizeof(void*) == sizeof(segtor<int>), "sizeof(segtor<int> should be 3 words");
 
 int main ()
 {
-   if(!do_recursive_segmented_vector_test())
+   if(!do_recursive_segtor_test())
       return 1;
 
    if(!do_test<int, false>())
@@ -438,7 +438,7 @@ int main ()
 
    //Test non-copy-move operations (back only; no emplace_front)
    {
-      segmented_vector<test::non_copymovable_int> d;
+      segtor<test::non_copymovable_int> d;
       d.emplace_back();
       d.emplace_back(1);
       d.resize(10);
@@ -463,7 +463,7 @@ int main ()
    ////////////////////////////////////
    //    Default init test
    ////////////////////////////////////
-   if(!test::default_init_test< segmented_vector<int, test::default_init_allocator<int> > >()){
+   if(!test::default_init_test< segtor<int, test::default_init_allocator<int> > >()){
       std::cerr << "Default init test failed" << std::endl;
       return 1;
    }
@@ -471,23 +471,23 @@ int main ()
    ////////////////////////////////////
    //    Emplace testing
    ////////////////////////////////////
-   // segmented_vector does not provide front operations (emplace_front, push_front, pop_front)
+   // segtor does not provide front operations (emplace_front, push_front, pop_front)
    const test::EmplaceOptions Options = (test::EmplaceOptions)(test::EMPLACE_BACK | test::EMPLACE_BEFORE);
 
    if(!boost::container::test::test_emplace
-      < segmented_vector<test::EmplaceInt>, Options>())
+      < segtor<test::EmplaceInt>, Options>())
       return 1;
    ////////////////////////////////////
    //    Allocator propagation testing
    ////////////////////////////////////
-   if(!boost::container::test::test_propagate_allocator<boost_container_segmented_vector>())
+   if(!boost::container::test::test_propagate_allocator<boost_container_segtor>())
       return 1;
 
    ////////////////////////////////////
    //    Initializer lists testing
    ////////////////////////////////////
    if(!boost::container::test::test_vector_methods_with_initializer_list_as_argument_for
-      < boost::container::segmented_vector<int> >()) {
+      < boost::container::segtor<int> >()) {
       return 1;
    }
 
@@ -495,7 +495,7 @@ int main ()
    //    Iterator testing
    ////////////////////////////////////
    {
-      typedef boost::container::segmented_vector<int> cont_int;
+      typedef boost::container::segtor<int> cont_int;
       for(std::size_t i = 1; i <= 10000; i*=10){
          cont_int a;
          for (int j = 0; j < (int)i; ++j)
@@ -512,7 +512,7 @@ int main ()
    ////////////////////////////////////
    // default allocator
    {
-      typedef boost::container::segmented_vector<int> cont;
+      typedef boost::container::segtor<int> cont;
       typedef cont::allocator_type allocator_type;
       typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
       BOOST_CONTAINER_STATIC_ASSERT_MSG(!(boost::has_trivial_destructor_after_move<cont>::value !=
@@ -522,7 +522,7 @@ int main ()
    }
    // std::allocator
    {
-      typedef boost::container::segmented_vector<int, std::allocator<int> > cont;
+      typedef boost::container::segtor<int, std::allocator<int> > cont;
       typedef cont::allocator_type allocator_type;
       typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
       BOOST_CONTAINER_STATIC_ASSERT_MSG(!(boost::has_trivial_destructor_after_move<cont>::value !=

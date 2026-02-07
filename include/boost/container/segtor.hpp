@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2025. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2026. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -8,8 +8,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef BOOST_CONTAINER_SEGMENTED_VECTOR_HPP
-#define BOOST_CONTAINER_SEGMENTED_VECTOR_HPP
+#ifndef BOOST_CONTAINER_SEGTOR_HPP
+#define BOOST_CONTAINER_SEGTOR_HPP
 
 #ifndef BOOST_CONFIG_HPP
 #  include <boost/config.hpp>
@@ -27,27 +27,26 @@ namespace boost {
 namespace container {
 
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-//! A segmented vector is a sequence container that supports random access to elements,
-//! constant time insertion and removal of elements at the end, and linear time
-//! insertion and removal of elements in the middle. It uses the same segmented
-//! (block-based) storage as deque but only allows growth at the back.
+//! A segtor (contraction of "segmented vector" is a sequence container that supports
+//! random access to elements, constant time insertion and removal of elements at
+//! the end, and linear time insertion and removal of elements in the middle.
 //!
-//! This is the single-ended version of boost::container::deque: it provides
+//! It's the single-ended version of boost::container::deque: it provides
 //! push_back, pop_back, emplace_back, etc., but does not provide push_front,
 //! pop_front, or emplace_front.
 //!
-//! \tparam T The type of object that is stored in the segmented_vector
+//! \tparam T The type of object that is stored in the segtor
 //! \tparam Allocator The allocator used for all internal memory management, use void
 //!   for the default allocator
-//! \tparam Options A type produced from \c boost::container::segmented_vector_options.
+//! \tparam Options A type produced from \c boost::container::segtor_options.
 template <class T, class Allocator = void, class Options = void>
 #else
 template <class T, class Allocator, class Options>
 #endif
-class segmented_vector : public deque_impl<T, Allocator, true, Options>
+class segtor : public deque_impl<T, Allocator, true, Options>
 {
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   BOOST_COPYABLE_AND_MOVABLE(segmented_vector)
+   BOOST_COPYABLE_AND_MOVABLE(segtor)
    typedef deque_impl<T, Allocator, true, Options> base_type;
 #endif
 
@@ -84,37 +83,37 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
    //
    //////////////////////////////////////////////
 
-   //! <b>Effects</b>: Default constructs a segmented_vector.
+   //! <b>Effects</b>: Default constructs a segtor.
    //!
    //! <b>Throws</b>: If allocator_type's default constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   segmented_vector()
+   segtor()
       BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<allocator_type>::value)
       : base_type()
    {}
 
-   //! <b>Effects</b>: Constructs a segmented_vector taking the allocator as parameter.
+   //! <b>Effects</b>: Constructs a segtor taking the allocator as parameter.
    //!
    //! <b>Throws</b>: Nothing
    //!
    //! <b>Complexity</b>: Constant.
-   explicit segmented_vector(const allocator_type& a) BOOST_NOEXCEPT_OR_NOTHROW
+   explicit segtor(const allocator_type& a) BOOST_NOEXCEPT_OR_NOTHROW
       : base_type(a)
    {}
 
-   //! <b>Effects</b>: Constructs a segmented_vector
+   //! <b>Effects</b>: Constructs a segtor
    //!   and inserts n value initialized values.
    //!
    //! <b>Throws</b>: If allocator_type's default constructor
    //!   throws or T's value initialization throws.
    //!
    //! <b>Complexity</b>: Linear to n.
-   explicit segmented_vector(size_type n)
+   explicit segtor(size_type n)
       : base_type(n)
    {}
 
-   //! <b>Effects</b>: Constructs a segmented_vector
+   //! <b>Effects</b>: Constructs a segtor
    //!   and inserts n default initialized values.
    //!
    //! <b>Throws</b>: If allocator_type's default constructor
@@ -123,22 +122,22 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
    //! <b>Complexity</b>: Linear to n.
    //!
    //! <b>Note</b>: Non-standard extension
-   segmented_vector(size_type n, default_init_t)
+   segtor(size_type n, default_init_t)
       : base_type(n, default_init)
    {}
 
-   //! <b>Effects</b>: Constructs a segmented_vector that will use a copy of allocator a
+   //! <b>Effects</b>: Constructs a segtor that will use a copy of allocator a
    //!   and inserts n value initialized values.
    //!
    //! <b>Throws</b>: If allocator_type's default constructor
    //!   throws or T's value initialization throws.
    //!
    //! <b>Complexity</b>: Linear to n.
-   explicit segmented_vector(size_type n, const allocator_type& a)
+   explicit segtor(size_type n, const allocator_type& a)
       : base_type(n, a)
    {}
 
-   //! <b>Effects</b>: Constructs a segmented_vector that will use a copy of allocator a
+   //! <b>Effects</b>: Constructs a segtor that will use a copy of allocator a
    //!   and inserts n default initialized values.
    //!
    //! <b>Throws</b>: If allocator_type's default constructor
@@ -147,33 +146,33 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
    //! <b>Complexity</b>: Linear to n.
    //!
    //! <b>Note</b>: Non-standard extension
-   segmented_vector(size_type n, default_init_t, const allocator_type& a)
+   segtor(size_type n, default_init_t, const allocator_type& a)
       : base_type(n, default_init, a)
    {}
 
-   //! <b>Effects</b>: Constructs a segmented_vector that will use a copy of allocator a
+   //! <b>Effects</b>: Constructs a segtor that will use a copy of allocator a
    //!   and inserts n copies of value.
    //!
    //! <b>Throws</b>: If allocator_type's default constructor
    //!   throws or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
-   segmented_vector(size_type n, const value_type& value)
+   segtor(size_type n, const value_type& value)
       : base_type(n, value)
    {}
 
-   //! <b>Effects</b>: Constructs a segmented_vector that will use a copy of allocator a
+   //! <b>Effects</b>: Constructs a segtor that will use a copy of allocator a
    //!   and inserts n copies of value.
    //!
    //! <b>Throws</b>: If allocator_type's default constructor
    //!   throws or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to n.
-   segmented_vector(size_type n, const value_type& value, const allocator_type& a)
+   segtor(size_type n, const value_type& value, const allocator_type& a)
       : base_type(n, value, a)
    {}
 
-   //! <b>Effects</b>: Constructs a segmented_vector that will use a copy of allocator a
+   //! <b>Effects</b>: Constructs a segtor that will use a copy of allocator a
    //!   and inserts a copy of the range [first, last).
    //!
    //! <b>Throws</b>: If allocator_type's default constructor
@@ -181,7 +180,7 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
    template <class InIt>
-   segmented_vector(InIt first, InIt last
+   segtor(InIt first, InIt last
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
       , typename dtl::disable_if_convertible<InIt, size_type>::type* = 0
       #endif
@@ -189,7 +188,7 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
       : base_type(first, last)
    {}
 
-   //! <b>Effects</b>: Constructs a segmented_vector that will use a copy of allocator a
+   //! <b>Effects</b>: Constructs a segtor that will use a copy of allocator a
    //!   and inserts a copy of the range [first, last).
    //!
    //! <b>Throws</b>: If allocator_type's default constructor
@@ -197,7 +196,7 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
    template <class InIt>
-   segmented_vector(InIt first, InIt last, const allocator_type& a
+   segtor(InIt first, InIt last, const allocator_type& a
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
       , typename dtl::disable_if_convertible<InIt, size_type>::type* = 0
       #endif
@@ -206,24 +205,24 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
    {}
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
-   //! <b>Effects</b>: Constructs a segmented_vector that will use a copy of allocator a
+   //! <b>Effects</b>: Constructs a segtor that will use a copy of allocator a
    //!   and inserts a copy of the range [il.begin(), il.end()).
    //!
    //! <b>Throws</b>: If allocator_type's default constructor
    //!   throws or T's constructor taking a dereferenced std::initializer_list iterator throws.
    //!
    //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
-   segmented_vector(std::initializer_list<value_type> il, const allocator_type& a = allocator_type())
+   segtor(std::initializer_list<value_type> il, const allocator_type& a = allocator_type())
       : base_type(il, a)
    {}
 #endif
 
-   //! <b>Effects</b>: Copy constructs a segmented_vector.
+   //! <b>Effects</b>: Copy constructs a segtor.
    //!
    //! <b>Postcondition</b>: x == *this.
    //!
    //! <b>Complexity</b>: Linear to the elements x contains.
-   segmented_vector(const segmented_vector& x)
+   segtor(const segtor& x)
       : base_type(x)
    {}
 
@@ -232,11 +231,11 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
    //! <b>Throws</b>: If allocator_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant.
-   segmented_vector(BOOST_RV_REF(segmented_vector) x) BOOST_NOEXCEPT_OR_NOTHROW
+   segtor(BOOST_RV_REF(segtor) x) BOOST_NOEXCEPT_OR_NOTHROW
       : base_type(boost::move(static_cast<base_type&>(x)))
    {}
 
-   //! <b>Effects</b>: Copy constructs a segmented_vector using the specified allocator.
+   //! <b>Effects</b>: Copy constructs a segtor using the specified allocator.
    //!
    //! <b>Postcondition</b>: x == *this.
    //!
@@ -244,7 +243,7 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
    //!   throws or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to the elements x contains.
-   segmented_vector(const segmented_vector& x, const allocator_type& a)
+   segtor(const segtor& x, const allocator_type& a)
       : base_type(x, a)
    {}
 
@@ -255,17 +254,17 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
    //! <b>Throws</b>: If allocation or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
-   segmented_vector(BOOST_RV_REF(segmented_vector) x, const allocator_type& a)
+   segtor(BOOST_RV_REF(segtor) x, const allocator_type& a)
       : base_type(boost::move(static_cast<base_type&>(x)), a)
    {}
 
-   //! <b>Effects</b>: Destroys the segmented_vector. All stored values are destroyed
+   //! <b>Effects</b>: Destroys the segtor. All stored values are destroyed
    //!   and used memory is deallocated.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Linear to the number of elements.
-   ~segmented_vector() BOOST_NOEXCEPT_OR_NOTHROW
+   ~segtor() BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
    //! <b>Effects</b>: Makes *this contain the same elements as x.
@@ -276,7 +275,7 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to the number of elements in x.
-   segmented_vector& operator=(BOOST_COPY_ASSIGN_REF(segmented_vector) x)
+   segtor& operator=(BOOST_COPY_ASSIGN_REF(segtor) x)
    {
       base_type::operator=(static_cast<const base_type&>(x));
       return *this;
@@ -290,7 +289,7 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
    //! <b>Complexity</b>: Constant if allocator_traits_type::
    //!   propagate_on_container_move_assignment is true or
    //!   this->get_allocator() == x.get_allocator(). Linear otherwise.
-   segmented_vector& operator=(BOOST_RV_REF(segmented_vector) x)
+   segtor& operator=(BOOST_RV_REF(segtor) x)
       BOOST_NOEXCEPT_IF(allocator_traits<allocator_type>::propagate_on_container_move_assignment::value
                         || allocator_traits<allocator_type>::is_always_equal::value)
    {
@@ -307,7 +306,7 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to the number of elements in il.
-   segmented_vector& operator=(std::initializer_list<value_type> il)
+   segtor& operator=(std::initializer_list<value_type> il)
    {
       base_type::operator=(il);
       return *this;
@@ -790,55 +789,55 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
-   void swap(segmented_vector& x);
+   void swap(segtor& x);
    #endif   //#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    //! <b>Effects</b>: Returns true if x and y are equal
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    BOOST_CONTAINER_NODISCARD inline
-      friend bool operator==(const segmented_vector& x, const segmented_vector& y)
+      friend bool operator==(const segtor& x, const segtor& y)
    {  return static_cast<const base_type&>(x) == static_cast<const base_type&>(y);  }
 
    //! <b>Effects</b>: Returns true if x and y are unequal
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    BOOST_CONTAINER_NODISCARD inline
-      friend bool operator!=(const segmented_vector& x, const segmented_vector& y)
+      friend bool operator!=(const segtor& x, const segtor& y)
    {  return static_cast<const base_type&>(x) != static_cast<const base_type&>(y); }
 
    //! <b>Effects</b>: Returns true if x is less than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    BOOST_CONTAINER_NODISCARD inline
-      friend bool operator<(const segmented_vector& x, const segmented_vector& y)
+      friend bool operator<(const segtor& x, const segtor& y)
    {  return static_cast<const base_type&>(x) < static_cast<const base_type&>(y);  }
 
    //! <b>Effects</b>: Returns true if x is greater than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    BOOST_CONTAINER_NODISCARD inline
-      friend bool operator>(const segmented_vector& x, const segmented_vector& y)
+      friend bool operator>(const segtor& x, const segtor& y)
    {  return static_cast<const base_type&>(x) > static_cast<const base_type&>(y);  }
 
    //! <b>Effects</b>: Returns true if x is equal or less than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    BOOST_CONTAINER_NODISCARD inline
-      friend bool operator<=(const segmented_vector& x, const segmented_vector& y)
+      friend bool operator<=(const segtor& x, const segtor& y)
    {  return static_cast<const base_type&>(x) <= static_cast<const base_type&>(y);  }
 
    //! <b>Effects</b>: Returns true if x is equal or greater than y
    //!
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    BOOST_CONTAINER_NODISCARD inline
-      friend bool operator>=(const segmented_vector& x, const segmented_vector& y)
+      friend bool operator>=(const segtor& x, const segtor& y)
    {  return static_cast<const base_type&>(x) >= static_cast<const base_type&>(y);  }
 
    //! <b>Effects</b>: x.swap(y)
    //!
    //! <b>Complexity</b>: Constant.
-   inline friend void swap(segmented_vector& x, segmented_vector& y)
+   inline friend void swap(segtor& x, segtor& y)
        BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
    {  static_cast<base_type&>(x).swap(static_cast<base_type&>(y));  }
 
@@ -848,12 +847,12 @@ class segmented_vector : public deque_impl<T, Allocator, true, Options>
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD
 
 template <typename InputIterator>
-segmented_vector(InputIterator, InputIterator) ->
-   segmented_vector<typename iter_value<InputIterator>::type>;
+segtor(InputIterator, InputIterator) ->
+   segtor<typename iter_value<InputIterator>::type>;
 
 template <typename InputIterator, typename Allocator>
-segmented_vector(InputIterator, InputIterator, Allocator const&) ->
-   segmented_vector<typename iter_value<InputIterator>::type, Allocator>;
+segtor(InputIterator, InputIterator, Allocator const&) ->
+   segtor<typename iter_value<InputIterator>::type, Allocator>;
 
 #endif
 
@@ -861,9 +860,9 @@ segmented_vector(InputIterator, InputIterator, Allocator const&) ->
 //!
 //! <b>Complexity</b>: Linear.
 template <class T, class A, class O, class U>
-inline typename segmented_vector<T, A, O>::size_type erase(segmented_vector<T, A, O>& c, const U& v)
+inline typename segtor<T, A, O>::size_type erase(segtor<T, A, O>& c, const U& v)
 {
-   typename segmented_vector<T, A, O>::size_type old_size = c.size();
+   typename segtor<T, A, O>::size_type old_size = c.size();
    c.erase(boost::container::remove(c.begin(), c.end(), v), c.end());
    return old_size - c.size();
 }
@@ -872,9 +871,9 @@ inline typename segmented_vector<T, A, O>::size_type erase(segmented_vector<T, A
 //!
 //! <b>Complexity</b>: Linear.
 template <class T, class A, class O, class Pred>
-inline typename segmented_vector<T, A, O>::size_type erase_if(segmented_vector<T, A, O>& c, Pred pred)
+inline typename segtor<T, A, O>::size_type erase_if(segtor<T, A, O>& c, Pred pred)
 {
-   typename segmented_vector<T, A, O>::size_type old_size = c.size();
+   typename segtor<T, A, O>::size_type old_size = c.size();
    c.erase(boost::container::remove_if(c.begin(), c.end(), pred), c.end());
    return old_size - c.size();
 }
@@ -887,7 +886,7 @@ inline typename segmented_vector<T, A, O>::size_type erase_if(segmented_vector<T
 namespace boost {
 
 template <class T, class Allocator, class Options>
-struct has_trivial_destructor_after_move<boost::container::segmented_vector<T, Allocator, Options> >
+struct has_trivial_destructor_after_move<boost::container::segtor<T, Allocator, Options> >
    : has_trivial_destructor_after_move<boost::container::deque_impl<T, Allocator, true, Options> >
 {};
 
@@ -897,4 +896,4 @@ struct has_trivial_destructor_after_move<boost::container::segmented_vector<T, A
 
 #include <boost/container/detail/config_end.hpp>
 
-#endif   //#ifndef BOOST_CONTAINER_SEGMENTED_VECTOR_HPP
+#endif   //#ifndef BOOST_CONTAINER_SEGTOR_HPP

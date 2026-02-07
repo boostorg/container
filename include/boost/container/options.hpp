@@ -700,7 +700,7 @@ using deque_options_t = typename boost::container::deque_options<Options...>::ty
 ////////////////////////////////////////////////////////////////
 //
 //
-//          OPTIONS FOR SEGMENTED_VECTOR CONTAINERS
+//          OPTIONS FOR SEGTOR CONTAINERS
 //
 //
 ////////////////////////////////////////////////////////////////
@@ -708,25 +708,25 @@ using deque_options_t = typename boost::container::deque_options<Options...>::ty
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
 template<std::size_t BlockBytes, std::size_t BlockSize, class StoredSizeType, bool Reservable>
-struct segmented_vector_opt : public deque_opt<BlockBytes, BlockSize, StoredSizeType, Reservable>
+struct segtor_opt : public deque_opt<BlockBytes, BlockSize, StoredSizeType, Reservable>
 {};
 
-typedef segmented_vector_opt<0u, 0u, void, false> segmented_vector_null_opt;
+typedef segtor_opt<0u, 0u, void, false> segtor_null_opt;
 
 #endif
 
 //! Helper metafunction to combine options into a single type to be used
-//! by \c boost::container::segmented_vector.
+//! by \c boost::container::segtor.
 //! Supported options are: \c boost::container::block_bytes / \c boost::container::segment_bytes,
 //! \c boost::container::block_size / \c boost::container::segment_size,
 //! \c boost::container::stored_size
 #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
 template<class ...Options>
-struct segmented_vector_options
+struct segtor_options
    : deque_options<Options...>
 #else
 template<class O1 = void, class O2 = void, class O3 = void, class O4 = void>
-struct segmented_vector_options
+struct segtor_options
    : deque_options<O1, O2, O3, O4>
 #endif
 {};
@@ -734,9 +734,9 @@ struct segmented_vector_options
 #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 //! Helper alias metafunction to combine options into a single type to be used
-//! by \c boost::container::segmented_vector.
+//! by \c boost::container::segtor.
 template<class ...Options>
-using segmented_vector_options_t = typename boost::container::segmented_vector_options<Options...>::type;
+using segtor_options_t = typename boost::container::segtor_options<Options...>::type;
 
 #endif
 
@@ -808,7 +808,7 @@ BOOST_INTRUSIVE_OPTION_CONSTANT(segment_bytes, std::size_t, SegmentBytes, block_
 
 //!This option specifies the size of a block, delimites the number of contiguous elements (BlockSize)
 //!that will be allocated by segmented containers.
-//!For some containers (like deque/segmented_vector), a power of two value can improve performance.
+//!For some containers (like deque/segtor), a power of two value can improve performance.
 //!A value zero represents the default value.
 //!
 //!\tparam BlockBytes An unsigned integer value.
@@ -823,7 +823,7 @@ BOOST_INTRUSIVE_OPTION_CONSTANT(segment_size, std::size_t, SegmentSize, block_si
 
 //!This option specifies if the container has reserve/capacity-like features
 //!
-//!For some containers (like deque/segmented_vector) this option might change the internal representation or
+//!For some containers (like deque/segtor) this option might change the internal representation or
 //!behavior so that memory for elements can be allocated in advance in
 //!order to improve performance.
 //!

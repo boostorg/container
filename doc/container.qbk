@@ -40,7 +40,7 @@ In short, what does [*Boost.Container] offer?
 * New advanced features (e.g. recursive containers) and [link container.configurable_containers configurability options for containers].
 * Containers support stateful allocators and are compatible with [*Boost.Interprocess]
   (they can be safely placed in shared memory) offering improved performance vs standard containers when using Boost.Interprocess.
-* You have very useful non-standard containers like `[stable/static/small]_vector`, `flat_[multi]set/map`, `devector` or `segmented_vector`.
+* You have very useful non-standard containers like `[stable/static/small]_vector`, `flat_[multi]set/map`, `devector` or `segtor`.
 * If you work on multiple platforms, you'll have a portable behaviour without depending
   on the std-lib implementation conformance for each platform. Some examples:
 * [link container.extended_functionality Extended functionality] beyond the standard based
@@ -63,7 +63,7 @@ In short, what does [*Boost.Container] offer?
     has to be increased. This minimum capacity is specified at compile time.
   * [classref boost::container::devector devector]: is a hybrid of the standard vector and deque containers.
     It offers cheap (amortized constant time) insertion at both the front and back ends.
-  * [classref boost::container::segmented_vector segmented_vector]: a sequence container with segmented
+  * [classref boost::container::segtor segtor]: a sequence container with segmented
     (block-based) storage like deque but only growth at the back; constant-time push_back/pop_back, random access.
   * [classref boost::container::slist slist]: the classic pre-standard singly linked list implementation
     offering constant-time `size()`. Note that C++11 `forward_list` has no `size()`.
@@ -571,9 +571,9 @@ stateful allocators, etc.
 
 [endsect]
 
-[section:segmented_vector ['segmented_vector]]
+[section:segtor ['segtor]]
 
-[classref boost::container::segmented_vector segmented_vector] is a sequence container that supports random access to elements, constant-time insertion and
+[classref boost::container::segtor segtor] is a sequence container that supports random access to elements, constant-time insertion and
 removal at the end, and linear-time insertion and removal in the middle. It uses the same segmented (block-based)
 storage as `deque` but only allows growth at the back: it provides `push_back`, `pop_back`, `emplace_back`, and the
 like, but does not provide `push_front`, `pop_front`, or `emplace_front`. In that sense it is the single-ended
@@ -585,7 +585,7 @@ expensive to move or when growth is large. Inserting or erasing at the end does 
 references/pointers to existing elements. Insertions and erasures in the middle invalidate iterators and references
 in the same way as for `deque`.
 
-The container can be configured via [classref boost::container::segmented_vector_options segmented_vector_options]
+The container can be configured via [classref boost::container::segtor_options segtor_options]
 to control block size and other parameters.
 
 [endsect]
@@ -796,11 +796,11 @@ used to customize `small_vector`:
 
 [endsect]
 
-[section:configurable_deque Configurable deque / segmented_vector]
+[section:configurable_deque Configurable deque / segtor]
 
-The configuration for [classref boost::container::deque deque] / [classref boost::container::segmented_vector segmented_vector]
+The configuration for [classref boost::container::deque deque] / [classref boost::container::segtor segtor]
 is passed as the last template parameter and defined using the utility class
-[classref boost::container::deque_options deque_options] and [classref boost::container::segmented_vector_options segmented_vector_options] respectively.
+[classref boost::container::deque_options deque_options] and [classref boost::container::segtor_options segtor_options] respectively.
 The following parameters can be configured:
 
 Parameters that control the size of container's 'block'/'segment' (the container allocates contiguous chunks of elements, called 'blocks'/'segments').
@@ -826,11 +826,11 @@ used to customize `deque`:
 [import ../example/doc_custom_deque.cpp]
 [doc_custom_deque]
 
-See the following example to see how [classref boost::container::segmented_vector_options segmented_vector_options] can be
-used to customize `segmented_vector`:
+See the following example to see how [classref boost::container::segtor_options segtor_options] can be
+used to customize `segtor`:
 
-[import ../example/doc_custom_segmented_vector.cpp]
-[doc_custom_segmented_vector]
+[import ../example/doc_custom_segtor.cpp]
+[doc_custom_segtor]
 
 [endsect]
 
@@ -1373,7 +1373,7 @@ This table shows the `sizeof` value of Boost.Container containers in 32 and 64 b
 [[`vector`]            [12]     [24] ]
 [[`deque`]             [16]     [32] ]
 [[`devector`]          [16]     [32] ]
-[[`segmented_vector`]  [12]     [24] ]
+[[`segtor`]  [12]     [24] ]
 [[`stable_vector`]     [20]     [40] ]
 [[`list`]              [12]     [24] ]
 [[`slist`]             [8]      [16] ]
@@ -1483,7 +1483,7 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
    * Added [classref boost::container::inline_chars inline_chars],
      [classref boost::container::growth_factor growth_factor] and
      [classref boost::container::stored_size stored_size] options to [classref boost::container::basic_string basic_string].
-   * New [classref boost::container::segmented_vector segmented_vector] container: the single ended brother of
+   * New [classref boost::container::segtor segtor] container: the single ended brother of
      [classref boost::container::deque deque]: a random-access sequence container with segmented
       (block-based) storage like deque but only growth at the back.
 * Fixed bugs/issues:

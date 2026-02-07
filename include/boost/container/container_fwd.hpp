@@ -30,7 +30,7 @@
 //!   - boost::container::small_vector
 //!   - boost::container::devector
 //!   - boost::container::deque
-//!   - boost::container::segmented_vector
+//!   - boost::container::segtor
 //!   - boost::container::slist
 //!   - boost::container::list
 //!   - boost::container::set
@@ -137,7 +137,7 @@ class deque;
 template <class T
          ,class Allocator = void
          ,class Options   = void>
-class segmented_vector;
+class segtor;
 
 template <class T
          ,class Allocator = void >
