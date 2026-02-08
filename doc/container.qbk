@@ -1347,14 +1347,14 @@ This tables shows the number of characters (excluding the null terminator) that 
 
 [endsect]
 
-[section:deque_blocks `deque` implementation block/segment size comparison ]
+[section:deque_blocks `deque` implementation block/segment size comparison]
 
 `deque` implementations are based on a segmented array of blocks, and the block size is an important parameter that affects performance.
 This table shows the block size in bytes for `deque` implementations across major implementations and Boost.Container.
 
 [table:block_sizes Deque Block Sizes
 [[Implementation]   [Block Size in bytes]                   ]
-[[Boost.Container]  [512 (32-bit) / 1024 (64-bit) [footnote Boost.Container has an option to select the [classref boost::container::block_size block_size] ] ] ]
+[[Boost.Container]  [512 (32-bit) / 1024 (64-bit) [footnote [classref boost::container::deque deque] & [classref boost::container::segtor segtor] have an option to select the [classref boost::container::block_size block_size] ] ] ]
 [[libstdc++ (GCC)]  [512 ]                                  ]
 [[libc++ (Clang)]   [4096]                                  ]
 [[Microsoft STL]    [16]                                    ]
