@@ -26,6 +26,7 @@
 
 // container
 #include <boost/container/container_fwd.hpp>
+#include <boost/container/options.hpp>
 #include <boost/container/new_allocator.hpp>
 #include <boost/container/allocator_traits.hpp>
 // container/detail
@@ -127,10 +128,70 @@ do{                                                    \
 namespace boost {
 namespace container {
 
+////////////////////////////////////////////////////////////////
+//
+//
+//          OPTIONS FOR NEST CONTAINER (EXPERIMENTAL)
+//
+//
+////////////////////////////////////////////////////////////////
+
+#if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+template<bool StoreDataInBlock>
+struct nest_opt
+{
+   BOOST_STATIC_CONSTEXPR bool store_data_in_block = StoreDataInBlock;
+};
+
+typedef nest_opt<false> nest_null_opt;
+
+#endif   //   !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+//! This option specifies whether block data (value storage) is inlined
+//! in each block (true) or allocated separately via the allocator (false).
+//! Inline data can improve locality but increases block size.
+//!
+//!\tparam Enabled A boolean value.
+BOOST_INTRUSIVE_OPTION_CONSTANT(store_data_in_block, bool, Enabled, store_data_in_block)
+
+//! Helper metafunction to combine options into a single type to be used
+//! by \c boost::container::nest.
+#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED) || defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
+template<class ...Options>
+#else
+template<class O1 = void, class O2 = void, class O3 = void, class O4 = void>
+#endif
+struct nest_options
+{
+   /// @cond
+   typedef typename ::boost::intrusive::pack_options
+      < nest_null_opt,
+      #if !defined(BOOST_CONTAINER_VARIADIC_TEMPLATES)
+      O1, O2, O3, O4
+      #else
+      Options...
+      #endif
+      >::type packed_options;
+   typedef nest_opt<packed_options::store_data_in_block> implementation_defined;
+   /// @endcond
+   typedef implementation_defined type;
+};
+
+#if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+
+template<class ...Options>
+using nest_options_t = typename boost::container::nest_options<Options...>::type;
+
+#endif
+
+#endif   //   !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 template <class T
-         ,class Allocator = void >
+         ,class Allocator = void
+         ,class Options = void>
 class nest;
 
 namespace nest_detail {
@@ -218,12 +279,12 @@ struct block_base
    BOOST_STATIC_CONSTEXPR std::size_t N = 64;
    BOOST_STATIC_CONSTEXPR mask_type full = (mask_type)(-1);
 
-   static pointer pointer_to(block_base& x) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE static pointer pointer_to(block_base& x) BOOST_NOEXCEPT
    {
       return boost::intrusive::pointer_traits<pointer>::pointer_to(x);
    }
 
-   static const_pointer pointer_to(const block_base& x) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE static const_pointer pointer_to(const block_base& x) BOOST_NOEXCEPT
    {
       return boost::intrusive::pointer_traits<const_pointer>::pointer_to(x);
    }
@@ -232,16 +293,18 @@ struct block_base
    {
       next_available = p;
       prev_available = p->prev_available;
-      next_available->prev_available = pointer_to(*this);
-      prev_available->next_available = pointer_to(*this);
+      pointer const pthis = pointer_to(*this);
+      next_available->prev_available = pthis;
+      prev_available->next_available = pthis;
    }
 
    BOOST_CONTAINER_FORCEINLINE void link_available_after(pointer p) BOOST_NOEXCEPT
    {
       prev_available = p;
       next_available = p->next_available;
-      next_available->prev_available = pointer_to(*this);
-      prev_available->next_available = pointer_to(*this);
+      pointer const pthis = pointer_to(*this);
+      next_available->prev_available = pthis;
+      prev_available->next_available = pthis;
    }
 
    BOOST_CONTAINER_FORCEINLINE void unlink_available() BOOST_NOEXCEPT
@@ -254,16 +317,18 @@ struct block_base
    {
       next = p;
       prev = p->prev;
-      next->prev = pointer_to(*this);
-      prev->next = pointer_to(*this);
+      pointer const pthis = pointer_to(*this);
+      next->prev = pthis;
+      prev->next = pthis;
    }
 
    BOOST_CONTAINER_FORCEINLINE void link_after(pointer p) BOOST_NOEXCEPT
    {
       prev = p;
       next = p->next;
-      next->prev = pointer_to(*this);
-      prev->next = pointer_to(*this);
+      pointer const pthis = pointer_to(*this);
+      next->prev = pthis;
+      prev->next = pthis;
    }
 
    BOOST_CONTAINER_FORCEINLINE void unlink() BOOST_NOEXCEPT
@@ -279,28 +344,49 @@ struct block_base
    mask_type mask;
 };
 
-template<class ValuePointer>
+template<class ValuePointer, bool StoreDataInBlock>
 struct block
    : block_base<typename pointer_rebind<ValuePointer, void>::type>
 {
    typedef block_base<typename pointer_rebind<ValuePointer, void>::type> super;
-
+   typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type value_type;
    ValuePointer data() BOOST_NOEXCEPT { return data_; }
+   static void set_data_null(block* p) BOOST_NOEXCEPT { p->data_ = ValuePointer(); }
    ValuePointer data_;
 };
 
 template<class ValuePointer>
-void swap_payload(block<ValuePointer>& x, block<ValuePointer>& y) BOOST_NOEXCEPT
+struct block<ValuePointer, true>
+   : block_base<typename pointer_rebind<ValuePointer, void>::type>
+{
+   typedef block_base<typename pointer_rebind<ValuePointer, void>::type> super;
+   typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type value_type;
+   ValuePointer data() BOOST_NOEXCEPT { return static_cast<ValuePointer>(static_cast<void*>(&data_stor)); }
+   static void set_data_null(block*) BOOST_NOEXCEPT {}
+   typename dtl::aligned_storage<sizeof(value_type)*64u, dtl::alignment_of<value_type>::value>::type data_stor;
+};
+
+template<class ValuePointer, bool StoreDataInBlock>
+void swap_payload(block<ValuePointer, StoreDataInBlock>& x, block<ValuePointer, StoreDataInBlock>& y) BOOST_NOEXCEPT;
+
+template<class ValuePointer>
+void swap_payload(block<ValuePointer, true>& x, block<ValuePointer, true>& y) BOOST_NOEXCEPT
+{
+   boost::adl_move_swap(x.mask, y.mask);
+}
+
+template<class ValuePointer>
+void swap_payload(block<ValuePointer, false>& x, block<ValuePointer, false>& y) BOOST_NOEXCEPT
 {
    boost::adl_move_swap(x.mask, y.mask);
    boost::adl_move_swap(x.data_, y.data_);
 }
 
-template<class ValuePointer>
+template<class ValuePointer, bool StoreDataInBlock>
 struct block_list
-   : block<ValuePointer>
+   : block<ValuePointer, StoreDataInBlock>
 {
-   typedef nest_detail::block<ValuePointer>                         block_type;
+   typedef nest_detail::block<ValuePointer, StoreDataInBlock>             block_type;
    typedef typename block_type::super                              block_base_type;
    typedef typename block_base_type::pointer                       block_base_pointer;
    typedef typename block_base_type::const_pointer                 const_block_base_pointer;
@@ -313,7 +399,6 @@ struct block_list
    using block_base_type::prev;
    using block_base_type::next;
    using block_base_type::mask;
-   using block_type::data_;
 
    static block_pointer
    static_cast_block_pointer(block_base_pointer pbb) BOOST_NOEXCEPT
@@ -326,14 +411,14 @@ struct block_list
    {
       reset();
       mask = 1; /* sentinel */
-      data_ = ValuePointer();
+      block_type::set_data_null(this);
    }
 
    block_list(BOOST_RV_REF(block_list) x) BOOST_NOEXCEPT
    {
       reset();
       mask = 1; /* sentinel */
-      data_ = ValuePointer();
+      block_type::set_data_null(this);
       if(x.next_available != x.header()) {
          prev_available = x.prev_available;
          next_available = x.next_available;
@@ -427,7 +512,7 @@ private:
 //
 //////////////////////////////////////////////
 
-template<class ValuePointer>
+template<class ValuePointer, bool StoreDataInBlock>
 class iterator
 {
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type element_type;
@@ -450,7 +535,7 @@ public:
    typedef typename nest_detail::pointer_rebind<pointer, value_type>::type maybe_nonconst_pointer;
 
    typedef typename dtl::if_c< boost::move_detail::is_const<element_type>::value
-                             , iterator< maybe_nonconst_pointer >
+                             , iterator< maybe_nonconst_pointer, StoreDataInBlock >
                              , nat>::type                            maybe_nonconst_iterator;
 
    iterator() BOOST_NOEXCEPT
@@ -538,15 +623,15 @@ public:
    }
 
 private:
-   template<class> friend class iterator;
-   template<class, class> friend class boost::container::nest;
+   template<class, bool> friend class iterator;
+   template<class, class, class> friend class boost::container::nest;
 
    typedef typename pointer_rebind<ValuePointer, void>::type              void_pointer;
    typedef nest_detail::block_base<void_pointer>                           block_base_type;
    typedef typename pointer_rebind<ValuePointer, block_base_type>::type   block_base_pointer;
    typedef typename pointer_rebind<ValuePointer, const block_base_type>::type const_block_base_pointer;
    typedef typename pointer_rebind<ValuePointer, value_type>::type        nonconst_pointer;
-   typedef nest_detail::block<nonconst_pointer>                            block_type;
+   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock>                block_type;
    typedef typename block_base_type::mask_type                            mask_type;
 
    BOOST_STATIC_CONSTEXPR std::size_t  N = block_base_type::N;
@@ -736,7 +821,7 @@ void move_assign_if(dtl::false_type, T&, T&) {}
 //
 //////////////////////////////////////////////
 
-template<class ValueAllocator>
+template<class ValueAllocator, bool StoreDataInBlock>
 struct block_typedefs
 {
    typedef boost::container::allocator_traits<ValueAllocator>   val_alloc_traits;
@@ -749,14 +834,14 @@ struct block_typedefs
    typedef typename pointer_rebind<
       value_pointer, const block_base_t>::type                  const_block_base_pointer;
 
-   typedef nest_detail::block<value_pointer>                     block_t;
+   typedef nest_detail::block<value_pointer, StoreDataInBlock>        block_t;
    typedef typename pointer_rebind<
       value_pointer, block_t>::type                             block_pointer;
 
    typedef typename val_alloc_traits::
       template portable_rebind_alloc<block_t>::type             block_allocator;
 
-   typedef nest_detail::block_list<value_pointer>                block_list_t;
+   typedef nest_detail::block_list<value_pointer, StoreDataInBlock>    block_list_t;
 };
 
 //////////////////////////////////////////////
@@ -810,14 +895,34 @@ struct visit_adaptor
 };
 
 template<class F, class T>
-struct const_visit_adaptor
+struct const_conditional_visit_adaptor
 {
    F& f;
-   explicit const_visit_adaptor(F& f_) : f(f_) {}
+   explicit const_conditional_visit_adaptor(F& f_) : f(f_) {}
    bool operator()(const T& x) const { return f(x); }
 };
 
 } // namespace nest_detail
+
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
+template<class Options>
+struct get_nest_opt
+{
+   typedef nest_opt<Options::store_data_in_block> type;
+};
+
+template<>
+struct get_nest_opt<void>
+{
+   typedef nest_null_opt type;
+};
+
+template<bool B>
+struct get_nest_opt<nest_opt<B> >
+{
+   typedef nest_opt<B> type;
+};
 
 #endif // BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -834,21 +939,25 @@ struct const_visit_adaptor
 //! \tparam T The type of object stored in the nest
 //! \tparam Allocator The allocator used for all internal memory management, use void
 //!   for the default allocator
+//! \tparam Options A type produced from \c boost::container::nest_options (e.g. \c store_data_in_block).
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
-template <class T, class Allocator = void>
+template <class T, class Allocator = void, class Options = void>
 #else
-template <class T, class Allocator>
+template <class T, class Allocator, class Options>
 #endif
 class nest
    : private boost::empty_value<
         typename nest_detail::block_typedefs<
            typename real_allocator<T, Allocator>::type
+         , get_nest_opt<Options>::type::store_data_in_block
         >::block_allocator, 0>
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    typedef typename real_allocator<T, Allocator>::type             ValueAllocator;
+   typedef typename get_nest_opt<Options>::type                    options_type;
+   BOOST_STATIC_CONSTEXPR bool store_data_in_block = options_type::store_data_in_block;
    typedef boost::container::allocator_traits<ValueAllocator>      allocator_traits_type;
-   typedef nest_detail::block_typedefs<ValueAllocator>              btd;
+   typedef nest_detail::block_typedefs<ValueAllocator, store_data_in_block> btd;
    typedef typename btd::block_base_t                              block_base;
    typedef typename btd::block_base_pointer                        block_base_pointer;
    typedef typename btd::const_block_base_pointer                  const_block_base_pointer;
@@ -881,8 +990,8 @@ class nest
    typedef const T&                                                         const_reference;
    typedef typename allocator_traits_type::size_type                        size_type;
    typedef typename allocator_traits_type::difference_type                  difference_type;
-   typedef BOOST_CONTAINER_IMPDEF(nest_detail::iterator<pointer>)            iterator;
-   typedef BOOST_CONTAINER_IMPDEF(nest_detail::iterator<const_pointer>)      const_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(nest_detail::iterator<pointer BOOST_MOVE_I store_data_in_block>)            iterator;
+   typedef BOOST_CONTAINER_IMPDEF(nest_detail::iterator<const_pointer BOOST_MOVE_I store_data_in_block>)      const_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)       reverse_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>) const_reverse_iterator;
 
@@ -1277,14 +1386,15 @@ class nest
    BOOST_CONTAINER_FORCEINLINE iterator emplace(BOOST_FWD_REF(Args)... args)
    {
       int n;
-      block_pointer pb = priv_retrieve_available_block(n);
+      block_pointer const pb = priv_retrieve_available_block(n);
       block_alloc_traits::construct(
          al(), boost::movelib::to_raw_pointer(pb->data() + n),
          boost::forward<Args>(args)...);
       pb->mask |= pb->mask + 1;
-      if(BOOST_UNLIKELY(pb->mask + 1 <= 2)) {
-         if(pb->mask == 1) blist.link_at_back(pb);
-         else              blist.unlink_available(pb);
+      const mask_type m = pb->mask;
+      if(BOOST_UNLIKELY(m + 1 <= 2)) {
+         if(m == 1) blist.link_at_back(pb);
+         else       blist.unlink_available(pb);
       }
       ++size_;
       return iterator(pb, n);
@@ -1617,7 +1727,7 @@ class nest
    template<class F>
    const_iterator visit_while(const_iterator first, const_iterator last, F f) const
    {
-      nest_detail::const_visit_adaptor<F, value_type> adaptor(f);
+      nest_detail::const_conditional_visit_adaptor<F, value_type> adaptor(f);
       iterator it = const_cast<nest*>(this)->visit_while(
          iterator(first.pbb, first.n),
          iterator(last.pbb, last.n),
@@ -1650,9 +1760,10 @@ class nest
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
 
-   template<class U, class A, class P>
-   friend typename nest<U, A>::size_type erase_if(nest<U, A>&, P);
+   template <class U, class A, class O, class P>
+   friend typename nest<U, A, O>::size_type erase_if(nest<U, A, O>&, P);
 
+   private:
    //////////////////////////////////////////////
    //
    //         private: allocator access
@@ -1675,10 +1786,8 @@ class nest
    static_cast_block_pointer(block_base_pointer pbb) BOOST_NOEXCEPT
    { return block_list::static_cast_block_pointer(pbb); }
 
-   block_pointer priv_create_new_available_block()
+   void priv_allocate_block_data(block_pointer pb, dtl::bool_<false>)
    {
-      block_pointer pb = block_alloc_traits::allocate(al(), 1);
-      pb->mask = 0;
       BOOST_TRY {
          allocator_type val_al(al());
          pb->data_ = allocator_traits_type::allocate(val_al, N);
@@ -1688,6 +1797,21 @@ class nest
          BOOST_RETHROW;
       }
       BOOST_CATCH_END
+   }
+   void priv_allocate_block_data(block_pointer, dtl::bool_<true>) BOOST_NOEXCEPT {}
+
+   void priv_deallocate_block_data(block_pointer pb, dtl::bool_<false>) BOOST_NOEXCEPT
+   {
+      allocator_type val_al(al());
+      allocator_traits_type::deallocate(val_al, pb->data(), N);
+   }
+   void priv_deallocate_block_data(block_pointer, dtl::bool_<true>) BOOST_NOEXCEPT {}
+
+   block_pointer priv_create_new_available_block()
+   {
+      block_pointer pb = block_alloc_traits::allocate(al(), 1);
+      pb->mask = 0;
+      priv_allocate_block_data(pb, dtl::bool_<store_data_in_block>());
       blist.link_available_at_back(pb);
       ++num_blocks;
       return pb;
@@ -1695,8 +1819,7 @@ class nest
 
    void priv_delete_block(block_pointer pb) BOOST_NOEXCEPT
    {
-      allocator_type val_al(al());
-      allocator_traits_type::deallocate(val_al, pb->data(), N);
+      priv_deallocate_block_data(pb, dtl::bool_<store_data_in_block>());
       block_alloc_traits::deallocate(al(), pb, 1);
    }
 
@@ -2413,8 +2536,8 @@ class nest
 //////////////////////////////////////////////
 
 //! <b>Effects</b>: Swaps x and y.
-template<class T, class Allocator>
-inline void swap(nest<T, Allocator>& x, nest<T, Allocator>& y)
+template<class T, class Allocator, class Options>
+inline void swap(nest<T, Allocator, Options>& x, nest<T, Allocator, Options>& y)
    BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
 {
    x.swap(y);
@@ -2423,9 +2546,9 @@ inline void swap(nest<T, Allocator>& x, nest<T, Allocator>& y)
 //! <b>Effects</b>: Erases all elements for which pred returns true.
 //!
 //! <b>Returns</b>: The number of erased elements.
-template<class T, class Allocator, class Predicate>
-typename nest<T, Allocator>::size_type
-erase_if(nest<T, Allocator>& x, Predicate pred)
+template<class T, class Allocator, class Options, class Predicate>
+typename nest<T, Allocator, Options>::size_type
+erase_if(nest<T, Allocator, Options>& x, Predicate pred)
 {
    return x.priv_erase_if(pred);
 }
@@ -2433,9 +2556,9 @@ erase_if(nest<T, Allocator>& x, Predicate pred)
 //! <b>Effects</b>: Erases all elements equal to value.
 //!
 //! <b>Returns</b>: The number of erased elements.
-template<class T, class Allocator>
-typename nest<T, Allocator>::size_type
-erase(nest<T, Allocator>& x, const T& value)
+template<class T, class Allocator, class Options>
+typename nest<T, Allocator, Options>::size_type
+erase(nest<T, Allocator, Options>& x, const T& value)
 {
    return erase_if(x, equal_to_value<T>(value));
 }
@@ -2449,7 +2572,8 @@ template<
 nest(InpIt, InpIt, Allocator = Allocator())
    -> nest<
       typename iterator_traits<InpIt>::value_type,
-      Allocator>;
+      Allocator,
+      void>;
 
 #endif
 
