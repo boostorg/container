@@ -58,6 +58,7 @@
 #include <functional>
 #include <new>
 #include <boost/cstdint.hpp>
+#include <climits>
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
 #include <initializer_list>
@@ -229,12 +230,12 @@ inline int unchecked_countr_zero(boost::uint64_t x)
 #endif
 }
 
-inline int unchecked_countr_one(boost::uint64_t x)
+BOOST_CONTAINER_FORCEINLINE int unchecked_countr_one(boost::uint64_t x)
 {
    return unchecked_countr_zero(~x);
 }
 
-inline int unchecked_countl_zero(boost::uint64_t x)
+BOOST_CONTAINER_FORCEINLINE int unchecked_countl_zero(boost::uint64_t x)
 {
 #if defined(BOOST_MSVC) && (defined(_M_X64) || defined(_M_ARM64))
    unsigned long r;
@@ -265,7 +266,7 @@ It find_if_not(It first, It last, Pred pred)
 
 //////////////////////////////////////////////
 //
-//      block_base / block / block_list
+//      block_base / block
 //
 //////////////////////////////////////////////
 
@@ -276,7 +277,7 @@ struct block_base
    typedef typename pointer_rebind<VoidPointer, const block_base>::type const_pointer;
    typedef boost::uint64_t mask_type;
 
-   BOOST_STATIC_CONSTEXPR std::size_t N = 64;
+   BOOST_STATIC_CONSTEXPR std::size_t N = sizeof(mask_type)*CHAR_BIT;
    BOOST_STATIC_CONSTEXPR mask_type full = (mask_type)(-1);
 
    BOOST_CONTAINER_FORCEINLINE static pointer pointer_to(block_base& x) BOOST_NOEXCEPT
@@ -287,6 +288,12 @@ struct block_base
    BOOST_CONTAINER_FORCEINLINE static const_pointer pointer_to(const block_base& x) BOOST_NOEXCEPT
    {
       return boost::intrusive::pointer_traits<const_pointer>::pointer_to(x);
+   }
+
+   block_base()
+   {
+      this->reset();
+      mask = 1; /* sentinel */
    }
 
    BOOST_CONTAINER_FORCEINLINE void link_available_before(pointer p) BOOST_NOEXCEPT
@@ -337,11 +344,100 @@ struct block_base
       next->prev = prev;
    }
 
+   BOOST_CONTAINER_FORCEINLINE pointer header() BOOST_NOEXCEPT
+   {
+      return pointer_to(*this);
+   }
+
+   BOOST_CONTAINER_FORCEINLINE const_pointer header() const BOOST_NOEXCEPT
+   {
+      return pointer_to(*this);
+   }
+
+   BOOST_CONTAINER_FORCEINLINE void link_at_back(pointer pb) BOOST_NOEXCEPT
+   {
+      pb->link_before(header());
+   }
+
+   BOOST_CONTAINER_FORCEINLINE void link_before(
+      pointer pbx, pointer pby) BOOST_NOEXCEPT
+   {
+      pbx->link_before(pby);
+   }
+
+   BOOST_CONTAINER_FORCEINLINE static void unlink(pointer pb) BOOST_NOEXCEPT
+   {
+      pb->unlink();
+   }
+
+   BOOST_CONTAINER_FORCEINLINE void link_available_at_back(pointer pb) BOOST_NOEXCEPT
+   {
+      pb->link_available_before(header());
+   }
+
+   BOOST_CONTAINER_FORCEINLINE void link_available_at_front(pointer pb) BOOST_NOEXCEPT
+   {
+      pb->link_available_after(header());
+   }
+
+   BOOST_CONTAINER_FORCEINLINE void unlink_available(pointer pb) BOOST_NOEXCEPT
+   {
+      pb->unlink_available();
+   }
+
+   void reset() BOOST_NOEXCEPT
+   {
+      pointer const h = header();
+      prev_available = h;
+      next_available = h;
+      prev = h;
+      next = h;
+   }
+
+   block_base(BOOST_RV_REF(block_base) x) BOOST_NOEXCEPT
+   {
+      mask = 1; /* sentinel */
+      this->operator=(boost::move(x));
+   }
+
+   block_base& operator=(BOOST_RV_REF(block_base) x) BOOST_NOEXCEPT
+   {
+      pointer const x_header = x.header();
+      pointer const t_header = this->header();
+
+      if (x.next_available != x_header) {
+         prev_available = x.prev_available;
+         next_available = x.next_available;
+         next_available->prev_available = t_header;
+         prev_available->next_available = t_header;
+      }
+      else {
+         prev_available = t_header;
+         next_available = t_header;
+      }
+
+      if (x.prev != x_header) {
+         prev = x.prev;
+         next = x.next;
+         next->prev = t_header;
+         prev->next = t_header;
+      }
+      else {
+         prev = t_header;
+         next = t_header;
+      }
+
+      x.reset();
+      return *this;
+   }
+
    pointer   prev_available;
    pointer   next_available;
    pointer   prev;
    pointer   next;
    mask_type mask;
+private:
+   BOOST_MOVABLE_BUT_NOT_COPYABLE(block_base)
 };
 
 template<class ValuePointer, bool StoreDataInBlock>
@@ -350,9 +446,27 @@ struct block
 {
    typedef block_base<typename pointer_rebind<ValuePointer, void>::type> super;
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type value_type;
-   ValuePointer data() BOOST_NOEXCEPT { return data_; }
-   static void set_data_null(block* p) BOOST_NOEXCEPT { p->data_ = ValuePointer(); }
+
+   BOOST_CONTAINER_FORCEINLINE ValuePointer data() BOOST_NOEXCEPT { return data_; }
+   BOOST_CONTAINER_FORCEINLINE void set_data_null() BOOST_NOEXCEPT { data_ = ValuePointer(); }
+
+   block()
+      : super(), data_()
+   {}
+
+   block(BOOST_RV_REF(block) x) BOOST_NOEXCEPT
+      : BOOST_MOVE_BASE(super, x), data_()
+   {}
+
+   block& operator=(BOOST_RV_REF(block) x) BOOST_NOEXCEPT
+   {
+      this->super::operator=(boost::move(x));
+      return *this;
+   }
+
    ValuePointer data_;
+private:
+   BOOST_MOVABLE_BUT_NOT_COPYABLE(block)
 };
 
 template<class ValuePointer>
@@ -361,150 +475,44 @@ struct block<ValuePointer, true>
 {
    typedef block_base<typename pointer_rebind<ValuePointer, void>::type> super;
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type value_type;
-   ValuePointer data() BOOST_NOEXCEPT { return static_cast<ValuePointer>(static_cast<void*>(&data_stor)); }
-   static void set_data_null(block*) BOOST_NOEXCEPT {}
+
+   BOOST_CONTAINER_FORCEINLINE ValuePointer data() BOOST_NOEXCEPT { return static_cast<ValuePointer>(static_cast<void*>(&data_stor)); }
+   BOOST_CONTAINER_FORCEINLINE void set_data_null() BOOST_NOEXCEPT {}
+
+   block()
+      : super()
+   {}
+
+   block(BOOST_RV_REF(block) x) BOOST_NOEXCEPT
+      : BOOST_MOVE_BASE(super, x)
+   {}
+
+   block& operator=(BOOST_RV_REF(block) x) BOOST_NOEXCEPT
+   {
+      this->super::operator=(boost::move(x));
+      return *this;
+   }
+
    typename dtl::aligned_storage<sizeof(value_type)*64u, dtl::alignment_of<value_type>::value>::type data_stor;
+private:
+   BOOST_MOVABLE_BUT_NOT_COPYABLE(block)
 };
 
 template<class ValuePointer, bool StoreDataInBlock>
 void swap_payload(block<ValuePointer, StoreDataInBlock>& x, block<ValuePointer, StoreDataInBlock>& y) BOOST_NOEXCEPT;
 
 template<class ValuePointer>
-void swap_payload(block<ValuePointer, true>& x, block<ValuePointer, true>& y) BOOST_NOEXCEPT
+BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, true>& x, block<ValuePointer, true>& y) BOOST_NOEXCEPT
 {
    boost::adl_move_swap(x.mask, y.mask);
 }
 
 template<class ValuePointer>
-void swap_payload(block<ValuePointer, false>& x, block<ValuePointer, false>& y) BOOST_NOEXCEPT
+BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, false>& x, block<ValuePointer, false>& y) BOOST_NOEXCEPT
 {
    boost::adl_move_swap(x.mask, y.mask);
    boost::adl_move_swap(x.data_, y.data_);
 }
-
-template<class ValuePointer, bool StoreDataInBlock>
-struct block_list
-   : block<ValuePointer, StoreDataInBlock>
-{
-   typedef nest_detail::block<ValuePointer, StoreDataInBlock>             block_type;
-   typedef typename block_type::super                              block_base_type;
-   typedef typename block_base_type::pointer                       block_base_pointer;
-   typedef typename block_base_type::const_pointer                 const_block_base_pointer;
-   typedef typename pointer_rebind<ValuePointer, block_type>::type block_pointer;
-
-   // bring base names into scope
-   using block_base_type::full;
-   using block_base_type::prev_available;
-   using block_base_type::next_available;
-   using block_base_type::prev;
-   using block_base_type::next;
-   using block_base_type::mask;
-
-   static block_pointer
-   static_cast_block_pointer(block_base_pointer pbb) BOOST_NOEXCEPT
-   {
-      return boost::intrusive::pointer_traits<block_pointer>::pointer_to(
-         static_cast<block_type&>(*pbb));
-   }
-
-   block_list()
-   {
-      reset();
-      mask = 1; /* sentinel */
-      block_type::set_data_null(this);
-   }
-
-   block_list(BOOST_RV_REF(block_list) x) BOOST_NOEXCEPT
-   {
-      reset();
-      mask = 1; /* sentinel */
-      block_type::set_data_null(this);
-      if(x.next_available != x.header()) {
-         prev_available = x.prev_available;
-         next_available = x.next_available;
-         next_available->prev_available = header();
-         prev_available->next_available = header();
-      }
-      if(x.prev != x.header()) {
-         prev = x.prev;
-         next = x.next;
-         next->prev = header();
-         prev->next = header();
-      }
-      x.reset();
-   }
-
-   block_list& operator=(BOOST_RV_REF(block_list) x) BOOST_NOEXCEPT
-   {
-      reset();
-      if(x.next_available != x.header()) {
-         prev_available = x.prev_available;
-         next_available = x.next_available;
-         next_available->prev_available = header();
-         prev_available->next_available = header();
-      }
-      if(x.prev != x.header()) {
-         prev = x.prev;
-         next = x.next;
-         next->prev = header();
-         prev->next = header();
-      }
-      x.reset();
-      return *this;
-   }
-
-   void reset() BOOST_NOEXCEPT
-   {
-      prev_available = header();
-      next_available = header();
-      prev = header();
-      next = header();
-   }
-
-   block_base_pointer header() BOOST_NOEXCEPT
-   {
-      return block_base_type::pointer_to(static_cast<block_base_type&>(*this));
-   }
-
-   const_block_base_pointer header() const BOOST_NOEXCEPT
-   {
-      return block_base_type::pointer_to(static_cast<const block_base_type&>(*this));
-   }
-
-   BOOST_CONTAINER_FORCEINLINE void link_at_back(block_pointer pb) BOOST_NOEXCEPT
-   {
-      pb->link_before(header());
-   }
-
-   BOOST_CONTAINER_FORCEINLINE void link_before(
-      block_pointer pbx, block_pointer pby) BOOST_NOEXCEPT
-   {
-      pbx->link_before(pby);
-   }
-
-   BOOST_CONTAINER_FORCEINLINE static void unlink(block_pointer pb) BOOST_NOEXCEPT
-   {
-      pb->unlink();
-   }
-
-   BOOST_CONTAINER_FORCEINLINE void link_available_at_back(block_pointer pb) BOOST_NOEXCEPT
-   {
-      pb->link_available_before(header());
-   }
-
-   BOOST_CONTAINER_FORCEINLINE void link_available_at_front(block_pointer pb) BOOST_NOEXCEPT
-   {
-      pb->link_available_after(header());
-   }
-
-   BOOST_CONTAINER_FORCEINLINE void unlink_available(block_pointer pb) BOOST_NOEXCEPT
-   {
-      pb->unlink_available();
-   }
-
-private:
-   BOOST_MOVABLE_BUT_NOT_COPYABLE(block_list)
-};
 
 //////////////////////////////////////////////
 //
@@ -564,12 +572,12 @@ public:
       return *this;
    }
 
-   pointer operator->() const BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE pointer operator->() const BOOST_NOEXCEPT
    {
       return static_cast<block_type&>(*pbb).data() + n;
    }
 
-   reference operator*() const BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE reference operator*() const BOOST_NOEXCEPT
    {
       return *operator->();
    }
@@ -840,8 +848,6 @@ struct block_typedefs
 
    typedef typename val_alloc_traits::
       template portable_rebind_alloc<block_t>::type             block_allocator;
-
-   typedef nest_detail::block_list<value_pointer, StoreDataInBlock>    block_list_t;
 };
 
 //////////////////////////////////////////////
@@ -964,7 +970,6 @@ class nest
    typedef typename btd::block_t                                   block;
    typedef typename btd::block_pointer                             block_pointer;
    typedef typename btd::block_allocator                           block_allocator;
-   typedef typename btd::block_list_t                              block_list;
    typedef boost::empty_value<block_allocator, 0>                  allocator_base;
    typedef typename block_base::mask_type                          mask_type;
    typedef boost::container::allocator_traits<block_allocator>     block_alloc_traits;
@@ -1383,7 +1388,7 @@ class nest
    //!
    //! <b>Complexity</b>: Constant (amortized).
    template<class ...Args>
-   BOOST_CONTAINER_FORCEINLINE iterator emplace(BOOST_FWD_REF(Args)... args)
+   inline iterator emplace(BOOST_FWD_REF(Args)... args)
    {
       int n;
       block_pointer const pb = priv_retrieve_available_block(n);
@@ -1782,9 +1787,12 @@ class nest
    //
    //////////////////////////////////////////////
 
-   static block_pointer
+   BOOST_CONTAINER_FORCEINLINE  static block_pointer
    static_cast_block_pointer(block_base_pointer pbb) BOOST_NOEXCEPT
-   { return block_list::static_cast_block_pointer(pbb); }
+   {
+      return boost::intrusive::pointer_traits<block_pointer>::pointer_to(
+         static_cast<block&>(*pbb));
+   }
 
    void priv_allocate_block_data(block_pointer pb, dtl::bool_<false>)
    {
@@ -1798,14 +1806,16 @@ class nest
       }
       BOOST_CATCH_END
    }
-   void priv_allocate_block_data(block_pointer, dtl::bool_<true>) BOOST_NOEXCEPT {}
+
+   BOOST_CONTAINER_FORCEINLINE void priv_allocate_block_data(block_pointer, dtl::bool_<true>) BOOST_NOEXCEPT {}
 
    void priv_deallocate_block_data(block_pointer pb, dtl::bool_<false>) BOOST_NOEXCEPT
    {
       allocator_type val_al(al());
       allocator_traits_type::deallocate(val_al, pb->data(), N);
    }
-   void priv_deallocate_block_data(block_pointer, dtl::bool_<true>) BOOST_NOEXCEPT {}
+
+   BOOST_CONTAINER_FORCEINLINE void priv_deallocate_block_data(block_pointer, dtl::bool_<true>) BOOST_NOEXCEPT {}
 
    block_pointer priv_create_new_available_block()
    {
@@ -2522,7 +2532,7 @@ class nest
    //
    //////////////////////////////////////////////
 
-   block_list blist;
+   block_base blist;
    size_type  num_blocks;
    size_type  size_;
 
