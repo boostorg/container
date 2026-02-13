@@ -37,6 +37,7 @@
 #include <boost/container/detail/type_traits.hpp>
 // move
 #include <boost/move/utility_core.hpp>
+#include <boost/move/core.hpp>
 #include <boost/move/traits.hpp>
 #include <boost/move/adl_move_swap.hpp>
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
@@ -444,23 +445,23 @@ template<class ValuePointer, bool StoreDataInBlock>
 struct block
    : block_base<typename pointer_rebind<ValuePointer, void>::type>
 {
-   typedef block_base<typename pointer_rebind<ValuePointer, void>::type> super;
+   typedef block_base<typename pointer_rebind<ValuePointer, void>::type> block_base_type;
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type value_type;
 
    BOOST_CONTAINER_FORCEINLINE ValuePointer data() BOOST_NOEXCEPT { return data_; }
    BOOST_CONTAINER_FORCEINLINE void set_data_null() BOOST_NOEXCEPT { data_ = ValuePointer(); }
 
    block()
-      : super(), data_()
+      : block_base_type(), data_()
    {}
 
    block(BOOST_RV_REF(block) x) BOOST_NOEXCEPT
-      : BOOST_MOVE_BASE(super, x), data_()
+      : block_base_type(BOOST_MOVE_BASE(block_base_type, x)), data_()
    {}
 
    block& operator=(BOOST_RV_REF(block) x) BOOST_NOEXCEPT
    {
-      this->super::operator=(boost::move(x));
+      this->block_base_type::operator=(boost::move(x));
       return *this;
    }
 
@@ -473,23 +474,23 @@ template<class ValuePointer>
 struct block<ValuePointer, true>
    : block_base<typename pointer_rebind<ValuePointer, void>::type>
 {
-   typedef block_base<typename pointer_rebind<ValuePointer, void>::type> super;
+   typedef block_base<typename pointer_rebind<ValuePointer, void>::type> block_base_type;
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type value_type;
 
    BOOST_CONTAINER_FORCEINLINE ValuePointer data() BOOST_NOEXCEPT { return static_cast<ValuePointer>(static_cast<void*>(&data_stor)); }
    BOOST_CONTAINER_FORCEINLINE void set_data_null() BOOST_NOEXCEPT {}
 
    block()
-      : super()
+      : block_base_type()
    {}
 
    block(BOOST_RV_REF(block) x) BOOST_NOEXCEPT
-      : BOOST_MOVE_BASE(super, x)
+      : block_base_type(BOOST_MOVE_BASE(block_base_type, x))
    {}
 
    block& operator=(BOOST_RV_REF(block) x) BOOST_NOEXCEPT
    {
-      this->super::operator=(boost::move(x));
+      this->block_base_type::operator=(boost::move(x));
       return *this;
    }
 
