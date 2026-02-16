@@ -1489,6 +1489,7 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
 * Fixed bugs/issues:
    * [@https://github.com/boostorg/container/issues/323 GitHub #323: ['"flat_tree::try_emplace UB"]].
    * [@https://github.com/boostorg/container/issues/328 GitHub #328: ['"boost::container::deque stores a redundant copy of the allocator, increasing size"]].
+   * [@https://github.com/boostorg/container/issues/330 GitHub #330: ['"boost/container/detail/pair.hpp: partial specializations of boost::move_detail traits for std::pair break Unity (jumbo)"]].
 
 [endsect]
 
