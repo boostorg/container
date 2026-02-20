@@ -21,25 +21,24 @@
 // Platform detection
 #if defined(_WIN32) && !defined(__CYGWIN__)
    #define BOOST_CONTAINER_HAS_ALIGNED_MALLOC
+#elif BOOST_CXX_VERSION >= 201703L
+   #define BOOST_CONTAINER_HAS_ALIGNED_ALLOC
+#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
+   //Note: in most C++ compilers __STDC_VERSION__ is not defined, but just in case
+   #define BOOST_CONTAINER_HAS_ALIGNED_ALLOC
 #else
    #include <unistd.h>  //Include it to detect POSIX features
    #if defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200112L)
       #define BOOST_CONTAINER_HAS_POSIX_MEMALIGN
    #elif defined(__APPLE__)
-      #include <Availability.h>
-      #if __MAC_OS_X_VERSION_MIN_REQUIRED >= 101500
-         #define BOOST_CONTAINER_HAS_ALIGNED_ALLOC
-      #else
-         #define BOOST_CONTAINER_HAS_POSIX_MEMALIGN
-      #endif
+      //All recent Apple OSes (macOS 10.6+, iOS 3.0+, tvOS 9.0+, watchOS 2.0+) support posix_memalign
+      #define BOOST_CONTAINER_HAS_POSIX_MEMALIGN
    #elif defined(__ANDROID__)
       #if (__ANDROID_API__ >= 28)
          #define BOOST_CONTAINER_HAS_ALIGNED_ALLOC
       #else
          #define BOOST_CONTAINER_HAS_POSIX_MEMALIGN
       #endif
-   #elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
-       #define BOOST_CONTAINER_HAS_ALIGNED_ALLOC
    #endif
 #endif
 
