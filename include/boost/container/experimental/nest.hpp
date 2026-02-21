@@ -140,13 +140,14 @@ namespace container {
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-template<bool StoreDataInBlock>
+template<bool StoreDataInBlock, bool Prefetch>
 struct nest_opt
 {
    BOOST_STATIC_CONSTEXPR bool store_data_in_block = StoreDataInBlock;
+   BOOST_STATIC_CONSTEXPR bool prefetch = Prefetch;
 };
 
-typedef nest_opt<false> nest_null_opt;
+typedef nest_opt<false, true> nest_null_opt;
 
 #endif   //   !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -156,6 +157,14 @@ typedef nest_opt<false> nest_null_opt;
 //!
 //!\tparam Enabled A boolean value.
 BOOST_INTRUSIVE_OPTION_CONSTANT(store_data_in_block, bool, Enabled, store_data_in_block)
+
+//! This option specifies if hardware prefetch instructions
+//! are emitted during iteration and other traversal operations.
+//! When enabled, prefetching can improve performance by reducing
+//! cache misses. The default value is true.
+//!
+//!\tparam Enabled A boolean value. True to enable prefetching.
+BOOST_INTRUSIVE_OPTION_CONSTANT(prefetch, bool, Enabled, prefetch)
 
 //! Helper metafunction to combine options into a single type to be used
 //! by \c boost::container::nest.
@@ -175,7 +184,7 @@ struct nest_options
       Options...
       #endif
       >::type packed_options;
-   typedef nest_opt<packed_options::store_data_in_block> implementation_defined;
+   typedef nest_opt<packed_options::store_data_in_block, packed_options::prefetch> implementation_defined;
    /// @endcond
    typedef implementation_defined type;
 };
@@ -521,7 +530,7 @@ BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, false>& x, blo
 //
 //////////////////////////////////////////////
 
-template<class ValuePointer, bool StoreDataInBlock>
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch>
 class iterator
 {
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type element_type;
@@ -544,7 +553,7 @@ public:
    typedef typename nest_detail::pointer_rebind<pointer, value_type>::type maybe_nonconst_pointer;
 
    typedef typename dtl::if_c< boost::move_detail::is_const<element_type>::value
-                             , iterator< maybe_nonconst_pointer, StoreDataInBlock >
+                             , iterator< maybe_nonconst_pointer, StoreDataInBlock, Prefetch >
                              , nat>::type                            maybe_nonconst_iterator;
 
    iterator() BOOST_NOEXCEPT
@@ -588,7 +597,9 @@ public:
       mask_type m = pbb->mask & (full << 1 << std::size_t(n));
       if(BOOST_UNLIKELY(m == 0)) {
          pbb = pbb->next;
-         BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb->next, block_type);
+         BOOST_IF_CONSTEXPR(Prefetch) {
+            BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb->next, block_type);
+         }
          m = pbb->mask;
       }
       n = nest_detail::unchecked_countr_zero(m);
@@ -607,7 +618,9 @@ public:
       mask_type m = pbb->mask & (full >> 1 >> (N - 1 - std::size_t(n)));
       if(BOOST_UNLIKELY(m == 0)) {
          pbb = pbb->prev;
-         BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb->prev, block_type);
+         BOOST_IF_CONSTEXPR(Prefetch) {
+            BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb->prev, block_type);
+         }
          m = pbb->mask;
       }
       n = int(N - 1 - (std::size_t)nest_detail::unchecked_countl_zero(m));
@@ -632,7 +645,7 @@ public:
    }
 
 private:
-   template<class, bool> friend class iterator;
+   template<class, bool, bool> friend class iterator;
    template<class, class, class> friend class boost::container::nest;
 
    typedef typename pointer_rebind<ValuePointer, void>::type              void_pointer;
@@ -916,7 +929,7 @@ struct const_conditional_visit_adaptor
 template<class Options>
 struct get_nest_opt
 {
-   typedef nest_opt<Options::store_data_in_block> type;
+   typedef nest_opt<Options::store_data_in_block, Options::prefetch> type;
 };
 
 template<>
@@ -925,10 +938,10 @@ struct get_nest_opt<void>
    typedef nest_null_opt type;
 };
 
-template<bool B>
-struct get_nest_opt<nest_opt<B> >
+template<bool B, bool P>
+struct get_nest_opt<nest_opt<B, P> >
 {
-   typedef nest_opt<B> type;
+   typedef nest_opt<B, P> type;
 };
 
 #endif // BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -963,6 +976,7 @@ class nest
    typedef typename real_allocator<T, Allocator>::type             ValueAllocator;
    typedef typename get_nest_opt<Options>::type                    options_type;
    BOOST_STATIC_CONSTEXPR bool store_data_in_block = options_type::store_data_in_block;
+   BOOST_STATIC_CONSTEXPR bool prefetch_enabled    = options_type::prefetch;
    typedef boost::container::allocator_traits<ValueAllocator>      allocator_traits_type;
    typedef nest_detail::block_typedefs<ValueAllocator, store_data_in_block> btd;
    typedef typename btd::block_base_t                              block_base;
@@ -996,8 +1010,8 @@ class nest
    typedef const T&                                                         const_reference;
    typedef typename allocator_traits_type::size_type                        size_type;
    typedef typename allocator_traits_type::difference_type                  difference_type;
-   typedef BOOST_CONTAINER_IMPDEF(nest_detail::iterator<pointer BOOST_MOVE_I store_data_in_block>)            iterator;
-   typedef BOOST_CONTAINER_IMPDEF(nest_detail::iterator<const_pointer BOOST_MOVE_I store_data_in_block>)      const_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(nest_detail::iterator<pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled>)            iterator;
+   typedef BOOST_CONTAINER_IMPDEF(nest_detail::iterator<const_pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled>)      const_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)       reverse_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>) const_reverse_iterator;
 
@@ -1537,7 +1551,9 @@ class nest
          do {
             block_pointer pb = static_cast_block_pointer(pbb);
             pbb = pb->next;
-            BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb, block);
+            BOOST_IF_CONSTEXPR(prefetch_enabled) {
+               BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb, block);
+            }
             size_ -= priv_destroy_all_in_nonempty_block(pb);
             blist.unlink(pb);
             if(BOOST_UNLIKELY(pb->mask == full)) blist.link_available_at_front(pb);
@@ -2486,8 +2502,10 @@ class nest
          mask_type next_mask = pbb->mask;
          int next_n = nest_detail::unchecked_countr_zero(next_mask);
          pointer next_pd = static_cast_block_pointer(pbb)->data();
-         BOOST_CONTAINER_NEST_PREFETCH(next_pd + next_n);
-         BOOST_CONTAINER_NEST_PREFETCH(pbb->next);
+         BOOST_IF_CONSTEXPR(prefetch_enabled) {
+            BOOST_CONTAINER_NEST_PREFETCH(next_pd + next_n);
+            BOOST_CONTAINER_NEST_PREFETCH(pbb->next);
+         }
          for(; ; ) {
             if(!f(pd[n])) return iterator(pb, n);
             m &= m - 1;
@@ -2516,7 +2534,9 @@ class nest
       while(pbb != blist.header()) {
          block_pointer pb = static_cast_block_pointer(pbb);
          pbb = pb->next;
-         BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb, block);
+         BOOST_IF_CONSTEXPR(prefetch_enabled) {
+            BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb, block);
+         }
          mask_type m = pb->mask;
          do {
             int n = nest_detail::unchecked_countr_zero(m);
