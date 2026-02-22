@@ -40,6 +40,7 @@
 #include <boost/move/core.hpp>
 #include <boost/move/traits.hpp>
 #include <boost/move/adl_move_swap.hpp>
+#include <boost/move/iterator.hpp>
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #  include <boost/move/detail/fwd_macros.hpp>
 #endif
@@ -118,8 +119,8 @@ _mm_prefetch(static_cast<const char*>(static_cast<const void*>(boost::movelib::t
 
 #define BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb, Block) \
 do{                                                    \
-  Block *p0_ = &static_cast<Block&>(*(pbb));           \
-  BOOST_CONTAINER_NEST_PREFETCH(p0_->data());           \
+  Block &p0_ = static_cast<Block&>(*(pbb));           \
+  BOOST_CONTAINER_NEST_PREFETCH(p0_.data());           \
 } while(0)
 
 #if defined(BOOST_MSVC)
@@ -1972,7 +1973,7 @@ class nest
             ++first;
             ++size_;
             if(BOOST_UNLIKELY(pb->mask == 0)) blist.link_at_back(pb);
-            pb->mask |= pb->mask +1;
+            pb->mask |= pb->mask + 1;
             if(pb->mask == full){
                blist.unlink_available(pb);
                break;
@@ -1986,66 +1987,20 @@ class nest
    template<class InpIt>
    void priv_insert_range_move(InpIt first, InpIt last)
    {
-      while(first != last) {
-         int  n;
-         block_pointer pb = priv_retrieve_available_block(n);
-         for(; ; ) {
-            block_alloc_traits::construct(
-               al(), boost::movelib::to_raw_pointer(pb->data() + n), boost::move(*first));
-            ++first;
-            ++size_;
-            if(BOOST_UNLIKELY(pb->mask == 0)) blist.link_at_back(pb);
-            pb->mask |= pb->mask +1;
-            if(pb->mask == full){
-               blist.unlink_available(pb);
-               break;
-            }
-            else if(first == last) return;
-            n = nest_detail::unchecked_countr_one(pb->mask);
-         }
-      }
+      this->priv_insert_range_copy( boost::make_move_iterator(first)
+                                  , boost::make_move_iterator(last));
    }
 
    void priv_insert_n_copies(size_type count, const T& x)
    {
-      for(size_type i = 0; i < count; ) {
-         int  n;
-         block_pointer pb = priv_retrieve_available_block(n);
-         for(; ; ) {
-            block_alloc_traits::construct(
-               al(), boost::movelib::to_raw_pointer(pb->data() + n), x);
-            ++i; ++size_;
-            if(BOOST_UNLIKELY(pb->mask == 0)) blist.link_at_back(pb);
-            pb->mask |= pb->mask +1;
-            if(pb->mask == full){
-               blist.unlink_available(pb);
-               break;
-            }
-            else if(i == count) return;
-            n = nest_detail::unchecked_countr_one(pb->mask);
-         }
-      }
+      typedef constant_iterator<T> const_it;
+      this->priv_insert_range_copy(const_it(x, count), const_it());
    }
 
    void priv_insert_n_default(size_type count)
    {
-      for(size_type i = 0; i < count; ) {
-         int  n;
-         block_pointer pb = priv_retrieve_available_block(n);
-         for(; ; ) {
-            block_alloc_traits::construct(
-               al(), boost::movelib::to_raw_pointer(pb->data() + n));
-            ++i; ++size_;
-            if(BOOST_UNLIKELY(pb->mask == 0)) blist.link_at_back(pb);
-            pb->mask |= pb->mask +1;
-            if(pb->mask == full){
-               blist.unlink_available(pb);
-               break;
-            }
-            else if(i == count) return;
-            n = nest_detail::unchecked_countr_one(pb->mask);
-         }
-      }
+      typedef value_init_construct_iterator<value_type> value_init_iterator;
+      this->priv_insert_range_copy(value_init_iterator(count), value_init_iterator());
    }
 
    template<class InpIt>
@@ -2094,43 +2049,8 @@ class nest
 
    void priv_assign_n(size_type count, const T& val)
    {
-      block_base_pointer pbb = blist.next;
-      int n = 0;
-      size_type remaining = count;
-      if(remaining > 0) {
-         for(; pbb != blist.header(); pbb = pbb->next, n = 0) {
-            block_pointer pb = static_cast_block_pointer(pbb);
-            for(mask_type bit = 1; bit; bit <<= 1, ++n) {
-               if(pb->mask & bit) {
-                  pb->data()[n] = val;
-                  --remaining;
-               }
-               else {
-                  block_alloc_traits::construct(
-                     al(), boost::movelib::to_raw_pointer(pb->data() + n), val);
-                  --remaining;
-                  ++size_;
-                  pb->mask |= bit;
-                  if(pb->mask == full) blist.unlink_available(pb);
-               }
-               if(remaining == 0) goto exit;
-            }
-         }
-      exit: ;
-      }
-      if(remaining > 0) {
-         priv_insert_n_copies(remaining, val);
-      }
-      else {
-         const_iterator it;
-         if(n != 0) {
-            it = const_iterator(pbb, n);
-            ++it;
-         } else {
-            it = const_iterator(pbb);
-         }
-         erase(it, cend());
-      }
+      typedef constant_iterator<T> const_it;
+      this->priv_range_assign(const_it(val, count), const_it());
    }
 
    //////////////////////////////////////////////
@@ -2165,45 +2085,8 @@ class nest
 
    void priv_move_assign_elements(nest& x)
    {
-      block_base_pointer pbb = blist.next;
-      int n = 0;
-      iterator first = x.begin();
-      iterator last  = x.end();
-      if(first != last) {
-         for(; pbb != blist.header(); pbb = pbb->next, n = 0) {
-            block_pointer pb = static_cast_block_pointer(pbb);
-            for(mask_type bit = 1; bit; bit <<= 1, ++n) {
-               if(pb->mask & bit) {
-                  pb->data()[n] = boost::move(*first);
-                  ++first;
-               }
-               else {
-                  block_alloc_traits::construct(
-                     al(), boost::movelib::to_raw_pointer(pb->data() + n),
-                     boost::move(*first));
-                  ++first;
-                  ++size_;
-                  pb->mask |= bit;
-                  if(pb->mask == full) blist.unlink_available(pb);
-               }
-               if(first == last) goto exit;
-            }
-         }
-      exit: ;
-      }
-      if(first != last) {
-         priv_insert_range_move(first, last);
-      }
-      else {
-         const_iterator it;
-         if(n != 0) {
-            it = const_iterator(pbb, n);
-            ++it;
-         } else {
-            it = const_iterator(pbb);
-         }
-         erase(it, cend());
-      }
+      this->priv_range_assign( boost::make_move_iterator(x.begin())
+                             , boost::make_move_iterator(x.end()) );
       x.clear();
    }
 
