@@ -1621,7 +1621,7 @@ class nest
 
    //! <b>Effects</b>: Transfers all elements from x into *this.
    void splice(BOOST_RV_REF(nest) x)
-   { splice(x); }
+   { this->splice(static_cast<nest&>(x)); }
 
    //! <b>Effects</b>: Removes consecutive duplicate elements.
    //!
