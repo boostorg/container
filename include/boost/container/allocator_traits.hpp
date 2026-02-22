@@ -484,6 +484,17 @@ struct allocator_traits
       return allocator_traits::priv_select_on_container_copy_construction(flag, a);
    }
 
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+   //! <b>Effects</b>: calls <code>a.construct(p)</code> if that call is well-formed;
+   //! otherwise, invokes <code>`placement new` (static_cast<void*>(p)) T()</code>
+   //! 
+   //! <b>Note</b>: Non-standard extension .
+   template <class T, class ...Args>
+   inline static void construct(Allocator & a, T* p, const value_init_t &)
+   {  allocator_traits::construct(a, p);  }
+
+   #endif
+
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
       //! <b>Effects</b>: calls <code>a.construct(p, std::forward<Args>(args)...)</code> if that call is well-formed;
       //! otherwise, invokes <code>`placement new` (static_cast<void*>(p)) T(std::forward<Args>(args)...)</code>
@@ -678,6 +689,10 @@ struct allocator_traits
    template<class T>
    inline static void priv_construct(dtl::false_type, Allocator &, T *p, const ::boost::container::default_init_t&)
    {  ::new((void*)p, boost_container_new_t()) T; }
+
+   template<class T>
+   inline static void priv_construct(dtl::false_type, Allocator &, T *p, const ::boost::container::value_init_t&)
+   {  ::new((void*)p, boost_container_new_t()) T(); }
 
    inline static bool priv_storage_is_unpropagable(dtl::true_type, const Allocator &a, pointer p)
    {  return a.storage_is_unpropagable(p);  }
