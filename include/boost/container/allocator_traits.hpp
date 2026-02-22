@@ -489,7 +489,7 @@ struct allocator_traits
    //! otherwise, invokes <code>`placement new` (static_cast<void*>(p)) T()</code>
    //! 
    //! <b>Note</b>: Non-standard extension .
-   template <class T, class ...Args>
+   template <class T>
    inline static void construct(Allocator & a, T* p, const value_init_t &)
    {  allocator_traits::construct(a, p);  }
 
