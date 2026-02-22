@@ -305,6 +305,85 @@ void test_initializer_list()
 }
 #endif
 
+template<class T>
+class unequal_allocator
+{
+public:
+   typedef T value_type;
+
+   template<class U>
+   struct rebind { typedef unequal_allocator<U> other; };
+
+   int id_;
+
+   unequal_allocator() : id_(0) {}
+   explicit unequal_allocator(int id) : id_(id) {}
+
+   template<class U>
+   unequal_allocator(const unequal_allocator<U>& other) : id_(other.id_) {}
+
+   T* allocate(std::size_t n) { return static_cast<T*>(::operator new(n * sizeof(T))); }
+   void deallocate(T* p, std::size_t) { ::operator delete(p); }
+
+   friend bool operator==(const unequal_allocator& a, const unequal_allocator& b)
+   { return a.id_ == b.id_; }
+   friend bool operator!=(const unequal_allocator& a, const unequal_allocator& b)
+   { return a.id_ != b.id_; }
+};
+
+void test_move_construction_unequal_allocator()
+{
+   typedef unequal_allocator<int> alloc_t;
+   typedef nest<int, alloc_t> nest_t;
+
+   alloc_t a1(1);
+   alloc_t a2(2);
+
+   nest_t h1(a1);
+   h1.insert(10);
+   h1.insert(20);
+   h1.insert(30);
+
+   nest_t h2(boost::move(h1), a2);
+
+   BOOST_TEST_EQ(h2.size(), 3u);
+   BOOST_TEST_EQ(h2.get_allocator().id_, 2);
+   h2.sort();
+   nest_t::const_iterator it = h2.begin();
+   BOOST_TEST_EQ(*it, 10); ++it;
+   BOOST_TEST_EQ(*it, 20); ++it;
+   BOOST_TEST_EQ(*it, 30);
+   BOOST_TEST_EQ(h1.size(), 3u);
+}
+
+void test_move_assignment_unequal_allocator()
+{
+   typedef unequal_allocator<int> alloc_t;
+   typedef nest<int, alloc_t> nest_t;
+
+   alloc_t a1(1);
+   alloc_t a2(2);
+
+   nest_t h1(a1);
+   h1.insert(10);
+   h1.insert(20);
+   h1.insert(30);
+
+   nest_t h2(a2);
+   h2.insert(100);
+
+   h2 = boost::move(h1);
+
+   BOOST_TEST_EQ(h2.size(), 3u);
+   BOOST_TEST_EQ(h2.get_allocator().id_, 2);
+   h2.sort();
+   nest_t::const_iterator it = h2.begin();
+   BOOST_TEST_EQ(*it, 10); ++it;
+   BOOST_TEST_EQ(*it, 20); ++it;
+   BOOST_TEST_EQ(*it, 30);
+   BOOST_TEST(h1.empty());
+}
+
 int main()
 {
    test_default_construction();
@@ -333,5 +412,7 @@ int main()
    #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    test_initializer_list();
    #endif
+   test_move_construction_unequal_allocator();
+   test_move_assignment_unequal_allocator();
    return boost::report_errors();
 }
