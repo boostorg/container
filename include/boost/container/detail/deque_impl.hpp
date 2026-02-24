@@ -259,7 +259,8 @@ class deque_iterator
       if (BOOST_UNLIKELY(this->m_cur == first)) {
          --this->m_node;
          this->m_cur = *this->m_node;
-         this->m_cur += get_block_ssize() - 1;
+         BOOST_CONSTEXPR_OR_CONST difference_type block_size = get_block_ssize();
+         this->m_cur += block_size - 1;
       }
       else {
          --this->m_cur;
@@ -904,7 +905,7 @@ class deque_base
    {
       const ptr_alloc_ptr n = it.get_node();
       BOOST_ASSERT(!this->members_.m_map == !n);  //Both should be null or both non-null
-      if (n) {
+      if (BOOST_LIKELY(n != 0)) {
          BOOST_CONSTEXPR_OR_CONST std::size_t block_size = deque_base::get_block_size();
          return static_cast<stored_size_type>(std::size_t(n - this->members_.m_map)*block_size + std::size_t(it.get_cur() - *n));
       }
@@ -1636,7 +1637,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    reference emplace_front(BOOST_FWD_REF(Args)... args)
    {
       BOOST_ASSERT(!is_single_ended);
-      value_type *pr = this->prot_push_front_simple_pos();
+      value_type *const pr = this->prot_push_front_simple_pos();
       if(BOOST_LIKELY(pr != 0)){
          allocator_traits_type::construct
             ( this->alloc()
@@ -1654,7 +1655,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    template <class... Args>
    reference emplace_back(BOOST_FWD_REF(Args)... args)
    {
-      value_type *pr = this->prot_push_back_simple_pos();
+      value_type *const pr = this->prot_push_back_simple_pos();
       if(BOOST_LIKELY(pr != 0)){
          allocator_traits_type::construct
             ( this->alloc(), pr, boost::forward<Args>(args)...);
@@ -1695,7 +1696,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N\
    reference emplace_front(BOOST_MOVE_UREF##N)\
    {\
-      value_type *pr = this->prot_push_front_simple_pos();\
+      value_type *const pr = this->prot_push_front_simple_pos();\
       if(BOOST_LIKELY(pr != 0)){\
          allocator_traits_type::construct\
             ( this->alloc(), pr BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
@@ -1712,7 +1713,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N\
    reference emplace_back(BOOST_MOVE_UREF##N)\
    {\
-      value_type *pr = this->prot_push_back_simple_pos();\
+      value_type * const pr = this->prot_push_back_simple_pos();\
       if(BOOST_LIKELY(pr != 0)){\
          allocator_traits_type::construct\
             ( this->alloc(), pr BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
