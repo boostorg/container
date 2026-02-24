@@ -343,6 +343,7 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements, 
 
    const std::size_t max = num_elements/multiplier;
    std::size_t capacity = 0u;
+   std::size_t size = 0u;
 
    for(std::size_t r = 0; r != num_iterations; ++r){
       //Unroll the loop to avoid noise from loop code
@@ -370,8 +371,10 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements, 
 
       if (r > num_iterations/10)
          timer.stop();
-      if(r == (num_iterations-1u))
+      if (r == (num_iterations - 1u)) {
          capacity = cpw_t::get_capacity(c);
+         size = c.size();
+      }
       c.clear();
    }
 
@@ -380,6 +383,8 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements, 
    std::cout   << cont_name << "->" << " ns: "
                << std::setw(8)
                << float(nseconds)/float((num_iterations-1)*num_elements)
+               << '\t'
+               << "Size: " << size
                << '\t'
                << "Capacity: " << capacity
                << std::endl;
@@ -445,11 +450,11 @@ void test_vectors_impl()
          vector_test_template< bc::devector<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                             "devector       ", bp);
          vector_test_template< std::deque<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                               "std::deque     ", bp);
          vector_test_template< bc::deque<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                                "deque          ", bp);
+         vector_test_template< bc::segtor<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                               "segtor         ", bp);
          vector_test_template< bc::deque<IntType, std::allocator<IntType>,
             typename bc::deque_options<bc::reservable<true> >::type       >, Operation >(numit[i], numele[i],                                "deque(reserv)  ", bp);
-         vector_test_template< bc::segtor<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                     "segtor         ", bp);
          vector_test_template< bc::segtor<IntType, std::allocator<IntType>,
-            typename bc::segtor_options<bc::reservable<true> >::type       >, Operation >(numit[i], numele[i],                                "segtor(reserv) ", bp);
+            typename bc::segtor_options<bc::reservable<true> >::type       >, Operation >(numit[i], numele[i],                               "segtor(reserv) ", bp);
       }
       std::cout << "---------------------------------\n---------------------------------\n";
    }
