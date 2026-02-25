@@ -1468,7 +1468,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       (void)n;
       BOOST_IF_CONSTEXPR(is_reservable){
          const size_type cur_back_cap = this->back_capacity();
-         if (this->back_capacity() < n)
+         if (cur_back_cap < n)
             this->priv_reserve_elements_at_back(size_type(n - cur_back_cap) );
       }
    }
@@ -1478,9 +1478,9 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       BOOST_CONTAINER_STATIC_ASSERT(!is_single_ended);
       (void)n;
       BOOST_IF_CONSTEXPR(is_reservable){
-         const size_type cur_back_cap = this->front_capacity();
-         if (this->front_capacity() < n)
-            this->priv_reserve_elements_at_front(size_type(n - cur_back_cap) );
+         const size_type cur_front_cap = this->front_capacity();
+         if (cur_front_cap < n)
+            this->priv_reserve_elements_at_front(size_type(n - cur_front_cap) );
       }
    }
 
@@ -1674,21 +1674,20 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       const size_type elemsbefore = this->prot_it_to_start_off(p);
       const size_type length = this->prot_size();
 
+      if (elemsbefore == length) {
+         this->emplace_back(boost::forward<Args>(args)...);
+         return this->prot_back_it();
+      }
+
       BOOST_IF_CONSTEXPR(!is_single_ended)
       if (!elemsbefore) {
          this->emplace_front(boost::forward<Args>(args)...);
          return this->begin();
       }
 
-      if (elemsbefore == length) {
-         this->emplace_back(boost::forward<Args>(args)...);
-         return this->prot_back_it();
-      }
-      else {
          typedef dtl::insert_emplace_proxy<ValAllocator, Args...> type;
          return this->priv_insert_middle_aux_impl(elemsbefore, 1, type(boost::forward<Args>(args)...));
       }
-   }
 
    #else //   !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
@@ -2223,18 +2222,17 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    {
       const size_type elemsbefore = this->prot_it_to_start_off(p);
 
+      if (elemsbefore == this->prot_size()) {
+         return this->priv_insert_back_aux_impl(n, proxy);
+      }
+
       BOOST_IF_CONSTEXPR(!is_single_ended)
          if(!elemsbefore) {
             return this->priv_insert_front_aux_impl(n, proxy);
       }
 
-      if (elemsbefore == this->prot_size()) {
-         return this->priv_insert_back_aux_impl(n, proxy);
-      }
-      else {
          return this->priv_insert_middle_aux_impl(elemsbefore, n, proxy);
       }
-   }
 
    template <class InsertProxy>
    void priv_segmented_proxy_uninitialized_copy_n_and_update(const iterator first, size_type n, InsertProxy &proxy)
