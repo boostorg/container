@@ -620,8 +620,9 @@ class deque_base
       //Even a zero element initialized map+nodes needs at least 1 node (for sentinel finish position)
       size_type num_nodes = size_type(num_elements / block_size + 1u);
 
-      //Allocate at least one extra slot on each used end to avoid inmediate map reallocation on push/front insertions
-      const size_type map_size = dtl::max_value(size_type(InitialMapSize), size_type(num_nodes + 1u + size_type(is_single_ended)));
+      //Allocate at least one extra slot on each used end to avoid inmediate map reallocation on push/front insertions for non-reservable
+      const size_type map_size = dtl::max_value( size_type(InitialMapSize)
+                                               , size_type(num_nodes + size_type(!is_reservable)*(1u + size_type(!is_single_ended))));
       const size_type start_map_pos = is_single_ended ? 0u : size_type(map_size - num_nodes)/2u;
 
       //The end position must be representable in stored_size_type
@@ -1685,9 +1686,9 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
          return this->begin();
       }
 
-         typedef dtl::insert_emplace_proxy<ValAllocator, Args...> type;
-         return this->priv_insert_middle_aux_impl(elemsbefore, 1, type(boost::forward<Args>(args)...));
-      }
+      typedef dtl::insert_emplace_proxy<ValAllocator, Args...> type;
+      return this->priv_insert_middle_aux_impl(elemsbefore, 1, type(boost::forward<Args>(args)...));
+   }
 
    #else //   !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
@@ -2231,8 +2232,8 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
             return this->priv_insert_front_aux_impl(n, proxy);
       }
 
-         return this->priv_insert_middle_aux_impl(elemsbefore, n, proxy);
-      }
+      return this->priv_insert_middle_aux_impl(elemsbefore, n, proxy);
+   }
 
    template <class InsertProxy>
    void priv_segmented_proxy_uninitialized_copy_n_and_update(const iterator first, size_type n, InsertProxy &proxy)
