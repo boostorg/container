@@ -2130,7 +2130,7 @@ class nest
       if(size_ <= 1) return;
 
       // Try transfer_sort for small element types
-      if(sizeof(T) <= sizeof(sort_proxy)) {
+      BOOST_IF_CONSTEXPR(sizeof(T) <= sizeof(sort_proxy)) {
          if(priv_transfer_sort(comp)) return;
       }
       else {
