@@ -1,0 +1,92 @@
+//////////////////////////////////////////////////////////////////////////////
+//
+// (C) Copyright Ion Gaztanaga 2025-2026. Distributed under the Boost
+// Software License, Version 1.0. (See accompanying file
+// LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://www.boost.org/libs/container for documentation.
+//
+//////////////////////////////////////////////////////////////////////////////
+#ifndef BOOST_CONTAINER_EXPERIMENTAL_SEGMENTED_PARTITION_POINT_HPP
+#define BOOST_CONTAINER_EXPERIMENTAL_SEGMENTED_PARTITION_POINT_HPP
+
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
+#include <boost/container/detail/config_begin.hpp>
+#include <boost/container/detail/workaround.hpp>
+#include <boost/container/experimental/segmented_iterator_traits.hpp>
+
+namespace boost {
+namespace container {
+
+template <class FwdIt, class Sent, class Predicate>
+FwdIt segmented_partition_point(FwdIt first, Sent last, Predicate pred);
+
+namespace detail_algo {
+
+template <class SegIter, class Predicate>
+SegIter segmented_partition_point_dispatch
+   (SegIter first, SegIter last, Predicate pred, segmented_iterator_tag)
+{
+   typedef segmented_iterator_traits<SegIter> traits;
+   typename traits::segment_iterator scur = traits::segment(first);
+   typename traits::segment_iterator slast = traits::segment(last);
+   typename traits::local_iterator lcur;
+   if(scur == slast) {
+      lcur = boost::container::segmented_partition_point(traits::local(first), traits::local(last), pred);
+      if(lcur != traits::local(last))
+         return traits::compose(scur, lcur);
+   }
+   else {
+      lcur = boost::container::segmented_partition_point(traits::local(first), traits::end(scur), pred);
+      if(lcur != traits::end(scur))
+         return traits::compose(scur, lcur);
+      for(++scur; scur != slast; ++scur) {
+         lcur = boost::container::segmented_partition_point(traits::begin(scur), traits::end(scur), pred);
+         if(lcur != traits::end(scur))
+            return traits::compose(scur, lcur);
+      }
+      lcur = boost::container::segmented_partition_point(traits::begin(scur), traits::local(last), pred);
+      if(lcur != traits::local(last))
+         return traits::compose(scur, lcur);
+   }
+   return last;
+}
+
+template <class FwdIt, class Sent, class Predicate, class Tag>
+typename algo_enable_if_c<
+   !Tag::value || is_sentinel<Sent, FwdIt>::value, FwdIt>::type
+segmented_partition_point_dispatch
+   (FwdIt first, Sent last, Predicate pred, Tag)
+{
+   for(; first != last; ++first)
+      if(!pred(*first))
+         return first;
+   return last;
+}
+
+} // namespace detail_algo
+
+//! Finds the partition point in [first, last): the first element
+//! for which \c pred returns false. The range must be partitioned
+//! with respect to \c pred.
+template <class FwdIt, class Sent, class Predicate>
+inline FwdIt segmented_partition_point(FwdIt first, Sent last, Predicate pred)
+{
+   typedef segmented_iterator_traits<FwdIt> traits;
+   return detail_algo::segmented_partition_point_dispatch(first, last, pred,
+      typename traits::is_segmented_iterator());
+}
+
+} // namespace container
+} // namespace boost
+
+#include <boost/container/detail/config_end.hpp>
+
+#endif // BOOST_CONTAINER_EXPERIMENTAL_SEGMENTED_PARTITION_POINT_HPP
