@@ -35,27 +35,29 @@ OutIter segmented_reverse_copy_dispatch
    (SegIter first, SegIter last, OutIter result, segmented_iterator_tag)
 {
    typedef segmented_iterator_traits<SegIter> traits;
+   typedef typename traits::segment_iterator segment_iterator;
+
    if(first == last)
       return result;
 
-   typename traits::segment_iterator sfirst = traits::segment(first);
-   typename traits::segment_iterator slast  = traits::segment(last);
+   segment_iterator sfirst = traits::segment(first);
+   segment_iterator slast  = traits::segment(last);
 
    if(sfirst == slast) {
-      return boost::container::segmented_reverse_copy(traits::local(first), traits::local(last), result);
+      return boost::container::segmented_reverse_copy(
+         traits::local(first), traits::local(last), result);
    }
 
-   result = boost::container::segmented_reverse_copy(traits::begin(slast), traits::local(last), result);
+   result = boost::container::segmented_reverse_copy(
+      traits::begin(slast), traits::local(last), result);
 
-   typename traits::segment_iterator s = slast;
-   while(s != sfirst) {
-      --s;
-      if(s != sfirst) {
-         result = boost::container::segmented_reverse_copy(traits::begin(s), traits::end(s), result);
-      }
-   }
+   segment_iterator s = slast;
+   for(--s; s != sfirst; --s)
+      result = boost::container::segmented_reverse_copy(
+         traits::begin(s), traits::end(s), result);
 
-   result = boost::container::segmented_reverse_copy(traits::local(first), traits::end(sfirst), result);
+   result = boost::container::segmented_reverse_copy(
+      traits::local(first), traits::end(sfirst), result);
 
    return result;
 }
@@ -75,7 +77,10 @@ OutIter segmented_reverse_copy_dispatch
 } // namespace detail_algo
 
 //! Copies elements from [first, last) to the range beginning at \c result
-//! in reverse order. Returns the output iterator past the last element written.
+//! in reverse order. When the source range uses segmented iterators,
+//! exploits segmentation by walking segments in reverse order, processing
+//! each local range without per-element segment-boundary overhead.
+//! Returns the output iterator past the last element written.
 template <class BidirIter, class OutIter>
 inline OutIter segmented_reverse_copy(BidirIter first, BidirIter last, OutIter result)
 {

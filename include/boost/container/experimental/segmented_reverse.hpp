@@ -22,60 +22,11 @@
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
 #include <boost/move/adl_move_swap.hpp>
-#include <boost/container/detail/iterator.hpp>
 
 namespace boost {
 namespace container {
 
 namespace detail_algo {
-
-template <class FwdIt, class BidirIt, class Size>
-BidirIt reverse_scan(FwdIt first, FwdIt last, BidirIt back, Size& count, non_segmented_iterator_tag)
-{
-   for(; first != last && count > 0; ++first, --count) {
-      --back;
-      boost::adl_move_swap(*first, *back);
-   }
-   return back;
-}
-
-template <class SegIt, class BidirIt, class Size>
-BidirIt reverse_scan(SegIt first, SegIt last, BidirIt back, Size& count, segmented_iterator_tag)
-{
-   typedef segmented_iterator_traits<SegIt> traits;
-   typedef typename traits::local_iterator local_iterator;
-   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
-   typename traits::segment_iterator scur = traits::segment(first);
-   typename traits::segment_iterator slast = traits::segment(last);
-   local_iterator lcur = traits::local(first);
-   if(scur == slast) {
-      back = reverse_scan(lcur, traits::local(last), back, count, is_local_seg_t());
-   }
-   else {
-      back = reverse_scan(lcur, traits::end(scur), back, count,
-         is_local_seg_t());
-      for(++scur; scur != slast && count > 0; ++scur)
-         back = reverse_scan(traits::begin(scur), traits::end(scur), back, count,
-            is_local_seg_t());
-      if(count > 0)
-         back = reverse_scan(traits::begin(scur), traits::local(last), back, count,
-            is_local_seg_t());
-   }
-   return back;
-}
-
-template <class SegIter>
-void segmented_reverse_dispatch(SegIter first, SegIter last, segmented_iterator_tag)
-{
-   typedef typename boost::container::iterator_traits<SegIter>::difference_type diff_t;
-   diff_t n = 0;
-   for(SegIter it = first; it != last; ++it)
-      ++n;
-   diff_t swaps = n / 2;
-   if(swaps <= 0) return;
-   SegIter back = last;
-   reverse_scan(first, last, back, swaps, segmented_iterator_tag());
-}
 
 template <class BidirIt>
 void segmented_reverse_dispatch(BidirIt first, BidirIt last, non_segmented_iterator_tag)
@@ -88,11 +39,76 @@ void segmented_reverse_dispatch(BidirIt first, BidirIt last, non_segmented_itera
    }
 }
 
+template <class SegIt>
+void segmented_reverse_dispatch(SegIt first, SegIt last, segmented_iterator_tag)
+{
+   typedef segmented_iterator_traits<SegIt> traits;
+   typedef typename traits::segment_iterator segment_iterator;
+   typedef typename traits::local_iterator local_iterator;
+   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+
+   if(first == last) return;
+
+   segment_iterator sf = traits::segment(first);
+   segment_iterator sl = traits::segment(last);
+
+   if(sf == sl) {
+      segmented_reverse_dispatch(traits::local(first), traits::local(last), is_local_seg_t());
+      return;
+   }
+
+   local_iterator f     = traits::local(first);
+   local_iterator f_end = traits::end(sf);
+   local_iterator l_beg = traits::begin(sl);
+   local_iterator l     = traits::local(last);
+
+   for(;;) {
+      while(f != f_end && l != l_beg) {
+         --l;
+         boost::adl_move_swap(*f, *l);
+         ++f;
+      }
+
+      if(f == f_end && l == l_beg) {
+         ++sf;
+         if(sf == sl) return;
+         --sl;
+         if(sf == sl) {
+            segmented_reverse_dispatch(
+               traits::begin(sf), traits::end(sf), is_local_seg_t());
+            return;
+         }
+         f     = traits::begin(sf);
+         f_end = traits::end(sf);
+         l_beg = traits::begin(sl);
+         l     = traits::end(sl);
+      }
+      else if(f == f_end) {
+         ++sf;
+         if(sf == sl) {
+            segmented_reverse_dispatch(l_beg, l, is_local_seg_t());
+            return;
+         }
+         f     = traits::begin(sf);
+         f_end = traits::end(sf);
+      }
+      else {
+         --sl;
+         if(sf == sl) {
+            segmented_reverse_dispatch(f, f_end, is_local_seg_t());
+            return;
+         }
+         l_beg = traits::begin(sl);
+         l     = traits::end(sl);
+      }
+   }
+}
+
 } // namespace detail_algo
 
 //! Reverses the order of elements in [first, last).
-//! When the iterator is segmented, exploits segmentation on the
-//! forward side to reduce per-element overhead.
+//! When the iterator is segmented, exploits segmentation on both
+//! the forward and backward sides to reduce per-element overhead.
 template <class BidirIter>
 void segmented_reverse(BidirIter first, BidirIter last)
 {
