@@ -532,12 +532,12 @@ BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, false>& x, blo
 
 //////////////////////////////////////////////
 //
-//      iterator
+//      nest_iterator
 //
 //////////////////////////////////////////////
 
 template<class ValuePointer, bool StoreDataInBlock, bool Prefetch>
-class iterator
+class nest_iterator
 {
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type element_type;
 
@@ -559,29 +559,29 @@ public:
    typedef typename nest_detail::pointer_rebind<pointer, value_type>::type maybe_nonconst_pointer;
 
    typedef typename dtl::if_c< boost::move_detail::is_const<element_type>::value
-                             , iterator< maybe_nonconst_pointer, StoreDataInBlock, Prefetch >
+                             , nest_iterator< maybe_nonconst_pointer, StoreDataInBlock, Prefetch >
                              , nat>::type                            maybe_nonconst_iterator;
 
-   iterator() BOOST_NOEXCEPT
+   nest_iterator() BOOST_NOEXCEPT
       : pbb(), n(0)
    {}
    
-   iterator(const iterator& x) BOOST_NOEXCEPT
+   nest_iterator(const nest_iterator& x) BOOST_NOEXCEPT
       : pbb(x.pbb), n(x.n)
    {}
    
-   iterator(const maybe_nonconst_iterator& x) BOOST_NOEXCEPT
+   nest_iterator(const maybe_nonconst_iterator& x) BOOST_NOEXCEPT
       : pbb(x.pbb), n(x.n)
    {}
 
-   iterator& operator=(const iterator& x) BOOST_NOEXCEPT
+   nest_iterator& operator=(const nest_iterator& x) BOOST_NOEXCEPT
    {
       pbb = x.pbb;
       n = x.n;
       return *this;
    }
 
-   iterator& operator=(const maybe_nonconst_iterator& x) BOOST_NOEXCEPT
+   nest_iterator& operator=(const maybe_nonconst_iterator& x) BOOST_NOEXCEPT
    {
       pbb = x.pbb;
       n = x.n;
@@ -598,7 +598,7 @@ public:
       return *operator->();
    }
 
-   BOOST_CONTAINER_FORCEINLINE iterator& operator++() BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE nest_iterator& operator++() BOOST_NOEXCEPT
    {
       mask_type m = pbb->mask & (full << 1 << std::size_t(n));
       if(BOOST_UNLIKELY(m == 0)) {
@@ -612,14 +612,14 @@ public:
       return *this;
    }
 
-   BOOST_CONTAINER_FORCEINLINE iterator operator++(int) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE nest_iterator operator++(int) BOOST_NOEXCEPT
    {
-      iterator tmp(*this);
+      nest_iterator tmp(*this);
       this->operator++();
       return tmp;
    }
 
-   BOOST_CONTAINER_FORCEINLINE iterator& operator--() BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE nest_iterator& operator--() BOOST_NOEXCEPT
    {
       mask_type m = pbb->mask & (full >> 1 >> (N - 1 - std::size_t(n)));
       if(BOOST_UNLIKELY(m == 0)) {
@@ -633,25 +633,25 @@ public:
       return *this;
    }
 
-   BOOST_CONTAINER_FORCEINLINE iterator operator--(int) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE nest_iterator operator--(int) BOOST_NOEXCEPT
    {
-      iterator tmp(*this);
+      nest_iterator tmp(*this);
       this->operator--();
       return tmp;
    }
 
-   friend bool operator==(const iterator& x, const iterator& y) BOOST_NOEXCEPT
+   friend bool operator==(const nest_iterator& x, const nest_iterator& y) BOOST_NOEXCEPT
    {
       return x.pbb == y.pbb && x.n == y.n;
    }
 
-   friend bool operator!=(const iterator& x, const iterator& y) BOOST_NOEXCEPT
+   friend bool operator!=(const nest_iterator& x, const nest_iterator& y) BOOST_NOEXCEPT
    {
       return !(x == y);
    }
 
 private:
-   template<class, bool, bool> friend class iterator;
+   template<class, bool, bool> friend class nest_iterator;
    template<class, class, class> friend class boost::container::nest;
    template<class> friend struct ::boost::container::segmented_iterator_traits;
 
@@ -666,11 +666,11 @@ private:
    BOOST_STATIC_CONSTEXPR std::size_t  N = block_base_type::N;
    BOOST_STATIC_CONSTEXPR mask_type full = block_base_type::full;
 
-   iterator(const_block_base_pointer pbb_, int n_) BOOST_NOEXCEPT
+   nest_iterator(const_block_base_pointer pbb_, int n_) BOOST_NOEXCEPT
       : pbb(const_cast_block_base_pointer(pbb_)), n(n_)
    {}
 
-   explicit iterator(const_block_base_pointer pbb_) BOOST_NOEXCEPT
+   explicit nest_iterator(const_block_base_pointer pbb_) BOOST_NOEXCEPT
       : pbb(const_cast_block_base_pointer(pbb_))
       , n(nest_detail::unchecked_countr_zero(pbb->mask))
    {}
@@ -1074,10 +1074,10 @@ struct const_conditional_visit_adaptor
 
 template<class ValuePointer, bool StoreDataInBlock, bool Prefetch>
 struct segmented_iterator_traits<
-   nest_detail::iterator<ValuePointer, StoreDataInBlock, Prefetch> >
+   nest_detail::nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> >
 {
    typedef segmented_iterator_tag                                            is_segmented_iterator;
-   typedef nest_detail::iterator<ValuePointer, StoreDataInBlock, Prefetch>   nest_iterator_type;
+   typedef nest_detail::nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>   nest_iterator_type;
    typedef nest_detail::nest_local_iterator<ValuePointer, StoreDataInBlock>  local_iterator;
    typedef nest_detail::nest_segment_iterator<ValuePointer>                  segment_iterator;
 
@@ -1197,8 +1197,8 @@ class nest
    typedef const T&                                                         const_reference;
    typedef typename allocator_traits_type::size_type                        size_type;
    typedef typename allocator_traits_type::difference_type                  difference_type;
-   typedef BOOST_CONTAINER_IMPDEF(nest_detail::iterator<pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled>)            iterator;
-   typedef BOOST_CONTAINER_IMPDEF(nest_detail::iterator<const_pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled>)      const_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(nest_detail::nest_iterator<pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled>)            iterator;
+   typedef BOOST_CONTAINER_IMPDEF(nest_detail::nest_iterator<const_pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled>)      const_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)       reverse_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>) const_reverse_iterator;
 
