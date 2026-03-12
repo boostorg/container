@@ -377,10 +377,12 @@ class deque_iterator
 template<class Iterator>
 struct segmented_iterator_traits;
 
+struct segmented_iterator_tag;
+
 template<class Pointer, bool IsConst, unsigned BlockBytes, unsigned BlockSize, class StoredSizeType>
 struct segmented_iterator_traits< deque_iterator<Pointer, IsConst, BlockBytes, BlockSize, StoredSizeType> >
 {
-   typedef dtl::bool_<true>                     is_segmented_iterator;
+   typedef segmented_iterator_tag                     is_segmented_iterator;
    typedef deque_iterator<Pointer, IsConst, BlockBytes, BlockSize, StoredSizeType> deque_iterator_type;
 
    typedef typename deque_iterator_type::val_alloc_ptr local_iterator;
@@ -393,9 +395,9 @@ struct segmented_iterator_traits< deque_iterator<Pointer, IsConst, BlockBytes, B
    static deque_iterator_type compose(segment_iterator s, local_iterator l)
    { return deque_iterator_type(l, s); }
 
-   static local_iterator begin(segment_iterator s) { return s.get_first(); }
+   static local_iterator begin(segment_iterator s) { return *s; }
 
-   static local_iterator end(segment_iterator s)   { return s.get_last(); }
+   static local_iterator end(segment_iterator s)   { return *s + deque_iterator_type::get_block_size(); }
 };
 
 ////////////////////////////////////////////////////////////////////////////
