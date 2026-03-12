@@ -33,8 +33,10 @@ namespace detail_algo {
 template <class FwdIt, class Size, class T>
 FwdIt fill_n_scan(FwdIt first, FwdIt last, Size& count, const T& value, non_segmented_iterator_tag)
 {
-   for(; first != last && count > 0; ++first, --count)
+   Size n = count;   //Avoid aliasing the count parameter
+   for(; first != last && n > 0; ++first, --n)
       *first = value;
+   count = n;
    return first;
 }
 
@@ -54,8 +56,7 @@ SegIt fill_n_scan(SegIt first, SegIt last, Size& count, const T& value, segmente
       lcur = fill_n_scan(lcur, traits::end(scur), count, value,
          is_local_seg_t());
       for(++scur; scur != slast && count > 0; ++scur)
-         lcur = fill_n_scan(traits::begin(scur), traits::end(scur), count, value,
-            is_local_seg_t());
+         lcur = fill_n_scan(traits::begin(scur), traits::end(scur), count, value, is_local_seg_t());
       if(count > 0)
          lcur = fill_n_scan(traits::begin(scur), traits::local(last), count, value,
             is_local_seg_t());

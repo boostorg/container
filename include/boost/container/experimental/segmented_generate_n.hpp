@@ -33,8 +33,10 @@ namespace detail_algo {
 template <class FwdIt, class Size, class Generator>
 FwdIt generate_n_scan(FwdIt first, FwdIt last, Size& count, Generator& gen, non_segmented_iterator_tag)
 {
-   for(; first != last && count > 0; ++first, --count)
+   Size n = count;   //Avoid aliasing the count parameter
+   for(; first != last && n > 0; ++first, --n)
       *first = gen();
+   count = n;
    return first;
 }
 
@@ -51,14 +53,11 @@ SegIt generate_n_scan(SegIt first, SegIt last, Size& count, Generator& gen, segm
       lcur = generate_n_scan(lcur, traits::local(last), count, gen, is_local_seg_t());
    }
    else {
-      lcur = generate_n_scan(lcur, traits::end(scur), count, gen,
-         is_local_seg_t());
+      lcur = generate_n_scan(lcur, traits::end(scur), count, gen, is_local_seg_t());
       for(++scur; scur != slast && count > 0; ++scur)
-         lcur = generate_n_scan(traits::begin(scur), traits::end(scur), count, gen,
-            is_local_seg_t());
+         lcur = generate_n_scan(traits::begin(scur), traits::end(scur), count, gen, is_local_seg_t());
       if(count > 0)
-         lcur = generate_n_scan(traits::begin(scur), traits::local(last), count, gen,
-            is_local_seg_t());
+         lcur = generate_n_scan(traits::begin(scur), traits::local(last), count, gen, is_local_seg_t());
    }
    return traits::compose(scur, lcur);
 }
