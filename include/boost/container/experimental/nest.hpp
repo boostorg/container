@@ -530,6 +530,8 @@ BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, false>& x, blo
    boost::adl_move_swap(x.data_, y.data_);
 }
 
+} // namespace nest_detail
+
 //////////////////////////////////////////////
 //
 //      nest_iterator
@@ -655,11 +657,11 @@ private:
    template<class, class, class> friend class boost::container::nest;
    template<class> friend struct ::boost::container::segmented_iterator_traits;
 
-   typedef typename pointer_rebind<ValuePointer, void>::type              void_pointer;
+   typedef typename nest_detail::pointer_rebind<ValuePointer, void>::type              void_pointer;
    typedef nest_detail::block_base<void_pointer>                           block_base_type;
-   typedef typename pointer_rebind<ValuePointer, block_base_type>::type   block_base_pointer;
-   typedef typename pointer_rebind<ValuePointer, const block_base_type>::type const_block_base_pointer;
-   typedef typename pointer_rebind<ValuePointer, value_type>::type        nonconst_pointer;
+   typedef typename nest_detail::pointer_rebind<ValuePointer, block_base_type>::type   block_base_pointer;
+   typedef typename nest_detail::pointer_rebind<ValuePointer, const block_base_type>::type const_block_base_pointer;
+   typedef typename nest_detail::pointer_rebind<ValuePointer, value_type>::type        nonconst_pointer;
    typedef nest_detail::block<nonconst_pointer, StoreDataInBlock>                block_type;
    typedef typename block_base_type::mask_type                            mask_type;
 
@@ -696,12 +698,12 @@ class nest_local_iterator
 {
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type element_type;
 
-   typedef typename pointer_rebind<ValuePointer, void>::type              void_pointer;
-   typedef block_base<void_pointer>                                       block_base_type;
-   typedef typename pointer_rebind<ValuePointer, block_base_type>::type   block_base_pointer;
-   typedef typename pointer_rebind<ValuePointer,
+   typedef typename nest_detail::pointer_rebind<ValuePointer, void>::type              void_pointer;
+   typedef nest_detail::block_base<void_pointer>                                       block_base_type;
+   typedef typename nest_detail::pointer_rebind<ValuePointer, block_base_type>::type   block_base_pointer;
+   typedef typename nest_detail::pointer_rebind<ValuePointer,
       typename dtl::remove_const<element_type>::type>::type               nonconst_pointer;
-   typedef block<nonconst_pointer, StoreDataInBlock>                      block_type;
+   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock>                      block_type;
    typedef typename block_base_type::mask_type                            mask_type;
 
    BOOST_STATIC_CONSTEXPR std::size_t N    = block_base_type::N;
@@ -731,7 +733,7 @@ public:
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator++() BOOST_NOEXCEPT
    {
       mask_type m = pbb->mask & (full << 1 << std::size_t(n));
-      n = m ? unchecked_countr_zero(m) : int(N);
+      n = m ? nest_detail::unchecked_countr_zero(m) : int(N);
       return *this;
    }
 
@@ -743,7 +745,7 @@ public:
       mask_type m = (n == int(N))
          ? pbb->mask
          : (pbb->mask & (full >> 1 >> (N - 1 - std::size_t(n))));
-      n = int(N - 1 - (std::size_t)unchecked_countl_zero(m));
+      n = int(N - 1 - (std::size_t)nest_detail::unchecked_countl_zero(m));
       return *this;
    }
 
@@ -775,9 +777,9 @@ private:
 template<class ValuePointer>
 class nest_segment_iterator
 {
-   typedef typename pointer_rebind<ValuePointer, void>::type              void_pointer;
-   typedef block_base<void_pointer>                                       block_base_type;
-   typedef typename pointer_rebind<ValuePointer, block_base_type>::type   block_base_pointer;
+   typedef typename nest_detail::pointer_rebind<ValuePointer, void>::type              void_pointer;
+   typedef nest_detail::block_base<void_pointer>                                       block_base_type;
+   typedef typename nest_detail::pointer_rebind<ValuePointer, block_base_type>::type   block_base_pointer;
 
 public:
    typedef void                                value_type;
@@ -819,6 +821,8 @@ public:
 private:
    block_base_pointer pbb;
 };
+
+namespace nest_detail {
 
 //////////////////////////////////////////////
 //
@@ -1074,12 +1078,12 @@ struct const_conditional_visit_adaptor
 
 template<class ValuePointer, bool StoreDataInBlock, bool Prefetch>
 struct segmented_iterator_traits<
-   nest_detail::nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> >
+   nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> >
 {
    typedef segmented_iterator_tag                                            is_segmented_iterator;
-   typedef nest_detail::nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>   nest_iterator_type;
-   typedef nest_detail::nest_local_iterator<ValuePointer, StoreDataInBlock>  local_iterator;
-   typedef nest_detail::nest_segment_iterator<ValuePointer>                  segment_iterator;
+   typedef nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>           nest_iterator_type;
+   typedef nest_local_iterator<ValuePointer, StoreDataInBlock>               local_iterator;
+   typedef nest_segment_iterator<ValuePointer>                               segment_iterator;
 
 private:
    typedef typename nest_detail::pointer_rebind<ValuePointer, void>::type    void_pointer;
@@ -1197,8 +1201,8 @@ class nest
    typedef const T&                                                         const_reference;
    typedef typename allocator_traits_type::size_type                        size_type;
    typedef typename allocator_traits_type::difference_type                  difference_type;
-   typedef BOOST_CONTAINER_IMPDEF(nest_detail::nest_iterator<pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled>)            iterator;
-   typedef BOOST_CONTAINER_IMPDEF(nest_detail::nest_iterator<const_pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled>)      const_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(nest_iterator<pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled>)            iterator;
+   typedef BOOST_CONTAINER_IMPDEF(nest_iterator<const_pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled>)      const_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)       reverse_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>) const_reverse_iterator;
 
