@@ -206,6 +206,11 @@ template <class T
          ,class Options = void>
 class nest;
 
+struct segmented_iterator_tag;
+
+template<class Iterator>
+struct segmented_iterator_traits;
+
 namespace nest_detail {
 
 //////////////////////////////////////////////
@@ -648,6 +653,7 @@ public:
 private:
    template<class, bool, bool> friend class iterator;
    template<class, class, class> friend class boost::container::nest;
+   template<class> friend struct ::boost::container::segmented_iterator_traits;
 
    typedef typename pointer_rebind<ValuePointer, void>::type              void_pointer;
    typedef nest_detail::block_base<void_pointer>                           block_base_type;
@@ -677,6 +683,141 @@ private:
 
    block_base_pointer pbb;
    int                n;
+};
+
+//////////////////////////////////////////////
+//
+//      nest_local_iterator
+//
+//////////////////////////////////////////////
+
+template<class ValuePointer, bool StoreDataInBlock>
+class nest_local_iterator
+{
+   typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type element_type;
+
+   typedef typename pointer_rebind<ValuePointer, void>::type              void_pointer;
+   typedef block_base<void_pointer>                                       block_base_type;
+   typedef typename pointer_rebind<ValuePointer, block_base_type>::type   block_base_pointer;
+   typedef typename pointer_rebind<ValuePointer,
+      typename dtl::remove_const<element_type>::type>::type               nonconst_pointer;
+   typedef block<nonconst_pointer, StoreDataInBlock>                      block_type;
+   typedef typename block_base_type::mask_type                            mask_type;
+
+   BOOST_STATIC_CONSTEXPR std::size_t N    = block_base_type::N;
+   BOOST_STATIC_CONSTEXPR mask_type   full = block_base_type::full;
+
+public:
+   typedef typename dtl::remove_const<element_type>::type                            value_type;
+   typedef typename boost::intrusive::pointer_traits<ValuePointer>::difference_type  difference_type;
+   typedef ValuePointer                                                              pointer;
+   typedef element_type&                                                             reference;
+   typedef std::bidirectional_iterator_tag                                           iterator_category;
+
+   nest_local_iterator() BOOST_NOEXCEPT
+      : pbb(), n(0)
+   {}
+
+   nest_local_iterator(block_base_pointer pbb_, int n_) BOOST_NOEXCEPT
+      : pbb(pbb_), n(n_)
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE reference operator*() const BOOST_NOEXCEPT
+   { return static_cast<block_type&>(*pbb).data()[n]; }
+
+   BOOST_CONTAINER_FORCEINLINE pointer operator->() const BOOST_NOEXCEPT
+   { return static_cast<block_type&>(*pbb).data() + n; }
+
+   BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator++() BOOST_NOEXCEPT
+   {
+      mask_type m = pbb->mask & (full << 1 << std::size_t(n));
+      n = m ? unchecked_countr_zero(m) : int(N);
+      return *this;
+   }
+
+   BOOST_CONTAINER_FORCEINLINE nest_local_iterator operator++(int) BOOST_NOEXCEPT
+   { nest_local_iterator tmp(*this); ++*this; return tmp; }
+
+   BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator--() BOOST_NOEXCEPT
+   {
+      mask_type m = (n == int(N))
+         ? pbb->mask
+         : (pbb->mask & (full >> 1 >> (N - 1 - std::size_t(n))));
+      n = int(N - 1 - (std::size_t)unchecked_countl_zero(m));
+      return *this;
+   }
+
+   BOOST_CONTAINER_FORCEINLINE nest_local_iterator operator--(int) BOOST_NOEXCEPT
+   { nest_local_iterator tmp(*this); --*this; return tmp; }
+
+   BOOST_CONTAINER_FORCEINLINE friend bool operator==(
+      const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
+   { return x.n == y.n && x.pbb == y.pbb; }
+
+   BOOST_CONTAINER_FORCEINLINE friend bool operator!=(
+      const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
+   { return !(x == y); }
+
+   BOOST_CONTAINER_FORCEINLINE block_base_pointer get_block() const BOOST_NOEXCEPT { return pbb; }
+   BOOST_CONTAINER_FORCEINLINE int get_slot() const BOOST_NOEXCEPT { return n; }
+
+private:
+   block_base_pointer pbb;
+   int                n;
+};
+
+//////////////////////////////////////////////
+//
+//      nest_segment_iterator
+//
+//////////////////////////////////////////////
+
+template<class ValuePointer>
+class nest_segment_iterator
+{
+   typedef typename pointer_rebind<ValuePointer, void>::type              void_pointer;
+   typedef block_base<void_pointer>                                       block_base_type;
+   typedef typename pointer_rebind<ValuePointer, block_base_type>::type   block_base_pointer;
+
+public:
+   typedef void                                value_type;
+   typedef std::ptrdiff_t                      difference_type;
+   typedef void                                pointer;
+   typedef void                                reference;
+   typedef std::bidirectional_iterator_tag     iterator_category;
+
+   nest_segment_iterator() BOOST_NOEXCEPT
+      : pbb()
+   {}
+
+   explicit nest_segment_iterator(block_base_pointer pbb_) BOOST_NOEXCEPT
+      : pbb(pbb_)
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE nest_segment_iterator& operator++() BOOST_NOEXCEPT
+   { pbb = pbb->next; return *this; }
+
+   BOOST_CONTAINER_FORCEINLINE nest_segment_iterator operator++(int) BOOST_NOEXCEPT
+   { nest_segment_iterator tmp(*this); ++*this; return tmp; }
+
+   BOOST_CONTAINER_FORCEINLINE nest_segment_iterator& operator--() BOOST_NOEXCEPT
+   { pbb = pbb->prev; return *this; }
+
+   BOOST_CONTAINER_FORCEINLINE nest_segment_iterator operator--(int) BOOST_NOEXCEPT
+   { nest_segment_iterator tmp(*this); --*this; return tmp; }
+
+   BOOST_CONTAINER_FORCEINLINE friend bool operator==(
+      const nest_segment_iterator& x, const nest_segment_iterator& y) BOOST_NOEXCEPT
+   { return x.pbb == y.pbb; }
+
+   BOOST_CONTAINER_FORCEINLINE friend bool operator!=(
+      const nest_segment_iterator& x, const nest_segment_iterator& y) BOOST_NOEXCEPT
+   { return !(x == y); }
+
+   BOOST_CONTAINER_FORCEINLINE block_base_pointer get_block() const BOOST_NOEXCEPT { return pbb; }
+
+private:
+   block_base_pointer pbb;
 };
 
 //////////////////////////////////////////////
@@ -924,6 +1065,51 @@ struct const_conditional_visit_adaptor
 };
 
 } // namespace nest_detail
+
+////////////////////////////////////////////////////////////////////////////
+//
+// Specialization of segmented_iterator_traits for nest::iterator
+//
+////////////////////////////////////////////////////////////////////////////
+
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch>
+struct segmented_iterator_traits<
+   nest_detail::iterator<ValuePointer, StoreDataInBlock, Prefetch> >
+{
+   typedef segmented_iterator_tag                                            is_segmented_iterator;
+   typedef nest_detail::iterator<ValuePointer, StoreDataInBlock, Prefetch>   nest_iterator_type;
+   typedef nest_detail::nest_local_iterator<ValuePointer, StoreDataInBlock>  local_iterator;
+   typedef nest_detail::nest_segment_iterator<ValuePointer>                  segment_iterator;
+
+private:
+   typedef typename nest_detail::pointer_rebind<ValuePointer, void>::type    void_pointer;
+   typedef nest_detail::block_base<void_pointer>                             block_base_type;
+   typedef typename block_base_type::mask_type                               mask_type;
+   BOOST_STATIC_CONSTEXPR std::size_t N = block_base_type::N;
+
+public:
+   static segment_iterator segment(nest_iterator_type it)
+   { return segment_iterator(it.pbb); }
+
+   static local_iterator local(nest_iterator_type it)
+   { return local_iterator(it.pbb, it.n); }
+
+   static nest_iterator_type compose(segment_iterator s, local_iterator l)
+   {
+      (void)s;
+      return nest_iterator_type(l.get_block(), l.get_slot());
+   }
+
+   static local_iterator begin(segment_iterator s)
+   {
+      mask_type m = s.get_block()->mask;
+      return local_iterator(s.get_block(),
+         m ? nest_detail::unchecked_countr_zero(m) : int(N));
+   }
+
+   static local_iterator end(segment_iterator s)
+   { return local_iterator(s.get_block(), int(N)); }
+};
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
