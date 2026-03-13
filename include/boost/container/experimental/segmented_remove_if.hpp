@@ -21,6 +21,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/container/experimental/segmented_find_if.hpp>
 #include <boost/move/utility_core.hpp>
 
 namespace boost {
@@ -97,10 +98,17 @@ segmented_remove_if_dispatch
 //! moving retained elements forward. Returns iterator to new end.
 template <class FwdIt, class Sent, class Predicate>
 inline FwdIt segmented_remove_if(FwdIt first, Sent last, Predicate pred)
-{
+{/*
    typedef segmented_iterator_traits<FwdIt> traits;
    return detail_algo::segmented_remove_if_dispatch(first, last, pred,
       typename traits::is_segmented_iterator());
+      */
+    first = segmented_find_if(first, last, pred);
+    if (first != last)
+        for (FwdIt i = first; ++i != last;)
+            if (!pred(*i))
+                *first++ = std::move(*i);
+    return first;
 }
 
 } // namespace container
