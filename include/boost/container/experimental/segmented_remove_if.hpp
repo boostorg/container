@@ -22,93 +22,26 @@
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
 #include <boost/container/experimental/segmented_find_if.hpp>
+#include <boost/container/experimental/segmented_remove_copy_if.hpp>
+
 #include <boost/move/utility_core.hpp>
 
 namespace boost {
 namespace container {
 
-template <class FwdIt, class Sent, class Predicate>
-FwdIt segmented_remove_if(FwdIt first, Sent last, Predicate pred);
-
-namespace detail_algo {
-
-template <class FwdIt, class OutIter, class Predicate>
-void remove_if_scan(FwdIt first, FwdIt last, OutIter& result, Predicate& pred, non_segmented_iterator_tag)
-{
-   for(; first != last; ++first) {
-      if(!pred(*first)) {
-         *result = boost::move(*first);
-         ++result;
-      }
-   }
-}
-
-template <class SegIt, class OutIter, class Predicate>
-void remove_if_scan(SegIt first, SegIt last, OutIter& result, Predicate& pred, segmented_iterator_tag)
-{
-   typedef segmented_iterator_traits<SegIt> traits;
-   typedef typename traits::local_iterator local_iterator;
-   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
-   typename traits::segment_iterator scur = traits::segment(first);
-   typename traits::segment_iterator slast = traits::segment(last);
-   local_iterator lcur = traits::local(first);
-   if(scur == slast) {
-      remove_if_scan(lcur, traits::local(last), result, pred, is_local_seg_t());
-   }
-   else {
-      remove_if_scan(lcur, traits::end(scur), result, pred,
-         is_local_seg_t());
-      for(++scur; scur != slast; ++scur)
-         remove_if_scan(traits::begin(scur), traits::end(scur), result, pred,
-            is_local_seg_t());
-      remove_if_scan(traits::begin(scur), traits::local(last), result, pred,
-         is_local_seg_t());
-   }
-}
-
-template <class SegIter, class Predicate>
-SegIter segmented_remove_if_dispatch
-   (SegIter first, SegIter last, Predicate pred, segmented_iterator_tag)
-{
-   SegIter result = first;
-   remove_if_scan(first, last, result, pred, segmented_iterator_tag());
-   return result;
-}
-
-template <class FwdIt, class Sent, class Predicate, class Tag>
-typename algo_enable_if_c<
-   !Tag::value || is_sentinel<Sent, FwdIt>::value, FwdIt>::type
-segmented_remove_if_dispatch
-   (FwdIt first, Sent last, Predicate pred, Tag)
-{
-   FwdIt result = first;
-   for(; first != last; ++first) {
-      if(!pred(*first)) {
-         if(result != first)
-            *result = boost::move(*first);
-         ++result;
-      }
-   }
-   return result;
-}
-
-} // namespace detail_algo
 
 //! Removes all elements for which \c pred returns true from [first, last),
 //! moving retained elements forward. Returns iterator to new end.
 template <class FwdIt, class Sent, class Predicate>
 inline FwdIt segmented_remove_if(FwdIt first, Sent last, Predicate pred)
-{/*
-   typedef segmented_iterator_traits<FwdIt> traits;
-   return detail_algo::segmented_remove_if_dispatch(first, last, pred,
-      typename traits::is_segmented_iterator());
-      */
-    first = segmented_find_if(first, last, pred);
-    if (first != last)
-        for (FwdIt i = first; ++i != last;)
-            if (!pred(*i))
-                *first++ = std::move(*i);
-    return first;
+{
+   first = segmented_find_if(first, last, pred);
+   if (first == last)
+      return last;
+
+   FwdIt next = first;
+   ++next;
+   return segmented_remove_copy_if(next, last, first, pred);
 }
 
 } // namespace container
