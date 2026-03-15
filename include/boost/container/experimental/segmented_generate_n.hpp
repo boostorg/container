@@ -21,6 +21,8 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/container/detail/iterators.hpp>
+#include <boost/container/detail/std_fwd.hpp>
 
 namespace boost {
 namespace container {
@@ -42,7 +44,7 @@ FwdIt generate_n_scan(FwdIt first, FwdIt last, Size& count, Generator& gen, non_
 
 
 template <class InIter, class Size, class Generator>
-InIter generate_n_scan_non_segmented(InIter first, InIter last, Size& count, const Generator &gen, std::random_access_iterator_tag)
+InIter generate_n_scan_non_segmented(InIter first, InIter last, Size& count, const Generator &gen, const std::random_access_iterator_tag &)
 {
    Size range_sz = Size(last - first);
    Size local_count = count < range_sz ? count : range_sz;
@@ -69,7 +71,7 @@ InIter generate_n_scan_non_segmented(InIter first, InIter last, Size& count, con
 template <class InIter, class Size, class Generator>
 BOOST_CONTAINER_FORCEINLINE InIter generate_n_scan(InIter first, InIter last, Size& count, const Generator &gen, non_segmented_iterator_tag)
 {
-   return (generate_n_scan_non_segmented)(first, last, count, gen, typename std::iterator_traits<InIter>::iterator_category());
+   return (generate_n_scan_non_segmented)(first, last, count, gen, typename iterator_traits<InIter>::iterator_category());
 }
 
 template <class SegIt, class Size, class Generator>
