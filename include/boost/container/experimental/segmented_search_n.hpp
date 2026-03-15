@@ -51,9 +51,11 @@ SegIter segmented_search_n_dispatch
       typename traits::local_iterator lend = traits::local(last);
       for(; lcur != lend; ++lcur) {
          if(*lcur == value) {
-            if(consecutive == 0) match_start = traits::compose(scur, lcur);
+            if(consecutive == 0)
+               match_start = traits::compose(scur, lcur);
             ++consecutive;
-            if(consecutive == count) return match_start;
+            if(consecutive == count)
+               return match_start;
          }
          else {
             consecutive = 0;
@@ -65,9 +67,11 @@ SegIter segmented_search_n_dispatch
          typename traits::local_iterator lend = traits::end(scur);
          for(; lcur != lend; ++lcur) {
             if(*lcur == value) {
-               if(consecutive == 0) match_start = traits::compose(scur, lcur);
+               if(consecutive == 0)
+                  match_start = traits::compose(scur, lcur);
                ++consecutive;
-               if(consecutive == count) return match_start;
+               if(consecutive == count)
+                  return match_start;
             }
             else {
                consecutive = 0;
@@ -79,9 +83,11 @@ SegIter segmented_search_n_dispatch
          typename traits::local_iterator le = traits::end(scur);
          for(lcur = lb; lcur != le; ++lcur) {
             if(*lcur == value) {
-               if(consecutive == 0) match_start = traits::compose(scur, lcur);
+               if(consecutive == 0)
+                  match_start = traits::compose(scur, lcur);
                ++consecutive;
-               if(consecutive == count) return match_start;
+               if(consecutive == count)
+                  return match_start;
             }
             else {
                consecutive = 0;
@@ -93,9 +99,11 @@ SegIter segmented_search_n_dispatch
          typename traits::local_iterator ll = traits::local(last);
          for(lcur = lb; lcur != ll; ++lcur) {
             if(*lcur == value) {
-               if(consecutive == 0) match_start = traits::compose(scur, lcur);
+               if(consecutive == 0)
+                  match_start = traits::compose(scur, lcur);
                ++consecutive;
-               if(consecutive == count) return match_start;
+               if(consecutive == count)
+                  return match_start;
             }
             else {
                consecutive = 0;
