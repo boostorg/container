@@ -367,8 +367,9 @@ void bench_copy(C& c, std::size_t iters, const char* cname)
    print_ratio("copy", cname, r1, r2);
 }
 
-template<class C>
-void bench_copy_if(C& c, std::size_t iters, const char* cname)
+template<class C, class Pred>
+void bench_copy_if(C& c, std::size_t iters, const char* cname,
+                   Pred pred, const char* label)
 {
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
@@ -376,7 +377,7 @@ void bench_copy_if(C& c, std::size_t iters, const char* cname)
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
       t1.resume();
-      bench_detail::copy_if(c.begin(), c.end(), out.begin(), is_odd<VT>());
+      bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred);
       t1.stop();
    }
    escape(&out[0]);
@@ -385,12 +386,12 @@ void bench_copy_if(C& c, std::size_t iters, const char* cname)
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
       t2.resume();
-      bc::segmented_copy_if(c.begin(), c.end(), out.begin(), is_odd<VT>());
+      bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred);
       t2.stop();
    }
    escape(&out[0]);
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
-   print_ratio("copy_if", cname, r1, r2);
+   print_ratio(label, cname, r1, r2);
 }
 
 template<class C>
@@ -1092,7 +1093,8 @@ void run_all(C& c, std::size_t iters, const char* cname)
 
    bench_for_each(c, iters, cname);
    bench_copy(c, iters, cname);
-   bench_copy_if(c, iters, cname);
+   bench_copy_if(c, iters, cname, is_odd<VT>(),      "copy_if(hit)");
+   bench_copy_if(c, iters, cname, is_negative<VT>(), "copy_if(miss)");
    bench_copy_n(c, iters, cname);
    bench_fill(c, iters, cname);
    bench_fill_n(c, iters, cname);
@@ -1192,7 +1194,7 @@ void run_benchmarks()
       run_all(dq, iter, "deque");
       std::cout << "\n";
    }
-/*
+   /*
    {
       std::cout << "--- bc::nest<" << typeid(T).name() << "> ---\n";
       bc::nest<T> nt;
