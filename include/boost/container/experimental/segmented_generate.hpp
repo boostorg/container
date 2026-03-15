@@ -32,8 +32,8 @@ namespace detail_algo {
 
 // Uses a by-reference inner loop to preserve generator state
 // across segments (std::generate takes generators by value).
-template <class FwdIt, class Generator>
-void generate_ref(FwdIt first, FwdIt last, Generator& gen)
+template <class FwdIt, class Sent, class Generator>
+void generate_ref(FwdIt first, const Sent last, Generator& gen)
 {
    for(; first != last; ++first)
       *first = gen();
@@ -60,10 +60,9 @@ void segmented_generate_ref
 template <class FwdIt, class Sent, class Generator, class Tag>
  BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, FwdIt>::value>::type
-segmented_generate_ref
-   (FwdIt first, Sent last, Generator& gen, Tag)
+segmented_generate_ref(FwdIt first, Sent last, Generator& gen, Tag)
 {
-   return detail_algo::generate_ref(first, last, gen);
+   return (generate_ref)(first, last, gen);
 }
 
 } // namespace detail_algo
