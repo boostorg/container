@@ -77,6 +77,17 @@ struct segmented_iterator_traits_impl<Iterator,
    static local_iterator end(segment_iterator s)   { return s.end(); }
 };
 
+template <class T>
+struct constref_generator
+{
+    const T& value;
+    BOOST_CONTAINER_FORCEINLINE explicit constref_generator(const T& v)
+       : value(v)
+    {}
+
+    BOOST_CONTAINER_FORCEINLINE const T& operator()() const { return value; }
+};
+
 } // namespace detail_algo
 
 //! Traits class to detect and decompose segmented iterators.
