@@ -32,9 +32,8 @@ BidirIt segmented_stable_partition(BidirIt first, BidirIt last, Pred pred);
 
 namespace detail_algo {
 
-template <class BidirIt>
-void stable_partition_shift(BidirIt it, BidirIt& result,
-   typename boost::container::iterator_traits<BidirIt>::value_type& tmp)
+template <class BidirIt, class T>
+BidirIt stable_partition_shift( BidirIt it, BidirIt result, T& tmp)
 {
    BidirIt cur = it;
    while(cur != result) {
@@ -43,7 +42,7 @@ void stable_partition_shift(BidirIt it, BidirIt& result,
       cur = prev;
    }
    *result = boost::move(tmp);
-   ++result;
+   return ++result;
 }
 
 // Composes a local iterator back to the outermost segmented iterator.
@@ -54,7 +53,7 @@ template <class SegIter>
 struct sp_identity_composer
 {
    typedef SegIter result_type;
-   result_type operator()(SegIter it) const { return it; }
+   BOOST_CONTAINER_FORCEINLINE result_type operator()(SegIter it) const { return it; }
 };
 
 template <class OuterComposer, class Traits>
@@ -72,7 +71,7 @@ struct sp_chained_composer
 };
 
 template <class FwdIt, class OuterIter, class Composer, class Pred>
-void stable_partition_scan(FwdIt first, FwdIt last, OuterIter& result,
+OuterIter stable_partition_scan(FwdIt first, FwdIt last, OuterIter result,
    Composer composer, Pred& pred, non_segmented_iterator_tag)
 {
    typedef typename boost::container::iterator_traits<OuterIter>::value_type value_type;
@@ -80,13 +79,14 @@ void stable_partition_scan(FwdIt first, FwdIt last, OuterIter& result,
       if(pred(*first)) {
          value_type tmp = boost::move(*first);
          OuterIter it = composer(first);
-         stable_partition_shift(it, result, tmp);
+         result = stable_partition_shift(it, result, tmp);
       }
    }
+   return result;
 }
 
 template <class SegIt, class OuterIter, class Composer, class Pred>
-void stable_partition_scan(SegIt first, SegIt last, OuterIter& result,
+OuterIter stable_partition_scan(SegIt first, SegIt last, OuterIter result,
    Composer composer, Pred& pred, segmented_iterator_tag)
 {
    typedef segmented_iterator_traits<SegIt> traits;
@@ -98,25 +98,23 @@ void stable_partition_scan(SegIt first, SegIt last, OuterIter& result,
    local_iterator lcur = traits::local(first);
    if(scur == slast) {
       inner_composer_t inner(composer, scur);
-      stable_partition_scan(lcur, traits::local(last), result, inner, pred, is_local_seg_t());
+      result = stable_partition_scan(lcur, traits::local(last), result, inner, pred, is_local_seg_t());
    }
    else {
       {
          inner_composer_t inner(composer, scur);
-         stable_partition_scan(lcur, traits::end(scur), result, inner, pred,
-            is_local_seg_t());
+         result = stable_partition_scan(lcur, traits::end(scur), result, inner, pred, is_local_seg_t());
       }
       for(++scur; scur != slast; ++scur) {
          inner_composer_t inner(composer, scur);
-         stable_partition_scan(traits::begin(scur), traits::end(scur), result, inner, pred,
-            is_local_seg_t());
+         result = stable_partition_scan(traits::begin(scur), traits::end(scur), result, inner, pred, is_local_seg_t());
       }
       {
          inner_composer_t inner(composer, scur);
-         stable_partition_scan(traits::begin(scur), traits::local(last), result, inner, pred,
-            is_local_seg_t());
+         result = stable_partition_scan(traits::begin(scur), traits::local(last), result, inner, pred,is_local_seg_t());
       }
    }
+   return result;
 }
 
 template <class SegIter, class Pred>
@@ -125,23 +123,16 @@ SegIter segmented_stable_partition_dispatch
 {
    SegIter result = first;
    sp_identity_composer<SegIter> composer;
-   stable_partition_scan(first, last, result, composer, pred, segmented_iterator_tag());
-   return result;
+   return stable_partition_scan(first, last, result, composer, pred, segmented_iterator_tag());
 }
 
 template <class BidirIt, class Pred>
 BidirIt segmented_stable_partition_dispatch
    (BidirIt first, BidirIt last, Pred pred, non_segmented_iterator_tag)
 {
-   typedef typename boost::container::iterator_traits<BidirIt>::value_type value_type;
    BidirIt result = first;
-   for(BidirIt it = first; it != last; ++it) {
-      if(pred(*it)) {
-         value_type tmp = boost::move(*it);
-         stable_partition_shift(it, result, tmp);
-      }
-   }
-   return result;
+   sp_identity_composer<BidirIt> composer;
+   return stable_partition_scan(first, last, first, composer, pred, non_segmented_iterator_tag());
 }
 
 } // namespace detail_algo
