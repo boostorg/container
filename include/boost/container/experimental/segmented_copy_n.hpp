@@ -31,25 +31,45 @@ OutIter segmented_copy_n(InIter first, Size count, OutIter result);
 namespace detail_algo {
 
 template <class InIter, class Size, class OutIter>
-OutIter copy_n_scan(InIter first, InIter last, Size& count, OutIter result, non_segmented_iterator_tag)
+OutIter copy_n_scan_non_segmented(InIter first, InIter last, Size& count, OutIter result, std::random_access_iterator_tag)
+{
+   Size range_sz = Size(last - first);
+   Size local_count = count < range_sz ? count : range_sz;
+   result = (segmented_copy_n)(first, local_count, result);
+   count -= local_count;
+   return result;
+}
+
+template <class InIter, class Size, class OutIter, class Tag>
+OutIter copy_n_scan_non_segmented(InIter first, InIter last, Size& count, OutIter result, Tag)
 {
    Size local_count = count;  //Avoid aliasing the count parameter
-   for(; first != last && local_count > 0; ++first, ++result, --local_count)
+
+   for(; local_count > 0 && first != last; ++first, ++result, --local_count)
       *result = *first;
+
    count = local_count;  //Restore the count parameter
+
    return result;
+}
+
+template <class InIter, class Size, class OutIter>
+OutIter copy_n_scan(InIter first, InIter last, Size& count, OutIter result, non_segmented_iterator_tag)
+{
+   return (copy_n_scan_non_segmented)(first, last, count, result, typename std::iterator_traits<InIter>::iterator_category());
 }
 
 template <class SegIt, class Size, class OutIter>
 OutIter copy_n_scan(SegIt first, SegIt last, Size& count, OutIter result, segmented_iterator_tag)
 {
    typedef segmented_iterator_traits<SegIt> traits;
-   typedef typename traits::local_iterator local_iterator;
+   typedef typename traits::local_iterator   local_iterator;
+   typedef typename traits::segment_iterator segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
 
-   typename traits::segment_iterator scur  = traits::segment(first);
-   typename traits::segment_iterator slast = traits::segment(last);
-   local_iterator lcur = traits::local(first);
+   segment_iterator scur  = traits::segment(first);
+   segment_iterator slast = traits::segment(last);
+   local_iterator   lcur  = traits::local(first);
 
    if(scur == slast) {
       result = copy_n_scan(lcur, traits::local(last), count, result, is_local_seg_t());
@@ -68,14 +88,15 @@ template <class SegIter, class Size, class OutIter>
 OutIter segmented_copy_n_dispatch
    (SegIter first, Size count, OutIter result, segmented_iterator_tag)
 {
-   if(count <= 0) return result;
-
    typedef segmented_iterator_traits<SegIter> traits;
-   typedef typename traits::local_iterator local_iterator;
+   typedef typename traits::local_iterator   local_iterator;
+   typedef typename traits::segment_iterator segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
 
-   typename traits::segment_iterator scur = traits::segment(first);
-   local_iterator lcur = traits::local(first);
+   if(count <= 0) return result;
+
+   segment_iterator scur = traits::segment(first);
+   local_iterator   lcur = traits::local(first);
 
    //Iterate through the segments, until the count is 0
    while(1) {
@@ -110,6 +131,52 @@ inline OutIter segmented_copy_n(InIter first, Size count, OutIter result)
       typename traits::is_segmented_iterator());
 }
 
+/*
+
+
+template <class InIter, class Size, class OutIter>
+OutIter segmented_copy_n(InIter first, Size count, OutIter result);
+
+namespace detail_algo {
+
+template <class InIter, class Size, class OutIter>
+OutIter segmented_copy_n_dispatch
+   (InIter first, Size &count, OutIter result, non_segmented_iterator_tag);
+
+template <class InIter, class Size, class OutIter>
+OutIter copy_n_scan(InIter first, InIter last, Size& count, OutIter result, non_segmented_iterator_tag)
+{
+   Size local_count = count;  //Avoid aliasing the count parameter
+   for(; first != last && local_count > 0; ++first, ++result, --local_count)
+      *result = *first;
+   count = local_count;  //Restore the count parameter
+   return result;
+}
+
+template <class SegIt, class Size, class OutIter>
+OutIter copy_n_scan(SegIt first, SegIt last, Size& count, OutIter result, segmented_iterator_tag)
+{
+   typedef segmented_iterator_traits<SegIt> traits;
+   typedef typename traits::local_iterator local_iterator;
+   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+
+   typename traits::segment_iterator scur  = traits::segment(first);
+   typename traits::segment_iterator slast = traits::segment(last);
+   local_iterator lcur = traits::local(first);
+
+   if(scur == slast) {
+      result = copy_n_scan(lcur, traits::local(last), count, result, is_local_seg_t());
+   }
+   else {
+      result = copy_n_scan(lcur, traits::end(scur), count, result, is_local_seg_t());
+      for(++scur; scur != slast && count > 0; ++scur)
+         result = copy_n_scan(traits::begin(scur), traits::end(scur), count, result, is_local_seg_t());
+      if(count > 0)
+         result = copy_n_scan(traits::begin(scur), traits::local(last), count, result, is_local_seg_t());
+   }
+   return result;
+}
+*/
 } // namespace container
 } // namespace boost
 

@@ -40,15 +40,50 @@ FwdIt generate_n_scan(FwdIt first, FwdIt last, Size& count, Generator& gen, non_
    return first;
 }
 
+
+template <class InIter, class Size, class Generator>
+InIter generate_n_scan_non_segmented(InIter first, InIter last, Size& count, const Generator &gen, std::random_access_iterator_tag)
+{
+   Size range_sz = Size(last - first);
+   Size local_count = count < range_sz ? count : range_sz;
+
+   first = (segmented_generate_n)(first, local_count, gen);
+
+   count -= local_count;
+   return first;
+}
+
+template <class InIter, class Size, class Generator, class Tag>
+InIter generate_n_scan_non_segmented(InIter first, InIter last, Size& count, const Generator &gen, Tag)
+{
+   Size local_count = count;  //Avoid aliasing the count parameter
+
+   for (; local_count > 0 && first != last; ++first, --local_count)
+      *first = gen();
+
+   count = local_count;  //Restore the count parameter
+
+   return first;
+}
+
+template <class InIter, class Size, class Generator>
+BOOST_CONTAINER_FORCEINLINE InIter generate_n_scan(InIter first, InIter last, Size& count, const Generator &gen, non_segmented_iterator_tag)
+{
+   return (generate_n_scan_non_segmented)(first, last, count, gen, typename std::iterator_traits<InIter>::iterator_category());
+}
+
 template <class SegIt, class Size, class Generator>
 SegIt generate_n_scan(SegIt first, SegIt last, Size& count, Generator& gen, segmented_iterator_tag)
 {
-   typedef segmented_iterator_traits<SegIt> traits;
-   typedef typename traits::local_iterator local_iterator;
+   typedef segmented_iterator_traits<SegIt>  traits;
+   typedef typename traits::local_iterator   local_iterator;
+   typedef typename traits::segment_iterator segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
-   typename traits::segment_iterator scur = traits::segment(first);
-   typename traits::segment_iterator slast = traits::segment(last);
-   local_iterator lcur = traits::local(first);
+
+   segment_iterator scur  = traits::segment(first);
+   segment_iterator slast = traits::segment(last);
+   local_iterator   lcur  = traits::local(first);
+
    if(scur == slast) {
       lcur = generate_n_scan(lcur, traits::local(last), count, gen, is_local_seg_t());
    }
@@ -67,17 +102,24 @@ SegIter segmented_generate_n_ref
    (SegIter first, Size count, Generator& gen, segmented_iterator_tag)
 {
    typedef segmented_iterator_traits<SegIter> traits;
-   if(count <= 0) return first;
-   typename traits::segment_iterator scur = traits::segment(first);
-   typename traits::local_iterator lcur = traits::local(first);
-   while(count > 0) {
-      typename traits::local_iterator lend = traits::end(scur);
-      lcur = generate_n_scan(lcur, lend, count, gen,
-         typename segmented_iterator_traits<typename traits::local_iterator>::is_segmented_iterator());
-      if(count > 0) {
-         ++scur;
-         lcur = traits::begin(scur);
-      }
+   typedef typename traits::local_iterator    local_iterator;
+   typedef typename traits::segment_iterator  segment_iterator;
+   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+
+   if(count <= 0)
+      return first;
+
+   segment_iterator scur = traits::segment(first);
+   local_iterator   lcur = traits::local(first);
+
+   //Iterate through the segments, until the count is 0
+   while(1) {
+      lcur = generate_n_scan(lcur, traits::end(scur), count, gen, is_local_seg_t());
+
+      if(count == 0)
+         break;
+      ++scur;
+      lcur = traits::begin(scur);
    }
    return traits::compose(scur, lcur);
 }
