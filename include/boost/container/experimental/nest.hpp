@@ -753,13 +753,13 @@ public:
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator operator--(int) BOOST_NOEXCEPT
    { nest_local_iterator tmp(*this); --*this; return tmp; }
 
-   BOOST_CONTAINER_FORCEINLINE friend bool operator==(
-      const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
-   { return x.n == y.n && x.pbb == y.pbb; }
+   BOOST_CONTAINER_FORCEINLINE
+   friend bool operator==(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
+   { return x.n == y.n; }
 
-   BOOST_CONTAINER_FORCEINLINE friend bool operator!=(
-      const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
-   { return !(x == y); }
+   BOOST_CONTAINER_FORCEINLINE
+   friend bool operator!=(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
+   { return x.n != y.n; }
 
    BOOST_CONTAINER_FORCEINLINE block_base_pointer get_block() const BOOST_NOEXCEPT { return pbb; }
    BOOST_CONTAINER_FORCEINLINE int get_slot() const BOOST_NOEXCEPT { return n; }
@@ -1102,8 +1102,7 @@ public:
 
    static nest_iterator_type compose(const segment_iterator &s, const local_iterator &l)
    {
-      (void)s;
-      return nest_iterator_type(l.get_block(), l.get_slot());
+      return nest_iterator_type(s.get_block(), l.get_slot());
    }
 
    static local_iterator begin(const segment_iterator &s)
