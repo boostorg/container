@@ -33,9 +33,14 @@ namespace detail_algo {
 template <class InpIter1, class Sent, class InpIter2>
 bool equal_ref(InpIter1 first1, Sent last1, InpIter2& first2)
 {
-   for(; first1 != last1; ++first1, ++first2)
-      if(!(*first1 == *first2))
+   InpIter2 local_first2 = first2;
+   for (; first1 != last1; ++first1, ++local_first2){
+      if (!(*first1 == *local_first2)) {
+         first2 = local_first2;
          return false;
+      }
+   }
+   first2 = local_first2;
    return true;
 }
 
