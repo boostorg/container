@@ -265,6 +265,28 @@ BOOST_CONTAINER_FORCEINLINE int unchecked_countl_zero(boost::uint64_t x)
 #endif
 }
 
+inline int countr_zero(boost::uint64_t x)
+{
+   return (int)boost::core::countr_zero(x);
+}
+
+BOOST_CONTAINER_FORCEINLINE int countr_one(boost::uint64_t x)
+{
+   return unchecked_countr_zero(~x);
+}
+
+BOOST_CONTAINER_FORCEINLINE int countl_zero(boost::uint64_t x)
+{
+   return (int)boost::core::countl_zero(x);
+}
+
+
+
+
+
+
+
+
 //////////////////////////////////////////////
 //
 //      find_if_not (C++03-compatible)
@@ -693,6 +715,9 @@ private:
 //
 //////////////////////////////////////////////
 
+//#define NEST_LOCAL_ITERATOR_FULL
+
+#if defined(NEST_LOCAL_ITERATOR_FULL)
 template<class ValuePointer, bool StoreDataInBlock>
 class nest_local_iterator
 {
@@ -707,6 +732,7 @@ class nest_local_iterator
 
    BOOST_STATIC_CONSTEXPR std::size_t N    = block_base_type::N;
    BOOST_STATIC_CONSTEXPR mask_type   full = block_base_type::full;
+   BOOST_STATIC_CONSTEXPR mask_type   full_l = (full << 1);
 
 public:
    typedef typename dtl::remove_const<element_type>::type                            value_type;
@@ -733,8 +759,8 @@ public:
 
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator++() BOOST_NOEXCEPT
    {
-      const mask_type m = pbb->mask & ((full << 1) << std::size_t(n));
-      n = m ? nest_detail::unchecked_countr_zero(m) : int(N);
+      const mask_type m = pbb->mask & (full_l << std::size_t(n));
+      n = nest_detail::countr_zero(m);
       return *this;
    }
 
@@ -743,9 +769,7 @@ public:
 
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator--() BOOST_NOEXCEPT
    {
-      const mask_type m = (n == int(N))
-         ? pbb->mask
-         : (pbb->mask & ((full >> 1) >> ((N - 1) - std::size_t(n))));
+      const mask_type m = pbb->mask & (full >> (N - std::size_t(n)));
       n = int((N - 1) - (std::size_t)nest_detail::unchecked_countl_zero(m));
       return *this;
    }
@@ -768,6 +792,100 @@ private:
    block_base_pointer pbb;
    int                n;
 };
+
+#else
+
+template<class ValuePointer, bool StoreDataInBlock>
+class nest_local_iterator
+{
+   typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type element_type;
+
+   typedef typename nest_detail::pointer_rebind<ValuePointer, void>::type     void_pointer;
+   typedef nest_detail::block_base<void_pointer>                              block_base_type;
+   typedef typename nest_detail::pointer_rebind<ValuePointer,
+      typename dtl::remove_const<element_type>::type>::type                   nonconst_pointer;
+   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock>             block_type;
+   typedef typename block_base_type::mask_type                                mask_type;
+
+   BOOST_STATIC_CONSTEXPR std::size_t N    = block_base_type::N;
+   BOOST_STATIC_CONSTEXPR mask_type   full = block_base_type::full;
+   BOOST_STATIC_CONSTEXPR mask_type   full_l = (full << 1);
+
+public:
+   typedef typename dtl::remove_const<element_type>::type                            value_type;
+   typedef typename boost::intrusive::pointer_traits<ValuePointer>::difference_type  difference_type;
+   typedef ValuePointer                                                              pointer;
+   typedef element_type&                                                             reference;
+   typedef std::bidirectional_iterator_tag                                           iterator_category;
+
+   typedef typename nest_detail::pointer_rebind<ValuePointer, block_base_type>::type   block_base_pointer;
+
+   nest_local_iterator() BOOST_NOEXCEPT
+      : pos()
+   {}
+
+   nest_local_iterator(block_base_pointer pbb_, int n_) BOOST_NOEXCEPT
+      : pos(static_cast<block_type&>(*pbb_).data()+n_), n(n_), mask(pbb_->mask)
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE reference operator*() const BOOST_NOEXCEPT
+   {
+      return *pos;
+   }
+
+   BOOST_CONTAINER_FORCEINLINE pointer operator->() const BOOST_NOEXCEPT
+   {
+      return pos;
+   }
+
+   BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator++() BOOST_NOEXCEPT
+   {
+      BOOST_ASSERT(n != N);
+      const mask_type m = mask & (full_l << std::size_t(n));
+      const int old_n = n;
+      n = nest_detail::countr_zero(m);
+      pos += (n - old_n);
+      return *this;
+   }
+
+   BOOST_CONTAINER_FORCEINLINE nest_local_iterator operator++(int) BOOST_NOEXCEPT
+   { nest_local_iterator tmp(*this); ++*this; return tmp; }
+
+   BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator--() BOOST_NOEXCEPT
+   {
+      BOOST_ASSERT(n != 0);
+      const mask_type m = mask & (full >> (N - std::size_t(n)));
+      const int old_n = n;
+      n = int((N - 1) - (std::size_t)nest_detail::unchecked_countl_zero(m));
+      pos -= (old_n - n);
+      return *this;
+   }
+
+   BOOST_CONTAINER_FORCEINLINE nest_local_iterator operator--(int) BOOST_NOEXCEPT
+   { nest_local_iterator tmp(*this); --*this; return tmp; }
+
+   BOOST_CONTAINER_FORCEINLINE
+   friend bool operator==(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
+   {
+      return x.n == y.n;
+   }
+
+   BOOST_CONTAINER_FORCEINLINE
+   friend bool operator!=(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
+   {
+      return x.n != y.n;
+   }
+
+   //BOOST_CONTAINER_FORCEINLINE block_base_pointer get_block() const BOOST_NOEXCEPT { return pbb; }
+   BOOST_CONTAINER_FORCEINLINE int get_slot() const BOOST_NOEXCEPT { return n; }
+
+private:
+   pointer pos;
+   int       n;
+   mask_type mask;
+};
+
+#endif   //defined(NEST_LOCAL_ITERATOR_FULL)
 
 //////////////////////////////////////////////
 //
