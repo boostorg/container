@@ -58,13 +58,12 @@ void segmented_generate_ref
 }
 
 template <class FwdIt, class Sent, class Generator, class Tag>
-typename algo_enable_if_c<
+ BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, FwdIt>::value>::type
 segmented_generate_ref
    (FwdIt first, Sent last, Generator& gen, Tag)
 {
-   for(; first != last; ++first)
-      *first = gen();
+   return detail_algo::generate_ref(first, last, gen);
 }
 
 } // namespace detail_algo
