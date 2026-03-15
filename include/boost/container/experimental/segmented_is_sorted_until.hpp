@@ -60,51 +60,52 @@ SegIter segmented_is_sorted_until_dispatch
       }
       return last;
    }
-
-   // First segment: from local(first) to end(sfirst)
-   {
-      typename traits::local_iterator lend = traits::end(sfirst);
-      lcur = prev_local;
-      ++lcur;
-      for(; lcur != lend; ++lcur) {
-         if(comp(*lcur, *prev_local))
-            return traits::compose(sfirst, lcur);
-         prev_local = lcur;
-      }
-   }
-
-   // Middle segments
-   for(++sfirst; sfirst != slast; ++sfirst) {
-      typename traits::local_iterator lb = traits::begin(sfirst);
-      typename traits::local_iterator le = traits::end(sfirst);
-      if(lb != le) {
-         if(comp(*lb, *prev_local))
-            return traits::compose(sfirst, lb);
-         prev_local = lb;
-         lcur = lb;
+   else {
+      // First segment: from local(first) to end(sfirst)
+      {
+         typename traits::local_iterator lend = traits::end(sfirst);
+         lcur = prev_local;
          ++lcur;
-         for(; lcur != le; ++lcur) {
-            if(comp(*lcur, *prev_local))
+         for (; lcur != lend; ++lcur) {
+            if (comp(*lcur, *prev_local))
                return traits::compose(sfirst, lcur);
             prev_local = lcur;
          }
       }
-   }
 
-   // Last segment: from begin(slast) to local(last)
-   {
-      typename traits::local_iterator lb = traits::begin(sfirst);
-      typename traits::local_iterator ll = traits::local(last);
-      if(lb != ll) {
-         if(comp(*lb, *prev_local))
-            return traits::compose(sfirst, lb);
-         prev_local = lb;
-         lcur = lb;
-         ++lcur;
-         for(; lcur != ll; ++lcur) {
-            if(comp(*lcur, *prev_local))
-               return traits::compose(sfirst, lcur);
-            prev_local = lcur;
+      // Middle segments
+      for (++sfirst; sfirst != slast; ++sfirst) {
+         typename traits::local_iterator lb = traits::begin(sfirst);
+         typename traits::local_iterator le = traits::end(sfirst);
+         if (lb != le) {
+            if (comp(*lb, *prev_local))
+               return traits::compose(sfirst, lb);
+            prev_local = lb;
+            lcur = lb;
+            ++lcur;
+            for (; lcur != le; ++lcur) {
+               if (comp(*lcur, *prev_local))
+                  return traits::compose(sfirst, lcur);
+               prev_local = lcur;
+            }
+         }
+      }
+
+      // Last segment: from begin(slast) to local(last)
+      {
+         typename traits::local_iterator lb = traits::begin(sfirst);
+         typename traits::local_iterator ll = traits::local(last);
+         if (lb != ll) {
+            if (comp(*lb, *prev_local))
+               return traits::compose(sfirst, lb);
+            prev_local = lb;
+            lcur = lb;
+            ++lcur;
+            for (; lcur != ll; ++lcur) {
+               if (comp(*lcur, *prev_local))
+                  return traits::compose(sfirst, lcur);
+               prev_local = lcur;
+            }
          }
       }
    }
