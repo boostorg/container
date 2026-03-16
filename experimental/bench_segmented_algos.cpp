@@ -36,17 +36,18 @@
 #include <boost/container/experimental/segmented_generate_n.hpp>
 #include <boost/container/experimental/segmented_is_partitioned.hpp>
 #include <boost/container/experimental/segmented_is_sorted.hpp>
+#include <boost/container/experimental/segmented_is_sorted_until.hpp>
 #include <boost/container/experimental/segmented_partition.hpp>
 #include <boost/container/experimental/segmented_partition_copy.hpp>
 #include <boost/container/experimental/segmented_remove.hpp>
+#include <boost/container/experimental/segmented_remove_if.hpp>
 #include <boost/container/experimental/segmented_remove_copy.hpp>
 #include <boost/container/experimental/segmented_remove_copy_if.hpp>
-#include <boost/container/experimental/segmented_remove_if.hpp>
 #include <boost/container/experimental/segmented_replace.hpp>
 #include <boost/container/experimental/segmented_replace_if.hpp>
 #include <boost/container/experimental/segmented_reverse.hpp>
-#include <boost/container/experimental/segmented_stable_partition.hpp>
 #include <boost/container/experimental/segmented_reverse_copy.hpp>
+#include <boost/container/experimental/segmented_stable_partition.hpp>
 #include <boost/container/experimental/segmented_search.hpp>
 #include <boost/container/experimental/segmented_search_n.hpp>
 #include <boost/container/experimental/segmented_swap_ranges.hpp>
@@ -298,6 +299,16 @@ bool is_sorted(FwdIt first, FwdIt last)
    return true;
 }
 
+template<class FwdIt>
+FwdIt is_sorted_until(FwdIt first, FwdIt last)
+{
+   if (first == last) return last;
+   FwdIt next = first;
+   for (++next; next != last; first = next, ++next)
+      if (*next < *first) return next;
+   return last;
+}
+
 template<class InIt, class Pred>
 bool is_partitioned(InIt first, InIt last, Pred pred)
 {
@@ -335,8 +346,64 @@ partition_copy(InIt first, InIt last,
 
 #endif
 
+
+
 //Not benchmarked  (c++11):
-//is_sorted_until
+//set_union
+//set_intersection
+//set_difference
+//set_symmetric_difference
+//merge
+//inplace_merge
+
+
+//not implemented (c++03)
+//find_end
+//find_first_of
+//adjacent_find
+//mismatch
+//copy_backward
+//move
+//move_backward
+//transform
+//replace_copy
+//replace_copy_if
+//unique
+//unique_copy
+//rotate
+//rotate_copy
+//max_element
+//min_element
+//minmax_element
+//nth_element
+//includes
+//set_union
+//lexicographical_compare
+//   -- sorting --
+//sort (random-access non-implementable?)
+//stable_sort (random-access non-implementable?)
+//partial_sort (random-access non-implementable?)
+//partial_sort_copy(random-access non-implementable?)
+//   -- binary search --
+//lower_bound (binary/random-access non-implementable?)
+//upper_bound (binary/random-access non-implementable?)
+//equal_range (binary/random-access non-implementable?)
+//binary_search (binary/random-access non-implementable?)
+//   -- heap --
+//push_heap (binary/random-access non-implementable?)
+//pop_heap (binary/random-access non-implementable?)
+//make_heap (binary/random-access non-implementable?)
+//sort_heap (binary/random-access non-implementable?)
+//   -- permutation --
+//next_permutation
+//prev_permutation
+//is_permutation
+//   -- numeric --
+//iota
+//accumulate
+//inner_product
+//adjacent_difference
+//partial_sum
 
 //not implemented (c++11):
 //all_of
@@ -345,18 +412,48 @@ partition_copy(InIt first, InIt last,
 //move
 //move_backward
 //partition_point
+//shuffle (random-access non-implementable?)
+//is_heap (random-access non-implementable?)
+//is_heap_until (random-access non-implementable?)
+
 
 //not implemented (c++17)
 //for_each_n
+//random_shuffle (random-access non-implementable?)
+//sample (random-access non-implementable?)
+//reduce
+//exclusive_scan
+//inclusive_scan
+//transform_reduce
+//transform_exclusive_scan
+//transform_inclusive_scan
+
+
+
+
 
 //not implemented (c++20)
 //shift_left
 //shift_right
+//lexicographical_compare_three_way
 
-//Not implementable for segmented iterators?
-//shuffle (c++11)
-//random_shuffle (c++17)
-//sample (c++17)
+//range-based?
+//find_last
+//find_last_if
+//find_last_if_not
+//
+//contains
+//contains_subrange
+//starts_with
+//ends_with
+//fold_left
+//fold_left_first
+//fold_right
+//fold_right_last
+//fold_left_with_iter
+//fold_left_first_with_iter
+//generate_random
+
 
 } // namespace bench_detail
 
@@ -1059,6 +1156,34 @@ void bench_is_sorted(C& c, std::size_t iters, const char* cname,
    print_ratio(label, cname, r1, r2);
 }
 
+template<class C>
+void bench_is_sorted_until(C& c, std::size_t iters, const char* cname,
+                           const char* label)
+{
+   int result = 0;
+
+   cpu_timer t1;
+   for (std::size_t i = 0; i < iters; ++i) {
+      t1.resume();
+      typename C::iterator it = bench_detail::is_sorted_until(c.begin(), c.end());
+      result = (it == c.end()) ? 1 : 0;
+      t1.stop();
+   }
+   escape(&result);
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+
+   cpu_timer t2;
+   for (std::size_t i = 0; i < iters; ++i) {
+      t2.resume();
+      typename C::iterator it = bc::segmented_is_sorted_until(c.begin(), c.end());
+      result = (it == c.end()) ? 1 : 0;
+      t2.stop();
+   }
+   escape(&result);
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+   print_ratio(label, cname, r1, r2);
+}
+
 template<class C, class Pred>
 void bench_is_partitioned(C& c, std::size_t iters, const char* cname,
                           Pred pred, const char* label)
@@ -1315,6 +1440,14 @@ void run_all(C& c, std::size_t iters, const char* cname)
       *last = VT(0);
       bench_is_sorted(c2, iters, cname, "is_sorted(miss)");
    }
+   {  //is_sorted_until
+      bench_is_sorted_until(c, iters, cname, "is_sorted_until(hit)");
+      C c2(c);
+      typename C::iterator last = c2.end();
+      --last;
+      *last = VT(0);
+      bench_is_sorted_until(c2, iters, cname, "is_sorted_until(miss)");
+   }
    {  //is_partitioned
       bench_is_partitioned(c, iters, cname, is_negative<VT>(), "is_partitioned(hit)");
       C c2(c);
@@ -1427,14 +1560,14 @@ void run_benchmarks()
       fill_test_data(dq, N);
       run_all(dq, iter, "deque");
       std::cout << "\n";
-   }/*
+   }
    {
       std::cout << "--- bc::nest<" << typeid(T).name() << "> ---\n";
       bc::nest<T> nt;
       fill_test_data(nt, N);
       run_all(nt, iter, "nest");
       std::cout << "\n";
-   }*/
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////
