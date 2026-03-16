@@ -46,6 +46,7 @@
 #include <boost/container/experimental/segmented_replace.hpp>
 #include <boost/container/experimental/segmented_replace_if.hpp>
 #include <boost/container/experimental/segmented_reverse.hpp>
+#include <boost/container/experimental/segmented_set_union.hpp>
 #include <boost/container/experimental/segmented_reverse_copy.hpp>
 #include <boost/container/experimental/segmented_stable_partition.hpp>
 #include <boost/container/experimental/segmented_search.hpp>
@@ -349,7 +350,6 @@ partition_copy(InIt first, InIt last,
 
 
 //Not benchmarked  (c++11):
-//set_union
 //set_intersection
 //set_difference
 //set_symmetric_difference
@@ -1294,6 +1294,32 @@ void bench_search_n(C& c, std::size_t iters, const char* cname,
    escape(&result);
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
+}
+
+template<class C>
+void bench_set_union(C c, C& c2, std::size_t iters, const char* cname)
+{
+   typedef typename C::value_type VT;
+   std::vector<VT> out(c.size() + c2.size());
+
+   cpu_timer t1;
+   for (std::size_t i = 0; i < iters; ++i) {
+      t1.resume();
+      std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+      t1.stop();
+   }
+   escape(&out[0]);
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+
+   cpu_timer t2;
+   for (std::size_t i = 0; i < iters; ++i) {
+      t2.resume();
+      bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+      t2.stop();
+   }
+   escape(&out[0]);
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+   print_ratio("set_union", cname, r1, r2);
 }
 
 template<class C, class Pred>
