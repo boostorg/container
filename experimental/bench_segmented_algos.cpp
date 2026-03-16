@@ -30,11 +30,13 @@
 #include <boost/container/experimental/segmented_fill_n.hpp>
 #include <boost/container/experimental/segmented_find.hpp>
 #include <boost/container/experimental/segmented_find_if.hpp>
+#include <boost/container/experimental/segmented_find_if_not.hpp>
 #include <boost/container/experimental/segmented_for_each.hpp>
 #include <boost/container/experimental/segmented_generate.hpp>
 #include <boost/container/experimental/segmented_generate_n.hpp>
 #include <boost/container/experimental/segmented_is_partitioned.hpp>
 #include <boost/container/experimental/segmented_is_sorted.hpp>
+#include <boost/container/experimental/segmented_partition.hpp>
 #include <boost/container/experimental/segmented_partition_copy.hpp>
 #include <boost/container/experimental/segmented_remove.hpp>
 #include <boost/container/experimental/segmented_remove_copy.hpp>
@@ -43,11 +45,13 @@
 #include <boost/container/experimental/segmented_replace.hpp>
 #include <boost/container/experimental/segmented_replace_if.hpp>
 #include <boost/container/experimental/segmented_reverse.hpp>
+#include <boost/container/experimental/segmented_stable_partition.hpp>
 #include <boost/container/experimental/segmented_reverse_copy.hpp>
 #include <boost/container/experimental/segmented_search.hpp>
 #include <boost/container/experimental/segmented_search_n.hpp>
 #include <boost/container/experimental/segmented_swap_ranges.hpp>
 #include <boost/container/experimental/segmented_transform.hpp>
+
 
 using boost::move_detail::cpu_timer;
 using boost::move_detail::cpu_times;
@@ -202,11 +206,54 @@ struct is_negative
 };
 
 template<class T>
+struct is_zero_or_positive
+{
+   bool operator()(const T& x) const { return int_value(x) >= 0; }
+};
+
+
+template<class T>
 struct counter
 {
    int n;
    counter() : n(0) {}
    T operator()() { return T(n++); }
+};
+
+template<class T>
+class equal_to_stored
+{
+   typedef T value_type;
+   const value_type t_;
+
+   public:
+   BOOST_CONTAINER_FORCEINLINE explicit equal_to_stored(const value_type &t)
+      :  t_(t)
+   {}
+
+   template <class U>
+   BOOST_CONTAINER_FORCEINLINE bool operator()(const U &t)const
+   {
+      return t_ == t;
+   }
+};
+
+template<class T>
+class unequal_to_stored
+{
+   typedef T value_type;
+   const value_type t_;
+
+   public:
+   BOOST_CONTAINER_FORCEINLINE explicit unequal_to_stored(const value_type &t)
+      :  t_(t)
+   {}
+
+   template <class U>
+   BOOST_CONTAINER_FORCEINLINE bool operator()(const U &t)const
+   {
+      return t_ != t;
+   }
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -520,6 +567,34 @@ void bench_find_if(C& c, std::size_t iters, const char* cname,
    for (std::size_t i = 0; i < iters; ++i) {
       t2.resume();
       typename C::iterator it = bc::segmented_find_if(c.begin(), c.end(), pred);
+      result = (it != c.end()) ? int_value(*it) : -1;
+      t2.stop();
+   }
+   escape(&result);
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+   print_ratio(label, cname, r1, r2);
+}
+
+template<class C, class Pred>
+void bench_find_if_not(C& c, std::size_t iters, const char* cname,
+                       Pred pred, const char* label)
+{
+   int result = 0;
+
+   cpu_timer t1;
+   for (std::size_t i = 0; i < iters; ++i) {
+      t1.resume();
+      typename C::iterator it = std::find_if_not(c.begin(), c.end(), pred);
+      result = (it != c.end()) ? int_value(*it) : -1;
+      t1.stop();
+   }
+   escape(&result);
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+
+   cpu_timer t2;
+   for (std::size_t i = 0; i < iters; ++i) {
+      t2.resume();
+      typename C::iterator it = bc::segmented_find_if_not(c.begin(), c.end(), pred);
       result = (it != c.end()) ? int_value(*it) : -1;
       t2.stop();
    }
@@ -1051,6 +1126,62 @@ void bench_search_n(C& c, std::size_t iters, const char* cname,
    print_ratio(label, cname, r1, r2);
 }
 
+template<class C, class Pred>
+void bench_partition(C& c, std::size_t iters, const char* cname,
+                     Pred pred, const char* label)
+{
+   int result = 0;
+
+   cpu_timer t1;
+   for (std::size_t i = 0; i < iters; ++i) {
+      t1.resume();
+      typename C::iterator it = std::partition(c.begin(), c.end(), pred);
+      result = (it == c.end()) ? 1 : 0;
+      t1.stop();
+   }
+   escape(&result);
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+
+   cpu_timer t2;
+   for (std::size_t i = 0; i < iters; ++i) {
+      t2.resume();
+      typename C::iterator it = bc::segmented_partition(c.begin(), c.end(), pred);
+      result = (it == c.end()) ? 1 : 0;
+      t2.stop();
+   }
+   escape(&result);
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+   print_ratio(label, cname, r1, r2);
+}
+
+template<class C, class Pred>
+void bench_stable_partition(C& c, std::size_t iters, const char* cname,
+                            Pred pred, const char* label)
+{
+   int result = 0;
+
+   cpu_timer t1;
+   for (std::size_t i = 0; i < iters; ++i) {
+      t1.resume();
+      typename C::iterator it = std::stable_partition(c.begin(), c.end(), pred);
+      result = (it == c.end()) ? 1 : 0;
+      t1.stop();
+   }
+   escape(&result);
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+
+   cpu_timer t2;
+   for (std::size_t i = 0; i < iters; ++i) {
+      t2.resume();
+      typename C::iterator it = bc::segmented_stable_partition(c.begin(), c.end(), pred);
+      result = (it == c.end()) ? 1 : 0;
+      t2.stop();
+   }
+   escape(&result);
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+   print_ratio(label, cname, r1, r2);
+}
+
 template<class C>
 void bench_partition_copy(C& c, std::size_t iters, const char* cname)
 {
@@ -1091,27 +1222,79 @@ void run_all(C& c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
 
+   //Make backup for algorithms that modify the container
+   C c_original = c;
+
+   //for_each
    bench_for_each(c, iters, cname);
+
+   //copy
    bench_copy(c, iters, cname);
+
+   //copy_if
    bench_copy_if(c, iters, cname, is_odd<VT>(),      "copy_if(hit)");
    bench_copy_if(c, iters, cname, is_negative<VT>(), "copy_if(miss)");
-   bench_copy_n(c, iters, cname);
-   bench_fill(c, iters, cname);
-   bench_fill_n(c, iters, cname);
-   bench_generate(c, iters, cname);
-   bench_generate_n(c, iters, cname);
 
-   bench_count(c, iters, cname, VT(-1), "count(miss)");
+   //copy_n
+   bench_copy_n(c, iters, cname);
+
+   //count
    bench_count(c, iters, cname, VT(0),  "count(hit)");
+   bench_count(c, iters, cname, VT(-1), "count(miss)");
+
+   //count_if
    bench_count_if(c, iters, cname, is_odd<VT>(),      "count_if(hit)");
    bench_count_if(c, iters, cname, is_negative<VT>(), "count_if(miss)");
 
-   bench_find(c, iters, cname, VT(-1), "find(miss)");
+   //find
    bench_find(c, iters, cname, VT(static_cast<int>(c.size() / 2)), "find(hit)");
-   bench_find_if(c, iters, cname, is_odd<VT>(),      "find_if(hit)");
+   bench_find(c, iters, cname, VT(-1), "find(miss)");
+
+   //find_if
+   bench_find_if(c, iters, cname, equal_to_stored<VT>(VT(static_cast<int>(c.size() / 2))), "find_if(hit)");
    bench_find_if(c, iters, cname, is_negative<VT>(), "find_if(miss)");
 
-   {
+   //find_if_not
+   bench_find_if_not(c, iters, cname, unequal_to_stored<VT>(VT(static_cast<int>(c.size() / 2))), "find_if_not(hit)");
+   bench_find_if_not(c, iters, cname, is_zero_or_positive<VT>(), "find_if_not(miss)");
+
+   //search_n
+   bench_search_n(c, iters, cname, 1, VT(static_cast<int>(c.size() / 2)), "search_n(hit)");
+   bench_search_n(c, iters, cname, 3, VT(-1), "search_n(miss)");
+
+   {  //is_sorted
+      bench_is_sorted(c, iters, cname, "is_sorted(hit)");
+      C c2(c);
+      typename C::iterator last = c2.end();
+      --last;
+      *last = VT(0);
+      bench_is_sorted(c2, iters, cname, "is_sorted(miss)");
+   }
+   {  //is_partitioned
+      bench_is_partitioned(c, iters, cname, is_negative<VT>(), "is_partitioned(hit)");
+      C c2(c);
+      typename C::iterator last = c2.end();
+      --last;
+      *last = VT(-1);
+      bench_is_partitioned(c2, iters, cname, is_negative<VT>(), "is_partitioned(miss)");
+   }
+   {  // fill
+      C c2(c);
+      bench_fill(c2, iters, cname);
+   }
+   {  // fill_n
+      C c2(c);
+      bench_fill_n(c2, iters, cname);
+   }
+   {  // generate
+      C c2(c);
+      bench_generate(c2, iters, cname);
+   }
+   {  //generate_n
+      C c2(c);
+      bench_generate_n(c2, iters, cname);
+   }
+   {  //equal
       C c2(c);
       bench_equal(c, c2, iters, cname, "equal(hit)");
       typename C::iterator last = c2.end();
@@ -1119,54 +1302,60 @@ void run_all(C& c, std::size_t iters, const char* cname)
       *last = VT(-1);
       bench_equal(c, c2, iters, cname, "equal(miss)");
    }
-
-   {
-      VT miss_pat[] = {VT(-1), VT(-2), VT(-3)};
-      bench_search(c, iters, cname, miss_pat, 3, "search(miss)");
+   {  //search
       int half = static_cast<int>(c.size() / 2);
       VT hit_pat[] = {VT(half), VT(half + 1), VT(half + 2)};
       bench_search(c, iters, cname, hit_pat, 3, "search(hit)");
-   }
-   bench_search_n(c, iters, cname, 3, VT(-1), "search_n(miss)");
-   bench_search_n(c, iters, cname, 1, VT(static_cast<int>(c.size() / 2)), "search_n(hit)");
-
-   bench_is_sorted(c, iters, cname, "is_sorted(hit)");
-   {
-      C c2(c);
-      typename C::iterator last = c2.end();
-      --last;
-      *last = VT(0);
-      bench_is_sorted(c2, iters, cname, "is_sorted(miss)");
+      VT miss_pat[] = {VT(-1), VT(-2), VT(-3)};
+      bench_search(c, iters, cname, miss_pat, 3, "search(miss)");
    }
 
-   bench_is_partitioned(c, iters, cname, is_negative<VT>(), "is_partitioned(hit)");
-   {
-      C c2(c);
-      typename C::iterator last = c2.end();
-      --last;
-      *last = VT(-1);
-      bench_is_partitioned(c2, iters, cname, is_negative<VT>(), "is_partitioned(miss)");
-   }
-
-   bench_remove(c, iters, cname, VT(-1), "remove(miss)");
+   //remove
    bench_remove(c, iters, cname, VT(0),  "remove(hit)");
-   bench_remove_if(c, iters, cname, is_negative<VT>(), "remove_if(miss)");
-   bench_remove_if(c, iters, cname, is_odd<VT>(),      "remove_if(hit)");
-   bench_remove_copy(c, iters, cname, VT(-1), "remove_copy(miss)");
-   bench_remove_copy(c, iters, cname, VT(0),  "remove_copy(hit)");
-   bench_remove_copy_if(c, iters, cname, is_negative<VT>(), "remove_copy_if(miss)");
-   bench_remove_copy_if(c, iters, cname, is_odd<VT>(),      "remove_copy_if(hit)");
+   bench_remove(c, iters, cname, VT(-1), "remove(miss)");
 
-   bench_replace(c, iters, cname, VT(-1), VT(-2), "replace(miss)");
+   //remove_if
+   bench_remove_if(c, iters, cname, is_odd<VT>(),      "remove_if(hit)");
+   bench_remove_if(c, iters, cname, is_negative<VT>(), "remove_if(miss)");
+
+   //remove_copy
+   bench_remove_copy(c, iters, cname, VT(0),  "remove_copy(hit)");
+   bench_remove_copy(c, iters, cname, VT(-1), "remove_copy(miss)");
+
+   //remove_copy_if
+   bench_remove_copy_if(c, iters, cname, is_odd<VT>(),      "remove_copy_if(hit)");
+   bench_remove_copy_if(c, iters, cname, is_negative<VT>(), "remove_copy_if(miss)");
+
+   //replace
    bench_replace(c, iters, cname, VT(0),  VT(0),  "replace(hit)");
+   bench_replace(c, iters, cname, VT(-1), VT(-2), "replace(miss)");
+
+   //replace_if
    bench_replace_if(c, iters, cname, is_odd<VT>(),      VT(-2), "replace_if(hit)");
    bench_replace_if(c, iters, cname, is_negative<VT>(), VT(-2), "replace_if(miss)");
 
+   //reverse
    bench_reverse(c, iters, cname);
+
+   //reverse_copy
    bench_reverse_copy(c, iters, cname);
+
+   //swap_ranges
    bench_swap_ranges(c, iters, cname);
-   bench_partition_copy(c, iters, cname);
+
+   //bench_search
    bench_transform(c, iters, cname);
+
+   //partition_copy
+   bench_partition_copy(c, iters, cname);
+
+   //partition
+   bench_partition(c, iters, cname, is_odd<VT>(),      "partition(hit)");
+   bench_partition(c, iters, cname, is_negative<VT>(), "partition(miss)");
+
+   //stable_partition
+   bench_stable_partition(c, iters, cname, is_odd<VT>(),      "stable_partition(hit)");
+   bench_stable_partition(c, iters, cname, is_negative<VT>(), "stable_partition(miss)");
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1186,15 +1375,14 @@ void run_benchmarks()
 
    std::cout << "\n=== Segmented algorithm benchmark [" << typeid(T).name() << "] ===\n"
              << "Elements: " << N << "   Iterations: " << iter << "\n\n";
-   
+
    {
       std::cout << "--- bc::deque<" << typeid(T).name() << "> ---\n";
       bc::deque<T> dq;
       fill_test_data(dq, N);
       run_all(dq, iter, "deque");
       std::cout << "\n";
-   }
-   /*
+   }/*
    {
       std::cout << "--- bc::nest<" << typeid(T).name() << "> ---\n";
       bc::nest<T> nt;
