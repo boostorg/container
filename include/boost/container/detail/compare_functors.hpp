@@ -149,6 +149,21 @@ struct key_node_pred
 };
 
 
+template<class Pred>
+class not_pred
+{
+   Pred m_p;
+
+   public:
+   BOOST_CONTAINER_FORCEINLINE explicit not_pred(const Pred &p)
+      :  m_p(p)
+   {}
+
+   template <class U>
+   BOOST_CONTAINER_FORCEINLINE bool operator()(const U &u) const
+   {  return !m_p(u);  }
+};
+
 }  //namespace container {
 }  //namespace boost {
 
