@@ -262,6 +262,15 @@ class unequal_to_stored
 
 namespace bench_detail {
 
+#if BOOST_CXX_VERSION < 201103L
+//! Returns an iterator to the first element for which \c pred
+//! returns false in [first, last), or \c last if not found.
+template <class InpIter, class Sent, class Pred>
+inline InpIter find_if_not(InpIter first, Sent last, Pred pred)
+{
+   return std::find_if(first, last, boost::container::not_pred<Pred>(pred));
+}
+
 template<class InIt, class OutIt, class Pred>
 OutIt copy_if(InIt first, InIt last, OutIt d_first, Pred pred)
 {
@@ -312,6 +321,42 @@ partition_copy(InIt first, InIt last,
    }
    return std::pair<OutIt1, OutIt2>(out_true, out_false);
 }
+
+#else
+
+   using std::find_if_not;
+   using std::copy_if;
+   using std::copy_n;
+   using std::is_sorted;
+   using std::is_sorted_until;
+   using std::is_partitioned;
+   using std::partition_copy;
+   using std::partition_point;
+
+#endif
+
+//Not benchmarked  (c++11):
+//is_sorted_until
+
+//not implemented (c++11):
+//all_of
+//any_of
+//none_of
+//move
+//move_backward
+//partition_point
+
+//not implemented (c++17)
+//for_each_n
+
+//not implemented (c++20)
+//shift_left
+//shift_right
+
+//Not implementable for segmented iterators?
+//shuffle (c++11)
+//random_shuffle (c++17)
+//sample (c++17)
 
 } // namespace bench_detail
 
@@ -584,7 +629,7 @@ void bench_find_if_not(C& c, std::size_t iters, const char* cname,
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
       t1.resume();
-      typename C::iterator it = std::find_if_not(c.begin(), c.end(), pred);
+      typename C::iterator it = bench_detail::find_if_not(c.begin(), c.end(), pred);
       result = (it != c.end()) ? int_value(*it) : -1;
       t1.stop();
    }
