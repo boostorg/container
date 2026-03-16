@@ -21,6 +21,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/container/experimental/segmented_copy.hpp>
 
 namespace boost {
 namespace container {
@@ -42,17 +43,18 @@ struct set_union_default_less
 };
 
 template <class FwdIt, class InIter2, class Sent2, class OutIter, class Comp>
-InIter2 set_union_scan(FwdIt first, FwdIt last, InIter2 first2, Sent2 last2, OutIter& result, Comp comp,
+InIter2 set_union_scan(FwdIt first, FwdIt last, InIter2 first2, Sent2 last2, OutIter& out, Comp comp,
    non_segmented_iterator_tag)
 {
+   OutIter result = out;   //Avoid aliasing
    while(first != last && first2 != last2) {
       if(comp(*first, *first2))      { *result = *first;  ++first; }
       else if(comp(*first2, *first)) { *result = *first2; ++first2; }
       else                           { *result = *first;  ++first; ++first2; }
       ++result;
    }
-   for(; first != last; ++first, ++result)
-      *result = *first;
+
+   out = (segmented_copy)(first, last, result);
    return first2;
 }
 
@@ -60,12 +62,15 @@ template <class SegIt, class InIter2, class Sent2, class OutIter, class Comp>
 InIter2 set_union_scan(SegIt first, SegIt last, InIter2 first2, Sent2 last2, OutIter& result, Comp comp,
    segmented_iterator_tag)
 {
-   typedef segmented_iterator_traits<SegIt> traits;
-   typedef typename traits::local_iterator local_iterator;
+   typedef segmented_iterator_traits<SegIt>  traits;
+   typedef typename traits::local_iterator   local_iterator;
+   typedef typename traits::segment_iterator segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
-   typename traits::segment_iterator scur  = traits::segment(first);
-   typename traits::segment_iterator slast = traits::segment(last);
-   local_iterator lcur = traits::local(first);
+
+   segment_iterator scur  = traits::segment(first);
+   segment_iterator slast = traits::segment(last);
+   local_iterator   lcur  = traits::local(first);
+
    if(scur == slast) {
       first2 = set_union_scan(lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());
    }
@@ -83,9 +88,7 @@ OutIter segmented_set_union_dispatch
    (SegIter first1, SegIter last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp, segmented_iterator_tag)
 {
    first2 = set_union_scan(first1, last1, first2, last2, result, comp, segmented_iterator_tag());
-   for(; first2 != last2; ++first2, ++result)
-      *result = *first2;
-   return result;
+   return (segmented_copy)(first2, last2, result);
 }
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp, class Tag>
@@ -100,15 +103,14 @@ segmented_set_union_dispatch
       else                            { *result = *first1; ++first1; ++first2; }
       ++result;
    }
-   for(; first1 != last1; ++first1, ++result) *result = *first1;
-   for(; first2 != last2; ++first2, ++result) *result = *first2;
-   return result;
+   result = (segmented_copy)(first1, last1, result);
+   return (segmented_copy)(first2, last2, result);
 }
 
 } // namespace detail_algo
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp>
-inline OutIter segmented_set_union
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_set_union
    (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp)
 {
    typedef segmented_iterator_traits<InIter1> traits;
@@ -117,7 +119,7 @@ inline OutIter segmented_set_union
 }
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter>
-inline OutIter segmented_set_union
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_set_union
    (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result)
 {
    return boost::container::segmented_set_union(first1, last1, first2, last2, result,
