@@ -130,7 +130,6 @@ template <class BidirIt, class Pred>
 BidirIt segmented_stable_partition_dispatch
    (BidirIt first, BidirIt last, Pred pred, non_segmented_iterator_tag)
 {
-   BidirIt result = first;
    sp_identity_composer<BidirIt> composer;
    return stable_partition_scan(first, last, first, composer, pred, non_segmented_iterator_tag());
 }
