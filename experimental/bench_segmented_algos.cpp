@@ -501,7 +501,7 @@ inline void print_ratio(const char* algo, const char* cname,
 //////////////////////////////////////////////////////////////////////////////
 
 template<class C>
-void bench_for_each(C& c, std::size_t iters, const char* cname)
+void bench_for_each(C c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
    int result = 0;
@@ -531,7 +531,7 @@ void bench_for_each(C& c, std::size_t iters, const char* cname)
 }
 
 template<class C>
-void bench_copy(C& c, std::size_t iters, const char* cname)
+void bench_copy(C c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
@@ -557,7 +557,7 @@ void bench_copy(C& c, std::size_t iters, const char* cname)
 }
 
 template<class C, class Pred>
-void bench_copy_if(C& c, std::size_t iters, const char* cname,
+void bench_copy_if(C c, std::size_t iters, const char* cname,
                    Pred pred, const char* label)
 {
    typedef typename C::value_type VT;
@@ -584,7 +584,7 @@ void bench_copy_if(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C>
-void bench_fill(C& c, std::size_t iters, const char* cname)
+void bench_fill(C c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
    VT val(42);
@@ -610,7 +610,7 @@ void bench_fill(C& c, std::size_t iters, const char* cname)
 }
 
 template<class C>
-void bench_count(C& c, std::size_t iters, const char* cname,
+void bench_count(C c, std::size_t iters, const char* cname,
                  const typename C::value_type& val, const char* label)
 {
    int result = 0;
@@ -636,7 +636,7 @@ void bench_count(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C, class Pred>
-void bench_count_if(C& c, std::size_t iters, const char* cname,
+void bench_count_if(C c, std::size_t iters, const char* cname,
                     Pred pred, const char* label)
 {
    int result = 0;
@@ -662,7 +662,7 @@ void bench_count_if(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C>
-void bench_find(C& c, std::size_t iters, const char* cname,
+void bench_find(C c, std::size_t iters, const char* cname,
                 const typename C::value_type& val, const char* label)
 {
    int result = 0;
@@ -690,7 +690,7 @@ void bench_find(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C, class Pred>
-void bench_find_if(C& c, std::size_t iters, const char* cname,
+void bench_find_if(C c, std::size_t iters, const char* cname,
                    Pred pred, const char* label)
 {
    int result = 0;
@@ -718,7 +718,7 @@ void bench_find_if(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C, class Pred>
-void bench_find_if_not(C& c, std::size_t iters, const char* cname,
+void bench_find_if_not(C c, std::size_t iters, const char* cname,
                        Pred pred, const char* label)
 {
    int result = 0;
@@ -746,7 +746,7 @@ void bench_find_if_not(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C>
-void bench_equal(C& c, C& c2, std::size_t iters, const char* cname,
+void bench_equal(C c, C& c2, std::size_t iters, const char* cname,
                  const char* label)
 {
    int result = 0;
@@ -772,7 +772,7 @@ void bench_equal(C& c, C& c2, std::size_t iters, const char* cname,
 }
 
 template<class C>
-void bench_replace(C& c, std::size_t iters, const char* cname,
+void bench_replace(C c, std::size_t iters, const char* cname,
                    const typename C::value_type& old_val,
                    const typename C::value_type& new_val, const char* label)
 {
@@ -800,7 +800,7 @@ void bench_replace(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C, class Pred>
-void bench_replace_if(C& c, std::size_t iters, const char* cname,
+void bench_replace_if(C c, std::size_t iters, const char* cname,
                       Pred pred, const typename C::value_type& new_val,
                       const char* label)
 {
@@ -828,7 +828,7 @@ void bench_replace_if(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C>
-void bench_transform(C& c, std::size_t iters, const char* cname)
+void bench_transform(C c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
@@ -854,7 +854,7 @@ void bench_transform(C& c, std::size_t iters, const char* cname)
 }
 
 template<class C>
-void bench_fill_n(C& c, std::size_t iters, const char* cname)
+void bench_fill_n(C c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
    VT val(42);
@@ -882,7 +882,7 @@ void bench_fill_n(C& c, std::size_t iters, const char* cname)
 }
 
 template<class C>
-void bench_copy_n(C& c, std::size_t iters, const char* cname)
+void bench_copy_n(C c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
@@ -910,7 +910,7 @@ void bench_copy_n(C& c, std::size_t iters, const char* cname)
 }
 
 template<class C>
-void bench_generate(C& c, std::size_t iters, const char* cname)
+void bench_generate(C c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
    int result = 0;
@@ -938,7 +938,7 @@ void bench_generate(C& c, std::size_t iters, const char* cname)
 }
 
 template<class C>
-void bench_generate_n(C& c, std::size_t iters, const char* cname)
+void bench_generate_n(C c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
    int result = 0;
@@ -968,7 +968,7 @@ void bench_generate_n(C& c, std::size_t iters, const char* cname)
 }
 
 template<class C>
-void bench_remove(C& c, std::size_t iters, const char* cname,
+void bench_remove(C c, std::size_t iters, const char* cname,
                   const typename C::value_type& val, const char* label)
 {
    int result = 0;
@@ -996,7 +996,7 @@ void bench_remove(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C, class Pred>
-void bench_remove_if(C& c, std::size_t iters, const char* cname,
+void bench_remove_if(C c, std::size_t iters, const char* cname,
                      Pred pred, const char* label)
 {
    int result = 0;
@@ -1024,7 +1024,7 @@ void bench_remove_if(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C>
-void bench_remove_copy(C& c, std::size_t iters, const char* cname,
+void bench_remove_copy(C c, std::size_t iters, const char* cname,
                        const typename C::value_type& val, const char* label)
 {
    typedef typename C::value_type VT;
@@ -1051,7 +1051,7 @@ void bench_remove_copy(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C, class Pred>
-void bench_remove_copy_if(C& c, std::size_t iters, const char* cname,
+void bench_remove_copy_if(C c, std::size_t iters, const char* cname,
                           Pred pred, const char* label)
 {
    typedef typename C::value_type VT;
@@ -1078,7 +1078,7 @@ void bench_remove_copy_if(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C>
-void bench_reverse(C& c, std::size_t iters, const char* cname)
+void bench_reverse(C c, std::size_t iters, const char* cname)
 {
    int result = 0;
 
@@ -1105,7 +1105,7 @@ void bench_reverse(C& c, std::size_t iters, const char* cname)
 }
 
 template<class C>
-void bench_reverse_copy(C& c, std::size_t iters, const char* cname)
+void bench_reverse_copy(C c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
@@ -1131,7 +1131,7 @@ void bench_reverse_copy(C& c, std::size_t iters, const char* cname)
 }
 
 template<class C>
-void bench_is_sorted(C& c, std::size_t iters, const char* cname,
+void bench_is_sorted(C c, std::size_t iters, const char* cname,
                      const char* label)
 {
    int result = 0;
@@ -1157,7 +1157,7 @@ void bench_is_sorted(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C>
-void bench_is_sorted_until(C& c, std::size_t iters, const char* cname,
+void bench_is_sorted_until(C c, std::size_t iters, const char* cname,
                            const char* label)
 {
    int result = 0;
@@ -1185,7 +1185,7 @@ void bench_is_sorted_until(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C, class Pred>
-void bench_is_partitioned(C& c, std::size_t iters, const char* cname,
+void bench_is_partitioned(C c, std::size_t iters, const char* cname,
                           Pred pred, const char* label)
 {
    int result = 0;
@@ -1211,7 +1211,7 @@ void bench_is_partitioned(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C>
-void bench_swap_ranges(C& c, std::size_t iters, const char* cname)
+void bench_swap_ranges(C c, std::size_t iters, const char* cname)
 {
    C c2(c);
    int result = 0;
@@ -1239,7 +1239,7 @@ void bench_swap_ranges(C& c, std::size_t iters, const char* cname)
 }
 
 template<class C>
-void bench_search(C& c, std::size_t iters, const char* cname,
+void bench_search(C c, std::size_t iters, const char* cname,
                   const typename C::value_type* pattern, std::size_t pat_size,
                   const char* label)
 {
@@ -1268,7 +1268,7 @@ void bench_search(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C>
-void bench_search_n(C& c, std::size_t iters, const char* cname,
+void bench_search_n(C c, std::size_t iters, const char* cname,
                     typename C::difference_type count,
                     const typename C::value_type& val, const char* label)
 {
@@ -1323,7 +1323,7 @@ void bench_set_union(C c, C& c2, std::size_t iters, const char* cname)
 }
 
 template<class C, class Pred>
-void bench_partition(C& c, std::size_t iters, const char* cname,
+void bench_partition(C c, std::size_t iters, const char* cname,
                      Pred pred, const char* label)
 {
    int result = 0;
@@ -1351,7 +1351,7 @@ void bench_partition(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C, class Pred>
-void bench_stable_partition(C& c, std::size_t iters, const char* cname,
+void bench_stable_partition(C c, std::size_t iters, const char* cname,
                             Pred pred, const char* label)
 {
    int result = 0;
@@ -1379,7 +1379,7 @@ void bench_stable_partition(C& c, std::size_t iters, const char* cname,
 }
 
 template<class C>
-void bench_partition_copy(C& c, std::size_t iters, const char* cname)
+void bench_partition_copy(C c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
    std::vector<VT> t_out(c.size());
@@ -1414,12 +1414,9 @@ void bench_partition_copy(C& c, std::size_t iters, const char* cname)
 //////////////////////////////////////////////////////////////////////////////
 
 template<class C>
-void run_all(C& c, std::size_t iters, const char* cname)
+void run_all(const C& c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
-
-   //Make backup for algorithms that modify the container
-   C c_original = c;
 
    //for_each
    bench_for_each(c, iters, cname);
@@ -1482,22 +1479,18 @@ void run_all(C& c, std::size_t iters, const char* cname)
       *last = VT(-1);
       bench_is_partitioned(c2, iters, cname, is_negative<VT>(), "is_partitioned(miss)");
    }
-   {  // fill
-      C c2(c);
-      bench_fill(c2, iters, cname);
-   }
-   {  // fill_n
-      C c2(c);
-      bench_fill_n(c2, iters, cname);
-   }
-   {  // generate
-      C c2(c);
-      bench_generate(c2, iters, cname);
-   }
-   {  //generate_n
-      C c2(c);
-      bench_generate_n(c2, iters, cname);
-   }
+   // fill
+   bench_fill(c, iters, cname);
+
+   // fill_n
+   bench_fill_n(c, iters, cname);
+
+   // generate
+   bench_generate(c, iters, cname);
+
+   //generate_n
+   bench_generate_n(c, iters, cname);
+
    {  //equal
       C c2(c);
       bench_equal(c, c2, iters, cname, "equal(hit)");
@@ -1550,6 +1543,14 @@ void run_all(C& c, std::size_t iters, const char* cname)
    //bench_search
    bench_transform(c, iters, cname);
 
+   //set_union
+   {
+      C c2(c);
+      for (typename C::iterator it = c2.begin(); it != c2.end(); ++it)
+         *it = VT(int_value(*it) * 2);
+      bench_set_union(c, c2, iters, cname);
+   }
+
    //partition_copy
    bench_partition_copy(c, iters, cname);
 
@@ -1586,14 +1587,14 @@ void run_benchmarks()
       fill_test_data(dq, N);
       run_all(dq, iter, "deque");
       std::cout << "\n";
-   }
+   }/*
    {
       std::cout << "--- bc::nest<" << typeid(T).name() << "> ---\n";
       bc::nest<T> nt;
       fill_test_data(nt, N);
       run_all(nt, iter, "nest");
       std::cout << "\n";
-   }
+   }*/
 }
 
 //////////////////////////////////////////////////////////////////////////////
