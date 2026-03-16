@@ -33,19 +33,20 @@ OutIt segmented_generate_n(OutIt first, Size count, Generator gen);
 namespace detail_algo {
 
 template <class OutIter, class Size, class Generator>
-OutIter generate_n_scan_non_segmented(OutIter first, OutIter last, Size& count, const Generator &gen, const std::random_access_iterator_tag &)
+OutIter generate_n_scan_non_segmented(OutIter first, OutIter last, Size& count, Generator &gen, const std::random_access_iterator_tag &)
 {
-   Size range_sz = Size(last - first);
-   Size local_count = count < range_sz ? count : range_sz;
+   std::size_t range_sz = static_cast<std::size_t>(last - first);
+   const Size local_count = (std::size_t)count < range_sz ? count : (Size)range_sz;
 
-   first = (segmented_generate_n)(first, local_count, gen);
+   for(Size cnt = local_count; cnt; ++first, --cnt)
+      *first = gen();
 
    count -= local_count;
    return first;
 }
 
 template <class OutIter, class Size, class Generator, class Tag>
-OutIter generate_n_scan_non_segmented(OutIter first, OutIter last, Size& count, const Generator &gen, Tag)
+OutIter generate_n_scan_non_segmented(OutIter first, OutIter last, Size& count, Generator &gen, Tag)
 {
    Size local_count = count;  //Avoid aliasing the count parameter
 
@@ -58,7 +59,7 @@ OutIter generate_n_scan_non_segmented(OutIter first, OutIter last, Size& count, 
 }
 
 template <class OutIter, class Size, class Generator>
-BOOST_CONTAINER_FORCEINLINE OutIter generate_n_scan(OutIter first, OutIter last, Size& count, const Generator &gen, non_segmented_iterator_tag)
+BOOST_CONTAINER_FORCEINLINE OutIter generate_n_scan(OutIter first, OutIter last, Size& count, Generator &gen, non_segmented_iterator_tag)
 {
    return (generate_n_scan_non_segmented)(first, last, count, gen, typename iterator_traits<OutIter>::iterator_category());
 }
