@@ -39,20 +39,23 @@ template <class SegIter, class Comp>
 SegIter segmented_is_sorted_until_dispatch
    (SegIter first, SegIter last, Comp comp, segmented_iterator_tag)
 {
-   typedef segmented_iterator_traits<SegIter> traits;
+   typedef segmented_iterator_traits<SegIter>   traits;
+   typedef typename traits::segment_iterator    segment_iterator;
+   typedef typename traits::local_iterator      local_iterator;
+
    if(first == last)
       return last;
 
-   typename traits::segment_iterator sfirst = traits::segment(first);
-   typename traits::segment_iterator slast  = traits::segment(last);
+   segment_iterator sfirst = traits::segment(first);
+   segment_iterator slast  = traits::segment(last);
 
-   typename traits::local_iterator prev_local = traits::local(first);
-   typename traits::local_iterator lcur;
+   local_iterator prev_local = traits::local(first);
+   local_iterator lcur;
 
    if(sfirst == slast) {
       lcur = prev_local;
       ++lcur;
-      typename traits::local_iterator lend = traits::local(last);
+      local_iterator lend = traits::local(last);
       for(; lcur != lend; ++lcur) {
          if(comp(*lcur, *prev_local))
             return traits::compose(sfirst, lcur);
@@ -63,7 +66,7 @@ SegIter segmented_is_sorted_until_dispatch
    else {
       // First segment: from local(first) to end(sfirst)
       {
-         typename traits::local_iterator lend = traits::end(sfirst);
+         local_iterator lend = traits::end(sfirst);
          lcur = prev_local;
          ++lcur;
          for (; lcur != lend; ++lcur) {
@@ -75,8 +78,8 @@ SegIter segmented_is_sorted_until_dispatch
 
       // Middle segments
       for (++sfirst; sfirst != slast; ++sfirst) {
-         typename traits::local_iterator lb = traits::begin(sfirst);
-         typename traits::local_iterator le = traits::end(sfirst);
+         local_iterator lb = traits::begin(sfirst);
+         local_iterator le = traits::end(sfirst);
          if (lb != le) {
             if (comp(*lb, *prev_local))
                return traits::compose(sfirst, lb);
@@ -93,8 +96,8 @@ SegIter segmented_is_sorted_until_dispatch
 
       // Last segment: from begin(slast) to local(last)
       {
-         typename traits::local_iterator lb = traits::begin(sfirst);
-         typename traits::local_iterator ll = traits::local(last);
+         local_iterator lb = traits::begin(sfirst);
+         local_iterator ll = traits::local(last);
          if (lb != ll) {
             if (comp(*lb, *prev_local))
                return traits::compose(sfirst, lb);
