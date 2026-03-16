@@ -33,7 +33,8 @@ void segmented_reverse_dispatch(BidirIt first, BidirIt last, non_segmented_itera
 {
    while(first != last) {
       --last;
-      if(first == last) break;
+      if(first == last)
+         break;
       boost::adl_move_swap(*first, *last);
       ++first;
    }
@@ -57,49 +58,52 @@ void segmented_reverse_dispatch(SegIt first, SegIt last, segmented_iterator_tag)
       return;
    }
 
-   local_iterator f     = traits::local(first);
+   local_iterator f_loc = traits::local(first);
    local_iterator f_end = traits::end(sf);
    local_iterator l_beg = traits::begin(sl);
-   local_iterator l     = traits::local(last);
+   local_iterator l_loc = traits::local(last);
 
    for(;;) {
-      while(f != f_end && l != l_beg) {
-         --l;
-         boost::adl_move_swap(*f, *l);
-         ++f;
+      while(f_loc != f_end && l_loc != l_beg) {
+         --l_loc;
+         boost::adl_move_swap(*f_loc, *l_loc);
+         ++f_loc;
       }
 
-      if(f == f_end && l == l_beg) {
+      if(f_loc == f_end && l_loc == l_beg) {
          ++sf;
-         if(sf == sl) return;
+         if(sf == sl)
+            return;
          --sl;
+
+         f_loc = traits::begin(sf);
+         f_end = traits::end(sf);
+
          if(sf == sl) {
-            segmented_reverse_dispatch(
-               traits::begin(sf), traits::end(sf), is_local_seg_t());
+            segmented_reverse_dispatch(f_loc, f_end, is_local_seg_t());
             return;
          }
-         f     = traits::begin(sf);
-         f_end = traits::end(sf);
+
          l_beg = traits::begin(sl);
-         l     = traits::end(sl);
+         l_loc = traits::end(sl);
       }
-      else if(f == f_end) {
+      else if(f_loc == f_end) {
          ++sf;
          if(sf == sl) {
-            segmented_reverse_dispatch(l_beg, l, is_local_seg_t());
+            segmented_reverse_dispatch(l_beg, l_loc, is_local_seg_t());
             return;
          }
-         f     = traits::begin(sf);
+         f_loc = traits::begin(sf);
          f_end = traits::end(sf);
       }
       else {
          --sl;
          if(sf == sl) {
-            segmented_reverse_dispatch(f, f_end, is_local_seg_t());
+            segmented_reverse_dispatch(f_loc, f_end, is_local_seg_t());
             return;
          }
          l_beg = traits::begin(sl);
-         l     = traits::end(sl);
+         l_loc = traits::end(sl);
       }
    }
 }
