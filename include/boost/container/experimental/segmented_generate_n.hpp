@@ -27,24 +27,13 @@
 namespace boost {
 namespace container {
 
-template <class FwdIt, class Size, class Generator>
-FwdIt segmented_generate_n(FwdIt first, Size count, Generator gen);
+template <class OutIt, class Size, class Generator>
+OutIt segmented_generate_n(OutIt first, Size count, Generator gen);
 
 namespace detail_algo {
 
-template <class FwdIt, class Size, class Generator>
-FwdIt generate_n_scan(FwdIt first, FwdIt last, Size& count, Generator& gen, non_segmented_iterator_tag)
-{
-   Size n = count;   //Avoid aliasing the count parameter
-   for(; first != last && n > 0; ++first, --n)
-      *first = gen();
-   count = n;
-   return first;
-}
-
-
-template <class InIter, class Size, class Generator>
-InIter generate_n_scan_non_segmented(InIter first, InIter last, Size& count, const Generator &gen, const std::random_access_iterator_tag &)
+template <class OutIter, class Size, class Generator>
+OutIter generate_n_scan_non_segmented(OutIter first, OutIter last, Size& count, const Generator &gen, const std::random_access_iterator_tag &)
 {
    Size range_sz = Size(last - first);
    Size local_count = count < range_sz ? count : range_sz;
@@ -55,8 +44,8 @@ InIter generate_n_scan_non_segmented(InIter first, InIter last, Size& count, con
    return first;
 }
 
-template <class InIter, class Size, class Generator, class Tag>
-InIter generate_n_scan_non_segmented(InIter first, InIter last, Size& count, const Generator &gen, Tag)
+template <class OutIter, class Size, class Generator, class Tag>
+OutIter generate_n_scan_non_segmented(OutIter first, OutIter last, Size& count, const Generator &gen, Tag)
 {
    Size local_count = count;  //Avoid aliasing the count parameter
 
@@ -68,10 +57,10 @@ InIter generate_n_scan_non_segmented(InIter first, InIter last, Size& count, con
    return first;
 }
 
-template <class InIter, class Size, class Generator>
-BOOST_CONTAINER_FORCEINLINE InIter generate_n_scan(InIter first, InIter last, Size& count, const Generator &gen, non_segmented_iterator_tag)
+template <class OutIter, class Size, class Generator>
+BOOST_CONTAINER_FORCEINLINE OutIter generate_n_scan(OutIter first, OutIter last, Size& count, const Generator &gen, non_segmented_iterator_tag)
 {
-   return (generate_n_scan_non_segmented)(first, last, count, gen, typename iterator_traits<InIter>::iterator_category());
+   return (generate_n_scan_non_segmented)(first, last, count, gen, typename iterator_traits<OutIter>::iterator_category());
 }
 
 template <class SegIt, class Size, class Generator>
@@ -126,9 +115,9 @@ SegIter segmented_generate_n_ref
    return traits::compose(scur, lcur);
 }
 
-template <class FwdIt, class Size, class Generator>
-FwdIt segmented_generate_n_ref
-   (FwdIt first, Size count, Generator& gen, non_segmented_iterator_tag)
+template <class OutIt, class Size, class Generator>
+OutIt segmented_generate_n_ref
+   (OutIt first, Size count, Generator& gen, non_segmented_iterator_tag)
 {
    for(; count > 0; ++first, --count)
       *first = gen();
@@ -141,10 +130,10 @@ FwdIt segmented_generate_n_ref
 //! \c count elements starting at \c first. Generator state is
 //! preserved across segment boundaries.
 //! Returns an iterator past the last generated element.
-template <class FwdIt, class Size, class Generator>
-inline FwdIt segmented_generate_n(FwdIt first, Size count, Generator gen)
+template <class OutIt, class Size, class Generator>
+BOOST_CONTAINER_FORCEINLINE OutIt segmented_generate_n(OutIt first, Size count, Generator gen)
 {
-   typedef segmented_iterator_traits<FwdIt> traits;
+   typedef segmented_iterator_traits<OutIt> traits;
    return detail_algo::segmented_generate_n_ref(first, count, gen,
       typename traits::is_segmented_iterator());
 }
