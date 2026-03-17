@@ -65,7 +65,7 @@ segmented_copy_dispatch
 //! Copies elements from [first, last) to the range beginning at \c result.
 //! Segmentation is exploited on the input range only.
 template <class InIter, class Sent, class OutIter>
-inline OutIter segmented_copy(InIter first, Sent last, OutIter result)
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_copy(InIter first, Sent last, OutIter result)
 {
    typedef segmented_iterator_traits<InIter> traits;
    return detail_algo::segmented_copy_dispatch(first, last, result,

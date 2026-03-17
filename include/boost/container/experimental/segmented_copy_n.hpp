@@ -33,7 +33,7 @@ OutIter segmented_copy_n(InIter first, Size count, OutIter result);
 namespace detail_algo {
 
 template <class InIter, class Size, class OutIter>
-OutIter copy_n_scan_non_segmented(InIter first, InIter last, Size& count, OutIter result, const std::random_access_iterator_tag &)
+BOOST_CONTAINER_FORCEINLINE OutIter copy_n_scan_non_segmented(InIter first, InIter last, Size& count, OutIter result, const std::random_access_iterator_tag &)
 {
    Size range_sz = Size(last - first);
    Size local_count = count < range_sz ? count : range_sz;
@@ -56,7 +56,7 @@ OutIter copy_n_scan_non_segmented(InIter first, InIter last, Size& count, OutIte
 }
 
 template <class InIter, class Size, class OutIter>
-OutIter copy_n_scan(InIter first, InIter last, Size& count, OutIter result, non_segmented_iterator_tag)
+BOOST_CONTAINER_FORCEINLINE OutIter copy_n_scan(InIter first, InIter last, Size& count, OutIter result, non_segmented_iterator_tag)
 {
    return (copy_n_scan_non_segmented)(first, last, count, result, typename iterator_traits<InIter>::iterator_category());
 }
