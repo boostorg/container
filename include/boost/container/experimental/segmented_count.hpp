@@ -29,7 +29,7 @@ namespace container {
 
 //! Returns the number of elements equal to \c value in [first, last).
 template <class InpIter, class Sent, class T>
-inline typename boost::container::iterator_traits<InpIter>::difference_type
+BOOST_CONTAINER_FORCEINLINE typename boost::container::iterator_traits<InpIter>::difference_type
 segmented_count(InpIter first, Sent last, const T& value)
 {
    return boost::container::segmented_count_if(first, last, equal_to_value<T>(value));
