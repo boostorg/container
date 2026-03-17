@@ -44,22 +44,17 @@ OutIter segmented_reverse_copy_dispatch
    segment_iterator slast  = traits::segment(last);
 
    if(sfirst == slast) {
-      return boost::container::segmented_reverse_copy(
-         traits::local(first), traits::local(last), result);
+      return (segmented_reverse_copy)(traits::local(first), traits::local(last), result);
    }
+   else {
+      result = (segmented_reverse_copy)(traits::begin(slast), traits::local(last), result);
 
-   result = boost::container::segmented_reverse_copy(
-      traits::begin(slast), traits::local(last), result);
+      segment_iterator s = slast;
+      for (--s; s != sfirst; --s)
+         result = (segmented_reverse_copy)(traits::begin(s), traits::end(s), result);
 
-   segment_iterator s = slast;
-   for(--s; s != sfirst; --s)
-      result = boost::container::segmented_reverse_copy(
-         traits::begin(s), traits::end(s), result);
-
-   result = boost::container::segmented_reverse_copy(
-      traits::local(first), traits::end(sfirst), result);
-
-   return result;
+      return (segmented_reverse_copy)(traits::local(first), traits::end(sfirst), result);
+   }
 }
 
 template <class BidirIter, class OutIter>
@@ -85,8 +80,8 @@ template <class BidirIter, class OutIter>
 BOOST_CONTAINER_FORCEINLINE OutIter segmented_reverse_copy(BidirIter first, BidirIter last, OutIter result)
 {
    typedef segmented_iterator_traits<BidirIter> traits;
-   return detail_algo::segmented_reverse_copy_dispatch(first, last, result,
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_reverse_copy_dispatch
+      (first, last, result, typename traits::is_segmented_iterator());
 }
 
 } // namespace container

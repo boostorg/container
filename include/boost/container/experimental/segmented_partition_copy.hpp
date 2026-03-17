@@ -38,35 +38,34 @@ segmented_partition_copy_dispatch
    (SegIter first, SegIter last, OutIter1 out_true, OutIter2 out_false, Pred pred, segmented_iterator_tag)
 {
    typedef segmented_iterator_traits<SegIter> traits;
+   typedef std::pair<OutIter1, OutIter2> pair_t;
+
    typename traits::segment_iterator sfirst = traits::segment(first);
    typename traits::segment_iterator slast  = traits::segment(last);
+
    if(sfirst == slast) {
-      std::pair<OutIter1, OutIter2> p =
-         boost::container::segmented_partition_copy(traits::local(first), traits::local(last), out_true, out_false, pred);
+      pair_t p = (segmented_partition_copy)(traits::local(first), traits::local(last), out_true, out_false, pred);
       out_true  = p.first;
       out_false = p.second;
    }
    else {
       {
-         std::pair<OutIter1, OutIter2> p =
-            boost::container::segmented_partition_copy(traits::local(first), traits::end(sfirst), out_true, out_false, pred);
+         pair_t p = (segmented_partition_copy)(traits::local(first), traits::end(sfirst), out_true, out_false, pred);
          out_true  = p.first;
          out_false = p.second;
       }
       for(++sfirst; sfirst != slast; ++sfirst) {
-         std::pair<OutIter1, OutIter2> p =
-            boost::container::segmented_partition_copy(traits::begin(sfirst), traits::end(sfirst), out_true, out_false, pred);
+         pair_t p = (segmented_partition_copy)(traits::begin(sfirst), traits::end(sfirst), out_true, out_false, pred);
          out_true  = p.first;
          out_false = p.second;
       }
       {
-         std::pair<OutIter1, OutIter2> p =
-            boost::container::segmented_partition_copy(traits::begin(sfirst), traits::local(last), out_true, out_false, pred);
+         pair_t p = (segmented_partition_copy)(traits::begin(sfirst), traits::local(last), out_true, out_false, pred);
          out_true  = p.first;
          out_false = p.second;
       }
    }
-   return std::pair<OutIter1, OutIter2>(out_true, out_false);
+   return pair_t(out_true, out_false);
 }
 
 template <class InIter, class Sent, class OutIter1, class OutIter2, class Pred, class Tag>
@@ -94,12 +93,13 @@ segmented_partition_copy_dispatch
 //! depending on whether \c pred returns true or false.
 //! Returns a pair of output iterators past the last elements written.
 template <class InIter, class Sent, class OutIter1, class OutIter2, class Pred>
-BOOST_CONTAINER_FORCEINLINE std::pair<OutIter1, OutIter2>
+BOOST_CONTAINER_FORCEINLINE
+std::pair<OutIter1, OutIter2>
 segmented_partition_copy(InIter first, Sent last, OutIter1 out_true, OutIter2 out_false, Pred pred)
 {
    typedef segmented_iterator_traits<InIter> traits;
-   return detail_algo::segmented_partition_copy_dispatch(first, last, out_true, out_false, pred,
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_partition_copy_dispatch
+      (first, last, out_true, out_false, pred, typename traits::is_segmented_iterator());
 }
 
 } // namespace container

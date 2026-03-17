@@ -32,8 +32,7 @@ FwdIt2 segmented_swap_ranges(FwdIt1 first1, Sent last1, FwdIt2 first2);
 namespace detail_algo {
 
 template <class SegIter, class FwdIt2>
-FwdIt2 segmented_swap_ranges_dispatch
-   (SegIter first1, SegIter last1, FwdIt2 first2, segmented_iterator_tag)
+FwdIt2 segmented_swap_ranges_dispatch (SegIter first1, SegIter last1, FwdIt2 first2, segmented_iterator_tag)
 {
    typedef segmented_iterator_traits<SegIter> traits;
    typename traits::segment_iterator sfirst = traits::segment(first1);
@@ -53,8 +52,7 @@ FwdIt2 segmented_swap_ranges_dispatch
 template <class FwdIt1, class Sent, class FwdIt2, class Tag>
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, FwdIt1>::value, FwdIt2>::type
-segmented_swap_ranges_dispatch
-   (FwdIt1 first1, Sent last1, FwdIt2 first2, Tag)
+segmented_swap_ranges_dispatch (FwdIt1 first1, Sent last1, FwdIt2 first2, Tag)
 {
    for(; first1 != last1; ++first1, ++first2) {
       boost::adl_move_swap(*first1, *first2);
@@ -68,11 +66,12 @@ segmented_swap_ranges_dispatch
 //! Returns an iterator past the last swapped element in the second range.
 //! Segmentation is exploited on the first range.
 template <class FwdIt1, class Sent, class FwdIt2>
-BOOST_CONTAINER_FORCEINLINE FwdIt2 segmented_swap_ranges(FwdIt1 first1, Sent last1, FwdIt2 first2)
+BOOST_CONTAINER_FORCEINLINE
+FwdIt2 segmented_swap_ranges(FwdIt1 first1, Sent last1, FwdIt2 first2)
 {
    typedef segmented_iterator_traits<FwdIt1> traits;
-   return detail_algo::segmented_swap_ranges_dispatch(first1, last1, first2,
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_swap_ranges_dispatch
+      (first1, last1, first2, typename traits::is_segmented_iterator());
 }
 
 } // namespace container

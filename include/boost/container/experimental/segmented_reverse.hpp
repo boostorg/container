@@ -31,10 +31,7 @@ namespace detail_algo {
 template <class BidirIt>
 void segmented_reverse_dispatch(BidirIt first, BidirIt last, non_segmented_iterator_tag)
 {
-   while(first != last) {
-      --last;
-      if(first == last)
-         break;
+   while(first != last && first != --last) {
       boost::adl_move_swap(*first, *last);
       ++first;
    }
@@ -43,9 +40,9 @@ void segmented_reverse_dispatch(BidirIt first, BidirIt last, non_segmented_itera
 template <class SegIt>
 void segmented_reverse_dispatch(SegIt first, SegIt last, segmented_iterator_tag)
 {
-   typedef segmented_iterator_traits<SegIt> traits;
+   typedef segmented_iterator_traits<SegIt>  traits;
    typedef typename traits::segment_iterator segment_iterator;
-   typedef typename traits::local_iterator local_iterator;
+   typedef typename traits::local_iterator   local_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
 
    if(first == last) return;
@@ -64,6 +61,7 @@ void segmented_reverse_dispatch(SegIt first, SegIt last, segmented_iterator_tag)
    local_iterator l_loc = traits::local(last);
 
    for(;;) {
+      //Cross-segment reverse loop: stop when either side reaches its end
       while(f_loc != f_end && l_loc != l_beg) {
          --l_loc;
          boost::adl_move_swap(*f_loc, *l_loc);
@@ -114,11 +112,12 @@ void segmented_reverse_dispatch(SegIt first, SegIt last, segmented_iterator_tag)
 //! When the iterator is segmented, exploits segmentation on both
 //! the forward and backward sides to reduce per-element overhead.
 template <class BidirIter>
-BOOST_CONTAINER_FORCEINLINE void segmented_reverse(BidirIter first, BidirIter last)
+BOOST_CONTAINER_FORCEINLINE
+void segmented_reverse(BidirIter first, BidirIter last)
 {
    typedef segmented_iterator_traits<BidirIter> traits;
-   detail_algo::segmented_reverse_dispatch(first, last,
-      typename traits::is_segmented_iterator());
+   detail_algo::segmented_reverse_dispatch
+      (first, last, typename traits::is_segmented_iterator());
 }
 
 } // namespace container

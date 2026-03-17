@@ -52,9 +52,10 @@ SegIter segmented_is_sorted_until_dispatch
    local_iterator prev_local = traits::local(first);
    local_iterator lcur;
 
+   lcur = prev_local;
+   ++lcur;
+
    if(sfirst == slast) {
-      lcur = prev_local;
-      ++lcur;
       local_iterator lend = traits::local(last);
       for(; lcur != lend; ++lcur) {
          if(comp(*lcur, *prev_local))
@@ -67,8 +68,7 @@ SegIter segmented_is_sorted_until_dispatch
       // First segment: from local(first) to end(sfirst)
       {
          local_iterator lend = traits::end(sfirst);
-         lcur = prev_local;
-         ++lcur;
+
          for (; lcur != lend; ++lcur) {
             if (comp(*lcur, *prev_local))
                return traits::compose(sfirst, lcur);
@@ -119,13 +119,14 @@ SegIter segmented_is_sorted_until_dispatch
 template <class FwdIt, class Sent, class Comp, class Tag>
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, FwdIt>::value, FwdIt>::type
-segmented_is_sorted_until_dispatch
-   (FwdIt first, Sent last, Comp comp, Tag)
+segmented_is_sorted_until_dispatch(FwdIt first, Sent last, Comp comp, Tag)
 {
    if(first == last)
       return last;
+
    FwdIt prev = first;
    ++first;
+
    for(; first != last; ++first) {
       if(comp(*first, *prev))
          return first;
@@ -140,23 +141,24 @@ segmented_is_sorted_until_dispatch
 //! in [first, last), using \c comp for comparison.
 //! Returns \c last if the range is sorted.
 template <class FwdIt, class Sent, class Comp>
-BOOST_CONTAINER_FORCEINLINE FwdIt segmented_is_sorted_until(FwdIt first, Sent last, Comp comp)
+BOOST_CONTAINER_FORCEINLINE
+FwdIt segmented_is_sorted_until(FwdIt first, Sent last, Comp comp)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
-   return detail_algo::segmented_is_sorted_until_dispatch(first, last, comp,
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_is_sorted_until_dispatch
+      (first, last, comp,typename traits::is_segmented_iterator());
 }
 
 //! Returns an iterator to the first element that is less than its predecessor
 //! in [first, last), using operator<.
 //! Returns \c last if the range is sorted.
 template <class FwdIt, class Sent>
-BOOST_CONTAINER_FORCEINLINE FwdIt segmented_is_sorted_until(FwdIt first, Sent last)
+BOOST_CONTAINER_FORCEINLINE
+FwdIt segmented_is_sorted_until(FwdIt first, Sent last)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
-   return detail_algo::segmented_is_sorted_until_dispatch(first, last,
-      detail_algo::default_less(),
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_is_sorted_until_dispatch
+      (first, last, detail_algo::default_less(), typename traits::is_segmented_iterator());
 }
 
 } // namespace container

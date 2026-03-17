@@ -29,7 +29,8 @@ namespace container {
 //! Removes all elements equal to \c value from [first, last),
 //! moving retained elements forward. Returns iterator to new end.
 template <class FwdIt, class Sent, class T>
-BOOST_CONTAINER_FORCEINLINE FwdIt segmented_remove(FwdIt first, Sent last, const T& value)
+BOOST_CONTAINER_FORCEINLINE
+FwdIt segmented_remove(FwdIt first, Sent last, const T& value)
 {
    return boost::container::segmented_remove_if(first, last, equal_to_value<T>(value));
 }

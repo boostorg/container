@@ -65,7 +65,7 @@ OutIter merge_scan(SegIt first, SegIt last, InIter2& first2, Sent2 last2, OutIte
 
    segment_iterator scur  = traits::segment(first);
    segment_iterator slast = traits::segment(last);
-   local_iterator lcur = traits::local(first);
+   local_iterator   lcur  = traits::local(first);
 
    if(scur == slast) {
       return merge_scan(lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());
@@ -106,28 +106,27 @@ segmented_merge_dispatch
       ++result;
    }
    result = (segmented_copy)(first1, last1, result);
-   result = (segmented_copy)(first2, last2, result);
-
-   return result;
+   return   (segmented_copy)(first2, last2, result);
 }
 
 } // namespace detail_algo
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp>
-BOOST_CONTAINER_FORCEINLINE OutIter segmented_merge
+BOOST_CONTAINER_FORCEINLINE
+OutIter segmented_merge
    (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp)
 {
    typedef segmented_iterator_traits<InIter1> traits;
-   return detail_algo::segmented_merge_dispatch(first1, last1, first2, last2, result, comp,
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_merge_dispatch
+      (first1, last1, first2, last2, result, comp, typename traits::is_segmented_iterator());
 }
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter>
-BOOST_CONTAINER_FORCEINLINE OutIter segmented_merge
-   (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result)
+BOOST_CONTAINER_FORCEINLINE
+OutIter segmented_merge (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result)
 {
-   return boost::container::segmented_merge(first1, last1, first2, last2, result,
-      detail_algo::merge_default_less());
+   return boost::container::segmented_merge
+      (first1, last1, first2, last2, result, detail_algo::merge_default_less());
 }
 
 } // namespace container

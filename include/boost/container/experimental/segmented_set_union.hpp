@@ -76,8 +76,10 @@ InIter2 set_union_scan(SegIt first, SegIt last, InIter2 first2, Sent2 last2, Out
    }
    else {
       first2 = set_union_scan(lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
+
       for(++scur; scur != slast; ++scur)
          first2 = set_union_scan(traits::begin(scur), traits::end(scur), first2, last2, result, comp, is_local_seg_t());
+
       first2 = set_union_scan(traits::begin(scur), traits::local(last), first2, last2, result, comp, is_local_seg_t());
    }
    return first2;
@@ -104,26 +106,26 @@ segmented_set_union_dispatch
       ++result;
    }
    result = (segmented_copy)(first1, last1, result);
-   return (segmented_copy)(first2, last2, result);
+   return   (segmented_copy)(first2, last2, result);
 }
 
 } // namespace detail_algo
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp>
-BOOST_CONTAINER_FORCEINLINE OutIter segmented_set_union
-   (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp)
+BOOST_CONTAINER_FORCEINLINE
+OutIter segmented_set_union (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp)
 {
    typedef segmented_iterator_traits<InIter1> traits;
-   return detail_algo::segmented_set_union_dispatch(first1, last1, first2, last2, result, comp,
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_set_union_dispatch
+      (first1, last1, first2, last2, result, comp, typename traits::is_segmented_iterator());
 }
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter>
-BOOST_CONTAINER_FORCEINLINE OutIter segmented_set_union
-   (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result)
+BOOST_CONTAINER_FORCEINLINE
+OutIter segmented_set_union (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result)
 {
-   return boost::container::segmented_set_union(first1, last1, first2, last2, result,
-      detail_algo::set_union_default_less());
+   return boost::container::segmented_set_union
+      (first1, last1, first2, last2, result, detail_algo::set_union_default_less());
 }
 
 } // namespace container

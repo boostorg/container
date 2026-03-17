@@ -118,17 +118,17 @@ OuterIter stable_partition_scan(SegIt first, SegIt last, OuterIter result,
 }
 
 template <class SegIter, class Pred>
-BOOST_CONTAINER_FORCEINLINE SegIter segmented_stable_partition_dispatch
-   (SegIter first, SegIter last, Pred pred, segmented_iterator_tag)
+BOOST_CONTAINER_FORCEINLINE
+SegIter segmented_stable_partition_dispatch (SegIter first, SegIter last, Pred pred, segmented_iterator_tag)
 {
-   return stable_partition_scan(first, last, first, sp_identity_composer<SegIter>(), pred, segmented_iterator_tag());
+   return (stable_partition_scan)(first, last, first, sp_identity_composer<SegIter>(), pred, segmented_iterator_tag());
 }
 
 template <class BidirIt, class Pred>
-BOOST_CONTAINER_FORCEINLINE BidirIt segmented_stable_partition_dispatch
-   (BidirIt first, BidirIt last, Pred pred, non_segmented_iterator_tag)
+BOOST_CONTAINER_FORCEINLINE
+BidirIt segmented_stable_partition_dispatch (BidirIt first, BidirIt last, Pred pred, non_segmented_iterator_tag)
 {
-   return stable_partition_scan(first, last, first, sp_identity_composer<BidirIt>(), pred, non_segmented_iterator_tag());
+   return (stable_partition_scan)(first, last, first, sp_identity_composer<BidirIt>(), pred, non_segmented_iterator_tag());
 }
 
 } // namespace detail_algo
@@ -137,11 +137,12 @@ BOOST_CONTAINER_FORCEINLINE BidirIt segmented_stable_partition_dispatch
 //! \c pred come before those that do not, preserving relative order
 //! within each group. Returns an iterator to the partition point.
 template <class BidirIt, class Pred>
-BOOST_CONTAINER_FORCEINLINE BidirIt segmented_stable_partition(BidirIt first, BidirIt last, Pred pred)
+BOOST_CONTAINER_FORCEINLINE
+BidirIt segmented_stable_partition(BidirIt first, BidirIt last, Pred pred)
 {
    typedef segmented_iterator_traits<BidirIt> traits;
-   return detail_algo::segmented_stable_partition_dispatch(first, last, pred,
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_stable_partition_dispatch
+      (first, last, pred, typename traits::is_segmented_iterator());
 }
 
 } // namespace container

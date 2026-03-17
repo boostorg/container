@@ -79,8 +79,7 @@ BOOST_CONTAINER_FORCEINLINE SegIter segmented_partition_dispatch
 template <class FwdIt, class Sent, class Pred, class Tag>
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, FwdIt>::value, FwdIt>::type
-segmented_partition_dispatch
-   (FwdIt first, Sent last, Pred pred, Tag)
+segmented_partition_dispatch(FwdIt first, Sent last, Pred pred, Tag)
 {
    FwdIt result = first;
    for(; first != last; ++first) {
@@ -98,11 +97,12 @@ segmented_partition_dispatch
 //! \c pred come before those that do not (Lomuto-style partition).
 //! Returns an iterator to the partition point.
 template <class FwdIt, class Sent, class Pred>
-BOOST_CONTAINER_FORCEINLINE FwdIt segmented_partition(FwdIt first, Sent last, Pred pred)
+BOOST_CONTAINER_FORCEINLINE
+FwdIt segmented_partition(FwdIt first, Sent last, Pred pred)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
-   return detail_algo::segmented_partition_dispatch(first, last, pred,
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_partition_dispatch
+      (first, last, pred, typename traits::is_segmented_iterator());
 }
 
 } // namespace container

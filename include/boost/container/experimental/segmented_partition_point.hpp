@@ -35,9 +35,10 @@ SegIter segmented_partition_point_dispatch
    (SegIter first, SegIter last, Predicate pred, segmented_iterator_tag)
 {
    typedef segmented_iterator_traits<SegIter> traits;
-   typename traits::segment_iterator scur = traits::segment(first);
+   typename traits::segment_iterator scur  = traits::segment(first);
    typename traits::segment_iterator slast = traits::segment(last);
    typename traits::local_iterator lcur;
+
    if(scur == slast) {
       lcur = boost::container::segmented_partition_point(traits::local(first), traits::local(last), pred);
       if(lcur != traits::local(last))
@@ -47,11 +48,13 @@ SegIter segmented_partition_point_dispatch
       lcur = boost::container::segmented_partition_point(traits::local(first), traits::end(scur), pred);
       if(lcur != traits::end(scur))
          return traits::compose(scur, lcur);
+
       for(++scur; scur != slast; ++scur) {
          lcur = boost::container::segmented_partition_point(traits::begin(scur), traits::end(scur), pred);
          if(lcur != traits::end(scur))
             return traits::compose(scur, lcur);
       }
+
       lcur = boost::container::segmented_partition_point(traits::begin(scur), traits::local(last), pred);
       if(lcur != traits::local(last))
          return traits::compose(scur, lcur);
@@ -77,11 +80,12 @@ segmented_partition_point_dispatch
 //! for which \c pred returns false. The range must be partitioned
 //! with respect to \c pred.
 template <class FwdIt, class Sent, class Predicate>
-BOOST_CONTAINER_FORCEINLINE FwdIt segmented_partition_point(FwdIt first, Sent last, Predicate pred)
+BOOST_CONTAINER_FORCEINLINE
+FwdIt segmented_partition_point(FwdIt first, Sent last, Predicate pred)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
-   return detail_algo::segmented_partition_point_dispatch(first, last, pred,
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_partition_point_dispatch
+      (first, last, pred, typename traits::is_segmented_iterator());
 }
 
 } // namespace container

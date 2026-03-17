@@ -49,12 +49,15 @@ SegIter segmented_search_dispatch
    if(s_first == s_last) return first;
 
    typedef segmented_iterator_traits<SegIter> traits;
-   typename traits::segment_iterator scur  = traits::segment(first);
-   typename traits::segment_iterator slast = traits::segment(last);
-   typename traits::local_iterator   lcur  = traits::local(first);
+   typedef typename traits::local_iterator    local_iterator;
+   typedef typename traits::segment_iterator  segment_iterator;
+   
+   segment_iterator scur  = traits::segment(first);
+   segment_iterator slast = traits::segment(last);
+   local_iterator   lcur  = traits::local(first);
 
    if(scur == slast) {
-      typename traits::local_iterator lend = traits::local(last);
+      local_iterator lend = traits::local(last);
       for(; lcur != lend; ++lcur) {
          if(*lcur == *s_first) {
             SegIter pos = traits::compose(scur, lcur);
@@ -65,7 +68,7 @@ SegIter segmented_search_dispatch
    }
    else {
       {
-         typename traits::local_iterator lend = traits::end(scur);
+         local_iterator lend = traits::end(scur);
          for(; lcur != lend; ++lcur) {
             if(*lcur == *s_first) {
                SegIter pos = traits::compose(scur, lcur);
@@ -75,8 +78,8 @@ SegIter segmented_search_dispatch
          }
       }
       for(++scur; scur != slast; ++scur) {
-         typename traits::local_iterator lb = traits::begin(scur);
-         typename traits::local_iterator le = traits::end(scur);
+         local_iterator lb = traits::begin(scur);
+         local_iterator le = traits::end(scur);
          for(lcur = lb; lcur != le; ++lcur) {
             if(*lcur == *s_first) {
                SegIter pos = traits::compose(scur, lcur);
@@ -86,8 +89,8 @@ SegIter segmented_search_dispatch
          }
       }
       {
-         typename traits::local_iterator lb = traits::begin(scur);
-         typename traits::local_iterator ll = traits::local(last);
+         local_iterator lb = traits::begin(scur);
+         local_iterator ll = traits::local(last);
          for(lcur = lb; lcur != ll; ++lcur) {
             if(*lcur == *s_first) {
                SegIter pos = traits::compose(scur, lcur);
@@ -131,12 +134,12 @@ segmented_search_dispatch
 //! Finds the first occurrence of the subsequence [s_first, s_last) in [first, last).
 //! Returns an iterator to the beginning of the found subsequence, or \c last if not found.
 template <class FwdIt1, class Sent1, class FwdIt2, class Sent2>
-BOOST_CONTAINER_FORCEINLINE FwdIt1 segmented_search
-   (FwdIt1 first, Sent1 last, FwdIt2 s_first, Sent2 s_last)
+BOOST_CONTAINER_FORCEINLINE
+FwdIt1 segmented_search(FwdIt1 first, Sent1 last, FwdIt2 s_first, Sent2 s_last)
 {
    typedef segmented_iterator_traits<FwdIt1> traits;
-   return detail_algo::segmented_search_dispatch(first, last, s_first, s_last,
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_search_dispatch
+      (first, last, s_first, s_last, typename traits::is_segmented_iterator());
 }
 
 } // namespace container

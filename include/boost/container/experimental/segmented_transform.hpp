@@ -37,20 +37,18 @@ OutIter segmented_transform_dispatch
    typedef segmented_iterator_traits<SegIter> traits;
    typename traits::segment_iterator sfirst = traits::segment(first);
    typename traits::segment_iterator slast  = traits::segment(last);
+
    if(sfirst == slast) {
-      result = boost::container::segmented_transform(
-         traits::local(first), traits::local(last), result, op);
+      return boost::container::segmented_transform(traits::local(first), traits::local(last), result, op);
    }
    else {
-      result = boost::container::segmented_transform(
-         traits::local(first), traits::end(sfirst), result, op);
+      result = boost::container::segmented_transform(traits::local(first), traits::end(sfirst), result, op);
+
       for(++sfirst; sfirst != slast; ++sfirst)
-         result = boost::container::segmented_transform(
-            traits::begin(sfirst), traits::end(sfirst), result, op);
-      result = boost::container::segmented_transform(
-         traits::begin(sfirst), traits::local(last), result, op);
+         result = boost::container::segmented_transform(traits::begin(sfirst), traits::end(sfirst), result, op);
+
+      return boost::container::segmented_transform(traits::begin(sfirst), traits::local(last), result, op);
    }
-   return result;
 }
 
 template <class InIter, class Sent, class OutIter, class UnaryOp, class Tag>
@@ -70,12 +68,12 @@ segmented_transform_dispatch
 //! to the range beginning at \c result.
 //! Segmentation is exploited on the input range only.
 template <class InIter, class Sent, class OutIter, class UnaryOp>
-BOOST_CONTAINER_FORCEINLINE OutIter segmented_transform
-   (InIter first, Sent last, OutIter result, UnaryOp op)
+BOOST_CONTAINER_FORCEINLINE
+OutIter segmented_transform (InIter first, Sent last, OutIter result, UnaryOp op)
 {
    typedef segmented_iterator_traits<InIter> traits;
-   return detail_algo::segmented_transform_dispatch(first, last, result, op,
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_transform_dispatch
+      (first, last, result, op, typename traits::is_segmented_iterator());
 }
 
 } // namespace container

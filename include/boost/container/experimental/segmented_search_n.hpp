@@ -40,15 +40,19 @@ SegIter segmented_search_n_dispatch
    if(count <= 0) return first;
 
    typedef segmented_iterator_traits<SegIter> traits;
+   typedef typename traits::segment_iterator  segment_iterator;
+   typedef typename traits::local_iterator    local_iterator;
+
    Size consecutive = 0;
    SegIter match_start = first;
 
-   typename traits::segment_iterator scur  = traits::segment(first);
-   typename traits::segment_iterator slast = traits::segment(last);
-   typename traits::local_iterator   lcur  = traits::local(first);
+   segment_iterator scur  = traits::segment(first);
+   segment_iterator slast = traits::segment(last);
+
+   local_iterator lcur  = traits::local(first);
 
    if(scur == slast) {
-      typename traits::local_iterator lend = traits::local(last);
+      local_iterator lend = traits::local(last);
       for(; lcur != lend; ++lcur) {
          if(*lcur == value) {
             if(consecutive == 0)
@@ -64,7 +68,7 @@ SegIter segmented_search_n_dispatch
    }
    else {
       {
-         typename traits::local_iterator lend = traits::end(scur);
+         local_iterator lend = traits::end(scur);
          for(; lcur != lend; ++lcur) {
             if(*lcur == value) {
                if(consecutive == 0)
@@ -79,8 +83,8 @@ SegIter segmented_search_n_dispatch
          }
       }
       for(++scur; scur != slast; ++scur) {
-         typename traits::local_iterator lb = traits::begin(scur);
-         typename traits::local_iterator le = traits::end(scur);
+         local_iterator lb = traits::begin(scur);
+         local_iterator le = traits::end(scur);
          for(lcur = lb; lcur != le; ++lcur) {
             if(*lcur == value) {
                if(consecutive == 0)
@@ -95,8 +99,8 @@ SegIter segmented_search_n_dispatch
          }
       }
       {
-         typename traits::local_iterator lb = traits::begin(scur);
-         typename traits::local_iterator ll = traits::local(last);
+         local_iterator lb = traits::begin(scur);
+         local_iterator ll = traits::local(last);
          for(lcur = lb; lcur != ll; ++lcur) {
             if(*lcur == value) {
                if(consecutive == 0)
@@ -151,8 +155,8 @@ BOOST_CONTAINER_FORCEINLINE FwdIt segmented_search_n
    (FwdIt first, Sent last, Size count, const T& value)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
-   return detail_algo::segmented_search_n_dispatch(first, last, count, value,
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_search_n_dispatch
+      (first, last, count, value, typename traits::is_segmented_iterator());
 }
 
 } // namespace container

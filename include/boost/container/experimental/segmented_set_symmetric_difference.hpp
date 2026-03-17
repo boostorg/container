@@ -105,20 +105,22 @@ segmented_set_symmetric_difference_dispatch
 } // namespace detail_algo
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp>
-BOOST_CONTAINER_FORCEINLINE OutIter segmented_set_symmetric_difference
+BOOST_CONTAINER_FORCEINLINE
+OutIter segmented_set_symmetric_difference
    (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp)
 {
    typedef segmented_iterator_traits<InIter1> traits;
-   return detail_algo::segmented_set_symmetric_difference_dispatch(first1, last1, first2, last2, result, comp,
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_set_symmetric_difference_dispatch
+      (first1, last1, first2, last2, result, comp, typename traits::is_segmented_iterator());
 }
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter>
-BOOST_CONTAINER_FORCEINLINE OutIter segmented_set_symmetric_difference
+BOOST_CONTAINER_FORCEINLINE
+OutIter segmented_set_symmetric_difference
    (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result)
 {
-   return boost::container::segmented_set_symmetric_difference(first1, last1, first2, last2, result,
-      detail_algo::set_symmetric_difference_default_less());
+   return boost::container::segmented_set_symmetric_difference
+      (first1, last1, first2, last2, result, detail_algo::set_symmetric_difference_default_less());
 }
 
 } // namespace container

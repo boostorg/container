@@ -37,16 +37,18 @@ OutIter segmented_remove_copy_if_dispatch
    typedef segmented_iterator_traits<SegIter> traits;
    typename traits::segment_iterator sfirst = traits::segment(first);
    typename traits::segment_iterator slast  = traits::segment(last);
+
    if(sfirst == slast) {
-      result = boost::container::segmented_remove_copy_if(traits::local(first), traits::local(last), result, pred);
+      return boost::container::segmented_remove_copy_if(traits::local(first), traits::local(last), result, pred);
    }
    else {
       result = boost::container::segmented_remove_copy_if(traits::local(first), traits::end(sfirst), result, pred);
+
       for(++sfirst; sfirst != slast; ++sfirst)
          result = boost::container::segmented_remove_copy_if(traits::begin(sfirst), traits::end(sfirst), result, pred);
-      result = boost::container::segmented_remove_copy_if(traits::begin(sfirst), traits::local(last), result, pred);
+
+      return boost::container::segmented_remove_copy_if(traits::begin(sfirst), traits::local(last), result, pred);
    }
-   return result;
 }
 
 template <class InIter, class Sent, class OutIter, class Pred, class Tag>
@@ -73,8 +75,8 @@ template <class InIter, class Sent, class OutIter, class Pred>
 BOOST_CONTAINER_FORCEINLINE OutIter segmented_remove_copy_if(InIter first, Sent last, OutIter result, Pred pred)
 {
    typedef segmented_iterator_traits<InIter> traits;
-   return detail_algo::segmented_remove_copy_if_dispatch(first, last, result, pred,
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_remove_copy_if_dispatch
+      (first, last, result, pred, typename traits::is_segmented_iterator());
 }
 
 } // namespace container
