@@ -57,15 +57,16 @@ OutIter segmented_copy_if_dispatch
    segment_iterator slast  = traits::segment(last);
 
    if(sfirst == slast) {
-      result = (segmented_copy_if_dispatch)(traits::local(first), traits::local(last), result, pred, is_local_seg_t());
+      return (segmented_copy_if_dispatch)(traits::local(first), traits::local(last), result, pred, is_local_seg_t());
    }
    else {
       result = (segmented_copy_if_dispatch)(traits::local(first), traits::end(sfirst), result, pred, is_local_seg_t());
+
       for(++sfirst; sfirst != slast; ++sfirst)
          result = (segmented_copy_if_dispatch)(traits::begin(sfirst), traits::end(sfirst), result, pred, is_local_seg_t());
-      result = (segmented_copy_if_dispatch)(traits::begin(sfirst), traits::local(last), result, pred, is_local_seg_t());
+
+      return (segmented_copy_if_dispatch)(traits::begin(sfirst), traits::local(last), result, pred, is_local_seg_t());
    }
-   return result;
 }
 
 } // namespace detail_algo
@@ -73,7 +74,8 @@ OutIter segmented_copy_if_dispatch
 //! Copies elements satisfying \c pred from [first, last) to the range
 //! beginning at \c result. Segmentation is exploited on the input range.
 template <class InIter, class Sent, class OutIter, class Pred>
-BOOST_CONTAINER_FORCEINLINE OutIter segmented_copy_if(InIter first, Sent last, OutIter result, Pred pred)
+BOOST_CONTAINER_FORCEINLINE
+OutIter segmented_copy_if(InIter first, Sent last, OutIter result, Pred pred)
 {
    typedef segmented_iterator_traits<InIter> traits;
    return detail_algo::segmented_copy_if_dispatch(first, last, result, pred,

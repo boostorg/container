@@ -47,13 +47,13 @@ void segmented_generate_ref
    typename traits::segment_iterator sfirst = traits::segment(first);
    typename traits::segment_iterator slast  = traits::segment(last);
    if(sfirst == slast) {
-      detail_algo::generate_ref(traits::local(first), traits::local(last), gen);
+      (generate_ref)(traits::local(first), traits::local(last), gen);
    }
    else {
-      detail_algo::generate_ref(traits::local(first), traits::end(sfirst), gen);
+      (generate_ref)(traits::local(first), traits::end(sfirst), gen);
       for(++sfirst; sfirst != slast; ++sfirst)
-         detail_algo::generate_ref(traits::begin(sfirst), traits::end(sfirst), gen);
-      detail_algo::generate_ref(traits::begin(sfirst), traits::local(last), gen);
+         (generate_ref)(traits::begin(sfirst), traits::end(sfirst), gen);
+      (generate_ref)(traits::begin(sfirst), traits::local(last), gen);
    }
 }
 
@@ -71,11 +71,11 @@ segmented_generate_ref(FwdIt first, Sent last, Generator& gen, Tag)
 //! element in [first, last).
 //! Generator state is preserved across segment boundaries.
 template <class FwdIt, class Sent, class Generator>
-BOOST_CONTAINER_FORCEINLINE void segmented_generate(FwdIt first, Sent last, Generator gen)
+BOOST_CONTAINER_FORCEINLINE
+void segmented_generate(FwdIt first, Sent last, Generator gen)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
-   detail_algo::segmented_generate_ref(first, last, gen,
-      typename traits::is_segmented_iterator());
+   detail_algo::segmented_generate_ref(first, last, gen, typename traits::is_segmented_iterator());
 }
 
 } // namespace container

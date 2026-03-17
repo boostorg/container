@@ -58,22 +58,26 @@ template <class SegIt, class InIter2, class Sent2, class OutIter, class Comp>
 OutIter merge_scan(SegIt first, SegIt last, InIter2& first2, Sent2 last2, OutIter result, Comp comp,
    segmented_iterator_tag)
 {
-   typedef segmented_iterator_traits<SegIt> traits;
-   typedef typename traits::local_iterator local_iterator;
+   typedef segmented_iterator_traits<SegIt>  traits;
+   typedef typename traits::local_iterator   local_iterator;
+   typedef typename traits::segment_iterator segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
-   typename traits::segment_iterator scur  = traits::segment(first);
-   typename traits::segment_iterator slast = traits::segment(last);
+
+   segment_iterator scur  = traits::segment(first);
+   segment_iterator slast = traits::segment(last);
    local_iterator lcur = traits::local(first);
+
    if(scur == slast) {
-      merge_scan(lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());
+      return merge_scan(lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());
    }
    else {
       result = merge_scan(lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
+
       for(++scur; scur != slast; ++scur)
          result = merge_scan(traits::begin(scur), traits::end(scur), first2, last2, result, comp, is_local_seg_t());
-      result = merge_scan(traits::begin(scur), traits::local(last), first2, last2, result, comp, is_local_seg_t());
+
+      return merge_scan(traits::begin(scur), traits::local(last), first2, last2, result, comp, is_local_seg_t());
    }
-   return result;
 }
 
 template <class SegIter, class InIter2, class Sent2, class OutIter, class Comp>

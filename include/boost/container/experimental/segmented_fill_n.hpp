@@ -30,9 +30,10 @@ namespace container {
 //! Returns an iterator past the last filled element.
 //! Exploits segmentation when available.
 template <class FwdIt, class Size, class T>
-BOOST_CONTAINER_FORCEINLINE FwdIt segmented_fill_n(FwdIt first, Size count, const T& value)
+BOOST_CONTAINER_FORCEINLINE
+FwdIt segmented_fill_n(FwdIt first, Size count, const T& value)
 {
-   return segmented_generate_n(first, count, detail_algo::constref_generator<T>(value));
+   return (segmented_generate_n)(first, count, detail_algo::constref_generator<T>(value));
 }
 
 } // namespace container

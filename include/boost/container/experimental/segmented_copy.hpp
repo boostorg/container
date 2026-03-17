@@ -31,29 +31,29 @@ OutIter segmented_copy(InIter first, Sent last, OutIter result);
 namespace detail_algo {
 
 template <class SegIter, class OutIter>
-OutIter segmented_copy_dispatch
-   (SegIter first, SegIter last, OutIter result, segmented_iterator_tag)
+OutIter segmented_copy_dispatch(SegIter first, SegIter last, OutIter result, segmented_iterator_tag)
 {
    typedef segmented_iterator_traits<SegIter> traits;
    typename traits::segment_iterator sfirst = traits::segment(first);
    typename traits::segment_iterator slast  = traits::segment(last);
+
    if(sfirst == slast) {
-      result = boost::container::segmented_copy(traits::local(first), traits::local(last), result);
+      return boost::container::segmented_copy(traits::local(first), traits::local(last), result);
    }
    else {
       result = boost::container::segmented_copy(traits::local(first), traits::end(sfirst), result);
+
       for(++sfirst; sfirst != slast; ++sfirst)
          result = boost::container::segmented_copy(traits::begin(sfirst), traits::end(sfirst), result);
-      result = boost::container::segmented_copy(traits::begin(sfirst), traits::local(last), result);
+
+      return boost::container::segmented_copy(traits::begin(sfirst), traits::local(last), result);
    }
-   return result;
 }
 
 template <class InIter, class Sent, class OutIter, class Tag>
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, InIter>::value, OutIter>::type
-segmented_copy_dispatch
-   (InIter first, Sent last, OutIter result, Tag)
+   segmented_copy_dispatch(InIter first, Sent last, OutIter result, Tag)
 {
    for(; first != last; ++first, ++result)
       *result = *first;
@@ -65,7 +65,8 @@ segmented_copy_dispatch
 //! Copies elements from [first, last) to the range beginning at \c result.
 //! Segmentation is exploited on the input range only.
 template <class InIter, class Sent, class OutIter>
-BOOST_CONTAINER_FORCEINLINE OutIter segmented_copy(InIter first, Sent last, OutIter result)
+BOOST_CONTAINER_FORCEINLINE
+OutIter segmented_copy(InIter first, Sent last, OutIter result)
 {
    typedef segmented_iterator_traits<InIter> traits;
    return detail_algo::segmented_copy_dispatch(first, last, result,

@@ -34,25 +34,26 @@ namespace detail_algo {
 
 template <class SegIter, class Pred>
 typename boost::container::iterator_traits<SegIter>::difference_type
-segmented_count_if_dispatch
-   (SegIter first, SegIter last, Pred pred, segmented_iterator_tag)
+   segmented_count_if_dispatch(SegIter first, SegIter last, Pred pred, segmented_iterator_tag)
 {
    typedef segmented_iterator_traits<SegIter> traits;
-   typedef typename boost::container::iterator_traits<SegIter>::difference_type diff_t;
-   diff_t result = 0;
+   typedef typename traits::segment_iterator  segment_iterator;
 
-   typename traits::segment_iterator sfirst = traits::segment(first);
-   typename traits::segment_iterator slast  = traits::segment(last);
+   segment_iterator sfirst = traits::segment(first);
+   segment_iterator slast  = traits::segment(last);
+
    if(sfirst == slast) {
-      result = boost::container::segmented_count_if(traits::local(first), traits::local(last), pred);
+      return (segmented_count_if)(traits::local(first), traits::local(last), pred);
    }
    else {
-      result += boost::container::segmented_count_if(traits::local(first), traits::end(sfirst), pred);
+      typename boost::container::iterator_traits<SegIter>::difference_type result = 0;
+      result += (segmented_count_if)(traits::local(first), traits::end(sfirst), pred);
+
       for(++sfirst; sfirst != slast; ++sfirst)
-         result += boost::container::segmented_count_if(traits::begin(sfirst), traits::end(sfirst), pred);
-      result += boost::container::segmented_count_if(traits::begin(sfirst), traits::local(last), pred);
+         result += (segmented_count_if)(traits::begin(sfirst), traits::end(sfirst), pred);
+
+      return result += (segmented_count_if)(traits::begin(sfirst), traits::local(last), pred);
    }
-   return result;
 }
 
 template <class InpIter, class Sent, class Pred, class Tag>

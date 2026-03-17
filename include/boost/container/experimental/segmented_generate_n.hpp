@@ -132,7 +132,8 @@ OutIt segmented_generate_n_ref
 //! preserved across segment boundaries.
 //! Returns an iterator past the last generated element.
 template <class OutIt, class Size, class Generator>
-BOOST_CONTAINER_FORCEINLINE OutIt segmented_generate_n(OutIt first, Size count, Generator gen)
+BOOST_CONTAINER_FORCEINLINE
+OutIt segmented_generate_n(OutIt first, Size count, Generator gen)
 {
    typedef segmented_iterator_traits<OutIt> traits;
    return detail_algo::segmented_generate_n_ref(first, count, gen,

@@ -30,7 +30,8 @@ namespace container {
 //! When \c Iter is a segmented iterator, exploits segmentation
 //! to reduce per-element overhead.
 template <class FwdIt, class Sent, class T>
-BOOST_CONTAINER_FORCEINLINE void segmented_fill(FwdIt first, Sent last, const T& value)
+BOOST_CONTAINER_FORCEINLINE
+void segmented_fill(FwdIt first, Sent last, const T& value)
 {
    (segmented_generate)(first, last, detail_algo::constref_generator<T>(value));
 }
