@@ -21,6 +21,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/container/experimental/segmented_copy.hpp>
 
 namespace boost {
 namespace container {
@@ -38,7 +39,7 @@ namespace detail_algo {
 struct set_difference_default_less
 {
    template <class T>
-   bool operator()(const T& a, const T& b) const { return a < b; }
+   BOOST_CONTAINER_FORCEINLINE bool operator()(const T& a, const T& b) const { return a < b; }
 };
 
 template <class FwdIt, class InIter2, class Sent2, class OutIter, class Comp>
@@ -50,7 +51,7 @@ void set_difference_scan(FwdIt first, FwdIt last, InIter2& first2, Sent2 last2, 
       else if(comp(*first2, *first)) { ++first2; }
       else                           { ++first; ++first2; }
    }
-   for(; first != last; ++first, ++result) *result = *first;
+   result = (segmented_copy)(first, last, result);
 }
 
 template <class SegIt, class InIter2, class Sent2, class OutIter, class Comp>
@@ -78,7 +79,7 @@ void set_difference_scan(SegIt first, SegIt last, InIter2& first2, Sent2 last2, 
 }
 
 template <class SegIter, class InIter2, class Sent2, class OutIter, class Comp>
-OutIter segmented_set_difference_dispatch
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_set_difference_dispatch
    (SegIter first1, SegIter last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp, segmented_iterator_tag)
 {
    set_difference_scan(first1, last1, first2, last2, result, comp, segmented_iterator_tag());
@@ -103,7 +104,7 @@ segmented_set_difference_dispatch
 } // namespace detail_algo
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp>
-inline OutIter segmented_set_difference
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_set_difference
    (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp)
 {
    typedef segmented_iterator_traits<InIter1> traits;

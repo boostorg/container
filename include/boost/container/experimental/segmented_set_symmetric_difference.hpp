@@ -21,6 +21,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/container/experimental/segmented_copy.hpp>
 
 namespace boost {
 namespace container {
@@ -50,7 +51,7 @@ void set_symmetric_difference_scan(FwdIt first, FwdIt last, InIter2& first2, Sen
       else if(comp(*first2, *first)) { *result = *first2; ++first2; ++result; }
       else                           { ++first; ++first2; }
    }
-   for(; first != last; ++first, ++result) *result = *first;
+   result = (segmented_copy)(first, last, result);
 }
 
 template <class SegIt, class InIter2, class Sent2, class OutIter, class Comp>
@@ -106,7 +107,7 @@ segmented_set_symmetric_difference_dispatch
 } // namespace detail_algo
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp>
-inline OutIter segmented_set_symmetric_difference
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_set_symmetric_difference
    (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp)
 {
    typedef segmented_iterator_traits<InIter1> traits;
@@ -115,7 +116,7 @@ inline OutIter segmented_set_symmetric_difference
 }
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter>
-inline OutIter segmented_set_symmetric_difference
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_set_symmetric_difference
    (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result)
 {
    return boost::container::segmented_set_symmetric_difference(first1, last1, first2, last2, result,
