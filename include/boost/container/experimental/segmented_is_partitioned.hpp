@@ -37,6 +37,7 @@ bool is_partitioned_with_state(InpIter first, Sent last, Pred pred, bool& in_tru
       for (; first != last; ++first) {
          if (!pred(*first)) {
             in_true_part = false;
+            ++first;
             break;
          }
       }
@@ -94,9 +95,20 @@ template <class InpIter, class Sent, class Pred>
 BOOST_CONTAINER_FORCEINLINE bool segmented_is_partitioned(InpIter first, Sent last, Pred pred)
 {
    typedef segmented_iterator_traits<InpIter> traits;
-   return detail_algo::segmented_is_partitioned_dispatch(first, last, pred,
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_is_partitioned_dispatch
+      (first, last, pred, typename traits::is_segmented_iterator());
 }
+
+/*
+Maybe implement as:
+
+template <class InputIt, class UnaryPredicate>
+bool is_partitioned(InputIt first, InputIt last, UnaryPredicate p) {
+    first = std::find_if_not(first, last, p);
+    return std::none_of(first, last, p);
+}
+
+*/
 
 } // namespace container
 } // namespace boost
