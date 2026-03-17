@@ -2051,7 +2051,9 @@ class nest
          first = priv_visit_while_impl(first.pbb, last.pbb, f);
          if(first.pbb != last.pbb) return first;
       }
-      for(; first != last; ++first) if(!f(*first)) return first;
+      for(; first != last; ++first)
+         if(!f(*first))
+            return first;
       return first;
    }
 
