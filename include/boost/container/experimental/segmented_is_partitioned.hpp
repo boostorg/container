@@ -31,21 +31,24 @@ bool segmented_is_partitioned(InpIter first, Sent last, Pred pred);
 namespace detail_algo {
 
 template <class InpIter, class Sent, class Pred>
-bool is_partitioned_with_state
-   (InpIter first, Sent last, Pred pred, bool& in_true_part)
+bool is_partitioned_with_state(InpIter first, Sent last, Pred pred, bool& in_true_part)
 {
-   for(; first != last; ++first) {
-      if(in_true_part) {
-         if(!pred(*first))
+   if(in_true_part) {
+      for (; first != last; ++first) {
+         if (!pred(*first)) {
             in_true_part = false;
+            break;
+         }
       }
-      else {
-         if(pred(*first))
-            return false;
-      }
+   }
+
+   for(; first != last; ++first) {
+      if(pred(*first))
+         return false;
    }
    return true;
 }
+
 
 // Non-recursive: must carry cross-segment state (in_true_part) to detect
 // the transition from true to false partition across segment boundaries.
@@ -58,30 +61,27 @@ bool segmented_is_partitioned_dispatch
    typename traits::segment_iterator slast  = traits::segment(last);
    bool in_true_part = true;
    if(sfirst == slast) {
-      return detail_algo::is_partitioned_with_state(
-         traits::local(first), traits::local(last), pred, in_true_part);
+      return (is_partitioned_with_state)(traits::local(first), traits::local(last), pred, in_true_part);
    }
    else {
-      if(!detail_algo::is_partitioned_with_state(
-            traits::local(first), traits::end(sfirst), pred, in_true_part))
+      if(!(is_partitioned_with_state)(traits::local(first), traits::end(sfirst), pred, in_true_part))
          return false;
+
       for(++sfirst; sfirst != slast; ++sfirst)
-         if(!detail_algo::is_partitioned_with_state(
-               traits::begin(sfirst), traits::end(sfirst), pred, in_true_part))
+         if(!(is_partitioned_with_state)(traits::begin(sfirst), traits::end(sfirst), pred, in_true_part))
             return false;
-      return detail_algo::is_partitioned_with_state(
-         traits::begin(sfirst), traits::local(last), pred, in_true_part);
+
+      return (is_partitioned_with_state)(traits::begin(sfirst), traits::local(last), pred, in_true_part);
    }
 }
 
 template <class InpIter, class Sent, class Pred, class Tag>
 BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, InpIter>::value, bool>::type
-segmented_is_partitioned_dispatch
-   (InpIter first, Sent last, Pred pred, Tag)
+segmented_is_partitioned_dispatch(InpIter first, Sent last, Pred pred, Tag)
 {
    bool in_true_part = true;
-   return detail_algo::is_partitioned_with_state(first, last, pred, in_true_part);
+   return (is_partitioned_with_state)(first, last, pred, in_true_part);
 }
 
 } // namespace detail_algo
