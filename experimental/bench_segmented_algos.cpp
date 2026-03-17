@@ -37,6 +37,7 @@
 #include <boost/container/experimental/segmented_is_partitioned.hpp>
 #include <boost/container/experimental/segmented_is_sorted.hpp>
 #include <boost/container/experimental/segmented_merge.hpp>
+#include <boost/container/experimental/segmented_mismatch.hpp>
 #include <boost/container/experimental/segmented_is_sorted_until.hpp>
 #include <boost/container/experimental/segmented_partition.hpp>
 #include <boost/container/experimental/segmented_partition_copy.hpp>
@@ -1255,6 +1256,32 @@ void bench_merge(C c, C& c2, std::size_t iters, const char* cname)
 }
 
 template<class C>
+void bench_mismatch(C c, C& c2, std::size_t iters, const char* cname,
+                    const char* label)
+{
+   int result = 0;
+
+   cpu_timer t1;
+   for (std::size_t i = 0; i < iters; ++i) {
+      t1.resume();
+      result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0;
+      t1.stop();
+      escape(&result);
+   }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+
+   cpu_timer t2;
+   for (std::size_t i = 0; i < iters; ++i) {
+      t2.resume();
+      result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0;
+      t2.stop();
+      escape(&result);
+   }
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+   print_ratio(label, cname, r1, r2);
+}
+
+template<class C>
 void bench_swap_ranges(C c, std::size_t iters, const char* cname)
 {
    C c2(c);
@@ -1661,6 +1688,16 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       for (typename C::iterator it = c2.begin(); it != c2.end(); ++it)
          *it = VT(int_value(*it) * 2);
       bench_merge(c, c2, iters, cname);
+   }
+
+   //mismatch
+   {
+      C c2(c);
+      bench_mismatch(c, c2, iters, cname, "mismatch(hit)");
+      typename C::iterator last = c2.end();
+      --last;
+      *last = VT(-1);
+      bench_mismatch(c, c2, iters, cname, "mismatch(miss)");
    }
 
    //partition
