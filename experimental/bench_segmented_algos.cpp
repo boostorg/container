@@ -36,6 +36,7 @@
 #include <boost/container/experimental/segmented_generate_n.hpp>
 #include <boost/container/experimental/segmented_is_partitioned.hpp>
 #include <boost/container/experimental/segmented_is_sorted.hpp>
+#include <boost/container/experimental/segmented_merge.hpp>
 #include <boost/container/experimental/segmented_is_sorted_until.hpp>
 #include <boost/container/experimental/segmented_partition.hpp>
 #include <boost/container/experimental/segmented_partition_copy.hpp>
@@ -353,7 +354,6 @@ partition_copy(InIt first, InIt last,
 
 
 //Not benchmarked:
-//merge
 //inplace_merge
 
 
@@ -1221,6 +1221,32 @@ void bench_is_partitioned(C c, std::size_t iters, const char* cname,
 }
 
 template<class C>
+void bench_merge(C c, C& c2, std::size_t iters, const char* cname)
+{
+   typedef typename C::value_type VT;
+   std::vector<VT> out(c.size() + c2.size());
+
+   cpu_timer t1;
+   for (std::size_t i = 0; i < iters; ++i) {
+      t1.resume();
+      std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+      t1.stop();
+      escape(&out[0]);
+   }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+
+   cpu_timer t2;
+   for (std::size_t i = 0; i < iters; ++i) {
+      t2.resume();
+      bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+      t2.stop();
+      escape(&out[0]);
+   }
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+   print_ratio("merge", cname, r1, r2);
+}
+
+template<class C>
 void bench_swap_ranges(C c, std::size_t iters, const char* cname)
 {
    C c2(c);
@@ -1381,7 +1407,7 @@ void bench_set_intersection(C c, C& c2, std::size_t iters, const char* cname)
       escape(&out[0]);
    }
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
-   print_ratio("set_intersect", cname, r1, r2);
+   print_ratio("set_intersection", cname, r1, r2);
 }
 
 template<class C>
@@ -1591,6 +1617,14 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       --last;
       *last = VT(0);
       bench_is_sorted_until(c2, iters, cname, "is_sorted_until(miss)");
+   }
+
+   //merge
+   {
+      C c2(c);
+      for (typename C::iterator it = c2.begin(); it != c2.end(); ++it)
+         *it = VT(int_value(*it) * 2);
+      bench_merge(c, c2, iters, cname);
    }
 
    //partition
