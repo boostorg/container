@@ -721,6 +721,344 @@ void test_initializer_list_operations()
 }
 #endif
 
+void test_segment_iterator_operations()
+{
+   typedef nest<int> nest_t;
+   typedef nest_t::iterator iterator;
+   typedef segmented_iterator_traits<iterator> traits;
+   typedef traits::segment_iterator segment_iterator;
+   typedef traits::local_iterator local_iterator;
+
+   nest_t h;
+   for (int i = 0; i < 200; ++i)
+      h.insert(i);
+
+   segment_iterator seg_begin = traits::segment(h.begin());
+   segment_iterator seg_end   = traits::segment(h.end());
+
+   // Default construction compiles
+   {
+      segment_iterator s;
+      (void)s;
+   }
+
+   // segment() + equality / inequality
+   {
+      segment_iterator s1 = traits::segment(h.begin());
+      segment_iterator s2 = traits::segment(h.begin());
+      BOOST_TEST(s1 == s2);
+      BOOST_TEST(!(s1 != s2));
+      BOOST_TEST(s1 != seg_end);
+      BOOST_TEST(!(s1 == seg_end));
+   }
+
+   // Pre-increment returns reference to self and advances
+   {
+      segment_iterator s = seg_begin;
+      segment_iterator& ref = ++s;
+      BOOST_TEST(&ref == &s);
+      BOOST_TEST(s != seg_begin);
+      BOOST_TEST(s != seg_end);
+   }
+
+   // Post-increment returns old value and advances
+   {
+      segment_iterator s = seg_begin;
+      segment_iterator old = s++;
+      BOOST_TEST(old == seg_begin);
+      segment_iterator expected = seg_begin;
+      ++expected;
+      BOOST_TEST(s == expected);
+   }
+
+   // Pre-decrement returns reference to self and retreats
+   {
+      segment_iterator s = seg_begin;
+      ++s;
+      segment_iterator& ref = --s;
+      BOOST_TEST(&ref == &s);
+      BOOST_TEST(s == seg_begin);
+   }
+
+   // Post-decrement returns old value and retreats
+   {
+      segment_iterator second = seg_begin;
+      ++second;
+      segment_iterator old = second--;
+      BOOST_TEST(second == seg_begin);
+      segment_iterator expected = seg_begin;
+      ++expected;
+      BOOST_TEST(old == expected);
+   }
+
+   // Increment then decrement is identity
+   {
+      segment_iterator s = seg_begin;
+      ++s; ++s;
+      --s; --s;
+      BOOST_TEST(s == seg_begin);
+   }
+
+   // Count segments (200 elements, 64 per block => at least 4 segments)
+   {
+      int num_segments = 0;
+      for (segment_iterator s = seg_begin; s != seg_end; ++s)
+         ++num_segments;
+      BOOST_TEST(num_segments >= 4);
+   }
+
+   // Full segmented traversal yields all elements
+   {
+      int count = 0;
+      segment_iterator s = seg_begin;
+      local_iterator loc = traits::local(h.begin());
+      while (s != seg_end) {
+         local_iterator loc_end = traits::end(s);
+         for (; loc != loc_end; ++loc)
+            ++count;
+         ++s;
+         if (s != seg_end)
+            loc = traits::begin(s);
+      }
+      BOOST_TEST_EQ(count, 200);
+   }
+
+   // Reverse traversal over segments
+   {
+      int fwd_count = 0;
+      for (segment_iterator s = seg_begin; s != seg_end; ++s)
+         ++fwd_count;
+
+      segment_iterator s = seg_end;
+      int rev_count = 0;
+      while (s != seg_begin) {
+         --s;
+         ++rev_count;
+      }
+      BOOST_TEST_EQ(fwd_count, rev_count);
+   }
+
+}
+
+void test_local_iterator_operations()
+{
+   typedef nest<int> nest_t;
+   typedef nest_t::iterator iterator;
+   typedef segmented_iterator_traits<iterator> traits;
+   typedef traits::segment_iterator segment_iterator;
+   typedef traits::local_iterator local_iterator;
+
+   // ---- Dense case (no gaps in bitmask) ----
+   nest_t h;
+   for (int i = 0; i < 200; ++i)
+      h.insert(i);
+
+   segment_iterator seg = traits::segment(h.begin());
+
+   // Default construction compiles
+   {
+      local_iterator l;
+      (void)l;
+   }
+
+   // begin() / end() of a segment
+   {
+      local_iterator b = traits::begin(seg);
+      local_iterator e = traits::end(seg);
+      BOOST_TEST(b != e);
+   }
+
+   // operator* dereference
+   {
+      local_iterator b = traits::begin(seg);
+      int val = *b;
+      (void)val;
+   }
+
+   // operator-> returns valid pointer
+   {
+      local_iterator b = traits::begin(seg);
+      BOOST_TEST(b.operator->() != 0);
+      BOOST_TEST_EQ(*b.operator->(), *b);
+   }
+
+   // Equality / inequality
+   {
+      local_iterator b1 = traits::begin(seg);
+      local_iterator b2 = traits::begin(seg);
+      local_iterator e  = traits::end(seg);
+      BOOST_TEST(b1 == b2);
+      BOOST_TEST(!(b1 != b2));
+      BOOST_TEST(b1 != e);
+      BOOST_TEST(!(b1 == e));
+   }
+
+   // Pre-increment returns reference to self and advances
+   {
+      local_iterator b = traits::begin(seg);
+      local_iterator orig = b;
+      local_iterator& ref = ++b;
+      BOOST_TEST(&ref == &b);
+      BOOST_TEST(b != orig);
+   }
+
+   // Post-increment returns old value
+   {
+      local_iterator b = traits::begin(seg);
+      local_iterator old = b++;
+      BOOST_TEST(old == traits::begin(seg));
+      local_iterator expected = traits::begin(seg);
+      ++expected;
+      BOOST_TEST(b == expected);
+   }
+
+   // Pre-decrement returns reference to self and retreats
+   {
+      local_iterator b = traits::begin(seg);
+      local_iterator second = b;
+      ++second;
+      local_iterator& ref = --second;
+      BOOST_TEST(&ref == &second);
+      BOOST_TEST(second == b);
+   }
+
+   // Post-decrement returns old value
+   {
+      local_iterator b = traits::begin(seg);
+      local_iterator second = b;
+      ++second;
+      local_iterator old = second--;
+      BOOST_TEST(second == b);
+      local_iterator expected = b;
+      ++expected;
+      BOOST_TEST(old == expected);
+   }
+
+   // Increment then decrement is identity
+   {
+      local_iterator b = traits::begin(seg);
+      ++b; ++b; ++b;
+      --b; --b; --b;
+      BOOST_TEST(b == traits::begin(seg));
+   }
+
+   // operator- (distance) on a dense (fully packed) block
+   {
+      local_iterator b = traits::begin(seg);
+      local_iterator e = traits::end(seg);
+
+      int count = 0;
+      for (local_iterator tmp = b; tmp != e; ++tmp)
+         ++count;
+
+      BOOST_TEST_EQ(e - b, count);
+      BOOST_TEST_EQ(b - b, 0);
+      BOOST_TEST_EQ(e - e, 0);
+
+      local_iterator second = b;
+      ++second;
+      BOOST_TEST_EQ(second - b, 1);
+   }
+
+   // operator- at intermediate positions
+   {
+      local_iterator b = traits::begin(seg);
+      local_iterator it = b;
+      for (int i = 0; i < 5; ++i) ++it;
+      BOOST_TEST_EQ(it - b, 5);
+   }
+
+   // compose() round-trip: compose(segment(it), local(it)) == it
+   {
+      iterator it = h.begin();
+      segment_iterator s = traits::segment(it);
+      local_iterator   l = traits::local(it);
+      iterator composed  = traits::compose(s, l);
+      BOOST_TEST(composed == it);
+      BOOST_TEST_EQ(*composed, *it);
+   }
+
+   // compose() round-trip after advancing the nest iterator
+   {
+      iterator it = h.begin();
+      ++it; ++it; ++it;
+      segment_iterator s = traits::segment(it);
+      local_iterator   l = traits::local(it);
+      iterator composed  = traits::compose(s, l);
+      BOOST_TEST(composed == it);
+      BOOST_TEST_EQ(*composed, *it);
+   }
+
+   // local() gives an iterator that dereferences to the same value
+   {
+      iterator it = h.begin();
+      local_iterator l = traits::local(it);
+      BOOST_TEST_EQ(*l, *it);
+   }
+
+   // begin(seg) matches local(compose(seg, begin(seg)))
+   {
+      local_iterator b = traits::begin(seg);
+      iterator it = traits::compose(seg, b);
+      local_iterator l = traits::local(it);
+      BOOST_TEST(l == b);
+   }
+
+   // ---- Sparse case (gaps in bitmask after erasures) ----
+   {
+      nest_t h2;
+      for (int i = 0; i < 128; ++i)
+         h2.insert(i);
+
+      int remaining = 128;
+      int erase_idx = 0;
+      for (iterator it = h2.begin(); it != h2.end(); ) {
+         if (erase_idx % 3 == 0) {
+            it = h2.erase(it);
+            --remaining;
+         } else {
+            ++it;
+         }
+         ++erase_idx;
+      }
+      BOOST_TEST_EQ(h2.size(), (nest_t::size_type)remaining);
+
+      segment_iterator s     = traits::segment(h2.begin());
+      segment_iterator s_end = traits::segment(h2.end());
+
+      int total_count = 0;
+      local_iterator loc = traits::local(h2.begin());
+      while (s != s_end) {
+         local_iterator lb = traits::begin(s);
+         local_iterator le = traits::end(s);
+
+         int seg_count = 0;
+         for (local_iterator tmp = lb; tmp != le; ++tmp)
+            ++seg_count;
+
+         // operator- must match the manual count
+         BOOST_TEST_EQ(le - lb, seg_count);
+         BOOST_TEST_EQ(lb - lb, 0);
+
+         // Intermediate distances
+         if (seg_count >= 4) {
+            local_iterator mid = lb;
+            ++mid; ++mid; ++mid;
+            BOOST_TEST_EQ(mid - lb, 3);
+            BOOST_TEST_EQ(le - mid, seg_count - 3);
+         }
+
+         for (; loc != le; ++loc)
+            ++total_count;
+
+         ++s;
+         if (s != s_end)
+            loc = traits::begin(s);
+      }
+      BOOST_TEST_EQ(total_count, remaining);
+   }
+}
+
 int main()
 {
    test_default_construction();
@@ -772,5 +1110,7 @@ int main()
    #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    test_initializer_list_operations();
    #endif
+   test_segment_iterator_operations();
+   test_local_iterator_operations();
    return boost::report_errors();
 }
