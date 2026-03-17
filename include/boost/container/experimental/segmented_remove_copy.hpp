@@ -30,7 +30,7 @@ namespace container {
 //! skipping elements equal to \c value. Returns the output iterator past
 //! the last element written.
 template <class InIter, class Sent, class OutIter, class T>
-inline OutIter segmented_remove_copy(InIter first, Sent last, OutIter result, const T& value)
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_remove_copy(InIter first, Sent last, OutIter result, const T& value)
 {
    return boost::container::segmented_remove_copy_if(first, last, result, equal_to_value<T>(value));
 }

@@ -75,7 +75,7 @@ bool segmented_is_partitioned_dispatch
 }
 
 template <class InpIter, class Sent, class Pred, class Tag>
-typename algo_enable_if_c<
+BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, InpIter>::value, bool>::type
 segmented_is_partitioned_dispatch
    (InpIter first, Sent last, Pred pred, Tag)
@@ -91,7 +91,7 @@ segmented_is_partitioned_dispatch
 //! partitioned with respect to \c pred.
 //! Exploits segmentation when available.
 template <class InpIter, class Sent, class Pred>
-inline bool segmented_is_partitioned(InpIter first, Sent last, Pred pred)
+BOOST_CONTAINER_FORCEINLINE bool segmented_is_partitioned(InpIter first, Sent last, Pred pred)
 {
    typedef segmented_iterator_traits<InpIter> traits;
    return detail_algo::segmented_is_partitioned_dispatch(first, last, pred,

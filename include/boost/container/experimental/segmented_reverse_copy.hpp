@@ -82,7 +82,7 @@ OutIter segmented_reverse_copy_dispatch
 //! each local range without per-element segment-boundary overhead.
 //! Returns the output iterator past the last element written.
 template <class BidirIter, class OutIter>
-inline OutIter segmented_reverse_copy(BidirIter first, BidirIter last, OutIter result)
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_reverse_copy(BidirIter first, BidirIter last, OutIter result)
 {
    typedef segmented_iterator_traits<BidirIter> traits;
    return detail_algo::segmented_reverse_copy_dispatch(first, last, result,

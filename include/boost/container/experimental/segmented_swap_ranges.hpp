@@ -68,7 +68,7 @@ segmented_swap_ranges_dispatch
 //! Returns an iterator past the last swapped element in the second range.
 //! Segmentation is exploited on the first range.
 template <class FwdIt1, class Sent, class FwdIt2>
-inline FwdIt2 segmented_swap_ranges(FwdIt1 first1, Sent last1, FwdIt2 first2)
+BOOST_CONTAINER_FORCEINLINE FwdIt2 segmented_swap_ranges(FwdIt1 first1, Sent last1, FwdIt2 first2)
 {
    typedef segmented_iterator_traits<FwdIt1> traits;
    return detail_algo::segmented_swap_ranges_dispatch(first1, last1, first2,

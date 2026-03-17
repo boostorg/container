@@ -94,7 +94,7 @@ segmented_partition_copy_dispatch
 //! depending on whether \c pred returns true or false.
 //! Returns a pair of output iterators past the last elements written.
 template <class InIter, class Sent, class OutIter1, class OutIter2, class Pred>
-inline std::pair<OutIter1, OutIter2>
+BOOST_CONTAINER_FORCEINLINE std::pair<OutIter1, OutIter2>
 segmented_partition_copy(InIter first, Sent last, OutIter1 out_true, OutIter2 out_false, Pred pred)
 {
    typedef segmented_iterator_traits<InIter> traits;

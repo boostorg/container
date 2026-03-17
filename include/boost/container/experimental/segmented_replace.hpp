@@ -28,7 +28,7 @@ namespace container {
 
 //! Replaces every occurrence of \c old_val with \c new_val in [first, last).
 template <class FwdIt, class Sent, class T>
-inline void segmented_replace
+BOOST_CONTAINER_FORCEINLINE void segmented_replace
    (FwdIt first, Sent last, const T& old_val, const T& new_val)
 {
    boost::container::segmented_replace_if(first, last, equal_to_value<T>(old_val), new_val);

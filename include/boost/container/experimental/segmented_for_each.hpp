@@ -67,7 +67,7 @@ segmented_for_each_dispatch
 //! When \c Iter is a segmented iterator, exploits segmentation
 //! to reduce per-element overhead.
 template <class InpIter, class Sent, class F>
-inline F segmented_for_each(InpIter first, Sent last, F f)
+BOOST_CONTAINER_FORCEINLINE F segmented_for_each(InpIter first, Sent last, F f)
 {
    typedef segmented_iterator_traits<InpIter> traits;
    return detail_algo::segmented_for_each_dispatch(first, last, f,

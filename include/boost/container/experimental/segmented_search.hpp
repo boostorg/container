@@ -131,7 +131,7 @@ segmented_search_dispatch
 //! Finds the first occurrence of the subsequence [s_first, s_last) in [first, last).
 //! Returns an iterator to the beginning of the found subsequence, or \c last if not found.
 template <class FwdIt1, class Sent1, class FwdIt2, class Sent2>
-inline FwdIt1 segmented_search
+BOOST_CONTAINER_FORCEINLINE FwdIt1 segmented_search
    (FwdIt1 first, Sent1 last, FwdIt2 s_first, Sent2 s_last)
 {
    typedef segmented_iterator_traits<FwdIt1> traits;

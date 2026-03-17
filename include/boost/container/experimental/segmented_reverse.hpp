@@ -114,7 +114,7 @@ void segmented_reverse_dispatch(SegIt first, SegIt last, segmented_iterator_tag)
 //! When the iterator is segmented, exploits segmentation on both
 //! the forward and backward sides to reduce per-element overhead.
 template <class BidirIter>
-void segmented_reverse(BidirIter first, BidirIter last)
+BOOST_CONTAINER_FORCEINLINE void segmented_reverse(BidirIter first, BidirIter last)
 {
    typedef segmented_iterator_traits<BidirIter> traits;
    detail_algo::segmented_reverse_dispatch(first, last,

@@ -77,7 +77,7 @@ segmented_partition_point_dispatch
 //! for which \c pred returns false. The range must be partitioned
 //! with respect to \c pred.
 template <class FwdIt, class Sent, class Predicate>
-inline FwdIt segmented_partition_point(FwdIt first, Sent last, Predicate pred)
+BOOST_CONTAINER_FORCEINLINE FwdIt segmented_partition_point(FwdIt first, Sent last, Predicate pred)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
    return detail_algo::segmented_partition_point_dispatch(first, last, pred,

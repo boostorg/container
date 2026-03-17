@@ -140,7 +140,7 @@ segmented_is_sorted_until_dispatch
 //! in [first, last), using \c comp for comparison.
 //! Returns \c last if the range is sorted.
 template <class FwdIt, class Sent, class Comp>
-inline FwdIt segmented_is_sorted_until(FwdIt first, Sent last, Comp comp)
+BOOST_CONTAINER_FORCEINLINE FwdIt segmented_is_sorted_until(FwdIt first, Sent last, Comp comp)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
    return detail_algo::segmented_is_sorted_until_dispatch(first, last, comp,
@@ -151,7 +151,7 @@ inline FwdIt segmented_is_sorted_until(FwdIt first, Sent last, Comp comp)
 //! in [first, last), using operator<.
 //! Returns \c last if the range is sorted.
 template <class FwdIt, class Sent>
-inline FwdIt segmented_is_sorted_until(FwdIt first, Sent last)
+BOOST_CONTAINER_FORCEINLINE FwdIt segmented_is_sorted_until(FwdIt first, Sent last)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
    return detail_algo::segmented_is_sorted_until_dispatch(first, last,

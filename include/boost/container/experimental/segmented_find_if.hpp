@@ -89,7 +89,7 @@ segmented_find_if_dispatch
 //! Returns an iterator to the first element satisfying \c pred
 //! in [first, last), or \c last if not found.
 template <class InpIter, class Sent, class Pred>
-inline InpIter segmented_find_if(InpIter first, Sent last, Pred pred)
+BOOST_CONTAINER_FORCEINLINE InpIter segmented_find_if(InpIter first, Sent last, Pred pred)
 {
    typedef segmented_iterator_traits<InpIter> traits;
    return detail_algo::segmented_find_if_dispatch(first, last, pred,

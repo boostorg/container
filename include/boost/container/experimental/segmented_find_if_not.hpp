@@ -29,7 +29,7 @@ namespace container {
 //! Returns an iterator to the first element for which \c pred
 //! returns false in [first, last), or \c last if not found.
 template <class InpIter, class Sent, class Pred>
-inline InpIter segmented_find_if_not(InpIter first, Sent last, Pred pred)
+BOOST_CONTAINER_FORCEINLINE InpIter segmented_find_if_not(InpIter first, Sent last, Pred pred)
 {
    return boost::container::segmented_find_if(first, last, not_pred<Pred>(pred));
 }

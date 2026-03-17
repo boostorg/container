@@ -115,7 +115,7 @@ segmented_merge_dispatch
 } // namespace detail_algo
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp>
-inline OutIter segmented_merge
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_merge
    (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp)
 {
    typedef segmented_iterator_traits<InIter1> traits;
@@ -124,7 +124,7 @@ inline OutIter segmented_merge
 }
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter>
-inline OutIter segmented_merge
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_merge
    (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result)
 {
    return boost::container::segmented_merge(first1, last1, first2, last2, result,

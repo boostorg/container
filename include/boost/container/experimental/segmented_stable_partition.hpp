@@ -63,10 +63,10 @@ struct sp_chained_composer
    OuterComposer outer_;
    typename Traits::segment_iterator seg_;
 
-   sp_chained_composer(OuterComposer o, typename Traits::segment_iterator s)
+   BOOST_CONTAINER_FORCEINLINE sp_chained_composer(OuterComposer o, typename Traits::segment_iterator s)
       : outer_(o), seg_(s) {}
 
-   result_type operator()(typename Traits::local_iterator l) const
+   BOOST_CONTAINER_FORCEINLINE result_type operator()(typename Traits::local_iterator l) const
    { return outer_(Traits::compose(seg_, l)); }
 };
 
@@ -118,20 +118,17 @@ OuterIter stable_partition_scan(SegIt first, SegIt last, OuterIter result,
 }
 
 template <class SegIter, class Pred>
-SegIter segmented_stable_partition_dispatch
+BOOST_CONTAINER_FORCEINLINE SegIter segmented_stable_partition_dispatch
    (SegIter first, SegIter last, Pred pred, segmented_iterator_tag)
 {
-   SegIter result = first;
-   sp_identity_composer<SegIter> composer;
-   return stable_partition_scan(first, last, result, composer, pred, segmented_iterator_tag());
+   return stable_partition_scan(first, last, first, sp_identity_composer<SegIter>(), pred, segmented_iterator_tag());
 }
 
 template <class BidirIt, class Pred>
-BidirIt segmented_stable_partition_dispatch
+BOOST_CONTAINER_FORCEINLINE BidirIt segmented_stable_partition_dispatch
    (BidirIt first, BidirIt last, Pred pred, non_segmented_iterator_tag)
 {
-   sp_identity_composer<BidirIt> composer;
-   return stable_partition_scan(first, last, first, composer, pred, non_segmented_iterator_tag());
+   return stable_partition_scan(first, last, first, sp_identity_composer<BidirIt>(), pred, non_segmented_iterator_tag());
 }
 
 } // namespace detail_algo
@@ -140,7 +137,7 @@ BidirIt segmented_stable_partition_dispatch
 //! \c pred come before those that do not, preserving relative order
 //! within each group. Returns an iterator to the partition point.
 template <class BidirIt, class Pred>
-inline BidirIt segmented_stable_partition(BidirIt first, BidirIt last, Pred pred)
+BOOST_CONTAINER_FORCEINLINE BidirIt segmented_stable_partition(BidirIt first, BidirIt last, Pred pred)
 {
    typedef segmented_iterator_traits<BidirIt> traits;
    return detail_algo::segmented_stable_partition_dispatch(first, last, pred,

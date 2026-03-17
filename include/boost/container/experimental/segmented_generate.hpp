@@ -71,7 +71,7 @@ segmented_generate_ref(FwdIt first, Sent last, Generator& gen, Tag)
 //! element in [first, last).
 //! Generator state is preserved across segment boundaries.
 template <class FwdIt, class Sent, class Generator>
-inline void segmented_generate(FwdIt first, Sent last, Generator gen)
+BOOST_CONTAINER_FORCEINLINE void segmented_generate(FwdIt first, Sent last, Generator gen)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
    detail_algo::segmented_generate_ref(first, last, gen,

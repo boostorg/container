@@ -29,7 +29,7 @@ namespace container {
 //! Returns an iterator to the first element equal to \c value
 //! in [first, last), or \c last if not found.
 template <class InpIter, class Sent, class T>
-inline InpIter segmented_find(InpIter first, Sent last, const T& value)
+BOOST_CONTAINER_FORCEINLINE InpIter segmented_find(InpIter first, Sent last, const T& value)
 {
    return boost::container::segmented_find_if(first, last, equal_to_value<T>(value));
 }

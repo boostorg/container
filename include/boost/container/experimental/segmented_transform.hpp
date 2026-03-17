@@ -70,7 +70,7 @@ segmented_transform_dispatch
 //! to the range beginning at \c result.
 //! Segmentation is exploited on the input range only.
 template <class InIter, class Sent, class OutIter, class UnaryOp>
-inline OutIter segmented_transform
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_transform
    (InIter first, Sent last, OutIter result, UnaryOp op)
 {
    typedef segmented_iterator_traits<InIter> traits;

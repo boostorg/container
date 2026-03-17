@@ -70,7 +70,7 @@ segmented_remove_copy_if_dispatch
 //! skipping elements satisfying \c pred. Returns the output iterator past
 //! the last element written.
 template <class InIter, class Sent, class OutIter, class Pred>
-inline OutIter segmented_remove_copy_if(InIter first, Sent last, OutIter result, Pred pred)
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_remove_copy_if(InIter first, Sent last, OutIter result, Pred pred)
 {
    typedef segmented_iterator_traits<InIter> traits;
    return detail_algo::segmented_remove_copy_if_dispatch(first, last, result, pred,

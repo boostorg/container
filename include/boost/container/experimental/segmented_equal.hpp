@@ -65,7 +65,7 @@ bool segmented_equal_ref
 }
 
 template <class InpIter1, class Sent, class InpIter2, class Tag>
-typename algo_enable_if_c<
+BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, InpIter1>::value, bool>::type
 segmented_equal_ref
    (InpIter1 first1, Sent last1, InpIter2& first2, Tag)
@@ -78,7 +78,7 @@ segmented_equal_ref
 //! Returns \c true if elements in [first1, last1) are equal to the
 //! range starting at \c first2. Exploits segmentation on the first range.
 template <class InpIter1, class Sent, class InpIter2>
-inline bool segmented_equal(InpIter1 first1, Sent last1, InpIter2 first2)
+BOOST_CONTAINER_FORCEINLINE bool segmented_equal(InpIter1 first1, Sent last1, InpIter2 first2)
 {
    typedef segmented_iterator_traits<InpIter1> traits;
    return detail_algo::segmented_equal_ref(first1, last1, first2,

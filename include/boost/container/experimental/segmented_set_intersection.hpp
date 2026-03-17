@@ -38,7 +38,7 @@ namespace detail_algo {
 struct set_intersection_default_less
 {
    template <class T>
-   bool operator()(const T& a, const T& b) const { return a < b; }
+   BOOST_CONTAINER_FORCEINLINE bool operator()(const T& a, const T& b) const { return a < b; }
 };
 
 template <class FwdIt, class InIter2, class Sent2, class OutIter, class Comp>
@@ -77,7 +77,7 @@ void set_intersection_scan(SegIt first, SegIt last, InIter2& first2, Sent2 last2
 }
 
 template <class SegIter, class InIter2, class Sent2, class OutIter, class Comp>
-OutIter segmented_set_intersection_dispatch
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_set_intersection_dispatch
    (SegIter first1, SegIter last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp, segmented_iterator_tag)
 {
    set_intersection_scan(first1, last1, first2, last2, result, comp, segmented_iterator_tag());
@@ -101,7 +101,7 @@ segmented_set_intersection_dispatch
 } // namespace detail_algo
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp>
-inline OutIter segmented_set_intersection
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_set_intersection
    (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp)
 {
    typedef segmented_iterator_traits<InIter1> traits;
@@ -110,7 +110,7 @@ inline OutIter segmented_set_intersection
 }
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter>
-inline OutIter segmented_set_intersection
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_set_intersection
    (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result)
 {
    return boost::container::segmented_set_intersection(first1, last1, first2, last2, result,

@@ -27,14 +27,14 @@ namespace container {
 
 //! Returns true if [first, last) is sorted according to \c comp.
 template <class FwdIt, class Sent, class Comp>
-inline bool segmented_is_sorted(FwdIt first, Sent last, Comp comp)
+BOOST_CONTAINER_FORCEINLINE bool segmented_is_sorted(FwdIt first, Sent last, Comp comp)
 {
    return boost::container::segmented_is_sorted_until(first, last, comp) == last;
 }
 
 //! Returns true if [first, last) is sorted using operator<.
 template <class FwdIt, class Sent>
-inline bool segmented_is_sorted(FwdIt first, Sent last)
+BOOST_CONTAINER_FORCEINLINE bool segmented_is_sorted(FwdIt first, Sent last)
 {
    return boost::container::segmented_is_sorted_until(first, last) == last;
 }

@@ -97,7 +97,7 @@ segmented_partition_dispatch
 //! \c pred come before those that do not (Lomuto-style partition).
 //! Returns an iterator to the partition point.
 template <class FwdIt, class Sent, class Pred>
-inline FwdIt segmented_partition(FwdIt first, Sent last, Pred pred)
+BOOST_CONTAINER_FORCEINLINE FwdIt segmented_partition(FwdIt first, Sent last, Pred pred)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
    return detail_algo::segmented_partition_dispatch(first, last, pred,

@@ -63,7 +63,7 @@ segmented_replace_if_dispatch
 
 //! Replaces every element satisfying \c pred with \c new_val in [first, last).
 template <class FwdIt, class Sent, class Pred, class T>
-inline void segmented_replace_if(FwdIt first, Sent last, Pred pred, const T& new_val)
+BOOST_CONTAINER_FORCEINLINE void segmented_replace_if(FwdIt first, Sent last, Pred pred, const T& new_val)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
    detail_algo::segmented_replace_if_dispatch(first, last, pred, new_val,
