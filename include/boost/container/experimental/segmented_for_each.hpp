@@ -21,6 +21,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/move/utility_core.hpp>
 
 namespace boost {
 namespace container {
@@ -37,14 +38,15 @@ F segmented_for_each_dispatch
    typedef segmented_iterator_traits<SegIter> traits;
    typename traits::segment_iterator sfirst = traits::segment(first);
    typename traits::segment_iterator slast  = traits::segment(last);
+
    if(sfirst == slast) {
-      f = boost::container::segmented_for_each(traits::local(first), traits::local(last), f);
+      f = boost::container::segmented_for_each(traits::local(first), traits::local(last), boost::move(f));
    }
    else {
-      f = boost::container::segmented_for_each(traits::local(first), traits::end(sfirst), f);
+      f = boost::container::segmented_for_each(traits::local(first), traits::end(sfirst), boost::move(f));
       for(++sfirst; sfirst != slast; ++sfirst)
-         f = boost::container::segmented_for_each(traits::begin(sfirst), traits::end(sfirst), f);
-      f = boost::container::segmented_for_each(traits::begin(sfirst), traits::local(last), f);
+         f = boost::container::segmented_for_each(traits::begin(sfirst), traits::end(sfirst), boost::move(f));
+      f = boost::container::segmented_for_each(traits::begin(sfirst), traits::local(last), boost::move(f));
    }
    return f;
 }
@@ -67,11 +69,11 @@ segmented_for_each_dispatch
 //! When \c Iter is a segmented iterator, exploits segmentation
 //! to reduce per-element overhead.
 template <class InpIter, class Sent, class F>
-BOOST_CONTAINER_FORCEINLINE F segmented_for_each(InpIter first, Sent last, F f)
+BOOST_CONTAINER_FORCEINLINE
+F segmented_for_each(InpIter first, Sent last, F f)
 {
    typedef segmented_iterator_traits<InpIter> traits;
-   return detail_algo::segmented_for_each_dispatch(first, last, f,
-      typename traits::is_segmented_iterator());
+   return detail_algo::segmented_for_each_dispatch(first, last, boost::move(f), typename traits::is_segmented_iterator());
 }
 
 } // namespace container
