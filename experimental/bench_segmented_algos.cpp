@@ -1407,7 +1407,7 @@ void bench_set_symmetric_difference(C c, C& c2, std::size_t iters, const char* c
       escape(&out[0]);
    }
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
-   print_ratio("set_symetric_difference", cname, r1, r2);
+   print_ratio("set_symmetric_difference", cname, r1, r2);
 }
 
 template<class C, class Pred>
