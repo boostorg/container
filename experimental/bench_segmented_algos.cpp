@@ -40,6 +40,7 @@
 #include <boost/container/experimental/segmented_is_sorted_until.hpp>
 #include <boost/container/experimental/segmented_partition.hpp>
 #include <boost/container/experimental/segmented_partition_copy.hpp>
+#include <boost/container/experimental/segmented_partition_point.hpp>
 #include <boost/container/experimental/segmented_remove.hpp>
 #include <boost/container/experimental/segmented_remove_if.hpp>
 #include <boost/container/experimental/segmented_remove_copy.hpp>
@@ -338,6 +339,14 @@ partition_copy(InIt first, InIt last,
    return std::pair<OutIt1, OutIt2>(out_true, out_false);
 }
 
+template<class FwdIt, class Pred>
+FwdIt partition_point(FwdIt first, FwdIt last, Pred pred)
+{
+   for (; first != last; ++first)
+      if (!pred(*first)) return first;
+   return last;
+}
+
 #else
 
    using std::find_if_not;
@@ -411,7 +420,6 @@ partition_copy(InIt first, InIt last,
 //none_of
 //move
 //move_backward
-//partition_point
 //shuffle (random-access non-implementable?)
 //is_heap (random-access non-implementable?)
 //is_heap_until (random-access non-implementable?)
@@ -489,7 +497,7 @@ inline double calc_ns_per_elem(nanosecond_type ns,
 inline void print_subheader()
 {
    std::cout << std::left  << std::setw(24) << "< algo >"
-             << std::right << std::setw(20) << "< speed >"
+             << std::right << std::setw(20) << "< speedup >"
              << std::right << std::setw(20) << "< std ns/item >"
              << std::right << std::setw(20) << "< seg ns/item >"
              << '\n';
@@ -1523,6 +1531,34 @@ void bench_partition_copy(C c, std::size_t iters, const char* cname)
    print_ratio("partition_copy", cname, r1, r2);
 }
 
+template<class C, class Pred>
+void bench_partition_point(C c, std::size_t iters, const char* cname,
+                           Pred pred, const char* label)
+{
+   int result = 0;
+
+   cpu_timer t1;
+   for (std::size_t i = 0; i < iters; ++i) {
+      t1.resume();
+      typename C::iterator it = bench_detail::partition_point(c.begin(), c.end(), pred);
+      result = (it == c.end()) ? 1 : 0;
+      t1.stop();
+      escape(&result);
+   }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+
+   cpu_timer t2;
+   for (std::size_t i = 0; i < iters; ++i) {
+      t2.resume();
+      typename C::iterator it = bc::segmented_partition_point(c.begin(), c.end(), pred);
+      result = (it == c.end()) ? 1 : 0;
+      t2.stop();
+      escape(&result);
+   }
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+   print_ratio(label, cname, r1, r2);
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // Run all benchmarks for a container type
 //////////////////////////////////////////////////////////////////////////////
@@ -1633,6 +1669,10 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 
    //partition_copy
    bench_partition_copy(c, iters, cname);
+
+   //partition_point
+   bench_partition_point(c, iters, cname, is_negative<VT>(), "partition_point(hit)");
+   bench_partition_point(c, iters, cname, is_odd<VT>(),      "partition_point(miss)");
 
    //remove
    bench_remove(c, iters, cname, VT(0),  "remove(hit)");
