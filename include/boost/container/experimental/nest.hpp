@@ -232,7 +232,7 @@ struct pointer_rebind
 //
 //////////////////////////////////////////////
 
-inline int unchecked_countr_zero(boost::uint64_t x)
+BOOST_CONTAINER_FORCEINLINE int unchecked_countr_zero(boost::uint64_t x)
 {
 #if defined(BOOST_MSVC) && (defined(_M_X64) || defined(_M_ARM64))
    unsigned long r;
@@ -265,20 +265,6 @@ BOOST_CONTAINER_FORCEINLINE int unchecked_countl_zero(boost::uint64_t x)
 #endif
 }
 
-inline int countr_zero(boost::uint64_t x)
-{
-   return (int)boost::core::countr_zero(x);
-}
-
-BOOST_CONTAINER_FORCEINLINE int countr_one(boost::uint64_t x)
-{
-   return unchecked_countr_zero(~x);
-}
-
-BOOST_CONTAINER_FORCEINLINE int countl_zero(boost::uint64_t x)
-{
-   return (int)boost::core::countl_zero(x);
-}
 
 
 
@@ -715,7 +701,7 @@ private:
 //
 //////////////////////////////////////////////
 
-//#define NEST_LOCAL_ITERATOR_FULL
+#define NEST_LOCAL_ITERATOR_FULL
 
 #if defined(NEST_LOCAL_ITERATOR_FULL)
 template<class ValuePointer, bool StoreDataInBlock>
@@ -759,8 +745,9 @@ public:
 
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator++() BOOST_NOEXCEPT
    {
+      BOOST_CONTAINER_NEST_ASSUME(n != (int)N); // Undefined behavior otherwise
       const mask_type m = pbb->mask & (full_l << std::size_t(n));
-      n = nest_detail::countr_zero(m);
+      n = m ? nest_detail::unchecked_countr_zero(m) : (int)N;
       return *this;
    }
 
@@ -769,6 +756,7 @@ public:
 
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator--() BOOST_NOEXCEPT
    {
+      BOOST_CONTAINER_NEST_ASSUME(n != 0); // Undefined behavior otherwise
       const mask_type m = pbb->mask & (full >> (N - std::size_t(n)));
       n = int((N - 1) - (std::size_t)nest_detail::unchecked_countl_zero(m));
       return *this;
@@ -784,6 +772,16 @@ public:
    BOOST_CONTAINER_FORCEINLINE
    friend bool operator!=(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
    { return x.n != y.n; }
+
+   BOOST_CONTAINER_FORCEINLINE
+   friend difference_type operator-(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
+   {
+      BOOST_CONTAINER_NEST_ASSUME(x.pbb == y.pbb); // Undefined behavior otherwise
+      const mask_type lo_x = (x.n == int(N)) ? full : ((mask_type(1) << x.n) - 1);
+      const mask_type lo_y = (y.n == int(N)) ? full : ((mask_type(1) << y.n) - 1);
+      const mask_type m = x.pbb->mask;
+      return boost::core::popcount(m & lo_x & (~lo_y));
+   }
 
    BOOST_CONTAINER_FORCEINLINE block_base_pointer get_block() const BOOST_NOEXCEPT { return pbb; }
    BOOST_CONTAINER_FORCEINLINE int get_slot() const BOOST_NOEXCEPT { return n; }
@@ -840,10 +838,10 @@ public:
 
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator++() BOOST_NOEXCEPT
    {
-      BOOST_ASSERT(n != N);
+      BOOST_CONTAINER_NEST_ASSUME(n != N);
       const mask_type m = mask & (full_l << std::size_t(n));
       const int old_n = n;
-      n = nest_detail::countr_zero(m);
+      n = m ? nest_detail::unchecked_countr_zero(m) : (int)N;
       pos += (n - old_n);
       return *this;
    }
@@ -853,7 +851,7 @@ public:
 
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator--() BOOST_NOEXCEPT
    {
-      BOOST_ASSERT(n != 0);
+      BOOST_CONTAINER_NEST_ASSUME(n != 0);
       const mask_type m = mask & (full >> (N - std::size_t(n)));
       const int old_n = n;
       n = int((N - 1) - (std::size_t)nest_detail::unchecked_countl_zero(m));
@@ -874,6 +872,18 @@ public:
    friend bool operator!=(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
    {
       return x.n != y.n;
+   }
+
+   BOOST_CONTAINER_FORCEINLINE
+   friend difference_type operator-(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
+   {
+      BOOST_CONTAINER_NEST_ASSUME(x.mask == y.mask); // Undefined behavior otherwise
+      BOOST_CONTAINER_NEST_ASSUME(x.n >= y.n);       // Undefined behavior otherwise
+      const mask_type m = x.mask;
+      const mask_type lo_x = (x.n == int(N)) ? full : ((mask_type(1) << x.n) - 1);
+      const mask_type lo_y = (y.n == int(N)) ? full : ((mask_type(1) << y.n) - 1);
+
+      return boost::core::popcount(m & lo_x & (~lo_y));
    }
 
    //BOOST_CONTAINER_FORCEINLINE block_base_pointer get_block() const BOOST_NOEXCEPT { return pbb; }
