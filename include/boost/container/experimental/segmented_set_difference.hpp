@@ -43,19 +43,21 @@ struct set_difference_default_less
 };
 
 template <class FwdIt, class InIter2, class Sent2, class OutIter, class Comp>
-void set_difference_scan(FwdIt first, FwdIt last, InIter2& first2, Sent2 last2, OutIter& result, Comp comp,
+OutIter set_difference_scan(FwdIt first, FwdIt last, InIter2& first2_out, Sent2 last2, OutIter result, Comp comp,
    non_segmented_iterator_tag)
 {
+   InIter2 first2 = first2_out;
    while(first != last && first2 != last2) {
       if(comp(*first, *first2))      { *result = *first; ++first; ++result; }
       else if(comp(*first2, *first)) { ++first2; }
       else                           { ++first; ++first2; }
    }
-   result = (segmented_copy)(first, last, result);
+   first2_out = first2;
+   return (segmented_copy)(first, last, result);
 }
 
 template <class SegIt, class InIter2, class Sent2, class OutIter, class Comp>
-void set_difference_scan(SegIt first, SegIt last, InIter2& first2, Sent2 last2, OutIter& result, Comp comp,
+OutIter set_difference_scan(SegIt first, SegIt last, InIter2& first2, Sent2 last2, OutIter result, Comp comp,
    segmented_iterator_tag)
 {
    typedef segmented_iterator_traits<SegIt> traits;
@@ -65,25 +67,22 @@ void set_difference_scan(SegIt first, SegIt last, InIter2& first2, Sent2 last2, 
    typename traits::segment_iterator slast = traits::segment(last);
    local_iterator lcur = traits::local(first);
    if(scur == slast) {
-      set_difference_scan(lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());
+      result = set_difference_scan(lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());
    }
    else {
-      set_difference_scan(lcur, traits::end(scur), first2, last2, result, comp,
-         is_local_seg_t());
+      result = set_difference_scan(lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
       for(++scur; scur != slast; ++scur)
-         set_difference_scan(traits::begin(scur), traits::end(scur), first2, last2, result, comp,
-            is_local_seg_t());
-      set_difference_scan(traits::begin(scur), traits::local(last), first2, last2, result, comp,
-         is_local_seg_t());
+         result = set_difference_scan(traits::begin(scur), traits::end(scur), first2, last2, result, comp, is_local_seg_t());
+      result = set_difference_scan(traits::begin(scur), traits::local(last), first2, last2, result, comp, is_local_seg_t());
    }
+   return result;
 }
 
 template <class SegIter, class InIter2, class Sent2, class OutIter, class Comp>
 BOOST_CONTAINER_FORCEINLINE OutIter segmented_set_difference_dispatch
    (SegIter first1, SegIter last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp, segmented_iterator_tag)
 {
-   set_difference_scan(first1, last1, first2, last2, result, comp, segmented_iterator_tag());
-   return result;
+   return set_difference_scan(first1, last1, first2, last2, result, comp, segmented_iterator_tag());
 }
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp, class Tag>
@@ -97,8 +96,7 @@ segmented_set_difference_dispatch
       else if(comp(*first2, *first1)) { ++first2; }
       else                            { ++first1; ++first2; }
    }
-   for(; first1 != last1; ++first1, ++result) *result = *first1;
-   return result;
+   return (segmented_copy)(first1, last1, result);
 }
 
 } // namespace detail_algo

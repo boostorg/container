@@ -21,6 +21,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/container/experimental/segmented_copy.hpp>
 
 namespace boost {
 namespace container {
@@ -42,7 +43,7 @@ struct merge_default_less
 };
 
 template <class FwdIt, class InIter2, class Sent2, class OutIter, class Comp>
-void merge_scan(FwdIt first, FwdIt last, InIter2& first2, Sent2 last2, OutIter& result, Comp comp,
+OutIter merge_scan(FwdIt first, FwdIt last, InIter2& first2, Sent2 last2, OutIter result, Comp comp,
    non_segmented_iterator_tag)
 {
    while(first != last && first2 != last2) {
@@ -50,12 +51,11 @@ void merge_scan(FwdIt first, FwdIt last, InIter2& first2, Sent2 last2, OutIter& 
       else                      { *result = *first; ++first; }
       ++result;
    }
-   for(; first != last; ++first, ++result)
-      *result = *first;
+   return (segmented_copy)(first, last, result);
 }
 
 template <class SegIt, class InIter2, class Sent2, class OutIter, class Comp>
-void merge_scan(SegIt first, SegIt last, InIter2& first2, Sent2 last2, OutIter& result, Comp comp,
+OutIter merge_scan(SegIt first, SegIt last, InIter2& first2, Sent2 last2, OutIter result, Comp comp,
    segmented_iterator_tag)
 {
    typedef segmented_iterator_traits<SegIt> traits;
@@ -68,24 +68,20 @@ void merge_scan(SegIt first, SegIt last, InIter2& first2, Sent2 last2, OutIter& 
       merge_scan(lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());
    }
    else {
-      merge_scan(lcur, traits::end(scur), first2, last2, result, comp,
-         is_local_seg_t());
+      result = merge_scan(lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
       for(++scur; scur != slast; ++scur)
-         merge_scan(traits::begin(scur), traits::end(scur), first2, last2, result, comp,
-            is_local_seg_t());
-      merge_scan(traits::begin(scur), traits::local(last), first2, last2, result, comp,
-         is_local_seg_t());
+         result = merge_scan(traits::begin(scur), traits::end(scur), first2, last2, result, comp, is_local_seg_t());
+      result = merge_scan(traits::begin(scur), traits::local(last), first2, last2, result, comp, is_local_seg_t());
    }
+   return result;
 }
 
 template <class SegIter, class InIter2, class Sent2, class OutIter, class Comp>
-OutIter segmented_merge_dispatch
+BOOST_CONTAINER_FORCEINLINE OutIter segmented_merge_dispatch
    (SegIter first1, SegIter last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp, segmented_iterator_tag)
 {
-   merge_scan(first1, last1, first2, last2, result, comp, segmented_iterator_tag());
-   for(; first2 != last2; ++first2, ++result)
-      *result = *first2;
-   return result;
+   result = merge_scan(first1, last1, first2, last2, result, comp, segmented_iterator_tag());
+   return (segmented_copy)(first2, last2, result);
 }
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp, class Tag>
@@ -105,10 +101,9 @@ segmented_merge_dispatch
       }
       ++result;
    }
-   for(; first1 != last1; ++first1, ++result)
-      *result = *first1;
-   for(; first2 != last2; ++first2, ++result)
-      *result = *first2;
+   result = (segmented_copy)(first1, last1, result);
+   result = (segmented_copy)(first2, last2, result);
+
    return result;
 }
 

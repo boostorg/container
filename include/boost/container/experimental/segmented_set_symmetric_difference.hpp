@@ -83,9 +83,7 @@ OutIter segmented_set_symmetric_difference_dispatch
    (SegIter first1, SegIter last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp, segmented_iterator_tag)
 {
    set_symmetric_difference_scan(first1, last1, first2, last2, result, comp, segmented_iterator_tag());
-   for(; first2 != last2; ++first2, ++result)
-      *result = *first2;
-   return result;
+   return (segmented_copy)(first2, last2, result);
 }
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp, class Tag>
@@ -99,8 +97,8 @@ segmented_set_symmetric_difference_dispatch
       else if(comp(*first2, *first1)) { *result = *first2; ++first2; ++result; }
       else                            { ++first1; ++first2; }
    }
-   for(; first1 != last1; ++first1, ++result) *result = *first1;
-   for(; first2 != last2; ++first2, ++result) *result = *first2;
+   result = (segmented_copy)(first1, last1, result);
+   result = (segmented_copy)(first2, last2, result);
    return result;
 }
 
