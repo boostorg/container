@@ -62,10 +62,11 @@ typename algo_enable_if_c<
 segmented_count_if_dispatch
    (InpIter first, Sent last, Pred pred, Tag)
 {
-   typename boost::container::iterator_traits<InpIter>::difference_type n = 0;
-   for(; first != last; ++first)
-      if(pred(*first))
-         ++n;
+   typedef typename boost::container::iterator_traits<InpIter>::difference_type diff_t;
+   diff_t n = 0;
+
+   for (; first != last; ++first)
+      n += static_cast<diff_t>(pred(*first));
    return n;
 }
 
@@ -73,7 +74,7 @@ segmented_count_if_dispatch
 
 //! Returns the number of elements satisfying \c pred in [first, last).
 template <class InpIter, class Sent, class Pred>
-inline typename boost::container::iterator_traits<InpIter>::difference_type
+BOOST_CONTAINER_FORCEINLINE typename boost::container::iterator_traits<InpIter>::difference_type
 segmented_count_if(InpIter first, Sent last, Pred pred)
 {
    typedef segmented_iterator_traits<InpIter> traits;
