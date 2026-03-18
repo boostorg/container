@@ -20,6 +20,8 @@
 #include <boost/container/experimental/nest.hpp>
 #include <boost/move/detail/nsec_clock.hpp>
 
+#include <boost/container/experimental/segmented_all_of.hpp>
+#include <boost/container/experimental/segmented_any_of.hpp>
 #include <boost/container/experimental/segmented_copy.hpp>
 #include <boost/container/experimental/segmented_copy_if.hpp>
 #include <boost/container/experimental/segmented_copy_n.hpp>
@@ -38,6 +40,7 @@
 #include <boost/container/experimental/segmented_is_sorted.hpp>
 #include <boost/container/experimental/segmented_merge.hpp>
 #include <boost/container/experimental/segmented_mismatch.hpp>
+#include <boost/container/experimental/segmented_none_of.hpp>
 #include <boost/container/experimental/segmented_is_sorted_until.hpp>
 #include <boost/container/experimental/segmented_partition.hpp>
 #include <boost/container/experimental/segmented_partition_copy.hpp>
@@ -68,6 +71,14 @@ using boost::move_detail::nanosecond_type;
 namespace bc = boost::container;
 
 volatile int sink = 0;
+
+void clobber() {
+#if defined(_MSC_VER)
+   _ReadWriteBarrier();
+#else
+    asm volatile("" : : : "memory");
+#endif
+}
 
 inline void escape(void* p)
 {
@@ -229,13 +240,13 @@ struct counter
 };
 
 template<class T>
-class equal_to_stored
+class equal_to_ref
 {
    typedef T value_type;
-   const value_type t_;
+   const value_type &t_;
 
    public:
-   BOOST_CONTAINER_FORCEINLINE explicit equal_to_stored(const value_type &t)
+   BOOST_CONTAINER_FORCEINLINE explicit equal_to_ref(const value_type &t)
       :  t_(t)
    {}
 
@@ -247,13 +258,30 @@ class equal_to_stored
 };
 
 template<class T>
-class unequal_to_stored
+class less_than_ref
 {
    typedef T value_type;
-   const value_type t_;
+   const value_type& t_;
+public:
+   BOOST_CONTAINER_FORCEINLINE explicit less_than_ref(const value_type& t)
+      : t_(t)
+   {
+   }
+   template <class U>
+   BOOST_CONTAINER_FORCEINLINE bool operator()(const U& t)const
+   {
+      return t_ < t;
+   }
+};
+
+template<class T>
+class unequal_to_ref
+{
+   typedef T value_type;
+   const value_type &t_;
 
    public:
-   BOOST_CONTAINER_FORCEINLINE explicit unequal_to_stored(const value_type &t)
+   BOOST_CONTAINER_FORCEINLINE explicit unequal_to_ref(const value_type &t)
       :  t_(t)
    {}
 
@@ -271,8 +299,31 @@ class unequal_to_stored
 namespace bench_detail {
 
 #if BOOST_CXX_VERSION < 201103L
-//! Returns an iterator to the first element for which \c pred
-//! returns false in [first, last), or \c last if not found.
+
+template<class InIt, class Pred>
+bool all_of(InIt first, InIt last, Pred pred)
+{
+   for (; first != last; ++first)
+      if (!pred(*first)) return false;
+   return true;
+}
+
+template<class InIt, class Pred>
+bool any_of(InIt first, InIt last, Pred pred)
+{
+   for (; first != last; ++first)
+      if (pred(*first)) return true;
+   return false;
+}
+
+template<class InIt, class Pred>
+bool none_of(InIt first, InIt last, Pred pred)
+{
+   for (; first != last; ++first)
+      if (pred(*first)) return false;
+   return true;
+}
+
 template <class InpIter, class Sent, class Pred>
 inline InpIter find_if_not(InpIter first, Sent last, Pred pred)
 {
@@ -350,6 +401,9 @@ FwdIt partition_point(FwdIt first, FwdIt last, Pred pred)
 
 #else
 
+   using std::all_of;
+   using std::any_of;
+   using std::none_of;
    using std::find_if_not;
    using std::copy_if;
    using std::copy_n;
@@ -416,9 +470,6 @@ FwdIt partition_point(FwdIt first, FwdIt last, Pred pred)
 //partial_sum
 
 //not implemented (c++11):
-//all_of
-//any_of
-//none_of
 //move
 //move_backward
 //shuffle (random-access non-implementable?)
@@ -519,6 +570,90 @@ inline void print_ratio(const char* algo, const char*,
 // Individual benchmarks
 //////////////////////////////////////////////////////////////////////////////
 
+template<class C, class Pred>
+void bench_all_of(C c, std::size_t iters, const char* cname,
+                  Pred pred, const char* label)
+{
+   int result = 0;
+
+   cpu_timer t1;
+   for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
+      t1.resume();
+      result = bench_detail::all_of(c.begin(), c.end(), pred) ? 1 : 0;
+      t1.stop();
+      escape(&result);
+   }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+
+   cpu_timer t2;
+   for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
+      t2.resume();
+      result = bc::segmented_all_of(c.begin(), c.end(), pred) ? 1 : 0;
+      t2.stop();
+      escape(&result);
+   }
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+   print_ratio(label, cname, r1, r2);
+}
+
+template<class C, class Pred>
+void bench_any_of(C c, std::size_t iters, const char* cname,
+                  Pred pred, const char* label)
+{
+   int result = 0;
+
+   cpu_timer t1;
+   for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
+      t1.resume();
+      result = bench_detail::any_of(c.begin(), c.end(), pred) ? 1 : 0;
+      t1.stop();
+      escape(&result);
+   }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+
+   cpu_timer t2;
+   for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
+      t2.resume();
+      result = bc::segmented_any_of(c.begin(), c.end(), pred) ? 1 : 0;
+      t2.stop();
+      escape(&result);
+   }
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+   print_ratio(label, cname, r1, r2);
+}
+
+template<class C, class Pred>
+void bench_none_of(C c, std::size_t iters, const char* cname,
+                   Pred pred, const char* label)
+{
+   int result = 0;
+
+   cpu_timer t1;
+   for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
+      t1.resume();
+      result = bench_detail::none_of(c.begin(), c.end(), pred) ? 1 : 0;
+      t1.stop();
+      escape(&result);
+   }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+
+   cpu_timer t2;
+   for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
+      t2.resume();
+      result = bc::segmented_none_of(c.begin(), c.end(), pred) ? 1 : 0;
+      t2.stop();
+      escape(&result);
+   }
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+   print_ratio(label, cname, r1, r2);
+}
+
 template<class C>
 void bench_for_each(C c, std::size_t iters, const char* cname)
 {
@@ -527,6 +662,7 @@ void bench_for_each(C c, std::size_t iters, const char* cname)
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       summer<VT> s;
       s = std::for_each(c.begin(), c.end(), s);
@@ -538,6 +674,7 @@ void bench_for_each(C c, std::size_t iters, const char* cname)
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       summer<VT> s;
       s = bc::segmented_for_each(c.begin(), c.end(), s);
@@ -557,6 +694,7 @@ void bench_copy(C c, std::size_t iters, const char* cname)
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::copy(c.begin(), c.end(), out.begin());
       t1.stop();
@@ -566,6 +704,7 @@ void bench_copy(C c, std::size_t iters, const char* cname)
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_copy(c.begin(), c.end(), out.begin());
       t2.stop();
@@ -584,6 +723,7 @@ void bench_copy_if(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred);
       t1.stop();
@@ -593,6 +733,7 @@ void bench_copy_if(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred);
       t2.stop();
@@ -610,6 +751,7 @@ void bench_fill(C c, std::size_t iters, const char* cname)
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::fill(c.begin(), c.end(), val);
       t1.stop();
@@ -619,6 +761,7 @@ void bench_fill(C c, std::size_t iters, const char* cname)
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_fill(c.begin(), c.end(), val);
       t2.stop();
@@ -636,6 +779,7 @@ void bench_count(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       result = static_cast<int>(std::count(c.begin(), c.end(), val));
       t1.stop();
@@ -645,6 +789,7 @@ void bench_count(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       result = static_cast<int>(bc::segmented_count(c.begin(), c.end(), val));
       t2.stop();
@@ -662,6 +807,7 @@ void bench_count_if(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       result = static_cast<int>(std::count_if(c.begin(), c.end(), pred));
       t1.stop();
@@ -671,6 +817,7 @@ void bench_count_if(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       result = static_cast<int>(bc::segmented_count_if(c.begin(), c.end(), pred));
       t2.stop();
@@ -688,6 +835,7 @@ void bench_find(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       typename C::iterator it = std::find(c.begin(), c.end(), val);
       result = (it == c.end()) ? 0 : 1;
@@ -698,6 +846,7 @@ void bench_find(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       typename C::iterator it = bc::segmented_find(c.begin(), c.end(), val);
       result = (it == c.end()) ? 0 : 1;
@@ -716,6 +865,7 @@ void bench_find_if(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       typename C::iterator it = std::find_if(c.begin(), c.end(), pred);
       result = (it != c.end()) ? int_value(*it) : -1;
@@ -726,6 +876,7 @@ void bench_find_if(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       typename C::iterator it = bc::segmented_find_if(c.begin(), c.end(), pred);
       result = (it != c.end()) ? int_value(*it) : -1;
@@ -744,6 +895,7 @@ void bench_find_if_not(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       typename C::iterator it = bench_detail::find_if_not(c.begin(), c.end(), pred);
       result = (it != c.end()) ? int_value(*it) : -1;
@@ -754,6 +906,7 @@ void bench_find_if_not(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       typename C::iterator it = bc::segmented_find_if_not(c.begin(), c.end(), pred);
       result = (it != c.end()) ? int_value(*it) : -1;
@@ -772,6 +925,7 @@ void bench_equal(C c, C& c2, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0;
       t1.stop();
@@ -781,6 +935,7 @@ void bench_equal(C c, C& c2, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0;
       t2.stop();
@@ -800,6 +955,7 @@ void bench_replace(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::replace(c.begin(), c.end(), old_val, new_val);
       t1.stop();
@@ -809,6 +965,7 @@ void bench_replace(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_replace(c.begin(), c.end(), old_val, new_val);
       t2.stop();
@@ -828,6 +985,7 @@ void bench_replace_if(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::replace_if(c.begin(), c.end(), pred, new_val);
       t1.stop();
@@ -837,6 +995,7 @@ void bench_replace_if(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_replace_if(c.begin(), c.end(), pred, new_val);
       t2.stop();
@@ -854,6 +1013,7 @@ void bench_transform(C c, std::size_t iters, const char* cname)
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::transform(c.begin(), c.end(), out.begin(), add_one<VT>());
       t1.stop();
@@ -863,6 +1023,7 @@ void bench_transform(C c, std::size_t iters, const char* cname)
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>());
       t2.stop();
@@ -882,6 +1043,7 @@ void bench_fill_n(C c, std::size_t iters, const char* cname)
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::fill_n(c.begin(), n, val);
       t1.stop();
@@ -891,6 +1053,7 @@ void bench_fill_n(C c, std::size_t iters, const char* cname)
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_fill_n(c.begin(), n, val);
       t2.stop();
@@ -910,6 +1073,7 @@ void bench_copy_n(C c, std::size_t iters, const char* cname)
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       bench_detail::copy_n(c.begin(), n, out.begin());
       t1.stop();
@@ -919,6 +1083,7 @@ void bench_copy_n(C c, std::size_t iters, const char* cname)
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_copy_n(c.begin(), n, out.begin());
       t2.stop();
@@ -936,6 +1101,7 @@ void bench_generate(C c, std::size_t iters, const char* cname)
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::generate(c.begin(), c.end(), counter<VT>());
       result = int_value(*c.begin());
@@ -946,6 +1112,7 @@ void bench_generate(C c, std::size_t iters, const char* cname)
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_generate(c.begin(), c.end(), counter<VT>());
       result = int_value(*c.begin());
@@ -966,6 +1133,7 @@ void bench_generate_n(C c, std::size_t iters, const char* cname)
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::generate_n(c.begin(), n, counter<VT>());
       result = int_value(*c.begin());
@@ -976,6 +1144,7 @@ void bench_generate_n(C c, std::size_t iters, const char* cname)
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_generate_n(c.begin(), n, counter<VT>());
       result = int_value(*c.begin());
@@ -994,6 +1163,7 @@ void bench_remove(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       typename C::iterator it = std::remove(c.begin(), c.end(), val);
       result = (it == c.end()) ? 1 : 0;
@@ -1004,6 +1174,7 @@ void bench_remove(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       typename C::iterator it = bc::segmented_remove(c.begin(), c.end(), val);
       result = (it == c.end()) ? 1 : 0;
@@ -1022,6 +1193,7 @@ void bench_remove_if(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       typename C::iterator it = std::remove_if(c.begin(), c.end(), pred);
       result = (it == c.end()) ? 1 : 0;
@@ -1032,6 +1204,7 @@ void bench_remove_if(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       typename C::iterator it = bc::segmented_remove_if(c.begin(), c.end(), pred);
       result = (it == c.end()) ? 1 : 0;
@@ -1051,6 +1224,7 @@ void bench_remove_copy(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::remove_copy(c.begin(), c.end(), out.begin(), val);
       t1.stop();
@@ -1060,6 +1234,7 @@ void bench_remove_copy(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val);
       t2.stop();
@@ -1078,6 +1253,7 @@ void bench_remove_copy_if(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::remove_copy_if(c.begin(), c.end(), out.begin(), pred);
       t1.stop();
@@ -1087,6 +1263,7 @@ void bench_remove_copy_if(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred);
       t2.stop();
@@ -1103,6 +1280,7 @@ void bench_reverse(C c, std::size_t iters, const char* cname)
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::reverse(c.begin(), c.end());
       result = int_value(*c.begin());
@@ -1113,6 +1291,7 @@ void bench_reverse(C c, std::size_t iters, const char* cname)
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_reverse(c.begin(), c.end());
       result = int_value(*c.begin());
@@ -1131,6 +1310,7 @@ void bench_reverse_copy(C c, std::size_t iters, const char* cname)
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::reverse_copy(c.begin(), c.end(), out.begin());
       t1.stop();
@@ -1140,6 +1320,7 @@ void bench_reverse_copy(C c, std::size_t iters, const char* cname)
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_reverse_copy(c.begin(), c.end(), out.begin());
       t2.stop();
@@ -1157,6 +1338,7 @@ void bench_is_sorted(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       result = bench_detail::is_sorted(c.begin(), c.end()) ? 1 : 0;
       t1.stop();
@@ -1166,6 +1348,7 @@ void bench_is_sorted(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       result = bc::segmented_is_sorted(c.begin(), c.end()) ? 1 : 0;
       t2.stop();
@@ -1183,6 +1366,7 @@ void bench_is_sorted_until(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       typename C::iterator it = bench_detail::is_sorted_until(c.begin(), c.end());
       result = (it == c.end()) ? 1 : 0;
@@ -1193,6 +1377,7 @@ void bench_is_sorted_until(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       typename C::iterator it = bc::segmented_is_sorted_until(c.begin(), c.end());
       result = (it == c.end()) ? 1 : 0;
@@ -1211,6 +1396,7 @@ void bench_is_partitioned(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       result = bench_detail::is_partitioned(c.begin(), c.end(), pred) ? 1 : 0;
       t1.stop();
@@ -1220,6 +1406,7 @@ void bench_is_partitioned(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       result = bc::segmented_is_partitioned(c.begin(), c.end(), pred) ? 1 : 0;
       t2.stop();
@@ -1237,6 +1424,7 @@ void bench_merge(C c, C& c2, std::size_t iters, const char* cname)
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
       t1.stop();
@@ -1246,6 +1434,7 @@ void bench_merge(C c, C& c2, std::size_t iters, const char* cname)
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
       t2.stop();
@@ -1263,6 +1452,7 @@ void bench_mismatch(C c, C& c2, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0;
       t1.stop();
@@ -1272,6 +1462,7 @@ void bench_mismatch(C c, C& c2, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0;
       t2.stop();
@@ -1289,6 +1480,7 @@ void bench_swap_ranges(C c, std::size_t iters, const char* cname)
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::swap_ranges(c.begin(), c.end(), c2.begin());
       result = int_value(*c.begin());
@@ -1299,6 +1491,7 @@ void bench_swap_ranges(C c, std::size_t iters, const char* cname)
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_swap_ranges(c.begin(), c.end(), c2.begin());
       result = int_value(*c.begin());
@@ -1318,6 +1511,7 @@ void bench_search(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       typename C::iterator it = std::search(c.begin(), c.end(), pattern, pattern + pat_size);
       result = (it == c.end()) ? 0 : 1;
@@ -1328,6 +1522,7 @@ void bench_search(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       typename C::iterator it = bc::segmented_search(c.begin(), c.end(), pattern, pattern + pat_size);
       result = (it == c.end()) ? 0 : 1;
@@ -1347,6 +1542,7 @@ void bench_search_n(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       typename C::iterator it = std::search_n(c.begin(), c.end(), count, val);
       result = (it == c.end()) ? 0 : 1;
@@ -1357,6 +1553,7 @@ void bench_search_n(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       typename C::iterator it = bc::segmented_search_n(c.begin(), c.end(), count, val);
       result = (it == c.end()) ? 0 : 1;
@@ -1375,6 +1572,7 @@ void bench_set_union(C c, C& c2, std::size_t iters, const char* cname)
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
       t1.stop();
@@ -1384,6 +1582,7 @@ void bench_set_union(C c, C& c2, std::size_t iters, const char* cname)
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
       t2.stop();
@@ -1401,6 +1600,7 @@ void bench_set_difference(C c, C& c2, std::size_t iters, const char* cname)
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
       t1.stop();
@@ -1410,6 +1610,7 @@ void bench_set_difference(C c, C& c2, std::size_t iters, const char* cname)
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
       t2.stop();
@@ -1427,6 +1628,7 @@ void bench_set_intersection(C c, C& c2, std::size_t iters, const char* cname)
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
       t1.stop();
@@ -1436,6 +1638,7 @@ void bench_set_intersection(C c, C& c2, std::size_t iters, const char* cname)
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
       t2.stop();
@@ -1453,6 +1656,7 @@ void bench_set_symmetric_difference(C c, C& c2, std::size_t iters, const char* c
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
       t1.stop();
@@ -1462,6 +1666,7 @@ void bench_set_symmetric_difference(C c, C& c2, std::size_t iters, const char* c
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
       t2.stop();
@@ -1479,6 +1684,7 @@ void bench_partition(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       typename C::iterator it = std::partition(c.begin(), c.end(), pred);
       result = (it == c.end()) ? 1 : 0;
@@ -1489,6 +1695,7 @@ void bench_partition(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       typename C::iterator it = bc::segmented_partition(c.begin(), c.end(), pred);
       result = (it == c.end()) ? 1 : 0;
@@ -1507,6 +1714,7 @@ void bench_stable_partition(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       typename C::iterator it = std::stable_partition(c.begin(), c.end(), pred);
       result = (it == c.end()) ? 1 : 0;
@@ -1517,6 +1725,7 @@ void bench_stable_partition(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       typename C::iterator it = bc::segmented_stable_partition(c.begin(), c.end(), pred);
       result = (it == c.end()) ? 1 : 0;
@@ -1536,6 +1745,7 @@ void bench_partition_copy(C c, std::size_t iters, const char* cname)
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       bench_detail::partition_copy(c.begin(), c.end(),
          t_out.begin(), f_out.begin(), is_odd<VT>());
@@ -1547,6 +1757,7 @@ void bench_partition_copy(C c, std::size_t iters, const char* cname)
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       bc::segmented_partition_copy(c.begin(), c.end(),
          t_out.begin(), f_out.begin(), is_odd<VT>());
@@ -1566,6 +1777,7 @@ void bench_partition_point(C c, std::size_t iters, const char* cname,
 
    cpu_timer t1;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t1.resume();
       typename C::iterator it = bench_detail::partition_point(c.begin(), c.end(), pred);
       result = (it == c.end()) ? 1 : 0;
@@ -1576,6 +1788,7 @@ void bench_partition_point(C c, std::size_t iters, const char* cname,
 
    cpu_timer t2;
    for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
       t2.resume();
       typename C::iterator it = bc::segmented_partition_point(c.begin(), c.end(), pred);
       result = (it == c.end()) ? 1 : 0;
@@ -1596,6 +1809,14 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
 
    print_subheader();
+
+   //all_of
+   bench_all_of(c, iters, cname, is_zero_or_positive<VT>(), "all_of(hit)");
+   bench_all_of(c, iters, cname, unequal_to_ref<VT>(VT(static_cast<int>(c.size() / 2))), "all_of(miss)");
+
+   //any_of
+   bench_any_of(c, iters, cname, equal_to_ref<VT>(VT(static_cast<int>(c.size() / 2))),   "any_of(hit)");
+   bench_any_of(c, iters, cname, is_negative<VT>(), "any_of(miss)");
 
    //copy
    bench_copy(c, iters, cname);
@@ -1636,11 +1857,11 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_find(c, iters, cname, VT(-1), "find(miss)");
 
    //find_if
-   bench_find_if(c, iters, cname, equal_to_stored<VT>(VT(static_cast<int>(c.size() / 2))), "find_if(hit)");
+   bench_find_if(c, iters, cname, equal_to_ref<VT>(VT(static_cast<int>(c.size() / 2))), "find_if(hit)");
    bench_find_if(c, iters, cname, is_negative<VT>(), "find_if(miss)");
 
    //find_if_not
-   bench_find_if_not(c, iters, cname, unequal_to_stored<VT>(VT(static_cast<int>(c.size() / 2))), "find_if_not(hit)");
+   bench_find_if_not(c, iters, cname, unequal_to_ref<VT>(VT(static_cast<int>(c.size() / 2))), "find_if_not(hit)");
    bench_find_if_not(c, iters, cname, is_zero_or_positive<VT>(), "find_if_not(miss)");
 
    //for_each
@@ -1700,6 +1921,10 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_mismatch(c, c2, iters, cname, "mismatch(miss)");
    }
 
+   //none_of
+   bench_none_of(c, iters, cname, is_negative<VT>(), "none_of(hit)");
+   bench_none_of(c, iters, cname, equal_to_ref<VT>(VT(static_cast<int>(c.size()/2))),      "none_of(miss)");
+
    //partition
    bench_partition(c, iters, cname, is_odd<VT>(),      "partition(hit)");
    bench_partition(c, iters, cname, is_negative<VT>(), "partition(miss)");
@@ -1708,9 +1933,9 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_partition_copy(c, iters, cname);
 
    //partition_point
-   bench_partition_point(c, iters, cname, is_negative<VT>(), "partition_point(hit)");
-   bench_partition_point(c, iters, cname, is_odd<VT>(),      "partition_point(miss)");
-
+   bench_partition_point(c, iters, cname, less_than_ref<VT>(static_cast<VT>((int)c.size()/2)), "partition_point(hit)");
+   bench_partition_point(c, iters, cname, is_negative<VT>(),                                   "partition_point(miss)");
+   ;
    //remove
    bench_remove(c, iters, cname, VT(0),  "remove(hit)");
    bench_remove(c, iters, cname, VT(-1), "remove(miss)");
