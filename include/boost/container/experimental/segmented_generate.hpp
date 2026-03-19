@@ -30,39 +30,38 @@ void segmented_generate(FwdIt first, Sent last, Generator gen);
 
 namespace detail_algo {
 
-// Uses a by-reference inner loop to preserve generator state
-// across segments (std::generate takes generators by value).
-template <class FwdIt, class Sent, class Generator>
-void generate_ref(FwdIt first, const Sent last, Generator& gen)
+template <class FwdIt, class Sent, class Generator, class Tag>
+ BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<
+   !Tag::value || is_sentinel<Sent, FwdIt>::value>::type
+segmented_generate_dispatch(FwdIt first, Sent last, Generator &gen, Tag)
 {
    for(; first != last; ++first)
       *first = gen();
 }
 
 template <class SegIter, class Generator>
-void segmented_generate_ref
-   (SegIter first, SegIter last, Generator& gen, segmented_iterator_tag)
+void segmented_generate_dispatch
+   (SegIter first, SegIter last, Generator &gen, segmented_iterator_tag)
 {
-   typedef segmented_iterator_traits<SegIter> traits;
-   typename traits::segment_iterator sfirst = traits::segment(first);
-   typename traits::segment_iterator slast  = traits::segment(last);
+   typedef segmented_iterator_traits<SegIter>   traits;
+   typedef typename traits::local_iterator      local_iterator;
+   typedef typename traits::segment_iterator    segment_iterator;
+   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+
+   segment_iterator sfirst = traits::segment(first);
+   segment_iterator slast  = traits::segment(last);
+
    if(sfirst == slast) {
-      (generate_ref)(traits::local(first), traits::local(last), gen);
+      (segmented_generate_dispatch)(traits::local(first), traits::local(last), gen, is_local_seg_t());
    }
    else {
-      (generate_ref)(traits::local(first), traits::end(sfirst), gen);
-      for(++sfirst; sfirst != slast; ++sfirst)
-         (generate_ref)(traits::begin(sfirst), traits::end(sfirst), gen);
-      (generate_ref)(traits::begin(sfirst), traits::local(last), gen);
-   }
-}
+      (segmented_generate_dispatch)(traits::local(first), traits::end(sfirst), gen, is_local_seg_t());
 
-template <class FwdIt, class Sent, class Generator, class Tag>
- BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<
-   !Tag::value || is_sentinel<Sent, FwdIt>::value>::type
-segmented_generate_ref(FwdIt first, Sent last, Generator& gen, Tag)
-{
-   return (generate_ref)(first, last, gen);
+      for(++sfirst; sfirst != slast; ++sfirst)
+         (segmented_generate_dispatch)(traits::begin(sfirst), traits::end(sfirst), gen, is_local_seg_t());
+
+      (segmented_generate_dispatch)(traits::begin(sfirst), traits::local(last), gen, is_local_seg_t());
+   }
 }
 
 } // namespace detail_algo
@@ -75,7 +74,7 @@ BOOST_CONTAINER_FORCEINLINE
 void segmented_generate(FwdIt first, Sent last, Generator gen)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
-   detail_algo::segmented_generate_ref(first, last, gen, typename traits::is_segmented_iterator());
+   detail_algo::segmented_generate_dispatch(first, last, gen, typename traits::is_segmented_iterator());
 }
 
 } // namespace container
