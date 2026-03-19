@@ -1925,17 +1925,17 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_none_of(c, iters, cname, is_negative<VT>(), "none_of(hit)");
    bench_none_of(c, iters, cname, equal_to_ref<VT>(VT(static_cast<int>(c.size()/2))),      "none_of(miss)");
 
-   //partition
+   //partition (not tested since it's not optimized for random access iterators)
    bench_partition(c, iters, cname, is_odd<VT>(),      "partition(hit)");
    bench_partition(c, iters, cname, is_negative<VT>(), "partition(miss)");
 
    //partition_copy
    bench_partition_copy(c, iters, cname);
 
-   //partition_point
-   bench_partition_point(c, iters, cname, less_than_ref<VT>(static_cast<VT>((int)c.size()/2)), "partition_point(hit)");
-   bench_partition_point(c, iters, cname, is_negative<VT>(),                                   "partition_point(miss)");
-   ;
+   //partition_point (not tested since it's not optimized for random access iterators)
+   //bench_partition_point(c, iters, cname, less_than_ref<VT>(static_cast<VT>((int)c.size()/2)), "partition_point(hit)");
+   //bench_partition_point(c, iters, cname, is_negative<VT>(),                                   "partition_point(miss)");
+
    //remove
    bench_remove(c, iters, cname, VT(0),  "remove(hit)");
    bench_remove(c, iters, cname, VT(-1), "remove(miss)");
@@ -1990,9 +1990,9 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_set_union(c, c2, iters, cname);
    }
 
-   //stable_partition
-   bench_stable_partition(c, iters, cname, is_odd<VT>(),      "stable_partition(hit)");
-   bench_stable_partition(c, iters, cname, is_negative<VT>(), "stable_partition(miss)");
+   //stable_partition (not tested since it's not optimized for random access iterators)
+   //bench_stable_partition(c, iters, cname, is_odd<VT>(),      "stable_partition(hit)");
+   //bench_stable_partition(c, iters, cname, is_negative<VT>(), "stable_partition(miss)");
 
    //swap_ranges
    bench_swap_ranges(c, iters, cname);
@@ -2013,7 +2013,7 @@ void run_benchmarks()
    const std::size_t iter = 500;
    #else
    const std::size_t N    = 10000;
-   const std::size_t iter = 10;
+   const std::size_t iter = 1;
    #endif
 
    std::cout << "\n=== Segmented algorithm benchmark [" << typeid(T).name() << "] ===\n"
