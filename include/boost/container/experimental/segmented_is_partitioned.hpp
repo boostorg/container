@@ -27,6 +27,9 @@
 namespace boost {
 namespace container {
 
+//! Note: This version is suboptimal only supports bidirectional iterators,
+//! as it relies on stable_partition_shift.
+//! 
 //! Returns \c true if all elements satisfying \c pred appear before
 //! all elements that do not, i.e. the range [first, last) is
 //! partitioned with respect to \c pred.

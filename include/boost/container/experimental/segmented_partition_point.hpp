@@ -34,30 +34,35 @@ template <class SegIter, class Predicate>
 SegIter segmented_partition_point_dispatch
    (SegIter first, SegIter last, Predicate pred, segmented_iterator_tag)
 {
-   typedef segmented_iterator_traits<SegIter> traits;
-   typename traits::segment_iterator scur  = traits::segment(first);
-   typename traits::segment_iterator slast = traits::segment(last);
-   typename traits::local_iterator lcur;
+   typedef segmented_iterator_traits<SegIter>   traits;
+   typedef typename traits::local_iterator      local_iterator;
+   typedef typename traits::segment_iterator    segment_iterator;
+
+   segment_iterator scur  = traits::segment(first);
+   segment_iterator slast = traits::segment(last);
 
    if(scur == slast) {
-      lcur = boost::container::segmented_partition_point(traits::local(first), traits::local(last), pred);
+      local_iterator lcur = boost::container::segmented_partition_point(traits::local(first), traits::local(last), pred);
       if(lcur != traits::local(last))
          return traits::compose(scur, lcur);
    }
    else {
-      lcur = boost::container::segmented_partition_point(traits::local(first), traits::end(scur), pred);
-      if(lcur != traits::end(scur))
-         return traits::compose(scur, lcur);
-
-      for(++scur; scur != slast; ++scur) {
-         lcur = boost::container::segmented_partition_point(traits::begin(scur), traits::end(scur), pred);
-         if(lcur != traits::end(scur))
+      {
+         local_iterator lcur = boost::container::segmented_partition_point(traits::local(first), traits::end(scur), pred);
+         if (lcur != traits::end(scur))
             return traits::compose(scur, lcur);
       }
 
-      lcur = boost::container::segmented_partition_point(traits::begin(scur), traits::local(last), pred);
-      if(lcur != traits::local(last))
-         return traits::compose(scur, lcur);
+      for(++scur; scur != slast; ++scur) {
+         local_iterator lcur = boost::container::segmented_partition_point(traits::begin(scur), traits::end(scur), pred);
+         if(lcur != traits::end(scur))
+            return traits::compose(scur, lcur);
+      }
+      {
+         local_iterator lcur = boost::container::segmented_partition_point(traits::begin(scur), traits::local(last), pred);
+         if (lcur != traits::local(last))
+            return traits::compose(scur, lcur);
+      }
    }
    return last;
 }
@@ -76,6 +81,9 @@ segmented_partition_point_dispatch
 
 } // namespace detail_algo
 
+//! Note: This version is suboptimal only supports bidirectional iterators,
+//! as it relies on stable_partition_shift.
+//! 
 //! Finds the partition point in [first, last): the first element
 //! for which \c pred returns false. The range must be partitioned
 //! with respect to \c pred.

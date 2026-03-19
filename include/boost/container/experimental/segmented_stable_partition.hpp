@@ -89,13 +89,17 @@ template <class SegIt, class OuterIter, class Composer, class Pred>
 OuterIter stable_partition_scan(SegIt first, SegIt last, OuterIter result,
    Composer composer, Pred& pred, segmented_iterator_tag)
 {
-   typedef segmented_iterator_traits<SegIt> traits;
-   typedef typename traits::local_iterator local_iterator;
+   typedef segmented_iterator_traits<SegIt>  traits;
+   typedef typename traits::local_iterator   local_iterator;
+   typedef typename traits::segment_iterator segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+
    typedef sp_chained_composer<Composer, traits> inner_composer_t;
-   typename traits::segment_iterator scur = traits::segment(first);
-   typename traits::segment_iterator slast = traits::segment(last);
-   local_iterator lcur = traits::local(first);
+
+   segment_iterator scur  = traits::segment(first);
+   segment_iterator slast = traits::segment(last);
+   local_iterator   lcur  = traits::local(first);
+
    if(scur == slast) {
       inner_composer_t inner(composer, scur);
       result = stable_partition_scan(lcur, traits::local(last), result, inner, pred, is_local_seg_t());
@@ -133,6 +137,9 @@ BidirIt segmented_stable_partition_dispatch (BidirIt first, BidirIt last, Pred p
 
 } // namespace detail_algo
 
+//! Note: This version is suboptimal only supports bidirectional iterators,
+//! as it relies on stable_partition_shift.
+//! 
 //! Reorders elements in [first, last) so that elements satisfying
 //! \c pred come before those that do not, preserving relative order
 //! within each group. Returns an iterator to the partition point.
