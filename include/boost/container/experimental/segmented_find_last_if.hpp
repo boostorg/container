@@ -41,7 +41,8 @@ FwdIt find_last_if_scan(FwdIt first, FwdIt last, Pred pred,
 {
    FwdIt result = last;
    for (; first != last; ++first)
-      if (pred(*first)) result = first;
+      if (pred(*first))
+         result = first;
    return result;
 }
 
@@ -52,7 +53,8 @@ BidirIt find_last_if_scan(BidirIt first, BidirIt last, Pred pred,
    BidirIt cur = last;
    while (cur != first) {
       --cur;
-      if (pred(*cur)) return cur;
+      if (pred(*cur))
+         return cur;
    }
    return last;
 }
@@ -63,12 +65,13 @@ BidirIt find_last_if_scan(BidirIt first, BidirIt last, Pred pred,
 
 template <class SegIt, class Pred>
 SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred,
-                        segmented_iterator_tag, const std::forward_iterator_tag& cat)
+                        segmented_iterator_tag, const std::forward_iterator_tag&)
 {
    typedef segmented_iterator_traits<SegIt>  traits;
    typedef typename traits::local_iterator   local_iterator;
    typedef typename traits::segment_iterator segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+   typedef typename iterator_traits<local_iterator>::iterator_category               local_cat_t;
 
    SegIt result = last;
    segment_iterator       sfirst = traits::segment(first);
@@ -77,28 +80,26 @@ SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred,
    if (sfirst == slast) {
       const local_iterator lf = traits::local(first);
       const local_iterator ll = traits::local(last);
-      const local_iterator r  = find_last_if_scan(lf, ll, pred, is_local_seg_t(), cat);
+      const local_iterator r  = find_last_if_scan(lf, ll, pred, is_local_seg_t(), local_cat_t());
       return traits::compose(sfirst, r);
    }
    else {
-      // First segment
-      {
+      {  // First segment
          const local_iterator le = traits::end(sfirst);
-         const local_iterator r = find_last_if_scan(traits::local(first), le, pred, is_local_seg_t(), cat);
+         const local_iterator r = find_last_if_scan(traits::local(first), le, pred, is_local_seg_t(), local_cat_t());
          if (r != le)
             result = traits::compose(sfirst, r);
       }
-      // Middle segments
+         // Middle segments
       for (++sfirst; sfirst != slast; ++sfirst) {
          const local_iterator le = traits::end(sfirst);
-         const local_iterator r = find_last_if_scan(traits::begin(sfirst), le, pred, is_local_seg_t(), cat);
+         const local_iterator r = find_last_if_scan(traits::begin(sfirst), le, pred, is_local_seg_t(), local_cat_t());
          if (r != le)
             result = traits::compose(sfirst, r);
       }
-      // Last segment
-      {
+      {  // Last segment
          const local_iterator ll = traits::local(last);
-         const local_iterator r = find_last_if_scan(traits::begin(sfirst), ll, pred, is_local_seg_t(), cat);
+         const local_iterator r = find_last_if_scan(traits::begin(sfirst), ll, pred, is_local_seg_t(), local_cat_t());
          if (r != ll)
             result = traits::compose(sfirst, r);
       }
@@ -112,15 +113,13 @@ SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred,
 //////////////////////////////////////////////
 
 template <class SegIt, class Pred>
-SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred,
-                        segmented_iterator_tag, const std::bidirectional_iterator_tag& cat)
+SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred, segmented_iterator_tag, const std::bidirectional_iterator_tag&)
 {
    typedef segmented_iterator_traits<SegIt>  traits;
    typedef typename traits::local_iterator   local_iterator;
    typedef typename traits::segment_iterator segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
-
-   if (first == last) return last;
+   typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
 
    segment_iterator sfirst = traits::segment(first);
    segment_iterator slast  = traits::segment(last);
@@ -128,10 +127,8 @@ SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred,
    if (sfirst == slast) {
       const local_iterator lf = traits::local(first);
       const local_iterator ll = traits::local(last);
-      const local_iterator r  = find_last_if_scan(lf, ll, pred, is_local_seg_t(), cat);
-      if (r != ll)
-         return traits::compose(sfirst, r);
-      return last;
+      const local_iterator r  = find_last_if_scan(lf, ll, pred, is_local_seg_t(), local_cat_t());
+      return traits::compose(sfirst, r);
    }
 
    // Last segment (partial): [begin(slast), local(last))
@@ -139,7 +136,7 @@ SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred,
       const local_iterator lb = traits::begin(slast);
       const local_iterator ll = traits::local(last);
       if (lb != ll) {
-         const local_iterator r = find_last_if_scan(lb, ll, pred, is_local_seg_t(), cat);
+         const local_iterator r = find_last_if_scan(lb, ll, pred, is_local_seg_t(), local_cat_t());
          if (r != ll)
             return traits::compose(slast, r);
       }
@@ -151,7 +148,7 @@ SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred,
       for (--scur; scur != sfirst; --scur) {
          const local_iterator lb = traits::begin(scur);
          const local_iterator le = traits::end(scur);
-         const local_iterator r  = find_last_if_scan(lb, le, pred, is_local_seg_t(), cat);
+         const local_iterator r  = find_last_if_scan(lb, le, pred, is_local_seg_t(), local_cat_t());
          if (r != le)
             return traits::compose(scur, r);
       }
@@ -161,7 +158,7 @@ SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred,
    {
       const local_iterator lf = traits::local(first);
       const local_iterator le = traits::end(sfirst);
-      const local_iterator r  = find_last_if_scan(lf, le, pred, is_local_seg_t(), cat);
+      const local_iterator r  = find_last_if_scan(lf, le, pred, is_local_seg_t(), local_cat_t());
       if (r != le)
          return traits::compose(sfirst, r);
    }
@@ -174,7 +171,8 @@ SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred,
 //////////////////////////////////////////////
 
 template <class FwdIt, class Sent, class Pred, class SegTag, class CatTag>
-FwdIt find_last_if_scan(FwdIt first, Sent last, Pred pred, SegTag, CatTag)
+typename algo_enable_if_c<is_sentinel<Sent, FwdIt>::value, FwdIt>::type
+   find_last_if_scan(FwdIt first, Sent last, Pred pred, SegTag, CatTag)
 {
    FwdIt result = first;
    bool found = false;
@@ -218,9 +216,7 @@ FwdIt segmented_find_last_if(FwdIt first, Sent last, Pred pred)
    typedef typename traits::is_segmented_iterator seg_t;
    typedef detail_algo::find_last_sent_filter<FwdIt, Sent, seg_t, cat_t> sf;
    return detail_algo::find_last_if_scan
-      ( first, last, pred
-      , typename sf::seg_t()
-      , typename sf::cat_t());
+      ( first, last, pred, typename sf::seg_t(), typename sf::cat_t());
 }
 
 } // namespace container
