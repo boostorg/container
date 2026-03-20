@@ -43,8 +43,7 @@ SegIter segmented_find_if_dispatch
    const local_iterator      lf  = traits::local(first);
 
    if(sfirst == slast) {
-      const local_iterator ll = traits::local(last);
-      local_iterator r = (segmented_find_if)(lf, ll, pred);
+      local_iterator r = (segmented_find_if)(lf, traits::local(last), pred);
       return traits::compose(sfirst, r);
    }
    else {
