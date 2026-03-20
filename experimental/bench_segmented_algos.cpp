@@ -584,7 +584,7 @@ inline void print_ratio(const char* algo, const char*,
 {
    double ratio = (seg_ns > 0.0) ? std_ns / seg_ns : 0.0;
    std::cout << std::left  << std::setw(24) << algo
-             << std::right << std::setw(20) << std::fixed << std::setprecision(2) << ratio << 'x'
+             << std::right << std::setw(20) << std::fixed << std::setprecision(2) << ((ratio < 1.0) ? "! " : "") << ratio << 'x'
              << std::right << std::setw(20) << std::fixed << std::setprecision(3) << std_ns
              << std::right << std::setw(20) << std::fixed << std::setprecision(3) << seg_ns
              << '\n';
@@ -2133,7 +2133,7 @@ template<class T>
 void run_benchmarks()
 {
    #ifdef NDEBUG
-   const std::size_t N    = 100000;
+   const std::size_t N    = 10000;
    const std::size_t iter = 500;
    #else
    const std::size_t N    = 10000;
