@@ -38,8 +38,6 @@ SegIter segmented_find_if_dispatch
    typedef typename traits::local_iterator   local_iterator;
    typedef typename traits::segment_iterator segment_iterator;
 
-   if(first == last) return last;
-
    segment_iterator       sfirst = traits::segment(first);
    const segment_iterator slast  = traits::segment(last);
    const local_iterator      lf  = traits::local(first);
@@ -47,8 +45,7 @@ SegIter segmented_find_if_dispatch
    if(sfirst == slast) {
       const local_iterator ll = traits::local(last);
       local_iterator r = (segmented_find_if)(lf, ll, pred);
-      if (r != ll)
-         return traits::compose(sfirst, r);
+      return traits::compose(sfirst, r);
    }
    else {
       //First segment
@@ -69,11 +66,9 @@ SegIter segmented_find_if_dispatch
       {
          const local_iterator ll = traits::local(last);
          const local_iterator r = (segmented_find_if)(traits::begin(sfirst), ll, pred);
-         if (r != ll)
-            return traits::compose(sfirst, r);
+         return traits::compose(sfirst, r);
       }
    }
-   return last;
 }
 
 template <class InpIter, class Sent, class Pred, class Tag>
@@ -83,8 +78,8 @@ segmented_find_if_dispatch(InpIter first, Sent last, Pred pred, Tag)
 {
    for(; first != last; ++first)
       if(pred(*first))
-         return first;
-   return last;
+         break;
+   return first;
 }
 
 } // namespace detail_algo
