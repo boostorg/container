@@ -33,6 +33,9 @@
 #include <boost/container/experimental/segmented_find.hpp>
 #include <boost/container/experimental/segmented_find_if.hpp>
 #include <boost/container/experimental/segmented_find_if_not.hpp>
+#include <boost/container/experimental/segmented_find_last.hpp>
+#include <boost/container/experimental/segmented_find_last_if.hpp>
+#include <boost/container/experimental/segmented_find_last_if_not.hpp>
 #include <boost/container/experimental/segmented_for_each.hpp>
 #include <boost/container/experimental/segmented_generate.hpp>
 #include <boost/container/experimental/segmented_generate_n.hpp>
@@ -415,6 +418,32 @@ FwdIt partition_point(FwdIt first, FwdIt last, Pred pred)
 
 #endif
 
+template<class FwdIt, class T>
+FwdIt find_last(FwdIt first, FwdIt last, const T& val)
+{
+   FwdIt result = last;
+   for (; first != last; ++first)
+      if (*first == val) result = first;
+   return result;
+}
+
+template<class FwdIt, class Pred>
+FwdIt find_last_if(FwdIt first, FwdIt last, Pred pred)
+{
+   FwdIt result = last;
+   for (; first != last; ++first)
+      if (pred(*first)) result = first;
+   return result;
+}
+
+template<class FwdIt, class Pred>
+FwdIt find_last_if_not(FwdIt first, FwdIt last, Pred pred)
+{
+   FwdIt result = last;
+   for (; first != last; ++first)
+      if (!pred(*first)) result = first;
+   return result;
+}
 
 
 //Not benchmarked:
@@ -425,7 +454,6 @@ FwdIt partition_point(FwdIt first, FwdIt last, Pred pred)
 //find_end
 //find_first_of
 //adjacent_find
-//mismatch
 //copy_backward
 //move
 //move_backward
@@ -498,10 +526,6 @@ FwdIt partition_point(FwdIt first, FwdIt last, Pred pred)
 //lexicographical_compare_three_way
 
 //range-based?
-//find_last
-//find_last_if
-//find_last_if_not
-//
 //contains
 //contains_subrange
 //starts_with
@@ -909,6 +933,96 @@ void bench_find_if_not(C c, std::size_t iters, const char* cname,
       clobber();
       t2.resume();
       typename C::iterator it = bc::segmented_find_if_not(c.begin(), c.end(), pred);
+      result = (it != c.end()) ? int_value(*it) : -1;
+      t2.stop();
+      escape(&result);
+   }
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+   print_ratio(label, cname, r1, r2);
+}
+
+template<class C>
+void bench_find_last(C c, std::size_t iters, const char* cname,
+                     const typename C::value_type& val, const char* label)
+{
+   int result = 0;
+
+   cpu_timer t1;
+   for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
+      t1.resume();
+      typename C::iterator it = bench_detail::find_last(c.begin(), c.end(), val);
+      result = (it == c.end()) ? 0 : 1;
+      t1.stop();
+      escape(&result);
+   }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+
+   cpu_timer t2;
+   for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
+      t2.resume();
+      typename C::iterator it = bc::segmented_find_last(c.begin(), c.end(), val);
+      result = (it == c.end()) ? 0 : 1;
+      t2.stop();
+      escape(&result);
+   }
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+   print_ratio(label, cname, r1, r2);
+}
+
+template<class C, class Pred>
+void bench_find_last_if(C c, std::size_t iters, const char* cname,
+                        Pred pred, const char* label)
+{
+   int result = 0;
+
+   cpu_timer t1;
+   for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
+      t1.resume();
+      typename C::iterator it = bench_detail::find_last_if(c.begin(), c.end(), pred);
+      result = (it != c.end()) ? int_value(*it) : -1;
+      t1.stop();
+      escape(&result);
+   }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+
+   cpu_timer t2;
+   for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
+      t2.resume();
+      typename C::iterator it = bc::segmented_find_last_if(c.begin(), c.end(), pred);
+      result = (it != c.end()) ? int_value(*it) : -1;
+      t2.stop();
+      escape(&result);
+   }
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+   print_ratio(label, cname, r1, r2);
+}
+
+template<class C, class Pred>
+void bench_find_last_if_not(C c, std::size_t iters, const char* cname,
+                            Pred pred, const char* label)
+{
+   int result = 0;
+
+   cpu_timer t1;
+   for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
+      t1.resume();
+      typename C::iterator it = bench_detail::find_last_if_not(c.begin(), c.end(), pred);
+      result = (it != c.end()) ? int_value(*it) : -1;
+      t1.stop();
+      escape(&result);
+   }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+
+   cpu_timer t2;
+   for (std::size_t i = 0; i < iters; ++i) {
+      clobber();
+      t2.resume();
+      typename C::iterator it = bc::segmented_find_last_if_not(c.begin(), c.end(), pred);
       result = (it != c.end()) ? int_value(*it) : -1;
       t2.stop();
       escape(&result);
@@ -1864,6 +1978,18 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_find_if_not(c, iters, cname, unequal_to_ref<VT>(VT(static_cast<int>(c.size() / 2))), "find_if_not(hit)");
    bench_find_if_not(c, iters, cname, is_zero_or_positive<VT>(), "find_if_not(miss)");
 
+   //find_last
+   bench_find_last(c, iters, cname, VT(static_cast<int>(c.size() / 2)), "find_last(hit)");
+   bench_find_last(c, iters, cname, VT(-1), "find_last(miss)");
+
+   //find_last_if
+   bench_find_last_if(c, iters, cname, equal_to_ref<VT>(VT(static_cast<int>(c.size() / 2))), "find_last_if(hit)");
+   bench_find_last_if(c, iters, cname, is_negative<VT>(), "find_last_if(miss)");
+
+   //find_last_if_not
+   bench_find_last_if_not(c, iters, cname, unequal_to_ref<VT>(VT(static_cast<int>(c.size() / 2))), "find_last_if_not(hit)");
+   bench_find_last_if_not(c, iters, cname, is_zero_or_positive<VT>(), "find_last_if_not(miss)");
+
    //for_each
    bench_for_each(c, iters, cname);
 
@@ -1915,9 +2041,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    {
       C c2(c);
       bench_mismatch(c, c2, iters, cname, "mismatch(hit)");
-      typename C::iterator last = c2.end();
-      --last;
-      *last = VT(-1);
+      c2[c2.size()/2] = VT(-1);
       bench_mismatch(c, c2, iters, cname, "mismatch(miss)");
    }
 
