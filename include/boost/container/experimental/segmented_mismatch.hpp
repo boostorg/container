@@ -40,54 +40,6 @@ struct mismatch_equal
    BOOST_CONTAINER_FORCEINLINE bool operator()(const T& a, const U& b) const { return a == b; }
 };
 
-template <class SegIter, class InpIter2, class BinaryPred>
-std::pair<SegIter, InpIter2> segmented_mismatch_dispatch
-   (SegIter first1, SegIter last1, InpIter2 first2, BinaryPred pred, segmented_iterator_tag)
-{
-   typedef segmented_iterator_traits<SegIter> traits;
-   typedef typename traits::local_iterator    local_iterator;
-   typedef typename traits::segment_iterator  segment_iterator;
-
-   typedef std::pair<SegIter, InpIter2>        return_t;
-   typedef std::pair<local_iterator, InpIter2> local_return_t;
-
-   segment_iterator sfirst = traits::segment(first1);
-   segment_iterator slast  = traits::segment(last1);
-
-   if(sfirst == slast) {
-      const local_iterator lf = traits::local(first1);
-      const local_iterator ll = traits::local(last1);
-      const local_return_t r = (segmented_mismatch)(lf, ll, first2, pred);
-      return return_t(traits::compose(sfirst, r.first), r.second);
-   }
-
-   // First segment
-   {
-      const local_iterator lf = traits::local(first1);
-      const local_iterator le = traits::end(sfirst);
-      const local_return_t r = (segmented_mismatch)(lf, le, first2, pred);
-      if (r.first != le)
-         return return_t(traits::compose(sfirst, r.first), r.second);
-      first2 = r.second;
-   }
-   // Middle segments
-   for(++sfirst; sfirst != slast; ++sfirst) {
-      const local_iterator lb = traits::begin(sfirst);
-      const local_iterator le = traits::end(sfirst);
-      const local_return_t r = (segmented_mismatch)(lb, le, first2, pred);
-      if (r.first != le)
-         return return_t(traits::compose(sfirst, r.first), r.second);
-      first2 = r.second;
-   }
-   // Last segment
-   {
-      const local_iterator lb = traits::begin(sfirst);
-      const local_iterator ll = traits::local(last1);
-      const local_return_t r = (segmented_mismatch)(lb, ll, first2, pred);
-      return return_t(traits::compose(sfirst, r.first), r.second);
-   }
-}
-
 template <class InpIter1, class Sent, class InpIter2, class BinaryPred, class Tag>
 typename algo_enable_if_c
    < !Tag::value || is_sentinel<Sent, InpIter1>::value
@@ -100,6 +52,46 @@ segmented_mismatch_dispatch(InpIter1 first1, Sent last1, InpIter2 first2, Binary
    }
 
    return std::pair<InpIter1, InpIter2>(first1, first2);
+}
+
+template <class SegIter, class InpIter2, class BinaryPred>
+std::pair<SegIter, InpIter2> segmented_mismatch_dispatch
+   (SegIter first1, SegIter last1, InpIter2 first2, BinaryPred pred, segmented_iterator_tag)
+{
+   typedef segmented_iterator_traits<SegIter> traits;
+   typedef typename traits::local_iterator    local_iterator;
+   typedef typename traits::segment_iterator  segment_iterator;
+   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+
+   typedef std::pair<SegIter, InpIter2>        return_t;
+   typedef std::pair<local_iterator, InpIter2> local_return_t;
+
+   segment_iterator       sfirst = traits::segment(first1);
+   segment_iterator const slast  = traits::segment(last1);
+
+   if(sfirst == slast) {
+      const local_return_t r = (segmented_mismatch_dispatch)(traits::local(first1), traits::local(last1), first2, pred, is_local_seg_t());
+      return return_t(traits::compose(sfirst, r.first), r.second);
+   }
+   else {
+      // First segment
+      local_iterator le = traits::end(sfirst);
+      local_return_t r = (segmented_mismatch_dispatch)(traits::local(first1), le, first2, pred, is_local_seg_t());
+      if (r.first != le)
+         return return_t(traits::compose(sfirst, r.first), r.second);
+
+      // Middle segments
+      for (++sfirst; sfirst != slast; ++sfirst) {
+         le = traits::end(sfirst);
+         r = (segmented_mismatch_dispatch)(traits::begin(sfirst), le, r.second, pred, is_local_seg_t());
+         if (r.first != le)
+            return return_t(traits::compose(sfirst, r.first), r.second);
+      }
+
+      // Last segment
+      r = (segmented_mismatch_dispatch)(traits::begin(slast), traits::local(last1), r.second, pred, is_local_seg_t());
+      return return_t(traits::compose(sfirst, r.first), r.second);
+   }
 }
 
 } // namespace detail_algo
