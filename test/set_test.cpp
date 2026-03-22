@@ -640,17 +640,3 @@ int main ()
 
    return 0;
 }
-
-/*
-#include <boost/container/set.hpp>
-#include <functional>
-
-int main()
-{
-  using set = boost::container::set<int, std::less<>>;
-
-  set s;
-  const set cs;
-  s.insert(cs.begin(), cs.end());
-}
-*/
