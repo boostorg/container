@@ -22,6 +22,7 @@
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
 #include <boost/container/experimental/segmented_find_if_not.hpp>
+#include <boost/container/experimental/segmented_find_last_if.hpp>
 #include <boost/move/adl_move_swap.hpp>
 #include <boost/container/detail/iterator.hpp>
 
@@ -104,55 +105,57 @@ SegIt partition_scan(SegIt first, SegIt last, Pred pred, segmented_iterator_tag,
    typedef typename traits::segment_iterator segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
 
-   if(first == last) return first;
-
    segment_iterator sf = traits::segment(first);
    segment_iterator sl = traits::segment(last);
+   local_iterator f_loc = traits::local(first);
+   local_iterator l_loc = traits::local(last);
 
-   if(sf == sl) {
-      local_iterator r = partition_scan(traits::local(first), traits::local(last), pred, is_local_seg_t(), cat);
-      return traits::compose(sf, r);
-   }
-   else {
-      local_iterator f_loc = traits::local(first);
+   if(sf != sl) {
       local_iterator f_end = traits::end(sf);
-      local_iterator l_loc = traits::local(last);
       local_iterator l_beg = traits::begin(sl);
 
-      for (;;) {
-         // Phase 1: advance front to find element NOT satisfying pred
-         f_loc = boost::container::segmented_find_if_not(f_loc, f_end, pred);
+      while (1) {
+         // Phase 1: advance front segment by segment to find an element NOT satisfying pred
+         while (1) {
+            f_loc = boost::container::segmented_find_if_not(f_loc, f_end, pred);
 
-         if (f_loc == f_end) {
-            ++sf;
-            if (sf == sl) {
-               local_iterator r = partition_scan(l_beg, l_loc, pred, is_local_seg_t(), cat);
-               return traits::compose(sf, r);
+            if (f_loc == f_end) {
+               ++sf;
+               if (sf == sl) {
+                  f_loc = l_beg;
+                  goto same_segment_partition_step;
+               }
+               f_loc = traits::begin(sf);
+               f_end = traits::end(sf);
             }
-            f_loc = traits::begin(sf);
-            f_end = traits::end(sf);
-            continue;
+            else
+               break;   //Found element not satisfying pred, now find one from the back satisfying pred to swap with.
          }
 
-         // Phase 2: retreat back to find element satisfying pred
-         for (;;) {
-            if (l_loc == l_beg) {
+         // Phase 2: retreat back segment by segment to find an element satisfying pred
+         while(1) {
+            const local_iterator l_loc_orig = l_loc;
+            l_loc = boost::container::segmented_find_last_if(l_beg, l_loc, pred);
+            if (l_loc == l_loc_orig) {   //Segment exhausted, move to previous
                --sl;
                if (sf == sl) {
-                  local_iterator r = partition_scan(f_loc, f_end, pred, is_local_seg_t(), cat);
-                  return traits::compose(sf, r);
+                  l_loc = f_end;
+                  goto same_segment_partition_step;
                }
                l_beg = traits::begin(sl);
                l_loc = traits::end(sl);
             }
-            --l_loc;
-            if (pred(*l_loc)) break;
+            else
+               break;
          }
 
          boost::adl_move_swap(*f_loc, *l_loc);
          ++f_loc;
       }
    }
+
+   same_segment_partition_step:
+   return traits::compose(sf, partition_scan(f_loc, l_loc, pred, is_local_seg_t(), cat));
 }
 
 //////////////////////////////////////////////
