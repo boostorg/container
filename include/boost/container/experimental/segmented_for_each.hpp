@@ -31,26 +31,6 @@ F segmented_for_each(InpIter first, Sent last, F f);
 
 namespace detail_algo {
 
-template <class SegIter, class F>
-F segmented_for_each_dispatch
-   (SegIter first, SegIter last, F f, segmented_iterator_tag)
-{
-   typedef segmented_iterator_traits<SegIter> traits;
-   typename traits::segment_iterator sfirst = traits::segment(first);
-   typename traits::segment_iterator slast  = traits::segment(last);
-
-   if(sfirst == slast) {
-      f = boost::container::segmented_for_each(traits::local(first), traits::local(last), boost::move(f));
-   }
-   else {
-      f = boost::container::segmented_for_each(traits::local(first), traits::end(sfirst), boost::move(f));
-      for(++sfirst; sfirst != slast; ++sfirst)
-         f = boost::container::segmented_for_each(traits::begin(sfirst), traits::end(sfirst), boost::move(f));
-      f = boost::container::segmented_for_each(traits::begin(sfirst), traits::local(last), boost::move(f));
-   }
-   return f;
-}
-
 template <class InpIter, class Sent, class F, class Tag>
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, InpIter>::value, F>::type
@@ -60,6 +40,29 @@ segmented_for_each_dispatch
    for(; first != last; ++first)
       f(*first);
    return f;
+}
+
+template <class SegIter, class F>
+F segmented_for_each_dispatch
+   (SegIter first, SegIter last, F f, segmented_iterator_tag)
+{
+   typedef segmented_iterator_traits<SegIter> traits;
+   typedef typename traits::local_iterator    local_iterator;
+   typedef typename traits::segment_iterator  segment_iterator;
+   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+
+   segment_iterator sfirst = traits::segment(first);
+   segment_iterator slast  = traits::segment(last);
+
+   if(sfirst == slast) {
+      return (segmented_for_each_dispatch)(traits::local(first), traits::local(last), boost::move(f), is_local_seg_t());
+   }
+   else {
+      f = (segmented_for_each_dispatch)(traits::local(first), traits::end(sfirst), boost::move(f), is_local_seg_t());
+      for(++sfirst; sfirst != slast; ++sfirst)
+         f = (segmented_for_each_dispatch)(traits::begin(sfirst), traits::end(sfirst), boost::move(f), is_local_seg_t());
+      return (segmented_for_each_dispatch)(traits::begin(sfirst), traits::local(last), boost::move(f), is_local_seg_t());
+   }
 }
 
 } // namespace detail_algo

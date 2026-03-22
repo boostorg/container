@@ -42,13 +42,19 @@ struct merge_default_less
    bool operator()(const T& a, const T& b) const { return a < b; }
 };
 
-template <class FwdIt, class InIter2, class Sent2, class OutIter, class Comp>
-OutIter merge_scan(FwdIt first, FwdIt last, InIter2& first2, Sent2 last2, OutIter result, Comp comp,
+template <class FwdIt, class Sent, class InIter2, class Sent2, class OutIter, class Comp>
+OutIter merge_scan(FwdIt first, Sent last, InIter2& first2, Sent2 last2, OutIter result, Comp comp,
    non_segmented_iterator_tag)
 {
    while(first != last && first2 != last2) {
-      if(comp(*first2, *first)) { *result = *first2; ++first2; }
-      else                      { *result = *first; ++first; }
+      if(comp(*first2, *first)) {
+         *result = *first2;
+         ++first2;
+      }
+      else {
+         *result = *first;
+         ++first;
+      }
       ++result;
    }
    return (segmented_copy)(first, last, result);
@@ -81,7 +87,8 @@ OutIter merge_scan(SegIt first, SegIt last, InIter2& first2, Sent2 last2, OutIte
 }
 
 template <class SegIter, class InIter2, class Sent2, class OutIter, class Comp>
-BOOST_CONTAINER_FORCEINLINE OutIter segmented_merge_dispatch
+BOOST_CONTAINER_FORCEINLINE
+OutIter segmented_merge_dispatch
    (SegIter first1, SegIter last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp, segmented_iterator_tag)
 {
    result = merge_scan(first1, last1, first2, last2, result, comp, segmented_iterator_tag());
@@ -89,23 +96,13 @@ BOOST_CONTAINER_FORCEINLINE OutIter segmented_merge_dispatch
 }
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp, class Tag>
+BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent1, InIter1>::value, OutIter>::type
 segmented_merge_dispatch
    (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp, Tag)
 {
-   while(first1 != last1 && first2 != last2) {
-      if(comp(*first2, *first1)) {
-         *result = *first2;
-         ++first2;
-      }
-      else {
-         *result = *first1;
-         ++first1;
-      }
-      ++result;
-   }
-   result = (segmented_copy)(first1, last1, result);
+   result = merge_scan(first1, last1, first2, last2, result, comp, non_segmented_iterator_tag());
    return   (segmented_copy)(first2, last2, result);
 }
 
