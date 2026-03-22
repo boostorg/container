@@ -656,10 +656,12 @@ class set
    template <class K>
    inline BOOST_CONTAINER_DOC1ST
       ( iterator
-      , typename dtl::enable_if_transparent< key_compare
-                                             BOOST_MOVE_I K
-                                             BOOST_MOVE_I iterator
-                                           >::type)  //transparent
+      , typename dtl::enable_if_c<
+         dtl::is_transparent<key_compare>::value &&                  //transparent
+         !dtl::is_convertible<K BOOST_MOVE_I iterator>::value &&     //not convertible to iterator
+         !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
+         BOOST_MOVE_I iterator
+         >::type)
       insert(const_iterator p, K &&x)
    {  return this->base_t::insert_unique_hint_convertible(p, boost::forward<K>(x)); }
 

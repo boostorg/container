@@ -411,7 +411,7 @@ class flat_set
    flat_set& operator=(std::initializer_list<value_type> il)
    {
        this->clear();
-       this->insert(il.begin(), il.end());
+       this->tree_t::insert_unique_range(il.begin(), il.end());
        return *this;
    }
 #endif
@@ -737,10 +737,12 @@ class flat_set
    template <class K>
    inline BOOST_CONTAINER_DOC1ST
       ( iterator
-      , typename dtl::enable_if_transparent< key_compare
-                                             BOOST_MOVE_I K
-                                             BOOST_MOVE_I iterator
-                                           >::type)  //transparent
+         , typename dtl::enable_if_c<
+            dtl::is_transparent<key_compare>::value &&                  //transparent
+            !dtl::is_convertible<K BOOST_MOVE_I iterator>::value &&     //not convertible to iterator
+            !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
+            BOOST_MOVE_I iterator
+       >::type)
       insert(const_iterator p, K &&x)
    {  return this->tree_t::insert_unique(p, boost::forward<K>(x)); }
 
@@ -1549,7 +1551,7 @@ class flat_multiset
    flat_multiset& operator=(std::initializer_list<value_type> il)
    {
        this->clear();
-       this->insert(il.begin(), il.end());
+       this->tree_t::insert_equal_range(il.begin(), il.end());
        return *this;
    }
 #endif
