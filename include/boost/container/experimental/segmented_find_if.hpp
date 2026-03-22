@@ -30,46 +30,6 @@ InpIter segmented_find_if(InpIter first, Sent last, Pred pred);
 
 namespace detail_algo {
 
-template <class SegIter, class Pred>
-SegIter segmented_find_if_dispatch
-   (SegIter first, SegIter last, Pred pred, segmented_iterator_tag)
-{
-   typedef segmented_iterator_traits<SegIter> traits;
-   typedef typename traits::local_iterator   local_iterator;
-   typedef typename traits::segment_iterator segment_iterator;
-
-   segment_iterator       sfirst = traits::segment(first);
-   const segment_iterator slast  = traits::segment(last);
-   const local_iterator      lf  = traits::local(first);
-
-   if(sfirst == slast) {
-      local_iterator r = (segmented_find_if)(lf, traits::local(last), pred);
-      return traits::compose(sfirst, r);
-   }
-   else {
-      //First segment
-      {
-         const local_iterator le = traits::end(sfirst);
-         const local_iterator r = (segmented_find_if)(lf, le, pred);
-         if (r != le)
-            return traits::compose(sfirst, r);
-      }
-      //Middle segments
-      for (++sfirst; sfirst != slast; ++sfirst) {
-         const local_iterator le = traits::end(sfirst);
-         const local_iterator r = (segmented_find_if)(traits::begin(sfirst), le, pred);
-         if (r != le)
-            return traits::compose(sfirst, r);
-      }
-      //Last segment
-      {
-         const local_iterator ll = traits::local(last);
-         const local_iterator r = (segmented_find_if)(traits::begin(sfirst), ll, pred);
-         return traits::compose(sfirst, r);
-      }
-   }
-}
-
 template <class InpIter, class Sent, class Pred, class Tag>
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, InpIter>::value, InpIter>::type
@@ -79,6 +39,44 @@ segmented_find_if_dispatch(InpIter first, Sent last, Pred pred, Tag)
       if(pred(*first))
          break;
    return first;
+}
+
+
+template <class SegIter, class Pred>
+SegIter segmented_find_if_dispatch
+   (SegIter first, SegIter last, Pred pred, segmented_iterator_tag)
+{
+   typedef segmented_iterator_traits<SegIter> traits;
+   typedef typename traits::local_iterator   local_iterator;
+   typedef typename traits::segment_iterator segment_iterator;
+   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+
+   segment_iterator       sfirst = traits::segment(first);
+   const segment_iterator slast  = traits::segment(last);
+
+   if(sfirst == slast) {
+      return traits::compose(sfirst, (segmented_find_if_dispatch)(traits::local(first), traits::local(last), pred, is_local_seg_t()));
+   }
+   else {
+      //First segment
+      {
+         const local_iterator le = traits::end(sfirst);
+         const local_iterator r = (segmented_find_if_dispatch)(traits::local(first), le, pred, is_local_seg_t());
+         if (r != le)
+            return traits::compose(sfirst, r);
+      }
+      //Middle segments
+      for (++sfirst; sfirst != slast; ++sfirst) {
+         const local_iterator le = traits::end(sfirst);
+         const local_iterator r = (segmented_find_if_dispatch)(traits::begin(sfirst), le, pred, is_local_seg_t());
+         if (r != le)
+            return traits::compose(sfirst, r);
+      }
+      //Last segment
+      {
+         return traits::compose(sfirst, (segmented_find_if_dispatch)(traits::begin(sfirst), traits::local(last), pred, is_local_seg_t()));
+      }
+   }
 }
 
 } // namespace detail_algo
