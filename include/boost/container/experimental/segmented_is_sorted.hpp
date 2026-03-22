@@ -30,7 +30,7 @@ template <class FwdIt, class Sent, class Comp>
 BOOST_CONTAINER_FORCEINLINE
 bool segmented_is_sorted(FwdIt first, Sent last, Comp comp)
 {
-   return boost::container::segmented_is_sorted_until(first, last, comp) == last;
+   return (segmented_is_sorted_until)(first, last, comp) == last;
 }
 
 //! Returns true if [first, last) is sorted using operator<.
@@ -38,7 +38,7 @@ template <class FwdIt, class Sent>
 BOOST_CONTAINER_FORCEINLINE
 bool segmented_is_sorted(FwdIt first, Sent last)
 {
-   return boost::container::segmented_is_sorted_until(first, last) == last;
+   return (segmented_is_sorted_until)(first, last) == last;
 }
 
 } // namespace container

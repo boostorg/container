@@ -47,8 +47,8 @@ SegIter segmented_find_if_dispatch
    (SegIter first, SegIter last, Pred pred, segmented_iterator_tag)
 {
    typedef segmented_iterator_traits<SegIter> traits;
-   typedef typename traits::local_iterator   local_iterator;
-   typedef typename traits::segment_iterator segment_iterator;
+   typedef typename traits::local_iterator    local_iterator;
+   typedef typename traits::segment_iterator  segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
 
    segment_iterator       sfirst = traits::segment(first);
@@ -73,9 +73,7 @@ SegIter segmented_find_if_dispatch
             return traits::compose(sfirst, r);
       }
       //Last segment
-      {
-         return traits::compose(sfirst, (segmented_find_if_dispatch)(traits::begin(sfirst), traits::local(last), pred, is_local_seg_t()));
-      }
+      return traits::compose(slast, (segmented_find_if_dispatch)(traits::begin(slast), traits::local(last), pred, is_local_seg_t()));
    }
 }
 
