@@ -504,6 +504,9 @@ FwdIt find_last_if_not(FwdIt first, FwdIt last, Pred pred)
 //is_heap (random-access non-implementable?)
 //is_heap_until (random-access non-implementable?)
 
+//not implemented (c++14)
+//mismatch with two full ranges
+//equal with two full ranges
 
 //not implemented (c++17)
 //for_each_n
@@ -1954,9 +1957,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    {
       C c2(c);
       bench_equal(c, c2, iters, cname, "equal(hit)");
-      typename C::iterator last = c2.end();
-      --last;
-      *last = VT(-1);
+      c2[c2.size() / 2u] = VT(-1);
       bench_equal(c, c2, iters, cname, "equal(miss)");
    }
 
@@ -2003,9 +2004,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    {
       bench_is_partitioned(c, iters, cname, is_negative<VT>(), "is_partitioned(hit)");
       C c2(c);
-      typename C::iterator last = c2.end();
-      --last;
-      *last = VT(-1);
+      c2[c2.size() / 2u] = VT(-1);
       bench_is_partitioned(c2, iters, cname, is_negative<VT>(), "is_partitioned(miss)");
    }
 
@@ -2013,9 +2012,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    {
       bench_is_sorted(c, iters, cname, "is_sorted(hit)");
       C c2(c);
-      typename C::iterator last = c2.end();
-      --last;
-      *last = VT(0);
+      c2[c2.size() / 2u] = VT(-1);
       bench_is_sorted(c2, iters, cname, "is_sorted(miss)");
    }
 
@@ -2023,9 +2020,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    {
       bench_is_sorted_until(c, iters, cname, "is_sorted_until(hit)");
       C c2(c);
-      typename C::iterator last = c2.end();
-      --last;
-      *last = VT(0);
+      c2[c2.size() / 2u] = VT(-1);
       bench_is_sorted_until(c2, iters, cname, "is_sorted_until(miss)");
    }
 
@@ -2040,8 +2035,9 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //mismatch
    {
       C c2(c);
-      bench_mismatch(c, c2, iters, cname, "mismatch(hit)");
       c2[c2.size()/2] = VT(-1);
+      bench_mismatch(c, c2, iters, cname, "mismatch(hit)");
+      c2[c2.size()/2] = c[c2.size()/2];
       bench_mismatch(c, c2, iters, cname, "mismatch(miss)");
    }
 
@@ -2134,7 +2130,7 @@ void run_benchmarks()
 {
    #ifdef NDEBUG
    const std::size_t N    = 10000;
-   const std::size_t iter = 500;
+   const std::size_t iter = 1000;
    #else
    const std::size_t N    = 10000;
    const std::size_t iter = 1;
