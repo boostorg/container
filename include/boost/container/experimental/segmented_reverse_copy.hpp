@@ -30,33 +30,6 @@ OutIter segmented_reverse_copy(BidirIter first, BidirIter last, OutIter result);
 
 namespace detail_algo {
 
-template <class SegIter, class OutIter>
-OutIter segmented_reverse_copy_dispatch
-   (SegIter first, SegIter last, OutIter result, segmented_iterator_tag)
-{
-   typedef segmented_iterator_traits<SegIter> traits;
-   typedef typename traits::segment_iterator segment_iterator;
-
-   if(first == last)
-      return result;
-
-   segment_iterator sfirst = traits::segment(first);
-   segment_iterator slast  = traits::segment(last);
-
-   if(sfirst == slast) {
-      return (segmented_reverse_copy)(traits::local(first), traits::local(last), result);
-   }
-   else {
-      result = (segmented_reverse_copy)(traits::begin(slast), traits::local(last), result);
-
-      segment_iterator s = slast;
-      for (--s; s != sfirst; --s)
-         result = (segmented_reverse_copy)(traits::begin(s), traits::end(s), result);
-
-      return (segmented_reverse_copy)(traits::local(first), traits::end(sfirst), result);
-   }
-}
-
 template <class BidirIter, class OutIter>
 OutIter segmented_reverse_copy_dispatch
    (BidirIter first, BidirIter last, OutIter result, non_segmented_iterator_tag)
@@ -67,6 +40,32 @@ OutIter segmented_reverse_copy_dispatch
       ++result;
    }
    return result;
+}
+
+template <class SegIter, class OutIter>
+OutIter segmented_reverse_copy_dispatch
+   (SegIter first, SegIter last, OutIter result, segmented_iterator_tag)
+{
+   typedef segmented_iterator_traits<SegIter>   traits;
+   typedef typename traits::local_iterator    local_iterator;
+   typedef typename traits::segment_iterator  segment_iterator;
+   typedef typename segmented_iterator_traits
+      <local_iterator>::is_segmented_iterator is_local_seg_t;
+
+   segment_iterator const sfirst = traits::segment(first);
+   segment_iterator       slast  = traits::segment(last);
+
+   if(sfirst == slast) {
+      return (segmented_reverse_copy_dispatch)(traits::local(first), traits::local(last), result, is_local_seg_t());
+   }
+   else {
+      result = (segmented_reverse_copy_dispatch)(traits::begin(slast), traits::local(last), result, is_local_seg_t());
+
+      for (--slast; slast != sfirst; --slast)
+         result = (segmented_reverse_copy_dispatch)(traits::begin(slast), traits::end(slast), result, is_local_seg_t());
+
+      return (segmented_reverse_copy_dispatch)(traits::local(first), traits::end(sfirst), result, is_local_seg_t());
+   }
 }
 
 } // namespace detail_algo

@@ -30,26 +30,6 @@ OutIter segmented_transform(InIter first, Sent last, OutIter result, UnaryOp op)
 
 namespace detail_algo {
 
-template <class SegIter, class OutIter, class UnaryOp>
-OutIter segmented_transform_dispatch
-   (SegIter first, SegIter last, OutIter result, UnaryOp op, segmented_iterator_tag)
-{
-   typedef segmented_iterator_traits<SegIter> traits;
-   typename traits::segment_iterator sfirst = traits::segment(first);
-   typename traits::segment_iterator slast  = traits::segment(last);
-
-   if(sfirst == slast) {
-      return boost::container::segmented_transform(traits::local(first), traits::local(last), result, op);
-   }
-   else {
-      result = boost::container::segmented_transform(traits::local(first), traits::end(sfirst), result, op);
-
-      for(++sfirst; sfirst != slast; ++sfirst)
-         result = boost::container::segmented_transform(traits::begin(sfirst), traits::end(sfirst), result, op);
-
-      return boost::container::segmented_transform(traits::begin(sfirst), traits::local(last), result, op);
-   }
-}
 
 template <class InIter, class Sent, class OutIter, class UnaryOp, class Tag>
 typename algo_enable_if_c<
@@ -60,6 +40,32 @@ segmented_transform_dispatch
    for(; first != last; ++first, ++result)
       *result = op(*first);
    return result;
+}
+
+template <class SegIter, class OutIter, class UnaryOp>
+OutIter segmented_transform_dispatch
+   (SegIter first, SegIter last, OutIter result, UnaryOp op, segmented_iterator_tag)
+{
+   typedef segmented_iterator_traits<SegIter> traits;
+   typedef typename traits::local_iterator    local_iterator;
+   typedef typename traits::segment_iterator  segment_iterator;
+   typedef typename segmented_iterator_traits
+      <local_iterator>::is_segmented_iterator is_local_seg_t;
+
+   segment_iterator       sfirst = traits::segment(first);
+   segment_iterator const slast  = traits::segment(last);
+
+   if(sfirst == slast) {
+      return (segmented_transform_dispatch)(traits::local(first), traits::local(last), result, op, is_local_seg_t());
+   }
+   else {
+      result = (segmented_transform_dispatch)(traits::local(first), traits::end(sfirst), result, op, is_local_seg_t());
+
+      for(++sfirst; sfirst != slast; ++sfirst)
+         result = (segmented_transform_dispatch)(traits::begin(sfirst), traits::end(sfirst), result, op, is_local_seg_t());
+
+      return (segmented_transform_dispatch)(traits::begin(sfirst), traits::local(last), result, op, is_local_seg_t());
+   }
 }
 
 } // namespace detail_algo

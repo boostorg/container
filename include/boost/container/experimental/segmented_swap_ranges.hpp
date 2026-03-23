@@ -31,23 +31,6 @@ FwdIt2 segmented_swap_ranges(FwdIt1 first1, Sent last1, FwdIt2 first2);
 
 namespace detail_algo {
 
-template <class SegIter, class FwdIt2>
-FwdIt2 segmented_swap_ranges_dispatch (SegIter first1, SegIter last1, FwdIt2 first2, segmented_iterator_tag)
-{
-   typedef segmented_iterator_traits<SegIter> traits;
-   typename traits::segment_iterator sfirst = traits::segment(first1);
-   typename traits::segment_iterator slast  = traits::segment(last1);
-   if(sfirst == slast) {
-      first2 = boost::container::segmented_swap_ranges(traits::local(first1), traits::local(last1), first2);
-   }
-   else {
-      first2 = boost::container::segmented_swap_ranges(traits::local(first1), traits::end(sfirst), first2);
-      for(++sfirst; sfirst != slast; ++sfirst)
-         first2 = boost::container::segmented_swap_ranges(traits::begin(sfirst), traits::end(sfirst), first2);
-      first2 = boost::container::segmented_swap_ranges(traits::begin(sfirst), traits::local(last1), first2);
-   }
-   return first2;
-}
 
 template <class FwdIt1, class Sent, class FwdIt2, class Tag>
 typename algo_enable_if_c<
@@ -56,6 +39,32 @@ segmented_swap_ranges_dispatch (FwdIt1 first1, Sent last1, FwdIt2 first2, Tag)
 {
    for(; first1 != last1; ++first1, ++first2) {
       boost::adl_move_swap(*first1, *first2);
+   }
+   return first2;
+}
+
+template <class SegIter, class FwdIt2>
+FwdIt2 segmented_swap_ranges_dispatch (SegIter first1, SegIter last1, FwdIt2 first2, segmented_iterator_tag)
+{
+   typedef segmented_iterator_traits<SegIter>   traits;
+   typedef typename traits::local_iterator    local_iterator;
+   typedef typename traits::segment_iterator  segment_iterator;
+   typedef typename segmented_iterator_traits
+      <local_iterator>::is_segmented_iterator is_local_seg_t;
+
+   segment_iterator       sfirst = traits::segment(first1);
+   segment_iterator const slast  = traits::segment(last1);
+
+   if(sfirst == slast) {
+      first2 = (segmented_swap_ranges_dispatch)(traits::local(first1), traits::local(last1), first2, is_local_seg_t());
+   }
+   else {
+      first2 = (segmented_swap_ranges_dispatch)(traits::local(first1), traits::end(sfirst), first2, is_local_seg_t());
+
+      for(++sfirst; sfirst != slast; ++sfirst)
+         first2 = (segmented_swap_ranges_dispatch)(traits::begin(sfirst), traits::end(sfirst), first2, is_local_seg_t());
+
+      first2 = (segmented_swap_ranges_dispatch)(traits::begin(sfirst), traits::local(last1), first2, is_local_seg_t());
    }
    return first2;
 }

@@ -30,43 +30,6 @@ FwdIt segmented_partition_point(FwdIt first, Sent last, Predicate pred);
 
 namespace detail_algo {
 
-template <class SegIter, class Predicate>
-SegIter segmented_partition_point_dispatch
-   (SegIter first, SegIter last, Predicate pred, segmented_iterator_tag)
-{
-   typedef segmented_iterator_traits<SegIter>   traits;
-   typedef typename traits::local_iterator      local_iterator;
-   typedef typename traits::segment_iterator    segment_iterator;
-
-   segment_iterator scur  = traits::segment(first);
-   segment_iterator slast = traits::segment(last);
-
-   if(scur == slast) {
-      local_iterator lcur = boost::container::segmented_partition_point(traits::local(first), traits::local(last), pred);
-      if(lcur != traits::local(last))
-         return traits::compose(scur, lcur);
-   }
-   else {
-      {
-         local_iterator lcur = boost::container::segmented_partition_point(traits::local(first), traits::end(scur), pred);
-         if (lcur != traits::end(scur))
-            return traits::compose(scur, lcur);
-      }
-
-      for(++scur; scur != slast; ++scur) {
-         local_iterator lcur = boost::container::segmented_partition_point(traits::begin(scur), traits::end(scur), pred);
-         if(lcur != traits::end(scur))
-            return traits::compose(scur, lcur);
-      }
-      {
-         local_iterator lcur = boost::container::segmented_partition_point(traits::begin(scur), traits::local(last), pred);
-         if (lcur != traits::local(last))
-            return traits::compose(scur, lcur);
-      }
-   }
-   return last;
-}
-
 template <class FwdIt, class Sent, class Predicate, class Tag>
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, FwdIt>::value, FwdIt>::type
@@ -79,10 +42,46 @@ segmented_partition_point_dispatch
    return last;
 }
 
+template <class SegIter, class Predicate>
+SegIter segmented_partition_point_dispatch
+   (SegIter first, SegIter last, Predicate pred, segmented_iterator_tag)
+{
+   typedef segmented_iterator_traits<SegIter>   traits;
+   typedef typename traits::local_iterator      local_iterator;
+   typedef typename traits::segment_iterator    segment_iterator;
+   typedef typename segmented_iterator_traits
+      <local_iterator>::is_segmented_iterator   is_local_seg_t;
+
+   segment_iterator        scur = traits::segment(first);
+   segment_iterator const slast = traits::segment(last);
+
+   if(scur == slast) {
+      return traits::compose(scur, 
+         (segmented_partition_point_dispatch)(traits::local(first), traits::local(last), pred, is_local_seg_t()));
+   }
+   else {
+      {
+         local_iterator lcur =
+            (segmented_partition_point_dispatch)(traits::local(first), traits::end(scur), pred, is_local_seg_t());
+         if (lcur != traits::end(scur))
+            return traits::compose(scur, lcur);
+      }
+
+      for(++scur; scur != slast; ++scur) {
+         local_iterator lcur =
+            (segmented_partition_point_dispatch)(traits::begin(scur), traits::end(scur), pred, is_local_seg_t());
+         if(lcur != traits::end(scur))
+            return traits::compose(scur, lcur);
+      }
+      return traits::compose(slast, 
+         (segmented_partition_point_dispatch)(traits::begin(scur), traits::local(last), pred, is_local_seg_t()));
+   }
+   return last;
+}
+
 } // namespace detail_algo
 
-//! Note: This version is suboptimal only supports bidirectional iterators,
-//! as it relies on stable_partition_shift.
+//! Note: This version is suboptimal, and does not fulfill OlogN comparisons
 //! 
 //! Finds the partition point in [first, last): the first element
 //! for which \c pred returns false. The range must be partitioned
