@@ -1462,6 +1462,13 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
 
 [section:release_notes Release Notes]
 
+[section:release_notes_boost_1_92_00 Boost 1.92 Release]
+
+* Fixed bugs/issues:
+   * [@https://github.com/boostorg/container/issues/334 GitHub #334: ['"Wrong overload resolution protection in implementation of P2363R5"]].
+   
+[endsect]
+
 [section:release_notes_boost_1_91_00 Boost 1.91 Release]
 
 * Implemented heterogeneous overloads from C++23 ([@http://wg21.link/p2077r3 P2077]) and C++26 ([@http://wg21.link/P2363 P2363]).
