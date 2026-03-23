@@ -273,7 +273,7 @@ public:
    template <class U>
    BOOST_CONTAINER_FORCEINLINE bool operator()(const U& t)const
    {
-      return t_ < t;
+      return t < t_;
    }
 };
 
@@ -2054,15 +2054,15 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 
    //partition_point (not tested since it's not optimized for random access iterators)
    //bench_partition_point(c, iters, cname, less_than_ref<VT>(static_cast<VT>((int)c.size()/2)), "partition_point(hit)");
-   //bench_partition_point(c, iters, cname, is_negative<VT>(),                                   "partition_point(miss)");
+   //bench_partition_point(c, iters, cname, is_zero_or_positive<VT>(),                           "partition_point(miss)");
 
    //remove
-   bench_remove(c, iters, cname, VT(0),  "remove(hit)");
-   bench_remove(c, iters, cname, VT(-1), "remove(miss)");
+   bench_remove(c, iters, cname, VT((int)c.size()/2),  "remove(hit)");
+   bench_remove(c, iters, cname, VT(-1),               "remove(miss)");
 
    //remove_copy
-   bench_remove_copy(c, iters, cname, VT(0),  "remove_copy(hit)");
-   bench_remove_copy(c, iters, cname, VT(-1), "remove_copy(miss)");
+   bench_remove_copy(c, iters, cname, VT((int)c.size()/2),  "remove_copy(hit)");
+   bench_remove_copy(c, iters, cname, VT(-1),               "remove_copy(miss)");
 
    //remove_copy_if
    bench_remove_copy_if(c, iters, cname, is_odd<VT>(),      "remove_copy_if(hit)");
