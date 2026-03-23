@@ -28,6 +28,7 @@ namespace container {
 
 namespace detail_algo {
 
+//Same-segment reverse: simply a reverse loop with move-swaps. No segmentation
 template <class BidirIt>
 void segmented_reverse_dispatch(BidirIt first, BidirIt last, non_segmented_iterator_tag)
 {
@@ -36,11 +37,94 @@ void segmented_reverse_dispatch(BidirIt first, BidirIt last, non_segmented_itera
       ++first;
    }
 }
+#define BOOST_CONTAINER_SEGMENTED_REVERSE_RECURSIVE
+#ifdef BOOST_CONTAINER_SEGMENTED_REVERSE_RECURSIVE
 
+//////////////////////////////////////////////
+// segmented_reverse_disjoint_ranges: swaps elements between
+// [f, f_end) (forward) and [l_beg, l) (backward).
+// Updates f and l to their final positions.
+// At least one side is fully consumed on return.
+//////////////////////////////////////////////
 
-//Note: This implementation does not support recursively segmented iterators for the most part
-//TODO: Add support for recursively segmented iterators, if needed. This will require a more complex
-//cross-segment loop that exploits segmentation on both the forward and backward sides until the two sides meet.
+template <class It>
+void segmented_reverse_disjoint_ranges(It& f_out, It const f_end, It const l_beg, It& l_out, non_segmented_iterator_tag)
+{
+   It f = f_out;
+   It l = l_out;
+
+   while (f != f_end && l != l_beg) {
+      --l;
+      boost::adl_move_swap(*f, *l);
+      ++f;
+   }
+   f_out = f;
+   l_out = l;
+}
+
+template <class It>
+void segmented_reverse_disjoint_ranges(It& f, It f_end, It l_beg, It& l, segmented_iterator_tag)
+{
+   typedef segmented_iterator_traits<It>        traits;
+   typedef typename traits::segment_iterator    segment_iterator;
+   typedef typename traits::local_iterator      local_iterator;
+   typedef typename segmented_iterator_traits
+      <local_iterator>::is_segmented_iterator   is_local_seg_t;
+
+   //Nothing to swap here if a range is empty
+   if (f == f_end || l == l_beg)
+      return;
+
+   segment_iterator       fs     = traits::segment(f);
+   const segment_iterator fs_end = traits::segment(f_end);
+   local_iterator         fi     = traits::local(f);
+   local_iterator         fi_end = (fs == fs_end) ? traits::local(f_end) : traits::end(fs);
+
+   segment_iterator       ls     = traits::segment(l);
+   const segment_iterator ls_beg = traits::segment(l_beg);
+   local_iterator         li     = traits::local(l);
+   local_iterator         li_beg = (ls == ls_beg) ? traits::local(l_beg) : traits::begin(ls);
+
+   //At least one of the two sides is guaranteed to be fully consumed after this loop
+   //since the ranges are guaranteed not to overlap
+   while (true) {
+      //Reverse the front and back segments recursively
+      segmented_reverse_disjoint_ranges(fi, fi_end, li_beg, li, is_local_seg_t());
+
+      //Independent advancement of forward and backward segments since ranges do not to overlap
+
+      //Check if the forward segment was fully consumed
+      if (fi == fi_end) {
+         //Check if there are no more segments to advance on the forward side, in which case we are done
+         if (fs == fs_end) {
+            f = f_end;
+            l = traits::compose(ls, li);
+            return;
+         }
+         //Advance the forward segment
+         ++fs;
+         fi = traits::begin(fs);
+         fi_end = (fs == fs_end) ? traits::local(f_end) : traits::end(fs);
+      }
+
+      //Check if the backward segment was fully consumed
+      if (li == li_beg) {
+         //Check if there are no more segments to retreat on the backward side, in which case we are done
+         if (ls == ls_beg) {
+            f = traits::compose(fs, fi);
+            l = l_beg;
+            return;
+         }
+         //Retreat the backward segment
+         --ls;
+         li = traits::end(ls);
+         li_beg = (ls == ls_beg) ? traits::local(l_beg) : traits::begin(ls);
+      }
+   }
+}
+
+#endif // BOOST_CONTAINER_SEGMENTED_REVERSE_RECURSIVE
+
 template <class SegIt>
 void segmented_reverse_dispatch(SegIt first, SegIt last, segmented_iterator_tag)
 {
@@ -60,12 +144,7 @@ void segmented_reverse_dispatch(SegIt first, SegIt last, segmented_iterator_tag)
       local_iterator l_beg = traits::begin(sl);
 
       while (true) {
-         //Cross-segment reverse loop: stop when either side reaches its end
-         while (f_loc != f_end && l_loc != l_beg) {
-            --l_loc;
-            boost::adl_move_swap(*f_loc, *l_loc);
-            ++f_loc;
-         }
+         segmented_reverse_disjoint_ranges(f_loc, f_end, l_beg, l_loc, is_local_seg_t());
 
          //Check if the backward side reached the end of its segment
          if (l_loc == l_beg) {
@@ -102,7 +181,6 @@ void segmented_reverse_dispatch(SegIt first, SegIt last, segmented_iterator_tag)
    }
    //Final reverse loop within the final segment
    segmented_reverse_dispatch(f_loc, l_loc, is_local_seg_t());
-   return;
 }
 
 } // namespace detail_algo
