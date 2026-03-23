@@ -37,73 +37,72 @@ void segmented_reverse_dispatch(BidirIt first, BidirIt last, non_segmented_itera
    }
 }
 
+
+//Note: This implementation does not support recursively segmented iterators for the most part
+//TODO: Add support for recursively segmented iterators, if needed. This will require a more complex
+//cross-segment loop that exploits segmentation on both the forward and backward sides until the two sides meet.
 template <class SegIt>
 void segmented_reverse_dispatch(SegIt first, SegIt last, segmented_iterator_tag)
 {
-   typedef segmented_iterator_traits<SegIt>  traits;
-   typedef typename traits::segment_iterator segment_iterator;
-   typedef typename traits::local_iterator   local_iterator;
-   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
-
-   if(first == last) return;
+   typedef segmented_iterator_traits<SegIt>     traits;
+   typedef typename traits::segment_iterator    segment_iterator;
+   typedef typename traits::local_iterator      local_iterator;
+   typedef typename segmented_iterator_traits
+      <local_iterator>::is_segmented_iterator   is_local_seg_t;
 
    segment_iterator sf = traits::segment(first);
    segment_iterator sl = traits::segment(last);
-
-   if(sf == sl) {
-      segmented_reverse_dispatch(traits::local(first), traits::local(last), is_local_seg_t());
-      return;
-   }
-
    local_iterator f_loc = traits::local(first);
-   local_iterator f_end = traits::end(sf);
-   local_iterator l_beg = traits::begin(sl);
    local_iterator l_loc = traits::local(last);
 
-   for(;;) {
-      //Cross-segment reverse loop: stop when either side reaches its end
-      while(f_loc != f_end && l_loc != l_beg) {
-         --l_loc;
-         boost::adl_move_swap(*f_loc, *l_loc);
-         ++f_loc;
-      }
+   if (sf != sl) {
+      local_iterator f_end = traits::end(sf);
+      local_iterator l_beg = traits::begin(sl);
 
-      if(f_loc == f_end && l_loc == l_beg) {
-         ++sf;
-         if(sf == sl)
-            return;
-         --sl;
-
-         f_loc = traits::begin(sf);
-         f_end = traits::end(sf);
-
-         if(sf == sl) {
-            segmented_reverse_dispatch(f_loc, f_end, is_local_seg_t());
-            return;
+      while (true) {
+         //Cross-segment reverse loop: stop when either side reaches its end
+         while (f_loc != f_end && l_loc != l_beg) {
+            --l_loc;
+            boost::adl_move_swap(*f_loc, *l_loc);
+            ++f_loc;
          }
 
-         l_beg = traits::begin(sl);
-         l_loc = traits::end(sl);
-      }
-      else if(f_loc == f_end) {
-         ++sf;
-         if(sf == sl) {
-            segmented_reverse_dispatch(l_beg, l_loc, is_local_seg_t());
-            return;
+         //Check if the backward side reached the end of its segment
+         if (l_loc == l_beg) {
+            //If both sides reached the end of their respective segments
+            //advance the forward segment and retreat the backward segment
+            if (f_loc == f_end) {
+               ++sf;
+               //If both segments were adjacent and we exhausted both, we are done
+               if (sf == sl)
+                  return;
+
+               f_loc = traits::begin(sf);
+               f_end = traits::end(sf);
+            }
+
+            --sl;
+            if (sf == sl) {
+               l_loc = f_end;
+               break;
+            }
+            l_beg = traits::begin(sl);
+            l_loc = traits::end(sl);
          }
-         f_loc = traits::begin(sf);
-         f_end = traits::end(sf);
-      }
-      else {
-         --sl;
-         if(sf == sl) {
-            segmented_reverse_dispatch(f_loc, f_end, is_local_seg_t());
-            return;
+         else {   //The forward side reached the end of its segment
+            ++sf;
+            if (sf == sl) {
+               f_loc = l_beg;
+               break;
+            }
+            f_loc = traits::begin(sf);
+            f_end = traits::end(sf);
          }
-         l_beg = traits::begin(sl);
-         l_loc = traits::end(sl);
       }
    }
+   //Final reverse loop within the final segment
+   segmented_reverse_dispatch(f_loc, l_loc, is_local_seg_t());
+   return;
 }
 
 } // namespace detail_algo

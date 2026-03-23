@@ -71,8 +71,7 @@ struct sp_chained_composer
 };
 
 template <class FwdIt, class OuterIter, class Composer, class Pred>
-OuterIter stable_partition_scan(FwdIt first, FwdIt last, OuterIter result,
-   Composer composer, Pred& pred, non_segmented_iterator_tag)
+OuterIter stable_partition_scan(FwdIt first, FwdIt last, OuterIter result, Composer composer, Pred pred, non_segmented_iterator_tag)
 {
    typedef typename boost::container::iterator_traits<OuterIter>::value_type value_type;
    for(; first != last; ++first) {
@@ -89,34 +88,27 @@ template <class SegIt, class OuterIter, class Composer, class Pred>
 OuterIter stable_partition_scan(SegIt first, SegIt last, OuterIter result,
    Composer composer, Pred& pred, segmented_iterator_tag)
 {
-   typedef segmented_iterator_traits<SegIt>  traits;
-   typedef typename traits::local_iterator   local_iterator;
-   typedef typename traits::segment_iterator segment_iterator;
-   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+   typedef segmented_iterator_traits<SegIt>   traits;
+   typedef typename traits::local_iterator    local_iterator;
+   typedef typename traits::segment_iterator  segment_iterator;
+   typedef typename segmented_iterator_traits
+      <local_iterator>::is_segmented_iterator is_local_seg_t;
 
-   typedef sp_chained_composer<Composer, traits> inner_composer_t;
+   typedef sp_chained_composer<Composer, traits> composer_t;
 
-   segment_iterator scur  = traits::segment(first);
-   segment_iterator slast = traits::segment(last);
-   local_iterator   lcur  = traits::local(first);
+   segment_iterator        scur = traits::segment(first);
+   segment_iterator const slast = traits::segment(last);
+   local_iterator          lcur = traits::local(first);
 
    if(scur == slast) {
-      inner_composer_t inner(composer, scur);
-      result = stable_partition_scan(lcur, traits::local(last), result, inner, pred, is_local_seg_t());
+      result = stable_partition_scan(lcur, traits::local(last), result, composer_t(composer, scur), pred, is_local_seg_t());
    }
    else {
-      {
-         inner_composer_t inner(composer, scur);
-         result = stable_partition_scan(lcur, traits::end(scur), result, inner, pred, is_local_seg_t());
-      }
+      result = stable_partition_scan(lcur, traits::end(scur), result, composer_t(composer, scur), pred, is_local_seg_t());
       for(++scur; scur != slast; ++scur) {
-         inner_composer_t inner(composer, scur);
-         result = stable_partition_scan(traits::begin(scur), traits::end(scur), result, inner, pred, is_local_seg_t());
+         result = stable_partition_scan(traits::begin(scur), traits::end(scur), result, composer_t(composer, scur), pred, is_local_seg_t());
       }
-      {
-         inner_composer_t inner(composer, scur);
-         result = stable_partition_scan(traits::begin(scur), traits::local(last), result, inner, pred,is_local_seg_t());
-      }
+      result = stable_partition_scan(traits::begin(scur), traits::local(last), result, composer_t(composer, scur), pred,is_local_seg_t());
    }
    return result;
 }

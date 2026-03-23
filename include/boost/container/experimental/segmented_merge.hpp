@@ -64,10 +64,11 @@ template <class SegIt, class InIter2, class Sent2, class OutIter, class Comp>
 OutIter merge_scan(SegIt first, SegIt last, InIter2& first2, Sent2 last2, OutIter result, Comp comp,
    segmented_iterator_tag)
 {
-   typedef segmented_iterator_traits<SegIt>  traits;
-   typedef typename traits::local_iterator   local_iterator;
-   typedef typename traits::segment_iterator segment_iterator;
-   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+   typedef segmented_iterator_traits<SegIt>   traits;
+   typedef typename traits::local_iterator    local_iterator;
+   typedef typename traits::segment_iterator  segment_iterator;
+   typedef typename segmented_iterator_traits
+      <local_iterator>::is_segmented_iterator is_local_seg_t;
 
    segment_iterator scur  = traits::segment(first);
    segment_iterator slast = traits::segment(last);
