@@ -3056,7 +3056,7 @@ private:
    #endif
 
    template <class InsertionProxy>
-   BOOST_CONTAINER_NOINLINE iterator priv_insert_forward_range_no_capacity
+   iterator priv_insert_forward_range_no_capacity
       (T *const raw_pos, const size_type n, const InsertionProxy insert_range_proxy, version_1)
    {
       const size_type new_cap = this->m_holder.template next_capacity<growth_factor_type>(n);
