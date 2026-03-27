@@ -1972,6 +1972,27 @@ private:
       return is_room_enough;
    }
 
+   //! <b>Requires</b>: Before the call to this function size() < capacity() must be true.
+   //!   Otherwise, the behavior is undefined.
+   //!
+   //! <b>Effects</b>: Inserts an object of type T constructed with
+   //!   std::forward<Args>(args)... in the end of the vector.
+   //!
+   //! <b>Throws</b>: If the in-place constructor throws.
+   //!
+   //! <b>Complexity</b>: Constant time.
+   //!
+   //! <b>Note</b>: Non-standard extension.
+   template<class ...Args>
+   inline reference unchecked_emplace_back(BOOST_FWD_REF(Args)...args)
+   {
+      BOOST_ASSERT(this->size() < this->capacity());
+      T* const p = this->priv_raw_end();
+      allocator_traits_type::construct(this->m_holder.alloc(), p, ::boost::forward<Args>(args)...);
+      ++this->m_holder.m_size;
+      return *p;
+   }
+
    //! <b>Requires</b>: position must be a valid iterator of *this.
    //!
    //! <b>Effects</b>: Inserts an object of type T constructed with
@@ -2022,6 +2043,17 @@ private:
          ++this->m_holder.m_size;\
       }\
       return is_room_enough;\
+   }\
+   \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   inline reference unchecked_emplace_back(BOOST_MOVE_UREF##N)\
+   {\
+      BOOST_ASSERT(this->size() < this->capacity());\
+      T* const p = this->priv_raw_end();\
+      allocator_traits_type::construct (this->m_holder.alloc()\
+         , p BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+      ++this->m_holder.m_size;\
+      return *p;\
    }\
    \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \

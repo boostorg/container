@@ -805,6 +805,23 @@ public:
     template<class ...Args>
     reference emplace_back(Args &&...args);
 
+    //! @pre <tt>size() < capacity()</tt>. Otherwise, the behavior is undefined.
+    //!
+    //! @brief Inserts a T constructed with
+    //!   \c std::forward<Args>(args)... in the end of the container.
+    //!
+    //! @return A reference to the created object.
+    //!
+    //! @param args     The arguments of the constructor of the new element which will be created at the end of the container.
+    //!
+    //! @par Throws
+    //!   @li If in-place constructor throws
+    //!
+    //! @par Complexity
+    //!   Constant O(1).
+    template<class ...Args>
+    reference unchecked_emplace_back(Args &&...args);
+
     //! @pre
     //!  @li \c p must be a valid iterator of \c *this in range <tt>[begin(), end()]</tt>
     //!  @li <tt>size() < capacity()</tt>
