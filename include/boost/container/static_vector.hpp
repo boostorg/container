@@ -608,7 +608,35 @@ public:
     //!
     //! @par Complexity
     //!   Constant O(1).
-    void push_back(BOOST_RV_REF(value_type) value);
+    void push_back(value_type &&value);
+
+    //! @pre <tt>size() < capacity()</tt>. Otherwise, the behavior is undefined.
+    //!
+    //! @brief Adds a copy of value at the end.
+    //!
+    //! @param value    The value used to copy construct the new element.
+    //!
+    //! @par Throws
+    //!   @li If T's copy constructor throws.
+    //!   @li If \c throw_on_overflow<true> option is set and the container runs out of capacity.
+    //!
+    //! @par Complexity
+    //!   Constant O(1).
+    void unchecked_push_back(value_type const& value);
+
+    //! @pre <tt>size() < capacity()</tt>. Otherwise, the behavior is undefined.
+    //!
+    //! @brief Moves value to the end.
+    //!
+    //! @param value    The value to move construct the new element.
+    //!
+    //! @par Throws
+    //!   @li If T's move constructor throws.
+    //!   @li If \c throw_on_overflow<true> option is set and the container runs out of capacity.
+    //!
+    //! @par Complexity
+    //!   Constant O(1).
+    void unchecked_push_back(value_type &&value);
 
     //! @pre <tt>!empty()</tt>
     //!

@@ -1984,7 +1984,7 @@ private:
    //!
    //! <b>Note</b>: Non-standard extension.
    template<class ...Args>
-   inline reference unchecked_emplace_back(BOOST_FWD_REF(Args)...args)
+   BOOST_CONTAINER_FORCEINLINE reference unchecked_emplace_back(BOOST_FWD_REF(Args)...args)
    {
       BOOST_ASSERT(this->size() < this->capacity());
       T* const p = this->priv_raw_end();
@@ -2086,8 +2086,30 @@ private:
    //!
    //! <b>Complexity</b>: Amortized constant time.
    void push_back(T &&x);
+
+   //! <b>Requires</b>: Before the call to this function size() < capacity() must be true.
+   //!   Otherwise, the behavior is undefined.
+   //!
+   //! <b>Effects</b>: Inserts a copy of x at the end of the vector.
+   //!
+   //! <b>Throws</b>: If T's copy/move constructor throws.
+   //!
+   //! <b>Complexity</b>: Constant time.
+   void unchecked_push_back(const T &x);
+
+   //! <b>Requires</b>: Before the call to this function size() < capacity() must be true.
+   //!   Otherwise, the behavior is undefined.
+   //!
+   //! <b>Effects</b>: Constructs a new element in the end of the vector
+   //!   and moves the resources of x to this new element.
+   //!
+   //! <b>Throws</b>: If T's copy/move constructor throws.
+   //!
+   //! <b>Complexity</b>: Constant time.
+   void unchecked_push_back(T &&x);
    #else
    BOOST_MOVE_CONVERSION_AWARE_CATCH(push_back, T, void, priv_push_back)
+   BOOST_MOVE_CONVERSION_AWARE_CATCH(unchecked_push_back, T, void, priv_unchecked_push_back)
    #endif
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -2976,8 +2998,18 @@ private:
       this->emplace_back(::boost::forward<U>(u));
    }
 
+   template <class U>
+   BOOST_CONTAINER_FORCEINLINE void priv_unchecked_push_back(BOOST_FWD_REF(U) u)
+   {
+      this->unchecked_emplace_back(::boost::forward<U>(u));
+   }
+
    //Overload to support compiler errors that instantiate too much
    inline void priv_push_back(::boost::move_detail::nat)
+   {}
+
+   //Overload to support compiler errors that instantiate too much
+   inline void priv_unchecked_push_back(::boost::move_detail::nat)
    {}
 
    inline iterator priv_insert(const_iterator, ::boost::move_detail::nat)

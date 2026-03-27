@@ -1467,7 +1467,7 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
 * Fixed bugs/issues:
    * [@https://github.com/boostorg/container/issues/334 GitHub #334: ['"Wrong overload resolution protection in implementation of P2363R5"]].
    
-* Added [memberref boost::container::vector::unchecked_emplace_back unchecked_emplace_back] to [classref boost::container::vector vector],
+* Added `unchecked_emplace_back` and `unchecked_push_back` to [classref boost::container::vector vector],
    [classref boost::container::static_vector static_vector] and [classref boost::container::small_vector small_vector].
 
 [endsect]
