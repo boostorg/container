@@ -418,8 +418,19 @@ FwdIt partition_point(FwdIt first, FwdIt last, Pred pred)
 
 #endif
 
+template<class BidirIt, class T>
+BidirIt find_last_dispatch(BidirIt first, BidirIt last, const T& val, std::bidirectional_iterator_tag)
+{
+   BidirIt it = last;
+   while (it != first) {
+      --it;
+      if (*it == val) return it;
+   }
+   return last;
+}
+
 template<class FwdIt, class T>
-FwdIt find_last(FwdIt first, FwdIt last, const T& val)
+FwdIt find_last_dispatch(FwdIt first, FwdIt last, const T& val, std::forward_iterator_tag)
 {
    FwdIt result = last;
    for (; first != last; ++first)
@@ -427,8 +438,26 @@ FwdIt find_last(FwdIt first, FwdIt last, const T& val)
    return result;
 }
 
+template<class It, class T>
+It find_last(It first, It last, const T& val)
+{
+   typedef typename std::iterator_traits<It>::iterator_category cat;
+   return find_last_dispatch(first, last, val, cat());
+}
+
+template<class BidirIt, class Pred>
+BidirIt find_last_if_dispatch(BidirIt first, BidirIt last, Pred pred, std::bidirectional_iterator_tag)
+{
+   BidirIt it = last;
+   while (it != first) {
+      --it;
+      if (pred(*it)) return it;
+   }
+   return last;
+}
+
 template<class FwdIt, class Pred>
-FwdIt find_last_if(FwdIt first, FwdIt last, Pred pred)
+FwdIt find_last_if_dispatch(FwdIt first, FwdIt last, Pred pred, std::forward_iterator_tag)
 {
    FwdIt result = last;
    for (; first != last; ++first)
@@ -436,13 +465,88 @@ FwdIt find_last_if(FwdIt first, FwdIt last, Pred pred)
    return result;
 }
 
+template<class It, class Pred>
+It find_last_if(It first, It last, Pred pred)
+{
+   typedef typename std::iterator_traits<It>::iterator_category cat;
+   return find_last_if_dispatch(first, last, pred, cat());
+}
+
+template<class BidirIt, class Pred>
+BidirIt find_last_if_not_dispatch(BidirIt first, BidirIt last, Pred pred, std::bidirectional_iterator_tag)
+{
+   BidirIt it = last;
+   while (it != first) {
+      --it;
+      if (!pred(*it)) return it;
+   }
+   return last;
+}
+
 template<class FwdIt, class Pred>
-FwdIt find_last_if_not(FwdIt first, FwdIt last, Pred pred)
+FwdIt find_last_if_not_dispatch(FwdIt first, FwdIt last, Pred pred, std::forward_iterator_tag)
 {
    FwdIt result = last;
    for (; first != last; ++first)
       if (!pred(*first)) result = first;
    return result;
+}
+
+template<class It, class Pred>
+It find_last_if_not(It first, It last, Pred pred)
+{
+   typedef typename std::iterator_traits<It>::iterator_category cat;
+   return find_last_if_not_dispatch(first, last, pred, cat());
+}
+
+template <class InpIter, class Sent, class Pred, class Tag>
+typename bc::algo_enable_if_c<
+   !Tag::value || bc::is_sentinel<Sent, InpIter>::value, InpIter>::type
+segmented_find_if_original_dispatch(InpIter first, Sent last, Pred pred, Tag)
+{
+   for(; first != last; ++first)
+      if(pred(*first))
+         break;
+   return first;
+}
+
+template <class SegIter, class Pred>
+SegIter segmented_find_if_original_dispatch
+   (SegIter first, SegIter last, Pred pred, bc::segmented_iterator_tag)
+{
+   typedef bc::segmented_iterator_traits<SegIter> traits;
+   typedef typename traits::local_iterator    local_iterator;
+   typedef typename traits::segment_iterator  segment_iterator;
+   typedef typename bc::segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+
+   segment_iterator       sfirst = traits::segment(first);
+   const segment_iterator slast  = traits::segment(last);
+
+   if(sfirst == slast) {
+      return traits::compose(sfirst, (segmented_find_if_original_dispatch)(traits::local(first), traits::local(last), pred, is_local_seg_t()));
+   }
+   else {
+      {
+         const local_iterator le = traits::end(sfirst);
+         const local_iterator r = (segmented_find_if_original_dispatch)(traits::local(first), le, pred, is_local_seg_t());
+         if (r != le)
+            return traits::compose(sfirst, r);
+      }
+      for (++sfirst; sfirst != slast; ++sfirst) {
+         const local_iterator le = traits::end(sfirst);
+         const local_iterator r = (segmented_find_if_original_dispatch)(traits::begin(sfirst), le, pred, is_local_seg_t());
+         if (r != le)
+            return traits::compose(sfirst, r);
+      }
+      return traits::compose(slast, (segmented_find_if_original_dispatch)(traits::begin(slast), traits::local(last), pred, is_local_seg_t()));
+   }
+}
+
+template <class InpIter, class Sent, class Pred>
+InpIter segmented_find_if_original(InpIter first, Sent last, Pred pred)
+{
+   typedef bc::segmented_iterator_traits<InpIter> traits;
+   return segmented_find_if_original_dispatch(first, last, pred, typename traits::is_segmented_iterator());
 }
 
 
@@ -590,6 +694,17 @@ inline void print_ratio(const char* algo, const char*,
              << std::right << std::setw(20) << std::fixed << std::setprecision(2) << ((ratio < 1.0) ? "! " : "") << ratio << 'x'
              << std::right << std::setw(20) << std::fixed << std::setprecision(3) << std_ns
              << std::right << std::setw(20) << std::fixed << std::setprecision(3) << seg_ns
+             << '\n';
+}
+
+inline void print_ratio_orig_vs_new(const char* algo, const char*,
+                                    double orig_ns, double new_ns)
+{
+   double ratio = (new_ns > 0.0) ? orig_ns / new_ns : 0.0;
+   std::cout << std::left  << std::setw(24) << algo
+             << std::right << std::setw(20) << std::fixed << std::setprecision(2) << ((ratio < 1.0) ? "! " : "") << ratio << 'x'
+             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << orig_ns
+             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << new_ns
              << '\n';
 }
 
