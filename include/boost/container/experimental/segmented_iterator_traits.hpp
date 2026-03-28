@@ -146,4 +146,6 @@ struct is_sentinel<Iter, Iter>
 
 #include <boost/container/detail/config_end.hpp>
 
+#define BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
+
 #endif // BOOST_CONTAINER_EXPERIMENTAL_SEGMENTED_ITERATOR_TRAITS_HPP
