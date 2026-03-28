@@ -59,6 +59,57 @@ BidirIt find_last_if_scan(BidirIt first, BidirIt last, Pred pred,
    return last;
 }
 
+#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
+
+template <class RAIter, class Pred>
+RAIter find_last_if_scan(RAIter first, RAIter last, Pred pred,
+                         non_segmented_iterator_tag, const std::random_access_iterator_tag&)
+{
+   typedef typename iterator_traits<RAIter>::difference_type difference_type;
+
+   const RAIter not_found = last;
+   RAIter cur = last;
+   difference_type n = cur - first;
+   while (n >= difference_type(4)) {
+      --cur;
+      if (pred(*cur))
+         return cur;
+      --cur;
+      if (pred(*cur))
+         return cur;
+      --cur;
+      if (pred(*cur))
+         return cur;
+      --cur;
+      if (pred(*cur))
+         return cur;
+      n -= 4;
+   }
+
+   switch (n % 4) {
+      case 3:
+         --cur;
+         if (pred(*cur))
+            return cur;
+      BOOST_FALLTHROUGH;
+      case 2:
+         --cur;
+         if (pred(*cur))
+            return cur;
+      BOOST_FALLTHROUGH;
+      case 1:
+         --cur;
+         if (pred(*cur))
+            return cur;
+      BOOST_FALLTHROUGH;
+      default:
+         break;
+   }
+   return not_found;
+}
+
+#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
+
 //////////////////////////////////////////////
 // Segmented forward scan
 //////////////////////////////////////////////
@@ -78,10 +129,7 @@ SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred,
    const segment_iterator slast  = traits::segment(last);
 
    if (sfirst == slast) {
-      const local_iterator lf = traits::local(first);
-      const local_iterator ll = traits::local(last);
-      const local_iterator r  = find_last_if_scan(lf, ll, pred, is_local_seg_t(), local_cat_t());
-      return traits::compose(sfirst, r);
+      return traits::compose(sfirst, find_last_if_scan(traits::local(first), traits::local(last), pred, is_local_seg_t(), local_cat_t()));
    }
    else {
       {  // First segment
@@ -97,14 +145,8 @@ SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred,
          if (r != le)
             result = traits::compose(sfirst, r);
       }
-      {  // Last segment
-         const local_iterator ll = traits::local(last);
-         const local_iterator r = find_last_if_scan(traits::begin(sfirst), ll, pred, is_local_seg_t(), local_cat_t());
-         if (r != ll)
-            result = traits::compose(sfirst, r);
-      }
-
-      return result;
+      // Last segment
+      return traits::compose(sfirst, find_last_if_scan(traits::begin(slast), traits::local(last), pred, is_local_seg_t(), local_cat_t()));
    }
 }
 
