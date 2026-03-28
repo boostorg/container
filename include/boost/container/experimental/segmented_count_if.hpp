@@ -35,11 +35,11 @@ namespace detail_algo {
 #if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
 
 template <class RAIter, class Pred>
-typename std::iterator_traits<RAIter>::difference_type
+typename iterator_traits<RAIter>::difference_type
 segmented_count_if_dispatch
    (RAIter first, RAIter last, Pred pred, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
-   typedef typename std::iterator_traits<RAIter>::difference_type difference_type;
+   typedef typename iterator_traits<RAIter>::difference_type difference_type;
 
    difference_type n = last - first;
    difference_type count = 0;
