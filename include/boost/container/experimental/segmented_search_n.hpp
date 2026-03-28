@@ -21,6 +21,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/container/experimental/segmented_find.hpp>
 
 namespace boost {
 namespace container {
@@ -154,6 +155,9 @@ template <class FwdIt, class Sent, class Size, class T>
 BOOST_CONTAINER_FORCEINLINE FwdIt segmented_search_n
    (FwdIt first, Sent last, Size count, const T& value)
 {
+   if(count == 1)
+      return (segmented_find)(first, last, value);
+
    typedef segmented_iterator_traits<FwdIt> traits;
    return detail_algo::segmented_search_n_dispatch
       (first, last, count, value, typename traits::is_segmented_iterator());
