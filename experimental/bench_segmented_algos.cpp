@@ -499,55 +499,7 @@ It find_last_if_not(It first, It last, Pred pred)
    return find_last_if_not_dispatch(first, last, pred, cat());
 }
 
-template <class InpIter, class Sent, class Pred, class Tag>
-typename bc::algo_enable_if_c<
-   !Tag::value || bc::is_sentinel<Sent, InpIter>::value, InpIter>::type
-segmented_find_if_original_dispatch(InpIter first, Sent last, Pred pred, Tag)
-{
-   for(; first != last; ++first)
-      if(pred(*first))
-         break;
-   return first;
-}
 
-template <class SegIter, class Pred>
-SegIter segmented_find_if_original_dispatch
-   (SegIter first, SegIter last, Pred pred, bc::segmented_iterator_tag)
-{
-   typedef bc::segmented_iterator_traits<SegIter> traits;
-   typedef typename traits::local_iterator    local_iterator;
-   typedef typename traits::segment_iterator  segment_iterator;
-   typedef typename bc::segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
-
-   segment_iterator       sfirst = traits::segment(first);
-   const segment_iterator slast  = traits::segment(last);
-
-   if(sfirst == slast) {
-      return traits::compose(sfirst, (segmented_find_if_original_dispatch)(traits::local(first), traits::local(last), pred, is_local_seg_t()));
-   }
-   else {
-      {
-         const local_iterator le = traits::end(sfirst);
-         const local_iterator r = (segmented_find_if_original_dispatch)(traits::local(first), le, pred, is_local_seg_t());
-         if (r != le)
-            return traits::compose(sfirst, r);
-      }
-      for (++sfirst; sfirst != slast; ++sfirst) {
-         const local_iterator le = traits::end(sfirst);
-         const local_iterator r = (segmented_find_if_original_dispatch)(traits::begin(sfirst), le, pred, is_local_seg_t());
-         if (r != le)
-            return traits::compose(sfirst, r);
-      }
-      return traits::compose(slast, (segmented_find_if_original_dispatch)(traits::begin(slast), traits::local(last), pred, is_local_seg_t()));
-   }
-}
-
-template <class InpIter, class Sent, class Pred>
-InpIter segmented_find_if_original(InpIter first, Sent last, Pred pred)
-{
-   typedef bc::segmented_iterator_traits<InpIter> traits;
-   return segmented_find_if_original_dispatch(first, last, pred, typename traits::is_segmented_iterator());
-}
 
 
 //Not benchmarked:
@@ -2244,7 +2196,7 @@ template<class T>
 void run_benchmarks()
 {
    #ifdef NDEBUG
-   const std::size_t N    = 10000;
+   const std::size_t N    = 100000;
    const std::size_t iter = 1000;
    #else
    const std::size_t N    = 10000;
