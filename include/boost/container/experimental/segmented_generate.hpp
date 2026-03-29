@@ -56,7 +56,7 @@ void segmented_generate_dispatch
          *first = gen(); ++first;
       BOOST_FALLTHROUGH;
       case 1:
-         *first = gen(); ++first;
+         *first = gen(); //No need to increment first since we're done after this.
       BOOST_FALLTHROUGH;
       default:
          break;
