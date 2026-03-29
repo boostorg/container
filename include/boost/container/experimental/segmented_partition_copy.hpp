@@ -21,6 +21,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/container/detail/iterator.hpp>
 #include <utility>
 
 namespace boost {
@@ -32,11 +33,61 @@ segmented_partition_copy(InIter first, Sent last, OutIter1 out_true, OutIter2 ou
 
 namespace detail_algo {
 
-template <class InIter, class Sent, class OutIter1, class OutIter2, class Pred, class Tag>
+#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
+
+template <class InIter, class OutIter1, class OutIter2, class Pred>
+std::pair<OutIter1, OutIter2> segmented_partition_copy_dispatch
+   (InIter first, InIter last, OutIter1 out_true, OutIter2 out_false, Pred pred
+   , const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
+{
+   typedef typename iterator_traits<InIter>::difference_type difference_type;
+   difference_type n = last - first;
+
+   while(n >= difference_type(4)) {
+      if(pred(*first)) { *out_true  = *first; ++out_true;  }
+      else             { *out_false = *first; ++out_false; }
+      ++first;
+      if(pred(*first)) { *out_true  = *first; ++out_true;  }
+      else             { *out_false = *first; ++out_false; }
+      ++first;
+      if(pred(*first)) { *out_true  = *first; ++out_true;  }
+      else             { *out_false = *first; ++out_false; }
+      ++first;
+      if(pred(*first)) { *out_true  = *first; ++out_true;  }
+      else             { *out_false = *first; ++out_false; }
+      ++first;
+      n -= 4;
+   }
+
+   switch (n % 4) {
+      case 3:
+         if(pred(*first)) { *out_true  = *first; ++out_true;  }
+         else             { *out_false = *first; ++out_false; }
+         ++first;
+      BOOST_FALLTHROUGH;
+      case 2:
+         if(pred(*first)) { *out_true  = *first; ++out_true;  }
+         else             { *out_false = *first; ++out_false; }
+         ++first;
+      BOOST_FALLTHROUGH;
+      case 1:
+         if(pred(*first)) { *out_true  = *first; ++out_true;  }
+         else             { *out_false = *first; ++out_false; }
+         //No need to increment first since we're done after this.
+      BOOST_FALLTHROUGH;
+      default:
+         break;
+   }
+   return std::pair<OutIter1, OutIter2>(out_true, out_false);
+}
+
+#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
+
+template <class InIter, class Sent, class OutIter1, class OutIter2, class Pred, class Tag, class Cat>
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, InIter>::value, std::pair<OutIter1, OutIter2> >::type
 segmented_partition_copy_dispatch
-   (InIter first, Sent last, OutIter1 out_true, OutIter2 out_false, Pred pred, Tag)
+   (InIter first, Sent last, OutIter1 out_true, OutIter2 out_false, Pred pred, Tag, Cat)
 {
    for(; first != last; ++first) {
       if(pred(*first)) {
@@ -51,10 +102,10 @@ segmented_partition_copy_dispatch
    return std::pair<OutIter1, OutIter2>(out_true, out_false);
 }
 
-template <class SegIter, class OutIter1, class OutIter2, class Pred>
+template <class SegIter, class OutIter1, class OutIter2, class Pred, class Cat>
 std::pair<OutIter1, OutIter2>
 segmented_partition_copy_dispatch
-   (SegIter first, SegIter last, OutIter1 out_true, OutIter2 out_false, Pred pred, segmented_iterator_tag)
+   (SegIter first, SegIter last, OutIter1 out_true, OutIter2 out_false, Pred pred, segmented_iterator_tag, Cat)
 {
    typedef segmented_iterator_traits<SegIter>  traits;
    typedef typename traits::local_iterator   local_iterator;
@@ -66,16 +117,16 @@ segmented_partition_copy_dispatch
    segment_iterator slast  = traits::segment(last);
 
    if(sfirst == slast) {
-      return (segmented_partition_copy_dispatch)(traits::local(first), traits::local(last), out_true, out_false, pred, is_local_seg_t());
+      return (segmented_partition_copy_dispatch)(traits::local(first), traits::local(last), out_true, out_false, pred, is_local_seg_t(), Cat());
    }
    else {
-      pair_t p = (segmented_partition_copy_dispatch)(traits::local(first), traits::end(sfirst), out_true, out_false, pred, is_local_seg_t());
+      pair_t p = (segmented_partition_copy_dispatch)(traits::local(first), traits::end(sfirst), out_true, out_false, pred, is_local_seg_t(), Cat());
 
       for(++sfirst; sfirst != slast; ++sfirst) {
-         p = (segmented_partition_copy_dispatch)(traits::begin(sfirst), traits::end(sfirst), p.first, p.second, pred, is_local_seg_t());
+         p = (segmented_partition_copy_dispatch)(traits::begin(sfirst), traits::end(sfirst), p.first, p.second, pred, is_local_seg_t(), Cat());
       }
 
-      return (segmented_partition_copy_dispatch)(traits::begin(sfirst), traits::local(last), p.first, p.second, pred, is_local_seg_t());
+      return (segmented_partition_copy_dispatch)(traits::begin(sfirst), traits::local(last), p.first, p.second, pred, is_local_seg_t(), Cat());
    }
 }
 
@@ -91,7 +142,7 @@ segmented_partition_copy(InIter first, Sent last, OutIter1 out_true, OutIter2 ou
 {
    typedef segmented_iterator_traits<InIter> traits;
    return detail_algo::segmented_partition_copy_dispatch
-      (first, last, out_true, out_false, pred, typename traits::is_segmented_iterator());
+      (first, last, out_true, out_false, pred, typename traits::is_segmented_iterator(), typename iterator_traits<InIter>::iterator_category());
 }
 
 } // namespace container
