@@ -21,8 +21,8 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
-#include <boost/container/detail/iterators.hpp>
 #include <boost/container/detail/std_fwd.hpp>
+#include <boost/container/detail/iterator.hpp>
 
 namespace boost {
 namespace container {
