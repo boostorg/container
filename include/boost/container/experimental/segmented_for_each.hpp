@@ -57,7 +57,7 @@ F segmented_for_each_dispatch
          f(*first); ++first;
       BOOST_FALLTHROUGH;
       case 1:
-         f(*first);
+         f(*first); ++first;
       BOOST_FALLTHROUGH;
       default:
          break;
