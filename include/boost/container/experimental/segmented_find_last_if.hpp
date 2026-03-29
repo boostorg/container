@@ -138,7 +138,8 @@ SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred,
    const segment_iterator slast  = traits::segment(last);
 
    if (sfirst == slast) {
-      return traits::compose(sfirst, find_last_if_scan(traits::local(first), traits::local(last), pred, is_local_seg_t(), local_cat_t()));
+      return traits::compose
+         (sfirst, find_last_if_scan(traits::local(first), traits::local(last), pred, is_local_seg_t(), local_cat_t()));
    }
    else {
       {  // First segment
@@ -155,7 +156,8 @@ SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred,
             result = traits::compose(sfirst, r);
       }
       // Last segment
-      return traits::compose(sfirst, find_last_if_scan(traits::begin(slast), traits::local(last), pred, is_local_seg_t(), local_cat_t()));
+      return traits::compose
+         (sfirst, find_last_if_scan(traits::begin(slast), traits::local(last), pred, is_local_seg_t(), local_cat_t()));
    }
 }
 
@@ -172,34 +174,35 @@ SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred, segmented_iterator_t
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
    typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
 
-   segment_iterator sfirst = traits::segment(first);
-   segment_iterator slast  = traits::segment(last);
+   segment_iterator const sfirst = traits::segment(first);
+   segment_iterator       slast  = traits::segment(last);
    const local_iterator ll = traits::local(last);
 
    if (sfirst == slast) {
-      const local_iterator r =
-         find_last_if_scan(traits::local(first), ll, pred, is_local_seg_t(), local_cat_t());
-      return traits::compose(sfirst, r);
+      return traits::compose
+         (sfirst, find_last_if_scan(traits::local(first), ll, pred, is_local_seg_t(), local_cat_t()));
    }
 
-   // Last segment (partial): [begin(slast), local(last))
-   local_iterator r = find_last_if_scan(traits::begin(slast), ll, pred, is_local_seg_t(), local_cat_t());
-   if (r != ll)
-      return traits::compose(slast, r);
+   {  // Last segment (partial): [begin(slast), local(last))
+      local_iterator r = find_last_if_scan(traits::begin(slast), ll, pred, is_local_seg_t(), local_cat_t());
+      if (r != ll)
+         return traits::compose(slast, r);
+   }
 
    // Middle segments in reverse
    for (--slast; slast != sfirst; --slast) {
       const local_iterator le = traits::end(slast);
-      r = find_last_if_scan(traits::begin(slast), le, pred, is_local_seg_t(), local_cat_t());
+      const local_iterator r = find_last_if_scan(traits::begin(slast), le, pred, is_local_seg_t(), local_cat_t());
       if (r != le)
          return traits::compose(slast, r);
    }
 
-   // First segment (partial): [local(first), end(sfirst))
-   const local_iterator le = traits::end(sfirst);
-   r  = find_last_if_scan(traits::local(first), le, pred, is_local_seg_t(), local_cat_t());
-   if (r != le)
-      return traits::compose(sfirst, r);
+   {  // First segment (partial): [local(first), end(sfirst))
+      const local_iterator le = traits::end(sfirst);
+      const local_iterator r  = find_last_if_scan(traits::local(first), le, pred, is_local_seg_t(), local_cat_t());
+      if (r != le)
+         return traits::compose(sfirst, r);
+   }
 
    return last;
 }
