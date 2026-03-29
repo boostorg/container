@@ -43,9 +43,10 @@ struct merge_default_less
 };
 
 template <class FwdIt, class Sent, class InIter2, class Sent2, class OutIter, class Comp>
-OutIter merge_scan(FwdIt first, Sent last, InIter2& first2, Sent2 last2, OutIter result, Comp comp,
+OutIter merge_scan(FwdIt first, Sent last, InIter2& first2_out, Sent2 last2, OutIter result, Comp comp,
    non_segmented_iterator_tag)
 {
+   InIter2 first2 = first2_out;
    while(first != last && first2 != last2) {
       if(comp(*first2, *first)) {
          *result = *first2;
@@ -57,6 +58,7 @@ OutIter merge_scan(FwdIt first, Sent last, InIter2& first2, Sent2 last2, OutIter
       }
       ++result;
    }
+   first2_out = first2;
    return (segmented_copy)(first, last, result);
 }
 
