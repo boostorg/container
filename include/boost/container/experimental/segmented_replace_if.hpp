@@ -88,20 +88,21 @@ void segmented_replace_if_dispatch
    typedef typename traits::local_iterator   local_iterator;
    typedef typename traits::segment_iterator segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+   typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
 
    segment_iterator sfirst = traits::segment(first);
    segment_iterator slast  = traits::segment(last);
 
    if(sfirst == slast) {
-      (segmented_replace_if_dispatch)(traits::local(first), traits::local(last), pred, new_val, is_local_seg_t(), Cat());
+      (segmented_replace_if_dispatch)(traits::local(first), traits::local(last), pred, new_val, is_local_seg_t(), local_cat_t());
    }
    else {
-      (segmented_replace_if_dispatch)(traits::local(first), traits::end(sfirst), pred, new_val, is_local_seg_t(), Cat());
+      (segmented_replace_if_dispatch)(traits::local(first), traits::end(sfirst), pred, new_val, is_local_seg_t(), local_cat_t());
 
       for(++sfirst; sfirst != slast; ++sfirst)
-         (segmented_replace_if_dispatch)(traits::begin(sfirst), traits::end(sfirst), pred, new_val, is_local_seg_t(), Cat());
+         (segmented_replace_if_dispatch)(traits::begin(sfirst), traits::end(sfirst), pred, new_val, is_local_seg_t(), local_cat_t());
 
-      (segmented_replace_if_dispatch)(traits::begin(sfirst), traits::local(last), pred, new_val, is_local_seg_t(), Cat());
+      (segmented_replace_if_dispatch)(traits::begin(sfirst), traits::local(last), pred, new_val, is_local_seg_t(), local_cat_t());
    }
 }
 

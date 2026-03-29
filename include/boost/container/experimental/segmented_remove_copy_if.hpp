@@ -92,20 +92,21 @@ OutIter segmented_remove_copy_if_dispatch
    typedef typename traits::local_iterator   local_iterator;
    typedef typename traits::segment_iterator segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+   typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
 
    segment_iterator sfirst = traits::segment(first);
    segment_iterator slast  = traits::segment(last);
 
    if(sfirst == slast) {
-      return (segmented_remove_copy_if_dispatch)(traits::local(first), traits::local(last), result, pred, is_local_seg_t(), Cat());
+      return (segmented_remove_copy_if_dispatch)(traits::local(first), traits::local(last), result, pred, is_local_seg_t(), local_cat_t());
    }
    else {
-      result = (segmented_remove_copy_if_dispatch)(traits::local(first), traits::end(sfirst), result, pred, is_local_seg_t(), Cat());
+      result = (segmented_remove_copy_if_dispatch)(traits::local(first), traits::end(sfirst), result, pred, is_local_seg_t(), local_cat_t());
 
       for(++sfirst; sfirst != slast; ++sfirst)
-         result = (segmented_remove_copy_if_dispatch)(traits::begin(sfirst), traits::end(sfirst), result, pred, is_local_seg_t(), Cat());
+         result = (segmented_remove_copy_if_dispatch)(traits::begin(sfirst), traits::end(sfirst), result, pred, is_local_seg_t(), local_cat_t());
 
-      return (segmented_remove_copy_if_dispatch)(traits::begin(sfirst), traits::local(last), result, pred, is_local_seg_t(), Cat());
+      return (segmented_remove_copy_if_dispatch)(traits::begin(sfirst), traits::local(last), result, pred, is_local_seg_t(), local_cat_t());
    }
 }
 

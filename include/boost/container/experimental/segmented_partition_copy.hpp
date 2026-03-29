@@ -117,22 +117,23 @@ segmented_partition_copy_dispatch
    typedef typename traits::local_iterator   local_iterator;
    typedef typename traits::segment_iterator segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+   typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
    typedef std::pair<OutIter1, OutIter2> pair_t;
 
    segment_iterator sfirst = traits::segment(first);
    segment_iterator slast  = traits::segment(last);
 
    if(sfirst == slast) {
-      return (segmented_partition_copy_dispatch)(traits::local(first), traits::local(last), out_true, out_false, pred, is_local_seg_t(), Cat());
+      return (segmented_partition_copy_dispatch)(traits::local(first), traits::local(last), out_true, out_false, pred, is_local_seg_t(), local_cat_t());
    }
    else {
-      pair_t p = (segmented_partition_copy_dispatch)(traits::local(first), traits::end(sfirst), out_true, out_false, pred, is_local_seg_t(), Cat());
+      pair_t p = (segmented_partition_copy_dispatch)(traits::local(first), traits::end(sfirst), out_true, out_false, pred, is_local_seg_t(), local_cat_t());
 
       for(++sfirst; sfirst != slast; ++sfirst) {
-         p = (segmented_partition_copy_dispatch)(traits::begin(sfirst), traits::end(sfirst), p.first, p.second, pred, is_local_seg_t(), Cat());
+         p = (segmented_partition_copy_dispatch)(traits::begin(sfirst), traits::end(sfirst), p.first, p.second, pred, is_local_seg_t(), local_cat_t());
       }
 
-      return (segmented_partition_copy_dispatch)(traits::begin(sfirst), traits::local(last), p.first, p.second, pred, is_local_seg_t(), Cat());
+      return (segmented_partition_copy_dispatch)(traits::begin(sfirst), traits::local(last), p.first, p.second, pred, is_local_seg_t(), local_cat_t());
    }
 }
 

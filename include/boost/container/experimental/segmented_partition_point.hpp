@@ -111,30 +111,31 @@ SegIter segmented_partition_point_dispatch
    typedef typename traits::segment_iterator    segment_iterator;
    typedef typename segmented_iterator_traits
       <local_iterator>::is_segmented_iterator   is_local_seg_t;
+   typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
 
    segment_iterator        scur = traits::segment(first);
    segment_iterator const slast = traits::segment(last);
 
    if(scur == slast) {
       return traits::compose(scur, 
-         (segmented_partition_point_dispatch)(traits::local(first), traits::local(last), pred, is_local_seg_t(), Cat()));
+         (segmented_partition_point_dispatch)(traits::local(first), traits::local(last), pred, is_local_seg_t(), local_cat_t()));
    }
    else {
       {
          local_iterator lcur =
-            (segmented_partition_point_dispatch)(traits::local(first), traits::end(scur), pred, is_local_seg_t(), Cat());
+            (segmented_partition_point_dispatch)(traits::local(first), traits::end(scur), pred, is_local_seg_t(), local_cat_t());
          if (lcur != traits::end(scur))
             return traits::compose(scur, lcur);
       }
 
       for(++scur; scur != slast; ++scur) {
          local_iterator lcur =
-            (segmented_partition_point_dispatch)(traits::begin(scur), traits::end(scur), pred, is_local_seg_t(), Cat());
+            (segmented_partition_point_dispatch)(traits::begin(scur), traits::end(scur), pred, is_local_seg_t(), local_cat_t());
          if(lcur != traits::end(scur))
             return traits::compose(scur, lcur);
       }
       return traits::compose(slast, 
-         (segmented_partition_point_dispatch)(traits::begin(scur), traits::local(last), pred, is_local_seg_t(), Cat()));
+         (segmented_partition_point_dispatch)(traits::begin(scur), traits::local(last), pred, is_local_seg_t(), local_cat_t()));
    }
    return last;
 }

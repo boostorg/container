@@ -109,30 +109,31 @@ SegIter segmented_find_if_dispatch
    typedef typename traits::local_iterator    local_iterator;
    typedef typename traits::segment_iterator  segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+   typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
 
    segment_iterator       sfirst = traits::segment(first);
    const segment_iterator slast  = traits::segment(last);
 
    if(sfirst == slast) {
-      return traits::compose(sfirst, (segmented_find_if_dispatch)(traits::local(first), traits::local(last), pred, is_local_seg_t(), Cat()));
+      return traits::compose(sfirst, (segmented_find_if_dispatch)(traits::local(first), traits::local(last), pred, is_local_seg_t(), local_cat_t()));
    }
    else {
       //First segment
       {
          const local_iterator le = traits::end(sfirst);
-         const local_iterator r = (segmented_find_if_dispatch)(traits::local(first), le, pred, is_local_seg_t(), Cat());
+         const local_iterator r = (segmented_find_if_dispatch)(traits::local(first), le, pred, is_local_seg_t(), local_cat_t());
          if (r != le)
             return traits::compose(sfirst, r);
       }
       //Middle segments
       for (++sfirst; sfirst != slast; ++sfirst) {
          const local_iterator le = traits::end(sfirst);
-         const local_iterator r = (segmented_find_if_dispatch)(traits::begin(sfirst), le, pred, is_local_seg_t(), Cat());
+         const local_iterator r = (segmented_find_if_dispatch)(traits::begin(sfirst), le, pred, is_local_seg_t(), local_cat_t());
          if (r != le)
             return traits::compose(sfirst, r);
       }
       //Last segment
-      return traits::compose(slast, (segmented_find_if_dispatch)(traits::begin(slast), traits::local(last), pred, is_local_seg_t(), Cat()));
+      return traits::compose(slast, (segmented_find_if_dispatch)(traits::begin(slast), traits::local(last), pred, is_local_seg_t(), local_cat_t()));
    }
 }
 

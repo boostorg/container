@@ -191,37 +191,39 @@ RAIter partition_scan(RAIter first, RAIter last, Pred pred, non_segmented_iterat
 #endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
 
 template <class SegIt, class OutIter, class Pred, class Cat>
-OutIter partition_scan(SegIt first, SegIt last, OutIter result, Pred pred, segmented_iterator_tag, const Cat & cat)
+OutIter partition_scan(SegIt first, SegIt last, OutIter result, Pred pred, segmented_iterator_tag, const Cat &)
 {
    typedef segmented_iterator_traits<SegIt>  traits;
    typedef typename traits::local_iterator   local_iterator;
    typedef typename traits::segment_iterator segment_iterator;
 
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+   typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
    segment_iterator scur  = traits::segment(first);
    segment_iterator slast = traits::segment(last);
    local_iterator   lcur  = traits::local(first);
 
    if(scur == slast) {
-      return partition_scan(lcur, traits::local(last), result, pred, is_local_seg_t(), cat);
+      return partition_scan(lcur, traits::local(last), result, pred, is_local_seg_t(), local_cat_t());
    }
    else {
-      result = partition_scan(lcur, traits::end(scur), result, pred, is_local_seg_t(), cat);
+      result = partition_scan(lcur, traits::end(scur), result, pred, is_local_seg_t(), local_cat_t());
 
       for(++scur; scur != slast; ++scur)
-         result = partition_scan(traits::begin(scur), traits::end(scur), result, pred, is_local_seg_t(), cat);
+         result = partition_scan(traits::begin(scur), traits::end(scur), result, pred, is_local_seg_t(), local_cat_t());
 
-      return partition_scan(traits::begin(scur), traits::local(last), result, pred, is_local_seg_t(), cat);
+      return partition_scan(traits::begin(scur), traits::local(last), result, pred, is_local_seg_t(), local_cat_t());
    }
 }
 
 template <class SegIt, class Pred>
-SegIt partition_scan(SegIt first, SegIt last, Pred pred, segmented_iterator_tag, const std::bidirectional_iterator_tag& cat)
+SegIt partition_scan(SegIt first, SegIt last, Pred pred, segmented_iterator_tag, const std::bidirectional_iterator_tag&)
 {
    typedef segmented_iterator_traits<SegIt>  traits;
    typedef typename traits::local_iterator   local_iterator;
    typedef typename traits::segment_iterator segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+   typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
 
    segment_iterator sf = traits::segment(first);
    segment_iterator sl = traits::segment(last);
@@ -273,7 +275,7 @@ SegIt partition_scan(SegIt first, SegIt last, Pred pred, segmented_iterator_tag,
    }
 
    same_segment_partition_step:
-   return traits::compose(sf, partition_scan(f_loc, l_loc, pred, is_local_seg_t(), cat));
+   return traits::compose(sf, partition_scan(f_loc, l_loc, pred, is_local_seg_t(), local_cat_t()));
 }
 
 //////////////////////////////////////////////
