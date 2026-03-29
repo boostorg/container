@@ -21,6 +21,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/container/detail/iterator.hpp>
 
 namespace boost {
 namespace container {
@@ -30,11 +31,46 @@ OutIter segmented_remove_copy_if(InIter first, Sent last, OutIter result, Pred p
 
 namespace detail_algo {
 
-template <class InIter, class Sent, class OutIter, class Pred, class Tag>
+#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
+
+template <class InIter, class OutIter, class Pred>
+OutIter segmented_remove_copy_if_dispatch
+   (InIter first, InIter last, OutIter result, Pred pred, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
+{
+   typedef typename iterator_traits<InIter>::difference_type difference_type;
+   difference_type n = last - first;
+
+   while(n >= difference_type(4)) {
+      if(!pred(*first)) { *result = *first; ++result; } ++first;
+      if(!pred(*first)) { *result = *first; ++result; } ++first;
+      if(!pred(*first)) { *result = *first; ++result; } ++first;
+      if(!pred(*first)) { *result = *first; ++result; } ++first;
+      n -= 4;
+   }
+
+   switch (n % 4) {
+      case 3:
+         if(!pred(*first)) { *result = *first; ++result; } ++first;
+      BOOST_FALLTHROUGH;
+      case 2:
+         if(!pred(*first)) { *result = *first; ++result; } ++first;
+      BOOST_FALLTHROUGH;
+      case 1:
+         if (!pred(*first)) { *result = *first; ++result; } //No need to increment first since we're done after this.
+      BOOST_FALLTHROUGH;
+      default:
+         break;
+   }
+   return result;
+}
+
+#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
+
+template <class InIter, class Sent, class OutIter, class Pred, class Tag, class Cat>
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, InIter>::value, OutIter>::type
 segmented_remove_copy_if_dispatch
-   (InIter first, Sent last, OutIter result, Pred pred, Tag)
+   (InIter first, Sent last, OutIter result, Pred pred, Tag, Cat)
 {
    for(; first != last; ++first) {
       if(!pred(*first)) {
@@ -45,9 +81,9 @@ segmented_remove_copy_if_dispatch
    return result;
 }
 
-template <class SegIter, class OutIter, class Pred>
+template <class SegIter, class OutIter, class Pred, class Cat>
 OutIter segmented_remove_copy_if_dispatch
-   (SegIter first, SegIter last, OutIter result, Pred pred, segmented_iterator_tag)
+   (SegIter first, SegIter last, OutIter result, Pred pred, segmented_iterator_tag, Cat)
 {
    typedef segmented_iterator_traits<SegIter>  traits;
    typedef typename traits::local_iterator   local_iterator;
@@ -58,15 +94,15 @@ OutIter segmented_remove_copy_if_dispatch
    segment_iterator slast  = traits::segment(last);
 
    if(sfirst == slast) {
-      return (segmented_remove_copy_if_dispatch)(traits::local(first), traits::local(last), result, pred, is_local_seg_t());
+      return (segmented_remove_copy_if_dispatch)(traits::local(first), traits::local(last), result, pred, is_local_seg_t(), Cat());
    }
    else {
-      result = (segmented_remove_copy_if_dispatch)(traits::local(first), traits::end(sfirst), result, pred, is_local_seg_t());
+      result = (segmented_remove_copy_if_dispatch)(traits::local(first), traits::end(sfirst), result, pred, is_local_seg_t(), Cat());
 
       for(++sfirst; sfirst != slast; ++sfirst)
-         result = (segmented_remove_copy_if_dispatch)(traits::begin(sfirst), traits::end(sfirst), result, pred, is_local_seg_t());
+         result = (segmented_remove_copy_if_dispatch)(traits::begin(sfirst), traits::end(sfirst), result, pred, is_local_seg_t(), Cat());
 
-      return (segmented_remove_copy_if_dispatch)(traits::begin(sfirst), traits::local(last), result, pred, is_local_seg_t());
+      return (segmented_remove_copy_if_dispatch)(traits::begin(sfirst), traits::local(last), result, pred, is_local_seg_t(), Cat());
    }
 }
 
@@ -81,7 +117,7 @@ OutIter segmented_remove_copy_if(InIter first, Sent last, OutIter result, Pred p
 {
    typedef segmented_iterator_traits<InIter> traits;
    return detail_algo::segmented_remove_copy_if_dispatch
-      (first, last, result, pred, typename traits::is_segmented_iterator());
+      (first, last, result, pred, typename traits::is_segmented_iterator(), typename iterator_traits<InIter>::iterator_category());
 }
 
 } // namespace container
