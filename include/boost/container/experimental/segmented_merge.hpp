@@ -42,6 +42,8 @@ struct merge_default_less
    bool operator()(const T& a, const T& b) const { return a < b; }
 };
 
+//TODO: Analyze if the second range is also segmented and if so,
+//try to use the same merge function change argument order and comparison object
 template <class FwdIt, class Sent, class InIter2, class Sent2, class OutIter, class Comp>
 OutIter merge_scan(FwdIt first, Sent last, InIter2& first2_out, Sent2 last2, OutIter result, Comp comp,
    non_segmented_iterator_tag)
