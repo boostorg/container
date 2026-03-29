@@ -51,16 +51,19 @@ segmented_count_if_dispatch
       n -= 4;
    }
 
-   switch (n % 4) {
+   switch(n) {
       case 3:
          count += static_cast<difference_type>(pred(*first)); ++first;
-      BOOST_FALLTHROUGH;
+         count += static_cast<difference_type>(pred(*first)); ++first;
+         count += static_cast<difference_type>(pred(*first)); ++first;
+         break;
       case 2:
          count += static_cast<difference_type>(pred(*first)); ++first;
-      BOOST_FALLTHROUGH;
+         count += static_cast<difference_type>(pred(*first)); ++first;
+         break;
       case 1:
          count += static_cast<difference_type>(pred(*first)); ++first;
-      BOOST_FALLTHROUGH;
+         break;
       default:
          break;
    }

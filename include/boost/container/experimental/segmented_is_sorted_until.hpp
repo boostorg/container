@@ -149,23 +149,31 @@ RAIter segmented_is_sorted_until_dispatch
       n -= 4;
    }
 
-   switch (n % 4) {
+   switch(n) {
       case 3:
          if(comp(*first, *prev))
-            break;
+            goto final_result;
          prev = first; ++first;
-      BOOST_FALLTHROUGH;
+         if(comp(*first, *prev))
+            goto final_result;
+         prev = first; ++first;
+         if(comp(*first, *prev))
+            goto final_result;
+         ++first;
+         break;
       case 2:
          if(comp(*first, *prev))
-            break;
+            goto final_result;
          prev = first; ++first;
-      BOOST_FALLTHROUGH;
+         if(comp(*first, *prev))
+            goto final_result;
+         ++first;
+         break;
       case 1:
          if(comp(*first, *prev))
-            break;
-         //No need to save "prev" since we're done after this.
+            goto final_result;
          ++first;
-      BOOST_FALLTHROUGH;
+         break;
       default:
          break;
    }

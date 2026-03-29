@@ -86,22 +86,31 @@ RAIter find_last_if_scan(RAIter first, RAIter last, Pred pred,
       n -= 4;
    }
 
-   switch (n % 4) {
+   switch(n) {
       case 3:
          --cur;
          if (pred(*cur))
             return cur;
-      BOOST_FALLTHROUGH;
+         --cur;
+         if (pred(*cur))
+            return cur;
+         --cur;
+         if (pred(*cur))
+            return cur;
+         break;
       case 2:
          --cur;
          if (pred(*cur))
             return cur;
-      BOOST_FALLTHROUGH;
+         --cur;
+         if (pred(*cur))
+            return cur;
+         break;
       case 1:
          --cur;
          if (pred(*cur))
             return cur;
-      BOOST_FALLTHROUGH;
+         break;
       default:
          break;
    }

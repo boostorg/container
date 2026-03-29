@@ -99,22 +99,31 @@ RAIter partition_scan(RAIter first, RAIter last, Pred pred, non_segmented_iterat
          ++first;
          nfront -= 4;
       }
-      switch (nfront % 4) {
+      switch(nfront) {
          case 3:
             if(!(cond = pred(*first)))
                goto front_found;
             ++first;
-         BOOST_FALLTHROUGH;
+            if(!(cond = pred(*first)))
+               goto front_found;
+            ++first;
+            if(!(cond = pred(*first)))
+               goto front_found;
+            ++first;
+            break;
          case 2:
             if(!(cond = pred(*first)))
                goto front_found;
             ++first;
-         BOOST_FALLTHROUGH;
+            if(!(cond = pred(*first)))
+               goto front_found;
+            ++first;
+            break;
          case 1:
             if(!(cond = pred(*first)))
                goto front_found;
             ++first;
-         BOOST_FALLTHROUGH;
+            break;
          default:
             break;
       }
@@ -141,22 +150,31 @@ RAIter partition_scan(RAIter first, RAIter last, Pred pred, non_segmented_iterat
          --last;
          nback -= 4;
       }
-      switch (nback % 4) {
+      switch(nback) {
          case 3:
             if(!(cond = !pred(*last)))
                goto back_found;
             --last;
-         BOOST_FALLTHROUGH;
+            if(!(cond = !pred(*last)))
+               goto back_found;
+            --last;
+            if(!(cond = !pred(*last)))
+               goto back_found;
+            --last;
+            break;
          case 2:
             if(!(cond = !pred(*last)))
                goto back_found;
             --last;
-         BOOST_FALLTHROUGH;
+            if(!(cond = !pred(*last)))
+               goto back_found;
+            --last;
+            break;
          case 1:
             if(!(cond = !pred(*last)))
                goto back_found;
             --last;
-         BOOST_FALLTHROUGH;
+            break;
          default:
             break;
       }

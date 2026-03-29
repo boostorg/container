@@ -48,16 +48,19 @@ OutIter segmented_remove_copy_if_dispatch
       n -= 4;
    }
 
-   switch (n % 4) {
+   switch(n) {
       case 3:
          if(!pred(*first)) { *result = *first; ++result; } ++first;
-      BOOST_FALLTHROUGH;
+         if(!pred(*first)) { *result = *first; ++result; } ++first;
+         if(!pred(*first)) { *result = *first; ++result; }
+         break;
       case 2:
          if(!pred(*first)) { *result = *first; ++result; } ++first;
-      BOOST_FALLTHROUGH;
+         if(!pred(*first)) { *result = *first; ++result; }
+         break;
       case 1:
-         if (!pred(*first)) { *result = *first; ++result; } //No need to increment first since we're done after this.
-      BOOST_FALLTHROUGH;
+         if(!pred(*first)) { *result = *first; ++result; }
+         break;
       default:
          break;
    }

@@ -56,22 +56,31 @@ RAIter segmented_find_if_dispatch
       n -= 4;
    }
 
-   switch (n % 4) {
+   switch(n) {
       case 3:
          if(pred(*first))
-            break;
+            goto final_result;
          ++first;
-      BOOST_FALLTHROUGH;
+         if(pred(*first))
+            goto final_result;
+         ++first;
+         if(pred(*first))
+            goto final_result;
+         ++first;
+         break;
       case 2:
          if(pred(*first))
-            break;
+            goto final_result;
          ++first;
-      BOOST_FALLTHROUGH;
+         if(pred(*first))
+            goto final_result;
+         ++first;
+         break;
       case 1:
          if(pred(*first))
-            break;
+            goto final_result;
          ++first;
-      BOOST_FALLTHROUGH;
+         break;
       default:
          break;
    }

@@ -49,16 +49,19 @@ void segmented_replace_if_dispatch
       n -= 4;
    }
 
-   switch (n % 4) {
+   switch(n) {
       case 3:
          if(pred(*first)) { *first = new_val; } ++first;
-      BOOST_FALLTHROUGH;
+         if(pred(*first)) { *first = new_val; } ++first;
+         if(pred(*first)) { *first = new_val; }
+         break;
       case 2:
          if(pred(*first)) { *first = new_val; } ++first;
-      BOOST_FALLTHROUGH;
+         if(pred(*first)) { *first = new_val; }
+         break;
       case 1:
-         if (pred(*first)) { *first = new_val; } //No need to increment first since we're done after this.
-      BOOST_FALLTHROUGH;
+         if(pred(*first)) { *first = new_val; }
+         break;
       default:
          break;
    }

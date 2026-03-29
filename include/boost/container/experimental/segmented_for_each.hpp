@@ -49,16 +49,19 @@ F segmented_for_each_dispatch
       n -= 4;
    }
 
-   switch (n % 4) {
+   switch(n) {
       case 3:
          f(*first); ++first;
-      BOOST_FALLTHROUGH;
+         f(*first); ++first;
+         f(*first);
+         break;
       case 2:
          f(*first); ++first;
-      BOOST_FALLTHROUGH;
+         f(*first);
+         break;
       case 1:
-         f(*first); //No need to increment first since we're done after this.
-      BOOST_FALLTHROUGH;
+         f(*first);
+         break;
       default:
          break;
    }

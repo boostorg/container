@@ -59,22 +59,28 @@ std::pair<OutIter1, OutIter2> segmented_partition_copy_dispatch
       n -= 4;
    }
 
-   switch (n % 4) {
+   switch(n) {
       case 3:
          if(pred(*first)) { *out_true  = *first; ++out_true;  }
          else             { *out_false = *first; ++out_false; }
          ++first;
-      BOOST_FALLTHROUGH;
+         if(pred(*first)) { *out_true  = *first; ++out_true;  }
+         else             { *out_false = *first; ++out_false; }
+         ++first;
+         if(pred(*first)) { *out_true  = *first; ++out_true;  }
+         else             { *out_false = *first; ++out_false; }
+         break;
       case 2:
          if(pred(*first)) { *out_true  = *first; ++out_true;  }
          else             { *out_false = *first; ++out_false; }
          ++first;
-      BOOST_FALLTHROUGH;
+         if(pred(*first)) { *out_true  = *first; ++out_true;  }
+         else             { *out_false = *first; ++out_false; }
+         break;
       case 1:
          if(pred(*first)) { *out_true  = *first; ++out_true;  }
          else             { *out_false = *first; ++out_false; }
-         //No need to increment first since we're done after this.
-      BOOST_FALLTHROUGH;
+         break;
       default:
          break;
    }

@@ -66,22 +66,31 @@ std::pair<RAIter1, RAIter2> segmented_mismatch_dispatch
       n -= 4;
    }
 
-   switch (n % 4) {
+   switch(n) {
       case 3:
          if(!pred(*first1, *first2))
-            break;
+            goto final_result;
          ++first1; ++first2;
-      BOOST_FALLTHROUGH;
+         if(!pred(*first1, *first2))
+            goto final_result;
+         ++first1; ++first2;
+         if(!pred(*first1, *first2))
+            goto final_result;
+         ++first1; ++first2;
+         break;
       case 2:
          if(!pred(*first1, *first2))
-            break;
+            goto final_result;
          ++first1; ++first2;
-      BOOST_FALLTHROUGH;
+         if(!pred(*first1, *first2))
+            goto final_result;
+         ++first1; ++first2;
+         break;
       case 1:
          if(!pred(*first1, *first2))
-            break;
+            goto final_result;
          ++first1; ++first2;
-      BOOST_FALLTHROUGH;
+         break;
       default:
          break;
    }

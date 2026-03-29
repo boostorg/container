@@ -48,16 +48,19 @@ void segmented_generate_dispatch
       n -= 4;
    }
 
-   switch (n % 4) {
+   switch(n) {
       case 3:
          *first = gen(); ++first;
-      BOOST_FALLTHROUGH;
+         *first = gen(); ++first;
+         *first = gen();
+         break;
       case 2:
          *first = gen(); ++first;
-      BOOST_FALLTHROUGH;
+         *first = gen();
+         break;
       case 1:
-         *first = gen(); //No need to increment first since we're done after this.
-      BOOST_FALLTHROUGH;
+         *first = gen();
+         break;
       default:
          break;
    }
