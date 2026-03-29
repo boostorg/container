@@ -67,13 +67,88 @@
 #include <boost/container/experimental/segmented_transform.hpp>
 
 
-using boost::move_detail::cpu_timer;
 using boost::move_detail::cpu_times;
 using boost::move_detail::nanosecond_type;
 
 namespace bc = boost::container;
 
 volatile int sink = 0;
+
+class cpu_timer
+{
+   nanosecond_type start_ns_;
+   bool running_;
+   std::vector<nanosecond_type> samples_;
+
+   static nanosecond_type now_ns()
+   {
+      cpu_times t;
+      boost::move_detail::get_cpu_times(t);
+      return t.wall;
+   }
+
+   static nanosecond_type robust_median(const std::vector<nanosecond_type> &samples)
+   {
+      if(samples.empty())
+         return 0u;
+
+      std::vector<nanosecond_type> sorted(samples);
+      std::sort(sorted.begin(), sorted.end());
+
+      std::size_t trim = sorted.size() / 20u; // Drop 5% low and high values.
+      if(trim * 2u >= sorted.size())
+         trim = 0u;
+
+      const std::size_t begin = trim;
+      const std::size_t end = sorted.size() - trim;
+      const std::size_t count = end - begin;
+      const std::size_t mid = begin + count / 2u;
+
+      if((count % 2u) != 0u)
+         return sorted[mid];
+
+      return static_cast<nanosecond_type>((sorted[mid - 1u] + sorted[mid]) / 2u);
+   }
+
+   public:
+   cpu_timer(std::size_t reserve = 0)
+      : start_ns_(0u), running_(false), samples_()
+   {  samples_.reserve(reserve); }
+
+   bool is_stopped() const
+   {  return !running_;  }
+
+   cpu_times elapsed() const
+   {
+      cpu_times t;
+      t.wall = robust_median(samples_) * static_cast<nanosecond_type>(samples_.size());
+      return t;
+   }
+
+   void start()
+   {
+      samples_.clear();
+      start_ns_ = now_ns();
+      running_ = true;
+   }
+
+   void stop()
+   {
+      if(!running_)
+         return;
+      const nanosecond_type now = now_ns();
+      samples_.push_back(now - start_ns_);
+      running_ = false;
+   }
+
+   void resume()
+   {
+      if(running_)
+         return;
+      start_ns_ = now_ns();
+      running_ = true;
+   }
+};
 
 void clobber() {
 #if defined(_MSC_VER)
@@ -670,7 +745,7 @@ void bench_all_of(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -680,7 +755,7 @@ void bench_all_of(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -698,7 +773,7 @@ void bench_any_of(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -708,7 +783,7 @@ void bench_any_of(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -726,7 +801,7 @@ void bench_none_of(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -736,7 +811,7 @@ void bench_none_of(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -754,7 +829,7 @@ void bench_for_each(const C &c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -766,7 +841,7 @@ void bench_for_each(const C &c, std::size_t iters, const char* cname)
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -786,7 +861,7 @@ void bench_copy(const C &c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -796,7 +871,7 @@ void bench_copy(const C &c, std::size_t iters, const char* cname)
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -815,7 +890,7 @@ void bench_copy_if(const C &c, std::size_t iters, const char* cname,
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -825,7 +900,7 @@ void bench_copy_if(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -843,7 +918,7 @@ void bench_fill(const C &c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    VT val(42);
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // fill is in-place, so make a copy for each iteration
       clobber();
@@ -854,7 +929,7 @@ void bench_fill(const C &c, std::size_t iters, const char* cname)
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // fill is in-place, so make a copy for each iteration
       clobber();
@@ -873,7 +948,7 @@ void bench_count(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -883,7 +958,7 @@ void bench_count(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -901,7 +976,7 @@ void bench_count_if(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -911,7 +986,7 @@ void bench_count_if(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -929,7 +1004,7 @@ void bench_find(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -940,7 +1015,7 @@ void bench_find(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -959,7 +1034,7 @@ void bench_find_if(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -970,7 +1045,7 @@ void bench_find_if(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -989,7 +1064,7 @@ void bench_find_if_not(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1000,7 +1075,7 @@ void bench_find_if_not(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1019,7 +1094,7 @@ void bench_find_last(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1030,7 +1105,7 @@ void bench_find_last(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1049,7 +1124,7 @@ void bench_find_last_if(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1060,7 +1135,7 @@ void bench_find_last_if(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1079,7 +1154,7 @@ void bench_find_last_if_not(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1090,7 +1165,7 @@ void bench_find_last_if_not(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1109,7 +1184,7 @@ void bench_equal(const C &c, const C &c2, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1119,7 +1194,7 @@ void bench_equal(const C &c, const C &c2, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1139,7 +1214,7 @@ void bench_replace(const C &c, std::size_t iters, const char* cname,
    typedef typename C::value_type VT;
    VT v = *c.begin();
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // replace is in-place, so make a copy for each iteration
       clobber();
@@ -1150,7 +1225,7 @@ void bench_replace(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // replace is in-place, so make a copy for each iteration
       clobber();
@@ -1171,7 +1246,7 @@ void bench_replace_if(const C &c, std::size_t iters, const char* cname,
    typedef typename C::value_type VT;
    VT v = *c.begin();
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // replace_if is in-place, so make a copy for each iteration
       clobber();
@@ -1182,7 +1257,7 @@ void bench_replace_if(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // replace_if is in-place, so make a copy for each iteration
       clobber();
@@ -1201,7 +1276,7 @@ void bench_transform(const C &c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1211,7 +1286,7 @@ void bench_transform(const C &c, std::size_t iters, const char* cname)
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1231,7 +1306,7 @@ void bench_fill_n(const C &c, std::size_t iters, const char* cname)
    typename C::difference_type n =
       static_cast<typename C::difference_type>(c.size());
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // fill_n is in-place, so make a copy for each iteration
       clobber();
@@ -1242,7 +1317,7 @@ void bench_fill_n(const C &c, std::size_t iters, const char* cname)
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // fill_n is in-place, so make a copy for each iteration
       clobber();
@@ -1263,7 +1338,7 @@ void bench_copy_n(const C &c, std::size_t iters, const char* cname)
    typename C::difference_type n =
       static_cast<typename C::difference_type>(c.size());
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1273,7 +1348,7 @@ void bench_copy_n(const C &c, std::size_t iters, const char* cname)
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1291,7 +1366,7 @@ void bench_generate(const C &c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // generate is in-place, so make a copy for each iteration
       clobber();
@@ -1303,7 +1378,7 @@ void bench_generate(const C &c, std::size_t iters, const char* cname)
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // generate is in-place, so make a copy for each iteration
       clobber();
@@ -1325,7 +1400,7 @@ void bench_generate_n(const C &c, std::size_t iters, const char* cname)
    typename C::difference_type n =
       static_cast<typename C::difference_type>(c.size());
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // generate_n is in-place, so make a copy for each iteration
       clobber();
@@ -1337,7 +1412,7 @@ void bench_generate_n(const C &c, std::size_t iters, const char* cname)
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // generate_n is in-place, so make a copy for each iteration
       clobber();
@@ -1357,7 +1432,7 @@ void bench_remove(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // remove is in-place, so make a copy for each iteration
       clobber();
@@ -1369,7 +1444,7 @@ void bench_remove(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // remove is in-place, so make a copy for each iteration
       clobber();
@@ -1389,7 +1464,7 @@ void bench_remove_if(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // remove_if is in-place, so make a copy for each iteration
       clobber();
@@ -1401,7 +1476,7 @@ void bench_remove_if(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // remove_if is in-place, so make a copy for each iteration
       clobber();
@@ -1422,7 +1497,7 @@ void bench_remove_copy(const C &c, std::size_t iters, const char* cname,
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1432,7 +1507,7 @@ void bench_remove_copy(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1451,7 +1526,7 @@ void bench_remove_copy_if(const C &c, std::size_t iters, const char* cname,
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1461,7 +1536,7 @@ void bench_remove_copy_if(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1478,7 +1553,7 @@ void bench_reverse(const C &c, std::size_t iters, const char* cname)
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // reverse is in-place, so make a copy for each iteration
       clobber();
@@ -1490,7 +1565,7 @@ void bench_reverse(const C &c, std::size_t iters, const char* cname)
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // reverse is in-place, so make a copy for each iteration
       clobber();
@@ -1510,7 +1585,7 @@ void bench_reverse_copy(const C &c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1520,7 +1595,7 @@ void bench_reverse_copy(const C &c, std::size_t iters, const char* cname)
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1538,7 +1613,7 @@ void bench_is_sorted(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1548,7 +1623,7 @@ void bench_is_sorted(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1566,7 +1641,7 @@ void bench_is_sorted_until(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1577,7 +1652,7 @@ void bench_is_sorted_until(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1596,7 +1671,7 @@ void bench_is_partitioned(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1606,7 +1681,7 @@ void bench_is_partitioned(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1624,7 +1699,7 @@ void bench_merge(const C &c, const C &c2, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size() + c2.size());
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1634,7 +1709,7 @@ void bench_merge(const C &c, const C &c2, std::size_t iters, const char* cname)
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1652,7 +1727,7 @@ void bench_mismatch(const C &c, const C &c2, std::size_t iters, const char* cnam
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1662,7 +1737,7 @@ void bench_mismatch(const C &c, const C &c2, std::size_t iters, const char* cnam
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1680,7 +1755,7 @@ void bench_swap_ranges(const C &c, std::size_t iters, const char* cname)
    C c2(c);
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c3(c);
       C c4(c2);
@@ -1693,7 +1768,7 @@ void bench_swap_ranges(const C &c, std::size_t iters, const char* cname)
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c3(c);
       C c4(c2);
@@ -1715,7 +1790,7 @@ void bench_search(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1726,7 +1801,7 @@ void bench_search(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1746,7 +1821,7 @@ void bench_search_n(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1757,7 +1832,7 @@ void bench_search_n(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1776,7 +1851,7 @@ void bench_set_union(const C &c, const C &c2, std::size_t iters, const char* cna
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size() + c2.size());
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1786,7 +1861,7 @@ void bench_set_union(const C &c, const C &c2, std::size_t iters, const char* cna
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1804,7 +1879,7 @@ void bench_set_difference(const C &c, const C &c2, std::size_t iters, const char
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1814,7 +1889,7 @@ void bench_set_difference(const C &c, const C &c2, std::size_t iters, const char
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1832,7 +1907,7 @@ void bench_set_intersection(const C &c, const C &c2, std::size_t iters, const ch
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1842,7 +1917,7 @@ void bench_set_intersection(const C &c, const C &c2, std::size_t iters, const ch
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1860,7 +1935,7 @@ void bench_set_symmetric_difference(const C &c, const C &c2, std::size_t iters, 
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size() + c2.size());
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1870,7 +1945,7 @@ void bench_set_symmetric_difference(const C &c, const C &c2, std::size_t iters, 
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1888,7 +1963,7 @@ void bench_partition(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // partition is in-place, so make a copy for each iteration
       clobber();
@@ -1900,7 +1975,7 @@ void bench_partition(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // partition is in-place, so make a copy for each iteration
       clobber();
@@ -1920,7 +1995,7 @@ void bench_stable_partition(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // stable_partition is in-place, so make a copy for each iteration
       clobber();
@@ -1932,7 +2007,7 @@ void bench_stable_partition(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       C c2(c); // stable_partition is in-place, so make a copy for each iteration
       clobber();
@@ -1953,7 +2028,7 @@ void bench_partition_copy(const C &c, std::size_t iters, const char* cname)
    std::vector<VT> t_out(c.size());
    std::vector<VT> f_out(c.size());
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1965,7 +2040,7 @@ void bench_partition_copy(const C &c, std::size_t iters, const char* cname)
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
@@ -1985,7 +2060,7 @@ void bench_partition_point(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1;
+   cpu_timer t1(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t1.resume();
@@ -1996,7 +2071,7 @@ void bench_partition_point(const C &c, std::size_t iters, const char* cname,
    }
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
-   cpu_timer t2;
+   cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
       clobber();
       t2.resume();
