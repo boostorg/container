@@ -146,10 +146,22 @@ struct is_sentinel<Iter, Iter>
 
 #include <boost/container/detail/config_end.hpp>
 
-#define BOOST_CONTAINER_DISABLE_SEGMENTED_LOOP_UNROLLING
+//#define BOOST_CONTAINER_ENABLE_SEGMENTED_LOOP_UNROLLING
+//#define BOOST_CONTAINER_DISABLE_SEGMENTED_LOOP_UNROLLING
 
-#ifndef BOOST_CONTAINER_DISABLE_SEGMENTED_LOOP_UNROLLING
-#define BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
+#if defined(BOOST_CONTAINER_ENABLE_SEGMENTED_LOOP_UNROLLING) && defined(BOOST_CONTAINER_DISABLE_SEGMENTED_LOOP_UNROLLING)
+   #error "Cannot define both BOOST_CONTAINER_ENABLE_SEGMENTED_LOOP_UNROLLING and BOOST_CONTAINER_DISABLE_SEGMENTED_LOOP_UNROLLING"
+#elif !defined(BOOST_CONTAINER_ENABLE_SEGMENTED_LOOP_UNROLLING) && !defined(BOOST_CONTAINER_DISABLE_SEGMENTED_LOOP_UNROLLING)
+   //Disable loop unrolling for clang, which generates suboptimal code in some case as clang auto-vectorizes
+   //loops more aggressively than other compilers, and loop unrolling can interfere with this optimization.
+   #if !defined(BOOST_CLANG)
+      #define BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
+   #endif
+#elif defined(BOOST_CONTAINER_ENABLE_SEGMENTED_LOOP_UNROLLING)
+   //Force loop unrolling
+   #define BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
+#else //defined(BOOST_CONTAINER_DISABLE_SEGMENTED_LOOP_UNROLLING)
+   // Force no loop unrolling
 #endif
 
 #endif // BOOST_CONTAINER_EXPERIMENTAL_SEGMENTED_ITERATOR_TRAITS_HPP
