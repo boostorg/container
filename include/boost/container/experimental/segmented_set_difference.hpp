@@ -49,7 +49,7 @@ OutIter set_difference_scan
    InIter2 first2 = first2_out;
 
    while(first != last && first2 != last2) {
-      if(comp(*first, *first2))      { *result = *first; ++first; ++result; }
+      if     (comp(*first, *first2)) { *result = *first; ++first; ++result; }
       else if(comp(*first2, *first)) { ++first2; }
       else                           { ++first; ++first2; }
    }

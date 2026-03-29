@@ -47,9 +47,9 @@ void set_symmetric_difference_scan(FwdIt first, FwdIt last, InIter2& first2, Sen
    non_segmented_iterator_tag)
 {
    while(first != last && first2 != last2) {
-      if(comp(*first, *first2))      { *result = *first; ++first; ++result; }
-      else if(comp(*first2, *first)) { *result = *first2; ++first2; ++result; }
-      else                           { ++first; ++first2; }
+      if      (comp(*first, *first2)) { *result = *first;  ++first;  ++result; }
+      else if (comp(*first2, *first)) { *result = *first2; ++first2; ++result; }
+      else                            { ++first; ++first2; }
    }
    result = (segmented_copy)(first, last, result);
 }

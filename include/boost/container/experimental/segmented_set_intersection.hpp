@@ -47,9 +47,9 @@ OutIter set_intersection_scan
 {
    InIter2 first2 = first2_out;
    while(first != last && first2 != last2) {
-      if(comp(*first, *first2))      { ++first; }
-      else if(comp(*first2, *first)) { ++first2; }
-      else { *result = *first; ++first; ++first2; ++result; }
+      if      (comp(*first, *first2)) { ++first;  }
+      else if (comp(*first2, *first)) { ++first2; }
+      else                            { *result = *first; ++first; ++first2; ++result; }
    }
    first2_out = first2;
    return result;

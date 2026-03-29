@@ -48,9 +48,9 @@ InIter2 set_union_scan(FwdIt first, FwdIt last, InIter2 first2, Sent2 last2, Out
 {
    OutIter result = out;   //Avoid aliasing
    while(first != last && first2 != last2) {
-      if(comp(*first, *first2))      { *result = *first;  ++first; }
-      else if(comp(*first2, *first)) { *result = *first2; ++first2; }
-      else                           { *result = *first;  ++first; ++first2; }
+      if      (comp(*first, *first2)) { *result = *first;  ++first;  }
+      else if (comp(*first2, *first)) { *result = *first2; ++first2; }
+      else                            { *result = *first;  ++first; ++first2; }
       ++result;
    }
 
