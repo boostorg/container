@@ -59,7 +59,7 @@ segmented_count_if_dispatch
          count += static_cast<difference_type>(pred(*first)); ++first;
       BOOST_FALLTHROUGH;
       case 1:
-         count += static_cast<difference_type>(pred(*first));
+         count += static_cast<difference_type>(pred(*first)); ++first;
       BOOST_FALLTHROUGH;
       default:
          break;
