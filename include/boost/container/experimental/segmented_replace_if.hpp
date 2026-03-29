@@ -21,6 +21,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/container/detail/iterator.hpp>
 
 namespace boost {
 namespace container {
@@ -30,19 +31,54 @@ void segmented_replace_if(FwdIt first, Sent last, Pred pred, const T& new_val);
 
 namespace detail_algo {
 
-template <class FwdIt, class Sent, class Pred, class T, class Tag>
+#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
+
+template <class RAIter, class Pred, class T>
+void segmented_replace_if_dispatch
+   (RAIter first, RAIter last, Pred pred, const T& new_val
+   , const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
+{
+   typedef typename iterator_traits<RAIter>::difference_type difference_type;
+   difference_type n = last - first;
+
+   while(n >= difference_type(4)) {
+      if(pred(*first)) { *first = new_val; } ++first;
+      if(pred(*first)) { *first = new_val; } ++first;
+      if(pred(*first)) { *first = new_val; } ++first;
+      if(pred(*first)) { *first = new_val; } ++first;
+      n -= 4;
+   }
+
+   switch (n % 4) {
+      case 3:
+         if(pred(*first)) { *first = new_val; } ++first;
+      BOOST_FALLTHROUGH;
+      case 2:
+         if(pred(*first)) { *first = new_val; } ++first;
+      BOOST_FALLTHROUGH;
+      case 1:
+         if (pred(*first)) { *first = new_val; } //No need to increment first since we're done after this.
+      BOOST_FALLTHROUGH;
+      default:
+         break;
+   }
+}
+
+#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
+
+template <class FwdIt, class Sent, class Pred, class T, class Tag, class Cat>
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, FwdIt>::value>::type
-segmented_replace_if_dispatch(FwdIt first, Sent last, Pred pred, const T& new_val, Tag)
+segmented_replace_if_dispatch(FwdIt first, Sent last, Pred pred, const T& new_val, Tag, Cat)
 {
    for(; first != last; ++first)
       if(pred(*first))
          *first = new_val;
 }
 
-template <class SegIter, class Pred, class T>
+template <class SegIter, class Pred, class T, class Cat>
 void segmented_replace_if_dispatch
-   (SegIter first, SegIter last, Pred pred, const T& new_val, segmented_iterator_tag)
+   (SegIter first, SegIter last, Pred pred, const T& new_val, segmented_iterator_tag, Cat)
 {
 
    typedef segmented_iterator_traits<SegIter>  traits;
@@ -54,15 +90,15 @@ void segmented_replace_if_dispatch
    segment_iterator slast  = traits::segment(last);
 
    if(sfirst == slast) {
-      (segmented_replace_if_dispatch)(traits::local(first), traits::local(last), pred, new_val, is_local_seg_t());
+      (segmented_replace_if_dispatch)(traits::local(first), traits::local(last), pred, new_val, is_local_seg_t(), Cat());
    }
    else {
-      (segmented_replace_if_dispatch)(traits::local(first), traits::end(sfirst), pred, new_val, is_local_seg_t());
+      (segmented_replace_if_dispatch)(traits::local(first), traits::end(sfirst), pred, new_val, is_local_seg_t(), Cat());
 
       for(++sfirst; sfirst != slast; ++sfirst)
-         (segmented_replace_if_dispatch)(traits::begin(sfirst), traits::end(sfirst), pred, new_val, is_local_seg_t());
+         (segmented_replace_if_dispatch)(traits::begin(sfirst), traits::end(sfirst), pred, new_val, is_local_seg_t(), Cat());
 
-      (segmented_replace_if_dispatch)(traits::begin(sfirst), traits::local(last), pred, new_val, is_local_seg_t());
+      (segmented_replace_if_dispatch)(traits::begin(sfirst), traits::local(last), pred, new_val, is_local_seg_t(), Cat());
    }
 }
 
@@ -75,7 +111,7 @@ void segmented_replace_if(FwdIt first, Sent last, Pred pred, const T& new_val)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
    detail_algo::segmented_replace_if_dispatch
-      (first, last, pred, new_val, typename traits::is_segmented_iterator());
+      (first, last, pred, new_val, typename traits::is_segmented_iterator(), typename iterator_traits<FwdIt>::iterator_category());
 }
 
 } // namespace container
