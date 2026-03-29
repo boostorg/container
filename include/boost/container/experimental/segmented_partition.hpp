@@ -50,8 +50,130 @@ OutIter partition_scan(FwdIt first, Sent last, OutIter result, Pred pred, non_se
    return result;
 }
 
-template <class SegIt, class OutIter, class Pred>
-OutIter partition_scan(SegIt first, SegIt last, OutIter result, Pred pred, segmented_iterator_tag, const std::forward_iterator_tag & cat)
+//////////////////////////////////////////////
+// Bidirectional (Hoare-style) partition
+//////////////////////////////////////////////
+
+template <class BidirIt, class Pred>
+BidirIt partition_scan(BidirIt first, BidirIt last, Pred pred, non_segmented_iterator_tag, const std::bidirectional_iterator_tag&)
+{
+   while(true) {
+      bool cond = true;
+      while(first != last && (cond = pred(*first)))
+         ++first;
+      if(cond)
+         return first;
+      --last;
+      cond = true;
+      while(first != last && (cond = !pred(*last)))
+         --last;
+      if(cond)
+         return first;
+      boost::adl_move_swap(*first, *last);
+      ++first;
+   }
+}
+
+#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
+
+template <class RAIter, class Pred>
+RAIter partition_scan(RAIter first, RAIter last, Pred pred, non_segmented_iterator_tag, const std::random_access_iterator_tag&)
+{
+   typedef typename iterator_traits<RAIter>::difference_type difference_type;
+
+   while(true) {
+      bool cond = true;
+      difference_type nfront = last - first;
+      while(nfront >= difference_type(4)) {
+         if(!(cond = pred(*first)))
+            goto front_found;
+         ++first;
+         if(!(cond = pred(*first)))
+            goto front_found;
+         ++first;
+         if(!(cond = pred(*first)))
+            goto front_found;
+         ++first;
+         if(!(cond = pred(*first)))
+            goto front_found;
+         ++first;
+         nfront -= 4;
+      }
+      switch (nfront % 4) {
+         case 3:
+            if(!(cond = pred(*first)))
+               goto front_found;
+            ++first;
+         BOOST_FALLTHROUGH;
+         case 2:
+            if(!(cond = pred(*first)))
+               goto front_found;
+            ++first;
+         BOOST_FALLTHROUGH;
+         case 1:
+            if(!(cond = pred(*first)))
+               goto front_found;
+            ++first;
+         BOOST_FALLTHROUGH;
+         default:
+            break;
+      }
+
+      front_found:
+      if(cond)
+         return first;
+
+      --last;
+      cond = true;
+      difference_type nback = last - first;
+      while(nback >= difference_type(4)) {
+         if(!(cond = !pred(*last)))
+            goto back_found;
+         --last;
+         if(!(cond = !pred(*last)))
+            goto back_found;
+         --last;
+         if(!(cond = !pred(*last)))
+            goto back_found;
+         --last;
+         if(!(cond = !pred(*last)))
+            goto back_found;
+         --last;
+         nback -= 4;
+      }
+      switch (nback % 4) {
+         case 3:
+            if(!(cond = !pred(*last)))
+               goto back_found;
+            --last;
+         BOOST_FALLTHROUGH;
+         case 2:
+            if(!(cond = !pred(*last)))
+               goto back_found;
+            --last;
+         BOOST_FALLTHROUGH;
+         case 1:
+            if(!(cond = !pred(*last)))
+               goto back_found;
+            --last;
+         BOOST_FALLTHROUGH;
+         default:
+            break;
+      }
+
+      back_found:
+      if(cond)
+         return first;
+
+      boost::adl_move_swap(*first, *last);
+      ++first;
+   }
+}
+
+#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
+
+template <class SegIt, class OutIter, class Pred, class Cat>
+OutIter partition_scan(SegIt first, SegIt last, OutIter result, Pred pred, segmented_iterator_tag, const Cat & cat)
 {
    typedef segmented_iterator_traits<SegIt>  traits;
    typedef typename traits::local_iterator   local_iterator;
@@ -72,28 +194,6 @@ OutIter partition_scan(SegIt first, SegIt last, OutIter result, Pred pred, segme
          result = partition_scan(traits::begin(scur), traits::end(scur), result, pred, is_local_seg_t(), cat);
 
       return partition_scan(traits::begin(scur), traits::local(last), result, pred, is_local_seg_t(), cat);
-   }
-}
-
-//////////////////////////////////////////////
-// Bidirectional (Hoare-style) partition
-//////////////////////////////////////////////
-
-template <class BidirIt, class Pred>
-BidirIt partition_scan(BidirIt first, BidirIt last, Pred pred, non_segmented_iterator_tag, const std::bidirectional_iterator_tag&)
-{
-   while(true) {
-      while(first != last && pred(*first))
-         ++first;
-      if(first == last)
-         return first;
-      --last;
-      while(first != last && !pred(*last))
-         --last;
-      if(first == last)
-         return first;
-      boost::adl_move_swap(*first, *last);
-      ++first;
    }
 }
 
@@ -177,6 +277,13 @@ FwdIt segmented_partition_dispatch(FwdIt first, Sent last, Pred pred, Tag tag, c
 template <class FwdIt, class Sent, class Pred, class Tag>
 BOOST_CONTAINER_FORCEINLINE
 FwdIt segmented_partition_dispatch(FwdIt first, Sent last, Pred pred, Tag tag, const std::bidirectional_iterator_tag& cat)
+{
+   return (partition_scan)(first, last, pred, tag, cat);
+}
+
+template <class FwdIt, class Sent, class Pred, class Tag>
+BOOST_CONTAINER_FORCEINLINE
+FwdIt segmented_partition_dispatch(FwdIt first, Sent last, Pred pred, Tag tag, const std::random_access_iterator_tag& cat)
 {
    return (partition_scan)(first, last, pred, tag, cat);
 }
