@@ -47,12 +47,12 @@ OutIter copy_n_scan_non_segmented
 template <class InIter, class Size, class OutIter, class Tag>
 OutIter copy_n_scan_non_segmented(InIter first, InIter last, Size& count, OutIter result, Tag)
 {
-   Size local_count = count;  //Avoid aliasing the count parameter
+   Size local_count = count;
 
    for(; local_count > 0 && first != last; ++first, ++result, --local_count)
       *result = *first;
 
-   count = local_count;  //Restore the count parameter
+   count = local_count;
 
    return result;
 }
@@ -89,9 +89,9 @@ OutIter copy_n_scan(SegIt first, SegIt last, Size& count, OutIter result, segmen
    }
 }
 
-template <class SegIter, class Size, class OutIter>
+template <class SegIter, class Size, class OutIter, class Cat>
 OutIter segmented_copy_n_dispatch
-   (SegIter first, Size count, OutIter result, segmented_iterator_tag)
+   (SegIter first, Size count, OutIter result, segmented_iterator_tag, Cat)
 {
    typedef segmented_iterator_traits<SegIter> traits;
    typedef typename traits::local_iterator   local_iterator;
@@ -103,7 +103,6 @@ OutIter segmented_copy_n_dispatch
    segment_iterator scur = traits::segment(first);
    local_iterator   lcur = traits::local(first);
 
-   //Iterate through the segments, until the count is 0
    while(1) {
       result = copy_n_scan(lcur, traits::end(scur), count, result, is_local_seg_t());
 
@@ -115,9 +114,44 @@ OutIter segmented_copy_n_dispatch
    return result;
 }
 
-template <class InIter, class Size, class OutIter>
+#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
+
+template <class RAIter, class Size, class OutIter>
 OutIter segmented_copy_n_dispatch
-   (InIter first, Size count, OutIter result, non_segmented_iterator_tag)
+   (RAIter first, Size count, OutIter result, non_segmented_iterator_tag, const std::random_access_iterator_tag &)
+{
+   while(count >= Size(4)) {
+      *result = *first; ++first; ++result;
+      *result = *first; ++first; ++result;
+      *result = *first; ++first; ++result;
+      *result = *first; ++first; ++result;
+      count -= Size(4);
+   }
+
+   switch(count) {
+      case 3:
+         *result = *first; ++first; ++result;
+         *result = *first; ++first; ++result;
+         *result = *first; ++first; ++result;
+         break;
+      case 2:
+         *result = *first; ++first; ++result;
+         *result = *first; ++first; ++result;
+         break;
+      case 1:
+         *result = *first; ++first; ++result;
+         break;
+      default:
+         break;
+   }
+   return result;
+}
+
+#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
+
+template <class InIter, class Size, class OutIter, class Cat>
+OutIter segmented_copy_n_dispatch
+   (InIter first, Size count, OutIter result, non_segmented_iterator_tag, Cat)
 {
    for(; count > 0; ++first, ++result, --count)
       *result = *first;
@@ -134,7 +168,7 @@ OutIter segmented_copy_n(InIter first, Size count, OutIter result)
 {
    typedef segmented_iterator_traits<InIter> traits;
    return detail_algo::segmented_copy_n_dispatch(first, count, result,
-      typename traits::is_segmented_iterator());
+      typename traits::is_segmented_iterator(), typename iterator_traits<InIter>::iterator_category());
 }
 
 
