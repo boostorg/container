@@ -38,8 +38,33 @@ OutIter generate_n_scan_non_segmented(OutIter first, OutIter last, Size& count, 
    std::size_t range_sz = static_cast<std::size_t>(last - first);
    const Size local_count = (std::size_t)count < range_sz ? count : (Size)range_sz;
 
+#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
+   Size cnt = local_count;
+   while(cnt >= Size(4)) {
+      *first = gen(); ++first;
+      *first = gen(); ++first;
+      *first = gen(); ++first;
+      *first = gen(); ++first;
+      cnt -= Size(4);
+   }
+
+   switch (cnt % Size(4)) {
+      case 3:
+         *first = gen(); ++first;
+      BOOST_FALLTHROUGH;
+      case 2:
+         *first = gen(); ++first;
+      BOOST_FALLTHROUGH;
+      case 1:
+         *first = gen();
+      BOOST_FALLTHROUGH;
+      default:
+         break;
+   }
+#else
    for(Size cnt = local_count; cnt; ++first, --cnt)
       *first = gen();
+#endif
 
    count -= local_count;
    return first;
