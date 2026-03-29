@@ -30,8 +30,8 @@ namespace container {
 namespace detail_algo {
 
 //Same-segment reverse: simply a reverse loop with move-swaps. No segmentation
-template <class BidirIt>
-void segmented_reverse_dispatch(BidirIt first, BidirIt last, non_segmented_iterator_tag, const std::bidirectional_iterator_tag &)
+template <class BidirIt, class Cat>
+void segmented_reverse_dispatch(BidirIt first, BidirIt last, non_segmented_iterator_tag, const Cat &)
 {
    while(first != last && first != --last) {
       boost::adl_move_swap(*first, *last);
@@ -79,9 +79,9 @@ void segmented_reverse_dispatch(RAIter first, RAIter last, non_segmented_iterato
 // At least one side is fully consumed on return.
 //////////////////////////////////////////////
 
-template <class It>
+template <class It, class Cat>
 void segmented_reverse_disjoint_ranges
-   (It& f_out, It const f_end, It const l_beg, It& l_out, non_segmented_iterator_tag, const std::bidirectional_iterator_tag &)
+   (It& f_out, It const f_end, It const l_beg, It& l_out, non_segmented_iterator_tag, const Cat &)
 {
    It f = f_out;
    It l = l_out;

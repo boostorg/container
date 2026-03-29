@@ -54,8 +54,8 @@ OutIter partition_scan(FwdIt first, Sent last, OutIter result, Pred pred, non_se
 // Bidirectional (Hoare-style) partition
 //////////////////////////////////////////////
 
-template <class BidirIt, class Pred>
-BidirIt partition_scan(BidirIt first, BidirIt last, Pred pred, non_segmented_iterator_tag, const std::bidirectional_iterator_tag&)
+template <class BidirIt, class Pred, class Cat>
+BidirIt partition_scan(BidirIt first, BidirIt last, Pred pred, non_segmented_iterator_tag, const Cat&)
 {
    while(true) {
       bool cond = true;

@@ -31,9 +31,9 @@ OutIter segmented_reverse_copy(BidirIter first, BidirIter last, OutIter result);
 
 namespace detail_algo {
 
-template <class BidirIter, class OutIter>
+template <class BidirIter, class OutIter, class Cat>
 OutIter segmented_reverse_copy_dispatch
-   (BidirIter first, BidirIter last, OutIter result, non_segmented_iterator_tag, const std::bidirectional_iterator_tag &)
+   (BidirIter first, BidirIter last, OutIter result, non_segmented_iterator_tag, const Cat &)
 {
    while(first != last) {
       --last;
