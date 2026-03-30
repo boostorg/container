@@ -388,16 +388,32 @@ struct segmented_iterator_traits< deque_iterator<Pointer, IsConst, BlockBytes, B
    typedef typename deque_iterator_type::val_alloc_ptr local_iterator;
    typedef typename deque_iterator_type::index_pointer segment_iterator;
 
-   BOOST_CONTAINER_FORCEINLINE static segment_iterator segment(deque_iterator_type it) { return it.get_node(); }
+   BOOST_CONTAINER_FORCEINLINE static segment_iterator segment(deque_iterator_type it)
+   { return it.get_node(); }
 
-   BOOST_CONTAINER_FORCEINLINE static local_iterator   local(deque_iterator_type it)   { return it.get_cur(); }
+   BOOST_CONTAINER_FORCEINLINE static local_iterator   local(deque_iterator_type it)
+   { return it.get_cur(); }
 
    BOOST_CONTAINER_FORCEINLINE static deque_iterator_type compose(segment_iterator s, local_iterator l)
-   { return deque_iterator_type(l, s); }
+   {
+      if (BOOST_UNLIKELY(s && l == (end)(s))) {
+         ++s;
+         l = *s;
+      }
+      return deque_iterator_type(l, s);
+   }
 
-   BOOST_CONTAINER_FORCEINLINE static local_iterator begin(segment_iterator s) { return *s; }
+   BOOST_CONTAINER_FORCEINLINE static local_iterator begin(segment_iterator s)
+   {
+      BOOST_ASSERT(s != segment_iterator());
+      return *s;
+   }
 
-   BOOST_CONTAINER_FORCEINLINE static local_iterator end(segment_iterator s)   { return *s + deque_iterator_type::get_block_size(); }
+   BOOST_CONTAINER_FORCEINLINE static local_iterator end(segment_iterator s)
+   {
+      BOOST_ASSERT(s != segment_iterator());
+      return *s + deque_iterator_type::get_block_size();
+   }
 };
 
 ////////////////////////////////////////////////////////////////////////////
