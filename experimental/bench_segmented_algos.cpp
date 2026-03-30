@@ -514,7 +514,7 @@ FwdIt find_last_dispatch(FwdIt first, FwdIt last, const T& val, std::forward_ite
 }
 
 template<class It, class T>
-It find_last(It first, It last, const T& val)
+BOOST_CONTAINER_FORCEINLINE It find_last(It first, It last, const T& val)
 {
    typedef typename std::iterator_traits<It>::iterator_category cat;
    return find_last_dispatch(first, last, val, cat());
@@ -541,7 +541,7 @@ FwdIt find_last_if_dispatch(FwdIt first, FwdIt last, Pred pred, std::forward_ite
 }
 
 template<class It, class Pred>
-It find_last_if(It first, It last, Pred pred)
+BOOST_CONTAINER_FORCEINLINE It find_last_if(It first, It last, Pred pred)
 {
    typedef typename std::iterator_traits<It>::iterator_category cat;
    return find_last_if_dispatch(first, last, pred, cat());
@@ -568,13 +568,11 @@ FwdIt find_last_if_not_dispatch(FwdIt first, FwdIt last, Pred pred, std::forward
 }
 
 template<class It, class Pred>
-It find_last_if_not(It first, It last, Pred pred)
+BOOST_CONTAINER_FORCEINLINE It find_last_if_not(It first, It last, Pred pred)
 {
    typedef typename std::iterator_traits<It>::iterator_category cat;
    return find_last_if_not_dispatch(first, last, pred, cat());
 }
-
-
 
 
 //Not benchmarked:
