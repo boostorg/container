@@ -109,13 +109,17 @@ SegIt generate_n_scan(SegIt first, SegIt last, Size& count, Generator& gen, segm
    }
    else {
       local_iterator lcur = generate_n_scan(traits::local(first), traits::end(scur), count, gen, is_local_seg_t());
-      for(++scur; scur != slast && count > 0; ++scur)
-         lcur = generate_n_scan(traits::begin(scur), traits::end(scur), count, gen, is_local_seg_t());
-      if(count > 0)
-         lcur = generate_n_scan(traits::begin(slast), traits::local(last), count, gen, is_local_seg_t());
+      if(count > 0) {
+         for(++scur; scur != slast; ++scur) {
+            lcur = generate_n_scan(traits::begin(scur), traits::end(scur), count, gen, is_local_seg_t());
+            if(!count)
+               break;
+         }
+         if(count > 0 && scur == slast)
+            lcur = generate_n_scan(traits::begin(slast), traits::local(last), count, gen, is_local_seg_t());
+      }
       return traits::compose(scur, lcur);
    }
-   
 }
 
 template <class SegIter, class Size, class Generator>
