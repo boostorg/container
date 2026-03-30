@@ -133,6 +133,74 @@ void test_is_sorted_until_seg2()
    BOOST_TEST_EQ(*it, 2);
 }
 
+void test_is_sorted_until_every_position()
+{
+   const int N = 9;
+
+   for(int p = 1; p < N; ++p) {
+      int data[9];
+      for(int j = 0; j < N; ++j) data[j] = j * 10;
+      data[p] = data[p - 1] - 1;
+
+      test_detail::seg_vector<int> sv;
+      sv.add_segment_range(data, data + 3);
+      sv.add_segment_range(data + 3, data + 5);
+      sv.add_segment_range(data + 5, data + 9);
+
+      typedef test_detail::seg_vector<int>::iterator iter_t;
+      iter_t result = segmented_is_sorted_until(sv.begin(), sv.end());
+
+      iter_t expected = sv.begin();
+      for(int j = 0; j < p; ++j) ++expected;
+
+      BOOST_TEST(result == expected);
+      BOOST_TEST_EQ(*result, data[p]);
+   }
+
+   {
+      int data[] = {0, 10, 20, 30, 40, 50, 60, 70, 80};
+      test_detail::seg_vector<int> sv;
+      sv.add_segment_range(data, data + 3);
+      sv.add_segment_range(data + 3, data + 5);
+      sv.add_segment_range(data + 5, data + 9);
+      BOOST_TEST(segmented_is_sorted_until(sv.begin(), sv.end()) == sv.end());
+   }
+}
+
+void test_is_sorted_until_every_position_seg2()
+{
+   const int N = 9;
+
+   for(int p = 1; p < N; ++p) {
+      int data[9];
+      for(int j = 0; j < N; ++j) data[j] = j * 10;
+      data[p] = data[p - 1] - 1;
+
+      test_detail::seg2_vector<int> sv2;
+      sv2.add_flat_segment_range(data, data + 3);
+      sv2.add_flat_segment_range(data + 3, data + 5);
+      sv2.add_flat_segment_range(data + 5, data + 9);
+
+      typedef test_detail::seg2_vector<int>::iterator iter_t;
+      iter_t result = segmented_is_sorted_until(sv2.begin(), sv2.end());
+
+      iter_t expected = sv2.begin();
+      for(int j = 0; j < p; ++j) ++expected;
+
+      BOOST_TEST(result == expected);
+      BOOST_TEST_EQ(*result, data[p]);
+   }
+
+   {
+      int data[] = {0, 10, 20, 30, 40, 50, 60, 70, 80};
+      test_detail::seg2_vector<int> sv2;
+      sv2.add_flat_segment_range(data, data + 3);
+      sv2.add_flat_segment_range(data + 3, data + 5);
+      sv2.add_flat_segment_range(data + 5, data + 9);
+      BOOST_TEST(segmented_is_sorted_until(sv2.begin(), sv2.end()) == sv2.end());
+   }
+}
+
 int main()
 {
    test_is_sorted_until_segmented();
@@ -145,5 +213,7 @@ int main()
    test_is_sorted_until_sentinel_segmented();
    test_is_sorted_until_sentinel_non_segmented();
    test_is_sorted_until_seg2();
+   test_is_sorted_until_every_position();
+   test_is_sorted_until_every_position_seg2();
    return boost::report_errors();
 }

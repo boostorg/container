@@ -168,6 +168,70 @@ void test_mismatch_seg2()
    BOOST_TEST_EQ(*r.second, 0);
 }
 
+void test_mismatch_every_position()
+{
+   test_detail::seg_vector<int> sv;
+   int a1[] = {10, 20, 30};
+   int a2[] = {40, 50};
+   int a3[] = {60, 70, 80, 90};
+   sv.add_segment_range(a1, a1 + 3);
+   sv.add_segment_range(a2, a2 + 2);
+   sv.add_segment_range(a3, a3 + 4);
+
+   int vals[] = {10, 20, 30, 40, 50, 60, 70, 80, 90};
+   const int N = 9;
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+
+   for(int pos = 0; pos < N; ++pos) {
+      int ref[9];
+      for(int j = 0; j < N; ++j) ref[j] = vals[j];
+      ref[pos] = -1;
+
+      iter_t expected = sv.begin();
+      for(int j = 0; j < pos; ++j) ++expected;
+
+      std::pair<iter_t, int*> r = segmented_mismatch(sv.begin(), sv.end(), ref);
+      BOOST_TEST(r.first == expected);
+      BOOST_TEST_EQ(*r.first, vals[pos]);
+      BOOST_TEST_EQ(*r.second, -1);
+   }
+
+   std::pair<iter_t, int*> r = segmented_mismatch(sv.begin(), sv.end(), vals);
+   BOOST_TEST(r.first == sv.end());
+}
+
+void test_mismatch_every_position_seg2()
+{
+   test_detail::seg2_vector<int> sv2;
+   int a1[] = {10, 20, 30};
+   int a2[] = {40, 50};
+   int a3[] = {60, 70, 80, 90};
+   sv2.add_flat_segment_range(a1, a1 + 3);
+   sv2.add_flat_segment_range(a2, a2 + 2);
+   sv2.add_flat_segment_range(a3, a3 + 4);
+
+   int vals[] = {10, 20, 30, 40, 50, 60, 70, 80, 90};
+   const int N = 9;
+   typedef test_detail::seg2_vector<int>::iterator iter_t;
+
+   for(int pos = 0; pos < N; ++pos) {
+      int ref[9];
+      for(int j = 0; j < N; ++j) ref[j] = vals[j];
+      ref[pos] = -1;
+
+      iter_t expected = sv2.begin();
+      for(int j = 0; j < pos; ++j) ++expected;
+
+      std::pair<iter_t, int*> r = segmented_mismatch(sv2.begin(), sv2.end(), ref);
+      BOOST_TEST(r.first == expected);
+      BOOST_TEST_EQ(*r.first, vals[pos]);
+      BOOST_TEST_EQ(*r.second, -1);
+   }
+
+   std::pair<iter_t, int*> r = segmented_mismatch(sv2.begin(), sv2.end(), vals);
+   BOOST_TEST(r.first == sv2.end());
+}
+
 int main()
 {
    test_mismatch_matching();
@@ -179,5 +243,7 @@ int main()
    test_mismatch_sentinel_segmented();
    test_mismatch_sentinel_non_segmented();
    test_mismatch_seg2();
+   test_mismatch_every_position();
+   test_mismatch_every_position_seg2();
    return boost::report_errors();
 }
