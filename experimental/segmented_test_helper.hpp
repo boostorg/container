@@ -319,7 +319,13 @@ struct segmented_iterator_traits<test_detail::seg_vector_iterator<T> >
    static local_iterator   local(iterator it)   { return it.local_; }
 
    static iterator compose(segment_iterator s, local_iterator l)
-   { return iterator(s, l); }
+   {
+      if(l == s->end() && !s->empty()) {
+         ++s;
+         l = s->begin();
+      }
+      return iterator(s, l);
+   }
 
    static local_iterator begin(segment_iterator s) { return s->begin(); }
    static local_iterator end(segment_iterator s)   { return s->end(); }
@@ -338,7 +344,13 @@ struct segmented_iterator_traits<test_detail::seg2_vector_iterator<T> >
    static local_iterator   local(iterator it)   { return it.local_; }
 
    static iterator compose(segment_iterator s, local_iterator l)
-   { return iterator(s, l); }
+   {
+      if(l == s->end() && s->total_size() != 0) {
+         ++s;
+         l = s->begin();
+      }
+      return iterator(s, l);
+   }
 
    static local_iterator begin(segment_iterator s) { return s->begin(); }
    static local_iterator end(segment_iterator s)   { return s->end(); }
