@@ -152,7 +152,7 @@ struct key_node_pred
 template<class Pred>
 class not_pred
 {
-   Pred m_p;
+   BOOST_ATTRIBUTE_NO_UNIQUE_ADDRESS Pred m_p;
 
    public:
    BOOST_CONTAINER_FORCEINLINE explicit not_pred(const Pred &p)
