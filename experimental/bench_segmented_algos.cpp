@@ -74,40 +74,43 @@ namespace bc = boost::container;
 
 volatile int sink = 0;
 
+#define BOOST_CONTAINER_SEGMENTED_ALGO_USE_MEDIAN_CLOCK
+
+#ifdef BOOST_CONTAINER_SEGMENTED_ALGO_USE_MEDIAN_CLOCK
+
 class cpu_timer
 {
    nanosecond_type start_ns_;
    bool running_;
-   std::vector<nanosecond_type> samples_;
+   mutable std::vector<nanosecond_type> samples_;
 
-   static nanosecond_type now_ns()
+   BOOST_CONTAINER_FORCEINLINE static nanosecond_type now_ns()
    {
       cpu_times t;
       boost::move_detail::get_cpu_times(t);
       return t.wall;
    }
 
-   static nanosecond_type robust_median(const std::vector<nanosecond_type> &samples)
+   nanosecond_type robust_median() const
    {
-      if(samples.empty())
+      if(samples_.empty())
          return 0u;
 
-      std::vector<nanosecond_type> sorted(samples);
-      std::sort(sorted.begin(), sorted.end());
+      std::sort(samples_.begin(), samples_.end());
 
-      std::size_t trim = sorted.size() / 20u; // Drop 5% low and high values.
-      if(trim * 2u >= sorted.size())
+      std::size_t trim = samples_.size() / 20u; // Drop 5% low and high values.
+      if(trim * 2u >= samples_.size())
          trim = 0u;
 
       const std::size_t begin = trim;
-      const std::size_t end = sorted.size() - trim;
+      const std::size_t end = samples_.size() - trim;
       const std::size_t count = end - begin;
       const std::size_t mid = begin + count / 2u;
 
       if((count % 2u) != 0u)
-         return sorted[mid];
+         return samples_[mid];
 
-      return static_cast<nanosecond_type>((sorted[mid - 1u] + sorted[mid]) / 2u);
+      return static_cast<nanosecond_type>((samples_[mid - 1u] + samples_[mid]) / 2u);
    }
 
    public:
@@ -115,13 +118,13 @@ class cpu_timer
       : start_ns_(0u), running_(false), samples_()
    {  samples_.reserve(reserve); }
 
-   bool is_stopped() const
+   BOOST_CONTAINER_FORCEINLINE bool is_stopped() const
    {  return !running_;  }
 
    cpu_times elapsed() const
    {
       cpu_times t;
-      t.wall = robust_median(samples_) * static_cast<nanosecond_type>(samples_.size());
+      t.wall = robust_median() * static_cast<nanosecond_type>(samples_.size());
       return t;
    }
 
@@ -149,6 +152,13 @@ class cpu_timer
       running_ = true;
    }
 };
+
+#else
+
+using cpu_timer = boost::move_detail::cpu_timer;
+
+#endif
+
 
 void clobber() {
 #if defined(_MSC_VER)
@@ -722,17 +732,6 @@ inline void print_ratio(const char* algo, const char*,
              << '\n';
 }
 
-inline void print_ratio_orig_vs_new(const char* algo, const char*,
-                                    double orig_ns, double new_ns)
-{
-   double ratio = (new_ns > 0.0) ? orig_ns / new_ns : 0.0;
-   std::cout << std::left  << std::setw(24) << algo
-             << std::right << std::setw(20) << std::fixed << std::setprecision(2) << ((ratio < 1.0) ? "! " : "") << ratio << 'x'
-             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << orig_ns
-             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << new_ns
-             << '\n';
-}
-
 //////////////////////////////////////////////////////////////////////////////
 // Individual benchmarks
 //////////////////////////////////////////////////////////////////////////////
@@ -751,7 +750,6 @@ void bench_all_of(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -761,6 +759,7 @@ void bench_all_of(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -779,7 +778,6 @@ void bench_any_of(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -789,6 +787,7 @@ void bench_any_of(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -807,7 +806,6 @@ void bench_none_of(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -817,6 +815,7 @@ void bench_none_of(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -837,7 +836,6 @@ void bench_for_each(const C &c, std::size_t iters, const char* cname)
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -849,6 +847,7 @@ void bench_for_each(const C &c, std::size_t iters, const char* cname)
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("for_each", cname, r1, r2);
 }
@@ -867,7 +866,6 @@ void bench_copy(const C &c, std::size_t iters, const char* cname)
       t1.stop();
       escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -877,6 +875,7 @@ void bench_copy(const C &c, std::size_t iters, const char* cname)
       t2.stop();
       escape(&out[0]);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("copy", cname, r1, r2);
 }
@@ -896,7 +895,6 @@ void bench_copy_if(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -906,6 +904,7 @@ void bench_copy_if(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&out[0]);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -925,7 +924,6 @@ void bench_fill(const C &c, std::size_t iters, const char* cname)
       t1.stop();
       escape(&val);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -936,6 +934,7 @@ void bench_fill(const C &c, std::size_t iters, const char* cname)
       t2.stop();
       escape(&val);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("fill", cname, r1, r2);
 }
@@ -954,7 +953,6 @@ void bench_count(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -964,6 +962,7 @@ void bench_count(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -982,7 +981,6 @@ void bench_count_if(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -992,6 +990,7 @@ void bench_count_if(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1011,7 +1010,6 @@ void bench_find(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1022,6 +1020,7 @@ void bench_find(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1041,7 +1040,6 @@ void bench_find_if(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1052,6 +1050,7 @@ void bench_find_if(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1071,7 +1070,6 @@ void bench_find_if_not(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1082,6 +1080,7 @@ void bench_find_if_not(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1101,7 +1100,6 @@ void bench_find_last(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1112,6 +1110,7 @@ void bench_find_last(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1131,7 +1130,6 @@ void bench_find_last_if(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1142,6 +1140,7 @@ void bench_find_last_if(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1161,7 +1160,6 @@ void bench_find_last_if_not(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1172,6 +1170,7 @@ void bench_find_last_if_not(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1190,7 +1189,6 @@ void bench_equal(const C &c, const C &c2, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1200,6 +1198,7 @@ void bench_equal(const C &c, const C &c2, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1221,7 +1220,6 @@ void bench_replace(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&v);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1232,6 +1230,7 @@ void bench_replace(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&v);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1253,7 +1252,6 @@ void bench_replace_if(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&v);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1264,6 +1262,7 @@ void bench_replace_if(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&v);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1282,7 +1281,6 @@ void bench_transform(const C &c, std::size_t iters, const char* cname)
       t1.stop();
       escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1292,6 +1290,7 @@ void bench_transform(const C &c, std::size_t iters, const char* cname)
       t2.stop();
       escape(&out[0]);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("transform", cname, r1, r2);
 }
@@ -1313,7 +1312,6 @@ void bench_fill_n(const C &c, std::size_t iters, const char* cname)
       t1.stop();
       escape(&val);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1324,6 +1322,7 @@ void bench_fill_n(const C &c, std::size_t iters, const char* cname)
       t2.stop();
       escape(&val);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("fill_n", cname, r1, r2);
 }
@@ -1344,7 +1343,6 @@ void bench_copy_n(const C &c, std::size_t iters, const char* cname)
       t1.stop();
       escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1354,6 +1352,7 @@ void bench_copy_n(const C &c, std::size_t iters, const char* cname)
       t2.stop();
       escape(&out[0]);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("copy_n", cname, r1, r2);
 }
@@ -1374,7 +1373,6 @@ void bench_generate(const C &c, std::size_t iters, const char* cname)
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1386,6 +1384,7 @@ void bench_generate(const C &c, std::size_t iters, const char* cname)
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("generate", cname, r1, r2);
 }
@@ -1408,7 +1407,6 @@ void bench_generate_n(const C &c, std::size_t iters, const char* cname)
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1420,6 +1418,7 @@ void bench_generate_n(const C &c, std::size_t iters, const char* cname)
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("generate_n", cname, r1, r2);
 }
@@ -1440,7 +1439,6 @@ void bench_remove(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1452,6 +1450,7 @@ void bench_remove(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1472,7 +1471,6 @@ void bench_remove_if(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1484,6 +1482,7 @@ void bench_remove_if(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1503,7 +1502,6 @@ void bench_remove_copy(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1513,6 +1511,7 @@ void bench_remove_copy(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&out[0]);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1532,7 +1531,6 @@ void bench_remove_copy_if(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1542,6 +1540,7 @@ void bench_remove_copy_if(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&out[0]);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1561,7 +1560,6 @@ void bench_reverse(const C &c, std::size_t iters, const char* cname)
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1573,6 +1571,7 @@ void bench_reverse(const C &c, std::size_t iters, const char* cname)
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("reverse", cname, r1, r2);
 }
@@ -1591,7 +1590,6 @@ void bench_reverse_copy(const C &c, std::size_t iters, const char* cname)
       t1.stop();
       escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1601,6 +1599,7 @@ void bench_reverse_copy(const C &c, std::size_t iters, const char* cname)
       t2.stop();
       escape(&out[0]);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("reverse_copy", cname, r1, r2);
 }
@@ -1619,7 +1618,6 @@ void bench_is_sorted(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1629,6 +1627,7 @@ void bench_is_sorted(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1648,7 +1647,6 @@ void bench_is_sorted_until(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1659,6 +1657,7 @@ void bench_is_sorted_until(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1677,7 +1676,6 @@ void bench_is_partitioned(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1687,6 +1685,7 @@ void bench_is_partitioned(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1705,7 +1704,6 @@ void bench_merge(const C &c, const C &c2, std::size_t iters, const char* cname)
       t1.stop();
       escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1715,6 +1713,7 @@ void bench_merge(const C &c, const C &c2, std::size_t iters, const char* cname)
       t2.stop();
       escape(&out[0]);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("merge", cname, r1, r2);
 }
@@ -1733,7 +1732,6 @@ void bench_mismatch(const C &c, const C &c2, std::size_t iters, const char* cnam
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1743,6 +1741,7 @@ void bench_mismatch(const C &c, const C &c2, std::size_t iters, const char* cnam
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1764,7 +1763,6 @@ void bench_swap_ranges(const C &c, std::size_t iters, const char* cname)
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1777,6 +1775,7 @@ void bench_swap_ranges(const C &c, std::size_t iters, const char* cname)
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("swap_ranges", cname, r1, r2);
 }
@@ -1797,7 +1796,6 @@ void bench_search(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1808,6 +1806,7 @@ void bench_search(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1828,7 +1827,6 @@ void bench_search_n(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1839,6 +1837,7 @@ void bench_search_n(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -1857,7 +1856,6 @@ void bench_set_union(const C &c, const C &c2, std::size_t iters, const char* cna
       t1.stop();
       escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1867,6 +1865,7 @@ void bench_set_union(const C &c, const C &c2, std::size_t iters, const char* cna
       t2.stop();
       escape(&out[0]);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("set_union", cname, r1, r2);
 }
@@ -1885,7 +1884,6 @@ void bench_set_difference(const C &c, const C &c2, std::size_t iters, const char
       t1.stop();
       escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1895,6 +1893,7 @@ void bench_set_difference(const C &c, const C &c2, std::size_t iters, const char
       t2.stop();
       escape(&out[0]);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("set_difference", cname, r1, r2);
 }
@@ -1913,7 +1912,6 @@ void bench_set_intersection(const C &c, const C &c2, std::size_t iters, const ch
       t1.stop();
       escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1923,6 +1921,7 @@ void bench_set_intersection(const C &c, const C &c2, std::size_t iters, const ch
       t2.stop();
       escape(&out[0]);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("set_intersection", cname, r1, r2);
 }
@@ -1941,7 +1940,6 @@ void bench_set_symmetric_difference(const C &c, const C &c2, std::size_t iters, 
       t1.stop();
       escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1951,6 +1949,7 @@ void bench_set_symmetric_difference(const C &c, const C &c2, std::size_t iters, 
       t2.stop();
       escape(&out[0]);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("set_symmetric_difference", cname, r1, r2);
 }
@@ -1971,7 +1970,6 @@ void bench_partition(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -1983,6 +1981,7 @@ void bench_partition(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -2003,7 +2002,6 @@ void bench_stable_partition(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -2015,6 +2013,7 @@ void bench_stable_partition(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -2036,7 +2035,6 @@ void bench_partition_copy(const C &c, std::size_t iters, const char* cname)
       escape(&t_out[0]);
       escape(&f_out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -2048,6 +2046,7 @@ void bench_partition_copy(const C &c, std::size_t iters, const char* cname)
       escape(&t_out[0]);
       escape(&f_out[0]);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("partition_copy", cname, r1, r2);
 }
@@ -2067,7 +2066,6 @@ void bench_partition_point(const C &c, std::size_t iters, const char* cname,
       t1.stop();
       escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
 
    cpu_timer t2(iters);
    for (std::size_t i = 0; i < iters; ++i) {
@@ -2078,6 +2076,7 @@ void bench_partition_point(const C &c, std::size_t iters, const char* cname,
       t2.stop();
       escape(&result);
    }
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
@@ -2294,11 +2293,11 @@ template<class T>
 void run_benchmarks()
 {
    #ifdef NDEBUG
-   const std::size_t N    = 100000;
-   const std::size_t iter = 1000;
+   const std::size_t N    = 500000;
+   const std::size_t iter = 500;
    #else
    const std::size_t N    = 10000;
-   const std::size_t iter = 1;
+   const std::size_t iter = 20;
    #endif
 
    std::cout << "\n=== Segmented algorithm benchmark [" << typeid(T).name() << "] ===\n"
@@ -2326,8 +2325,8 @@ void run_benchmarks()
 
 int main()
 {
-   //run_benchmarks<int>();
+   run_benchmarks<int>();
    run_benchmarks<MyInt>();
-   //run_benchmarks<MyFatInt>();
+   run_benchmarks<MyFatInt>();
    return 0;
 }
