@@ -82,10 +82,16 @@ OutIter copy_n_scan(SegIt first, SegIt last, Size& count, OutIter result, segmen
    else {
       result = copy_n_scan(lcur, traits::end(scur), count, result, is_local_seg_t());
 
-      for(++scur; scur != slast && count > 0; ++scur)
-         result = copy_n_scan(traits::begin(scur), traits::end(scur), count, result, is_local_seg_t());
+      if (!count)
+         return result;
 
-      return count ? copy_n_scan(traits::begin(scur), traits::local(last), count, result, is_local_seg_t()) : result;
+      for (++scur; scur != slast; ++scur) {
+         result = copy_n_scan(traits::begin(scur), traits::end(scur), count, result, is_local_seg_t());
+         if (!count)
+            return result;
+      }
+
+      return copy_n_scan(traits::begin(scur), traits::local(last), count, result, is_local_seg_t());
    }
 }
 

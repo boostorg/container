@@ -20,7 +20,7 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
-#include <boost/container/experimental/segmented_find_if.hpp>
+#include <boost/container/experimental/segmented_none_of.hpp>
 
 namespace boost {
 namespace container {
@@ -31,7 +31,7 @@ template <class InpIter, class Sent, class Pred>
 BOOST_CONTAINER_FORCEINLINE
 bool segmented_any_of(InpIter first, Sent last, Pred pred)
 {
-   return !((segmented_find_if)(first, last, pred) == last);
+   return !(segmented_none_of)(first, last, pred);
 }
 
 } // namespace container

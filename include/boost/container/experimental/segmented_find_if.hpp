@@ -115,7 +115,10 @@ SegIter segmented_find_if_dispatch
    const segment_iterator slast  = traits::segment(last);
 
    if(sfirst == slast) {
-      return traits::compose(sfirst, (segmented_find_if_dispatch)(traits::local(first), traits::local(last), pred, is_local_seg_t(), local_cat_t()));
+      const local_iterator ll = traits::local(last);
+      const local_iterator r = (segmented_find_if_dispatch)(traits::local(first), ll, pred, is_local_seg_t(), local_cat_t());
+      if (r != ll)
+         return traits::compose(sfirst, r);
    }
    else {
       //First segment
@@ -133,8 +136,14 @@ SegIter segmented_find_if_dispatch
             return traits::compose(sfirst, r);
       }
       //Last segment
-      return traits::compose(slast, (segmented_find_if_dispatch)(traits::begin(slast), traits::local(last), pred, is_local_seg_t(), local_cat_t()));
+      {
+         const local_iterator ll = traits::local(last);
+         const local_iterator r = (segmented_find_if_dispatch)(traits::begin(slast), traits::local(last), pred, is_local_seg_t(), local_cat_t());
+         if (r != ll)
+            return traits::compose(sfirst, r);
+      }
    }
+   return last;
 }
 
 } // namespace detail_algo

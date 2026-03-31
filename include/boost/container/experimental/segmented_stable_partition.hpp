@@ -96,9 +96,9 @@ OuterIter stable_partition_scan(SegIt first, SegIt last, OuterIter result,
 
    typedef sp_chained_composer<Composer, traits> composer_t;
 
-   segment_iterator        scur = traits::segment(first);
+   segment_iterator       scur  = traits::segment(first);
    segment_iterator const slast = traits::segment(last);
-   local_iterator          lcur = traits::local(first);
+   local_iterator         lcur  = traits::local(first);
 
    if(scur == slast) {
       result = stable_partition_scan(lcur, traits::local(last), result, composer_t(composer, scur), pred, is_local_seg_t());

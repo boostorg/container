@@ -64,9 +64,9 @@ void set_symmetric_difference_scan(SegIt first, SegIt last, InIter2& first2, Sen
    typedef typename segmented_iterator_traits
       <local_iterator>::is_segmented_iterator is_local_seg_t;
 
-   segment_iterator scur  = traits::segment(first);
-   segment_iterator slast = traits::segment(last);
-   local_iterator lcur = traits::local(first);
+   segment_iterator       scur  = traits::segment(first);
+   segment_iterator const slast = traits::segment(last);
+   local_iterator         lcur  = traits::local(first);
 
    if(scur == slast) {
       set_symmetric_difference_scan(lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());

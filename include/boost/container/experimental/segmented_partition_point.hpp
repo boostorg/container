@@ -117,25 +117,35 @@ SegIter segmented_partition_point_dispatch
    segment_iterator const slast = traits::segment(last);
 
    if(scur == slast) {
-      return traits::compose(scur, 
-         (segmented_partition_point_dispatch)(traits::local(first), traits::local(last), pred, is_local_seg_t(), local_cat_t()));
+      const local_iterator ll = traits::local(last);
+      const local_iterator r  = (segmented_partition_point_dispatch)
+            (traits::local(first), ll, pred, is_local_seg_t(), local_cat_t());
+      if (r != ll)
+         return traits::compose(scur, r);
    }
    else {
-      {
-         local_iterator lcur =
-            (segmented_partition_point_dispatch)(traits::local(first), traits::end(scur), pred, is_local_seg_t(), local_cat_t());
-         if (lcur != traits::end(scur))
-            return traits::compose(scur, lcur);
+      {  //first segment
+         const local_iterator le = traits::end(scur);
+         const local_iterator r = (segmented_partition_point_dispatch)
+            (traits::local(first), le, pred, is_local_seg_t(), local_cat_t());
+         if (r != le)
+            return traits::compose(scur, r);
       }
-
+      //middle segments
       for(++scur; scur != slast; ++scur) {
-         local_iterator lcur =
-            (segmented_partition_point_dispatch)(traits::begin(scur), traits::end(scur), pred, is_local_seg_t(), local_cat_t());
-         if(lcur != traits::end(scur))
-            return traits::compose(scur, lcur);
+         const local_iterator le = traits::end(scur);
+         const local_iterator r = (segmented_partition_point_dispatch)
+            (traits::begin(scur), le, pred, is_local_seg_t(), local_cat_t());
+         if (r != le)
+            return traits::compose(scur, r);
       }
-      return traits::compose(slast, 
-         (segmented_partition_point_dispatch)(traits::begin(scur), traits::local(last), pred, is_local_seg_t(), local_cat_t()));
+      {  //last segment
+         const local_iterator ll = traits::local(last);
+         const local_iterator r = (segmented_partition_point_dispatch)
+            (traits::begin(scur), ll, pred, is_local_seg_t(), local_cat_t());
+         if (r != ll)
+            return traits::compose(scur, r);
+      }
    }
    return last;
 }

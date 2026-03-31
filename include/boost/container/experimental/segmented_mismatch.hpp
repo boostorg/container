@@ -131,8 +131,9 @@ std::pair<SegIter, InpIter2> segmented_mismatch_dispatch
    segment_iterator const slast  = traits::segment(last1);
 
    if(sfirst == slast) {
-      const local_return_t r = (segmented_mismatch_dispatch)(traits::local(first1), traits::local(last1), first2, pred, is_local_seg_t(), local_cat_t());
-      return return_t(traits::compose(sfirst, r.first), r.second);
+      const local_iterator ll = traits::local(last1);
+      const local_return_t r = (segmented_mismatch_dispatch)(traits::local(first1), ll, first2, pred, is_local_seg_t(), local_cat_t());
+      return return_t((r.first != ll) ? traits::compose(sfirst, r.first) : last1, r.second);
    }
    else {
       // First segment
@@ -150,8 +151,9 @@ std::pair<SegIter, InpIter2> segmented_mismatch_dispatch
       }
 
       // Last segment
-      r = (segmented_mismatch_dispatch)(traits::begin(slast), traits::local(last1), r.second, pred, is_local_seg_t(), local_cat_t());
-      return return_t(traits::compose(sfirst, r.first), r.second);
+      le = traits::local(last1);
+      r = (segmented_mismatch_dispatch)(traits::begin(slast), le, r.second, pred, is_local_seg_t(), local_cat_t());
+      return return_t((r.first != le) ? traits::compose(sfirst, r.first) : last1, r.second);
    }
 }
 

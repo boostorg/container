@@ -42,6 +42,9 @@ FwdIt segmented_remove_if(FwdIt first, Sent last, Predicate pred)
 
    FwdIt next = first;
    ++next;
+   //TODO: This is not the most efficient way to implement segmented_remove_if
+   //because it does not take advantage that both ranges are segmented,
+   //but it is the simplest way to implement it
    return segmented_remove_copy_if(next, last, first, pred);
 }
 

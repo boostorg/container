@@ -101,24 +101,27 @@ SegIt generate_n_scan(SegIt first, SegIt last, Size& count, Generator& gen, segm
    typedef typename traits::segment_iterator segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
 
-   segment_iterator scur  = traits::segment(first);
-   segment_iterator slast = traits::segment(last);
+   segment_iterator       scur  = traits::segment(first);
+   segment_iterator const slast = traits::segment(last);
 
    if(scur == slast) {
-      return traits::compose(scur, generate_n_scan(traits::local(first), traits::local(last), count, gen, is_local_seg_t()));
+      const local_iterator ll = traits::local(last);
+      const local_iterator r = (generate_n_scan)(traits::local(first), ll, count, gen, is_local_seg_t());
+      return (r != ll) ? traits::compose(scur, r) : last;
    }
    else {
-      local_iterator lcur = generate_n_scan(traits::local(first), traits::end(scur), count, gen, is_local_seg_t());
-      if(count > 0) {
-         for(++scur; scur != slast; ++scur) {
-            lcur = generate_n_scan(traits::begin(scur), traits::end(scur), count, gen, is_local_seg_t());
-            if(!count)
-               break;
-         }
-         if(count > 0 && scur == slast)
-            lcur = generate_n_scan(traits::begin(slast), traits::local(last), count, gen, is_local_seg_t());
+      local_iterator r = generate_n_scan(traits::local(first), traits::end(scur), count, gen, is_local_seg_t());
+      if (!count)
+         return traits::compose(scur, r);
+
+      for (++scur; scur != slast; ++scur) {
+         r = generate_n_scan(traits::begin(scur), traits::end(scur), count, gen, is_local_seg_t());
+         if (!count)
+            return traits::compose(scur, r);
       }
-      return traits::compose(scur, lcur);
+      const local_iterator ll = traits::local(last);
+      r = generate_n_scan(traits::begin(slast), ll, count, gen, is_local_seg_t());
+      return (r != ll) ? traits::compose(scur, r) : last;
    }
 }
 
