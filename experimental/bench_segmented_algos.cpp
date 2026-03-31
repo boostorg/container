@@ -87,7 +87,7 @@ volatile int sink = 0;
    #elif defined(__GNUC__)
       #define BOOST_CONTAINER_BENCH_CLOBBER()   asm volatile("" : : : "memory")
       //#define BOOST_CONTAINER_BENCH_ESCAPE(p)   asm volatile("" : : "g"(p) : "memory")
-      #define BOOST_CONTAINER_BENCH_ESCAPE(p)   asm volatile("" : "+r,m"(x) : : "memory")
+      #define BOOST_CONTAINER_BENCH_ESCAPE(p)   asm volatile("" : "+r,m"(p) : : "memory")
 
    #else
       #define BOOST_CONTAINER_BENCH_CLOBBER()   ((void)0)
