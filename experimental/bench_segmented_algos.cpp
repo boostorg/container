@@ -12,6 +12,7 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
+#include <cmath>
 #include <cstring>
 #include <utility>
 #include <typeinfo>
@@ -74,6 +75,26 @@ namespace bc = boost::container;
 
 volatile int sink = 0;
 
+//#define BOOST_CONTAINER_SEGMENTED_ALGO_NO_BARRIERS
+
+#ifdef BOOST_CONTAINER_SEGMENTED_ALGO_NO_BARRIERS
+   #define BOOST_CONTAINER_BENCH_CLOBBER()   ((void)0)
+   #define BOOST_CONTAINER_BENCH_ESCAPE(p)   ((void)(p))
+#else
+   #if defined(_MSC_VER)
+      #define BOOST_CONTAINER_BENCH_CLOBBER()   _ReadWriteBarrier()
+      #define BOOST_CONTAINER_BENCH_ESCAPE(p)   (sink = *static_cast<int*>(p))
+   #elif defined(__GNUC__)
+      #define BOOST_CONTAINER_BENCH_CLOBBER()   asm volatile("" : : : "memory")
+      //#define BOOST_CONTAINER_BENCH_ESCAPE(p)   asm volatile("" : : "g"(p) : "memory")
+      #define BOOST_CONTAINER_BENCH_ESCAPE(p)   asm volatile("" : "+r,m"(x) : : "memory")
+
+   #else
+      #define BOOST_CONTAINER_BENCH_CLOBBER()   ((void)0)
+      #define BOOST_CONTAINER_BENCH_ESCAPE(p)   ((void)(p))
+   #endif
+#endif
+
 #define BOOST_CONTAINER_SEGMENTED_ALGO_USE_MEDIAN_CLOCK
 
 #ifdef BOOST_CONTAINER_SEGMENTED_ALGO_USE_MEDIAN_CLOCK
@@ -98,7 +119,7 @@ class cpu_timer
 
       std::sort(samples_.begin(), samples_.end());
 
-      std::size_t trim = samples_.size() / 20u; // Drop 5% low and high values.
+         std::size_t trim = samples_.size() / 20u; // Drop 5% low and high values.
       if(trim * 2u >= samples_.size())
          trim = 0u;
 
@@ -160,22 +181,8 @@ using cpu_timer = boost::move_detail::cpu_timer;
 #endif
 
 
-void clobber() {
-#if defined(_MSC_VER)
-   _ReadWriteBarrier();
-#else
-    asm volatile("" : : : "memory");
-#endif
-}
-
-inline void escape(void* p)
-{
-   #if defined(_MSC_VER)
-   sink = *static_cast<int*>(p);
-   #elif defined(__GNUC__)
-   asm volatile("" : : "g"(p) : "memory");
-   #endif
-}
+BOOST_CONTAINER_FORCEINLINE void clobber()       { BOOST_CONTAINER_BENCH_CLOBBER(); }
+BOOST_CONTAINER_FORCEINLINE void escape(void* p) { BOOST_CONTAINER_BENCH_ESCAPE(p); }
 
 //////////////////////////////////////////////////////////////////////////////
 // Value types
@@ -706,6 +713,10 @@ void fill_test_data(bc::nest<T,A,O>& c, std::size_t n)
 // Benchmark helpers
 //////////////////////////////////////////////////////////////////////////////
 
+#ifndef BENCH_REPEATS
+#define BENCH_REPEATS 10
+#endif
+
 inline double calc_ns_per_elem(nanosecond_type ns,
                                std::size_t iters, std::size_t elems)
 {
@@ -721,10 +732,21 @@ inline void print_subheader()
              << '\n';
 }
 
+struct geomean_accumulator
+{
+   double log_sum;
+   int    count;
+
+   void reset()  { log_sum = 0.0; count = 0; }
+   void add(double ratio) { if(ratio > 0.0) { log_sum += std::log(ratio); ++count; } }
+   double result() const  { return count > 0 ? std::exp(log_sum / count) : 0.0; }
+} g_geomean = { 0.0, 0 };
+
 inline void print_ratio(const char* algo, const char*,
                         double std_ns, double seg_ns)
 {
    double ratio = (seg_ns > 0.0) ? std_ns / seg_ns : 0.0;
+   g_geomean.add(ratio);
    std::cout << std::left  << std::setw(24) << algo
              << std::right << std::setw(20) << std::fixed << std::setprecision(2) << ((ratio < 1.0) ? "! " : "") << ratio << 'x'
              << std::right << std::setw(20) << std::fixed << std::setprecision(3) << std_ns
@@ -742,25 +764,28 @@ void bench_all_of(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      result = bench_detail::all_of(c.begin(), c.end(), pred) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = bench_detail::all_of(c.begin(), c.end(), pred) ? 1 : 0;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      result = bc::segmented_all_of(c.begin(), c.end(), pred) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = bc::segmented_all_of(c.begin(), c.end(), pred) ? 1 : 0;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -770,25 +795,28 @@ void bench_any_of(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      result = bench_detail::any_of(c.begin(), c.end(), pred) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = bench_detail::any_of(c.begin(), c.end(), pred) ? 1 : 0;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      result = bc::segmented_any_of(c.begin(), c.end(), pred) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = bc::segmented_any_of(c.begin(), c.end(), pred) ? 1 : 0;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -798,25 +826,28 @@ void bench_none_of(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      result = bench_detail::none_of(c.begin(), c.end(), pred) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = bench_detail::none_of(c.begin(), c.end(), pred) ? 1 : 0;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      result = bc::segmented_none_of(c.begin(), c.end(), pred) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = bc::segmented_none_of(c.begin(), c.end(), pred) ? 1 : 0;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -826,29 +857,32 @@ void bench_for_each(const C &c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      summer<VT> s;
-      s = std::for_each(c.begin(), c.end(), s);
-      result = s.sum;
+      for (std::size_t i = 0; i < iters; ++i) {
+         summer<VT> s;
+         s = std::for_each(c.begin(), c.end(), s);
+         result = s.sum;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      summer<VT> s;
-      s = bc::segmented_for_each(c.begin(), c.end(), s);
-      result = s.sum;
+      for (std::size_t i = 0; i < iters; ++i) {
+         summer<VT> s;
+         s = bc::segmented_for_each(c.begin(), c.end(), s);
+         result = s.sum;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("for_each", cname, r1, r2);
 }
 
@@ -858,25 +892,28 @@ void bench_copy(const C &c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::copy(c.begin(), c.end(), out.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         std::copy(c.begin(), c.end(), out.begin());
+         clobber();
+      }
       t1.stop();
-      escape(&out[0]);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_copy(c.begin(), c.end(), out.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         bc::segmented_copy(c.begin(), c.end(), out.begin());
+         clobber();
+      }
       t2.stop();
-      escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("copy", cname, r1, r2);
 }
 
@@ -887,25 +924,28 @@ void bench_copy_if(const C &c, std::size_t iters, const char* cname,
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred);
+      for (std::size_t i = 0; i < iters; ++i) {
+         bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred);
+         clobber();
+      }
       t1.stop();
-      escape(&out[0]);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred);
+      for (std::size_t i = 0; i < iters; ++i) {
+         bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred);
+         clobber();
+      }
       t2.stop();
-      escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -915,27 +955,30 @@ void bench_fill(const C &c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    VT val(42);
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // fill is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::fill(c2.begin(), c2.end(), val);
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // fill is in-place, so make a copy for each iteration
+         std::fill(c2.begin(), c2.end(), val);
+         clobber();
+      }
       t1.stop();
-      escape(&val);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // fill is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_fill(c2.begin(), c2.end(), val);
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // fill is in-place, so make a copy for each iteration
+         bc::segmented_fill(c2.begin(), c2.end(), val);
+         clobber();
+      }
       t2.stop();
-      escape(&val);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("fill", cname, r1, r2);
 }
 
@@ -945,25 +988,28 @@ void bench_count(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      result = static_cast<int>(std::count(c.begin(), c.end(), val));
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = static_cast<int>(std::count(c.begin(), c.end(), val));
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      result = static_cast<int>(bc::segmented_count(c.begin(), c.end(), val));
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = static_cast<int>(bc::segmented_count(c.begin(), c.end(), val));
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -973,25 +1019,28 @@ void bench_count_if(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      result = static_cast<int>(std::count_if(c.begin(), c.end(), pred));
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = static_cast<int>(std::count_if(c.begin(), c.end(), pred));
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      result = static_cast<int>(bc::segmented_count_if(c.begin(), c.end(), pred));
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = static_cast<int>(bc::segmented_count_if(c.begin(), c.end(), pred));
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1001,27 +1050,30 @@ void bench_find(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      typename C::const_iterator it = std::find(c.begin(), c.end(), val);
-      result = (it == c.end()) ? 0 : 1;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = std::find(c.begin(), c.end(), val);
+         result = (it == c.end()) ? 0 : 1;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      typename C::const_iterator it = bc::segmented_find(c.begin(), c.end(), val);
-      result = (it == c.end()) ? 0 : 1;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = bc::segmented_find(c.begin(), c.end(), val);
+         result = (it == c.end()) ? 0 : 1;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1031,27 +1083,30 @@ void bench_find_if(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      typename C::const_iterator it = std::find_if(c.begin(), c.end(), pred);
-      result = (it != c.end()) ? int_value(*it) : -1;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = std::find_if(c.begin(), c.end(), pred);
+         result = (it != c.end()) ? int_value(*it) : -1;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      typename C::const_iterator it = bc::segmented_find_if(c.begin(), c.end(), pred);
-      result = (it != c.end()) ? int_value(*it) : -1;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = bc::segmented_find_if(c.begin(), c.end(), pred);
+         result = (it != c.end()) ? int_value(*it) : -1;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1061,27 +1116,30 @@ void bench_find_if_not(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      typename C::const_iterator it = bench_detail::find_if_not(c.begin(), c.end(), pred);
-      result = (it != c.end()) ? int_value(*it) : -1;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = bench_detail::find_if_not(c.begin(), c.end(), pred);
+         result = (it != c.end()) ? int_value(*it) : -1;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      typename C::const_iterator it = bc::segmented_find_if_not(c.begin(), c.end(), pred);
-      result = (it != c.end()) ? int_value(*it) : -1;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = bc::segmented_find_if_not(c.begin(), c.end(), pred);
+         result = (it != c.end()) ? int_value(*it) : -1;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1091,27 +1149,30 @@ void bench_find_last(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      typename C::const_iterator it = bench_detail::find_last(c.begin(), c.end(), val);
-      result = (it == c.end()) ? 0 : 1;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = bench_detail::find_last(c.begin(), c.end(), val);
+         result = (it == c.end()) ? 0 : 1;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      typename C::const_iterator it = bc::segmented_find_last(c.begin(), c.end(), val);
-      result = (it == c.end()) ? 0 : 1;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = bc::segmented_find_last(c.begin(), c.end(), val);
+         result = (it == c.end()) ? 0 : 1;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1121,27 +1182,30 @@ void bench_find_last_if(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      typename C::const_iterator it = bench_detail::find_last_if(c.begin(), c.end(), pred);
-      result = (it != c.end()) ? int_value(*it) : -1;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = bench_detail::find_last_if(c.begin(), c.end(), pred);
+         result = (it != c.end()) ? int_value(*it) : -1;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      typename C::const_iterator it = bc::segmented_find_last_if(c.begin(), c.end(), pred);
-      result = (it != c.end()) ? int_value(*it) : -1;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = bc::segmented_find_last_if(c.begin(), c.end(), pred);
+         result = (it != c.end()) ? int_value(*it) : -1;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1151,27 +1215,30 @@ void bench_find_last_if_not(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      typename C::const_iterator it = bench_detail::find_last_if_not(c.begin(), c.end(), pred);
-      result = (it != c.end()) ? int_value(*it) : -1;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = bench_detail::find_last_if_not(c.begin(), c.end(), pred);
+         result = (it != c.end()) ? int_value(*it) : -1;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      typename C::const_iterator it = bc::segmented_find_last_if_not(c.begin(), c.end(), pred);
-      result = (it != c.end()) ? int_value(*it) : -1;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = bc::segmented_find_last_if_not(c.begin(), c.end(), pred);
+         result = (it != c.end()) ? int_value(*it) : -1;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1181,25 +1248,28 @@ void bench_equal(const C &c, const C &c2, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1211,27 +1281,30 @@ void bench_replace(const C &c, std::size_t iters, const char* cname,
    typedef typename C::value_type VT;
    VT v = *c.begin();
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // replace is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::replace(c2.begin(), c2.end(), old_val, new_val);
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // replace is in-place, so make a copy for each iteration
+         std::replace(c2.begin(), c2.end(), old_val, new_val);
+         clobber();
+      }
       t1.stop();
-      escape(&v);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // replace is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_replace(c2.begin(), c2.end(), old_val, new_val);
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // replace is in-place, so make a copy for each iteration
+         bc::segmented_replace(c2.begin(), c2.end(), old_val, new_val);
+         clobber();
+      }
       t2.stop();
-      escape(&v);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1243,27 +1316,30 @@ void bench_replace_if(const C &c, std::size_t iters, const char* cname,
    typedef typename C::value_type VT;
    VT v = *c.begin();
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // replace_if is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::replace_if(c2.begin(), c2.end(), pred, new_val);
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // replace_if is in-place, so make a copy for each iteration
+         std::replace_if(c2.begin(), c2.end(), pred, new_val);
+         clobber();
+      }
       t1.stop();
-      escape(&v);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // replace_if is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_replace_if(c2.begin(), c2.end(), pred, new_val);
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // replace_if is in-place, so make a copy for each iteration
+         bc::segmented_replace_if(c2.begin(), c2.end(), pred, new_val);
+         clobber();
+      }
       t2.stop();
-      escape(&v);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1273,25 +1349,28 @@ void bench_transform(const C &c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::transform(c.begin(), c.end(), out.begin(), add_one<VT>());
+      for (std::size_t i = 0; i < iters; ++i) {
+         std::transform(c.begin(), c.end(), out.begin(), add_one<VT>());
+         clobber();
+      }
       t1.stop();
-      escape(&out[0]);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>());
+      for (std::size_t i = 0; i < iters; ++i) {
+         bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>());
+         clobber();
+      }
       t2.stop();
-      escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("transform", cname, r1, r2);
 }
 
@@ -1303,27 +1382,30 @@ void bench_fill_n(const C &c, std::size_t iters, const char* cname)
    typename C::difference_type n =
       static_cast<typename C::difference_type>(c.size());
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // fill_n is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::fill_n(c2.begin(), n, val);
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // fill_n is in-place, so make a copy for each iteration
+         std::fill_n(c2.begin(), n, val);
+         clobber();
+      }
       t1.stop();
-      escape(&val);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // fill_n is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_fill_n(c2.begin(), n, val);
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // fill_n is in-place, so make a copy for each iteration
+         bc::segmented_fill_n(c2.begin(), n, val);
+         clobber();
+      }
       t2.stop();
-      escape(&val);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("fill_n", cname, r1, r2);
 }
 
@@ -1335,25 +1417,28 @@ void bench_copy_n(const C &c, std::size_t iters, const char* cname)
    typename C::difference_type n =
       static_cast<typename C::difference_type>(c.size());
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      bench_detail::copy_n(c.begin(), n, out.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         bench_detail::copy_n(c.begin(), n, out.begin());
+         clobber();
+      }
       t1.stop();
-      escape(&out[0]);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_copy_n(c.begin(), n, out.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         bc::segmented_copy_n(c.begin(), n, out.begin());
+         clobber();
+      }
       t2.stop();
-      escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("copy_n", cname, r1, r2);
 }
 
@@ -1363,29 +1448,32 @@ void bench_generate(const C &c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // generate is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::generate(c2.begin(), c2.end(), counter<VT>());
-      result = int_value(*c2.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // generate is in-place, so make a copy for each iteration
+         std::generate(c2.begin(), c2.end(), counter<VT>());
+         result = int_value(*c2.begin());
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // generate is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_generate(c2.begin(), c2.end(), counter<VT>());
-      result = int_value(*c2.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // generate is in-place, so make a copy for each iteration
+         bc::segmented_generate(c2.begin(), c2.end(), counter<VT>());
+         result = int_value(*c2.begin());
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("generate", cname, r1, r2);
 }
 
@@ -1397,29 +1485,32 @@ void bench_generate_n(const C &c, std::size_t iters, const char* cname)
    typename C::difference_type n =
       static_cast<typename C::difference_type>(c.size());
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // generate_n is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::generate_n(c2.begin(), n, counter<VT>());
-      result = int_value(*c2.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // generate_n is in-place, so make a copy for each iteration
+         std::generate_n(c2.begin(), n, counter<VT>());
+         result = int_value(*c2.begin());
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // generate_n is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_generate_n(c2.begin(), n, counter<VT>());
-      result = int_value(*c2.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // generate_n is in-place, so make a copy for each iteration
+         bc::segmented_generate_n(c2.begin(), n, counter<VT>());
+         result = int_value(*c2.begin());
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("generate_n", cname, r1, r2);
 }
 
@@ -1429,29 +1520,32 @@ void bench_remove(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // remove is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      typename C::iterator it = std::remove(c2.begin(), c2.end(), val);
-      result = (it == c2.end()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // remove is in-place, so make a copy for each iteration
+         typename C::iterator it = std::remove(c2.begin(), c2.end(), val);
+         result = (it == c2.end()) ? 1 : 0;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // remove is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      typename C::iterator it = bc::segmented_remove(c2.begin(), c2.end(), val);
-      result = (it == c2.end()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // remove is in-place, so make a copy for each iteration
+         typename C::iterator it = bc::segmented_remove(c2.begin(), c2.end(), val);
+         result = (it == c2.end()) ? 1 : 0;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1461,29 +1555,32 @@ void bench_remove_if(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // remove_if is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      typename C::iterator it = std::remove_if(c2.begin(), c2.end(), pred);
-      result = (it == c2.end()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // remove_if is in-place, so make a copy for each iteration
+         typename C::iterator it = std::remove_if(c2.begin(), c2.end(), pred);
+         result = (it == c2.end()) ? 1 : 0;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // remove_if is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      typename C::iterator it = bc::segmented_remove_if(c2.begin(), c2.end(), pred);
-      result = (it == c2.end()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // remove_if is in-place, so make a copy for each iteration
+         typename C::iterator it = bc::segmented_remove_if(c2.begin(), c2.end(), pred);
+         result = (it == c2.end()) ? 1 : 0;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1494,25 +1591,28 @@ void bench_remove_copy(const C &c, std::size_t iters, const char* cname,
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::remove_copy(c.begin(), c.end(), out.begin(), val);
+      for (std::size_t i = 0; i < iters; ++i) {
+         std::remove_copy(c.begin(), c.end(), out.begin(), val);
+         clobber();
+      }
       t1.stop();
-      escape(&out[0]);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val);
+      for (std::size_t i = 0; i < iters; ++i) {
+         bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val);
+         clobber();
+      }
       t2.stop();
-      escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1523,25 +1623,28 @@ void bench_remove_copy_if(const C &c, std::size_t iters, const char* cname,
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::remove_copy_if(c.begin(), c.end(), out.begin(), pred);
+      for (std::size_t i = 0; i < iters; ++i) {
+         std::remove_copy_if(c.begin(), c.end(), out.begin(), pred);
+         clobber();
+      }
       t1.stop();
-      escape(&out[0]);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred);
+      for (std::size_t i = 0; i < iters; ++i) {
+         bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred);
+         clobber();
+      }
       t2.stop();
-      escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1550,29 +1653,32 @@ void bench_reverse(const C &c, std::size_t iters, const char* cname)
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // reverse is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::reverse(c2.begin(), c2.end());
-      result = int_value(*c2.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // reverse is in-place, so make a copy for each iteration
+         std::reverse(c2.begin(), c2.end());
+         result = int_value(*c2.begin());
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // reverse is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_reverse(c2.begin(), c2.end());
-      result = int_value(*c2.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // reverse is in-place, so make a copy for each iteration
+         bc::segmented_reverse(c2.begin(), c2.end());
+         result = int_value(*c2.begin());
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("reverse", cname, r1, r2);
 }
 
@@ -1582,25 +1688,28 @@ void bench_reverse_copy(const C &c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::reverse_copy(c.begin(), c.end(), out.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         std::reverse_copy(c.begin(), c.end(), out.begin());
+         clobber();
+      }
       t1.stop();
-      escape(&out[0]);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_reverse_copy(c.begin(), c.end(), out.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         bc::segmented_reverse_copy(c.begin(), c.end(), out.begin());
+         clobber();
+      }
       t2.stop();
-      escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("reverse_copy", cname, r1, r2);
 }
 
@@ -1610,25 +1719,28 @@ void bench_is_sorted(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      result = bench_detail::is_sorted(c.begin(), c.end()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = bench_detail::is_sorted(c.begin(), c.end()) ? 1 : 0;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      result = bc::segmented_is_sorted(c.begin(), c.end()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = bc::segmented_is_sorted(c.begin(), c.end()) ? 1 : 0;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1638,27 +1750,30 @@ void bench_is_sorted_until(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      typename C::const_iterator it = bench_detail::is_sorted_until(c.begin(), c.end());
-      result = (it == c.end()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = bench_detail::is_sorted_until(c.begin(), c.end());
+         result = (it == c.end()) ? 1 : 0;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      typename C::const_iterator it = bc::segmented_is_sorted_until(c.begin(), c.end());
-      result = (it == c.end()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = bc::segmented_is_sorted_until(c.begin(), c.end());
+         result = (it == c.end()) ? 1 : 0;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1668,25 +1783,28 @@ void bench_is_partitioned(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      result = bench_detail::is_partitioned(c.begin(), c.end(), pred) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = bench_detail::is_partitioned(c.begin(), c.end(), pred) ? 1 : 0;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      result = bc::segmented_is_partitioned(c.begin(), c.end(), pred) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = bc::segmented_is_partitioned(c.begin(), c.end(), pred) ? 1 : 0;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1696,25 +1814,28 @@ void bench_merge(const C &c, const C &c2, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size() + c2.size());
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+         clobber();
+      }
       t1.stop();
-      escape(&out[0]);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+         clobber();
+      }
       t2.stop();
-      escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("merge", cname, r1, r2);
 }
 
@@ -1724,25 +1845,28 @@ void bench_mismatch(const C &c, const C &c2, std::size_t iters, const char* cnam
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1752,31 +1876,34 @@ void bench_swap_ranges(const C &c, std::size_t iters, const char* cname)
    C c2(c);
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c3(c);
-      C c4(c2);
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::swap_ranges(c3.begin(), c3.end(), c4.begin());
-      result = int_value(*c3.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c3(c);
+         C c4(c2);
+         std::swap_ranges(c3.begin(), c3.end(), c4.begin());
+         result = int_value(*c3.begin());
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c3(c);
-      C c4(c2);
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_swap_ranges(c3.begin(), c3.end(), c4.begin());
-      result = int_value(*c3.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c3(c);
+         C c4(c2);
+         bc::segmented_swap_ranges(c3.begin(), c3.end(), c4.begin());
+         result = int_value(*c3.begin());
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("swap_ranges", cname, r1, r2);
 }
 
@@ -1787,27 +1914,30 @@ void bench_search(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      typename C::const_iterator it = std::search(c.begin(), c.end(), pattern, pattern + pat_size);
-      result = (it == c.end()) ? 0 : 1;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = std::search(c.begin(), c.end(), pattern, pattern + pat_size);
+         result = (it == c.end()) ? 0 : 1;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      typename C::const_iterator it = bc::segmented_search(c.begin(), c.end(), pattern, pattern + pat_size);
-      result = (it == c.end()) ? 0 : 1;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = bc::segmented_search(c.begin(), c.end(), pattern, pattern + pat_size);
+         result = (it == c.end()) ? 0 : 1;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1818,27 +1948,30 @@ void bench_search_n(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      typename C::const_iterator it = std::search_n(c.begin(), c.end(), count, val);
-      result = (it == c.end()) ? 0 : 1;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = std::search_n(c.begin(), c.end(), count, val);
+         result = (it == c.end()) ? 0 : 1;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      typename C::const_iterator it = bc::segmented_search_n(c.begin(), c.end(), count, val);
-      result = (it == c.end()) ? 0 : 1;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = bc::segmented_search_n(c.begin(), c.end(), count, val);
+         result = (it == c.end()) ? 0 : 1;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1848,25 +1981,28 @@ void bench_set_union(const C &c, const C &c2, std::size_t iters, const char* cna
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size() + c2.size());
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+         clobber();
+      }
       t1.stop();
-      escape(&out[0]);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+         clobber();
+      }
       t2.stop();
-      escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("set_union", cname, r1, r2);
 }
 
@@ -1876,25 +2012,28 @@ void bench_set_difference(const C &c, const C &c2, std::size_t iters, const char
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+         clobber();
+      }
       t1.stop();
-      escape(&out[0]);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+         clobber();
+      }
       t2.stop();
-      escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("set_difference", cname, r1, r2);
 }
 
@@ -1904,25 +2043,28 @@ void bench_set_intersection(const C &c, const C &c2, std::size_t iters, const ch
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+         clobber();
+      }
       t1.stop();
-      escape(&out[0]);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+         clobber();
+      }
       t2.stop();
-      escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("set_intersection", cname, r1, r2);
 }
 
@@ -1932,25 +2074,28 @@ void bench_set_symmetric_difference(const C &c, const C &c2, std::size_t iters, 
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size() + c2.size());
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+         clobber();
+      }
       t1.stop();
-      escape(&out[0]);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+      for (std::size_t i = 0; i < iters; ++i) {
+         bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
+         clobber();
+      }
       t2.stop();
-      escape(&out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("set_symmetric_difference", cname, r1, r2);
 }
 
@@ -1960,29 +2105,32 @@ void bench_partition(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // partition is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      typename C::iterator it = std::partition(c2.begin(), c2.end(), pred);
-      result = (it == c2.end()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // partition is in-place, so make a copy for each iteration
+         typename C::iterator it = std::partition(c2.begin(), c2.end(), pred);
+         result = (it == c2.end()) ? 1 : 0;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // partition is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      typename C::iterator it = bc::segmented_partition(c2.begin(), c2.end(), pred);
-      result = (it == c2.end()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // partition is in-place, so make a copy for each iteration
+         typename C::iterator it = bc::segmented_partition(c2.begin(), c2.end(), pred);
+         result = (it == c2.end()) ? 1 : 0;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1992,29 +2140,32 @@ void bench_stable_partition(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // stable_partition is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      typename C::iterator it = std::stable_partition(c2.begin(), c2.end(), pred);
-      result = (it == c2.end()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // stable_partition is in-place, so make a copy for each iteration
+         typename C::iterator it = std::stable_partition(c2.begin(), c2.end(), pred);
+         result = (it == c2.end()) ? 1 : 0;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      C c2(c); // stable_partition is in-place, so make a copy for each iteration
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      typename C::iterator it = bc::segmented_stable_partition(c2.begin(), c2.end(), pred);
-      result = (it == c2.end()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         C c2(c); // stable_partition is in-place, so make a copy for each iteration
+         typename C::iterator it = bc::segmented_stable_partition(c2.begin(), c2.end(), pred);
+         result = (it == c2.end()) ? 1 : 0;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -2025,29 +2176,30 @@ void bench_partition_copy(const C &c, std::size_t iters, const char* cname)
    std::vector<VT> t_out(c.size());
    std::vector<VT> f_out(c.size());
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      bench_detail::partition_copy(c.begin(), c.end(),
-         t_out.begin(), f_out.begin(), is_odd<VT>());
+      for (std::size_t i = 0; i < iters; ++i) {
+         bench_detail::partition_copy(c.begin(), c.end(),
+            t_out.begin(), f_out.begin(), is_odd<VT>());
+         clobber();
+      }
       t1.stop();
-      escape(&t_out[0]);
-      escape(&f_out[0]);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      bc::segmented_partition_copy(c.begin(), c.end(),
-         t_out.begin(), f_out.begin(), is_odd<VT>());
+      for (std::size_t i = 0; i < iters; ++i) {
+         bc::segmented_partition_copy(c.begin(), c.end(),
+            t_out.begin(), f_out.begin(), is_odd<VT>());
+         clobber();
+      }
       t2.stop();
-      escape(&t_out[0]);
-      escape(&f_out[0]);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio("partition_copy", cname, r1, r2);
 }
 
@@ -2057,27 +2209,30 @@ void bench_partition_point(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t1(BENCH_REPEATS);
+   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
       t1.resume();
-      typename C::const_iterator it = bench_detail::partition_point(c.begin(), c.end(), pred);
-      result = (it == c.end()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = bench_detail::partition_point(c.begin(), c.end(), pred);
+         result = (it == c.end()) ? 1 : 0;
+         escape(&result);
+      }
       t1.stop();
-      escape(&result);
    }
 
-   cpu_timer t2(iters);
-   for (std::size_t i = 0; i < iters; ++i) {
-      clobber();
+   cpu_timer t2(BENCH_REPEATS);
+   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
       t2.resume();
-      typename C::const_iterator it = bc::segmented_partition_point(c.begin(), c.end(), pred);
-      result = (it == c.end()) ? 1 : 0;
+      for (std::size_t i = 0; i < iters; ++i) {
+         typename C::const_iterator it = bc::segmented_partition_point(c.begin(), c.end(), pred);
+         result = (it == c.end()) ? 1 : 0;
+         escape(&result);
+      }
       t2.stop();
-      escape(&result);
    }
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
+
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -2090,6 +2245,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
 
+   g_geomean.reset();
    print_subheader();
 
    //all_of
@@ -2283,6 +2439,10 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 
    //transform
    bench_transform(c, iters, cname);
+
+   std::cout << '\n'
+             << std::left  << std::setw(24) << "GEOMEAN"
+             << std::right << std::setw(20) << std::fixed << std::setprecision(2) << g_geomean.result() << "x\n";
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2293,29 +2453,29 @@ template<class T>
 void run_benchmarks()
 {
    #ifdef NDEBUG
-   const std::size_t N    = 500000;
+   const std::size_t N    = 100000;
    const std::size_t iter = 500;
    #else
    const std::size_t N    = 10000;
-   const std::size_t iter = 20;
+   const std::size_t iter = 1;
    #endif
 
    std::cout << "\n=== Segmented algorithm benchmark [" << typeid(T).name() << "] ===\n"
              << "Elements: " << N << "   Iterations: " << iter << "\n\n";
 
    {
-      std::cout << "--- bc::deque<" << typeid(T).name() << "> ---\n";
+         std::cout << "--- bc::deque<" << typeid(T).name() << "> ---\n";
       bc::deque<T> dq;
       fill_test_data(dq, N);
       run_all(dq, iter, "deque");
-      std::cout << "\n";
+         std::cout << "\n";
    }/*
    {
-      std::cout << "--- bc::nest<" << typeid(T).name() << "> ---\n";
+         std::cout << "--- bc::nest<" << typeid(T).name() << "> ---\n";
       bc::nest<T> nt;
       fill_test_data(nt, N);
       run_all(nt, iter, "nest");
-      std::cout << "\n";
+         std::cout << "\n";
    }*/
 }
 
@@ -2325,8 +2485,8 @@ void run_benchmarks()
 
 int main()
 {
-   run_benchmarks<int>();
+   //run_benchmarks<int>();
    run_benchmarks<MyInt>();
-   run_benchmarks<MyFatInt>();
+   //run_benchmarks<MyFatInt>();
    return 0;
 }
