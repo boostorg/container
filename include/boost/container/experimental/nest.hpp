@@ -78,6 +78,22 @@
 #include <emmintrin.h>
 #endif
 
+#if !defined(BOOST_CONTAINER_NEST_NO_PDEP)
+#  if defined(__BMI2__)
+#     define BOOST_CONTAINER_NEST_HAS_PDEP
+#  elif defined(BOOST_MSVC) && defined(__AVX2__) && (defined(_M_X64) || defined(_M_IX86))
+#     define BOOST_CONTAINER_NEST_HAS_PDEP
+#  endif
+#endif
+
+#if defined(BOOST_CONTAINER_NEST_HAS_PDEP)
+#  if defined(BOOST_MSVC)
+#     include <intrin.h>
+#  else
+#     include <immintrin.h>
+#  endif
+#endif
+
 #ifdef __has_builtin
 #define BOOST_CONTAINER_NEST_HAS_BUILTIN(x) __has_builtin(x)
 #else
@@ -103,10 +119,9 @@
   } while(0)
 #endif
 
-/* We use BOOST_CONTAINER_NEST_PREFETCH[_BLOCK] macros rather than proper
- * functions because of https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109985
- */
-
+// We use BOOST_CONTAINER_NEST_PREFETCH[_BLOCK] macros rather than proper
+// functions because of https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109985
+//
 #if defined(BOOST_GCC) || defined(BOOST_CLANG)
 #define BOOST_CONTAINER_NEST_PREFETCH(p) \
 __builtin_prefetch(static_cast<const char*>(static_cast<const void*>(boost::movelib::to_raw_pointer(p))))
@@ -117,15 +132,39 @@ _mm_prefetch(static_cast<const char*>(static_cast<const void*>(boost::movelib::t
 #define BOOST_CONTAINER_NEST_PREFETCH(p) ((void)(p))
 #endif
 
-#define BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb, Block) \
-do{                                                    \
-  Block &p0_ = static_cast<Block&>(*(pbb));           \
-  BOOST_CONTAINER_NEST_PREFETCH(p0_.data());           \
-} while(0)
+#define BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb, N) \
+   do{                                                    \
+      if(BOOST_LIKELY(pbb->mask != 0))\
+      BOOST_CONTAINER_NEST_PREFETCH(static_cast<block_type&>(*(pbb)).data() + (N));\
+   } while(0)\
+//
+
+#define BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb) \
+   BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb, 0)\
+//
+
+//#define BOOST_CONTAINER_NEST_PREFETCH_NEXT_ELEMENT
+
+#if defined(BOOST_CONTAINER_NEST_PREFETCH_NEXT_ELEMENT)
+
+#define BOOST_CONTAINER_NEST_PREFETCH_BLOCK_FIRST(pbb) \
+   BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb, nest_detail::unchecked_countr_zero(pbb->mask)); \
+//
+
+#define BOOST_CONTAINER_NEST_PREFETCH_BLOCK_LAST(pbb) \
+   BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb, int(N - 1 - (std::size_t)nest_detail::unchecked_countl_zero(pbb->mask))); \
+//
+
+#else
+
+#define BOOST_CONTAINER_NEST_PREFETCH_BLOCK_FIRST BOOST_CONTAINER_NEST_PREFETCH_BLOCK
+#define BOOST_CONTAINER_NEST_PREFETCH_BLOCK_LAST BOOST_CONTAINER_NEST_PREFETCH_BLOCK
+
+#endif   //BOOST_CONTAINER_NEST_PREFETCH_EXISTING_VALUE
 
 #if defined(BOOST_MSVC)
 #pragma warning(push)
-#pragma warning(disable:4714) /* marked as __forceinline not inlined */
+#pragma warning(disable:4714) // marked as __forceinline not inlined
 #endif
 
 namespace boost {
@@ -265,8 +304,79 @@ BOOST_CONTAINER_FORCEINLINE int unchecked_countl_zero(boost::uint64_t x)
 #endif
 }
 
+//  nth_set_bit: returns the bit-position of the nth set bit (0-indexed) in mask.
+//  Precondition: popcount(mask) > n >= 0.
+//
+//  Two implementations selected at compile time:
+//    1. BMI2 pdep + countr_zero          (BOOST_CONTAINER_NEST_HAS_PDEP)
+//    2. Binary search using popcount      (default fallback)
+//
+//  The default fallback halves the 64-bit mask with popcount at each step
+//  (branching variant). Define BOOST_CONTAINER_NEST_NTH_BIT_BRANCHLESS to
+//  select a branchless arithmetic variant of the same algorithm.
 
+#if defined(BOOST_CONTAINER_NEST_HAS_PDEP)
 
+BOOST_CONTAINER_FORCEINLINE int nth_set_bit(boost::uint64_t mask, int n)
+{
+   return unchecked_countr_zero(_pdep_u64(boost::uint64_t(1) << n, mask));
+}
+
+#elif defined(BOOST_CONTAINER_NEST_NTH_BIT_BRANCHLESS)
+
+BOOST_CONTAINER_FORCEINLINE int nth_set_bit(boost::uint64_t mask, int n)
+{
+   int pos = 0;
+   int c;
+
+   c = boost::core::popcount(boost::uint64_t(mask & boost::uint64_t(0x00000000FFFFFFFFu)));
+   { const int s = (n >= c); pos += s * 32; mask >>= unsigned(s * 32); n -= s * c; }
+
+   c = boost::core::popcount(boost::uint64_t(mask & boost::uint64_t(0x000000000000FFFFu)));
+   { const int s = (n >= c); pos += s * 16; mask >>= unsigned(s * 16); n -= s * c; }
+
+   c = boost::core::popcount(boost::uint64_t(mask & boost::uint64_t(0x00000000000000FFu)));
+   { const int s = (n >= c); pos += s * 8;  mask >>= unsigned(s * 8);  n -= s * c; }
+
+   c = boost::core::popcount(boost::uint64_t(mask & boost::uint64_t(0x000000000000000Fu)));
+   { const int s = (n >= c); pos += s * 4;  mask >>= unsigned(s * 4);  n -= s * c; }
+
+   c = boost::core::popcount(boost::uint64_t(mask & boost::uint64_t(0x0000000000000003u)));
+   { const int s = (n >= c); pos += s * 2;  mask >>= unsigned(s * 2);  n -= s * c; }
+
+   { const int s = (n > 0);  pos += s;      mask >>= unsigned(s); }
+
+   return pos + unchecked_countr_zero(mask);
+}
+
+#else
+
+BOOST_CONTAINER_FORCEINLINE int nth_set_bit(boost::uint64_t mask, int n)
+{
+   int pos = 0;
+   int c;
+
+   c = boost::core::popcount(boost::uint64_t(mask & boost::uint64_t(0x00000000FFFFFFFFu)));
+   if (n >= c) { pos += 32; mask >>= 32; n -= c; }
+
+   c = boost::core::popcount(boost::uint64_t(mask & boost::uint64_t(0x000000000000FFFFu)));
+   if (n >= c) { pos += 16; mask >>= 16; n -= c; }
+
+   c = boost::core::popcount(boost::uint64_t(mask & boost::uint64_t(0x00000000000000FFu)));
+   if (n >= c) { pos += 8;  mask >>= 8;  n -= c; }
+
+   c = boost::core::popcount(boost::uint64_t(mask & boost::uint64_t(0x000000000000000Fu)));
+   if (n >= c) { pos += 4;  mask >>= 4;  n -= c; }
+
+   c = boost::core::popcount(boost::uint64_t(mask & boost::uint64_t(0x0000000000000003u)));
+   if (n >= c) { pos += 2;  mask >>= 2;  n -= c; }
+
+   if (n > 0)  { pos += 1;  mask >>= 1; }
+
+   return pos + unchecked_countr_zero(mask);
+}
+
+#endif
 
 
 
@@ -317,7 +427,8 @@ struct block_base
    block_base()
    {
       this->reset();
-      mask = 1; /* sentinel */
+      mask = 1; // sentinel
+      //mask = 0; // sentinel
    }
 
    BOOST_CONTAINER_FORCEINLINE void link_available_before(pointer p) BOOST_NOEXCEPT
@@ -420,7 +531,8 @@ struct block_base
 
    block_base(BOOST_RV_REF(block_base) x) BOOST_NOEXCEPT
    {
-      mask = 1; /* sentinel */
+      //mask = 0; // sentinel
+      mask = 1; // sentinel
       this->operator=(boost::move(x));
    }
 
@@ -605,20 +717,22 @@ public:
 
    BOOST_CONTAINER_FORCEINLINE reference operator*() const BOOST_NOEXCEPT
    {
-      return *operator->();
+      return static_cast<block_type&>(*pbb).data()[n];
    }
 
    BOOST_CONTAINER_FORCEINLINE nest_iterator& operator++() BOOST_NOEXCEPT
    {
-      mask_type m = pbb->mask & (full << 1 << std::size_t(n));
-      if(BOOST_UNLIKELY(m == 0)) {
+      mask_type mask = pbb->mask & (full << 1 << std::size_t(n));
+      const bool next_block = mask == 0;
+      if (BOOST_UNLIKELY(next_block)) {
          pbb = pbb->next;
+         mask = pbb->mask;
          BOOST_IF_CONSTEXPR(Prefetch) {
-            BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb->next, block_type);
+            BOOST_CONTAINER_NEST_PREFETCH_BLOCK_FIRST(pbb);
+            BOOST_CONTAINER_NEST_PREFETCH(pbb->next);
          }
-         m = pbb->mask;
       }
-      n = nest_detail::unchecked_countr_zero(m);
+      n = nest_detail::unchecked_countr_zero(mask);
       return *this;
    }
 
@@ -631,15 +745,18 @@ public:
 
    BOOST_CONTAINER_FORCEINLINE nest_iterator& operator--() BOOST_NOEXCEPT
    {
-      mask_type m = pbb->mask & (full >> 1 >> ((N - 1) - std::size_t(n)));
-      if(BOOST_UNLIKELY(m == 0)) {
+      mask_type mask = pbb->mask & (full >> 1 >> ((N - 1) - std::size_t(n)));
+      if(BOOST_UNLIKELY(mask == 0)) {
          pbb = pbb->prev;
+         mask = pbb->mask;
          BOOST_IF_CONSTEXPR(Prefetch) {
-            BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb->prev, block_type);
+            BOOST_CONTAINER_NEST_PREFETCH_BLOCK_LAST(pbb);
+            BOOST_CONTAINER_NEST_PREFETCH(pbb->next);
          }
-         m = pbb->mask;
+
       }
-      n = int(N - 1 - (std::size_t)nest_detail::unchecked_countl_zero(m));
+
+      n = int(N - 1 - (std::size_t)nest_detail::unchecked_countl_zero(mask));
       return *this;
    }
 
@@ -665,13 +782,16 @@ private:
    template<class, class, class> friend class boost::container::nest;
    template<class> friend struct ::boost::container::segmented_iterator_traits;
 
-   typedef typename nest_detail::pointer_rebind<ValuePointer, void>::type              void_pointer;
+   typedef typename nest_detail::pointer_rebind<ValuePointer, void>::type  void_pointer;
    typedef nest_detail::block_base<void_pointer>                           block_base_type;
-   typedef typename nest_detail::pointer_rebind<ValuePointer, block_base_type>::type   block_base_pointer;
-   typedef typename nest_detail::pointer_rebind<ValuePointer, const block_base_type>::type const_block_base_pointer;
-   typedef typename nest_detail::pointer_rebind<ValuePointer, value_type>::type        nonconst_pointer;
-   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock>                block_type;
-   typedef typename block_base_type::mask_type                            mask_type;
+   typedef typename nest_detail::pointer_rebind
+         <ValuePointer, block_base_type>::type                             block_base_pointer;
+   typedef typename nest_detail::pointer_rebind
+         <ValuePointer, const block_base_type>::type                       const_block_base_pointer;
+   typedef typename nest_detail::pointer_rebind
+         <ValuePointer, value_type>::type                                  nonconst_pointer;
+   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock>          block_type;
+   typedef typename block_base_type::mask_type                             mask_type;
 
    BOOST_STATIC_CONSTEXPR std::size_t  N = block_base_type::N;
    BOOST_STATIC_CONSTEXPR mask_type full = block_base_type::full;
@@ -725,7 +845,7 @@ public:
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::difference_type  difference_type;
    typedef ValuePointer                                                              pointer;
    typedef element_type&                                                             reference;
-   typedef std::bidirectional_iterator_tag                                           iterator_category;
+   typedef std::random_access_iterator_tag                                          iterator_category;
 
    typedef typename nest_detail::pointer_rebind<ValuePointer, block_base_type>::type   block_base_pointer;
 
@@ -745,7 +865,7 @@ public:
 
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator++() BOOST_NOEXCEPT
    {
-      BOOST_CONTAINER_NEST_ASSUME(n != (int)N); // Undefined behavior otherwise
+      BOOST_CONTAINER_NEST_ASSUME(n != (int)N);
       const mask_type m = pbb->mask & (full_l << std::size_t(n));
       n = m ? nest_detail::unchecked_countr_zero(m) : (int)N;
       return *this;
@@ -756,7 +876,7 @@ public:
 
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator--() BOOST_NOEXCEPT
    {
-      BOOST_CONTAINER_NEST_ASSUME(n != 0); // Undefined behavior otherwise
+      BOOST_CONTAINER_NEST_ASSUME(n != 0);
       const mask_type m = pbb->mask & (full >> (N - std::size_t(n)));
       n = int((N - 1) - (std::size_t)nest_detail::unchecked_countl_zero(m));
       return *this;
@@ -765,6 +885,38 @@ public:
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator operator--(int) BOOST_NOEXCEPT
    { nest_local_iterator tmp(*this); --*this; return tmp; }
 
+   // random-access: advance by k occupied slots
+   BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator+=(difference_type k) BOOST_NOEXCEPT
+   {
+      const mask_type m = pbb->mask;
+      const mask_type lo = (n == int(N)) ? full : ((mask_type(1) << n) - 1);
+      const int idx    = (int)boost::core::popcount(m & lo);
+      const int target = idx + (int)k;
+      const int total  = (int)boost::core::popcount(m);
+      BOOST_CONTAINER_NEST_ASSUME(target >= 0 && target <= total);
+      n = (target >= total) ? (int)N : nest_detail::nth_set_bit(m, target);
+      return *this;
+   }
+
+   BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator-=(difference_type k) BOOST_NOEXCEPT
+   { return *this += (-k); }
+
+   BOOST_CONTAINER_FORCEINLINE
+   friend nest_local_iterator operator+(nest_local_iterator it, difference_type k) BOOST_NOEXCEPT
+   { it += k; return it; }
+
+   BOOST_CONTAINER_FORCEINLINE
+   friend nest_local_iterator operator+(difference_type k, nest_local_iterator it) BOOST_NOEXCEPT
+   { it += k; return it; }
+
+   BOOST_CONTAINER_FORCEINLINE
+   friend nest_local_iterator operator-(nest_local_iterator it, difference_type k) BOOST_NOEXCEPT
+   { it -= k; return it; }
+
+   BOOST_CONTAINER_FORCEINLINE reference operator[](difference_type k) const BOOST_NOEXCEPT
+   { return *(*this + k); }
+
+   // equality
    BOOST_CONTAINER_FORCEINLINE
    friend bool operator==(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
    { return x.n == y.n; }
@@ -773,10 +925,35 @@ public:
    friend bool operator!=(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
    { return x.n != y.n; }
 
+   // ordering
+   BOOST_CONTAINER_FORCEINLINE
+   friend bool operator<(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
+   { return x.n < y.n; }
+
+   BOOST_CONTAINER_FORCEINLINE
+   friend bool operator>(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
+   { return x.n > y.n; }
+
+   BOOST_CONTAINER_FORCEINLINE
+   friend bool operator<=(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
+   { return x.n <= y.n; }
+
+   BOOST_CONTAINER_FORCEINLINE
+   friend bool operator>=(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
+   { return x.n >= y.n; }
+
+   // distance
    BOOST_CONTAINER_FORCEINLINE
    friend difference_type operator-(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
    {
-      BOOST_CONTAINER_NEST_ASSUME(x.pbb == y.pbb); // Undefined behavior otherwise
+      BOOST_CONTAINER_NEST_ASSUME(x.pbb == y.pbb);
+      #if 0
+      const mask_type m = x.pbb->mask;
+      const mask_type lo_x = (x.n == int(N)) ? full : ((mask_type(1) << x.n) - 1);
+      const mask_type lo_y = (y.n == int(N)) ? full : ((mask_type(1) << y.n) - 1);
+      return difference_type(boost::core::popcount(m & lo_x))
+           - difference_type(boost::core::popcount(m & lo_y));
+      #endif
       const mask_type lo_x = (x.n == int(N)) ? full : ((mask_type(1) << x.n) - 1);
       const mask_type lo_y = (y.n == int(N)) ? full : ((mask_type(1) << y.n) - 1);
       const mask_type m = x.pbb->mask;
@@ -814,7 +991,7 @@ public:
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::difference_type  difference_type;
    typedef ValuePointer                                                              pointer;
    typedef element_type&                                                             reference;
-   typedef std::bidirectional_iterator_tag                                           iterator_category;
+   typedef std::random_access_iterator_tag                                          iterator_category;
 
    typedef typename nest_detail::pointer_rebind<ValuePointer, block_base_type>::type   block_base_pointer;
 
@@ -827,18 +1004,14 @@ public:
    {}
 
    BOOST_CONTAINER_FORCEINLINE reference operator*() const BOOST_NOEXCEPT
-   {
-      return *pos;
-   }
+   { return *pos; }
 
    BOOST_CONTAINER_FORCEINLINE pointer operator->() const BOOST_NOEXCEPT
-   {
-      return pos;
-   }
+   { return pos; }
 
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator++() BOOST_NOEXCEPT
    {
-      BOOST_CONTAINER_NEST_ASSUME(n != N);
+      BOOST_CONTAINER_NEST_ASSUME(n != (int)N);
       const mask_type m = mask & (full_l << std::size_t(n));
       const int old_n = n;
       n = m ? nest_detail::unchecked_countr_zero(m) : (int)N;
@@ -862,27 +1035,81 @@ public:
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator operator--(int) BOOST_NOEXCEPT
    { nest_local_iterator tmp(*this); --*this; return tmp; }
 
+   // random-access: advance by k occupied slots
+   BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator+=(difference_type k) BOOST_NOEXCEPT
+   {
+      const mask_type m = mask;
+      const mask_type lo = (n == int(N)) ? full : ((mask_type(1) << n) - 1);
+      const int idx    = (int)boost::core::popcount(m & lo);
+      const int target = idx + (int)k;
+      const int total  = (int)boost::core::popcount(m);
+      BOOST_CONTAINER_NEST_ASSUME(target >= 0 && target <= total);
+      const int old_n = n;
+      n = (target >= total) ? (int)N : nest_detail::nth_set_bit(m, target);
+      pos += (n - old_n);
+      return *this;
+   }
+
+   BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator-=(difference_type k) BOOST_NOEXCEPT
+   { return *this += (-k); }
+
+   BOOST_CONTAINER_FORCEINLINE
+   friend nest_local_iterator operator+(nest_local_iterator it, difference_type k) BOOST_NOEXCEPT
+   { it += k; return it; }
+
+   BOOST_CONTAINER_FORCEINLINE
+   friend nest_local_iterator operator+(difference_type k, nest_local_iterator it) BOOST_NOEXCEPT
+   { it += k; return it; }
+
+   BOOST_CONTAINER_FORCEINLINE
+   friend nest_local_iterator operator-(nest_local_iterator it, difference_type k) BOOST_NOEXCEPT
+   { it -= k; return it; }
+
+   BOOST_CONTAINER_FORCEINLINE reference operator[](difference_type k) const BOOST_NOEXCEPT
+   { return *(*this + k); }
+
+   // equality
    BOOST_CONTAINER_FORCEINLINE
    friend bool operator==(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
-   {
-      return x.n == y.n;
-   }
+   { return x.n == y.n; }
 
    BOOST_CONTAINER_FORCEINLINE
    friend bool operator!=(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
-   {
-      return x.n != y.n;
-   }
+   { return x.n != y.n; }
 
+   // ordering
+   BOOST_CONTAINER_FORCEINLINE
+   friend bool operator<(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
+   { return x.n < y.n; }
+
+   BOOST_CONTAINER_FORCEINLINE
+   friend bool operator>(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
+   { return x.n > y.n; }
+
+   BOOST_CONTAINER_FORCEINLINE
+   friend bool operator<=(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
+   { return x.n <= y.n; }
+
+   BOOST_CONTAINER_FORCEINLINE
+   friend bool operator>=(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
+   { return x.n >= y.n; }
+
+   // distance
    BOOST_CONTAINER_FORCEINLINE
    friend difference_type operator-(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
    {
-      BOOST_CONTAINER_NEST_ASSUME(x.mask == y.mask); // Undefined behavior otherwise
+      BOOST_CONTAINER_NEST_ASSUME(x.mask == y.mask);
+   #if 0
+      const mask_type m = x.mask;
+      const mask_type lo_x = (x.n == int(N)) ? full : ((mask_type(1) << x.n) - 1);
+      const mask_type lo_y = (y.n == int(N)) ? full : ((mask_type(1) << y.n) - 1);
+      return difference_type(boost::core::popcount(m & lo_x))
+           - difference_type(boost::core::popcount(m & lo_y));
+   #endif
       BOOST_CONTAINER_NEST_ASSUME(x.n >= y.n);       // Undefined behavior otherwise
       const mask_type m = x.mask;
       const mask_type lo_x = (x.n == int(N)) ? full : ((mask_type(1) << x.n) - 1);
       const mask_type lo_y = (y.n == int(N)) ? full : ((mask_type(1) << y.n) - 1);
-
       return boost::core::popcount(m & lo_x & (~lo_y));
    }
 
@@ -890,7 +1117,7 @@ public:
    BOOST_CONTAINER_FORCEINLINE int get_slot() const BOOST_NOEXCEPT { return n; }
 
 private:
-   pointer pos;
+   pointer   pos;
    int       n;
    mask_type mask;
 };
@@ -1132,12 +1359,12 @@ struct block_typedefs
    typedef typename pointer_rebind<
       value_pointer, const block_base_t>::type                  const_block_base_pointer;
 
-   typedef nest_detail::block<value_pointer, StoreDataInBlock>        block_t;
+   typedef nest_detail::block<value_pointer, StoreDataInBlock>        block_type;
    typedef typename pointer_rebind<
-      value_pointer, block_t>::type                             block_pointer;
+      value_pointer, block_type>::type                             block_pointer;
 
    typedef typename val_alloc_traits::
-      template portable_rebind_alloc<block_t>::type             block_allocator;
+      template portable_rebind_alloc<block_type>::type             block_allocator;
 };
 
 //////////////////////////////////////////////
@@ -1207,8 +1434,8 @@ struct const_conditional_visit_adaptor
 ////////////////////////////////////////////////////////////////////////////
 
 template<class ValuePointer, bool StoreDataInBlock, bool Prefetch>
-struct segmented_iterator_traits<
-   nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> >
+struct segmented_iterator_traits
+   < nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> >
 {
    typedef segmented_iterator_tag                                            is_segmented_iterator;
    typedef nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>           nest_iterator_type;
@@ -1216,21 +1443,36 @@ struct segmented_iterator_traits<
    typedef nest_segment_iterator<ValuePointer>                               segment_iterator;
 
 private:
-   typedef typename nest_detail::pointer_rebind<ValuePointer, void>::type    void_pointer;
-   typedef nest_detail::block_base<void_pointer>                             block_base_type;
-   typedef typename block_base_type::mask_type                               mask_type;
+
+   typedef typename boost::intrusive::pointer_traits
+         <ValuePointer>::element_type                                      element_type;
+   typedef typename dtl::remove_const<element_type>::type                  value_type;
+
+   typedef typename nest_detail::pointer_rebind<ValuePointer, void>::type  void_pointer;
+   typedef nest_detail::block_base<void_pointer>                           block_base_type;
+   typedef typename nest_detail::pointer_rebind
+         <ValuePointer, value_type>::type                                  nonconst_pointer;
+   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock>          block_type;
+   typedef typename block_base_type::mask_type                             mask_type;
+
    BOOST_STATIC_CONSTEXPR std::size_t N = block_base_type::N;
 
-public:
+   public:
+
    static segment_iterator segment(const nest_iterator_type &it)
    { return segment_iterator(it.pbb); }
 
    static local_iterator local(const nest_iterator_type &it)
    { return local_iterator(it.pbb, it.n); }
 
-   static nest_iterator_type compose(const segment_iterator &s, const local_iterator &l)
+   static nest_iterator_type compose(segment_iterator s, const local_iterator& l)
    {
-      return nest_iterator_type(s.get_block(), l.get_slot());
+      int n = l.get_slot();
+      if (BOOST_UNLIKELY(n == N)) {
+         ++s;
+         n = 0;
+      }
+      return nest_iterator_type(s.get_block(), n);
    }
 
    static local_iterator begin(const segment_iterator &s)
@@ -1238,8 +1480,12 @@ public:
       typedef typename segment_iterator::block_base_pointer block_base_pointer;
       block_base_pointer const bp = s.get_block();
       const mask_type m = bp->mask;
-      BOOST_ASSERT(m != 0);   // segment iterators should never point to empty blocks
-      return local_iterator(bp, nest_detail::unchecked_countr_zero(m));
+      if (BOOST_LIKELY(m != 0)) {
+         const int n = nest_detail::unchecked_countr_zero(m);
+         BOOST_CONTAINER_NEST_PREFETCH_BLOCK_FIRST(bp);
+         return local_iterator(bp, n);
+      }
+      return local_iterator(bp, N);
    }
 
    static local_iterator end(const segment_iterator &s)
@@ -1304,7 +1550,7 @@ class nest
    typedef typename btd::block_base_t                              block_base;
    typedef typename btd::block_base_pointer                        block_base_pointer;
    typedef typename btd::const_block_base_pointer                  const_block_base_pointer;
-   typedef typename btd::block_t                                   block;
+   typedef typename btd::block_type                                block_type;
    typedef typename btd::block_pointer                             block_pointer;
    typedef typename btd::block_allocator                           block_allocator;
    typedef boost::empty_value<block_allocator, 0>                  allocator_base;
@@ -1661,10 +1907,10 @@ class nest
    //! <b>Complexity</b>: Constant.
    size_type max_size() const BOOST_NOEXCEPT
    {
-      std::size_t bs = (std::size_t)block_alloc_traits::max_size(al()) * sizeof(block);
+      std::size_t bs = (std::size_t)block_alloc_traits::max_size(al()) * sizeof(block_type);
       allocator_type val_al(al());
       std::size_t vs = (std::size_t)allocator_traits_type::max_size(val_al) * sizeof(T);
-      return (size_type)((std::min)(bs, vs) / (sizeof(block) + sizeof(T) * N) * N);
+      return (size_type)((std::min)(bs, vs) / (sizeof(block_type) + sizeof(T) * N) * N);
    }
 
    //! <b>Effects</b>: Returns the total number of slots (used and unused).
@@ -1874,7 +2120,7 @@ class nest
             block_pointer pb = static_cast_block_pointer(pbb);
             pbb = pb->next;
             BOOST_IF_CONSTEXPR(prefetch_enabled) {
-               BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb, block);
+               BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
             }
             size_ -= priv_destroy_all_in_nonempty_block(pb);
             blist.unlink(pb);
@@ -2132,7 +2378,7 @@ class nest
    static_cast_block_pointer(block_base_pointer pbb) BOOST_NOEXCEPT
    {
       return boost::intrusive::pointer_traits<block_pointer>::pointer_to(
-         static_cast<block&>(*pbb));
+         static_cast<block_type&>(*pbb));
    }
 
    void priv_allocate_block_data(block_pointer pb, dtl::bool_<false>)
@@ -2741,7 +2987,7 @@ class nest
          block_pointer pb = static_cast_block_pointer(pbb);
          pbb = pb->next;
          BOOST_IF_CONSTEXPR(prefetch_enabled) {
-            BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb, block);
+            BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
          }
          mask_type m = pb->mask;
          do {
