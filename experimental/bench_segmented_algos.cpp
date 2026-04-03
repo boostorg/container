@@ -19,7 +19,6 @@
 
 #include <boost/container/deque.hpp>
 #include <boost/container/experimental/nest.hpp>
-#include <boost/move/detail/nsec_clock.hpp>
 
 #include <boost/container/experimental/segmented_all_of.hpp>
 #include <boost/container/experimental/segmented_any_of.hpp>
@@ -66,123 +65,11 @@
 #include <boost/container/experimental/segmented_stable_partition.hpp>
 #include <boost/container/experimental/segmented_swap_ranges.hpp>
 #include <boost/container/experimental/segmented_transform.hpp>
+#include "../bench/bench_utils.hpp"
 
 
-using boost::move_detail::cpu_times;
-using boost::move_detail::nanosecond_type;
 
 namespace bc = boost::container;
-
-volatile int sink = 0;
-
-//#define BOOST_CONTAINER_SEGMENTED_ALGO_NO_BARRIERS
-
-#ifdef BOOST_CONTAINER_SEGMENTED_ALGO_NO_BARRIERS
-   #define BOOST_CONTAINER_BENCH_CLOBBER()   ((void)0)
-   #define BOOST_CONTAINER_BENCH_ESCAPE(p)   ((void)(p))
-#else
-   #if defined(_MSC_VER)
-      #define BOOST_CONTAINER_BENCH_CLOBBER()   _ReadWriteBarrier()
-      #define BOOST_CONTAINER_BENCH_ESCAPE(p)   (sink = *static_cast<int*>(p))
-   #elif defined(__GNUC__)
-      #define BOOST_CONTAINER_BENCH_CLOBBER()   asm volatile("" : : : "memory")
-      //#define BOOST_CONTAINER_BENCH_ESCAPE(p)   asm volatile("" : : "g"(p) : "memory")
-      #define BOOST_CONTAINER_BENCH_ESCAPE(p)   asm volatile("" : "+r,m"(p) : : "memory")
-
-   #else
-      #define BOOST_CONTAINER_BENCH_CLOBBER()   ((void)0)
-      #define BOOST_CONTAINER_BENCH_ESCAPE(p)   ((void)(p))
-   #endif
-#endif
-
-#define BOOST_CONTAINER_SEGMENTED_ALGO_USE_MEDIAN_CLOCK
-
-#ifdef BOOST_CONTAINER_SEGMENTED_ALGO_USE_MEDIAN_CLOCK
-
-class cpu_timer
-{
-   nanosecond_type start_ns_;
-   bool running_;
-   mutable std::vector<nanosecond_type> samples_;
-
-   BOOST_CONTAINER_FORCEINLINE static nanosecond_type now_ns()
-   {
-      cpu_times t;
-      boost::move_detail::get_cpu_times(t);
-      return t.wall;
-   }
-
-   nanosecond_type robust_median() const
-   {
-      if(samples_.empty())
-         return 0u;
-
-      std::sort(samples_.begin(), samples_.end());
-
-         std::size_t trim = samples_.size() / 20u; // Drop 5% low and high values.
-      if(trim * 2u >= samples_.size())
-         trim = 0u;
-
-      const std::size_t begin = trim;
-      const std::size_t end = samples_.size() - trim;
-      const std::size_t count = end - begin;
-      const std::size_t mid = begin + count / 2u;
-
-      if((count % 2u) != 0u)
-         return samples_[mid];
-
-      return static_cast<nanosecond_type>((samples_[mid - 1u] + samples_[mid]) / 2u);
-   }
-
-   public:
-   cpu_timer(std::size_t reserve = 0)
-      : start_ns_(0u), running_(false), samples_()
-   {  samples_.reserve(reserve); }
-
-   BOOST_CONTAINER_FORCEINLINE bool is_stopped() const
-   {  return !running_;  }
-
-   cpu_times elapsed() const
-   {
-      cpu_times t;
-      t.wall = robust_median() * static_cast<nanosecond_type>(samples_.size());
-      return t;
-   }
-
-   void start()
-   {
-      samples_.clear();
-      start_ns_ = now_ns();
-      running_ = true;
-   }
-
-   void stop()
-   {
-      if(!running_)
-         return;
-      const nanosecond_type now = now_ns();
-      samples_.push_back(now - start_ns_);
-      running_ = false;
-   }
-
-   void resume()
-   {
-      if(running_)
-         return;
-      start_ns_ = now_ns();
-      running_ = true;
-   }
-};
-
-#else
-
-using cpu_timer = boost::move_detail::cpu_timer;
-
-#endif
-
-
-BOOST_CONTAINER_FORCEINLINE void clobber()       { BOOST_CONTAINER_BENCH_CLOBBER(); }
-BOOST_CONTAINER_FORCEINLINE void escape(void* p) { BOOST_CONTAINER_BENCH_ESCAPE(p); }
 
 //////////////////////////////////////////////////////////////////////////////
 // Value types
@@ -713,11 +600,8 @@ void fill_test_data(bc::nest<T,A,O>& c, std::size_t n)
 // Benchmark helpers
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef BENCH_REPEATS
-#define BENCH_REPEATS 10
-#endif
 
-inline double calc_ns_per_elem(nanosecond_type ns,
+inline double calc_ns_per_elem(boost::move_detail::nanosecond_type ns,
                                std::size_t iters, std::size_t elems)
 {
    return double(ns) / double(iters * elems);
@@ -764,28 +648,72 @@ void bench_all_of(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = bench_detail::all_of(c.begin(), c.end(), pred) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = bench_detail::all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = bench_detail::all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = bench_detail::all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = bench_detail::all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = bench_detail::all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = bench_detail::all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = bench_detail::all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = bench_detail::all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = bc::segmented_all_of(c.begin(), c.end(), pred) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = bc::segmented_all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = bc::segmented_all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = bc::segmented_all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = bc::segmented_all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = bc::segmented_all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = bc::segmented_all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = bc::segmented_all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = bc::segmented_all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -795,28 +723,72 @@ void bench_any_of(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = bench_detail::any_of(c.begin(), c.end(), pred) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = bench_detail::any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = bench_detail::any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = bench_detail::any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = bench_detail::any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = bench_detail::any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = bench_detail::any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = bench_detail::any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = bench_detail::any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = bc::segmented_any_of(c.begin(), c.end(), pred) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = bc::segmented_any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = bc::segmented_any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = bc::segmented_any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = bc::segmented_any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = bc::segmented_any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = bc::segmented_any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = bc::segmented_any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = bc::segmented_any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -826,28 +798,72 @@ void bench_none_of(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = bench_detail::none_of(c.begin(), c.end(), pred) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = bench_detail::none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = bench_detail::none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = bench_detail::none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = bench_detail::none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = bench_detail::none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = bench_detail::none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = bench_detail::none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = bench_detail::none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = bc::segmented_none_of(c.begin(), c.end(), pred) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = bc::segmented_none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = bc::segmented_none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = bc::segmented_none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = bc::segmented_none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = bc::segmented_none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = bc::segmented_none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = bc::segmented_none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = bc::segmented_none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -857,32 +873,72 @@ void bench_for_each(const C &c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         summer<VT> s;
-         s = std::for_each(c.begin(), c.end(), s);
-         result = s.sum;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { summer<VT> s; clobber(); s = std::for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { summer<VT> s; clobber(); s = std::for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { summer<VT> s; clobber(); s = std::for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { summer<VT> s; clobber(); s = std::for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { summer<VT> s; clobber(); s = std::for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { summer<VT> s; clobber(); s = std::for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { summer<VT> s; clobber(); s = std::for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { summer<VT> s; clobber(); s = std::for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         summer<VT> s;
-         s = bc::segmented_for_each(c.begin(), c.end(), s);
-         result = s.sum;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { summer<VT> s; clobber(); s = bc::segmented_for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { summer<VT> s; clobber(); s = bc::segmented_for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { summer<VT> s; clobber(); s = bc::segmented_for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { summer<VT> s; clobber(); s = bc::segmented_for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { summer<VT> s; clobber(); s = bc::segmented_for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { summer<VT> s; clobber(); s = bc::segmented_for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { summer<VT> s; clobber(); s = bc::segmented_for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { summer<VT> s; clobber(); s = bc::segmented_for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("for_each", cname, r1, r2);
 }
 
@@ -892,28 +948,72 @@ void bench_copy(const C &c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         std::copy(c.begin(), c.end(), out.begin());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         bc::segmented_copy(c.begin(), c.end(), out.begin());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("copy", cname, r1, r2);
 }
 
@@ -924,28 +1024,72 @@ void bench_copy_if(const C &c, std::size_t iters, const char* cname,
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred);
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred);
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -954,31 +1098,74 @@ void bench_fill(const C &c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
    VT val(42);
+   C c2(c);
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // fill is in-place, so make a copy for each iteration
-         std::fill(c2.begin(), c2.end(), val);
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::fill(c2.begin(), c2.end(), val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::fill(c2.begin(), c2.end(), val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::fill(c2.begin(), c2.end(), val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::fill(c2.begin(), c2.end(), val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::fill(c2.begin(), c2.end(), val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::fill(c2.begin(), c2.end(), val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::fill(c2.begin(), c2.end(), val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::fill(c2.begin(), c2.end(), val); escape(&c2); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // fill is in-place, so make a copy for each iteration
-         bc::segmented_fill(c2.begin(), c2.end(), val);
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_fill(c2.begin(), c2.end(), val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_fill(c2.begin(), c2.end(), val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_fill(c2.begin(), c2.end(), val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_fill(c2.begin(), c2.end(), val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_fill(c2.begin(), c2.end(), val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_fill(c2.begin(), c2.end(), val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_fill(c2.begin(), c2.end(), val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_fill(c2.begin(), c2.end(), val); escape(&c2); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("fill", cname, r1, r2);
 }
 
@@ -988,28 +1175,72 @@ void bench_count(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = static_cast<int>(std::count(c.begin(), c.end(), val));
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = static_cast<int>(std::count(c.begin(), c.end(), val)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = static_cast<int>(std::count(c.begin(), c.end(), val)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = static_cast<int>(std::count(c.begin(), c.end(), val)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = static_cast<int>(std::count(c.begin(), c.end(), val)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = static_cast<int>(std::count(c.begin(), c.end(), val)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = static_cast<int>(std::count(c.begin(), c.end(), val)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = static_cast<int>(std::count(c.begin(), c.end(), val)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = static_cast<int>(std::count(c.begin(), c.end(), val)); escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = static_cast<int>(bc::segmented_count(c.begin(), c.end(), val));
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = static_cast<int>(bc::segmented_count(c.begin(), c.end(), val)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = static_cast<int>(bc::segmented_count(c.begin(), c.end(), val)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = static_cast<int>(bc::segmented_count(c.begin(), c.end(), val)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = static_cast<int>(bc::segmented_count(c.begin(), c.end(), val)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = static_cast<int>(bc::segmented_count(c.begin(), c.end(), val)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = static_cast<int>(bc::segmented_count(c.begin(), c.end(), val)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = static_cast<int>(bc::segmented_count(c.begin(), c.end(), val)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = static_cast<int>(bc::segmented_count(c.begin(), c.end(), val)); escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1019,28 +1250,72 @@ void bench_count_if(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = static_cast<int>(std::count_if(c.begin(), c.end(), pred));
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = static_cast<int>(std::count_if(c.begin(), c.end(), pred)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = static_cast<int>(std::count_if(c.begin(), c.end(), pred)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = static_cast<int>(std::count_if(c.begin(), c.end(), pred)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = static_cast<int>(std::count_if(c.begin(), c.end(), pred)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = static_cast<int>(std::count_if(c.begin(), c.end(), pred)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = static_cast<int>(std::count_if(c.begin(), c.end(), pred)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = static_cast<int>(std::count_if(c.begin(), c.end(), pred)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = static_cast<int>(std::count_if(c.begin(), c.end(), pred)); escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = static_cast<int>(bc::segmented_count_if(c.begin(), c.end(), pred));
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = static_cast<int>(bc::segmented_count_if(c.begin(), c.end(), pred)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = static_cast<int>(bc::segmented_count_if(c.begin(), c.end(), pred)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = static_cast<int>(bc::segmented_count_if(c.begin(), c.end(), pred)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = static_cast<int>(bc::segmented_count_if(c.begin(), c.end(), pred)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = static_cast<int>(bc::segmented_count_if(c.begin(), c.end(), pred)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = static_cast<int>(bc::segmented_count_if(c.begin(), c.end(), pred)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = static_cast<int>(bc::segmented_count_if(c.begin(), c.end(), pred)); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = static_cast<int>(bc::segmented_count_if(c.begin(), c.end(), pred)); escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1048,32 +1323,75 @@ template<class C>
 void bench_find(const C &c, std::size_t iters, const char* cname,
                 const typename C::value_type& val, const char* label)
 {
+   typedef typename C::const_iterator cit_t;
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = std::find(c.begin(), c.end(), val);
-         result = (it == c.end()) ? 0 : 1;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = std::find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = std::find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = std::find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = std::find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = std::find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = std::find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = std::find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = std::find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = bc::segmented_find(c.begin(), c.end(), val);
-         result = (it == c.end()) ? 0 : 1;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = bc::segmented_find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = bc::segmented_find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = bc::segmented_find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = bc::segmented_find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = bc::segmented_find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = bc::segmented_find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = bc::segmented_find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = bc::segmented_find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1081,32 +1399,75 @@ template<class C, class Pred>
 void bench_find_if(const C &c, std::size_t iters, const char* cname,
                    Pred pred, const char* label)
 {
+   typedef typename C::const_iterator cit_t;
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = std::find_if(c.begin(), c.end(), pred);
-         result = (it != c.end()) ? int_value(*it) : -1;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = std::find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = std::find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = std::find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = std::find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = std::find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = std::find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = std::find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = std::find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = bc::segmented_find_if(c.begin(), c.end(), pred);
-         result = (it != c.end()) ? int_value(*it) : -1;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = bc::segmented_find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = bc::segmented_find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = bc::segmented_find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = bc::segmented_find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = bc::segmented_find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = bc::segmented_find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = bc::segmented_find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = bc::segmented_find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1114,32 +1475,75 @@ template<class C, class Pred>
 void bench_find_if_not(const C &c, std::size_t iters, const char* cname,
                        Pred pred, const char* label)
 {
+   typedef typename C::const_iterator cit_t;
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = bench_detail::find_if_not(c.begin(), c.end(), pred);
-         result = (it != c.end()) ? int_value(*it) : -1;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = bench_detail::find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = bench_detail::find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = bench_detail::find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = bench_detail::find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = bench_detail::find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = bench_detail::find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = bench_detail::find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = bench_detail::find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = bc::segmented_find_if_not(c.begin(), c.end(), pred);
-         result = (it != c.end()) ? int_value(*it) : -1;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = bc::segmented_find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = bc::segmented_find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = bc::segmented_find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = bc::segmented_find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = bc::segmented_find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = bc::segmented_find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = bc::segmented_find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = bc::segmented_find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1147,32 +1551,75 @@ template<class C>
 void bench_find_last(const C &c, std::size_t iters, const char* cname,
                      const typename C::value_type& val, const char* label)
 {
+   typedef typename C::const_iterator cit_t;
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = bench_detail::find_last(c.begin(), c.end(), val);
-         result = (it == c.end()) ? 0 : 1;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = bench_detail::find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = bench_detail::find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = bench_detail::find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = bench_detail::find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = bench_detail::find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = bench_detail::find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = bench_detail::find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = bench_detail::find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = bc::segmented_find_last(c.begin(), c.end(), val);
-         result = (it == c.end()) ? 0 : 1;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = bc::segmented_find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = bc::segmented_find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = bc::segmented_find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = bc::segmented_find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = bc::segmented_find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = bc::segmented_find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = bc::segmented_find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = bc::segmented_find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1180,32 +1627,75 @@ template<class C, class Pred>
 void bench_find_last_if(const C &c, std::size_t iters, const char* cname,
                         Pred pred, const char* label)
 {
+   typedef typename C::const_iterator cit_t;
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = bench_detail::find_last_if(c.begin(), c.end(), pred);
-         result = (it != c.end()) ? int_value(*it) : -1;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = bench_detail::find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = bench_detail::find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = bench_detail::find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = bench_detail::find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = bench_detail::find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = bench_detail::find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = bench_detail::find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = bench_detail::find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = bc::segmented_find_last_if(c.begin(), c.end(), pred);
-         result = (it != c.end()) ? int_value(*it) : -1;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = bc::segmented_find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = bc::segmented_find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = bc::segmented_find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = bc::segmented_find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = bc::segmented_find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = bc::segmented_find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = bc::segmented_find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = bc::segmented_find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1213,32 +1703,75 @@ template<class C, class Pred>
 void bench_find_last_if_not(const C &c, std::size_t iters, const char* cname,
                             Pred pred, const char* label)
 {
+   typedef typename C::const_iterator cit_t;
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = bench_detail::find_last_if_not(c.begin(), c.end(), pred);
-         result = (it != c.end()) ? int_value(*it) : -1;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = bench_detail::find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = bench_detail::find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = bench_detail::find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = bench_detail::find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = bench_detail::find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = bench_detail::find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = bench_detail::find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = bench_detail::find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = bc::segmented_find_last_if_not(c.begin(), c.end(), pred);
-         result = (it != c.end()) ? int_value(*it) : -1;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = bc::segmented_find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = bc::segmented_find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = bc::segmented_find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = bc::segmented_find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = bc::segmented_find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = bc::segmented_find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = bc::segmented_find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = bc::segmented_find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1248,28 +1781,72 @@ void bench_equal(const C &c, const C &c2, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1278,33 +1855,83 @@ void bench_replace(const C &c, std::size_t iters, const char* cname,
                    const typename C::value_type& old_val,
                    const typename C::value_type& new_val, const char* label)
 {
-   typedef typename C::value_type VT;
-   VT v = *c.begin();
+   typedef const typename C::value_type* cptr;
+   cptr pold_val = &old_val;
+   cptr pnew_val = &new_val;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {
+      C c2(c);
+      std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // replace is in-place, so make a copy for each iteration
-         std::replace(c2.begin(), c2.end(), old_val, new_val);
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   pold_val = &old_val;
+   pnew_val = &new_val;
+
+   cpu_timer t2;
+   {
+      C c2(c);
+      std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // replace is in-place, so make a copy for each iteration
-         bc::segmented_replace(c2.begin(), c2.end(), old_val, new_val);
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1313,33 +1940,82 @@ void bench_replace_if(const C &c, std::size_t iters, const char* cname,
                       Pred pred, const typename C::value_type& new_val,
                       const char* label)
 {
-   typedef typename C::value_type VT;
-   VT v = *c.begin();
-
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {
+      C c1(c), c2(c), c3(c), c4(c), c5(c), c6(c), c7(c), c8(c);
+      std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // replace_if is in-place, so make a copy for each iteration
-         std::replace_if(c2.begin(), c2.end(), pred, new_val);
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         t1.resume();
+         { clobber(); std::replace_if(c1.begin(), c1.end(), pred, new_val); escape(&c1); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::replace_if(c2.begin(), c2.end(), pred, new_val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::replace_if(c3.begin(), c3.end(), pred, new_val); escape(&c3); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::replace_if(c4.begin(), c4.end(), pred, new_val); escape(&c4); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::replace_if(c5.begin(), c5.end(), pred, new_val); escape(&c5); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::replace_if(c6.begin(), c6.end(), pred, new_val); escape(&c6); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::replace_if(c7.begin(), c7.end(), pred, new_val); escape(&c7); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::replace_if(c8.begin(), c8.end(), pred, new_val); escape(&c8); }
+         t1.stop();
+         if (BOOST_UNLIKELY(--n_ == 0)) { break; }
+         c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c;
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {
+      C c1(c), c2(c), c3(c), c4(c), c5(c), c6(c), c7(c), c8(c);
+      std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // replace_if is in-place, so make a copy for each iteration
-         bc::segmented_replace_if(c2.begin(), c2.end(), pred, new_val);
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         t2.resume();
+         { clobber(); bc::segmented_replace_if(c1.begin(), c1.end(), pred, new_val); escape(&c1); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_replace_if(c2.begin(), c2.end(), pred, new_val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_replace_if(c3.begin(), c3.end(), pred, new_val); escape(&c3); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_replace_if(c4.begin(), c4.end(), pred, new_val); escape(&c4); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_replace_if(c5.begin(), c5.end(), pred, new_val); escape(&c5); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_replace_if(c6.begin(), c6.end(), pred, new_val); escape(&c6); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_replace_if(c7.begin(), c7.end(), pred, new_val); escape(&c7); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_replace_if(c8.begin(), c8.end(), pred, new_val); escape(&c8); }
+         t2.stop();
+         if (BOOST_UNLIKELY(--n_ == 0)) { break; }
+         c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c;
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1349,28 +2025,72 @@ void bench_transform(const C &c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         std::transform(c.begin(), c.end(), out.begin(), add_one<VT>());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("transform", cname, r1, r2);
 }
 
@@ -1381,31 +2101,74 @@ void bench_fill_n(const C &c, std::size_t iters, const char* cname)
    VT val(42);
    typename C::difference_type n =
       static_cast<typename C::difference_type>(c.size());
+   C c2(c);
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // fill_n is in-place, so make a copy for each iteration
-         std::fill_n(c2.begin(), n, val);
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::fill_n(c2.begin(), n, val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::fill_n(c2.begin(), n, val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::fill_n(c2.begin(), n, val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::fill_n(c2.begin(), n, val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::fill_n(c2.begin(), n, val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::fill_n(c2.begin(), n, val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::fill_n(c2.begin(), n, val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::fill_n(c2.begin(), n, val); escape(&c2); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // fill_n is in-place, so make a copy for each iteration
-         bc::segmented_fill_n(c2.begin(), n, val);
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_fill_n(c2.begin(), n, val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_fill_n(c2.begin(), n, val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_fill_n(c2.begin(), n, val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_fill_n(c2.begin(), n, val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_fill_n(c2.begin(), n, val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_fill_n(c2.begin(), n, val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_fill_n(c2.begin(), n, val); escape(&c2); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_fill_n(c2.begin(), n, val); escape(&c2); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("fill_n", cname, r1, r2);
 }
 
@@ -1417,28 +2180,72 @@ void bench_copy_n(const C &c, std::size_t iters, const char* cname)
    typename C::difference_type n =
       static_cast<typename C::difference_type>(c.size());
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         bench_detail::copy_n(c.begin(), n, out.begin());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         bc::segmented_copy_n(c.begin(), n, out.begin());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("copy_n", cname, r1, r2);
 }
 
@@ -1446,34 +2253,75 @@ template<class C>
 void bench_generate(const C &c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
+   C c2(c);
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // generate is in-place, so make a copy for each iteration
-         std::generate(c2.begin(), c2.end(), counter<VT>());
-         result = int_value(*c2.begin());
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // generate is in-place, so make a copy for each iteration
-         bc::segmented_generate(c2.begin(), c2.end(), counter<VT>());
-         result = int_value(*c2.begin());
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("generate", cname, r1, r2);
 }
 
@@ -1481,36 +2329,77 @@ template<class C>
 void bench_generate_n(const C &c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
-   int result = 0;
    typename C::difference_type n =
       static_cast<typename C::difference_type>(c.size());
+   C c2(c);
+   int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // generate_n is in-place, so make a copy for each iteration
-         std::generate_n(c2.begin(), n, counter<VT>());
-         result = int_value(*c2.begin());
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // generate_n is in-place, so make a copy for each iteration
-         bc::segmented_generate_n(c2.begin(), n, counter<VT>());
-         result = int_value(*c2.begin());
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("generate_n", cname, r1, r2);
 }
 
@@ -1518,34 +2407,85 @@ template<class C>
 void bench_remove(const C &c, std::size_t iters, const char* cname,
                   const typename C::value_type& val, const char* label)
 {
+   typedef typename C::iterator it_t;
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {
+      C c1(c), c2(c), c3(c), c4(c), c5(c), c6(c), c7(c), c8(c);
+      std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // remove is in-place, so make a copy for each iteration
-         typename C::iterator it = std::remove(c2.begin(), c2.end(), val);
-         result = (it == c2.end()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         t1.resume();
+         { clobber(); it_t it = std::remove(c1.begin(), c1.end(), val); result = (it == c1.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); it_t it = std::remove(c2.begin(), c2.end(), val); result = (it == c2.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); it_t it = std::remove(c3.begin(), c3.end(), val); result = (it == c3.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); it_t it = std::remove(c4.begin(), c4.end(), val); result = (it == c4.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); it_t it = std::remove(c5.begin(), c5.end(), val); result = (it == c5.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); it_t it = std::remove(c6.begin(), c6.end(), val); result = (it == c6.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); it_t it = std::remove(c7.begin(), c7.end(), val); result = (it == c7.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); it_t it = std::remove(c8.begin(), c8.end(), val); result = (it == c8.end()) ? 1 : 0; escape(&result); }
+         t1.stop();
+         if (BOOST_UNLIKELY(--n_ == 0)) { break; }
+         c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c;
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {
+      C c1(c), c2(c), c3(c), c4(c), c5(c), c6(c), c7(c), c8(c);
+      std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // remove is in-place, so make a copy for each iteration
-         typename C::iterator it = bc::segmented_remove(c2.begin(), c2.end(), val);
-         result = (it == c2.end()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         t2.resume();
+         { clobber(); it_t it = bc::segmented_remove(c1.begin(), c1.end(), val); result = (it == c1.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); it_t it = bc::segmented_remove(c2.begin(), c2.end(), val); result = (it == c2.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); it_t it = bc::segmented_remove(c3.begin(), c3.end(), val); result = (it == c3.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); it_t it = bc::segmented_remove(c4.begin(), c4.end(), val); result = (it == c4.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); it_t it = bc::segmented_remove(c5.begin(), c5.end(), val); result = (it == c5.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); it_t it = bc::segmented_remove(c6.begin(), c6.end(), val); result = (it == c6.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); it_t it = bc::segmented_remove(c7.begin(), c7.end(), val); result = (it == c7.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); it_t it = bc::segmented_remove(c8.begin(), c8.end(), val); result = (it == c8.end()) ? 1 : 0; escape(&result); }
+         t2.stop();
+         if (BOOST_UNLIKELY(--n_ == 0)) { break; }
+         c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c;
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1553,34 +2493,85 @@ template<class C, class Pred>
 void bench_remove_if(const C &c, std::size_t iters, const char* cname,
                      Pred pred, const char* label)
 {
+   typedef typename C::iterator it_t;
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {
+      C c1(c), c2(c), c3(c), c4(c), c5(c), c6(c), c7(c), c8(c);
+      std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // remove_if is in-place, so make a copy for each iteration
-         typename C::iterator it = std::remove_if(c2.begin(), c2.end(), pred);
-         result = (it == c2.end()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         t1.resume();
+         { clobber(); it_t it = std::remove_if(c1.begin(), c1.end(), pred); result = (it == c1.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); it_t it = std::remove_if(c2.begin(), c2.end(), pred); result = (it == c2.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); it_t it = std::remove_if(c3.begin(), c3.end(), pred); result = (it == c3.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); it_t it = std::remove_if(c4.begin(), c4.end(), pred); result = (it == c4.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); it_t it = std::remove_if(c5.begin(), c5.end(), pred); result = (it == c5.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); it_t it = std::remove_if(c6.begin(), c6.end(), pred); result = (it == c6.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); it_t it = std::remove_if(c7.begin(), c7.end(), pred); result = (it == c7.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); it_t it = std::remove_if(c8.begin(), c8.end(), pred); result = (it == c8.end()) ? 1 : 0; escape(&result); }
+         t1.stop();
+         if (BOOST_UNLIKELY(--n_ == 0)) { break; }
+         c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c;
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {
+      C c1(c), c2(c), c3(c), c4(c), c5(c), c6(c), c7(c), c8(c);
+      std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // remove_if is in-place, so make a copy for each iteration
-         typename C::iterator it = bc::segmented_remove_if(c2.begin(), c2.end(), pred);
-         result = (it == c2.end()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         t2.resume();
+         { clobber(); it_t it = bc::segmented_remove_if(c1.begin(), c1.end(), pred); result = (it == c1.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); it_t it = bc::segmented_remove_if(c2.begin(), c2.end(), pred); result = (it == c2.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); it_t it = bc::segmented_remove_if(c3.begin(), c3.end(), pred); result = (it == c3.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); it_t it = bc::segmented_remove_if(c4.begin(), c4.end(), pred); result = (it == c4.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); it_t it = bc::segmented_remove_if(c5.begin(), c5.end(), pred); result = (it == c5.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); it_t it = bc::segmented_remove_if(c6.begin(), c6.end(), pred); result = (it == c6.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); it_t it = bc::segmented_remove_if(c7.begin(), c7.end(), pred); result = (it == c7.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); it_t it = bc::segmented_remove_if(c8.begin(), c8.end(), pred); result = (it == c8.end()) ? 1 : 0; escape(&result); }
+         t2.stop();
+         if (BOOST_UNLIKELY(--n_ == 0)) { break; }
+         c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c;
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1591,28 +2582,72 @@ void bench_remove_copy(const C &c, std::size_t iters, const char* cname,
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         std::remove_copy(c.begin(), c.end(), out.begin(), val);
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val);
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1623,62 +2658,147 @@ void bench_remove_copy_if(const C &c, std::size_t iters, const char* cname,
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         std::remove_copy_if(c.begin(), c.end(), out.begin(), pred);
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred);
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
 template<class C>
 void bench_reverse(const C &c, std::size_t iters, const char* cname)
 {
+   C c2(c);
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // reverse is in-place, so make a copy for each iteration
-         std::reverse(c2.begin(), c2.end());
-         result = int_value(*c2.begin());
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // reverse is in-place, so make a copy for each iteration
-         bc::segmented_reverse(c2.begin(), c2.end());
-         result = int_value(*c2.begin());
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("reverse", cname, r1, r2);
 }
 
@@ -1688,28 +2808,72 @@ void bench_reverse_copy(const C &c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         std::reverse_copy(c.begin(), c.end(), out.begin());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         bc::segmented_reverse_copy(c.begin(), c.end(), out.begin());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("reverse_copy", cname, r1, r2);
 }
 
@@ -1719,28 +2883,72 @@ void bench_is_sorted(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = bench_detail::is_sorted(c.begin(), c.end()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = bench_detail::is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = bench_detail::is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = bench_detail::is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = bench_detail::is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = bench_detail::is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = bench_detail::is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = bench_detail::is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = bench_detail::is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = bc::segmented_is_sorted(c.begin(), c.end()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = bc::segmented_is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = bc::segmented_is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = bc::segmented_is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = bc::segmented_is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = bc::segmented_is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = bc::segmented_is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = bc::segmented_is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = bc::segmented_is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1748,32 +2956,75 @@ template<class C>
 void bench_is_sorted_until(const C &c, std::size_t iters, const char* cname,
                            const char* label)
 {
+   typedef typename C::const_iterator cit_t;
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = bench_detail::is_sorted_until(c.begin(), c.end());
-         result = (it == c.end()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = bench_detail::is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = bench_detail::is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = bench_detail::is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = bench_detail::is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = bench_detail::is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = bench_detail::is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = bench_detail::is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = bench_detail::is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = bc::segmented_is_sorted_until(c.begin(), c.end());
-         result = (it == c.end()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = bc::segmented_is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = bc::segmented_is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = bc::segmented_is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = bc::segmented_is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = bc::segmented_is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = bc::segmented_is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = bc::segmented_is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = bc::segmented_is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1783,28 +3034,72 @@ void bench_is_partitioned(const C &c, std::size_t iters, const char* cname,
 {
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = bench_detail::is_partitioned(c.begin(), c.end(), pred) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = bench_detail::is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = bench_detail::is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = bench_detail::is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = bench_detail::is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = bench_detail::is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = bench_detail::is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = bench_detail::is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = bench_detail::is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = bc::segmented_is_partitioned(c.begin(), c.end(), pred) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = bc::segmented_is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = bc::segmented_is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = bc::segmented_is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = bc::segmented_is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = bc::segmented_is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = bc::segmented_is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = bc::segmented_is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = bc::segmented_is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1814,28 +3109,72 @@ void bench_merge(const C &c, const C &c2, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size() + c2.size());
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("merge", cname, r1, r2);
 }
 
@@ -1845,65 +3184,152 @@ void bench_mismatch(const C &c, const C &c2, std::size_t iters, const char* cnam
 {
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
 template<class C>
 void bench_swap_ranges(const C &c, std::size_t iters, const char* cname)
 {
+   typedef typename C::iterator it_t;
+   typedef typename C::value_type VT;
    C c2(c);
+   C c3(c2);
+   for (it_t it = c3.begin(), ite = c3.end(); it != ite; ++it)
+      *it = VT(int_value(*it) * 3);
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c3(c);
-         C c4(c2);
-         std::swap_ranges(c3.begin(), c3.end(), c4.begin());
-         result = int_value(*c3.begin());
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c3(c);
-         C c4(c2);
-         bc::segmented_swap_ranges(c3.begin(), c3.end(), c4.begin());
-         result = int_value(*c3.begin());
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("swap_ranges", cname, r1, r2);
 }
 
@@ -1912,32 +3338,75 @@ void bench_search(const C &c, std::size_t iters, const char* cname,
                   const typename C::value_type* pattern, std::size_t pat_size,
                   const char* label)
 {
+   typedef typename C::const_iterator cit_t;
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = std::search(c.begin(), c.end(), pattern, pattern + pat_size);
-         result = (it == c.end()) ? 0 : 1;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = std::search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = std::search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = std::search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = std::search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = std::search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = std::search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = std::search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = std::search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = bc::segmented_search(c.begin(), c.end(), pattern, pattern + pat_size);
-         result = (it == c.end()) ? 0 : 1;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = bc::segmented_search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = bc::segmented_search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = bc::segmented_search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = bc::segmented_search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = bc::segmented_search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = bc::segmented_search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = bc::segmented_search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = bc::segmented_search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1946,32 +3415,75 @@ void bench_search_n(const C &c, std::size_t iters, const char* cname,
                     typename C::difference_type count,
                     const typename C::value_type& val, const char* label)
 {
+   typedef typename C::const_iterator cit_t;
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = std::search_n(c.begin(), c.end(), count, val);
-         result = (it == c.end()) ? 0 : 1;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = std::search_n(c.begin(), c.end(), count, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = std::search_n(c.begin(), c.end(), count, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = std::search_n(c.begin(), c.end(), count, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = std::search_n(c.begin(), c.end(), count, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = std::search_n(c.begin(), c.end(), count, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = std::search_n(c.begin(), c.end(), count, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = std::search_n(c.begin(), c.end(), count, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = std::search_n(c.begin(), c.end(), count, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = bc::segmented_search_n(c.begin(), c.end(), count, val);
-         result = (it == c.end()) ? 0 : 1;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = bc::segmented_search_n(c.begin(), c.end(), count, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = bc::segmented_search_n(c.begin(), c.end(), count, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = bc::segmented_search_n(c.begin(), c.end(), count, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = bc::segmented_search_n(c.begin(), c.end(), count, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = bc::segmented_search_n(c.begin(), c.end(), count, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = bc::segmented_search_n(c.begin(), c.end(), count, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = bc::segmented_search_n(c.begin(), c.end(), count, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = bc::segmented_search_n(c.begin(), c.end(), count, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -1981,28 +3493,72 @@ void bench_set_union(const C &c, const C &c2, std::size_t iters, const char* cna
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size() + c2.size());
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("set_union", cname, r1, r2);
 }
 
@@ -2012,28 +3568,72 @@ void bench_set_difference(const C &c, const C &c2, std::size_t iters, const char
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("set_difference", cname, r1, r2);
 }
 
@@ -2043,28 +3643,72 @@ void bench_set_intersection(const C &c, const C &c2, std::size_t iters, const ch
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size());
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("set_intersection", cname, r1, r2);
 }
 
@@ -2074,28 +3718,72 @@ void bench_set_symmetric_difference(const C &c, const C &c2, std::size_t iters, 
    typedef typename C::value_type VT;
    std::vector<VT> out(c.size() + c2.size());
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("set_symmetric_difference", cname, r1, r2);
 }
 
@@ -2103,34 +3791,85 @@ template<class C, class Pred>
 void bench_partition(const C &c, std::size_t iters, const char* cname,
                      Pred pred, const char* label)
 {
+   typedef typename C::iterator it_t;
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {
+      C c1(c), c2(c), c3(c), c4(c), c5(c), c6(c), c7(c), c8(c);
+      std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // partition is in-place, so make a copy for each iteration
-         typename C::iterator it = std::partition(c2.begin(), c2.end(), pred);
-         result = (it == c2.end()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         t1.resume();
+         { clobber(); it_t it = std::partition(c1.begin(), c1.end(), pred); result = (it == c1.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); it_t it = std::partition(c2.begin(), c2.end(), pred); result = (it == c2.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); it_t it = std::partition(c3.begin(), c3.end(), pred); result = (it == c3.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); it_t it = std::partition(c4.begin(), c4.end(), pred); result = (it == c4.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); it_t it = std::partition(c5.begin(), c5.end(), pred); result = (it == c5.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); it_t it = std::partition(c6.begin(), c6.end(), pred); result = (it == c6.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); it_t it = std::partition(c7.begin(), c7.end(), pred); result = (it == c7.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); it_t it = std::partition(c8.begin(), c8.end(), pred); result = (it == c8.end()) ? 1 : 0; escape(&result); }
+         t1.stop();
+         if (BOOST_UNLIKELY(--n_ == 0)) { break; }
+         c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c;
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {
+      C c1(c), c2(c), c3(c), c4(c), c5(c), c6(c), c7(c), c8(c);
+      std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // partition is in-place, so make a copy for each iteration
-         typename C::iterator it = bc::segmented_partition(c2.begin(), c2.end(), pred);
-         result = (it == c2.end()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         t2.resume();
+         { clobber(); it_t it = bc::segmented_partition(c1.begin(), c1.end(), pred); result = (it == c1.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); it_t it = bc::segmented_partition(c2.begin(), c2.end(), pred); result = (it == c2.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); it_t it = bc::segmented_partition(c3.begin(), c3.end(), pred); result = (it == c3.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); it_t it = bc::segmented_partition(c4.begin(), c4.end(), pred); result = (it == c4.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); it_t it = bc::segmented_partition(c5.begin(), c5.end(), pred); result = (it == c5.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); it_t it = bc::segmented_partition(c6.begin(), c6.end(), pred); result = (it == c6.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); it_t it = bc::segmented_partition(c7.begin(), c7.end(), pred); result = (it == c7.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); it_t it = bc::segmented_partition(c8.begin(), c8.end(), pred); result = (it == c8.end()) ? 1 : 0; escape(&result); }
+         t2.stop();
+         if (BOOST_UNLIKELY(--n_ == 0)) { break; }
+         c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c;
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -2138,34 +3877,85 @@ template<class C, class Pred>
 void bench_stable_partition(const C &c, std::size_t iters, const char* cname,
                             Pred pred, const char* label)
 {
+   typedef typename C::iterator it_t;
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {
+      C c1(c), c2(c), c3(c), c4(c), c5(c), c6(c), c7(c), c8(c);
+      std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // stable_partition is in-place, so make a copy for each iteration
-         typename C::iterator it = std::stable_partition(c2.begin(), c2.end(), pred);
-         result = (it == c2.end()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         t1.resume();
+         { clobber(); it_t it = std::stable_partition(c1.begin(), c1.end(), pred); result = (it == c1.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); it_t it = std::stable_partition(c2.begin(), c2.end(), pred); result = (it == c2.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); it_t it = std::stable_partition(c3.begin(), c3.end(), pred); result = (it == c3.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); it_t it = std::stable_partition(c4.begin(), c4.end(), pred); result = (it == c4.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); it_t it = std::stable_partition(c5.begin(), c5.end(), pred); result = (it == c5.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); it_t it = std::stable_partition(c6.begin(), c6.end(), pred); result = (it == c6.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); it_t it = std::stable_partition(c7.begin(), c7.end(), pred); result = (it == c7.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); it_t it = std::stable_partition(c8.begin(), c8.end(), pred); result = (it == c8.end()) ? 1 : 0; escape(&result); }
+         t1.stop();
+         if (BOOST_UNLIKELY(--n_ == 0)) { break; }
+         c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c;
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {
+      C c1(c), c2(c), c3(c), c4(c), c5(c), c6(c), c7(c), c8(c);
+      std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         C c2(c); // stable_partition is in-place, so make a copy for each iteration
-         typename C::iterator it = bc::segmented_stable_partition(c2.begin(), c2.end(), pred);
-         result = (it == c2.end()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         t2.resume();
+         { clobber(); it_t it = bc::segmented_stable_partition(c1.begin(), c1.end(), pred); result = (it == c1.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); it_t it = bc::segmented_stable_partition(c2.begin(), c2.end(), pred); result = (it == c2.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); it_t it = bc::segmented_stable_partition(c3.begin(), c3.end(), pred); result = (it == c3.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); it_t it = bc::segmented_stable_partition(c4.begin(), c4.end(), pred); result = (it == c4.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); it_t it = bc::segmented_stable_partition(c5.begin(), c5.end(), pred); result = (it == c5.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); it_t it = bc::segmented_stable_partition(c6.begin(), c6.end(), pred); result = (it == c6.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); it_t it = bc::segmented_stable_partition(c7.begin(), c7.end(), pred); result = (it == c7.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); it_t it = bc::segmented_stable_partition(c8.begin(), c8.end(), pred); result = (it == c8.end()) ? 1 : 0; escape(&result); }
+         t2.stop();
+         if (BOOST_UNLIKELY(--n_ == 0)) { break; }
+         c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c;
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -2176,30 +3966,72 @@ void bench_partition_copy(const C &c, std::size_t iters, const char* cname)
    std::vector<VT> t_out(c.size());
    std::vector<VT> f_out(c.size());
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         bench_detail::partition_copy(c.begin(), c.end(),
-            t_out.begin(), f_out.begin(), is_odd<VT>());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         bc::segmented_partition_copy(c.begin(), c.end(),
-            t_out.begin(), f_out.begin(), is_odd<VT>());
-         clobber();
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio("partition_copy", cname, r1, r2);
 }
 
@@ -2207,32 +4039,75 @@ template<class C, class Pred>
 void bench_partition_point(const C &c, std::size_t iters, const char* cname,
                            Pred pred, const char* label)
 {
+   typedef typename C::const_iterator cit_t;
    int result = 0;
 
-   cpu_timer t1(BENCH_REPEATS);
-   for (std::size_t r1 = 0; r1 < BENCH_REPEATS; ++r1) {
+   cpu_timer t1;
+   {  std::size_t n_ = (iters + 7) / 8;
       t1.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = bench_detail::partition_point(c.begin(), c.end(), pred);
-         result = (it == c.end()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = bench_detail::partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = bench_detail::partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = bench_detail::partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = bench_detail::partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = bench_detail::partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = bench_detail::partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = bench_detail::partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = bench_detail::partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
+      } while (true);
       }
-      t1.stop();
    }
 
-   cpu_timer t2(BENCH_REPEATS);
-   for (std::size_t r2 = 0; r2 < BENCH_REPEATS; ++r2) {
+   cpu_timer t2;
+   {  std::size_t n_ = (iters + 7) / 8;
       t2.resume();
-      for (std::size_t i = 0; i < iters; ++i) {
-         typename C::const_iterator it = bc::segmented_partition_point(c.begin(), c.end(), pred);
-         result = (it == c.end()) ? 1 : 0;
-         escape(&result);
+      switch (iters % 8) {
+      case 0: do {
+         { clobber(); cit_t it = bc::segmented_partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 7:
+         { clobber(); cit_t it = bc::segmented_partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 6:
+         { clobber(); cit_t it = bc::segmented_partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 5:
+         { clobber(); cit_t it = bc::segmented_partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 4:
+         { clobber(); cit_t it = bc::segmented_partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 3:
+         { clobber(); cit_t it = bc::segmented_partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 2:
+         { clobber(); cit_t it = bc::segmented_partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         BOOST_FALLTHROUGH;
+      case 1:
+         { clobber(); cit_t it = bc::segmented_partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+         if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
+      } while (true);
       }
-      t2.stop();
    }
 
-   double r1 = calc_ns_per_elem(t1.elapsed().wall, BENCH_REPEATS * iters, c.size());
-   double r2 = calc_ns_per_elem(t2.elapsed().wall, BENCH_REPEATS * iters, c.size());
+   double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
+   double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
    print_ratio(label, cname, r1, r2);
 }
 
@@ -2278,7 +4153,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    {
       C c2(c);
       bench_equal(c, c2, iters, cname, "equal(hit)");
-      c2[c2.size() / 2u] = VT(-1);
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = VT(-1);
       bench_equal(c, c2, iters, cname, "equal(miss)");
    }
 
@@ -2325,7 +4200,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    {
       bench_is_partitioned(c, iters, cname, is_negative<VT>(), "is_partitioned(hit)");
       C c2(c);
-      c2[c2.size() / 2u] = VT(-1);
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = VT(-1);
       bench_is_partitioned(c2, iters, cname, is_negative<VT>(), "is_partitioned(miss)");
    }
 
@@ -2333,7 +4208,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    {
       bench_is_sorted(c, iters, cname, "is_sorted(hit)");
       C c2(c);
-      c2[c2.size() / 2u] = VT(-1);
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = VT(-1);
       bench_is_sorted(c2, iters, cname, "is_sorted(miss)");
    }
 
@@ -2341,7 +4216,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    {
       bench_is_sorted_until(c, iters, cname, "is_sorted_until(hit)");
       C c2(c);
-      c2[c2.size() / 2u] = VT(-1);
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = VT(-1);
       bench_is_sorted_until(c2, iters, cname, "is_sorted_until(miss)");
    }
 
@@ -2356,9 +4231,10 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //mismatch
    {
       C c2(c);
-      c2[c2.size()/2] = VT(-1);
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = VT(-1);
       bench_mismatch(c, c2, iters, cname, "mismatch(hit)");
-      c2[c2.size()/2] = c[c2.size()/2];
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) =
+         *boost::container::make_iterator_uadvance(c.begin(), c.size()/2);
       bench_mismatch(c, c2, iters, cname, "mismatch(miss)");
    }
 
@@ -2393,7 +4269,16 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_remove_if(c, iters, cname, is_negative<VT>(), "remove_if(miss)");
 
    //replace
-   bench_replace(c, iters, cname, VT(0),  VT(0),  "replace(hit)");
+   {  //Replace half of the elements to ensure that the "hit" case is not too fast
+      C c2(c);
+      is_odd<VT> is_odd_pred;
+      for (typename C::iterator it = c2.begin(); it != c2.end(); ++it){
+         if( is_odd_pred(*it) )
+            *it = VT(-1);
+      }
+      bench_replace(c2, iters, cname, VT(-1),  VT(-2),  "replace(hit)");
+   }
+
    bench_replace(c, iters, cname, VT(-1), VT(-2), "replace(miss)");
 
    //replace_if
@@ -2454,7 +4339,7 @@ void run_benchmarks()
 {
    #ifdef NDEBUG
    const std::size_t N    = 100000;
-   const std::size_t iter = 500;
+   const std::size_t iter = 1000;
    #else
    const std::size_t N    = 10000;
    const std::size_t iter = 1;
@@ -2464,18 +4349,18 @@ void run_benchmarks()
              << "Elements: " << N << "   Iterations: " << iter << "\n\n";
 
    {
-         std::cout << "--- bc::deque<" << typeid(T).name() << "> ---\n";
+      std::cout << "--- bc::deque<" << typeid(T).name() << "> ---\n";
       bc::deque<T> dq;
       fill_test_data(dq, N);
       run_all(dq, iter, "deque");
          std::cout << "\n";
    }/*
    {
-         std::cout << "--- bc::nest<" << typeid(T).name() << "> ---\n";
+      std::cout << "--- bc::nest<" << typeid(T).name() << "> ---\n";
       bc::nest<T> nt;
       fill_test_data(nt, N);
       run_all(nt, iter, "nest");
-         std::cout << "\n";
+      std::cout << "\n";
    }*/
 }
 
