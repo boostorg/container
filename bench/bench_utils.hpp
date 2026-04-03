@@ -13,6 +13,7 @@
 
 #include <boost/move/detail/nsec_clock.hpp>
 #include <boost/container/detail/workaround.hpp>
+#include <vector>
 
 volatile int bench_utils_sink = 0;
 
