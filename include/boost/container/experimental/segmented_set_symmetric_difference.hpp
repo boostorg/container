@@ -43,14 +43,28 @@ struct set_symmetric_difference_default_less
 };
 
 template <class FwdIt, class InIter2, class Sent2, class OutIter, class Comp>
-void set_symmetric_difference_scan(FwdIt first, FwdIt last, InIter2& first2, Sent2 last2, OutIter& result, Comp comp,
+void set_symmetric_difference_scan(FwdIt first, FwdIt last, InIter2& first2_out, Sent2 last2, OutIter& result, Comp comp,
    non_segmented_iterator_tag)
 {
+   InIter2 first2 = first2_out;  //Avoid aliasing issues
    while(first != last && first2 != last2) {
-      if      (comp(*first, *first2)) { *result = *first;  ++first;  ++result; }
-      else if (comp(*first2, *first)) { *result = *first2; ++first2; ++result; }
-      else                            { ++first; ++first2; }
+      if (comp(*first, *first2)) {
+         *result = *first;
+         ++first;
+         ++result;
+      }
+      else {
+         if (comp(*first2, *first)) {
+            *result = *first2;
+            ++result;
+         }
+         else {
+            ++first;
+         }
+         ++first2;
+      }
    }
+   first2_out = first2;
    result = (segmented_copy)(first, last, result);
 }
 
