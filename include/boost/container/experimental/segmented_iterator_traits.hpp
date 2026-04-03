@@ -36,6 +36,24 @@ struct non_segmented_iterator_tag
    static const bool value = false;
 };
 
+//! Sentinel whose comparison with any iterator always yields false (not equal).
+//! Passes through segmented_remove_if_result_bounded to express an unbounded
+//! destination, letting the compiler eliminate the dead destination-full branch.
+struct unreachable_sentinel_t
+{
+   template <class It>
+   BOOST_CONTAINER_FORCEINLINE friend bool operator==(const It&, unreachable_sentinel_t) { return false; }
+   
+   template <class It>
+   BOOST_CONTAINER_FORCEINLINE friend bool operator==(unreachable_sentinel_t, const It&) { return false; }
+   
+   template <class It>
+   BOOST_CONTAINER_FORCEINLINE friend bool operator!=(const It&, unreachable_sentinel_t) { return true; }
+   
+   template <class It>
+   BOOST_CONTAINER_FORCEINLINE friend bool operator!=(unreachable_sentinel_t, const It&) { return true; }
+};
+
 namespace detail_algo {
 
 template <bool B> struct void_if_true;
