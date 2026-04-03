@@ -104,6 +104,7 @@ class MyInt
    friend inline bool operator==(const MyInt& a, const MyInt& b) { return a.int_ == b.int_; }
    friend inline bool operator!=(const MyInt& a, const MyInt& b) { return a.int_ != b.int_; }
    friend inline bool operator<(const MyInt& a, const MyInt& b) { return a.int_ < b.int_; }
+   friend inline bool operator>(const MyInt& a, const MyInt& b) { return a.int_ > b.int_; }
 };
 
 class MyFatInt
@@ -253,6 +254,24 @@ public:
    BOOST_CONTAINER_FORCEINLINE bool operator()(const U& t)const
    {
       return t < t_;
+   }
+};
+
+template<class T>
+class less_and_greater_ref
+{
+   typedef T value_type;
+   const value_type& l_;
+   const value_type& g_;
+public:
+   BOOST_CONTAINER_FORCEINLINE explicit less_and_greater_ref(const value_type& l, const value_type& g)
+      : l_(l), g_(g)
+   {
+   }
+   template <class U>
+   BOOST_CONTAINER_FORCEINLINE bool operator()(const U& t)const
+   {
+      return t < l_ || t > g_ ;
    }
 };
 
@@ -4261,11 +4280,11 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_remove_copy(c, iters, cname, VT(-1),               "remove_copy(miss)");
 
    //remove_copy_if
-   bench_remove_copy_if(c, iters, cname, is_odd<VT>(),      "remove_copy_if(hit)");
+   bench_remove_copy_if(c, iters, cname, less_and_greater_ref<VT>(VT((int)c.size()/4), VT((int)c.size()*3/4)),      "remove_copy_if(hit)");
    bench_remove_copy_if(c, iters, cname, is_negative<VT>(), "remove_copy_if(miss)");
 
    //remove_if
-   bench_remove_if(c, iters, cname, is_odd<VT>(),      "remove_if(hit)");
+   bench_remove_if(c, iters, cname, less_and_greater_ref<VT>(VT((int)c.size()/4), VT((int)c.size()*3/4)), "remove_if(hit)");
    bench_remove_if(c, iters, cname, is_negative<VT>(), "remove_if(miss)");
 
    //replace
@@ -4339,7 +4358,7 @@ void run_benchmarks()
 {
    #ifdef NDEBUG
    const std::size_t N    = 100000;
-   const std::size_t iter = 1000;
+   const std::size_t iter = 2000;
    #else
    const std::size_t N    = 10000;
    const std::size_t iter = 1;
