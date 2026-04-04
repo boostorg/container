@@ -190,14 +190,20 @@ SegDstIter segmented_remove_copy_if_dst_dispatch
 //////////////////////////////////////////////////////////////////////////////
 
 template <bool Move, class SrcIter, class Sent, class OutIter, class Pred, class Tag, class Cat>
+BOOST_CONTAINER_FORCEINLINE 
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, SrcIter>::value, OutIter>::type
 segmented_remove_copy_if_dispatch
    (SrcIter first, Sent last, OutIter result, Pred pred, Tag, Cat)
 {
+#if !defined(BOOST_CONTAINER_DISABLE_SEGMENTED_OUTPUT)
    typedef segmented_iterator_traits<OutIter> dst_traits;
    return (segmented_remove_copy_if_dst_dispatch<Move>)
       (first, last, result, pred, typename dst_traits::is_segmented_iterator(), Cat());
+#else
+   return (segmented_remove_copy_if_dst_dispatch<Move>)
+      (first, last, result, pred, non_segmented_iterator_tag(), Cat());
+#endif
 }
 
 template <bool Move, class SegIter, class OutIter, class Pred, class Cat>

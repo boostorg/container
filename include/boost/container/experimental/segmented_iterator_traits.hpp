@@ -200,4 +200,16 @@ struct is_sentinel<Iter, Iter>
    // Force no loop unrolling
 #endif
 
+//////////////////////////////////////////////////////////////////////////////
+// BOOST_CONTAINER_DISABLE_SEGMENTED_OUTPUT
+//
+// When defined, segmented algorithms that write to an output iterator will
+// NOT exploit segmentation on the output side.  Only input (source) iterator
+// segmentation is used.  This is useful for benchmarking the advantage of
+// the segmented output optimisation in isolation.
+//
+// Define BOOST_CONTAINER_DISABLE_SEGMENTED_OUTPUT before including any
+// segmented algorithm header to disable the optimisation.
+//////////////////////////////////////////////////////////////////////////////
+
 #endif // BOOST_CONTAINER_EXPERIMENTAL_SEGMENTED_ITERATOR_TRAITS_HPP
