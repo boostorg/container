@@ -128,6 +128,48 @@ void test_remove_seg2()
    BOOST_TEST(it == new_end);
 }
 
+void test_remove_movable_seg()
+{
+   typedef test_detail::movable_int mi;
+   test_detail::seg_vector<mi> sv;
+   int a1[] = {1, 2, 3};
+   int a2[] = {2, 4, 2};
+   int a3[] = {5, 2};
+   sv.add_segment_from_ints(a1, a1 + 3);
+   sv.add_segment_from_ints(a2, a2 + 3);
+   sv.add_segment_from_ints(a3, a3 + 2);
+
+   typedef test_detail::seg_vector<mi>::iterator iter_t;
+   iter_t new_end = segmented_remove(sv.begin(), sv.end(), mi(2));
+
+   int expected[] = {1, 3, 4, 5};
+   iter_t it = sv.begin();
+   for(int i = 0; i < 4; ++i, ++it)
+      BOOST_TEST_EQ(it->value(), expected[i]);
+   BOOST_TEST(it == new_end);
+}
+
+void test_remove_movable_seg2()
+{
+   typedef test_detail::movable_int mi;
+   test_detail::seg2_vector<mi> sv2;
+   int a1[] = {1, 2, 3};
+   int a2[] = {2, 4, 2};
+   int a3[] = {5, 2};
+   sv2.add_flat_segment_from_ints(a1, a1 + 3);
+   sv2.add_flat_segment_from_ints(a2, a2 + 3);
+   sv2.add_flat_segment_from_ints(a3, a3 + 2);
+
+   typedef test_detail::seg2_vector<mi>::iterator iter_t;
+   iter_t new_end = segmented_remove(sv2.begin(), sv2.end(), mi(2));
+
+   int expected[] = {1, 3, 4, 5};
+   iter_t it = sv2.begin();
+   for(int i = 0; i < 4; ++i, ++it)
+      BOOST_TEST_EQ(it->value(), expected[i]);
+   BOOST_TEST(it == new_end);
+}
+
 int main()
 {
    test_remove_segmented();
@@ -138,5 +180,7 @@ int main()
    test_remove_sentinel_segmented();
    test_remove_sentinel_non_segmented();
    test_remove_seg2();
+   test_remove_movable_seg();
+   test_remove_movable_seg2();
    return boost::report_errors();
 }

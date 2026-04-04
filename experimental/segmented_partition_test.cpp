@@ -18,6 +18,7 @@ using namespace boost::container;
 struct is_even
 {
    bool operator()(int v) const { return v % 2 == 0; }
+   bool operator()(const test_detail::movable_int& v) const { return v.value() % 2 == 0; }
 };
 
 void test_partition_basic()
@@ -156,6 +157,54 @@ void test_partition_seg2()
    BOOST_TEST_EQ(even_count, 3);
 }
 
+void test_partition_movable_seg()
+{
+   typedef test_detail::movable_int mi;
+   test_detail::seg_vector<mi> sv;
+   int a1[] = {1, 2, 3};
+   int a2[] = {4, 5, 6, 7};
+   int a3[] = {8, 9};
+   sv.add_segment_from_ints(a1, a1 + 3);
+   sv.add_segment_from_ints(a2, a2 + 4);
+   sv.add_segment_from_ints(a3, a3 + 2);
+
+   typedef test_detail::seg_vector<mi>::iterator iter_t;
+   iter_t mid = segmented_partition(sv.begin(), sv.end(), is_even());
+
+   for(iter_t it = sv.begin(); it != mid; ++it)
+      BOOST_TEST(it->value() % 2 == 0);
+   for(iter_t it = mid; it != sv.end(); ++it)
+      BOOST_TEST(it->value() % 2 != 0);
+
+   int even_count = 0;
+   for(iter_t it = sv.begin(); it != mid; ++it)
+      ++even_count;
+   BOOST_TEST_EQ(even_count, 4);
+}
+
+void test_partition_movable_seg2()
+{
+   typedef test_detail::movable_int mi;
+   test_detail::seg2_vector<mi> sv2;
+   int a1[] = {1, 2, 3};
+   int a2[] = {4, 5, 6};
+   sv2.add_flat_segment_from_ints(a1, a1 + 3);
+   sv2.add_flat_segment_from_ints(a2, a2 + 3);
+
+   typedef test_detail::seg2_vector<mi>::iterator iter_t;
+   iter_t mid = segmented_partition(sv2.begin(), sv2.end(), is_even());
+
+   for(iter_t it = sv2.begin(); it != mid; ++it)
+      BOOST_TEST(it->value() % 2 == 0);
+   for(iter_t it = mid; it != sv2.end(); ++it)
+      BOOST_TEST(it->value() % 2 != 0);
+
+   int even_count = 0;
+   for(iter_t it = sv2.begin(); it != mid; ++it)
+      ++even_count;
+   BOOST_TEST_EQ(even_count, 3);
+}
+
 int main()
 {
    test_partition_basic();
@@ -166,5 +215,7 @@ int main()
    test_partition_sentinel_segmented();
    test_partition_sentinel_non_segmented();
    test_partition_seg2();
+   test_partition_movable_seg();
+   test_partition_movable_seg2();
    return boost::report_errors();
 }

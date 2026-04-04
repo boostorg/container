@@ -19,8 +19,27 @@
 #include <vector>
 #include <cstddef>
 #include <iterator>
+#include <ostream>
+#include <utility>
 
 namespace test_detail {
+
+class movable_int
+{
+   int val_;
+public:
+   explicit movable_int(int v = 0) : val_(v) {}
+   movable_int(movable_int&& other) noexcept : val_(other.val_) { other.val_ = -1; }
+   movable_int& operator=(movable_int&& other) noexcept { val_ = other.val_; other.val_ = -1; return *this; }
+   movable_int(const movable_int&) = delete;
+   movable_int& operator=(const movable_int&) = delete;
+
+   int value() const { return val_; }
+
+   friend bool operator==(const movable_int& a, const movable_int& b) { return a.val_ == b.val_; }
+   friend bool operator!=(const movable_int& a, const movable_int& b) { return a.val_ != b.val_; }
+   friend std::ostream& operator<<(std::ostream& os, const movable_int& m) { return os << m.val_; }
+};
 
 template<class T>
 class seg_vector_iterator
@@ -115,6 +134,15 @@ public:
    void add_segment_range(InpIt first, InpIt last)
    {
       segments_.insert(segments_.end() - 1, std::vector<T>(first, last));
+   }
+
+   void add_segment_from_ints(const int* first, const int* last)
+   {
+      std::vector<T> v;
+      v.reserve(static_cast<std::size_t>(last - first));
+      for(; first != last; ++first)
+         v.push_back(T(*first));
+      segments_.insert(segments_.end() - 1, std::move(v));
    }
 
    iterator begin()
@@ -275,6 +303,13 @@ public:
       seg_vector<T> sv;
       sv.add_segment_range(first, last);
       segments_.insert(segments_.end() - 1, sv);
+   }
+
+   void add_flat_segment_from_ints(const int* first, const int* last)
+   {
+      seg_vector<T> sv;
+      sv.add_segment_from_ints(first, last);
+      segments_.insert(segments_.end() - 1, std::move(sv));
    }
 
    iterator begin()

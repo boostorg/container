@@ -18,6 +18,7 @@ using namespace boost::container;
 struct is_even
 {
    bool operator()(int v) const { return v % 2 == 0; }
+   bool operator()(const test_detail::movable_int& v) const { return v.value() % 2 == 0; }
 };
 
 void test_stable_partition_basic()
@@ -132,6 +133,50 @@ void test_stable_partition_seg2()
    BOOST_TEST_EQ(*it, 5);
 }
 
+void test_stable_partition_movable_seg()
+{
+   typedef test_detail::movable_int mi;
+   test_detail::seg_vector<mi> sv;
+   int a1[] = {3, 2, 1};
+   int a2[] = {6, 5, 4};
+   sv.add_segment_from_ints(a1, a1 + 3);
+   sv.add_segment_from_ints(a2, a2 + 3);
+
+   typedef test_detail::seg_vector<mi>::iterator iter_t;
+   iter_t mid = segmented_stable_partition(sv.begin(), sv.end(), is_even());
+
+   iter_t it = sv.begin();
+   BOOST_TEST_EQ(it->value(), 2); ++it;
+   BOOST_TEST_EQ(it->value(), 6); ++it;
+   BOOST_TEST_EQ(it->value(), 4); ++it;
+   BOOST_TEST(it == mid);
+   BOOST_TEST_EQ(it->value(), 3); ++it;
+   BOOST_TEST_EQ(it->value(), 1); ++it;
+   BOOST_TEST_EQ(it->value(), 5);
+}
+
+void test_stable_partition_movable_seg2()
+{
+   typedef test_detail::movable_int mi;
+   test_detail::seg2_vector<mi> sv2;
+   int a1[] = {1, 2, 3};
+   int a2[] = {4, 5, 6};
+   sv2.add_flat_segment_from_ints(a1, a1 + 3);
+   sv2.add_flat_segment_from_ints(a2, a2 + 3);
+
+   typedef test_detail::seg2_vector<mi>::iterator iter_t;
+   iter_t mid = segmented_stable_partition(sv2.begin(), sv2.end(), is_even());
+
+   iter_t it = sv2.begin();
+   BOOST_TEST_EQ(it->value(), 2); ++it;
+   BOOST_TEST_EQ(it->value(), 4); ++it;
+   BOOST_TEST_EQ(it->value(), 6); ++it;
+   BOOST_TEST(it == mid);
+   BOOST_TEST_EQ(it->value(), 1); ++it;
+   BOOST_TEST_EQ(it->value(), 3); ++it;
+   BOOST_TEST_EQ(it->value(), 5);
+}
+
 int main()
 {
    test_stable_partition_basic();
@@ -141,5 +186,7 @@ int main()
    test_stable_partition_all_false();
    test_stable_partition_non_segmented();
    test_stable_partition_seg2();
+   test_stable_partition_movable_seg();
+   test_stable_partition_movable_seg2();
    return boost::report_errors();
 }

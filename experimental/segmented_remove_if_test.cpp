@@ -18,11 +18,13 @@ using namespace boost::container;
 struct is_even
 {
    bool operator()(int x) const { return x % 2 == 0; }
+   bool operator()(const test_detail::movable_int& x) const { return x.value() % 2 == 0; }
 };
 
 struct is_odd
 {
    bool operator()(int x) const { return x % 2 != 0; }
+   bool operator()(const test_detail::movable_int& x) const { return x.value() % 2 != 0; }
 };
 
 void test_remove_if_segmented()
@@ -130,6 +132,43 @@ void test_remove_if_seg2()
    BOOST_TEST(it == new_end);
 }
 
+void test_remove_if_movable_seg()
+{
+   typedef test_detail::movable_int mi;
+   test_detail::seg_vector<mi> sv;
+   int a1[] = {1, 2, 3, 4, 5, 6};
+   sv.add_segment_from_ints(a1, a1 + 3);
+   sv.add_segment_from_ints(a1 + 3, a1 + 6);
+
+   typedef test_detail::seg_vector<mi>::iterator iter_t;
+   iter_t new_end = segmented_remove_if(sv.begin(), sv.end(), is_even());
+
+   int expected[] = {1, 3, 5};
+   iter_t it = sv.begin();
+   for(int i = 0; i < 3; ++i, ++it)
+      BOOST_TEST_EQ(it->value(), expected[i]);
+   BOOST_TEST(it == new_end);
+}
+
+void test_remove_if_movable_seg2()
+{
+   typedef test_detail::movable_int mi;
+   test_detail::seg2_vector<mi> sv2;
+   int a1[] = {1, 2, 3};
+   int a2[] = {4, 5, 6};
+   sv2.add_flat_segment_from_ints(a1, a1 + 3);
+   sv2.add_flat_segment_from_ints(a2, a2 + 3);
+
+   typedef test_detail::seg2_vector<mi>::iterator iter_t;
+   iter_t new_end = segmented_remove_if(sv2.begin(), sv2.end(), is_even());
+
+   int expected[] = {1, 3, 5};
+   iter_t it = sv2.begin();
+   for(int i = 0; i < 3; ++i, ++it)
+      BOOST_TEST_EQ(it->value(), expected[i]);
+   BOOST_TEST(it == new_end);
+}
+
 int main()
 {
    test_remove_if_segmented();
@@ -140,5 +179,7 @@ int main()
    test_remove_if_sentinel_segmented();
    test_remove_if_sentinel_non_segmented();
    test_remove_if_seg2();
+   test_remove_if_movable_seg();
+   test_remove_if_movable_seg2();
    return boost::report_errors();
 }
