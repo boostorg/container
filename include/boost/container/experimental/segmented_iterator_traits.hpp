@@ -106,6 +106,22 @@ struct constref_generator
     BOOST_CONTAINER_FORCEINLINE const T& operator()() const { return value; }
 };
 
+//////////////////////////////////////////////////////////////////////////////
+// Transfer helper: copy (Move=false) or move (Move=true) a single element.
+//////////////////////////////////////////////////////////////////////////////
+
+template <bool> struct transfer_op;
+template <> struct transfer_op<false>
+{
+   template <class D, class S>
+   BOOST_CONTAINER_FORCEINLINE static void apply(D& d, S& s) { d = s; }
+};
+template <> struct transfer_op<true>
+{
+   template <class D, class S>
+   BOOST_CONTAINER_FORCEINLINE static void apply(D& d, S& s) { d = boost::move(s); }
+};
+
 } // namespace detail_algo
 
 //! Traits class to detect and decompose segmented iterators.
