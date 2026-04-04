@@ -972,28 +972,28 @@ void bench_copy(const C &c, std::size_t iters, const char* cname)
       t1.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
       } while (true);
       }
@@ -1004,28 +1004,28 @@ void bench_copy(const C &c, std::size_t iters, const char* cname)
       t2.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
       } while (true);
       }
@@ -1048,28 +1048,28 @@ void bench_copy_if(const C &c, std::size_t iters, const char* cname,
       t1.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
       } while (true);
       }
@@ -1080,28 +1080,28 @@ void bench_copy_if(const C &c, std::size_t iters, const char* cname,
       t2.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
       } while (true);
       }
@@ -2049,28 +2049,28 @@ void bench_transform(const C &c, std::size_t iters, const char* cname)
       t1.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
       } while (true);
       }
@@ -2081,28 +2081,28 @@ void bench_transform(const C &c, std::size_t iters, const char* cname)
       t2.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(out.data()); }
+         { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
       } while (true);
       }
@@ -2204,28 +2204,28 @@ void bench_copy_n(const C &c, std::size_t iters, const char* cname)
       t1.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
       } while (true);
       }
@@ -2236,28 +2236,28 @@ void bench_copy_n(const C &c, std::size_t iters, const char* cname)
       t2.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
       } while (true);
       }
@@ -2606,28 +2606,28 @@ void bench_remove_copy(const C &c, std::size_t iters, const char* cname,
       t1.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
       } while (true);
       }
@@ -2638,28 +2638,28 @@ void bench_remove_copy(const C &c, std::size_t iters, const char* cname,
       t2.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(out.data()); }
+         { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
       } while (true);
       }
@@ -2682,28 +2682,28 @@ void bench_remove_copy_if(const C &c, std::size_t iters, const char* cname,
       t1.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
       } while (true);
       }
@@ -2714,28 +2714,28 @@ void bench_remove_copy_if(const C &c, std::size_t iters, const char* cname,
       t2.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(out.data()); }
+         { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
       } while (true);
       }
@@ -2832,28 +2832,28 @@ void bench_reverse_copy(const C &c, std::size_t iters, const char* cname)
       t1.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
       } while (true);
       }
@@ -2864,28 +2864,28 @@ void bench_reverse_copy(const C &c, std::size_t iters, const char* cname)
       t2.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
       } while (true);
       }
@@ -3133,28 +3133,28 @@ void bench_merge(const C &c, const C &c2, std::size_t iters, const char* cname)
       t1.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
       } while (true);
       }
@@ -3165,28 +3165,28 @@ void bench_merge(const C &c, const C &c2, std::size_t iters, const char* cname)
       t2.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
       } while (true);
       }
@@ -3517,28 +3517,28 @@ void bench_set_union(const C &c, const C &c2, std::size_t iters, const char* cna
       t1.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
       } while (true);
       }
@@ -3549,28 +3549,28 @@ void bench_set_union(const C &c, const C &c2, std::size_t iters, const char* cna
       t2.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
       } while (true);
       }
@@ -3592,28 +3592,28 @@ void bench_set_difference(const C &c, const C &c2, std::size_t iters, const char
       t1.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
       } while (true);
       }
@@ -3624,28 +3624,28 @@ void bench_set_difference(const C &c, const C &c2, std::size_t iters, const char
       t2.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
       } while (true);
       }
@@ -3667,28 +3667,28 @@ void bench_set_intersection(const C &c, const C &c2, std::size_t iters, const ch
       t1.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
       } while (true);
       }
@@ -3699,28 +3699,28 @@ void bench_set_intersection(const C &c, const C &c2, std::size_t iters, const ch
       t2.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
       } while (true);
       }
@@ -3742,28 +3742,28 @@ void bench_set_symmetric_difference(const C &c, const C &c2, std::size_t iters, 
       t1.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
       } while (true);
       }
@@ -3774,28 +3774,28 @@ void bench_set_symmetric_difference(const C &c, const C &c2, std::size_t iters, 
       t2.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(out.data()); }
+         { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
       } while (true);
       }
@@ -3990,28 +3990,28 @@ void bench_partition_copy(const C &c, std::size_t iters, const char* cname)
       t1.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
       } while (true);
       }
@@ -4022,28 +4022,28 @@ void bench_partition_copy(const C &c, std::size_t iters, const char* cname)
       t2.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(t_out.data()); }
+         { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
       } while (true);
       }
@@ -4356,7 +4356,9 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 template<class T>
 void run_benchmarks()
 {
-   #ifdef NDEBUG
+
+   #define SIMPLE_TEST
+   #if defined(NDEBUG) && !defined(SIMPLE_TEST)
    const std::size_t N    = 100000;
    const std::size_t iter = 2000;
    #else
