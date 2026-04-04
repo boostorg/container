@@ -21,6 +21,8 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 
+#include <boost/move/utility_core.hpp>
+
 namespace boost {
 namespace container {
 
