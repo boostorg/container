@@ -628,7 +628,7 @@ inline double calc_ns_per_elem(boost::move_detail::nanosecond_type ns,
 
 inline void print_subheader()
 {
-   std::cout << std::left  << std::setw(24) << "< algo >"
+   std::cout << std::left  << std::setw(32) << "< algo >"
              << std::right << std::setw(20) << "< speedup >"
              << std::right << std::setw(20) << "< std ns/item >"
              << std::right << std::setw(20) << "< seg ns/item >"
@@ -650,7 +650,7 @@ inline void print_ratio(const char* algo, const char*,
 {
    double ratio = (seg_ns > 0.0) ? std_ns / seg_ns : 0.0;
    g_geomean.add(ratio);
-   std::cout << std::left  << std::setw(24) << algo
+   std::cout << std::left  << std::setw(32) << algo
              << std::right << std::setw(20) << std::fixed << std::setprecision(2) << ((ratio < 1.0) ? "! " : "") << ratio << 'x'
              << std::right << std::setw(20) << std::fixed << std::setprecision(3) << std_ns
              << std::right << std::setw(20) << std::fixed << std::setprecision(3) << seg_ns
@@ -961,11 +961,12 @@ void bench_for_each(const C &c, std::size_t iters, const char* cname)
    print_ratio("for_each", cname, r1, r2);
 }
 
-template<class C>
-void bench_copy(const C &c, std::size_t iters, const char* cname)
+template<bool DequeOut, class C>
+void bench_copy(const C &c, std::size_t iters, const char* cname, const char* label)
 {
    typedef typename C::value_type VT;
-   boost::container::vector<VT> out(c.size());
+   typedef typename boost::move_detail::if_c<DequeOut, bc::deque<VT>, boost::container::vector<VT> >::type out_t;
+   out_t out(c.size());
 
    cpu_timer t1;
    {  std::size_t n_ = (iters + 7) / 8;
@@ -1033,7 +1034,7 @@ void bench_copy(const C &c, std::size_t iters, const char* cname)
 
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
-   print_ratio("copy", cname, r1, r2);
+   print_ratio(label, cname, r1, r2);
 }
 
 template<class C, class Pred>
@@ -2594,12 +2595,13 @@ void bench_remove_if(const C &c, std::size_t iters, const char* cname,
    print_ratio(label, cname, r1, r2);
 }
 
-template<class C>
+template<bool DequeOut, class C>
 void bench_remove_copy(const C &c, std::size_t iters, const char* cname,
                        const typename C::value_type& val, const char* label)
 {
    typedef typename C::value_type VT;
-   boost::container::vector<VT> out(c.size());
+   typedef typename boost::move_detail::if_c<DequeOut, bc::deque<VT>, boost::container::vector<VT> >::type out_t;
+   out_t out(c.size());
 
    cpu_timer t1;
    {  std::size_t n_ = (iters + 7) / 8;
@@ -2670,12 +2672,13 @@ void bench_remove_copy(const C &c, std::size_t iters, const char* cname,
    print_ratio(label, cname, r1, r2);
 }
 
-template<class C, class Pred>
+template<bool DequeOut, class C, class Pred>
 void bench_remove_copy_if(const C &c, std::size_t iters, const char* cname,
                           Pred pred, const char* label)
 {
    typedef typename C::value_type VT;
-   boost::container::vector<VT> out(c.size());
+   typedef typename boost::move_detail::if_c<DequeOut, bc::deque<VT>, boost::container::vector<VT> >::type out_t;
+   out_t out(c.size());
 
    cpu_timer t1;
    {  std::size_t n_ = (iters + 7) / 8;
@@ -4139,19 +4142,28 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
 
+   const VT zero(0);
+   const VT min1(-1);
+   const VT quart((int)c.size() / 4);
+   const VT half((int)c.size() / 2);
+   const VT threequart((int)c.size() / 2);
+
    g_geomean.reset();
    print_subheader();
 
    //all_of
    bench_all_of(c, iters, cname, is_zero_or_positive<VT>(), "all_of(hit)");
-   bench_all_of(c, iters, cname, unequal_to_ref<VT>(VT(static_cast<int>(c.size() / 2))), "all_of(miss)");
+   bench_all_of(c, iters, cname, unequal_to_ref<VT>(half), "all_of(miss)");
 
    //any_of
-   bench_any_of(c, iters, cname, equal_to_ref<VT>(VT(static_cast<int>(c.size() / 2))),   "any_of(hit)");
+   bench_any_of(c, iters, cname, equal_to_ref<VT>(half),   "any_of(hit)");
    bench_any_of(c, iters, cname, is_negative<VT>(), "any_of(miss)");
 
    //copy
-   bench_copy(c, iters, cname);
+   bench_copy<false>(c, iters, cname, "copy");
+
+   //copy -> deque output
+   bench_copy<true>(c, iters, cname, "copy(2xS)");
 
    //copy_if
    bench_copy_if(c, iters, cname, is_odd<VT>(),      "copy_if(hit)");
@@ -4161,8 +4173,8 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_copy_n(c, iters, cname);
 
    //count
-   bench_count(c, iters, cname, VT(0),  "count(hit)");
-   bench_count(c, iters, cname, VT(-1), "count(miss)");
+   bench_count(c, iters, cname, zero,  "count(hit)");
+   bench_count(c, iters, cname, min1, "count(miss)");
 
    //count_if
    bench_count_if(c, iters, cname, is_odd<VT>(),      "count_if(hit)");
@@ -4172,7 +4184,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    {
       C c2(c);
       bench_equal(c, c2, iters, cname, "equal(hit)");
-      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = VT(-1);
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
       bench_equal(c, c2, iters, cname, "equal(miss)");
    }
 
@@ -4183,27 +4195,27 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_fill_n(c, iters, cname);
 
    //find
-   bench_find(c, iters, cname, VT(static_cast<int>(c.size() / 2)), "find(hit)");
-   bench_find(c, iters, cname, VT(-1), "find(miss)");
+   bench_find(c, iters, cname, half, "find(hit)");
+   bench_find(c, iters, cname, min1, "find(miss)");
 
    //find_if
-   bench_find_if(c, iters, cname, equal_to_ref<VT>(VT(static_cast<int>(c.size() / 2))), "find_if(hit)");
+   bench_find_if(c, iters, cname, equal_to_ref<VT>(half), "find_if(hit)");
    bench_find_if(c, iters, cname, is_negative<VT>(), "find_if(miss)");
 
    //find_if_not
-   bench_find_if_not(c, iters, cname, unequal_to_ref<VT>(VT(static_cast<int>(c.size() / 2))), "find_if_not(hit)");
+   bench_find_if_not(c, iters, cname, unequal_to_ref<VT>(half), "find_if_not(hit)");
    bench_find_if_not(c, iters, cname, is_zero_or_positive<VT>(), "find_if_not(miss)");
 
    //find_last
-   bench_find_last(c, iters, cname, VT(static_cast<int>(c.size() / 2)), "find_last(hit)");
-   bench_find_last(c, iters, cname, VT(-1), "find_last(miss)");
+   bench_find_last(c, iters, cname, half, "find_last(hit)");
+   bench_find_last(c, iters, cname, min1, "find_last(miss)");
 
    //find_last_if
-   bench_find_last_if(c, iters, cname, equal_to_ref<VT>(VT(static_cast<int>(c.size() / 2))), "find_last_if(hit)");
+   bench_find_last_if(c, iters, cname, equal_to_ref<VT>(half), "find_last_if(hit)");
    bench_find_last_if(c, iters, cname, is_negative<VT>(), "find_last_if(miss)");
 
    //find_last_if_not
-   bench_find_last_if_not(c, iters, cname, unequal_to_ref<VT>(VT(static_cast<int>(c.size() / 2))), "find_last_if_not(hit)");
+   bench_find_last_if_not(c, iters, cname, unequal_to_ref<VT>(half), "find_last_if_not(hit)");
    bench_find_last_if_not(c, iters, cname, is_zero_or_positive<VT>(), "find_last_if_not(miss)");
 
    //for_each
@@ -4219,7 +4231,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    {
       bench_is_partitioned(c, iters, cname, is_negative<VT>(), "is_partitioned(hit)");
       C c2(c);
-      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = VT(-1);
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
       bench_is_partitioned(c2, iters, cname, is_negative<VT>(), "is_partitioned(miss)");
    }
 
@@ -4227,7 +4239,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    {
       bench_is_sorted(c, iters, cname, "is_sorted(hit)");
       C c2(c);
-      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = VT(-1);
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
       bench_is_sorted(c2, iters, cname, "is_sorted(miss)");
    }
 
@@ -4235,7 +4247,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    {
       bench_is_sorted_until(c, iters, cname, "is_sorted_until(hit)");
       C c2(c);
-      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = VT(-1);
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
       bench_is_sorted_until(c2, iters, cname, "is_sorted_until(miss)");
    }
 
@@ -4250,7 +4262,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //mismatch
    {
       C c2(c);
-      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = VT(-1);
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
       bench_mismatch(c, c2, iters, cname, "mismatch(hit)");
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) =
          *boost::container::make_iterator_uadvance(c.begin(), c.size()/2);
@@ -4272,19 +4284,25 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //bench_partition_point(c, iters, cname, is_zero_or_positive<VT>(),                           "partition_point(miss)");
 
    //remove
-   bench_remove(c, iters, cname, VT((int)c.size()/2),  "remove(hit)");
-   bench_remove(c, iters, cname, VT(-1),               "remove(miss)");
+   bench_remove(c, iters, cname, half,  "remove(hit)");
+   bench_remove(c, iters, cname, min1,  "remove(miss)");
 
    //remove_copy
-   bench_remove_copy(c, iters, cname, VT((int)c.size()/2),  "remove_copy(hit)");
-   bench_remove_copy(c, iters, cname, VT(-1),               "remove_copy(miss)");
+   bench_remove_copy<false>(c, iters, cname, half, "remove_copy(hit)");
+   bench_remove_copy<true>(c, iters, cname, half,  "remove_copy(2xS hit)");
+   bench_remove_copy<false>(c, iters, cname, min1, "remove_copy(miss)");
+   bench_remove_copy<true>(c, iters, cname, min1,  "remove_copy(2xS miss)");
 
    //remove_copy_if
-   bench_remove_copy_if(c, iters, cname, less_and_greater_ref<VT>(VT((int)c.size()/4), VT((int)c.size()*3/4)),      "remove_copy_if(hit)");
-   bench_remove_copy_if(c, iters, cname, is_negative<VT>(), "remove_copy_if(miss)");
+   bench_remove_copy_if<false>(c, iters, cname, less_and_greater_ref<VT>(quart, VT((int)c.size()*3/4)), "remove_copy_if(hit)");
+   bench_remove_copy_if<false>(c, iters, cname, is_negative<VT>(), "remove_copy_if(miss)");
+
+   //remove_copy_if -> deque output
+   bench_remove_copy_if<true>(c, iters, cname, less_and_greater_ref<VT>(quart, VT((int)c.size()*3/4)),  "remove_copy_if(2xS hit)");
+   bench_remove_copy_if<true>(c, iters, cname, is_negative<VT>(), "remove_copyif(2xS miss)");
 
    //remove_if
-   bench_remove_if(c, iters, cname, less_and_greater_ref<VT>(VT((int)c.size()/4), VT((int)c.size()*3/4)), "remove_if(hit)");
+   bench_remove_if(c, iters, cname, less_and_greater_ref<VT>(quart, VT((int)c.size()*3/4)), "remove_if(hit)");
    bench_remove_if(c, iters, cname, is_negative<VT>(), "remove_if(miss)");
 
    //replace
@@ -4293,12 +4311,12 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       is_odd<VT> is_odd_pred;
       for (typename C::iterator it = c2.begin(); it != c2.end(); ++it){
          if( is_odd_pred(*it) )
-            *it = VT(-1);
+            *it = min1;
       }
-      bench_replace(c2, iters, cname, VT(-1),  VT(-2),  "replace(hit)");
+      bench_replace(c2, iters, cname, min1,  VT(-2),  "replace(hit)");
    }
 
-   bench_replace(c, iters, cname, VT(-1), VT(-2), "replace(miss)");
+   bench_replace(c, iters, cname, min1, VT(-2), "replace(miss)");
 
    //replace_if
    bench_replace_if(c, iters, cname, is_odd<VT>(),      VT(-2), "replace_if(hit)");
@@ -4312,16 +4330,16 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 
    //search
    {
-      int half = static_cast<int>(c.size() / 2);
-      VT hit_pat[] = {VT(half), VT(half + 1), VT(half + 2)};
+      int ihalf = static_cast<int>(c.size() / 2);
+      VT hit_pat[] = {half, VT(ihalf + 1), VT(ihalf + 2)};
       bench_search(c, iters, cname, hit_pat, 3, "search(hit)");
-      VT miss_pat[] = {VT(-1), VT(-2), VT(-3)};
+      VT miss_pat[] = {min1, VT(-2), VT(-3)};
       bench_search(c, iters, cname, miss_pat, 3, "search(miss)");
    }
 
    //search_n
-   bench_search_n(c, iters, cname, 1, VT(static_cast<int>(c.size() / 2)), "search_n(hit)");
-   bench_search_n(c, iters, cname, 3, VT(-1), "search_n(miss)");
+   bench_search_n(c, iters, cname, 1, half, "search_n(hit)");
+   bench_search_n(c, iters, cname, 3, min1, "search_n(miss)");
 
    //set_difference, set_symmetric_difference, set_union
    {
@@ -4345,7 +4363,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_transform(c, iters, cname);
 
    std::cout << '\n'
-             << std::left  << std::setw(24) << "GEOMEAN"
+             << std::left  << std::setw(32) << "GEOMEAN"
              << std::right << std::setw(20) << std::fixed << std::setprecision(2) << g_geomean.result() << "x\n";
 }
 
@@ -4357,7 +4375,7 @@ template<class T>
 void run_benchmarks()
 {
 
-   #define SIMPLE_TEST
+   //#define SIMPLE_TEST
    #if defined(NDEBUG) && !defined(SIMPLE_TEST)
    const std::size_t N    = 100000;
    const std::size_t iter = 2000;
