@@ -9,7 +9,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <algorithm>
-#include <vector>
+#include <boost/container/vector.hpp>
 #include <iostream>
 #include <iomanip>
 #include <cmath>
@@ -965,7 +965,7 @@ template<class C>
 void bench_copy(const C &c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
-   std::vector<VT> out(c.size());
+   boost::container::vector<VT> out(c.size());
 
    cpu_timer t1;
    {  std::size_t n_ = (iters + 7) / 8;
@@ -1041,7 +1041,7 @@ void bench_copy_if(const C &c, std::size_t iters, const char* cname,
                    Pred pred, const char* label)
 {
    typedef typename C::value_type VT;
-   std::vector<VT> out(c.size());
+   boost::container::vector<VT> out(c.size());
 
    cpu_timer t1;
    {  std::size_t n_ = (iters + 7) / 8;
@@ -2042,7 +2042,7 @@ template<class C>
 void bench_transform(const C &c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
-   std::vector<VT> out(c.size());
+   boost::container::vector<VT> out(c.size());
 
    cpu_timer t1;
    {  std::size_t n_ = (iters + 7) / 8;
@@ -2195,7 +2195,7 @@ template<class C>
 void bench_copy_n(const C &c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
-   std::vector<VT> out(c.size());
+   boost::container::vector<VT> out(c.size());
    typename C::difference_type n =
       static_cast<typename C::difference_type>(c.size());
 
@@ -2599,7 +2599,7 @@ void bench_remove_copy(const C &c, std::size_t iters, const char* cname,
                        const typename C::value_type& val, const char* label)
 {
    typedef typename C::value_type VT;
-   std::vector<VT> out(c.size());
+   boost::container::vector<VT> out(c.size());
 
    cpu_timer t1;
    {  std::size_t n_ = (iters + 7) / 8;
@@ -2675,7 +2675,7 @@ void bench_remove_copy_if(const C &c, std::size_t iters, const char* cname,
                           Pred pred, const char* label)
 {
    typedef typename C::value_type VT;
-   std::vector<VT> out(c.size());
+   boost::container::vector<VT> out(c.size());
 
    cpu_timer t1;
    {  std::size_t n_ = (iters + 7) / 8;
@@ -2825,7 +2825,7 @@ template<class C>
 void bench_reverse_copy(const C &c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
-   std::vector<VT> out(c.size());
+   boost::container::vector<VT> out(c.size());
 
    cpu_timer t1;
    {  std::size_t n_ = (iters + 7) / 8;
@@ -3126,7 +3126,7 @@ template<class C>
 void bench_merge(const C &c, const C &c2, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
-   std::vector<VT> out(c.size() + c2.size());
+   boost::container::vector<VT> out(c.size() + c2.size());
 
    cpu_timer t1;
    {  std::size_t n_ = (iters + 7) / 8;
@@ -3510,7 +3510,7 @@ template<class C>
 void bench_set_union(const C &c, const C &c2, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
-   std::vector<VT> out(c.size() + c2.size());
+   boost::container::vector<VT> out(c.size() + c2.size());
 
    cpu_timer t1;
    {  std::size_t n_ = (iters + 7) / 8;
@@ -3585,7 +3585,7 @@ template<class C>
 void bench_set_difference(const C &c, const C &c2, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
-   std::vector<VT> out(c.size());
+   boost::container::vector<VT> out(c.size());
 
    cpu_timer t1;
    {  std::size_t n_ = (iters + 7) / 8;
@@ -3660,7 +3660,7 @@ template<class C>
 void bench_set_intersection(const C &c, const C &c2, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
-   std::vector<VT> out(c.size());
+   boost::container::vector<VT> out(c.size());
 
    cpu_timer t1;
    {  std::size_t n_ = (iters + 7) / 8;
@@ -3735,7 +3735,7 @@ template<class C>
 void bench_set_symmetric_difference(const C &c, const C &c2, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
-   std::vector<VT> out(c.size() + c2.size());
+   boost::container::vector<VT> out(c.size() + c2.size());
 
    cpu_timer t1;
    {  std::size_t n_ = (iters + 7) / 8;
@@ -3982,8 +3982,8 @@ template<class C>
 void bench_partition_copy(const C &c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
-   std::vector<VT> t_out(c.size());
-   std::vector<VT> f_out(c.size());
+   boost::container::vector<VT> t_out(c.size());
+   boost::container::vector<VT> f_out(c.size());
 
    cpu_timer t1;
    {  std::size_t n_ = (iters + 7) / 8;

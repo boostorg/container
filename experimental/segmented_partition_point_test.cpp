@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_partition_point.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -72,11 +72,11 @@ void test_partition_point_empty()
 
 void test_partition_point_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(1); v.push_back(3); v.push_back(4);
    v.push_back(7); v.push_back(8); v.push_back(9);
 
-   std::vector<int>::iterator pp = segmented_partition_point(v.begin(), v.end(), less_than_5());
+   boost::container::vector<int>::iterator pp = segmented_partition_point(v.begin(), v.end(), less_than_5());
    BOOST_TEST_EQ(*pp, 7);
 }
 
@@ -97,11 +97,11 @@ void test_partition_point_sentinel_segmented()
 
 void test_partition_point_sentinel_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(1); v.push_back(3); v.push_back(4);
    v.push_back(7); v.push_back(8); v.push_back(9);
 
-   std::vector<int>::iterator pp = segmented_partition_point(v.begin(), test_detail::make_sentinel(v.end()), less_than_5());
+   boost::container::vector<int>::iterator pp = segmented_partition_point(v.begin(), test_detail::make_sentinel(v.end()), less_than_5());
    BOOST_TEST_EQ(*pp, 7);
 }
 

@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_is_partitioned.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -96,12 +96,12 @@ void test_is_partitioned_violation_in_second_segment()
 
 void test_is_partitioned_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(1); v.push_back(2); v.push_back(3);
    v.push_back(5); v.push_back(6);
    BOOST_TEST(segmented_is_partitioned(v.begin(), v.end(), less_than_5()));
 
-   std::vector<int> v2;
+   boost::container::vector<int> v2;
    v2.push_back(1); v2.push_back(6); v2.push_back(3);
    BOOST_TEST(!segmented_is_partitioned(v2.begin(), v2.end(), less_than_5()));
 }
@@ -121,12 +121,12 @@ void test_is_partitioned_sentinel_segmented()
 
 void test_is_partitioned_sentinel_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(1); v.push_back(2); v.push_back(3);
    v.push_back(5); v.push_back(6);
    BOOST_TEST(segmented_is_partitioned(v.begin(), test_detail::make_sentinel(v.end()), less_than_5()));
 
-   std::vector<int> v2;
+   boost::container::vector<int> v2;
    v2.push_back(1); v2.push_back(6); v2.push_back(3);
    BOOST_TEST(!segmented_is_partitioned(v2.begin(), test_detail::make_sentinel(v2.end()), less_than_5()));
 }

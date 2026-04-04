@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_fill.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -83,7 +83,7 @@ void test_fill_partial_range()
 
 void test_fill_non_segmented()
 {
-   std::vector<int> v(5, 0);
+   boost::container::vector<int> v(5, 0);
    segmented_fill(v.begin(), v.end(), 7);
    for(std::size_t i = 0; i < v.size(); ++i)
       BOOST_TEST_EQ(v[i], 7);
@@ -105,7 +105,7 @@ void test_fill_sentinel_segmented()
 
 void test_fill_sentinel_non_segmented()
 {
-   std::vector<int> v(5, 0);
+   boost::container::vector<int> v(5, 0);
    segmented_fill(v.begin(), test_detail::make_sentinel(v.end()), 7);
    for(std::size_t i = 0; i < v.size(); ++i)
       BOOST_TEST_EQ(v[i], 7);

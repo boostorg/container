@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_mismatch.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 #include <utility>
 
 using namespace boost::container;
@@ -95,11 +95,11 @@ void test_mismatch_single_segment()
 
 void test_mismatch_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(1); v.push_back(2); v.push_back(3);
 
    int ref_match[] = {1, 2, 3};
-   typedef std::vector<int>::iterator vec_it;
+   typedef boost::container::vector<int>::iterator vec_it;
    std::pair<vec_it, int*> r = segmented_mismatch(v.begin(), v.end(), ref_match);
    BOOST_TEST(r.first == v.end());
 
@@ -130,11 +130,11 @@ void test_mismatch_sentinel_segmented()
 
 void test_mismatch_sentinel_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(1); v.push_back(2); v.push_back(3);
 
    int ref_match[] = {1, 2, 3};
-   typedef std::vector<int>::iterator vec_it;
+   typedef boost::container::vector<int>::iterator vec_it;
    std::pair<vec_it, int*> r =
       segmented_mismatch(v.begin(), test_detail::make_sentinel(v.end()), ref_match);
    BOOST_TEST(r.first == v.end());

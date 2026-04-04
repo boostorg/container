@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_count.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -38,7 +38,7 @@ void test_count_empty()
 
 void test_count_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(1);
    v.push_back(2);
    v.push_back(1);
@@ -64,7 +64,7 @@ void test_count_sentinel_segmented()
 
 void test_count_sentinel_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(1);
    v.push_back(2);
    v.push_back(1);

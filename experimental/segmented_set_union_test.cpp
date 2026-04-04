@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_set_union.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -19,9 +19,9 @@ void test_set_union_basic()
 {
    int a[] = {1, 3, 5, 7};
    int b[] = {2, 3, 6, 7, 8};
-   std::vector<int> out(9, 0);
+   boost::container::vector<int> out(9, 0);
 
-   std::vector<int>::iterator end_it =
+   boost::container::vector<int>::iterator end_it =
       segmented_set_union(a, a + 4, b, b + 5, out.begin());
 
    std::size_t n = static_cast<std::size_t>(end_it - out.begin());
@@ -38,10 +38,10 @@ void test_set_union_basic()
 void test_set_union_empty_first()
 {
    int b[] = {1, 2, 3};
-   std::vector<int> out(3, 0);
+   boost::container::vector<int> out(3, 0);
 
    int* empty = b;
-   std::vector<int>::iterator end_it =
+   boost::container::vector<int>::iterator end_it =
       segmented_set_union(empty, empty, b, b + 3, out.begin());
 
    std::size_t n = static_cast<std::size_t>(end_it - out.begin());
@@ -54,10 +54,10 @@ void test_set_union_empty_first()
 void test_set_union_empty_second()
 {
    int a[] = {1, 2, 3};
-   std::vector<int> out(3, 0);
+   boost::container::vector<int> out(3, 0);
 
    int* empty = a;
-   std::vector<int>::iterator end_it =
+   boost::container::vector<int>::iterator end_it =
       segmented_set_union(a, a + 3, empty, empty, out.begin());
 
    std::size_t n = static_cast<std::size_t>(end_it - out.begin());
@@ -71,9 +71,9 @@ void test_set_union_disjoint()
 {
    int a[] = {1, 3, 5};
    int b[] = {2, 4, 6};
-   std::vector<int> out(6, 0);
+   boost::container::vector<int> out(6, 0);
 
-   std::vector<int>::iterator end_it =
+   boost::container::vector<int>::iterator end_it =
       segmented_set_union(a, a + 3, b, b + 3, out.begin());
 
    std::size_t n = static_cast<std::size_t>(end_it - out.begin());
@@ -95,9 +95,9 @@ void test_set_union_with_comp()
 {
    int a[] = {7, 5, 3, 1};
    int b[] = {8, 7, 6, 3, 2};
-   std::vector<int> out(9, 0);
+   boost::container::vector<int> out(9, 0);
 
-   std::vector<int>::iterator end_it =
+   boost::container::vector<int>::iterator end_it =
       segmented_set_union(a, a + 4, b, b + 5, out.begin(), greater_int());
 
    std::size_t n = static_cast<std::size_t>(end_it - out.begin());
@@ -120,9 +120,9 @@ void test_set_union_segmented_input()
    sv.add_segment_range(a2, a2 + 2);
 
    int b[] = {2, 3, 6};
-   std::vector<int> out(7, 0);
+   boost::container::vector<int> out(7, 0);
 
-   std::vector<int>::iterator end_it =
+   boost::container::vector<int>::iterator end_it =
       segmented_set_union(sv.begin(), sv.end(), b, b + 3, out.begin());
 
    std::size_t n = static_cast<std::size_t>(end_it - out.begin());
@@ -144,9 +144,9 @@ void test_set_union_sentinel_segmented()
    sv.add_segment_range(a2, a2 + 2);
 
    int b[] = {2, 3, 6};
-   std::vector<int> out(7, 0);
+   boost::container::vector<int> out(7, 0);
 
-   std::vector<int>::iterator end_it =
+   boost::container::vector<int>::iterator end_it =
       segmented_set_union(sv.begin(), test_detail::make_sentinel(sv.end()),
                           b, test_detail::make_sentinel(b + 3), out.begin());
 
@@ -164,9 +164,9 @@ void test_set_union_sentinel_non_segmented()
 {
    int a[] = {1, 3, 5, 7};
    int b[] = {2, 3, 6, 7, 8};
-   std::vector<int> out(9, 0);
+   boost::container::vector<int> out(9, 0);
 
-   std::vector<int>::iterator end_it =
+   boost::container::vector<int>::iterator end_it =
       segmented_set_union(a, test_detail::make_sentinel(a + 4),
                           b, test_detail::make_sentinel(b + 5), out.begin());
 
@@ -190,9 +190,9 @@ void test_set_union_seg2()
    sv2.add_flat_segment_range(a2, a2 + 1);
 
    int b[] = {2, 3, 6, 7};
-   std::vector<int> out(8, 0);
+   boost::container::vector<int> out(8, 0);
 
-   std::vector<int>::iterator end_it =
+   boost::container::vector<int>::iterator end_it =
       segmented_set_union(sv2.begin(), sv2.end(), b, b + 4, out.begin());
 
    std::size_t n = static_cast<std::size_t>(end_it - out.begin());

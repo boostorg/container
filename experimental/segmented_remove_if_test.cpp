@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_remove_if.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -76,10 +76,10 @@ void test_remove_if_empty()
 
 void test_remove_if_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(1); v.push_back(2); v.push_back(3); v.push_back(4); v.push_back(5);
 
-   std::vector<int>::iterator new_end = segmented_remove_if(v.begin(), v.end(), is_odd());
+   boost::container::vector<int>::iterator new_end = segmented_remove_if(v.begin(), v.end(), is_odd());
    BOOST_TEST_EQ(new_end - v.begin(), 2);
    BOOST_TEST_EQ(v[0], 2);
    BOOST_TEST_EQ(v[1], 4);
@@ -104,10 +104,10 @@ void test_remove_if_sentinel_segmented()
 
 void test_remove_if_sentinel_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(1); v.push_back(2); v.push_back(3); v.push_back(4); v.push_back(5);
 
-   std::vector<int>::iterator new_end =
+   boost::container::vector<int>::iterator new_end =
       segmented_remove_if(v.begin(), test_detail::make_sentinel(v.end()), is_odd());
    BOOST_TEST_EQ(new_end - v.begin(), 2);
    BOOST_TEST_EQ(v[0], 2);

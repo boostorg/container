@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_search_n.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -56,8 +56,8 @@ void test_search_n_zero_count()
 void test_search_n_non_segmented()
 {
    int src[] = {1, 2, 2, 2, 3};
-   std::vector<int> v(src, src + 5);
-   std::vector<int>::iterator it = segmented_search_n(v.begin(), v.end(), 3, 2);
+   boost::container::vector<int> v(src, src + 5);
+   boost::container::vector<int>::iterator it = segmented_search_n(v.begin(), v.end(), 3, 2);
    BOOST_TEST(it != v.end());
    BOOST_TEST_EQ(*it, 2);
    BOOST_TEST_EQ(static_cast<std::size_t>(it - v.begin()), 1u);
@@ -80,8 +80,8 @@ void test_search_n_sentinel_segmented()
 void test_search_n_sentinel_non_segmented()
 {
    int src[] = {1, 2, 2, 2, 3};
-   std::vector<int> v(src, src + 5);
-   std::vector<int>::iterator it =
+   boost::container::vector<int> v(src, src + 5);
+   boost::container::vector<int>::iterator it =
       segmented_search_n(v.begin(), test_detail::make_sentinel(v.end()), 3, 2);
    BOOST_TEST(it != v.end());
    BOOST_TEST_EQ(*it, 2);

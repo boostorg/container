@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_merge.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -29,8 +29,8 @@ void test_merge_segmented_inputs()
    sv2.add_segment_range(b1, b1 + 2);
    sv2.add_segment_range(b2, b2 + 2);
 
-   std::vector<int> out(8, 0);
-   std::vector<int>::iterator r = segmented_merge(
+   boost::container::vector<int> out(8, 0);
+   boost::container::vector<int>::iterator r = segmented_merge(
       sv1.begin(), sv1.end(), sv2.begin(), sv2.end(), out.begin());
 
    BOOST_TEST_EQ(static_cast<std::size_t>(r - out.begin()), 8u);
@@ -45,8 +45,8 @@ void test_merge_first_empty()
    int a[] = {1, 2, 3};
    sv2.add_segment_range(a, a + 3);
 
-   std::vector<int> out(3, 0);
-   std::vector<int>::iterator r = segmented_merge(
+   boost::container::vector<int> out(3, 0);
+   boost::container::vector<int>::iterator r = segmented_merge(
       sv1.begin(), sv1.end(), sv2.begin(), sv2.end(), out.begin());
 
    BOOST_TEST_EQ(static_cast<std::size_t>(r - out.begin()), 3u);
@@ -62,8 +62,8 @@ void test_merge_second_empty()
    sv1.add_segment_range(a, a + 3);
    test_detail::seg_vector<int> sv2;
 
-   std::vector<int> out(3, 0);
-   std::vector<int>::iterator r = segmented_merge(
+   boost::container::vector<int> out(3, 0);
+   boost::container::vector<int>::iterator r = segmented_merge(
       sv1.begin(), sv1.end(), sv2.begin(), sv2.end(), out.begin());
 
    BOOST_TEST_EQ(static_cast<std::size_t>(r - out.begin()), 3u);
@@ -76,8 +76,8 @@ void test_merge_both_empty()
 {
    test_detail::seg_vector<int> sv1;
    test_detail::seg_vector<int> sv2;
-   std::vector<int> out;
-   std::vector<int>::iterator r = segmented_merge(
+   boost::container::vector<int> out;
+   boost::container::vector<int>::iterator r = segmented_merge(
       sv1.begin(), sv1.end(), sv2.begin(), sv2.end(), out.begin());
    BOOST_TEST(r == out.begin());
 }
@@ -91,11 +91,11 @@ void test_merge_with_comp()
 {
    int a[] = {5, 3, 1};
    int b[] = {6, 4, 2};
-   std::vector<int> v1(a, a + 3);
-   std::vector<int> v2(b, b + 3);
-   std::vector<int> out(6, 0);
+   boost::container::vector<int> v1(a, a + 3);
+   boost::container::vector<int> v2(b, b + 3);
+   boost::container::vector<int> out(6, 0);
 
-   std::vector<int>::iterator r = segmented_merge(
+   boost::container::vector<int>::iterator r = segmented_merge(
       v1.begin(), v1.end(), v2.begin(), v2.end(), out.begin(), greater_comp());
 
    BOOST_TEST_EQ(static_cast<std::size_t>(r - out.begin()), 6u);
@@ -111,11 +111,11 @@ void test_merge_non_segmented()
 {
    int a[] = {1, 3, 5};
    int b[] = {2, 4, 6};
-   std::vector<int> v1(a, a + 3);
-   std::vector<int> v2(b, b + 3);
-   std::vector<int> out(6, 0);
+   boost::container::vector<int> v1(a, a + 3);
+   boost::container::vector<int> v2(b, b + 3);
+   boost::container::vector<int> out(6, 0);
 
-   std::vector<int>::iterator r = segmented_merge(
+   boost::container::vector<int>::iterator r = segmented_merge(
       v1.begin(), v1.end(), v2.begin(), v2.end(), out.begin());
 
    BOOST_TEST_EQ(static_cast<std::size_t>(r - out.begin()), 6u);
@@ -127,11 +127,11 @@ void test_merge_duplicates()
 {
    int a[] = {1, 2, 3};
    int b[] = {2, 3, 4};
-   std::vector<int> v1(a, a + 3);
-   std::vector<int> v2(b, b + 3);
-   std::vector<int> out(6, 0);
+   boost::container::vector<int> v1(a, a + 3);
+   boost::container::vector<int> v2(b, b + 3);
+   boost::container::vector<int> out(6, 0);
 
-   std::vector<int>::iterator r = segmented_merge(
+   boost::container::vector<int>::iterator r = segmented_merge(
       v1.begin(), v1.end(), v2.begin(), v2.end(), out.begin());
 
    BOOST_TEST_EQ(static_cast<std::size_t>(r - out.begin()), 6u);
@@ -154,8 +154,8 @@ void test_merge_sentinel_segmented()
    sv2.add_segment_range(b1, b1 + 2);
    sv2.add_segment_range(b2, b2 + 2);
 
-   std::vector<int> out(8, 0);
-   std::vector<int>::iterator r = segmented_merge(
+   boost::container::vector<int> out(8, 0);
+   boost::container::vector<int>::iterator r = segmented_merge(
       sv1.begin(), test_detail::make_sentinel(sv1.end()),
       sv2.begin(), test_detail::make_sentinel(sv2.end()), out.begin());
 
@@ -168,11 +168,11 @@ void test_merge_sentinel_non_segmented()
 {
    int a[] = {1, 3, 5};
    int b[] = {2, 4, 6};
-   std::vector<int> v1(a, a + 3);
-   std::vector<int> v2(b, b + 3);
-   std::vector<int> out(6, 0);
+   boost::container::vector<int> v1(a, a + 3);
+   boost::container::vector<int> v2(b, b + 3);
+   boost::container::vector<int> out(6, 0);
 
-   std::vector<int>::iterator r = segmented_merge(
+   boost::container::vector<int>::iterator r = segmented_merge(
       v1.begin(), test_detail::make_sentinel(v1.end()),
       v2.begin(), test_detail::make_sentinel(v2.end()), out.begin());
 
@@ -190,8 +190,8 @@ void test_merge_seg2()
    sv2.add_flat_segment_range(a2, a2 + 2);
 
    int b[] = {2, 4, 6, 8};
-   std::vector<int> out(9, 0);
-   std::vector<int>::iterator r = segmented_merge(
+   boost::container::vector<int> out(9, 0);
+   boost::container::vector<int>::iterator r = segmented_merge(
       sv2.begin(), sv2.end(), b, b + 4, out.begin());
 
    BOOST_TEST_EQ(static_cast<std::size_t>(r - out.begin()), 9u);

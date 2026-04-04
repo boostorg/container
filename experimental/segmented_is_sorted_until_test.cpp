@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_is_sorted_until.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -89,8 +89,8 @@ void test_is_sorted_until_with_comp()
 void test_is_sorted_until_non_segmented()
 {
    int data[] = {1, 2, 5, 3, 4};
-   std::vector<int> v(data, data + 5);
-   std::vector<int>::iterator it = segmented_is_sorted_until(v.begin(), v.end());
+   boost::container::vector<int> v(data, data + 5);
+   boost::container::vector<int>::iterator it = segmented_is_sorted_until(v.begin(), v.end());
    BOOST_TEST(it != v.end());
    BOOST_TEST_EQ(*it, 3);
 }
@@ -112,8 +112,8 @@ void test_is_sorted_until_sentinel_segmented()
 void test_is_sorted_until_sentinel_non_segmented()
 {
    int data[] = {1, 2, 5, 3, 4};
-   std::vector<int> v(data, data + 5);
-   std::vector<int>::iterator it =
+   boost::container::vector<int> v(data, data + 5);
+   boost::container::vector<int>::iterator it =
       segmented_is_sorted_until(v.begin(), test_detail::make_sentinel(v.end()));
    BOOST_TEST(it != v.end());
    BOOST_TEST_EQ(*it, 3);

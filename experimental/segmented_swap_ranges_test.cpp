@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_swap_ranges.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -25,11 +25,11 @@ void test_swap_ranges_full()
    sv.add_segment_range(a2, a2 + 2);
    sv.add_segment_range(a3, a3 + 4);
 
-   std::vector<int> other(9, 0);
+   boost::container::vector<int> other(9, 0);
    for(int i = 0; i < 9; ++i)
       other[static_cast<std::size_t>(i)] = (i + 1) * 10;
 
-   std::vector<int>::iterator result =
+   boost::container::vector<int>::iterator result =
       segmented_swap_ranges(sv.begin(), sv.end(), other.begin());
 
    BOOST_TEST(result == other.end());
@@ -45,8 +45,8 @@ void test_swap_ranges_full()
 void test_swap_ranges_empty()
 {
    test_detail::seg_vector<int> sv;
-   std::vector<int> other;
-   std::vector<int>::iterator result =
+   boost::container::vector<int> other;
+   boost::container::vector<int>::iterator result =
       segmented_swap_ranges(sv.begin(), sv.end(), other.begin());
    BOOST_TEST(result == other.begin());
 }
@@ -72,12 +72,12 @@ void test_swap_ranges_single_segment()
 
 void test_swap_ranges_non_segmented()
 {
-   std::vector<int> v1;
+   boost::container::vector<int> v1;
    v1.push_back(1); v1.push_back(2); v1.push_back(3);
-   std::vector<int> v2;
+   boost::container::vector<int> v2;
    v2.push_back(10); v2.push_back(20); v2.push_back(30);
 
-   std::vector<int>::iterator result =
+   boost::container::vector<int>::iterator result =
       segmented_swap_ranges(v1.begin(), v1.end(), v2.begin());
    BOOST_TEST(result == v2.end());
 
@@ -99,11 +99,11 @@ void test_swap_ranges_sentinel_segmented()
    sv.add_segment_range(a2, a2 + 2);
    sv.add_segment_range(a3, a3 + 4);
 
-   std::vector<int> other(9, 0);
+   boost::container::vector<int> other(9, 0);
    for(int i = 0; i < 9; ++i)
       other[static_cast<std::size_t>(i)] = (i + 1) * 10;
 
-   std::vector<int>::iterator result =
+   boost::container::vector<int>::iterator result =
       segmented_swap_ranges(sv.begin(), test_detail::make_sentinel(sv.end()), other.begin());
 
    BOOST_TEST(result == other.end());
@@ -118,12 +118,12 @@ void test_swap_ranges_sentinel_segmented()
 
 void test_swap_ranges_sentinel_non_segmented()
 {
-   std::vector<int> v1;
+   boost::container::vector<int> v1;
    v1.push_back(1); v1.push_back(2); v1.push_back(3);
-   std::vector<int> v2;
+   boost::container::vector<int> v2;
    v2.push_back(10); v2.push_back(20); v2.push_back(30);
 
-   std::vector<int>::iterator result =
+   boost::container::vector<int>::iterator result =
       segmented_swap_ranges(v1.begin(), test_detail::make_sentinel(v1.end()), v2.begin());
    BOOST_TEST(result == v2.end());
 
@@ -145,11 +145,11 @@ void test_swap_ranges_seg2()
    sv2.add_flat_segment_range(a2, a2 + 2);
    sv2.add_flat_segment_range(a3, a3 + 4);
 
-   std::vector<int> other(9, 0);
+   boost::container::vector<int> other(9, 0);
    for(int i = 0; i < 9; ++i)
       other[static_cast<std::size_t>(i)] = (i + 1) * 10;
 
-   std::vector<int>::iterator result =
+   boost::container::vector<int>::iterator result =
       segmented_swap_ranges(sv2.begin(), sv2.end(), other.begin());
 
    BOOST_TEST(result == other.end());
@@ -173,11 +173,11 @@ void test_swap_ranges_movable_seg()
    sv.add_segment_from_ints(a2, a2 + 2);
    sv.add_segment_from_ints(a3, a3 + 4);
 
-   std::vector<mi> other;
+   boost::container::vector<mi> other;
    for(int i = 0; i < 9; ++i)
       other.push_back(mi((i + 1) * 10));
 
-   std::vector<mi>::iterator result =
+   boost::container::vector<mi>::iterator result =
       segmented_swap_ranges(sv.begin(), sv.end(), other.begin());
 
    BOOST_TEST(result == other.end());
@@ -201,11 +201,11 @@ void test_swap_ranges_movable_seg2()
    sv2.add_flat_segment_from_ints(a2, a2 + 2);
    sv2.add_flat_segment_from_ints(a3, a3 + 4);
 
-   std::vector<mi> other;
+   boost::container::vector<mi> other;
    for(int i = 0; i < 9; ++i)
       other.push_back(mi((i + 1) * 10));
 
-   std::vector<mi>::iterator result =
+   boost::container::vector<mi>::iterator result =
       segmented_swap_ranges(sv2.begin(), sv2.end(), other.begin());
 
    BOOST_TEST(result == other.end());

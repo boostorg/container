@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_find_last_if.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -76,12 +76,12 @@ void test_find_last_if_empty()
 
 void test_find_last_if_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(-1);
    v.push_back(-2);
    v.push_back(3);
 
-   std::vector<int>::iterator it =
+   boost::container::vector<int>::iterator it =
       segmented_find_last_if(v.begin(), v.end(), is_negative());
    BOOST_TEST(it != v.end());
    BOOST_TEST_EQ(*it, -2);
@@ -110,12 +110,12 @@ void test_find_last_if_sentinel_segmented()
 
 void test_find_last_if_sentinel_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(-1);
    v.push_back(-2);
    v.push_back(3);
 
-   std::vector<int>::iterator it =
+   boost::container::vector<int>::iterator it =
       segmented_find_last_if(v.begin(), test_detail::make_sentinel(v.end()), is_negative());
    BOOST_TEST(it != v.end());
    BOOST_TEST_EQ(*it, -2);

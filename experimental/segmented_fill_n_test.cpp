@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_fill_n.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -84,8 +84,8 @@ void test_fill_n_single_segment()
 
 void test_fill_n_non_segmented()
 {
-   std::vector<int> v(5, 0);
-   std::vector<int>::iterator result = segmented_fill_n(v.begin(), 3, 7);
+   boost::container::vector<int> v(5, 0);
+   boost::container::vector<int>::iterator result = segmented_fill_n(v.begin(), 3, 7);
 
    BOOST_TEST(result == v.begin() + 3);
    BOOST_TEST_EQ(v[0], 7);

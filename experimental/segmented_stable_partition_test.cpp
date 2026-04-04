@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_stable_partition.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -23,11 +23,11 @@ struct is_even
 
 void test_stable_partition_basic()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(1); v.push_back(2); v.push_back(3);
    v.push_back(4); v.push_back(5); v.push_back(6);
 
-   std::vector<int>::iterator mid = segmented_stable_partition(v.begin(), v.end(), is_even());
+   boost::container::vector<int>::iterator mid = segmented_stable_partition(v.begin(), v.end(), is_even());
 
    BOOST_TEST_EQ(v[0], 2);
    BOOST_TEST_EQ(v[1], 4);
@@ -37,7 +37,7 @@ void test_stable_partition_basic()
    BOOST_TEST_EQ(v[5], 5);
 
    int dist = 0;
-   for(std::vector<int>::iterator it = v.begin(); it != mid; ++it)
+   for(boost::container::vector<int>::iterator it = v.begin(); it != mid; ++it)
       ++dist;
    BOOST_TEST_EQ(dist, 3);
 }
@@ -65,16 +65,16 @@ void test_stable_partition_segmented()
 
 void test_stable_partition_empty()
 {
-   std::vector<int> v;
-   std::vector<int>::iterator mid = segmented_stable_partition(v.begin(), v.end(), is_even());
+   boost::container::vector<int> v;
+   boost::container::vector<int>::iterator mid = segmented_stable_partition(v.begin(), v.end(), is_even());
    BOOST_TEST(mid == v.end());
 }
 
 void test_stable_partition_all_true()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(2); v.push_back(4); v.push_back(6);
-   std::vector<int>::iterator mid = segmented_stable_partition(v.begin(), v.end(), is_even());
+   boost::container::vector<int>::iterator mid = segmented_stable_partition(v.begin(), v.end(), is_even());
    BOOST_TEST(mid == v.end());
    BOOST_TEST_EQ(v[0], 2);
    BOOST_TEST_EQ(v[1], 4);
@@ -83,9 +83,9 @@ void test_stable_partition_all_true()
 
 void test_stable_partition_all_false()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(1); v.push_back(3); v.push_back(5);
-   std::vector<int>::iterator mid = segmented_stable_partition(v.begin(), v.end(), is_even());
+   boost::container::vector<int>::iterator mid = segmented_stable_partition(v.begin(), v.end(), is_even());
    BOOST_TEST(mid == v.begin());
    BOOST_TEST_EQ(v[0], 1);
    BOOST_TEST_EQ(v[1], 3);
@@ -94,10 +94,10 @@ void test_stable_partition_all_false()
 
 void test_stable_partition_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(5); v.push_back(2); v.push_back(7); v.push_back(4); v.push_back(1);
 
-   std::vector<int>::iterator mid = segmented_stable_partition(v.begin(), v.end(), is_even());
+   boost::container::vector<int>::iterator mid = segmented_stable_partition(v.begin(), v.end(), is_even());
 
    BOOST_TEST_EQ(v[0], 2);
    BOOST_TEST_EQ(v[1], 4);
@@ -106,7 +106,7 @@ void test_stable_partition_non_segmented()
    BOOST_TEST_EQ(v[4], 1);
 
    int even_count = 0;
-   for(std::vector<int>::iterator it = v.begin(); it != mid; ++it)
+   for(boost::container::vector<int>::iterator it = v.begin(); it != mid; ++it)
       ++even_count;
    BOOST_TEST_EQ(even_count, 2);
 }

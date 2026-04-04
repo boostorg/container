@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_generate.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -58,7 +58,7 @@ void test_generate_single_segment()
 
 void test_generate_non_segmented()
 {
-   std::vector<int> v(5, 0);
+   boost::container::vector<int> v(5, 0);
    segmented_generate(v.begin(), v.end(), counter());
    for(int i = 0; i < 5; ++i)
       BOOST_TEST_EQ(v[static_cast<std::size_t>(i)], i + 1);
@@ -80,7 +80,7 @@ void test_generate_sentinel_segmented()
 
 void test_generate_sentinel_non_segmented()
 {
-   std::vector<int> v(5, 0);
+   boost::container::vector<int> v(5, 0);
    segmented_generate(v.begin(), test_detail::make_sentinel(v.end()), counter());
    for(int i = 0; i < 5; ++i)
       BOOST_TEST_EQ(v[static_cast<std::size_t>(i)], i + 1);

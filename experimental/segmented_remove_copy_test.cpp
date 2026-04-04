@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_remove_copy.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -25,8 +25,8 @@ void test_remove_copy_segmented()
    sv.add_segment_range(a2, a2 + 3);
    sv.add_segment_range(a3, a3 + 2);
 
-   std::vector<int> out(8, 0);
-   std::vector<int>::iterator r = segmented_remove_copy(sv.begin(), sv.end(), out.begin(), 2);
+   boost::container::vector<int> out(8, 0);
+   boost::container::vector<int>::iterator r = segmented_remove_copy(sv.begin(), sv.end(), out.begin(), 2);
 
    int expected[] = {1, 3, 4, 5};
    std::size_t count = static_cast<std::size_t>(r - out.begin());
@@ -38,8 +38,8 @@ void test_remove_copy_segmented()
 void test_remove_copy_empty()
 {
    test_detail::seg_vector<int> sv;
-   std::vector<int> out;
-   std::vector<int>::iterator r = segmented_remove_copy(sv.begin(), sv.end(), out.begin(), 0);
+   boost::container::vector<int> out;
+   boost::container::vector<int>::iterator r = segmented_remove_copy(sv.begin(), sv.end(), out.begin(), 0);
    BOOST_TEST(r == out.begin());
 }
 
@@ -49,8 +49,8 @@ void test_remove_copy_none_removed()
    int a[] = {1, 3, 5};
    sv.add_segment_range(a, a + 3);
 
-   std::vector<int> out(3, 0);
-   std::vector<int>::iterator r = segmented_remove_copy(sv.begin(), sv.end(), out.begin(), 2);
+   boost::container::vector<int> out(3, 0);
+   boost::container::vector<int>::iterator r = segmented_remove_copy(sv.begin(), sv.end(), out.begin(), 2);
    BOOST_TEST_EQ(static_cast<std::size_t>(r - out.begin()), 3u);
    BOOST_TEST_EQ(out[0], 1);
    BOOST_TEST_EQ(out[1], 3);
@@ -60,9 +60,9 @@ void test_remove_copy_none_removed()
 void test_remove_copy_non_segmented()
 {
    int src[] = {1, 2, 3, 2, 4};
-   std::vector<int> v(src, src + 5);
-   std::vector<int> out(5, 0);
-   std::vector<int>::iterator r = segmented_remove_copy(v.begin(), v.end(), out.begin(), 2);
+   boost::container::vector<int> v(src, src + 5);
+   boost::container::vector<int> out(5, 0);
+   boost::container::vector<int>::iterator r = segmented_remove_copy(v.begin(), v.end(), out.begin(), 2);
 
    std::size_t count = static_cast<std::size_t>(r - out.begin());
    BOOST_TEST_EQ(count, 3u);
@@ -81,8 +81,8 @@ void test_remove_copy_sentinel_segmented()
    sv.add_segment_range(a2, a2 + 3);
    sv.add_segment_range(a3, a3 + 2);
 
-   std::vector<int> out(8, 0);
-   std::vector<int>::iterator r = segmented_remove_copy(sv.begin(), test_detail::make_sentinel(sv.end()), out.begin(), 2);
+   boost::container::vector<int> out(8, 0);
+   boost::container::vector<int>::iterator r = segmented_remove_copy(sv.begin(), test_detail::make_sentinel(sv.end()), out.begin(), 2);
 
    int expected[] = {1, 3, 4, 5};
    std::size_t count = static_cast<std::size_t>(r - out.begin());
@@ -94,9 +94,9 @@ void test_remove_copy_sentinel_segmented()
 void test_remove_copy_sentinel_non_segmented()
 {
    int src[] = {1, 2, 3, 2, 4};
-   std::vector<int> v(src, src + 5);
-   std::vector<int> out(5, 0);
-   std::vector<int>::iterator r = segmented_remove_copy(v.begin(), test_detail::make_sentinel(v.end()), out.begin(), 2);
+   boost::container::vector<int> v(src, src + 5);
+   boost::container::vector<int> out(5, 0);
+   boost::container::vector<int>::iterator r = segmented_remove_copy(v.begin(), test_detail::make_sentinel(v.end()), out.begin(), 2);
 
    std::size_t count = static_cast<std::size_t>(r - out.begin());
    BOOST_TEST_EQ(count, 3u);
@@ -115,8 +115,8 @@ void test_remove_copy_seg2()
    sv2.add_flat_segment_range(a2, a2 + 3);
    sv2.add_flat_segment_range(a3, a3 + 2);
 
-   std::vector<int> out(8, 0);
-   std::vector<int>::iterator r = segmented_remove_copy(sv2.begin(), sv2.end(), out.begin(), 2);
+   boost::container::vector<int> out(8, 0);
+   boost::container::vector<int>::iterator r = segmented_remove_copy(sv2.begin(), sv2.end(), out.begin(), 2);
 
    int expected[] = {1, 3, 4, 5};
    std::size_t count = static_cast<std::size_t>(r - out.begin());

@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_transform.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -33,8 +33,8 @@ void test_transform_full_range()
    sv.add_segment_range(a1, a1 + 3);
    sv.add_segment_range(a2, a2 + 2);
 
-   std::vector<int> out(5, 0);
-   std::vector<int>::iterator result =
+   boost::container::vector<int> out(5, 0);
+   boost::container::vector<int>::iterator result =
       segmented_transform(sv.begin(), sv.end(), out.begin(), times_two());
 
    BOOST_TEST(result == out.end());
@@ -48,8 +48,8 @@ void test_transform_full_range()
 void test_transform_empty()
 {
    test_detail::seg_vector<int> sv;
-   std::vector<int> out;
-   std::vector<int>::iterator result =
+   boost::container::vector<int> out;
+   boost::container::vector<int>::iterator result =
       segmented_transform(sv.begin(), sv.end(), out.begin(), times_two());
    BOOST_TEST(result == out.begin());
 }
@@ -60,7 +60,7 @@ void test_transform_single_segment()
    int a[] = {10, 20, 30};
    sv.add_segment_range(a, a + 3);
 
-   std::vector<int> out(3, 0);
+   boost::container::vector<int> out(3, 0);
    segmented_transform(sv.begin(), sv.end(), out.begin(), negate_val());
 
    BOOST_TEST_EQ(out[0], -10);
@@ -70,12 +70,12 @@ void test_transform_single_segment()
 
 void test_transform_non_segmented()
 {
-   std::vector<int> in;
+   boost::container::vector<int> in;
    in.push_back(1);
    in.push_back(2);
    in.push_back(3);
 
-   std::vector<int> out(3, 0);
+   boost::container::vector<int> out(3, 0);
    segmented_transform(in.begin(), in.end(), out.begin(), times_two());
 
    BOOST_TEST_EQ(out[0], 2);
@@ -91,8 +91,8 @@ void test_transform_sentinel_segmented()
    sv.add_segment_range(a1, a1 + 3);
    sv.add_segment_range(a2, a2 + 2);
 
-   std::vector<int> out(5, 0);
-   std::vector<int>::iterator result =
+   boost::container::vector<int> out(5, 0);
+   boost::container::vector<int>::iterator result =
       segmented_transform(sv.begin(), test_detail::make_sentinel(sv.end()), out.begin(), times_two());
 
    BOOST_TEST(result == out.end());
@@ -105,12 +105,12 @@ void test_transform_sentinel_segmented()
 
 void test_transform_sentinel_non_segmented()
 {
-   std::vector<int> in;
+   boost::container::vector<int> in;
    in.push_back(1);
    in.push_back(2);
    in.push_back(3);
 
-   std::vector<int> out(3, 0);
+   boost::container::vector<int> out(3, 0);
    segmented_transform(in.begin(), test_detail::make_sentinel(in.end()), out.begin(), times_two());
 
    BOOST_TEST_EQ(out[0], 2);
@@ -128,8 +128,8 @@ void test_transform_seg2()
    sv2.add_flat_segment_range(a2, a2 + 2);
    sv2.add_flat_segment_range(a3, a3 + 4);
 
-   std::vector<int> out(9, 0);
-   std::vector<int>::iterator result =
+   boost::container::vector<int> out(9, 0);
+   boost::container::vector<int>::iterator result =
       segmented_transform(sv2.begin(), sv2.end(), out.begin(), times_two());
 
    BOOST_TEST(result == out.end());

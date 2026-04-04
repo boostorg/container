@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_find.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -60,12 +60,12 @@ void test_find_empty()
 
 void test_find_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(10);
    v.push_back(20);
    v.push_back(30);
 
-   std::vector<int>::iterator it = segmented_find(v.begin(), v.end(), 20);
+   boost::container::vector<int>::iterator it = segmented_find(v.begin(), v.end(), 20);
    BOOST_TEST(it != v.end());
    BOOST_TEST_EQ(*it, 20);
 
@@ -92,12 +92,12 @@ void test_find_sentinel_segmented()
 
 void test_find_sentinel_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(10);
    v.push_back(20);
    v.push_back(30);
 
-   std::vector<int>::iterator it =
+   boost::container::vector<int>::iterator it =
       segmented_find(v.begin(), test_detail::make_sentinel(v.end()), 20);
    BOOST_TEST(it != v.end());
    BOOST_TEST_EQ(*it, 20);

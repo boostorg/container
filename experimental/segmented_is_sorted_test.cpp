@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_is_sorted.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -83,12 +83,12 @@ void test_is_sorted_non_segmented()
 {
    {
       int data[] = {1, 2, 3, 4, 5};
-      std::vector<int> v(data, data + 5);
+      boost::container::vector<int> v(data, data + 5);
       BOOST_TEST(segmented_is_sorted(v.begin(), v.end()));
    }
    {
       int data[] = {1, 3, 2, 4, 5};
-      std::vector<int> v(data, data + 5);
+      boost::container::vector<int> v(data, data + 5);
       BOOST_TEST(!segmented_is_sorted(v.begin(), v.end()));
    }
 }
@@ -110,12 +110,12 @@ void test_is_sorted_sentinel_non_segmented()
 {
    {
       int data[] = {1, 2, 3, 4, 5};
-      std::vector<int> v(data, data + 5);
+      boost::container::vector<int> v(data, data + 5);
       BOOST_TEST(segmented_is_sorted(v.begin(), test_detail::make_sentinel(v.end())));
    }
    {
       int data[] = {1, 3, 2, 4, 5};
-      std::vector<int> v(data, data + 5);
+      boost::container::vector<int> v(data, data + 5);
       BOOST_TEST(!segmented_is_sorted(v.begin(), test_detail::make_sentinel(v.end())));
    }
 }

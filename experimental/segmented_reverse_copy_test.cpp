@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_reverse_copy.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -25,8 +25,8 @@ void test_reverse_copy_segmented()
    sv.add_segment_range(a2, a2 + 2);
    sv.add_segment_range(a3, a3 + 3);
 
-   std::vector<int> out(8, 0);
-   std::vector<int>::iterator r = segmented_reverse_copy(sv.begin(), sv.end(), out.begin());
+   boost::container::vector<int> out(8, 0);
+   boost::container::vector<int>::iterator r = segmented_reverse_copy(sv.begin(), sv.end(), out.begin());
 
    BOOST_TEST_EQ(static_cast<std::size_t>(r - out.begin()), 8u);
 
@@ -38,8 +38,8 @@ void test_reverse_copy_segmented()
 void test_reverse_copy_empty()
 {
    test_detail::seg_vector<int> sv;
-   std::vector<int> out;
-   std::vector<int>::iterator r = segmented_reverse_copy(sv.begin(), sv.end(), out.begin());
+   boost::container::vector<int> out;
+   boost::container::vector<int>::iterator r = segmented_reverse_copy(sv.begin(), sv.end(), out.begin());
    BOOST_TEST(r == out.begin());
 }
 
@@ -49,8 +49,8 @@ void test_reverse_copy_single_segment()
    int a[] = {10, 20, 30};
    sv.add_segment_range(a, a + 3);
 
-   std::vector<int> out(3, 0);
-   std::vector<int>::iterator r = segmented_reverse_copy(sv.begin(), sv.end(), out.begin());
+   boost::container::vector<int> out(3, 0);
+   boost::container::vector<int>::iterator r = segmented_reverse_copy(sv.begin(), sv.end(), out.begin());
 
    BOOST_TEST_EQ(static_cast<std::size_t>(r - out.begin()), 3u);
    BOOST_TEST_EQ(out[0], 30);
@@ -63,7 +63,7 @@ void test_reverse_copy_single_element()
    test_detail::seg_vector<int> sv;
    sv.add_segment(1, 42);
 
-   std::vector<int> out(1, 0);
+   boost::container::vector<int> out(1, 0);
    segmented_reverse_copy(sv.begin(), sv.end(), out.begin());
    BOOST_TEST_EQ(out[0], 42);
 }
@@ -71,9 +71,9 @@ void test_reverse_copy_single_element()
 void test_reverse_copy_non_segmented()
 {
    int src[] = {1, 2, 3, 4, 5};
-   std::vector<int> v(src, src + 5);
-   std::vector<int> out(5, 0);
-   std::vector<int>::iterator r = segmented_reverse_copy(v.begin(), v.end(), out.begin());
+   boost::container::vector<int> v(src, src + 5);
+   boost::container::vector<int> out(5, 0);
+   boost::container::vector<int>::iterator r = segmented_reverse_copy(v.begin(), v.end(), out.begin());
 
    BOOST_TEST_EQ(static_cast<std::size_t>(r - out.begin()), 5u);
    BOOST_TEST_EQ(out[0], 5);
@@ -93,8 +93,8 @@ void test_reverse_copy_seg2()
    sv2.add_flat_segment_range(a2, a2 + 2);
    sv2.add_flat_segment_range(a3, a3 + 4);
 
-   std::vector<int> out(9, 0);
-   std::vector<int>::iterator r = segmented_reverse_copy(sv2.begin(), sv2.end(), out.begin());
+   boost::container::vector<int> out(9, 0);
+   boost::container::vector<int>::iterator r = segmented_reverse_copy(sv2.begin(), sv2.end(), out.begin());
 
    BOOST_TEST_EQ(static_cast<std::size_t>(r - out.begin()), 9u);
 

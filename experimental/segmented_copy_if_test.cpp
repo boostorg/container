@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_copy_if.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -30,8 +30,8 @@ void test_copy_if_full_range()
    sv.add_segment_range(a2, a2 + 2);
    sv.add_segment_range(a3, a3 + 4);
 
-   std::vector<int> out(9, 0);
-   std::vector<int>::iterator result =
+   boost::container::vector<int> out(9, 0);
+   boost::container::vector<int>::iterator result =
       segmented_copy_if(sv.begin(), sv.end(), out.begin(), is_even());
 
    std::size_t count = static_cast<std::size_t>(result - out.begin());
@@ -48,8 +48,8 @@ void test_copy_if_none_match()
    int a1[] = {1, 3, 5};
    sv.add_segment_range(a1, a1 + 3);
 
-   std::vector<int> out(3, 0);
-   std::vector<int>::iterator result =
+   boost::container::vector<int> out(3, 0);
+   boost::container::vector<int>::iterator result =
       segmented_copy_if(sv.begin(), sv.end(), out.begin(), is_even());
 
    BOOST_TEST(result == out.begin());
@@ -63,8 +63,8 @@ void test_copy_if_all_match()
    sv.add_segment_range(a1, a1 + 2);
    sv.add_segment_range(a2, a2 + 2);
 
-   std::vector<int> out(4, 0);
-   std::vector<int>::iterator result =
+   boost::container::vector<int> out(4, 0);
+   boost::container::vector<int>::iterator result =
       segmented_copy_if(sv.begin(), sv.end(), out.begin(), is_even());
 
    BOOST_TEST(result == out.end());
@@ -77,20 +77,20 @@ void test_copy_if_all_match()
 void test_copy_if_empty()
 {
    test_detail::seg_vector<int> sv;
-   std::vector<int> out;
-   std::vector<int>::iterator result =
+   boost::container::vector<int> out;
+   boost::container::vector<int>::iterator result =
       segmented_copy_if(sv.begin(), sv.end(), out.begin(), is_even());
    BOOST_TEST(result == out.begin());
 }
 
 void test_copy_if_non_segmented()
 {
-   std::vector<int> in;
+   boost::container::vector<int> in;
    in.push_back(1); in.push_back(2); in.push_back(3);
    in.push_back(4); in.push_back(5);
 
-   std::vector<int> out(5, 0);
-   std::vector<int>::iterator result =
+   boost::container::vector<int> out(5, 0);
+   boost::container::vector<int>::iterator result =
       segmented_copy_if(in.begin(), in.end(), out.begin(), is_even());
 
    std::size_t count = static_cast<std::size_t>(result - out.begin());
@@ -109,8 +109,8 @@ void test_copy_if_sentinel_segmented()
    sv.add_segment_range(a2, a2 + 2);
    sv.add_segment_range(a3, a3 + 4);
 
-   std::vector<int> out(9, 0);
-   std::vector<int>::iterator result =
+   boost::container::vector<int> out(9, 0);
+   boost::container::vector<int>::iterator result =
       segmented_copy_if(sv.begin(), test_detail::make_sentinel(sv.end()), out.begin(), is_even());
 
    std::size_t count = static_cast<std::size_t>(result - out.begin());
@@ -123,12 +123,12 @@ void test_copy_if_sentinel_segmented()
 
 void test_copy_if_sentinel_non_segmented()
 {
-   std::vector<int> in;
+   boost::container::vector<int> in;
    in.push_back(1); in.push_back(2); in.push_back(3);
    in.push_back(4); in.push_back(5);
 
-   std::vector<int> out(5, 0);
-   std::vector<int>::iterator result =
+   boost::container::vector<int> out(5, 0);
+   boost::container::vector<int>::iterator result =
       segmented_copy_if(in.begin(), test_detail::make_sentinel(in.end()), out.begin(), is_even());
 
    std::size_t count = static_cast<std::size_t>(result - out.begin());
@@ -147,8 +147,8 @@ void test_copy_if_seg2()
    sv2.add_flat_segment_range(a2, a2 + 2);
    sv2.add_flat_segment_range(a3, a3 + 4);
 
-   std::vector<int> out(9, 0);
-   std::vector<int>::iterator result =
+   boost::container::vector<int> out(9, 0);
+   boost::container::vector<int>::iterator result =
       segmented_copy_if(sv2.begin(), sv2.end(), out.begin(), is_even());
 
    std::size_t count = static_cast<std::size_t>(result - out.begin());

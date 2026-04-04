@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_partition_copy.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 #include <utility>
 
 using namespace boost::container;
@@ -31,10 +31,10 @@ void test_partition_copy_segmented()
    sv.add_segment_range(a2, a2 + 3);
    sv.add_segment_range(a3, a3 + 1);
 
-   std::vector<int> evens(7, 0);
-   std::vector<int> odds(7, 0);
+   boost::container::vector<int> evens(7, 0);
+   boost::container::vector<int> odds(7, 0);
 
-   std::pair<std::vector<int>::iterator, std::vector<int>::iterator> r =
+   std::pair<boost::container::vector<int>::iterator, boost::container::vector<int>::iterator> r =
       segmented_partition_copy(sv.begin(), sv.end(), evens.begin(), odds.begin(), is_even());
 
    std::size_t ne = static_cast<std::size_t>(r.first  - evens.begin());
@@ -55,9 +55,9 @@ void test_partition_copy_segmented()
 void test_partition_copy_empty()
 {
    test_detail::seg_vector<int> sv;
-   std::vector<int> evens;
-   std::vector<int> odds;
-   std::pair<std::vector<int>::iterator, std::vector<int>::iterator> r =
+   boost::container::vector<int> evens;
+   boost::container::vector<int> odds;
+   std::pair<boost::container::vector<int>::iterator, boost::container::vector<int>::iterator> r =
       segmented_partition_copy(sv.begin(), sv.end(), evens.begin(), odds.begin(), is_even());
    BOOST_TEST(r.first  == evens.begin());
    BOOST_TEST(r.second == odds.begin());
@@ -69,9 +69,9 @@ void test_partition_copy_all_true()
    int a[] = {2, 4, 6};
    sv.add_segment_range(a, a + 3);
 
-   std::vector<int> evens(3, 0);
-   std::vector<int> odds(3, 0);
-   std::pair<std::vector<int>::iterator, std::vector<int>::iterator> r =
+   boost::container::vector<int> evens(3, 0);
+   boost::container::vector<int> odds(3, 0);
+   std::pair<boost::container::vector<int>::iterator, boost::container::vector<int>::iterator> r =
       segmented_partition_copy(sv.begin(), sv.end(), evens.begin(), odds.begin(), is_even());
 
    BOOST_TEST_EQ(static_cast<std::size_t>(r.first  - evens.begin()), 3u);
@@ -81,11 +81,11 @@ void test_partition_copy_all_true()
 void test_partition_copy_non_segmented()
 {
    int src[] = {1, 2, 3, 4, 5};
-   std::vector<int> v(src, src + 5);
-   std::vector<int> evens(5, 0);
-   std::vector<int> odds(5, 0);
+   boost::container::vector<int> v(src, src + 5);
+   boost::container::vector<int> evens(5, 0);
+   boost::container::vector<int> odds(5, 0);
 
-   std::pair<std::vector<int>::iterator, std::vector<int>::iterator> r =
+   std::pair<boost::container::vector<int>::iterator, boost::container::vector<int>::iterator> r =
       segmented_partition_copy(v.begin(), v.end(), evens.begin(), odds.begin(), is_even());
 
    std::size_t ne = static_cast<std::size_t>(r.first  - evens.begin());
@@ -109,10 +109,10 @@ void test_partition_copy_sentinel_segmented()
    sv.add_segment_range(a2, a2 + 3);
    sv.add_segment_range(a3, a3 + 1);
 
-   std::vector<int> evens(7, 0);
-   std::vector<int> odds(7, 0);
+   boost::container::vector<int> evens(7, 0);
+   boost::container::vector<int> odds(7, 0);
 
-   std::pair<std::vector<int>::iterator, std::vector<int>::iterator> r =
+   std::pair<boost::container::vector<int>::iterator, boost::container::vector<int>::iterator> r =
       segmented_partition_copy(sv.begin(), test_detail::make_sentinel(sv.end()), evens.begin(), odds.begin(), is_even());
 
    std::size_t ne = static_cast<std::size_t>(r.first  - evens.begin());
@@ -133,11 +133,11 @@ void test_partition_copy_sentinel_segmented()
 void test_partition_copy_sentinel_non_segmented()
 {
    int src[] = {1, 2, 3, 4, 5};
-   std::vector<int> v(src, src + 5);
-   std::vector<int> evens(5, 0);
-   std::vector<int> odds(5, 0);
+   boost::container::vector<int> v(src, src + 5);
+   boost::container::vector<int> evens(5, 0);
+   boost::container::vector<int> odds(5, 0);
 
-   std::pair<std::vector<int>::iterator, std::vector<int>::iterator> r =
+   std::pair<boost::container::vector<int>::iterator, boost::container::vector<int>::iterator> r =
       segmented_partition_copy(v.begin(), test_detail::make_sentinel(v.end()), evens.begin(), odds.begin(), is_even());
 
    std::size_t ne = static_cast<std::size_t>(r.first  - evens.begin());
@@ -159,10 +159,10 @@ void test_partition_copy_seg2()
    sv2.add_flat_segment_range(a1, a1 + 3);
    sv2.add_flat_segment_range(a2, a2 + 3);
 
-   std::vector<int> evens(6, 0);
-   std::vector<int> odds(6, 0);
+   boost::container::vector<int> evens(6, 0);
+   boost::container::vector<int> odds(6, 0);
 
-   std::pair<std::vector<int>::iterator, std::vector<int>::iterator> r =
+   std::pair<boost::container::vector<int>::iterator, boost::container::vector<int>::iterator> r =
       segmented_partition_copy(sv2.begin(), sv2.end(), evens.begin(), odds.begin(), is_even());
 
    std::size_t ne = static_cast<std::size_t>(r.first  - evens.begin());

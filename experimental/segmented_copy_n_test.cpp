@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_copy_n.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -25,8 +25,8 @@ void test_copy_n_full()
    sv.add_segment_range(a2, a2 + 2);
    sv.add_segment_range(a3, a3 + 4);
 
-   std::vector<int> out(9, 0);
-   std::vector<int>::iterator result = segmented_copy_n(sv.begin(), 9, out.begin());
+   boost::container::vector<int> out(9, 0);
+   boost::container::vector<int>::iterator result = segmented_copy_n(sv.begin(), 9, out.begin());
 
    BOOST_TEST(result == out.end());
    for(int i = 0; i < 9; ++i)
@@ -43,8 +43,8 @@ void test_copy_n_partial()
    sv.add_segment_range(a2, a2 + 2);
    sv.add_segment_range(a3, a3 + 4);
 
-   std::vector<int> out(5, 0);
-   std::vector<int>::iterator result = segmented_copy_n(sv.begin(), 5, out.begin());
+   boost::container::vector<int> out(5, 0);
+   boost::container::vector<int>::iterator result = segmented_copy_n(sv.begin(), 5, out.begin());
 
    BOOST_TEST(result == out.end());
    BOOST_TEST_EQ(out[0], 1);
@@ -60,8 +60,8 @@ void test_copy_n_zero()
    int a[] = {1, 2, 3};
    sv.add_segment_range(a, a + 3);
 
-   std::vector<int> out(3, 99);
-   std::vector<int>::iterator result = segmented_copy_n(sv.begin(), 0, out.begin());
+   boost::container::vector<int> out(3, 99);
+   boost::container::vector<int>::iterator result = segmented_copy_n(sv.begin(), 0, out.begin());
 
    BOOST_TEST(result == out.begin());
    BOOST_TEST_EQ(out[0], 99);
@@ -73,8 +73,8 @@ void test_copy_n_single_segment()
    int a[] = {10, 20, 30};
    sv.add_segment_range(a, a + 3);
 
-   std::vector<int> out(2, 0);
-   std::vector<int>::iterator result = segmented_copy_n(sv.begin(), 2, out.begin());
+   boost::container::vector<int> out(2, 0);
+   boost::container::vector<int>::iterator result = segmented_copy_n(sv.begin(), 2, out.begin());
 
    BOOST_TEST(result == out.end());
    BOOST_TEST_EQ(out[0], 10);
@@ -83,11 +83,11 @@ void test_copy_n_single_segment()
 
 void test_copy_n_non_segmented()
 {
-   std::vector<int> in;
+   boost::container::vector<int> in;
    in.push_back(1); in.push_back(2); in.push_back(3);
 
-   std::vector<int> out(2, 0);
-   std::vector<int>::iterator result = segmented_copy_n(in.begin(), 2, out.begin());
+   boost::container::vector<int> out(2, 0);
+   boost::container::vector<int>::iterator result = segmented_copy_n(in.begin(), 2, out.begin());
 
    BOOST_TEST(result == out.end());
    BOOST_TEST_EQ(out[0], 1);
@@ -104,8 +104,8 @@ void test_copy_n_seg2()
    sv2.add_flat_segment_range(a2, a2 + 2);
    sv2.add_flat_segment_range(a3, a3 + 4);
 
-   std::vector<int> out(9, 0);
-   std::vector<int>::iterator result = segmented_copy_n(sv2.begin(), 9, out.begin());
+   boost::container::vector<int> out(9, 0);
+   boost::container::vector<int>::iterator result = segmented_copy_n(sv2.begin(), 9, out.begin());
 
    BOOST_TEST(result == out.end());
    for(int i = 0; i < 9; ++i)

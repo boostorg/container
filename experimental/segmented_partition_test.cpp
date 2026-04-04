@@ -11,7 +11,7 @@
 #include <boost/container/experimental/segmented_partition.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
-#include <vector>
+#include <boost/container/vector.hpp>
 
 using namespace boost::container;
 
@@ -77,18 +77,18 @@ void test_partition_all_false()
 
 void test_partition_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(5); v.push_back(2); v.push_back(7); v.push_back(4); v.push_back(1);
 
-   std::vector<int>::iterator mid = segmented_partition(v.begin(), v.end(), is_even());
+   boost::container::vector<int>::iterator mid = segmented_partition(v.begin(), v.end(), is_even());
 
-   for(std::vector<int>::iterator it = v.begin(); it != mid; ++it)
+   for(boost::container::vector<int>::iterator it = v.begin(); it != mid; ++it)
       BOOST_TEST(*it % 2 == 0);
-   for(std::vector<int>::iterator it = mid; it != v.end(); ++it)
+   for(boost::container::vector<int>::iterator it = mid; it != v.end(); ++it)
       BOOST_TEST(*it % 2 != 0);
 
    int even_count = 0;
-   for(std::vector<int>::iterator it = v.begin(); it != mid; ++it)
+   for(boost::container::vector<int>::iterator it = v.begin(); it != mid; ++it)
       ++even_count;
    BOOST_TEST_EQ(even_count, 2);
 }
@@ -119,18 +119,18 @@ void test_partition_sentinel_segmented()
 
 void test_partition_sentinel_non_segmented()
 {
-   std::vector<int> v;
+   boost::container::vector<int> v;
    v.push_back(5); v.push_back(2); v.push_back(7); v.push_back(4); v.push_back(1);
 
-   std::vector<int>::iterator mid = segmented_partition(v.begin(), test_detail::make_sentinel(v.end()), is_even());
+   boost::container::vector<int>::iterator mid = segmented_partition(v.begin(), test_detail::make_sentinel(v.end()), is_even());
 
-   for(std::vector<int>::iterator it = v.begin(); it != mid; ++it)
+   for(boost::container::vector<int>::iterator it = v.begin(); it != mid; ++it)
       BOOST_TEST(*it % 2 == 0);
-   for(std::vector<int>::iterator it = mid; it != v.end(); ++it)
+   for(boost::container::vector<int>::iterator it = mid; it != v.end(); ++it)
       BOOST_TEST(*it % 2 != 0);
 
    int even_count = 0;
-   for(std::vector<int>::iterator it = v.begin(); it != mid; ++it)
+   for(boost::container::vector<int>::iterator it = v.begin(); it != mid; ++it)
       ++even_count;
    BOOST_TEST_EQ(even_count, 2);
 }
