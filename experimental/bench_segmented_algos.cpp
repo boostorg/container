@@ -4144,9 +4144,9 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 
    const VT zero(0);
    const VT min1(-1);
-   const VT quart((int)c.size() / 4);
-   const VT half((int)c.size() / 2);
-   const VT threequart((int)c.size() / 2);
+   const VT quart((int)c.size()/4);
+   const VT half((int)c.size()/2);
+   const VT threequart((int)c.size()*3/4);
 
    g_geomean.reset();
    print_subheader();
@@ -4161,8 +4161,6 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 
    //copy
    bench_copy<false>(c, iters, cname, "copy");
-
-   //copy -> deque output
    bench_copy<true>(c, iters, cname, "copy(2xS)");
 
    //copy_if
@@ -4294,15 +4292,13 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_remove_copy<true>(c, iters, cname, min1,  "remove_copy(2xS miss)");
 
    //remove_copy_if
-   bench_remove_copy_if<false>(c, iters, cname, less_and_greater_ref<VT>(quart, VT((int)c.size()*3/4)), "remove_copy_if(hit)");
+   bench_remove_copy_if<false>(c, iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_copy_if(hit)");
+   bench_remove_copy_if<true>(c, iters, cname, less_and_greater_ref<VT>(quart, threequart),  "remove_copy_if(2xS hit)");
    bench_remove_copy_if<false>(c, iters, cname, is_negative<VT>(), "remove_copy_if(miss)");
-
-   //remove_copy_if -> deque output
-   bench_remove_copy_if<true>(c, iters, cname, less_and_greater_ref<VT>(quart, VT((int)c.size()*3/4)),  "remove_copy_if(2xS hit)");
-   bench_remove_copy_if<true>(c, iters, cname, is_negative<VT>(), "remove_copyif(2xS miss)");
+   bench_remove_copy_if<true>(c, iters, cname, is_negative<VT>(), "remove_copy_if(2xS miss)");
 
    //remove_if
-   bench_remove_if(c, iters, cname, less_and_greater_ref<VT>(quart, VT((int)c.size()*3/4)), "remove_if(hit)");
+   bench_remove_if(c, iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_if(hit)");
    bench_remove_if(c, iters, cname, is_negative<VT>(), "remove_if(miss)");
 
    //replace
