@@ -112,6 +112,107 @@ void test_copy_n_seg2()
       BOOST_TEST_EQ(out[static_cast<std::size_t>(i)], i + 1);
 }
 
+void test_copy_n_segmented_output()
+{
+   test_detail::seg_vector<int> sv;
+   int a1[] = {1, 2, 3};
+   int a2[] = {4, 5};
+   int a3[] = {6, 7, 8, 9};
+   sv.add_segment_range(a1, a1 + 3);
+   sv.add_segment_range(a2, a2 + 2);
+   sv.add_segment_range(a3, a3 + 4);
+
+   test_detail::seg_vector<int> out;
+   out.add_segment(4, 0);
+   out.add_segment(3, 0);
+   out.add_segment(2, 0);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   iter_t result = segmented_copy_n(sv.begin(), 9, out.begin());
+
+   BOOST_TEST(result == out.end());
+   iter_t it = out.begin();
+   for(int i = 0; i < 9; ++i, ++it)
+      BOOST_TEST_EQ(*it, i + 1);
+}
+
+void test_copy_n_seg2_to_seg2()
+{
+   test_detail::seg2_vector<int> sv2;
+   int a1[] = {1, 2, 3};
+   int a2[] = {4, 5};
+   int a3[] = {6, 7, 8, 9};
+   sv2.add_flat_segment_range(a1, a1 + 3);
+   sv2.add_flat_segment_range(a2, a2 + 2);
+   sv2.add_flat_segment_range(a3, a3 + 4);
+
+   test_detail::seg2_vector<int> out;
+   {
+      test_detail::seg_vector<int> s1; s1.add_segment(5, 0);
+      test_detail::seg_vector<int> s2; s2.add_segment(4, 0);
+      out.add_segment(s1);
+      out.add_segment(s2);
+   }
+
+   typedef test_detail::seg2_vector<int>::iterator iter_t;
+   iter_t result = segmented_copy_n(sv2.begin(), 9, out.begin());
+
+   BOOST_TEST(result == out.end());
+   iter_t it = out.begin();
+   for(int i = 0; i < 9; ++i, ++it)
+      BOOST_TEST_EQ(*it, i + 1);
+}
+
+void test_copy_n_seg_to_seg_misaligned()
+{
+   test_detail::seg_vector<int> sv;
+   int a1[] = {1, 2, 3, 4, 5};
+   int a2[] = {6, 7, 8};
+   sv.add_segment_range(a1, a1 + 5);
+   sv.add_segment_range(a2, a2 + 3);
+
+   test_detail::seg_vector<int> out;
+   out.add_segment(2, 0);
+   out.add_segment(3, 0);
+   out.add_segment(3, 0);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   iter_t result = segmented_copy_n(sv.begin(), 8, out.begin());
+
+   BOOST_TEST(result == out.end());
+   iter_t it = out.begin();
+   for(int i = 0; i < 8; ++i, ++it)
+      BOOST_TEST_EQ(*it, i + 1);
+}
+
+void test_copy_n_partial_segmented_output()
+{
+   test_detail::seg_vector<int> sv;
+   int a1[] = {1, 2, 3};
+   int a2[] = {4, 5};
+   int a3[] = {6, 7, 8, 9};
+   sv.add_segment_range(a1, a1 + 3);
+   sv.add_segment_range(a2, a2 + 2);
+   sv.add_segment_range(a3, a3 + 4);
+
+   test_detail::seg_vector<int> out;
+   out.add_segment(3, 0);
+   out.add_segment(3, 0);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   iter_t result = segmented_copy_n(sv.begin(), 5, out.begin());
+
+   std::size_t count = 0;
+   iter_t it = out.begin();
+   for(; it != result; ++it)
+      ++count;
+   BOOST_TEST_EQ(count, 5u);
+
+   it = out.begin();
+   for(int i = 0; i < 5; ++i, ++it)
+      BOOST_TEST_EQ(*it, i + 1);
+}
+
 int main()
 {
    test_copy_n_full();
@@ -120,5 +221,9 @@ int main()
    test_copy_n_single_segment();
    test_copy_n_non_segmented();
    test_copy_n_seg2();
+   test_copy_n_segmented_output();
+   test_copy_n_seg2_to_seg2();
+   test_copy_n_seg_to_seg_misaligned();
+   test_copy_n_partial_segmented_output();
    return boost::report_errors();
 }

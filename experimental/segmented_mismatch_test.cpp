@@ -232,6 +232,132 @@ void test_mismatch_every_position_seg2()
    BOOST_TEST(r.first == sv2.end());
 }
 
+void test_mismatch_seg_to_seg()
+{
+   test_detail::seg_vector<int> sv;
+   int a1[] = {1, 2, 3};
+   int a2[] = {4, 5};
+   int a3[] = {6, 7, 8, 9};
+   sv.add_segment_range(a1, a1 + 3);
+   sv.add_segment_range(a2, a2 + 2);
+   sv.add_segment_range(a3, a3 + 4);
+
+   test_detail::seg_vector<int> sv2;
+   int b1[] = {1, 2, 3, 4};
+   int b2[] = {5, 6, 7, 8};
+   int b3[] = {9};
+   sv2.add_segment_range(b1, b1 + 4);
+   sv2.add_segment_range(b2, b2 + 4);
+   sv2.add_segment_range(b3, b3 + 1);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   std::pair<iter_t, iter_t> r = segmented_mismatch(sv.begin(), sv.end(), sv2.begin());
+   BOOST_TEST(r.first == sv.end());
+}
+
+void test_mismatch_seg_to_seg_mismatch()
+{
+   test_detail::seg_vector<int> sv;
+   int a1[] = {1, 2, 3};
+   int a2[] = {4, 5};
+   int a3[] = {6, 7, 8, 9};
+   sv.add_segment_range(a1, a1 + 3);
+   sv.add_segment_range(a2, a2 + 2);
+   sv.add_segment_range(a3, a3 + 4);
+
+   test_detail::seg_vector<int> sv2;
+   int b1[] = {1, 2, 3, 4};
+   int b2[] = {5, 6, 99, 8};
+   int b3[] = {9};
+   sv2.add_segment_range(b1, b1 + 4);
+   sv2.add_segment_range(b2, b2 + 4);
+   sv2.add_segment_range(b3, b3 + 1);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   std::pair<iter_t, iter_t> r = segmented_mismatch(sv.begin(), sv.end(), sv2.begin());
+   BOOST_TEST(r.first != sv.end());
+   BOOST_TEST_EQ(*r.first, 7);
+   BOOST_TEST_EQ(*r.second, 99);
+}
+
+void test_mismatch_seg2_to_seg2()
+{
+   test_detail::seg2_vector<int> sv;
+   int a1[] = {1, 2, 3};
+   int a2[] = {4, 5};
+   int a3[] = {6, 7, 8, 9};
+   sv.add_flat_segment_range(a1, a1 + 3);
+   sv.add_flat_segment_range(a2, a2 + 2);
+   sv.add_flat_segment_range(a3, a3 + 4);
+
+   test_detail::seg2_vector<int> sv2;
+   int b1[] = {1, 2, 3, 4, 5};
+   int b2[] = {6, 7, 8, 9};
+   sv2.add_flat_segment_range(b1, b1 + 5);
+   sv2.add_flat_segment_range(b2, b2 + 4);
+
+   typedef test_detail::seg2_vector<int>::iterator iter_t;
+   std::pair<iter_t, iter_t> r = segmented_mismatch(sv.begin(), sv.end(), sv2.begin());
+   BOOST_TEST(r.first == sv.end());
+}
+
+void test_mismatch_seg_to_seg_misaligned()
+{
+   test_detail::seg_vector<int> sv;
+   int a1[] = {1, 2, 3, 4, 5};
+   int a2[] = {6, 7, 8};
+   sv.add_segment_range(a1, a1 + 5);
+   sv.add_segment_range(a2, a2 + 3);
+
+   test_detail::seg_vector<int> sv2;
+   int b1[] = {1, 2};
+   int b2[] = {3, 4, 5};
+   int b3[] = {6, 7, 8};
+   sv2.add_segment_range(b1, b1 + 2);
+   sv2.add_segment_range(b2, b2 + 3);
+   sv2.add_segment_range(b3, b3 + 3);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   std::pair<iter_t, iter_t> r = segmented_mismatch(sv.begin(), sv.end(), sv2.begin());
+   BOOST_TEST(r.first == sv.end());
+}
+
+void test_mismatch_seg_to_seg_every_position()
+{
+   test_detail::seg_vector<int> sv;
+   int a1[] = {10, 20, 30};
+   int a2[] = {40, 50};
+   int a3[] = {60, 70, 80, 90};
+   sv.add_segment_range(a1, a1 + 3);
+   sv.add_segment_range(a2, a2 + 2);
+   sv.add_segment_range(a3, a3 + 4);
+
+   int vals[] = {10, 20, 30, 40, 50, 60, 70, 80, 90};
+   const int N = 9;
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+
+   for(int pos = 0; pos < N; ++pos) {
+      test_detail::seg_vector<int> sv2;
+      int ref[9];
+      for(int j = 0; j < N; ++j) ref[j] = vals[j];
+      ref[pos] = -1;
+      int r1[] = {ref[0], ref[1], ref[2], ref[3]};
+      int r2[] = {ref[4], ref[5], ref[6], ref[7]};
+      int r3[] = {ref[8]};
+      sv2.add_segment_range(r1, r1 + 4);
+      sv2.add_segment_range(r2, r2 + 4);
+      sv2.add_segment_range(r3, r3 + 1);
+
+      iter_t expected = sv.begin();
+      for(int j = 0; j < pos; ++j) ++expected;
+
+      std::pair<iter_t, iter_t> r = segmented_mismatch(sv.begin(), sv.end(), sv2.begin());
+      BOOST_TEST(r.first == expected);
+      BOOST_TEST_EQ(*r.first, vals[pos]);
+      BOOST_TEST_EQ(*r.second, -1);
+   }
+}
+
 int main()
 {
    test_mismatch_matching();
@@ -245,5 +371,10 @@ int main()
    test_mismatch_seg2();
    test_mismatch_every_position();
    test_mismatch_every_position_seg2();
+   test_mismatch_seg_to_seg();
+   test_mismatch_seg_to_seg_mismatch();
+   test_mismatch_seg2_to_seg2();
+   test_mismatch_seg_to_seg_misaligned();
+   test_mismatch_seg_to_seg_every_position();
    return boost::report_errors();
 }
