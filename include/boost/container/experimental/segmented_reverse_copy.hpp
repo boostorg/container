@@ -63,16 +63,13 @@ OutIter segmented_reverse_copy_dispatch
    switch(n) {
       case 3:
          --last; *result = *last; ++result;
-         --last; *result = *last; ++result;
-         --last; *result = *last; ++result;
-         break;
+         BOOST_FALLTHROUGH;
       case 2:
          --last; *result = *last; ++result;
-         --last; *result = *last; ++result;
-         break;
+         BOOST_FALLTHROUGH;
       case 1:
          --last; *result = *last; ++result;
-         break;
+         BOOST_FALLTHROUGH;
       default:
          break;
    }

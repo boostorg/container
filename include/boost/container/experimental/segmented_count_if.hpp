@@ -54,16 +54,13 @@ segmented_count_if_dispatch
    switch(n) {
       case 3:
          count += static_cast<difference_type>(pred(*first)); ++first;
-         count += static_cast<difference_type>(pred(*first)); ++first;
-         count += static_cast<difference_type>(pred(*first)); ++first;
-         break;
+         BOOST_FALLTHROUGH;
       case 2:
          count += static_cast<difference_type>(pred(*first)); ++first;
-         count += static_cast<difference_type>(pred(*first)); ++first;
-         break;
+         BOOST_FALLTHROUGH;
       case 1:
          count += static_cast<difference_type>(pred(*first)); ++first;
-         break;
+         BOOST_FALLTHROUGH;
       default:
          break;
    }

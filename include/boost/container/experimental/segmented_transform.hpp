@@ -51,16 +51,13 @@ OutIter segmented_transform_dispatch
    switch(n) {
       case 3:
          *result = op(*first); ++first; ++result;
-         *result = op(*first); ++first; ++result;
-         *result = op(*first); ++first; ++result;
-         break;
+         BOOST_FALLTHROUGH;
       case 2:
          *result = op(*first); ++first; ++result;
-         *result = op(*first); ++first; ++result;
-         break;
+         BOOST_FALLTHROUGH;
       case 1:
          *result = op(*first); ++first; ++result;
-         break;
+         BOOST_FALLTHROUGH;
       default:
          break;
    }

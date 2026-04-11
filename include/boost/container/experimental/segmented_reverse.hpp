@@ -58,16 +58,13 @@ void segmented_reverse_dispatch(RAIter first, RAIter last, non_segmented_iterato
    switch(pairs) {
       case 3:
          --last; boost::adl_move_swap(*first, *last); ++first;
-         --last; boost::adl_move_swap(*first, *last); ++first;
-         --last; boost::adl_move_swap(*first, *last);
-         break;
+         BOOST_FALLTHROUGH;
       case 2:
          --last; boost::adl_move_swap(*first, *last); ++first;
-         --last; boost::adl_move_swap(*first, *last);
-         break;
+         BOOST_FALLTHROUGH;
       case 1:
          --last; boost::adl_move_swap(*first, *last);
-         break;
+         BOOST_FALLTHROUGH;
       default:
          break;
    }
@@ -123,16 +120,13 @@ void segmented_reverse_disjoint_ranges
    switch(n) {
       case 3:
          --l; boost::adl_move_swap(*f, *l); ++f;
-         --l; boost::adl_move_swap(*f, *l); ++f;
-         --l; boost::adl_move_swap(*f, *l); ++f;
-         break;
+         BOOST_FALLTHROUGH;
       case 2:
          --l; boost::adl_move_swap(*f, *l); ++f;
-         --l; boost::adl_move_swap(*f, *l); ++f;
-         break;
+         BOOST_FALLTHROUGH;
       case 1:
          --l; boost::adl_move_swap(*f, *l); ++f;
-         break;
+         BOOST_FALLTHROUGH;
       default:
          break;
    }

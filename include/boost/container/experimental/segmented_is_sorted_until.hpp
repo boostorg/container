@@ -154,26 +154,17 @@ RAIter segmented_is_sorted_until_dispatch
          if(comp(*first, *prev))
             goto final_result;
          prev = first; ++first;
-         if(comp(*first, *prev))
-            goto final_result;
-         prev = first; ++first;
-         if(comp(*first, *prev))
-            goto final_result;
-         ++first;
-         break;
+         BOOST_FALLTHROUGH;
       case 2:
          if(comp(*first, *prev))
             goto final_result;
          prev = first; ++first;
-         if(comp(*first, *prev))
-            goto final_result;
-         ++first;
-         break;
+         BOOST_FALLTHROUGH;
       case 1:
          if(comp(*first, *prev))
             goto final_result;
          ++first;
-         break;
+         BOOST_FALLTHROUGH;
       default:
          break;
    }

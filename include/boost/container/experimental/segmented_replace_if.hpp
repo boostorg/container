@@ -52,16 +52,13 @@ void segmented_replace_if_dispatch
    switch(n) {
       case 3:
          if(pred(*first)) { *first = new_val; } ++first;
-         if(pred(*first)) { *first = new_val; } ++first;
-         if(pred(*first)) { *first = new_val; }
-         break;
+         BOOST_FALLTHROUGH;
       case 2:
          if(pred(*first)) { *first = new_val; } ++first;
-         if(pred(*first)) { *first = new_val; }
-         break;
+         BOOST_FALLTHROUGH;
       case 1:
          if(pred(*first)) { *first = new_val; }
-         break;
+         BOOST_FALLTHROUGH;
       default:
          break;
    }

@@ -51,16 +51,13 @@ void segmented_generate_dispatch
    switch(n) {
       case 3:
          *first = gen(); ++first;
-         *first = gen(); ++first;
-         *first = gen();
-         break;
+         BOOST_FALLTHROUGH;
       case 2:
          *first = gen(); ++first;
-         *first = gen();
-         break;
+         BOOST_FALLTHROUGH;
       case 1:
          *first = gen();
-         break;
+         BOOST_FALLTHROUGH;
       default:
          break;
    }

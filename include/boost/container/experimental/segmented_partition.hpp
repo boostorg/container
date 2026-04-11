@@ -104,26 +104,17 @@ RAIter partition_scan(RAIter first, RAIter last, Pred pred, non_segmented_iterat
             if(!(cond = pred(*first)))
                goto front_found;
             ++first;
-            if(!(cond = pred(*first)))
-               goto front_found;
-            ++first;
-            if(!(cond = pred(*first)))
-               goto front_found;
-            ++first;
-            break;
+            BOOST_FALLTHROUGH;
          case 2:
             if(!(cond = pred(*first)))
                goto front_found;
             ++first;
-            if(!(cond = pred(*first)))
-               goto front_found;
-            ++first;
-            break;
+            BOOST_FALLTHROUGH;
          case 1:
             if(!(cond = pred(*first)))
                goto front_found;
             ++first;
-            break;
+            BOOST_FALLTHROUGH;
          default:
             break;
       }
@@ -155,26 +146,17 @@ RAIter partition_scan(RAIter first, RAIter last, Pred pred, non_segmented_iterat
             if(!(cond = !pred(*last)))
                goto back_found;
             --last;
-            if(!(cond = !pred(*last)))
-               goto back_found;
-            --last;
-            if(!(cond = !pred(*last)))
-               goto back_found;
-            --last;
-            break;
+            BOOST_FALLTHROUGH;
          case 2:
             if(!(cond = !pred(*last)))
                goto back_found;
             --last;
-            if(!(cond = !pred(*last)))
-               goto back_found;
-            --last;
-            break;
+            BOOST_FALLTHROUGH;
          case 1:
             if(!(cond = !pred(*last)))
                goto back_found;
             --last;
-            break;
+            BOOST_FALLTHROUGH;
          default:
             break;
       }

@@ -91,26 +91,17 @@ RAIter find_last_if_scan(RAIter first, RAIter last, Pred pred,
          --cur;
          if (pred(*cur))
             return cur;
-         --cur;
-         if (pred(*cur))
-            return cur;
-         --cur;
-         if (pred(*cur))
-            return cur;
-         break;
+         BOOST_FALLTHROUGH;
       case 2:
          --cur;
          if (pred(*cur))
             return cur;
-         --cur;
-         if (pred(*cur))
-            return cur;
-         break;
+         BOOST_FALLTHROUGH;
       case 1:
          --cur;
          if (pred(*cur))
             return cur;
-         break;
+         BOOST_FALLTHROUGH;
       default:
          break;
    }

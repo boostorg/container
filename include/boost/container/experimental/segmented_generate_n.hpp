@@ -51,16 +51,13 @@ OutIter generate_n_scan_non_segmented(OutIter first, OutIter last, Size& count, 
    switch(cnt) {
       case 3:
          *first = gen(); ++first;
-         *first = gen(); ++first;
-         *first = gen(); ++first;
-         break;
+         BOOST_FALLTHROUGH;
       case 2:
          *first = gen(); ++first;
-         *first = gen(); ++first;
-         break;
+         BOOST_FALLTHROUGH;
       case 1:
          *first = gen(); ++first;
-         break;
+         BOOST_FALLTHROUGH;
       default:
          break;
    }

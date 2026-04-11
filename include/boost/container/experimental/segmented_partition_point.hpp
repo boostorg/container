@@ -61,26 +61,17 @@ RAIter segmented_partition_point_dispatch
          if(!pred(*first))
             goto final_result;
          ++first;
-         if(!pred(*first))
-            goto final_result;
-         ++first;
-         if(!pred(*first))
-            goto final_result;
-         ++first;
-         break;
+         BOOST_FALLTHROUGH;
       case 2:
          if(!pred(*first))
             goto final_result;
          ++first;
-         if(!pred(*first))
-            goto final_result;
-         ++first;
-         break;
+         BOOST_FALLTHROUGH;
       case 1:
          if(!pred(*first))
             goto final_result;
          ++first;
-         break;
+         BOOST_FALLTHROUGH;
       default:
          break;
    }

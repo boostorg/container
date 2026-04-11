@@ -52,16 +52,13 @@ F segmented_for_each_dispatch
    switch(n) {
       case 3:
          f(*first); ++first;
-         f(*first); ++first;
-         f(*first);
-         break;
+         BOOST_FALLTHROUGH;
       case 2:
          f(*first); ++first;
-         f(*first);
-         break;
+         BOOST_FALLTHROUGH;
       case 1:
          f(*first);
-         break;
+         BOOST_FALLTHROUGH;
       default:
          break;
    }
