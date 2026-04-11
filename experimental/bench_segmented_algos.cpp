@@ -1037,12 +1037,13 @@ void bench_copy(const C &c, std::size_t iters, const char* cname, const char* la
    print_ratio(label, cname, r1, r2);
 }
 
-template<class C, class Pred>
+template<bool DequeOut, class C, class Pred>
 void bench_copy_if(const C &c, std::size_t iters, const char* cname,
                    Pred pred, const char* label)
 {
    typedef typename C::value_type VT;
-   boost::container::vector<VT> out(c.size());
+   typedef typename boost::move_detail::if_c<DequeOut, bc::deque<VT>, boost::container::vector<VT> >::type out_t;
+   out_t out(c.size());
 
    cpu_timer t1;
    {  std::size_t n_ = (iters + 7) / 8;
@@ -1795,10 +1796,13 @@ void bench_find_last_if_not(const C &c, std::size_t iters, const char* cname,
    print_ratio(label, cname, r1, r2);
 }
 
-template<class C>
+template<bool DequeSecond, class C>
 void bench_equal(const C &c, const C &c2, std::size_t iters, const char* cname,
                  const char* label)
 {
+   typedef typename C::value_type VT;
+   typedef typename boost::move_detail::if_c<DequeSecond, bc::deque<VT>, boost::container::vector<VT> >::type range2_t;
+   range2_t range2(c2.begin(), c2.end());
    int result = 0;
 
    cpu_timer t1;
@@ -1806,28 +1810,28 @@ void bench_equal(const C &c, const C &c2, std::size_t iters, const char* cname,
       t1.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         { clobber(); result = std::equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         { clobber(); result = std::equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         { clobber(); result = std::equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         { clobber(); result = std::equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         { clobber(); result = std::equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         { clobber(); result = std::equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         { clobber(); result = std::equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); result = std::equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         { clobber(); result = std::equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
       } while (true);
       }
@@ -1838,28 +1842,28 @@ void bench_equal(const C &c, const C &c2, std::size_t iters, const char* cname,
       t2.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), c2.begin()) ? 1 : 0; escape(&result); }
+         { clobber(); result = bc::segmented_equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
       } while (true);
       }
@@ -2192,11 +2196,12 @@ void bench_fill_n(const C &c, std::size_t iters, const char* cname)
    print_ratio("fill_n", cname, r1, r2);
 }
 
-template<class C>
-void bench_copy_n(const C &c, std::size_t iters, const char* cname)
+template<bool DequeOut, class C>
+void bench_copy_n(const C &c, std::size_t iters, const char* cname, const char* label)
 {
    typedef typename C::value_type VT;
-   boost::container::vector<VT> out(c.size());
+   typedef typename boost::move_detail::if_c<DequeOut, bc::deque<VT>, boost::container::vector<VT> >::type out_t;
+   out_t out(c.size());
    typename C::difference_type n =
       static_cast<typename C::difference_type>(c.size());
 
@@ -2266,7 +2271,7 @@ void bench_copy_n(const C &c, std::size_t iters, const char* cname)
 
    double r1 = calc_ns_per_elem(t1.elapsed().wall, iters, c.size());
    double r2 = calc_ns_per_elem(t2.elapsed().wall, iters, c.size());
-   print_ratio("copy_n", cname, r1, r2);
+   print_ratio(label, cname, r1, r2);
 }
 
 template<class C>
@@ -3200,10 +3205,13 @@ void bench_merge(const C &c, const C &c2, std::size_t iters, const char* cname)
    print_ratio("merge", cname, r1, r2);
 }
 
-template<class C>
+template<bool DequeSecond, class C>
 void bench_mismatch(const C &c, const C &c2, std::size_t iters, const char* cname,
                     const char* label)
 {
+   typedef typename C::value_type VT;
+   typedef typename boost::move_detail::if_c<DequeSecond, bc::deque<VT>, boost::container::vector<VT> >::type range2_t;
+   range2_t range2(c2.begin(), c2.end());
    int result = 0;
 
    cpu_timer t1;
@@ -3211,28 +3219,28 @@ void bench_mismatch(const C &c, const C &c2, std::size_t iters, const char* cnam
       t1.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         { clobber(); result = (std::mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         { clobber(); result = (std::mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         { clobber(); result = (std::mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         { clobber(); result = (std::mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         { clobber(); result = (std::mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         { clobber(); result = (std::mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         { clobber(); result = (std::mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); result = (std::mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         { clobber(); result = (std::mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t1.stop(); break; }
       } while (true);
       }
@@ -3243,28 +3251,28 @@ void bench_mismatch(const C &c, const C &c2, std::size_t iters, const char* cnam
       t2.resume();
       switch (iters % 8) {
       case 0: do {
-         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 7:
-         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 6:
-         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 5:
-         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 4:
-         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 3:
-         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 2:
-         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
          BOOST_FALLTHROUGH;
       case 1:
-         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), c2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+         { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
          if (BOOST_UNLIKELY(--n_ == 0)) { t2.stop(); break; }
       } while (true);
       }
@@ -4164,11 +4172,14 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_copy<true>(c, iters, cname, "copy(2xS)");
 
    //copy_if
-   bench_copy_if(c, iters, cname, is_odd<VT>(),      "copy_if(hit)");
-   bench_copy_if(c, iters, cname, is_negative<VT>(), "copy_if(miss)");
+   bench_copy_if<false>(c, iters, cname, is_odd<VT>(),      "copy_if(hit)");
+   bench_copy_if<true>(c, iters, cname, is_odd<VT>(),       "copy_if(2xS hit)");
+   bench_copy_if<false>(c, iters, cname, is_negative<VT>(), "copy_if(miss)");
+   bench_copy_if<true>(c, iters, cname, is_negative<VT>(),  "copy_if(2xS miss)");
 
    //copy_n
-   bench_copy_n(c, iters, cname);
+   bench_copy_n<false>(c, iters, cname, "copy_n");
+   bench_copy_n<true>(c, iters, cname, "copy_n(2xS)");
 
    //count
    bench_count(c, iters, cname, zero,  "count(hit)");
@@ -4181,9 +4192,11 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //equal
    {
       C c2(c);
-      bench_equal(c, c2, iters, cname, "equal(hit)");
+      bench_equal<false>(c, c2, iters, cname, "equal(hit)");
+      bench_equal<true>(c, c2, iters, cname, "equal(2xS hit)");
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
-      bench_equal(c, c2, iters, cname, "equal(miss)");
+      bench_equal<false>(c, c2, iters, cname, "equal(miss)");
+      bench_equal<true>(c, c2, iters, cname, "equal(2xS miss)");
    }
 
    //fill
@@ -4261,10 +4274,12 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    {
       C c2(c);
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
-      bench_mismatch(c, c2, iters, cname, "mismatch(hit)");
+      bench_mismatch<false>(c, c2, iters, cname, "mismatch(hit)");
+      bench_mismatch<true>(c, c2, iters, cname, "mismatch(2xS hit)");
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) =
          *boost::container::make_iterator_uadvance(c.begin(), c.size()/2);
-      bench_mismatch(c, c2, iters, cname, "mismatch(miss)");
+      bench_mismatch<false>(c, c2, iters, cname, "mismatch(miss)");
+      bench_mismatch<true>(c, c2, iters, cname, "mismatch(2xS miss)");
    }
 
    //none_of
