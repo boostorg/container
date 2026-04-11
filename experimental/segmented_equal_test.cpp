@@ -125,6 +125,90 @@ void test_equal_seg2()
    BOOST_TEST(!segmented_equal(sv2.begin(), sv2.end(), ref_bad));
 }
 
+void test_equal_seg_to_seg()
+{
+   test_detail::seg_vector<int> sv1;
+   int a1[] = {1, 2, 3};
+   int a2[] = {4, 5};
+   int a3[] = {6, 7, 8, 9};
+   sv1.add_segment_range(a1, a1 + 3);
+   sv1.add_segment_range(a2, a2 + 2);
+   sv1.add_segment_range(a3, a3 + 4);
+
+   test_detail::seg_vector<int> sv2;
+   int b1[] = {1, 2};
+   int b2[] = {3, 4, 5, 6};
+   int b3[] = {7, 8, 9};
+   sv2.add_segment_range(b1, b1 + 2);
+   sv2.add_segment_range(b2, b2 + 4);
+   sv2.add_segment_range(b3, b3 + 3);
+
+   BOOST_TEST(segmented_equal(sv1.begin(), sv1.end(), sv2.begin()));
+}
+
+void test_equal_seg_to_seg_mismatch()
+{
+   test_detail::seg_vector<int> sv1;
+   int a1[] = {1, 2, 3};
+   int a2[] = {4, 5};
+   sv1.add_segment_range(a1, a1 + 3);
+   sv1.add_segment_range(a2, a2 + 2);
+
+   test_detail::seg_vector<int> sv2;
+   int b1[] = {1, 2};
+   int b2[] = {3, 4, 99};
+   sv2.add_segment_range(b1, b1 + 2);
+   sv2.add_segment_range(b2, b2 + 3);
+
+   BOOST_TEST(!segmented_equal(sv1.begin(), sv1.end(), sv2.begin()));
+}
+
+void test_equal_seg2_to_seg2()
+{
+   test_detail::seg2_vector<int> sv1;
+   int a1[] = {1, 2, 3};
+   int a2[] = {4, 5};
+   int a3[] = {6, 7, 8, 9};
+   sv1.add_flat_segment_range(a1, a1 + 3);
+   sv1.add_flat_segment_range(a2, a2 + 2);
+   sv1.add_flat_segment_range(a3, a3 + 4);
+
+   test_detail::seg2_vector<int> sv2;
+   int b1[] = {1, 2};
+   int b2[] = {3, 4, 5, 6};
+   int b3[] = {7, 8, 9};
+   sv2.add_flat_segment_range(b1, b1 + 2);
+   sv2.add_flat_segment_range(b2, b2 + 4);
+   sv2.add_flat_segment_range(b3, b3 + 3);
+
+   BOOST_TEST(segmented_equal(sv1.begin(), sv1.end(), sv2.begin()));
+
+   test_detail::seg2_vector<int> sv3;
+   int c1[] = {1, 2, 3, 4, 5, 6, 7, 8, 0};
+   sv3.add_flat_segment_range(c1, c1 + 9);
+
+   BOOST_TEST(!segmented_equal(sv1.begin(), sv1.end(), sv3.begin()));
+}
+
+void test_equal_seg_to_seg_misaligned()
+{
+   test_detail::seg_vector<int> sv1;
+   int a1[] = {10};
+   int a2[] = {20, 30};
+   int a3[] = {40, 50, 60};
+   sv1.add_segment_range(a1, a1 + 1);
+   sv1.add_segment_range(a2, a2 + 2);
+   sv1.add_segment_range(a3, a3 + 3);
+
+   test_detail::seg_vector<int> sv2;
+   int b1[] = {10, 20, 30, 40};
+   int b2[] = {50, 60};
+   sv2.add_segment_range(b1, b1 + 4);
+   sv2.add_segment_range(b2, b2 + 2);
+
+   BOOST_TEST(segmented_equal(sv1.begin(), sv1.end(), sv2.begin()));
+}
+
 int main()
 {
    test_equal_matching();
@@ -136,5 +220,9 @@ int main()
    test_equal_sentinel_segmented();
    test_equal_sentinel_non_segmented();
    test_equal_seg2();
+   test_equal_seg_to_seg();
+   test_equal_seg_to_seg_mismatch();
+   test_equal_seg2_to_seg2();
+   test_equal_seg_to_seg_misaligned();
    return boost::report_errors();
 }
