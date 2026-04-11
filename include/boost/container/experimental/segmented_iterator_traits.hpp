@@ -201,15 +201,17 @@ struct is_sentinel<Iter, Iter>
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
-// BOOST_CONTAINER_DISABLE_SEGMENTED_OUTPUT
+// BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO
 //
 // When defined, segmented algorithms that write to an output iterator will
 // NOT exploit segmentation on the output side.  Only input (source) iterator
 // segmentation is used.  This is useful for benchmarking the advantage of
 // the segmented output optimisation in isolation.
 //
-// Define BOOST_CONTAINER_DISABLE_SEGMENTED_OUTPUT before including any
+// Define BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO before including any
 // segmented algorithm header to disable the optimisation.
 //////////////////////////////////////////////////////////////////////////////
+
+//#define BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO
 
 #endif // BOOST_CONTAINER_EXPERIMENTAL_SEGMENTED_ITERATOR_TRAITS_HPP

@@ -280,7 +280,7 @@ template <class RAIter, class Size, class OutIter>
 BOOST_CONTAINER_FORCEINLINE OutIter segmented_copy_n_dispatch
    (RAIter first, Size count, OutIter result, non_segmented_iterator_tag, const std::random_access_iterator_tag &)
 {
-#if !defined(BOOST_CONTAINER_DISABLE_SEGMENTED_OUTPUT)
+#if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
    typedef segmented_iterator_traits<OutIter> dst_traits;
    return (segmented_copy_n_dst_dispatch)
       (first, count, result, typename dst_traits::is_segmented_iterator(), std::random_access_iterator_tag());
@@ -296,7 +296,7 @@ template <class InIter, class Size, class OutIter, class Cat>
 OutIter segmented_copy_n_dispatch
    (InIter first, Size count, OutIter result, non_segmented_iterator_tag, Cat)
 {
-#if !defined(BOOST_CONTAINER_DISABLE_SEGMENTED_OUTPUT)
+#if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
    typedef segmented_iterator_traits<OutIter> dst_traits;
    return (segmented_copy_n_dst_dispatch)
       (first, count, result, typename dst_traits::is_segmented_iterator(), Cat());

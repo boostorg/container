@@ -189,7 +189,7 @@ typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, SrcIter>::value, OutIter>::type
    segmented_copy_dispatch(SrcIter first, Sent last, OutIter result, Tag, Cat)
 {
-#if !defined(BOOST_CONTAINER_DISABLE_SEGMENTED_OUTPUT)
+#if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
    typedef segmented_iterator_traits<OutIter> dst_traits;
    return (segmented_copy_dst_dispatch)
       (first, last, result, typename dst_traits::is_segmented_iterator(), Cat());
