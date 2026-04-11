@@ -134,7 +134,6 @@ _mm_prefetch(static_cast<const char*>(static_cast<const void*>(boost::movelib::t
 
 #define BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb, N) \
    do{                                                    \
-      if(BOOST_LIKELY(pbb->mask != 0))\
       BOOST_CONTAINER_NEST_PREFETCH(static_cast<block_type&>(*(pbb)).data() + (N));\
    } while(0)\
 //
