@@ -41,6 +41,18 @@ struct non_segmented_iterator_tag
 //! Sentinel whose comparison with any iterator always yields false (not equal).
 //! Passes through segmented_remove_if_result_bounded to express an unbounded
 //! destination, letting the compiler eliminate the dead destination-full branch.
+template<class T1, class T2>
+struct segduo
+{
+   T1 first;
+   T2 second;
+
+   BOOST_CONTAINER_FORCEINLINE segduo() {}
+   BOOST_CONTAINER_FORCEINLINE segduo(const T1 &f, const T2 &s) : first(f), second(s) {}
+   BOOST_CONTAINER_FORCEINLINE segduo(const segduo &o) : first(o.first), second(o.second) {}
+   BOOST_CONTAINER_FORCEINLINE void operator=(const segduo &o) { first = o.first; second = o.second; }
+};
+
 struct unreachable_sentinel_t
 {
    template <class It>
