@@ -46,11 +46,6 @@ struct segduo
 {
    T1 first;
    T2 second;
-
-   BOOST_CONTAINER_FORCEINLINE segduo() {}
-   BOOST_CONTAINER_FORCEINLINE segduo(const T1 &f, const T2 &s) : first(f), second(s) {}
-   BOOST_CONTAINER_FORCEINLINE segduo(const segduo &o) : first(o.first), second(o.second) {}
-   BOOST_CONTAINER_FORCEINLINE void operator=(const segduo &o) { first = o.first; second = o.second; }
 };
 
 struct unreachable_sentinel_t
