@@ -43,10 +43,9 @@ struct set_union_default_less
 };
 
 template <class FwdIt, class InIter2, class Sent2, class OutIter, class Comp>
-InIter2 set_union_scan(FwdIt first, FwdIt last, InIter2 first2, Sent2 last2, OutIter& out, Comp comp,
+segduo<InIter2, OutIter> set_union_scan(FwdIt first, FwdIt last, InIter2 first2, Sent2 last2, OutIter result, Comp comp,
    non_segmented_iterator_tag)
 {
-   OutIter result = out;   //Avoid aliasing
    while(first != last && first2 != last2) {
       if      (comp(*first, *first2)) { *result = *first;  ++first;  }
       else if (comp(*first2, *first)) { *result = *first2; ++first2; }
@@ -54,12 +53,11 @@ InIter2 set_union_scan(FwdIt first, FwdIt last, InIter2 first2, Sent2 last2, Out
       ++result;
    }
 
-   out = (segmented_copy)(first, last, result);
-   return first2;
+   return segduo<InIter2, OutIter>(first2, (segmented_copy)(first, last, result));
 }
 
 template <class SegIt, class InIter2, class Sent2, class OutIter, class Comp>
-InIter2 set_union_scan(SegIt first, SegIt last, InIter2 first2, Sent2 last2, OutIter& result, Comp comp,
+segduo<InIter2, OutIter> set_union_scan(SegIt first, SegIt last, InIter2 first2, Sent2 last2, OutIter result, Comp comp,
    segmented_iterator_tag)
 {
    typedef segmented_iterator_traits<SegIt>  traits;
@@ -72,25 +70,24 @@ InIter2 set_union_scan(SegIt first, SegIt last, InIter2 first2, Sent2 last2, Out
    local_iterator         lcur  = traits::local(first);
 
    if(scur == slast) {
-      first2 = set_union_scan(lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());
+      return set_union_scan(lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());
    }
    else {
-      first2 = set_union_scan(lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
+      segduo<InIter2, OutIter> r = set_union_scan(lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
 
       for(++scur; scur != slast; ++scur)
-         first2 = set_union_scan(traits::begin(scur), traits::end(scur), first2, last2, result, comp, is_local_seg_t());
+         r = set_union_scan(traits::begin(scur), traits::end(scur), r.first, last2, r.second, comp, is_local_seg_t());
 
-      first2 = set_union_scan(traits::begin(scur), traits::local(last), first2, last2, result, comp, is_local_seg_t());
+      return set_union_scan(traits::begin(scur), traits::local(last), r.first, last2, r.second, comp, is_local_seg_t());
    }
-   return first2;
 }
 
 template <class SegIter, class InIter2, class Sent2, class OutIter, class Comp>
 OutIter segmented_set_union_dispatch
    (SegIter first1, SegIter last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp, segmented_iterator_tag)
 {
-   first2 = set_union_scan(first1, last1, first2, last2, result, comp, segmented_iterator_tag());
-   return (segmented_copy)(first2, last2, result);
+   segduo<InIter2, OutIter> r = set_union_scan(first1, last1, first2, last2, result, comp, segmented_iterator_tag());
+   return (segmented_copy)(r.first, last2, r.second);
 }
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp, class Tag>

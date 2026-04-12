@@ -43,10 +43,9 @@ struct set_symmetric_difference_default_less
 };
 
 template <class FwdIt, class InIter2, class Sent2, class OutIter, class Comp>
-void set_symmetric_difference_scan(FwdIt first, FwdIt last, InIter2& first2_out, Sent2 last2, OutIter& result, Comp comp,
+segduo<InIter2, OutIter> set_symmetric_difference_scan(FwdIt first, FwdIt last, InIter2 first2, Sent2 last2, OutIter result, Comp comp,
    non_segmented_iterator_tag)
 {
-   InIter2 first2 = first2_out;  //Avoid aliasing issues
    while(first != last && first2 != last2) {
       if (comp(*first, *first2)) {
          *result = *first;
@@ -64,12 +63,11 @@ void set_symmetric_difference_scan(FwdIt first, FwdIt last, InIter2& first2_out,
          ++first2;
       }
    }
-   first2_out = first2;
-   result = (segmented_copy)(first, last, result);
+   return segduo<InIter2, OutIter>(first2, (segmented_copy)(first, last, result));
 }
 
 template <class SegIt, class InIter2, class Sent2, class OutIter, class Comp>
-void set_symmetric_difference_scan(SegIt first, SegIt last, InIter2& first2, Sent2 last2, OutIter& result, Comp comp,
+segduo<InIter2, OutIter> set_symmetric_difference_scan(SegIt first, SegIt last, InIter2 first2, Sent2 last2, OutIter result, Comp comp,
    segmented_iterator_tag)
 {
    typedef segmented_iterator_traits<SegIt>   traits;
@@ -83,16 +81,13 @@ void set_symmetric_difference_scan(SegIt first, SegIt last, InIter2& first2, Sen
    local_iterator         lcur  = traits::local(first);
 
    if(scur == slast) {
-      set_symmetric_difference_scan(lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());
+      return set_symmetric_difference_scan(lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());
    }
    else {
-      set_symmetric_difference_scan(lcur, traits::end(scur), first2, last2, result, comp,
-         is_local_seg_t());
+      segduo<InIter2, OutIter> r = set_symmetric_difference_scan(lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
       for(++scur; scur != slast; ++scur)
-         set_symmetric_difference_scan(traits::begin(scur), traits::end(scur), first2, last2, result, comp,
-            is_local_seg_t());
-      set_symmetric_difference_scan(traits::begin(scur), traits::local(last), first2, last2, result, comp,
-         is_local_seg_t());
+         r = set_symmetric_difference_scan(traits::begin(scur), traits::end(scur), r.first, last2, r.second, comp, is_local_seg_t());
+      return set_symmetric_difference_scan(traits::begin(scur), traits::local(last), r.first, last2, r.second, comp, is_local_seg_t());
    }
 }
 
@@ -100,8 +95,8 @@ template <class SegIter, class InIter2, class Sent2, class OutIter, class Comp>
 OutIter segmented_set_symmetric_difference_dispatch
    (SegIter first1, SegIter last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp, segmented_iterator_tag)
 {
-   set_symmetric_difference_scan(first1, last1, first2, last2, result, comp, segmented_iterator_tag());
-   return (segmented_copy)(first2, last2, result);
+   segduo<InIter2, OutIter> r = set_symmetric_difference_scan(first1, last1, first2, last2, result, comp, segmented_iterator_tag());
+   return (segmented_copy)(r.first, last2, r.second);
 }
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp, class Tag>

@@ -43,15 +43,13 @@ struct mismatch_equal
 
 //////////////////////////////////////////////////////////////////////////////
 // Bounded iter2 helper: compares source [first1, last1) against
-// [iter2_first, iter2_last), stopping when source, iter2, or a mismatch
+// [first2, iter2_last), stopping when source, iter2, or a mismatch
 // is encountered.
-// Advances first1_out (by reference) so the caller knows how far we got.
-// Advances iter2_first (by reference) for the same reason.
+// Returns segduo<SrcIter, Iter2> with the final positions of both iterators.
 // Recursively walks iter2 segments when iter2 is segmented.
 //
-// Returns true if no mismatch was found in the bounded region
-// (i.e. stopped because first1==last1 or first2==iter2_last).
-// Returns false if a mismatch was found.
+// The caller can derive whether a mismatch was found:
+// if first1 != last1 && first2 != iter2_last, a mismatch was found.
 //
 // When iter2_last is unreachable_sentinel_t the segment-boundary check
 // is optimised away, giving the same code as an unbounded loop.
@@ -60,77 +58,60 @@ struct mismatch_equal
 #if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
 
 template <class RASrcIter, class Iter2, class Iter2Sent, class BinaryPred>
-bool segmented_mismatch_iter2_bounded
-   (RASrcIter &first1_out, RASrcIter last1, Iter2 &iter2_first, Iter2Sent iter2_last, BinaryPred pred,
+segduo<RASrcIter, Iter2> segmented_mismatch_iter2_bounded
+   (RASrcIter first1, RASrcIter last1, Iter2 first2, Iter2Sent iter2_last, BinaryPred pred,
     const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
    typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
-   RASrcIter first1 = first1_out;
-   Iter2 first2 = iter2_first;
 
    difference_type n = last1 - first1;
 
    while(n >= difference_type(4)) {
-      if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto mismatch_path; ++first1; ++first2;
-      if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto mismatch_path; ++first1; ++first2;
-      if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto mismatch_path; ++first1; ++first2;
-      if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto mismatch_path; ++first1; ++first2;
+      if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto out_path; ++first1; ++first2;
+      if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto out_path; ++first1; ++first2;
+      if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto out_path; ++first1; ++first2;
+      if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto out_path; ++first1; ++first2;
       n -= 4;
    }
 
    switch(n) {
       case 3:
-         if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto mismatch_path; ++first1; ++first2;
+         if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto out_path; ++first1; ++first2;
          BOOST_FALLTHROUGH;
       case 2:
-         if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto mismatch_path; ++first1; ++first2;
+         if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto out_path; ++first1; ++first2;
          BOOST_FALLTHROUGH;
       case 1:
-         if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto mismatch_path; ++first1; ++first2;
+         if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto out_path; ++first1; ++first2;
          BOOST_FALLTHROUGH;
       default:
          break;
    }
    out_path:
-   first1_out = first1;
-   iter2_first = first2;
-   return true;
-
-   mismatch_path:
-   first1_out = first1;
-   iter2_first = first2;
-   return false;
+   return segduo<RASrcIter, Iter2>(first1, first2);
 }
 
 #endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
 
 template <class SrcIter, class Sent, class Iter2, class Iter2Sent, class BinaryPred, class Iter2Tag, class SrcCat>
-typename algo_enable_if_c<!Iter2Tag::value, bool>::type
+typename algo_enable_if_c<!Iter2Tag::value, segduo<SrcIter, Iter2> >::type
 segmented_mismatch_iter2_bounded
-   (SrcIter &first1_out, Sent last1, Iter2 &iter2_first, Iter2Sent iter2_last, BinaryPred pred, Iter2Tag, SrcCat)
+   (SrcIter first1, Sent last1, Iter2 first2, Iter2Sent iter2_last, BinaryPred pred, Iter2Tag, SrcCat)
 {
-   SrcIter first1 = first1_out;
-   Iter2 first2 = iter2_first;
-
    for(; first1 != last1; ++first1) {
       if(first2 == iter2_last)
          goto out_path;
-      if(!pred(*first1, *first2)) {
-         first1_out = first1;
-         iter2_first = first2;
-         return false;
-      }
+      if(!pred(*first1, *first2))
+         return segduo<SrcIter, Iter2>(first1, first2);
       ++first2;
    }
    out_path:
-   first1_out = first1;
-   iter2_first = first2;
-   return true;
+   return segduo<SrcIter, Iter2>(first1, first2);
 }
 
 template <class SrcIter, class Sent, class SegIter2, class BinaryPred, class SrcCat>
-bool segmented_mismatch_iter2_bounded
-   (SrcIter &first1, Sent last1, SegIter2 &iter2_first_out, SegIter2 iter2_last, BinaryPred pred,
+segduo<SrcIter, SegIter2> segmented_mismatch_iter2_bounded
+   (SrcIter first1, Sent last1, SegIter2 iter2_first, SegIter2 iter2_last, BinaryPred pred,
     segmented_iterator_tag, SrcCat)
 {
    typedef segmented_iterator_traits<SegIter2>  iter2_traits;
@@ -138,46 +119,38 @@ bool segmented_mismatch_iter2_bounded
    typedef typename iter2_traits::segment_iterator  iter2_segment_iterator;
    typedef typename segmented_iterator_traits<iter2_local_iterator>::is_segmented_iterator iter2_is_local_seg_t;
 
-   iter2_segment_iterator       sfirst = iter2_traits::segment(iter2_first_out);
+   iter2_segment_iterator       sfirst = iter2_traits::segment(iter2_first);
    const iter2_segment_iterator slast  = iter2_traits::segment(iter2_last);
 
    if(sfirst == slast) {
-      iter2_local_iterator loc2 = iter2_traits::local(iter2_first_out);
-      bool r = (segmented_mismatch_iter2_bounded)
-         (first1, last1, loc2, iter2_traits::local(iter2_last), pred, iter2_is_local_seg_t(), SrcCat());
-      iter2_first_out = iter2_traits::compose(sfirst, loc2);
-      return r;
+      segduo<SrcIter, iter2_local_iterator> r = (segmented_mismatch_iter2_bounded)
+         (first1, last1, iter2_traits::local(iter2_first), iter2_traits::local(iter2_last), pred, iter2_is_local_seg_t(), SrcCat());
+      return segduo<SrcIter, SegIter2>(r.first, iter2_traits::compose(sfirst, r.second));
    }
    else {
-      iter2_local_iterator loc2 = iter2_traits::local(iter2_first_out);
-      if(!(segmented_mismatch_iter2_bounded)
-            (first1, last1, loc2, iter2_traits::end(sfirst), pred, iter2_is_local_seg_t(), SrcCat())) {
-         iter2_first_out = iter2_traits::compose(sfirst, loc2);
-         return false;
-      }
-      if(first1 == last1) {
-         iter2_first_out = iter2_traits::compose(sfirst, loc2);
-         return true;
-      }
+      segduo<SrcIter, iter2_local_iterator> r = (segmented_mismatch_iter2_bounded)
+         (first1, last1, iter2_traits::local(iter2_first), iter2_traits::end(sfirst), pred, iter2_is_local_seg_t(), SrcCat());
+      first1 = r.first;
+      iter2_local_iterator loc2 = r.second;
+      if(first1 != last1 && loc2 != iter2_traits::end(sfirst))
+         return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(sfirst, loc2));
+      if(first1 == last1)
+         return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(sfirst, loc2));
 
       for(++sfirst; sfirst != slast; ++sfirst) {
-         loc2 = iter2_traits::begin(sfirst);
-         if(!(segmented_mismatch_iter2_bounded)
-               (first1, last1, loc2, iter2_traits::end(sfirst), pred, iter2_is_local_seg_t(), SrcCat())) {
-            iter2_first_out = iter2_traits::compose(sfirst, loc2);
-            return false;
-         }
-         if(first1 == last1) {
-            iter2_first_out = iter2_traits::compose(sfirst, loc2);
-            return true;
-         }
+         r = (segmented_mismatch_iter2_bounded)
+            (first1, last1, iter2_traits::begin(sfirst), iter2_traits::end(sfirst), pred, iter2_is_local_seg_t(), SrcCat());
+         first1 = r.first;
+         loc2 = r.second;
+         if(first1 != last1 && loc2 != iter2_traits::end(sfirst))
+            return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(sfirst, loc2));
+         if(first1 == last1)
+            return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(sfirst, loc2));
       }
 
-      loc2 = iter2_traits::begin(slast);
-      bool r = (segmented_mismatch_iter2_bounded)
-         (first1, last1, loc2, iter2_traits::local(iter2_last), pred, iter2_is_local_seg_t(), SrcCat());
-      iter2_first_out = iter2_traits::compose(sfirst, loc2);
-      return r;
+      r = (segmented_mismatch_iter2_bounded)
+         (first1, last1, iter2_traits::begin(slast), iter2_traits::local(iter2_last), pred, iter2_is_local_seg_t(), SrcCat());
+      return segduo<SrcIter, SegIter2>(r.first, iter2_traits::compose(sfirst, r.second));
    }
 }
 
@@ -188,8 +161,8 @@ bool segmented_mismatch_iter2_bounded
 //////////////////////////////////////////////////////////////////////////////
 
 template <class SrcIter, class Sent, class InpIter2, class BinaryPred, class Cat>
-BOOST_CONTAINER_FORCEINLINE bool segmented_mismatch_iter2_dispatch
-   (SrcIter &first1, Sent last1, InpIter2 &first2, BinaryPred pred,
+BOOST_CONTAINER_FORCEINLINE segduo<SrcIter, InpIter2> segmented_mismatch_iter2_dispatch
+   (SrcIter first1, Sent last1, InpIter2 first2, BinaryPred pred,
     const non_segmented_iterator_tag &, Cat)
 {
    return (segmented_mismatch_iter2_bounded)
@@ -197,8 +170,8 @@ BOOST_CONTAINER_FORCEINLINE bool segmented_mismatch_iter2_dispatch
 }
 
 template <class SrcIter, class Sent, class SegIter2, class BinaryPred, class Cat>
-bool segmented_mismatch_iter2_dispatch
-   (SrcIter &first1, Sent last1, SegIter2 &first2_out, BinaryPred pred,
+segduo<SrcIter, SegIter2> segmented_mismatch_iter2_dispatch
+   (SrcIter first1, Sent last1, SegIter2 first2, BinaryPred pred,
     const segmented_iterator_tag &, Cat)
 {
    typedef segmented_iterator_traits<SegIter2>  iter2_traits;
@@ -207,33 +180,32 @@ bool segmented_mismatch_iter2_dispatch
    typedef typename segmented_iterator_traits<iter2_local_iterator>::is_segmented_iterator iter2_is_local_seg_t;
 
    if(first1 == last1)
-      return true;
+      return segduo<SrcIter, SegIter2>(first1, first2);
 
-   iter2_segment_iterator seg2 = iter2_traits::segment(first2_out);
-   iter2_local_iterator   loc2 = iter2_traits::local(first2_out);
+   iter2_segment_iterator seg2 = iter2_traits::segment(first2);
+   iter2_local_iterator   loc2 = iter2_traits::local(first2);
 
    while(first1 != last1) {
       iter2_local_iterator end2 = iter2_traits::end(seg2);
-      if(!(segmented_mismatch_iter2_bounded)
-            (first1, last1, loc2, end2, pred, iter2_is_local_seg_t(), Cat())) {
-         first2_out = iter2_traits::compose(seg2, loc2);
-         return false;
-      }
+      segduo<SrcIter, iter2_local_iterator> r = (segmented_mismatch_iter2_bounded)
+         (first1, last1, loc2, end2, pred, iter2_is_local_seg_t(), Cat());
+      first1 = r.first;
+      loc2 = r.second;
+      if(first1 != last1 && loc2 != end2)
+         return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(seg2, loc2));
       if(first1 != last1) {
          ++seg2;
          loc2 = iter2_traits::begin(seg2);
       }
    }
-   first2_out = iter2_traits::compose(seg2, loc2);
-   return true;
+   return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(seg2, loc2));
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // Source dispatch: walks the source (first1) segments.
 // Returns std::pair<Iter1, Iter2>.
-// Internally uses the iter2 dispatch which returns bool and updates first2
-// by reference.  The source dispatch reconstructs the composed first1
-// position when a mismatch is found.
+// Internally uses the iter2 dispatch which returns segduo and the source
+// dispatch converts the result to std::pair.
 //////////////////////////////////////////////////////////////////////////////
 
 template <class SrcIter, class Sent, class InpIter2, class BinaryPred, class Tag, class Cat>
@@ -246,14 +218,13 @@ segmented_mismatch_dispatch(SrcIter first1, Sent last1, InpIter2 first2, BinaryP
 {
 #if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
    typedef segmented_iterator_traits<InpIter2> iter2_traits;
-   bool ok = (segmented_mismatch_iter2_dispatch)
+   segduo<SrcIter, InpIter2> r = (segmented_mismatch_iter2_dispatch)
       (first1, last1, first2, pred, typename iter2_traits::is_segmented_iterator(), Cat());
 #else
-   bool ok = (segmented_mismatch_iter2_dispatch)
+   segduo<SrcIter, InpIter2> r = (segmented_mismatch_iter2_dispatch)
       (first1, last1, first2, pred, non_segmented_iterator_tag(), Cat());
 #endif
-   (void)ok;
-   return std::pair<SrcIter, InpIter2>(first1, first2);
+   return std::pair<SrcIter, InpIter2>(r.first, r.second);
 }
 
 template <class SegIter, class InpIter2, class BinaryPred, class Cat>

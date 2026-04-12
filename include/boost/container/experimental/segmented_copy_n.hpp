@@ -35,8 +35,9 @@ namespace detail_algo {
 //////////////////////////////////////////////////////////////////////////////
 // Bounded destination helper: copies from source count elements into
 // [dst_first, dst_last), stopping when count reaches zero or destination
-// is full.  Advances first_out and count (by reference) so the caller
-// knows how far we got.
+// is full.  Returns segduo<SrcIter, DstIter> with the final positions of
+// both iterators.  count is advanced by reference so the caller knows
+// how many elements remain.
 // Recursively walks destination segments when dst is segmented.
 //
 // When dst_last is unreachable_sentinel_t the destination-full check
@@ -46,12 +47,10 @@ namespace detail_algo {
 #if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
 
 template <class RASrcIter, class Size, class DstIter, class DstSent>
-DstIter segmented_copy_n_dst_bounded
-   (RASrcIter& first_out, Size& count, DstIter dst_first, DstSent dst_last,
+segduo<RASrcIter, DstIter> segmented_copy_n_dst_bounded
+   (RASrcIter first, Size& count, DstIter dst_first, DstSent dst_last,
     const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
-   RASrcIter first = first_out;
-
    while(count >= Size(4)) {
       if(dst_first == dst_last) goto out_path; *dst_first = *first; ++first; ++dst_first; --count;
       if(dst_first == dst_last) goto out_path; *dst_first = *first; ++first; ++dst_first; --count;
@@ -73,19 +72,16 @@ DstIter segmented_copy_n_dst_bounded
          break;
    }
    out_path:
-   first_out = first;
-   return dst_first;
+   return segduo<RASrcIter, DstIter>(first, dst_first);
 }
 
 #endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
 
 template <class SrcIter, class Size, class DstIter, class DstSent, class DstTag, class SrcCat>
-typename algo_enable_if_c<!DstTag::value, DstIter>::type
+typename algo_enable_if_c<!DstTag::value, segduo<SrcIter, DstIter> >::type
 segmented_copy_n_dst_bounded
-   (SrcIter& first_out, Size& count, DstIter dst_first, DstSent dst_last, DstTag, SrcCat)
+   (SrcIter first, Size& count, DstIter dst_first, DstSent dst_last, DstTag, SrcCat)
 {
-   SrcIter first = first_out;
-
    for(; count > 0; ++first, --count) {
       if(dst_first == dst_last)
          goto out_path;
@@ -93,13 +89,12 @@ segmented_copy_n_dst_bounded
       ++dst_first;
    }
    out_path:
-   first_out = first;
-   return dst_first;
+   return segduo<SrcIter, DstIter>(first, dst_first);
 }
 
 template <class SrcIter, class Size, class SegDstIter, class SrcCat>
-SegDstIter segmented_copy_n_dst_bounded
-   (SrcIter& first, Size& count, SegDstIter dst_first, SegDstIter dst_last,
+segduo<SrcIter, SegDstIter> segmented_copy_n_dst_bounded
+   (SrcIter first, Size& count, SegDstIter dst_first, SegDstIter dst_last,
     segmented_iterator_tag, SrcCat)
 {
    typedef segmented_iterator_traits<SegDstIter>  dst_traits;
@@ -111,26 +106,28 @@ SegDstIter segmented_copy_n_dst_bounded
    const dst_segment_iterator slast  = dst_traits::segment(dst_last);
 
    if(sfirst == slast) {
-      dst_local_iterator r = (segmented_copy_n_dst_bounded)
+      segduo<SrcIter, dst_local_iterator> r = (segmented_copy_n_dst_bounded)
          (first, count, dst_traits::local(dst_first), dst_traits::local(dst_last), dst_is_local_seg_t(), SrcCat());
-      return dst_traits::compose(sfirst, r);
+      return segduo<SrcIter, SegDstIter>(r.first, dst_traits::compose(sfirst, r.second));
    }
    else {
-      dst_local_iterator dst_local = (segmented_copy_n_dst_bounded)
+      segduo<SrcIter, dst_local_iterator> r = (segmented_copy_n_dst_bounded)
          (first, count, dst_traits::local(dst_first), dst_traits::end(sfirst), dst_is_local_seg_t(), SrcCat());
+      first = r.first;
       if(count == 0)
-         return dst_traits::compose(sfirst, dst_local);
+         return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sfirst, r.second));
 
       for(++sfirst; sfirst != slast; ++sfirst) {
-         dst_local = (segmented_copy_n_dst_bounded)
+         r = (segmented_copy_n_dst_bounded)
             (first, count, dst_traits::begin(sfirst), dst_traits::end(sfirst), dst_is_local_seg_t(), SrcCat());
+         first = r.first;
          if(count == 0)
-            return dst_traits::compose(sfirst, dst_local);
+            return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sfirst, r.second));
       }
 
-      dst_local = (segmented_copy_n_dst_bounded)
+      r = (segmented_copy_n_dst_bounded)
          (first, count, dst_traits::begin(slast), dst_traits::local(dst_last), dst_is_local_seg_t(), SrcCat());
-      return dst_traits::compose(sfirst, dst_local);
+      return segduo<SrcIter, SegDstIter>(r.first, dst_traits::compose(sfirst, r.second));
    }
 }
 
@@ -146,7 +143,7 @@ BOOST_CONTAINER_FORCEINLINE DstIter segmented_copy_n_dst_dispatch
     const non_segmented_iterator_tag &, Cat)
 {
    return (segmented_copy_n_dst_bounded)
-      (first, count, result, unreachable_sentinel_t(), non_segmented_iterator_tag(), Cat());
+      (first, count, result, unreachable_sentinel_t(), non_segmented_iterator_tag(), Cat()).second;
 }
 
 template <class SrcIter, class Size, class SegDstIter, class Cat>
@@ -166,13 +163,16 @@ SegDstIter segmented_copy_n_dst_dispatch
    dst_local_iterator   dst_local = dst_traits::local(result);
 
    while(count > 0) {
-      dst_local_iterator dst_end = dst_traits::end(dst_seg);
-      dst_local = (segmented_copy_n_dst_bounded)
+      const dst_local_iterator dst_end = dst_traits::end(dst_seg);
+      const segduo<SrcIter, dst_local_iterator> r = (segmented_copy_n_dst_bounded)
          (first, count, dst_local, dst_end, dst_is_local_seg_t(), Cat());
+      first = r.first;
       if(count > 0) {
          ++dst_seg;
          dst_local = dst_traits::begin(dst_seg);
       }
+      else
+         dst_local = r.second;
    }
    return dst_traits::compose(dst_seg, dst_local);
 }

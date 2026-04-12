@@ -42,21 +42,19 @@ struct set_intersection_default_less
 };
 
 template <class FwdIt, class Sent1, class InIter2, class Sent2, class OutIter, class Comp>
-OutIter set_intersection_scan
-   (FwdIt first, Sent1 last, InIter2& first2_out, Sent2 last2, OutIter result, Comp comp, non_segmented_iterator_tag)
+segduo<InIter2, OutIter> set_intersection_scan
+   (FwdIt first, Sent1 last, InIter2 first2, Sent2 last2, OutIter result, Comp comp, non_segmented_iterator_tag)
 {
-   InIter2 first2 = first2_out;
    while(first != last && first2 != last2) {
       if      (comp(*first, *first2)) { ++first;  }
       else if (comp(*first2, *first)) { ++first2; }
       else                            { *result = *first; ++first; ++first2; ++result; }
    }
-   first2_out = first2;
-   return result;
+   return segduo<InIter2, OutIter>(first2, result);
 }
 
 template <class SegIt, class InIter2, class Sent2, class OutIter, class Comp>
-OutIter set_intersection_scan(SegIt first, SegIt last, InIter2& first2, Sent2 last2, OutIter result, Comp comp,
+segduo<InIter2, OutIter> set_intersection_scan(SegIt first, SegIt last, InIter2 first2, Sent2 last2, OutIter result, Comp comp,
    segmented_iterator_tag)
 {
    typedef segmented_iterator_traits<SegIt>  traits;
@@ -72,12 +70,12 @@ OutIter set_intersection_scan(SegIt first, SegIt last, InIter2& first2, Sent2 la
       return (set_intersection_scan)(lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());
    }
    else {
-      result = (set_intersection_scan)(lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
+      segduo<InIter2, OutIter> r = (set_intersection_scan)(lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
 
       for(++scur; scur != slast; ++scur)
-         result = (set_intersection_scan)(traits::begin(scur), traits::end(scur), first2, last2, result, comp, is_local_seg_t());
+         r = (set_intersection_scan)(traits::begin(scur), traits::end(scur), r.first, last2, r.second, comp, is_local_seg_t());
 
-      return (set_intersection_scan)(traits::begin(scur), traits::local(last), first2, last2, result, comp, is_local_seg_t());
+      return (set_intersection_scan)(traits::begin(scur), traits::local(last), r.first, last2, r.second, comp, is_local_seg_t());
    }
 }
 
@@ -85,7 +83,7 @@ template <class SegIter, class InIter2, class Sent2, class OutIter, class Comp>
 BOOST_CONTAINER_FORCEINLINE OutIter segmented_set_intersection_dispatch
    (SegIter first1, SegIter last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp, segmented_iterator_tag)
 {
-   return (set_intersection_scan)(first1, last1, first2, last2, result, comp, segmented_iterator_tag());
+   return (set_intersection_scan)(first1, last1, first2, last2, result, comp, segmented_iterator_tag()).second;
 }
 
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp, class Tag>
@@ -94,7 +92,7 @@ typename algo_enable_if_c<
 segmented_set_intersection_dispatch
    (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp, Tag)
 {
-   return (set_intersection_scan)(first1, last1, first2, last2, result, comp, non_segmented_iterator_tag());
+   return (set_intersection_scan)(first1, last1, first2, last2, result, comp, non_segmented_iterator_tag()).second;
 }
 
 } // namespace detail_algo
