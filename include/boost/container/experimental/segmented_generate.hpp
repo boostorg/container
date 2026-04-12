@@ -22,6 +22,8 @@
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
 #include <boost/container/detail/iterator.hpp>
+#include <boost/move/utility_core.hpp>
+
 
 namespace boost {
 namespace container {
@@ -35,7 +37,7 @@ namespace detail_algo {
 
 template <class RAIter, class Generator>
 void segmented_generate_dispatch
-   (RAIter first, RAIter last, Generator &gen, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
+   (RAIter first, RAIter last, Generator gen, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
    typedef typename iterator_traits<RAIter>::difference_type difference_type;
 
@@ -68,7 +70,7 @@ void segmented_generate_dispatch
 template <class FwdIt, class Sent, class Generator, class Tag, class Cat>
  BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, FwdIt>::value>::type
-segmented_generate_dispatch(FwdIt first, Sent last, Generator &gen, Tag, Cat)
+segmented_generate_dispatch(FwdIt first, Sent last, Generator gen, Tag, Cat)
 {
    for(; first != last; ++first)
       *first = gen();
@@ -76,7 +78,7 @@ segmented_generate_dispatch(FwdIt first, Sent last, Generator &gen, Tag, Cat)
 
 template <class SegIter, class Generator, class Cat>
 void segmented_generate_dispatch
-   (SegIter first, SegIter last, Generator &gen, segmented_iterator_tag, Cat)
+   (SegIter first, SegIter last, Generator gen, segmented_iterator_tag, Cat)
 {
    typedef segmented_iterator_traits<SegIter>   traits;
    typedef typename traits::local_iterator      local_iterator;
@@ -88,15 +90,15 @@ void segmented_generate_dispatch
    segment_iterator slast  = traits::segment(last);
 
    if(sfirst == slast) {
-      (segmented_generate_dispatch)(traits::local(first), traits::local(last), gen, is_local_seg_t(), local_cat_t());
+      (segmented_generate_dispatch)(traits::local(first), traits::local(last), boost::move(gen), is_local_seg_t(), local_cat_t());
    }
    else {
-      (segmented_generate_dispatch)(traits::local(first), traits::end(sfirst), gen, is_local_seg_t(), local_cat_t());
+      (segmented_generate_dispatch)(traits::local(first), traits::end(sfirst), boost::move(gen), is_local_seg_t(), local_cat_t());
 
       for(++sfirst; sfirst != slast; ++sfirst)
-         (segmented_generate_dispatch)(traits::begin(sfirst), traits::end(sfirst), gen, is_local_seg_t(), local_cat_t());
+         (segmented_generate_dispatch)(traits::begin(sfirst), traits::end(sfirst), boost::move(gen), is_local_seg_t(), local_cat_t());
 
-      (segmented_generate_dispatch)(traits::begin(sfirst), traits::local(last), gen, is_local_seg_t(), local_cat_t());
+      (segmented_generate_dispatch)(traits::begin(sfirst), traits::local(last), boost::move(gen), is_local_seg_t(), local_cat_t());
    }
 }
 
@@ -111,7 +113,7 @@ void segmented_generate(FwdIt first, Sent last, Generator gen)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
    detail_algo::segmented_generate_dispatch
-      (first, last, gen, typename traits::is_segmented_iterator(), typename iterator_traits<FwdIt>::iterator_category());
+      (first, last, boost::move(gen), typename traits::is_segmented_iterator(), typename iterator_traits<FwdIt>::iterator_category());
 }
 
 } // namespace container
