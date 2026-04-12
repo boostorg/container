@@ -43,7 +43,6 @@ volatile int bench_utils_sink = 0;
 
 class cpu_timer
 {
-   typedef boost::move_detail::cpu_times cpu_times;
    typedef boost::move_detail::nanosecond_type nanosecond_type;
 
    nanosecond_type start_ns_;
@@ -52,9 +51,7 @@ class cpu_timer
 
    BOOST_CONTAINER_FORCEINLINE static nanosecond_type now_ns()
    {
-      cpu_times t;
-      boost::move_detail::get_cpu_times(t);
-      return t.wall;
+      return boost::move_detail::nsec_clock();
    }
 
    nanosecond_type robust_median() const
@@ -87,11 +84,9 @@ class cpu_timer
    BOOST_CONTAINER_FORCEINLINE bool is_stopped() const
    {  return !running_;  }
 
-   cpu_times elapsed() const
+   nanosecond_type elapsed() const
    {
-      cpu_times t;
-      t.wall = robust_median() * static_cast<nanosecond_type>(samples_.size());
-      return t;
+      return robust_median() * static_cast<nanosecond_type>(samples_.size());
    }
 
    void start()
@@ -100,7 +95,7 @@ class cpu_timer
       start_ns_ = now_ns();
       running_ = true;
    }
-
+ 
    void stop()
    {
       if(!running_)
