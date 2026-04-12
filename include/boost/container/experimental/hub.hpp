@@ -561,32 +561,32 @@ struct sort_iterator
 
   sort_iterator& operator+=(difference_type n) noexcept
   {
-    index += n;
+    index += static_cast<std::size_t>(n);
     return *this;
   }
     
   friend sort_iterator
   operator+(const sort_iterator& x, difference_type n) noexcept
   {
-    return {x.pp, x.index + n};
+    return {x.pp, x.index + static_cast<std::size_t>(n)};
   }
 
   friend sort_iterator 
   operator+(difference_type n, const sort_iterator& x) noexcept
   {
-    return {x.pp, n + x.index};
+    return {x.pp, static_cast<std::size_t>(n) + x.index};
   }
 
   sort_iterator& operator-=(difference_type n) noexcept
   {
-    index -= n;
+    index -= static_cast<std::size_t>(n);
     return *this;
   }
     
   friend sort_iterator 
   operator-(const sort_iterator& x, difference_type n) noexcept
   {
-    return {x.pp, x.index - n};
+    return {x.pp, x.index - static_cast<std::size_t>(n)};
   }
 
   reference operator[](difference_type n) const noexcept
@@ -1653,7 +1653,7 @@ private:
   void compact_sort(Compare comp)
   {
     /* compact elements and build an array of pointers to data chunks of N */
-    using sort_iterator = hub_detail::sort_iterator<T, N>;
+    using sort_iterator = hub_detail::sort_iterator<T, static_cast<std::size_t>(N)>;
 
     if(size_ > 1) {
       std::size_t n = (std::size_t)((size_ + N - 1) / N);

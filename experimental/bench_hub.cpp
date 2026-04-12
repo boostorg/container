@@ -403,29 +403,29 @@ void write_table(const table& t, const char* filename)
 
    out << data_horizontal_line << "\n";
 
-   out << "  " << std::setw(first_column_width) << " ";
-   out << std::setw(table_width - first_column_width - 3)
+   out << "  " << std::setw(static_cast<int>(first_column_width)) << " ";
+   out << std::setw(static_cast<int>(table_width - first_column_width - 3))
        << std::string("| sizeof(element): ") + std::to_string(ELEMENT_SIZE) << "|\n";
 
    out << data_horizontal_line << "\n";
 
-   out << "  " << std::setw(first_column_width) << " ";
+   out << "  " << std::setw(static_cast<int>(first_column_width)) << " ";
    for(const benchmark_result& res: t) {
-      out << "| " << std::setw(data_column_width) << res.title;
+      out << "| " << std::setw(static_cast<int>(data_column_width)) << res.title;
    }
    out << "|\n";
 
    out << data_horizontal_line << "\n";
 
-   out << "  " << std::setw(first_column_width) << " " ;
+   out << "  " << std::setw(static_cast<int>(first_column_width)) << " " ;
    for(std::size_t i = 0; i < num_data_columns; ++i) {
-      out << "| " << std::setw(data_column_width) << "container size";
+      out << "| " << std::setw(static_cast<int>(data_column_width)) << "container size";
    }
    out << "|\n";
 
    out << table_horizontal_line << "\n";
 
-   out << "| " << std::setw(first_column_width) << "erase rate";
+   out << "| " << std::setw(static_cast<int>(first_column_width)) << "erase rate";
    for(std::size_t i = 0; i < num_data_columns; ++i) {
       out << "| ";
       for(auto j = min_size_exp; j <= max_size_exp; ++j) {
@@ -440,7 +440,7 @@ void write_table(const table& t, const char* filename)
    for(double erasure_rate = min_erasure_rate;
        erasure_rate <= max_erasure_rate;
        erasure_rate += erase_rate_inc, ++row) {
-      out << "| " << std::setw(first_column_width) << erasure_rate;
+      out << "| " << std::setw(static_cast<int>(first_column_width)) << erasure_rate;
       for(const benchmark_result& res: t) {
          out << "| ";
          for(const auto& x: res.data[row]) {
