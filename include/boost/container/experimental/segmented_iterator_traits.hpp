@@ -197,6 +197,50 @@ struct is_sentinel<Iter, Iter>
    static const bool value = false;
 };
 
+namespace detail_algo {
+
+// Compile-time metafunction that unwraps a (possibly recursively) segmented
+// iterator to its deepest non-segmented `local_iterator` type.
+//
+//   deepest_local_iterator<It>::type == It                         (non-segmented)
+//   deepest_local_iterator<It>::type ==
+//      deepest_local_iterator<segmented_iterator_traits<It>::local_iterator>::type
+//                                                                   (segmented)
+//
+// Used by segmented algorithms that need to hold cross-segment state of
+// iterator type rather than element type (e.g. a "previous element" pointer
+// that survives the boundary between sub-ranges), by reducing that state to a
+// single unified type across all levels of recursion.
+template <bool IsSeg, class It>
+struct deepest_local_iterator_impl;
+
+template <class It>
+struct deepest_local_iterator_impl<false, It>
+{
+   typedef It type;
+};
+
+template <class It>
+struct deepest_local_iterator_impl<true, It>
+{
+private:
+   typedef typename segmented_iterator_traits<It>::local_iterator local_t;
+public:
+   typedef typename deepest_local_iterator_impl<
+      segmented_iterator_traits<local_t>::is_segmented_iterator::value,
+      local_t>::type type;
+};
+
+template <class It>
+struct deepest_local_iterator
+{
+   typedef typename deepest_local_iterator_impl<
+      segmented_iterator_traits<It>::is_segmented_iterator::value,
+      It>::type type;
+};
+
+} // namespace detail_algo
+
 } // namespace container
 } // namespace boost
 
