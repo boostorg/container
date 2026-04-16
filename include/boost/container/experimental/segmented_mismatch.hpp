@@ -67,22 +67,36 @@ segduo<RASrcIter, Iter2> segmented_mismatch_iter2_bounded
    difference_type n = last1 - first1;
 
    while(n >= difference_type(4)) {
-      if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto out_path; ++first1; ++first2;
-      if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto out_path; ++first1; ++first2;
-      if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto out_path; ++first1; ++first2;
-      if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto out_path; ++first1; ++first2;
+      if(first2 == iter2_last) goto out_path;
+      if(!pred(*first1, *first2)) goto out_path;
+      ++first1; ++first2;
+      if(first2 == iter2_last) goto out_path;
+      if(!pred(*first1, *first2)) goto out_path;
+      ++first1; ++first2;
+      if(first2 == iter2_last) goto out_path;
+      if(!pred(*first1, *first2)) goto out_path;
+      ++first1; ++first2;
+      if(first2 == iter2_last) goto out_path;
+      if(!pred(*first1, *first2)) goto out_path;
+      ++first1; ++first2;
       n -= 4;
    }
 
    switch(n) {
       case 3:
-         if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto out_path; ++first1; ++first2;
+         if(first2 == iter2_last) goto out_path;
+         if(!pred(*first1, *first2)) goto out_path;
+         ++first1; ++first2;
          BOOST_FALLTHROUGH;
       case 2:
-         if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto out_path; ++first1; ++first2;
+         if(first2 == iter2_last) goto out_path;
+         if(!pred(*first1, *first2)) goto out_path;
+         ++first1; ++first2;
          BOOST_FALLTHROUGH;
       case 1:
-         if(first2 == iter2_last) goto out_path; if(!pred(*first1, *first2)) goto out_path; ++first1; ++first2;
+         if(first2 == iter2_last) goto out_path;
+         if(!pred(*first1, *first2)) goto out_path;
+         ++first1; ++first2;
          BOOST_FALLTHROUGH;
       default:
          break;
