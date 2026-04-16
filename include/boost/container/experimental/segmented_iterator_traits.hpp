@@ -68,6 +68,16 @@ struct unreachable_sentinel_t
 
 namespace detail_algo {
 
+//! Default less-than function object used by segmented algorithms when the
+//! user does not provide an explicit comparator.  Centralised here to avoid
+//! duplicating the same struct across every algorithm header.
+struct segmented_default_less
+{
+   template <class T>
+   BOOST_CONTAINER_FORCEINLINE
+   bool operator()(const T& a, const T& b) const { return a < b; }
+};
+
 template <bool B> struct void_if_true;
 template <> struct void_if_true<true> { typedef void type; };
 

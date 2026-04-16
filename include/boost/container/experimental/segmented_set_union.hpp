@@ -36,12 +36,6 @@ OutIter segmented_set_union
 
 namespace detail_algo {
 
-struct set_union_default_less
-{
-   template <class T>
-   bool operator()(const T& a, const T& b) const { return a < b; }
-};
-
 template <class FwdIt, class InIter2, class Sent2, class OutIter, class Comp>
 segduo<InIter2, OutIter> set_union_scan(FwdIt first, FwdIt last, InIter2 first2, Sent2 last2, OutIter result, Comp comp,
    non_segmented_iterator_tag)
@@ -122,7 +116,7 @@ BOOST_CONTAINER_FORCEINLINE
 OutIter segmented_set_union (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result)
 {
    return boost::container::segmented_set_union
-      (first1, last1, first2, last2, result, detail_algo::set_union_default_less());
+      (first1, last1, first2, last2, result, detail_algo::segmented_default_less());
 }
 
 } // namespace container

@@ -36,12 +36,6 @@ OutIter segmented_merge
 
 namespace detail_algo {
 
-struct merge_default_less
-{
-   template <class T>
-   bool operator()(const T& a, const T& b) const { return a < b; }
-};
-
 //TODO: Analyze if the second range is also segmented and if so,
 //try to use the same merge function change argument order and comparison object
 template <class FwdIt, class Sent, class InIter2, class Sent2, class OutIter, class Comp>
@@ -126,7 +120,7 @@ BOOST_CONTAINER_FORCEINLINE
 OutIter segmented_merge (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result)
 {
    return boost::container::segmented_merge
-      (first1, last1, first2, last2, result, detail_algo::merge_default_less());
+      (first1, last1, first2, last2, result, detail_algo::segmented_default_less());
 }
 
 } // namespace container

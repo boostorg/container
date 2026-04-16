@@ -35,12 +35,6 @@ OutIter segmented_set_intersection
 
 namespace detail_algo {
 
-struct set_intersection_default_less
-{
-   template <class T>
-   BOOST_CONTAINER_FORCEINLINE bool operator()(const T& a, const T& b) const { return a < b; }
-};
-
 template <class FwdIt, class Sent1, class InIter2, class Sent2, class OutIter, class Comp>
 segduo<InIter2, OutIter> set_intersection_scan
    (FwdIt first, Sent1 last, InIter2 first2, Sent2 last2, OutIter result, Comp comp, non_segmented_iterator_tag)
@@ -111,7 +105,7 @@ BOOST_CONTAINER_FORCEINLINE OutIter segmented_set_intersection
    (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result)
 {
    return boost::container::segmented_set_intersection
-      (first1, last1, first2, last2, result, detail_algo::set_intersection_default_less());
+      (first1, last1, first2, last2, result, detail_algo::segmented_default_less());
 }
 
 } // namespace container
