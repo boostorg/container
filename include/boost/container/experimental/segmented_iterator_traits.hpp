@@ -78,6 +78,25 @@ struct segmented_default_less
    bool operator()(const T& a, const T& b) const { return a < b; }
 };
 
+//! Proxy-safe "equal to *it" predicate.  Holds the iterator by value and
+//! re-dereferences on every invocation, so a prvalue proxy returned by
+//! operator*() only lives for the full expression of the comparison and
+//! never outlives it.  This avoids the lifetime hazard of caching *it in
+//! a const-reference member (as equal_to_value would).
+template <class Iter>
+struct equal_to_deref
+{
+   Iter it_;
+
+   BOOST_CONTAINER_FORCEINLINE explicit equal_to_deref(Iter it)
+      : it_(it)
+   {}
+
+   template <class U>
+   BOOST_CONTAINER_FORCEINLINE bool operator()(const U &u) const
+   {  return u == *it_; }
+};
+
 template <bool B> struct void_if_true;
 template <> struct void_if_true<true> { typedef void type; };
 

@@ -33,6 +33,12 @@ std::pair<InpIter1, InpIter2> segmented_mismatch(InpIter1 first1, Sent last1, In
 template <class InpIter1, class Sent, class InpIter2>
 std::pair<InpIter1, InpIter2> segmented_mismatch(InpIter1 first1, Sent last1, InpIter2 first2);
 
+template <class InpIter1, class Sent1, class InpIter2, class Sent2, class BinaryPred>
+std::pair<InpIter1, InpIter2> segmented_mismatch(InpIter1 first1, Sent1 last1, InpIter2 first2, Sent2 last2, BinaryPred pred);
+
+template <class InpIter1, class Sent1, class InpIter2>
+std::pair<InpIter1, InpIter2> segmented_mismatch(InpIter1 first1, Sent1 last1, InpIter2 first2, InpIter2 last2);
+
 namespace detail_algo {
 
 struct mismatch_equal
@@ -169,19 +175,10 @@ segduo<SrcIter, SegIter2> segmented_mismatch_iter2_bounded
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// Iter2 dispatch: routes to bounded helper.
-// Non-segmented iter2: single unbounded call (unreachable_sentinel_t).
-// Segmented iter2: loop over iter2 segments, bounded per segment.
+// Iter2 dispatch (segmented iter2 only): loops over iter2 segments,
+// bounded per segment. Used as the body of the unbounded-iter2 shim
+// of segmented_mismatch_iter2_bounded below.
 //////////////////////////////////////////////////////////////////////////////
-
-template <class SrcIter, class Sent, class InpIter2, class BinaryPred, class Cat>
-BOOST_CONTAINER_FORCEINLINE segduo<SrcIter, InpIter2> segmented_mismatch_iter2_dispatch
-   (SrcIter first1, Sent last1, InpIter2 first2, BinaryPred pred,
-    const non_segmented_iterator_tag &, Cat)
-{
-   return (segmented_mismatch_iter2_bounded)
-      (first1, last1, first2, unreachable_sentinel_t(), pred, non_segmented_iterator_tag(), Cat());
-}
 
 template <class SrcIter, class Sent, class SegIter2, class BinaryPred, class Cat>
 segduo<SrcIter, SegIter2> segmented_mismatch_iter2_dispatch
@@ -216,34 +213,68 @@ segduo<SrcIter, SegIter2> segmented_mismatch_iter2_dispatch
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// Source dispatch: walks the source (first1) segments.
-// Returns std::pair<Iter1, Iter2>.
-// Internally uses the iter2 dispatch which returns segduo and the source
-// dispatch converts the result to std::pair.
+// Shim: segmented_mismatch_iter2_bounded overload for the combination
+// "segmented iter2 + unreachable_sentinel_t as iter2_last". The primary
+// segmented-iter2 overload (above) requires iter2_first and iter2_last to
+// share the same type, which prevents passing unreachable_sentinel_t
+// directly. This shim forwards to segmented_mismatch_iter2_dispatch, which
+// walks iter2 segments without needing a global iter2_last.
+//
+// With this shim in place, segmented_mismatch_bounded_dispatch can be
+// reused as the single implementation for the unbounded case, simply by
+// passing unreachable_sentinel_t as last2.
+//////////////////////////////////////////////////////////////////////////////
+template <class SrcIter, class Sent, class SegIter2, class BinaryPred, class SrcCat>
+BOOST_CONTAINER_FORCEINLINE segduo<SrcIter, SegIter2>
+segmented_mismatch_iter2_bounded
+   (SrcIter first1, Sent last1, SegIter2 iter2_first, unreachable_sentinel_t,
+    BinaryPred pred, segmented_iterator_tag, SrcCat)
+{
+   return (segmented_mismatch_iter2_dispatch)
+      (first1, last1, iter2_first, pred, segmented_iterator_tag(), SrcCat());
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Fully bounded dispatch (two-range mismatch): walks [first1, last1) and
+// [first2, last2) in lock-step, recursive on both sides. Stops at the first
+// of: mismatch, source exhaustion (first1 == last1), or iter2 exhaustion
+// (first2 == last2). Returns segduo{final source, final iter2}.
+//
+// - The non-segmented-source leaf forwards to segmented_mismatch_iter2_bounded,
+//   which already recurses on iter2 segmentation and has the random-access
+//   unrolled fast path.
+// - The segmented-source overload mirrors the classic segmented walk but
+//   threads last2 through the recursion and exits early when iter2 is
+//   exhausted.
+//
+// This dispatch is also reused to implement the unbounded (three-iterator)
+// segmented_mismatch_dispatch by passing unreachable_sentinel_t as last2
+// (the shim above handles the segmented-iter2 case for that sentinel).
 //////////////////////////////////////////////////////////////////////////////
 
-template <class SrcIter, class Sent, class InpIter2, class BinaryPred, class Tag, class Cat>
+template <class SrcIter, class Sent, class InpIter2, class Sent2, class BinaryPred, class Tag, class Cat>
 BOOST_CONTAINER_FORCEINLINE
-typename algo_enable_if_c
-   < !Tag::value || is_sentinel<Sent, SrcIter>::value
-   , std::pair<SrcIter, InpIter2>
-   >::type
-segmented_mismatch_dispatch(SrcIter first1, Sent last1, InpIter2 first2, BinaryPred pred, Tag, Cat)
+typename algo_enable_if_c<
+   !Tag::value || is_sentinel<Sent, SrcIter>::value, segduo<SrcIter, InpIter2> >::type
+segmented_mismatch_bounded_dispatch
+   (SrcIter first1, Sent last1, InpIter2 first2, Sent2 last2, BinaryPred pred, Tag, Cat)
 {
 #if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
    typedef segmented_iterator_traits<InpIter2> iter2_traits;
-   segduo<SrcIter, InpIter2> r = (segmented_mismatch_iter2_dispatch)
-      (first1, last1, first2, pred, typename iter2_traits::is_segmented_iterator(), Cat());
+   return (segmented_mismatch_iter2_bounded)
+      (first1, last1, first2, last2, pred,
+       typename iter2_traits::is_segmented_iterator(), Cat());
 #else
-   segduo<SrcIter, InpIter2> r = (segmented_mismatch_iter2_dispatch)
-      (first1, last1, first2, pred, non_segmented_iterator_tag(), Cat());
+   return (segmented_mismatch_iter2_bounded)
+      (first1, last1, first2, last2, pred,
+       non_segmented_iterator_tag(), Cat());
 #endif
-   return std::pair<SrcIter, InpIter2>(r.first, r.second);
 }
 
-template <class SegIter, class InpIter2, class BinaryPred, class Cat>
-std::pair<SegIter, InpIter2> segmented_mismatch_dispatch
-   (SegIter first1, SegIter last1, InpIter2 first2, BinaryPred pred, segmented_iterator_tag, Cat)
+template <class SegIter, class InpIter2, class Sent2, class BinaryPred, class Cat>
+segduo<SegIter, InpIter2> segmented_mismatch_bounded_dispatch
+   (SegIter first1, SegIter last1, InpIter2 first2, Sent2 last2,
+    BinaryPred pred, segmented_iterator_tag, Cat)
 {
    typedef segmented_iterator_traits<SegIter>  traits;
    typedef typename traits::local_iterator     local_iterator;
@@ -251,32 +282,37 @@ std::pair<SegIter, InpIter2> segmented_mismatch_dispatch
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
    typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
 
-   typedef std::pair<SegIter, InpIter2>        return_t;
-   typedef std::pair<local_iterator, InpIter2> local_return_t;
+   typedef segduo<SegIter, InpIter2>           return_t;
+   typedef segduo<local_iterator, InpIter2>    local_return_t;
 
    segment_iterator       sfirst = traits::segment(first1);
    segment_iterator const slast  = traits::segment(last1);
 
-   if(sfirst == slast) {
+   if (sfirst == slast) {
       const local_iterator ll = traits::local(last1);
-      const local_return_t r = (segmented_mismatch_dispatch)(traits::local(first1), ll, first2, pred, is_local_seg_t(), local_cat_t());
+      local_return_t r = (segmented_mismatch_bounded_dispatch)
+         (traits::local(first1), ll, first2, last2, pred, is_local_seg_t(), local_cat_t());
       return return_t((r.first != ll) ? traits::compose(sfirst, r.first) : last1, r.second);
    }
    else {
       local_iterator le = traits::end(sfirst);
-      local_return_t r = (segmented_mismatch_dispatch)(traits::local(first1), le, first2, pred, is_local_seg_t(), local_cat_t());
-      if (r.first != le)
+      local_return_t r = (segmented_mismatch_bounded_dispatch)
+         (traits::local(first1), le, first2, last2, pred, is_local_seg_t(), local_cat_t());
+      // Early exit: stopped inside segment (mismatch) or iter2 exhausted.
+      if (r.first != le || r.second == last2)
          return return_t(traits::compose(sfirst, r.first), r.second);
 
       for (++sfirst; sfirst != slast; ++sfirst) {
          le = traits::end(sfirst);
-         r = (segmented_mismatch_dispatch)(traits::begin(sfirst), le, r.second, pred, is_local_seg_t(), local_cat_t());
-         if (r.first != le)
+         r = (segmented_mismatch_bounded_dispatch)
+            (traits::begin(sfirst), le, r.second, last2, pred, is_local_seg_t(), local_cat_t());
+         if (r.first != le || r.second == last2)
             return return_t(traits::compose(sfirst, r.first), r.second);
       }
 
       le = traits::local(last1);
-      r = (segmented_mismatch_dispatch)(traits::begin(slast), le, r.second, pred, is_local_seg_t(), local_cat_t());
+      r = (segmented_mismatch_bounded_dispatch)
+         (traits::begin(slast), le, r.second, last2, pred, is_local_seg_t(), local_cat_t());
       return return_t((r.first != le) ? traits::compose(sfirst, r.first) : last1, r.second);
    }
 }
@@ -292,8 +328,12 @@ BOOST_CONTAINER_FORCEINLINE std::pair<InpIter1, InpIter2>
 segmented_mismatch(InpIter1 first1, Sent last1, InpIter2 first2, BinaryPred pred)
 {
    typedef segmented_iterator_traits<InpIter1> traits;
-   return detail_algo::segmented_mismatch_dispatch
-      (first1, last1, first2, pred, typename traits::is_segmented_iterator(), typename iterator_traits<InpIter1>::iterator_category());
+
+   segduo<InpIter1, InpIter2> r = (detail_algo::segmented_mismatch_bounded_dispatch)
+      ( first1, last1, first2, unreachable_sentinel_t(), pred
+      , typename traits::is_segmented_iterator()
+      , typename iterator_traits<InpIter1>::iterator_category());
+   return std::pair<InpIter1, InpIter2>(r.first, r.second);
 }
 
 //! Returns a pair of iterators to the first mismatching elements
@@ -305,6 +345,42 @@ BOOST_CONTAINER_FORCEINLINE std::pair<InpIter1, InpIter2>
 segmented_mismatch(InpIter1 first1, Sent last1, InpIter2 first2)
 {
    return boost::container::segmented_mismatch(first1, last1, first2, detail_algo::mismatch_equal());
+}
+
+//! Returns a pair of iterators to the first elements where
+//! \c pred(*it1, *it2) is false in [first1, last1) and [first2, last2),
+//! or {last1, last2} if all elements in the common prefix match.
+//! When the two ranges have different lengths, iteration stops at the end
+//! of the shorter range; the returned pair then points to the end of the
+//! shorter range and the corresponding position in the other range.
+//! Exploits segmentation on both ranges.
+template <class InpIter1, class Sent1, class InpIter2, class Sent2, class BinaryPred>
+BOOST_CONTAINER_FORCEINLINE std::pair<InpIter1, InpIter2>
+segmented_mismatch(InpIter1 first1, Sent1 last1, InpIter2 first2, Sent2 last2, BinaryPred pred)
+{
+   typedef segmented_iterator_traits<InpIter1> traits;
+   segduo<InpIter1, InpIter2> r = detail_algo::segmented_mismatch_bounded_dispatch
+      (first1, last1, first2, last2, pred,
+       typename traits::is_segmented_iterator(),
+       typename iterator_traits<InpIter1>::iterator_category());
+   return std::pair<InpIter1, InpIter2>(r.first, r.second);
+}
+
+//! Returns a pair of iterators to the first mismatching elements in
+//! [first1, last1) and [first2, last2), or {last1, last2} if all elements
+//! in the common prefix match. When the two ranges have different lengths,
+//! iteration stops at the end of the shorter range.
+//! Exploits segmentation on both ranges.
+//!
+//! Note: \c last2 must have the same type as \c first2. To pass a sentinel
+//! type for the end of the second range, use the overload with an explicit
+//! predicate.
+template <class InpIter1, class Sent1, class InpIter2>
+BOOST_CONTAINER_FORCEINLINE std::pair<InpIter1, InpIter2>
+segmented_mismatch(InpIter1 first1, Sent1 last1, InpIter2 first2, InpIter2 last2)
+{
+   return boost::container::segmented_mismatch
+      (first1, last1, first2, last2, detail_algo::mismatch_equal());
 }
 
 } // namespace container
