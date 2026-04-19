@@ -93,10 +93,12 @@ BOOST_CONTAINER_FORCEINLINE void resume_timing()
 
 struct element
 {
-   element(int n_) : n{ n_ }
-   {}
-
 #if defined(NONTRIVIAL_ELEMENT)
+   element(int n_) : n{ n_ }
+   {
+      std::memset(payload, 0, sizeof(payload));
+   }
+
    ~element()
    {
       std::memset(payload, 0, sizeof(payload));
@@ -115,6 +117,9 @@ struct element
       std::memset(x.payload, 0, sizeof(payload));
       return *this;
    }
+#else
+   element(int n_) : n{ n_ }
+   {}
 #endif
 
    operator int() const { return n; }
