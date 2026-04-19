@@ -416,6 +416,24 @@ FwdIt partition_point(FwdIt first, FwdIt last, Pred pred)
 
 #endif
 
+#if BOOST_CXX_VERSION < 201402L
+
+// Portable two-range std::mismatch (std::mismatch with 4 args is C++14).
+template<class InIt1, class InIt2>
+std::pair<InIt1, InIt2> mismatch(InIt1 first1, InIt1 last1, InIt2 first2, InIt2 last2)
+{
+   while (first1 != last1 && first2 != last2 && *first1 == *first2) {
+      ++first1; ++first2;
+   }
+   return std::pair<InIt1, InIt2>(first1, first2);
+}
+
+#else
+
+using std::mismatch;
+
+#endif
+
 template<class BidirIt, class T>
 BidirIt find_last_dispatch(BidirIt first, BidirIt last, const T& val, std::bidirectional_iterator_tag)
 {
@@ -497,7 +515,6 @@ BOOST_CONTAINER_FORCEINLINE It find_last_if_not(It first, It last, Pred pred)
    return find_last_if_not_dispatch(first, last, pred, cat());
 }
 
-
 //Not benchmarked:
 //inplace_merge
 
@@ -557,7 +574,6 @@ BOOST_CONTAINER_FORCEINLINE It find_last_if_not(It first, It last, Pred pred)
 //is_heap_until (random-access non-implementable?)
 
 //not implemented (c++14)
-//mismatch with two full ranges
 //equal with two full ranges
 
 //not implemented (c++17)
@@ -1255,6 +1271,22 @@ struct seg_mismatch {
    { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
 };
 
+// --- mismatch (two-range) ---
+template<class C, class R2>
+struct std_mismatch_2r {
+   const C &c; R2 &range2; int &result;
+   std_mismatch_2r(const C &c_, R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
+   BOOST_CONTAINER_FORCEINLINE void operator()()
+   { clobber(); result = (bench_detail::mismatch(c.begin(), c.end(), range2.begin(), range2.end()).first == c.end()) ? 1 : 0; escape(&result); }
+};
+template<class C, class R2>
+struct seg_mismatch_2r {
+   const C &c; R2 &range2; int &result;
+   seg_mismatch_2r(const C &c_, R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
+   BOOST_CONTAINER_FORCEINLINE void operator()()
+   { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), range2.begin(), range2.end()).first == c.end()) ? 1 : 0; escape(&result); }
+};
+
 // --- swap_ranges ---
 template<class C>
 struct std_swap_ranges {
@@ -1875,6 +1907,19 @@ void bench_mismatch(const C &c, const C &c2, std::size_t iters, const char* cnam
       bench_ops::seg_mismatch<C, range2_t>(c, range2, result), label, cname);
 }
 
+template<bool DequeSecond, class C>
+void bench_mismatch_2r(const C &c, const C &c2, std::size_t iters, const char* cname,
+                       const char* label)
+{
+   typedef typename C::value_type VT;
+   typedef typename boost::move_detail::if_c<DequeSecond, bc::deque<VT>, boost::container::vector<VT> >::type range2_t;
+   range2_t range2(c2.begin(), c2.end());
+   int result = 0;
+   compare_batch(iters, c.size(),
+      bench_ops::std_mismatch_2r<C, range2_t>(c, range2, result),
+      bench_ops::seg_mismatch_2r<C, range2_t>(c, range2, result), label, cname);
+}
+
 template<class C>
 void bench_swap_ranges(const C &c, std::size_t iters, const char* cname)
 {
@@ -2140,6 +2185,18 @@ void run_all(const C& c, std::size_t iters, const char* cname)
          *boost::container::make_iterator_uadvance(c.begin(), c.size()/2);
       bench_mismatch<false>(c, c2, iters, cname, "mismatch(miss)");
       bench_mismatch<true>(c, c2, iters, cname, "mismatch(2xS miss)");
+   }
+
+   //mismatch (two ranges)
+   {
+      C c2(c);
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
+      bench_mismatch_2r<false>(c, c2, iters, cname, "mismatch_2r(hit)");
+      bench_mismatch_2r<true>(c, c2, iters, cname, "mismatch_2r(2xS hit)");
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) =
+         *boost::container::make_iterator_uadvance(c.begin(), c.size()/2);
+      bench_mismatch_2r<false>(c, c2, iters, cname, "mismatch_2r(miss)");
+      bench_mismatch_2r<true>(c, c2, iters, cname, "mismatch_2r(2xS miss)");
    }
 
    //none_of
