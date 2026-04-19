@@ -323,7 +323,7 @@ BOOST_CONTAINER_FORCEINLINE int nth_set_bit(boost::uint64_t mask, int n)
 
 #elif defined(BOOST_CONTAINER_NEST_NTH_BIT_BRANCHLESS)
 
-BOOST_CONTAINER_FORCEINLINE int nth_set_bit(boost::uint64_t mask, int n)
+inline int nth_set_bit(boost::uint64_t mask, int n)
 {
    int pos = 0;
    int c;
@@ -350,7 +350,7 @@ BOOST_CONTAINER_FORCEINLINE int nth_set_bit(boost::uint64_t mask, int n)
 
 #else
 
-BOOST_CONTAINER_FORCEINLINE int nth_set_bit(boost::uint64_t mask, int n)
+inline int nth_set_bit(boost::uint64_t mask, int n)
 {
    int pos = 0;
    int c;
@@ -458,15 +458,6 @@ struct block_base
    {
       next = p;
       prev = p->prev;
-      pointer const pthis = pointer_to(*this);
-      next->prev = pthis;
-      prev->next = pthis;
-   }
-
-   BOOST_CONTAINER_FORCEINLINE void link_after(pointer p) BOOST_NOEXCEPT
-   {
-      prev = p;
-      next = p->next;
       pointer const pthis = pointer_to(*this);
       next->prev = pthis;
       prev->next = pthis;
@@ -1944,8 +1935,10 @@ class nest
    //! <b>Complexity</b>: Linear on the number of available blocks.
    void trim_capacity(size_type n) BOOST_NOEXCEPT
    {
+      if(capacity() <= n) return;
+
       block_base_pointer pbb = blist.header()->next_available;
-      while(capacity() > n && pbb != blist.header()) {
+      while((capacity() - n >= N) && pbb != blist.header()) {
          block_pointer pb = static_cast_block_pointer(pbb);
          pbb = pbb->next_available;
          if(pb->mask == 0) {
@@ -1977,12 +1970,15 @@ class nest
       block_alloc_traits::construct(
          al(), boost::movelib::to_raw_pointer(pb->data() + n),
          boost::forward<Args>(args)...);
-      pb->mask |= pb->mask + 1;
-      const mask_type m = pb->mask;
-      if(BOOST_UNLIKELY(m + 1 <= 2)) {
-         if(m == 1) blist.link_at_back(pb);
-         else       blist.unlink_available(pb);
+      pb->mask |= pb->mask + 1u;
+      const mask_type mask_plus_one = pb->mask + 1u;
+      if (BOOST_UNLIKELY(mask_plus_one <= 2)) {
+         // pb->mask == 0 (impossible), 1 or full
+         if (mask_plus_one == 0) blist.unlink_available(pb);
+         // pb->mask == 1
+         else                    blist.link_at_back(pb);
       }
+
       ++size_;
       return iterator(pb, n);
    }
@@ -2000,21 +1996,22 @@ class nest
 
    #define BOOST_CONTAINER_NEST_EMPLACE_CODE(N) \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
-   BOOST_CONTAINER_FORCEINLINE iterator emplace(BOOST_MOVE_UREF##N)         \
-   {                                                                         \
-      int n_;                                                                \
-      block_pointer pb = priv_retrieve_available_block(n_);                  \
-      block_alloc_traits::construct(                                         \
-         al(), boost::movelib::to_raw_pointer(pb->data() + n_)              \
-         BOOST_MOVE_I##N BOOST_MOVE_FWD##N);                                \
-      pb->mask |= pb->mask + 1;                                             \
-      if(BOOST_UNLIKELY(pb->mask + 1 <= 2)) {                               \
-         if(pb->mask == 1) blist.link_at_back(pb);                          \
-         else              blist.unlink_available(pb);                       \
-      }                                                                      \
-      ++size_;                                                               \
-      return iterator(pb, n_);                                               \
-   }                                                                         \
+   BOOST_CONTAINER_FORCEINLINE iterator emplace(BOOST_MOVE_UREF##N)  \
+   {                                                                 \
+      int n_;                                                        \
+      block_pointer pb = priv_retrieve_available_block(n_);          \
+      block_alloc_traits::construct(                                 \
+         al(), boost::movelib::to_raw_pointer(pb->data() + n_)       \
+         BOOST_MOVE_I##N BOOST_MOVE_FWD##N);                         \
+      pb->mask |= pb->mask + 1u;                                     \
+      const mask_type mask_plus_one = pb->mask + 1u;                 \
+      if (BOOST_UNLIKELY(mask_plus_one <= 2)) {                      \
+         if (mask_plus_one == 0) blist.unlink_available(pb);         \
+         else                    blist.link_at_back(pb);             \
+      }                                                              \
+      ++size_;                                                       \
+      return iterator(pb, n_);                                       \
+   }                                                                 \
    \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    BOOST_CONTAINER_FORCEINLINE iterator emplace_hint(const_iterator BOOST_MOVE_I##N BOOST_MOVE_UREF##N) \
@@ -2443,6 +2440,12 @@ class nest
       BOOST_ASSERT(pb->mask != 0);
       return priv_destroy_all_dispatch(pb,
          dtl::bool_<dtl::is_trivially_destructible<T>::value>());
+
+//Missing checking if the allocator has "destroy"
+//      std::is_trivially_destructible<T>::value &&
+//      ( hub_detail::is_std_allocator<block_allocator>::value ||
+//      hub_detail::is_std_pmr_polymorphic_allocator<block_allocator>::value ||
+//     !hub_detail::allocator_has_destroy<block_allocator, T*>::value )>{});
    }
 
    size_type priv_destroy_all_dispatch(
@@ -2575,9 +2578,10 @@ class nest
    void priv_range_assign(InpIt first, InpIt last)
    {
       block_base_pointer pbb = blist.next;
-      int n = 0;
+      int  n = -1;
       if(first != last) {
-         for(; pbb != blist.header(); pbb = pbb->next, n = 0) {
+         for(; pbb != blist.header(); pbb = pbb->next) {
+            n = 0;
             block_pointer pb = static_cast_block_pointer(pbb);
             for(mask_type bit = 1; bit; bit <<= 1, ++n) {
                if(pb->mask & bit) {
@@ -2601,16 +2605,7 @@ class nest
          priv_insert_range_copy(first, last);
       }
       else {
-         const_iterator it = (n == 0)
-            ? const_iterator(pbb)
-            : (const_iterator(pbb, n), ++const_iterator(pbb, n));
-         //Advance from pbb,n to the next valid position
-         if(n != 0) {
-            it = const_iterator(pbb, n);
-            ++it;
-         } else {
-            it = const_iterator(pbb);
-         }
+         const_iterator it = (n == -1) ? const_iterator(pbb) : ++const_iterator(pbb, n);
          erase(it, cend());
       }
    }
@@ -2895,7 +2890,7 @@ class nest
       }
    }
 
-   void priv_compact_pair(block_pointer& pbx, block_pointer& pby)
+   void priv_compact_pair(block_pointer pbx, block_pointer pby)
    {
       std::size_t cx = static_cast<std::size_t>(boost::core::popcount(pbx->mask));
       std::size_t cy = static_cast<std::size_t>(boost::core::popcount(pby->mask));

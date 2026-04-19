@@ -6,8 +6,8 @@
  * http://www.boost.org/LICENSE_1_0.txt)
  */
 
-#ifndef BOOST_CONTAINER_EXPERIMENTAL_HUB_HPP
-#define BOOST_CONTAINER_EXPERIMENTAL_HUB_HPP
+#ifndef BOOST_CONTAINER_HUB_HPP
+#define BOOST_CONTAINER_HUB_HPP
 
 #include <algorithm>
 #include <boost/assert.hpp>
@@ -52,7 +52,7 @@
 #if !defined(BOOST_CONTAINER_HUB_DISABLE_SSE2)
 #if defined(BOOST_CONTAINER_HUB_ENABLE_SSE2)|| \
     defined(__SSE2__) || \
-    defined(_M_X64) || (defined(_M_IX86_FP)&&_M_IX86_FP>=2)
+    defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
 #define BOOST_CONTAINER_HUB_SSE2
 #endif
 #endif
@@ -73,16 +73,16 @@
 #define BOOST_CONTAINER_HUB_ASSUME(cond) __builtin_assume(cond)
 #elif defined(__GNUC__) || \
       BOOST_CONTAINER_HUB_HAS_BUILTIN(__builtin_unreachable)
-#define BOOST_CONTAINER_HUB_ASSUME(cond)           \
+#define BOOST_CONTAINER_HUB_ASSUME(cond) \
   do{                                    \
     if(!(cond)) __builtin_unreachable(); \
   } while(0)
 #elif defined(_MSC_VER)
 #define BOOST_CONTAINER_HUB_ASSUME(cond) __assume(cond)
 #else
-#define BOOST_CONTAINER_HUB_ASSUME(cond)          \
-  do{                                   \
-    static_cast<void>(false && (cond)); \
+#define BOOST_CONTAINER_HUB_ASSUME(cond) \
+  do{                                    \
+    static_cast<void>(false && (cond));  \
   } while(0)
 #endif
 
@@ -215,14 +215,6 @@ struct block_base
   {
     next = p;
     prev = p->prev;
-    next->prev = pointer_to(*this);
-    prev->next = pointer_to(*this);
-  }
-
-  BOOST_FORCEINLINE void link_after(pointer p) noexcept
-  {
-    prev = p;
-    next = p->next;
     next->prev = pointer_to(*this);
     prev->next = pointer_to(*this);
   }
@@ -754,6 +746,28 @@ using enable_if_is_input_iterator_t =
     >::value
   >::type;
 
+/* std::pmr::polymorphic_allocator::destroy may be marked as deprecated.
+ * C&P from boost/core/allocator_access.hpp.
+ */
+#if defined(_LIBCPP_SUPPRESS_DEPRECATED_PUSH)
+_LIBCPP_SUPPRESS_DEPRECATED_PUSH
+#endif
+#if defined(_STL_DISABLE_DEPRECATED_WARNING)
+_STL_DISABLE_DEPRECATED_WARNING
+#endif
+#if defined(__clang__) && defined(__has_warning)
+# if __has_warning("-Wdeprecated-declarations")
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wdeprecated-declarations"
+# endif
+#elif defined(_MSC_VER)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#elif defined(BOOST_GCC) && BOOST_GCC >= 40600
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 template<typename Allocator, typename Ptr, typename = void>
 struct allocator_has_destroy: std::false_type {};
 
@@ -762,6 +776,22 @@ struct allocator_has_destroy<
   Allocator, Ptr,
   decltype((void)std::declval<Allocator&>().destroy(std::declval<Ptr>()))
 >: std::true_type {};
+
+#if defined(__clang__) && defined(__has_warning)
+# if __has_warning("-Wdeprecated-declarations")
+#  pragma clang diagnostic pop
+# endif
+#elif defined(_MSC_VER)
+# pragma warning(pop)
+#elif defined(BOOST_GCC) && BOOST_GCC >= 40600
+# pragma GCC diagnostic pop
+#endif  
+#if defined(_STL_RESTORE_DEPRECATED_WARNING)
+_STL_RESTORE_DEPRECATED_WARNING
+#endif
+#if defined(_LIBCPP_SUPPRESS_DEPRECATED_POP)
+_LIBCPP_SUPPRESS_DEPRECATED_POP
+#endif
 
 template<typename Allocator>
 struct is_std_allocator: std::false_type {};
@@ -1035,8 +1065,9 @@ public:
     /* Linear on # available blocks, std::hive is linear on # _reserved_
      * blocks.
      */
+    if(capacity() <= n) return;
     for(auto pbb = blist.header()->next_available;
-        capacity() > n && pbb != blist.header(); ) {
+        capacity() - n >= N && pbb != blist.header(); ) {
       auto pb = static_cast_block_pointer(pbb);
       pbb = pbb-> next_available;
       if(pb->mask == 0) {
@@ -1054,11 +1085,11 @@ public:
     auto pb = retrieve_available_block(n);
     allocator_construct(
       al(), boost::to_address(pb->data() + n), std::forward<Args>(args)...);
-    pb->mask |= pb->mask + 1;
-    if(BOOST_UNLIKELY(pb->mask + 1 <= 2)) {
+    auto mask_plus_one = (pb->mask |= pb->mask + 1) + 1;
+    if(BOOST_UNLIKELY(mask_plus_one <= 2)) {
       /* pb->mask == 0 (impossible), 1 or full */
-      if(pb->mask == 1) blist.link_at_back(pb);
-      else /* pb->mask == full */  blist.unlink_available(pb);
+      if(mask_plus_one == 0) blist.unlink_available(pb);
+      else /* pb->mask == 1 */ blist.link_at_back(pb);
     }
     ++size_;
     return {pb, n};
@@ -1555,11 +1586,12 @@ private:
     Incrementable first, Sentinel last, Construct construct, Insert insert)
   {
     auto pbb = blist.next;
-    int  n = 0;
+    int  n = -1;
     if(first != last) {
       /* consume active blocks */
-      for(; pbb != blist.header(); pbb = pbb->next, n = 0) {
+      for(; pbb != blist.header(); pbb = pbb->next) {
         auto pb = static_cast_block_pointer(pbb);
+        n = 0;
         for(mask_type bit = 1; bit; bit <<= 1, ++n) {
           if(pb->mask & bit) { /* full slot */
             insert(boost::to_address(pb->data() + n), first++);
@@ -1581,7 +1613,7 @@ private:
     }
     else{
       /* erase remaining original elements */
-      auto it = (n == 0)? const_iterator{pbb}: ++const_iterator{pbb, n};
+      auto it = (n == -1)? const_iterator{pbb}: ++const_iterator{pbb, n};
       erase(it, cend());
     }
   }
@@ -1709,7 +1741,7 @@ private:
     }
   }
 
-  void compact(block_pointer& pbx, block_pointer& pby)
+  void compact(block_pointer pbx, block_pointer pby)
   {
     auto cx = core::popcount(pbx->mask),
          cy = core::popcount(pby->mask);
@@ -1731,7 +1763,7 @@ private:
 
   void compact(block_pointer pb)
   {
-    for(; ;) {
+    for(; ; ) {
       auto n = hub_detail::unchecked_countr_one(pb->mask);
       auto m = N - 1 - hub_detail::unchecked_countl_zero(pb->mask);
       if(n > m) return;
@@ -1748,10 +1780,10 @@ private:
     block_base_pointer pbb, block_base_pointer last_pbb, F&& f)
   {
     BOOST_ASSERT(pbb != last_pbb);
-    auto           pb = static_cast_block_pointer(pbb);
-    auto           mask = pb->mask;
-    auto           n = hub_detail::unchecked_countr_zero(mask);
-    auto           pd = pb->data();
+    auto pb = static_cast_block_pointer(pbb);
+    auto mask = pb->mask;
+    auto n = hub_detail::unchecked_countr_zero(mask);
+    auto pd = pb->data();
     do {
       pbb = pb->next;
       auto next_mask = pbb->mask;
