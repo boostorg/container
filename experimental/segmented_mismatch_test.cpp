@@ -458,6 +458,10 @@ void test_mismatch_2r_second_empty()
    BOOST_TEST(r.second == &dummy);
 }
 
+struct test_mismatch_double_eq {
+   bool operator()(int a, int b) const { return a * 2 == b; }
+};
+
 void test_mismatch_2r_with_pred()
 {
    test_detail::seg_vector<int> sv;
@@ -467,17 +471,15 @@ void test_mismatch_2r_with_pred()
    sv.add_segment_range(a2, a2 + 2);
 
    int ref[] = {2, 4, 6, 8, 10};
-   struct double_eq {
-      bool operator()(int a, int b) const { return a * 2 == b; }
-   };
+   typedef test_mismatch_double_eq double_eq;
    typedef test_detail::seg_vector<int>::iterator seg_it;
    std::pair<seg_it, int*> r =
-      segmented_mismatch(sv.begin(), sv.end(), ref, ref + 5, double_eq());
+      segmented_mismatch(sv.begin(), sv.end(), ref + 0, ref + 5, double_eq());
    BOOST_TEST(r.first  == sv.end());
    BOOST_TEST(r.second == ref + 5);
 
    int ref_bad[] = {2, 4, 99, 8, 10};
-   r = segmented_mismatch(sv.begin(), sv.end(), ref_bad, ref_bad + 5, double_eq());
+   r = segmented_mismatch(sv.begin(), sv.end(), ref_bad + 0, ref_bad + 5, double_eq());
    BOOST_TEST_EQ(*r.first,  3);
    BOOST_TEST_EQ(*r.second, 99);
 }
