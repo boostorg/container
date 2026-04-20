@@ -142,7 +142,7 @@ _mm_prefetch(static_cast<const char*>(static_cast<const void*>(boost::movelib::t
    BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb, 0)\
 //
 
-//#define BOOST_CONTAINER_NEST_PREFETCH_NEXT_ELEMENT
+#define BOOST_CONTAINER_NEST_PREFETCH_NEXT_ELEMENT
 
 #if defined(BOOST_CONTAINER_NEST_PREFETCH_NEXT_ELEMENT)
 
