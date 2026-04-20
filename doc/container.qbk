@@ -70,7 +70,7 @@ In short, what does [*Boost.Container] offer?
 
 [section:introduction_building_container Building Boost.Container]
 
-There is no need to compile [*Boost.Container], since it's a header-only library,
+For most functionalities, there is no need to compile [*Boost.Container], since it's a header-only library,
 just include your Boost header directory in your compiler include path *except if you use*:
 
 *  [link container.extended_allocators Extended Allocators]
@@ -80,6 +80,9 @@ Those exceptions are are implemented as a separately compiled library, so in tho
 in a location that can be found by your linker.
 If you followed the [@http://www.boost.org/doc/libs/release/more/getting_started/index.html Boost Getting Started]
 instructions, that's already been done for you.
+
+For the CMake build system, the project (`CMakeLists.txt`) contains the BOOST_CONTAINER_HEADER_ONLY option that can be set
+to ON to build the library as header-only or OFF to build it as a separately compiled library.
 
 [endsect]
 
