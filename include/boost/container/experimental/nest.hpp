@@ -937,7 +937,7 @@ public:
    friend difference_type operator-(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
    {
       BOOST_CONTAINER_NEST_ASSUME(x.pbb == y.pbb);
-      #if 0
+#if 0 //Supporting negative difference would require additional checks
       const mask_type m = x.pbb->mask;
       const mask_type lo_x = (x.n == int(N)) ? full : ((mask_type(1) << x.n) - 1);
       const mask_type lo_y = (y.n == int(N)) ? full : ((mask_type(1) << y.n) - 1);
