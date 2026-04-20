@@ -295,22 +295,22 @@ struct create_and_destroy
 template<typename Container>
 struct prepare
 {
-   const Container& get_container(std::size_t n_, double erasure_rate_)
+   const Container& get_container(std::size_t n_arg, double erasure_rate_arg)
    {
-      if(n_ != n || erasure_rate_ != erasure_rate) {
+      if(n_arg != n_ || erasure_rate_arg != erasure_rate_) {
          pause_timing();
-         n = n_;
-         erasure_rate = erasure_rate_;
+         n_ = n_arg;
+         erasure_rate_ = erasure_rate_arg;
          c.clear();
          c.shrink_to_fit();
-         c = make<Container>(n, erasure_rate);
+         c = make<Container>(n_, erasure_rate_);
          resume_timing();
       }
       return c;
    }
 
-   std::size_t n = 0;
-   double      erasure_rate = 0.0;
+   std::size_t n_ = 0;
+   double      erasure_rate_ = 0.0;
    Container   c;
 };
 
@@ -320,8 +320,8 @@ struct for_each: prepare<Container>
    unsigned int operator()(std::size_t n, double erasure_rate)
    {
       unsigned int res = 0;
-      auto& c = this->get_container(n, erasure_rate);
-      for(const auto& x: c) res += (unsigned int)x;
+      auto& cr = this->get_container(n, erasure_rate);
+      for(const auto& x: cr) res += (unsigned int)x;
       return res;
    }
 };
@@ -332,8 +332,8 @@ struct visit_all: prepare<Container>
    unsigned int operator()(std::size_t n, double erasure_rate)
    {
       unsigned int res = 0;
-      auto& c = this->get_container(n, erasure_rate);
-      c.visit_all([&] (const auto& x) { res += (unsigned int)x; });
+      auto& cr = this->get_container(n, erasure_rate);
+      cr.visit_all([&] (const auto& x) { res += (unsigned int)x; });
       return res;
    }
 };
@@ -464,7 +464,7 @@ int main(int argc,char* argv[])
    (void)argv;
 
    using namespace boost::container;
-   try{
+   BOOST_CONTAINER_TRY{
       #ifdef PLF_HIVE_BENCH
       using num = plf::hive<element>;
       #else
@@ -505,9 +505,12 @@ int main(int argc,char* argv[])
       std::cout << std::left << std::setw(30) << "OVERALL"
                 << std::fixed << std::setprecision(3) << geomean(t) << "\n";
    }
-   catch(const std::exception& e) {
+   BOOST_CONTAINER_CATCH(const std::exception& e) {
+      #ifndef BOOST_NO_EXCEPTIONS
       std::cerr << e.what() << std::endl;
+      #endif
    }
+   BOOST_CONTAINER_CATCH_END
 }
 
 #endif
