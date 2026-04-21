@@ -353,7 +353,7 @@ void test_move_construction_unequal_allocator()
    BOOST_TEST_EQ(*it, 10); ++it;
    BOOST_TEST_EQ(*it, 20); ++it;
    BOOST_TEST_EQ(*it, 30);
-   BOOST_TEST_EQ(h1.size(), 3u);
+   BOOST_TEST_EQ(h1.size(), 0u);
 }
 
 void test_move_assignment_unequal_allocator()

@@ -138,29 +138,6 @@ _mm_prefetch(static_cast<const char*>(static_cast<const void*>(boost::movelib::t
    } while(0)\
 //
 
-#define BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb) \
-   BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb, 0)\
-//
-
-#define BOOST_CONTAINER_NEST_PREFETCH_NEXT_ELEMENT
-
-#if defined(BOOST_CONTAINER_NEST_PREFETCH_NEXT_ELEMENT)
-
-#define BOOST_CONTAINER_NEST_PREFETCH_BLOCK_FIRST(pbb) \
-   BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb, nest_detail::unchecked_countr_zero(pbb->mask)); \
-//
-
-#define BOOST_CONTAINER_NEST_PREFETCH_BLOCK_LAST(pbb) \
-   BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb, int(N - 1 - (std::size_t)nest_detail::unchecked_countl_zero(pbb->mask))); \
-//
-
-#else
-
-#define BOOST_CONTAINER_NEST_PREFETCH_BLOCK_FIRST BOOST_CONTAINER_NEST_PREFETCH_BLOCK
-#define BOOST_CONTAINER_NEST_PREFETCH_BLOCK_LAST BOOST_CONTAINER_NEST_PREFETCH_BLOCK
-
-#endif   //BOOST_CONTAINER_NEST_PREFETCH_EXISTING_VALUE
-
 #if defined(BOOST_MSVC)
 #pragma warning(push)
 #pragma warning(disable:4714) // marked as __forceinline not inlined
@@ -640,6 +617,16 @@ BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, false>& x, blo
    boost::adl_move_swap(x.data_, y.data_);
 }
 
+BOOST_CONTAINER_FORCEINLINE int first_in_mask(boost::uint64_t m)
+{
+   return unchecked_countr_zero(m);
+}
+
+BOOST_CONTAINER_FORCEINLINE int last_in_mask(boost::uint64_t m)
+{
+   return 63 - unchecked_countl_zero(m);
+}
+
 } // namespace nest_detail
 
 //////////////////////////////////////////////
@@ -674,26 +661,26 @@ public:
                              , nest_iterator< maybe_nonconst_pointer, StoreDataInBlock, Prefetch >
                              , nat>::type                            maybe_nonconst_iterator;
 
-   nest_iterator() BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE nest_iterator() BOOST_NOEXCEPT
       : pbb(), n(0)
    {}
    
-   nest_iterator(const nest_iterator& x) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE nest_iterator(const nest_iterator& x) BOOST_NOEXCEPT
       : pbb(x.pbb), n(x.n)
    {}
    
-   nest_iterator(const maybe_nonconst_iterator& x) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE nest_iterator(const maybe_nonconst_iterator& x) BOOST_NOEXCEPT
       : pbb(x.pbb), n(x.n)
    {}
 
-   nest_iterator& operator=(const nest_iterator& x) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE nest_iterator& operator=(const nest_iterator& x) BOOST_NOEXCEPT
    {
       pbb = x.pbb;
       n = x.n;
       return *this;
    }
 
-   nest_iterator& operator=(const maybe_nonconst_iterator& x) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE nest_iterator& operator=(const maybe_nonconst_iterator& x) BOOST_NOEXCEPT
    {
       pbb = x.pbb;
       n = x.n;
@@ -712,17 +699,16 @@ public:
 
    BOOST_CONTAINER_FORCEINLINE nest_iterator& operator++() BOOST_NOEXCEPT
    {
-      mask_type mask = pbb->mask & (full << 1 << std::size_t(n));
-      const bool next_block = mask == 0;
-      if (BOOST_UNLIKELY(next_block)) {
+      mask_type mask = pbb->mask & (full << 1 << n);
+      if(BOOST_UNLIKELY(mask == 0)) {
          pbb = pbb->next;
-         mask = pbb->mask;
          BOOST_IF_CONSTEXPR(Prefetch) {
-            BOOST_CONTAINER_NEST_PREFETCH_BLOCK_FIRST(pbb);
-            BOOST_CONTAINER_NEST_PREFETCH(pbb->next);
+            BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb->next, nest_detail::first_in_mask(pbb->mask));
+            BOOST_CONTAINER_NEST_PREFETCH(pbb->next); //iG
          }
+         mask = pbb->mask;
       }
-      n = nest_detail::unchecked_countr_zero(mask);
+      n = nest_detail::first_in_mask(mask);
       return *this;
    }
 
@@ -735,18 +721,16 @@ public:
 
    BOOST_CONTAINER_FORCEINLINE nest_iterator& operator--() BOOST_NOEXCEPT
    {
-      mask_type mask = pbb->mask & (full >> 1 >> ((N - 1) - std::size_t(n)));
-      if(BOOST_UNLIKELY(mask == 0)) {
+      mask_type mask = pbb->mask & (full >> 1 >> (((int)N - 1) - n));
+      if (BOOST_UNLIKELY(mask == 0)) {
          pbb = pbb->prev;
-         mask = pbb->mask;
          BOOST_IF_CONSTEXPR(Prefetch) {
-            BOOST_CONTAINER_NEST_PREFETCH_BLOCK_LAST(pbb);
-            BOOST_CONTAINER_NEST_PREFETCH(pbb->next);
+            BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb->next, nest_detail::last_in_mask(pbb->mask));
+            BOOST_CONTAINER_NEST_PREFETCH(pbb->prev); //iG
          }
-
+         mask = pbb->mask;
       }
-
-      n = int(N - 1 - (std::size_t)nest_detail::unchecked_countl_zero(mask));
+      n = nest_detail::last_in_mask(mask);
       return *this;
    }
 
@@ -786,16 +770,11 @@ private:
    BOOST_STATIC_CONSTEXPR std::size_t  N = block_base_type::N;
    BOOST_STATIC_CONSTEXPR mask_type full = block_base_type::full;
 
-   nest_iterator(const_block_base_pointer pbb_, int n_) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE nest_iterator(const_block_base_pointer pbb_, int n_) BOOST_NOEXCEPT
       : pbb(const_cast_block_base_pointer(pbb_)), n(n_)
    {}
 
-   explicit nest_iterator(const_block_base_pointer pbb_) BOOST_NOEXCEPT
-      : pbb(const_cast_block_base_pointer(pbb_))
-      , n(nest_detail::unchecked_countr_zero(pbb->mask))
-   {}
-
-   static block_base_pointer
+   BOOST_CONTAINER_FORCEINLINE static block_base_pointer
    const_cast_block_base_pointer(const_block_base_pointer pbb_) BOOST_NOEXCEPT
    {
       return block_base_type::pointer_to(const_cast<block_base_type&>(*pbb_));
@@ -856,8 +835,8 @@ public:
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator++() BOOST_NOEXCEPT
    {
       BOOST_CONTAINER_NEST_ASSUME(n != (int)N);
-      const mask_type m = pbb->mask & (full_l << std::size_t(n));
-      n = m ? nest_detail::unchecked_countr_zero(m) : (int)N;
+      const mask_type m = pbb->mask & (full_l << n);
+      n = m ? nest_detail::first_in_mask(m) : (int)N;
       return *this;
    }
 
@@ -867,8 +846,8 @@ public:
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator--() BOOST_NOEXCEPT
    {
       BOOST_CONTAINER_NEST_ASSUME(n != 0);
-      const mask_type m = pbb->mask & (full >> (N - std::size_t(n)));
-      n = int((N - 1) - (std::size_t)nest_detail::unchecked_countl_zero(m));
+      const mask_type m = pbb->mask & (full >> (int(N) - n));
+      n = nest_detail::last_in_mask(m);
       return *this;
    }
 
@@ -1002,9 +981,9 @@ public:
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator++() BOOST_NOEXCEPT
    {
       BOOST_CONTAINER_NEST_ASSUME(n != (int)N);
-      const mask_type m = mask & (full_l << std::size_t(n));
+      const mask_type m = mask & (full_l << n);
       const int old_n = n;
-      n = m ? nest_detail::unchecked_countr_zero(m) : (int)N;
+      n = m ? nest_detail::first_in_mask(m) : (int)N;
       pos += (n - old_n);
       return *this;
    }
@@ -1015,9 +994,9 @@ public:
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator--() BOOST_NOEXCEPT
    {
       BOOST_CONTAINER_NEST_ASSUME(n != 0);
-      const mask_type m = mask & (full >> (N - std::size_t(n)));
+      const mask_type m = mask & (full >> (N - n));
       const int old_n = n;
-      n = int((N - 1) - (std::size_t)nest_detail::unchecked_countl_zero(m));
+      n = nest_detail::last_in_mask(m);
       pos -= (old_n - n);
       return *this;
    }
@@ -1403,16 +1382,16 @@ template<class F, class T>
 struct visit_adaptor
 {
    F& f;
-   explicit visit_adaptor(F& f_) : f(f_) {}
-   bool operator()(T& x) const { f(x); return true; }
+   BOOST_CONTAINER_FORCEINLINE explicit visit_adaptor(F& f_) : f(f_) {}
+   BOOST_CONTAINER_FORCEINLINE bool operator()(T& x) const { f(x); return true; }
 };
 
 template<class F, class T>
 struct const_conditional_visit_adaptor
 {
    F& f;
-   explicit const_conditional_visit_adaptor(F& f_) : f(f_) {}
-   bool operator()(const T& x) const { return f(x); }
+   BOOST_CONTAINER_FORCEINLINE explicit const_conditional_visit_adaptor(F& f_) : f(f_) {}
+   BOOST_CONTAINER_FORCEINLINE bool operator()(const T& x) const { return f(x); }
 };
 
 } // namespace nest_detail
@@ -1449,13 +1428,13 @@ private:
 
    public:
 
-   static segment_iterator segment(const nest_iterator_type &it)
+   BOOST_CONTAINER_FORCEINLINE static segment_iterator segment(const nest_iterator_type &it)
    { return segment_iterator(it.pbb); }
 
-   static local_iterator local(const nest_iterator_type &it)
+   BOOST_CONTAINER_FORCEINLINE static local_iterator local(const nest_iterator_type &it)
    { return local_iterator(it.pbb, it.n); }
 
-   static nest_iterator_type compose(segment_iterator s, const local_iterator& l)
+   BOOST_CONTAINER_FORCEINLINE static nest_iterator_type compose(segment_iterator s, const local_iterator& l)
    {
       int n = l.get_slot();
       if (BOOST_UNLIKELY(n == N)) {
@@ -1465,20 +1444,18 @@ private:
       return nest_iterator_type(s.get_block(), n);
    }
 
-   static local_iterator begin(const segment_iterator &s)
+   BOOST_CONTAINER_FORCEINLINE static local_iterator begin(const segment_iterator &s)
    {
       typedef typename segment_iterator::block_base_pointer block_base_pointer;
       block_base_pointer const bp = s.get_block();
       const mask_type m = bp->mask;
-      if (BOOST_LIKELY(m != 0)) {
-         const int n = nest_detail::unchecked_countr_zero(m);
-         BOOST_CONTAINER_NEST_PREFETCH_BLOCK_FIRST(bp);
-         return local_iterator(bp, n);
-      }
-      return local_iterator(bp, N);
+      const int n = nest_detail::first_in_mask(m);
+      BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(bp, n);
+      BOOST_CONTAINER_NEST_PREFETCH(bp->next); //iG
+      return local_iterator(bp, n);
    }
 
-   static local_iterator end(const segment_iterator &s)
+   BOOST_CONTAINER_FORCEINLINE static local_iterator end(const segment_iterator &s)
    { return local_iterator(s.get_block(), int(N)); }
 };
 
@@ -1723,6 +1700,7 @@ class nest
       }
       else{
          priv_insert_range_move(x.begin(), x.end());
+         x.priv_reset();
       }
    }
 
@@ -1913,6 +1891,9 @@ class nest
    //! <b>Complexity</b>: Linear.
    void reserve(size_type n)
    {
+      if(n > max_size()) {
+         throw_length_error("Requested capacity greater than max_size()");
+      }
       while(capacity() < n) (void)priv_create_new_available_block();
    }
 
@@ -1963,7 +1944,7 @@ class nest
    //!
    //! <b>Complexity</b>: Constant (amortized).
    template<class ...Args>
-   inline iterator emplace(BOOST_FWD_REF(Args)... args)
+   BOOST_CONTAINER_FORCEINLINE iterator emplace(BOOST_FWD_REF(Args)... args)
    {
       int n;
       block_pointer const pb = priv_retrieve_available_block(n);
@@ -2116,14 +2097,15 @@ class nest
             block_pointer pb = static_cast_block_pointer(pbb);
             pbb = pb->next;
             BOOST_IF_CONSTEXPR(prefetch_enabled) {
-               BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
+               BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb, nest_detail::first_in_mask(pbb->mask));
+               BOOST_CONTAINER_NEST_PREFETCH(pbb->next);
             }
             size_ -= priv_destroy_all_in_nonempty_block(pb);
             blist.unlink(pb);
             if(BOOST_UNLIKELY(pb->mask == full)) blist.link_available_at_front(pb);
             pb->mask = 0;
          } while(pbb != last.pbb);
-         first = const_iterator(pbb);
+         first = const_iterator(pbb, nest_detail::first_in_mask(pbb->mask));
       }
       while(first != last) first = erase(first);
       return iterator(last.pbb, last.n);
@@ -2278,10 +2260,7 @@ class nest
    void visit(const_iterator first, const_iterator last, F f) const
    {
       nest_detail::visit_adaptor<F, const value_type> adaptor(f);
-      const_cast<nest*>(this)->visit_while(
-         iterator(first.pbb, first.n),
-         iterator(last.pbb, last.n),
-         adaptor);
+      this->visit_while(first, last, adaptor);
    }
 
    //! <b>Effects</b>: Calls f(x) for each element x in [first, last)
@@ -2460,7 +2439,7 @@ class nest
       size_type s = 0;
       mask_type m = pb->mask;
       do {
-         int n = nest_detail::unchecked_countr_zero(m);
+         int n = nest_detail::first_in_mask(m);
          block_alloc_traits::destroy(al(), boost::movelib::to_raw_pointer(pb->data() + n));
          ++s;
          m &= m - 1;
@@ -2605,8 +2584,8 @@ class nest
          priv_insert_range_copy(first, last);
       }
       else {
-         const_iterator it = (n == -1) ? const_iterator(pbb) : ++const_iterator(pbb, n);
-         erase(it, cend());
+         erase( (n == -1) ? const_iterator(pbb, nest_detail::first_in_mask(pbb->mask)) : ++const_iterator(pbb, n)
+              , cend());
       }
    }
 
@@ -2643,6 +2622,7 @@ class nest
       else {
          // Move-assign element by element
          priv_move_assign_elements(x);
+         x.priv_reset();
       }
    }
 
@@ -2727,7 +2707,7 @@ class nest
          pbb = pbb->next;
          mask_type m = pb->mask;
          while(m) {
-            int n = nest_detail::unchecked_countr_zero(m);
+            int n = nest_detail::first_in_mask(m);
             buf.push_back_move(pb->data()[n]);
             m &= m - 1;
          }
@@ -2742,7 +2722,7 @@ class nest
          pbb = pbb->next;
          mask_type m = pb->mask;
          while(m) {
-            int n = nest_detail::unchecked_countr_zero(m);
+            int n = nest_detail::first_in_mask(m);
             pb->data()[n] = boost::move(*buf.begin());
             buf.erase_front();
             m &= m - 1;
@@ -2765,7 +2745,7 @@ class nest
          pbb = pbb->next;
          mask_type m = pb->mask;
          while(m) {
-            int n = nest_detail::unchecked_countr_zero(m);
+            int n = nest_detail::first_in_mask(m);
             proxies[i].p = boost::movelib::to_raw_pointer(pb->data() + n);
             proxies[i].n = i;
             ++i;
@@ -2901,7 +2881,7 @@ class nest
       std::size_t c = (std::min)(N - cx, cy);
       while(c--) {
          std::size_t n = static_cast<std::size_t>(nest_detail::unchecked_countr_one(pbx->mask));
-         std::size_t m = N - 1u - static_cast<std::size_t>(nest_detail::unchecked_countl_zero(pby->mask));
+         std::size_t m = static_cast<std::size_t>(nest_detail::last_in_mask(pby->mask));
          block_alloc_traits::construct(
             al(), boost::movelib::to_raw_pointer(pbx->data() + n),
             boost::move(pby->data()[m]));
@@ -2916,7 +2896,7 @@ class nest
    {
       for(; ;) {
          std::size_t n = (std::size_t)nest_detail::unchecked_countr_one(pb->mask);
-         std::size_t m = N - 1 - (std::size_t)nest_detail::unchecked_countl_zero(pb->mask);
+         std::size_t m = static_cast<std::size_t>(nest_detail::last_in_mask(pb->mask));
          if(n > m) return;
          block_alloc_traits::construct(
             al(), boost::movelib::to_raw_pointer(pb->data() + n),
@@ -2936,18 +2916,18 @@ class nest
 
    template<class F>
    iterator priv_visit_while_impl(
-      block_base_pointer pbb, block_base_pointer last_pbb, F& f)
+      block_base_pointer pbb, block_base_pointer last_pbb, F &f)
    {
       BOOST_ASSERT(pbb != last_pbb);
       block_pointer pb = static_cast_block_pointer(pbb);
       mask_type     m  = pb->mask;
-      int           n  = nest_detail::unchecked_countr_zero(m);
+      int           n  = nest_detail::first_in_mask(m);
       pointer       pd = pb->data();
       do {
          pbb = pb->next;
-         mask_type next_mask = pbb->mask;
-         int next_n = nest_detail::unchecked_countr_zero(next_mask);
-         pointer next_pd = static_cast_block_pointer(pbb)->data();
+         const mask_type next_mask = pbb->mask;
+         const int next_n = nest_detail::first_in_mask(next_mask);
+         pointer const next_pd = static_cast_block_pointer(pbb)->data();
          BOOST_IF_CONSTEXPR(prefetch_enabled) {
             BOOST_CONTAINER_NEST_PREFETCH(next_pd + next_n);
             BOOST_CONTAINER_NEST_PREFETCH(pbb->next);
@@ -2956,14 +2936,14 @@ class nest
             if(!f(pd[n])) return iterator(pb, n);
             m &= m - 1;
             if(!m) break;
-            n = nest_detail::unchecked_countr_zero(m);
+            n = nest_detail::first_in_mask(m);
          }
          pb = static_cast_block_pointer(pbb);
          m = next_mask;
          n = next_n;
          pd = next_pd;
       } while(pb != last_pbb);
-      return iterator(last_pbb);
+      return iterator(last_pbb, nest_detail::first_in_mask(last_pbb->mask));
    }
 
    //////////////////////////////////////////////
@@ -2981,11 +2961,12 @@ class nest
          block_pointer pb = static_cast_block_pointer(pbb);
          pbb = pb->next;
          BOOST_IF_CONSTEXPR(prefetch_enabled) {
-            BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
+            BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb, nest_detail::first_in_mask(pbb->mask));
+            BOOST_CONTAINER_NEST_PREFETCH(pbb->next); //iG
          }
          mask_type m = pb->mask;
          do {
-            int n = nest_detail::unchecked_countr_zero(m);
+            int n = nest_detail::first_in_mask(m);
             if(pred(pb->data()[n])) priv_erase_impl(pb, n);
             m &= m - 1;
          } while(m);
