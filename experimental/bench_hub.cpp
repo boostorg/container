@@ -144,19 +144,19 @@ struct urbg
 };
 
 template<typename Container, typename Iterator>
-void erase_void(Container& x, Iterator it)
+BOOST_CONTAINER_FORCEINLINE void erase_void(Container& x, Iterator it)
 {
    x.erase(it);
 }
 
 template<typename... Args, typename Iterator>
-void erase_void(boost::container::hub<Args...>& x, Iterator it)
+BOOST_CONTAINER_FORCEINLINE void erase_void(boost::container::hub<Args...>& x, Iterator it)
 {
    x.erase_void(it);
 }
 
 template<typename... Args, typename Iterator>
-void erase_void(boost::container::nest<Args...>& x, Iterator it)
+BOOST_CONTAINER_FORCEINLINE void erase_void(boost::container::nest<Args...>& x, Iterator it)
 {
    x.erase_void(it);
 }
