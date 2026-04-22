@@ -167,18 +167,20 @@ SegDstIter segmented_copy_if_dst_dispatch
    dst_segment_iterator dst_seg   = dst_traits::segment(result);
    dst_local_iterator   dst_local = dst_traits::local(result);
 
-   while(first != last) {
-      const dst_local_iterator dst_end = dst_traits::end(dst_seg);
+   while (1) {
       const segduo<SrcIter, dst_local_iterator> r = (segmented_copy_if_dst_bounded)
-         (first, last, dst_local, dst_end, pred, dst_is_local_seg_t(), Cat());
+         (first, last, dst_local, dst_traits::end(dst_seg), pred, dst_is_local_seg_t(), Cat());
       first = r.first;
       if(first != last) {
          ++dst_seg;
          dst_local = dst_traits::begin(dst_seg);
       }
-      else
+      else {
          dst_local = r.second;
+         break;
+      }
    }
+
    return dst_traits::compose(dst_seg, dst_local);
 }
 
