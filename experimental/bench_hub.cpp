@@ -476,19 +476,18 @@ int main(int argc,char* argv[])
       using den  = nest<element>;
 
       table t;
-
-      t.push_back(benchmark(
-         "creat, ins, erase, ins",
-         create<num>{}, create<den>{}));
-      t.push_back(benchmark(
-         "creat, ins, erase, ins, destroy",
-         create_and_destroy<num>{}, create_and_destroy<den>{}));
       t.push_back(benchmark(
          "for_each",
          for_each<num>{}, for_each<den>{}));
       t.push_back(benchmark(
          "visit_all",
          visit_all<num>{}, visit_all<den>{}));
+      t.push_back(benchmark(
+         "creat, ins, erase, ins",
+         create<num>{}, create<den>{}));
+      t.push_back(benchmark(
+         "creat, ins, erase, ins, destroy",
+         create_and_destroy<num>{}, create_and_destroy<den>{}));
       t.push_back(benchmark(
          "sort",
          sort<num>{}, sort<den>{}));
