@@ -65,6 +65,7 @@
 #include <boost/container/experimental/segmented_stable_partition.hpp>
 #include <boost/container/experimental/segmented_swap_ranges.hpp>
 #include <boost/container/experimental/segmented_transform.hpp>
+#include <boost/container/experimental/wrapped_iterator.hpp>
 #include "../bench/bench_utils.hpp"
 
 
@@ -351,20 +352,24 @@ OutIt copy_n(InIt first, Size count, OutIt result)
 template<class FwdIt>
 bool is_sorted(FwdIt first, FwdIt last)
 {
-   if (first == last) return true;
-   FwdIt next = first;
-   for (++next; next != last; first = next, ++next)
-      if (*next < *first) return false;
+   if (first != last) {
+      FwdIt next = first;
+      for (; ++next != last; first = next)
+         if (*next < *first)
+            return false;
+   }
    return true;
 }
 
 template<class FwdIt>
 FwdIt is_sorted_until(FwdIt first, FwdIt last)
 {
-   if (first == last) return last;
-   FwdIt next = first;
-   for (++next; next != last; first = next, ++next)
-      if (*next < *first) return next;
+   if (first != last) {
+      FwdIt next = first;
+      for (; ++next != last; first = next)
+         if (*next < *first)
+            return next;
+   }
    return last;
 }
 
@@ -645,31 +650,39 @@ inline double calc_ns_per_elem(boost::move_detail::nanosecond_type ns,
 inline void print_subheader()
 {
    std::cout << std::left  << std::setw(32) << "< algo >"
-             << std::right << std::setw(20) << "< speedup >"
-             << std::right << std::setw(20) << "< std ns/item >"
-             << std::right << std::setw(20) << "< seg ns/item >"
+             << std::right << std::setw(20) << "< nonseg/seg >"
+             << std::right << std::setw(20) << "< std/seg >"
+             << std::right << std::setw(20) << "< nonseg/std >"
              << '\n';
 }
 
 struct geomean_accumulator
 {
-   double log_sum;
-   int    count;
+   double seg_log_sum, nonseg_log_sum, ns_over_seg_log_sum;
+   int    seg_count, nonseg_count, ns_over_seg_count;
 
-   void reset()  { log_sum = 0.0; count = 0; }
-   void add(double ratio) { if(ratio > 0.0) { log_sum += std::log(ratio); ++count; } }
-   double result() const  { return count > 0 ? std::exp(log_sum / count) : 0.0; }
-} g_geomean = { 0.0, 0 };
+   void reset()  { seg_log_sum = nonseg_log_sum = ns_over_seg_log_sum = 0.0; seg_count = nonseg_count = ns_over_seg_count = 0; }
+   void add_seg(double r) { if(r > 0.0) { seg_log_sum += std::log(r); ++seg_count; } }
+   void add_nonseg(double r) { if(r > 0.0) { nonseg_log_sum += std::log(r); ++nonseg_count; } }
+   void add_ns_over_seg(double r) { if(r > 0.0) { ns_over_seg_log_sum += std::log(r); ++ns_over_seg_count; } }
+   double seg_result() const { return seg_count > 0 ? std::exp(seg_log_sum / seg_count) : 0.0; }
+   double nonseg_result() const { return nonseg_count > 0 ? std::exp(nonseg_log_sum / nonseg_count) : 0.0; }
+   double ns_over_seg_result() const { return ns_over_seg_count > 0 ? std::exp(ns_over_seg_log_sum / ns_over_seg_count) : 0.0; }
+} g_geomean = { 0.0, 0.0, 0.0, 0, 0, 0 };
 
 inline void print_ratio(const char* algo, const char*,
-                        double std_ns, double seg_ns)
+                        double std_ns, double seg_ns, double nonseg_ns)
 {
-   double ratio = (seg_ns > 0.0) ? std_ns / seg_ns : 0.0;
-   g_geomean.add(ratio);
+   double seg_ratio      = (seg_ns > 0.0) ? std_ns / seg_ns    : 0.0;
+   double nonseg_ratio   = (std_ns > 0.0) ? nonseg_ns / std_ns : 0.0;
+   double ns_over_seg    = (seg_ns > 0.0) ? nonseg_ns / seg_ns : 0.0;
+   g_geomean.add_seg(seg_ratio);
+   g_geomean.add_nonseg(nonseg_ratio);
+   g_geomean.add_ns_over_seg(ns_over_seg);
    std::cout << std::left  << std::setw(32) << algo
-             << std::right << std::setw(20) << std::fixed << std::setprecision(2) << ((ratio < 1.0) ? "! " : "") << ratio << 'x'
-             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << std_ns
-             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << seg_ns
+             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << ns_over_seg
+             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << seg_ratio
+             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << nonseg_ratio
              << '\n';
 }
 
@@ -706,22 +719,27 @@ struct noop_reset {
    BOOST_CONTAINER_FORCEINLINE void operator()() {}
 };
 
-template <class F1, class R1, class F2, class R2>
+template <class F1, class R1, class F2, class R2, class F3, class R3>
 inline void compare_batch(std::size_t iters, std::size_t nelems,
                           F1 std_op, R1 std_reset, F2 seg_op, R2 seg_reset,
+                          F3 nonseg_op, R3 nonseg_reset,
                           const char* label, const char* cname)
 {
    typedef boost::move_detail::nanosecond_type ns_type;
    ns_type t1 = measure_batch(iters, std_op, std_reset);
    ns_type t2 = measure_batch(iters, seg_op, seg_reset);
-   print_ratio(label, cname, calc_ns_per_elem(t1, iters, nelems), calc_ns_per_elem(t2, iters, nelems));
+   ns_type t3 = measure_batch(iters, nonseg_op, nonseg_reset);
+   print_ratio(label, cname, calc_ns_per_elem(t1, iters, nelems),
+               calc_ns_per_elem(t2, iters, nelems), calc_ns_per_elem(t3, iters, nelems));
 }
 
-template <class F1, class F2>
+template <class F1, class F2, class F3>
 inline void compare_batch(std::size_t iters, std::size_t nelems,
-                          F1 std_op, F2 seg_op, const char* label, const char* cname)
+                          F1 std_op, F2 seg_op, F3 nonseg_op,
+                          const char* label, const char* cname)
 {
-   compare_batch(iters, nelems, std_op, noop_reset(), seg_op, noop_reset(), label, cname);
+   compare_batch(iters, nelems, std_op, noop_reset(), seg_op, noop_reset(),
+                 nonseg_op, noop_reset(), label, cname);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -729,6 +747,16 @@ inline void compare_batch(std::size_t iters, std::size_t nelems,
 //////////////////////////////////////////////////////////////////////////////
 
 namespace bench_ops {
+
+template<bool Wrap> struct iter_w {
+   template<class It> static It wrap(It i) { return i; }
+};
+template<> struct iter_w<true> {
+   template<class It> static bc::wrapped_iterator<It> wrap(It i) { return bc::wrapped_iterator<It>(i); }
+};
+
+template<bool Wrap, class It> struct iter_wt          { typedef It type; };
+template<class It>            struct iter_wt<true, It> { typedef bc::wrapped_iterator<It> type; };
 
 template<class C>
 struct batch_state {
@@ -757,12 +785,12 @@ struct std_all_of {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = bench_detail::all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
 };
-template<class C, class Pred>
+template<class C, class Pred, bool Wrap = false>
 struct seg_all_of {
    const C &c; Pred pred; int &result;
    seg_all_of(const C &c_, Pred p_, int &r_) : c(c_), pred(p_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); result = bc::segmented_all_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+   { clobber(); result = bc::segmented_all_of(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred) ? 1 : 0; escape(&result); }
 };
 
 // --- any_of ---
@@ -773,12 +801,12 @@ struct std_any_of {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = bench_detail::any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
 };
-template<class C, class Pred>
+template<class C, class Pred, bool Wrap = false>
 struct seg_any_of {
    const C &c; Pred pred; int &result;
    seg_any_of(const C &c_, Pred p_, int &r_) : c(c_), pred(p_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); result = bc::segmented_any_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+   { clobber(); result = bc::segmented_any_of(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred) ? 1 : 0; escape(&result); }
 };
 
 // --- none_of ---
@@ -789,12 +817,12 @@ struct std_none_of {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = bench_detail::none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
 };
-template<class C, class Pred>
+template<class C, class Pred, bool Wrap = false>
 struct seg_none_of {
    const C &c; Pred pred; int &result;
    seg_none_of(const C &c_, Pred p_, int &r_) : c(c_), pred(p_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); result = bc::segmented_none_of(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+   { clobber(); result = bc::segmented_none_of(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred) ? 1 : 0; escape(&result); }
 };
 
 // --- for_each ---
@@ -806,13 +834,13 @@ struct std_for_each {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { summer<VT> s; clobber(); s = std::for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_for_each {
    typedef typename C::value_type VT;
    const C &c; int &result;
    seg_for_each(const C &c_, int &r_) : c(c_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { summer<VT> s; clobber(); s = bc::segmented_for_each(c.begin(), c.end(), s); result = s.sum; escape(&result); }
+   { summer<VT> s; clobber(); s = bc::segmented_for_each(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), s); result = s.sum; escape(&result); }
 };
 
 // --- copy ---
@@ -823,12 +851,12 @@ struct std_copy {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
 };
-template<class C, class OutT>
+template<class C, class OutT, bool Wrap = false>
 struct seg_copy {
    const C &c; OutT &out;
    seg_copy(const C &c_, OutT &o_) : c(c_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
+   { clobber(); bc::segmented_copy(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
 };
 
 // --- copy_if ---
@@ -839,12 +867,12 @@ struct std_copy_if {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
 };
-template<class C, class OutT, class Pred>
+template<class C, class OutT, class Pred, bool Wrap = false>
 struct seg_copy_if {
    const C &c; OutT &out; Pred pred;
    seg_copy_if(const C &c_, OutT &o_, Pred p_) : c(c_), out(o_), pred(p_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
+   { clobber(); bc::segmented_copy_if(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin()), pred); escape(&out[0]); }
 };
 
 // --- fill ---
@@ -855,12 +883,12 @@ struct std_fill {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::fill(c2.begin(), c2.end(), val); escape(&c2); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_fill {
    C &c2; const typename C::value_type &val;
    seg_fill(C &c_, const typename C::value_type &v_) : c2(c_), val(v_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_fill(c2.begin(), c2.end(), val); escape(&c2); }
+   { clobber(); bc::segmented_fill(iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), val); escape(&c2); }
 };
 
 // --- count ---
@@ -871,12 +899,12 @@ struct std_count {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = static_cast<int>(std::count(c.begin(), c.end(), val)); escape(&result); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_count {
    const C &c; const typename C::value_type &val; int &result;
    seg_count(const C &c_, const typename C::value_type &v_, int &r_) : c(c_), val(v_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); result = static_cast<int>(bc::segmented_count(c.begin(), c.end(), val)); escape(&result); }
+   { clobber(); result = static_cast<int>(bc::segmented_count(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), val)); escape(&result); }
 };
 
 // --- count_if ---
@@ -887,12 +915,12 @@ struct std_count_if {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = static_cast<int>(std::count_if(c.begin(), c.end(), pred)); escape(&result); }
 };
-template<class C, class Pred>
+template<class C, class Pred, bool Wrap = false>
 struct seg_count_if {
    const C &c; Pred pred; int &result;
    seg_count_if(const C &c_, Pred p_, int &r_) : c(c_), pred(p_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); result = static_cast<int>(bc::segmented_count_if(c.begin(), c.end(), pred)); escape(&result); }
+   { clobber(); result = static_cast<int>(bc::segmented_count_if(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred)); escape(&result); }
 };
 
 // --- find ---
@@ -904,13 +932,13 @@ struct std_find {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = std::find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_find {
-   typedef typename C::const_iterator cit_t;
+   typedef typename iter_wt<Wrap, typename C::const_iterator>::type cit_t;
    const C &c; const typename C::value_type &val; int &result;
    seg_find(const C &c_, const typename C::value_type &v_, int &r_) : c(c_), val(v_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); cit_t it = bc::segmented_find(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+   { clobber(); cit_t it = bc::segmented_find(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), val); result = (it == iter_w<Wrap>::wrap(c.end())) ? 0 : 1; escape(&result); }
 };
 
 // --- find_if ---
@@ -922,13 +950,13 @@ struct std_find_if {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = std::find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
 };
-template<class C, class Pred>
+template<class C, class Pred, bool Wrap = false>
 struct seg_find_if {
-   typedef typename C::const_iterator cit_t;
+   typedef typename iter_wt<Wrap, typename C::const_iterator>::type cit_t;
    const C &c; Pred pred; int &result;
    seg_find_if(const C &c_, Pred p_, int &r_) : c(c_), pred(p_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); cit_t it = bc::segmented_find_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+   { clobber(); cit_t it = bc::segmented_find_if(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred); result = (it != iter_w<Wrap>::wrap(c.end())) ? int_value(*it) : -1; escape(&result); }
 };
 
 // --- find_if_not ---
@@ -940,13 +968,13 @@ struct std_find_if_not {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = bench_detail::find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
 };
-template<class C, class Pred>
+template<class C, class Pred, bool Wrap = false>
 struct seg_find_if_not {
-   typedef typename C::const_iterator cit_t;
+   typedef typename iter_wt<Wrap, typename C::const_iterator>::type cit_t;
    const C &c; Pred pred; int &result;
    seg_find_if_not(const C &c_, Pred p_, int &r_) : c(c_), pred(p_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); cit_t it = bc::segmented_find_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+   { clobber(); cit_t it = bc::segmented_find_if_not(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred); result = (it != iter_w<Wrap>::wrap(c.end())) ? int_value(*it) : -1; escape(&result); }
 };
 
 // --- find_last ---
@@ -958,13 +986,13 @@ struct std_find_last {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = bench_detail::find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_find_last {
-   typedef typename C::const_iterator cit_t;
+   typedef typename iter_wt<Wrap, typename C::const_iterator>::type cit_t;
    const C &c; const typename C::value_type &val; int &result;
    seg_find_last(const C &c_, const typename C::value_type &v_, int &r_) : c(c_), val(v_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); cit_t it = bc::segmented_find_last(c.begin(), c.end(), val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+   { clobber(); cit_t it = bc::segmented_find_last(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), val); result = (it == iter_w<Wrap>::wrap(c.end())) ? 0 : 1; escape(&result); }
 };
 
 // --- find_last_if ---
@@ -976,13 +1004,13 @@ struct std_find_last_if {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = bench_detail::find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
 };
-template<class C, class Pred>
+template<class C, class Pred, bool Wrap = false>
 struct seg_find_last_if {
-   typedef typename C::const_iterator cit_t;
+   typedef typename iter_wt<Wrap, typename C::const_iterator>::type cit_t;
    const C &c; Pred pred; int &result;
    seg_find_last_if(const C &c_, Pred p_, int &r_) : c(c_), pred(p_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); cit_t it = bc::segmented_find_last_if(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+   { clobber(); cit_t it = bc::segmented_find_last_if(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred); result = (it != iter_w<Wrap>::wrap(c.end())) ? int_value(*it) : -1; escape(&result); }
 };
 
 // --- find_last_if_not ---
@@ -994,13 +1022,13 @@ struct std_find_last_if_not {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = bench_detail::find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
 };
-template<class C, class Pred>
+template<class C, class Pred, bool Wrap = false>
 struct seg_find_last_if_not {
-   typedef typename C::const_iterator cit_t;
+   typedef typename iter_wt<Wrap, typename C::const_iterator>::type cit_t;
    const C &c; Pred pred; int &result;
    seg_find_last_if_not(const C &c_, Pred p_, int &r_) : c(c_), pred(p_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); cit_t it = bc::segmented_find_last_if_not(c.begin(), c.end(), pred); result = (it != c.end()) ? int_value(*it) : -1; escape(&result); }
+   { clobber(); cit_t it = bc::segmented_find_last_if_not(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred); result = (it != iter_w<Wrap>::wrap(c.end())) ? int_value(*it) : -1; escape(&result); }
 };
 
 // --- equal ---
@@ -1011,12 +1039,12 @@ struct std_equal {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = std::equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
 };
-template<class C, class R2>
+template<class C, class R2, bool Wrap = false>
 struct seg_equal {
    const C &c; R2 &range2; int &result;
    seg_equal(const C &c_, R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); result = bc::segmented_equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
+   { clobber(); result = bc::segmented_equal(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(range2.begin())) ? 1 : 0; escape(&result); }
 };
 
 // --- replace ---
@@ -1028,13 +1056,13 @@ struct std_replace_op {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_replace_op {
    typedef const typename C::value_type* cptr;
    C &c2; cptr &pold_val; cptr &pnew_val;
    seg_replace_op(C &c_, cptr &po_, cptr &pn_) : c2(c_), pold_val(po_), pnew_val(pn_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_replace(c2.begin(), c2.end(), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
+   { clobber(); bc::segmented_replace(iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
 };
 
 // --- transform ---
@@ -1046,13 +1074,13 @@ struct std_transform {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_transform {
    typedef typename C::value_type VT;
    const C &c; boost::container::vector<VT> &out;
    seg_transform(const C &c_, boost::container::vector<VT> &o_) : c(c_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
+   { clobber(); bc::segmented_transform(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin()), add_one<VT>()); escape(&out[0]); }
 };
 
 // --- fill_n ---
@@ -1063,12 +1091,12 @@ struct std_fill_n {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::fill_n(c2.begin(), n, val); escape(&c2); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_fill_n {
    C &c2; typename C::difference_type n; const typename C::value_type &val;
    seg_fill_n(C &c_, typename C::difference_type n_, const typename C::value_type &v_) : c2(c_), n(n_), val(v_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_fill_n(c2.begin(), n, val); escape(&c2); }
+   { clobber(); bc::segmented_fill_n(iter_w<Wrap>::wrap(c2.begin()), n, val); escape(&c2); }
 };
 
 // --- copy_n ---
@@ -1079,12 +1107,12 @@ struct std_copy_n {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
 };
-template<class C, class OutT>
+template<class C, class OutT, bool Wrap = false>
 struct seg_copy_n {
    const C &c; typename C::difference_type n; OutT &out;
    seg_copy_n(const C &c_, typename C::difference_type n_, OutT &o_) : c(c_), n(n_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
+   { clobber(); bc::segmented_copy_n(iter_w<Wrap>::wrap(c.begin()), n, iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
 };
 
 // --- generate ---
@@ -1096,13 +1124,13 @@ struct std_generate {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_generate {
    typedef typename C::value_type VT;
    C &c2; int &result;
    seg_generate(C &c_, int &r_) : c2(c_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_generate(c2.begin(), c2.end(), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+   { clobber(); bc::segmented_generate(iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
 };
 
 // --- generate_n ---
@@ -1114,13 +1142,13 @@ struct std_generate_n {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_generate_n {
    typedef typename C::value_type VT;
    C &c2; typename C::difference_type n; int &result;
    seg_generate_n(C &c_, typename C::difference_type n_, int &r_) : c2(c_), n(n_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_generate_n(c2.begin(), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
+   { clobber(); bc::segmented_generate_n(iter_w<Wrap>::wrap(c2.begin()), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
 };
 
 // --- remove_copy ---
@@ -1131,12 +1159,12 @@ struct std_remove_copy {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
 };
-template<class C, class OutT>
+template<class C, class OutT, bool Wrap = false>
 struct seg_remove_copy {
    const C &c; OutT &out; const typename C::value_type &val;
    seg_remove_copy(const C &c_, OutT &o_, const typename C::value_type &v_) : c(c_), out(o_), val(v_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
+   { clobber(); bc::segmented_remove_copy(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin()), val); escape(&out[0]); }
 };
 
 // --- remove_copy_if ---
@@ -1147,12 +1175,12 @@ struct std_remove_copy_if {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
 };
-template<class C, class OutT, class Pred>
+template<class C, class OutT, class Pred, bool Wrap = false>
 struct seg_remove_copy_if {
    const C &c; OutT &out; Pred pred;
    seg_remove_copy_if(const C &c_, OutT &o_, Pred p_) : c(c_), out(o_), pred(p_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
+   { clobber(); bc::segmented_remove_copy_if(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin()), pred); escape(&out[0]); }
 };
 
 // --- reverse ---
@@ -1163,12 +1191,12 @@ struct std_reverse {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_reverse {
    C &c2; int &result;
    seg_reverse(C &c_, int &r_) : c2(c_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_reverse(c2.begin(), c2.end()); result = int_value(*c2.begin()); escape(&result); }
+   { clobber(); bc::segmented_reverse(iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end())); result = int_value(*c2.begin()); escape(&result); }
 };
 
 // --- reverse_copy ---
@@ -1180,13 +1208,13 @@ struct std_reverse_copy {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_reverse_copy {
    typedef typename C::value_type VT;
    const C &c; boost::container::vector<VT> &out;
    seg_reverse_copy(const C &c_, boost::container::vector<VT> &o_) : c(c_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
+   { clobber(); bc::segmented_reverse_copy(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
 };
 
 // --- is_sorted ---
@@ -1197,12 +1225,12 @@ struct std_is_sorted {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = bench_detail::is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_is_sorted {
    const C &c; int &result;
    seg_is_sorted(const C &c_, int &r_) : c(c_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); result = bc::segmented_is_sorted(c.begin(), c.end()) ? 1 : 0; escape(&result); }
+   { clobber(); result = bc::segmented_is_sorted(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end())) ? 1 : 0; escape(&result); }
 };
 
 // --- is_sorted_until ---
@@ -1214,13 +1242,13 @@ struct std_is_sorted_until {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = bench_detail::is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_is_sorted_until {
-   typedef typename C::const_iterator cit_t;
+   typedef typename iter_wt<Wrap, typename C::const_iterator>::type cit_t;
    const C &c; int &result;
    seg_is_sorted_until(const C &c_, int &r_) : c(c_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); cit_t it = bc::segmented_is_sorted_until(c.begin(), c.end()); result = (it == c.end()) ? 1 : 0; escape(&result); }
+   { clobber(); cit_t it = bc::segmented_is_sorted_until(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end())); result = (it == iter_w<Wrap>::wrap(c.end())) ? 1 : 0; escape(&result); }
 };
 
 // --- is_partitioned ---
@@ -1231,12 +1259,12 @@ struct std_is_partitioned {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = bench_detail::is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
 };
-template<class C, class Pred>
+template<class C, class Pred, bool Wrap = false>
 struct seg_is_partitioned {
    const C &c; Pred pred; int &result;
    seg_is_partitioned(const C &c_, Pred p_, int &r_) : c(c_), pred(p_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); result = bc::segmented_is_partitioned(c.begin(), c.end(), pred) ? 1 : 0; escape(&result); }
+   { clobber(); result = bc::segmented_is_partitioned(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred) ? 1 : 0; escape(&result); }
 };
 
 // --- merge ---
@@ -1247,12 +1275,12 @@ struct std_merge {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
 };
-template<class C, class OutVec>
+template<class C, class OutVec, bool Wrap = false>
 struct seg_merge {
    const C &c; const C &c2; OutVec &out;
    seg_merge(const C &c_, const C &c2_, OutVec &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
+   { clobber(); bc::segmented_merge(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
 };
 
 // --- mismatch ---
@@ -1263,12 +1291,12 @@ struct std_mismatch {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = (std::mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
 };
-template<class C, class R2>
+template<class C, class R2, bool Wrap = false>
 struct seg_mismatch {
    const C &c; R2 &range2; int &result;
    seg_mismatch(const C &c_, R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
+   { clobber(); result = (bc::segmented_mismatch(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(range2.begin())).first == iter_w<Wrap>::wrap(c.end())) ? 1 : 0; escape(&result); }
 };
 
 // --- mismatch (two-range) ---
@@ -1279,12 +1307,12 @@ struct std_mismatch_2r {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = (bench_detail::mismatch(c.begin(), c.end(), range2.begin(), range2.end()).first == c.end()) ? 1 : 0; escape(&result); }
 };
-template<class C, class R2>
+template<class C, class R2, bool Wrap = false>
 struct seg_mismatch_2r {
    const C &c; R2 &range2; int &result;
    seg_mismatch_2r(const C &c_, R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); result = (bc::segmented_mismatch(c.begin(), c.end(), range2.begin(), range2.end()).first == c.end()) ? 1 : 0; escape(&result); }
+   { clobber(); result = (bc::segmented_mismatch(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(range2.begin()), iter_w<Wrap>::wrap(range2.end())).first == iter_w<Wrap>::wrap(c.end())) ? 1 : 0; escape(&result); }
 };
 
 // --- swap_ranges ---
@@ -1295,12 +1323,12 @@ struct std_swap_ranges {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_swap_ranges {
    C &c2; C &c3; int &result;
    seg_swap_ranges(C &c2_, C &c3_, int &r_) : c2(c2_), c3(c3_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_swap_ranges(c2.begin(), c2.end(), c3.begin()); result = int_value(*c2.begin()); escape(&result); }
+   { clobber(); bc::segmented_swap_ranges(iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(c3.begin())); result = int_value(*c2.begin()); escape(&result); }
 };
 
 // --- search ---
@@ -1313,14 +1341,14 @@ struct std_search {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = std::search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_search {
-   typedef typename C::const_iterator cit_t;
+   typedef typename iter_wt<Wrap, typename C::const_iterator>::type cit_t;
    typedef typename C::value_type VT;
    const C &c; const VT *pattern; std::size_t pat_size; int &result;
    seg_search(const C &c_, const VT *p_, std::size_t ps_, int &r_) : c(c_), pattern(p_), pat_size(ps_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); cit_t it = bc::segmented_search(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+   { clobber(); cit_t it = bc::segmented_search(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pattern, pattern + pat_size); result = (it == iter_w<Wrap>::wrap(c.end())) ? 0 : 1; escape(&result); }
 };
 
 // --- search_n ---
@@ -1332,13 +1360,13 @@ struct std_search_n {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = std::search_n(c.begin(), c.end(), cnt, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_search_n {
-   typedef typename C::const_iterator cit_t;
+   typedef typename iter_wt<Wrap, typename C::const_iterator>::type cit_t;
    const C &c; typename C::difference_type cnt; const typename C::value_type &val; int &result;
    seg_search_n(const C &c_, typename C::difference_type n_, const typename C::value_type &v_, int &r_) : c(c_), cnt(n_), val(v_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); cit_t it = bc::segmented_search_n(c.begin(), c.end(), cnt, val); result = (it == c.end()) ? 0 : 1; escape(&result); }
+   { clobber(); cit_t it = bc::segmented_search_n(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), cnt, val); result = (it == iter_w<Wrap>::wrap(c.end())) ? 0 : 1; escape(&result); }
 };
 
 // --- set_union ---
@@ -1349,12 +1377,12 @@ struct std_set_union {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
 };
-template<class C, class OutVec>
+template<class C, class OutVec, bool Wrap = false>
 struct seg_set_union {
    const C &c; const C &c2; OutVec &out;
    seg_set_union(const C &c_, const C &c2_, OutVec &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
+   { clobber(); bc::segmented_set_union(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
 };
 
 // --- set_difference ---
@@ -1365,12 +1393,12 @@ struct std_set_difference {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
 };
-template<class C, class OutVec>
+template<class C, class OutVec, bool Wrap = false>
 struct seg_set_difference {
    const C &c; const C &c2; OutVec &out;
    seg_set_difference(const C &c_, const C &c2_, OutVec &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
+   { clobber(); bc::segmented_set_difference(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
 };
 
 // --- set_intersection ---
@@ -1381,12 +1409,12 @@ struct std_set_intersection {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
 };
-template<class C, class OutVec>
+template<class C, class OutVec, bool Wrap = false>
 struct seg_set_intersection {
    const C &c; const C &c2; OutVec &out;
    seg_set_intersection(const C &c_, const C &c2_, OutVec &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
+   { clobber(); bc::segmented_set_intersection(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
 };
 
 // --- set_symmetric_difference ---
@@ -1397,12 +1425,12 @@ struct std_set_symmetric_difference {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
 };
-template<class C, class OutVec>
+template<class C, class OutVec, bool Wrap = false>
 struct seg_set_symmetric_difference {
    const C &c; const C &c2; OutVec &out;
    seg_set_symmetric_difference(const C &c_, const C &c2_, OutVec &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
+   { clobber(); bc::segmented_set_symmetric_difference(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
 };
 
 // --- partition_copy ---
@@ -1414,13 +1442,13 @@ struct std_partition_copy {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bench_detail::partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_partition_copy {
    typedef typename C::value_type VT;
    const C &c; boost::container::vector<VT> &t_out; boost::container::vector<VT> &f_out;
    seg_partition_copy(const C &c_, boost::container::vector<VT> &t_, boost::container::vector<VT> &f_) : c(c_), t_out(t_), f_out(f_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_partition_copy(c.begin(), c.end(), t_out.begin(), f_out.begin(), is_odd<VT>()); escape(&t_out[0]); }
+   { clobber(); bc::segmented_partition_copy(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(t_out.begin()), iter_w<Wrap>::wrap(f_out.begin()), is_odd<VT>()); escape(&t_out[0]); }
 };
 
 // --- partition_point ---
@@ -1432,13 +1460,13 @@ struct std_partition_point {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = bench_detail::partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
 };
-template<class C, class Pred>
+template<class C, class Pred, bool Wrap = false>
 struct seg_partition_point {
-   typedef typename C::const_iterator cit_t;
+   typedef typename iter_wt<Wrap, typename C::const_iterator>::type cit_t;
    const C &c; Pred pred; int &result;
    seg_partition_point(const C &c_, Pred p_, int &r_) : c(c_), pred(p_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); cit_t it = bc::segmented_partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
+   { clobber(); cit_t it = bc::segmented_partition_point(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred); result = (it == iter_w<Wrap>::wrap(c.end())) ? 1 : 0; escape(&result); }
 };
 
 // --- Batch: replace_if ---
@@ -1449,12 +1477,12 @@ struct std_replace_if_batch {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::replace_if(bs.cs[bs.idx]->begin(), bs.cs[bs.idx]->end(), pred, new_val); escape(bs.cs[bs.idx]); ++bs.idx; }
 };
-template<class C, class Pred>
+template<class C, class Pred, bool Wrap = false>
 struct seg_replace_if_batch {
    batch_state<C> &bs; Pred pred; const typename C::value_type &new_val;
    seg_replace_if_batch(batch_state<C> &b_, Pred p_, const typename C::value_type &nv_) : bs(b_), pred(p_), new_val(nv_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_replace_if(bs.cs[bs.idx]->begin(), bs.cs[bs.idx]->end(), pred, new_val); escape(bs.cs[bs.idx]); ++bs.idx; }
+   { clobber(); bc::segmented_replace_if(iter_w<Wrap>::wrap(bs.cs[bs.idx]->begin()), iter_w<Wrap>::wrap(bs.cs[bs.idx]->end()), pred, new_val); escape(bs.cs[bs.idx]); ++bs.idx; }
 };
 
 // --- Batch: remove ---
@@ -1466,13 +1494,13 @@ struct std_remove_batch {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); it_t it = std::remove(bs.cs[bs.idx]->begin(), bs.cs[bs.idx]->end(), val); result = (it == bs.cs[bs.idx]->end()) ? 1 : 0; escape(&result); ++bs.idx; }
 };
-template<class C>
+template<class C, bool Wrap = false>
 struct seg_remove_batch {
-   typedef typename C::iterator it_t;
+   typedef typename iter_wt<Wrap, typename C::iterator>::type it_t;
    batch_state<C> &bs; const typename C::value_type &val; int &result;
    seg_remove_batch(batch_state<C> &b_, const typename C::value_type &v_, int &r_) : bs(b_), val(v_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); it_t it = bc::segmented_remove(bs.cs[bs.idx]->begin(), bs.cs[bs.idx]->end(), val); result = (it == bs.cs[bs.idx]->end()) ? 1 : 0; escape(&result); ++bs.idx; }
+   { clobber(); it_t it = bc::segmented_remove(iter_w<Wrap>::wrap(bs.cs[bs.idx]->begin()), iter_w<Wrap>::wrap(bs.cs[bs.idx]->end()), val); result = (it == iter_w<Wrap>::wrap(bs.cs[bs.idx]->end())) ? 1 : 0; escape(&result); ++bs.idx; }
 };
 
 // --- Batch: remove_if ---
@@ -1484,13 +1512,13 @@ struct std_remove_if_batch {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); it_t it = std::remove_if(bs.cs[bs.idx]->begin(), bs.cs[bs.idx]->end(), pred); result = (it == bs.cs[bs.idx]->end()) ? 1 : 0; escape(&result); ++bs.idx; }
 };
-template<class C, class Pred>
+template<class C, class Pred, bool Wrap = false>
 struct seg_remove_if_batch {
-   typedef typename C::iterator it_t;
+   typedef typename iter_wt<Wrap, typename C::iterator>::type it_t;
    batch_state<C> &bs; Pred pred; int &result;
    seg_remove_if_batch(batch_state<C> &b_, Pred p_, int &r_) : bs(b_), pred(p_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); it_t it = bc::segmented_remove_if(bs.cs[bs.idx]->begin(), bs.cs[bs.idx]->end(), pred); result = (it == bs.cs[bs.idx]->end()) ? 1 : 0; escape(&result); ++bs.idx; }
+   { clobber(); it_t it = bc::segmented_remove_if(iter_w<Wrap>::wrap(bs.cs[bs.idx]->begin()), iter_w<Wrap>::wrap(bs.cs[bs.idx]->end()), pred); result = (it == iter_w<Wrap>::wrap(bs.cs[bs.idx]->end())) ? 1 : 0; escape(&result); ++bs.idx; }
 };
 
 // --- Batch: partition ---
@@ -1502,13 +1530,13 @@ struct std_partition_batch {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); it_t it = std::partition(bs.cs[bs.idx]->begin(), bs.cs[bs.idx]->end(), pred); result = (it == bs.cs[bs.idx]->end()) ? 1 : 0; escape(&result); ++bs.idx; }
 };
-template<class C, class Pred>
+template<class C, class Pred, bool Wrap = false>
 struct seg_partition_batch {
-   typedef typename C::iterator it_t;
+   typedef typename iter_wt<Wrap, typename C::iterator>::type it_t;
    batch_state<C> &bs; Pred pred; int &result;
    seg_partition_batch(batch_state<C> &b_, Pred p_, int &r_) : bs(b_), pred(p_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); it_t it = bc::segmented_partition(bs.cs[bs.idx]->begin(), bs.cs[bs.idx]->end(), pred); result = (it == bs.cs[bs.idx]->end()) ? 1 : 0; escape(&result); ++bs.idx; }
+   { clobber(); it_t it = bc::segmented_partition(iter_w<Wrap>::wrap(bs.cs[bs.idx]->begin()), iter_w<Wrap>::wrap(bs.cs[bs.idx]->end()), pred); result = (it == iter_w<Wrap>::wrap(bs.cs[bs.idx]->end())) ? 1 : 0; escape(&result); ++bs.idx; }
 };
 
 // --- Batch: stable_partition ---
@@ -1520,13 +1548,13 @@ struct std_stable_partition_batch {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); it_t it = std::stable_partition(bs.cs[bs.idx]->begin(), bs.cs[bs.idx]->end(), pred); result = (it == bs.cs[bs.idx]->end()) ? 1 : 0; escape(&result); ++bs.idx; }
 };
-template<class C, class Pred>
+template<class C, class Pred, bool Wrap = false>
 struct seg_stable_partition_batch {
-   typedef typename C::iterator it_t;
+   typedef typename iter_wt<Wrap, typename C::iterator>::type it_t;
    batch_state<C> &bs; Pred pred; int &result;
    seg_stable_partition_batch(batch_state<C> &b_, Pred p_, int &r_) : bs(b_), pred(p_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); it_t it = bc::segmented_stable_partition(bs.cs[bs.idx]->begin(), bs.cs[bs.idx]->end(), pred); result = (it == bs.cs[bs.idx]->end()) ? 1 : 0; escape(&result); ++bs.idx; }
+   { clobber(); it_t it = bc::segmented_stable_partition(iter_w<Wrap>::wrap(bs.cs[bs.idx]->begin()), iter_w<Wrap>::wrap(bs.cs[bs.idx]->end()), pred); result = (it == iter_w<Wrap>::wrap(bs.cs[bs.idx]->end())) ? 1 : 0; escape(&result); ++bs.idx; }
 };
 
 } // namespace bench_ops
@@ -1542,7 +1570,8 @@ void bench_all_of(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_all_of<C, Pred>(c, pred, result),
-      bench_ops::seg_all_of<C, Pred>(c, pred, result), label, cname);
+      bench_ops::seg_all_of<C, Pred>(c, pred, result),
+      bench_ops::seg_all_of<C, Pred, true>(c, pred, result), label, cname);
 }
 
 template<class C, class Pred>
@@ -1552,7 +1581,8 @@ void bench_any_of(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_any_of<C, Pred>(c, pred, result),
-      bench_ops::seg_any_of<C, Pred>(c, pred, result), label, cname);
+      bench_ops::seg_any_of<C, Pred>(c, pred, result),
+      bench_ops::seg_any_of<C, Pred, true>(c, pred, result), label, cname);
 }
 
 template<class C, class Pred>
@@ -1562,7 +1592,8 @@ void bench_none_of(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_none_of<C, Pred>(c, pred, result),
-      bench_ops::seg_none_of<C, Pred>(c, pred, result), label, cname);
+      bench_ops::seg_none_of<C, Pred>(c, pred, result),
+      bench_ops::seg_none_of<C, Pred, true>(c, pred, result), label, cname);
 }
 
 template<class C>
@@ -1571,30 +1602,33 @@ void bench_for_each(const C &c, std::size_t iters, const char* cname)
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_for_each<C>(c, result),
-      bench_ops::seg_for_each<C>(c, result), "for_each", cname);
+      bench_ops::seg_for_each<C>(c, result),
+      bench_ops::seg_for_each<C, true>(c, result), "for_each", cname);
 }
 
-template<bool DequeOut, class C>
+template<bool IsDual, class C>
 void bench_copy(const C &c, std::size_t iters, const char* cname, const char* label)
 {
    typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<DequeOut, bc::deque<VT>, boost::container::vector<VT> >::type out_t;
+   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type out_t;
    out_t out(c.size());
    compare_batch(iters, c.size(),
       bench_ops::std_copy<C, out_t>(c, out),
-      bench_ops::seg_copy<C, out_t>(c, out), label, cname);
+      bench_ops::seg_copy<C, out_t>(c, out),
+      bench_ops::seg_copy<C, out_t, true>(c, out), label, cname);
 }
 
-template<bool DequeOut, class C, class Pred>
+template<bool IsDual, class C, class Pred>
 void bench_copy_if(const C &c, std::size_t iters, const char* cname,
                    Pred pred, const char* label)
 {
    typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<DequeOut, bc::deque<VT>, boost::container::vector<VT> >::type out_t;
+   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type out_t;
    out_t out(c.size());
    compare_batch(iters, c.size(),
       bench_ops::std_copy_if<C, out_t, Pred>(c, out, pred),
-      bench_ops::seg_copy_if<C, out_t, Pred>(c, out, pred), label, cname);
+      bench_ops::seg_copy_if<C, out_t, Pred>(c, out, pred),
+      bench_ops::seg_copy_if<C, out_t, Pred, true>(c, out, pred), label, cname);
 }
 
 template<class C>
@@ -1605,7 +1639,8 @@ void bench_fill(const C &c, std::size_t iters, const char* cname)
    C c2(c);
    compare_batch(iters, c.size(),
       bench_ops::std_fill<C>(c2, val),
-      bench_ops::seg_fill<C>(c2, val), "fill", cname);
+      bench_ops::seg_fill<C>(c2, val),
+      bench_ops::seg_fill<C, true>(c2, val), "fill", cname);
 }
 
 template<class C>
@@ -1615,7 +1650,8 @@ void bench_count(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_count<C>(c, val, result),
-      bench_ops::seg_count<C>(c, val, result), label, cname);
+      bench_ops::seg_count<C>(c, val, result),
+      bench_ops::seg_count<C, true>(c, val, result), label, cname);
 }
 
 template<class C, class Pred>
@@ -1625,7 +1661,8 @@ void bench_count_if(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_count_if<C, Pred>(c, pred, result),
-      bench_ops::seg_count_if<C, Pred>(c, pred, result), label, cname);
+      bench_ops::seg_count_if<C, Pred>(c, pred, result),
+      bench_ops::seg_count_if<C, Pred, true>(c, pred, result), label, cname);
 }
 
 template<class C>
@@ -1635,7 +1672,8 @@ void bench_find(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_find<C>(c, val, result),
-      bench_ops::seg_find<C>(c, val, result), label, cname);
+      bench_ops::seg_find<C>(c, val, result),
+      bench_ops::seg_find<C, true>(c, val, result), label, cname);
 }
 
 template<class C, class Pred>
@@ -1645,7 +1683,8 @@ void bench_find_if(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_find_if<C, Pred>(c, pred, result),
-      bench_ops::seg_find_if<C, Pred>(c, pred, result), label, cname);
+      bench_ops::seg_find_if<C, Pred>(c, pred, result),
+      bench_ops::seg_find_if<C, Pred, true>(c, pred, result), label, cname);
 }
 
 template<class C, class Pred>
@@ -1655,7 +1694,8 @@ void bench_find_if_not(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_find_if_not<C, Pred>(c, pred, result),
-      bench_ops::seg_find_if_not<C, Pred>(c, pred, result), label, cname);
+      bench_ops::seg_find_if_not<C, Pred>(c, pred, result),
+      bench_ops::seg_find_if_not<C, Pred, true>(c, pred, result), label, cname);
 }
 
 template<class C>
@@ -1665,7 +1705,8 @@ void bench_find_last(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_find_last<C>(c, val, result),
-      bench_ops::seg_find_last<C>(c, val, result), label, cname);
+      bench_ops::seg_find_last<C>(c, val, result),
+      bench_ops::seg_find_last<C, true>(c, val, result), label, cname);
 }
 
 template<class C, class Pred>
@@ -1675,7 +1716,8 @@ void bench_find_last_if(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_find_last_if<C, Pred>(c, pred, result),
-      bench_ops::seg_find_last_if<C, Pred>(c, pred, result), label, cname);
+      bench_ops::seg_find_last_if<C, Pred>(c, pred, result),
+      bench_ops::seg_find_last_if<C, Pred, true>(c, pred, result), label, cname);
 }
 
 template<class C, class Pred>
@@ -1685,20 +1727,22 @@ void bench_find_last_if_not(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_find_last_if_not<C, Pred>(c, pred, result),
-      bench_ops::seg_find_last_if_not<C, Pred>(c, pred, result), label, cname);
+      bench_ops::seg_find_last_if_not<C, Pred>(c, pred, result),
+      bench_ops::seg_find_last_if_not<C, Pred, true>(c, pred, result), label, cname);
 }
 
-template<bool DequeSecond, class C>
+template<bool IsDual, class C>
 void bench_equal(const C &c, const C &c2, std::size_t iters, const char* cname,
                  const char* label)
 {
    typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<DequeSecond, bc::deque<VT>, boost::container::vector<VT> >::type range2_t;
+   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type range2_t;
    range2_t range2(c2.begin(), c2.end());
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_equal<C, range2_t>(c, range2, result),
-      bench_ops::seg_equal<C, range2_t>(c, range2, result), label, cname);
+      bench_ops::seg_equal<C, range2_t>(c, range2, result),
+      bench_ops::seg_equal<C, range2_t, true>(c, range2, result), label, cname);
 }
 
 template<class C>
@@ -1709,10 +1753,12 @@ void bench_replace(const C &c, std::size_t iters, const char* cname,
    typedef const typename C::value_type* cptr;
    cptr p1o = &old_val, p1n = &new_val;
    cptr p2o = &old_val, p2n = &new_val;
-   C c2a(c), c2b(c);
+   cptr p3o = &old_val, p3n = &new_val;
+   C c2a(c), c2b(c), c2c(c);
    compare_batch(iters, c.size(),
       bench_ops::std_replace_op<C>(c2a, p1o, p1n),
-      bench_ops::seg_replace_op<C>(c2b, p2o, p2n), label, cname);
+      bench_ops::seg_replace_op<C>(c2b, p2o, p2n),
+      bench_ops::seg_replace_op<C, true>(c2c, p3o, p3n), label, cname);
 }
 
 template<class C, class Pred>
@@ -1720,10 +1766,11 @@ void bench_replace_if(const C &c, std::size_t iters, const char* cname,
                       Pred pred, const typename C::value_type& new_val,
                       const char* label)
 {
-   bench_ops::batch_state<C> bs1(c), bs2(c);
+   bench_ops::batch_state<C> bs1(c), bs2(c), bs3(c);
    compare_batch(iters, c.size(),
       bench_ops::std_replace_if_batch<C, Pred>(bs1, pred, new_val), bench_ops::batch_reset<C>(bs1),
       bench_ops::seg_replace_if_batch<C, Pred>(bs2, pred, new_val), bench_ops::batch_reset<C>(bs2),
+      bench_ops::seg_replace_if_batch<C, Pred, true>(bs3, pred, new_val), bench_ops::batch_reset<C>(bs3),
       label, cname);
 }
 
@@ -1734,7 +1781,8 @@ void bench_transform(const C &c, std::size_t iters, const char* cname)
    boost::container::vector<VT> out(c.size());
    compare_batch(iters, c.size(),
       bench_ops::std_transform<C>(c, out),
-      bench_ops::seg_transform<C>(c, out), "transform", cname);
+      bench_ops::seg_transform<C>(c, out),
+      bench_ops::seg_transform<C, true>(c, out), "transform", cname);
 }
 
 template<class C>
@@ -1747,20 +1795,22 @@ void bench_fill_n(const C &c, std::size_t iters, const char* cname)
    C c2(c);
    compare_batch(iters, c.size(),
       bench_ops::std_fill_n<C>(c2, n, val),
-      bench_ops::seg_fill_n<C>(c2, n, val), "fill_n", cname);
+      bench_ops::seg_fill_n<C>(c2, n, val),
+      bench_ops::seg_fill_n<C, true>(c2, n, val), "fill_n", cname);
 }
 
-template<bool DequeOut, class C>
+template<bool IsDual, class C>
 void bench_copy_n(const C &c, std::size_t iters, const char* cname, const char* label)
 {
    typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<DequeOut, bc::deque<VT>, boost::container::vector<VT> >::type out_t;
+   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type out_t;
    out_t out(c.size());
    typename C::difference_type n =
       static_cast<typename C::difference_type>(c.size());
    compare_batch(iters, c.size(),
       bench_ops::std_copy_n<C, out_t>(c, n, out),
-      bench_ops::seg_copy_n<C, out_t>(c, n, out), label, cname);
+      bench_ops::seg_copy_n<C, out_t>(c, n, out),
+      bench_ops::seg_copy_n<C, out_t, true>(c, n, out), label, cname);
 }
 
 template<class C>
@@ -1770,7 +1820,8 @@ void bench_generate(const C &c, std::size_t iters, const char* cname)
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_generate<C>(c2, result),
-      bench_ops::seg_generate<C>(c2, result), "generate", cname);
+      bench_ops::seg_generate<C>(c2, result),
+      bench_ops::seg_generate<C, true>(c2, result), "generate", cname);
 }
 
 template<class C>
@@ -1782,7 +1833,8 @@ void bench_generate_n(const C &c, std::size_t iters, const char* cname)
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_generate_n<C>(c2, n, result),
-      bench_ops::seg_generate_n<C>(c2, n, result), "generate_n", cname);
+      bench_ops::seg_generate_n<C>(c2, n, result),
+      bench_ops::seg_generate_n<C, true>(c2, n, result), "generate_n", cname);
 }
 
 template<class C>
@@ -1790,10 +1842,11 @@ void bench_remove(const C &c, std::size_t iters, const char* cname,
                   const typename C::value_type& val, const char* label)
 {
    int result = 0;
-   bench_ops::batch_state<C> bs1(c), bs2(c);
+   bench_ops::batch_state<C> bs1(c), bs2(c), bs3(c);
    compare_batch(iters, c.size(),
       bench_ops::std_remove_batch<C>(bs1, val, result), bench_ops::batch_reset<C>(bs1),
       bench_ops::seg_remove_batch<C>(bs2, val, result), bench_ops::batch_reset<C>(bs2),
+      bench_ops::seg_remove_batch<C, true>(bs3, val, result), bench_ops::batch_reset<C>(bs3),
       label, cname);
 }
 
@@ -1802,35 +1855,38 @@ void bench_remove_if(const C &c, std::size_t iters, const char* cname,
                      Pred pred, const char* label)
 {
    int result = 0;
-   bench_ops::batch_state<C> bs1(c), bs2(c);
+   bench_ops::batch_state<C> bs1(c), bs2(c), bs3(c);
    compare_batch(iters, c.size(),
       bench_ops::std_remove_if_batch<C, Pred>(bs1, pred, result), bench_ops::batch_reset<C>(bs1),
       bench_ops::seg_remove_if_batch<C, Pred>(bs2, pred, result), bench_ops::batch_reset<C>(bs2),
+      bench_ops::seg_remove_if_batch<C, Pred, true>(bs3, pred, result), bench_ops::batch_reset<C>(bs3),
       label, cname);
 }
 
-template<bool DequeOut, class C>
+template<bool IsDual, class C>
 void bench_remove_copy(const C &c, std::size_t iters, const char* cname,
                        const typename C::value_type& val, const char* label)
 {
    typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<DequeOut, bc::deque<VT>, boost::container::vector<VT> >::type out_t;
+   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type out_t;
    out_t out(c.size());
    compare_batch(iters, c.size(),
       bench_ops::std_remove_copy<C, out_t>(c, out, val),
-      bench_ops::seg_remove_copy<C, out_t>(c, out, val), label, cname);
+      bench_ops::seg_remove_copy<C, out_t>(c, out, val),
+      bench_ops::seg_remove_copy<C, out_t, true>(c, out, val), label, cname);
 }
 
-template<bool DequeOut, class C, class Pred>
+template<bool IsDual, class C, class Pred>
 void bench_remove_copy_if(const C &c, std::size_t iters, const char* cname,
                           Pred pred, const char* label)
 {
    typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<DequeOut, bc::deque<VT>, boost::container::vector<VT> >::type out_t;
+   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type out_t;
    out_t out(c.size());
    compare_batch(iters, c.size(),
       bench_ops::std_remove_copy_if<C, out_t, Pred>(c, out, pred),
-      bench_ops::seg_remove_copy_if<C, out_t, Pred>(c, out, pred), label, cname);
+      bench_ops::seg_remove_copy_if<C, out_t, Pred>(c, out, pred),
+      bench_ops::seg_remove_copy_if<C, out_t, Pred, true>(c, out, pred), label, cname);
 }
 
 template<class C>
@@ -1840,7 +1896,8 @@ void bench_reverse(const C &c, std::size_t iters, const char* cname)
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_reverse<C>(c2, result),
-      bench_ops::seg_reverse<C>(c2, result), "reverse", cname);
+      bench_ops::seg_reverse<C>(c2, result),
+      bench_ops::seg_reverse<C, true>(c2, result), "reverse", cname);
 }
 
 template<class C>
@@ -1850,7 +1907,8 @@ void bench_reverse_copy(const C &c, std::size_t iters, const char* cname)
    boost::container::vector<VT> out(c.size());
    compare_batch(iters, c.size(),
       bench_ops::std_reverse_copy<C>(c, out),
-      bench_ops::seg_reverse_copy<C>(c, out), "reverse_copy", cname);
+      bench_ops::seg_reverse_copy<C>(c, out),
+      bench_ops::seg_reverse_copy<C, true>(c, out), "reverse_copy", cname);
 }
 
 template<class C>
@@ -1860,7 +1918,8 @@ void bench_is_sorted(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_is_sorted<C>(c, result),
-      bench_ops::seg_is_sorted<C>(c, result), label, cname);
+      bench_ops::seg_is_sorted<C>(c, result),
+      bench_ops::seg_is_sorted<C, true>(c, result), label, cname);
 }
 
 template<class C>
@@ -1870,7 +1929,8 @@ void bench_is_sorted_until(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_is_sorted_until<C>(c, result),
-      bench_ops::seg_is_sorted_until<C>(c, result), label, cname);
+      bench_ops::seg_is_sorted_until<C>(c, result),
+      bench_ops::seg_is_sorted_until<C, true>(c, result), label, cname);
 }
 
 template<class C, class Pred>
@@ -1880,7 +1940,8 @@ void bench_is_partitioned(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_is_partitioned<C, Pred>(c, pred, result),
-      bench_ops::seg_is_partitioned<C, Pred>(c, pred, result), label, cname);
+      bench_ops::seg_is_partitioned<C, Pred>(c, pred, result),
+      bench_ops::seg_is_partitioned<C, Pred, true>(c, pred, result), label, cname);
 }
 
 template<class C>
@@ -1891,33 +1952,36 @@ void bench_merge(const C &c, const C &c2, std::size_t iters, const char* cname)
    out_vec_t out(c.size() + c2.size());
    compare_batch(iters, c.size(),
       bench_ops::std_merge<C, out_vec_t>(c, c2, out),
-      bench_ops::seg_merge<C, out_vec_t>(c, c2, out), "merge", cname);
+      bench_ops::seg_merge<C, out_vec_t>(c, c2, out),
+      bench_ops::seg_merge<C, out_vec_t, true>(c, c2, out), "merge", cname);
 }
 
-template<bool DequeSecond, class C>
+template<bool IsDual, class C>
 void bench_mismatch(const C &c, const C &c2, std::size_t iters, const char* cname,
                     const char* label)
 {
    typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<DequeSecond, bc::deque<VT>, boost::container::vector<VT> >::type range2_t;
+   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type range2_t;
    range2_t range2(c2.begin(), c2.end());
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_mismatch<C, range2_t>(c, range2, result),
-      bench_ops::seg_mismatch<C, range2_t>(c, range2, result), label, cname);
+      bench_ops::seg_mismatch<C, range2_t>(c, range2, result),
+      bench_ops::seg_mismatch<C, range2_t, true>(c, range2, result), label, cname);
 }
 
-template<bool DequeSecond, class C>
+template<bool IsDual, class C>
 void bench_mismatch_2r(const C &c, const C &c2, std::size_t iters, const char* cname,
                        const char* label)
 {
    typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<DequeSecond, bc::deque<VT>, boost::container::vector<VT> >::type range2_t;
+   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type range2_t;
    range2_t range2(c2.begin(), c2.end());
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_mismatch_2r<C, range2_t>(c, range2, result),
-      bench_ops::seg_mismatch_2r<C, range2_t>(c, range2, result), label, cname);
+      bench_ops::seg_mismatch_2r<C, range2_t>(c, range2, result),
+      bench_ops::seg_mismatch_2r<C, range2_t, true>(c, range2, result), label, cname);
 }
 
 template<class C>
@@ -1932,7 +1996,8 @@ void bench_swap_ranges(const C &c, std::size_t iters, const char* cname)
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_swap_ranges<C>(c2, c3, result),
-      bench_ops::seg_swap_ranges<C>(c2, c3, result), "swap_ranges", cname);
+      bench_ops::seg_swap_ranges<C>(c2, c3, result),
+      bench_ops::seg_swap_ranges<C, true>(c2, c3, result), "swap_ranges", cname);
 }
 
 template<class C>
@@ -1943,7 +2008,8 @@ void bench_search(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_search<C>(c, pattern, pat_size, result),
-      bench_ops::seg_search<C>(c, pattern, pat_size, result), label, cname);
+      bench_ops::seg_search<C>(c, pattern, pat_size, result),
+      bench_ops::seg_search<C, true>(c, pattern, pat_size, result), label, cname);
 }
 
 template<class C>
@@ -1954,7 +2020,8 @@ void bench_search_n(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_search_n<C>(c, count, val, result),
-      bench_ops::seg_search_n<C>(c, count, val, result), label, cname);
+      bench_ops::seg_search_n<C>(c, count, val, result),
+      bench_ops::seg_search_n<C, true>(c, count, val, result), label, cname);
 }
 
 template<class C>
@@ -1965,7 +2032,8 @@ void bench_set_union(const C &c, const C &c2, std::size_t iters, const char* cna
    out_vec_t out(c.size() + c2.size());
    compare_batch(iters, c.size(),
       bench_ops::std_set_union<C, out_vec_t>(c, c2, out),
-      bench_ops::seg_set_union<C, out_vec_t>(c, c2, out), "set_union", cname);
+      bench_ops::seg_set_union<C, out_vec_t>(c, c2, out),
+      bench_ops::seg_set_union<C, out_vec_t, true>(c, c2, out), "set_union", cname);
 }
 
 template<class C>
@@ -1976,7 +2044,8 @@ void bench_set_difference(const C &c, const C &c2, std::size_t iters, const char
    out_vec_t out(c.size());
    compare_batch(iters, c.size(),
       bench_ops::std_set_difference<C, out_vec_t>(c, c2, out),
-      bench_ops::seg_set_difference<C, out_vec_t>(c, c2, out), "set_difference", cname);
+      bench_ops::seg_set_difference<C, out_vec_t>(c, c2, out),
+      bench_ops::seg_set_difference<C, out_vec_t, true>(c, c2, out), "set_difference", cname);
 }
 
 template<class C>
@@ -1987,7 +2056,8 @@ void bench_set_intersection(const C &c, const C &c2, std::size_t iters, const ch
    out_vec_t out(c.size());
    compare_batch(iters, c.size(),
       bench_ops::std_set_intersection<C, out_vec_t>(c, c2, out),
-      bench_ops::seg_set_intersection<C, out_vec_t>(c, c2, out), "set_intersection", cname);
+      bench_ops::seg_set_intersection<C, out_vec_t>(c, c2, out),
+      bench_ops::seg_set_intersection<C, out_vec_t, true>(c, c2, out), "set_intersection", cname);
 }
 
 template<class C>
@@ -1998,7 +2068,8 @@ void bench_set_symmetric_difference(const C &c, const C &c2, std::size_t iters, 
    out_vec_t out(c.size() + c2.size());
    compare_batch(iters, c.size(),
       bench_ops::std_set_symmetric_difference<C, out_vec_t>(c, c2, out),
-      bench_ops::seg_set_symmetric_difference<C, out_vec_t>(c, c2, out), "set_symmetric_difference", cname);
+      bench_ops::seg_set_symmetric_difference<C, out_vec_t>(c, c2, out),
+      bench_ops::seg_set_symmetric_difference<C, out_vec_t, true>(c, c2, out), "set_symmetric_difference", cname);
 }
 
 template<class C, class Pred>
@@ -2006,10 +2077,11 @@ void bench_partition(const C &c, std::size_t iters, const char* cname,
                      Pred pred, const char* label)
 {
    int result = 0;
-   bench_ops::batch_state<C> bs1(c), bs2(c);
+   bench_ops::batch_state<C> bs1(c), bs2(c), bs3(c);
    compare_batch(iters, c.size(),
       bench_ops::std_partition_batch<C, Pred>(bs1, pred, result), bench_ops::batch_reset<C>(bs1),
       bench_ops::seg_partition_batch<C, Pred>(bs2, pred, result), bench_ops::batch_reset<C>(bs2),
+      bench_ops::seg_partition_batch<C, Pred, true>(bs3, pred, result), bench_ops::batch_reset<C>(bs3),
       label, cname);
 }
 
@@ -2018,10 +2090,11 @@ void bench_stable_partition(const C &c, std::size_t iters, const char* cname,
                             Pred pred, const char* label)
 {
    int result = 0;
-   bench_ops::batch_state<C> bs1(c), bs2(c);
+   bench_ops::batch_state<C> bs1(c), bs2(c), bs3(c);
    compare_batch(iters, c.size(),
       bench_ops::std_stable_partition_batch<C, Pred>(bs1, pred, result), bench_ops::batch_reset<C>(bs1),
       bench_ops::seg_stable_partition_batch<C, Pred>(bs2, pred, result), bench_ops::batch_reset<C>(bs2),
+      bench_ops::seg_stable_partition_batch<C, Pred, true>(bs3, pred, result), bench_ops::batch_reset<C>(bs3),
       label, cname);
 }
 
@@ -2033,7 +2106,8 @@ void bench_partition_copy(const C &c, std::size_t iters, const char* cname)
    boost::container::vector<VT> f_out(c.size());
    compare_batch(iters, c.size(),
       bench_ops::std_partition_copy<C>(c, t_out, f_out),
-      bench_ops::seg_partition_copy<C>(c, t_out, f_out), "partition_copy", cname);
+      bench_ops::seg_partition_copy<C>(c, t_out, f_out),
+      bench_ops::seg_partition_copy<C, true>(c, t_out, f_out), "partition_copy", cname);
 }
 
 template<class C, class Pred>
@@ -2043,7 +2117,8 @@ void bench_partition_point(const C &c, std::size_t iters, const char* cname,
    int result = 0;
    compare_batch(iters, c.size(),
       bench_ops::std_partition_point<C, Pred>(c, pred, result),
-      bench_ops::seg_partition_point<C, Pred>(c, pred, result), label, cname);
+      bench_ops::seg_partition_point<C, Pred>(c, pred, result),
+      bench_ops::seg_partition_point<C, Pred, true>(c, pred, result), label, cname);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2292,7 +2367,10 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 
    std::cout << '\n'
              << std::left  << std::setw(32) << "GEOMEAN"
-             << std::right << std::setw(20) << std::fixed << std::setprecision(2) << g_geomean.result() << "x\n";
+             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << g_geomean.ns_over_seg_result()
+             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << g_geomean.seg_result()
+             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << g_geomean.nonseg_result()
+             << '\n';
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2306,7 +2384,7 @@ void run_benchmarks()
    //#define SIMPLE_TEST
    #if defined(NDEBUG) && !defined(SIMPLE_TEST)
    const std::size_t N    = 100000;
-   const std::size_t iter = 3000;
+   const std::size_t iter = 4000;
    #else
    const std::size_t N    = 10000;
    const std::size_t iter = 100;
