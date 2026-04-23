@@ -661,13 +661,51 @@ struct geomean_accumulator
    double seg_log_sum, nonseg_log_sum, ns_over_seg_log_sum;
    int    seg_count, nonseg_count, ns_over_seg_count;
 
-   void reset()  { seg_log_sum = nonseg_log_sum = ns_over_seg_log_sum = 0.0; seg_count = nonseg_count = ns_over_seg_count = 0; }
-   void add_seg(double r) { if(r > 0.0) { seg_log_sum += std::log(r); ++seg_count; } }
-   void add_nonseg(double r) { if(r > 0.0) { nonseg_log_sum += std::log(r); ++nonseg_count; } }
-   void add_ns_over_seg(double r) { if(r > 0.0) { ns_over_seg_log_sum += std::log(r); ++ns_over_seg_count; } }
-   double seg_result() const { return seg_count > 0 ? std::exp(seg_log_sum / seg_count) : 0.0; }
-   double nonseg_result() const { return nonseg_count > 0 ? std::exp(nonseg_log_sum / nonseg_count) : 0.0; }
-   double ns_over_seg_result() const { return ns_over_seg_count > 0 ? std::exp(ns_over_seg_log_sum / ns_over_seg_count) : 0.0; }
+   void reset()
+   {
+      seg_log_sum = nonseg_log_sum = ns_over_seg_log_sum = 0.0;
+      seg_count = nonseg_count = ns_over_seg_count = 0;
+   }
+
+   void add_seg(double r)
+   {
+      if(r > 0.0) {
+         seg_log_sum += std::log(r);
+         ++seg_count;
+      }
+   }
+
+   void add_nonseg(double r)
+   {
+      if(r > 0.0) {
+         nonseg_log_sum += std::log(r);
+         ++nonseg_count;
+      }
+   }
+
+   void add_ns_over_seg(double r)
+   {
+      if(r > 0.0) {
+         ns_over_seg_log_sum += std::log(r);
+         ++ns_over_seg_count;
+      }
+   }
+
+   double seg_result() const
+   {
+      return seg_count > 0 ? std::exp(seg_log_sum / seg_count) : 0.0;
+   }
+
+   double nonseg_result() const
+   {
+      return nonseg_count > 0 ? std::exp(nonseg_log_sum / nonseg_count) : 0.0;
+   }
+
+   double ns_over_seg_result() const
+   {
+      return ns_over_seg_count > 0 ? std::exp(ns_over_seg_log_sum / ns_over_seg_count) : 0.0;
+   }
+
 } g_geomean = { 0.0, 0.0, 0.0, 0, 0, 0 };
 
 inline void print_ratio(const char* algo, const char*,
