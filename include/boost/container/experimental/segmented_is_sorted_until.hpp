@@ -148,14 +148,13 @@ sorted_until_rec
     DeepIt &, bool &,
     const segmented_iterator_tag &, Cat)
 {
-   if (first == last)
-      return first;
-   SegIter prev_local = first;
-   ++first;
-   for (; first != last; ++first) {
-      if (comp(*first, *prev_local))
-         return first;
-      prev_local = first;
+   if (first != last) {
+      SegIter prev_local = first;
+      for (; ++first != last; ) {
+         if (comp(*first, *prev_local))
+            return first;
+         prev_local = first;
+      }
    }
    return first;
 }
