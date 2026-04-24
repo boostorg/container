@@ -48,7 +48,7 @@ namespace detail_algo {
 #if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
 
 template <bool Move, class RASrcIter, class DstIter, class DstSent, class Pred>
-segduo<RASrcIter, DstIter> segmented_remove_copy_if_dst_bounded
+BOOST_CONTAINER_FORCEINLINE segduo<RASrcIter, DstIter> segmented_remove_copy_if_dst_bounded
    (RASrcIter first, RASrcIter last, DstIter dst_first, DstSent dst_last, Pred pred,
     const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
@@ -84,7 +84,7 @@ segduo<RASrcIter, DstIter> segmented_remove_copy_if_dst_bounded
 #endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
 
 template <bool Move, class SrcIter, class Sent, class DstIter, class DstSent, class Pred, class DstTag, class SrcCat>
-typename algo_enable_if_c<!DstTag::value, segduo<SrcIter, DstIter> >::type
+BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<!DstTag::value, segduo<SrcIter, DstIter> >::type
 segmented_remove_copy_if_dst_bounded
    (SrcIter first, Sent last, DstIter dst_first, DstSent dst_last, Pred pred, DstTag, SrcCat)
 {
@@ -170,7 +170,7 @@ SegDstIter segmented_remove_copy_if_dst_dispatch
    dst_segment_iterator dst_seg   = dst_traits::segment(result);
    dst_local_iterator   dst_local = dst_traits::local(result);
 
-   while(first != last) {
+   while(1) {
       const dst_local_iterator dst_end = dst_traits::end(dst_seg);
       const segduo<SrcIter, dst_local_iterator> r = (segmented_remove_copy_if_dst_bounded<Move>)
          (first, last, dst_local, dst_end, pred, dst_is_local_seg_t(), Cat());
@@ -179,8 +179,10 @@ SegDstIter segmented_remove_copy_if_dst_dispatch
          ++dst_seg;
          dst_local = dst_traits::begin(dst_seg);
       }
-      else
+      else {
          dst_local = r.second;
+         break;
+      }
    }
    return dst_traits::compose(dst_seg, dst_local);
 }
