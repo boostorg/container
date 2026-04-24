@@ -39,14 +39,13 @@ void segmented_reverse_dispatch(BidirIt first, BidirIt last, non_segmented_itera
    }
 }
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-
 template <class RAIter>
 void segmented_reverse_dispatch(RAIter first, RAIter last, non_segmented_iterator_tag, const std::random_access_iterator_tag &)
 {
    typedef typename iterator_traits<RAIter>::difference_type difference_type;
    difference_type pairs = (last - first) / difference_type(2);
 
+#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
    while(pairs >= difference_type(4)) {
       --last; boost::adl_move_swap(*first, *last); ++first;
       --last; boost::adl_move_swap(*first, *last); ++first;
@@ -68,9 +67,14 @@ void segmented_reverse_dispatch(RAIter first, RAIter last, non_segmented_iterato
       default:
          break;
    }
+#else
+   for(; pairs; --pairs) {
+      --last;
+      boost::adl_move_swap(*first, *last);
+      ++first;
+   }
+#endif
 }
-
-#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
 
 //////////////////////////////////////////////
 // segmented_reverse_disjoint_ranges: swaps elements between
@@ -95,7 +99,7 @@ void segmented_reverse_disjoint_ranges
    l_out = l;
 }
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
+#if defined(BOOST_CONTAINER_SEGMENTED_RANDOM_ACCESS_OPTIMIZATION)
 
 template <class It>
 void segmented_reverse_disjoint_ranges
@@ -109,6 +113,7 @@ void segmented_reverse_disjoint_ranges
    difference_type n_l = l - l_beg;
    difference_type n = n_f < n_l ? n_f : n_l;
 
+#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
    while(n >= difference_type(4)) {
       --l; boost::adl_move_swap(*f, *l); ++f;
       --l; boost::adl_move_swap(*f, *l); ++f;
@@ -130,12 +135,19 @@ void segmented_reverse_disjoint_ranges
       default:
          break;
    }
+#else
+   for(; n; --n) {
+      --l;
+      boost::adl_move_swap(*f, *l);
+      ++f;
+   }
+#endif
 
    f_out = f;
    l_out = l;
 }
 
-#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
+#endif   //BOOST_CONTAINER_SEGMENTED_RANDOM_ACCESS_OPTIMIZATION
 
 template <class It, class Cat>
 void segmented_reverse_disjoint_ranges(It& f, It f_end, It l_beg, It& l, segmented_iterator_tag, const Cat&)
