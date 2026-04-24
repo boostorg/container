@@ -99,8 +99,6 @@ void segmented_reverse_disjoint_ranges
    l_out = l;
 }
 
-#if defined(BOOST_CONTAINER_SEGMENTED_RANDOM_ACCESS_OPTIMIZATION)
-
 template <class It>
 void segmented_reverse_disjoint_ranges
    (It& f_out, It const f_end, It const l_beg, It& l_out, non_segmented_iterator_tag, const std::random_access_iterator_tag &)
@@ -146,8 +144,6 @@ void segmented_reverse_disjoint_ranges
    f_out = f;
    l_out = l;
 }
-
-#endif   //BOOST_CONTAINER_SEGMENTED_RANDOM_ACCESS_OPTIMIZATION
 
 template <class It, class Cat>
 void segmented_reverse_disjoint_ranges(It& f, It f_end, It l_beg, It& l, segmented_iterator_tag, const Cat&)
