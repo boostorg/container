@@ -52,21 +52,28 @@ segduo<RASrcIter, DstIter> segmented_copy_n_dst_bounded
     const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
    while(count >= Size(4)) {
-      if(dst_first == dst_last) goto out_path; *dst_first = *first; ++first; ++dst_first; --count;
-      if(dst_first == dst_last) goto out_path; *dst_first = *first; ++first; ++dst_first; --count;
-      if(dst_first == dst_last) goto out_path; *dst_first = *first; ++first; ++dst_first; --count;
-      if(dst_first == dst_last) goto out_path; *dst_first = *first; ++first; ++dst_first; --count;
+      if(dst_first == dst_last) goto out_path;
+      *dst_first = *first; ++first; ++dst_first; --count;
+      if(dst_first == dst_last) goto out_path;
+      *dst_first = *first; ++first; ++dst_first; --count;
+      if(dst_first == dst_last) goto out_path;
+      *dst_first = *first; ++first; ++dst_first; --count;
+      if(dst_first == dst_last) goto out_path;
+      *dst_first = *first; ++first; ++dst_first; --count;
    }
 
    switch(count) {
       case 3:
-         if(dst_first == dst_last) goto out_path; *dst_first = *first; ++first; ++dst_first; --count;
+         if(dst_first == dst_last) goto out_path;
+         *dst_first = *first; ++first; ++dst_first; --count;
          BOOST_FALLTHROUGH;
       case 2:
-         if(dst_first == dst_last) goto out_path; *dst_first = *first; ++first; ++dst_first; --count;
+         if(dst_first == dst_last) goto out_path;
+         *dst_first = *first; ++first; ++dst_first; --count;
          BOOST_FALLTHROUGH;
       case 1:
-         if(dst_first == dst_last) goto out_path; *dst_first = *first; ++first; ++dst_first; --count;
+         if(dst_first == dst_last) goto out_path;
+         *dst_first = *first; ++first; ++dst_first; --count;
          BOOST_FALLTHROUGH;
       default:
          break;

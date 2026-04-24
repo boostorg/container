@@ -54,22 +54,36 @@ segduo<RASrcIter, DstIter> segmented_copy_dst_bounded
    difference_type n = last - first;
 
    while(n >= difference_type(4)) {
-      if(dst_first == dst_last) goto out_path; *dst_first = *first; ++first; ++dst_first;
-      if(dst_first == dst_last) goto out_path; *dst_first = *first; ++first; ++dst_first;
-      if(dst_first == dst_last) goto out_path; *dst_first = *first; ++first; ++dst_first;
-      if(dst_first == dst_last) goto out_path; *dst_first = *first; ++first; ++dst_first;
+      if(dst_first == dst_last)
+         goto out_path;
+      *dst_first = *first; ++first; ++dst_first;
+      if(dst_first == dst_last)
+         goto out_path;
+      *dst_first = *first; ++first; ++dst_first;
+      if(dst_first == dst_last)
+         goto out_path;
+      *dst_first = *first; ++first; ++dst_first;
+      if(dst_first == dst_last)
+         goto out_path;
+      *dst_first = *first; ++first; ++dst_first;
       n -= 4;
    }
 
    switch(n) {
       case 3:
-         if(dst_first == dst_last) goto out_path; *dst_first = *first; ++first; ++dst_first;
+         if(dst_first == dst_last)
+            goto out_path;
+         *dst_first = *first; ++first; ++dst_first;
          BOOST_FALLTHROUGH;
       case 2:
-         if(dst_first == dst_last) goto out_path; *dst_first = *first; ++first; ++dst_first;
+         if(dst_first == dst_last)
+            goto out_path;
+         *dst_first = *first; ++first; ++dst_first;
          BOOST_FALLTHROUGH;
       case 1:
-         if(dst_first == dst_last) goto out_path; *dst_first = *first; ++first; ++dst_first;
+         if(dst_first == dst_last)
+            goto out_path;
+         *dst_first = *first; ++first; ++dst_first;
          BOOST_FALLTHROUGH;
       default:
          break;
