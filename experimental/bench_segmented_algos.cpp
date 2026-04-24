@@ -649,10 +649,10 @@ inline double calc_ns_per_elem(boost::move_detail::nanosecond_type ns,
 
 inline void print_subheader()
 {
-   std::cout << std::left  << std::setw(32) << "< algo >"
-             << std::right << std::setw(20) << "< nsg/seg >"
-             << std::right << std::setw(20) << "< std/seg >"
-             << std::right << std::setw(20) << "< std/nsg >"
+   std::cout << std::left  << std::setw(24) << "< algo >"
+             << std::right << std::setw(16) << "< nsg/seg >"
+             << std::right << std::setw(16) << "< std/seg >"
+             << std::right << std::setw(16) << "< std/nsg >"
              << '\n';
 }
 
@@ -712,15 +712,15 @@ inline void print_ratio(const char* algo, const char*,
                         double std_ns, double seg_ns, double nsg_ns)
 {
    double nsg_seg_ratio   = (seg_ns > 0.0) ? nsg_ns / seg_ns : 0.0;
-   double std_seg_ratio   = (seg_ns > 0.0) ? std_ns / seg_ns    : 0.0;
+   double std_seg_ratio   = (seg_ns > 0.0) ? std_ns / seg_ns : 0.0;
    double std_nsg_ratio   = (std_ns > 0.0) ? std_ns / nsg_ns : 0.0;
    g_geomean.add_std_over_seg(std_seg_ratio);
    g_geomean.add_std_over_nsg(std_nsg_ratio);
    g_geomean.add_nsg_over_seg(nsg_seg_ratio);
-   std::cout << std::left  << std::setw(32) << algo
-             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << nsg_seg_ratio
-             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << std_seg_ratio
-             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << std_nsg_ratio
+   std::cout << std::left  << std::setw(24) << algo
+             << std::right << std::setw(16) << std::fixed << std::setprecision(2) << nsg_seg_ratio
+             << std::right << std::setw(16) << std::fixed << std::setprecision(2) << std_seg_ratio
+             << std::right << std::setw(16) << std::fixed << std::setprecision(2) << std_nsg_ratio
              << '\n';
 }
 
@@ -2406,10 +2406,10 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    std::cout << '\n';
    print_subheader();
 
-   std::cout << std::left  << std::setw(32) << "algo geomean"
-             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << g_geomean.nsg_over_seg_result()
-             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << g_geomean.std_over_seg_result()
-             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << g_geomean.std_over_nsg_result()
+   std::cout << std::left  << std::setw(24) << "algo geomean"
+             << std::right << std::setw(16) << std::fixed << std::setprecision(2) << g_geomean.nsg_over_seg_result()
+             << std::right << std::setw(16) << std::fixed << std::setprecision(2) << g_geomean.std_over_seg_result()
+             << std::right << std::setw(16) << std::fixed << std::setprecision(2) << g_geomean.std_over_nsg_result()
              << '\n';
 }
 
