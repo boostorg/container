@@ -1238,19 +1238,17 @@ struct seg_reverse {
 };
 
 // --- reverse_copy ---
-template<class C>
+template<class C, class OutT>
 struct std_reverse_copy {
-   typedef typename C::value_type VT;
-   const C &c; boost::container::vector<VT> &out;
-   std_reverse_copy(const C &c_, boost::container::vector<VT> &o_) : c(c_), out(o_) {}
+   const C &c; OutT &out;
+   std_reverse_copy(const C &c_, OutT &o_) : c(c_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
 };
-template<class C, bool Wrap = false>
+template<class C, class OutT, bool Wrap = false>
 struct seg_reverse_copy {
-   typedef typename C::value_type VT;
-   const C &c; boost::container::vector<VT> &out;
-   seg_reverse_copy(const C &c_, boost::container::vector<VT> &o_) : c(c_), out(o_) {}
+   const C &c; OutT &out;
+   seg_reverse_copy(const C &c_, OutT &o_) : c(c_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_reverse_copy(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
 };
@@ -1938,15 +1936,16 @@ void bench_reverse(const C &c, std::size_t iters, const char* cname)
       bench_ops::seg_reverse<C, true>(c2, result), "reverse", cname);
 }
 
-template<class C>
-void bench_reverse_copy(const C &c, std::size_t iters, const char* cname)
+template<bool IsDual, class C>
+void bench_reverse_copy(const C &c, std::size_t iters, const char* cname, const char* label)
 {
    typedef typename C::value_type VT;
-   boost::container::vector<VT> out(c.size());
+   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type out_t;
+   out_t out(c.size());
    compare_batch(iters, c.size(),
-      bench_ops::std_reverse_copy<C>(c, out),
-      bench_ops::seg_reverse_copy<C>(c, out),
-      bench_ops::seg_reverse_copy<C, true>(c, out), "reverse_copy", cname);
+      bench_ops::std_reverse_copy<C, out_t>(c, out),
+      bench_ops::seg_reverse_copy<C, out_t>(c, out),
+      bench_ops::seg_reverse_copy<C, out_t, true>(c, out), label, cname);
 }
 
 template<class C>
@@ -2367,7 +2366,8 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_reverse(c, iters, cname);
 
    //reverse_copy
-   bench_reverse_copy(c, iters, cname);
+   bench_reverse_copy<false>(c, iters, cname, "reverse_copy");
+   bench_reverse_copy<true>(c, iters, cname, "reverse_copy(2xS)");
 
    //search
    {
@@ -2424,7 +2424,7 @@ void run_benchmarks()
    //#define SIMPLE_TEST
    #if defined(NDEBUG) && !defined(SIMPLE_TEST)
    const std::size_t N    = 100000;
-   const std::size_t iter = 4000;
+   const std::size_t iter = 2000;
    #else
    const std::size_t N    = 10000;
    const std::size_t iter = 1;
