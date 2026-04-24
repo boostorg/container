@@ -650,77 +650,77 @@ inline double calc_ns_per_elem(boost::move_detail::nanosecond_type ns,
 inline void print_subheader()
 {
    std::cout << std::left  << std::setw(32) << "< algo >"
-             << std::right << std::setw(20) << "< nonseg/seg >"
+             << std::right << std::setw(20) << "< nsg/seg >"
              << std::right << std::setw(20) << "< std/seg >"
-             << std::right << std::setw(20) << "< nonseg/std >"
+             << std::right << std::setw(20) << "< std/nsg >"
              << '\n';
 }
 
 struct geomean_accumulator
 {
-   double seg_log_sum, nonseg_log_sum, ns_over_seg_log_sum;
-   int    seg_count, nonseg_count, ns_over_seg_count;
+   double std_over_seg_log_sum, std_over_nsg_log_sum, ns_over_std_over_seg_log_sum;
+   int    std_over_seg_count, std_over_nsg_count, nseg_over_seg_count;
 
    void reset()
    {
-      seg_log_sum = nonseg_log_sum = ns_over_seg_log_sum = 0.0;
-      seg_count = nonseg_count = ns_over_seg_count = 0;
+      std_over_seg_log_sum = std_over_nsg_log_sum = ns_over_std_over_seg_log_sum = 0.0;
+      std_over_seg_count = std_over_nsg_count = nseg_over_seg_count = 0;
    }
 
-   void add_seg(double r)
+   void add_std_over_seg(double r)
    {
       if(r > 0.0) {
-         seg_log_sum += std::log(r);
-         ++seg_count;
+         std_over_seg_log_sum += std::log(r);
+         ++std_over_seg_count;
       }
    }
 
-   void add_nonseg(double r)
+   void add_std_over_nsg(double r)
    {
       if(r > 0.0) {
-         nonseg_log_sum += std::log(r);
-         ++nonseg_count;
+         std_over_nsg_log_sum += std::log(r);
+         ++std_over_nsg_count;
       }
    }
 
-   void add_ns_over_seg(double r)
+   void add_nsg_over_seg(double r)
    {
       if(r > 0.0) {
-         ns_over_seg_log_sum += std::log(r);
-         ++ns_over_seg_count;
+         ns_over_std_over_seg_log_sum += std::log(r);
+         ++nseg_over_seg_count;
       }
    }
 
-   double seg_result() const
+   double std_over_seg_result() const
    {
-      return seg_count > 0 ? std::exp(seg_log_sum / seg_count) : 0.0;
+      return std_over_seg_count > 0 ? std::exp(std_over_seg_log_sum / std_over_seg_count) : 0.0;
    }
 
-   double nonseg_result() const
+   double std_over_nsg_result() const
    {
-      return nonseg_count > 0 ? std::exp(nonseg_log_sum / nonseg_count) : 0.0;
+      return std_over_nsg_count > 0 ? std::exp(std_over_nsg_log_sum / std_over_nsg_count) : 0.0;
    }
 
-   double ns_over_seg_result() const
+   double nsg_over_seg_result() const
    {
-      return ns_over_seg_count > 0 ? std::exp(ns_over_seg_log_sum / ns_over_seg_count) : 0.0;
+      return nseg_over_seg_count > 0 ? std::exp(ns_over_std_over_seg_log_sum / nseg_over_seg_count) : 0.0;
    }
 
 } g_geomean = { 0.0, 0.0, 0.0, 0, 0, 0 };
 
 inline void print_ratio(const char* algo, const char*,
-                        double std_ns, double seg_ns, double nonseg_ns)
+                        double std_ns, double seg_ns, double nsg_ns)
 {
-   double seg_ratio      = (seg_ns > 0.0) ? std_ns / seg_ns    : 0.0;
-   double nonseg_ratio   = (std_ns > 0.0) ? nonseg_ns / std_ns : 0.0;
-   double ns_over_seg    = (seg_ns > 0.0) ? nonseg_ns / seg_ns : 0.0;
-   g_geomean.add_seg(seg_ratio);
-   g_geomean.add_nonseg(nonseg_ratio);
-   g_geomean.add_ns_over_seg(ns_over_seg);
+   double nsg_seg_ratio   = (seg_ns > 0.0) ? nsg_ns / seg_ns : 0.0;
+   double std_seg_ratio   = (seg_ns > 0.0) ? std_ns / seg_ns    : 0.0;
+   double std_nsg_ratio   = (std_ns > 0.0) ? std_ns / nsg_ns : 0.0;
+   g_geomean.add_std_over_seg(std_seg_ratio);
+   g_geomean.add_std_over_nsg(std_nsg_ratio);
+   g_geomean.add_nsg_over_seg(nsg_seg_ratio);
    std::cout << std::left  << std::setw(32) << algo
-             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << ns_over_seg
-             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << seg_ratio
-             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << nonseg_ratio
+             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << nsg_seg_ratio
+             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << std_seg_ratio
+             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << std_nsg_ratio
              << '\n';
 }
 
@@ -760,24 +760,24 @@ struct noop_reset {
 template <class F1, class R1, class F2, class R2, class F3, class R3>
 inline void compare_batch(std::size_t iters, std::size_t nelems,
                           F1 std_op, R1 std_reset, F2 seg_op, R2 seg_reset,
-                          F3 nonseg_op, R3 nonseg_reset,
+                          F3 nsg_op, R3 nsg_reset,
                           const char* label, const char* cname)
 {
    typedef boost::move_detail::nanosecond_type ns_type;
    ns_type t1 = measure_batch(iters, std_op, std_reset);
    ns_type t2 = measure_batch(iters, seg_op, seg_reset);
-   ns_type t3 = measure_batch(iters, nonseg_op, nonseg_reset);
+   ns_type t3 = measure_batch(iters, nsg_op, nsg_reset);
    print_ratio(label, cname, calc_ns_per_elem(t1, iters, nelems),
                calc_ns_per_elem(t2, iters, nelems), calc_ns_per_elem(t3, iters, nelems));
 }
 
 template <class F1, class F2, class F3>
 inline void compare_batch(std::size_t iters, std::size_t nelems,
-                          F1 std_op, F2 seg_op, F3 nonseg_op,
+                          F1 std_op, F2 seg_op, F3 nsg_op,
                           const char* label, const char* cname)
 {
    compare_batch(iters, nelems, std_op, noop_reset(), seg_op, noop_reset(),
-                 nonseg_op, noop_reset(), label, cname);
+                 nsg_op, noop_reset(), label, cname);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2403,11 +2403,13 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //transform
    bench_transform(c, iters, cname);
 
-   std::cout << '\n'
-             << std::left  << std::setw(32) << "GEOMEAN"
-             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << g_geomean.ns_over_seg_result()
-             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << g_geomean.seg_result()
-             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << g_geomean.nonseg_result()
+   std::cout << '\n';
+   print_subheader();
+
+   std::cout << std::left  << std::setw(32) << "algo geomean"
+             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << g_geomean.nsg_over_seg_result()
+             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << g_geomean.std_over_seg_result()
+             << std::right << std::setw(20) << std::fixed << std::setprecision(3) << g_geomean.std_over_nsg_result()
              << '\n';
 }
 
@@ -2425,7 +2427,7 @@ void run_benchmarks()
    const std::size_t iter = 4000;
    #else
    const std::size_t N    = 10000;
-   const std::size_t iter = 100;
+   const std::size_t iter = 1;
    #endif
 
    std::cout << "\n=== Segmented algorithm benchmark [" << typeid(T).name() << "] ===\n"
