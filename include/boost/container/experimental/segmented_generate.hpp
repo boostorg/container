@@ -37,7 +37,7 @@ namespace detail_algo {
 
 template <class RAIter, class Generator>
 void segmented_generate_dispatch
-   (RAIter first, RAIter last, Generator gen, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
+   (RAIter first, RAIter last, Generator &gen, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
    typedef typename iterator_traits<RAIter>::difference_type difference_type;
 
