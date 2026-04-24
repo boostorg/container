@@ -21,19 +21,113 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
-#include <boost/container/experimental/segmented_generate.hpp>
+#include <boost/container/detail/iterator.hpp>
+#include <boost/container/experimental/segmented_fill_n.hpp>
 
 namespace boost {
 namespace container {
 
+template <class FwdIt, class Sent, class T>
+void segmented_fill(FwdIt first, Sent last, const T& value);
+
+namespace detail_algo {
+
+#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
+
+template <class RAIter, class T>
+void segmented_fill_range
+   (RAIter first, RAIter last, const T& value, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
+{
+   typedef typename iterator_traits<RAIter>::difference_type difference_type;
+
+   difference_type n = last - first;
+   while(n >= difference_type(4)) {
+      *first = value; ++first;
+      *first = value; ++first;
+      *first = value; ++first;
+      *first = value; ++first;
+      n -= 4;
+   }
+
+   switch(n) {
+      case 3:
+         *first = value; ++first;
+         BOOST_FALLTHROUGH;
+      case 2:
+         *first = value; ++first;
+         BOOST_FALLTHROUGH;
+      case 1:
+         *first = value;
+         BOOST_FALLTHROUGH;
+      default:
+         break;
+   }
+}
+
+#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
+
+template <class FwdIt, class Sent, class T, class Tag, class Cat>
+BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<
+   !Tag::value || is_sentinel<Sent, FwdIt>::value>::type
+segmented_fill_range(FwdIt first, Sent last, const T& value, Tag, Cat)
+{
+   for(; first != last; ++first)
+      *first = value;
+}
+
+template <class SegIter, class T, class Cat>
+void segmented_fill_range
+   (SegIter first, SegIter last, const T& value, segmented_iterator_tag, Cat)
+{
+   typedef segmented_iterator_traits<SegIter>   traits;
+   typedef typename traits::local_iterator      local_iterator;
+   typedef typename traits::segment_iterator    segment_iterator;
+   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+   typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
+
+   segment_iterator sfirst = traits::segment(first);
+   segment_iterator slast  = traits::segment(last);
+
+   if(sfirst == slast) {
+      (segmented_fill_range)(traits::local(first), traits::local(last), value, is_local_seg_t(), local_cat_t());
+   }
+   else {
+      (segmented_fill_range)(traits::local(first), traits::end(sfirst), value, is_local_seg_t(), local_cat_t());
+
+      for(++sfirst; sfirst != slast; ++sfirst)
+         (segmented_fill_range)(traits::begin(sfirst), traits::end(sfirst), value, is_local_seg_t(), local_cat_t());
+
+      (segmented_fill_range)(traits::begin(sfirst), traits::local(last), value, is_local_seg_t(), local_cat_t());
+   }
+}
+
+template <class FwdIt, class T>
+BOOST_CONTAINER_FORCEINLINE
+void segmented_fill_dispatch(FwdIt first, FwdIt last, const T& value, const std::random_access_iterator_tag &)
+{
+   (segmented_fill_n)(first, last - first, value);
+}
+
+template <class FwdIt, class Sent, class T, class Cat>
+BOOST_CONTAINER_FORCEINLINE
+void segmented_fill_dispatch(FwdIt first, Sent last, const T& value, const Cat &)
+{
+   typedef segmented_iterator_traits<FwdIt> traits;
+   (segmented_fill_range)(first, last, value, typename traits::is_segmented_iterator(), Cat());
+}
+
+} // namespace detail_algo
+
 //! Assigns \c value to every element in [first, last).
 //! When \c Iter is a segmented iterator, exploits segmentation
 //! to reduce per-element overhead.
+//! When \c Sent is the same type as \c FwdIt and the iterator
+//! category is random access, derives to \c segmented_fill_n.
 template <class FwdIt, class Sent, class T>
 BOOST_CONTAINER_FORCEINLINE
 void segmented_fill(FwdIt first, Sent last, const T& value)
 {
-   (segmented_generate)(first, last, detail_algo::constref_generator<T>(value));
+   detail_algo::segmented_fill_dispatch(first, last, value, typename iterator_traits<FwdIt>::iterator_category());
 }
 
 } // namespace container
