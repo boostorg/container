@@ -787,10 +787,12 @@ inline void compare_batch(std::size_t iters, std::size_t nelems,
 namespace bench_ops {
 
 template<bool Wrap> struct iter_w {
-   template<class It> static It wrap(It i) { return i; }
+   template<class It> static BOOST_CONTAINER_FORCEINLINE
+   It wrap(It i) { return i; }
 };
 template<> struct iter_w<true> {
-   template<class It> static bc::wrapped_iterator<It> wrap(It i) { return bc::wrapped_iterator<It>(i); }
+   template<class It> static BOOST_CONTAINER_FORCEINLINE
+   bc::wrapped_iterator<It> wrap(It i) { return bc::wrapped_iterator<It>(i); }
 };
 
 template<bool Wrap, class It> struct iter_wt          { typedef It type; };
@@ -2424,7 +2426,7 @@ void run_benchmarks()
    //#define SIMPLE_TEST
    #if defined(NDEBUG) && !defined(SIMPLE_TEST)
    const std::size_t N    = 100000;
-   const std::size_t iter = 2000;
+   const std::size_t iter = 3000;
    #else
    const std::size_t N    = 10000;
    const std::size_t iter = 1;
@@ -2435,6 +2437,7 @@ void run_benchmarks()
 
    {
       std::cout << "--- bc::deque<" << typeid(T).name() << "> ---\n";
+      //bc::deque<T, void, bc::deque_options_t<bc::block_size<4096> > > dq;
       bc::deque<T> dq;
       fill_test_data(dq, N);
       run_all(dq, iter, "deque");
