@@ -99,6 +99,26 @@ segmented_copy_n_dst_bounded
    return segduo<SrcIter, DstIter>(first, dst_first);
 }
 
+#if defined(BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION)
+
+template <class RASrcIter, class Size, class RADstIter>
+BOOST_CONTAINER_FORCEINLINE
+typename iterator_enable_if_tag
+   <RADstIter, std::random_access_iterator_tag, segduo<RASrcIter, RADstIter> >::type
+segmented_copy_n_dst_bounded
+   (RASrcIter first, Size& count, RADstIter dst_first, RADstIter dst_last,
+    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &src_tag)
+{
+   typedef typename iterator_traits<RADstIter>::difference_type difference_type;
+   const difference_type dst_n = dst_last - dst_first;
+   Size n = count < Size(dst_n) ? count : Size(dst_n);
+   count -= n; //Decrement before n is modified
+   return (segmented_copy_n_dst_bounded)(first, n, dst_first, unreachable_sentinel_t(),
+      non_segmented_iterator_tag(), src_tag);
+}
+
+#endif   //BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION
+
 template <class SrcIter, class Size, class SegDstIter, class SrcCat>
 segduo<SrcIter, SegDstIter> segmented_copy_n_dst_bounded
    (SrcIter first, Size& count, SegDstIter dst_first, SegDstIter dst_last,
@@ -289,10 +309,10 @@ BOOST_CONTAINER_FORCEINLINE OutIter segmented_copy_n_dispatch
 #if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
    typedef segmented_iterator_traits<OutIter> dst_traits;
    return (segmented_copy_n_dst_dispatch)
-      (first, count, result, typename dst_traits::is_segmented_iterator(), std::random_access_iterator_tag());
+      (first, count, result, typename dst_traits::is_segmented_iterator(), src_tag);
 #else
    return (segmented_copy_n_dst_dispatch)
-      (first, count, result, non_segmented_iterator_tag(), std::random_access_iterator_tag());
+      (first, count, result, non_segmented_iterator_tag(), src_tag);
 #endif
 }
 

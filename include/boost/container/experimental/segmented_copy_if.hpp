@@ -21,6 +21,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/container/experimental/wrapped_iterator.hpp>
 #include <boost/container/detail/iterator.hpp>
 
 namespace boost {
@@ -96,6 +97,36 @@ segmented_copy_if_dst_bounded
    out_path:
    return segduo<SrcIter, DstIter>(first, dst_first);
 }
+
+#if defined(BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION)
+
+template <class RASrcIter, class RADstIter, class Pred>
+BOOST_CONTAINER_FORCEINLINE
+typename iterator_enable_if_tag
+   <RADstIter, std::random_access_iterator_tag, segduo<RASrcIter, RADstIter> >::type
+segmented_copy_if_dst_bounded
+   (RASrcIter first, RASrcIter last, RADstIter dst_first, RADstIter dst_last, Pred pred,
+    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &src_tag)
+{
+   typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
+   const difference_type src_n = last - first;
+   const difference_type dst_n = difference_type(dst_last - dst_first);
+   if (dst_n >= src_n) {
+      return (segmented_copy_if_dst_bounded)(first, last, dst_first, unreachable_sentinel_t(),
+         pred, non_segmented_iterator_tag(), src_tag);
+   }
+   else {
+      //Dispatch to normal loop declaring the destination as bidirectional
+      //to avoid recursion and stack overflow
+      return (segmented_copy_if_dst_bounded)
+            ( first, last
+            , make_wrapped_iterator<std::bidirectional_iterator_tag>(dst_first)
+            , make_wrapped_iterator<std::bidirectional_iterator_tag>(dst_last)
+            , pred, non_segmented_iterator_tag(), src_tag);
+   }
+}
+
+#endif   //BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION
 
 template <class SrcIter, class Sent, class SegDstIter, class Pred, class SrcCat>
 segduo<SrcIter, SegDstIter> segmented_copy_if_dst_bounded

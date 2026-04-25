@@ -64,6 +64,7 @@ struct mismatch_equal
 #if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
 
 template <class RASrcIter, class Iter2, class Iter2Sent, class BinaryPred>
+BOOST_CONTAINER_FORCEINLINE
 segduo<RASrcIter, Iter2> segmented_mismatch_iter2_bounded
    (RASrcIter first1, RASrcIter last1, Iter2 first2, Iter2Sent iter2_last, BinaryPred pred,
     const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
@@ -114,6 +115,7 @@ segduo<RASrcIter, Iter2> segmented_mismatch_iter2_bounded
 #endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
 
 template <class SrcIter, class Sent, class Iter2, class Iter2Sent, class BinaryPred, class Iter2Tag, class SrcCat>
+BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c<!Iter2Tag::value, segduo<SrcIter, Iter2> >::type
 segmented_mismatch_iter2_bounded
    (SrcIter first1, Sent last1, Iter2 first2, Iter2Sent iter2_last, BinaryPred pred, Iter2Tag, SrcCat)
@@ -128,6 +130,26 @@ segmented_mismatch_iter2_bounded
    out_path:
    return segduo<SrcIter, Iter2>(first1, first2);
 }
+
+#if defined(BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION)
+
+template <class RASrcIter, class RAIter2, class BinaryPred>
+BOOST_CONTAINER_FORCEINLINE
+typename iterator_enable_if_tag
+   <RAIter2, std::random_access_iterator_tag, segduo<RASrcIter, RAIter2> >::type
+segmented_mismatch_iter2_bounded
+   (RASrcIter first1, RASrcIter last1, RAIter2 first2, RAIter2 iter2_last, BinaryPred pred,
+    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &src_tag)
+{
+   typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
+   const difference_type src_n  = last1 - first1;
+   const difference_type iter2_n = difference_type(iter2_last - first2);
+   const difference_type n = src_n < iter2_n ? src_n : iter2_n;
+   return (segmented_mismatch_iter2_bounded)(first1, first1 + n, first2, unreachable_sentinel_t(),
+      pred, non_segmented_iterator_tag(), src_tag);
+}
+
+#endif   //BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION
 
 template <class SrcIter, class Sent, class SegIter2, class BinaryPred, class SrcCat>
 segduo<SrcIter, SegIter2> segmented_mismatch_iter2_bounded

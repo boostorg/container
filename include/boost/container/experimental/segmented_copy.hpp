@@ -109,6 +109,26 @@ segmented_copy_dst_bounded
    return segduo<SrcIter, DstIter>(first, dst_first);
 }
 
+#if defined(BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION)
+
+template <class RASrcIter, class RADstIter>
+BOOST_CONTAINER_FORCEINLINE
+typename iterator_enable_if_tag
+   <RADstIter, std::random_access_iterator_tag, segduo<RASrcIter, RADstIter> >::type
+segmented_copy_dst_bounded
+   (RASrcIter first, RASrcIter last, RADstIter dst_first, RADstIter dst_last,
+    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &src_tag)
+{
+   typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
+   const difference_type src_n = last - first;
+   const difference_type dst_n = difference_type(dst_last - dst_first);
+   const difference_type n = src_n < dst_n ? src_n : dst_n;
+   return (segmented_copy_dst_bounded)(first, first + n, dst_first, unreachable_sentinel_t(),
+      non_segmented_iterator_tag(), src_tag);
+}
+
+#endif   //BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION
+
 template <class SrcIter, class Sent, class SegDstIter, class SrcCat>
 segduo<SrcIter, SegDstIter> segmented_copy_dst_bounded
    (SrcIter first, Sent last, SegDstIter dst_first, SegDstIter dst_last,
