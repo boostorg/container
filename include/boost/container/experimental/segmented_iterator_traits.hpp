@@ -48,7 +48,12 @@ struct segduo
    T2 second;
 
    BOOST_CONTAINER_FORCEINLINE segduo() {}
-   BOOST_CONTAINER_FORCEINLINE segduo(const T1 &f, const T2 &s) : first(f), second(s) {}
+
+   template<class U1, class U2>
+   BOOST_CONTAINER_FORCEINLINE segduo(const U1 &f, const U2 &s) : first(f), second(s) {}
+
+   template<class U1, class U2>
+   BOOST_CONTAINER_FORCEINLINE segduo(const segduo<U1, U2> &sd) : first(sd.first), second(sd.second) {}
 };
 
 struct unreachable_sentinel_t
@@ -296,5 +301,11 @@ struct deepest_local_iterator
 //////////////////////////////////////////////////////////////////////////////
 
 //#define BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO
+
+//#define BOOST_CONTAINER_SEGMENTED_DISABLE_DUAL_RA_OPTIMIZATION
+
+#if !defined(BOOST_CONTAINER_SEGMENTED_DISABLE_DUAL_RA_OPTIMIZATION)
+#define BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION
+#endif
 
 #endif // BOOST_CONTAINER_EXPERIMENTAL_SEGMENTED_ITERATOR_TRAITS_HPP
