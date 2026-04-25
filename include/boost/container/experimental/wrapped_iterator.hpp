@@ -63,7 +63,7 @@ public:
    BOOST_CONTAINER_FORCEINLINE wrapped_iterator() BOOST_NOEXCEPT : m_it() {}
    BOOST_CONTAINER_FORCEINLINE explicit wrapped_iterator(Iterator it) BOOST_NOEXCEPT : m_it(it) {}
 
-   BOOST_CONTAINER_FORCEINLINE Iterator base() const BOOST_NOEXCEPT {  return m_it; }
+   BOOST_CONTAINER_FORCEINLINE operator Iterator () const BOOST_NOEXCEPT {  return m_it; }
 
    // Forward operations
    BOOST_CONTAINER_FORCEINLINE reference operator*()  const BOOST_NOEXCEPT {  return *m_it;    }
