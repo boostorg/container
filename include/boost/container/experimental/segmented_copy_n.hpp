@@ -304,7 +304,7 @@ OutIter segmented_copy_n_dispatch
 
 template <class RAIter, class Size, class OutIter>
 BOOST_CONTAINER_FORCEINLINE OutIter segmented_copy_n_dispatch
-   (RAIter first, Size count, OutIter result, non_segmented_iterator_tag, const std::random_access_iterator_tag &)
+   (RAIter first, Size count, OutIter result, non_segmented_iterator_tag, const std::random_access_iterator_tag &src_tag)
 {
 #if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
    typedef segmented_iterator_traits<OutIter> dst_traits;
