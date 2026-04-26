@@ -242,25 +242,40 @@ template <class It>
 struct deepest_local_iterator_impl<false, It>
 {
    typedef It type;
+   BOOST_CONTAINER_FORCEINLINE static type get(It it) { return it; }
 };
 
 template <class It>
 struct deepest_local_iterator_impl<true, It>
 {
-private:
+   private:
+
    typedef typename segmented_iterator_traits<It>::local_iterator local_t;
-public:
-   typedef typename deepest_local_iterator_impl<
-      segmented_iterator_traits<local_t>::is_segmented_iterator::value,
-      local_t>::type type;
+   typedef deepest_local_iterator_impl
+      < segmented_iterator_traits<local_t>::is_segmented_iterator::value
+      , local_t> next_layer_t;
+
+   public:
+
+   typedef typename next_layer_t::type type;
+
+   BOOST_CONTAINER_FORCEINLINE static typename next_layer_t::type get(It it)
+   {  return next_layer_t::get(segmented_iterator_traits<It>::local(it)); }
 };
 
 template <class It>
 struct deepest_local_iterator
 {
-   typedef typename deepest_local_iterator_impl<
-      segmented_iterator_traits<It>::is_segmented_iterator::value,
-      It>::type type;
+   typedef deepest_local_iterator_impl
+      < segmented_iterator_traits<It>::is_segmented_iterator::value
+      , It> next_layer_t;
+
+   public:
+
+   typedef typename next_layer_t::type type;
+
+   BOOST_CONTAINER_FORCEINLINE static typename next_layer_t::type get(It it)
+   {  return next_layer_t::get(it);  }
 };
 
 } // namespace detail_algo
