@@ -174,9 +174,7 @@ segduo<SrcIter, SegIter2> segmented_mismatch_iter2_bounded
          (first1, last1, iter2_traits::local(iter2_first), iter2_traits::end(sfirst), pred, iter2_is_local_seg_t(), SrcCat());
       first1 = r.first;
       iter2_local_iterator loc2 = r.second;
-      if(first1 != last1 && loc2 != iter2_traits::end(sfirst))
-         return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(sfirst, loc2));
-      if(first1 == last1)
+      if(first1 == last1 || loc2 != iter2_traits::end(sfirst))
          return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(sfirst, loc2));
 
       for(++sfirst; sfirst != slast; ++sfirst) {
@@ -184,9 +182,7 @@ segduo<SrcIter, SegIter2> segmented_mismatch_iter2_bounded
             (first1, last1, iter2_traits::begin(sfirst), iter2_traits::end(sfirst), pred, iter2_is_local_seg_t(), SrcCat());
          first1 = r.first;
          loc2 = r.second;
-         if(first1 != last1 && loc2 != iter2_traits::end(sfirst))
-            return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(sfirst, loc2));
-         if(first1 == last1)
+         if(first1 == last1 || loc2 != iter2_traits::end(sfirst))
             return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(sfirst, loc2));
       }
 
