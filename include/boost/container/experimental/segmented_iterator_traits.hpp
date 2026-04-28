@@ -71,6 +71,16 @@ struct unreachable_sentinel_t
    BOOST_CONTAINER_FORCEINLINE friend bool operator!=(unreachable_sentinel_t, const It&) { return true; }
 };
 
+//! Disambiguator tag passed by the dual-RA fast-path overload of certain
+//! bounded helpers (e.g. segmented_copy_if_dst_bounded,
+//! segmented_remove_copy_if_dst_bounded) when it has decided that the
+//! remaining source does not fit the destination capacity and a real
+//! bounded scan is required.  The tag's only role is to perturb the
+//! signature of the recursive call so that the dual-RA overload itself
+//! cannot re-match: only the unrolled / generic terminal overloads remain
+//! viable, leaving the random-access category of both iterators intact.
+struct dual_ra_skip_t {};
+
 namespace detail_algo {
 
 //! Default less-than function object used by segmented algorithms when the

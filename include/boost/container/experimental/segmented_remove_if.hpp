@@ -33,7 +33,11 @@ BOOST_CONTAINER_FORCEINLINE
 FwdIt segmented_remove_if(FwdIt first, Sent last, Predicate pred)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
-   first = segmented_find_if(first, last, pred);
+   first = detail_algo::segmented_find_if_dispatch
+      (first, last, pred
+      , typename traits::is_segmented_iterator()
+      , typename iterator_traits<FwdIt>::iterator_category());
+
    if(first == last)
       return last;
 

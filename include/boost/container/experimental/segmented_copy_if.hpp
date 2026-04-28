@@ -21,7 +21,6 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
-#include <boost/container/experimental/wrapped_iterator.hpp>
 #include <boost/container/detail/iterator.hpp>
 
 namespace boost {
@@ -48,7 +47,8 @@ namespace detail_algo {
 template <class RASrcIter, class DstIter, class DstSent, class Pred>
 BOOST_CONTAINER_FORCEINLINE segduo<RASrcIter, DstIter> segmented_copy_if_dst_bounded
    (RASrcIter first, RASrcIter last, DstIter dst_first, DstSent dst_last, Pred pred,
-    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
+    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &,
+    dual_ra_skip_t = dual_ra_skip_t())
 {
    typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
 
@@ -84,7 +84,8 @@ BOOST_CONTAINER_FORCEINLINE segduo<RASrcIter, DstIter> segmented_copy_if_dst_bou
 template <class SrcIter, class Sent, class DstIter, class DstSent, class Pred, class DstTag, class SrcCat>
 BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<!DstTag::value, segduo<SrcIter, DstIter> >::type
 segmented_copy_if_dst_bounded
-   (SrcIter first, Sent last, DstIter dst_first, DstSent dst_last, Pred pred, DstTag, SrcCat)
+   (SrcIter first, Sent last, DstIter dst_first, DstSent dst_last, Pred pred, DstTag, SrcCat,
+    dual_ra_skip_t = dual_ra_skip_t())
 {
    for(; first != last; ++first) {
       if(pred(*first)) {
@@ -116,13 +117,12 @@ segmented_copy_if_dst_bounded
          pred, non_segmented_iterator_tag(), src_tag);
    }
    else {
-      //Dispatch to normal loop declaring the destination as bidirectional
-      //to avoid recursion and stack overflow
+      // Pass dual_ra_skip_t() so the dual-RA overload (this one) is removed
+      // from the candidate set: only the unrolled / generic terminal overloads
+      // remain viable.  The destination iterator stays random-access.
       return (segmented_copy_if_dst_bounded)
-            ( first, last
-            , make_wrapped_iterator<std::bidirectional_iterator_tag>(dst_first)
-            , make_wrapped_iterator<std::bidirectional_iterator_tag>(dst_last)
-            , pred, non_segmented_iterator_tag(), src_tag);
+            (first, last, dst_first, dst_last, pred,
+             non_segmented_iterator_tag(), src_tag, dual_ra_skip_t());
    }
 }
 
