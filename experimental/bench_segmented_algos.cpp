@@ -2331,6 +2331,10 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_remove(c, iters, cname, half,  "remove(hit)");
    bench_remove(c, iters, cname, min1,  "remove(miss)");
 
+   //remove_if
+   bench_remove_if(c, iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_if(hit)");
+   bench_remove_if(c, iters, cname, is_negative<VT>(), "remove_if(miss)");
+
    //remove_copy
    bench_remove_copy<false>(c, iters, cname, half, "remove_copy(hit)");
    bench_remove_copy<true>(c, iters, cname, half,  "remove_copy(2xS hit)");
@@ -2342,10 +2346,6 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_remove_copy_if<true>(c, iters, cname, less_and_greater_ref<VT>(quart, threequart),  "remove_copy_if(2xS hit)");
    bench_remove_copy_if<false>(c, iters, cname, is_negative<VT>(), "remove_copy_if(miss)");
    bench_remove_copy_if<true>(c, iters, cname, is_negative<VT>(), "remove_copy_if(2xS miss)");
-
-   //remove_if
-   bench_remove_if(c, iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_if(hit)");
-   bench_remove_if(c, iters, cname, is_negative<VT>(), "remove_if(miss)");
 
    //replace
    {  //Replace half of the elements to ensure that the "hit" case is not too fast
