@@ -35,8 +35,7 @@ namespace container {
 //! partitioned with respect to \c pred.
 //! Exploits segmentation when available.
 template <class InpIter, class Sent, class Pred>
-BOOST_CONTAINER_FORCEINLINE
-bool segmented_is_partitioned(InpIter first, Sent last, Pred pred)
+inline bool segmented_is_partitioned(InpIter first, Sent last, Pred pred)
 {
     first = segmented_find_if_not(first, last, pred);
     return segmented_none_of(first, last, pred);
