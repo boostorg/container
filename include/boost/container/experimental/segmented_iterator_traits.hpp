@@ -20,6 +20,7 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
+#include <boost/container/detail/iterator.hpp>
 
 #include <boost/move/utility_core.hpp>
 
@@ -54,6 +55,24 @@ struct segduo
 
    template<class U1, class U2>
    BOOST_CONTAINER_FORCEINLINE segduo(const segduo<U1, U2> &sd) : first(sd.first), second(sd.second) {}
+};
+
+template<class T1, class T2, class T3>
+struct segtrio
+{
+   T1 first;
+   T2 second;
+   T3 third;
+
+   BOOST_CONTAINER_FORCEINLINE segtrio() {}
+
+   template<class U1, class U2, class U3>
+   BOOST_CONTAINER_FORCEINLINE segtrio(const U1 &f, const U2 &s, const U3 &t)
+      : first(f), second(s), third(t) {}
+
+   template<class U1, class U2, class U3>
+   BOOST_CONTAINER_FORCEINLINE segtrio(const segtrio<U1, U2, U3> &sd)
+      : first(sd.first), second(sd.second), third(sd.third) {}
 };
 
 struct unreachable_sentinel_t
@@ -232,6 +251,41 @@ struct is_sentinel<Iter, Iter>
 };
 
 namespace detail_algo {
+
+//////////////////////////////////////////////////////////////////////////////
+// sent_filter: when [first, last) is closed by a true sentinel
+// (Sent != Iter), segment walkers cannot decompose Sent and bidirectional
+// algorithms cannot step backwards from it; in that case both the iterator
+// category and the segmentation tag are downgraded to
+// (std::forward_iterator_tag, non_segmented_iterator_tag) so that algorithms
+// route through the flat, forward-only path.  When Sent == Iter, the
+// iterator's natural category and segmentation are preserved.
+//
+// Used by bidirectional/segmented algorithms (e.g. segmented_partition,
+// segmented_find_last_if) that need a single dispatch point covering both
+// the (Iter, Iter) and (Iter, Sentinel) call signatures.
+//////////////////////////////////////////////////////////////////////////////
+
+template <class Iter, class Sent, bool = is_sentinel<Sent, Iter>::value>
+struct sent_filter
+{
+   typedef std::forward_iterator_tag                          cat_t;
+   typedef non_segmented_iterator_tag                         seg_t;
+};
+
+template <class Iter>
+struct sent_filter<Iter, Iter, false>
+{
+   typedef typename boost::container::iterator_traits<Iter>
+      ::iterator_category                                     cat_t;
+   typedef typename segmented_iterator_traits<Iter>
+      ::is_segmented_iterator                                 seg_t;
+};
+
+template <class Iter, class Sent>
+struct sent_filter<Iter, Sent, false>
+   : public sent_filter<Iter, Iter, false>
+{};
 
 // Compile-time metafunction that unwraps a (possibly recursively) segmented
 // iterator to its deepest non-segmented `local_iterator` type.
