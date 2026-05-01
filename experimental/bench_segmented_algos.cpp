@@ -1306,17 +1306,17 @@ struct seg_is_partitioned {
 };
 
 // --- merge ---
-template<class C, class OutVec>
+template<class C1, class C2, class OutT>
 struct std_merge {
-   const C &c; const C &c2; OutVec &out;
-   std_merge(const C &c_, const C &c2_, OutVec &o_) : c(c_), c2(c2_), out(o_) {}
+   const C1 &c; const C2 &c2; OutT &out;
+   std_merge(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
 };
-template<class C, class OutVec, bool Wrap = false>
+template<class C1, class C2, class OutT, bool Wrap = false>
 struct seg_merge {
-   const C &c; const C &c2; OutVec &out;
-   seg_merge(const C &c_, const C &c2_, OutVec &o_) : c(c_), c2(c2_), out(o_) {}
+   const C1 &c; const C2 &c2; OutT &out;
+   seg_merge(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_merge(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
 };
@@ -1983,16 +1983,15 @@ void bench_is_partitioned(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_is_partitioned<C, Pred, true>(c, pred, result), label, cname);
 }
 
-template<class C>
-void bench_merge(const C &c, const C &c2, std::size_t iters, const char* cname)
+template<class C1, class C2, class OutT>
+void bench_merge(const C1 &c1, const C2 &c2, std::size_t iters,
+                 const char* cname, const char* label)
 {
-   typedef typename C::value_type VT;
-   typedef boost::container::vector<VT> out_vec_t;
-   out_vec_t out(c.size() + c2.size());
-   compare_batch(iters, c.size(),
-      bench_ops::std_merge<C, out_vec_t>(c, c2, out),
-      bench_ops::seg_merge<C, out_vec_t>(c, c2, out),
-      bench_ops::seg_merge<C, out_vec_t, true>(c, c2, out), "merge", cname);
+   OutT out(c1.size() + c2.size());
+   compare_batch(iters, c1.size(),
+      bench_ops::std_merge<C1, C2, OutT>(c1, c2, out),
+      bench_ops::seg_merge<C1, C2, OutT>(c1, c2, out),
+      bench_ops::seg_merge<C1, C2, OutT, true>(c1, c2, out), label, cname);
 }
 
 template<bool IsDual, class C>
@@ -2283,10 +2282,24 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 
    //merge
    {
+      typedef boost::container::vector<VT> vec_t;
       C c2(c);
       for (typename C::iterator it = c2.begin(); it != c2.end(); ++it)
          *it = VT(int_value(*it) * 2);
-      bench_merge(c, c2, iters, cname);
+      // Flat copies of the inputs for the mixed-shape variants.  Both copies
+      // are sorted (input data is monotonically generated) so the merge
+      // semantics are preserved.
+      vec_t v1(c.begin(), c.end());
+      vec_t v2(c2.begin(), c2.end());
+
+      // merge(1):   first range = C, second range = bc::vector, out = bc::vector
+      bench_merge<C,     vec_t, vec_t>(c,  v2, iters, cname, "merge(1S)");
+      // merge(2):   first range = bc::vector, second range = C, out = bc::vector
+      bench_merge<vec_t, C,     vec_t>(v1, c2, iters, cname, "merge(2S)");
+      // merge(2xS): both ranges = C, out = bc::vector
+      bench_merge<C,     C,     vec_t>(c,  c2, iters, cname, "merge(2xS)");
+      // merge(3xS): both ranges and out = C
+      bench_merge<C,     C,     C    >(c,  c2, iters, cname, "merge(3xS)");
    }
 
    //mismatch
