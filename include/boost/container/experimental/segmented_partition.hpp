@@ -290,21 +290,6 @@ FwdIt segmented_partition_dispatch(FwdIt first, Sent last, Pred pred, Tag tag, c
    return (partition_scan)(first, last, pred, tag, cat);
 }
 
-//Sentinels may only be used with forward iterators, so we can ignore the segmentation tag in that case.
-template<class It, class Sent, class Seg, class Tag>
-struct sent_filter
-{
-   typedef std::forward_iterator_tag   cat_t;
-   typedef non_segmented_iterator_tag  seg_t;
-};
-
-template<class It, class Seg, class Tag>
-struct sent_filter<It, It, Seg, Tag>
-{
-   typedef Tag cat_t;
-   typedef Seg seg_t;
-};
-
 } // namespace detail_algo
 
 //! Reorders elements in [first, last) so that elements satisfying
@@ -317,15 +302,11 @@ template <class FwdIt, class Sent, class Pred>
 BOOST_CONTAINER_FORCEINLINE
 FwdIt segmented_partition(FwdIt first, Sent last, Pred pred)
 {
-   typedef segmented_iterator_traits<FwdIt> traits;
-   typedef typename boost::container::iterator_traits<FwdIt>::iterator_category cat_t;
-   typedef typename traits::is_segmented_iterator seg_t;
-
-   typedef detail_algo::sent_filter<FwdIt, Sent, seg_t, cat_t> sent_filter_t;
+   typedef detail_algo::sent_filter<FwdIt, Sent> sf;
    return detail_algo::segmented_partition_dispatch
       ( first, last, pred
-      , typename sent_filter_t::seg_t()
-      , typename sent_filter_t::cat_t());
+      , typename sf::seg_t()
+      , typename sf::cat_t());
 }
 
 } // namespace container

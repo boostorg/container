@@ -214,24 +214,6 @@ typename algo_enable_if_c<is_sentinel<Sent, FwdIt>::value, FwdIt>::type
    return found ? result : first;
 }
 
-//////////////////////////////////////////////
-// sent_filter: sentinel ⇒ forward + flat
-//////////////////////////////////////////////
-
-template<class It, class Sent, class Seg, class Tag>
-struct find_last_sent_filter
-{
-   typedef std::forward_iterator_tag   cat_t;
-   typedef non_segmented_iterator_tag  seg_t;
-};
-
-template<class It, class Seg, class Tag>
-struct find_last_sent_filter<It, It, Seg, Tag>
-{
-   typedef Tag cat_t;
-   typedef Seg seg_t;
-};
-
 } // namespace detail_algo
 
 //! Returns an iterator to the last element satisfying \c pred
@@ -243,10 +225,7 @@ template <class FwdIt, class Sent, class Pred>
 BOOST_CONTAINER_FORCEINLINE
 FwdIt segmented_find_last_if(FwdIt first, Sent last, Pred pred)
 {
-   typedef segmented_iterator_traits<FwdIt> traits;
-   typedef typename boost::container::iterator_traits<FwdIt>::iterator_category cat_t;
-   typedef typename traits::is_segmented_iterator seg_t;
-   typedef detail_algo::find_last_sent_filter<FwdIt, Sent, seg_t, cat_t> sf;
+   typedef detail_algo::sent_filter<FwdIt, Sent> sf;
    return detail_algo::find_last_if_scan
       ( first, last, pred, typename sf::seg_t(), typename sf::cat_t());
 }
