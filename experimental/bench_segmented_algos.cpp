@@ -1074,15 +1074,15 @@ struct seg_find_last_if_not {
 // --- equal ---
 template<class C, class R2>
 struct std_equal {
-   const C &c; R2 &range2; int &result;
-   std_equal(const C &c_, R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
+   const C &c; const R2 &range2; int &result;
+   std_equal(const C &c_, const R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = std::equal(c.begin(), c.end(), range2.begin()) ? 1 : 0; escape(&result); }
 };
 template<class C, class R2, bool Wrap = false>
 struct seg_equal {
-   const C &c; R2 &range2; int &result;
-   seg_equal(const C &c_, R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
+   const C &c; const R2 &range2; int &result;
+   seg_equal(const C &c_, const R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = bc::segmented_equal(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(range2.begin())) ? 1 : 0; escape(&result); }
 };
@@ -1324,15 +1324,15 @@ struct seg_merge {
 // --- mismatch ---
 template<class C, class R2>
 struct std_mismatch {
-   const C &c; R2 &range2; int &result;
-   std_mismatch(const C &c_, R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
+   const C &c; const R2 &range2; int &result;
+   std_mismatch(const C &c_, const R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = (std::mismatch(c.begin(), c.end(), range2.begin()).first == c.end()) ? 1 : 0; escape(&result); }
 };
 template<class C, class R2, bool Wrap = false>
 struct seg_mismatch {
-   const C &c; R2 &range2; int &result;
-   seg_mismatch(const C &c_, R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
+   const C &c; const R2 &range2; int &result;
+   seg_mismatch(const C &c_, const R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = (bc::segmented_mismatch(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(range2.begin())).first == iter_w<Wrap>::wrap(c.end())) ? 1 : 0; escape(&result); }
 };
@@ -1340,15 +1340,15 @@ struct seg_mismatch {
 // --- mismatch (two-range) ---
 template<class C, class R2>
 struct std_mismatch_2r {
-   const C &c; R2 &range2; int &result;
-   std_mismatch_2r(const C &c_, R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
+   const C &c; const R2 &range2; int &result;
+   std_mismatch_2r(const C &c_, const R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = (bench_detail::mismatch(c.begin(), c.end(), range2.begin(), range2.end()).first == c.end()) ? 1 : 0; escape(&result); }
 };
 template<class C, class R2, bool Wrap = false>
 struct seg_mismatch_2r {
-   const C &c; R2 &range2; int &result;
-   seg_mismatch_2r(const C &c_, R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
+   const C &c; const R2 &range2; int &result;
+   seg_mismatch_2r(const C &c_, const R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = (bc::segmented_mismatch(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(range2.begin()), iter_w<Wrap>::wrap(range2.end())).first == iter_w<Wrap>::wrap(c.end())) ? 1 : 0; escape(&result); }
 };
@@ -1644,29 +1644,25 @@ void bench_for_each(const C &c, std::size_t iters, const char* cname)
       bench_ops::seg_for_each<C, true>(c, result), "for_each", cname);
 }
 
-template<bool IsDual, class C>
-void bench_copy(const C &c, std::size_t iters, const char* cname, const char* label)
+template<class InC, class OutC>
+void bench_copy(const InC &c, std::size_t iters, const char* cname, const char* label)
 {
-   typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type out_t;
-   out_t out(c.size());
+   OutC out(c.size());
    compare_batch(iters, c.size(),
-      bench_ops::std_copy<C, out_t>(c, out),
-      bench_ops::seg_copy<C, out_t>(c, out),
-      bench_ops::seg_copy<C, out_t, true>(c, out), label, cname);
+      bench_ops::std_copy<InC, OutC>(c, out),
+      bench_ops::seg_copy<InC, OutC>(c, out),
+      bench_ops::seg_copy<InC, OutC, true>(c, out), label, cname);
 }
 
-template<bool IsDual, class C, class Pred>
-void bench_copy_if(const C &c, std::size_t iters, const char* cname,
+template<class InC, class OutC, class Pred>
+void bench_copy_if(const InC &c, std::size_t iters, const char* cname,
                    Pred pred, const char* label)
 {
-   typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type out_t;
-   out_t out(c.size());
+   OutC out(c.size());
    compare_batch(iters, c.size(),
-      bench_ops::std_copy_if<C, out_t, Pred>(c, out, pred),
-      bench_ops::seg_copy_if<C, out_t, Pred>(c, out, pred),
-      bench_ops::seg_copy_if<C, out_t, Pred, true>(c, out, pred), label, cname);
+      bench_ops::std_copy_if<InC, OutC, Pred>(c, out, pred),
+      bench_ops::seg_copy_if<InC, OutC, Pred>(c, out, pred),
+      bench_ops::seg_copy_if<InC, OutC, Pred, true>(c, out, pred), label, cname);
 }
 
 template<class C>
@@ -1769,18 +1765,15 @@ void bench_find_last_if_not(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_find_last_if_not<C, Pred, true>(c, pred, result), label, cname);
 }
 
-template<bool IsDual, class C>
-void bench_equal(const C &c, const C &c2, std::size_t iters, const char* cname,
+template<class InC1, class InC2>
+void bench_equal(const InC1 &c, const InC2 &c2, std::size_t iters, const char* cname,
                  const char* label)
 {
-   typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type range2_t;
-   range2_t range2(c2.begin(), c2.end());
    int result = 0;
    compare_batch(iters, c.size(),
-      bench_ops::std_equal<C, range2_t>(c, range2, result),
-      bench_ops::seg_equal<C, range2_t>(c, range2, result),
-      bench_ops::seg_equal<C, range2_t, true>(c, range2, result), label, cname);
+      bench_ops::std_equal<InC1, InC2>(c, c2, result),
+      bench_ops::seg_equal<InC1, InC2>(c, c2, result),
+      bench_ops::seg_equal<InC1, InC2, true>(c, c2, result), label, cname);
 }
 
 template<class C>
@@ -1837,18 +1830,16 @@ void bench_fill_n(const C &c, std::size_t iters, const char* cname)
       bench_ops::seg_fill_n<C, true>(c2, n, val), "fill_n", cname);
 }
 
-template<bool IsDual, class C>
-void bench_copy_n(const C &c, std::size_t iters, const char* cname, const char* label)
+template<class InC, class OutC>
+void bench_copy_n(const InC &c, std::size_t iters, const char* cname, const char* label)
 {
-   typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type out_t;
-   out_t out(c.size());
-   typename C::difference_type n =
-      static_cast<typename C::difference_type>(c.size());
+   OutC out(c.size());
+   typename InC::difference_type n =
+      static_cast<typename InC::difference_type>(c.size());
    compare_batch(iters, c.size(),
-      bench_ops::std_copy_n<C, out_t>(c, n, out),
-      bench_ops::seg_copy_n<C, out_t>(c, n, out),
-      bench_ops::seg_copy_n<C, out_t, true>(c, n, out), label, cname);
+      bench_ops::std_copy_n<InC, OutC>(c, n, out),
+      bench_ops::seg_copy_n<InC, OutC>(c, n, out),
+      bench_ops::seg_copy_n<InC, OutC, true>(c, n, out), label, cname);
 }
 
 template<class C>
@@ -1901,30 +1892,26 @@ void bench_remove_if(const C &c, std::size_t iters, const char* cname,
       label, cname);
 }
 
-template<bool IsDual, class C>
-void bench_remove_copy(const C &c, std::size_t iters, const char* cname,
-                       const typename C::value_type& val, const char* label)
+template<class InC, class OutC>
+void bench_remove_copy(const InC &c, std::size_t iters, const char* cname,
+                       const typename InC::value_type& val, const char* label)
 {
-   typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type out_t;
-   out_t out(c.size());
+   OutC out(c.size());
    compare_batch(iters, c.size(),
-      bench_ops::std_remove_copy<C, out_t>(c, out, val),
-      bench_ops::seg_remove_copy<C, out_t>(c, out, val),
-      bench_ops::seg_remove_copy<C, out_t, true>(c, out, val), label, cname);
+      bench_ops::std_remove_copy<InC, OutC>(c, out, val),
+      bench_ops::seg_remove_copy<InC, OutC>(c, out, val),
+      bench_ops::seg_remove_copy<InC, OutC, true>(c, out, val), label, cname);
 }
 
-template<bool IsDual, class C, class Pred>
-void bench_remove_copy_if(const C &c, std::size_t iters, const char* cname,
+template<class InC, class OutC, class Pred>
+void bench_remove_copy_if(const InC &c, std::size_t iters, const char* cname,
                           Pred pred, const char* label)
 {
-   typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type out_t;
-   out_t out(c.size());
+   OutC out(c.size());
    compare_batch(iters, c.size(),
-      bench_ops::std_remove_copy_if<C, out_t, Pred>(c, out, pred),
-      bench_ops::seg_remove_copy_if<C, out_t, Pred>(c, out, pred),
-      bench_ops::seg_remove_copy_if<C, out_t, Pred, true>(c, out, pred), label, cname);
+      bench_ops::std_remove_copy_if<InC, OutC, Pred>(c, out, pred),
+      bench_ops::seg_remove_copy_if<InC, OutC, Pred>(c, out, pred),
+      bench_ops::seg_remove_copy_if<InC, OutC, Pred, true>(c, out, pred), label, cname);
 }
 
 template<class C>
@@ -1938,16 +1925,14 @@ void bench_reverse(const C &c, std::size_t iters, const char* cname)
       bench_ops::seg_reverse<C, true>(c2, result), "reverse", cname);
 }
 
-template<bool IsDual, class C>
-void bench_reverse_copy(const C &c, std::size_t iters, const char* cname, const char* label)
+template<class InC, class OutC>
+void bench_reverse_copy(const InC &c, std::size_t iters, const char* cname, const char* label)
 {
-   typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type out_t;
-   out_t out(c.size());
+   OutC out(c.size());
    compare_batch(iters, c.size(),
-      bench_ops::std_reverse_copy<C, out_t>(c, out),
-      bench_ops::seg_reverse_copy<C, out_t>(c, out),
-      bench_ops::seg_reverse_copy<C, out_t, true>(c, out), label, cname);
+      bench_ops::std_reverse_copy<InC, OutC>(c, out),
+      bench_ops::seg_reverse_copy<InC, OutC>(c, out),
+      bench_ops::seg_reverse_copy<InC, OutC, true>(c, out), label, cname);
 }
 
 template<class C>
@@ -1994,32 +1979,26 @@ void bench_merge(const C1 &c1, const C2 &c2, std::size_t iters,
       bench_ops::seg_merge<C1, C2, OutT, true>(c1, c2, out), label, cname);
 }
 
-template<bool IsDual, class C>
-void bench_mismatch(const C &c, const C &c2, std::size_t iters, const char* cname,
+template<class InC1, class InC2>
+void bench_mismatch(const InC1 &c, const InC2 &c2, std::size_t iters, const char* cname,
                     const char* label)
 {
-   typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type range2_t;
-   range2_t range2(c2.begin(), c2.end());
    int result = 0;
    compare_batch(iters, c.size(),
-      bench_ops::std_mismatch<C, range2_t>(c, range2, result),
-      bench_ops::seg_mismatch<C, range2_t>(c, range2, result),
-      bench_ops::seg_mismatch<C, range2_t, true>(c, range2, result), label, cname);
+      bench_ops::std_mismatch<InC1, InC2>(c, c2, result),
+      bench_ops::seg_mismatch<InC1, InC2>(c, c2, result),
+      bench_ops::seg_mismatch<InC1, InC2, true>(c, c2, result), label, cname);
 }
 
-template<bool IsDual, class C>
-void bench_mismatch_2r(const C &c, const C &c2, std::size_t iters, const char* cname,
+template<class InC1, class InC2>
+void bench_mismatch_2r(const InC1 &c, const InC2 &c2, std::size_t iters, const char* cname,
                        const char* label)
 {
-   typedef typename C::value_type VT;
-   typedef typename boost::move_detail::if_c<IsDual, C, boost::container::vector<VT> >::type range2_t;
-   range2_t range2(c2.begin(), c2.end());
    int result = 0;
    compare_batch(iters, c.size(),
-      bench_ops::std_mismatch_2r<C, range2_t>(c, range2, result),
-      bench_ops::seg_mismatch_2r<C, range2_t>(c, range2, result),
-      bench_ops::seg_mismatch_2r<C, range2_t, true>(c, range2, result), label, cname);
+      bench_ops::std_mismatch_2r<InC1, InC2>(c, c2, result),
+      bench_ops::seg_mismatch_2r<InC1, InC2>(c, c2, result),
+      bench_ops::seg_mismatch_2r<InC1, InC2, true>(c, c2, result), label, cname);
 }
 
 template<class C>
@@ -2167,12 +2146,17 @@ template<class C>
 void run_all(const C& c, std::size_t iters, const char* cname)
 {
    typedef typename C::value_type VT;
+   typedef boost::container::vector<VT> vec_t;
 
    const VT zero(0);
    const VT min1(-1);
    const VT quart((int)c.size()/4);
    const VT half((int)c.size()/2);
    const VT threequart((int)c.size()*3/4);
+
+   //Flat (non-segmented) copy of c, used as the first range in the
+   //"only-second-range-segmented" (2S) variants of dual-shape algorithms.
+   vec_t cv(c.begin(), c.end());
 
    g_geomean.reset();
    print_subheader();
@@ -2186,18 +2170,25 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_any_of(c, iters, cname, is_negative<VT>(), "any_of(miss)");
 
    //copy
-   bench_copy<false>(c, iters, cname, "copy");
-   bench_copy<true>(c, iters, cname, "copy(2xS)");
+   //  1S:  src = C (segmented), dst = bc::vector
+   //  2S:  src = bc::vector,    dst = C
+   //  2xS: src = C,              dst = C
+   bench_copy<C,     vec_t>(c,  iters, cname, "copy(1S)");
+   bench_copy<vec_t, C    >(cv, iters, cname, "copy(2S)");
+   bench_copy<C,     C    >(c,  iters, cname, "copy(2xS)");
 
    //copy_if
-   bench_copy_if<false>(c, iters, cname, is_odd<VT>(),      "copy_if(hit)");
-   bench_copy_if<true>(c, iters, cname, is_odd<VT>(),       "copy_if(2xS hit)");
-   bench_copy_if<false>(c, iters, cname, is_negative<VT>(), "copy_if(miss)");
-   bench_copy_if<true>(c, iters, cname, is_negative<VT>(),  "copy_if(2xS miss)");
+   bench_copy_if<C,     vec_t>(c,  iters, cname, is_odd<VT>(),      "copy_if(1S hit)");
+   bench_copy_if<vec_t, C    >(cv, iters, cname, is_odd<VT>(),      "copy_if(2S hit)");
+   bench_copy_if<C,     C    >(c,  iters, cname, is_odd<VT>(),      "copy_if(2xS hit)");
+   bench_copy_if<C,     vec_t>(c,  iters, cname, is_negative<VT>(), "copy_if(1S miss)");
+   bench_copy_if<vec_t, C    >(cv, iters, cname, is_negative<VT>(), "copy_if(2S miss)");
+   bench_copy_if<C,     C    >(c,  iters, cname, is_negative<VT>(), "copy_if(2xS miss)");
 
    //copy_n
-   bench_copy_n<false>(c, iters, cname, "copy_n");
-   bench_copy_n<true>(c, iters, cname, "copy_n(2xS)");
+   bench_copy_n<C,     vec_t>(c,  iters, cname, "copy_n(1S)");
+   bench_copy_n<vec_t, C    >(cv, iters, cname, "copy_n(2S)");
+   bench_copy_n<C,     C    >(c,  iters, cname, "copy_n(2xS)");
 
    //count
    bench_count(c, iters, cname, zero,  "count(hit)");
@@ -2210,11 +2201,15 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //equal
    {
       C c2(c);
-      bench_equal<false>(c, c2, iters, cname, "equal(hit)");
-      bench_equal<true>(c, c2, iters, cname, "equal(2xS hit)");
+      vec_t c2v(c2.begin(), c2.end());
+      bench_equal<C,     vec_t>(c,  c2v, iters, cname, "equal(1S hit)");
+      bench_equal<vec_t, C    >(cv, c2,  iters, cname, "equal(2S hit)");
+      bench_equal<C,     C    >(c,  c2,  iters, cname, "equal(2xS hit)");
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
-      bench_equal<false>(c, c2, iters, cname, "equal(miss)");
-      bench_equal<true>(c, c2, iters, cname, "equal(2xS miss)");
+      c2v.assign(c2.begin(), c2.end());
+      bench_equal<C,     vec_t>(c,  c2v, iters, cname, "equal(1S miss)");
+      bench_equal<vec_t, C    >(cv, c2,  iters, cname, "equal(2S miss)");
+      bench_equal<C,     C    >(c,  c2,  iters, cname, "equal(2xS miss)");
    }
 
    //fill
@@ -2282,48 +2277,54 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 
    //merge
    {
-      typedef boost::container::vector<VT> vec_t;
       C c2(c);
       for (typename C::iterator it = c2.begin(); it != c2.end(); ++it)
          *it = VT(int_value(*it) * 2);
-      // Flat copies of the inputs for the mixed-shape variants.  Both copies
-      // are sorted (input data is monotonically generated) so the merge
-      // semantics are preserved.
-      vec_t v1(c.begin(), c.end());
-      vec_t v2(c2.begin(), c2.end());
+      // Flat copy of c2 for the mixed-shape variants.  Both copies (cv and
+      // c2v) remain sorted (input data is monotonically generated) so the
+      // merge semantics are preserved.
+      vec_t c2v(c2.begin(), c2.end());
 
-      // merge(1):   first range = C, second range = bc::vector, out = bc::vector
-      bench_merge<C,     vec_t, vec_t>(c,  v2, iters, cname, "merge(1S)");
-      // merge(2):   first range = bc::vector, second range = C, out = bc::vector
-      bench_merge<vec_t, C,     vec_t>(v1, c2, iters, cname, "merge(2S)");
+      // merge(1S):  first range = C, second range = bc::vector, out = bc::vector
+      bench_merge<C,     vec_t, vec_t>(c,  c2v, iters, cname, "merge(1S)");
+      // merge(2S):  first range = bc::vector, second range = C, out = bc::vector
+      bench_merge<vec_t, C,     vec_t>(cv, c2,  iters, cname, "merge(2S)");
       // merge(2xS): both ranges = C, out = bc::vector
-      bench_merge<C,     C,     vec_t>(c,  c2, iters, cname, "merge(2xS)");
+      bench_merge<C,     C,     vec_t>(c,  c2,  iters, cname, "merge(2xS)");
       // merge(3xS): both ranges and out = C
-      bench_merge<C,     C,     C    >(c,  c2, iters, cname, "merge(3xS)");
+      bench_merge<C,     C,     C    >(c,  c2,  iters, cname, "merge(3xS)");
    }
 
    //mismatch
    {
       C c2(c);
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
-      bench_mismatch<false>(c, c2, iters, cname, "mismatch(hit)");
-      bench_mismatch<true>(c, c2, iters, cname, "mismatch(2xS hit)");
+      vec_t c2v(c2.begin(), c2.end());
+      bench_mismatch<C,     vec_t>(c,  c2v, iters, cname, "mismatch(1S hit)");
+      bench_mismatch<vec_t, C    >(cv, c2,  iters, cname, "mismatch(2S hit)");
+      bench_mismatch<C,     C    >(c,  c2,  iters, cname, "mismatch(2xS hit)");
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) =
          *boost::container::make_iterator_uadvance(c.begin(), c.size()/2);
-      bench_mismatch<false>(c, c2, iters, cname, "mismatch(miss)");
-      bench_mismatch<true>(c, c2, iters, cname, "mismatch(2xS miss)");
+      c2v.assign(c2.begin(), c2.end());
+      bench_mismatch<C,     vec_t>(c,  c2v, iters, cname, "mismatch(1S miss)");
+      bench_mismatch<vec_t, C    >(cv, c2,  iters, cname, "mismatch(2S miss)");
+      bench_mismatch<C,     C    >(c,  c2,  iters, cname, "mismatch(2xS miss)");
    }
 
    //mismatch (two ranges)
    {
       C c2(c);
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
-      bench_mismatch_2r<false>(c, c2, iters, cname, "mismatch_2r(hit)");
-      bench_mismatch_2r<true>(c, c2, iters, cname, "mismatch_2r(2xS hit)");
+      vec_t c2v(c2.begin(), c2.end());
+      bench_mismatch_2r<C,     vec_t>(c,  c2v, iters, cname, "mismatch_2r(1S hit)");
+      bench_mismatch_2r<vec_t, C    >(cv, c2,  iters, cname, "mismatch_2r(2S hit)");
+      bench_mismatch_2r<C,     C    >(c,  c2,  iters, cname, "mismatch_2r(2xS hit)");
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) =
          *boost::container::make_iterator_uadvance(c.begin(), c.size()/2);
-      bench_mismatch_2r<false>(c, c2, iters, cname, "mismatch_2r(miss)");
-      bench_mismatch_2r<true>(c, c2, iters, cname, "mismatch_2r(2xS miss)");
+      c2v.assign(c2.begin(), c2.end());
+      bench_mismatch_2r<C,     vec_t>(c,  c2v, iters, cname, "mismatch_2r(1S miss)");
+      bench_mismatch_2r<vec_t, C    >(cv, c2,  iters, cname, "mismatch_2r(2S miss)");
+      bench_mismatch_2r<C,     C    >(c,  c2,  iters, cname, "mismatch_2r(2xS miss)");
    }
 
    //none_of
@@ -2349,16 +2350,20 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_remove_if(c, iters, cname, is_negative<VT>(), "remove_if(miss)");
 
    //remove_copy
-   bench_remove_copy<false>(c, iters, cname, half, "remove_copy(hit)");
-   bench_remove_copy<true>(c, iters, cname, half,  "remove_copy(2xS hit)");
-   bench_remove_copy<false>(c, iters, cname, min1, "remove_copy(miss)");
-   bench_remove_copy<true>(c, iters, cname, min1,  "remove_copy(2xS miss)");
+   bench_remove_copy<C,     vec_t>(c,  iters, cname, half, "remove_copy(1S hit)");
+   bench_remove_copy<vec_t, C    >(cv, iters, cname, half, "remove_copy(2S hit)");
+   bench_remove_copy<C,     C    >(c,  iters, cname, half, "remove_copy(2xS hit)");
+   bench_remove_copy<C,     vec_t>(c,  iters, cname, min1, "remove_copy(1S miss)");
+   bench_remove_copy<vec_t, C    >(cv, iters, cname, min1, "remove_copy(2S miss)");
+   bench_remove_copy<C,     C    >(c,  iters, cname, min1, "remove_copy(2xS miss)");
 
    //remove_copy_if
-   bench_remove_copy_if<false>(c, iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_copy_if(hit)");
-   bench_remove_copy_if<true>(c, iters, cname, less_and_greater_ref<VT>(quart, threequart),  "remove_copy_if(2xS hit)");
-   bench_remove_copy_if<false>(c, iters, cname, is_negative<VT>(), "remove_copy_if(miss)");
-   bench_remove_copy_if<true>(c, iters, cname, is_negative<VT>(), "remove_copy_if(2xS miss)");
+   bench_remove_copy_if<C,     vec_t>(c,  iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_copy_if(1S hit)");
+   bench_remove_copy_if<vec_t, C    >(cv, iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_copy_if(2S hit)");
+   bench_remove_copy_if<C,     C    >(c,  iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_copy_if(2xS hit)");
+   bench_remove_copy_if<C,     vec_t>(c,  iters, cname, is_negative<VT>(), "remove_copy_if(1S miss)");
+   bench_remove_copy_if<vec_t, C    >(cv, iters, cname, is_negative<VT>(), "remove_copy_if(2S miss)");
+   bench_remove_copy_if<C,     C    >(c,  iters, cname, is_negative<VT>(), "remove_copy_if(2xS miss)");
 
    //replace
    {  //Replace half of the elements to ensure that the "hit" case is not too fast
@@ -2381,8 +2386,9 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_reverse(c, iters, cname);
 
    //reverse_copy
-   bench_reverse_copy<false>(c, iters, cname, "reverse_copy");
-   bench_reverse_copy<true>(c, iters, cname, "reverse_copy(2xS)");
+   bench_reverse_copy<C,     vec_t>(c,  iters, cname, "reverse_copy(1S)");
+   bench_reverse_copy<vec_t, C    >(cv, iters, cname, "reverse_copy(2S)");
+   bench_reverse_copy<C,     C    >(c,  iters, cname, "reverse_copy(2xS)");
 
    //search
    {
