@@ -29,7 +29,6 @@ namespace container {
 //! Removes all elements for which \c pred returns true from [first, last),
 //! moving retained elements forward. Returns iterator to new end.
 template <class FwdIt, class Sent, class Predicate>
-BOOST_CONTAINER_FORCEINLINE
 FwdIt segmented_remove_if(FwdIt first, Sent last, Predicate pred)
 {
    typedef segmented_iterator_traits<FwdIt> traits;

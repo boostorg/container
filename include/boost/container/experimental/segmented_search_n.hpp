@@ -152,7 +152,7 @@ segmented_search_n_dispatch
 //! Finds the first occurrence of \c count consecutive elements equal to \c value
 //! in [first, last). Returns an iterator to the start of the run, or \c last if not found.
 template <class FwdIt, class Sent, class Size, class T>
-BOOST_CONTAINER_FORCEINLINE FwdIt segmented_search_n
+inline FwdIt segmented_search_n
    (FwdIt first, Sent last, Size count, const T& value)
 {
    if(count == 1)
