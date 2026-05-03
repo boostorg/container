@@ -1408,65 +1408,65 @@ struct seg_search_n {
 };
 
 // --- set_union ---
-template<class C, class OutVec>
+template<class C1, class C2, class OutT>
 struct std_set_union {
-   const C &c; const C &c2; OutVec &out;
-   std_set_union(const C &c_, const C &c2_, OutVec &o_) : c(c_), c2(c2_), out(o_) {}
+   const C1 &c; const C2 &c2; OutT &out;
+   std_set_union(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
 };
-template<class C, class OutVec, bool Wrap = false>
+template<class C1, class C2, class OutT, bool Wrap = false>
 struct seg_set_union {
-   const C &c; const C &c2; OutVec &out;
-   seg_set_union(const C &c_, const C &c2_, OutVec &o_) : c(c_), c2(c2_), out(o_) {}
+   const C1 &c; const C2 &c2; OutT &out;
+   seg_set_union(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_set_union(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
 };
 
 // --- set_difference ---
-template<class C, class OutVec>
+template<class C1, class C2, class OutT>
 struct std_set_difference {
-   const C &c; const C &c2; OutVec &out;
-   std_set_difference(const C &c_, const C &c2_, OutVec &o_) : c(c_), c2(c2_), out(o_) {}
+   const C1 &c; const C2 &c2; OutT &out;
+   std_set_difference(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
 };
-template<class C, class OutVec, bool Wrap = false>
+template<class C1, class C2, class OutT, bool Wrap = false>
 struct seg_set_difference {
-   const C &c; const C &c2; OutVec &out;
-   seg_set_difference(const C &c_, const C &c2_, OutVec &o_) : c(c_), c2(c2_), out(o_) {}
+   const C1 &c; const C2 &c2; OutT &out;
+   seg_set_difference(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_set_difference(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
 };
 
 // --- set_intersection ---
-template<class C, class OutVec>
+template<class C1, class C2, class OutT>
 struct std_set_intersection {
-   const C &c; const C &c2; OutVec &out;
-   std_set_intersection(const C &c_, const C &c2_, OutVec &o_) : c(c_), c2(c2_), out(o_) {}
+   const C1 &c; const C2 &c2; OutT &out;
+   std_set_intersection(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
 };
-template<class C, class OutVec, bool Wrap = false>
+template<class C1, class C2, class OutT, bool Wrap = false>
 struct seg_set_intersection {
-   const C &c; const C &c2; OutVec &out;
-   seg_set_intersection(const C &c_, const C &c2_, OutVec &o_) : c(c_), c2(c2_), out(o_) {}
+   const C1 &c; const C2 &c2; OutT &out;
+   seg_set_intersection(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_set_intersection(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
 };
 
 // --- set_symmetric_difference ---
-template<class C, class OutVec>
+template<class C1, class C2, class OutT>
 struct std_set_symmetric_difference {
-   const C &c; const C &c2; OutVec &out;
-   std_set_symmetric_difference(const C &c_, const C &c2_, OutVec &o_) : c(c_), c2(c2_), out(o_) {}
+   const C1 &c; const C2 &c2; OutT &out;
+   std_set_symmetric_difference(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
 };
-template<class C, class OutVec, bool Wrap = false>
+template<class C1, class C2, class OutT, bool Wrap = false>
 struct seg_set_symmetric_difference {
-   const C &c; const C &c2; OutVec &out;
-   seg_set_symmetric_difference(const C &c_, const C &c2_, OutVec &o_) : c(c_), c2(c2_), out(o_) {}
+   const C1 &c; const C2 &c2; OutT &out;
+   seg_set_symmetric_difference(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_set_symmetric_difference(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
 };
@@ -2041,52 +2041,48 @@ void bench_search_n(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_search_n<C, true>(c, count, val, result), label, cname);
 }
 
-template<class C>
-void bench_set_union(const C &c, const C &c2, std::size_t iters, const char* cname)
+template<class C1, class C2, class OutT>
+void bench_set_union(const C1 &c, const C2 &c2, std::size_t iters,
+                     const char* cname, const char* label)
 {
-   typedef typename C::value_type VT;
-   typedef boost::container::vector<VT> out_vec_t;
-   out_vec_t out(c.size() + c2.size());
+   OutT out(c.size() + c2.size());
    compare_batch(iters, c.size(),
-      bench_ops::std_set_union<C, out_vec_t>(c, c2, out),
-      bench_ops::seg_set_union<C, out_vec_t>(c, c2, out),
-      bench_ops::seg_set_union<C, out_vec_t, true>(c, c2, out), "set_union", cname);
+      bench_ops::std_set_union<C1, C2, OutT>(c, c2, out),
+      bench_ops::seg_set_union<C1, C2, OutT>(c, c2, out),
+      bench_ops::seg_set_union<C1, C2, OutT, true>(c, c2, out), label, cname);
 }
 
-template<class C>
-void bench_set_difference(const C &c, const C &c2, std::size_t iters, const char* cname)
+template<class C1, class C2, class OutT>
+void bench_set_difference(const C1 &c, const C2 &c2, std::size_t iters,
+                           const char* cname, const char* label)
 {
-   typedef typename C::value_type VT;
-   typedef boost::container::vector<VT> out_vec_t;
-   out_vec_t out(c.size());
+   OutT out(c.size());
    compare_batch(iters, c.size(),
-      bench_ops::std_set_difference<C, out_vec_t>(c, c2, out),
-      bench_ops::seg_set_difference<C, out_vec_t>(c, c2, out),
-      bench_ops::seg_set_difference<C, out_vec_t, true>(c, c2, out), "set_difference", cname);
+      bench_ops::std_set_difference<C1, C2, OutT>(c, c2, out),
+      bench_ops::seg_set_difference<C1, C2, OutT>(c, c2, out),
+      bench_ops::seg_set_difference<C1, C2, OutT, true>(c, c2, out), label, cname);
 }
 
-template<class C>
-void bench_set_intersection(const C &c, const C &c2, std::size_t iters, const char* cname)
+template<class C1, class C2, class OutT>
+void bench_set_intersection(const C1 &c, const C2 &c2, std::size_t iters,
+                             const char* cname, const char* label)
 {
-   typedef typename C::value_type VT;
-   typedef boost::container::vector<VT> out_vec_t;
-   out_vec_t out(c.size());
+   OutT out(c.size());
    compare_batch(iters, c.size(),
-      bench_ops::std_set_intersection<C, out_vec_t>(c, c2, out),
-      bench_ops::seg_set_intersection<C, out_vec_t>(c, c2, out),
-      bench_ops::seg_set_intersection<C, out_vec_t, true>(c, c2, out), "set_intersection", cname);
+      bench_ops::std_set_intersection<C1, C2, OutT>(c, c2, out),
+      bench_ops::seg_set_intersection<C1, C2, OutT>(c, c2, out),
+      bench_ops::seg_set_intersection<C1, C2, OutT, true>(c, c2, out), label, cname);
 }
 
-template<class C>
-void bench_set_symmetric_difference(const C &c, const C &c2, std::size_t iters, const char* cname)
+template<class C1, class C2, class OutT>
+void bench_set_symmetric_difference(const C1 &c, const C2 &c2, std::size_t iters,
+                                     const char* cname, const char* label)
 {
-   typedef typename C::value_type VT;
-   typedef boost::container::vector<VT> out_vec_t;
-   out_vec_t out(c.size() + c2.size());
+   OutT out(c.size() + c2.size());
    compare_batch(iters, c.size(),
-      bench_ops::std_set_symmetric_difference<C, out_vec_t>(c, c2, out),
-      bench_ops::seg_set_symmetric_difference<C, out_vec_t>(c, c2, out),
-      bench_ops::seg_set_symmetric_difference<C, out_vec_t, true>(c, c2, out), "set_symmetric_difference", cname);
+      bench_ops::std_set_symmetric_difference<C1, C2, OutT>(c, c2, out),
+      bench_ops::seg_set_symmetric_difference<C1, C2, OutT>(c, c2, out),
+      bench_ops::seg_set_symmetric_difference<C1, C2, OutT, true>(c, c2, out), label, cname);
 }
 
 template<class C, class Pred>
@@ -2289,6 +2285,8 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_merge<C,     vec_t, vec_t>(c,  c2v, iters, cname, "merge(1S)");
       // merge(2S):  first range = bc::vector, second range = C, out = bc::vector
       bench_merge<vec_t, C,     vec_t>(cv, c2,  iters, cname, "merge(2S)");
+      // merge(3S):  first range = bc::vector, second range = bc::vector, out = C
+      bench_merge<vec_t, vec_t, C    >(cv, c2v, iters, cname, "merge(3S)");
       // merge(2xS): both ranges = C, out = bc::vector
       bench_merge<C,     C,     vec_t>(c,  c2,  iters, cname, "merge(2xS)");
       // merge(3xS): both ranges and out = C
@@ -2403,15 +2401,40 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_search_n(c, iters, cname, 1, half, "search_n(hit)");
    bench_search_n(c, iters, cname, 3, min1, "search_n(miss)");
 
-   //set_difference, set_symmetric_difference, set_union
+   //set_difference, set_intersection, set_symmetric_difference, set_union
    {
       C c2(c);
       for (typename C::iterator it = c2.begin(); it != c2.end(); ++it)
          *it = VT(int_value(*it) * 2);
-      bench_set_difference(c, c2, iters, cname);
-      bench_set_intersection(c, c2, iters, cname);
-      bench_set_symmetric_difference(c, c2, iters, cname);
-      bench_set_union(c, c2, iters, cname);
+      vec_t c2v(c2.begin(), c2.end());
+
+      // set_difference
+      bench_set_difference<C,     vec_t, vec_t>(c,  c2v, iters, cname, "set_difference(1S)");
+      bench_set_difference<vec_t, C,     vec_t>(cv, c2,  iters, cname, "set_difference(2S)");
+      bench_set_difference<vec_t, vec_t, C    >(cv, c2v, iters, cname, "set_difference(3S)");
+      bench_set_difference<C,     C,     vec_t>(c,  c2,  iters, cname, "set_difference(2xS)");
+      bench_set_difference<C,     C,     C    >(c,  c2,  iters, cname, "set_difference(3xS)");
+
+      // set_intersection
+      bench_set_intersection<C,     vec_t, vec_t>(c,  c2v, iters, cname, "set_intersection(1S)");
+      bench_set_intersection<vec_t, C,     vec_t>(cv, c2,  iters, cname, "set_intersection(2S)");
+      bench_set_intersection<vec_t, vec_t, C    >(cv, c2v, iters, cname, "set_intersection(3S)");
+      bench_set_intersection<C,     C,     vec_t>(c,  c2,  iters, cname, "set_intersection(2xS)");
+      bench_set_intersection<C,     C,     C    >(c,  c2,  iters, cname, "set_intersection(3xS)");
+
+      // set_symmetric_difference
+      bench_set_symmetric_difference<C,     vec_t, vec_t>(c,  c2v, iters, cname, "set_sym_diff(1S)");
+      bench_set_symmetric_difference<vec_t, C,     vec_t>(cv, c2,  iters, cname, "set_sym_diff(2S)");
+      bench_set_symmetric_difference<vec_t, vec_t, C    >(cv, c2v, iters, cname, "set_sym_diff(3S)");
+      bench_set_symmetric_difference<C,     C,     vec_t>(c,  c2,  iters, cname, "set_sym_diff(2xS)");
+      bench_set_symmetric_difference<C,     C,     C    >(c,  c2,  iters, cname, "set_sym_diff(3xS)");
+
+      // set_union
+      bench_set_union<C,     vec_t, vec_t>(c,  c2v, iters, cname, "set_union(1S)");
+      bench_set_union<vec_t, C,     vec_t>(cv, c2,  iters, cname, "set_union(2S)");
+      bench_set_union<vec_t, vec_t, C    >(cv, c2v, iters, cname, "set_union(3S)");
+      bench_set_union<C,     C,     vec_t>(c,  c2,  iters, cname, "set_union(2xS)");
+      bench_set_union<C,     C,     C    >(c,  c2,  iters, cname, "set_union(3xS)");
    }
 
    //stable_partition (not tested since it's not optimized for random access iterators)
