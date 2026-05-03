@@ -51,8 +51,7 @@ template <bool Move, class RASrcIter, class DstIter, class DstSent, class Pred>
 BOOST_CONTAINER_FORCEINLINE
 segduo<RASrcIter, DstIter> segmented_remove_copy_if_dst_bounded
    (RASrcIter first, RASrcIter last, DstIter dst_first, DstSent dst_last, Pred pred,
-    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &,
-    dual_ra_skip_t = dual_ra_skip_t())
+    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
    typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
 
@@ -88,8 +87,7 @@ segduo<RASrcIter, DstIter> segmented_remove_copy_if_dst_bounded
 template <bool Move, class SrcIter, class Sent, class DstIter, class DstSent, class Pred, class DstTag, class SrcCat>
 BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<!DstTag::value, segduo<SrcIter, DstIter> >::type
 segmented_remove_copy_if_dst_bounded
-   (SrcIter first, Sent last, DstIter dst_first, DstSent dst_last, Pred pred, DstTag, SrcCat,
-    dual_ra_skip_t = dual_ra_skip_t())
+   (SrcIter first, Sent last, DstIter dst_first, DstSent dst_last, Pred pred, DstTag, SrcCat)
 {
    for(; first != last; ++first) {
       if(!pred(*first)) {
@@ -102,34 +100,6 @@ segmented_remove_copy_if_dst_bounded
    out_path:
    return segduo<SrcIter, DstIter>(first, dst_first);
 }
-
-#if defined(BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION)
-
-template <bool Move, class RASrcIter, class RADstIter, class Pred>
-BOOST_CONTAINER_FORCEINLINE
-typename iterator_enable_if_tag
-   <RADstIter, std::random_access_iterator_tag, segduo<RASrcIter, RADstIter> >::type
-segmented_remove_copy_if_dst_bounded
-   (RASrcIter first, RASrcIter last, RADstIter dst_first, RADstIter dst_last, Pred pred,
-    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &src_tag)
-{
-   typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
-   const difference_type src_n = last - first;
-   const difference_type dst_n = difference_type(dst_last - dst_first);
-   if (dst_n >= src_n) {
-      return (segmented_remove_copy_if_dst_bounded<Move>)
-         (first, last, dst_first, unreachable_sentinel_t(), pred, non_segmented_iterator_tag(), src_tag);
-   }
-   else {
-      // Pass dual_ra_skip_t() so the dual-RA overload (this one) is removed
-      // from the candidate set: only the unrolled / generic terminal overloads
-      // remain viable.  The destination iterator stays random-access.
-      return (segmented_remove_copy_if_dst_bounded<Move>)
-            (first, last, dst_first, dst_last, pred, non_segmented_iterator_tag(), src_tag, dual_ra_skip_t());
-   }
-}
-
-#endif   //BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION
 
 template <bool Move, class SrcIter, class Sent, class SegDstIter, class Pred, class SrcCat>
 segduo<SrcIter, SegDstIter> segmented_remove_copy_if_dst_bounded

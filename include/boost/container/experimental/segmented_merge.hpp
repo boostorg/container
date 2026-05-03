@@ -72,8 +72,7 @@ typename iterator_enable_if_tag
 merge_dst_bounded
    (RAIter1 first1, RAIter1 last1, RAIter2 first2, RAIter2 last2,
     DstIter dst_first, DstSent dst_last, Comp comp,
-    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &,
-    dual_ra_skip_t = dual_ra_skip_t())
+    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
    typedef typename iterator_traits<RAIter1>::difference_type sd1_t;
    typedef typename iterator_traits<RAIter2>::difference_type sd2_t;
@@ -121,8 +120,7 @@ BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c<!DstTag::value, segtrio<Iter1, Iter2, DstIter> >::type
 merge_dst_bounded
    (Iter1 first1, Sent1 last1, Iter2 first2, Sent2 last2,
-    DstIter dst_first, DstSent dst_last, Comp comp, DstTag, SrcCat,
-    dual_ra_skip_t = dual_ra_skip_t())
+    DstIter dst_first, DstSent dst_last, Comp comp, DstTag, SrcCat)
 {
    // Per-iteration the loop only checks exhaustion on the side that was
    // just consumed (the other side and dst position are unchanged by the
@@ -155,50 +153,6 @@ merge_dst_bounded
    }
    return segtrio<Iter1, Iter2, DstIter>(first1, first2, dst_first);
 }
-
-#if defined(BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION)
-
-// Dual-RA fast path: when both sources are random-access and the destination
-// is also random-access, pre-compute whether the destination is large enough
-// to hold the worst-case combined output (src1_n + src2_n).  If so, skip the
-// per-iteration dst-full check; otherwise, fall back to the bounded scan via
-// dual_ra_skip_t to avoid re-matching this overload.
-template <class RAIter1, class RAIter2, class RADstIter, class Comp>
-BOOST_CONTAINER_FORCEINLINE
-typename iterator_enable_if_tag
-   <RADstIter, std::random_access_iterator_tag,
-      typename iterator_enable_if_tag
-         <RAIter2, std::random_access_iterator_tag,
-            segtrio<RAIter1, RAIter2, RADstIter>
-         >::type
-   >::type
-merge_dst_bounded
-   (RAIter1 first1, RAIter1 last1, RAIter2 first2, RAIter2 last2,
-    RADstIter dst_first, RADstIter dst_last, Comp comp,
-    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &src_tag)
-{
-   typedef typename iterator_traits<RADstIter>::difference_type difference_type;
-   const difference_type src1_n = last1 - first1;
-   const difference_type src2_n = last2 - first2;
-   const difference_type dst_n  = difference_type(dst_last - dst_first);
-   if (dst_n >= src1_n + src2_n) {
-      return (merge_dst_bounded)
-         (first1, last1, first2, last2, dst_first, unreachable_sentinel_t(),
-          comp, non_segmented_iterator_tag(), src_tag);
-   }
-   else {
-      // Pass dual_ra_skip_t() so the dual-RA overload (this one) is removed
-      // from the candidate set; the call resolves to the unrolled overload
-      // when BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING is defined, or to the
-      // generic terminal overload otherwise.  The destination iterator
-      // stays random-access either way.
-      return (merge_dst_bounded)
-         (first1, last1, first2, last2, dst_first, dst_last,
-          comp, non_segmented_iterator_tag(), src_tag, dual_ra_skip_t());
-   }
-}
-
-#endif   //BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION
 
 template <class Iter1, class Sent1, class Iter2, class Sent2, class SegDstIter,
           class Comp, class SrcCat>
