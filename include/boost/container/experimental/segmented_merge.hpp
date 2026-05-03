@@ -289,10 +289,16 @@ BOOST_CONTAINER_FORCEINLINE segtrio<Iter1, Iter2, OutIter> merge_seg2_dispatch
 (Iter1 first1, Sent1 last1, Iter2 first2, Sent2 last2, OutIter result, Comp comp,
    non_segmented_iterator_tag, const Cat& src1_cat)
 {
+#if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
    typedef segmented_iterator_traits<OutIter>  out_traits;
    typedef typename out_traits::is_segmented_iterator is_out_seg_t;
    return (merge_until_exhausts)
       (first1, last1, first2, last2, result, comp, is_out_seg_t(), src1_cat);
+#else
+   return (merge_dst_bounded)
+      (first1, last1, first2, last2, result, unreachable_sentinel_t(),
+       comp, non_segmented_iterator_tag(), src1_cat);
+#endif
 }
 
 template <class Iter1, class Sent1, class SegIter2, class OutIter, class Comp, class Cat>
