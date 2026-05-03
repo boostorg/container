@@ -20,8 +20,8 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
-#include <boost/container/detail/compare_functors.hpp>
-#include <boost/container/experimental/segmented_remove_if.hpp>
+#include <boost/container/experimental/segmented_find.hpp>
+#include <boost/container/experimental/segmented_remove_copy.hpp>
 
 namespace boost {
 namespace container {
@@ -29,10 +29,24 @@ namespace container {
 //! Removes all elements equal to \c value from [first, last),
 //! moving retained elements forward. Returns iterator to new end.
 template <class FwdIt, class Sent, class T>
-BOOST_CONTAINER_FORCEINLINE
 FwdIt segmented_remove(FwdIt first, Sent last, const T& value)
 {
-   return boost::container::segmented_remove_if(first, last, equal_to_value<T>(value));
+   typedef segmented_iterator_traits<FwdIt> traits;
+   first = detail_algo::segmented_find_dispatch
+      (first, last, value
+      , typename traits::is_segmented_iterator()
+      , typename iterator_traits<FwdIt>::iterator_category());
+
+   if(first == last)
+      return last;
+
+   FwdIt next = first;
+   ++next;
+
+   return detail_algo::segmented_remove_copy_dispatch<true>
+      (next, last, first, value,
+       typename traits::is_segmented_iterator(),
+       typename iterator_traits<FwdIt>::iterator_category());
 }
 
 } // namespace container

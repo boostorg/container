@@ -20,11 +20,124 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
-#include <boost/container/detail/compare_functors.hpp>
-#include <boost/container/experimental/segmented_find_if.hpp>
+#include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/container/detail/iterators.hpp>
 
 namespace boost {
 namespace container {
+
+template <class InpIter, class Sent, class T>
+InpIter segmented_find(InpIter first, Sent last, const T& value);
+
+namespace detail_algo {
+
+#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
+
+template <class RAIter, class T>
+RAIter segmented_find_dispatch
+   (RAIter first, RAIter last, const T& value, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
+{
+   typedef typename iterator_traits<RAIter>::difference_type difference_type;
+
+   difference_type n = last - first;
+   while(n >= difference_type(4)) {
+      if(*first == value)
+         goto final_result;
+      ++first;
+      if(*first == value)
+         goto final_result;
+      ++first;
+      if(*first == value)
+         goto final_result;
+      ++first;
+      if(*first == value)
+         goto final_result;
+      ++first;
+      n -= 4;
+   }
+
+   switch(n) {
+      case 3:
+         if(*first == value)
+            goto final_result;
+         ++first;
+         BOOST_FALLTHROUGH;
+      case 2:
+         if(*first == value)
+            goto final_result;
+         ++first;
+         BOOST_FALLTHROUGH;
+      case 1:
+         if(*first == value)
+            goto final_result;
+         ++first;
+         BOOST_FALLTHROUGH;
+      default:
+         break;
+   }
+   final_result:
+   return first;
+}
+
+#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
+
+template <class InpIter, class Sent, class T, class Tag, class Cat>
+typename algo_enable_if_c<
+   !Tag::value || is_sentinel<Sent, InpIter>::value, InpIter>::type
+segmented_find_dispatch(InpIter first, Sent last, const T& value, Tag, Cat)
+{
+   for(; first != last; ++first)
+      if(*first == value)
+         break;
+   return first;
+}
+
+template <class SegIter, class T, class Cat>
+SegIter segmented_find_dispatch
+   (SegIter first, SegIter last, const T& value, segmented_iterator_tag, Cat)
+{
+   typedef segmented_iterator_traits<SegIter> traits;
+   typedef typename traits::local_iterator    local_iterator;
+   typedef typename traits::segment_iterator  segment_iterator;
+   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+   typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
+
+   segment_iterator       sfirst = traits::segment(first);
+   const segment_iterator slast  = traits::segment(last);
+
+   if(sfirst == slast) {
+      const local_iterator ll = traits::local(last);
+      const local_iterator r = (segmented_find_dispatch)(traits::local(first), ll, value, is_local_seg_t(), local_cat_t());
+      if (r != ll)
+         return traits::compose(sfirst, r);
+   }
+   else {
+      //First segment
+      {
+         const local_iterator le = traits::end(sfirst);
+         const local_iterator r = (segmented_find_dispatch)(traits::local(first), le, value, is_local_seg_t(), local_cat_t());
+         if (r != le)
+            return traits::compose(sfirst, r);
+      }
+      //Middle segments
+      for (++sfirst; sfirst != slast; ++sfirst) {
+         const local_iterator le = traits::end(sfirst);
+         const local_iterator r = (segmented_find_dispatch)(traits::begin(sfirst), le, value, is_local_seg_t(), local_cat_t());
+         if (r != le)
+            return traits::compose(sfirst, r);
+      }
+      //Last segment
+      {
+         const local_iterator ll = traits::local(last);
+         const local_iterator r = (segmented_find_dispatch)(traits::begin(slast), traits::local(last), value, is_local_seg_t(), local_cat_t());
+         if (r != ll)
+            return traits::compose(sfirst, r);
+      }
+   }
+   return last;
+}
+
+} // namespace detail_algo
 
 //! Returns an iterator to the first element equal to \c value
 //! in [first, last), or \c last if not found.
@@ -32,7 +145,9 @@ template <class InpIter, class Sent, class T>
 BOOST_CONTAINER_FORCEINLINE
 InpIter segmented_find(InpIter first, Sent last, const T& value)
 {
-   return boost::container::segmented_find_if(first, last, equal_to_value<T>(value));
+   typedef segmented_iterator_traits<InpIter> traits;
+   return detail_algo::segmented_find_dispatch
+      (first, last, value, typename traits::is_segmented_iterator(), typename iterator_traits<InpIter>::iterator_category());
 }
 
 } // namespace container
