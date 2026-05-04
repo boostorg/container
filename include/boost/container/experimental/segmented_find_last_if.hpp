@@ -36,6 +36,7 @@ namespace detail_algo {
 //////////////////////////////////////////////
 
 template <class FwdIt, class Pred>
+BOOST_CONTAINER_FORCEINLINE
 FwdIt find_last_if_scan(FwdIt first, FwdIt last, Pred pred,
                         non_segmented_iterator_tag, const std::forward_iterator_tag&)
 {
@@ -47,6 +48,7 @@ FwdIt find_last_if_scan(FwdIt first, FwdIt last, Pred pred,
 }
 
 template <class BidirIt, class Pred>
+BOOST_CONTAINER_FORCEINLINE
 BidirIt find_last_if_scan(BidirIt first, BidirIt last, Pred pred,
                           non_segmented_iterator_tag, const std::bidirectional_iterator_tag&)
 {
@@ -62,6 +64,7 @@ BidirIt find_last_if_scan(BidirIt first, BidirIt last, Pred pred,
 #if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
 
 template <class RAIter, class Pred>
+BOOST_CONTAINER_FORCEINLINE
 RAIter find_last_if_scan(RAIter first, RAIter last, Pred pred,
                          non_segmented_iterator_tag, const std::random_access_iterator_tag&)
 {
