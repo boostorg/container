@@ -68,7 +68,7 @@
 #include <boost/container/experimental/wrapped_iterator.hpp>
 #include "../bench/bench_utils.hpp"
 
-
+#define BOOST_CONTAINER_BENCH_SEGMENTED_GROUP 1
 
 namespace bc = boost::container;
 
@@ -172,6 +172,9 @@ class MyFatInt
    friend inline bool operator==(const MyFatInt& a, const MyFatInt& b) { return a.int0_ == b.int0_; }
    friend inline bool operator!=(const MyFatInt& a, const MyFatInt& b) { return a.int0_ != b.int0_; }
    friend inline bool operator<(const MyFatInt& a, const MyFatInt& b) { return a.int0_ < b.int0_; }
+   friend inline bool operator>(const MyFatInt& a, const MyFatInt& b) { return a.int0_ > b.int0_; }
+   friend inline bool operator<=(const MyFatInt& a, const MyFatInt& b) { return a.int0_ <= b.int0_; }
+   friend inline bool operator>=(const MyFatInt& a, const MyFatInt& b) { return a.int0_ >= b.int0_; }
 };
 
 inline int int_value(int x) { return x; }
@@ -889,14 +892,14 @@ struct std_copy {
    const C &c; OutT &out;
    std_copy(const C &c_, OutT &o_) : c(c_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
+   { clobber(); std::copy(c.begin(), c.end(), out.begin()); escape(&*out.begin()); }
 };
 template<class C, class OutT, bool Wrap = false>
 struct seg_copy {
    const C &c; OutT &out;
    seg_copy(const C &c_, OutT &o_) : c(c_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_copy(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
+   { clobber(); bc::segmented_copy(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin())); escape(&*out.begin()); }
 };
 
 // --- copy_if ---
@@ -905,14 +908,14 @@ struct std_copy_if {
    const C &c; OutT &out; Pred pred;
    std_copy_if(const C &c_, OutT &o_, Pred p_) : c(c_), out(o_), pred(p_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
+   { clobber(); bench_detail::copy_if(c.begin(), c.end(), out.begin(), pred); escape(&*out.begin()); }
 };
 template<class C, class OutT, class Pred, bool Wrap = false>
 struct seg_copy_if {
    const C &c; OutT &out; Pred pred;
    seg_copy_if(const C &c_, OutT &o_, Pred p_) : c(c_), out(o_), pred(p_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_copy_if(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin()), pred); escape(&out[0]); }
+   { clobber(); bc::segmented_copy_if(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin()), pred); escape(&*out.begin()); }
 };
 
 // --- fill ---
@@ -1112,7 +1115,7 @@ struct std_transform {
    const C &c; boost::container::vector<VT> &out;
    std_transform(const C &c_, boost::container::vector<VT> &o_) : c(c_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&out[0]); }
+   { clobber(); std::transform(c.begin(), c.end(), out.begin(), add_one<VT>()); escape(&*out.begin()); }
 };
 template<class C, bool Wrap = false>
 struct seg_transform {
@@ -1120,7 +1123,7 @@ struct seg_transform {
    const C &c; boost::container::vector<VT> &out;
    seg_transform(const C &c_, boost::container::vector<VT> &o_) : c(c_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_transform(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin()), add_one<VT>()); escape(&out[0]); }
+   { clobber(); bc::segmented_transform(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin()), add_one<VT>()); escape(&*out.begin()); }
 };
 
 // --- fill_n ---
@@ -1145,14 +1148,14 @@ struct std_copy_n {
    const C &c; typename C::difference_type n; OutT &out;
    std_copy_n(const C &c_, typename C::difference_type n_, OutT &o_) : c(c_), n(n_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(&out[0]); }
+   { clobber(); bench_detail::copy_n(c.begin(), n, out.begin()); escape(&*out.begin()); }
 };
 template<class C, class OutT, bool Wrap = false>
 struct seg_copy_n {
    const C &c; typename C::difference_type n; OutT &out;
    seg_copy_n(const C &c_, typename C::difference_type n_, OutT &o_) : c(c_), n(n_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_copy_n(iter_w<Wrap>::wrap(c.begin()), n, iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
+   { clobber(); bc::segmented_copy_n(iter_w<Wrap>::wrap(c.begin()), n, iter_w<Wrap>::wrap(out.begin())); escape(&*out.begin()); }
 };
 
 // --- generate ---
@@ -1197,14 +1200,14 @@ struct std_remove_copy {
    const C &c; OutT &out; const typename C::value_type &val;
    std_remove_copy(const C &c_, OutT &o_, const typename C::value_type &v_) : c(c_), out(o_), val(v_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(&out[0]); }
+   { clobber(); std::remove_copy(c.begin(), c.end(), out.begin(), val); escape(&*out.begin()); }
 };
 template<class C, class OutT, bool Wrap = false>
 struct seg_remove_copy {
    const C &c; OutT &out; const typename C::value_type &val;
    seg_remove_copy(const C &c_, OutT &o_, const typename C::value_type &v_) : c(c_), out(o_), val(v_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_remove_copy(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin()), val); escape(&out[0]); }
+   { clobber(); bc::segmented_remove_copy(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin()), val); escape(&*out.begin()); }
 };
 
 // --- remove_copy_if ---
@@ -1213,14 +1216,14 @@ struct std_remove_copy_if {
    const C &c; OutT &out; Pred pred;
    std_remove_copy_if(const C &c_, OutT &o_, Pred p_) : c(c_), out(o_), pred(p_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&out[0]); }
+   { clobber(); std::remove_copy_if(c.begin(), c.end(), out.begin(), pred); escape(&*out.begin()); }
 };
 template<class C, class OutT, class Pred, bool Wrap = false>
 struct seg_remove_copy_if {
    const C &c; OutT &out; Pred pred;
    seg_remove_copy_if(const C &c_, OutT &o_, Pred p_) : c(c_), out(o_), pred(p_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_remove_copy_if(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin()), pred); escape(&out[0]); }
+   { clobber(); bc::segmented_remove_copy_if(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin()), pred); escape(&*out.begin()); }
 };
 
 // --- reverse ---
@@ -1245,14 +1248,14 @@ struct std_reverse_copy {
    const C &c; OutT &out;
    std_reverse_copy(const C &c_, OutT &o_) : c(c_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(&out[0]); }
+   { clobber(); std::reverse_copy(c.begin(), c.end(), out.begin()); escape(&*out.begin()); }
 };
 template<class C, class OutT, bool Wrap = false>
 struct seg_reverse_copy {
    const C &c; OutT &out;
    seg_reverse_copy(const C &c_, OutT &o_) : c(c_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_reverse_copy(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
+   { clobber(); bc::segmented_reverse_copy(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin())); escape(&*out.begin()); }
 };
 
 // --- is_sorted ---
@@ -1311,14 +1314,14 @@ struct std_merge {
    const C1 &c; const C2 &c2; OutT &out;
    std_merge(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
+   { clobber(); std::merge(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&*out.begin()); }
 };
 template<class C1, class C2, class OutT, bool Wrap = false>
 struct seg_merge {
    const C1 &c; const C2 &c2; OutT &out;
    seg_merge(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_merge(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
+   { clobber(); bc::segmented_merge(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&*out.begin()); }
 };
 
 // --- mismatch ---
@@ -1413,14 +1416,14 @@ struct std_set_union {
    const C1 &c; const C2 &c2; OutT &out;
    std_set_union(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
+   { clobber(); std::set_union(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&*out.begin()); }
 };
 template<class C1, class C2, class OutT, bool Wrap = false>
 struct seg_set_union {
    const C1 &c; const C2 &c2; OutT &out;
    seg_set_union(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_set_union(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
+   { clobber(); bc::segmented_set_union(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&*out.begin()); }
 };
 
 // --- set_difference ---
@@ -1429,14 +1432,14 @@ struct std_set_difference {
    const C1 &c; const C2 &c2; OutT &out;
    std_set_difference(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
+   { clobber(); std::set_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&*out.begin()); }
 };
 template<class C1, class C2, class OutT, bool Wrap = false>
 struct seg_set_difference {
    const C1 &c; const C2 &c2; OutT &out;
    seg_set_difference(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_set_difference(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
+   { clobber(); bc::segmented_set_difference(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&*out.begin()); }
 };
 
 // --- set_intersection ---
@@ -1445,14 +1448,14 @@ struct std_set_intersection {
    const C1 &c; const C2 &c2; OutT &out;
    std_set_intersection(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
+   { clobber(); std::set_intersection(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&*out.begin()); }
 };
 template<class C1, class C2, class OutT, bool Wrap = false>
 struct seg_set_intersection {
    const C1 &c; const C2 &c2; OutT &out;
    seg_set_intersection(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_set_intersection(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
+   { clobber(); bc::segmented_set_intersection(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&*out.begin()); }
 };
 
 // --- set_symmetric_difference ---
@@ -1461,14 +1464,14 @@ struct std_set_symmetric_difference {
    const C1 &c; const C2 &c2; OutT &out;
    std_set_symmetric_difference(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&out[0]); }
+   { clobber(); std::set_symmetric_difference(c.begin(), c.end(), c2.begin(), c2.end(), out.begin()); escape(&*out.begin()); }
 };
 template<class C1, class C2, class OutT, bool Wrap = false>
 struct seg_set_symmetric_difference {
    const C1 &c; const C2 &c2; OutT &out;
    seg_set_symmetric_difference(const C1 &c_, const C2 &c2_, OutT &o_) : c(c_), c2(c2_), out(o_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); bc::segmented_set_symmetric_difference(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&out[0]); }
+   { clobber(); bc::segmented_set_symmetric_difference(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&*out.begin()); }
 };
 
 // --- partition_copy ---
@@ -2157,6 +2160,11 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    g_geomean.reset();
    print_subheader();
 
+   //////////////////////////////////////////////////////////////////
+   // Group 1: Algorithms with a single range
+   //////////////////////////////////////////////////////////////////
+#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 1
+
    //all_of
    bench_all_of(c, iters, cname, is_zero_or_positive<VT>(), "all_of(hit)");
    bench_all_of(c, iters, cname, unequal_to_ref<VT>(half), "all_of(miss)");
@@ -2165,27 +2173,6 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_any_of(c, iters, cname, equal_to_ref<VT>(half),   "any_of(hit)");
    bench_any_of(c, iters, cname, is_negative<VT>(), "any_of(miss)");
 
-   //copy
-   //  1S:  src = C (segmented), dst = bc::vector
-   //  2S:  src = bc::vector,    dst = C
-   //  2xS: src = C,              dst = C
-   bench_copy<C,     vec_t>(c,  iters, cname, "copy(1S)");
-   bench_copy<vec_t, C    >(cv, iters, cname, "copy(2S)");
-   bench_copy<C,     C    >(c,  iters, cname, "copy(2xS)");
-
-   //copy_if
-   bench_copy_if<C,     vec_t>(c,  iters, cname, is_odd<VT>(),      "copy_if(1S hit)");
-   bench_copy_if<vec_t, C    >(cv, iters, cname, is_odd<VT>(),      "copy_if(2S hit)");
-   bench_copy_if<C,     C    >(c,  iters, cname, is_odd<VT>(),      "copy_if(2xS hit)");
-   bench_copy_if<C,     vec_t>(c,  iters, cname, is_negative<VT>(), "copy_if(1S miss)");
-   bench_copy_if<vec_t, C    >(cv, iters, cname, is_negative<VT>(), "copy_if(2S miss)");
-   bench_copy_if<C,     C    >(c,  iters, cname, is_negative<VT>(), "copy_if(2xS miss)");
-
-   //copy_n
-   bench_copy_n<C,     vec_t>(c,  iters, cname, "copy_n(1S)");
-   bench_copy_n<vec_t, C    >(cv, iters, cname, "copy_n(2S)");
-   bench_copy_n<C,     C    >(c,  iters, cname, "copy_n(2xS)");
-
    //count
    bench_count(c, iters, cname, zero,  "count(hit)");
    bench_count(c, iters, cname, min1, "count(miss)");
@@ -2193,20 +2180,6 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //count_if
    bench_count_if(c, iters, cname, is_odd<VT>(),      "count_if(hit)");
    bench_count_if(c, iters, cname, is_negative<VT>(), "count_if(miss)");
-
-   //equal
-   {
-      C c2(c);
-      vec_t c2v(c2.begin(), c2.end());
-      bench_equal<C,     vec_t>(c,  c2v, iters, cname, "equal(1S hit)");
-      bench_equal<vec_t, C    >(cv, c2,  iters, cname, "equal(2S hit)");
-      bench_equal<C,     C    >(c,  c2,  iters, cname, "equal(2xS hit)");
-      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
-      c2v.assign(c2.begin(), c2.end());
-      bench_equal<C,     vec_t>(c,  c2v, iters, cname, "equal(1S miss)");
-      bench_equal<vec_t, C    >(cv, c2,  iters, cname, "equal(2S miss)");
-      bench_equal<C,     C    >(c,  c2,  iters, cname, "equal(2xS miss)");
-   }
 
    //fill
    bench_fill(c, iters, cname);
@@ -2271,26 +2244,99 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_is_sorted_until(c2, iters, cname, "is_sorted_until(miss)");
    }
 
-   //merge
+   //none_of
+   bench_none_of(c, iters, cname, is_negative<VT>(), "none_of(hit)");
+   bench_none_of(c, iters, cname, equal_to_ref<VT>(VT(static_cast<int>(c.size()/2))),      "none_of(miss)");
+
+   //partition
+   bench_partition(c, iters, cname, is_odd<VT>(),      "partition(hit)");
+   bench_partition(c, iters, cname, is_negative<VT>(), "partition(miss)");
+
+   //partition_point (not tested since it's not optimized for random access iterators)
+   //bench_partition_point(c, iters, cname, less_than_ref<VT>(static_cast<VT>((int)c.size()/2)), "partition_point(hit)");
+   //bench_partition_point(c, iters, cname, is_zero_or_positive<VT>(),                           "partition_point(miss)");
+
+   //remove
+   bench_remove(c, iters, cname, half,  "remove(hit)");
+   bench_remove(c, iters, cname, min1,  "remove(miss)");
+
+   //remove_if
+   bench_remove_if(c, iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_if(hit)");
+   bench_remove_if(c, iters, cname, is_negative<VT>(), "remove_if(miss)");
+
+   //replace
    {
       C c2(c);
-      for (typename C::iterator it = c2.begin(); it != c2.end(); ++it)
-         *it = VT(int_value(*it) * 2);
-      // Flat copy of c2 for the mixed-shape variants.  Both copies (cv and
-      // c2v) remain sorted (input data is monotonically generated) so the
-      // merge semantics are preserved.
-      vec_t c2v(c2.begin(), c2.end());
+      is_odd<VT> is_odd_pred;
+      for (typename C::iterator it = c2.begin(); it != c2.end(); ++it){
+         if( is_odd_pred(*it) )
+            *it = min1;
+      }
+      bench_replace(c2, iters, cname, min1,  VT(-2),  "replace(hit)");
+   }
+   bench_replace(c, iters, cname, min1, VT(-2), "replace(miss)");
 
-      // merge(1S):  first range = C, second range = bc::vector, out = bc::vector
-      bench_merge<C,     vec_t, vec_t>(c,  c2v, iters, cname, "merge(1S)");
-      // merge(2S):  first range = bc::vector, second range = C, out = bc::vector
-      bench_merge<vec_t, C,     vec_t>(cv, c2,  iters, cname, "merge(2S)");
-      // merge(3S):  first range = bc::vector, second range = bc::vector, out = C
-      bench_merge<vec_t, vec_t, C    >(cv, c2v, iters, cname, "merge(3S)");
-      // merge(2xS): both ranges = C, out = bc::vector
-      bench_merge<C,     C,     vec_t>(c,  c2,  iters, cname, "merge(2xS)");
-      // merge(3xS): both ranges and out = C
-      bench_merge<C,     C,     C    >(c,  c2,  iters, cname, "merge(3xS)");
+   //replace_if
+   bench_replace_if(c, iters, cname, is_odd<VT>(),      VT(-2), "replace_if(hit)");
+   bench_replace_if(c, iters, cname, is_negative<VT>(), VT(-2), "replace_if(miss)");
+
+   //reverse
+   bench_reverse(c, iters, cname);
+
+   //search
+   {
+      int ihalf = static_cast<int>(c.size() / 2);
+      VT hit_pat[] = {half, VT(ihalf + 1), VT(ihalf + 2)};
+      bench_search(c, iters, cname, hit_pat, 3, "search(hit)");
+      VT miss_pat[] = {min1, VT(-2), VT(-3)};
+      bench_search(c, iters, cname, miss_pat, 3, "search(miss)");
+   }
+
+   //search_n
+   bench_search_n(c, iters, cname, 1, half, "search_n(hit)");
+   bench_search_n(c, iters, cname, 3, min1, "search_n(miss)");
+
+   //stable_partition (not tested since it's not optimized for random access iterators)
+   //bench_stable_partition(c, iters, cname, is_odd<VT>(),      "stable_partition(hit)");
+   //bench_stable_partition(c, iters, cname, is_negative<VT>(), "stable_partition(miss)");
+
+#endif
+
+   //////////////////////////////////////////////////////////////////
+   // Group 2: Algorithms with 2 ranges
+   //////////////////////////////////////////////////////////////////
+#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 2
+
+   //copy
+   bench_copy<C,     vec_t>(c,  iters, cname, "copy(1S)");
+   bench_copy<vec_t, C    >(cv, iters, cname, "copy(2S)");
+   bench_copy<C,     C    >(c,  iters, cname, "copy(2xS)");
+
+   //copy_if
+   bench_copy_if<C,     vec_t>(c,  iters, cname, is_odd<VT>(),      "copy_if(1S hit)");
+   bench_copy_if<vec_t, C    >(cv, iters, cname, is_odd<VT>(),      "copy_if(2S hit)");
+   bench_copy_if<C,     C    >(c,  iters, cname, is_odd<VT>(),      "copy_if(2xS hit)");
+   bench_copy_if<C,     vec_t>(c,  iters, cname, is_negative<VT>(), "copy_if(1S miss)");
+   bench_copy_if<vec_t, C    >(cv, iters, cname, is_negative<VT>(), "copy_if(2S miss)");
+   bench_copy_if<C,     C    >(c,  iters, cname, is_negative<VT>(), "copy_if(2xS miss)");
+
+   //copy_n
+   bench_copy_n<C,     vec_t>(c,  iters, cname, "copy_n(1S)");
+   bench_copy_n<vec_t, C    >(cv, iters, cname, "copy_n(2S)");
+   bench_copy_n<C,     C    >(c,  iters, cname, "copy_n(2xS)");
+
+   //equal
+   {
+      C c2(c);
+      vec_t c2v(c2.begin(), c2.end());
+      bench_equal<C,     vec_t>(c,  c2v, iters, cname, "equal(1S hit)");
+      bench_equal<vec_t, C    >(cv, c2,  iters, cname, "equal(2S hit)");
+      bench_equal<C,     C    >(c,  c2,  iters, cname, "equal(2xS hit)");
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
+      c2v.assign(c2.begin(), c2.end());
+      bench_equal<C,     vec_t>(c,  c2v, iters, cname, "equal(1S miss)");
+      bench_equal<vec_t, C    >(cv, c2,  iters, cname, "equal(2S miss)");
+      bench_equal<C,     C    >(c,  c2,  iters, cname, "equal(2xS miss)");
    }
 
    //mismatch
@@ -2325,28 +2371,6 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_mismatch_2r<C,     C    >(c,  c2,  iters, cname, "mismatch_2r(2xS miss)");
    }
 
-   //none_of
-   bench_none_of(c, iters, cname, is_negative<VT>(), "none_of(hit)");
-   bench_none_of(c, iters, cname, equal_to_ref<VT>(VT(static_cast<int>(c.size()/2))),      "none_of(miss)");
-
-   bench_partition(c, iters, cname, is_odd<VT>(),      "partition(hit)");
-   bench_partition(c, iters, cname, is_negative<VT>(), "partition(miss)");
-
-   //partition_copy
-   bench_partition_copy(c, iters, cname);
-
-   //partition_point (not tested since it's not optimized for random access iterators)
-   //bench_partition_point(c, iters, cname, less_than_ref<VT>(static_cast<VT>((int)c.size()/2)), "partition_point(hit)");
-   //bench_partition_point(c, iters, cname, is_zero_or_positive<VT>(),                           "partition_point(miss)");
-
-   //remove
-   bench_remove(c, iters, cname, half,  "remove(hit)");
-   bench_remove(c, iters, cname, min1,  "remove(miss)");
-
-   //remove_if
-   bench_remove_if(c, iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_if(hit)");
-   bench_remove_if(c, iters, cname, is_negative<VT>(), "remove_if(miss)");
-
    //remove_copy
    bench_remove_copy<C,     vec_t>(c,  iters, cname, half, "remove_copy(1S hit)");
    bench_remove_copy<vec_t, C    >(cv, iters, cname, half, "remove_copy(2S hit)");
@@ -2363,43 +2387,40 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_remove_copy_if<vec_t, C    >(cv, iters, cname, is_negative<VT>(), "remove_copy_if(2S miss)");
    bench_remove_copy_if<C,     C    >(c,  iters, cname, is_negative<VT>(), "remove_copy_if(2xS miss)");
 
-   //replace
-   {  //Replace half of the elements to ensure that the "hit" case is not too fast
-      C c2(c);
-      is_odd<VT> is_odd_pred;
-      for (typename C::iterator it = c2.begin(); it != c2.end(); ++it){
-         if( is_odd_pred(*it) )
-            *it = min1;
-      }
-      bench_replace(c2, iters, cname, min1,  VT(-2),  "replace(hit)");
-   }
-
-   bench_replace(c, iters, cname, min1, VT(-2), "replace(miss)");
-
-   //replace_if
-   bench_replace_if(c, iters, cname, is_odd<VT>(),      VT(-2), "replace_if(hit)");
-   bench_replace_if(c, iters, cname, is_negative<VT>(), VT(-2), "replace_if(miss)");
-
-   //reverse
-   bench_reverse(c, iters, cname);
-
    //reverse_copy
    bench_reverse_copy<C,     vec_t>(c,  iters, cname, "reverse_copy(1S)");
    bench_reverse_copy<vec_t, C    >(cv, iters, cname, "reverse_copy(2S)");
    bench_reverse_copy<C,     C    >(c,  iters, cname, "reverse_copy(2xS)");
 
-   //search
+   //swap_ranges
+   bench_swap_ranges(c, iters, cname);
+
+   //transform
+   bench_transform(c, iters, cname);
+
+#endif
+
+   //////////////////////////////////////////////////////////////////
+   // Group 3: Algorithms with 3 ranges
+   //////////////////////////////////////////////////////////////////
+#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 3
+
+   //merge
    {
-      int ihalf = static_cast<int>(c.size() / 2);
-      VT hit_pat[] = {half, VT(ihalf + 1), VT(ihalf + 2)};
-      bench_search(c, iters, cname, hit_pat, 3, "search(hit)");
-      VT miss_pat[] = {min1, VT(-2), VT(-3)};
-      bench_search(c, iters, cname, miss_pat, 3, "search(miss)");
+      C c2(c);
+      for (typename C::iterator it = c2.begin(); it != c2.end(); ++it)
+         *it = VT(int_value(*it) * 2);
+      vec_t c2v(c2.begin(), c2.end());
+
+      bench_merge<C,     vec_t, vec_t>(c,  c2v, iters, cname, "merge(1S)");
+      bench_merge<vec_t, C,     vec_t>(cv, c2,  iters, cname, "merge(2S)");
+      bench_merge<vec_t, vec_t, C    >(cv, c2v, iters, cname, "merge(3S)");
+      bench_merge<C,     C,     vec_t>(c,  c2,  iters, cname, "merge(2xS)");
+      bench_merge<C,     C,     C    >(c,  c2,  iters, cname, "merge(3xS)");
    }
 
-   //search_n
-   bench_search_n(c, iters, cname, 1, half, "search_n(hit)");
-   bench_search_n(c, iters, cname, 3, min1, "search_n(miss)");
+   //partition_copy
+   bench_partition_copy(c, iters, cname);
 
    //set_difference, set_intersection, set_symmetric_difference, set_union
    {
@@ -2437,15 +2458,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_set_union<C,     C,     C    >(c,  c2,  iters, cname, "set_union(3xS)");
    }
 
-   //stable_partition (not tested since it's not optimized for random access iterators)
-   //bench_stable_partition(c, iters, cname, is_odd<VT>(),      "stable_partition(hit)");
-   //bench_stable_partition(c, iters, cname, is_negative<VT>(), "stable_partition(miss)");
-
-   //swap_ranges
-   bench_swap_ranges(c, iters, cname);
-
-   //transform
-   bench_transform(c, iters, cname);
+#endif
 
    std::cout << '\n';
    print_subheader();
@@ -2484,14 +2497,16 @@ void run_benchmarks()
       fill_test_data(dq, N);
       run_all(dq, iter, "deque");
          std::cout << "\n";
-   }/*
+   }
+/*
    {
       std::cout << "--- bc::nest<" << typeid(T).name() << "> ---\n";
       bc::nest<T> nt;
       fill_test_data(nt, N);
       run_all(nt, iter, "nest");
       std::cout << "\n";
-   }*/
+   }
+*/
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2501,7 +2516,7 @@ void run_benchmarks()
 int main()
 {
    //run_benchmarks<int>();
-   run_benchmarks<MyInt>();
-   //run_benchmarks<MyFatInt>();
+   //run_benchmarks<MyInt>();
+   run_benchmarks<MyFatInt>();
    return 0;
 }
