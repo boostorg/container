@@ -80,7 +80,7 @@ segmented_replace_if_dispatch(FwdIt first, Sent last, Pred pred, const T& BOOST_
 
 template <class SegIter, class Pred, class T, class Cat>
 void segmented_replace_if_dispatch
-   (SegIter first, SegIter last, Pred pred, const T& new_val, segmented_iterator_tag, Cat)
+   (SegIter first, SegIter last, Pred pred, const T& BOOST_RESTRICT new_val, segmented_iterator_tag, Cat)
 {
 
    typedef segmented_iterator_traits<SegIter>  traits;
