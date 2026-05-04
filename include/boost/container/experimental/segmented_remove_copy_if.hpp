@@ -58,22 +58,43 @@ segduo<RASrcIter, DstIter> segmented_remove_copy_if_dst_bounded
    difference_type n = last - first;
 
    while(n >= difference_type(4)) {
-      if(!pred(*first)) { if(dst_first == dst_last) goto out_path; transfer_op<Move>::apply(*dst_first, *first); ++dst_first; } ++first;
-      if(!pred(*first)) { if(dst_first == dst_last) goto out_path; transfer_op<Move>::apply(*dst_first, *first); ++dst_first; } ++first;
-      if(!pred(*first)) { if(dst_first == dst_last) goto out_path; transfer_op<Move>::apply(*dst_first, *first); ++dst_first; } ++first;
-      if(!pred(*first)) { if(dst_first == dst_last) goto out_path; transfer_op<Move>::apply(*dst_first, *first); ++dst_first; } ++first;
+      if(!pred(*first)) {
+         if(dst_first == dst_last) goto out_path;
+         transfer_op<Move>::apply(*dst_first, *first); ++dst_first;
+      } ++first;
+      if(!pred(*first)) {
+         if(dst_first == dst_last) goto out_path;
+         transfer_op<Move>::apply(*dst_first, *first); ++dst_first;
+      } ++first;
+      if(!pred(*first)) {
+         if(dst_first == dst_last) goto out_path;
+         transfer_op<Move>::apply(*dst_first, *first); ++dst_first;
+      } ++first;
+      if(!pred(*first)) {
+         if(dst_first == dst_last) goto out_path;
+         transfer_op<Move>::apply(*dst_first, *first); ++dst_first;
+      } ++first;
       n -= 4;
    }
 
    switch(n) {
       case 3:
-         if(!pred(*first)) { if(dst_first == dst_last) goto out_path; transfer_op<Move>::apply(*dst_first, *first); ++dst_first; } ++first;
+         if(!pred(*first)) {
+            if(dst_first == dst_last) goto out_path;
+            transfer_op<Move>::apply(*dst_first, *first); ++dst_first;
+         } ++first;
          BOOST_FALLTHROUGH;
       case 2:
-         if(!pred(*first)) { if(dst_first == dst_last) goto out_path; transfer_op<Move>::apply(*dst_first, *first); ++dst_first; } ++first;
+         if(!pred(*first)) {
+            if(dst_first == dst_last) goto out_path;
+            transfer_op<Move>::apply(*dst_first, *first); ++dst_first;
+         } ++first;
          BOOST_FALLTHROUGH;
       case 1:
-         if(!pred(*first)) { if(dst_first == dst_last) goto out_path; transfer_op<Move>::apply(*dst_first, *first); ++dst_first; } ++first;
+         if(!pred(*first)) {
+            if(dst_first == dst_last) goto out_path;
+            transfer_op<Move>::apply(*dst_first, *first); ++dst_first;
+         } ++first;
          BOOST_FALLTHROUGH;
       default:
          break;

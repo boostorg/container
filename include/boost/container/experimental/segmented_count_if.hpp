@@ -44,22 +44,29 @@ segmented_count_if_dispatch
    difference_type n = last - first;
    difference_type count = 0;
    while(n >= difference_type(4)) {
-      count += static_cast<difference_type>(pred(*first)); ++first;
-      count += static_cast<difference_type>(pred(*first)); ++first;
-      count += static_cast<difference_type>(pred(*first)); ++first;
-      count += static_cast<difference_type>(pred(*first)); ++first;
+      if(pred(*first)) ++count;
+      ++first;
+      if(pred(*first)) ++count;
+      ++first;
+      if(pred(*first)) ++count;
+      ++first;
+      if(pred(*first)) ++count;
+      ++first;
       n -= 4;
    }
 
    switch(n) {
       case 3:
-         count += static_cast<difference_type>(pred(*first)); ++first;
+         if(pred(*first)) ++count;
+         ++first;
          BOOST_FALLTHROUGH;
       case 2:
-         count += static_cast<difference_type>(pred(*first)); ++first;
+         if(pred(*first)) ++count;
+         ++first;
          BOOST_FALLTHROUGH;
       case 1:
-         count += static_cast<difference_type>(pred(*first)); ++first;
+         if(pred(*first)) ++count;
+         ++first;
          BOOST_FALLTHROUGH;
       default:
          break;
@@ -80,7 +87,7 @@ segmented_count_if_dispatch
    diff_t n = 0;
 
    for (; first != last; ++first)
-      n += static_cast<diff_t>(pred(*first));
+      if (pred(*first)) ++n;
    return n;
 }
 

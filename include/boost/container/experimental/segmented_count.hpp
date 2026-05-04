@@ -20,12 +20,105 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
-#include <boost/container/detail/compare_functors.hpp>
+#include <boost/container/experimental/segmented_iterator_traits.hpp>
 #include <boost/container/detail/iterator.hpp>
-#include <boost/container/experimental/segmented_count_if.hpp>
 
 namespace boost {
 namespace container {
+
+template <class InpIter, class Sent, class T>
+typename boost::container::iterator_traits<InpIter>::difference_type
+segmented_count(InpIter first, Sent last, const T& value);
+
+namespace detail_algo {
+
+#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
+
+template <class RAIter, class T>
+typename iterator_traits<RAIter>::difference_type
+segmented_count_dispatch
+   (RAIter first, RAIter last, const T& value, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
+{
+   typedef typename iterator_traits<RAIter>::difference_type difference_type;
+
+   difference_type n = last - first;
+   difference_type count = 0;
+   while(n >= difference_type(4)) {
+      if(*first == value) ++count;
+      ++first;
+      if(*first == value) ++count;
+      ++first;
+      if(*first == value) ++count;
+      ++first;
+      if(*first == value) ++count;
+      ++first;
+      n -= 4;
+   }
+
+   switch(n) {
+      case 3:
+         if(*first == value) ++count;
+         ++first;
+         BOOST_FALLTHROUGH;
+      case 2:
+         if(*first == value) ++count;
+         ++first;
+         BOOST_FALLTHROUGH;
+      case 1:
+         if(*first == value) ++count;
+         ++first;
+         BOOST_FALLTHROUGH;
+      default:
+         break;
+   }
+   return count;
+}
+
+#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
+
+template <class InpIter, class Sent, class T, class Tag, class Cat>
+typename algo_enable_if_c<
+   !Tag::value || is_sentinel<Sent, InpIter>::value,
+   typename boost::container::iterator_traits<InpIter>::difference_type>::type
+segmented_count_dispatch
+   (InpIter first, Sent last, const T& value, Tag, Cat)
+{
+   typedef typename boost::container::iterator_traits<InpIter>::difference_type diff_t;
+   diff_t n = 0;
+
+   for (; first != last; ++first)
+      if (*first == value) ++n;
+   return n;
+}
+
+template <class SegIter, class T, class Cat>
+typename boost::container::iterator_traits<SegIter>::difference_type
+   segmented_count_dispatch(SegIter first, SegIter last, const T& value, segmented_iterator_tag, Cat)
+{
+   typedef segmented_iterator_traits<SegIter> traits;
+   typedef typename traits::segment_iterator  segment_iterator;
+   typedef typename traits::local_iterator    local_iterator;
+   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+   typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
+
+   segment_iterator sfirst = traits::segment(first);
+   segment_iterator slast  = traits::segment(last);
+
+   if(sfirst == slast) {
+      return (segmented_count_dispatch)(traits::local(first), traits::local(last), value, is_local_seg_t(), local_cat_t());
+   }
+   else {
+      typename boost::container::iterator_traits<SegIter>::difference_type result = 0;
+      result += (segmented_count_dispatch)(traits::local(first), traits::end(sfirst), value, is_local_seg_t(), local_cat_t());
+
+      for(++sfirst; sfirst != slast; ++sfirst)
+         result += (segmented_count_dispatch)(traits::begin(sfirst), traits::end(sfirst), value, is_local_seg_t(), local_cat_t());
+
+      return result += (segmented_count_dispatch)(traits::begin(sfirst), traits::local(last), value, is_local_seg_t(), local_cat_t());
+   }
+}
+
+} // namespace detail_algo
 
 //! Returns the number of elements equal to \c value in [first, last).
 template <class InpIter, class Sent, class T>
@@ -33,7 +126,9 @@ BOOST_CONTAINER_FORCEINLINE
 typename boost::container::iterator_traits<InpIter>::difference_type
    segmented_count(InpIter first, Sent last, const T& value)
 {
-   return boost::container::segmented_count_if(first, last, equal_to_value<T>(value));
+   typedef segmented_iterator_traits<InpIter> traits;
+   return detail_algo::segmented_count_dispatch(first, last, value,
+      typename traits::is_segmented_iterator(), typename iterator_traits<InpIter>::iterator_category());
 }
 
 } // namespace container

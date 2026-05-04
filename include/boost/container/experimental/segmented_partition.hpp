@@ -39,6 +39,7 @@ namespace detail_algo {
 //////////////////////////////////////////////
 
 template <class FwdIt, class Sent, class OutIter, class Pred>
+BOOST_CONTAINER_FORCEINLINE
 OutIter partition_scan(FwdIt first, Sent last, OutIter result, Pred pred, non_segmented_iterator_tag, const std::forward_iterator_tag &)
 {
    for(; first != last; ++first) {
@@ -55,6 +56,7 @@ OutIter partition_scan(FwdIt first, Sent last, OutIter result, Pred pred, non_se
 //////////////////////////////////////////////
 
 template <class BidirIt, class Pred, class Cat>
+BOOST_CONTAINER_FORCEINLINE
 BidirIt partition_scan(BidirIt first, BidirIt last, Pred pred, non_segmented_iterator_tag, const Cat&)
 {
    while(true) {
@@ -77,6 +79,7 @@ BidirIt partition_scan(BidirIt first, BidirIt last, Pred pred, non_segmented_ite
 #if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
 
 template <class RAIter, class Pred>
+BOOST_CONTAINER_FORCEINLINE
 RAIter partition_scan(RAIter first, RAIter last, Pred pred, non_segmented_iterator_tag, const std::random_access_iterator_tag&)
 {
    typedef typename iterator_traits<RAIter>::difference_type difference_type;
@@ -265,7 +268,6 @@ SegIt partition_scan(SegIt first, SegIt last, Pred pred, segmented_iterator_tag,
 //////////////////////////////////////////////
 
 template <class FwdIt, class Sent, class Pred, class Tag>
-BOOST_CONTAINER_FORCEINLINE
 FwdIt segmented_partition_dispatch(FwdIt first, Sent last, Pred pred, Tag tag, const std::forward_iterator_tag &cat)
 {
    first = (segmented_find_if_not)(first, last, pred);
