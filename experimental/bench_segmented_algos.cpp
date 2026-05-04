@@ -2516,7 +2516,7 @@ void run_benchmarks()
 int main()
 {
    //run_benchmarks<int>();
-   //run_benchmarks<MyInt>();
-   run_benchmarks<MyFatInt>();
+   run_benchmarks<MyInt>();
+   //run_benchmarks<MyFatInt>();
    return 0;
 }
