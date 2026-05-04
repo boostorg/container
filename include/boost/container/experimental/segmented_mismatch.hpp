@@ -121,13 +121,10 @@ segmented_mismatch_iter2_bounded
    (SrcIter first1, Sent last1, Iter2 first2, Iter2Sent iter2_last, BinaryPred pred, Iter2Tag, SrcCat)
 {
    for(; first1 != last1; ++first1) {
-      if(first2 == iter2_last)
-         goto out_path;
-      if(!pred(*first1, *first2))
-         return segduo<SrcIter, Iter2>(first1, first2);
+      if(first2 == iter2_last || !pred(*first1, *first2))
+         break;
       ++first2;
    }
-   out_path:
    return segduo<SrcIter, Iter2>(first1, first2);
 }
 
