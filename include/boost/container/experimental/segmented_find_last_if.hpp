@@ -35,9 +35,9 @@ namespace detail_algo {
 // Non-segmented scans
 //////////////////////////////////////////////
 
-template <class FwdIt, class Pred>
+template <class FwdIt, class Sent, class Pred>
 BOOST_CONTAINER_FORCEINLINE
-FwdIt find_last_if_scan(FwdIt first, FwdIt last, Pred pred,
+FwdIt find_last_if_scan(FwdIt first, Sent last, Pred pred,
                         non_segmented_iterator_tag, const std::forward_iterator_tag&)
 {
    FwdIt result = last;
@@ -205,18 +205,6 @@ SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred, segmented_iterator_t
 //////////////////////////////////////////////
 // Sentinel / generic fallback
 //////////////////////////////////////////////
-
-template <class FwdIt, class Sent, class Pred, class SegTag, class CatTag>
-typename algo_enable_if_c<is_sentinel<Sent, FwdIt>::value, FwdIt>::type
-   find_last_if_scan(FwdIt first, Sent last, Pred pred, SegTag, CatTag)
-{
-   FwdIt result = first;
-   bool found = false;
-   for (; first != last; ++first) {
-      if (pred(*first)) { result = first; found = true; }
-   }
-   return found ? result : first;
-}
 
 } // namespace detail_algo
 
