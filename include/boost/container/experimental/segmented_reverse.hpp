@@ -31,6 +31,7 @@ namespace detail_algo {
 
 //Same-segment reverse: simply a reverse loop with move-swaps. No segmentation
 template <class BidirIt, class Cat>
+BOOST_CONTAINER_FORCEINLINE
 void segmented_reverse_dispatch(BidirIt first, BidirIt last, non_segmented_iterator_tag, const Cat &)
 {
    while(first != last && first != --last) {
@@ -40,6 +41,7 @@ void segmented_reverse_dispatch(BidirIt first, BidirIt last, non_segmented_itera
 }
 
 template <class RAIter>
+BOOST_CONTAINER_FORCEINLINE
 void segmented_reverse_dispatch(RAIter first, RAIter last, non_segmented_iterator_tag, const std::random_access_iterator_tag &)
 {
    typedef typename iterator_traits<RAIter>::difference_type difference_type;
