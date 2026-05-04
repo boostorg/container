@@ -65,27 +65,26 @@ BidirIt find_last_if_scan(BidirIt first, BidirIt last, Pred pred,
 
 template <class RAIter, class Pred>
 BOOST_CONTAINER_FORCEINLINE
-RAIter find_last_if_scan(RAIter first, RAIter last, Pred pred,
+RAIter find_last_if_scan(RAIter first, RAIter const last, Pred pred,
                          non_segmented_iterator_tag, const std::random_access_iterator_tag&)
 {
    typedef typename iterator_traits<RAIter>::difference_type difference_type;
 
-   const RAIter not_found = last;
    RAIter cur = last;
    difference_type n = cur - first;
    while (n >= difference_type(4)) {
       --cur;
       if (pred(*cur))
-         return cur;
+         goto found;
       --cur;
       if (pred(*cur))
-         return cur;
+         goto found;
       --cur;
       if (pred(*cur))
-         return cur;
+         goto found;
       --cur;
       if (pred(*cur))
-         return cur;
+         goto found;
       n -= 4;
    }
 
@@ -93,22 +92,24 @@ RAIter find_last_if_scan(RAIter first, RAIter last, Pred pred,
       case 3:
          --cur;
          if (pred(*cur))
-            return cur;
+            goto found;
          BOOST_FALLTHROUGH;
       case 2:
          --cur;
          if (pred(*cur))
-            return cur;
+            goto found;
          BOOST_FALLTHROUGH;
       case 1:
          --cur;
          if (pred(*cur))
-            return cur;
+            goto found;
          BOOST_FALLTHROUGH;
       default:
          break;
    }
-   return not_found;
+   return last;
+   found:
+   return cur;
 }
 
 #endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
