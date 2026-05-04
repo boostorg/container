@@ -27,15 +27,16 @@ namespace boost {
 namespace container {
 
 template <class FwdIt, class Sent, class T>
-void segmented_replace(FwdIt first, Sent last, const T& old_val, const T& new_val);
+void segmented_replace(FwdIt first, Sent last, const T& BOOST_RESTRICT old_val, const T& BOOST_RESTRICT new_val);
 
 namespace detail_algo {
 
 #if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
 
 template <class RAIter, class T>
+BOOST_CONTAINER_FORCEINLINE
 void segmented_replace_dispatch
-   (RAIter first, RAIter last, const T& old_val, const T& new_val
+   (RAIter first, RAIter last, const T& BOOST_RESTRICT old_val, const T& BOOST_RESTRICT new_val
    , const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
    typedef typename iterator_traits<RAIter>::difference_type difference_type;
@@ -67,9 +68,10 @@ void segmented_replace_dispatch
 #endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
 
 template <class FwdIt, class Sent, class T, class Tag, class Cat>
+BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, FwdIt>::value>::type
-segmented_replace_dispatch(FwdIt first, Sent last, const T& old_val, const T& new_val, Tag, Cat)
+segmented_replace_dispatch(FwdIt first, Sent last, const T& BOOST_RESTRICT old_val, const T& BOOST_RESTRICT new_val, Tag, Cat)
 {
    for(; first != last; ++first)
       if(*first == old_val)
@@ -78,7 +80,7 @@ segmented_replace_dispatch(FwdIt first, Sent last, const T& old_val, const T& ne
 
 template <class SegIter, class T, class Cat>
 void segmented_replace_dispatch
-   (SegIter first, SegIter last, const T& old_val, const T& new_val, segmented_iterator_tag, Cat)
+   (SegIter first, SegIter last, const T& BOOST_RESTRICT old_val, const T& BOOST_RESTRICT new_val, segmented_iterator_tag, Cat)
 {
 
    typedef segmented_iterator_traits<SegIter>  traits;
@@ -108,7 +110,7 @@ void segmented_replace_dispatch
 //! Replaces every occurrence of \c old_val with \c new_val in [first, last).
 template <class FwdIt, class Sent, class T>
 BOOST_CONTAINER_FORCEINLINE
-void segmented_replace(FwdIt first, Sent last, const T& old_val, const T& new_val)
+void segmented_replace(FwdIt first, Sent last, const T& BOOST_RESTRICT old_val, const T& BOOST_RESTRICT new_val)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
    detail_algo::segmented_replace_dispatch

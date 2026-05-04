@@ -27,15 +27,16 @@ namespace boost {
 namespace container {
 
 template <class FwdIt, class Sent, class Pred, class T>
-void segmented_replace_if(FwdIt first, Sent last, Pred pred, const T& new_val);
+void segmented_replace_if(FwdIt first, Sent last, Pred pred, const T& BOOST_RESTRICT new_val);
 
 namespace detail_algo {
 
 #if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
 
 template <class RAIter, class Pred, class T>
+BOOST_CONTAINER_FORCEINLINE
 void segmented_replace_if_dispatch
-   (RAIter first, RAIter last, Pred pred, const T& new_val
+   (RAIter first, RAIter last, Pred pred, const T& BOOST_RESTRICT new_val
    , const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
    typedef typename iterator_traits<RAIter>::difference_type difference_type;
@@ -69,7 +70,8 @@ void segmented_replace_if_dispatch
 template <class FwdIt, class Sent, class Pred, class T, class Tag, class Cat>
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, FwdIt>::value>::type
-segmented_replace_if_dispatch(FwdIt first, Sent last, Pred pred, const T& new_val, Tag, Cat)
+BOOST_CONTAINER_FORCEINLINE
+segmented_replace_if_dispatch(FwdIt first, Sent last, Pred pred, const T& BOOST_RESTRICT new_val, Tag, Cat)
 {
    for(; first != last; ++first)
       if(pred(*first))
@@ -108,7 +110,7 @@ void segmented_replace_if_dispatch
 //! Replaces every element satisfying \c pred with \c new_val in [first, last).
 template <class FwdIt, class Sent, class Pred, class T>
 BOOST_CONTAINER_FORCEINLINE
-void segmented_replace_if(FwdIt first, Sent last, Pred pred, const T& new_val)
+void segmented_replace_if(FwdIt first, Sent last, Pred pred, const T& BOOST_RESTRICT new_val)
 {
    typedef segmented_iterator_traits<FwdIt> traits;
    detail_algo::segmented_replace_if_dispatch
