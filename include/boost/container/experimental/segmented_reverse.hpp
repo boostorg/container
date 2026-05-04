@@ -81,34 +81,30 @@ void segmented_reverse_dispatch(RAIter first, RAIter last, non_segmented_iterato
 //////////////////////////////////////////////
 // segmented_reverse_disjoint_ranges: swaps elements between
 // [f, f_end) (forward) and [l_beg, l) (backward).
-// Updates f and l to their final positions.
+// Returns segduo with the final positions of f and l.
 // At least one side is fully consumed on return.
 //////////////////////////////////////////////
 
 template <class It, class Cat>
-void segmented_reverse_disjoint_ranges
-   (It& f_out, It const f_end, It const l_beg, It& l_out, non_segmented_iterator_tag, const Cat &)
+BOOST_CONTAINER_FORCEINLINE
+segduo<It, It> segmented_reverse_disjoint_ranges
+   (It f, It const f_end, It const l_beg, It l, non_segmented_iterator_tag, const Cat &)
 {
-   It f = f_out;
-   It l = l_out;
-
    while (f != f_end && l != l_beg) {
       --l;
       boost::adl_move_swap(*f, *l);
       ++f;
    }
-   f_out = f;
-   l_out = l;
+   return segduo<It, It>(f, l);
 }
 
 template <class It>
-void segmented_reverse_disjoint_ranges
-   (It& f_out, It const f_end, It const l_beg, It& l_out, non_segmented_iterator_tag, const std::random_access_iterator_tag &)
+BOOST_CONTAINER_FORCEINLINE
+segduo<It, It> segmented_reverse_disjoint_ranges
+   (It f, It const f_end, It const l_beg, It l, non_segmented_iterator_tag, const std::random_access_iterator_tag &)
 {
    typedef typename iterator_traits<It>::difference_type difference_type;
 
-   It f = f_out;
-   It l = l_out;
    difference_type n_f = f_end - f;
    difference_type n_l = l - l_beg;
    difference_type n = n_f < n_l ? n_f : n_l;
@@ -143,12 +139,11 @@ void segmented_reverse_disjoint_ranges
    }
 #endif
 
-   f_out = f;
-   l_out = l;
+   return segduo<It, It>(f, l);
 }
 
 template <class It, class Cat>
-void segmented_reverse_disjoint_ranges(It& f, It f_end, It l_beg, It& l, segmented_iterator_tag, const Cat&)
+segduo<It, It> segmented_reverse_disjoint_ranges(It f, It f_end, It l_beg, It l, segmented_iterator_tag, const Cat&)
 {
    typedef segmented_iterator_traits<It>        traits;
    typedef typename traits::segment_iterator    segment_iterator;
@@ -160,7 +155,7 @@ void segmented_reverse_disjoint_ranges(It& f, It f_end, It l_beg, It& l, segment
 
    //Nothing to swap here if a range is empty
    if (f == f_end || l == l_beg)
-      return;
+      return segduo<It, It>(f, l);
 
    segment_iterator       fs     = traits::segment(f);
    const segment_iterator fs_end = traits::segment(f_end);
@@ -176,18 +171,18 @@ void segmented_reverse_disjoint_ranges(It& f, It f_end, It l_beg, It& l, segment
    //since the ranges are guaranteed not to overlap
    while (true) {
       //Reverse the front and back segments recursively
-      segmented_reverse_disjoint_ranges(fi, fi_end, li_beg, li, is_local_seg_t(), local_cat_t());
+      segduo<local_iterator, local_iterator> r =
+         segmented_reverse_disjoint_ranges(fi, fi_end, li_beg, li, is_local_seg_t(), local_cat_t());
+      fi = r.first;
+      li = r.second;
 
       //Independent advancement of forward and backward segments since ranges do not to overlap
 
       //Check if the forward segment was fully consumed
       if (fi == fi_end) {
          //Check if there are no more segments to advance on the forward side, in which case we are done
-         if (fs == fs_end) {
-            f = f_end;
-            l = traits::compose(ls, li);
-            return;
-         }
+         if (fs == fs_end)
+            return segduo<It, It>(f_end, traits::compose(ls, li));
          //Advance the forward segment
          ++fs;
          fi = traits::begin(fs);
@@ -197,11 +192,8 @@ void segmented_reverse_disjoint_ranges(It& f, It f_end, It l_beg, It& l, segment
       //Check if the backward segment was fully consumed
       if (li == li_beg) {
          //Check if there are no more segments to retreat on the backward side, in which case we are done
-         if (ls == ls_beg) {
-            f = traits::compose(fs, fi);
-            l = l_beg;
-            return;
-         }
+         if (ls == ls_beg)
+            return segduo<It, It>(traits::compose(fs, fi), l_beg);
          //Retreat the backward segment
          --ls;
          li = traits::end(ls);
@@ -231,7 +223,10 @@ void segmented_reverse_dispatch(SegIt first, SegIt last, segmented_iterator_tag,
       local_iterator l_beg = traits::begin(sl);
 
       while (true) {
-         segmented_reverse_disjoint_ranges(f_loc, f_end, l_beg, l_loc, is_local_seg_t(), local_cat_t());
+         segduo<local_iterator, local_iterator> r =
+            segmented_reverse_disjoint_ranges(f_loc, f_end, l_beg, l_loc, is_local_seg_t(), local_cat_t());
+         f_loc = r.first;
+         l_loc = r.second;
 
          //Check if the backward side reached the end of its segment
          if (l_loc == l_beg) {
