@@ -34,6 +34,7 @@ namespace detail_algo {
 #if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
 
 template <class InIter, class OutIter, class UnaryOp>
+BOOST_CONTAINER_FORCEINLINE
 OutIter segmented_transform_dispatch
    (InIter first, InIter last, OutIter result, UnaryOp op, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
@@ -68,6 +69,7 @@ OutIter segmented_transform_dispatch
 
 
 template <class InIter, class Sent, class OutIter, class UnaryOp, class Tag, class Cat>
+BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, InIter>::value, OutIter>::type
 segmented_transform_dispatch

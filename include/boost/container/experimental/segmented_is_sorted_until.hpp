@@ -42,6 +42,7 @@ namespace detail_algo {
 // (1) Non-segmented base case.
 //     At this level FwdIt == DeepIt (the deepest type computed from the top).
 template <class FwdIt, class Sent, class Comp, class DeepIt, class Cat>
+BOOST_CONTAINER_FORCEINLINE
 segduo<FwdIt, DeepIt> sorted_until_rec
    (FwdIt first, Sent last, Comp comp,
     DeepIt prev, const non_segmented_iterator_tag &, Cat)

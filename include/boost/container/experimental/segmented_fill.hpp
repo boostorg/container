@@ -35,6 +35,7 @@ namespace detail_algo {
 #if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
 
 template <class RAIter, class T>
+BOOST_CONTAINER_FORCEINLINE
 void segmented_fill_range
    (RAIter first, RAIter last, const T& value, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
