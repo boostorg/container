@@ -33,7 +33,10 @@ FwdIt segmented_fill_n(FwdIt first, Size count, const T& value);
 namespace detail_algo {
 
 template <class OutIter, class Size, class T>
-OutIter fill_n_scan_non_segmented(OutIter first, OutIter last, Size& count, const T& value, const std::random_access_iterator_tag &)
+BOOST_CONTAINER_FORCEINLINE
+OutIter fill_n_scan
+   ( OutIter first, OutIter last, Size& BOOST_RESTRICT count
+   , const T& value, non_segmented_iterator_tag, const std::random_access_iterator_tag &)
 {
    std::size_t range_sz = static_cast<std::size_t>(last - first);
    const Size local_count = (std::size_t)count < range_sz ? count : (Size)range_sz;
@@ -70,8 +73,10 @@ OutIter fill_n_scan_non_segmented(OutIter first, OutIter last, Size& count, cons
    return first;
 }
 
-template <class OutIter, class Size, class T, class Tag>
-OutIter fill_n_scan_non_segmented(OutIter first, OutIter last, Size& count, const T& value, Tag)
+template <class OutIter, class Size, class T, class Cat>
+BOOST_CONTAINER_FORCEINLINE
+OutIter fill_n_scan
+   (OutIter first, OutIter last, Size& BOOST_RESTRICT count, const T& value, non_segmented_iterator_tag, const Cat &)
 {
    Size local_count = count;
 
@@ -83,41 +88,35 @@ OutIter fill_n_scan_non_segmented(OutIter first, OutIter last, Size& count, cons
    return first;
 }
 
-template <class OutIter, class Size, class T>
-BOOST_CONTAINER_FORCEINLINE
-OutIter fill_n_scan(OutIter first, OutIter last, Size& count, const T& value, non_segmented_iterator_tag)
+template <class SegIt, class Size, class T, class Cat>
+SegIt fill_n_scan(SegIt first, SegIt last, Size& BOOST_RESTRICT count, const T& value, segmented_iterator_tag, const Cat &)
 {
-   return (fill_n_scan_non_segmented)(first, last, count, value, typename iterator_traits<OutIter>::iterator_category());
-}
-
-template <class SegIt, class Size, class T>
-SegIt fill_n_scan(SegIt first, SegIt last, Size& count, const T& value, segmented_iterator_tag)
-{
-   typedef segmented_iterator_traits<SegIt>  traits;
-   typedef typename traits::local_iterator   local_iterator;
-   typedef typename traits::segment_iterator segment_iterator;
-   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+   typedef segmented_iterator_traits<SegIt>                                            traits;
+   typedef typename traits::local_iterator                                             local_iterator;
+   typedef typename traits::segment_iterator                                           segment_iterator;
+   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator   is_local_seg_t;
+   typedef typename iterator_traits<local_iterator>::iterator_category                 local_cat_t;
 
    segment_iterator       scur  = traits::segment(first);
    segment_iterator const slast = traits::segment(last);
 
    if(scur == slast) {
       const local_iterator ll = traits::local(last);
-      const local_iterator r = (fill_n_scan)(traits::local(first), ll, count, value, is_local_seg_t());
+      const local_iterator r = (fill_n_scan)(traits::local(first), ll, count, value, is_local_seg_t(), local_cat_t());
       return (r != ll) ? traits::compose(scur, r) : last;
    }
    else {
-      local_iterator r = fill_n_scan(traits::local(first), traits::end(scur), count, value, is_local_seg_t());
+      local_iterator r = fill_n_scan(traits::local(first), traits::end(scur), count, value, is_local_seg_t(), local_cat_t());
       if (!count)
          return traits::compose(scur, r);
 
       for (++scur; scur != slast; ++scur) {
-         r = fill_n_scan(traits::begin(scur), traits::end(scur), count, value, is_local_seg_t());
+         r = fill_n_scan(traits::begin(scur), traits::end(scur), count, value, is_local_seg_t(), local_cat_t());
          if (!count)
             return traits::compose(scur, r);
       }
       const local_iterator ll = traits::local(last);
-      r = fill_n_scan(traits::begin(slast), ll, count, value, is_local_seg_t());
+      r = fill_n_scan(traits::begin(slast), ll, count, value, is_local_seg_t(), local_cat_t());
       return (r != ll) ? traits::compose(scur, r) : last;
    }
 }
@@ -130,12 +129,13 @@ SegIter segmented_fill_n_ref
    typedef typename traits::local_iterator    local_iterator;
    typedef typename traits::segment_iterator  segment_iterator;
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+   typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
 
    segment_iterator scur = traits::segment(first);
    local_iterator   lcur = traits::local(first);
 
    while(1) {
-      lcur = fill_n_scan(lcur, traits::end(scur), count, value, is_local_seg_t());
+      lcur = fill_n_scan(lcur, traits::end(scur), count, value, is_local_seg_t(), local_cat_t());
 
       if(count == 0)
          break;
