@@ -35,6 +35,7 @@ namespace detail_algo {
 #if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
 
 template <class RAIter, class F>
+BOOST_CONTAINER_FORCEINLINE
 F segmented_for_each_dispatch
    (RAIter first, RAIter last, F f, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
@@ -70,6 +71,7 @@ F segmented_for_each_dispatch
 template <class InpIter, class Sent, class F, class Tag, class Cat>
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, InpIter>::value, F>::type
+BOOST_CONTAINER_FORCEINLINE
 segmented_for_each_dispatch
    (InpIter first, Sent last, F f, Tag, Cat)
 {
