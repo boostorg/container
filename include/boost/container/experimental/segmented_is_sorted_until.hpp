@@ -60,7 +60,7 @@ segduo<FwdIt, DeepIt> sorted_until_rec
 template <class RAIter, class Comp, class DeepIt>
 segduo<RAIter, DeepIt> sorted_until_rec
    (RAIter first, RAIter last, Comp comp,
-    RAIter prev,
+    DeepIt prev,
     const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
    typedef typename iterator_traits<RAIter>::difference_type difference_type;
