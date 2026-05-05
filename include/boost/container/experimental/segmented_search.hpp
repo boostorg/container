@@ -162,24 +162,29 @@ typename algo_enable_if_c<
 segmented_search_dispatch
    (FwdIt1 first, Sent1 last, FwdIt2 s_first, Sent2 s_last, Tag)
 {
-   // No top-level "s_first == s_last" guard is needed: the inner
-   // "if(s_it == s_last) return first;" below handles the empty-needle case
-   // (returning the current first, which equals the original first on the
-   // first outer iteration). When first == last the outer loop is skipped
-   // and we return last, which also equals first.
-   for(; first != last; ++first) {
+   if (s_first == s_last)
+      return first;
+
+   equal_to_deref<FwdIt2> eq(s_first);
+
+   while (first != last) {
+      first = boost::container::segmented_find_if(first, last, eq);
+      if (first == last)
+         return last;
+
       FwdIt1 it = first;
       FwdIt2 s_it = s_first;
       for(;;) {
+         ++it;
+         ++s_it;
          if(s_it == s_last)
             return first;
          if(it == last)
             return last;
          if(!(*it == *s_it))
             break;
-         ++it;
-         ++s_it;
       }
+      ++first;
    }
    return last;
 }
