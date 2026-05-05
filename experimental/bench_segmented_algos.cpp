@@ -2492,8 +2492,7 @@ void run_benchmarks()
 
    {
       std::cout << "--- bc::deque<" << typeid(T).name() << "> ---\n";
-      //bc::deque<T, void, bc::deque_options_t<bc::block_size<4096> > > dq;
-      bc::deque<T> dq;
+      bc::deque<T, void, bc::deque_options_t<bc::block_size<128> > > dq;
       fill_test_data(dq, N);
       run_all(dq, iter, "deque");
          std::cout << "\n";
@@ -2517,6 +2516,6 @@ int main()
 {
    //run_benchmarks<int>();
    run_benchmarks<MyInt>();
-   //run_benchmarks<MyFatInt>();
+   run_benchmarks<MyFatInt>();
    return 0;
 }
