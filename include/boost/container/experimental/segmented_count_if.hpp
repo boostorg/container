@@ -44,6 +44,16 @@ segmented_count_if_dispatch
    difference_type n = last - first;
    difference_type count = 0;
    while(n >= difference_type(4)) {
+   #if defined(BOOST_CONTAINER_SEGMENTED_COUNT_BRANCHLESS)
+      count += static_cast<difference_type>(pred(*first));
+      ++first;
+      count += static_cast<difference_type>(pred(*first));
+      ++first;
+      count += static_cast<difference_type>(pred(*first));
+      ++first;
+      count += static_cast<difference_type>(pred(*first));
+      ++first;
+   #else
       if(pred(*first)) ++count;
       ++first;
       if(pred(*first)) ++count;
@@ -52,20 +62,33 @@ segmented_count_if_dispatch
       ++first;
       if(pred(*first)) ++count;
       ++first;
+   #endif
       n -= 4;
    }
 
    switch(n) {
       case 3:
+      #if defined(BOOST_CONTAINER_SEGMENTED_COUNT_BRANCHLESS)
+         count += static_cast<difference_type>(pred(*first));
+      #else
          if(pred(*first)) ++count;
+      #endif
          ++first;
          BOOST_FALLTHROUGH;
       case 2:
+      #if defined(BOOST_CONTAINER_SEGMENTED_COUNT_BRANCHLESS)
+         count += static_cast<difference_type>(pred(*first));
+      #else
          if(pred(*first)) ++count;
+      #endif
          ++first;
          BOOST_FALLTHROUGH;
       case 1:
+      #if defined(BOOST_CONTAINER_SEGMENTED_COUNT_BRANCHLESS)
+         count += static_cast<difference_type>(pred(*first));
+      #else
          if(pred(*first)) ++count;
+      #endif
          ++first;
          BOOST_FALLTHROUGH;
       default:
@@ -87,7 +110,11 @@ segmented_count_if_dispatch
    diff_t n = 0;
 
    for (; first != last; ++first)
+   #if defined(BOOST_CONTAINER_SEGMENTED_COUNT_BRANCHLESS)
+      n += static_cast<diff_t>(pred(*first));
+   #else
       if (pred(*first)) ++n;
+   #endif
    return n;
 }
 

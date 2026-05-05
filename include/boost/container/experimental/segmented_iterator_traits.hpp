@@ -381,10 +381,28 @@ struct deepest_local_iterator
 
 //#define BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO
 
+// When defined, segmented algorithms that have a dual random-access fast path
+// (e.g. segmented_copy_if_dst_bounded) will not attempt to detect whether the
+// remaining source range fits the destination capacity and will always take the
+// fast path when both iterators are random-access.  This is useful for benchmarking
+// the advantage of the dual-RA optimisation in isolation.
+//
 //#define BOOST_CONTAINER_SEGMENTED_DISABLE_DUAL_RA_OPTIMIZATION
-
 #if !defined(BOOST_CONTAINER_SEGMENTED_DISABLE_DUAL_RA_OPTIMIZATION)
 #define BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION
 #endif
+
+// When defined, segmented algorithms that count elements (e.g. segmented_count,
+// segmented_count_if) will use a branchless counting strategy in their
+// innermost loops, incrementing the count by the boolean result of the
+// predicate rather than testing the predicate result in a branch and conditionally
+// incrementing.  This can improve performance on some platforms by avoiding branch mispredictions,
+// at the cost of potentially increased instruction count and/or reduced vectorization opportunities.
+// 
+// However, the optimal strategy is highly platform- and algorithm-specific, so this is disabled by default.
+// There are regressions on some algorithms and platforms when this is enabled, and the performance impact
+// varies widely across different scenarios.
+//
+//#define BOOST_CONTAINER_SEGMENTED_COUNT_BRANCHLESS
 
 #endif // BOOST_CONTAINER_EXPERIMENTAL_SEGMENTED_ITERATOR_TRAITS_HPP
