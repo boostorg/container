@@ -73,6 +73,7 @@ typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, FwdIt>::value>::type
 segmented_replace_dispatch(FwdIt first, Sent last, const T& BOOST_RESTRICT old_val, const T& BOOST_RESTRICT new_val, Tag, Cat)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first)
       if(*first == old_val)
          *first = new_val;

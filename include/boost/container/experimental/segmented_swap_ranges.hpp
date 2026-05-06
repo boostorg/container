@@ -37,6 +37,7 @@ typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, FwdIt1>::value, FwdIt2>::type
 segmented_swap_ranges_dispatch (FwdIt1 first1, Sent last1, FwdIt2 first2, Tag)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first1 != last1; ++first1, ++first2) {
       boost::adl_move_swap(*first1, *first2);
    }

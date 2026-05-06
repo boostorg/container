@@ -73,6 +73,7 @@ template <class FwdIt, class Sent, class Generator, class Tag, class Cat>
    !Tag::value || is_sentinel<Sent, FwdIt>::value>::type
 segmented_generate_dispatch(FwdIt first, const Sent last, Generator & BOOST_RESTRICT gen, Tag, Cat)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first)
       *first = gen();
 }

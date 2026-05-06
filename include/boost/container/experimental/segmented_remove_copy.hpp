@@ -97,6 +97,7 @@ BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<!DstTag::value, segduo<Src
 segmented_remove_copy_dst_bounded
    (SrcIter first, Sent last, DstIter dst_first, DstSent dst_last, const T& value, DstTag, SrcCat)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first) {
       if(!(*first == value)) {
          if(dst_first == dst_last)
@@ -163,7 +164,7 @@ BOOST_CONTAINER_FORCEINLINE DstIter segmented_remove_copy_dst_dispatch
 
 template <bool Move, class SrcIter, class Sent, class SegDstIter, class T, class Cat>
 SegDstIter segmented_remove_copy_dst_dispatch
-   (SrcIter first, Sent last, SegDstIter result, const T& value,
+   (SrcIter first, const Sent last, SegDstIter result, const T& value,
     const segmented_iterator_tag &, Cat)
 {
    typedef segmented_iterator_traits<SegDstIter>  dst_traits;
@@ -178,11 +179,10 @@ SegDstIter segmented_remove_copy_dst_dispatch
    dst_local_iterator   dst_local = dst_traits::local(result);
 
    while(1) {
-      const dst_local_iterator dst_end = dst_traits::end(dst_seg);
       const segduo<SrcIter, dst_local_iterator> r = (segmented_remove_copy_dst_bounded<Move>)
-         (first, last, dst_local, dst_end, value, dst_is_local_seg_t(), Cat());
-      first = r.first;
-      if(first != last) {
+         (first, last, dst_local, dst_traits::end(dst_seg), value, dst_is_local_seg_t(), Cat());
+      if(r.first != last) {
+         first = r.first;
          ++dst_seg;
          dst_local = dst_traits::begin(dst_seg);
       }
@@ -204,15 +204,15 @@ typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, SrcIter>::value, OutIter>::type
 segmented_remove_copy_dispatch
    (SrcIter first, Sent last, OutIter result, const T& value, Tag, Cat)
-{
+{/*
 #if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
    typedef segmented_iterator_traits<OutIter> dst_traits;
    return (segmented_remove_copy_dst_dispatch<Move>)
       (first, last, result, value, typename dst_traits::is_segmented_iterator(), Cat());
-#else
+#else*/
    return (segmented_remove_copy_dst_dispatch<Move>)
       (first, last, result, value, non_segmented_iterator_tag(), Cat());
-#endif
+//#endif
 }
 
 template <bool Move, class SegIter, class OutIter, class T, class Cat>

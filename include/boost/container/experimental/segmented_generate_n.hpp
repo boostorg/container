@@ -65,6 +65,7 @@ OutIter generate_n_scan
          break;
    }
 #else
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(Size cnt = local_count; cnt; ++first, --cnt)
       *first = gen();
 #endif
@@ -80,6 +81,7 @@ OutIter generate_n_scan
 {
    Size local_count = count;
 
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for (; local_count > 0 && first != last; ++first, --local_count)
       *first = gen();
 
@@ -149,6 +151,7 @@ template <class OutIt, class Size, class Generator>
 OutIt segmented_generate_n_ref
    (OutIt first, Size count, Generator& BOOST_RESTRICT gen, non_segmented_iterator_tag)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; count > 0; ++first, --count)
       *first = gen();
    return first;

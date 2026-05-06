@@ -72,6 +72,7 @@ BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, FwdIt>::value>::type
 segmented_fill_range(FwdIt first, Sent last, const T& value, Tag, Cat)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first)
       *first = value;
 }

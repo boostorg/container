@@ -73,6 +73,7 @@ typename algo_enable_if_c<
 BOOST_CONTAINER_FORCEINLINE
 segmented_replace_if_dispatch(FwdIt first, Sent last, Pred pred, const T& BOOST_RESTRICT new_val, Tag, Cat)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first)
       if(pred(*first))
          *first = new_val;

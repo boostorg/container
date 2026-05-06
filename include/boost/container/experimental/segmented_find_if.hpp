@@ -88,6 +88,7 @@ typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, InpIter>::value, InpIter>::type
 segmented_find_if_dispatch(InpIter first, Sent last, Pred pred, Tag, Cat)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first)
       if(pred(*first))
          break;

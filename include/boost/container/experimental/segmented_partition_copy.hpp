@@ -88,6 +88,7 @@ typename algo_enable_if_c<
 segmented_partition_copy_dispatch
    (InIter first, Sent last, OutIter1 out_true, OutIter2 out_false, Pred pred, Tag, Cat)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first) {
       if(pred(*first)) {
          *out_true = *first;

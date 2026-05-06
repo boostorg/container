@@ -42,6 +42,7 @@ template <class FwdIt, class Sent, class OutIter, class Pred>
 BOOST_CONTAINER_FORCEINLINE
 OutIter partition_scan(FwdIt first, Sent last, OutIter result, Pred pred, non_segmented_iterator_tag, const std::forward_iterator_tag &)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first) {
       if(pred(*first)) {
          boost::adl_move_swap(*result, *first);

@@ -110,6 +110,7 @@ BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<!DstTag::value, segduo<Src
 segmented_remove_copy_if_dst_bounded
    (SrcIter first, Sent last, DstIter dst_first, DstSent dst_last, Pred pred, DstTag, SrcCat)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first) {
       if(!pred(*first)) {
          if(dst_first == dst_last)

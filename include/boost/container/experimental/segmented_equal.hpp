@@ -110,6 +110,7 @@ typename algo_enable_if_c<!Iter2Tag::value, segduo<SrcIter, Iter2> >::type
 segmented_equal_iter2_bounded
    (SrcIter first1, Sent last1, Iter2 first2, Iter2Sent iter2_last, BinaryPred pred, Iter2Tag, SrcCat)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first1 != last1; ++first1) {
       if(first2 == iter2_last)
          goto out_path;

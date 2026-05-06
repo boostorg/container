@@ -89,6 +89,7 @@ BOOST_CONTAINER_FORCEINLINE segduo<SrcIter, DstIter>
 segmented_copy_n_src_dst_bounded
    (SrcIter first, SrcSent last, Size& BOOST_RESTRICT count, DstIter dst_first, DstSent dst_last)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; count > 0; ++first, --count) {
       if(dst_first == dst_last || first == last)
          goto out_path;

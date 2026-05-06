@@ -41,6 +41,7 @@ FwdIt find_last_scan(FwdIt first, Sent last, const T& value,
                      non_segmented_iterator_tag, const std::forward_iterator_tag&)
 {
    FwdIt result = last;
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for (; first != last; ++first)
       if (*first == value)
          result = first;
@@ -53,6 +54,7 @@ BidirIt find_last_scan(BidirIt first, BidirIt last, const T& value,
                        non_segmented_iterator_tag, const std::bidirectional_iterator_tag&)
 {
    BidirIt cur = last;
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    while (cur != first) {
       --cur;
       if (*cur == value)

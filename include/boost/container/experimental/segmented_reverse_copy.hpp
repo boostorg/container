@@ -98,6 +98,7 @@ BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<!DstTag::value, segduo<Bid
 segmented_reverse_copy_dst_bounded
    (BidirIter first, BidirIter last, DstIter dst_first, DstSent dst_last, DstTag, SrcCat)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    while(first != last) {
       if(dst_first == dst_last)
          goto out_path;

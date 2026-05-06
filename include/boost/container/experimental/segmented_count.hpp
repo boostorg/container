@@ -111,6 +111,7 @@ segmented_count_dispatch
    typedef typename boost::container::iterator_traits<InpIter>::difference_type diff_t;
    diff_t n = 0;
 
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for (; first != last; ++first)
    #if defined(BOOST_CONTAINER_SEGMENTED_COUNT_BRANCHLESS)
       n += static_cast<diff_t>(*first == value);

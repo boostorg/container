@@ -34,6 +34,7 @@ template <class BidirIt, class Cat>
 BOOST_CONTAINER_FORCEINLINE
 void segmented_reverse_dispatch(BidirIt first, BidirIt last, non_segmented_iterator_tag, const Cat &)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    while(first != last && first != --last) {
       boost::adl_move_swap(*first, *last);
       ++first;
@@ -70,6 +71,7 @@ void segmented_reverse_dispatch(RAIter first, RAIter last, non_segmented_iterato
          break;
    }
 #else
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; pairs; --pairs) {
       --last;
       boost::adl_move_swap(*first, *last);
@@ -90,6 +92,7 @@ BOOST_CONTAINER_FORCEINLINE
 segduo<It, It> segmented_reverse_disjoint_ranges
    (It f, It const f_end, It const l_beg, It l, non_segmented_iterator_tag, const Cat &)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    while (f != f_end && l != l_beg) {
       --l;
       boost::adl_move_swap(*f, *l);
@@ -132,6 +135,7 @@ segduo<It, It> segmented_reverse_disjoint_ranges
          break;
    }
 #else
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; n; --n) {
       --l;
       boost::adl_move_swap(*f, *l);

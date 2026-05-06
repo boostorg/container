@@ -74,6 +74,7 @@ template <class FwdIt, class OuterIter, class Composer, class Pred>
 OuterIter stable_partition_scan(FwdIt first, FwdIt last, OuterIter result, Composer composer, Pred pred, non_segmented_iterator_tag)
 {
    typedef typename boost::container::iterator_traits<OuterIter>::value_type value_type;
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first) {
       if(pred(*first)) {
          value_type tmp = boost::move(*first);

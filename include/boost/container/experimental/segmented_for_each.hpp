@@ -75,6 +75,7 @@ BOOST_CONTAINER_FORCEINLINE
 segmented_for_each_dispatch
    (InpIter first, Sent last, F f, Tag, Cat)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first)
       f(*first);
    return f;

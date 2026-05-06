@@ -75,6 +75,7 @@ typename algo_enable_if_c<
 segmented_transform_dispatch
    (InIter first, Sent last, OutIter result, UnaryOp op, Tag, Cat)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first, ++result)
       *result = op(*first);
    return result;

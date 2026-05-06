@@ -47,6 +47,7 @@ segduo<FwdIt, DeepIt> sorted_until_rec
    (FwdIt first, Sent last, Comp comp,
     DeepIt prev, const non_segmented_iterator_tag &, Cat)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for (; first != last; ++first) {
       if (comp(*first, *prev))
          break;

@@ -87,6 +87,7 @@ typename algo_enable_if_c<
 segmented_partition_point_dispatch
    (FwdIt first, Sent last, Predicate pred, Tag, Cat)
 {
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first)
       if(!pred(*first))
          return first;
