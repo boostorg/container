@@ -8,6 +8,19 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+// Force aggressive function/loop alignment to eliminate instruction cache-line
+// alignment noise from benchmark measurements. Without this, identical code can
+// show up to 1.8x performance variation depending on where the linker happens
+// to place each template instantiation relative to 64-byte cache-line boundaries.
+#if defined(__GNUC__) && !defined(__clang__)
+   #pragma GCC optimize("align-functions=64", "align-loops=32")
+#elif defined(__clang__)
+   // Clang has no file-wide pragma for alignment. Use command-line flags:
+   //   -falign-functions=64 -falign-loops=32
+#elif defined(_MSC_VER)
+   // MSVC has no pragma or attribute for function/loop alignment control.
+#endif
+
 #include <algorithm>
 #include <boost/container/vector.hpp>
 #include <iostream>
@@ -2492,7 +2505,7 @@ void run_benchmarks()
 
    {
       std::cout << "--- bc::deque<" << typeid(T).name() << "> ---\n";
-      bc::deque<T, void, bc::deque_options_t<bc::block_size<128> > > dq;
+      bc::deque<T, void, bc::deque_options_t<bc::block_size<1024> > > dq;
       fill_test_data(dq, N);
       run_all(dq, iter, "deque");
          std::cout << "\n";
