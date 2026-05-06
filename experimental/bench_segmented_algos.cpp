@@ -12,7 +12,11 @@
 // alignment noise from benchmark measurements. Without this, identical code can
 // show up to 1.8x performance variation depending on where the linker happens
 // to place each template instantiation relative to 64-byte cache-line boundaries.
-#if defined(__GNUC__) && !defined(__clang__)
+// Requires GCC >= 9: GCC 8's #pragma GCC optimize applies optimization attributes
+// to all functions in the TU, conflicting with __attribute__((always_inline)) on
+// friend operators defined in headers (e.g. wrapped_iterator), causing
+// -Werror=attributes errors.
+#if defined(__GNUC__) && !defined(__clang__) && (__GNUC__ >= 9)
    #pragma GCC optimize("align-functions=64", "align-loops=32")
 #elif defined(__clang__)
    // Clang has no file-wide pragma for alignment. Use command-line flags:
@@ -2491,10 +2495,10 @@ template<class T>
 void run_benchmarks()
 {
 
-   //#define SIMPLE_TEST
+   #define SIMPLE_TEST
    #if defined(NDEBUG) && !defined(SIMPLE_TEST)
    const std::size_t N    = 100000;
-   const std::size_t iter = 3000;
+   const std::size_t iter = 2000;
    #else
    const std::size_t N    = 10000;
    const std::size_t iter = 1;
@@ -2505,7 +2509,8 @@ void run_benchmarks()
 
    {
       std::cout << "--- bc::deque<" << typeid(T).name() << "> ---\n";
-      bc::deque<T, void, bc::deque_options_t<bc::block_size<1024> > > dq;
+      typedef typename bc::deque_options < bc::block_size<1024> >::type block_size_opt_t;
+      bc::deque<T, void, block_size_opt_t> dq;
       fill_test_data(dq, N);
       run_all(dq, iter, "deque");
          std::cout << "\n";
