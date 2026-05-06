@@ -249,4 +249,16 @@ namespace boost {
     #define BOOST_CONTAINER_NOVTABLE
 #endif
 
+#if (defined(BOOST_CLANG) && BOOST_CLANG >= 30600) || \
+    (defined(BOOST_GCC) && BOOST_GCC >= 80100)
+  #define BOOST_CONTAINER_UNROLL_PRAGMA(x) _Pragma(#x)
+  #define BOOST_CONTAINER_UNROLL(n) BOOST_CONTAINER_UNROLL_PRAGMA(GCC unroll n)
+
+#elif defined(_MSC_VER) && _MSC_VER >= 1920
+  #define BOOST_CONTAINER_UNROLL(n) __pragma(warning(suppress: 4081)) __pragma(loop(unroll))
+
+#else
+  #define BOOST_CONTAINER_UNROLL(n)
+#endif
+
 #endif   //#ifndef BOOST_CONTAINER_DETAIL_WORKAROUND_HPP
