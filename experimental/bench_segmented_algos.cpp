@@ -2495,10 +2495,9 @@ template<class T>
 void run_benchmarks()
 {
 
-   #define SIMPLE_TEST
-   #if defined(NDEBUG) && !defined(SIMPLE_TEST)
+   #if defined(NDEBUG) && defined(BENCH_ON)
    const std::size_t N    = 100000;
-   const std::size_t iter = 2000;
+   const std::size_t iter = 3000;
    #else
    const std::size_t N    = 10000;
    const std::size_t iter = 1;
