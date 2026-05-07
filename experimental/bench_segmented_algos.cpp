@@ -86,6 +86,7 @@
 #include "../bench/bench_utils.hpp"
 
 #define BOOST_CONTAINER_BENCH_SEGMENTED_GROUP 1
+#define BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED 0
 
 namespace bc = boost::container;
 
@@ -2216,6 +2217,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_find_if_not(c, iters, cname, unequal_to_ref<VT>(half), "find_if_not(hit)");
    bench_find_if_not(c, iters, cname, is_zero_or_positive<VT>(), "find_if_not(miss)");
 
+#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED) || BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED
    //find_last
    bench_find_last(c, iters, cname, half, "find_last(hit)");
    bench_find_last(c, iters, cname, min1, "find_last(miss)");
@@ -2227,6 +2229,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //find_last_if_not
    bench_find_last_if_not(c, iters, cname, unequal_to_ref<VT>(half), "find_last_if_not(hit)");
    bench_find_last_if_not(c, iters, cname, is_zero_or_positive<VT>(), "find_last_if_not(miss)");
+#endif
 
    //for_each
    bench_for_each(c, iters, cname);
@@ -2297,8 +2300,10 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_replace_if(c, iters, cname, is_odd<VT>(),      VT(-2), "replace_if(hit)");
    bench_replace_if(c, iters, cname, is_negative<VT>(), VT(-2), "replace_if(miss)");
 
+#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED) || BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED
    //reverse
    bench_reverse(c, iters, cname);
+#endif
 
    //search
    {
@@ -2404,10 +2409,12 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_remove_copy_if<vec_t, C    >(cv, iters, cname, is_negative<VT>(), "remove_copy_if(2S miss)");
    bench_remove_copy_if<C,     C    >(c,  iters, cname, is_negative<VT>(), "remove_copy_if(2xS miss)");
 
+#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED) || BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED
    //reverse_copy
    bench_reverse_copy<C,     vec_t>(c,  iters, cname, "reverse_copy(1S)");
    bench_reverse_copy<vec_t, C    >(cv, iters, cname, "reverse_copy(2S)");
    bench_reverse_copy<C,     C    >(c,  iters, cname, "reverse_copy(2xS)");
+#endif
 
    //swap_ranges
    bench_swap_ranges(c, iters, cname);
@@ -2494,7 +2501,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 template<class T>
 void run_benchmarks()
 {
-
+#define BENCH_ON
    #if defined(NDEBUG) && defined(BENCH_ON)
    const std::size_t N    = 100000;
    const std::size_t iter = 3000;
@@ -2508,7 +2515,7 @@ void run_benchmarks()
 
    {
       std::cout << "--- bc::deque<" << typeid(T).name() << "> ---\n";
-      typedef typename bc::deque_options < bc::block_size<1024> >::type block_size_opt_t;
+      typedef typename bc::deque_options < bc::block_size<128> >::type block_size_opt_t;
       bc::deque<T, void, block_size_opt_t> dq;
       fill_test_data(dq, N);
       run_all(dq, iter, "deque");
