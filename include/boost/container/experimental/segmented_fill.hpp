@@ -103,13 +103,6 @@ void segmented_fill_range
    }
 }
 
-template <class FwdIt, class T>
-BOOST_CONTAINER_FORCEINLINE
-void segmented_fill_dispatch(FwdIt first, FwdIt last, const T& value, const std::random_access_iterator_tag &)
-{
-   (segmented_fill_n)(first, last - first, value);
-}
-
 template <class FwdIt, class Sent, class T, class Cat>
 BOOST_CONTAINER_FORCEINLINE
 void segmented_fill_dispatch(FwdIt first, Sent last, const T& value, const Cat &)
@@ -129,7 +122,10 @@ template <class FwdIt, class Sent, class T>
 BOOST_CONTAINER_FORCEINLINE
 void segmented_fill(FwdIt first, Sent last, const T& value)
 {
-   detail_algo::segmented_fill_dispatch(first, last, value, typename iterator_traits<FwdIt>::iterator_category());
+   typedef segmented_iterator_traits<FwdIt> traits;
+   (detail_algo::segmented_fill_range)( first, last, value
+                                      , typename traits::is_segmented_iterator()
+                                      , typename iterator_traits<FwdIt>::iterator_category());
 }
 
 } // namespace container
