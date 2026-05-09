@@ -249,8 +249,12 @@ namespace boost {
     #define BOOST_CONTAINER_NOVTABLE
 #endif
 
-#if defined(BOOST_CLANG) && BOOST_CLANG >= 30600 || \
-    defined(BOOST_GCC) && BOOST_GCC >= 150000
+#if (defined(BOOST_CLANG) && BOOST_CLANG_VERSION >= 30600)
+
+  #define BOOST_CONTAINER_UNROLL_PRAGMA(x) _Pragma(#x)
+  #define BOOST_CONTAINER_UNROLL(n) BOOST_CONTAINER_UNROLL_PRAGMA(unroll n)
+
+#elif (defined(BOOST_GCC) && BOOST_GCC_VERSION >= 150000)
   // GCC < 15 emits an unsuppressible "ignoring loop annotation" warning
   // when the optimizer decides it cannot unroll a loop (complex iterators,
   // unknown trip count, etc.). This was fixed in GCC 15.
