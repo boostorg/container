@@ -178,7 +178,7 @@ segduo<SegIter, DeepIt> sorted_until_rec
 //! in [first, last), using \c comp for comparison.
 //! Returns \c last if the range is sorted.
 template <class FwdIt, class Sent, class Comp>
-BOOST_CONTAINER_FORCEINLINE
+inline
 FwdIt segmented_is_sorted_until(FwdIt first, Sent last, Comp comp)
 {
    if (first == last)
@@ -199,10 +199,21 @@ FwdIt segmented_is_sorted_until(FwdIt first, Sent last, Comp comp)
 //! in [first, last), using operator<.
 //! Returns \c last if the range is sorted.
 template <class FwdIt, class Sent>
-BOOST_CONTAINER_FORCEINLINE
+inline
 FwdIt segmented_is_sorted_until(FwdIt first, Sent last)
 {
-   return (segmented_is_sorted_until)(first, last, detail_algo::segmented_default_less());
+   if (first == last)
+      return first;
+
+   typedef segmented_iterator_traits<FwdIt>           traits;
+   typedef detail_algo::deepest_local_iterator<FwdIt> deep_it_helper;
+   typedef typename deep_it_helper::type              deep_it;
+
+   deep_it prev = deep_it_helper::get(first);
+   return detail_algo::sorted_until_rec
+      (++first, last, detail_algo::segmented_default_less(), prev,
+         typename traits::is_segmented_iterator(),
+         typename iterator_traits<FwdIt>::iterator_category()).first;
 }
 
 } // namespace container
