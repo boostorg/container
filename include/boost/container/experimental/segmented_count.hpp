@@ -28,7 +28,7 @@ namespace container {
 
 template <class InpIter, class Sent, class T>
 typename boost::container::iterator_traits<InpIter>::difference_type
-segmented_count(InpIter first, Sent last, const T& value);
+segmented_count(InpIter first, Sent last, const T& BOOST_RESTRICT value);
 
 namespace detail_algo {
 
@@ -38,7 +38,7 @@ template <class RAIter, class T>
 BOOST_CONTAINER_FORCEINLINE
 typename iterator_traits<RAIter>::difference_type
 segmented_count_dispatch
-   (RAIter first, RAIter last, const T& value, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
+   (RAIter first, RAIter last, const T& BOOST_RESTRICT value, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
    typedef typename iterator_traits<RAIter>::difference_type difference_type;
 
@@ -106,7 +106,7 @@ typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, InpIter>::value,
    typename boost::container::iterator_traits<InpIter>::difference_type>::type
 segmented_count_dispatch
-   (InpIter first, Sent last, const T& value, Tag, Cat)
+   (InpIter first, Sent last, const T& BOOST_RESTRICT value, Tag, Cat)
 {
    typedef typename boost::container::iterator_traits<InpIter>::difference_type diff_t;
    diff_t n = 0;
@@ -123,7 +123,7 @@ segmented_count_dispatch
 
 template <class SegIter, class T, class Cat>
 typename boost::container::iterator_traits<SegIter>::difference_type
-   segmented_count_dispatch(SegIter first, SegIter last, const T& value, segmented_iterator_tag, Cat)
+   segmented_count_dispatch(SegIter first, SegIter last, const T& BOOST_RESTRICT value, segmented_iterator_tag, Cat)
 {
    typedef segmented_iterator_traits<SegIter> traits;
    typedef typename traits::segment_iterator  segment_iterator;
@@ -154,7 +154,7 @@ typename boost::container::iterator_traits<SegIter>::difference_type
 template <class InpIter, class Sent, class T>
 BOOST_CONTAINER_FORCEINLINE
 typename boost::container::iterator_traits<InpIter>::difference_type
-   segmented_count(InpIter first, Sent last, const T& value)
+   segmented_count(InpIter first, Sent last, const T& BOOST_RESTRICT value)
 {
    typedef segmented_iterator_traits<InpIter> traits;
    return detail_algo::segmented_count_dispatch(first, last, value,
