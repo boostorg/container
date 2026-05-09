@@ -85,7 +85,7 @@
 #include <boost/container/experimental/wrapped_iterator.hpp>
 #include "../bench/bench_utils.hpp"
 
-#define BOOST_CONTAINER_BENCH_SEGMENTED_GROUP 1
+#define BOOST_CONTAINER_BENCH_SEGMENTED_GROUP 10
 #define BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED 0
 
 namespace bc = boost::container;
@@ -2181,7 +2181,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //////////////////////////////////////////////////////////////////
    // Group 1: Algorithms with a single range
    //////////////////////////////////////////////////////////////////
-#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 1
+#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 10
 
    //all_of
    bench_all_of(c, iters, cname, is_zero_or_positive<VT>(), "all_of(hit)");
@@ -2248,41 +2248,15 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_is_partitioned(c2, iters, cname, is_negative<VT>(), "is_partitioned(miss)");
    }
 
-   //is_sorted
-   {
-      bench_is_sorted(c, iters, cname, "is_sorted(hit)");
-      C c2(c);
-      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
-      bench_is_sorted(c2, iters, cname, "is_sorted(miss)");
-   }
-
-   //is_sorted_until
-   {
-      bench_is_sorted_until(c, iters, cname, "is_sorted_until(hit)");
-      C c2(c);
-      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
-      bench_is_sorted_until(c2, iters, cname, "is_sorted_until(miss)");
-   }
-
    //none_of
    bench_none_of(c, iters, cname, is_negative<VT>(), "none_of(hit)");
    bench_none_of(c, iters, cname, equal_to_ref<VT>(VT(static_cast<int>(c.size()/2))),      "none_of(miss)");
 
+   #if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED) || BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED
    //partition
    bench_partition(c, iters, cname, is_odd<VT>(),      "partition(hit)");
    bench_partition(c, iters, cname, is_negative<VT>(), "partition(miss)");
-
-   //partition_point (not tested since it's not optimized for random access iterators)
-   //bench_partition_point(c, iters, cname, less_than_ref<VT>(static_cast<VT>((int)c.size()/2)), "partition_point(hit)");
-   //bench_partition_point(c, iters, cname, is_zero_or_positive<VT>(),                           "partition_point(miss)");
-
-   //remove
-   bench_remove(c, iters, cname, half,  "remove(hit)");
-   bench_remove(c, iters, cname, min1,  "remove(miss)");
-
-   //remove_if
-   bench_remove_if(c, iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_if(hit)");
-   bench_remove_if(c, iters, cname, is_negative<VT>(), "remove_if(miss)");
+   #endif
 
    //replace
    {
@@ -2300,24 +2274,6 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_replace_if(c, iters, cname, is_odd<VT>(),      VT(-2), "replace_if(hit)");
    bench_replace_if(c, iters, cname, is_negative<VT>(), VT(-2), "replace_if(miss)");
 
-#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED) || BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED
-   //reverse
-   bench_reverse(c, iters, cname);
-#endif
-
-   //search
-   {
-      int ihalf = static_cast<int>(c.size() / 2);
-      VT hit_pat[] = {half, VT(ihalf + 1), VT(ihalf + 2)};
-      bench_search(c, iters, cname, hit_pat, 3, "search(hit)");
-      VT miss_pat[] = {min1, VT(-2), VT(-3)};
-      bench_search(c, iters, cname, miss_pat, 3, "search(miss)");
-   }
-
-   //search_n
-   bench_search_n(c, iters, cname, 1, half, "search_n(hit)");
-   bench_search_n(c, iters, cname, 3, min1, "search_n(miss)");
-
    //stable_partition (not tested since it's not optimized for random access iterators)
    //bench_stable_partition(c, iters, cname, is_odd<VT>(),      "stable_partition(hit)");
    //bench_stable_partition(c, iters, cname, is_negative<VT>(), "stable_partition(miss)");
@@ -2325,9 +2281,81 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 #endif
 
    //////////////////////////////////////////////////////////////////
+   // Group 1.5: Algorithms with 1 range but two iterational directions
+   //////////////////////////////////////////////////////////////////
+#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 15
+
+   //is_sorted
+   {
+      bench_is_sorted(c, iters, cname, "is_sorted(hit)");
+      C c2(c);
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
+      bench_is_sorted(c2, iters, cname, "is_sorted(miss)");
+   }
+
+   //is_sorted_until
+   {
+      bench_is_sorted_until(c, iters, cname, "is_sorted_until(hit)");
+      C c2(c);
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
+      bench_is_sorted_until(c2, iters, cname, "is_sorted_until(miss)");
+   }
+
+   //partition_point (not tested since it's not optimized for random access iterators)
+   //bench_partition_point(c, iters, cname, less_than_ref<VT>(static_cast<VT>((int)c.size()/2)), "partition_point(hit)");
+   //bench_partition_point(c, iters, cname, is_zero_or_positive<VT>(),                           "partition_point(miss)");
+
+   //remove
+
+   bench_remove(c, iters, cname, half,  "remove(hit)");
+   bench_remove(c, iters, cname, min1,  "remove(miss)");
+
+   //remove_if
+   bench_remove_if(c, iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_if(hit)");
+   bench_remove_if(c, iters, cname, is_negative<VT>(), "remove_if(miss)");
+
+#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED) || BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED
+   //reverse
+   bench_reverse(c, iters, cname);
+#endif
+
+   //search_n
+   bench_search_n(c, iters, cname, 1, half, "search_n(1hit)");
+   bench_search_n(c, iters, cname, 3, min1, "search_n(miss)");
+
+   //search_n with decoy runs + a real match of 8 in the middle
+   {
+      C c_sn(c);
+      const std::size_t sz = c_sn.size();
+      const std::size_t mid = sz / 2;
+
+      // Place decoy runs of min1 in the first half (lengths 2, 4, 6)
+      // spaced out so they don't overlap
+      const std::size_t gap = mid / 4;
+      const std::size_t decoy_runs[] = { 2, 4, 6 };
+      for(std::size_t d = 0; d < 3; ++d) {
+         const std::size_t pos = gap * (d + 1) - decoy_runs[d];
+         typename C::iterator it = boost::container::make_iterator_uadvance(c_sn.begin(), pos);
+         for(std::size_t k = 0; k < decoy_runs[d]; ++k, ++it)
+            *it = min1;
+      }
+
+      // Place the real match of 8 consecutive min1 values at the middle
+      {
+         typename C::iterator it = boost::container::make_iterator_uadvance(c_sn.begin(), mid);
+         for(std::size_t k = 0; k < 8; ++k, ++it)
+            *it = min1;
+      }
+
+      bench_search_n(c_sn, iters, cname, 8, min1, "search_n(8mid)");
+   }
+
+#endif
+
+   //////////////////////////////////////////////////////////////////
    // Group 2: Algorithms with 2 ranges
    //////////////////////////////////////////////////////////////////
-#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 2
+#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 20
 
    //copy
    bench_copy<C,     vec_t>(c,  iters, cname, "copy(1S)");
@@ -2416,6 +2444,15 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_reverse_copy<C,     C    >(c,  iters, cname, "reverse_copy(2xS)");
 #endif
 
+   //search
+   {
+      int ihalf = static_cast<int>(c.size() / 2);
+      VT hit_pat[] = {half, VT(ihalf + 1), VT(ihalf + 2)};
+      bench_search(c, iters, cname, hit_pat, 3, "search(hit)");
+      VT miss_pat[] = {min1, VT(-2), VT(-3)};
+      bench_search(c, iters, cname, miss_pat, 3, "search(miss)");
+   }
+
    //swap_ranges
    bench_swap_ranges(c, iters, cname);
 
@@ -2427,7 +2464,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //////////////////////////////////////////////////////////////////
    // Group 3: Algorithms with 3 ranges
    //////////////////////////////////////////////////////////////////
-#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 3
+#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 30
 
    //merge
    {
