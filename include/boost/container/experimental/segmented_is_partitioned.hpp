@@ -20,16 +20,13 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
-#include <boost/container/experimental/segmented_iterator_traits.hpp>
+
 #include <boost/container/experimental/segmented_find_if_not.hpp>
 #include <boost/container/experimental/segmented_none_of.hpp>
 
 namespace boost {
 namespace container {
 
-//! Note: This version is suboptimal only supports bidirectional iterators,
-//! as it relies on stable_partition_shift.
-//! 
 //! Returns \c true if all elements satisfying \c pred appear before
 //! all elements that do not, i.e. the range [first, last) is
 //! partitioned with respect to \c pred.
@@ -37,8 +34,8 @@ namespace container {
 template <class InpIter, class Sent, class Pred>
 inline bool segmented_is_partitioned(InpIter first, Sent last, Pred pred)
 {
-    first = segmented_find_if_not(first, last, pred);
-    return segmented_none_of(first, last, pred);
+   first = (segmented_find_if_not)(first, last, pred);
+   return (segmented_none_of)(first, last, pred);
 }
 
 } // namespace container
