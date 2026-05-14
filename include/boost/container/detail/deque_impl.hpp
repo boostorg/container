@@ -383,24 +383,23 @@ template<class Pointer, bool IsConst, unsigned BlockBytes, unsigned BlockSize, c
 struct segmented_iterator_traits< deque_iterator<Pointer, IsConst, BlockBytes, BlockSize, StoredSizeType> >
 {
    typedef segmented_iterator_tag                     is_segmented_iterator;
-   typedef deque_iterator<Pointer, IsConst, BlockBytes, BlockSize, StoredSizeType> deque_iterator_type;
+   typedef deque_iterator<Pointer, IsConst, BlockBytes, BlockSize, StoredSizeType> iterator;
 
-   typedef typename deque_iterator_type::val_alloc_ptr local_iterator;
-   typedef typename deque_iterator_type::index_pointer segment_iterator;
+   typedef typename iterator::val_alloc_ptr local_iterator;
+   typedef typename iterator::index_pointer segment_iterator;
 
-   BOOST_CONTAINER_FORCEINLINE static segment_iterator segment(deque_iterator_type it)
+   BOOST_CONTAINER_FORCEINLINE static segment_iterator segment(iterator it)
    { return it.get_node(); }
 
-   BOOST_CONTAINER_FORCEINLINE static local_iterator   local(deque_iterator_type it)
+   BOOST_CONTAINER_FORCEINLINE static local_iterator   local(iterator it)
    { return it.get_cur(); }
 
-   BOOST_CONTAINER_FORCEINLINE static deque_iterator_type compose(segment_iterator s, local_iterator l)
+   BOOST_CONTAINER_FORCEINLINE static iterator compose(segment_iterator s, local_iterator l)
    {
-      if (BOOST_UNLIKELY(s && l == (end)(s))) {
-         ++s;
+      if (BOOST_UNLIKELY(s && l == (end)(s++))) {
          l = *s;
       }
-      return deque_iterator_type(l, s);
+      return iterator(l, s);
    }
 
    BOOST_CONTAINER_FORCEINLINE static local_iterator begin(segment_iterator s)
@@ -412,7 +411,7 @@ struct segmented_iterator_traits< deque_iterator<Pointer, IsConst, BlockBytes, B
    BOOST_CONTAINER_FORCEINLINE static local_iterator end(segment_iterator s)
    {
       BOOST_ASSERT(s != segment_iterator());
-      return *s + deque_iterator_type::get_block_size();
+      return *s + iterator::get_block_size();
    }
 };
 
