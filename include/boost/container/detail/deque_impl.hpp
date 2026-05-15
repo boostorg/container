@@ -396,7 +396,8 @@ struct segmented_iterator_traits< deque_iterator<Pointer, IsConst, BlockBytes, B
 
    BOOST_CONTAINER_FORCEINLINE static iterator compose(segment_iterator s, local_iterator l)
    {
-      if (BOOST_UNLIKELY(s && l == (end)(s++))) {
+      if (BOOST_UNLIKELY(s && l == (end)(s))) {
+         ++s;
          l = *s;
       }
       return iterator(l, s);
