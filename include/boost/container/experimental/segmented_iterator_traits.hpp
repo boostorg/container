@@ -146,30 +146,6 @@ template <class T>
 struct has_iterator_category<T, typename make_void<typename T::iterator_category>::type>
 { static const bool value = true; };
 
-template <class Iterator, class Enable = void>
-struct segmented_iterator_traits_impl
-{
-   typedef non_segmented_iterator_tag is_segmented_iterator;
-};
-
-template <class Iterator>
-struct segmented_iterator_traits_impl<Iterator,
-   typename void_if_true<Iterator::is_segmented_iterator::value>::type>
-{
-   typedef segmented_iterator_tag                is_segmented_iterator;
-   typedef typename Iterator::segment_iterator   segment_iterator;
-   typedef typename Iterator::local_iterator     local_iterator;
-
-   static segment_iterator segment(Iterator it)  { return it.segment(); }
-   static local_iterator   local(Iterator it)    { return it.local(); }
-
-   static Iterator compose(segment_iterator s, local_iterator l)
-   { return Iterator(s, l); }
-
-   static local_iterator begin(segment_iterator s) { return s.begin(); }
-   static local_iterator end(segment_iterator s)   { return s.end(); }
-};
-
 template <class T>
 struct constref_generator
 {
@@ -229,9 +205,10 @@ template <> struct transfer_op<true>
 //! Based on: M. Austern, "Segmented Iterators and Hierarchical Algorithms"
 template <class Iterator>
 struct segmented_iterator_traits
-   : detail_algo::segmented_iterator_traits_impl<Iterator>
-{};
-
+{
+   typedef non_segmented_iterator_tag is_segmented_iterator;
+};
+ 
 //! Detects whether \c Sent is a true sentinel for \c Iter.
 //! A sentinel is a type that is not the same as the iterator and
 //! does not model an iterator (lacks \c iterator_category).
