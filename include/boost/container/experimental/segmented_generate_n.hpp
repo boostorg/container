@@ -34,14 +34,14 @@ namespace detail_algo {
 
 template <class OutIter, class Size, class Generator>
 BOOST_CONTAINER_FORCEINLINE
-OutIter generate_n_scan
-   ( OutIter first, OutIter last, Size& BOOST_RESTRICT count
+segduo<OutIter, Size> generate_n_scan
+   ( OutIter first, OutIter last, Size count
    , Generator &BOOST_RESTRICT gen, non_segmented_iterator_tag, const std::random_access_iterator_tag &)
 {
-   std::size_t range_sz = static_cast<std::size_t>(last - first);
-   const Size local_count = (std::size_t)count < range_sz ? count : (Size)range_sz;
+   const Size range_sz = static_cast<Size>(last - first);
 
 #if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
+   const Size local_count = (std::size_t)count < range_sz ? count : (Size)range_sz;
    Size cnt = local_count;
    while(cnt >= Size(4)) {
       *first = gen(); ++first;
@@ -64,34 +64,32 @@ OutIter generate_n_scan
       default:
          break;
    }
+   return segduo<OutIter, Size>(first, count - local_count);
 #else
+   const Size length = count < (Size)range_sz ? count : (Size)range_sz;
+   count -= length;
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-   for(Size cnt = local_count; cnt; ++first, --cnt)
+   for (Size cnt = 0; cnt != length; ++first, ++cnt){
       *first = gen();
+   }
+   return segduo<OutIter, Size>(first, count);
 #endif
-
-   count -= local_count;
-   return first;
 }
 
 template <class OutIter, class Size, class Generator, class Cat>
 BOOST_CONTAINER_FORCEINLINE
-OutIter generate_n_scan
-   (OutIter first, OutIter last, Size& BOOST_RESTRICT count, Generator &BOOST_RESTRICT gen, non_segmented_iterator_tag, const Cat &)
+segduo<OutIter, Size> generate_n_scan
+   (OutIter first, OutIter last, Size count, Generator &BOOST_RESTRICT gen, non_segmented_iterator_tag, const Cat &)
 {
-   Size local_count = count;
-
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-   for (; local_count > 0 && first != last; ++first, --local_count)
+   for (; count > 0 && first != last; ++first, --count)
       *first = gen();
 
-   count = local_count;
-
-   return first;
+   return segduo<OutIter, Size>(first, count);
 }
 
 template <class SegIt, class Size, class Generator, class Cat>
-SegIt generate_n_scan(SegIt first, SegIt last, Size& BOOST_RESTRICT count, Generator& BOOST_RESTRICT gen, segmented_iterator_tag, const Cat &)
+segduo<SegIt, Size> generate_n_scan(SegIt first, SegIt last, Size count, Generator& BOOST_RESTRICT gen, segmented_iterator_tag, const Cat &)
 {
    typedef segmented_iterator_traits<SegIt>                                            traits;
    typedef typename traits::local_iterator                                             local_iterator;
@@ -104,22 +102,24 @@ SegIt generate_n_scan(SegIt first, SegIt last, Size& BOOST_RESTRICT count, Gener
 
    if(scur == slast) {
       const local_iterator ll = traits::local(last);
-      const local_iterator r = (generate_n_scan)(traits::local(first), ll, count, gen, is_local_seg_t(), local_cat_t());
-      return (r != ll) ? traits::compose(scur, r) : last;
+      const segduo<local_iterator, Size> r = (generate_n_scan)(traits::local(first), ll, count, gen, is_local_seg_t(), local_cat_t());
+      return segduo<SegIt, Size>((r.first != ll) ? traits::compose(scur, r.first) : last, r.second);
    }
    else {
-      local_iterator r = generate_n_scan(traits::local(first), traits::end(scur), count, gen, is_local_seg_t(), local_cat_t());
+      segduo<local_iterator, Size> r = generate_n_scan(traits::local(first), traits::end(scur), count, gen, is_local_seg_t(), local_cat_t());
+      count = r.second;
       if (!count)
-         return traits::compose(scur, r);
+         return segduo<SegIt, Size>(traits::compose(scur, r.first), count);
 
       for (++scur; scur != slast; ++scur) {
          r = generate_n_scan(traits::begin(scur), traits::end(scur), count, gen, is_local_seg_t(), local_cat_t());
+         count = r.second;
          if (!count)
-            return traits::compose(scur, r);
+            return segduo<SegIt, Size>(traits::compose(scur, r.first), count);
       }
       const local_iterator ll = traits::local(last);
       r = generate_n_scan(traits::begin(slast), ll, count, gen, is_local_seg_t(), local_cat_t());
-      return (r != ll) ? traits::compose(scur, r) : last;
+      return segduo<SegIt, Size>((r.first != ll) ? traits::compose(scur, r.first) : last, r.second);
    }
 }
 
@@ -134,15 +134,24 @@ SegIter segmented_generate_n_ref
    typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
 
    segment_iterator scur = traits::segment(first);
-   local_iterator   lcur = traits::local(first);
+   local_iterator   lcur;
 
-   while(1) {
-      lcur = generate_n_scan(lcur, traits::end(scur), count, gen, is_local_seg_t(), local_cat_t());
+   {
+      const segduo<local_iterator, Size> r = generate_n_scan(traits::local(first), traits::end(scur), count, gen, is_local_seg_t(), local_cat_t());
+      lcur  = r.first;
+      count = r.second;
+   }
 
-      if(count == 0)
-         break;
+   if(count){
       ++scur;
-      lcur = traits::begin(scur);
+      while(1) {
+         const segduo<local_iterator, Size> r = generate_n_scan(traits::begin(scur), traits::end(scur), count, gen, is_local_seg_t(), local_cat_t());
+         lcur  = r.first;
+         count = r.second;
+         if(count == 0)
+            break;
+         ++scur;
+      }
    }
    return traits::compose(scur, lcur);
 }
