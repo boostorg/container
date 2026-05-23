@@ -27,7 +27,7 @@ namespace boost {
 namespace container {
 
 template <class InpIter, class Sent, class T>
-InpIter segmented_find(InpIter first, Sent last, const T& value);
+InpIter segmented_find(InpIter first, Sent last, const T& BOOST_RESTRICT value);
 
 namespace detail_algo {
 
@@ -36,7 +36,7 @@ namespace detail_algo {
 template <class RAIter, class T>
 BOOST_CONTAINER_FORCEINLINE
 RAIter segmented_find_dispatch
-   (RAIter first, RAIter last, const T& value, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
+   (RAIter first, RAIter last, const T& BOOST_RESTRICT value, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
    typedef typename iterator_traits<RAIter>::difference_type difference_type;
 
@@ -86,7 +86,7 @@ template <class InpIter, class Sent, class T, class Tag, class Cat>
 BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, InpIter>::value, InpIter>::type
-segmented_find_dispatch(InpIter first, Sent last, const T& value, Tag, Cat)
+segmented_find_dispatch(InpIter first, Sent last, const T& BOOST_RESTRICT value, Tag, Cat)
 {
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first)
@@ -97,7 +97,7 @@ segmented_find_dispatch(InpIter first, Sent last, const T& value, Tag, Cat)
 
 template <class SegIter, class T, class Cat>
 SegIter segmented_find_dispatch
-   (SegIter first, SegIter last, const T& value, segmented_iterator_tag, Cat)
+   (SegIter first, SegIter last, const T& BOOST_RESTRICT value, segmented_iterator_tag, Cat)
 {
    typedef segmented_iterator_traits<SegIter> traits;
    typedef typename traits::local_iterator    local_iterator;
@@ -146,7 +146,7 @@ SegIter segmented_find_dispatch
 //! in [first, last), or \c last if not found.
 template <class InpIter, class Sent, class T>
 BOOST_CONTAINER_FORCEINLINE
-InpIter segmented_find(InpIter first, Sent last, const T& value)
+InpIter segmented_find(InpIter first, Sent last, const T& BOOST_RESTRICT value)
 {
    typedef segmented_iterator_traits<InpIter> traits;
    return detail_algo::segmented_find_dispatch
