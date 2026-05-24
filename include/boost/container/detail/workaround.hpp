@@ -268,4 +268,29 @@ namespace boost {
   #define BOOST_CONTAINER_UNROLL(n)
 #endif
 
+#ifdef __has_builtin
+#define BOOST_CONTAINER_HAS_BUILTIN(x) __has_builtin(x)
+#else
+#define BOOST_CONTAINER_HAS_BUILTIN(x) 0
+#endif
+
+#if !defined(NDEBUG)
+#define BOOST_CONTAINER_ASSUME(cond) BOOST_ASSERT(cond)
+#elif BOOST_CONTAINER_HAS_BUILTIN(__builtin_assume)
+#define BOOST_CONTAINER_ASSUME(cond) __builtin_assume(cond)
+#elif defined(__GNUC__) || \
+      BOOST_CONTAINER_HAS_BUILTIN(__builtin_unreachable)
+#define BOOST_CONTAINER_ASSUME(cond) \
+  do{                                    \
+    if(!(cond)) __builtin_unreachable(); \
+  } while(0)
+#elif defined(_MSC_VER)
+#define BOOST_CONTAINER_ASSUME(cond) __assume(cond)
+#else
+#define BOOST_CONTAINER_ASSUME(cond) \
+  do{                                    \
+    static_cast<void>(false && (cond));  \
+  } while(0)
+#endif
+
 #endif   //#ifndef BOOST_CONTAINER_DETAIL_WORKAROUND_HPP
