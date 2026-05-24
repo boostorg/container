@@ -435,7 +435,6 @@ inline FwdIt segmented_search_n
    else if (BOOST_UNLIKELY(detail_algo::search_n_range_shorter_than(first, last, count, cat_t())))
       return last;   
    else if (count == 1) {
-      typedef segmented_iterator_traits<FwdIt> traits;
       return detail_algo::segmented_find_dispatch(first, last, value, is_seg_t(), cat_t());
    }
    else {
