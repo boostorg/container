@@ -148,7 +148,7 @@ segtrio<bool, Size, LocalIter> search_n_scan_segment
    // Phase 3 bound. Default: scan the whole segment from `lcur`. This is
    // only used when phase 2 is skipped because the segment is shorter than
    // `count`; otherwise phase 2 tightens it further on exit.
-   difference_type tail_max = (dcount - 1) < remaining ? (dcount - 1) : remaining;
+   difference_type tail_max;
 
    // Phase 2: skip-by-count probing -- only meaningful if a full run fits.
    //
@@ -162,7 +162,8 @@ segtrio<bool, Size, LocalIter> search_n_scan_segment
    if(dcount <= remaining) {
       // dcount <= remaining => probe = lcur + (dcount - 1) is in [lcur, lend),
       // so the loop body always executes at least once: use do/while.
-      LocalIter probe = lcur + (dcount - 1);
+      LocalIter probe = lcur;
+      probe += (dcount - 1);
       do {
          if(*probe == value) {
             // Backward verify count - 1 elements before probe.
@@ -190,6 +191,7 @@ segtrio<bool, Size, LocalIter> search_n_scan_segment
             probe += dcount;
          }
       } while(probe < lend);
+
       // Phase-2 exit invariant: the last formed probe was at `probe - dcount`
       // (no-match branch) or at `probe - count` (back-mismatch branch); both
       // carry a confirmed `*!= value`. Therefore no partial trailing run can
@@ -198,23 +200,50 @@ segtrio<bool, Size, LocalIter> search_n_scan_segment
       // [0, count - 1].
       tail_max = (lend - probe) + (dcount - 1);
    }
+   else {
+      // dcount > remaining => (dcount - 1) >= remaining, so the bound
+      // collapses to `remaining` (scan the whole segment from `lcur`).
+      tail_max = remaining;
+   }
 
    // Phase 3: partial trailing run that could extend into the next segment.
+   //
+   // Mirrors phase 2's verify-loop pattern: a do/while drives `--tail` + probe
+   // and a `goto` lifts the mismatch fix-up out of the hot body, leaving a
+   // single straight-line path through the inner loop. This:
+   //   * eliminates the top-of-loop `tail != tail_lo` check on entry,
+   //   * removes the `++tail` undo from the hot body (it runs once at the
+   //     mismatch label), and
+   //   * lets the full-run fall-through report `tail_max` directly without
+   //     a final `lend - tail` subtraction.
    {
       const LocalIter tail_lo = lend - tail_max;
       LocalIter       tail    = lend;
+      if (tail == tail_lo)         // tail_max == 0: empty tail, nothing to scan.
+         return result_t(false, 0, match_start);
+
       BOOST_CONTAINER_UNROLL(4)
-      while(tail != tail_lo) {
+      do {
          --tail;
-         if (!(*tail == value)) {
-            ++tail;
-            break;
-         }
-      }
-      const Size tail_run = static_cast<Size>(lend - tail);
-      if(tail_run > 0)
-         match_start = tail;
-      return result_t(false, tail_run, match_start);
+         if (!(*tail == value))
+            goto tail_mismatch;
+      } while (tail != tail_lo);
+
+      // Full tail run: every element in [tail_lo, lend) equals value.
+      // tail == tail_lo and tail_max > 0, so the run is non-empty.
+      match_start = tail;
+      return result_t(false, static_cast<Size>(tail_max), match_start);
+
+      // Mismatch at `tail`; the partial run starts one past it. On a
+      // first-iteration mismatch (`*(lend - 1) != value`) the post-`++tail`
+      // value collapses to `lend`, which the caller already interprets as
+      // "no match position" via `r.third != lend`, so the assignment is
+      // safe to do unconditionally and the `tail_run > 0` guard is
+      // unnecessary.
+      tail_mismatch:
+      ++tail;
+      match_start = tail;
+      return result_t(false, static_cast<Size>(lend - tail), match_start);
    }
 }
 
@@ -432,11 +461,11 @@ inline FwdIt segmented_search_n
 
    if (BOOST_UNLIKELY(count <= 0))
       return first;
-   else if (BOOST_UNLIKELY(detail_algo::search_n_range_shorter_than(first, last, count, cat_t())))
-      return last;   
    else if (count == 1) {
       return detail_algo::segmented_find_dispatch(first, last, value, is_seg_t(), cat_t());
    }
+   else if (BOOST_UNLIKELY(detail_algo::search_n_range_shorter_than(first, last, count, cat_t())))
+      return last;   
    else {
       // count >= 2. Tag-dispatched: non-segmented RA top-level calls take a Phase-2-only
       // fast path (Phase 1 is dead because `consecutive == 0` and Phase 3
