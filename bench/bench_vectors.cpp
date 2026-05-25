@@ -448,8 +448,8 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements, 
 template<class IntType, class Operation>
 void test_vectors_impl()
 {
-   #define SINGLE_TEST
-   //#define SIMPLE_IT
+   //#define SINGLE_TEST
+   #define SIMPLE_IT
    #ifdef SINGLE_TEST
       #ifdef NDEBUG
       std::size_t numit [] = { 1000 };
