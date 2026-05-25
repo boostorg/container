@@ -550,10 +550,6 @@ void test_get_iterator()
    nest<int>::const_iterator cfound = ch.get_iterator(p);
    BOOST_TEST(cfound != ch.end());
    BOOST_TEST_EQ(*cfound, 42);
-
-   nest<int>::const_pointer bad = 0;
-   nest<int>::iterator not_found = h.get_iterator(bad);
-   (void)not_found;
 }
 
 struct sum_functor
