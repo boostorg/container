@@ -333,7 +333,7 @@ struct visit_all: prepare<Container>
    {
       unsigned int res = 0;
       auto& cr = this->get_container(n, erasure_rate);
-      cr.visit_all([&] (const auto& x) { res += (unsigned int)x; });
+      boost::container::for_each(cr, [&] (const auto& x) { res += (unsigned int)x; });
       return res;
    }
 };
@@ -478,7 +478,7 @@ int main(int argc,char* argv[])
       table t;
       t.push_back(benchmark(
          "for_each",
-         for_each<num>{}, for_each<den>{}));
+         ::for_each<num>{}, ::for_each<den>{}));
       t.push_back(benchmark(
          "visit_all",
          visit_all<num>{}, visit_all<den>{}));

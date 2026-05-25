@@ -587,7 +587,7 @@ void test_visit()
    h.insert(2);
    h.insert(3);
 
-   h.visit(h.begin(), h.end(), doubler_functor());
+   boost::container::for_each(h.begin(), h.end(), doubler_functor());
    h.sort();
    nest<int>::const_iterator it = h.begin();
    BOOST_TEST_EQ(*it, 2); ++it;
@@ -596,10 +596,10 @@ void test_visit()
 
    int sum = 0;
    const nest<int>& ch = h;
-   ch.visit(ch.begin(), ch.end(), sum_functor(&sum));
+   boost::container::for_each(ch.begin(), ch.end(), sum_functor(&sum));
    BOOST_TEST_EQ(sum, 12);
 
-   h.visit_all(doubler_functor());
+   boost::container::for_each(h, doubler_functor());
    h.sort();
    it = h.begin();
    BOOST_TEST_EQ(*it, 4); ++it;
@@ -607,7 +607,7 @@ void test_visit()
    BOOST_TEST_EQ(*it, 12);
 
    sum = 0;
-   ch.visit_all(sum_functor(&sum));
+   boost::container::for_each(ch, sum_functor(&sum));
    BOOST_TEST_EQ(sum, 24);
 }
 
@@ -622,24 +622,24 @@ void test_visit_while()
    h.sort();
 
    int sum = 0;
-   nest<int>::iterator stop_it = h.visit_while(
-      h.begin(), h.end(), conditional_sum_functor(&sum, 6));
+   nest<int>::iterator stop_it = boost::container::for_each_while(
+      h.begin(), h.end(), conditional_sum_functor(&sum, 6)).first;
    BOOST_TEST(sum <= 6);
    BOOST_TEST(stop_it != h.end());
 
    sum = 0;
-   stop_it = h.visit_all_while(conditional_sum_functor(&sum, 3));
+   stop_it = boost::container::for_each_while(h, conditional_sum_functor(&sum, 3)).first;
    BOOST_TEST(sum <= 3);
 
    const nest<int>& ch = h;
    sum = 0;
-   nest<int>::const_iterator cstop_it = ch.visit_while(
-      ch.begin(), ch.end(), conditional_sum_functor(&sum, 6));
+   nest<int>::const_iterator cstop_it = boost::container::for_each_while(
+      ch.begin(), ch.end(), conditional_sum_functor(&sum, 6)).first;
    BOOST_TEST(sum <= 6);
    BOOST_TEST(cstop_it != ch.end());
 
    sum = 0;
-   cstop_it = ch.visit_all_while(conditional_sum_functor(&sum, 3));
+   cstop_it = boost::container::for_each_while(ch, conditional_sum_functor(&sum, 3)).first;
    BOOST_TEST(sum <= 3);
 }
 

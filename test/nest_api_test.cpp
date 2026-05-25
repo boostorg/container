@@ -257,7 +257,7 @@ struct tracked
 //////////////////////////////////////////////////////////////////////////////
 //
 //   Namespace-scope functors (C++03 does not allow local types as template
-//   arguments, so everything used with .visit / find_if / erase_if lives here)
+//   arguments, so everything used with for_each / find_if / erase_if lives here)
 //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -730,7 +730,7 @@ void test_visitation(const typename Nest::allocator_type& al)
 
    std::vector<value_type> rng = make_range<value_type>(200);
 
-   // visit / visit_all
+   // for_each at iterator and container scope
    {
       Nest        x(rng.begin(), rng.end(), al);
       const Nest& cx = x;
@@ -748,11 +748,11 @@ void test_visitation(const typename Nest::allocator_type& al)
          std::advance(clast, -(std::ptrdiff_t)i);
 
          unsigned int res = 0;
-         x.visit(first, last, accum_functor<value_type>(res));
+         boost::container::for_each(first, last, accum_functor<value_type>(res));
          unsigned int res1 = res;
 
          res = 0;
-         cx.visit(cfirst, clast, accum_functor<value_type>(res));
+         boost::container::for_each(cfirst, clast, accum_functor<value_type>(res));
          unsigned int res2 = res;
 
          res = 0;
@@ -764,11 +764,11 @@ void test_visitation(const typename Nest::allocator_type& al)
       }
 
       unsigned int res = 0;
-      x.visit_all(accum_functor<value_type>(res));
+      boost::container::for_each(x, accum_functor<value_type>(res));
       unsigned int res1 = res;
 
       res = 0;
-      cx.visit_all(accum_functor<value_type>(res));
+      boost::container::for_each(cx, accum_functor<value_type>(res));
       unsigned int res2 = res;
 
       res = 0;
@@ -779,7 +779,7 @@ void test_visitation(const typename Nest::allocator_type& al)
       BOOST_TEST_EQ(res2, res3);
    }
 
-   // visit_while / visit_all_while
+   // for_each_while at iterator and container scope
    {
       Nest        x(rng.begin(), rng.end(), al);
       const Nest& cx = x;
@@ -793,14 +793,14 @@ void test_visitation(const typename Nest::allocator_type& al)
 
          unsigned int res = 0;
          std::size_t  n   = (std::size_t)std::distance(first, x.end()) / 2;
-         iterator     it1 = x.visit_while(
-            first, x.end(), bounded_accum_functor<value_type>(res, n));
+         iterator     it1 = boost::container::for_each_while(
+            first, x.end(), bounded_accum_functor<value_type>(res, n)).first;
          unsigned int res1 = res;
 
          res = 0;
          n   = (std::size_t)std::distance(first, x.end()) / 2;
-         const_iterator it2 = cx.visit_while(
-            cfirst, cx.end(), bounded_accum_functor<value_type>(res, n));
+         const_iterator it2 = boost::container::for_each_while(
+            cfirst, cx.end(), bounded_accum_functor<value_type>(res, n)).first;
          unsigned int res2 = res;
 
          res = 0;
@@ -818,12 +818,14 @@ void test_visitation(const typename Nest::allocator_type& al)
 
       unsigned int res = 0;
       std::size_t  n   = x.size();
-      iterator     it1 = x.visit_all_while(bounded_accum_functor<value_type>(res, n));
+      iterator     it1 = boost::container::for_each_while(
+         x, bounded_accum_functor<value_type>(res, n)).first;
       unsigned int res1 = res;
 
       res = 0;
       n   = x.size();
-      const_iterator it2 = cx.visit_all_while(bounded_accum_functor<value_type>(res, n));
+      const_iterator it2 = boost::container::for_each_while(
+         cx, bounded_accum_functor<value_type>(res, n)).first;
       unsigned int res2 = res;
 
       res = 0;

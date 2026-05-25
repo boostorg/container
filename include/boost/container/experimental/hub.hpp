@@ -121,6 +121,19 @@ class hub;
 template<typename T, typename Allocator, typename Predicate>
 typename hub<T, Allocator>::size_type erase_if(hub<T, Allocator>&, Predicate);
 
+namespace hub_detail {
+
+template<typename ValuePointer> class iterator;
+
+}
+
+template<typename T, typename Allocator, typename F>
+F for_each(hub<T, Allocator>&, F);
+
+template<typename ValuePtr, typename F>
+std::pair<hub_detail::iterator<ValuePtr>, F> for_each_while(
+  hub_detail::iterator<ValuePtr>, hub_detail::iterator<ValuePtr>, F);
+
 #ifndef BOOST_NO_CXX17_HDR_MEMORY_RESOURCE
 namespace pmr {
 
@@ -236,9 +249,16 @@ template<typename ValuePointer>
 struct block: block_base<pointer_rebind_t<ValuePointer, void>>
 {
   using super = block_base<pointer_rebind_t<ValuePointer, void>>;
+  using pointer = pointer_rebind_t<ValuePointer, block>;
 
   ValuePointer data() noexcept { return data_; }
   ValuePointer data_;
+
+  static pointer 
+  static_cast_block_pointer(typename super::pointer pbb) noexcept
+  {
+    return pointer_traits<pointer>::pointer_to(static_cast<block&>(*pbb));
+  }
 };
 
 template<typename ValuePointer>
@@ -255,7 +275,7 @@ struct block_list: block<ValuePointer>
   using block_base = typename block::super;
   using block_base_pointer = typename block_base::pointer;
   using const_block_base_pointer = typename block_base::const_pointer;
-  using block_pointer = pointer_rebind_t<ValuePointer, block>;
+  using block_pointer = typename block::pointer;
   using block_base::full;
   using block_base::pointer_to;
   using block_base::prev_available;
@@ -264,13 +284,6 @@ struct block_list: block<ValuePointer>
   using block_base::next;
   using block_base::mask;
   using block::data_;
-
-  static block_pointer 
-  static_cast_block_pointer(block_base_pointer pbb) noexcept
-  {
-    return pointer_traits<block_pointer>::pointer_to(
-      static_cast<block&>(*pbb));
-  }
 
   block_list() 
   { 
@@ -467,6 +480,13 @@ public:
 private:
   template<typename> friend class iterator;
   template<typename, typename> friend class container::hub;
+  template<typename VP, typename F>
+  friend std::pair<hub_detail::iterator<VP>, F> container::for_each_while(
+    hub_detail::iterator<VP>, hub_detail::iterator<VP>, F);
+  template<typename HubIt, typename F>
+  friend HubIt for_each_while_core(
+    typename HubIt::block_base_pointer,typename HubIt::block_base_pointer,
+    F&&);
 
   template<typename T>
   using pointer_rebind_t = hub_detail::pointer_rebind_t<ValuePointer, T>;
@@ -498,6 +518,39 @@ private:
   int                n = 0;
 };
 
+template<typename HubIterator, typename F>
+HubIterator for_each_while_core(
+  typename HubIterator::block_base_pointer pbb,
+  typename HubIterator::block_base_pointer last_pbb, F&& f)
+{
+  using block = typename HubIterator::block;
+
+  BOOST_ASSERT(pbb != last_pbb);
+  auto pb = block::static_cast_block_pointer(pbb);
+  auto mask = pb->mask;
+  auto n = unchecked_countr_zero(mask);
+  auto pd = pb->data();
+  do {
+    pbb = pb->next;
+    auto next_mask = pbb->mask;
+    auto next_n = unchecked_countr_zero(next_mask);
+    auto next_pd = block::static_cast_block_pointer(pbb)->data();
+    BOOST_CONTAINER_HUB_PREFETCH(next_pd + next_n);
+    BOOST_CONTAINER_HUB_PREFETCH(pbb->next);
+    for(; ; ) {
+      if(!f(pd[n])) return {pb, n};
+      mask &= mask - 1;
+      if(!mask) break;
+      n = unchecked_countr_zero(mask);
+    }
+    pb = block::static_cast_block_pointer(pbb);
+    mask = next_mask;
+    n = next_n;
+    pd = next_pd;
+  } while(pb != last_pbb);
+  return {last_pbb};
+}
+
 template<typename T, std::size_t N>
 struct sort_iterator
 {
@@ -507,11 +560,11 @@ struct sort_iterator
   using reference = T&;
   using iterator_category = std::random_access_iterator_tag;
 
-  sort_iterator(T** pp_, std::size_t index_): pp{pp_}, index{index_} {}
+  sort_iterator(T** pp_, difference_type index_): pp{pp_}, index{index_} {}
 
   pointer operator->() const noexcept
   {
-    return pp[index / N] + (index % N);
+    return pp[(std::size_t)index / N] + ((std::size_t)index % N);
   }
 
   reference operator*() const noexcept
@@ -548,42 +601,42 @@ struct sort_iterator
   friend difference_type
   operator-(const sort_iterator& x, const sort_iterator& y) noexcept
   {
-    return (difference_type)(x.index - y.index);
+    return x.index - y.index;
   }
 
   sort_iterator& operator+=(difference_type n) noexcept
   {
-    index += static_cast<std::size_t>(n);
+    index += n;
     return *this;
   }
     
   friend sort_iterator
   operator+(const sort_iterator& x, difference_type n) noexcept
   {
-    return {x.pp, x.index + static_cast<std::size_t>(n)};
+    return {x.pp, x.index + n};
   }
 
   friend sort_iterator 
   operator+(difference_type n, const sort_iterator& x) noexcept
   {
-    return {x.pp, static_cast<std::size_t>(n) + x.index};
+    return {x.pp, n + x.index};
   }
 
   sort_iterator& operator-=(difference_type n) noexcept
   {
-    index -= static_cast<std::size_t>(n);
+    index -= n;
     return *this;
   }
     
   friend sort_iterator 
   operator-(const sort_iterator& x, difference_type n) noexcept
   {
-    return {x.pp, x.index - static_cast<std::size_t>(n)};
+    return {x.pp, x.index - n};
   }
 
   reference operator[](difference_type n) const noexcept
   {
-    return operator*(*this + n);
+    return *(*this + n);
   }
 
   friend bool 
@@ -622,16 +675,16 @@ struct sort_iterator
     return x.index >= y.index;
   }
 
-  T** pp;
-  std::size_t index;
+  T**             pp;
+  difference_type index;
 };
 
 template<typename T, typename Allocator>
 struct buffer
 {
-  buffer(std::size_t n, Allocator al_): al{al_} 
+  buffer(std::size_t n, Allocator al_) noexcept: al{al_} 
   {
-    data = static_cast<T*>(::operator new[](n * sizeof(T), std::nothrow));
+    allocate_data(n);
     if(data) capacity = n;
   }
 
@@ -639,7 +692,7 @@ struct buffer
   {
     if(data) {
       for(; begin_ != end_; ++begin_) allocator_destroy(al, begin());
-      ::operator delete[](data);
+      deallocate_data();
     }
   }
   
@@ -660,11 +713,48 @@ struct buffer
     allocator_destroy(al, begin());
     ++begin_;
   }
-  
+ 
   Allocator   al;
   std::size_t begin_ = 0, end_ = 0;
   std::size_t capacity = 0;
   T*          data = nullptr;
+
+private:
+#if defined(__cpp_aligned_new) && __cpp_aligned_new >= 201606L
+  using aligned_new_required = std::integral_constant<
+    bool, (alignof(T) > __STDCPP_DEFAULT_NEW_ALIGNMENT__)>;
+
+  void allocate_data(std::size_t n)
+  {
+    data = static_cast<T*>(allocate(n * sizeof(T), aligned_new_required{}));
+  }
+
+  static void* allocate(std::size_t m, std::false_type)
+  {
+    return ::operator new[](m, std::nothrow);
+  }
+
+  static void* allocate(std::size_t m, std::true_type)
+  {
+    return ::operator new[](m, std::align_val_t{alignof(T)}, std::nothrow);
+  }
+
+  void deallocate_data() { deallocate(data, aligned_new_required{}); }
+
+  static void deallocate(void* p, std::false_type) { ::operator delete[](p); }
+
+  static void deallocate(void* p, std::true_type) 
+  {
+    ::operator delete[](p, std::align_val_t{alignof(T)}); 
+  }
+#else
+  void allocate_data(std::size_t n)
+  {
+    data = static_cast<T*>(::operator new[](n * sizeof(T), std::nothrow));
+  }
+
+  void deallocate_data() { ::operator delete[](data); }
+#endif
 };
 
 template<typename T>
@@ -813,8 +903,8 @@ struct if_constexpr_void_else{ void operator()() const {} };
 template<typename F, typename G = if_constexpr_void_else>
 void if_constexpr(std::true_type, F f, G = G{}) { f(); }
 
-template<typename F, typename G>
-void if_constexpr(std::false_type, F, G g) { g(); }
+template<typename F, typename G = if_constexpr_void_else>
+void if_constexpr(std::false_type, F, G g = G{}) { g(); }
 
 template<typename T>
 void copy_assign_if(std::true_type, T& x, const T& y) { x = y; }
@@ -1038,11 +1128,6 @@ public:
   
   size_type capacity() const noexcept { return num_blocks * N; }
 
-  size_type memory() const noexcept // TODO: remove
-  { 
-    return num_blocks * (sizeof(block) + sizeof(T) * N); 
-  }
-
   void reserve(size_type n)
   {
     if(n > max_size()) {
@@ -1071,9 +1156,9 @@ public:
       auto pb = static_cast_block_pointer(pbb);
       pbb = pbb-> next_available;
       if(pb->mask == 0) {
-         blist.unlink_available(pb);
-         delete_block(pb);
-         --num_blocks;
+        blist.unlink_available(pb);
+        delete_block(pb);
+        --num_blocks;
       }
     }
   }
@@ -1081,10 +1166,11 @@ public:
   template<typename... Args>
   BOOST_FORCEINLINE iterator emplace(Args&&... args)
   {
+    auto pbb = blist.next_available; /* for construct_or_restore_capacity */
     int  n;
     auto pb = retrieve_available_block(n);
-    allocator_construct(
-      al(), boost::to_address(pb->data() + n), std::forward<Args>(args)...);
+    construct_or_restore_capacity(
+      boost::to_address(pb->data() + n), pbb, std::forward<Args>(args)...);
     auto mask_plus_one = (pb->mask |= pb->mask + 1) + 1;
     if(BOOST_UNLIKELY(mask_plus_one <= 2)) {
       /* pb->mask == 0 (impossible), 1 or full */
@@ -1159,7 +1245,7 @@ public:
       if(first.pbb != pbb) break;
     }
     auto pbb = first.pbb;
-    if(pbb != last.pbb){
+    if(pbb != last.pbb) {
       do {
         auto pb = static_cast_block_pointer(pbb);
         pbb = pb->next;
@@ -1212,8 +1298,8 @@ public:
       --x.num_blocks;
       ++num_blocks;
       auto s = core::popcount(pb->mask);
-      x.size_ -= s;
-      size_ += s;
+      x.size_ -= (size_type)s;
+      size_ += (size_type)s;
     }
   }
 
@@ -1233,6 +1319,11 @@ public:
     }
     return (size_type)(s - size_);
   }
+
+#if defined(BOOST_MSVC)
+#pragma warning(push)
+#pragma warning(disable:4127) /* conditional expression is constant */
+#endif
 
   template<typename Compare = std::less<T>>
   void sort(Compare comp = Compare())
@@ -1260,90 +1351,35 @@ public:
     compact_sort(comp);
   }
 
-  iterator get_iterator(const_pointer p) noexcept /* noexcept? */
+#if defined(BOOST_MSVC)
+#pragma warning(pop) /* C4127 */
+#endif
+
+  iterator get_iterator(const_pointer p)
   {   
     std::less<const T*> less;
     for(auto pbb = blist.next; pbb != blist.header(); pbb = pbb-> next) {
       auto pb = static_cast_block_pointer(pbb);
       if(!less(boost::to_address(p), boost::to_address(pb->data())) &&
           less(boost::to_address(p), boost::to_address(pb->data() + N))) {
-        return {pb, (int)(p - pb->data())};
+        int n = (int)(p - pb->data());
+        BOOST_ASSERT_MSG(
+          (pb->mask & ((mask_type)(1) << n)) != 0,
+          "p points to an invalid element");
+        return {pb, n};
       }
     }
-    return end(); /* shouldn't assert? */
+    BOOST_ASSERT_MSG(false, "p does not point into the extents of *this");
+#if defined(BOOST_ASSERT_HANDLER_IS_NORETURN)
+    BOOST_UNREACHABLE_RETURN(end());
+#else
+    return end();
+#endif
   }
 
-  const_iterator get_iterator(const_pointer p) const noexcept /* noexcept? */
+  const_iterator get_iterator(const_pointer p) const
   {
     return const_cast<hub*>(this)->get_iterator(p);
-  }
-
-  template<typename F>
-  void visit(iterator first, iterator last, F f)
-  {
-    visit_while(first, last, [&] (value_type& x) {
-      f(x); 
-      return true;
-    });
-  }
-
-  template<typename F>
-  void visit(const_iterator first, const_iterator last, F f) const
-  {
-    visit_while(first, last, [&] (const value_type& x) {
-      f(x); 
-      return true;
-    });
-  }
-
-  template<typename F>
-  iterator visit_while(iterator first, iterator last, F f)
-  {
-    for(auto pbb = first.pbb; first != last; ) {
-      if(!f(*first)) return first;
-      ++first;
-      if(first.pbb != pbb) break;
-    }
-    if(first.pbb != last.pbb) {
-      first = visit_while_impl(first.pbb, last.pbb, f);
-      if(first.pbb != last.pbb) return first;
-    }
-    for(; first != last; ++first) if(!f(*first)) return first;
-    return first;
-  }
-
-  template<typename F>
-  const_iterator visit_while(
-    const_iterator first, const_iterator last, F f) const
-  {
-    auto it =const_cast<hub*>(this)->visit_while(
-      iterator{first.pbb, first.n}, iterator{last.pbb, last.n},
-      [&] (const value_type& x) { return f(x); });
-    return {it.pbb, it.n};
-  }
-
-  template<typename F>
-  void visit_all(F f) 
-  {
-    visit(begin(), end(), std::ref(f)); 
-  }
-
-  template<typename F>
-  void visit_all(F f) const
-  {
-    visit(begin(), end(), std::ref(f)); 
-  }
-
-  template<typename F>
-  iterator visit_all_while(F f) 
-  {
-    return visit_while(begin(), end(), std::ref(f)); 
-  }
-
-  template<typename F>
-  const_iterator visit_all_while(F f) const
-  {
-    return visit_while(begin(), end(), std::ref(f)); 
   }
 
 private:
@@ -1436,7 +1472,7 @@ private:
   static block_pointer 
   static_cast_block_pointer(block_base_pointer pbb) noexcept
   {
-    return block_list::static_cast_block_pointer(pbb);
+    return block::static_cast_block_pointer(pbb);
   }
 
   block_pointer create_new_available_block()
@@ -1466,7 +1502,7 @@ private:
 
   BOOST_FORCEINLINE block_pointer retrieve_available_block(int& n)
   {
-    if(BOOST_LIKELY(blist.next_available != blist.header())){
+    if(BOOST_LIKELY(blist.next_available != blist.header())) {
       auto pb = static_cast_block_pointer(blist.next_available);
       n = hub_detail::unchecked_countr_one(pb->mask);
       return pb;
@@ -1546,6 +1582,25 @@ private:
     size_ = 0;
   }
 
+  template<typename... Args>
+  inline void construct_or_restore_capacity(
+    value_type* p, block_base_pointer pbb, Args&&... args)
+  {
+    BOOST_TRY {
+      allocator_construct(al(), p, std::forward<Args>(args)...);
+    }
+    BOOST_CATCH(...) {
+      auto pb = static_cast_block_pointer(blist.next_available);
+      if(pb != pbb) { /* block freshly allocated -> restore capacity */
+        blist.unlink_available(pb);
+        delete_block(pb);
+        --num_blocks;
+      }
+      BOOST_RETHROW
+    }
+    BOOST_CATCH_END
+  }
+
   BOOST_FORCEINLINE void erase_impl(block_base_pointer pbb, int n) noexcept
   {
     auto pb = static_cast_block_pointer(pbb);
@@ -1558,17 +1613,17 @@ private:
 
   template<typename Incrementable, typename Sentinel, typename Construct>
   void range_insert_impl(
-    Incrementable first, Sentinel last, Construct construct)
+    Incrementable first, Sentinel last, Construct construct_)
   {
     while(first != last) {
       int  n;
       auto pb = retrieve_available_block(n);
       for(; ; ) {
-        construct(boost::to_address(pb->data() + n), first++);
+        construct_(boost::to_address(pb->data() + n), first++);
         ++size_;
         if(BOOST_UNLIKELY(pb->mask == 0)) blist.link_at_back(pb);
         pb->mask |= pb->mask +1;
-        if(pb->mask == full){
+        if(pb->mask == full) {
           blist.unlink_available(pb);
           break;
         }
@@ -1583,7 +1638,7 @@ private:
     typename Construct, typename Insert
   >
   void range_assign_impl(
-    Incrementable first, Sentinel last, Construct construct, Insert insert)
+    Incrementable first, Sentinel last, Construct construct_, Insert insert_)
   {
     auto pbb = blist.next;
     int  n = -1;
@@ -1594,10 +1649,10 @@ private:
         n = 0;
         for(mask_type bit = 1; bit; bit <<= 1, ++n) {
           if(pb->mask & bit) { /* full slot */
-            insert(boost::to_address(pb->data() + n), first++);
+            insert_(boost::to_address(pb->data() + n), first++);
           }
           else { /* empty slot */
-            construct(boost::to_address(pb->data() + n), first++);
+            construct_(boost::to_address(pb->data() + n), first++);
             ++size_;
             pb->mask |= bit;
             if(pb->mask == full) blist.unlink_available(pb);
@@ -1609,7 +1664,7 @@ private:
     }
     if(first != last) {
       /* all active blocks consumed, keep inserting */
-      range_insert_impl(first, last, construct);
+      range_insert_impl(first, last, construct_);
     }
     else{
       /* erase remaining original elements */
@@ -1622,15 +1677,19 @@ private:
   bool transfer_sort(Compare comp)
   {
     /* transfer to a buffer, sort and transfer back */
-    hub_detail::buffer<T,Allocator> buf(size_, al());
-    if(!buf.data) return false;
+    if(size_ > 1) {
+      hub_detail::buffer<T,Allocator> buf(size_, al());
+      if(!buf.data) return false;
 
-    visit_all([&] (value_type& x) { buf.emplace_back(std::move(x)); });
-    std::sort(buf.begin(), buf.end(), comp);
-    visit_all([&] (value_type& x) { 
-      x = std::move(*buf.begin());
-      buf.erase_front();
-    });
+      container::for_each(*this, [&] (value_type& x) {
+        buf.emplace_back(std::move(x));
+      });
+      std::sort(buf.begin(), buf.end(), comp);
+      container::for_each(*this, [&] (value_type& x) { 
+        x = std::move(*buf.begin());
+        buf.erase_front();
+      });
+    }
     return true;
   }
 
@@ -1651,7 +1710,7 @@ private:
       if(!p) return false;
 
       size_type i = 0;
-      visit_all([&] (value_type& x) {
+      container::for_each(*this, [&] (value_type& x) {
         p[i] = {std::addressof(x), i};
         ++i;
       });
@@ -1685,7 +1744,7 @@ private:
   void compact_sort(Compare comp)
   {
     /* compact elements and build an array of pointers to data chunks of N */
-    using sort_iterator = hub_detail::sort_iterator<T, static_cast<std::size_t>(N)>;
+    using sort_iterator = hub_detail::sort_iterator<T, (std::size_t)N>;
 
     if(size_ > 1) {
       std::size_t n = (std::size_t)((size_ + N - 1) / N);
@@ -1698,7 +1757,8 @@ private:
       BOOST_ASSERT(i == n);
 
       std::sort(
-        sort_iterator{p.get(), 0}, sort_iterator{p.get(), size_}, comp);
+        sort_iterator{p.get(), 0},
+        sort_iterator{p.get(), (std::ptrdiff_t)size_}, comp);
     }
   }
 
@@ -1775,36 +1835,6 @@ private:
     }
   }
 
-  template<typename F>
-  iterator visit_while_impl(
-    block_base_pointer pbb, block_base_pointer last_pbb, F&& f)
-  {
-    BOOST_ASSERT(pbb != last_pbb);
-    auto pb = static_cast_block_pointer(pbb);
-    auto mask = pb->mask;
-    auto n = hub_detail::unchecked_countr_zero(mask);
-    auto pd = pb->data();
-    do {
-      pbb = pb->next;
-      auto next_mask = pbb->mask;
-      auto next_n = hub_detail::unchecked_countr_zero(next_mask);
-      auto next_pd = static_cast_block_pointer(pbb)->data();
-      BOOST_CONTAINER_HUB_PREFETCH(next_pd + next_n);
-      BOOST_CONTAINER_HUB_PREFETCH(pbb->next);
-      for(; ; ) {
-        if(!f(pd[n])) return {pb, n};
-        mask &= mask - 1;
-        if(!mask) break;
-        n = hub_detail::unchecked_countr_zero(mask);
-      }
-      pb = static_cast_block_pointer(pbb);
-      mask = next_mask;
-      n = next_n;
-      pd = next_pd;
-    } while(pb != last_pbb);
-    return {last_pbb};
-  }
-
   block_list blist;
   size_type  num_blocks = 0;
   size_type  size_ = 0;
@@ -1837,6 +1867,14 @@ void swap(hub<T, Allocator>& x, hub<T, Allocator>& y)
   x.swap(y);
 }
 
+template<typename T, typename Allocator, typename U = T>
+typename hub<T, Allocator>::size_type
+erase(hub<T, Allocator>& x, const U& value)
+{
+  return container::erase_if(
+    x, [&](const T& v) -> bool { return v == value; });
+}
+
 template<typename T, typename Allocator, typename Predicate>
 typename hub<T, Allocator>::size_type
 erase_if(hub<T, Allocator>& x, Predicate pred)
@@ -1860,11 +1898,67 @@ erase_if(hub<T, Allocator>& x, Predicate pred)
   return (size_type)(s - x.size_);
 }
 
-template<typename T, typename Allocator, typename U = T>
-typename hub<T, Allocator>::size_type
-erase(hub<T, Allocator>& x, const U& value)
+template<typename ValuePtr, typename F>
+F for_each(
+  hub_detail::iterator<ValuePtr> first, hub_detail::iterator<ValuePtr> last,
+  F f)
 {
-  return erase_if(x, [&](const T& v) -> bool { return v == value; });
+  using reference = typename hub_detail::iterator<ValuePtr>::reference;
+
+  container::for_each_while(
+    first, last, [&] (reference x) { f(x); return true; });
+  return f;
+}
+
+template<typename T, typename Allocator, typename F>
+F for_each(hub<T, Allocator>& x, F f)
+{
+  container::for_each(x.begin(), x.end(), std::ref(f));
+  return f;
+}
+
+template<typename T, typename Allocator, typename F>
+F for_each(const hub<T, Allocator>& x, F f)
+{
+  container::for_each(x.begin(), x.end(), std::ref(f));
+  return f;
+}
+
+template<typename ValuePtr, typename F>
+std::pair<hub_detail::iterator<ValuePtr>, F> for_each_while(
+  hub_detail::iterator<ValuePtr> first, hub_detail::iterator<ValuePtr> last,
+  F f)
+{
+  for(auto pbb = first.pbb; first != last; ) {
+    if(!f(*first)) return {first, std::move(f)};
+    ++first;
+    if(first.pbb != pbb) break;
+  }
+  if(first.pbb != last.pbb) {
+    first = hub_detail::for_each_while_core<hub_detail::iterator<ValuePtr>>(
+      first.pbb, last.pbb, f);
+    if(first.pbb != last.pbb) return {first, std::move(f)};
+  }
+  for(; first != last; ++first) if(!f(*first)) return {first, std::move(f)};
+  return {first, std::move(f)};
+}
+
+template<typename T, typename Allocator, typename F>
+std::pair<typename hub<T, Allocator>::iterator, F>
+for_each_while(hub<T, Allocator>& x, F f)
+{
+  return {
+    container::for_each_while(x.begin(), x.end(), std::ref(f)).first, 
+    std::move(f)};
+}
+
+template<typename T, typename Allocator, typename F>
+std::pair<typename hub<T, Allocator>::const_iterator, F>
+for_each_while(const hub<T, Allocator>& x, F f)
+{
+  return {
+    container::for_each_while(x.begin(), x.end(), std::ref(f)).first,
+    std::move(f)};
 }
 
 } /* namespace container */

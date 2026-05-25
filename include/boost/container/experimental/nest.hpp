@@ -59,6 +59,7 @@
 #include <cstddef>
 #include <functional>
 #include <new>
+#include <utility>
 #include <boost/cstdint.hpp>
 #include <climits>
 
@@ -221,10 +222,40 @@ template <class T
          ,class Options = void>
 class nest;
 
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch>
+class nest_iterator;
+
+template<class T, class Allocator, class Options, class Predicate>
+typename nest<T, Allocator, Options>::size_type
+erase_if(nest<T, Allocator, Options>&, Predicate);
+
+template<class T, class Allocator, class Options, class F>
+F for_each(nest<T, Allocator, Options>&, F);
+
+template<class T, class Allocator, class Options, class F>
+F for_each(const nest<T, Allocator, Options>&, F);
+
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, class F>
+std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>, F >
+   for_each_while
+      ( nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>
+      , nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>
+      , F);
+
 struct segmented_iterator_tag;
 
 template<class Iterator>
 struct segmented_iterator_traits;
+
+namespace nest_detail {
+
+template<class NestIterator, class F>
+NestIterator for_each_while_core
+   ( typename NestIterator::block_base_pointer pbb
+   , typename NestIterator::block_base_pointer last_pbb
+   , F& f);
+
+} // namespace nest_detail
 
 namespace nest_detail {
 
@@ -549,6 +580,7 @@ struct block
 {
    typedef block_base<typename pointer_rebind<ValuePointer, void>::type> block_base_type;
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type value_type;
+   typedef typename pointer_rebind<ValuePointer, block>::type            pointer;
 
    BOOST_CONTAINER_FORCEINLINE ValuePointer data() BOOST_NOEXCEPT { return data_; }
    BOOST_CONTAINER_FORCEINLINE void set_data_null() BOOST_NOEXCEPT { data_ = ValuePointer(); }
@@ -567,6 +599,13 @@ struct block
       return *this;
    }
 
+   BOOST_CONTAINER_FORCEINLINE static pointer
+   static_cast_block_pointer(typename block_base_type::pointer pbb) BOOST_NOEXCEPT
+   {
+      return boost::intrusive::pointer_traits<pointer>::pointer_to(
+         static_cast<block&>(*pbb));
+   }
+
    ValuePointer data_;
 private:
    BOOST_MOVABLE_BUT_NOT_COPYABLE(block)
@@ -578,6 +617,7 @@ struct block<ValuePointer, true>
 {
    typedef block_base<typename pointer_rebind<ValuePointer, void>::type> block_base_type;
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type value_type;
+   typedef typename pointer_rebind<ValuePointer, block>::type            pointer;
 
    BOOST_CONTAINER_FORCEINLINE ValuePointer data() BOOST_NOEXCEPT { return static_cast<ValuePointer>(static_cast<void*>(&data_stor)); }
    BOOST_CONTAINER_FORCEINLINE void set_data_null() BOOST_NOEXCEPT {}
@@ -594,6 +634,13 @@ struct block<ValuePointer, true>
    {
       this->block_base_type::operator=(boost::move(x));
       return *this;
+   }
+
+   BOOST_CONTAINER_FORCEINLINE static pointer
+   static_cast_block_pointer(typename block_base_type::pointer pbb) BOOST_NOEXCEPT
+   {
+      return boost::intrusive::pointer_traits<pointer>::pointer_to(
+         static_cast<block&>(*pbb));
    }
 
    typename dtl::aligned_storage<sizeof(value_type)*64u, dtl::alignment_of<value_type>::value>::type data_stor;
@@ -755,6 +802,17 @@ private:
    template<class, bool, bool> friend class nest_iterator;
    template<class, class, class> friend class boost::container::nest;
    template<class> friend struct ::boost::container::segmented_iterator_traits;
+   template<class VP, bool SDIB, bool Pf, class FF>
+   friend std::pair< nest_iterator<VP, SDIB, Pf>, FF >
+      for_each_while
+         ( nest_iterator<VP, SDIB, Pf>
+         , nest_iterator<VP, SDIB, Pf>
+         , FF);
+   template<class NestIt, class FF>
+   friend NestIt nest_detail::for_each_while_core
+      ( typename NestIt::block_base_pointer
+      , typename NestIt::block_base_pointer
+      , FF&);
 
    typedef typename nest_detail::pointer_rebind<ValuePointer, void>::type  void_pointer;
    typedef nest_detail::block_base<void_pointer>                           block_base_type;
@@ -769,6 +827,7 @@ private:
 
    BOOST_STATIC_CONSTEXPR std::size_t  N = block_base_type::N;
    BOOST_STATIC_CONSTEXPR mask_type full = block_base_type::full;
+   BOOST_STATIC_CONSTEXPR bool prefetch_enabled = Prefetch;
 
    BOOST_CONTAINER_FORCEINLINE nest_iterator(const_block_base_pointer pbb_, int n_) BOOST_NOEXCEPT
       : pbb(const_cast_block_base_pointer(pbb_)), n(n_)
@@ -1165,12 +1224,12 @@ struct sort_iterator
    typedef T&                                reference;
    typedef std::random_access_iterator_tag   iterator_category;
 
-   sort_iterator(T** pp_, std::size_t index_)
+   sort_iterator(T** pp_, difference_type index_)
       : pp(pp_), index(index_)
    {}
 
    pointer operator->() const BOOST_NOEXCEPT
-   { return pp[index / N] + (index % N); }
+   { return pp[(std::size_t)index / N] + ((std::size_t)index % N); }
 
    reference operator*() const BOOST_NOEXCEPT
    { return *operator->(); }
@@ -1182,25 +1241,25 @@ struct sort_iterator
 
    friend difference_type
    operator-(const sort_iterator& x, const sort_iterator& y) BOOST_NOEXCEPT
-   { return (difference_type)(x.index - y.index); }
+   { return x.index - y.index; }
 
    sort_iterator& operator+=(difference_type d) BOOST_NOEXCEPT
-   { index += std::size_t(d); return *this; }
+   { index += d; return *this; }
 
    friend sort_iterator
    operator+(const sort_iterator& x, difference_type d) BOOST_NOEXCEPT
-   { return sort_iterator(x.pp, x.index + static_cast<std::size_t>(d)); }
+   { return sort_iterator(x.pp, x.index + d); }
 
    friend sort_iterator
    operator+(difference_type d, const sort_iterator& x) BOOST_NOEXCEPT
    { return sort_iterator(x.pp, d + x.index); }
 
    sort_iterator& operator-=(difference_type d) BOOST_NOEXCEPT
-   { index -= std::size_t(d); return *this; }
+   { index -= d; return *this; }
 
    friend sort_iterator
    operator-(const sort_iterator& x, difference_type d) BOOST_NOEXCEPT
-   { return sort_iterator(x.pp, x.index - static_cast<std::size_t>(d)); }
+   { return sort_iterator(x.pp, x.index - d); }
 
    reference operator[](difference_type d) const BOOST_NOEXCEPT
    { return *(*this + d); }
@@ -1218,8 +1277,8 @@ struct sort_iterator
    friend bool operator>=(const sort_iterator& x, const sort_iterator& y) BOOST_NOEXCEPT
    { return x.index >= y.index; }
 
-   T**         pp;
-   std::size_t index;
+   T**             pp;
+   difference_type index;
 };
 
 //////////////////////////////////////////////
@@ -1233,10 +1292,10 @@ struct buffer
 {
    typedef boost::container::allocator_traits<Allocator> alloc_traits;
 
-   buffer(std::size_t n_, Allocator al_)
+   buffer(std::size_t n_, Allocator al_) BOOST_NOEXCEPT
       : al(al_), begin_idx(0), end_idx(0), cap(0), data(0)
    {
-      data = static_cast<T*>(::operator new(n_ * sizeof(T), std::nothrow));
+      allocate_data(n_);
       if(data) cap = n_;
    }
 
@@ -1246,7 +1305,7 @@ struct buffer
          for(; begin_idx != end_idx; ++begin_idx) {
             alloc_traits::destroy(al, data + begin_idx);
          }
-         ::operator delete(static_cast<void*>(data));
+         deallocate_data();
       }
    }
 
@@ -1276,6 +1335,41 @@ struct buffer
 private:
    buffer(const buffer&);
    buffer& operator=(const buffer&);
+
+#if defined(__cpp_aligned_new) && __cpp_aligned_new >= 201606L
+   typedef dtl::bool_<(dtl::alignment_of<T>::value > __STDCPP_DEFAULT_NEW_ALIGNMENT__)>
+      aligned_new_required;
+
+   void allocate_data(std::size_t m)
+   {
+      data = static_cast<T*>(allocate_impl(m * sizeof(T), aligned_new_required()));
+   }
+
+   static void* allocate_impl(std::size_t m, dtl::false_type)
+   {
+      return ::operator new(m, std::nothrow);
+   }
+
+   static void* allocate_impl(std::size_t m, dtl::true_type)
+   {
+      return ::operator new(m, std::align_val_t(dtl::alignment_of<T>::value), std::nothrow);
+   }
+
+   void deallocate_data() { deallocate_impl(data, aligned_new_required()); }
+
+   static void deallocate_impl(void* p, dtl::false_type)
+   { ::operator delete(p); }
+
+   static void deallocate_impl(void* p, dtl::true_type)
+   { ::operator delete(p, std::align_val_t(dtl::alignment_of<T>::value)); }
+#else
+   void allocate_data(std::size_t m)
+   {
+      data = static_cast<T*>(::operator new(m * sizeof(T), std::nothrow));
+   }
+
+   void deallocate_data() { ::operator delete(static_cast<void*>(data)); }
+#endif
 };
 
 // RAII wrapper for raw memory (replaces unique_ptr with nodtor_deleter)
@@ -1374,25 +1468,79 @@ struct sort_proxy_comparator
 
 //////////////////////////////////////////////
 //
-//    visit_to_visit_while adaptor
+//    for_each adaptor: wraps a unary function so it can be used as the
+//    predicate of for_each_while (always returns true).
 //
 //////////////////////////////////////////////
 
 template<class F, class T>
-struct visit_adaptor
+struct for_each_adaptor
 {
    F& f;
-   BOOST_CONTAINER_FORCEINLINE explicit visit_adaptor(F& f_) : f(f_) {}
+   BOOST_CONTAINER_FORCEINLINE explicit for_each_adaptor(F& f_) : f(f_) {}
    BOOST_CONTAINER_FORCEINLINE bool operator()(T& x) const { f(x); return true; }
 };
 
+//////////////////////////////////////////////
+//
+//    ref_predicate_adaptor: holds the wrapped predicate by reference so its
+//    state is preserved when the adaptor is copied around by the visiting
+//    machinery.
+//
+//////////////////////////////////////////////
+
 template<class F, class T>
-struct const_conditional_visit_adaptor
+struct ref_predicate_adaptor
 {
    F& f;
-   BOOST_CONTAINER_FORCEINLINE explicit const_conditional_visit_adaptor(F& f_) : f(f_) {}
-   BOOST_CONTAINER_FORCEINLINE bool operator()(const T& x) const { return f(x); }
+   BOOST_CONTAINER_FORCEINLINE explicit ref_predicate_adaptor(F& f_) : f(f_) {}
+   BOOST_CONTAINER_FORCEINLINE bool operator()(T& x) const { return f(x); }
 };
+
+//////////////////////////////////////////////
+//
+//      for_each_while_core
+//
+//////////////////////////////////////////////
+
+template<class NestIterator, class F>
+NestIterator for_each_while_core
+   ( typename NestIterator::block_base_pointer pbb
+   , typename NestIterator::block_base_pointer last_pbb
+   , F& f)
+{
+   typedef typename NestIterator::block_type        block_t;
+   typedef typename block_t::pointer                block_ptr_t;
+   typedef typename NestIterator::nonconst_pointer  value_ptr_t;
+   typedef typename NestIterator::mask_type         mask_t;
+
+   BOOST_ASSERT(pbb != last_pbb);
+   block_ptr_t pb = block_t::static_cast_block_pointer(pbb);
+   mask_t      m  = pb->mask;
+   int         n  = nest_detail::first_in_mask(m);
+   value_ptr_t pd = pb->data();
+   do {
+      pbb = pb->next;
+      const mask_t next_mask = pbb->mask;
+      const int next_n = nest_detail::first_in_mask(next_mask);
+      value_ptr_t const next_pd = block_t::static_cast_block_pointer(pbb)->data();
+      BOOST_IF_CONSTEXPR(NestIterator::prefetch_enabled) {
+         BOOST_CONTAINER_NEST_PREFETCH(next_pd + next_n);
+         BOOST_CONTAINER_NEST_PREFETCH(pbb->next);
+      }
+      for(; ;) {
+         if(!f(pd[n])) return NestIterator(pb, n);
+         m &= m - 1;
+         if(!m) break;
+         n = nest_detail::first_in_mask(m);
+      }
+      pb = block_t::static_cast_block_pointer(pbb);
+      m  = next_mask;
+      n  = next_n;
+      pd = next_pd;
+   } while(pb != last_pbb);
+   return NestIterator(last_pbb, nest_detail::first_in_mask(last_pbb->mask));
+}
 
 } // namespace nest_detail
 
@@ -1946,11 +2094,19 @@ class nest
    template<class ...Args>
    BOOST_CONTAINER_FORCEINLINE iterator emplace(BOOST_FWD_REF(Args)... args)
    {
+      block_base_pointer const pbb_prev = blist.next_available;
       int n;
       block_pointer const pb = priv_retrieve_available_block(n);
-      block_alloc_traits::construct(
-         al(), boost::movelib::to_raw_pointer(pb->data() + n),
-         boost::forward<Args>(args)...);
+      BOOST_TRY{
+         block_alloc_traits::construct(
+            al(), boost::movelib::to_raw_pointer(pb->data() + n),
+            boost::forward<Args>(args)...);
+      }
+      BOOST_CATCH(...){
+         this->priv_restore_capacity_on_throw(pbb_prev);
+         BOOST_RETHROW;
+      }
+      BOOST_CATCH_END
       pb->mask |= pb->mask + 1u;
       const mask_type mask_plus_one = pb->mask + 1u;
       if (BOOST_UNLIKELY(mask_plus_one <= 2)) {
@@ -1979,11 +2135,19 @@ class nest
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    BOOST_CONTAINER_FORCEINLINE iterator emplace(BOOST_MOVE_UREF##N)  \
    {                                                                 \
+      block_base_pointer const pbb_prev = blist.next_available;      \
       int n_;                                                        \
       block_pointer pb = priv_retrieve_available_block(n_);          \
-      block_alloc_traits::construct(                                 \
-         al(), boost::movelib::to_raw_pointer(pb->data() + n_)       \
-         BOOST_MOVE_I##N BOOST_MOVE_FWD##N);                         \
+      BOOST_TRY{                                                     \
+         block_alloc_traits::construct(                              \
+            al(), boost::movelib::to_raw_pointer(pb->data() + n_)    \
+            BOOST_MOVE_I##N BOOST_MOVE_FWD##N);                      \
+      }                                                              \
+      BOOST_CATCH(...){                                              \
+         this->priv_restore_capacity_on_throw(pbb_prev);             \
+         BOOST_RETHROW;                                              \
+      }                                                              \
+      BOOST_CATCH_END                                                \
       pb->mask |= pb->mask + 1u;                                     \
       const mask_type mask_plus_one = pb->mask + 1u;                 \
       if (BOOST_UNLIKELY(mask_plus_one <= 2)) {                      \
@@ -2158,9 +2322,9 @@ class nest
          blist.link_at_back(pb);
          --x.num_blocks;
          ++num_blocks;
-         size_type s = static_cast<size_type>(boost::core::popcount(pb->mask));
-         x.size_ -= s;
-         size_ += s;
+         size_type const s = (size_type)boost::core::popcount(pb->mask);
+         x.size_ -= (size_type)s;
+         size_ += (size_type)s;
       }
    }
 
@@ -2196,6 +2360,11 @@ class nest
    size_type unique()
    { return unique(std::equal_to<T>()); }
 
+   #if defined(BOOST_MSVC)
+   #pragma warning(push)
+   #pragma warning(disable:4127) // conditional expression is constant
+   #endif
+
    //! <b>Effects</b>: Sorts elements according to comp.
    //!
    //! <b>Complexity</b>: O(n log n).
@@ -2204,6 +2373,10 @@ class nest
    {
       priv_sort_impl(comp);
    }
+
+   #if defined(BOOST_MSVC)
+   #pragma warning(pop) // C4127
+   #endif
 
    //! <b>Effects</b>: Sorts elements in ascending order.
    //!
@@ -2214,7 +2387,7 @@ class nest
    //! <b>Effects</b>: Returns an iterator to the element pointed to by p.
    //!
    //! <b>Complexity</b>: Linear.
-   iterator get_iterator(const_pointer p) BOOST_NOEXCEPT
+   iterator get_iterator(const_pointer p)
    {
       std::less<const T*> less_cmp;
       block_base_pointer pbb = blist.next;
@@ -2224,105 +2397,29 @@ class nest
          const T* raw_p = boost::movelib::to_raw_pointer(p);
          if(!less_cmp(raw_p, raw_data) &&
              less_cmp(raw_p, raw_data + N)) {
-            return iterator(pb, (int)(p - pb->data()));
+            int const n = (int)(p - pb->data());
+            BOOST_ASSERT_MSG(
+               (pb->mask & ((mask_type)(1) << n)) != 0,
+               "p points to an invalid element");
+            return iterator(pb, n);
          }
          pbb = pbb->next;
       }
+      BOOST_ASSERT_MSG(false, "p does not point into the extents of *this");
+      #if defined(BOOST_ASSERT_HANDLER_IS_NORETURN)
+      BOOST_UNREACHABLE_RETURN(end());
+      #else
       return end();
+      #endif
    }
 
    //! <b>Effects</b>: Returns a const_iterator to the element pointed to by p.
    //!
    //! <b>Complexity</b>: Linear.
-   const_iterator get_iterator(const_pointer p) const BOOST_NOEXCEPT
+   const_iterator get_iterator(const_pointer p) const
    {
       return const_cast<nest*>(this)->get_iterator(p);
    }
-
-   //////////////////////////////////////////////
-   //
-   //         internal visitation
-   //
-   //////////////////////////////////////////////
-
-   //! <b>Effects</b>: Calls f(x) for each element x in [first, last).
-   //!
-   //! <b>Complexity</b>: Linear.
-   template<class F>
-   void visit(iterator first, iterator last, F f)
-   {
-      nest_detail::visit_adaptor<F, value_type> adaptor(f);
-      visit_while(first, last, adaptor);
-   }
-
-   //! <b>Effects</b>: Calls f(x) for each const element x in [first, last).
-   template<class F>
-   void visit(const_iterator first, const_iterator last, F f) const
-   {
-      nest_detail::visit_adaptor<F, const value_type> adaptor(f);
-      this->visit_while(first, last, adaptor);
-   }
-
-   //! <b>Effects</b>: Calls f(x) for each element x in [first, last)
-   //!   until f returns false.
-   //!
-   //! <b>Returns</b>: Iterator to the element where visitation stopped.
-   template<class F>
-   iterator visit_while(iterator first, iterator last, F f)
-   {
-      {
-         block_base_pointer pbb = first.pbb;
-         while(first != last) {
-            if(!f(*first)) return first;
-            ++first;
-            if(first.pbb != pbb) break;
-         }
-      }
-      if(first.pbb != last.pbb) {
-         first = priv_visit_while_impl(first.pbb, last.pbb, f);
-         if(first.pbb != last.pbb) return first;
-      }
-      for(; first != last; ++first)
-         if(!f(*first))
-            return first;
-      return first;
-   }
-
-   //! <b>Effects</b>: Calls f(x) for each const element until f returns false.
-   //!
-   //! <b>Returns</b>: const_iterator to the element where visitation stopped.
-   template<class F>
-   const_iterator visit_while(const_iterator first, const_iterator last, F f) const
-   {
-      nest_detail::const_conditional_visit_adaptor<F, value_type> adaptor(f);
-      iterator it = const_cast<nest*>(this)->visit_while(
-         iterator(first.pbb, first.n),
-         iterator(last.pbb, last.n),
-         adaptor);
-      return const_iterator(it.pbb, it.n);
-   }
-
-   //! <b>Effects</b>: Calls f(x) for all elements.
-   template<class F>
-   void visit_all(F f)
-   { visit(begin(), end(), f); }
-
-   //! <b>Effects</b>: Calls f(x) for all const elements.
-   template<class F>
-   void visit_all(F f) const
-   { visit(begin(), end(), f); }
-
-   //! <b>Effects</b>: Calls f(x) for all elements until f returns false.
-   //!
-   //! <b>Returns</b>: Iterator to the element where visitation stopped.
-   template<class F>
-   iterator visit_all_while(F f)
-   { return visit_while(begin(), end(), f); }
-
-   //! <b>Effects</b>: Calls f(x) for all const elements until f returns false.
-   template<class F>
-   const_iterator visit_all_while(F f) const
-   { return visit_while(begin(), end(), f); }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
@@ -2352,8 +2449,7 @@ class nest
    BOOST_CONTAINER_FORCEINLINE  static block_pointer
    static_cast_block_pointer(block_base_pointer pbb) BOOST_NOEXCEPT
    {
-      return boost::intrusive::pointer_traits<block_pointer>::pointer_to(
-         static_cast<block_type&>(*pbb));
+      return block_type::static_cast_block_pointer(pbb);
    }
 
    void priv_allocate_block_data(block_pointer pb, dtl::bool_<false>)
@@ -2405,6 +2501,19 @@ class nest
       else {
          n = 0;
          return priv_create_new_available_block();
+      }
+   }
+
+   // If the next_available block at the moment of failure is not the same as the one
+   // observed before calling priv_retrieve_available_block, a new (and now empty) block
+   // was freshly allocated for the failed construction: free it to restore capacity.
+   void priv_restore_capacity_on_throw(block_base_pointer pbb_prev) BOOST_NOEXCEPT
+   {
+      if(blist.next_available != pbb_prev) {
+         block_pointer const pb_new = static_cast_block_pointer(blist.next_available);
+         blist.unlink_available(pb_new);
+         priv_delete_block(pb_new);
+         --num_blocks;
       }
    }
 
@@ -2670,8 +2779,6 @@ class nest
    template<class Compare>
    void priv_sort_impl(Compare comp)
    {
-      if(size_ <= 1) return;
-
       // Try transfer_sort for small element types
       BOOST_IF_CONSTEXPR(sizeof(T) <= sizeof(sort_proxy)) {
          if(priv_transfer_sort(comp)) return;
@@ -2688,14 +2795,16 @@ class nest
    template<class Compare>
    bool priv_transfer_sort(Compare comp)
    {
-      nest_detail::buffer<T, block_allocator> buf(size_, al());
-      if(!buf.data) return false;
+      if(size_ > 1) {
+         nest_detail::buffer<T, block_allocator> buf(size_, al());
+         if(!buf.data) return false;
 
-      // Move all elements to buffer
-      priv_visit_all_move_to_buffer(buf);
-      std::sort(buf.begin(), buf.end(), comp);
-      // Move sorted elements back
-      priv_visit_all_move_from_buffer(buf);
+         // Move all elements to buffer
+         priv_visit_all_move_to_buffer(buf);
+         std::sort(buf.begin(), buf.end(), comp);
+         // Move sorted elements back
+         priv_visit_all_move_from_buffer(buf);
+      }
       return true;
    }
 
@@ -2733,42 +2842,44 @@ class nest
    template<class Compare>
    bool priv_proxy_sort(Compare comp)
    {
-      void* raw = ::operator new(size_ * sizeof(sort_proxy), std::nothrow);
-      if(!raw) return false;
-      nest_detail::raw_memory_holder holder(raw);
-      sort_proxy* proxies = static_cast<sort_proxy*>(raw);
+      if(size_ > 1) {
+         void* raw = ::operator new(size_ * sizeof(sort_proxy), std::nothrow);
+         if(!raw) return false;
+         nest_detail::raw_memory_holder holder(raw);
+         sort_proxy* proxies = static_cast<sort_proxy*>(raw);
 
-      size_type i = 0;
-      block_base_pointer pbb = blist.next;
-      while(pbb != blist.header()) {
-         block_pointer pb = static_cast_block_pointer(pbb);
-         pbb = pbb->next;
-         mask_type m = pb->mask;
-         while(m) {
-            int n = nest_detail::first_in_mask(m);
-            proxies[i].p = boost::movelib::to_raw_pointer(pb->data() + n);
-            proxies[i].n = i;
-            ++i;
-            m &= m - 1;
+         size_type i = 0;
+         block_base_pointer pbb = blist.next;
+         while(pbb != blist.header()) {
+            block_pointer pb = static_cast_block_pointer(pbb);
+            pbb = pbb->next;
+            mask_type m = pb->mask;
+            while(m) {
+               int n = nest_detail::first_in_mask(m);
+               proxies[i].p = boost::movelib::to_raw_pointer(pb->data() + n);
+               proxies[i].n = i;
+               ++i;
+               m &= m - 1;
+            }
          }
-      }
 
-      nest_detail::sort_proxy_comparator<T, Compare> proxy_comp(comp);
-      std::sort(proxies, proxies + size_, proxy_comp);
+         nest_detail::sort_proxy_comparator<T, Compare> proxy_comp(comp);
+         std::sort(proxies, proxies + size_, proxy_comp);
 
-      // Rearrange elements according to sorted proxy order
-      for(i = 0; i < size_; ++i) {
-         if(proxies[i].n != i) {
-            T x = boost::move(*(proxies[i].p));
-            size_type j = i;
-            do {
-               size_type k = proxies[j].n;
-               *(proxies[j].p) = boost::move(*proxies[k].p);
+         // Rearrange elements according to sorted proxy order
+         for(i = 0; i < size_; ++i) {
+            if(proxies[i].n != i) {
+               T x = boost::move(*(proxies[i].p));
+               size_type j = i;
+               do {
+                  size_type k = proxies[j].n;
+                  *(proxies[j].p) = boost::move(*proxies[k].p);
+                  proxies[j].n = j;
+                  j = k;
+               } while(proxies[j].n != i);
+               *(proxies[j].p) = boost::move(x);
                proxies[j].n = j;
-               j = k;
-            } while(proxies[j].n != i);
-            *(proxies[j].p) = boost::move(x);
-            proxies[j].n = j;
+            }
          }
       }
       return true;
@@ -2779,16 +2890,19 @@ class nest
    {
       typedef nest_detail::sort_iterator<T, N> sort_iter;
 
-      std::size_t nblocks = (std::size_t)((size_ + N - 1) / N);
-      void* raw = ::operator new(nblocks * sizeof(T*));
-      nest_detail::raw_memory_holder holder(raw);
-      T** ptrs = static_cast<T**>(raw);
+      if(size_ > 1) {
+         std::size_t nblocks = (std::size_t)((size_ + N - 1) / N);
+         void* raw = ::operator new(nblocks * sizeof(T*));
+         nest_detail::raw_memory_holder holder(raw);
+         T** ptrs = static_cast<T**>(raw);
 
-      std::size_t idx = 0;
-      priv_compact_with_tracking(ptrs, idx);
-      BOOST_ASSERT(idx == nblocks);
+         std::size_t idx = 0;
+         priv_compact_with_tracking(ptrs, idx);
+         BOOST_ASSERT(idx == nblocks);
 
-      std::sort(sort_iter(ptrs, 0), sort_iter(ptrs, size_), comp);
+         std::sort( sort_iter(ptrs, 0)
+                  , sort_iter(ptrs, (std::ptrdiff_t)size_), comp);
+      }
    }
 
    //////////////////////////////////////////////
@@ -2910,44 +3024,6 @@ class nest
 
    //////////////////////////////////////////////
    //
-   //   private: visit_while implementation
-   //
-   //////////////////////////////////////////////
-
-   template<class F>
-   iterator priv_visit_while_impl(
-      block_base_pointer pbb, block_base_pointer last_pbb, F &f)
-   {
-      BOOST_ASSERT(pbb != last_pbb);
-      block_pointer pb = static_cast_block_pointer(pbb);
-      mask_type     m  = pb->mask;
-      int           n  = nest_detail::first_in_mask(m);
-      pointer       pd = pb->data();
-      do {
-         pbb = pb->next;
-         const mask_type next_mask = pbb->mask;
-         const int next_n = nest_detail::first_in_mask(next_mask);
-         pointer const next_pd = static_cast_block_pointer(pbb)->data();
-         BOOST_IF_CONSTEXPR(prefetch_enabled) {
-            BOOST_CONTAINER_NEST_PREFETCH(next_pd + next_n);
-            BOOST_CONTAINER_NEST_PREFETCH(pbb->next);
-         }
-         for(; ; ) {
-            if(!f(pd[n])) return iterator(pb, n);
-            m &= m - 1;
-            if(!m) break;
-            n = nest_detail::first_in_mask(m);
-         }
-         pb = static_cast_block_pointer(pbb);
-         m = next_mask;
-         n = next_n;
-         pd = next_pd;
-      } while(pb != last_pbb);
-      return iterator(last_pbb, nest_detail::first_in_mask(last_pbb->mask));
-   }
-
-   //////////////////////////////////////////////
-   //
    //         private: erase_if impl
    //
    //////////////////////////////////////////////
@@ -3018,7 +3094,124 @@ template<class T, class Allocator, class Options>
 typename nest<T, Allocator, Options>::size_type
 erase(nest<T, Allocator, Options>& x, const T& value)
 {
-   return erase_if(x, equal_to_value<T>(value));
+   return boost::container::erase_if(x, equal_to_value<T>(value));
+}
+
+//! <b>Effects</b>: Calls f(*it) for each iterator it in [first, last) until
+//!   f(*it) returns false.
+//!
+//! <b>Returns</b>: A std::pair containing the iterator where visitation
+//!   stopped (or last if all calls returned true) and the (possibly moved)
+//!   functor f.
+//!
+//! <b>Complexity</b>: Linear in the distance between first and last.
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, class F>
+std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>, F >
+   for_each_while
+      ( nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> first
+      , nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> last
+      , F f)
+{
+   typedef nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> iter_t;
+   typedef typename iter_t::block_base_pointer                     bbp_t;
+   typedef std::pair<iter_t, F>                                    result_type;
+
+   {
+      bbp_t pbb_first = first.pbb;
+      while(first != last) {
+         if(!f(*first)) return result_type(first, f);
+         ++first;
+         if(first.pbb != pbb_first) break;
+      }
+   }
+   if(first.pbb != last.pbb) {
+      first = nest_detail::for_each_while_core<iter_t>(first.pbb, last.pbb, f);
+      if(first.pbb != last.pbb) return result_type(first, f);
+   }
+   for(; first != last; ++first) {
+      if(!f(*first)) return result_type(first, f);
+   }
+   return result_type(first, f);
+}
+
+//! <b>Effects</b>: Calls f(*it) for each iterator it in [first, last).
+//!
+//! <b>Returns</b>: The (possibly moved) functor f.
+//!
+//! <b>Complexity</b>: Linear in the distance between first and last.
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, class F>
+F for_each
+   ( nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> first
+   , nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> last
+   , F f)
+{
+   typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type
+      element_t;
+   nest_detail::for_each_adaptor<F, element_t> adaptor(f);
+   (void)boost::container::for_each_while(first, last, adaptor);
+   return f;
+}
+
+//! <b>Effects</b>: Calls f(x) for each element x in x.
+//!
+//! <b>Returns</b>: The (possibly moved) functor f.
+//!
+//! <b>Complexity</b>: Linear in the number of elements.
+template<class T, class Allocator, class Options, class F>
+F for_each(nest<T, Allocator, Options>& x, F f)
+{
+   nest_detail::for_each_adaptor<F, T> adaptor(f);
+   (void)boost::container::for_each_while(x.begin(), x.end(), adaptor);
+   return f;
+}
+
+//! <b>Effects</b>: Calls f(x) for each const element x in x.
+//!
+//! <b>Returns</b>: The (possibly moved) functor f.
+//!
+//! <b>Complexity</b>: Linear in the number of elements.
+template<class T, class Allocator, class Options, class F>
+F for_each(const nest<T, Allocator, Options>& x, F f)
+{
+   nest_detail::for_each_adaptor<F, const T> adaptor(f);
+   (void)boost::container::for_each_while(x.begin(), x.end(), adaptor);
+   return f;
+}
+
+//! <b>Effects</b>: Calls f(x) for each element x of x until f(x) returns false.
+//!
+//! <b>Returns</b>: A std::pair with the iterator where visitation stopped (or
+//!   end() if all calls returned true) and the (possibly moved) functor f.
+//!
+//! <b>Complexity</b>: Linear in the number of elements.
+template<class T, class Allocator, class Options, class F>
+std::pair<typename nest<T, Allocator, Options>::iterator, F>
+   for_each_while(nest<T, Allocator, Options>& x, F f)
+{
+   typedef typename nest<T, Allocator, Options>::iterator iter_t;
+   nest_detail::ref_predicate_adaptor<F, T> adaptor(f);
+   iter_t const it = boost::container::for_each_while(
+      x.begin(), x.end(), adaptor).first;
+   return std::pair<iter_t, F>(it, f);
+}
+
+//! <b>Effects</b>: Calls f(x) for each const element x of x until f(x)
+//!   returns false.
+//!
+//! <b>Returns</b>: A std::pair with the const_iterator where visitation
+//!   stopped (or end() if all calls returned true) and the (possibly moved)
+//!   functor f.
+//!
+//! <b>Complexity</b>: Linear in the number of elements.
+template<class T, class Allocator, class Options, class F>
+std::pair<typename nest<T, Allocator, Options>::const_iterator, F>
+   for_each_while(const nest<T, Allocator, Options>& x, F f)
+{
+   typedef typename nest<T, Allocator, Options>::const_iterator citer_t;
+   nest_detail::ref_predicate_adaptor<F, const T> adaptor(f);
+   citer_t const it = boost::container::for_each_while(
+      x.begin(), x.end(), adaptor).first;
+   return std::pair<citer_t, F>(it, f);
 }
 
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD
