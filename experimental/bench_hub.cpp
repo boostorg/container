@@ -22,23 +22,30 @@ int main() { return 0; }
 #include "../bench/bench_utils.hpp"
 
 #ifndef ELEMENT_SIZE
-#define ELEMENT_SIZE 64
-//#define ELEMENT_SIZE 16
+#define ELEMENT_SIZE 16
+//#define ELEMENT_SIZE 32
+//#define ELEMENT_SIZE 64
+//#define ELEMENT_SIZE 80
 #endif
 #define NONTRIVIAL_ELEMENT
 
 std::chrono::high_resolution_clock::time_point measure_start, measure_pause;
 
 template<typename F>
-double measure(F f)
+BOOST_NOINLINE double measure(F f)
 {
    using namespace std::chrono;
 
    //static const int              num_trials = 10;
    //static const milliseconds     min_time_per_trial(200);
 
-   static const std::size_t      num_trials = 5;
-   static const milliseconds     min_time_per_trial(100);
+   #ifdef NDEBUG
+   static const std::size_t      num_trials = 8;
+   static const milliseconds     min_time_per_trial(75);
+   #else
+   static const std::size_t      num_trials = 1;
+   static const milliseconds     min_time_per_trial(0);
+   #endif
 
    std::array<double,num_trials> trials;
 
@@ -60,7 +67,9 @@ double measure(F f)
    }
    std::sort(trials.begin(), trials.end());
 
-   return std::accumulate(trials.begin() + 2, trials.end() - 2, 0.0)/(trials.size() - 4);
+   const std::size_t ts = trials.size();
+   const std::size_t ts_discard = ts/4;
+   return std::accumulate(trials.begin() + ts_discard, trials.end(), 0.0)/(ts - ts_discard);
 }
 
 BOOST_CONTAINER_FORCEINLINE void pause_timing()
@@ -198,7 +207,8 @@ static double      min_erasure_rate = 0.0,
 */
 
 static std::size_t min_size_exp = 3,
-                   max_size_exp = 5;
+                   max_size_exp = 7
+;
 static double      min_erasure_rate = 0.1,
                    max_erasure_rate = 0.9,
                    erase_rate_inc = 0.4;
@@ -209,6 +219,8 @@ struct benchmark_result
    std::vector<std::vector<std::string>> data;
    std::vector<std::vector<double>>      ratios;
 };
+
+double geomean(const benchmark_result& bench);  // defined further below
 
 template<typename FNum, typename FDen>
 benchmark_result benchmark(const char* title, FNum fnum, FDen fden)
@@ -233,7 +245,7 @@ benchmark_result benchmark(const char* title, FNum fnum, FDen fden)
    {
       std::cout << "1.E" << i << " ";
    }
-   std::cout << std::endl;
+   std::cout << " mean" << std::endl;
 
    for(double erasure_rate = min_erasure_rate;
               erasure_rate <= max_erasure_rate;
@@ -259,8 +271,20 @@ benchmark_result benchmark(const char* title, FNum fnum, FDen fden)
          std::cout << out.str() << " " << std::flush;
          res.data.back().push_back(out.str());
       }
+      {  //Per-row geomean across the container sizes for this erase rate.
+         double      row_log_sum = 0.0;
+         std::size_t row_count   = 0;
+         for(double r: res.ratios.back()) {
+            if(r > 0.0) { row_log_sum += std::log(r); ++row_count; }
+         }
+         double row_geomean = row_count ? std::exp(row_log_sum / (double)row_count) : 0.0;
+         std::cout << std::fixed << std::setprecision(2) << row_geomean;
+      }
       std::cout << std::endl;
    }
+   std::cout << std::left << std::setw(11) << "geomean"
+             << std::right << std::fixed << std::setprecision(3)
+             << geomean(res) << "\n";
    return res;
 }
 
@@ -315,7 +339,7 @@ struct prepare
 };
 
 template<typename Container>
-struct for_each: prepare<Container>
+struct iteration: prepare<Container>
 {
    unsigned int operator()(std::size_t n, double erasure_rate)
    {
@@ -327,7 +351,7 @@ struct for_each: prepare<Container>
 };
 
 template<typename Container>
-struct visit_all: prepare<Container>
+struct for_each: prepare<Container>
 {
    unsigned int operator()(std::size_t n, double erasure_rate)
    {
@@ -341,8 +365,8 @@ struct visit_all: prepare<Container>
 #if defined(PLF_HIVE_BENCH)
 
 template<typename Element>
-struct visit_all <plf::hive<Element>>
-   : for_each< plf::hive<Element> >
+struct for_each <plf::hive<Element>>
+   : iteration< plf::hive<Element> >
 {};
 
 #endif
@@ -469,28 +493,33 @@ int main(int argc,char* argv[])
       using num = plf::hive<element>;
       #else
       using num = hub<element>;
+      //using num  = nest<element>;
       //using num = nest<element, void, nest_options_t< store_data_in_block<true> > >;
       //using num = nest<element, void, nest_options_t< prefetch<false> > >;
       //using num = nest<element, void, nest_options_t< prefetch<false>, store_data_in_block<true> > >;
       #endif
       using den  = nest<element>;
+      //using den = nest<element, void, nest_options_t< prefetch<false> > >;
+      //using den = nest<element, void, nest_options_t< store_data_in_block<true> > >;
+      //using den = nest<element, void, nest_options_t< block_cacheline_align<true> > >;
+      //using den = nest<element, void, nest_options_t< store_data_in_block<true>, block_cacheline_align<true> > >;
 
       table t;
+      t.push_back(benchmark(
+         "iteration",
+         ::iteration<num>{}, ::iteration<den>{}));
       t.push_back(benchmark(
          "for_each",
          ::for_each<num>{}, ::for_each<den>{}));
       t.push_back(benchmark(
-         "visit_all",
-         visit_all<num>{}, visit_all<den>{}));
+         "sort",
+         sort<num>{}, sort<den>{}));
       t.push_back(benchmark(
          "creat, ins, erase, ins",
          create<num>{}, create<den>{}));
       t.push_back(benchmark(
          "creat, ins, erase, ins, destroy",
          create_and_destroy<num>{}, create_and_destroy<den>{}));
-      t.push_back(benchmark(
-         "sort",
-         sort<num>{}, sort<den>{}));
 
       const char* filename = "hub_test.txt";
       write_table(t, filename);
