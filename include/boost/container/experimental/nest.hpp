@@ -139,6 +139,36 @@ _mm_prefetch(static_cast<const char*>(static_cast<const void*>(boost::movelib::t
    } while(0)\
 //
 
+#define BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb) \
+   do{                                                    \
+      BOOST_CONTAINER_NEST_PREFETCH(static_cast<block_type&>(*(pbb)).data());\
+   } while(0)\
+//
+
+//#define BOOST_CONTAINER_NEST_DISABLE_PRAGMA_UNROLL
+//#define BOOST_CONTAINER_NEST_ENABLE_PRAGMA_UNROLL
+
+#if defined(BOOST_CONTAINER_NEST_DISABLE_PRAGMA_UNROLL) && defined (BOOST_CONTAINER_NEST_ENABLE_PRAGMA_UNROLL)
+#error "Cannot define both BOOST_CONTAINER_NEST_DISABLE_PRAGMA_UNROLL and BOOST_CONTAINER_NEST_ENABLE_PRAGMA_UNROLL"
+#endif
+
+#if !defined(BOOST_CONTAINER_NEST_DISABLE_PRAGMA_UNROLL) && !defined (BOOST_CONTAINER_NEST_ENABLE_PRAGMA_UNROLL)
+   #if defined(BOOST_CLANG)
+      //Let clang decide when to unroll loops, as it can auto-vectorize more aggressively when unrolling is disabled.
+      #define BOOST_CONTAINER_NEST_DISABLE_PRAGMA_UNROLL
+   #else
+      #define BOOST_CONTAINER_NEST_ENABLE_PRAGMA_UNROLL
+   #endif
+#endif
+
+#if defined(BOOST_CONTAINER_NEST_ENABLE_PRAGMA_UNROLL)
+   #define BOOST_CONTAINER_NEST_UNROLL(N) BOOST_CONTAINER_UNROLL(N)
+#elif defined(BOOST_CONTAINER_NEST_DISABLE_PRAGMA_UNROLL)
+   #define BOOST_CONTAINER_NEST_UNROLL(N)
+#else
+#error "Must define either BOOST_CONTAINER_NEST_ENABLE_PRAGMA_UNROLL or BOOST_CONTAINER_NEST_DISABLE_PRAGMA_UNROLL"
+#endif
+
 #if defined(BOOST_MSVC)
 #pragma warning(push)
 #pragma warning(disable:4714) // marked as __forceinline not inlined
@@ -157,14 +187,15 @@ namespace container {
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-template<bool StoreDataInBlock, bool Prefetch>
+template<bool StoreDataInBlock, bool Prefetch, bool BlockCachelineAlign>
 struct nest_opt
 {
-   BOOST_STATIC_CONSTEXPR bool store_data_in_block = StoreDataInBlock;
-   BOOST_STATIC_CONSTEXPR bool prefetch = Prefetch;
+   BOOST_STATIC_CONSTEXPR bool store_data_in_block    = StoreDataInBlock;
+   BOOST_STATIC_CONSTEXPR bool prefetch               = Prefetch;
+   BOOST_STATIC_CONSTEXPR bool block_cacheline_align  = BlockCachelineAlign;
 };
 
-typedef nest_opt<false, true> nest_null_opt;
+typedef nest_opt<false, true, false> nest_null_opt;
 
 #endif   //   !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -182,6 +213,30 @@ BOOST_INTRUSIVE_OPTION_CONSTANT(store_data_in_block, bool, Enabled, store_data_i
 //!
 //!\tparam Enabled A boolean value. True to enable prefetching.
 BOOST_INTRUSIVE_OPTION_CONSTANT(prefetch, bool, Enabled, prefetch)
+
+//! This option specifies whether the dynamically-allocated `block`
+//! struct is over-aligned to the cache line. When enabled (true), the
+//! alignment is `std::hardware_constructive_interference_size` (or 64
+//! when not available), which guarantees that the per-block header
+//! (.prev/.next/.mask/.data_) always fits in a single cache line and
+//! that one synchronous load brings it fully into L1. When disabled
+//! (false, the default), the block uses its natural alignment.
+//!
+//! Trade-off: cache-line alignment routes block allocation through
+//! `std::aligned_alloc`/`posix_memalign`, which is more expensive
+//! per call than plain `malloc` and may worsen spatial locality
+//! across the heap. The benefit is workload-dependent; benchmark
+//! both before enabling.
+//!
+//! This option only takes effect with allocators that honor
+//! over-alignment requirements (e.g. boost::container::new_allocator
+//! and C++17 std::allocator). Custom allocators that ignore
+//! over-alignment will silently allocate with natural alignment
+//! (no correctness impact).
+//!
+//!\tparam Enabled A boolean value. True to over-align blocks to the
+//! cache line.
+BOOST_INTRUSIVE_OPTION_CONSTANT(block_cacheline_align, bool, Enabled, block_cacheline_align)
 
 //! Helper metafunction to combine options into a single type to be used
 //! by \c boost::container::nest.
@@ -201,7 +256,10 @@ struct nest_options
       Options...
       #endif
       >::type packed_options;
-   typedef nest_opt<packed_options::store_data_in_block, packed_options::prefetch> implementation_defined;
+   typedef nest_opt<
+      packed_options::store_data_in_block,
+      packed_options::prefetch,
+      packed_options::block_cacheline_align> implementation_defined;
    /// @endcond
    typedef implementation_defined type;
 };
@@ -222,7 +280,7 @@ template <class T
          ,class Options = void>
 class nest;
 
-template<class ValuePointer, bool StoreDataInBlock, bool Prefetch>
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, bool BlockCachelineAlign>
 class nest_iterator;
 
 template<class T, class Allocator, class Options, class Predicate>
@@ -235,27 +293,17 @@ F for_each(nest<T, Allocator, Options>&, F);
 template<class T, class Allocator, class Options, class F>
 F for_each(const nest<T, Allocator, Options>&, F);
 
-template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, class F>
-std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>, F >
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, bool BlockCachelineAlign, class F>
+std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign>, F >
    for_each_while
-      ( nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>
-      , nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>
+      ( nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign>
+      , nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign>
       , F);
 
 struct segmented_iterator_tag;
 
 template<class Iterator>
 struct segmented_iterator_traits;
-
-namespace nest_detail {
-
-template<class NestIterator, class F>
-NestIterator for_each_while_core
-   ( typename NestIterator::block_base_pointer pbb
-   , typename NestIterator::block_base_pointer last_pbb
-   , F& f);
-
-} // namespace nest_detail
 
 namespace nest_detail {
 
@@ -404,6 +452,34 @@ It find_if_not(It first, It last, Pred pred)
          break;
    return first;
 }
+
+//////////////////////////////////////////////
+//
+//      Cache-line size constant (used by the block_cacheline_align
+//      option). Falls back to a 64-byte default when
+//      std::hardware_constructive_interference_size is not available.
+//
+//////////////////////////////////////////////
+
+#if defined(__cpp_lib_hardware_interference_size) \
+ && (__cpp_lib_hardware_interference_size >= 201703L)
+BOOST_STATIC_CONSTEXPR std::size_t cacheline_size
+   = std::hardware_constructive_interference_size;
+#else
+BOOST_STATIC_CONSTEXPR std::size_t cacheline_size = 64u;
+#endif
+
+// Compile-time alignment value for the `block` struct: cacheline_size
+// when the BlockCachelineAlign option is enabled, otherwise just the
+// natural alignment of a void* (always satisfied by the type's actual
+// members so the alignas/__declspec(align)/__attribute__((aligned))
+// becomes a no-op when disabled).
+template<bool BlockCachelineAlign>
+struct block_align_value
+{
+   BOOST_STATIC_CONSTEXPR std::size_t value
+      = BlockCachelineAlign ? cacheline_size : sizeof(void*);
+};
 
 //////////////////////////////////////////////
 //
@@ -565,6 +641,83 @@ struct block_base
       return *this;
    }
 
+   //////////////////////////////////////////////
+   //
+   //   block_base linked-list memberships
+   //
+   //////////////////////////////////////////////
+   //
+   //Each block_base is simultaneously a node in TWO doubly-linked,
+   //circular lists. Both lists are anchored at the per-nest `blist`
+   //sentinel (itself a block_base, embedded inside `nest` and with no
+   //associated data array) returned by `header()`.
+   //
+   //A given block participates in each list depending on the value of
+   //its own `mask`:
+   //
+   //                    | main list | available list
+   //   -----------------+-----------+----------------
+   //    mask == 0       |    no     |     yes        (empty,  reusable)
+   //    0 < mask < full |   yes     |     yes        (partial)
+   //    mask == full    |   yes     |     no         (saturated)
+   //
+   //(1) MAIN LIST    -- members `prev` / `next`
+   //
+   //    Spans every block that holds at least one live element
+   //    (mask != 0). Defines the user-visible block ordering: the
+   //    nest's `begin()` returns an iterator to the first set bit
+   //    of `blist.next->mask`; `nest_iterator::operator++` walks
+   //    to the successor block via `pbb->next`, and
+   //    `operator--` via `pbb->prev`. Thus iteration order is
+   //    exactly the order in which blocks first became non-empty
+   //    (link_at_back appends a freshly-non-empty block at the
+   //    tail). The sentinel `header()` itself does NOT belong to
+   //    the user-visible sequence; reaching `next == header()`
+   //    signals end-of-range.
+   //
+   //    Maintenance points:
+   //      * link_at_back(pb) on the empty->non-empty transition
+   //        (priv_insert_range_copy, emplace's "mask was 0" branch).
+   //      * unlink(pb) on the non-empty->empty transition
+   //        (priv_erase_impl when mask becomes 0).
+   //      * priv_reset's second sweep walks `blist.next` to deal
+   //        with the blocks that the first available-list sweep
+   //        left behind, which by then must all be saturated.
+   //
+   //(2) AVAILABLE LIST -- members `prev_available` / `next_available`
+   //
+   //    Spans every block that has at least one free slot
+   //    (mask != full): empty blocks and partial blocks. This is
+   //    the freelist consulted on every insertion by
+   //    `priv_retrieve_available_block`, which returns
+   //    `blist.next_available` and lands the new element on the
+   //    lowest 0-bit of that block's mask. As long as the list is
+   //    non-empty, insertion is O(1) and never reaches the
+   //    allocator.
+   //
+   //    Insertion-order policy is asymmetric:
+   //      * freshly allocated empty blocks are linked at the BACK
+   //        (link_available_at_back, in priv_create_new_available_block)
+   //        so they are consumed last, after existing partials.
+   //      * a saturated block that becomes partial again because an
+   //        element was erased is linked at the FRONT
+   //        (link_available_at_front, in priv_erase_impl and
+   //        priv_erase_range). This favors reuse of cache-hot slots
+   //        the program just vacated.
+   //
+   //    Maintenance points:
+   //      * link_available_at_back(pb) on block creation.
+   //      * link_available_at_front(pb) on the full->partial
+   //        transition (priv_erase_impl, priv_erase_range when a
+   //        block had been saturated).
+   //      * unlink_available(pb) on the partial->full transition
+   //        (emplace / priv_insert_range_copy when `mask + 1 == 0`).
+   //      * priv_reset's first sweep walks `blist.header()->next_available`
+   //        to destroy empty and partial blocks and free their data.
+   //
+   //Note that a partial block is on BOTH lists at once; its four
+   //pointers are independent (the available chain may skip past full
+   //blocks that the main chain visits, and vice versa).
    pointer   prev_available;
    pointer   next_available;
    pointer   prev;
@@ -574,8 +727,18 @@ private:
    BOOST_MOVABLE_BUT_NOT_COPYABLE(block_base)
 };
 
-template<class ValuePointer, bool StoreDataInBlock>
-struct block
+//Over-align the dynamically-allocated block (not block_base, which would
+//bloat the sentinel header embedded in `nest` and propagate to user
+//structs containing a nest). The base sub-object always sits at offset
+//0 of the derived block, so a cache-line-aligned block guarantees the
+//block_base header (.prev/.next/.mask/.data_) fits in ONE cache line.
+//
+//Controlled by the BlockCachelineAlign template parameter (set via the
+//`block_cacheline_align` nest option). When false (default), the
+//portable BOOST_ALIGNMENT macro receives sizeof(void*), which is at
+//most the natural alignment of the type, so the directive is a no-op.
+template<class ValuePointer, bool StoreDataInBlock, bool BlockCachelineAlign>
+struct BOOST_ALIGNMENT(block_align_value<BlockCachelineAlign>::value) block
    : block_base<typename pointer_rebind<ValuePointer, void>::type>
 {
    typedef block_base<typename pointer_rebind<ValuePointer, void>::type> block_base_type;
@@ -611,8 +774,8 @@ private:
    BOOST_MOVABLE_BUT_NOT_COPYABLE(block)
 };
 
-template<class ValuePointer>
-struct block<ValuePointer, true>
+template<class ValuePointer, bool BlockCachelineAlign>
+struct BOOST_ALIGNMENT(block_align_value<BlockCachelineAlign>::value) block<ValuePointer, true, BlockCachelineAlign>
    : block_base<typename pointer_rebind<ValuePointer, void>::type>
 {
    typedef block_base<typename pointer_rebind<ValuePointer, void>::type> block_base_type;
@@ -648,17 +811,17 @@ private:
    BOOST_MOVABLE_BUT_NOT_COPYABLE(block)
 };
 
-template<class ValuePointer, bool StoreDataInBlock>
-void swap_payload(block<ValuePointer, StoreDataInBlock>& x, block<ValuePointer, StoreDataInBlock>& y) BOOST_NOEXCEPT;
+template<class ValuePointer, bool StoreDataInBlock, bool BlockCachelineAlign>
+void swap_payload(block<ValuePointer, StoreDataInBlock, BlockCachelineAlign>& x, block<ValuePointer, StoreDataInBlock, BlockCachelineAlign>& y) BOOST_NOEXCEPT;
 
-template<class ValuePointer>
-BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, true>& x, block<ValuePointer, true>& y) BOOST_NOEXCEPT
+template<class ValuePointer, bool BlockCachelineAlign>
+BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, true, BlockCachelineAlign>& x, block<ValuePointer, true, BlockCachelineAlign>& y) BOOST_NOEXCEPT
 {
    boost::adl_move_swap(x.mask, y.mask);
 }
 
-template<class ValuePointer>
-BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, false>& x, block<ValuePointer, false>& y) BOOST_NOEXCEPT
+template<class ValuePointer, bool BlockCachelineAlign>
+BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, false, BlockCachelineAlign>& x, block<ValuePointer, false, BlockCachelineAlign>& y) BOOST_NOEXCEPT
 {
    boost::adl_move_swap(x.mask, y.mask);
    boost::adl_move_swap(x.data_, y.data_);
@@ -682,7 +845,7 @@ BOOST_CONTAINER_FORCEINLINE int last_in_mask(boost::uint64_t m)
 //
 //////////////////////////////////////////////
 
-template<class ValuePointer, bool StoreDataInBlock, bool Prefetch>
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, bool BlockCachelineAlign>
 class nest_iterator
 {
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type element_type;
@@ -705,7 +868,7 @@ public:
    typedef typename nest_detail::pointer_rebind<pointer, value_type>::type maybe_nonconst_pointer;
 
    typedef typename dtl::if_c< boost::move_detail::is_const<element_type>::value
-                             , nest_iterator< maybe_nonconst_pointer, StoreDataInBlock, Prefetch >
+                             , nest_iterator< maybe_nonconst_pointer, StoreDataInBlock, Prefetch, BlockCachelineAlign >
                              , nat>::type                            maybe_nonconst_iterator;
 
    BOOST_CONTAINER_FORCEINLINE nest_iterator() BOOST_NOEXCEPT
@@ -750,8 +913,13 @@ public:
       if(BOOST_UNLIKELY(mask == 0)) {
          pbb = pbb->next;
          BOOST_IF_CONSTEXPR(Prefetch) {
-            BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb->next, nest_detail::first_in_mask(pbb->mask));
-            BOOST_CONTAINER_NEST_PREFETCH(pbb->next); //iG
+            //Load current mask and data
+            BOOST_CONTAINER_NEST_PREFETCH(&pbb->mask);
+            BOOST_CONTAINER_NEST_PREFETCH(static_cast<block_type&>(*pbb).data());
+            //Load next data
+            block_type& pbn = static_cast<block_type&>(*pbb->next);
+            BOOST_CONTAINER_NEST_PREFETCH(&pbn.next->mask);
+            BOOST_CONTAINER_NEST_PREFETCH(pbn.data());
          }
          mask = pbb->mask;
       }
@@ -772,8 +940,13 @@ public:
       if (BOOST_UNLIKELY(mask == 0)) {
          pbb = pbb->prev;
          BOOST_IF_CONSTEXPR(Prefetch) {
-            BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb->next, nest_detail::last_in_mask(pbb->mask));
-            BOOST_CONTAINER_NEST_PREFETCH(pbb->prev); //iG
+            //Load current mask and data
+            BOOST_CONTAINER_NEST_PREFETCH(&pbb->mask);
+            BOOST_CONTAINER_NEST_PREFETCH(static_cast<block_type&>(*pbb).data());
+            //Load next data
+            block_type& pbn = static_cast<block_type&>(*pbb->prev);
+            BOOST_CONTAINER_NEST_PREFETCH(&pbn.prev->mask);
+            BOOST_CONTAINER_NEST_PREFETCH(pbn.data());
          }
          mask = pbb->mask;
       }
@@ -799,20 +972,15 @@ public:
    }
 
 private:
-   template<class, bool, bool> friend class nest_iterator;
+   template<class, bool, bool, bool> friend class nest_iterator;
    template<class, class, class> friend class boost::container::nest;
    template<class> friend struct ::boost::container::segmented_iterator_traits;
-   template<class VP, bool SDIB, bool Pf, class FF>
-   friend std::pair< nest_iterator<VP, SDIB, Pf>, FF >
+   template<class VP, bool SDIB, bool Pf, bool BCA, class FF>
+   friend std::pair< nest_iterator<VP, SDIB, Pf, BCA>, FF >
       for_each_while
-         ( nest_iterator<VP, SDIB, Pf>
-         , nest_iterator<VP, SDIB, Pf>
+         ( nest_iterator<VP, SDIB, Pf, BCA>
+         , nest_iterator<VP, SDIB, Pf, BCA>
          , FF);
-   template<class NestIt, class FF>
-   friend NestIt nest_detail::for_each_while_core
-      ( typename NestIt::block_base_pointer
-      , typename NestIt::block_base_pointer
-      , FF&);
 
    typedef typename nest_detail::pointer_rebind<ValuePointer, void>::type  void_pointer;
    typedef nest_detail::block_base<void_pointer>                           block_base_type;
@@ -822,7 +990,7 @@ private:
          <ValuePointer, const block_base_type>::type                       const_block_base_pointer;
    typedef typename nest_detail::pointer_rebind
          <ValuePointer, value_type>::type                                  nonconst_pointer;
-   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock>          block_type;
+   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock, BlockCachelineAlign> block_type;
    typedef typename block_base_type::mask_type                             mask_type;
 
    BOOST_STATIC_CONSTEXPR std::size_t  N = block_base_type::N;
@@ -852,7 +1020,7 @@ private:
 #define NEST_LOCAL_ITERATOR_FULL
 
 #if defined(NEST_LOCAL_ITERATOR_FULL)
-template<class ValuePointer, bool StoreDataInBlock>
+template<class ValuePointer, bool StoreDataInBlock, bool BlockCachelineAlign>
 class nest_local_iterator
 {
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type element_type;
@@ -861,7 +1029,7 @@ class nest_local_iterator
    typedef nest_detail::block_base<void_pointer>                              block_base_type;
    typedef typename nest_detail::pointer_rebind<ValuePointer,
       typename dtl::remove_const<element_type>::type>::type                   nonconst_pointer;
-   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock>             block_type;
+   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock, BlockCachelineAlign> block_type;
    typedef typename block_base_type::mask_type                                mask_type;
 
    BOOST_STATIC_CONSTEXPR std::size_t N    = block_base_type::N;
@@ -998,7 +1166,7 @@ private:
 
 #else
 
-template<class ValuePointer, bool StoreDataInBlock>
+template<class ValuePointer, bool StoreDataInBlock, bool BlockCachelineAlign>
 class nest_local_iterator
 {
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type element_type;
@@ -1007,7 +1175,7 @@ class nest_local_iterator
    typedef nest_detail::block_base<void_pointer>                              block_base_type;
    typedef typename nest_detail::pointer_rebind<ValuePointer,
       typename dtl::remove_const<element_type>::type>::type                   nonconst_pointer;
-   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock>             block_type;
+   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock, BlockCachelineAlign> block_type;
    typedef typename block_base_type::mask_type                                mask_type;
 
    BOOST_STATIC_CONSTEXPR std::size_t N    = block_base_type::N;
@@ -1409,7 +1577,7 @@ void move_assign_if(dtl::false_type, T&, T&) {}
 //
 //////////////////////////////////////////////
 
-template<class ValueAllocator, bool StoreDataInBlock>
+template<class ValueAllocator, bool StoreDataInBlock, bool BlockCachelineAlign>
 struct block_typedefs
 {
    typedef boost::container::allocator_traits<ValueAllocator>   val_alloc_traits;
@@ -1422,7 +1590,7 @@ struct block_typedefs
    typedef typename pointer_rebind<
       value_pointer, const block_base_t>::type                  const_block_base_pointer;
 
-   typedef nest_detail::block<value_pointer, StoreDataInBlock>        block_type;
+   typedef nest_detail::block<value_pointer, StoreDataInBlock, BlockCachelineAlign> block_type;
    typedef typename pointer_rebind<
       value_pointer, block_type>::type                             block_pointer;
 
@@ -1497,51 +1665,6 @@ struct ref_predicate_adaptor
    BOOST_CONTAINER_FORCEINLINE bool operator()(T& x) const { return f(x); }
 };
 
-//////////////////////////////////////////////
-//
-//      for_each_while_core
-//
-//////////////////////////////////////////////
-
-template<class NestIterator, class F>
-NestIterator for_each_while_core
-   ( typename NestIterator::block_base_pointer pbb
-   , typename NestIterator::block_base_pointer last_pbb
-   , F& f)
-{
-   typedef typename NestIterator::block_type        block_t;
-   typedef typename block_t::pointer                block_ptr_t;
-   typedef typename NestIterator::nonconst_pointer  value_ptr_t;
-   typedef typename NestIterator::mask_type         mask_t;
-
-   BOOST_ASSERT(pbb != last_pbb);
-   block_ptr_t pb = block_t::static_cast_block_pointer(pbb);
-   mask_t      m  = pb->mask;
-   int         n  = nest_detail::first_in_mask(m);
-   value_ptr_t pd = pb->data();
-   do {
-      pbb = pb->next;
-      const mask_t next_mask = pbb->mask;
-      const int next_n = nest_detail::first_in_mask(next_mask);
-      value_ptr_t const next_pd = block_t::static_cast_block_pointer(pbb)->data();
-      BOOST_IF_CONSTEXPR(NestIterator::prefetch_enabled) {
-         BOOST_CONTAINER_NEST_PREFETCH(next_pd + next_n);
-         BOOST_CONTAINER_NEST_PREFETCH(pbb->next);
-      }
-      for(; ;) {
-         if(!f(pd[n])) return NestIterator(pb, n);
-         m &= m - 1;
-         if(!m) break;
-         n = nest_detail::first_in_mask(m);
-      }
-      pb = block_t::static_cast_block_pointer(pbb);
-      m  = next_mask;
-      n  = next_n;
-      pd = next_pd;
-   } while(pb != last_pbb);
-   return NestIterator(last_pbb, nest_detail::first_in_mask(last_pbb->mask));
-}
-
 } // namespace nest_detail
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1550,14 +1673,14 @@ NestIterator for_each_while_core
 //
 ////////////////////////////////////////////////////////////////////////////
 
-template<class ValuePointer, bool StoreDataInBlock, bool Prefetch>
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, bool BlockCachelineAlign>
 struct segmented_iterator_traits
-   < nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> >
+   < nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign> >
 {
-   typedef segmented_iterator_tag                                            is_segmented_iterator;
-   typedef nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>           nest_iterator_type;
-   typedef nest_local_iterator<ValuePointer, StoreDataInBlock>               local_iterator;
-   typedef nest_segment_iterator<ValuePointer>                               segment_iterator;
+   typedef segmented_iterator_tag                                                          is_segmented_iterator;
+   typedef nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign>    nest_iterator_type;
+   typedef nest_local_iterator<ValuePointer, StoreDataInBlock, BlockCachelineAlign>        local_iterator;
+   typedef nest_segment_iterator<ValuePointer>                                             segment_iterator;
 
 private:
 
@@ -1569,7 +1692,7 @@ private:
    typedef nest_detail::block_base<void_pointer>                           block_base_type;
    typedef typename nest_detail::pointer_rebind
          <ValuePointer, value_type>::type                                  nonconst_pointer;
-   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock>          block_type;
+   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock, BlockCachelineAlign> block_type;
    typedef typename block_base_type::mask_type                             mask_type;
 
    BOOST_STATIC_CONSTEXPR std::size_t N = block_base_type::N;
@@ -1598,8 +1721,10 @@ private:
       block_base_pointer const bp = s.get_block();
       const mask_type m = bp->mask;
       const int n = nest_detail::first_in_mask(m);
+      //Prefetch the eact line the
+      //returned local_iterator will dereference first instead of the
+      //unconditional slot-0 line.
       BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(bp, n);
-      BOOST_CONTAINER_NEST_PREFETCH(bp->next); //iG
       return local_iterator(bp, n);
    }
 
@@ -1612,7 +1737,10 @@ private:
 template<class Options>
 struct get_nest_opt
 {
-   typedef nest_opt<Options::store_data_in_block, Options::prefetch> type;
+   typedef nest_opt<
+      Options::store_data_in_block,
+      Options::prefetch,
+      Options::block_cacheline_align> type;
 };
 
 template<>
@@ -1621,10 +1749,10 @@ struct get_nest_opt<void>
    typedef nest_null_opt type;
 };
 
-template<bool B, bool P>
-struct get_nest_opt<nest_opt<B, P> >
+template<bool B, bool P, bool A>
+struct get_nest_opt<nest_opt<B, P, A> >
 {
-   typedef nest_opt<B, P> type;
+   typedef nest_opt<B, P, A> type;
 };
 
 #endif // BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -1653,15 +1781,17 @@ class nest
         typename nest_detail::block_typedefs<
            typename real_allocator<T, Allocator>::type
          , get_nest_opt<Options>::type::store_data_in_block
+         , get_nest_opt<Options>::type::block_cacheline_align
         >::block_allocator, 0>
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    typedef typename real_allocator<T, Allocator>::type             ValueAllocator;
    typedef typename get_nest_opt<Options>::type                    options_type;
-   BOOST_STATIC_CONSTEXPR bool store_data_in_block = options_type::store_data_in_block;
-   BOOST_STATIC_CONSTEXPR bool prefetch_enabled    = options_type::prefetch;
+   BOOST_STATIC_CONSTEXPR bool store_data_in_block    = options_type::store_data_in_block;
+   BOOST_STATIC_CONSTEXPR bool prefetch_enabled       = options_type::prefetch;
+   BOOST_STATIC_CONSTEXPR bool block_cacheline_align  = options_type::block_cacheline_align;
    typedef boost::container::allocator_traits<ValueAllocator>      allocator_traits_type;
-   typedef nest_detail::block_typedefs<ValueAllocator, store_data_in_block> btd;
+   typedef nest_detail::block_typedefs<ValueAllocator, store_data_in_block, block_cacheline_align> btd;
    typedef typename btd::block_base_t                              block_base;
    typedef typename btd::block_base_pointer                        block_base_pointer;
    typedef typename btd::const_block_base_pointer                  const_block_base_pointer;
@@ -1693,8 +1823,8 @@ class nest
    typedef const T&                                                         const_reference;
    typedef typename allocator_traits_type::size_type                        size_type;
    typedef typename allocator_traits_type::difference_type                  difference_type;
-   typedef BOOST_CONTAINER_IMPDEF(nest_iterator<pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled>)            iterator;
-   typedef BOOST_CONTAINER_IMPDEF(nest_iterator<const_pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled>)      const_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(nest_iterator<pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled BOOST_MOVE_I block_cacheline_align>)            iterator;
+   typedef BOOST_CONTAINER_IMPDEF(nest_iterator<const_pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled BOOST_MOVE_I block_cacheline_align>)      const_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)       reverse_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>) const_reverse_iterator;
 
@@ -2261,8 +2391,7 @@ class nest
             block_pointer pb = static_cast_block_pointer(pbb);
             pbb = pb->next;
             BOOST_IF_CONSTEXPR(prefetch_enabled) {
-               BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb, nest_detail::first_in_mask(pbb->mask));
-               BOOST_CONTAINER_NEST_PREFETCH(pbb->next);
+               BOOST_CONTAINER_NEST_PREFETCH(static_cast<block_type&>(*pbb).data());
             }
             size_ -= priv_destroy_all_in_nonempty_block(pb);
             blist.unlink(pb);
@@ -2578,6 +2707,16 @@ class nest
       while(pbb != blist.header()) {
          block_pointer pb = static_cast_block_pointer(pbb);
          pbb = pb->next_available;
+         //Prefetch the next block's data array so its first cache line is
+         //just a block_base (no data_), so skip the prefetch on the header
+         //sentinel. For trivially destructible value types there is nothing
+         //to destroy in the data array, so the prefetch would be wasted.
+         BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value) {
+            if(BOOST_UNLIKELY(pbb != blist.header())) {
+                  BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
+               BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
+            }
+         }
          if(pb->mask != 0) {
             priv_destroy_all_in_nonempty_block(pb);
             blist.unlink(pb);
@@ -2590,6 +2729,11 @@ class nest
          BOOST_ASSERT(pbb->mask == full);
          block_pointer pb = static_cast_block_pointer(pbb);
          pbb = pb->next;
+         BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value) {
+            if(BOOST_UNLIKELY(pbb != blist.header())) {
+               BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
+            }
+         }
          priv_destroy_all_in_full_block(pb);
          priv_delete_block(pb);
       }
@@ -3037,10 +3181,10 @@ class nest
          block_pointer pb = static_cast_block_pointer(pbb);
          pbb = pb->next;
          BOOST_IF_CONSTEXPR(prefetch_enabled) {
-            BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb, nest_detail::first_in_mask(pbb->mask));
-            BOOST_CONTAINER_NEST_PREFETCH(pbb->next); //iG
+            BOOST_CONTAINER_NEST_PREFETCH(static_cast<block_type&>(*pbb).data());
          }
          mask_type m = pb->mask;
+         BOOST_CONTAINER_UNROLL(4)
          do {
             int n = nest_detail::first_in_mask(m);
             if(pred(pb->data()[n])) priv_erase_impl(pb, n);
@@ -3105,33 +3249,58 @@ erase(nest<T, Allocator, Options>& x, const T& value)
 //!   functor f.
 //!
 //! <b>Complexity</b>: Linear in the distance between first and last.
-template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, class F>
-std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>, F >
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, bool BlockCachelineAlign, class F>
+std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign>, F >
    for_each_while
-      ( nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> first
-      , nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> last
+      ( nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign> first
+      , nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign> last
       , F f)
 {
-   typedef nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> iter_t;
+   typedef nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign> iter_t;
    typedef typename iter_t::block_base_pointer                     bbp_t;
+   typedef typename iter_t::block_type                             block_t;
+   typedef typename iter_t::nonconst_pointer                       value_ptr_t;
+   typedef typename iter_t::mask_type                              mask_t;
    typedef std::pair<iter_t, F>                                    result_type;
 
-   {
-      bbp_t pbb_first = first.pbb;
-      while(first != last) {
-         if(!f(*first)) return result_type(first, f);
-         ++first;
-         if(first.pbb != pbb_first) break;
+   BOOST_STATIC_CONSTEXPR mask_t full = iter_t::full;
+
+   if(BOOST_UNLIKELY(first == last))
+      return result_type(last, f);
+
+   bbp_t       pbb      = first.pbb;
+   bbp_t const last_pbb = last.pbb;
+   int const   last_n   = last.n;
+   mask_t      m        = pbb->mask & (full << first.n);
+
+   for(; ;) {
+      BOOST_CONTAINER_NEST_PREFETCH(&pbb->next->mask);
+      //Mask the mask for the last block
+      const mask_t is_last = mask_t(pbb == last_pbb);
+      m &= (is_last << last_n) - mask_t(1);
+
+      //Next block prefetch
+      BOOST_CONTAINER_NEST_PREFETCH(block_t::static_cast_block_pointer(pbb->next)->data());
+      const int next_n = nest_detail::first_in_mask(pbb->next->mask);
+      BOOST_CONTAINER_NEST_PREFETCH(block_t::static_cast_block_pointer(pbb->next)->data() + next_n);
+
+      //Mask can become zero if the last iterator is in the 0 position
+      value_ptr_t const pd = block_t::static_cast_block_pointer(pbb)->data();
+
+      BOOST_CONTAINER_UNROLL(4)
+      while(m) {
+         int n = nest_detail::first_in_mask(m);
+         if (!f(pd[n]))
+            return result_type(iter_t(pbb, n), f);
+         m &= m - 1;
       }
+
+      if(is_last)
+         return result_type(last, f);
+
+      pbb = pbb->next;
+      m   = pbb->mask;
    }
-   if(first.pbb != last.pbb) {
-      first = nest_detail::for_each_while_core<iter_t>(first.pbb, last.pbb, f);
-      if(first.pbb != last.pbb) return result_type(first, f);
-   }
-   for(; first != last; ++first) {
-      if(!f(*first)) return result_type(first, f);
-   }
-   return result_type(first, f);
 }
 
 //! <b>Effects</b>: Calls f(*it) for each iterator it in [first, last).
@@ -3139,10 +3308,10 @@ std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>, F >
 //! <b>Returns</b>: The (possibly moved) functor f.
 //!
 //! <b>Complexity</b>: Linear in the distance between first and last.
-template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, class F>
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, bool BlockCachelineAlign, class F>
 F for_each
-   ( nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> first
-   , nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> last
+   ( nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign> first
+   , nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign> last
    , F f)
 {
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type
