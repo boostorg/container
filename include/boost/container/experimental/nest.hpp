@@ -187,15 +187,14 @@ namespace container {
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-template<bool StoreDataInBlock, bool Prefetch, bool BlockCachelineAlign>
+template<bool StoreDataInBlock, bool Prefetch>
 struct nest_opt
 {
    BOOST_STATIC_CONSTEXPR bool store_data_in_block    = StoreDataInBlock;
    BOOST_STATIC_CONSTEXPR bool prefetch               = Prefetch;
-   BOOST_STATIC_CONSTEXPR bool block_cacheline_align  = BlockCachelineAlign;
 };
 
-typedef nest_opt<false, true, false> nest_null_opt;
+typedef nest_opt<false, true> nest_null_opt;
 
 #endif   //   !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -213,30 +212,6 @@ BOOST_INTRUSIVE_OPTION_CONSTANT(store_data_in_block, bool, Enabled, store_data_i
 //!
 //!\tparam Enabled A boolean value. True to enable prefetching.
 BOOST_INTRUSIVE_OPTION_CONSTANT(prefetch, bool, Enabled, prefetch)
-
-//! This option specifies whether the dynamically-allocated `block`
-//! struct is over-aligned to the cache line. When enabled (true), the
-//! alignment is `std::hardware_constructive_interference_size` (or 64
-//! when not available), which guarantees that the per-block header
-//! (.prev/.next/.mask/.data_) always fits in a single cache line and
-//! that one synchronous load brings it fully into L1. When disabled
-//! (false, the default), the block uses its natural alignment.
-//!
-//! Trade-off: cache-line alignment routes block allocation through
-//! `std::aligned_alloc`/`posix_memalign`, which is more expensive
-//! per call than plain `malloc` and may worsen spatial locality
-//! across the heap. The benefit is workload-dependent; benchmark
-//! both before enabling.
-//!
-//! This option only takes effect with allocators that honor
-//! over-alignment requirements (e.g. boost::container::new_allocator
-//! and C++17 std::allocator). Custom allocators that ignore
-//! over-alignment will silently allocate with natural alignment
-//! (no correctness impact).
-//!
-//!\tparam Enabled A boolean value. True to over-align blocks to the
-//! cache line.
-BOOST_INTRUSIVE_OPTION_CONSTANT(block_cacheline_align, bool, Enabled, block_cacheline_align)
 
 //! Helper metafunction to combine options into a single type to be used
 //! by \c boost::container::nest.
@@ -258,8 +233,7 @@ struct nest_options
       >::type packed_options;
    typedef nest_opt<
       packed_options::store_data_in_block,
-      packed_options::prefetch,
-      packed_options::block_cacheline_align> implementation_defined;
+      packed_options::prefetch> implementation_defined;
    /// @endcond
    typedef implementation_defined type;
 };
@@ -280,7 +254,7 @@ template <class T
          ,class Options = void>
 class nest;
 
-template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, bool BlockCachelineAlign>
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch>
 class nest_iterator;
 
 template<class T, class Allocator, class Options, class Predicate>
@@ -293,11 +267,11 @@ F for_each(nest<T, Allocator, Options>&, F);
 template<class T, class Allocator, class Options, class F>
 F for_each(const nest<T, Allocator, Options>&, F);
 
-template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, bool BlockCachelineAlign, class F>
-std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign>, F >
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, class F>
+std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>, F >
    for_each_while
-      ( nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign>
-      , nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign>
+      ( nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>
+      , nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>
       , F);
 
 struct segmented_iterator_tag;
@@ -452,34 +426,6 @@ It find_if_not(It first, It last, Pred pred)
          break;
    return first;
 }
-
-//////////////////////////////////////////////
-//
-//      Cache-line size constant (used by the block_cacheline_align
-//      option). Falls back to a 64-byte default when
-//      std::hardware_constructive_interference_size is not available.
-//
-//////////////////////////////////////////////
-
-#if defined(__cpp_lib_hardware_interference_size) \
- && (__cpp_lib_hardware_interference_size >= 201703L)
-BOOST_STATIC_CONSTEXPR std::size_t cacheline_size
-   = std::hardware_constructive_interference_size;
-#else
-BOOST_STATIC_CONSTEXPR std::size_t cacheline_size = 64u;
-#endif
-
-// Compile-time alignment value for the `block` struct: cacheline_size
-// when the BlockCachelineAlign option is enabled, otherwise just the
-// natural alignment of a void* (always satisfied by the type's actual
-// members so the alignas/__declspec(align)/__attribute__((aligned))
-// becomes a no-op when disabled).
-template<bool BlockCachelineAlign>
-struct block_align_value
-{
-   BOOST_STATIC_CONSTEXPR std::size_t value
-      = BlockCachelineAlign ? cacheline_size : sizeof(void*);
-};
 
 //////////////////////////////////////////////
 //
@@ -727,18 +673,8 @@ private:
    BOOST_MOVABLE_BUT_NOT_COPYABLE(block_base)
 };
 
-//Over-align the dynamically-allocated block (not block_base, which would
-//bloat the sentinel header embedded in `nest` and propagate to user
-//structs containing a nest). The base sub-object always sits at offset
-//0 of the derived block, so a cache-line-aligned block guarantees the
-//block_base header (.prev/.next/.mask/.data_) fits in ONE cache line.
-//
-//Controlled by the BlockCachelineAlign template parameter (set via the
-//`block_cacheline_align` nest option). When false (default), the
-//portable BOOST_ALIGNMENT macro receives sizeof(void*), which is at
-//most the natural alignment of the type, so the directive is a no-op.
-template<class ValuePointer, bool StoreDataInBlock, bool BlockCachelineAlign>
-struct BOOST_ALIGNMENT(block_align_value<BlockCachelineAlign>::value) block
+template<class ValuePointer, bool StoreDataInBlock>
+struct block
    : block_base<typename pointer_rebind<ValuePointer, void>::type>
 {
    typedef block_base<typename pointer_rebind<ValuePointer, void>::type> block_base_type;
@@ -774,8 +710,8 @@ private:
    BOOST_MOVABLE_BUT_NOT_COPYABLE(block)
 };
 
-template<class ValuePointer, bool BlockCachelineAlign>
-struct BOOST_ALIGNMENT(block_align_value<BlockCachelineAlign>::value) block<ValuePointer, true, BlockCachelineAlign>
+template<class ValuePointer>
+struct block<ValuePointer, true>
    : block_base<typename pointer_rebind<ValuePointer, void>::type>
 {
    typedef block_base<typename pointer_rebind<ValuePointer, void>::type> block_base_type;
@@ -811,17 +747,17 @@ private:
    BOOST_MOVABLE_BUT_NOT_COPYABLE(block)
 };
 
-template<class ValuePointer, bool StoreDataInBlock, bool BlockCachelineAlign>
-void swap_payload(block<ValuePointer, StoreDataInBlock, BlockCachelineAlign>& x, block<ValuePointer, StoreDataInBlock, BlockCachelineAlign>& y) BOOST_NOEXCEPT;
+template<class ValuePointer, bool StoreDataInBlock>
+void swap_payload(block<ValuePointer, StoreDataInBlock>& x, block<ValuePointer, StoreDataInBlock>& y) BOOST_NOEXCEPT;
 
-template<class ValuePointer, bool BlockCachelineAlign>
-BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, true, BlockCachelineAlign>& x, block<ValuePointer, true, BlockCachelineAlign>& y) BOOST_NOEXCEPT
+template<class ValuePointer>
+BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, true>& x, block<ValuePointer, true>& y) BOOST_NOEXCEPT
 {
    boost::adl_move_swap(x.mask, y.mask);
 }
 
-template<class ValuePointer, bool BlockCachelineAlign>
-BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, false, BlockCachelineAlign>& x, block<ValuePointer, false, BlockCachelineAlign>& y) BOOST_NOEXCEPT
+template<class ValuePointer>
+BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, false>& x, block<ValuePointer, false>& y) BOOST_NOEXCEPT
 {
    boost::adl_move_swap(x.mask, y.mask);
    boost::adl_move_swap(x.data_, y.data_);
@@ -845,7 +781,7 @@ BOOST_CONTAINER_FORCEINLINE int last_in_mask(boost::uint64_t m)
 //
 //////////////////////////////////////////////
 
-template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, bool BlockCachelineAlign>
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch>
 class nest_iterator
 {
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type element_type;
@@ -868,7 +804,7 @@ public:
    typedef typename nest_detail::pointer_rebind<pointer, value_type>::type maybe_nonconst_pointer;
 
    typedef typename dtl::if_c< boost::move_detail::is_const<element_type>::value
-                             , nest_iterator< maybe_nonconst_pointer, StoreDataInBlock, Prefetch, BlockCachelineAlign >
+                             , nest_iterator< maybe_nonconst_pointer, StoreDataInBlock, Prefetch >
                              , nat>::type                            maybe_nonconst_iterator;
 
    BOOST_CONTAINER_FORCEINLINE nest_iterator() BOOST_NOEXCEPT
@@ -972,14 +908,14 @@ public:
    }
 
 private:
-   template<class, bool, bool, bool> friend class nest_iterator;
+   template<class, bool, bool> friend class nest_iterator;
    template<class, class, class> friend class boost::container::nest;
    template<class> friend struct ::boost::container::segmented_iterator_traits;
-   template<class VP, bool SDIB, bool Pf, bool BCA, class FF>
-   friend std::pair< nest_iterator<VP, SDIB, Pf, BCA>, FF >
+   template<class VP, bool SDIB, bool Pf, class FF>
+   friend std::pair< nest_iterator<VP, SDIB, Pf>, FF >
       for_each_while
-         ( nest_iterator<VP, SDIB, Pf, BCA>
-         , nest_iterator<VP, SDIB, Pf, BCA>
+         ( nest_iterator<VP, SDIB, Pf>
+         , nest_iterator<VP, SDIB, Pf>
          , FF);
 
    typedef typename nest_detail::pointer_rebind<ValuePointer, void>::type  void_pointer;
@@ -990,7 +926,7 @@ private:
          <ValuePointer, const block_base_type>::type                       const_block_base_pointer;
    typedef typename nest_detail::pointer_rebind
          <ValuePointer, value_type>::type                                  nonconst_pointer;
-   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock, BlockCachelineAlign> block_type;
+   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock> block_type;
    typedef typename block_base_type::mask_type                             mask_type;
 
    BOOST_STATIC_CONSTEXPR std::size_t  N = block_base_type::N;
@@ -1020,7 +956,7 @@ private:
 #define NEST_LOCAL_ITERATOR_FULL
 
 #if defined(NEST_LOCAL_ITERATOR_FULL)
-template<class ValuePointer, bool StoreDataInBlock, bool BlockCachelineAlign>
+template<class ValuePointer, bool StoreDataInBlock>
 class nest_local_iterator
 {
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type element_type;
@@ -1029,7 +965,7 @@ class nest_local_iterator
    typedef nest_detail::block_base<void_pointer>                              block_base_type;
    typedef typename nest_detail::pointer_rebind<ValuePointer,
       typename dtl::remove_const<element_type>::type>::type                   nonconst_pointer;
-   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock, BlockCachelineAlign> block_type;
+   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock> block_type;
    typedef typename block_base_type::mask_type                                mask_type;
 
    BOOST_STATIC_CONSTEXPR std::size_t N    = block_base_type::N;
@@ -1166,7 +1102,7 @@ private:
 
 #else
 
-template<class ValuePointer, bool StoreDataInBlock, bool BlockCachelineAlign>
+template<class ValuePointer, bool StoreDataInBlock>
 class nest_local_iterator
 {
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type element_type;
@@ -1175,7 +1111,7 @@ class nest_local_iterator
    typedef nest_detail::block_base<void_pointer>                              block_base_type;
    typedef typename nest_detail::pointer_rebind<ValuePointer,
       typename dtl::remove_const<element_type>::type>::type                   nonconst_pointer;
-   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock, BlockCachelineAlign> block_type;
+   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock> block_type;
    typedef typename block_base_type::mask_type                                mask_type;
 
    BOOST_STATIC_CONSTEXPR std::size_t N    = block_base_type::N;
@@ -1577,7 +1513,7 @@ void move_assign_if(dtl::false_type, T&, T&) {}
 //
 //////////////////////////////////////////////
 
-template<class ValueAllocator, bool StoreDataInBlock, bool BlockCachelineAlign>
+template<class ValueAllocator, bool StoreDataInBlock>
 struct block_typedefs
 {
    typedef boost::container::allocator_traits<ValueAllocator>   val_alloc_traits;
@@ -1590,7 +1526,7 @@ struct block_typedefs
    typedef typename pointer_rebind<
       value_pointer, const block_base_t>::type                  const_block_base_pointer;
 
-   typedef nest_detail::block<value_pointer, StoreDataInBlock, BlockCachelineAlign> block_type;
+   typedef nest_detail::block<value_pointer, StoreDataInBlock> block_type;
    typedef typename pointer_rebind<
       value_pointer, block_type>::type                             block_pointer;
 
@@ -1673,13 +1609,13 @@ struct ref_predicate_adaptor
 //
 ////////////////////////////////////////////////////////////////////////////
 
-template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, bool BlockCachelineAlign>
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch>
 struct segmented_iterator_traits
-   < nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign> >
+   < nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> >
 {
    typedef segmented_iterator_tag                                                          is_segmented_iterator;
-   typedef nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign>    nest_iterator_type;
-   typedef nest_local_iterator<ValuePointer, StoreDataInBlock, BlockCachelineAlign>        local_iterator;
+   typedef nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>    nest_iterator_type;
+   typedef nest_local_iterator<ValuePointer, StoreDataInBlock>        local_iterator;
    typedef nest_segment_iterator<ValuePointer>                                             segment_iterator;
 
 private:
@@ -1692,7 +1628,7 @@ private:
    typedef nest_detail::block_base<void_pointer>                           block_base_type;
    typedef typename nest_detail::pointer_rebind
          <ValuePointer, value_type>::type                                  nonconst_pointer;
-   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock, BlockCachelineAlign> block_type;
+   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock> block_type;
    typedef typename block_base_type::mask_type                             mask_type;
 
    BOOST_STATIC_CONSTEXPR std::size_t N = block_base_type::N;
@@ -1739,8 +1675,7 @@ struct get_nest_opt
 {
    typedef nest_opt<
       Options::store_data_in_block,
-      Options::prefetch,
-      Options::block_cacheline_align> type;
+      Options::prefetch> type;
 };
 
 template<>
@@ -1749,10 +1684,10 @@ struct get_nest_opt<void>
    typedef nest_null_opt type;
 };
 
-template<bool B, bool P, bool A>
-struct get_nest_opt<nest_opt<B, P, A> >
+template<bool B, bool P>
+struct get_nest_opt<nest_opt<B, P> >
 {
-   typedef nest_opt<B, P, A> type;
+   typedef nest_opt<B, P> type;
 };
 
 #endif // BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -1781,7 +1716,6 @@ class nest
         typename nest_detail::block_typedefs<
            typename real_allocator<T, Allocator>::type
          , get_nest_opt<Options>::type::store_data_in_block
-         , get_nest_opt<Options>::type::block_cacheline_align
         >::block_allocator, 0>
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -1789,9 +1723,8 @@ class nest
    typedef typename get_nest_opt<Options>::type                    options_type;
    BOOST_STATIC_CONSTEXPR bool store_data_in_block    = options_type::store_data_in_block;
    BOOST_STATIC_CONSTEXPR bool prefetch_enabled       = options_type::prefetch;
-   BOOST_STATIC_CONSTEXPR bool block_cacheline_align  = options_type::block_cacheline_align;
    typedef boost::container::allocator_traits<ValueAllocator>      allocator_traits_type;
-   typedef nest_detail::block_typedefs<ValueAllocator, store_data_in_block, block_cacheline_align> btd;
+   typedef nest_detail::block_typedefs<ValueAllocator, store_data_in_block> btd;
    typedef typename btd::block_base_t                              block_base;
    typedef typename btd::block_base_pointer                        block_base_pointer;
    typedef typename btd::const_block_base_pointer                  const_block_base_pointer;
@@ -1823,8 +1756,8 @@ class nest
    typedef const T&                                                         const_reference;
    typedef typename allocator_traits_type::size_type                        size_type;
    typedef typename allocator_traits_type::difference_type                  difference_type;
-   typedef BOOST_CONTAINER_IMPDEF(nest_iterator<pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled BOOST_MOVE_I block_cacheline_align>)            iterator;
-   typedef BOOST_CONTAINER_IMPDEF(nest_iterator<const_pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled BOOST_MOVE_I block_cacheline_align>)      const_iterator;
+   typedef BOOST_CONTAINER_IMPDEF(nest_iterator<pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled>)            iterator;
+   typedef BOOST_CONTAINER_IMPDEF(nest_iterator<const_pointer BOOST_MOVE_I store_data_in_block BOOST_MOVE_I prefetch_enabled>)      const_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<iterator>)       reverse_iterator;
    typedef BOOST_CONTAINER_IMPDEF(boost::container::reverse_iterator<const_iterator>) const_reverse_iterator;
 
@@ -3249,14 +3182,14 @@ erase(nest<T, Allocator, Options>& x, const T& value)
 //!   functor f.
 //!
 //! <b>Complexity</b>: Linear in the distance between first and last.
-template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, bool BlockCachelineAlign, class F>
-std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign>, F >
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, class F>
+std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>, F >
    for_each_while
-      ( nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign> first
-      , nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign> last
+      ( nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> first
+      , nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> last
       , F f)
 {
-   typedef nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign> iter_t;
+   typedef nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> iter_t;
    typedef typename iter_t::block_base_pointer                     bbp_t;
    typedef typename iter_t::block_type                             block_t;
    typedef typename iter_t::nonconst_pointer                       value_ptr_t;
@@ -3308,10 +3241,10 @@ std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelin
 //! <b>Returns</b>: The (possibly moved) functor f.
 //!
 //! <b>Complexity</b>: Linear in the distance between first and last.
-template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, bool BlockCachelineAlign, class F>
+template<class ValuePointer, bool StoreDataInBlock, bool Prefetch, class F>
 F for_each
-   ( nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign> first
-   , nest_iterator<ValuePointer, StoreDataInBlock, Prefetch, BlockCachelineAlign> last
+   ( nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> first
+   , nest_iterator<ValuePointer, StoreDataInBlock, Prefetch> last
    , F f)
 {
    typedef typename boost::intrusive::pointer_traits<ValuePointer>::element_type
