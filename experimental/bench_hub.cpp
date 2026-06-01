@@ -21,12 +21,20 @@ int main() { return 0; }
 #include <iostream>
 #include "../bench/bench_utils.hpp"
 
-#ifndef ELEMENT_SIZE
-#define ELEMENT_SIZE 16
-//#define ELEMENT_SIZE 32
-//#define ELEMENT_SIZE 64
-//#define ELEMENT_SIZE 80
+#include <cstddef>
+#include <utility>
+
+//Element sizes (in bytes) benchmarked. Each size produces its own table.
+//Sizes must be >= sizeof(int); a size that is not a multiple of the int
+//alignment is rounded up by the compiler, and the printed sizeof(element)
+//reflects the actual (possibly padded) size.
+#ifndef ELEMENT_SIZES
+#define ELEMENT_SIZES { 16, 32, 64, 80 }
 #endif
+inline constexpr std::size_t element_sizes[] = ELEMENT_SIZES;
+inline constexpr std::size_t element_sizes_count =
+   sizeof(element_sizes) / sizeof(element_sizes[0]);
+
 #define NONTRIVIAL_ELEMENT
 
 std::chrono::high_resolution_clock::time_point measure_start, measure_pause;
@@ -36,12 +44,11 @@ BOOST_NOINLINE double measure(F f)
 {
    using namespace std::chrono;
 
-   //static const int              num_trials = 10;
-   //static const milliseconds     min_time_per_trial(200);
-
    #ifdef NDEBUG
    static const std::size_t      num_trials = 8;
    static const milliseconds     min_time_per_trial(75);
+   //static const int              num_trials = 1;
+   //static const milliseconds     min_time_per_trial(0);
    #else
    static const std::size_t      num_trials = 1;
    static const milliseconds     min_time_per_trial(0);
@@ -100,26 +107,27 @@ BOOST_CONTAINER_FORCEINLINE void resume_timing()
 #include "plf_hive.h"
 #endif
 
-struct element
+template<std::size_t Size>
+struct element_t
 {
 #if defined(NONTRIVIAL_ELEMENT)
-   element(int n_) : n{ n_ }
+   element_t(int n_) : n{ n_ }
    {
       std::memset(payload, 0, sizeof(payload));
    }
 
-   ~element()
+   ~element_t()
    {
       std::memset(payload, 0, sizeof(payload));
    }
 
-   element(element&& x): n{x.n}
+   element_t(element_t&& x): n{x.n}
    {
       std::memcpy(payload, x.payload, sizeof(payload));
       std::memset(x.payload, 0, sizeof(payload));
    }
 
-   element& operator=(element&& x)
+   element_t& operator=(element_t&& x)
    {
       n = x.n;
       std::memcpy(payload, x.payload, sizeof(payload));
@@ -127,14 +135,14 @@ struct element
       return *this;
    }
 #else
-   element(int n_) : n{ n_ }
+   element_t(int n_) : n{ n_ }
    {}
 #endif
 
    operator int() const { return n; }
 
    int n;
-   char payload[ELEMENT_SIZE - sizeof(int)];
+   char payload[Size - sizeof(int)];
 };
 
 struct urbg
@@ -207,7 +215,7 @@ static double      min_erasure_rate = 0.0,
 */
 
 static std::size_t min_size_exp = 3,
-                   max_size_exp = 7
+                   max_size_exp = 6
 ;
 static double      min_erasure_rate = 0.1,
                    max_erasure_rate = 0.9,
@@ -223,7 +231,7 @@ struct benchmark_result
 double geomean(const benchmark_result& bench);  // defined further below
 
 template<typename FNum, typename FDen>
-benchmark_result benchmark(const char* title, FNum fnum, FDen fden)
+benchmark_result benchmark(const char* title, std::size_t element_size, FNum fnum, FDen fden)
 {
    static constexpr std::size_t size_limit =
       sizeof(std::size_t) == 4?
@@ -238,7 +246,7 @@ benchmark_result benchmark(const char* title, FNum fnum, FDen fden)
 
    std::cout << std::string(41, '-') << "\n"
              << title << "\n"
-             << "sizeof(element): " << sizeof(element) << "\n";
+             << "sizeof(element): " << element_size << "\n";
    std::cout << std::left << std::setw(11) << "" << "container size\n" << std::right
              << std::left << std::setw(11) << "erase rate" << std::right;
    for(std::size_t i = min_size_exp; i <= max_size_exp; ++i)
@@ -250,7 +258,14 @@ benchmark_result benchmark(const char* title, FNum fnum, FDen fden)
    for(double erasure_rate = min_erasure_rate;
               erasure_rate <= max_erasure_rate;
               erasure_rate += erase_rate_inc) {
-      std::cout << std::left << std::setw(11) << erasure_rate << std::right << std::flush;
+      //Print the erase rate in a self-contained format: the row-geomean
+      //and final-geomean prints below leave std::cout in std::fixed with a
+      //sticky precision, which would otherwise bleed into this column on
+      //later rows/tables (e.g. "0.50"/"0.100"). Reset to defaultfloat and
+      //round away the += accumulation noise so it always shows e.g. 0.1.
+      std::cout << std::left << std::setw(11) << std::defaultfloat << std::setprecision(6)
+                << (std::round(erasure_rate * 1000.0) / 1000.0)
+                << std::right << std::flush;
 
       res.data.push_back({});
       res.ratios.push_back({});
@@ -258,7 +273,7 @@ benchmark_result benchmark(const char* title, FNum fnum, FDen fden)
       for(std::size_t i = min_size_exp; i <= max_size_exp; ++i) {
          std::ostringstream out;
          std::size_t        n = (std::size_t)std::pow(10.0, (double)i);
-         if(n * sizeof(element) > size_limit) {
+         if(n * element_size > size_limit) {
             out << "----";
          }
          else{
@@ -412,7 +427,7 @@ double geomean(const benchmark_result& bench)
    return count > 0 ? std::exp(log_sum / (double)count) : 0.0;
 }
 
-void write_table(const table& t, const char* filename)
+void write_table(const table& t, const char* filename, std::size_t element_size)
 {
    static std::size_t first_column_width = 11;
    static std::size_t data_column_width = (max_size_exp + 1 - min_size_exp) * 5;
@@ -434,7 +449,7 @@ void write_table(const table& t, const char* filename)
 
    out << "  " << std::setw(static_cast<int>(first_column_width)) << " ";
    out << std::setw(static_cast<int>(table_width - first_column_width - 3))
-       << std::string("| sizeof(element): ") + std::to_string(ELEMENT_SIZE) << "|\n";
+       << std::string("| sizeof(element): ") + std::to_string(element_size) << "|\n";
 
    out << data_horizontal_line << "\n";
 
@@ -482,56 +497,77 @@ void write_table(const table& t, const char* filename)
    out << table_horizontal_line;
 }
 
+//Runs the full benchmark suite for a single element size and writes its
+//own table file (hub_test_<size>.txt). element_t<Size> is the value type.
+template<std::size_t Size>
+void run_bench()
+{
+   using namespace boost::container;
+   using element = element_t<Size>;
+
+   #ifdef PLF_HIVE_BENCH
+   using num = plf::hive<element>;
+   #else
+   using num = hub<element>;
+   //using num  = nest<element>;
+   //using num = nest<element, void, nest_options_t< store_data_in_block<true> > >;
+   //using num = nest<element, void, nest_options_t< prefetch<false> > >;
+   //using num = nest<element, void, nest_options_t< prefetch<false>, store_data_in_block<true> > >;
+   #endif
+   using den  = nest<element>;
+   //using den = nest<element, void, nest_options_t< prefetch<false> > >;
+   //using den = nest<element, void, nest_options_t< store_data_in_block<true> > >;
+
+   const std::size_t element_size = sizeof(element);
+
+   std::cout << "\n" << std::string(41, '=') << "\n"
+             << "ELEMENT SIZE: " << element_size << " bytes\n"
+             << std::string(41, '=') << "\n";
+
+   table t;
+   t.push_back(benchmark(
+      "iteration", element_size,
+      ::iteration<num>{}, ::iteration<den>{}));
+   t.push_back(benchmark(
+      "for_each", element_size,
+      ::for_each<num>{}, ::for_each<den>{}));/*
+   t.push_back(benchmark(
+      "sort", element_size,
+      sort<num>{}, sort<den>{}));
+   t.push_back(benchmark(
+      "creat, ins, erase, ins", element_size,
+      create<num>{}, create<den>{}));
+   t.push_back(benchmark(
+      "creat, ins, erase, ins, destroy", element_size,
+      create_and_destroy<num>{}, create_and_destroy<den>{}));
+*/
+   const std::string filename = "hub_test_" + std::to_string(element_size) + ".txt";
+   write_table(t, filename.c_str(), element_size);
+
+   std::cout << "\n" << std::string(41, '-') << "\n"
+             << "Geometric means (num/den time ratio), element size "
+             << element_size << "\n";
+   for(const auto& bench: t) {
+      std::cout << std::left << std::setw(30) << bench.title
+                << std::fixed << std::setprecision(3) << geomean(bench) << "\n";
+   }
+   std::cout << std::left << std::setw(30) << "OVERALL"
+             << std::fixed << std::setprecision(3) << geomean(t) << "\n";
+}
+
+template<std::size_t... Is>
+void run_all(std::index_sequence<Is...>)
+{
+   (run_bench<element_sizes[Is]>(), ...);
+}
+
 int main(int argc,char* argv[])
 {
    (void)argc;
    (void)argv;
 
-   using namespace boost::container;
    BOOST_CONTAINER_TRY{
-      #ifdef PLF_HIVE_BENCH
-      using num = plf::hive<element>;
-      #else
-      using num = hub<element>;
-      //using num  = nest<element>;
-      //using num = nest<element, void, nest_options_t< store_data_in_block<true> > >;
-      //using num = nest<element, void, nest_options_t< prefetch<false> > >;
-      //using num = nest<element, void, nest_options_t< prefetch<false>, store_data_in_block<true> > >;
-      #endif
-      using den  = nest<element>;
-      //using den = nest<element, void, nest_options_t< prefetch<false> > >;
-      //using den = nest<element, void, nest_options_t< store_data_in_block<true> > >;
-      //using den = nest<element, void, nest_options_t< block_cacheline_align<true> > >;
-      //using den = nest<element, void, nest_options_t< store_data_in_block<true>, block_cacheline_align<true> > >;
-
-      table t;
-      t.push_back(benchmark(
-         "iteration",
-         ::iteration<num>{}, ::iteration<den>{}));
-      t.push_back(benchmark(
-         "for_each",
-         ::for_each<num>{}, ::for_each<den>{}));
-      t.push_back(benchmark(
-         "sort",
-         sort<num>{}, sort<den>{}));
-      t.push_back(benchmark(
-         "creat, ins, erase, ins",
-         create<num>{}, create<den>{}));
-      t.push_back(benchmark(
-         "creat, ins, erase, ins, destroy",
-         create_and_destroy<num>{}, create_and_destroy<den>{}));
-
-      const char* filename = "hub_test.txt";
-      write_table(t, filename);
-
-      std::cout << "\n" << std::string(41, '-') << "\n"
-                << "Geometric means (num/den time ratio)\n";
-      for(const auto& bench: t) {
-         std::cout << std::left << std::setw(30) << bench.title
-                   << std::fixed << std::setprecision(3) << geomean(bench) << "\n";
-      }
-      std::cout << std::left << std::setw(30) << "OVERALL"
-                << std::fixed << std::setprecision(3) << geomean(t) << "\n";
+      run_all(std::make_index_sequence<element_sizes_count>{});
    }
    BOOST_CONTAINER_CATCH(const std::exception& e) {
       #ifndef BOOST_NO_EXCEPTIONS
