@@ -849,20 +849,15 @@ public:
       if(BOOST_UNLIKELY(mask == 0)) {
          pbb = pbb->next;
          BOOST_IF_CONSTEXPR(Prefetch) {
-            //Load current mask and data
-            BOOST_CONTAINER_NEST_PREFETCH(&pbb->mask);
-            BOOST_CONTAINER_NEST_PREFETCH(static_cast<block_type&>(*pbb).data());
-            //Load next data
+            //Load next critical metadata
             block_type& pbn = static_cast<block_type&>(*pbb->next);
             BOOST_CONTAINER_NEST_PREFETCH(&pbn.next->mask);
-            BOOST_CONTAINER_NEST_PREFETCH(pbn.data());
          }
          mask = pbb->mask;
       }
       n = nest_detail::first_in_mask(mask);
       return *this;
    }
-
    BOOST_CONTAINER_FORCEINLINE nest_iterator operator++(int) BOOST_NOEXCEPT
    {
       nest_iterator tmp(*this);
@@ -876,13 +871,9 @@ public:
       if (BOOST_UNLIKELY(mask == 0)) {
          pbb = pbb->prev;
          BOOST_IF_CONSTEXPR(Prefetch) {
-            //Load current mask and data
-            BOOST_CONTAINER_NEST_PREFETCH(&pbb->mask);
-            BOOST_CONTAINER_NEST_PREFETCH(static_cast<block_type&>(*pbb).data());
             //Load next data
             block_type& pbn = static_cast<block_type&>(*pbb->prev);
             BOOST_CONTAINER_NEST_PREFETCH(&pbn.prev->mask);
-            BOOST_CONTAINER_NEST_PREFETCH(pbn.data());
          }
          mask = pbb->mask;
       }
