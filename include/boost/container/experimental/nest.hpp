@@ -641,18 +641,31 @@ struct block_base
    //    non-empty, insertion is O(1) and never reaches the
    //    allocator.
    //
-   //    Insertion-order policy is asymmetric:
-   //      * freshly allocated empty blocks are linked at the BACK
-   //        (link_available_at_back, in priv_create_new_available_block)
-   //        so they are consumed last, after existing partials.
+   //    INVARIANT: the available list is partitioned so that all
+   //    PARTIAL blocks come first and all EMPTY (reserved) blocks come
+   //    last:  [ partial ... partial | empty ... empty ]. This lets
+   //    `trim_capacity` walk the list backwards from `prev_available`
+   //    and stop at the first non-empty block, making it linear on the
+   //    number of reserved blocks rather than on the whole list.
+   //
+   //    Insertion-order policy that preserves the partition:
+   //      * empty blocks (freshly allocated, or just drained by an
+   //        erase/compaction) are linked at the BACK
+   //        (link_available_at_back). Freshly allocated empties are
+   //        thus also consumed last, after existing partials.
    //      * a saturated block that becomes partial again because an
    //        element was erased is linked at the FRONT
    //        (link_available_at_front, in priv_erase_impl and
    //        priv_erase_range). This favors reuse of cache-hot slots
-   //        the program just vacated.
+   //        the program just vacated and keeps partials ahead of
+   //        empties.
    //
    //    Maintenance points:
-   //      * link_available_at_back(pb) on block creation.
+   //      * link_available_at_back(pb) on block creation and on every
+   //        non-empty->empty transition (priv_erase_impl,
+   //        priv_erase_range, priv_compact_*), preceded by
+   //        unlink_available(pb) when the block was already partial so
+   //        it is relocated to the back rather than duplicated.
    //      * link_available_at_front(pb) on the full->partial
    //        transition (priv_erase_impl, priv_erase_range when a
    //        block had been saturated).
@@ -2110,25 +2123,28 @@ class nest
 
    //! <b>Effects</b>: Releases all reserved (empty) blocks.
    //!
-   //! <b>Complexity</b>: Linear on the number of available blocks.
+   //! <b>Complexity</b>: Linear on the number of reserved (empty) blocks.
    void trim_capacity() BOOST_NOEXCEPT { trim_capacity(0); }
 
    //! <b>Effects</b>: Releases reserved blocks until capacity() <= n.
    //!
-   //! <b>Complexity</b>: Linear on the number of available blocks.
+   //! <b>Complexity</b>: Linear on the number of reserved (empty) blocks released.
    void trim_capacity(size_type n) BOOST_NOEXCEPT
    {
       if(capacity() <= n) return;
 
-      block_base_pointer pbb = blist.header()->next_available;
-      while((capacity() - n >= N) && pbb != blist.header()) {
+      //The available list is partitioned as [partial... | empty...], so all
+      //reserved (mask == 0) blocks sit at the back. Walk it backwards from
+      //prev_available and stop at the first non-empty block: this makes the
+      //operation linear on the number of reserved blocks, not on the whole
+      //available list.
+      block_base_pointer pbb = blist.header()->prev_available;
+      while((capacity() - n >= N) && pbb != blist.header() && pbb->mask == 0) {
          block_pointer pb = static_cast_block_pointer(pbb);
-         pbb = pbb->next_available;
-         if(pb->mask == 0) {
-            blist.unlink_available(pb);
-            priv_delete_block(pb);
-            --num_blocks;
-         }
+         pbb = pbb->prev_available;
+         blist.unlink_available(pb);
+         priv_delete_block(pb);
+         --num_blocks;
       }
    }
 
@@ -2319,7 +2335,11 @@ class nest
             }
             size_ -= priv_destroy_all_in_nonempty_block(pb);
             blist.unlink(pb);
-            if(BOOST_UNLIKELY(pb->mask == full)) blist.link_available_at_front(pb);
+            //Block is being fully emptied. If it was partial it is already in
+            //the available list, so take it out first; then (re)link it at the
+            //back, where all reserved (empty) blocks are kept grouped.
+            if(BOOST_LIKELY(pb->mask != full)) blist.unlink_available(pb);
+            blist.link_available_at_back(pb);
             pb->mask = 0;
          } while(pbb != last.pbb);
          first = const_iterator(pbb, nest_detail::first_in_mask(pbb->mask));
@@ -2678,7 +2698,14 @@ class nest
       block_alloc_traits::destroy(al(), boost::movelib::to_raw_pointer(pb->data() + n));
       if(BOOST_UNLIKELY(pb->mask == full)) blist.link_available_at_front(pb);
       pb->mask &= ~((mask_type)(1) << n);
-      if(BOOST_UNLIKELY(pb->mask == 0)) blist.unlink(pb);
+      if(BOOST_UNLIKELY(pb->mask == 0)) {
+         //Block just became empty: take it out of the main list and move it
+         //to the back of the available list so reserved blocks stay grouped
+         //there (keeps trim_capacity linear on the number of reserved blocks).
+         blist.unlink(pb);
+         blist.unlink_available(pb);
+         blist.link_available_at_back(pb);
+      }
       --size_;
    }
 
@@ -3004,7 +3031,12 @@ class nest
                   priv_compact_pair(pbx, pby);
                   if(pby->mask == 0) {
                      pbby = pby->next;
+                     //pby was non-full (hence in the available list) and has
+                     //just been drained empty. Move it to the back so all
+                     //reserved blocks stay grouped there for trim_capacity.
                      blist.unlink(pby);
+                     blist.unlink_available(pby);
+                     blist.link_available_at_back(pby);
                   }
                }
             } while(pbx->mask != full);
@@ -3041,7 +3073,12 @@ class nest
                   priv_compact_pair(pbx, pby);
                   if(pby->mask == 0) {
                      pbby = pby->next;
+                     //pby was non-full (hence in the available list) and has
+                     //just been drained empty. Move it to the back so all
+                     //reserved blocks stay grouped there for trim_capacity.
                      blist.unlink(pby);
+                     blist.unlink_available(pby);
+                     blist.link_available_at_back(pby);
                   }
                }
             } while(pbx->mask != full);

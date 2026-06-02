@@ -509,6 +509,89 @@ void test_capacity(const typename Nest::allocator_type& al)
    }
 }
 
+//! Exercises the partitioned available list: empty (reserved) blocks are
+//! kept grouped at the back, so trim_capacity()/shrink_to_fit() reclaim
+//! exactly the empty blocks regardless of how/where they were emptied
+//! (single erase, range erase or compaction).
+template<class Nest>
+void test_trim_partition(const typename Nest::allocator_type& al)
+{
+   typedef typename Nest::value_type value_type;
+   typedef typename Nest::size_type  size_type;
+   typedef typename Nest::iterator   iterator;
+
+   //Implementation-defined block size (slots per block).
+   const size_type N = 64;
+
+   //1) Erase a whole block's worth from the front (single erases); one
+   //   element survives, so a single block suffices after trimming.
+   {
+      Nest x(N + 1, value_type(), al);
+      x.reserve(10 * N);
+      for(size_type i = 0; i < N; ++i) x.erase(x.begin());
+      x.trim_capacity();
+      BOOST_TEST_EQ(x.size(), (size_type)1);
+      BOOST_TEST_EQ(x.capacity(), N);
+   }
+
+   //2) Erase a 2N range; one element survives.
+   {
+      Nest x(2 * N + 1, value_type(), al);
+      x.reserve(10 * N);
+      iterator last = x.begin();
+      std::advance(last, (std::ptrdiff_t)(2 * N));
+      x.erase(x.begin(), last);
+      x.trim_capacity();
+      BOOST_TEST_EQ(x.size(), (size_type)1);
+      BOOST_TEST_EQ(x.capacity(), N);
+   }
+
+   //3) Punch half of each of three blocks, then compact + trim: the 1.5N
+   //   surviving elements must end up packed into two blocks.
+   {
+      Nest x(3 * N, value_type(), al);
+      x.reserve(10 * N);
+      iterator pos0 = x.begin();
+      iterator pos1 = x.begin(); std::advance(pos1, (std::ptrdiff_t)N);
+      iterator pos2 = x.begin(); std::advance(pos2, (std::ptrdiff_t)(2 * N));
+      iterator e;
+      e = pos2; std::advance(e, (std::ptrdiff_t)(N / 2)); x.erase(pos2, e);
+      e = pos1; std::advance(e, (std::ptrdiff_t)(N / 2)); x.erase(pos1, e);
+      e = pos0; std::advance(e, (std::ptrdiff_t)(N / 2)); x.erase(pos0, e);
+      x.shrink_to_fit();
+      BOOST_TEST_EQ(x.size(), (size_type)(3 * N - 3 * (N / 2)));
+      BOOST_TEST_EQ(x.capacity(), (size_type)(2 * N));
+   }
+
+   //4) trim_capacity(n) releases only empties and keeps at least n capacity.
+   {
+      Nest x(N, value_type(), al);
+      x.reserve(10 * N);
+      x.trim_capacity(3 * N);
+      BOOST_TEST_EQ(x.capacity(), (size_type)(3 * N));
+      x.trim_capacity();
+      BOOST_TEST_EQ(x.capacity(), N);
+      BOOST_TEST_EQ(x.size(), N);
+   }
+
+   //5) Empty non-adjacent blocks (range erases): trim must reclaim exactly
+   //   those blocks and the freed capacity must remain reusable afterwards.
+   {
+      Nest x(5 * N, value_type(), al);
+      iterator b0 = x.begin();
+      iterator b2 = x.begin(); std::advance(b2, (std::ptrdiff_t)(2 * N));
+      iterator e;
+      e = b2; std::advance(e, (std::ptrdiff_t)N); x.erase(b2, e);
+      e = b0; std::advance(e, (std::ptrdiff_t)N); x.erase(b0, e);
+      BOOST_TEST_EQ(x.size(), (size_type)(3 * N));
+      x.trim_capacity();
+      BOOST_TEST_EQ(x.capacity(), (size_type)(3 * N));
+      BOOST_TEST_EQ(x.size(), (size_type)(3 * N));
+      x.insert((size_type)(2 * N), value_type());
+      BOOST_TEST_EQ(x.size(), (size_type)(5 * N));
+   }
+}
+
 template<class Nest>
 void test_modifiers_provenance(const typename Nest::allocator_type& al)
 {
@@ -858,6 +941,7 @@ void test_all(const typename Nest::allocator_type& al)
    test_construct_copy_destroy<Nest>(al);
    test_iterators<Nest>(al);
    test_capacity<Nest>(al);
+   test_trim_partition<Nest>(al);
    test_modifiers<Nest>(al);
    test_hive_operations<Nest>(al);
    test_visitation<Nest>(al);
