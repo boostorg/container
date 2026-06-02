@@ -29,7 +29,9 @@ int main() { return 0; }
 //alignment is rounded up by the compiler, and the printed sizeof(element)
 //reflects the actual (possibly padded) size.
 #ifndef ELEMENT_SIZES
-#define ELEMENT_SIZES { 16, 32, 64, 80 }
+//#define ELEMENT_SIZES { 16, 32, 64, 96, 128, 192, 256 }
+#define ELEMENT_SIZES { 16, 64, 128, 256 }
+//#define ELEMENT_SIZES { 64, 80 }
 #endif
 inline constexpr std::size_t element_sizes[] = ELEMENT_SIZES;
 inline constexpr std::size_t element_sizes_count =
@@ -45,10 +47,10 @@ BOOST_NOINLINE double measure(F f)
    using namespace std::chrono;
 
    #ifdef NDEBUG
-   static const std::size_t      num_trials = 8;
-   static const milliseconds     min_time_per_trial(75);
-   //static const int              num_trials = 1;
-   //static const milliseconds     min_time_per_trial(0);
+   //static const std::size_t      num_trials = 8;
+   //static const milliseconds     min_time_per_trial(100);
+   static const int              num_trials = 1;
+   static const milliseconds     min_time_per_trial(0);
    #else
    static const std::size_t      num_trials = 1;
    static const milliseconds     min_time_per_trial(0);
@@ -298,7 +300,7 @@ benchmark_result benchmark(const char* title, std::size_t element_size, FNum fnu
       std::cout << std::endl;
    }
    std::cout << std::left << std::setw(11) << "geomean"
-             << std::right << std::fixed << std::setprecision(3)
+             << std::right << std::fixed << std::setprecision(2)
              << geomean(res) << "\n";
    return res;
 }
@@ -497,10 +499,18 @@ void write_table(const table& t, const char* filename, std::size_t element_size)
    out << table_horizontal_line;
 }
 
+//Per-execution (single element size) result summary: the geomean of each
+//individual test plus the overall geomean across all tests.
+struct run_summary
+{
+   std::vector<std::pair<std::string, double> > per_test;
+   double                                       overall;
+};
+
 //Runs the full benchmark suite for a single element size and writes its
 //own table file (hub_test_<size>.txt). element_t<Size> is the value type.
 template<std::size_t Size>
-void run_bench()
+run_summary run_bench()
 {
    using namespace boost::container;
    using element = element_t<Size>;
@@ -530,7 +540,7 @@ void run_bench()
       ::iteration<num>{}, ::iteration<den>{}));
    t.push_back(benchmark(
       "for_each", element_size,
-      ::for_each<num>{}, ::for_each<den>{}));/*
+      ::for_each<num>{}, ::for_each<den>{}));
    t.push_back(benchmark(
       "sort", element_size,
       sort<num>{}, sort<den>{}));
@@ -540,27 +550,68 @@ void run_bench()
    t.push_back(benchmark(
       "creat, ins, erase, ins, destroy", element_size,
       create_and_destroy<num>{}, create_and_destroy<den>{}));
-*/
+
    const std::string filename = "hub_test_" + std::to_string(element_size) + ".txt";
    write_table(t, filename.c_str(), element_size);
 
    std::cout << "\n" << std::string(41, '-') << "\n"
              << "Geometric means (num/den time ratio), element size "
              << element_size << "\n";
+   run_summary summary;
    for(const auto& bench: t) {
+      const double g = geomean(bench);
+      summary.per_test.push_back(std::make_pair(bench.title, g));
       std::cout << std::left << std::setw(30) << bench.title
-                << std::fixed << std::setprecision(3) << geomean(bench) << "\n";
+                << std::fixed << std::setprecision(2) << g << "\n";
    }
+   summary.overall = geomean(t);
    std::cout << std::left << std::setw(30) << "OVERALL"
-             << std::fixed << std::setprecision(3) << geomean(t) << "\n";
+             << std::fixed << std::setprecision(2) << summary.overall << "\n";
+   return summary;
+}
+
+//Geometric mean of a set of (positive) ratios.
+inline double geomean_of(const std::vector<double>& v)
+{
+   double log_sum = 0.0;
+   std::size_t count = 0;
+   for(double r: v) {
+      if(r > 0.0) { log_sum += std::log(r); ++count; }
+   }
+   return count > 0 ? std::exp(log_sum / (double)count) : 0.0;
 }
 
 template<std::size_t... Is>
 void run_all(std::index_sequence<Is...>)
 {
-   (run_bench<element_sizes[Is]>(), ...);
-}
+   //Collect each execution's per-test and overall geomeans, then report
+   //the geomean of each test across all executions, followed by the
+   //geomean of the per-execution overall geomeans.
+   const run_summary summaries[] = { run_bench<element_sizes[Is]>()... };
+   const std::size_t num_exec = sizeof...(Is);
 
+   std::cout << "\n" << std::string(41, '=') << "\n"
+             << "Aggregated geometric means across all " << num_exec
+             << " executions (num/den time ratio)\n";
+
+   //Per-test geomean across executions (test set is identical per execution).
+   const std::size_t num_tests = summaries[0].per_test.size();
+   for(std::size_t ti = 0; ti < num_tests; ++ti) {
+      std::vector<double> vals;
+      for(std::size_t e = 0; e < num_exec; ++e)
+         vals.push_back(summaries[e].per_test[ti].second);
+      std::cout << std::left << std::setw(30) << summaries[0].per_test[ti].first
+                << std::fixed << std::setprecision(2) << geomean_of(vals) << "\n";
+   }
+
+   //Geomean of the per-execution overall geomeans.
+   std::vector<double> overalls;
+   for(std::size_t e = 0; e < num_exec; ++e)
+      overalls.push_back(summaries[e].overall);
+   std::cout << std::left << std::setw(30) << "GEOMEAN OF GEOMEANS"
+             << std::fixed << std::setprecision(2) << geomean_of(overalls) << "\n";
+}
+   
 int main(int argc,char* argv[])
 {
    (void)argc;
