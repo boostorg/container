@@ -1147,19 +1147,14 @@ public:
 
   void trim_capacity(size_type n) noexcept
   {
-    /* Linear on # available blocks, std::hive is linear on # _reserved_
-     * blocks.
-     */
     if(capacity() <= n) return;
-    for(auto pbb = blist.header()->next_available;
-        capacity() - n >= N && pbb != blist.header(); ) {
+    for(auto pbb = blist.header()->prev_available;
+        capacity() - n >= N && pbb != blist.header() && pbb->mask == 0; ) {
       auto pb = static_cast_block_pointer(pbb);
-      pbb = pbb-> next_available;
-      if(pb->mask == 0) {
-        blist.unlink_available(pb);
-        delete_block(pb);
-        --num_blocks;
-      }
+      pbb = pbb-> prev_available;
+      blist.unlink_available(pb);
+      delete_block(pb);
+      --num_blocks;
     }
   }
 
@@ -1252,7 +1247,8 @@ public:
         BOOST_CONTAINER_HUB_PREFETCH_BLOCK(pbb, block);
         size_ -= destroy_all_in_nonempty_block(pb);
         blist.unlink(pb);
-        if(BOOST_UNLIKELY(pb->mask == full)) blist.link_available_at_front(pb);
+        if(BOOST_LIKELY(pb->mask != full)) blist.unlink_available(pb);
+        blist.link_available_at_back(pb);
         pb->mask = 0;
       } while(pbb != last.pbb);
       first = {pbb};
@@ -1607,7 +1603,11 @@ private:
     allocator_destroy(al(), boost::to_address(pb->data() + n));
     if(BOOST_UNLIKELY(pb->mask == full)) blist.link_available_at_front(pb);
     pb->mask &= ~((mask_type)(1) << n);
-    if(BOOST_UNLIKELY(pb->mask == 0)) blist.unlink(pb);
+    if(BOOST_UNLIKELY(pb->mask == 0)) {
+      blist.unlink(pb);
+      blist.unlink_available(pb);
+      blist.link_available_at_back(pb); 
+    }
     --size_;
   }
 
@@ -1791,6 +1791,8 @@ private:
             if(pby->mask == 0) {
               pbby = pby->next;
               blist.unlink(pby);
+              blist.unlink_available(pby);
+              blist.link_available_at_back(pby); 
             }
           }
         }while(pbx->mask != full);
