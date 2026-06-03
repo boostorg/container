@@ -52,11 +52,11 @@ BOOST_NOINLINE double measure(F f)
 
    #ifdef NDEBUG
    //static const std::size_t num_trials = 10;
-   //static const nsec_t      min_time_per_trial = 150000000u; //150 ms
-   static const std::size_t num_trials = 8;
-   static const nsec_t      min_time_per_trial = 100000000u; //75 ms
-   //static const std::size_t num_trials = 1;
-   //static const nsec_t      min_time_per_trial = 0u;
+   //static const nsec_t      min_time_per_trial = 150*1000000u; //150 ms
+   //static const std::size_t num_trials = 8;
+   //static const nsec_t      min_time_per_trial = 100*1000000u; // ms
+   static const std::size_t num_trials = 1;
+   static const nsec_t      min_time_per_trial = 0u;
    #else
    static const std::size_t num_trials = 1;
    static const nsec_t      min_time_per_trial = 0u;
@@ -253,9 +253,11 @@ benchmark_result benchmark(const char* title, std::size_t element_size, FNum fnu
 
    benchmark_result res = {title, {}, {}};
 
-   std::cout << std::string(41, '-') << "\n"
+   char current_fill = std::cout.fill();
+   std::cout << std::setfill('-') << std::setw(41) << "" <<"\n"
              << title << "\n"
-             << "sizeof(element): " << element_size << "\n";
+             << "sizeof(element): " << element_size << "\n"
+             << std::setfill(current_fill);
    std::cout << std::left << std::setw(11) << "" << "container size\n" << std::right
              << std::left << std::setw(11) << "erase rate" << std::right;
    for(std::size_t i = min_size_exp; i <= max_size_exp; ++i)
@@ -523,75 +525,6 @@ double geomean(const benchmark_result& bench)
    return count > 0 ? std::exp(log_sum / (double)count) : 0.0;
 }
 
-void write_table(const table& t, const char* filename, std::size_t element_size)
-{
-   static std::size_t first_column_width = 11;
-   static std::size_t data_column_width = (max_size_exp + 1 - min_size_exp) * 5;
-   std::size_t        num_data_columns = t.size();
-   std::size_t        table_width = first_column_width + 2 + num_data_columns * (data_column_width + 2) + 1;
-
-   std::ofstream fout(filename);
-   std::ostream &out = fout;
-   //(void)filename;
-   //std::ostream &out = std::cout;
-
-   auto data_horizontal_line =
-      std::string(first_column_width + 2, ' ') + std::string(table_width - first_column_width - 2, '-');
-   auto table_horizontal_line = std::string(table_width, '-');
-
-   out << std::left;
-
-   out << data_horizontal_line << "\n";
-
-   out << "  " << std::setw(static_cast<int>(first_column_width)) << " ";
-   out << std::setw(static_cast<int>(table_width - first_column_width - 3))
-       << std::string("| sizeof(element): ") + std::to_string(element_size) << "|\n";
-
-   out << data_horizontal_line << "\n";
-
-   out << "  " << std::setw(static_cast<int>(first_column_width)) << " ";
-   for(const benchmark_result& res: t) {
-      out << "| " << std::setw(static_cast<int>(data_column_width)) << res.title;
-   }
-   out << "|\n";
-
-   out << data_horizontal_line << "\n";
-
-   out << "  " << std::setw(static_cast<int>(first_column_width)) << " " ;
-   for(std::size_t i = 0; i < num_data_columns; ++i) {
-      out << "| " << std::setw(static_cast<int>(data_column_width)) << "container size";
-   }
-   out << "|\n";
-
-   out << table_horizontal_line << "\n";
-
-   out << "| " << std::setw(static_cast<int>(first_column_width)) << "erase rate";
-   for(std::size_t i = 0; i < num_data_columns; ++i) {
-      out << "| ";
-      for(auto j = min_size_exp; j <= max_size_exp; ++j) {
-         out << "1.E" << j << " ";
-      }
-   }
-   out << "|\n";
-
-   out << table_horizontal_line << "\n";
-
-   std::size_t row = 0;
-   for(double erasure_rate = min_erasure_rate;
-       erasure_rate <= max_erasure_rate;
-       erasure_rate += erase_rate_inc, ++row) {
-      out << "| " << std::setw(static_cast<int>(first_column_width)) << erasure_rate;
-      for(const benchmark_result& res: t) {
-         out << "| ";
-         for(const auto& x: res.data[row]) {
-            out << x << " ";
-         }
-      }
-      out << "|\n";
-   }
-
-   out << table_horizontal_line;
-}
 
 //Per-execution (single element size) result summary: the geomean of each
 //individual test plus the overall geomean across all tests.
@@ -625,9 +558,11 @@ run_summary run_bench()
 
    const std::size_t element_size = sizeof(element);
 
-   std::cout << "\n" << std::string(41, '=') << "\n"
+   char current_fill = std::cout.fill();
+   std::cout << "\n" << std::setfill('=') << std::setw(41) << "" << "\n"
              << "ELEMENT SIZE: " << element_size << " bytes\n"
-             << std::string(41, '=') << "\n";
+             << std::setw(41)  << "\n"
+             << std::setfill(current_fill);
 
    table t;/*
    t.push_back(benchmark(
@@ -658,12 +593,11 @@ run_summary run_bench()
       "erasure", element_size,
       ::erasure<num>{}, ::erasure<den>{}));*/
 
-   const std::string filename = "hub_test_" + std::to_string(element_size) + ".txt";
-   write_table(t, filename.c_str(), element_size);
-
-   std::cout << "\n" << std::string(41, '-') << "\n"
+      std::cout << "\n" << std::setfill('-') << std::setw(41) << "" "\n"
              << "Geometric means (num/den time ratio), element size "
              << element_size << "\n";
+   std::cout << std::setfill(current_fill);
+
    run_summary summary;
    for(const auto& bench: t) {
       const double g = geomean(bench);
@@ -697,9 +631,11 @@ void run_all(std::index_sequence<Is...>)
    const run_summary summaries[] = { run_bench<element_sizes[Is]>()... };
    const std::size_t num_exec = sizeof...(Is);
 
-   std::cout << "\n" << std::string(41, '=') << "\n"
+   char current_fill = std::cout.fill();
+   std::cout << "\n" << std::setfill('=') << std::setw(41) << "" << "\n"
              << "Aggregated geometric means across all " << num_exec
-             << " executions (num/den time ratio)\n";
+             << " executions (num/den time ratio)\n"
+             << std::setfill(current_fill);
 
    //Per-test geomean across executions (test set is identical per execution).
    const std::size_t num_tests = summaries[0].per_test.size();
