@@ -16,9 +16,9 @@ int main() { return 0; }
 
 #include <algorithm>
 #include <array>
-#include <chrono>
 #include <numeric>
 #include <iostream>
+#include <boost/move/detail/nsec_clock.hpp>
 #include "../bench/bench_utils.hpp"
 
 #include <cstddef>
@@ -30,8 +30,9 @@ int main() { return 0; }
 //reflects the actual (possibly padded) size.
 #ifndef ELEMENT_SIZES
 //#define ELEMENT_SIZES { 16, 32, 64, 96, 128, 192, 256 }
-#define ELEMENT_SIZES { 16, 64, 128, 256 }
+//#define ELEMENT_SIZES { 16, 64, 128, 256 }
 //#define ELEMENT_SIZES { 64, 80 }
+#define ELEMENT_SIZES { 64 }
 #endif
 inline constexpr std::size_t element_sizes[] = ELEMENT_SIZES;
 inline constexpr std::size_t element_sizes_count =
@@ -39,40 +40,45 @@ inline constexpr std::size_t element_sizes_count =
 
 #define NONTRIVIAL_ELEMENT
 
-std::chrono::high_resolution_clock::time_point measure_start, measure_pause;
+//Wall-clock measured in nanoseconds via boost::move_detail::nsec_clock().
+//measure_start is advanced forward by resume_timing() so that
+//(now - measure_start) yields measured (non-paused) time.
+boost::move_detail::nanosecond_type measure_start, measure_pause;
 
 template<typename F>
 BOOST_NOINLINE double measure(F f)
 {
-   using namespace std::chrono;
+   typedef boost::move_detail::nanosecond_type nsec_t;
 
    #ifdef NDEBUG
-   //static const std::size_t      num_trials = 8;
-   //static const milliseconds     min_time_per_trial(100);
-   static const int              num_trials = 1;
-   static const milliseconds     min_time_per_trial(0);
+   //static const std::size_t num_trials = 10;
+   //static const nsec_t      min_time_per_trial = 150000000u; //150 ms
+   static const std::size_t num_trials = 8;
+   static const nsec_t      min_time_per_trial = 100000000u; //75 ms
+   //static const std::size_t num_trials = 1;
+   //static const nsec_t      min_time_per_trial = 0u;
    #else
-   static const std::size_t      num_trials = 1;
-   static const milliseconds     min_time_per_trial(0);
+   static const std::size_t num_trials = 1;
+   static const nsec_t      min_time_per_trial = 0u;
    #endif
 
    std::array<double,num_trials> trials;
 
    for(std::size_t i = 0; i < num_trials; ++i) {
-      int                               runs = 0;
-      high_resolution_clock::time_point t2;
-      decltype(f())                     res;
+      int             runs = 0;
+      nsec_t          t1;
+      nsec_t          t2;
+      decltype(f())   res;
 
-      measure_start = high_resolution_clock::now();
+      measure_start = t1 = boost::move_detail::nsec_clock();
       do{
          clobber();
          res = f();
          escape(&res);
-         t2 = high_resolution_clock::now();
+         t2 = boost::move_detail::nsec_clock();
          ++runs;
-      }while((t2 - measure_start) < min_time_per_trial);
-      trials[i] =
-         duration_cast<duration<double>>(t2 - measure_start).count() / runs;
+      }while((t2 - t1) < min_time_per_trial);
+      trials[i] = double(t2 - measure_start) / 1.0e9 / runs;
    }
    std::sort(trials.begin(), trials.end());
 
@@ -83,12 +89,12 @@ BOOST_NOINLINE double measure(F f)
 
 BOOST_CONTAINER_FORCEINLINE void pause_timing()
 {
-   measure_pause = std::chrono::high_resolution_clock::now();
+   measure_pause = boost::move_detail::nsec_clock();
 }
 
 BOOST_CONTAINER_FORCEINLINE void resume_timing()
 {
-   measure_start += std::chrono::high_resolution_clock::now() - measure_pause;
+   measure_start += boost::move_detail::nsec_clock() - measure_pause;
 }
 
 #include <boost/container/experimental/hub.hpp>
@@ -208,6 +214,7 @@ void fill(Container& c, std::size_t n)
       while(n--) c.insert((int)rng());
    }
 }
+
 /*
 static std::size_t min_size_exp = 3,
                    max_size_exp = 7;
@@ -306,7 +313,7 @@ benchmark_result benchmark(const char* title, std::size_t element_size, FNum fnu
 }
 
 template<typename Container>
-struct create
+struct create_fill
 {
    unsigned int operator()(std::size_t n, double erasure_rate) const
    {
@@ -323,13 +330,100 @@ struct create
 };
 
 template<typename Container>
-struct create_and_destroy
+struct create_fill_and_destroy
 {
    unsigned int operator()(std::size_t n, double erasure_rate) const
    {
       auto c = make<Container>(n, erasure_rate);
       fill(c, n);
       return (unsigned int)c.size();
+   }
+};
+
+//Isolates the cost of make<Container>() alone (the insert + shuffle +
+//random-erase build), excluding the subsequent destruction.
+template<typename Container>
+struct creation
+{
+   unsigned int operator()(std::size_t n, double erasure_rate) const
+   {
+      unsigned int res = 0;
+      {
+         auto c = make<Container>(n, erasure_rate);   // measured
+         res = (unsigned int)c.size();
+         pause_timing();                              // exclude destruction
+      }
+      resume_timing();
+      return res;
+   }
+};
+
+//Isolates the cost of fill() alone (re-inserting up to n elements into an
+//already-built, partially-erased container), excluding make and destruction.
+template<typename Container>
+struct filling
+{
+   unsigned int operator()(std::size_t n, double erasure_rate) const
+   {
+      unsigned int res = 0;
+      {
+         pause_timing();
+         auto c = make<Container>(n, erasure_rate);   // excluded
+         resume_timing();
+         fill(c, n);                                  // measured
+         res = (unsigned int)c.size();
+         pause_timing();                              // exclude destruction
+      }
+      resume_timing();
+      return res;
+   }
+};
+
+template<typename Container>
+struct erasure
+{
+   unsigned int operator()(std::size_t n, double erasure_rate) const
+   {
+      unsigned int res = 0;
+      {
+         pause_timing();
+         std::uint64_t erasure_cut =
+            (std::uint64_t)(erasure_rate * (double)(std::uint64_t)(-1));
+
+         Container                                 c;
+         urbg                                      rng;
+         std::vector<typename Container::iterator> iterators;
+
+         iterators.reserve(n);
+         for (std::size_t i = 0; i < n; ++i) iterators.push_back(c.insert((int)rng()));
+         std::shuffle(iterators.begin(), iterators.end(), rng);
+         resume_timing();
+
+         for (auto it : iterators) {
+            if (rng() < erasure_cut) erase_void(c, it);
+         }
+         pause_timing();
+         res = (unsigned)c.size();
+      }
+      return res;
+   }
+};
+
+//Isolates the cost of the container destructor alone, over a fully built and
+//filled container, excluding make and fill.
+template<typename Container>
+struct destruction
+{
+   unsigned int operator()(std::size_t n, double erasure_rate) const
+   {
+      unsigned int res = 0;
+      {
+         pause_timing();
+         auto c = make<Container>(n, erasure_rate);   // excluded
+         res = (unsigned int)c.size();
+         resume_timing();                             // measure only the dtor below
+      }                                               // ~Container() measured here
+      return res;
    }
 };
 
@@ -525,6 +619,7 @@ run_summary run_bench()
    //using num = nest<element, void, nest_options_t< prefetch<false>, store_data_in_block<true> > >;
    #endif
    using den  = nest<element>;
+   //using den  = hub<element>;
    //using den = nest<element, void, nest_options_t< prefetch<false> > >;
    //using den = nest<element, void, nest_options_t< store_data_in_block<true> > >;
 
@@ -534,7 +629,7 @@ run_summary run_bench()
              << "ELEMENT SIZE: " << element_size << " bytes\n"
              << std::string(41, '=') << "\n";
 
-   table t;
+   table t;/*
    t.push_back(benchmark(
       "iteration", element_size,
       ::iteration<num>{}, ::iteration<den>{}));
@@ -545,11 +640,23 @@ run_summary run_bench()
       "sort", element_size,
       sort<num>{}, sort<den>{}));
    t.push_back(benchmark(
-      "creat, ins, erase, ins", element_size,
-      create<num>{}, create<den>{}));
+      "create, fill", element_size,
+      create_fill<num>{}, create_fill<den>{}));
    t.push_back(benchmark(
-      "creat, ins, erase, ins, destroy", element_size,
-      create_and_destroy<num>{}, create_and_destroy<den>{}));
+      "create, fill, destroy", element_size,
+      create_fill_and_destroy<num>{}, create_fill_and_destroy<den>{}));
+   t.push_back(benchmark(
+      "destroy (dtor)", element_size,
+      destruction<num>{}, destruction<den>{}));
+   t.push_back(benchmark(
+      "creation (make)", element_size,
+      creation<num>{}, creation<den>{}));*/
+   t.push_back(benchmark(
+      "filling", element_size,
+      filling<num>{}, filling<den>{}));/*
+   t.push_back(benchmark(
+      "erasure", element_size,
+      ::erasure<num>{}, ::erasure<den>{}));*/
 
    const std::string filename = "hub_test_" + std::to_string(element_size) + ".txt";
    write_table(t, filename.c_str(), element_size);
