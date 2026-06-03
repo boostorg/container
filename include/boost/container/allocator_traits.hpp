@@ -100,6 +100,7 @@ class allocator_traits_dummy
 template<class T, class ...Args>
 BOOST_CONTAINER_FORCEINLINE void construct_type(T *p, BOOST_FWD_REF(Args) ...args)
 {
+   BOOST_CONTAINER_ASSUME(p != 0);   //elide the new-expression's null check on placement new
    ::new(const_cast<void*>(static_cast<const volatile void*>(p)), boost_container_new_t()) T(::boost::forward<Args>(args)...);
 }
 
@@ -111,6 +112,7 @@ BOOST_CONTAINER_FORCEINLINE \
    typename dtl::disable_if_c<dtl::is_pair<T>::value, void >::type \
 construct_type(T *p BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
 {\
+   BOOST_CONTAINER_ASSUME(p != 0);\
    ::new(const_cast<void*>(static_cast<const volatile void*>(p)), boost_container_new_t()) T( BOOST_MOVE_FWD##N );\
 }\
 //
