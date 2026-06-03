@@ -1,3 +1,4 @@
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // (C) Copyright Joaquin M Lopez Munoz 2025-2026.
@@ -2167,16 +2168,9 @@ class nest
       block_base_pointer const pbb_prev = blist.next_available;
       int n;
       block_pointer const pb = priv_retrieve_available_block(n);
-      BOOST_TRY{
-         block_alloc_traits::construct(
-            al(), boost::movelib::to_raw_pointer(pb->data() + n),
-            boost::forward<Args>(args)...);
-      }
-      BOOST_CATCH(...){
-         this->priv_restore_capacity_on_throw(pbb_prev);
-         BOOST_RETHROW;
-      }
-      BOOST_CATCH_END
+      this->priv_construct_or_restore_capacity(
+         boost::movelib::to_raw_pointer(pb->data() + n), pbb_prev,
+         boost::forward<Args>(args)...);
       pb->mask |= pb->mask + 1u;
       const mask_type mask_plus_one = pb->mask + 1u;
       if (BOOST_UNLIKELY(mask_plus_one <= 2)) {
@@ -2208,18 +2202,10 @@ class nest
       block_base_pointer const pbb_prev = blist.next_available;      \
       int n_;                                                        \
       block_pointer pb = priv_retrieve_available_block(n_);          \
-      BOOST_TRY{                                                     \
-         block_alloc_traits::construct(                              \
-            al(), boost::movelib::to_raw_pointer(pb->data() + n_)    \
-            BOOST_MOVE_I##N BOOST_MOVE_FWD##N);                      \
-      }                                                              \
-      BOOST_CATCH(...){                                              \
-         this->priv_restore_capacity_on_throw(pbb_prev);             \
-         BOOST_RETHROW;                                              \
-      }                                                              \
-      BOOST_CATCH_END                                                \
-      pb->mask |= pb->mask + 1u;                                     \
-      const mask_type mask_plus_one = pb->mask + 1u;                 \
+      this->priv_construct_or_restore_capacity(                      \
+         boost::movelib::to_raw_pointer(pb->data() + n_), pbb_prev   \
+         BOOST_MOVE_I##N BOOST_MOVE_FWD##N);                         \
+      const mask_type mask_plus_one = (pb->mask |= pb->mask + 1u) + 1u; \
       if (BOOST_UNLIKELY(mask_plus_one <= 2)) {                      \
          if (mask_plus_one == 0) blist.unlink_available(pb);         \
          else                    blist.link_at_back(pb);             \
@@ -2580,7 +2566,7 @@ class nest
    // If the next_available block at the moment of failure is not the same as the one
    // observed before calling priv_retrieve_available_block, a new (and now empty) block
    // was freshly allocated for the failed construction: free it to restore capacity.
-   void priv_restore_capacity_on_throw(block_base_pointer pbb_prev) BOOST_NOEXCEPT
+   BOOST_CONTAINER_NOINLINE void priv_restore_capacity_on_throw(block_base_pointer pbb_prev) BOOST_NOEXCEPT
    {
       if(blist.next_available != pbb_prev) {
          block_pointer const pb_new = static_cast_block_pointer(blist.next_available);
@@ -2589,6 +2575,44 @@ class nest
          --num_blocks;
       }
    }
+
+   // The try/catch lives here (not inline in emplace) on purpose: MSVC will not
+   // inline a function that contains its own EH scope, so keeping emplace
+   // EH-clean lets it be inlined into the caller's insert loop. This is a plain
+   // (non-FORCEINLINE) helper so the EH scope stays out of emplace.
+   #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+   template<class ...Args>
+   BOOST_CONTAINER_FORCEINLINE void priv_construct_or_restore_capacity
+      (T* p, block_base_pointer pbb_prev, BOOST_FWD_REF(Args)... args)
+   {
+      BOOST_TRY{
+         block_alloc_traits::construct(al(), p, boost::forward<Args>(args)...);
+      }
+      BOOST_CATCH(...){
+         this->priv_restore_capacity_on_throw(pbb_prev);
+         BOOST_RETHROW;
+      }
+      BOOST_CATCH_END
+   }
+   #else
+   #define BOOST_CONTAINER_NEST_CONSTRUCT_OR_RESTORE_CODE(N) \
+   BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
+   void priv_construct_or_restore_capacity                            \
+      (T* p, block_base_pointer pbb_prev BOOST_MOVE_I##N BOOST_MOVE_UREF##N) \
+   {                                                                  \
+      BOOST_TRY{                                                      \
+         block_alloc_traits::construct(al(), p BOOST_MOVE_I##N BOOST_MOVE_FWD##N); \
+      }                                                               \
+      BOOST_CATCH(...){                                               \
+         this->priv_restore_capacity_on_throw(pbb_prev);              \
+         BOOST_RETHROW;                                               \
+      }                                                               \
+      BOOST_CATCH_END                                                 \
+   }                                                                  \
+   //
+   BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_NEST_CONSTRUCT_OR_RESTORE_CODE)
+   #undef BOOST_CONTAINER_NEST_CONSTRUCT_OR_RESTORE_CODE
+   #endif
 
    //////////////////////////////////////////////
    //
