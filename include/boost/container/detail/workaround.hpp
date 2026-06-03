@@ -293,4 +293,29 @@ namespace boost {
   } while(0)
 #endif
 
+//Marks a pointer-returning function as never returning null, so callers can
+//elide the implicit null check (e.g. the one a new-expression performs on the
+//result of a custom placement operator new). No-op on compilers lacking the
+//attribute (e.g. MSVC, where BOOST_CONTAINER_ASSUME is used instead).
+#if defined(__has_attribute)
+#  if __has_attribute(returns_nonnull)
+#     define BOOST_CONTAINER_RETURNS_NONNULL __attribute__((returns_nonnull))
+#  endif
+#endif
+#ifndef BOOST_CONTAINER_RETURNS_NONNULL
+#  define BOOST_CONTAINER_RETURNS_NONNULL
+#endif
+
+//Marks the listed (1-based) pointer parameters as never null, allowing the
+//compiler to assume so at call sites and warn if a null literal is passed.
+//No-op on compilers lacking the attribute (e.g. MSVC).
+#if defined(__has_attribute)
+#  if __has_attribute(nonnull)
+#     define BOOST_CONTAINER_NONNULL(...) __attribute__((nonnull(__VA_ARGS__)))
+#  endif
+#endif
+#ifndef BOOST_CONTAINER_NONNULL
+#  define BOOST_CONTAINER_NONNULL(...)
+#endif
+
 #endif   //#ifndef BOOST_CONTAINER_DETAIL_WORKAROUND_HPP
