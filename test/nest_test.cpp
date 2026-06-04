@@ -12,6 +12,8 @@
 #include <boost/core/lightweight_test.hpp>
 #include <algorithm>
 #include <functional>
+#include <vector>
+#include <cstddef>
 
 using namespace boost::container;
 
@@ -91,6 +93,36 @@ void test_emplace()
    nest<int>::iterator it = h.emplace(42);
    BOOST_TEST_EQ(*it, 42);
    BOOST_TEST_EQ(h.size(), 1u);
+}
+
+void test_quick_emplace()
+{
+   nest<int> h;
+   nest<int>::iterator it = h.quick_emplace(0);
+   BOOST_TEST_EQ(*it, 0);
+   BOOST_TEST_EQ(h.size(), 1u);
+
+   //Fill enough elements to span several blocks and verify all are present.
+   const int count = 1000;
+   for(int i = 1; i < count; ++i){
+      nest<int>::iterator jt = h.quick_emplace(i);
+      BOOST_TEST_EQ(*jt, i);
+   }
+   BOOST_TEST_EQ(h.size(), (std::size_t)count);
+
+   //quick_emplace and emplace must interoperate on the same container.
+   h.emplace(-1);
+   h.quick_emplace(-2);
+   BOOST_TEST_EQ(h.size(), (std::size_t)(count + 2));
+
+   //All originally inserted values [0, count) must still be retrievable.
+   std::vector<bool> seen(count, false);
+   for(nest<int>::iterator b = h.begin(), e = h.end(); b != e; ++b){
+      if(*b >= 0 && *b < count)
+         seen[(std::size_t)*b] = true;
+   }
+   for(int i = 0; i < count; ++i)
+      BOOST_TEST(seen[(std::size_t)i]);
 }
 
 void test_assign()
@@ -727,6 +759,7 @@ int main()
    test_move_construction();
    test_insert_erase();
    test_emplace();
+   test_quick_emplace();
    test_assign();
    test_copy_assignment();
    test_move_assignment();

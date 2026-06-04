@@ -188,6 +188,41 @@ BOOST_CONTAINER_FORCEINLINE void erase_void(boost::container::nest<Args...>& x, 
    x.erase_void(it);
 }
 
+//quick_emplace: containers without a quick_emplace member (hub, plf::hive)
+//fall back to insert; nest uses its faster, capacity-rollback-free path.
+template<typename Container, typename T>
+BOOST_CONTAINER_FORCEINLINE typename Container::iterator
+quick_emplace(Container& x, const T& v)
+{
+   return x.insert(v);
+}
+
+template<typename... Args, typename T>
+BOOST_CONTAINER_FORCEINLINE typename boost::container::nest<Args...>::iterator
+quick_emplace(boost::container::nest<Args...>& x, const T& v)
+{
+   return x.quick_emplace(v);
+}
+
+//quick_erase: erase helper mirroring erase_void, used by the quick build path.
+template<typename Container, typename Iterator>
+BOOST_CONTAINER_FORCEINLINE void quick_erase(Container& x, Iterator it)
+{
+   x.erase(it);
+}
+
+template<typename... Args, typename Iterator>
+BOOST_CONTAINER_FORCEINLINE void quick_erase(boost::container::hub<Args...>& x, Iterator it)
+{
+   x.erase_void(it);
+}
+
+template<typename... Args, typename Iterator>
+BOOST_CONTAINER_FORCEINLINE void quick_erase(boost::container::nest<Args...>& x, Iterator it)
+{
+   x.erase_void(it);
+}
+
 template<typename Container>
 Container make(std::size_t n, double erasure_rate)
 {
@@ -214,6 +249,37 @@ void fill(Container& c, std::size_t n)
    if(n > c.size()) {
       n -= c.size();
       while(n--) c.insert((int)rng());
+   }
+}
+
+//Quick variants of make/fill that exercise the quick_emplace insertion path
+//(nest::quick_emplace; insert for the other containers).
+template<typename Container>
+Container quick_make(std::size_t n, double erasure_rate)
+{
+   std::uint64_t erasure_cut =
+      (std::uint64_t)(erasure_rate * (double)(std::uint64_t)(-1));
+
+   Container                                 c;
+   urbg                                      rng;
+   std::vector<typename Container::iterator> iterators;
+
+   iterators.reserve(n);
+   for(std::size_t i = 0; i < n; ++i) iterators.push_back(quick_emplace(c, (int)rng()));
+   std::shuffle(iterators.begin(), iterators.end(), rng);
+   for(auto it: iterators) {
+      if(rng() < erasure_cut) quick_erase(c, it);
+   }
+   return c;
+}
+
+template<typename Container>
+void quick_fill(Container& c, std::size_t n)
+{
+   urbg rng;
+   if(n > c.size()) {
+      n -= c.size();
+      while(n--) quick_emplace(c, (int)rng());
    }
 }
 
@@ -387,6 +453,27 @@ struct filling
          fill(c, n);                                  // measured
          res = (unsigned int)c.size();
          pause_timing();                              // exclude destruction
+      }
+      resume_timing();
+      return res;
+   }
+};
+
+//Like filling, but the measured re-insertion uses the quick_emplace path
+//(nest::quick_emplace; insert for hub/hive).
+template<typename Container>
+struct quick_filling
+{
+   unsigned int operator()(std::size_t n, double erasure_rate) const
+   {
+      unsigned int res = 0;
+      {
+         pause_timing();
+         auto c = quick_make<Container>(n, erasure_rate);   // excluded
+         resume_timing();
+         quick_fill(c, n);                                  // measured
+         res = (unsigned int)c.size();
+         pause_timing();                                    // exclude destruction
       }
       resume_timing();
       return res;
@@ -602,6 +689,9 @@ run_summary run_bench()
    t.push_back(benchmark(
       "filling", element_size,
       filling<num>{}, filling<den>{}));
+   t.push_back(benchmark(
+      "quick filling", element_size,
+      quick_filling<num>{}, quick_filling<den>{}));
    t.push_back(benchmark(
       "erasure", element_size,
       ::erasure<num>{}, ::erasure<den>{}));
