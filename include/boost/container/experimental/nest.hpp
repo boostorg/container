@@ -85,30 +85,11 @@
 #  include <intrin.h>
 #endif
 
-#ifdef __has_builtin
-#define BOOST_CONTAINER_NEST_HAS_BUILTIN(x) __has_builtin(x)
-#else
-#define BOOST_CONTAINER_NEST_HAS_BUILTIN(x) 0
-#endif
 
-// We use BOOST_CONTAINER_NEST_PREFETCH[_BLOCK] macros rather than proper
-// functions because of https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109985
-//
-#if defined(BOOST_GCC) || defined(BOOST_CLANG)
+// Fancy-pointer-aware wrapper over BOOST_CONTAINER_PREFETCH (defined in
+// workaround.hpp): it converts 'p' to a raw pointer before prefetching.
 #define BOOST_CONTAINER_NEST_PREFETCH(p) \
-__builtin_prefetch(static_cast<const char*>(static_cast<const void*>(boost::movelib::to_raw_pointer(p))))
-#elif defined(BOOST_CONTAINER_NEST_SSE2)
-#define BOOST_CONTAINER_NEST_PREFETCH(p) \
-_mm_prefetch(static_cast<const char*>(static_cast<const void*>(boost::movelib::to_raw_pointer(p))), _MM_HINT_T0)
-#else
-#define BOOST_CONTAINER_NEST_PREFETCH(p) ((void)(p))
-#endif
-
-#define BOOST_CONTAINER_NEST_PREFETCH_BLOCK_NTH(pbb, N) \
-   do{                                                    \
-      BOOST_CONTAINER_NEST_PREFETCH(static_cast<block_type&>(*(pbb)).data() + (N));\
-   } while(0)\
-//
+   BOOST_CONTAINER_PREFETCH(boost::movelib::to_raw_pointer(p))
 
 #define BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb) \
    do{                                                    \
