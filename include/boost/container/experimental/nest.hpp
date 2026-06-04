@@ -127,29 +127,6 @@ _mm_prefetch(static_cast<const char*>(static_cast<const void*>(boost::movelib::t
    } while(0)\
 //
 
-//#define BOOST_CONTAINER_NEST_DISABLE_PRAGMA_UNROLL
-//#define BOOST_CONTAINER_NEST_ENABLE_PRAGMA_UNROLL
-
-#if defined(BOOST_CONTAINER_NEST_DISABLE_PRAGMA_UNROLL) && defined (BOOST_CONTAINER_NEST_ENABLE_PRAGMA_UNROLL)
-#error "Cannot define both BOOST_CONTAINER_NEST_DISABLE_PRAGMA_UNROLL and BOOST_CONTAINER_NEST_ENABLE_PRAGMA_UNROLL"
-#endif
-
-#if !defined(BOOST_CONTAINER_NEST_DISABLE_PRAGMA_UNROLL) && !defined (BOOST_CONTAINER_NEST_ENABLE_PRAGMA_UNROLL)
-   #if defined(BOOST_CLANG)
-      //Let clang decide when to unroll loops, as it can auto-vectorize more aggressively when unrolling is disabled.
-      #define BOOST_CONTAINER_NEST_DISABLE_PRAGMA_UNROLL
-   #else
-      #define BOOST_CONTAINER_NEST_ENABLE_PRAGMA_UNROLL
-   #endif
-#endif
-
-#if defined(BOOST_CONTAINER_NEST_ENABLE_PRAGMA_UNROLL)
-   #define BOOST_CONTAINER_NEST_UNROLL(N) BOOST_CONTAINER_UNROLL(N)
-#elif defined(BOOST_CONTAINER_NEST_DISABLE_PRAGMA_UNROLL)
-   #define BOOST_CONTAINER_NEST_UNROLL(N)
-#else
-#error "Must define either BOOST_CONTAINER_NEST_ENABLE_PRAGMA_UNROLL or BOOST_CONTAINER_NEST_DISABLE_PRAGMA_UNROLL"
-#endif
 
 #if defined(BOOST_MSVC)
 #pragma warning(push)
