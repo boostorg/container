@@ -102,25 +102,6 @@
 #define BOOST_CONTAINER_NEST_HAS_BUILTIN(x) 0
 #endif
 
-#if !defined(NDEBUG)
-#define BOOST_CONTAINER_NEST_ASSUME(cond) BOOST_ASSERT(cond)
-#elif BOOST_CONTAINER_NEST_HAS_BUILTIN(__builtin_assume)
-#define BOOST_CONTAINER_NEST_ASSUME(cond) __builtin_assume(cond)
-#elif defined(__GNUC__) || \
-      BOOST_CONTAINER_NEST_HAS_BUILTIN(__builtin_unreachable)
-#define BOOST_CONTAINER_NEST_ASSUME(cond)           \
-  do{                                    \
-    if(!(cond)) __builtin_unreachable(); \
-  } while(0)
-#elif defined(_MSC_VER)
-#define BOOST_CONTAINER_NEST_ASSUME(cond) __assume(cond)
-#else
-#define BOOST_CONTAINER_NEST_ASSUME(cond)          \
-  do{                                   \
-    static_cast<void>(false && (cond)); \
-  } while(0)
-#endif
-
 // We use BOOST_CONTAINER_NEST_PREFETCH[_BLOCK] macros rather than proper
 // functions because of https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109985
 //
@@ -310,7 +291,7 @@ BOOST_CONTAINER_FORCEINLINE int unchecked_countr_zero(boost::uint64_t x)
 #elif defined(BOOST_GCC) || defined(BOOST_CLANG)
    return (int)__builtin_ctzll(x);
 #else
-   BOOST_CONTAINER_NEST_ASSUME(x != 0);
+   BOOST_CONTAINER_ASSUME(x != 0);
    return (int)boost::core::countr_zero(x);
 #endif
 }
@@ -329,7 +310,7 @@ BOOST_CONTAINER_FORCEINLINE int unchecked_countl_zero(boost::uint64_t x)
 #elif defined(BOOST_GCC) || defined(BOOST_CLANG)
    return (int)__builtin_clzll(x);
 #else
-   BOOST_CONTAINER_NEST_ASSUME(x != 0);
+   BOOST_CONTAINER_ASSUME(x != 0);
    return (int)boost::core::countl_zero(x);
 #endif
 }
@@ -552,7 +533,6 @@ struct block_base
 
    block_base(BOOST_RV_REF(block_base) x) BOOST_NOEXCEPT
    {
-      //mask = 0; // sentinel
       mask = 1; // sentinel
       this->operator=(boost::move(x));
    }
@@ -1002,7 +982,7 @@ public:
 
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator++() BOOST_NOEXCEPT
    {
-      BOOST_CONTAINER_NEST_ASSUME(n != (int)N);
+      BOOST_CONTAINER_ASSUME(n != (int)N);
       const mask_type m = pbb->mask & (full_l << n);
       n = m ? nest_detail::first_in_mask(m) : (int)N;
       return *this;
@@ -1013,7 +993,7 @@ public:
 
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator--() BOOST_NOEXCEPT
    {
-      BOOST_CONTAINER_NEST_ASSUME(n != 0);
+      BOOST_CONTAINER_ASSUME(n != 0);
       const mask_type m = pbb->mask & (full >> (int(N) - n));
       n = nest_detail::last_in_mask(m);
       return *this;
@@ -1030,7 +1010,7 @@ public:
       const int idx    = (int)boost::core::popcount(m & lo);
       const int target = idx + (int)k;
       const int total  = (int)boost::core::popcount(m);
-      BOOST_CONTAINER_NEST_ASSUME(target >= 0 && target <= total);
+      BOOST_CONTAINER_ASSUME(target >= 0 && target <= total);
       n = (target >= total) ? (int)N : nest_detail::nth_set_bit(m, target);
       return *this;
    }
@@ -1083,7 +1063,7 @@ public:
    BOOST_CONTAINER_FORCEINLINE
    friend difference_type operator-(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
    {
-      BOOST_CONTAINER_NEST_ASSUME(x.pbb == y.pbb);
+      BOOST_CONTAINER_ASSUME(x.pbb == y.pbb);
 #if 0 //Supporting negative difference would require additional checks
       const mask_type m = x.pbb->mask;
       const mask_type lo_x = (x.n == int(N)) ? full : ((mask_type(1) << x.n) - 1);
@@ -1148,7 +1128,7 @@ public:
 
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator++() BOOST_NOEXCEPT
    {
-      BOOST_CONTAINER_NEST_ASSUME(n != (int)N);
+      BOOST_CONTAINER_ASSUME(n != (int)N);
       const mask_type m = mask & (full_l << n);
       const int old_n = n;
       n = m ? nest_detail::first_in_mask(m) : (int)N;
@@ -1161,7 +1141,7 @@ public:
 
    BOOST_CONTAINER_FORCEINLINE nest_local_iterator& operator--() BOOST_NOEXCEPT
    {
-      BOOST_CONTAINER_NEST_ASSUME(n != 0);
+      BOOST_CONTAINER_ASSUME(n != 0);
       const mask_type m = mask & (full >> (N - n));
       const int old_n = n;
       n = nest_detail::last_in_mask(m);
@@ -1180,7 +1160,7 @@ public:
       const int idx    = (int)boost::core::popcount(m & lo);
       const int target = idx + (int)k;
       const int total  = (int)boost::core::popcount(m);
-      BOOST_CONTAINER_NEST_ASSUME(target >= 0 && target <= total);
+      BOOST_CONTAINER_ASSUME(target >= 0 && target <= total);
       const int old_n = n;
       n = (target >= total) ? (int)N : nest_detail::nth_set_bit(m, target);
       pos += (n - old_n);
@@ -1235,7 +1215,7 @@ public:
    BOOST_CONTAINER_FORCEINLINE
    friend difference_type operator-(const nest_local_iterator& x, const nest_local_iterator& y) BOOST_NOEXCEPT
    {
-      BOOST_CONTAINER_NEST_ASSUME(x.mask == y.mask);
+      BOOST_CONTAINER_ASSUME(x.mask == y.mask);
    #if 0
       const mask_type m = x.mask;
       const mask_type lo_x = (x.n == int(N)) ? full : ((mask_type(1) << x.n) - 1);
@@ -1243,7 +1223,7 @@ public:
       return difference_type(boost::core::popcount(m & lo_x))
            - difference_type(boost::core::popcount(m & lo_y));
    #endif
-      BOOST_CONTAINER_NEST_ASSUME(x.n >= y.n);       // Undefined behavior otherwise
+      BOOST_CONTAINER_ASSUME(x.n >= y.n);       // Undefined behavior otherwise
       const mask_type m = x.mask;
       const mask_type lo_x = (x.n == int(N)) ? full : ((mask_type(1) << x.n) - 1);
       const mask_type lo_y = (y.n == int(N)) ? full : ((mask_type(1) << y.n) - 1);
