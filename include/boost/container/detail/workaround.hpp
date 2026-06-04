@@ -318,4 +318,24 @@ namespace boost {
 #  define BOOST_CONTAINER_NONNULL(...)
 #endif
 
+//Software prefetch hint for a raw pointer 'p' (no fancy-pointer support).
+//Implemented as a macro rather than a function because of
+//https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109985
+#if defined(__GNUC__) || defined(__clang__)
+#  define BOOST_CONTAINER_PREFETCH(p) \
+      __builtin_prefetch(static_cast<const char*>(static_cast<const void*>(p)))
+#elif defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
+//_mm_prefetch / _MM_HINT_T0 live in the lightweight SSE header <xmmintrin.h>
+//(shipped with MSVC since VC++ 7.0 / Visual Studio .NET 2002), so there is no
+//need to pull in the heavy <intrin.h> umbrella.
+#  include <xmmintrin.h>
+#  define BOOST_CONTAINER_PREFETCH(p) \
+      _mm_prefetch(static_cast<const char*>(static_cast<const void*>(p)), _MM_HINT_T0)
+#elif defined(_MSC_VER) && (defined(_M_ARM) || defined(_M_ARM64))
+//ARM/ARM64 MSVC: __prefetch (PLD on ARM, PRFM PLDL1KEEP on ARM64)
+#  define BOOST_CONTAINER_PREFETCH(p) __prefetch(static_cast<const void*>(p))
+#else
+#  define BOOST_CONTAINER_PREFETCH(p) ((void)(p))
+#endif
+
 #endif   //#ifndef BOOST_CONTAINER_DETAIL_WORKAROUND_HPP
