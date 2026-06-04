@@ -1,6 +1,7 @@
 /* Benchmark of boost::container::hub against plf::hive.
  * 
  * Copyright 2026 Joaquin M Lopez Munoz.
+ * Copyright 2026 Ion Gaztanaga.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at
  * http://www.boost.org/LICENSE_1_0.txt)
@@ -29,10 +30,11 @@ int main() { return 0; }
 //alignment is rounded up by the compiler, and the printed sizeof(element)
 //reflects the actual (possibly padded) size.
 #ifndef ELEMENT_SIZES
-//#define ELEMENT_SIZES { 16, 32, 64, 96, 128, 192, 256 }
-//#define ELEMENT_SIZES { 16, 64, 128, 256 }
+//#define ELEMENT_SIZES { 32, 64, 96, 128, 192, 256 }
+//#define ELEMENT_SIZES { 32, 64, 128, 256 }
 //#define ELEMENT_SIZES { 64, 80 }
 #define ELEMENT_SIZES { 64 }
+//#define ELEMENT_SIZES { 32 }
 #endif
 inline constexpr std::size_t element_sizes[] = ELEMENT_SIZES;
 inline constexpr std::size_t element_sizes_count =
@@ -253,6 +255,11 @@ benchmark_result benchmark(const char* title, std::size_t element_size, FNum fnu
 
    benchmark_result res = {title, {}, {}};
 
+   //Wall-clock elapsed for this whole test (all erase rates x sizes), including
+   //paused regions; this is the real time the test takes to run, not the
+   //measured per-operation time used for the ratios.
+   const boost::move_detail::nanosecond_type test_start = boost::move_detail::nsec_clock();
+
    char current_fill = std::cout.fill();
    std::cout << std::setfill('-') << std::setw(41) << "" <<"\n"
              << title << "\n"
@@ -311,6 +318,11 @@ benchmark_result benchmark(const char* title, std::size_t element_size, FNum fnu
    std::cout << std::left << std::setw(11) << "geomean"
              << std::right << std::fixed << std::setprecision(2)
              << geomean(res) << "\n";
+
+   const double test_elapsed = (double)(boost::move_detail::nsec_clock() - test_start) / 1.0e9;
+   std::cout << std::left << std::setw(11) << "elapsed"
+             << std::right << std::fixed << std::setprecision(3)
+             << test_elapsed << " s\n";
    return res;
 }
 
@@ -532,6 +544,7 @@ struct run_summary
 {
    std::vector<std::pair<std::string, double> > per_test;
    double                                       overall;
+   std::size_t                                  element_size;
 };
 
 //Runs the full benchmark suite for a single element size and writes its
@@ -561,10 +574,10 @@ run_summary run_bench()
    char current_fill = std::cout.fill();
    std::cout << "\n" << std::setfill('=') << std::setw(41) << "" << "\n"
              << "ELEMENT SIZE: " << element_size << " bytes\n"
-             << std::setw(41)  << "\n"
+             << std::setw(41)  << "" << "\n"
              << std::setfill(current_fill);
 
-   table t;/*
+   table t;
    t.push_back(benchmark(
       "iteration", element_size,
       ::iteration<num>{}, ::iteration<den>{}));
@@ -585,13 +598,13 @@ run_summary run_bench()
       destruction<num>{}, destruction<den>{}));
    t.push_back(benchmark(
       "creation (make)", element_size,
-      creation<num>{}, creation<den>{}));*/
+      creation<num>{}, creation<den>{}));
    t.push_back(benchmark(
       "filling", element_size,
-      filling<num>{}, filling<den>{}));/*
+      filling<num>{}, filling<den>{}));
    t.push_back(benchmark(
       "erasure", element_size,
-      ::erasure<num>{}, ::erasure<den>{}));*/
+      ::erasure<num>{}, ::erasure<den>{}));
 
       std::cout << "\n" << std::setfill('-') << std::setw(41) << "" "\n"
              << "Geometric means (num/den time ratio), element size "
@@ -606,6 +619,7 @@ run_summary run_bench()
                 << std::fixed << std::setprecision(2) << g << "\n";
    }
    summary.overall = geomean(t);
+   summary.element_size = element_size;
    std::cout << std::left << std::setw(30) << "OVERALL"
              << std::fixed << std::setprecision(2) << summary.overall << "\n";
    return summary;
@@ -628,6 +642,7 @@ void run_all(std::index_sequence<Is...>)
    //Collect each execution's per-test and overall geomeans, then report
    //the geomean of each test across all executions, followed by the
    //geomean of the per-execution overall geomeans.
+   const boost::move_detail::nanosecond_type total_start = boost::move_detail::nsec_clock();
    const run_summary summaries[] = { run_bench<element_sizes[Is]>()... };
    const std::size_t num_exec = sizeof...(Is);
 
@@ -639,6 +654,7 @@ void run_all(std::index_sequence<Is...>)
 
    //Per-test geomean across executions (test set is identical per execution).
    const std::size_t num_tests = summaries[0].per_test.size();
+   std::cout << "\n ---- Per test ----\n";
    for(std::size_t ti = 0; ti < num_tests; ++ti) {
       std::vector<double> vals;
       for(std::size_t e = 0; e < num_exec; ++e)
@@ -647,12 +663,28 @@ void run_all(std::index_sequence<Is...>)
                 << std::fixed << std::setprecision(2) << geomean_of(vals) << "\n";
    }
 
+   //General (all-tests) geomean for each element size, shown only when more
+   //than one element size was benchmarked.
+   if(num_exec > 1) {
+      std::cout << "\n ---- Per size ----\n";
+      for(std::size_t e = 0; e < num_exec; ++e) {
+         const std::string lbl = "element size " + std::to_string(summaries[e].element_size);
+         std::cout << std::left << std::setw(30) << lbl
+                   << std::fixed << std::setprecision(2) << summaries[e].overall << "\n";
+      }
+   }
+
    //Geomean of the per-execution overall geomeans.
    std::vector<double> overalls;
    for(std::size_t e = 0; e < num_exec; ++e)
       overalls.push_back(summaries[e].overall);
-   std::cout << std::left << std::setw(30) << "GEOMEAN OF GEOMEANS"
+   std::cout << '\n'
+             << std::left << std::setw(30) << "GEOMEAN OF GEOMEANS"
              << std::fixed << std::setprecision(2) << geomean_of(overalls) << "\n";
+
+   const double total_elapsed = (double)(boost::move_detail::nsec_clock() - total_start) / 1.0e9;
+   std::cout << std::left << std::setw(30) << "TOTAL ELAPSED"
+             << std::fixed << std::setprecision(3) << total_elapsed << " s\n";
 }
    
 int main(int argc,char* argv[])
