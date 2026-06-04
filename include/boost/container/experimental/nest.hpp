@@ -2632,7 +2632,6 @@ class nest
          //to destroy in the data array, so the prefetch would be wasted.
          BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value) {
             if(BOOST_UNLIKELY(pbb != blist.header())) {
-                  BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
                BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
             }
          }
@@ -2671,8 +2670,11 @@ class nest
    {
       block_pointer pb = static_cast_block_pointer(pbb);
       block_alloc_traits::destroy(al(), boost::movelib::to_raw_pointer(pb->data() + n));
-      if(BOOST_UNLIKELY(pb->mask == full)) blist.link_available_at_front(pb);
+      if(BOOST_UNLIKELY(pb->mask == full))
+         blist.link_available_at_front(pb);
+
       pb->mask &= ~((mask_type)(1) << n);
+
       if(BOOST_UNLIKELY(pb->mask == 0)) {
          //Block just became empty: take it out of the main list and move it
          //to the back of the available list so reserved blocks stay grouped
