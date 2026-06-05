@@ -18,7 +18,7 @@
 #include <boost/core/empty_value.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/core/pointer_traits.hpp>
-#include <boost/throw_exception.hpp>
+#include <boost/container/throw_exception.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -26,7 +26,6 @@
 #include <iterator>
 #include <memory>
 #include <new>
-#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
@@ -1288,7 +1287,7 @@ public:
   //!
   //! <b>Postcondition</b>: capacity() >= n.
   //!
-  //! <b>Throws</b>: std::length_error if n > max_size(), plus any exception
+  //! <b>Throws</b>: length_error_t if n > max_size(), plus any exception
   //!   thrown by the allocator.
   //!
   //! <b>Complexity</b>: Linear in the number of reserved blocks allocated.
@@ -1298,8 +1297,7 @@ public:
   void reserve(size_type n)
   {
     if(n > max_size()) {
-      BOOST_THROW_EXCEPTION(
-        std::length_error("Requested capacity greater than max_size()"));
+      throw_length_error("Requested capacity greater than max_size()");
     }
     while(capacity() < n) (void)create_new_available_block();
   }
