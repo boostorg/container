@@ -1589,11 +1589,15 @@ class nest
       block_base_pointer const pbb_prev = blist.next_available;
       int n;
       block_pointer const pb = priv_retrieve_available_block(n);
+      //Store the mask on a register so that some compilers
+      //don't reload it asumming construction can modify it.
+      const mask_type m = pb->mask;
       this->priv_construct_or_restore_capacity(
          boost::movelib::to_raw_pointer(pb->data()) + n, pbb_prev,
          boost::forward<Args>(args)...);
-      pb->mask |= pb->mask + 1u;
-      const mask_type mask_plus_one = pb->mask + 1u;
+      const mask_type new_mask = m | (m + 1u);
+      pb->mask = new_mask;
+      const mask_type mask_plus_one = new_mask + 1u;
       if (BOOST_UNLIKELY(mask_plus_one <= 2)) {
          // pb->mask == 0 (impossible), 1 or full
          if (mask_plus_one == 0) blist.unlink_available(pb);
@@ -1627,8 +1631,22 @@ class nest
    template<class ...Args>
    BOOST_CONTAINER_FORCEINLINE iterator quick_emplace(BOOST_FWD_REF(Args)... args)
    {
+      //Read the available block's mask exactly once and keep it in a register.
+      block_base_pointer const pbb = blist.next_available;
+      block_pointer pb;
+      mask_type m;
       int n;
-      block_pointer const pb = priv_retrieve_available_block(n);
+      if (BOOST_LIKELY(pbb != blist.header())) {
+         m = pbb->mask;
+         n = nest_detail::unchecked_countr_one(m);
+         pb = static_cast_block_pointer(pbb);
+      }
+      else {
+         m = 0;   //freshly created: mask == 0, n = 0
+         n = 0;
+         pb = priv_create_new_available_block();
+      }
+      
       //If construct throws, the (possibly freshly allocated) block is left
       //linked as an empty available block: size_/mask are only updated below,
       //so no element is counted. This is the same state reserve() produces.
@@ -1636,13 +1654,15 @@ class nest
       //for some compilers (no exception rollback code needed).
       block_alloc_traits::construct
          (al(), boost::movelib::to_raw_pointer(pb->data()) + n, boost::forward<Args>(args)...);
-      pb->mask |= pb->mask + 1u;
-      const mask_type mask_plus_one = pb->mask + 1u;
-      if (BOOST_UNLIKELY(mask_plus_one <= 2)) {
-         // pb->mask == 0 (impossible), 1 or full
-         if (mask_plus_one == 0) blist.unlink_available(pb);
-         // pb->mask == 1
-         else                    blist.link_at_back(pb);
+
+      const mask_type new_mask = m | (m + 1u);
+      pb->mask = new_mask;
+      const mask_type new_mask_plus_one = new_mask + 1u;
+      if (BOOST_UNLIKELY(new_mask_plus_one <= 2u)) {
+         // new_mask == full (block just filled)
+         if (new_mask_plus_one == 0u) blist.unlink_available(pb);
+         // new_mask == 1 (block went empty -> non-empty)
+         else                         blist.link_at_back(pb);
       }
 
       ++size_;
@@ -1651,24 +1671,55 @@ class nest
 
    #else // BOOST_NO_CXX11_VARIADIC_TEMPLATES
 
+   #define BOOST_CONTAINER_NEST_QUICK_EMPLACE_BODY(N)                \
+      block_base_pointer const pbb = blist.next_available;           \
+      block_pointer pb;                                              \
+      mask_type m;                                                   \
+      int n;                                                         \
+      if (BOOST_LIKELY(pbb != blist.header())) {                     \
+         m = pbb->mask;                                              \
+         n = nest_detail::unchecked_countr_one(m);                   \
+         pb = static_cast_block_pointer(pbb);                        \
+      }                                                              \
+      else {                                                         \
+         m = 0;                                                      \
+         n = 0;                                                      \
+         pb = priv_create_new_available_block();                     \
+      }                                                              \
+      block_alloc_traits::construct                                  \
+         (al(), boost::movelib::to_raw_pointer(pb->data()) + n       \
+         BOOST_MOVE_I##N BOOST_MOVE_FWD##N);                         \
+      const mask_type new_mask = m | (m + 1u);                       \
+      pb->mask = new_mask;                                           \
+      const mask_type new_mask_plus_one = new_mask + 1u;             \
+      if (BOOST_UNLIKELY(new_mask_plus_one <= 2u)) {                 \
+         if (new_mask_plus_one == 0u) blist.unlink_available(pb);    \
+         else                         blist.link_at_back(pb);        \
+      }                                                              \
+      ++size_;                                                       \
+      return iterator(pb, n);                                        \
+   //
+
    #define BOOST_CONTAINER_NEST_EMPLACE_CODE(N) \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    BOOST_CONTAINER_FORCEINLINE iterator emplace(BOOST_MOVE_UREF##N)  \
    {                                                                 \
       block_base_pointer const pbb_prev = blist.next_available;      \
-      int n_;                                                        \
-      block_pointer pb = priv_retrieve_available_block(n_);          \
+      int n;                                                         \
+      block_pointer const pb = priv_retrieve_available_block(n);     \
+      const mask_type m = pb->mask;                                  \
       this->priv_construct_or_restore_capacity(                      \
-         boost::movelib::to_raw_pointer(pb->data() + n_), pbb_prev   \
+         boost::movelib::to_raw_pointer(pb->data()) + n, pbb_prev    \
          BOOST_MOVE_I##N BOOST_MOVE_FWD##N);                         \
-      pb->mask |= pb->mask + 1u;                                     \
-      const mask_type mask_plus_one = pb->mask + 1u;                 \
+      const mask_type new_mask = m | (m + 1u);                       \
+      pb->mask = new_mask;                                           \
+      const mask_type mask_plus_one = new_mask + 1u;                 \
       if (BOOST_UNLIKELY(mask_plus_one <= 2)) {                      \
          if (mask_plus_one == 0) blist.unlink_available(pb);         \
          else                    blist.link_at_back(pb);             \
       }                                                              \
       ++size_;                                                       \
-      return iterator(pb, n_);                                       \
+      return iterator(pb, n);                                        \
    }                                                                 \
    \
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
@@ -1678,23 +1729,12 @@ class nest
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    BOOST_CONTAINER_FORCEINLINE iterator quick_emplace(BOOST_MOVE_UREF##N)  \
    {                                                                 \
-      int n_;                                                        \
-      block_pointer pb = priv_retrieve_available_block(n_);          \
-      block_alloc_traits::construct                                  \
-         (al(), boost::movelib::to_raw_pointer(pb->data() + n_)      \
-         BOOST_MOVE_I##N BOOST_MOVE_FWD##N);                         \
-      pb->mask |= pb->mask + 1u;                                     \
-      const mask_type mask_plus_one = pb->mask + 1u;                 \
-      if (BOOST_UNLIKELY(mask_plus_one <= 2)) {                      \
-         if (mask_plus_one == 0) blist.unlink_available(pb);         \
-         else                    blist.link_at_back(pb);             \
-      }                                                              \
-      ++size_;                                                       \
-      return iterator(pb, n_);                                       \
+      BOOST_CONTAINER_NEST_QUICK_EMPLACE_BODY(N)                     \
    }                                                                 \
    //
    BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_NEST_EMPLACE_CODE)
    #undef BOOST_CONTAINER_NEST_EMPLACE_CODE
+   #undef BOOST_CONTAINER_NEST_QUICK_EMPLACE_BODY
 
    #endif // BOOST_NO_CXX11_VARIADIC_TEMPLATES
 
