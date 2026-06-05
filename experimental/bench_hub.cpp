@@ -57,8 +57,8 @@ BOOST_NOINLINE double measure(F f)
       #ifdef LONG_BENCH
       //static const std::size_t num_trials = 10;
       //static const nsec_t      min_time_per_trial = 150*1000000u; //150 ms
-      static const std::size_t num_trials = 6;
-      static const nsec_t      min_time_per_trial = 150*1000000u; // ms
+      static const std::size_t num_trials = 8;
+      static const nsec_t      min_time_per_trial = 100*1000000u; // ms
       #else
       static const std::size_t num_trials = 1;
       static const nsec_t      min_time_per_trial = 0u;
@@ -735,7 +735,7 @@ run_summary run_bench()
              << std::setw(41)  << "" << "\n"
              << std::setfill(current_fill);
 
-   table t;/*
+   table t;
    t.push_back(benchmark(
       "iteration", element_size,
       ::iteration<num>{}, ::iteration<den>{}));
@@ -756,18 +756,18 @@ run_summary run_bench()
       destruction<num>{}, destruction<den>{}));
    t.push_back(benchmark(
       "creation (make)", element_size,
-      creation<num>{}, creation<den>{}));*/
+      creation<num>{}, creation<den>{}));
    t.push_back(benchmark(
       "filling", element_size,
       filling<num>{}, filling<den>{}));
    t.push_back(benchmark(
       "quick filling", element_size,
-      quick_filling<num>{}, quick_filling<den>{}));/*
+      quick_filling<num>{}, quick_filling<den>{}));
    t.push_back(benchmark(
       "erasure", element_size,
       ::erasure<num>{}, ::erasure<den>{}));
-      */
-      std::cout << "\n" << std::setfill('-') << std::setw(41) << "" "\n"
+
+   std::cout << "\n" << std::setfill('-') << std::setw(41) << "" "\n"
              << "Geometric means (num/den time ratio), element size "
              << element_size << "\n";
    std::cout << std::setfill(current_fill);
