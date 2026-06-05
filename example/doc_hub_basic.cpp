@@ -6,6 +6,14 @@
  * http://www.boost.org/LICENSE_1_0.txt)
  */
 
+#include <boost/config.hpp>
+
+#if BOOST_CXX_VERSION < 201103L
+
+int main() { return 0; }
+
+#else
+
 #include <boost/container/hub.hpp>
 #ifdef NDEBUG
 #	undef NDEBUG
@@ -29,3 +37,5 @@ int main()
   for(int i = 200; i < 10000; ++i) h.insert(i);
   assert(*it == 100); // iterator still valid
 }
+
+#endif
