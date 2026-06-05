@@ -1661,7 +1661,8 @@ class nest
       this->priv_construct_or_restore_capacity(                      \
          boost::movelib::to_raw_pointer(pb->data() + n_), pbb_prev   \
          BOOST_MOVE_I##N BOOST_MOVE_FWD##N);                         \
-      const mask_type mask_plus_one = (pb->mask |= pb->mask + 1u) + 1u; \
+      pb->mask |= pb->mask + 1u;                                     \
+      const mask_type mask_plus_one = pb->mask + 1u;                 \
       if (BOOST_UNLIKELY(mask_plus_one <= 2)) {                      \
          if (mask_plus_one == 0) blist.unlink_available(pb);         \
          else                    blist.link_at_back(pb);             \
@@ -1682,7 +1683,8 @@ class nest
       block_alloc_traits::construct                                  \
          (al(), boost::movelib::to_raw_pointer(pb->data() + n_)      \
          BOOST_MOVE_I##N BOOST_MOVE_FWD##N);                         \
-      const mask_type mask_plus_one = (pb->mask |= pb->mask + 1u) + 1u; \
+      pb->mask |= pb->mask + 1u;                                     \
+      const mask_type mask_plus_one = pb->mask + 1u;                 \
       if (BOOST_UNLIKELY(mask_plus_one <= 2)) {                      \
          if (mask_plus_one == 0) blist.unlink_available(pb);         \
          else                    blist.link_at_back(pb);             \
