@@ -708,8 +708,10 @@ public:
          pbb = pbb->next;
          BOOST_IF_CONSTEXPR(Prefetch) {
             //Load next critical metadata
-            block_type& pbn = static_cast<block_type&>(*pbb->next);
-            BOOST_CONTAINER_NEST_PREFETCH(&pbn.next->mask);
+            block_base_type& pbn = static_cast<block_base_type&>(*pbb->next);
+            //Prefetch the next block's metadata plus the data
+            BOOST_CONTAINER_NEST_PREFETCH(&pbn.next);
+            BOOST_CONTAINER_NEST_PREFETCH_BLOCK(&pbn);
          }
          mask = pbb->mask;
       }
@@ -730,8 +732,9 @@ public:
          pbb = pbb->prev;
          BOOST_IF_CONSTEXPR(Prefetch) {
             //Load next data
-            block_type& pbn = static_cast<block_type&>(*pbb->prev);
-            BOOST_CONTAINER_NEST_PREFETCH(&pbn.prev->mask);
+            block_base_type& pbn = static_cast<block_base_type&>(*pbb->prev);
+            BOOST_CONTAINER_NEST_PREFETCH(&pbn.prev);
+            BOOST_CONTAINER_NEST_PREFETCH_BLOCK(&pbn);
          }
          mask = pbb->mask;
       }
@@ -774,7 +777,7 @@ private:
          <ValuePointer, const block_base_type>::type                       const_block_base_pointer;
    typedef typename nest_detail::pointer_rebind
          <ValuePointer, value_type>::type                                  nonconst_pointer;
-   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock> block_type;
+   typedef nest_detail::block<nonconst_pointer, StoreDataInBlock>          block_type;
    typedef typename block_base_type::mask_type                             mask_type;
 
    BOOST_STATIC_CONSTEXPR std::size_t  N = block_base_type::N;
