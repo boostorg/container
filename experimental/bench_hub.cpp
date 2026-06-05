@@ -103,7 +103,7 @@ BOOST_CONTAINER_FORCEINLINE void resume_timing()
    measure_start += boost::move_detail::nsec_clock() - measure_pause;
 }
 
-#include <boost/container/experimental/hub.hpp>
+#include <boost/container/hub.hpp>
 #include <boost/container/experimental/nest.hpp>
 #include <boost/core/detail/splitmix64.hpp>
 #include <cmath>

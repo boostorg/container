@@ -942,6 +942,34 @@ struct block_typedefs
 
 } /* namespace container::hub_detail */
 
+//! A hub is a container with constant-time insertion and erasure and element
+//! stability: pointers and iterators to an element remain valid until the
+//! element is erased. It is a nearly drop-in, more compact alternative to the
+//! C++26 \c std::hive.
+//!
+//! Elements are stored in \e blocks of contiguous memory, each with a fixed
+//! capacity of 64 elements. The insertion position is chosen by the container,
+//! which may reuse the memory of previously erased elements. A block with at
+//! least one element is called \e active; an empty block kept internally for
+//! future reuse is called \e reserved. Reserved blocks are not used until all
+//! active blocks are full, and are only deallocated by \c shrink_to_fit,
+//! \c trim_capacity or on container destruction. New blocks are allocated only
+//! when every block is full or when the user issues a \c reserve operation.
+//!
+//! \c hub<T,\ Allocator> is a model of \c Container, \c ReversibleContainer,
+//! \c AllocatorAwareContainer and \c SequenceContainer, with the following
+//! exceptions: operators \c == and \c != are not provided, and positional
+//! insertion of the form \c insert(position,\ ...) or \c emplace(position,\ ...)
+//! is not provided or ignores the position argument. Its iterators model
+//! \c LegacyBidirectionalIterator.
+//!
+//! \tparam T The cv-unqualified object type of the elements stored in the hub.
+//! \tparam Allocator An allocator whose value type is \c T.
+//!
+//! <b>Exception safety</b>: Except when explicitly noted, all non-const member
+//!   functions (and free functions taking \c hub by non-const reference) provide
+//!   the basic exception guarantee, whereas all const member functions (and free
+//!   functions taking \c hub by const reference) provide the strong guarantee.
 template<typename T, typename Allocator>
 class hub: empty_value<
   typename hub_detail::block_typedefs<Allocator>::block_allocator, 0>
@@ -969,11 +997,25 @@ public:
   using reverse_iterator = std::reverse_iterator<iterator>;
   using const_reverse_iterator = std::reverse_iterator<const_iterator>; 
 
+  //! <b>Effects</b>: Constructs an empty hub, using \c Allocator() as the allocator.
+  //!
+  //! <b>Requires</b>: \c Allocator is DefaultConstructible.
+  //!
+  //! <b>Complexity</b>: Constant.
   hub() noexcept(noexcept(Allocator())): hub{Allocator()} {}
 
+  //! <b>Effects</b>: Constructs an empty hub, using the specified allocator.
+  //!
+  //! <b>Complexity</b>: Constant.
   explicit hub(const Allocator& al_) noexcept: 
     allocator_base{empty_init, al_} {}
 
+  //! <b>Effects</b>: Constructs a hub with n default-inserted elements, using
+  //!   the specified allocator.
+  //!
+  //! <b>Requires</b>: T is DefaultInsertable into the hub.
+  //!
+  //! <b>Complexity</b>: Linear in n.
   explicit hub(size_type n, const Allocator& al_ = Allocator()): hub{al_}
   {
     range_insert_impl(size_type(0), n, [&, this] (T* p, size_type) {
@@ -981,11 +1023,21 @@ public:
     });
   }
 
+  //! <b>Effects</b>: Constructs a hub with n copies of value, using the
+  //!   specified allocator.
+  //!
+  //! <b>Requires</b>: T is CopyInsertable into the hub.
+  //!
+  //! <b>Complexity</b>: Linear in n.
   hub(size_type n, const T& x, const Allocator& al_ = Allocator()): hub{al_}
   {
     insert(n, x);
   }
 
+  //! <b>Effects</b>: Constructs a hub equal to the range [first, last), using
+  //!   the specified allocator.
+  //!
+  //! <b>Complexity</b>: Linear in std::distance(first, last).
   template<
     typename InputIterator, 
     typename = hub_detail::enable_if_is_input_iterator_t<InputIterator>
@@ -998,6 +1050,10 @@ public:
   }
 
 #if !defined(BOOST_CONTAINER_HUB_NO_RANGES)
+  //! <b>Effects</b>: Constructs a hub equal to the range rg, using the
+  //!   specified allocator.
+  //!
+  //! <b>Complexity</b>: Linear in std::ranges::distance(rg).
   template<hub_detail::container_compatible_range<T> R>
   hub(from_range_t, R&& rg, const Allocator& al_ = Allocator()): hub{al_}
   {
@@ -1005,23 +1061,67 @@ public:
   }
 #endif
 
+  //! <b>Effects</b>: Constructs a hub equal to x. The second overload uses the
+  //!   given allocator.
+  //!
+  //! <b>Requires</b>: T is CopyInsertable into the hub.
+  //!
+  //! <b>Complexity</b>: Linear in x.size().
   hub(const hub& x):
     hub{x, allocator_select_on_container_copy_construction(x.al())} {}
 
+  //! <b>Effects</b>: Constructs a hub equal to x, using the given allocator.
+  //!
+  //! <b>Requires</b>: T is CopyInsertable into the hub.
+  //!
+  //! <b>Complexity</b>: Linear in x.size().
   hub(const hub& x, const hub_detail::type_identity_t<Allocator>& al_):
     hub(x.begin(), x.end(), al_) {}
 
+  //! <b>Effects</b>: Move constructor. Element blocks are moved from x into
+  //!   *this; pointers, references and iterators to elements of x remain valid
+  //!   but now refer to *this.
+  //!
+  //! <b>Postcondition</b>: x.empty() is true.
+  //!
+  //! <b>Complexity</b>: Constant.
   hub(hub&& x) noexcept:
     hub{std::move(x), Allocator(std::move(x.al())), std::true_type{}} {}
 
+  //! <b>Effects</b>: Allocator-extended move constructor. If alloc equals
+  //!   x.get_allocator() the element blocks are moved (iterators/pointers to x
+  //!   remain valid as members of *this); otherwise each element is moved into
+  //!   *this and references, pointers and iterators to x are invalidated.
+  //!
+  //! <b>Requires</b>: T is MoveInsertable when the allocators may be unequal.
+  //!
+  //! <b>Postcondition</b>: x.empty() is true.
+  //!
+  //! <b>Complexity</b>: Constant, or linear in x.size() if elements are moved
+  //!   one by one.
   hub(hub&& x, const hub_detail::type_identity_t<Allocator>& al_):
     hub{std::move(x), al_, allocator_is_always_equal_t<Allocator>{}} {}
 
+  //! <b>Effects</b>: Constructs a hub equal to il, using the specified allocator.
+  //!
+  //! <b>Requires</b>: T is CopyInsertable into the hub.
+  //!
+  //! <b>Complexity</b>: Linear in il.size().
   hub(std::initializer_list<T> il, const Allocator& al_ = Allocator()):
     hub{il.begin(), il.end(), al_} {}
 
+  //! <b>Effects</b>: Destroys all elements and deallocates all blocks.
+  //!
+  //! <b>Complexity</b>: Linear in size() plus the number of blocks.
   ~hub() { reset(); }
 
+  //! <b>Effects</b>: Copy assignment. Existing elements are copy-assigned or
+  //!   destroyed and the elements of x are copied into *this, keeping their
+  //!   relative order.
+  //!
+  //! <b>Requires</b>: T is CopyInsertable into the hub and CopyAssignable.
+  //!
+  //! <b>Complexity</b>: Linear in size() + x.size().
   hub& operator=(const hub& x)
   {
     using pocca =
@@ -1041,6 +1141,20 @@ public:
     return *this;
   }
 
+  //! <b>Effects</b>: Move assignment. Existing elements are move-assigned or
+  //!   destroyed. If the allocator propagates on move assignment or both
+  //!   allocators are equal, element blocks are moved from x (iterators/pointers
+  //!   to x remain valid as members of *this); otherwise each element of x is
+  //!   moved into *this and references, pointers and iterators to x are
+  //!   invalidated.
+  //!
+  //! <b>Requires</b>: T is MoveInsertable and MoveAssignable when elements are
+  //!   moved one by one.
+  //!
+  //! <b>Postcondition</b>: x.empty() is true.
+  //!
+  //! <b>Complexity</b>: Linear in size(), plus linear in x.size() when elements
+  //!   are moved one by one.
   hub& operator=(hub&& x)
     noexcept(
       allocator_propagate_on_container_move_assignment_t<Allocator>::value ||
@@ -1058,12 +1172,19 @@ public:
     return *this;
   }
 
+  //! <b>Effects</b>: Replaces the contents of *this with a copy of il.
+  //!
+  //! <b>Complexity</b>: Linear in size() + il.size().
   hub& operator=(std::initializer_list<T> il)
   {
     assign(il);
     return *this;
   }
 
+  //! <b>Effects</b>: Replaces the contents of *this with a copy of the range
+  //!   [first, last).
+  //!
+  //! <b>Complexity</b>: Linear in size() + std::distance(first, last).
   template<
     typename InputIterator,
     typename = hub_detail::enable_if_is_input_iterator_t<InputIterator>
@@ -1077,6 +1198,10 @@ public:
   }
 
 #if !defined(BOOST_CONTAINER_HUB_NO_RANGES)
+  //! <b>Effects</b>: Replaces the contents of *this with a copy of the elements
+  //!   in the range rg.
+  //!
+  //! <b>Complexity</b>: Linear in size() + std::ranges::distance(rg).
   template<hub_detail::container_compatible_range<T> R>
   void assign_range(R&& rg)
   {
@@ -1087,6 +1212,9 @@ public:
   }
 #endif
 
+  //! <b>Effects</b>: Replaces the contents of *this with n copies of x.
+  //!
+  //! <b>Complexity</b>: Linear in size() + n.
   void assign(size_type n, const T& x)
   {
     range_assign_impl(
@@ -1095,14 +1223,27 @@ public:
       [&] (T* p, size_type) { *p = x; });
   }
 
+  //! <b>Effects</b>: Replaces the contents of *this with a copy of il.
+  //!
+  //! <b>Complexity</b>: Linear in size() + il.size().
   void assign(std::initializer_list<T> il) { assign(il.begin(), il.end()); }
 
+  //! <b>Effects</b>: Returns a copy of the allocator associated with *this.
+  //!
+  //! <b>Complexity</b>: Constant.
   allocator_type get_allocator() const noexcept { return al(); }
 
+  //! <b>Effects</b>: Returns an iterator to the first element, or end() if empty.
+  //!   The const overloads return a const_iterator. <b>Complexity</b>: Constant.
   iterator               begin() noexcept { return ++end(); }
   const_iterator         begin() const noexcept { return ++end(); }
+  //! <b>Effects</b>: Returns the past-the-end iterator. The end iterator is
+  //!   stable: it is not invalidated by insertion or erasure. The const overloads
+  //!   return a const_iterator. <b>Complexity</b>: Constant.
   iterator               end() noexcept { return {blist.header(), 0}; }
   const_iterator         end() const noexcept { return {blist.header(), 0}; }
+  //! <b>Effects</b>: Reverse and const iterator accessors, with the usual
+  //!   semantics. <b>Complexity</b>: Constant.
   reverse_iterator       rbegin() noexcept { return reverse_iterator{end()}; }
   const_reverse_iterator rbegin() const noexcept 
                          { return const_reverse_iterator{end()}; }
@@ -1114,9 +1255,19 @@ public:
   const_reverse_iterator crbegin() const noexcept { return rbegin(); }
   const_reverse_iterator crend() const noexcept { return rend(); }
 
+  //! <b>Effects</b>: Returns true if the hub contains no elements.
+  //!
+  //! <b>Complexity</b>: Constant.
   bool      empty() const noexcept { return size_ == 0; }
+
+  //! <b>Effects</b>: Returns the number of elements in the hub.
+  //!
+  //! <b>Complexity</b>: Constant.
   size_type size() const noexcept { return size_; }
 
+  //! <b>Effects</b>: Returns the largest possible size of the hub.
+  //!
+  //! <b>Complexity</b>: Constant.
   size_type max_size() const noexcept 
   {
     std::size_t
@@ -1126,8 +1277,24 @@ public:
       (size_type)((std::min)(bs, vs) / (sizeof(block) + sizeof(T) * N) * N);
   }
   
+  //! <b>Effects</b>: Returns the total number of elements that *this can hold
+  //!   without requiring allocation of more element blocks.
+  //!
+  //! <b>Complexity</b>: Constant.
   size_type capacity() const noexcept { return num_blocks * N; }
 
+  //! <b>Effects</b>: If n <= capacity() there are no effects; otherwise
+  //!   increases capacity() by allocating reserved blocks.
+  //!
+  //! <b>Postcondition</b>: capacity() >= n.
+  //!
+  //! <b>Throws</b>: std::length_error if n > max_size(), plus any exception
+  //!   thrown by the allocator.
+  //!
+  //! <b>Complexity</b>: Linear in the number of reserved blocks allocated.
+  //!
+  //! <b>Note</b>: All references, pointers and iterators (including the
+  //!   past-the-end iterator) remain valid.
   void reserve(size_type n)
   {
     if(n > max_size()) {
@@ -1137,14 +1304,40 @@ public:
     while(capacity() < n) (void)create_new_available_block();
   }
 
+  //! <b>Effects</b>: Reallocates elements if needed so that the number of active
+  //!   blocks is minimized and deallocates the ensuing reserved blocks. If
+  //!   capacity() already equals size() there are no effects. If T throws during
+  //!   reallocation, the effects are unspecified.
+  //!
+  //! <b>Requires</b>: T is MoveInsertable into the hub.
+  //!
+  //! <b>Complexity</b>: Linear in size() if reallocation happens, plus linear in
+  //!   the number of reserved blocks.
+  //!
+  //! <b>Note</b>: If reallocation happens, the order of the elements may change
+  //!   and all references, pointers and iterators to elements are invalidated.
   void shrink_to_fit()
   {
     compact();
     trim_capacity();
   }
 
+  //! <b>Effects</b>: Deallocates all reserved blocks, reducing capacity()
+  //!   accordingly.
+  //!
+  //! <b>Complexity</b>: Linear in the number of reserved blocks deallocated.
+  //!
+  //! <b>Note</b>: All references, pointers and iterators (including the
+  //!   past-the-end iterator) remain valid.
   void trim_capacity() noexcept { trim_capacity(0); }
 
+  //! <b>Effects</b>: If n >= capacity() there are no effects; otherwise reduces
+  //!   capacity() to no less than n by deallocating reserved blocks.
+  //!
+  //! <b>Complexity</b>: Linear in the number of reserved blocks deallocated.
+  //!
+  //! <b>Note</b>: All references, pointers and iterators (including the
+  //!   past-the-end iterator) remain valid.
   void trim_capacity(size_type n) noexcept
   {
     if(capacity() <= n) return;
@@ -1158,6 +1351,16 @@ public:
     }
   }
 
+  //! <b>Effects</b>: Inserts an object of type T constructed with
+  //!   std::forward<Args>(args)... at a position chosen by the container. If an
+  //!   exception is thrown there are no effects. args may directly or indirectly
+  //!   refer to a value in *this.
+  //!
+  //! <b>Requires</b>: T is EmplaceConstructible into the hub from args.
+  //!
+  //! <b>Returns</b>: An iterator pointing to the new element.
+  //!
+  //! <b>Complexity</b>: Constant. Exactly one object of type T is constructed.
   template<typename... Args>
   BOOST_FORCEINLINE iterator emplace(Args&&... args)
   {
@@ -1176,12 +1379,25 @@ public:
     return {pb, n};
   }
 
+  //! <b>Effects</b>: Equivalent to emplace(std::forward<Args>(args)...); the
+  //!   hint is ignored.
+  //!
+  //! <b>Returns</b>: An iterator pointing to the new element.
+  //!
+  //! <b>Complexity</b>: Constant.
   template<typename... Args>
   BOOST_FORCEINLINE iterator emplace_hint(const_iterator, Args&&... args)
   {
     return emplace(std::forward<Args>(args)...);
   }
 
+  //! <b>Effects</b>: Inserts a copy of x (or moves x) at a position chosen by
+  //!   the container; overloads taking a hint ignore it. Equivalent to
+  //!   emplace(std::forward<decltype(x)>(x)).
+  //!
+  //! <b>Returns</b>: An iterator pointing to the new element.
+  //!
+  //! <b>Complexity</b>: Constant.
   BOOST_FORCEINLINE iterator insert(const T& x) { return emplace(x); }
   BOOST_FORCEINLINE iterator insert(const_iterator, const T& x)
                              { return emplace(x); }
@@ -1189,9 +1405,21 @@ public:
   BOOST_FORCEINLINE iterator insert(const_iterator, T&& x) 
                              { return emplace(std::move(x)); }
 
+  //! <b>Effects</b>: Inserts copies of the elements in il. Equivalent to
+  //!   insert(il.begin(), il.end()).
+  //!
+  //! <b>Complexity</b>: Linear in il.size().
   void insert(std::initializer_list<T> il) { insert(il.begin(), il.end()); }
 
 #if !defined(BOOST_CONTAINER_HUB_NO_RANGES)
+  //! <b>Effects</b>: Inserts copies of the elements in rg. Each iterator in rg
+  //!   is dereferenced exactly once.
+  //!
+  //! <b>Requires</b>: T is EmplaceConstructible into the hub from
+  //!   *ranges::begin(rg) and rg does not overlap *this.
+  //!
+  //! <b>Complexity</b>: Linear in the number of elements inserted; one object of
+  //!   type T is constructed per element.
   template<hub_detail::container_compatible_range<T> R>
   void insert_range(R&& rg)
   {
@@ -1201,6 +1429,14 @@ public:
   }
 #endif
 
+  //! <b>Effects</b>: Inserts copies of the elements in [first, last). Each
+  //!   iterator in the range is dereferenced exactly once.
+  //!
+  //! <b>Requires</b>: T is EmplaceConstructible into the hub from *first and
+  //!   [first, last) does not overlap *this.
+  //!
+  //! <b>Complexity</b>: Linear in the number of elements inserted; one object of
+  //!   type T is constructed per element.
   template<
     typename InputIterator,
     typename = hub_detail::enable_if_is_input_iterator_t<InputIterator>
@@ -1212,6 +1448,12 @@ public:
     });
   }
 
+  //! <b>Effects</b>: Inserts n copies of x.
+  //!
+  //! <b>Requires</b>: T is CopyInsertable into the hub.
+  //!
+  //! <b>Complexity</b>: Linear in n; one object of type T is constructed per
+  //!   element.
   void insert(size_type n, const T& x)
   {
     range_insert_impl(size_type(0), n, [&, this] (T* p, size_type) {
@@ -1219,6 +1461,15 @@ public:
     });
   }
 
+  //! <b>Effects</b>: Erases the element pointed to by pos.
+  //!
+  //! <b>Returns</b>: An iterator pointing to the element that followed the
+  //!   erased one.
+  //!
+  //! <b>Complexity</b>: Constant.
+  //!
+  //! <b>Note</b>: Invalidates references, pointers and iterators referring to
+  //!   the erased element.
   BOOST_FORCEINLINE iterator erase(const_iterator pos)
   {
     auto pbb = pos.pbb;
@@ -1228,11 +1479,28 @@ public:
     return {pos.pbb, pos.n};
   }
 
+  //! <b>Effects</b>: Erases the element pointed to by pos. Equivalent to
+  //!   erase(pos) but returns nothing.
+  //!
+  //! <b>Complexity</b>: Constant.
+  //!
+  //! <b>Note</b>: Potentially faster than erase(pos) as no return iterator needs
+  //!   to be computed. Invalidates references, pointers and iterators referring
+  //!   to the erased element.
   BOOST_FORCEINLINE void erase_void(const_iterator pos)
   {
     erase_impl(pos.pbb, pos.n);
   }
 
+  //! <b>Effects</b>: Erases the elements in the range [first, last).
+  //!
+  //! <b>Returns</b>: An iterator pointing to the element that followed the last
+  //!   erased element.
+  //!
+  //! <b>Complexity</b>: Linear in the number of elements erased.
+  //!
+  //! <b>Note</b>: Invalidates references, pointers and iterators referring to
+  //!   the erased elements.
   iterator erase(const_iterator first, const_iterator last)
   {
     for(auto pbb = first.pbb; first != last; ) {
@@ -1257,6 +1525,10 @@ public:
     return {last.pbb, last.n};
   }
 
+  //! <b>Effects</b>: Exchanges the contents and capacity() of *this with those
+  //!   of x.
+  //!
+  //! <b>Complexity</b>: Constant.
   void swap(hub& x)
     noexcept(
       allocator_propagate_on_container_swap_t<Allocator>::value ||
@@ -1276,8 +1548,21 @@ public:
     std::swap(size_, x.size_);
   }
 
+  //! <b>Effects</b>: Erases all elements. Reserved blocks are kept.
+  //!
+  //! <b>Complexity</b>: Linear in size().
   void clear() noexcept { erase(begin(), end()); }
 
+  //! <b>Effects</b>: Inserts the contents of x into *this, leaving x empty.
+  //!   Pointers and references to the moved elements of x now refer to *this;
+  //!   iterators continue to refer to their elements but behave as iterators
+  //!   into *this. Reserved blocks of x are not transferred.
+  //!
+  //! <b>Requires</b>: get_allocator() == x.get_allocator() and
+  //!   std::addressof(x) != this.
+  //!
+  //! <b>Complexity</b>: Linear in the number of blocks of x plus the number of
+  //!   blocks of *this.
   void splice(hub& x)
   {
     BOOST_ASSERT(this != &x);
@@ -1299,8 +1584,24 @@ public:
     }
   }
 
+  //! <b>Effects</b>: Equivalent to splice(x).
   void splice(hub&& x) { splice(x); }
 
+  //! <b>Effects</b>: Erases all but the first element from every consecutive
+  //!   group of equivalent elements, i.e. erases each element i in
+  //!   [begin() + 1, end()) for which pred(*i, *(i - 1)) is true.
+  //!
+  //! <b>Requires</b>: pred is an equivalence relation.
+  //!
+  //! <b>Returns</b>: The number of elements erased.
+  //!
+  //! <b>Throws</b>: Nothing unless pred throws.
+  //!
+  //! <b>Complexity</b>: Exactly size() - 1 applications of pred for a non-empty
+  //!   hub, otherwise none.
+  //!
+  //! <b>Note</b>: Invalidates references, pointers and iterators referring to
+  //!   the erased elements.
   template<typename BinaryPredicate = std::equal_to<T>>
   size_type unique(BinaryPredicate pred = BinaryPredicate())
   {
@@ -1321,6 +1622,17 @@ public:
 #pragma warning(disable:4127) /* conditional expression is constant */
 #endif
 
+  //! <b>Effects</b>: Sorts *this according to comp. If comp or any operation on
+  //!   T throws, *this is left in a valid but unspecified state; if an exception
+  //!   is thrown while allocating internal memory there are no effects.
+  //!
+  //! <b>Requires</b>: T is MoveInsertable into the hub, MoveConstructible,
+  //!   MoveAssignable and Swappable.
+  //!
+  //! <b>Complexity</b>: O(N*log(N)) comparisons, where N is size().
+  //!
+  //! <b>Note</b>: May allocate. References, pointers and iterators to elements
+  //!   may be invalidated. The sort is not stable.
   template<typename Compare = std::less<T>>
   void sort(Compare comp = Compare())
   {
@@ -1351,6 +1663,14 @@ public:
 #pragma warning(pop) /* C4127 */
 #endif
 
+  //! <b>Effects</b>: Returns an iterator (or const_iterator) referring to the
+  //!   same element as p.
+  //!
+  //! <b>Requires</b>: p points to an element in *this.
+  //!
+  //! <b>Throws</b>: Nothing.
+  //!
+  //! <b>Complexity</b>: Linear in the number of active blocks in *this.
   iterator get_iterator(const_pointer p)
   {   
     std::less<const T*> less;
@@ -1862,6 +2182,9 @@ hub(from_range_t, R&&, Allocator = Allocator())
 #endif
 #endif
 
+//! <b>Effects</b>: Equivalent to x.swap(y).
+//!
+//! <b>Complexity</b>: Constant.
 template<typename T, typename Allocator>
 void swap(hub<T, Allocator>& x, hub<T, Allocator>& y)
   noexcept(noexcept(x.swap(y)))
@@ -1869,6 +2192,12 @@ void swap(hub<T, Allocator>& x, hub<T, Allocator>& y)
   x.swap(y);
 }
 
+//! <b>Effects</b>: Erases all elements of x equal to value. Equivalent to
+//!   erase_if(x, [&](const auto& e){ return e == value; }).
+//!
+//! <b>Returns</b>: The number of erased elements.
+//!
+//! <b>Complexity</b>: Linear in x.size().
 template<typename T, typename Allocator, typename U = T>
 typename hub<T, Allocator>::size_type
 erase(hub<T, Allocator>& x, const U& value)
@@ -1877,6 +2206,14 @@ erase(hub<T, Allocator>& x, const U& value)
     x, [&](const T& v) -> bool { return v == value; });
 }
 
+//! <b>Effects</b>: Erases all elements of x for which pred returns true.
+//!
+//! <b>Returns</b>: The number of erased elements.
+//!
+//! <b>Complexity</b>: Linear in x.size().
+//!
+//! <b>Note</b>: Potentially faster than the naive erase loop due to internal
+//!   optimizations.
 template<typename T, typename Allocator, typename Predicate>
 typename hub<T, Allocator>::size_type
 erase_if(hub<T, Allocator>& x, Predicate pred)
@@ -1900,6 +2237,16 @@ erase_if(hub<T, Allocator>& x, Predicate pred)
   return (size_type)(s - x.size_);
 }
 
+//! <b>Effects</b>: Applies f to every element in [first, last), in order.
+//!   Equivalent to: while(first != last) f(*first++); return f;
+//!
+//! <b>Requires</b>: decltype(first) is the iterator or const_iterator of an
+//!   instantiation of hub and [first, last) is a valid range.
+//!
+//! <b>Returns</b>: std::move(f).
+//!
+//! <b>Note</b>: Potentially faster than the equivalent loop thanks to internal
+//!   unrolling and prefetching.
 template<typename ValuePtr, typename F>
 F for_each(
   hub_detail::iterator<ValuePtr> first, hub_detail::iterator<ValuePtr> last,
@@ -1912,6 +2259,13 @@ F for_each(
   return f;
 }
 
+//! <b>Effects</b>: Applies f to every element of x. Equivalent to
+//!   for_each(x.begin(), x.end(), std::ref(f)).
+//!
+//! <b>Returns</b>: std::move(f).
+//!
+//! <b>Note</b>: Potentially faster than range iteration thanks to internal
+//!   unrolling and prefetching.
 template<typename T, typename Allocator, typename F>
 F for_each(hub<T, Allocator>& x, F f)
 {
@@ -1926,6 +2280,18 @@ F for_each(const hub<T, Allocator>& x, F f)
   return f;
 }
 
+//! <b>Effects</b>: Applies f to the elements of [first, last) in order while f
+//!   returns true. Equivalent to:
+//!   while(first != last && f(*first)) ++first; return {first, std::move(f)};
+//!
+//! <b>Requires</b>: decltype(first) is the iterator or const_iterator of an
+//!   instantiation of hub and [first, last) is a valid range.
+//!
+//! <b>Returns</b>: A pair with the iterator past the last visited element and
+//!   std::move(f).
+//!
+//! <b>Note</b>: Potentially faster than the equivalent loop thanks to internal
+//!   unrolling and prefetching.
 template<typename ValuePtr, typename F>
 std::pair<hub_detail::iterator<ValuePtr>, F> for_each_while(
   hub_detail::iterator<ValuePtr> first, hub_detail::iterator<ValuePtr> last,
@@ -1945,6 +2311,15 @@ std::pair<hub_detail::iterator<ValuePtr>, F> for_each_while(
   return {first, std::move(f)};
 }
 
+//! <b>Effects</b>: Applies f to the elements of x while f returns true.
+//!   Equivalent to for_each_while(x.begin(), x.end(), std::ref(f)) with f moved
+//!   into the returned pair.
+//!
+//! <b>Returns</b>: A pair with the iterator past the last visited element and
+//!   std::move(f).
+//!
+//! <b>Note</b>: Potentially faster than range iteration thanks to internal
+//!   unrolling and prefetching.
 template<typename T, typename Allocator, typename F>
 std::pair<typename hub<T, Allocator>::iterator, F>
 for_each_while(hub<T, Allocator>& x, F f)
