@@ -20,8 +20,6 @@ int main() { return 0; }
 #include <boost/core/allocator_access.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include <boost/core/pointer_traits.hpp>
-#include <boost/uuid/random_generator.hpp>
-#include <boost/uuid/uuid_io.hpp>
 
 /* GCC on Darwin cannot parse the system <mach/message.h> header
  * (xnu_static_assert_struct_size uses Clang-only extensions).
@@ -30,7 +28,7 @@ int main() { return 0; }
 #define BOOST_CONTAINER_HUB_TEST_API_NO_INTERPROCESS
 #endif
 
-#if !defined(BOOST_CONTAINER_HUB_TEST_API_NO_INTERPROCESS)
+#if !defined(BOOST_NO_EXCEPTIONS) && !defined(BOOST_CONTAINER_HUB_TEST_API_NO_INTERPROCESS)
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
 #endif
@@ -164,7 +162,6 @@ void test(const typename Hub::allocator_type& al = {})
   using const_pointer = typename Hub::const_pointer;
   using reference = typename Hub::reference;
   using const_reference = typename Hub::const_reference;
-  using size_type = typename Hub::size_type;
   using difference_type = typename Hub::difference_type;
   using iterator = typename Hub::iterator;
   using const_iterator = typename Hub::const_iterator;
@@ -386,7 +383,7 @@ void test(const typename Hub::allocator_type& al = {})
     test_equal(x, x2);
 
 #ifndef BOOST_NO_EXCEPTIONS
-    if(cx.max_size() < (size_type)(-1)) {
+    if(cx.max_size() < (typename Hub::size_type)(-1)) {
       BOOST_TEST_THROWS(
         x.reserve(cx.max_size() + 1), boost::container::length_error_t);
     }
@@ -747,21 +744,29 @@ void test_ctad()
 #endif
 }
 
+#if !defined(BOOST_NO_EXCEPTIONS) && !defined(BOOST_CONTAINER_HUB_TEST_API_NO_INTERPROCESS)
+#include <sstream>
+const char *get_shared_memory_name()
+{
+   std::stringstream s;
+   s << "process_" << boost::interprocess::ipcdetail::get_current_process_id();
+   static std::string str = s.str();
+   return str.c_str();
+}
+#endif
+
 int main()
 {
   test<boost::container::hub<int>>();
   test<boost::container::hub<std::size_t>>();
 
-#if !defined(BOOST_CONTAINER_HUB_TEST_API_NO_INTERPROCESS)
+#if !defined(BOOST_NO_EXCEPTIONS) && !defined(BOOST_CONTAINER_HUB_TEST_API_NO_INTERPROCESS)
   namespace bip = boost::interprocess;
   using segment_manager = bip::managed_shared_memory::segment_manager;
   using shared_int_allocator = bip::allocator<int, segment_manager>;
   using shared_int_hub = boost::container::hub<int, shared_int_allocator>;
 
-  static auto segment_name_str = 
-    std::string("boost_hub_test_api_shmem_segment") +
-    to_string(boost::uuids::random_generator()());
-  static auto segment_name = segment_name_str.c_str();
+  static auto segment_name = get_shared_memory_name();
   static struct segment_remover {
     segment_remover() { bip::shared_memory_object::remove(segment_name); }
     ~segment_remover() { bip::shared_memory_object::remove(segment_name); }
