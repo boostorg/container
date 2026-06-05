@@ -16,6 +16,7 @@ int main() { return 0; }
 #include <boost/config.hpp>
 #include <boost/config/workaround.hpp>
 #include <boost/container/hub.hpp>
+#include <boost/container/throw_exception.hpp>
 #include <boost/core/allocator_access.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include <boost/core/pointer_traits.hpp>
@@ -384,9 +385,12 @@ void test(const typename Hub::allocator_type& al = {})
     BOOST_TEST_EQ(cx.capacity(), c);
     test_equal(x, x2);
 
+#ifndef BOOST_NO_EXCEPTIONS
     if(cx.max_size() < (size_type)(-1)) {
-      BOOST_TEST_THROWS(x.reserve(cx.max_size() + 1), std::length_error);
+      BOOST_TEST_THROWS(
+        x.reserve(cx.max_size() + 1), boost::container::length_error_t);
     }
+#endif
   }
 
   /* available list partitioned in (non-empty)|(empty) */

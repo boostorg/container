@@ -1287,7 +1287,7 @@ public:
   //!
   //! <b>Postcondition</b>: capacity() >= n.
   //!
-  //! <b>Throws</b>: length_error_t if n > max_size(), plus any exception
+  //! <b>Throws</b>: if n > max_size(), plus any exception
   //!   thrown by the allocator.
   //!
   //! <b>Complexity</b>: Linear in the number of reserved blocks allocated.

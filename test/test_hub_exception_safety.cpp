@@ -6,7 +6,11 @@
 
 #include <boost/config.hpp>
 
-#if BOOST_CXX_VERSION < 201103L
+/* This test exercises exception safety, so it is meaningless (and would not
+ * even compile, as it relies on try/catch and throw) when exceptions are
+ * disabled.
+ */
+#if BOOST_CXX_VERSION < 201103L || defined(BOOST_NO_EXCEPTIONS)
 
 int main() { return 0; }
 
