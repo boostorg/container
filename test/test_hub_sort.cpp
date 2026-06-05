@@ -39,7 +39,7 @@ struct big_nontrivial_int
 
 static_assert(
   !std::is_trivially_destructible<big_nontrivial_int>::value
-#if !BOOST_WORKAROUND(BOOST_LIBSTDCXX_VERSION, < 50000)
+#if defined(BOOST_LIBSTDCXX_VERSION) && (BOOST_LIBSTDCXX_VERSION >= 50000)
   && !std::is_trivially_copy_constructible<big_nontrivial_int>::value
   && !std::is_trivially_assignable<
     big_nontrivial_int, big_nontrivial_int>::value
