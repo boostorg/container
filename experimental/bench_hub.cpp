@@ -32,8 +32,8 @@ int main() { return 0; }
 #ifndef ELEMENT_SIZES
 //#define ELEMENT_SIZES { 32, 64, 96, 128, 192, 256 }
 //#define ELEMENT_SIZES { 32, 64, 128, 256 }
-//#define ELEMENT_SIZES { 64, 80 }
-#define ELEMENT_SIZES { 64 }
+#define ELEMENT_SIZES { 64, 80 }
+//#define ELEMENT_SIZES { 64 }
 //#define ELEMENT_SIZES { 32 }
 #endif
 inline constexpr std::size_t element_sizes[] = ELEMENT_SIZES;
@@ -53,12 +53,16 @@ BOOST_NOINLINE double measure(F f)
    typedef boost::move_detail::nanosecond_type nsec_t;
 
    #ifdef NDEBUG
-   //static const std::size_t num_trials = 10;
-   //static const nsec_t      min_time_per_trial = 150*1000000u; //150 ms
-   //static const std::size_t num_trials = 8;
-   //static const nsec_t      min_time_per_trial = 100*1000000u; // ms
-   static const std::size_t num_trials = 1;
-   static const nsec_t      min_time_per_trial = 0u;
+      //#define LONG_BENCH
+      #ifdef LONG_BENCH
+      //static const std::size_t num_trials = 10;
+      //static const nsec_t      min_time_per_trial = 150*1000000u; //150 ms
+      static const std::size_t num_trials = 6;
+      static const nsec_t      min_time_per_trial = 150*1000000u; // ms
+      #else
+      static const std::size_t num_trials = 1;
+      static const nsec_t      min_time_per_trial = 0u;
+      #endif
    #else
    static const std::size_t num_trials = 1;
    static const nsec_t      min_time_per_trial = 0u;
@@ -291,7 +295,7 @@ static double      min_erasure_rate = 0.0,
                    erase_rate_inc = 0.1;
 */
 
-static std::size_t min_size_exp = 3,
+static std::size_t min_size_exp = 4,
                    max_size_exp = 6
 ;
 static double      min_erasure_rate = 0.1,
@@ -624,12 +628,79 @@ double geomean(const benchmark_result& bench)
    return count > 0 ? std::exp(log_sum / (double)count) : 0.0;
 }
 
+//Geometric mean of a set of (positive) ratios.
+inline double geomean_of(const std::vector<double>& v)
+{
+   double log_sum = 0.0;
+   std::size_t count = 0;
+   for(double r: v) {
+      if(r > 0.0) { log_sum += std::log(r); ++count; }
+   }
+   return count > 0 ? std::exp(log_sum / (double)count) : 0.0;
+}
+
+//The list of erasure rates benchmarked, in the same order (and rounding) as the
+//rows of benchmark_result::ratios.
+inline std::vector<double> erasure_rates()
+{
+   std::vector<double> v;
+   for(double erasure_rate = min_erasure_rate;
+              erasure_rate <= max_erasure_rate;
+              erasure_rate += erase_rate_inc) {
+      v.push_back(std::round(erasure_rate * 1000.0) / 1000.0);
+   }
+   return v;
+}
+
+//Geomean of every erasure-rate row of a [erasure_rate][size] ratio matrix.
+inline std::vector<double> per_rate_geomeans(const std::vector<std::vector<double> >& ratios)
+{
+   std::vector<double> out;
+   for(const std::vector<double>& row: ratios) out.push_back(geomean_of(row));
+   return out;
+}
+
+//Column width of the numeric ("gen" + per-rate) columns.
+static const int geomean_col_w = 6;
+
+//Header row: blank label cell, then "gen" and one column per erasure rate.
+inline void print_geomean_header(const std::vector<double>& rates)
+{
+   std::cout << std::left << std::setw(30) << "" << std::setw(geomean_col_w) << "gen";
+   for(double r: rates) {
+      std::ostringstream o;
+      o << std::defaultfloat << std::setprecision(6) << r;
+      std::cout << std::left << std::setw(geomean_col_w) << o.str();
+   }
+   std::cout << "\n";
+}
+
+//Data row: label, general geomean and one geomean per erasure rate. Missing
+//per-rate values (size_per_rate shorter than rates) are left blank.
+inline void print_geomean_row(const std::string& label, double gen,
+                              const std::vector<double>& per_rate, std::size_t rate_count)
+{
+   std::cout << std::left << std::setw(30) << label
+             << std::fixed << std::setprecision(2)
+             << std::setw(geomean_col_w) << gen;
+   for(std::size_t ri = 0; ri < rate_count; ++ri) {
+      if(ri < per_rate.size())
+         std::cout << std::setw(geomean_col_w) << per_rate[ri];
+      else
+         std::cout << std::setw(geomean_col_w) << "";
+   }
+   std::cout << "\n";
+}
+
 
 //Per-execution (single element size) result summary: the geomean of each
 //individual test plus the overall geomean across all tests.
 struct run_summary
 {
    std::vector<std::pair<std::string, double> > per_test;
+   //Raw num/den ratios of each test, kept as [test][erasure_rate][size] so the
+   //aggregated report can also break geomeans down per erasure rate.
+   std::vector<std::vector<std::vector<double> > > per_test_ratios;
    double                                       overall;
    std::size_t                                  element_size;
 };
@@ -664,7 +735,7 @@ run_summary run_bench()
              << std::setw(41)  << "" << "\n"
              << std::setfill(current_fill);
 
-   table t;
+   table t;/*
    t.push_back(benchmark(
       "iteration", element_size,
       ::iteration<num>{}, ::iteration<den>{}));
@@ -685,45 +756,45 @@ run_summary run_bench()
       destruction<num>{}, destruction<den>{}));
    t.push_back(benchmark(
       "creation (make)", element_size,
-      creation<num>{}, creation<den>{}));
+      creation<num>{}, creation<den>{}));*/
    t.push_back(benchmark(
       "filling", element_size,
       filling<num>{}, filling<den>{}));
    t.push_back(benchmark(
       "quick filling", element_size,
-      quick_filling<num>{}, quick_filling<den>{}));
+      quick_filling<num>{}, quick_filling<den>{}));/*
    t.push_back(benchmark(
       "erasure", element_size,
       ::erasure<num>{}, ::erasure<den>{}));
-
+      */
       std::cout << "\n" << std::setfill('-') << std::setw(41) << "" "\n"
              << "Geometric means (num/den time ratio), element size "
              << element_size << "\n";
    std::cout << std::setfill(current_fill);
 
+   const std::vector<double> rates = erasure_rates();
+   print_geomean_header(rates);
+
    run_summary summary;
    for(const auto& bench: t) {
       const double g = geomean(bench);
       summary.per_test.push_back(std::make_pair(bench.title, g));
-      std::cout << std::left << std::setw(30) << bench.title
-                << std::fixed << std::setprecision(2) << g << "\n";
+      summary.per_test_ratios.push_back(bench.ratios);
+      print_geomean_row(bench.title, g, per_rate_geomeans(bench.ratios), rates.size());
    }
    summary.overall = geomean(t);
    summary.element_size = element_size;
-   std::cout << std::left << std::setw(30) << "OVERALL"
-             << std::fixed << std::setprecision(2) << summary.overall << "\n";
-   return summary;
-}
 
-//Geometric mean of a set of (positive) ratios.
-inline double geomean_of(const std::vector<double>& v)
-{
-   double log_sum = 0.0;
-   std::size_t count = 0;
-   for(double r: v) {
-      if(r > 0.0) { log_sum += std::log(r); ++count; }
-   }
-   return count > 0 ? std::exp(log_sum / (double)count) : 0.0;
+   //OVERALL: general geomean and, per erasure rate, the geomean pooled across
+   //every test at that rate.
+   std::vector<std::vector<double> > overall_per_rate(rates.size());
+   for(const auto& bench: t)
+      for(std::size_t ri = 0; ri < bench.ratios.size() && ri < rates.size(); ++ri)
+         for(double r: bench.ratios[ri]) overall_per_rate[ri].push_back(r);
+   std::vector<double> overall_rate_gm;
+   for(const std::vector<double>& v: overall_per_rate) overall_rate_gm.push_back(geomean_of(v));
+   print_geomean_row("OVERALL", summary.overall, overall_rate_gm, rates.size());
+   return summary;
 }
 
 template<std::size_t... Is>
@@ -737,40 +808,79 @@ void run_all(std::index_sequence<Is...>)
    const std::size_t num_exec = sizeof...(Is);
 
    char current_fill = std::cout.fill();
-   std::cout << "\n" << std::setfill('=') << std::setw(41) << "" << "\n"
+   std::cout << "\n\n\n"
+             << std::setfill('=') << std::setw(41) << "" << "\n"
+             << std::setfill('=') << std::setw(41) << "" << "\n"
              << "Aggregated geometric means across all " << num_exec
              << " executions (num/den time ratio)\n"
+             << std::setfill('=') << std::setw(41) << "" << "\n"
+             << std::setfill('=') << std::setw(41) << "" << "\n"
              << std::setfill(current_fill);
 
-   //Per-test geomean across executions (test set is identical per execution).
+   const std::vector<double> rates = erasure_rates();
+
+   //Per-test geomean across executions (test set is identical per execution),
+   //with one column per erasure rate (pooled across executions and sizes).
    const std::size_t num_tests = summaries[0].per_test.size();
    std::cout << "\n ---- Per test ----\n";
+   print_geomean_header(rates);
    for(std::size_t ti = 0; ti < num_tests; ++ti) {
       std::vector<double> vals;
       for(std::size_t e = 0; e < num_exec; ++e)
          vals.push_back(summaries[e].per_test[ti].second);
-      std::cout << std::left << std::setw(30) << summaries[0].per_test[ti].first
-                << std::fixed << std::setprecision(2) << geomean_of(vals) << "\n";
+
+      std::vector<std::vector<double> > vals_per_rate(rates.size());
+      for(std::size_t e = 0; e < num_exec; ++e) {
+         const std::vector<std::vector<double> >& tr = summaries[e].per_test_ratios[ti];
+         for(std::size_t ri = 0; ri < tr.size() && ri < rates.size(); ++ri)
+            for(double r: tr[ri]) vals_per_rate[ri].push_back(r);
+      }
+      std::vector<double> rate_gm;
+      for(const std::vector<double>& v: vals_per_rate) rate_gm.push_back(geomean_of(v));
+      print_geomean_row(summaries[0].per_test[ti].first, geomean_of(vals),
+                        rate_gm, rates.size());
    }
 
    //General (all-tests) geomean for each element size, shown only when more
-   //than one element size was benchmarked.
+   //than one element size was benchmarked, with one column per erasure rate.
    if(num_exec > 1) {
       std::cout << "\n ---- Per size ----\n";
+      print_geomean_header(rates);
       for(std::size_t e = 0; e < num_exec; ++e) {
          const std::string lbl = "element size " + std::to_string(summaries[e].element_size);
-         std::cout << std::left << std::setw(30) << lbl
-                   << std::fixed << std::setprecision(2) << summaries[e].overall << "\n";
+
+         std::vector<std::vector<double> > vals_per_rate(rates.size());
+         for(std::size_t ti = 0; ti < num_tests; ++ti) {
+            const std::vector<std::vector<double> >& tr = summaries[e].per_test_ratios[ti];
+            for(std::size_t ri = 0; ri < tr.size() && ri < rates.size(); ++ri)
+               for(double r: tr[ri]) vals_per_rate[ri].push_back(r);
+         }
+         std::vector<double> rate_gm;
+         for(const std::vector<double>& v: vals_per_rate) rate_gm.push_back(geomean_of(v));
+         print_geomean_row(lbl, summaries[e].overall, rate_gm, rates.size());
       }
    }
 
-   //Geomean of the per-execution overall geomeans.
+   //Geomean of the per-execution overall geomeans, with one column per erasure
+   //rate (pooled across every execution, test and size at that rate).
    std::vector<double> overalls;
    for(std::size_t e = 0; e < num_exec; ++e)
       overalls.push_back(summaries[e].overall);
-   std::cout << '\n'
-             << std::left << std::setw(30) << "GEOMEAN OF GEOMEANS"
-             << std::fixed << std::setprecision(2) << geomean_of(overalls) << "\n";
+
+   std::vector<std::vector<double> > vals_per_rate(rates.size());
+   for(std::size_t e = 0; e < num_exec; ++e) {
+      for(std::size_t ti = 0; ti < num_tests; ++ti) {
+         const std::vector<std::vector<double> >& tr = summaries[e].per_test_ratios[ti];
+         for(std::size_t ri = 0; ri < tr.size() && ri < rates.size(); ++ri)
+            for(double r: tr[ri]) vals_per_rate[ri].push_back(r);
+      }
+   }
+   std::vector<double> rate_gm;
+   for(const std::vector<double>& v: vals_per_rate) rate_gm.push_back(geomean_of(v));
+
+   std::cout << '\n';
+   print_geomean_header(rates);
+   print_geomean_row("GEOMEAN OF GEOMEANS", geomean_of(overalls), rate_gm, rates.size());
 
    const double total_elapsed = (double)(boost::move_detail::nsec_clock() - total_start) / 1.0e9;
    std::cout << std::left << std::setw(30) << "TOTAL ELAPSED"
