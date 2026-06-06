@@ -561,16 +561,62 @@ are a particular case where [classref boost::container::static_vector static_vec
 
 [section:small_vector ['small_vector]]
 
-[classref boost::container::small_vector small_vector] is a vector-like container optimized for the case when it contains few elements.
-It contains some preallocated elements in-place, which allows it to avoid the use of dynamic storage allocation
-when the actual number of elements is below that preallocated threshold. [classref boost::container::small_vector small_vector] is inspired by
+[classref boost::container::small_vector small_vector] is a vector-like container optimized for the case when it holds few elements.
+It embeds some preallocated, in-place storage for a number `N` of elements, which allows it to avoid any
+dynamic memory allocation as long as the actual number of elements does not exceed that preallocated threshold.
+[classref boost::container::small_vector small_vector] is inspired by
 [@http://llvm.org/docs/ProgrammersManual.html#llvm-adt-smallvector-h LLVM's `SmallVector`] container.
-Unlike [classref boost::container::static_vector static_vector], [classref boost::container::small_vector small_vector]'s capacity can grow beyond the initial preallocated capacity.
 
-[classref boost::container::small_vector small_vector]`<T, N, Allocator>` is convertible to `small_vector_base<T, Allocator>`, a type that is independent
-from the preallocated element count, allowing client code that does not need to be templated on that N argument.
-[classref boost::container::small_vector small_vector] inherits all `vector`'s member functions so it supports all standard features like emplacement,
-stateful allocators, etc.
+[*What is it for?]. Many programs create a large amount of short-lived sequences that, the overwhelming majority of the
+time, contain just a handful of elements. Using a plain `vector` in those scenarios means paying for a heap
+allocation (and the matching deallocation) on construction/growth even when only one or two elements are stored,
+which can dominate the cost and hurt cache locality. [classref boost::container::small_vector small_vector] addresses this by carrying a small buffer
+inside the container object itself: while `size() <= N` no allocation takes place and the elements live next to the
+container, which is both faster and more cache-friendly. Typical uses are temporary working sets, the implementation
+details of other data structures, parser/AST node children, small option lists, etc.
+
+[*Relationship with other containers]. Unlike [classref boost::container::static_vector static_vector], whose capacity is a fixed compile-time bound,
+[classref boost::container::small_vector small_vector]'s capacity can grow beyond the initial preallocated `N`: when the preallocated buffer is
+exhausted it transparently switches to dynamically allocated storage, behaving from then on like an ordinary `vector`.
+In other words, [classref boost::container::static_vector static_vector] never allocates (and throws if the fixed capacity is exceeded), whereas
+[classref boost::container::small_vector small_vector] only allocates once it outgrows its in-place buffer. [classref boost::container::small_vector small_vector] derives from
+[classref boost::container::vector vector] and inherits all of its member functions, so it supports every standard
+feature such as emplacement, the full set of insertion/erasure operations, stateful allocators, and so on.
+
+[*General properties]. [classref boost::container::small_vector small_vector] provides contiguous storage and random access iterators, just like `vector`.
+Insertion and removal are amortized constant time at the end and linear elsewhere. As with `vector`, iterators and
+references are invalidated by reallocation; note that, in addition, the very first growth past `N` (and any later
+shrink/transition between in-place and heap storage) moves the elements, so pointers, references and iterators are
+invalidated at those points even though the same logical element count is preserved.
+
+[*Memory considerations]. Because the in-place buffer is part of the object, `sizeof(small_vector<T, N>)` grows with
+`N` (roughly the size of an empty `vector` plus storage for `N` objects of type `T`). Choosing `N` is therefore a
+trade-off: a larger `N` avoids more allocations but makes the container object bigger (which matters when many of them
+are stored, moved around or kept on the stack). A good rule of thumb is to set `N` to the most common maximum size of
+the sequence so the common case stays allocation-free while the rare larger case still works by falling back to the
+heap.
+
+[*['small_vector_base]: decoupling code from the preallocated count]. The preallocated element count `N` is part of
+[classref boost::container::small_vector small_vector]'s type, so `small_vector<T, 4>` and `small_vector<T, 64>` are distinct, unrelated types.
+This is inconvenient for functions that just want to operate on "a small vector of `T`" regardless of how much
+in-place storage it happens to carry, as they would otherwise need to be turned into templates parameterized on `N`.
+To solve this, every [classref boost::container::small_vector small_vector]`<T, N, Allocator, Options>` publicly derives from, and is implicitly
+convertible to, [classref boost::container::small_vector_base small_vector_base]`<T, Allocator, Options>`, a base type that does [*not] depend on `N`.
+Functions that read or modify a small vector can take a (`const`) reference to
+[classref boost::container::small_vector_base small_vector_base] and accept any `small_vector<T, N>`:
+
+[import ../example/doc_small_vector_base.cpp]
+[doc_small_vector_base]
+
+[classref boost::container::small_vector_base small_vector_base] inherits all of `vector`'s member functions as well, so the called code can use the full
+container interface. It is non-copyable and non-destructible on its own (it is meant to be used only through a derived
+[classref boost::container::small_vector small_vector] object, typically as a function parameter), which keeps client interfaces free of the
+`N` template argument while preserving the small-buffer optimization of the concrete object passed in.
+
+[*Customization]. As with the other Boost.Container vector-like containers, [classref boost::container::small_vector small_vector] can be tuned through
+[classref boost::container::small_vector_options small_vector_options] (alignment of the in-place storage, growth factor, the integral type used to
+store the size/capacity, etc.). See the [link container.configurable_containers.configurable_small_vectors Configurable
+small vector] section for examples.
 
 [endsect]
 
