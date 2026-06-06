@@ -541,21 +541,44 @@ and fixed capacity of `array`. [classref boost::container::static_vector static_
 high-performance [@https://svn.boost.org/svn/boost/sandbox/varray/doc/html/index.html varray]
 class.
 
-The number of elements in a [classref boost::container::static_vector static_vector] may vary dynamically up to a fixed capacity
-because elements are stored within the object itself similarly to an array. However, objects are
-initialized as they are inserted into [classref boost::container::static_vector static_vector] unlike C arrays or `std::array` which must construct
-all elements on instantiation. The behavior of [classref boost::container::static_vector static_vector] enables the use of statically allocated
-elements in cases with complex object lifetime requirements that would otherwise not be trivially
-possible. Some other properties:
+[*What is it for?]. [classref boost::container::static_vector static_vector] stores its elements inside the container object itself, so it
+never performs dynamic memory allocation. This makes it ideal whenever heap allocation is undesirable
+or unavailable but a variable-length, vector-like interface is still convenient: embedded and realtime
+systems, hot code paths where allocation latency matters, fixed-size buffers, and the internal
+implementation of other classes are typical examples.
 
-* Random access to elements
-* Constant time insertion and removal of elements at the end
+[*Relationship with other containers]. The number of elements in a [classref boost::container::static_vector static_vector] may vary dynamically up to a
+fixed capacity because elements are stored within the object itself, similarly to an array. However, objects
+are initialized as they are inserted into [classref boost::container::static_vector static_vector] unlike C arrays or `std::array`, which must
+construct all elements on instantiation. The behavior of [classref boost::container::static_vector static_vector] enables the use of statically
+allocated elements in cases with complex object lifetime requirements that would otherwise not be trivially
+possible. The key difference with [classref boost::container::small_vector small_vector] is that [classref boost::container::small_vector small_vector] falls back to dynamic
+storage once its in-place buffer is exhausted, while [classref boost::container::static_vector static_vector]'s capacity is a hard,
+compile-time bound that is never exceeded.
+
+[*General properties]. Some relevant properties are:
+
+* Random access to elements.
+* Constant time insertion and removal of elements at the end.
 * Linear time insertion and removal of elements at the beginning or in the middle.
+* No dynamic memory allocation, ever: `capacity()` and `max_size()` are fixed at compile time.
+* Like `vector`, iterators and references are invalidated by insertions/erasures that shift elements,
+  but the storage region itself is never relocated (it lives inside the object).
 
-[classref boost::container::static_vector static_vector] is well suited for use in a buffer, the internal implementation of other
-classes, or use cases where there is a fixed limit to the number of elements that must be stored.
-Embedded and realtime applications where allocation either may not be available or acceptable
-are a particular case where [classref boost::container::static_vector static_vector] can be beneficial.
+[*Error handling]. By default ([classref boost::container::throw_on_overflow throw_on_overflow]`<true>`) trying to insert beyond the fixed capacity throws
+`bad_alloc` (or calls `throw_bad_alloc()` when exceptions are disabled) instead of allocating more memory.
+Out-of-bounds access through `at()` throws `out_of_range`. If [classref boost::container::throw_on_overflow throw_on_overflow]`<false>` is configured, inserting
+beyond capacity is undefined behavior, trading the safety check for minimum overhead.
+
+The following example illustrates the most common operations and the fixed-capacity behavior:
+
+[import ../example/doc_static_vector.cpp]
+[doc_static_vector]
+
+[*Customization]. As with the other Boost.Container vector-like containers, [classref boost::container::static_vector static_vector] can be tuned
+through [classref boost::container::static_vector_options static_vector_options] (the overflow-checking policy described above and the integral type
+used to store the size). See the [link container.configurable_containers.configurable_static_vectors Configurable
+static vector] section for examples.
 
 [endsect]
 
