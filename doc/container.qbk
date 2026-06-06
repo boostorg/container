@@ -432,14 +432,28 @@ erasure times considerably. Flat associative containers have the following attri
 
 [section:devector ['devector]]
 
-[classref boost::container::devector devector] is a hybrid of the standard vector and deque containers originally written by Thaler Benedek.
-It offers cheap (amortized constant time) insertion at both the front and back ends,
-while also providing the regular features of `vector`, in particular the contiguous underlying memory.
+[classref boost::container::devector devector] ("double-ended vector") is a hybrid of the standard `vector` and
+`deque` containers, originally written by Benedek Thaler. It offers cheap (amortized constant time) insertion at
+both the front and back ends, while also providing the regular features of `vector`, in particular contiguous
+underlying storage and random access to elements.
 
-Unlike `vector`, [classref boost::container::devector devector] can have free capacity both before and after the elements. This enables efficient
-implementation of methods that modify the [classref boost::container::devector devector] at the front. In general, [classref boost::container::devector devector]'s available methods
-are a superset of those of `vector` with similar behaviour, barring a couple of iterator invalidation
-guarantees that differ.
+[*What is it for?] [classref boost::container::devector devector] is the natural choice whenever a program needs a
+growable sequence that is frequently modified at [*both] ends but still requires the elements to live in a single
+contiguous block of memory. Double-ended queues (work queues, sliding windows, ring-buffer-like patterns) and
+parsers or builders that both prepend and append data are typical examples where a plain `vector` would force
+expensive shifts at the front and a `deque` would give up contiguity.
+
+[*Relationship with other containers]. Like `vector`, [classref boost::container::devector devector] keeps all its
+elements in a single contiguous buffer, so it offers random access, `data()`-based interoperability with C APIs and
+cache-friendly traversal; in fact, [classref boost::container::devector devector]'s available methods are a superset
+of those of `vector` with similar behaviour, barring a couple of iterator invalidation guarantees that differ.
+Unlike `vector`, it can reserve free capacity [*before] the first element as well as after the last one, which makes
+front insertion as cheap as back insertion instead of a linear-time operation. Like `deque`, it provides amortized
+constant-time growth at both ends, but unlike `deque` it does not use a segmented layout: the price for contiguity
+is that growing past the reserved capacity relocates elements, so iterators and references are invalidated more
+often than in a `deque`. In short, [classref boost::container::devector devector] sits between `vector` and `deque`,
+trading some of `deque`'s iterator-stability guarantees for `vector`-like contiguous storage with efficient
+two-ended growth.
 
 The static size overhead for boost's [classref boost::container::devector devector] is one extra `size_t` per container: Usually sizeof([classref boost::container::devector devector]) == 4*sizeof(T*).
 
@@ -484,6 +498,11 @@ However, this strategy has also some downsides:
    * However the usual container invariant where `size() <= capacity()` does not hold. `size()` can be bigger than
     `capacity()` because elements can be always inserted at an extreme with free capacity without reallocation.
 
+The following example illustrates the most common operations: efficient insertion and removal at both ends,
+random access over contiguous storage and the per-end `reserve_front`/`reserve_back` capacity hints:
+
+[import ../example/doc_devector.cpp]
+[doc_devector]
 
 [endsect]
 
