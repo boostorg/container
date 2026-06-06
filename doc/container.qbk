@@ -413,8 +413,8 @@ its erase functions (AssocVector::erase invalidates all iterators into the objec
 complexity guarantees of insert and erase (linear as opposed to constant). ]]
 
 [*Boost.Container] [classref boost::container::flat_map flat_map], [classref boost::container::flat_set flat_set], [classref boost::container::flat_multimap flat_multimap] and [classref boost::container::flat_multiset flat_multiset] containers are ordered, vector-like container based, associative
-containers following  Austern's and Alexandrescu's guidelines. These ordered vector containers have also
-benefited with the addition of `move semantics` to C++11, speeding up insertion and
+containers following  Austern's and Alexandrescu's guidelines. These ordered vector-like containers have also
+benefited with the addition of `move semantics`, speeding up insertion and
 erasure times considerably. Flat associative containers have the following attributes:
 
 * Faster lookup than standard associative containers
@@ -427,6 +427,44 @@ erasure times considerably. Flat associative containers have the following attri
 * Weaker exception safety than standard associative containers
 (copy/move constructors can throw when shifting values in erasures and insertions)
 * Slower insertion and erasure than standard associative containers (specially for non-movable types)
+
+[*Differences with the standard `std::flat_map`/`std::flat_set`]. C++23 added `std::flat_map`, `std::flat_set`,
+`std::flat_multimap` and `std::flat_multiset`, based on the same sorted-vector idea. There are, however, several
+notable differences with [*Boost.Container]'s long-standing implementation (available since 2004 and usable from
+C++03 onwards):
+
+* [*Container vs. container adaptor]: [*Boost.Container]'s flat containers are full-fledged containers that own a
+  single underlying sorted sequence. The standard ones are container [*adaptors] layered on top of user-provided
+  sequence containers, exposed through `keys()`/`values()` accessors and `extract()`/`replace()` operations.
+
+* [*Storage layout for maps] (array of structs vs. structure of arrays):
+  [classref boost::container::flat_map flat_map] stores its elements as a single sequence of `value_type` =
+  `std::pair<Key, T>`, so each key is interleaved with its mapped value in one contiguous buffer. `std::flat_map`
+  instead keeps keys and mapped values in two [*separate] parallel containers (`key_container_type` and
+  `mapped_container_type`). The standard layout can speed up key-only scans (lookups touch only the keys array) at
+  the cost of an extra indirection when both key and value are needed, while Boost's layout keeps each key next to
+  its value.
+
+* [*Iterators and `value_type`]: because [classref boost::container::flat_map flat_map] holds real
+  `std::pair<Key, T>` objects, its iterators dereference to actual pair lvalues and `&*it` yields a pointer to a
+  stored pair. `std::flat_map`, having two arrays, exposes proxy references of type
+  `pair<const key_type&, mapped_type&>` and does not provide pointers into a single pair array.
+
+* [*Underlying sequence access]: [*Boost.Container] exposes the whole sorted vector through `sequence_type`,
+  `extract_sequence()` and `adopt_sequence()` (optionally with the `ordered_unique_range_t` tag for an O(1)
+  adoption), which is handy to build the container cheaply and then re-adopt it. The standard counterpart uses
+  `extract()`/`replace()` returning the key and mapped containers separately.
+
+* [*Availability and configurability]: [*Boost.Container]'s flat containers work from C++03, let you choose the
+  underlying vector-like sequence (e.g. [classref boost::container::small_vector small_vector] or
+  [classref boost::container::static_vector static_vector]) through a template parameter and offer additional
+  ordered-range insertion overloads.
+
+The following example shows the most common operations, the single-sequence storage and the
+`extract_sequence`/`adopt_sequence` idiom:
+
+[import ../example/doc_flat_map.cpp]
+[doc_flat_map]
 
 [endsect]
 
