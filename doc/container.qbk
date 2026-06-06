@@ -578,8 +578,8 @@ always use insert_after and erase_after whenever possible. If you find that inse
 adequate for your needs, and that you often need to use insert and erase in the middle of the list, then you
 should probably use list instead of [classref boost::container::slist slist].]]
 
-[*Boost.Container] updates the classic [classref boost::container::slist slist] container with C++11 features like move semantics and placement
-insertion and implements it a bit differently than the standard C++ `forward_list`. `forward_list` has no `size()`
+[*Boost.Container] updates the classic [classref boost::container::slist slist] container with
+and implements it a bit differently than the standard C++ `forward_list`. `forward_list` has no `size()`
 method, so it's been designed to allow (or in practice, encourage) implementations without tracking list size
 with every insertion/erasure, allowing constant-time
 `splice_after(iterator, forward_list &, iterator, iterator)`-based list merging. On the other hand [classref boost::container::slist slist] offers
@@ -587,6 +587,32 @@ constant-time `size()` for those that don't care about linear-time `splice_after
 `size()` and offers an additional `splice_after(iterator, [classref boost::container::slist slist] &, iterator, iterator, size_type)` method that
 can speed up [classref boost::container::slist slist] merging when the programmer already knows the size. [classref boost::container::slist slist] and `forward_list` are therefore
 complementary.
+
+[*Differences with the standard `std::forward_list`]. Both [classref boost::container::slist slist] and the C++11
+`std::forward_list` are singly linked lists with forward iterators, `push_front`, and the constant-time `_after`
+operations (`insert_after`, `erase_after`, `splice_after`), so most code looks the same with either. The relevant
+differences are:
+
+* [*Size tracking]: [classref boost::container::slist slist] keeps the element count, so `size()` is O(1).
+  `std::forward_list` deliberately has [*no] `size()` member, trading the query for a smaller footprint and for an
+  always-constant-time whole-list `splice_after`.
+
+* [*`splice_after` complexity]: because [classref boost::container::slist slist] must keep its size up to date, the
+  range overload `splice_after(pos, x, before_first, before_last)` is linear (it has to count the transferred
+  elements). To recover constant time when the count is already known, [classref boost::container::slist slist]
+  adds the extra overload `splice_after(pos, x, before_first, before_last, n)`, which has no equivalent in
+  `std::forward_list`.
+
+* [*Heritage and interface]: [classref boost::container::slist slist] is the continuation of the classic SGI
+  `slist` (it predates the standard one), while `std::forward_list` is the C++11 standardization of the same idea
+  with a slightly trimmed interface. Choose [classref boost::container::slist slist] when an O(1) `size()` or the
+  size-aware merge is convenient, and `std::forward_list` when the minimal per-list overhead matters most.
+
+The following example illustrates the most common operations, in particular the constant-time `_after` family
+(`insert_after`/`erase_after`), the use of `before_begin()` and the size-aware `splice_after`:
+
+[import ../example/doc_slist.cpp]
+[doc_slist]
 
 [endsect]
 
