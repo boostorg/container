@@ -627,6 +627,22 @@ compile-time bound that is never exceeded.
 Out-of-bounds access through `at()` throws `out_of_range`. If [classref boost::container::throw_on_overflow throw_on_overflow]`<false>` is configured, inserting
 beyond capacity is undefined behavior, trading the safety check for minimum overhead.
 
+[*Differences with the standard `std::inplace_vector`]. C++26 added `std::inplace_vector`, a dynamically-resizable,
+fixed-capacity sequence container that stores its elements inside the object, i.e. the same idea pioneered by
+[classref boost::container::static_vector static_vector]. The most relevant differences are:
+
+* [*Overflow handling]: `std::inplace_vector` always throws `bad_alloc` when an operation would exceed the
+  capacity, and additionally provides `try_push_back`/`try_emplace_back` (which return a null pointer instead of
+  throwing when full) and `unchecked_push_back`/`unchecked_emplace_back` (undefined behavior when full). Boost's
+  [classref boost::container::static_vector static_vector] also throws by default, but selects between throwing and
+  undefined behavior at compile time through the [classref boost::container::throw_on_overflow throw_on_overflow]
+  policy of [classref boost::container::static_vector_options static_vector_options] rather than through distinct
+  member functions.
+
+* [*Configurability]: [classref boost::container::static_vector static_vector] can be tuned via
+  [classref boost::container::static_vector_options static_vector_options] (overflow policy and the integral type
+  used to store the size). `std::inplace_vector` offers no such customization.
+
 The following example illustrates the most common operations and the fixed-capacity behavior:
 
 [import ../example/doc_static_vector.cpp]
