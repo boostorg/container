@@ -3080,7 +3080,7 @@ template <class T, class Allocator, class Options>
 struct has_trivial_destructor_after_move<boost::container::devector<T, Allocator, Options> >
 {
     typedef typename boost::container::devector<T, Allocator, Options>::allocator_type allocator_type;
-    typedef typename ::boost::container::allocator_traits<allocator_type>::pointer pointer;
+    typedef typename boost::container::allocator_traits<allocator_type>::pointer pointer;
     BOOST_STATIC_CONSTEXPR bool value =
       ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
       ::boost::has_trivial_destructor_after_move<pointer>::value;

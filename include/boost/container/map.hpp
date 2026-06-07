@@ -104,7 +104,7 @@ class map
    typedef Key                                                                            key_type;
    typedef T                                                                              mapped_type;
    typedef typename base_t::allocator_type                                                allocator_type;
-   typedef ::boost::container::allocator_traits<allocator_type>                           allocator_traits_type;
+   typedef boost::container::allocator_traits<allocator_type>                           allocator_traits_type;
    typedef typename boost::container::allocator_traits<allocator_type>::value_type        value_type;
    typedef typename boost::container::allocator_traits<allocator_type>::pointer           pointer;
    typedef typename boost::container::allocator_traits<allocator_type>::const_pointer     const_pointer;
@@ -1626,7 +1626,7 @@ class multimap
    typedef Key                                                                            key_type;
    typedef T                                                                              mapped_type;
    typedef typename base_t::allocator_type                                                allocator_type;
-   typedef ::boost::container::allocator_traits<allocator_type>                           allocator_traits_type;
+   typedef boost::container::allocator_traits<allocator_type>                           allocator_traits_type;
    typedef typename boost::container::allocator_traits<allocator_type>::value_type        value_type;
    typedef typename boost::container::allocator_traits<allocator_type>::pointer           pointer;
    typedef typename boost::container::allocator_traits<allocator_type>::const_pointer     const_pointer;

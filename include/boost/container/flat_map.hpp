@@ -217,7 +217,7 @@ class flat_map
    typedef std::pair<Key, T>                                                        value_type;
    typedef typename BOOST_CONTAINER_IMPDEF(tree_t::sequence_type)                   sequence_type;
    typedef typename sequence_type::allocator_type                                   allocator_type;
-   typedef ::boost::container::allocator_traits<allocator_type>                     allocator_traits_type;
+   typedef boost::container::allocator_traits<allocator_type>                     allocator_traits_type;
    typedef typename sequence_type::pointer                                          pointer;
    typedef typename sequence_type::const_pointer                                    const_pointer;
    typedef typename sequence_type::reference                                        reference;
@@ -2091,7 +2091,7 @@ class flat_multimap
    typedef std::pair<Key, T>                                                        value_type;
    typedef typename BOOST_CONTAINER_IMPDEF(tree_t::sequence_type)                   sequence_type;
    typedef typename sequence_type::allocator_type                                   allocator_type;
-   typedef ::boost::container::allocator_traits<allocator_type>                     allocator_traits_type;
+   typedef boost::container::allocator_traits<allocator_type>                     allocator_traits_type;
    typedef typename sequence_type::pointer                                          pointer;
    typedef typename sequence_type::const_pointer                                    const_pointer;
    typedef typename sequence_type::reference                                        reference;

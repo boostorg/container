@@ -665,12 +665,12 @@ class basic_string
    typedef Traits                                                                         traits_type;
    typedef CharT                                                                          value_type;
    typedef typename real_allocator<CharT, Allocator>::type                                allocator_type;
-   typedef typename ::boost::container::allocator_traits<allocator_type>::pointer         pointer;
-   typedef typename ::boost::container::allocator_traits<allocator_type>::const_pointer   const_pointer;
-   typedef typename ::boost::container::allocator_traits<allocator_type>::reference       reference;
-   typedef typename ::boost::container::allocator_traits<allocator_type>::const_reference const_reference;
-   typedef typename ::boost::container::allocator_traits<allocator_type>::size_type       size_type;
-   typedef typename ::boost::container::allocator_traits<allocator_type>::difference_type difference_type;
+   typedef typename boost::container::allocator_traits<allocator_type>::pointer         pointer;
+   typedef typename boost::container::allocator_traits<allocator_type>::const_pointer   const_pointer;
+   typedef typename boost::container::allocator_traits<allocator_type>::reference       reference;
+   typedef typename boost::container::allocator_traits<allocator_type>::const_reference const_reference;
+   typedef typename boost::container::allocator_traits<allocator_type>::size_type       size_type;
+   typedef typename boost::container::allocator_traits<allocator_type>::difference_type difference_type;
    typedef BOOST_CONTAINER_IMPDEF(allocator_type)                                         stored_allocator_type;
    typedef BOOST_CONTAINER_IMPDEF(pointer)                                                iterator;
    typedef BOOST_CONTAINER_IMPDEF(const_pointer)                                          const_iterator;
@@ -3879,7 +3879,7 @@ template <class C, class T, class Allocator>
 struct has_trivial_destructor_after_move<boost::container::basic_string<C, T, Allocator> >
 {
    typedef typename boost::container::basic_string<C, T, Allocator>::allocator_type allocator_type;
-   typedef typename ::boost::container::allocator_traits<allocator_type>::pointer pointer;
+   typedef typename boost::container::allocator_traits<allocator_type>::pointer pointer;
    BOOST_STATIC_CONSTEXPR bool value =
       ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
       ::boost::has_trivial_destructor_after_move<pointer>::value;

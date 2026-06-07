@@ -836,7 +836,7 @@ public:
    typedef T                                                                           value_type;
    typedef BOOST_CONTAINER_IMPDEF
       (typename real_allocator<T BOOST_MOVE_I A>::type)                                allocator_type;
-   typedef ::boost::container::allocator_traits<allocator_type>                        allocator_traits_t;
+   typedef boost::container::allocator_traits<allocator_type>                        allocator_traits_t;
    typedef typename   allocator_traits<allocator_type>::pointer                        pointer;
    typedef typename   allocator_traits<allocator_type>::const_pointer                  const_pointer;
    typedef typename   allocator_traits<allocator_type>::reference                      reference;
@@ -3485,7 +3485,7 @@ template <class T, class Allocator, class Options>
 struct has_trivial_destructor_after_move<boost::container::vector<T, Allocator, Options> >
 {
    typedef typename boost::container::vector<T, Allocator, Options>::allocator_type allocator_type;
-   typedef typename ::boost::container::allocator_traits<allocator_type>::pointer pointer;
+   typedef typename boost::container::allocator_traits<allocator_type>::pointer pointer;
    BOOST_STATIC_CONSTEXPR bool value = ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
                                                 ::boost::has_trivial_destructor_after_move<pointer>::value;
 };
