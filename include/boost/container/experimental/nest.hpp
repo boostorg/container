@@ -749,12 +749,12 @@ public:
       return tmp;
    }
 
-   friend bool operator==(const nest_iterator& x, const nest_iterator& y) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE friend bool operator==(const nest_iterator& x, const nest_iterator& y) BOOST_NOEXCEPT
    {
       return x.pbb == y.pbb && x.n == y.n;
    }
 
-   friend bool operator!=(const nest_iterator& x, const nest_iterator& y) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE friend bool operator!=(const nest_iterator& x, const nest_iterator& y) BOOST_NOEXCEPT
    {
       return !(x == y);
    }
