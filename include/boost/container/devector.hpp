@@ -334,14 +334,14 @@ class devector
    * iterator does not meet the forward iterator requirements, `T` shall also be [MoveInsertable]
    * into `*this`.
    *
-   * **Postcondition**: `size() == boost::container::iterator_distance(first, last)
+   * **Postcondition**: `size() == boost::container::iterator_distance(first, last)`
    *
    * **Exceptions**: Strong exception guarantee.
    *
    * **Complexity**: Makes only `N` calls to the copy constructor of `T` (where `N` is the distance between `first`
    * and `last`), at most one allocation and no reallocations if iterators first and last are of forward,
    * bidirectional, or random access categories. It makes `O(N)` calls to the copy constructor of `T`
-   * and `O(log(N)) reallocations if they are just input iterators.
+   * and `O(log(N))` reallocations if they are just input iterators.
    *
    * **Remarks**: Each iterator in the range `[first,last)` shall be dereferenced exactly once,
    * unless an exception is thrown.
@@ -1935,7 +1935,7 @@ class devector
    * **Complexity**: Linear in the size of `*this` and `N` (where `N` is the distance between `first` and `last`).
    * Makes only `N` calls to the constructor of `T` and no reallocations if iterators `first` and `last`
    * are of forward, bidirectional, or random access categories. It makes 2N calls to the copy constructor of `T`
-   * and `O(log(N)) reallocations if they are just input iterators.
+   * and `O(log(N))` reallocations if they are just input iterators.
    *
    * **Exceptions**: Strong exception guarantee if `T` is `NothrowConstructible`
    * and `NothrowAssignable`, Basic exception guarantee otherwise.
