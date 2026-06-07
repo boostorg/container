@@ -765,10 +765,12 @@ to control block size and other parameters.
 
 [section:hub_introduction Introduction]
 
+[classref boost::container::hub hub] is a container
+[@https://lists.boost.org/archives/list/boost@lists.boost.org/thread/6YXMHMARNAEFTGBTZYYAETCAYCYHHKQP/ designed by Joaqu\u00EDn M. L\u00F3pez Mu\u00F1oz]
+with:
 
-`boost::container::hub` is a container with constant-time insertion and erasure and ['element stability]: 
-pointers/iterators to an element remain valid until the element is erased.
-
+*  Constant-time insertion and erasure
+*  ['element stability]: pointers/iterators to an element remain valid until the element is erased.
 
 [c++]
 
