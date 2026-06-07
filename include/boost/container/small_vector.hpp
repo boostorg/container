@@ -47,10 +47,10 @@
 
 #include <cstddef> //offsetof
 
-#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-
 namespace boost {
 namespace container {
+
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 namespace dtl{
 

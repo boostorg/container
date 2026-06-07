@@ -82,8 +82,13 @@
 #pragma GCC diagnostic pop
 #endif
 
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 namespace boost {
 namespace container {
+
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 namespace dtl {
 
 template <class T>
