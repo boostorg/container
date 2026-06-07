@@ -16,6 +16,7 @@ int main() { return 0; }
 #include <boost/config.hpp>
 #include <boost/config/workaround.hpp>
 #include <boost/container/hub.hpp>
+#include <boost/container/pmr/hub.hpp>
 #include <boost/container/throw_exception.hpp>
 #include <boost/core/allocator_access.hpp>
 #include <boost/core/lightweight_test.hpp>
@@ -777,9 +778,7 @@ int main()
   test<shared_int_hub>(shared_int_allocator(segment.get_segment_manager()));
 #endif
 
-#if !defined(BOOST_NO_CXX17_HDR_MEMORY_RESOURCE)
   test<boost::container::pmr::hub<int>>();
-#endif
 
   test_ctad<boost::container::hub>();
 

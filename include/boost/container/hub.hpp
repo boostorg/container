@@ -133,15 +133,6 @@ template<typename ValuePtr, typename F>
 std::pair<hub_detail::iterator<ValuePtr>, F> for_each_while(
   hub_detail::iterator<ValuePtr>, hub_detail::iterator<ValuePtr>, F);
 
-#ifndef BOOST_NO_CXX17_HDR_MEMORY_RESOURCE
-namespace pmr {
-
-template<typename T>
-using hub = boost::container::hub<T, std::pmr::polymorphic_allocator<T>>;
-
-}
-#endif
-
 namespace hub_detail {
 
 inline int unchecked_countr_zero(std::uint64_t x)
