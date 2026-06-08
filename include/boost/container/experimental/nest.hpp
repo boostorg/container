@@ -2041,7 +2041,7 @@ class nest
 
    BOOST_CONTAINER_FORCEINLINE void priv_allocate_block_data(block_pointer, dtl::bool_<true>) BOOST_NOEXCEPT {}
 
-   void priv_deallocate_block_data(block_pointer pb, dtl::bool_<false>) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE void priv_deallocate_block_data(block_pointer pb, dtl::bool_<false>) BOOST_NOEXCEPT
    {
       allocator_type val_al(al());
       allocator_traits_type::deallocate(val_al, pb->data(), N);
@@ -2135,7 +2135,7 @@ class nest
    //
    //////////////////////////////////////////////
 
-   size_type priv_destroy_all_in_nonempty_block(block_pointer pb) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE size_type priv_destroy_all_in_nonempty_block(block_pointer pb) BOOST_NOEXCEPT
    {
       BOOST_ASSERT(pb->mask != 0);
       return priv_destroy_all_dispatch(pb,
@@ -2148,7 +2148,7 @@ class nest
 //     !hub_detail::allocator_has_destroy<block_allocator, T*>::value )>{});
    }
 
-   size_type priv_destroy_all_dispatch(
+   BOOST_CONTAINER_FORCEINLINE size_type priv_destroy_all_dispatch(
       block_pointer pb, dtl::true_type /* trivially destructible */) BOOST_NOEXCEPT
    {
       return (size_type)boost::core::popcount(pb->mask);
@@ -2157,22 +2157,26 @@ class nest
    size_type priv_destroy_all_dispatch(
       block_pointer pb, dtl::false_type /* use destroy */) BOOST_NOEXCEPT
    {
-      size_type s = 0;
       mask_type m = pb->mask;
+      const mask_type r = (size_type)boost::core::popcount(m);
+
+      BOOST_CONTAINER_UNROLL(4)
       do {
          int n = nest_detail::first_in_mask(m);
          block_alloc_traits::destroy(al(), boost::movelib::to_raw_pointer(pb->data() + n));
-         ++s;
          m &= m - 1;
       } while(m);
-      return s;
+      return r;
    }
 
    size_type priv_destroy_all_in_full_block(block_pointer pb) BOOST_NOEXCEPT
    {
       BOOST_ASSERT(pb->mask == full);
-      for(std::size_t n = 0; n < N; ++n) {
-         block_alloc_traits::destroy(al(), boost::movelib::to_raw_pointer(pb->data() + n));
+      T* data = boost::movelib::to_raw_pointer(pb->data());
+      T *const data_end = data + N;
+      BOOST_CONTAINER_UNROLL(4)
+      for (; data != data_end; ++data) {
+         block_alloc_traits::destroy(al(), data);
       }
       return (size_type)N;
    }
@@ -2185,40 +2189,60 @@ class nest
 
    void priv_reset() BOOST_NOEXCEPT
    {
-      // available blocks (with at least one empty slot)
-      block_base_pointer pbb = blist.header()->next_available;
-      while(pbb != blist.header()) {
-         block_pointer pb = static_cast_block_pointer(pbb);
-         pbb = pb->next_available;
-         //Prefetch the next block's data array so its first cache line is
-         //just a block_base (no data_), so skip the prefetch on the header
-         //sentinel. For trivially destructible value types there is nothing
-         //to destroy in the data array, so the prefetch would be wasted.
-         BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value) {
-            if(BOOST_UNLIKELY(pbb != blist.header())) {
+      // It exploits the available-list
+      // partition invariant ([ partial ... partial | empty ... empty ]) so
+      // each sweep handles a single block category:
+      //   1) partial (non-empty) available blocks: destroy their elements
+      //      and unlink them from the main list (they are on both lists),
+      //   2) empty (reserved) available blocks: just free them (no element
+      //      to destroy, and they are not on the main list),
+      //   3) full blocks still on the main list: destroy elements + free.
+      block_base_pointer const hdr = blist.header();
+
+      // 1) partial available blocks (stop at the first empty one)
+      block_base_pointer pbb = hdr->next_available;
+      while(pbb != hdr && pbb->mask != 0) {
+         block_pointer const pb = static_cast_block_pointer(pbb);
+         pbb = pbb->next_available;
+
+         BOOST_IF_CONSTEXPR(prefetch_enabled){
+            BOOST_CONTAINER_NEST_PREFETCH(pbb);
+            BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value)
                BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
-            }
          }
-         if(pb->mask != 0) {
-            priv_destroy_all_in_nonempty_block(pb);
-            blist.unlink(pb);
-         }
+
+         priv_destroy_all_in_nonempty_block(pb);
+         blist.unlink(pb); //This might touch the next block's prev pointer
          priv_delete_block(pb);
       }
-      // full blocks remaining
+
+      // 2) empty available blocks (no elements to destroy)
+      while(pbb != hdr) {
+         block_pointer const pb = static_cast_block_pointer(pbb);
+         pbb = pbb->next_available;
+
+         BOOST_IF_CONSTEXPR(prefetch_enabled)
+            BOOST_CONTAINER_NEST_PREFETCH(pbb);
+
+         priv_delete_block(pb);
+      }
+
+      // 3) full blocks remaining on the main list
       pbb = blist.next;
-      while(pbb != blist.header()) {
-         BOOST_ASSERT(pbb->mask == full);
-         block_pointer pb = static_cast_block_pointer(pbb);
-         pbb = pb->next;
-         BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value) {
-            if(BOOST_UNLIKELY(pbb != blist.header())) {
+      while(pbb != hdr) {
+         block_pointer const pb = static_cast_block_pointer(pbb);
+         pbb = pbb->next;
+
+         BOOST_IF_CONSTEXPR(prefetch_enabled){
+            BOOST_CONTAINER_NEST_PREFETCH(pbb);
+            BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value)
                BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
-            }
          }
+
          priv_destroy_all_in_full_block(pb);
          priv_delete_block(pb);
       }
+
       blist.reset();
       num_blocks = 0;
       size_ = 0;
@@ -2233,7 +2257,7 @@ class nest
    BOOST_CONTAINER_FORCEINLINE void priv_erase_impl(block_base_pointer pbb, int n) BOOST_NOEXCEPT
    {
       block_pointer pb = static_cast_block_pointer(pbb);
-      block_alloc_traits::destroy(al(), boost::movelib::to_raw_pointer(pb->data() + n));
+      block_alloc_traits::destroy(al(), boost::movelib::to_raw_pointer(pb->data()) + n);
       if(BOOST_UNLIKELY(pb->mask == full))
          blist.link_available_at_front(pb);
 
