@@ -2158,7 +2158,7 @@ class nest
       block_pointer pb, dtl::false_type /* use destroy */) BOOST_NOEXCEPT
    {
       mask_type m = pb->mask;
-      const mask_type r = (size_type)boost::core::popcount(m);
+      const size_type r = (size_type)boost::core::popcount(m);
 
       BOOST_CONTAINER_UNROLL(4)
       do {
