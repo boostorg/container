@@ -709,8 +709,8 @@ public:
          BOOST_IF_CONSTEXPR(Prefetch) {
             //Load next critical metadata
             block_base_type& pbn = static_cast<block_base_type&>(*pbb->next);
-            //Prefetch the next block's metadata plus the data
-            BOOST_CONTAINER_NEST_PREFETCH(&pbn.next);
+            //Prefetch the next block's metadata plus the next metadata
+            BOOST_CONTAINER_NEST_PREFETCH(&pbn.next->next);
             BOOST_CONTAINER_NEST_PREFETCH_BLOCK(&pbn);
          }
          mask = pbb->mask;
@@ -731,9 +731,9 @@ public:
       if (BOOST_UNLIKELY(mask == 0)) {
          pbb = pbb->prev;
          BOOST_IF_CONSTEXPR(Prefetch) {
-            //Load next data
+            //Load previous data
             block_base_type& pbn = static_cast<block_base_type&>(*pbb->prev);
-            BOOST_CONTAINER_NEST_PREFETCH(&pbn.prev);
+            BOOST_CONTAINER_NEST_PREFETCH(&pbn.prev->prev);
             BOOST_CONTAINER_NEST_PREFETCH_BLOCK(&pbn);
          }
          mask = pbb->mask;
@@ -2221,7 +2221,7 @@ class nest
          pbb = pbb->next;
 
          BOOST_IF_CONSTEXPR(prefetch_enabled){
-            BOOST_CONTAINER_NEST_PREFETCH(pbb);
+            BOOST_CONTAINER_NEST_PREFETCH(&pbb->next->next);
             BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value)
                BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
          }
@@ -2791,15 +2791,19 @@ std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>, F >
    mask_t      m        = pbb->mask & (full << first.n);
 
    for(; ;) {
-      BOOST_CONTAINER_NEST_PREFETCH(&pbb->next->mask);
+      block_t& pbn = static_cast<block_t&>(*pbb->next);
+      BOOST_IF_CONSTEXPR(Prefetch)
+         BOOST_CONTAINER_NEST_PREFETCH(&pbn.mask);
       //Mask the mask for the last block
       const mask_t is_last = mask_t(pbb == last_pbb);
       m &= (is_last << last_n) - mask_t(1);
 
       //Next block prefetch
-      BOOST_CONTAINER_NEST_PREFETCH(block_t::static_cast_block_pointer(pbb->next)->data());
-      const int next_n = nest_detail::first_in_mask(pbb->next->mask);
-      BOOST_CONTAINER_NEST_PREFETCH(block_t::static_cast_block_pointer(pbb->next)->data() + next_n);
+      BOOST_IF_CONSTEXPR(Prefetch) {
+         BOOST_CONTAINER_NEST_PREFETCH(&pbn.next->next);
+         const int next_n = nest_detail::first_in_mask(pbn.mask);
+         BOOST_CONTAINER_NEST_PREFETCH(pbn.data() + next_n);
+      }
 
       //Mask can become zero if the last iterator is in the 0 position
       value_ptr_t const pd = block_t::static_cast_block_pointer(pbb)->data();
