@@ -9,6 +9,9 @@
 #ifndef BOOST_CONTAINER_HUB_HPP
 #define BOOST_CONTAINER_HUB_HPP
 
+#include <boost/container/detail/config_begin.hpp>
+#include <boost/container/detail/workaround.hpp>
+
 #include <algorithm>
 #include <boost/assert.hpp>
 #include <boost/config.hpp>
@@ -2371,4 +2374,8 @@ for_each_while(const hub<T, Allocator>& x, F f)
 #pragma warning(pop) /* C4714 */
 #endif
 
+#include <boost/container/detail/config_end.hpp>
+
 #endif
+
+
