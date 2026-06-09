@@ -2189,37 +2189,24 @@ class nest
 
    void priv_reset() BOOST_NOEXCEPT
    {
-      // It exploits the available-list
-      // partition invariant ([ partial ... partial | empty ... empty ]) so
-      // each sweep handles a single block category:
-      //   1) partial (non-empty) available blocks: destroy their elements
-      //      and unlink them from the main list (they are on both lists),
-      //   2) empty (reserved) available blocks: just free them (no element
-      //      to destroy, and they are not on the main list),
-      //   3) full blocks still on the main list: destroy elements + free.
       block_base_pointer const hdr = blist.header();
 
-      // 1) partial available blocks (stop at the first empty one)
-      block_base_pointer pbb = hdr->next_available;
-      while(pbb != hdr && pbb->mask != 0) {
+      // Never touch a node belonging to the other
+      // linked list while iterating one list.
+      // It still relies on the partition invariant
+      // ([ partial ... partial | empty ... empty ]):
+      //   A) Walk the available list backwards, freeing empty
+      //      blocks that sit at the back of the available list and are not
+      //      on the main list.
+      //   B) Walk the main list forward, destroying the elements of every
+      //      remaining block (partial or full) and freeing it.
+
+      // A) empty (reserved) blocks, from the back of the available list
+      block_base_pointer pbb = hdr->prev_available;
+      BOOST_CONTAINER_UNROLL(4)
+      while(pbb != hdr && pbb->mask == 0) {
          block_pointer const pb = static_cast_block_pointer(pbb);
-         pbb = pbb->next_available;
-
-         BOOST_IF_CONSTEXPR(prefetch_enabled){
-            BOOST_CONTAINER_NEST_PREFETCH(pbb);
-            BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value)
-               BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
-         }
-
-         priv_destroy_all_in_nonempty_block(pb);
-         blist.unlink(pb); //This might touch the next block's prev pointer
-         priv_delete_block(pb);
-      }
-
-      // 2) empty available blocks (no elements to destroy)
-      while(pbb != hdr) {
-         block_pointer const pb = static_cast_block_pointer(pbb);
-         pbb = pbb->next_available;
+         pbb = pbb->prev_available;
 
          BOOST_IF_CONSTEXPR(prefetch_enabled)
             BOOST_CONTAINER_NEST_PREFETCH(pbb);
@@ -2227,7 +2214,7 @@ class nest
          priv_delete_block(pb);
       }
 
-      // 3) full blocks remaining on the main list
+      // B) partial + full blocks, in main-list order
       pbb = blist.next;
       while(pbb != hdr) {
          block_pointer const pb = static_cast_block_pointer(pbb);
@@ -2238,8 +2225,12 @@ class nest
             BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value)
                BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
          }
-
-         priv_destroy_all_in_full_block(pb);
+         BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value) {
+            if (pb->mask == full)
+               priv_destroy_all_in_full_block(pb);
+            else
+               priv_destroy_all_in_nonempty_block(pb);
+         }
          priv_delete_block(pb);
       }
 
