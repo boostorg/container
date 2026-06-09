@@ -431,6 +431,7 @@ public:
     auto mask = pbb->mask & (full << 1 << n);
     if(BOOST_UNLIKELY(mask == 0)) {
       pbb = pbb->next;
+      BOOST_CONTAINER_HUB_PREFETCH(pbb->next->next);
       BOOST_CONTAINER_HUB_PREFETCH_BLOCK(pbb->next, block);
       mask = pbb->mask;
     }
@@ -450,6 +451,7 @@ public:
     auto mask = pbb->mask & (full >> 1 >> (N - 1 - n));
     if(BOOST_UNLIKELY(mask == 0)) {
       pbb = pbb->prev;
+      BOOST_CONTAINER_HUB_PREFETCH(pbb->prev->prev);
       BOOST_CONTAINER_HUB_PREFETCH_BLOCK(pbb->prev, block);
       mask = pbb->mask;
     }
@@ -1819,7 +1821,8 @@ private:
     }
   }
 
-  size_type destroy_all_in_nonempty_block(block_pointer pb) noexcept
+  BOOST_FORCEINLINE size_type destroy_all_in_nonempty_block(
+    block_pointer pb) noexcept
   {
     BOOST_ASSERT(pb->mask != 0);
     return destroy_all_in_nonempty_block(pb, std::integral_constant<bool,
@@ -1829,58 +1832,62 @@ private:
        !hub_detail::allocator_has_destroy<block_allocator, T*>::value )>{});
   }
 
-  size_type destroy_all_in_nonempty_block(
+  BOOST_FORCEINLINE size_type destroy_all_in_nonempty_block(
     block_pointer pb, std::true_type /* trivial destruction */) noexcept
   {
     return (size_type)core::popcount(pb->mask);
   }
 
-  size_type destroy_all_in_nonempty_block(
+  BOOST_FORCEINLINE size_type destroy_all_in_nonempty_block(
     block_pointer pb, std::false_type /* use allocator_destroy */) noexcept
   {
-    size_type s = 0;
+    size_type s = (size_type)core::popcount(pb->mask);
     auto      mask = pb->mask;
+    auto      pd = boost::to_address(pb->data());
+    BOOST_CONTAINER_UNROLL(4)
     do {
       auto n = hub_detail::unchecked_countr_zero(mask);
-      allocator_destroy(al(), boost::to_address(pb->data() + n));
-      ++s;
+      allocator_destroy(al(), pd + n);
       mask &= mask - 1;
     } while(mask);
     return s;
   }
 
-  size_type destroy_all_in_full_block(block_pointer pb) noexcept
+  BOOST_FORCEINLINE size_type destroy_all_in_full_block(
+    block_pointer pb) noexcept
   {
     BOOST_ASSERT(pb->mask == full);
-    for(int n = 0; n < N; ++n) {
-      allocator_destroy(al(), boost::to_address(pb->data() + n));
+    auto pd = boost::to_address(pb->data());
+    int  n = 0;
+    BOOST_CONTAINER_UNROLL(4)
+    for(; n < N; ++n) {
+      allocator_destroy(al(), pd + n);
     }
     return (size_type)N;
   }
 
   void reset() noexcept
   {
-    for(auto pbb = blist.next_available; pbb != blist.header(); ) {
+    /* empty blocks */
+    auto pbb = blist.prev_available;
+    BOOST_CONTAINER_UNROLL(4)
+    while(pbb != blist.header() && pbb->mask == 0) {
       auto pb = static_cast_block_pointer(pbb);
-      pbb = pb->next_available;
-      BOOST_IF_CONSTEXPR(!std::is_trivially_destructible<T>::value) {
-        BOOST_CONTAINER_HUB_PREFETCH_BLOCK(pbb, block);
-      }
-      if(pb->mask != 0) {
-        destroy_all_in_nonempty_block(pb);
-        blist.unlink(pb);
-      }
+      pbb = pb->prev_available;
+      BOOST_CONTAINER_HUB_PREFETCH(pbb);
       delete_block(pb);
     }
-    /* full blocks remaining */
-    for(auto pbb = blist.next; pbb != blist.header(); ) {
-      BOOST_ASSERT(pbb->mask == full);
+
+    /* non-empty blocks */
+    pbb = blist.next;
+    while(pbb != blist.header()) {
       auto pb = static_cast_block_pointer(pbb);
       pbb = pb->next;
       BOOST_IF_CONSTEXPR(!std::is_trivially_destructible<T>::value) {
         BOOST_CONTAINER_HUB_PREFETCH_BLOCK(pbb, block);
       }
-      destroy_all_in_full_block(pb);
+      if(pb->mask == full) destroy_all_in_full_block(pb);
+      else                 destroy_all_in_nonempty_block(pb);
       delete_block(pb);
     }
     blist.reset();
