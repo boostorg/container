@@ -2247,14 +2247,18 @@ class nest
 
    BOOST_CONTAINER_FORCEINLINE void priv_erase_impl(block_base_pointer pbb, int n) BOOST_NOEXCEPT
    {
-      block_pointer pb = static_cast_block_pointer(pbb);
+      block_pointer const pb = static_cast_block_pointer(pbb);
+      const mask_type m = pb->mask; //Load constant before any "opaque" operations like "destroy"
+      const mask_type new_mask = m & ~((mask_type)(1) << n);
+      pb->mask = new_mask;
+
       block_alloc_traits::destroy(al(), boost::movelib::to_raw_pointer(pb->data()) + n);
-      if(BOOST_UNLIKELY(pb->mask == full))
+
+      if(BOOST_UNLIKELY(m == full))
          blist.link_available_at_front(pb);
 
-      pb->mask &= ~((mask_type)(1) << n);
-
-      if(BOOST_UNLIKELY(pb->mask == 0)) {
+      //With N > 1 both conditions can't be true
+      else if(BOOST_UNLIKELY(new_mask == 0)) {
          //Block just became empty: take it out of the main list and move it
          //to the back of the available list so reserved blocks stay grouped
          //there (keeps trim_capacity linear on the number of reserved blocks).
@@ -2262,6 +2266,7 @@ class nest
          blist.unlink_available(pb);
          blist.link_available_at_back(pb);
       }
+
       --size_;
    }
 
