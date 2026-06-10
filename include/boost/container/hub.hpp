@@ -132,6 +132,14 @@ template<typename ValuePointer> class iterator;
 template<typename T, typename Allocator, typename F>
 F for_each(hub<T, Allocator>&, F);
 
+template<typename T, typename Allocator, typename F>
+std::pair<typename hub<T, Allocator>::iterator, F> for_each_while(
+  hub<T, Allocator>&, F);
+
+template<typename T, typename Allocator, typename F>
+std::pair<typename hub<T, Allocator>::const_iterator, F> for_each_while(
+  const hub<T, Allocator>&, F);
+
 template<typename ValuePtr, typename F>
 std::pair<hub_detail::iterator<ValuePtr>, F> for_each_while(
   hub_detail::iterator<ValuePtr>, hub_detail::iterator<ValuePtr>, F);
@@ -487,6 +495,9 @@ private:
   template<typename VP, typename F>
   friend std::pair<hub_detail::iterator<VP>, F> container::for_each_while(
     hub_detail::iterator<VP>, hub_detail::iterator<VP>, F);
+  template<typename T, typename A, typename F>
+  friend std::pair<typename hub<T, A>::iterator, F> container::for_each_while(
+    hub<T, A>&, F);
 
   template<typename T>
   using pointer_rebind_t = hub_detail::pointer_rebind_t<ValuePointer, T>;
@@ -531,6 +542,20 @@ struct inline_ref_caller
    }
 };
 
+
+template<class F>
+struct inline_ref_const_caller
+{
+   F& f;
+
+   template<typename T>
+   BOOST_FORCEINLINE auto operator()(const T& x) -> 
+     decltype(std::declval<F>()(std::declval<const T&>()))
+   { 
+     return f(x);
+   }
+};
+
 template<class F>
 struct inline_return_true_ref_caller
 {
@@ -540,6 +565,19 @@ struct inline_return_true_ref_caller
    BOOST_FORCEINLINE bool operator()(T&& x)
    { 
      f(std::forward<T>(x));
+     return true;
+   }
+};
+
+template<class F>
+struct inline_return_true_ref_const_caller
+{
+   F& f;
+
+   template<typename T>
+   BOOST_FORCEINLINE bool operator()(const T& x)
+   { 
+     f(x);
      return true;
    }
 };
@@ -1694,6 +1732,9 @@ public:
   }
 
 private:
+  template<typename U, typename A, typename F>
+  friend std::pair<typename hub<U, A>::iterator, F> for_each_while(
+    hub<U, A>&, F);
   template<typename U, typename A, typename P>
   friend typename hub<U, A>::size_type erase_if(hub<U, A>&, P);
 
@@ -2254,7 +2295,7 @@ erase_if(hub<T, Allocator>& x, Predicate pred)
 //! <b>Note</b>: Potentially faster than the equivalent loop thanks to internal
 //!   unrolling and prefetching.
 template<typename ValuePtr, typename F>
-F for_each(
+BOOST_FORCEINLINE F for_each(
   hub_detail::iterator<ValuePtr> first, hub_detail::iterator<ValuePtr> last,
   F f)
 {
@@ -2271,18 +2312,19 @@ F for_each(
 //! <b>Note</b>: Potentially faster than range iteration thanks to internal
 //!   unrolling and prefetching.
 template<typename T, typename Allocator, typename F>
-F for_each(hub<T, Allocator>& x, F f)
+BOOST_FORCEINLINE F for_each(hub<T, Allocator>& x, F f)
 {
   container::for_each_while(
-    x.begin(), x.end(), hub_detail::inline_return_true_ref_caller<F>{f});
+    x, hub_detail::inline_return_true_ref_caller<F>{f});
   return f;
 }
 
 template<typename T, typename Allocator, typename F>
-F for_each(const hub<T, Allocator>& x, F f)
+BOOST_FORCEINLINE F for_each(const hub<T, Allocator>& x, F f)
 {
   container::for_each_while(
-    x.begin(), x.end(), hub_detail::inline_return_true_ref_caller<F>{f});
+    const_cast<hub<T, Allocator>&>(x),
+    hub_detail::inline_return_true_ref_const_caller<F>{f});
   return f;
 }
 
@@ -2350,19 +2392,39 @@ template<typename T, typename Allocator, typename F>
 std::pair<typename hub<T, Allocator>::iterator, F>
 for_each_while(hub<T, Allocator>& x, F f)
 {
-  return {
-    container::for_each_while(
-      x.begin(), x.end(), hub_detail::inline_ref_caller<F>{f}).first,
-    std::move(f)};
+   using iterator = typename hub<T, Allocator>::iterator;
+   using block = typename iterator::block;
+
+   auto last_pbb = x.blist.header();
+   for(auto pbb = x.blist.next; pbb != last_pbb; ) {
+      BOOST_CONTAINER_HUB_PREFETCH(&pbb->next->mask);
+      BOOST_CONTAINER_HUB_PREFETCH(
+        block::static_cast_block_pointer(pbb->next)->data());
+      auto next_n = hub_detail::unchecked_countr_zero(pbb->next->mask);
+      BOOST_CONTAINER_HUB_PREFETCH(
+        block::static_cast_block_pointer(pbb->next)->data() + next_n);
+      auto pd = block::static_cast_block_pointer(pbb)->data();
+      auto mask = pbb->mask;
+      BOOST_CONTAINER_UNROLL(4)
+      while(mask) {
+        auto n = hub_detail::unchecked_countr_zero(mask);
+        if (!f(pd[n])) return {{pbb, n}, std::move(f)};
+        mask &= mask - 1;
+      }
+      pbb = pbb->next;
+      mask = pbb->mask;
+   }
+   return {{last_pbb}, std::move(f)};
 }
 
 template<typename T, typename Allocator, typename F>
 std::pair<typename hub<T, Allocator>::const_iterator, F>
-for_each_while(const hub<T, Allocator>& x, F f)
+BOOST_FORCEINLINE for_each_while(const hub<T, Allocator>& x, F f)
 {
   return {
     container::for_each_while(
-      x.begin(), x.end(), hub_detail::inline_ref_caller<F>{f}).first,
+      const_cast<hub<T, Allocator>&>(x), 
+      hub_detail::inline_ref_const_caller<F>{f}).first,
     std::move(f)};
 }
 
@@ -2376,6 +2438,5 @@ for_each_while(const hub<T, Allocator>& x, F f)
 
 #include <boost/container/detail/config_end.hpp>
 
-#endif
-
+#endif   //BOOST_CONTAINER_HUB_HPP
 
