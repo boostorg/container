@@ -139,13 +139,14 @@ struct intrusive_slist_type
 //!   for the default allocator
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class T, class Allocator = void >
+class slist
 #else
 template <class T, class Allocator>
-#endif
 class slist
    : protected dtl::node_alloc_holder
       < typename real_allocator<T, Allocator>::type
       , typename dtl::intrusive_slist_type<typename real_allocator<T, Allocator>::type>::type>
+#endif
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    typedef typename real_allocator<T, Allocator>::type      ValueAllocator;
