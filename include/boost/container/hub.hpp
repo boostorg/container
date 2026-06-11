@@ -2301,7 +2301,7 @@ erase_if(hub<T, Allocator>& x, Predicate pred)
 //! <b>Effects</b>: Applies f to every element in [first, last), in order.
 //!   Equivalent to: while(first != last) f(*first++); return f;
 //!
-//! <b>Requires</b>: decltype(first) is the iterator or const_iterator of an
+//! <b>Requires</b>: decltype(first) is the `iterator` or `const_iterator` of an
 //!   instantiation of hub and [first, last) is a valid range.
 //!
 //! <b>Returns</b>: std::move(f).
@@ -2309,9 +2309,10 @@ erase_if(hub<T, Allocator>& x, Predicate pred)
 //! <b>Note</b>: Potentially faster than the equivalent loop thanks to internal
 //!   unrolling and prefetching.
 template<typename ValuePtr, typename F>
-BOOST_CONTAINER_FORCEINLINE F for_each(
-  hub_detail::iterator<ValuePtr> first, hub_detail::iterator<ValuePtr> last,
-  F f)
+BOOST_CONTAINER_FORCEINLINE F for_each
+   ( BOOST_CONTAINER_DOC1ST(HubIteratorType, hub_detail::iterator<ValuePtr>) first
+   , BOOST_CONTAINER_DOC1ST(HubIteratorType, hub_detail::iterator<ValuePtr>) last
+   , F f)
 {
   container::for_each_while(
     first, last, hub_detail::inline_return_true_ref_caller<F>{f});
@@ -2333,6 +2334,13 @@ BOOST_CONTAINER_FORCEINLINE F for_each(hub<T, Allocator>& x, F f)
   return f;
 }
 
+//! <b>Effects</b>: Applies f to every element of x. Equivalent to
+//!   for_each(x.cbegin(), x.cend(), std::ref(f)).
+//!
+//! <b>Returns</b>: std::move(f).
+//!
+//! <b>Note</b>: Potentially faster than range iteration thanks to internal
+//!   unrolling and prefetching.
 template<typename T, typename Allocator, typename F>
 BOOST_CONTAINER_FORCEINLINE F for_each(const hub<T, Allocator>& x, F f)
 {
@@ -2346,7 +2354,7 @@ BOOST_CONTAINER_FORCEINLINE F for_each(const hub<T, Allocator>& x, F f)
 //!   returns true. Equivalent to:
 //!   while(first != last && f(*first)) ++first; return {first, std::move(f)};
 //!
-//! <b>Requires</b>: decltype(first) is the iterator or const_iterator of an
+//! <b>Requires</b>: decltype(first) is the `iterator` or `const_iterator` of an
 //!   instantiation of hub and [first, last) is a valid range.
 //!
 //! <b>Returns</b>: A pair with the iterator past the last visited element and
@@ -2355,9 +2363,11 @@ BOOST_CONTAINER_FORCEINLINE F for_each(const hub<T, Allocator>& x, F f)
 //! <b>Note</b>: Potentially faster than the equivalent loop thanks to internal
 //!   unrolling and prefetching.
 template<typename ValuePtr, typename F>
-std::pair<hub_detail::iterator<ValuePtr>, F> for_each_while(
-  hub_detail::iterator<ValuePtr> first, hub_detail::iterator<ValuePtr> last,
-  F f)
+std::pair<BOOST_CONTAINER_DOC1ST(HubIteratorType, hub_detail::iterator<ValuePtr>) , F>
+   for_each_while
+   ( BOOST_CONTAINER_DOC1ST(HubIteratorType, hub_detail::iterator<ValuePtr>) first
+   , BOOST_CONTAINER_DOC1ST(HubIteratorType, hub_detail::iterator<ValuePtr>) last
+   , F f)
 {
    using iterator = hub_detail::iterator<ValuePtr>;
    using block = typename iterator::block;
@@ -2431,6 +2441,15 @@ for_each_while(hub<T, Allocator>& x, F f)
    return {{last_pbb}, std::move(f)};
 }
 
+//! <b>Effects</b>: Applies f to the elements of x while f returns true.
+//!   Equivalent to for_each_while(x.cbegin(), x.cend(), std::ref(f)) with f moved
+//!   into the returned pair.
+//!
+//! <b>Returns</b>: A pair with the iterator past the last visited element and
+//!   std::move(f).
+//!
+//! <b>Note</b>: Potentially faster than range iteration thanks to internal
+//!   unrolling and prefetching.
 template<typename T, typename Allocator, typename F>
 std::pair<typename hub<T, Allocator>::const_iterator, F>
 BOOST_CONTAINER_FORCEINLINE for_each_while(const hub<T, Allocator>& x, F f)
