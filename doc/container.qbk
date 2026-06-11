@@ -2400,16 +2400,7 @@ elements' elements, and so on.
 
 [*Boost.Container] implements its own [classref boost::container::scoped_allocator_adaptor scoped_allocator_adaptor]
 class and [*backports this feature also
-to C++03 compilers]. Due to C++03 limitations, in those compilers
-the allocator propagation implemented by `scoped_allocator_adaptor::construct` functions
-will be based on traits ([classref boost::container::constructible_with_allocator_suffix constructible_with_allocator_suffix]
-and [classref boost::container::constructible_with_allocator_prefix constructible_with_allocator_prefix])
-proposed in [@http://www.open-std.org/jtc1/sc22/WG21/docs/papers/2008/n2554.pdf
-N2554: The Scoped Allocator Model (Rev 2) proposal]. In conforming C++11 compilers or compilers supporting SFINAE
-expressions (when `BOOST_NO_SFINAE_EXPR` is NOT defined), traits are ignored and C++11 rules
-(`is_constructible<T, Args..., inner_allocator_type>::value` and
-`is_constructible<T, allocator_arg_t, inner_allocator_type, Args...>::value`)
-will be used to detect if the allocator must be propagated with suffix or prefix allocator arguments.
+to C++03 compilers].
 
 [endsect]
 
@@ -2532,11 +2523,6 @@ details are:
       [classref boost::container::allocator_arg_t allocator_arg_t] as the first argument
      and [classref boost::container::pmr::memory_resource memory_resource*] as the second argument.
 
-[*Note:] ['In C++03 compilers, it is required that the programmer specializes as `true`
-[classref boost::container::constructible_with_allocator_suffix constructible_with_allocator_suffix] or
-[classref boost::container::constructible_with_allocator_prefix constructible_with_allocator_prefix]
-as in C++03 there is no way to automatically detect the chosen option at compile time. If
-no specialization is done, [*Boost.Container] assumes the suffix option].
 
 [doc_pmr_ShoppingList_hpp]
 
