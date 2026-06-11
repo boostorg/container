@@ -31,8 +31,9 @@ int main() { return 0; }
 //reflects the actual (possibly padded) size.
 #ifndef ELEMENT_SIZES
 //#define ELEMENT_SIZES { 32, 64, 96, 128, 192, 256 }
-//#define ELEMENT_SIZES { 32, 64, 128, 256 }
-#define ELEMENT_SIZES { 64, 80 }
+#define ELEMENT_SIZES { 32, 64, 128, 256 }
+//#define ELEMENT_SIZES { 64, 80 }
+//#define ELEMENT_SIZES { 128 }
 //#define ELEMENT_SIZES { 64 }
 //#define ELEMENT_SIZES { 32 }
 #endif
@@ -169,7 +170,7 @@ struct urbg
    urbg() = default;
    explicit urbg(result_type seed): rng{seed} {}
 
-   result_type operator()() { return rng(); }
+   BOOST_CONTAINER_FORCEINLINE result_type operator()() { return rng(); }
 
    boost::detail::splitmix64 rng;
 };
@@ -424,17 +425,18 @@ struct create_fill_and_destroy
    }
 };
 
-//Isolates the cost of make<Container>() alone (the insert + shuffle +
-//random-erase build), excluding the subsequent destruction.
+//Isolates the cost of creating the container
 template<typename Container>
 struct creation
 {
    unsigned int operator()(std::size_t n, double erasure_rate) const
    {
       unsigned int res = 0;
-      {
-         auto c = make<Container>(n, erasure_rate);   // measured
-         res = (unsigned int)c.size();
+      {  //Construct 3 containers so that the destruction cost is more visible in the timing
+         auto c1 = make<Container>(n, erasure_rate);   // measured
+         auto c2 = make<Container>(n, erasure_rate);   // measured
+         auto c3 = make<Container>(n, erasure_rate);   // measured
+         res = (unsigned int)(c1.size()+c2.size()+c3.size());
          pause_timing();                              // exclude destruction
       }
       resume_timing();
@@ -452,10 +454,12 @@ struct filling
       unsigned int res = 0;
       {
          pause_timing();
-         auto c = make<Container>(n, erasure_rate);   // excluded
+         auto c1 = make<Container>(n, erasure_rate);   // excluded
+         auto c2 = make<Container>(n, erasure_rate);   // excluded
          resume_timing();
-         fill(c, n);                                  // measured
-         res = (unsigned int)c.size();
+         fill(c1, n);                                  // measured
+         fill(c2, n);                                  // measured
+         res = (unsigned int)(c1.size()+c2.size());
          pause_timing();                              // exclude destruction
       }
       resume_timing();
@@ -473,10 +477,12 @@ struct quick_filling
       unsigned int res = 0;
       {
          pause_timing();
-         auto c = quick_make<Container>(n, erasure_rate);   // excluded
+         auto c1 = quick_make<Container>(n, erasure_rate);   // excluded
+         auto c2 = quick_make<Container>(n, erasure_rate);   // excluded
          resume_timing();
-         quick_fill(c, n);                                  // measured
-         res = (unsigned int)c.size();
+         quick_fill(c1, n);                                  // measured
+         quick_fill(c2, n);                                  // measured
+         res = (unsigned int)(c1.size()+c2.size());
          pause_timing();                                    // exclude destruction
       }
       resume_timing();
@@ -495,20 +501,41 @@ struct erasure
          std::uint64_t erasure_cut =
             (std::uint64_t)(erasure_rate * (double)(std::uint64_t)(-1));
 
-         Container                                 c;
+         Container                                 c1;
+         Container                                 c2;
          urbg                                      rng;
-         std::vector<typename Container::iterator> iterators;
+         std::vector<typename Container::iterator> iterators1;
+         std::vector<typename Container::iterator> iterators2;
 
-         iterators.reserve(n);
-         for (std::size_t i = 0; i < n; ++i) iterators.push_back(c.insert((int)rng()));
-         std::shuffle(iterators.begin(), iterators.end(), rng);
+         iterators1.reserve(n);
+         iterators2.reserve(n);
+         for (std::size_t i = 0; i < n; ++i) {
+            iterators1.push_back(c1.insert((int)rng()));
+            iterators2.push_back(c2.insert((int)rng()));
+         }
+
+         std::shuffle(iterators1.begin(), iterators1.end(), rng);
+         std::shuffle(iterators2.begin(), iterators2.end(), rng);
          resume_timing();
 
-         for (auto it : iterators) {
-            if (rng() < erasure_cut) erase_void(c, it);
+         for ( auto it1 = iterators1.begin()
+             ; it1 != iterators1.end()
+             ; ++it1) {
+            if (rng() < erasure_cut) {
+               erase_void(c1, *it1);
+            }
          }
+
+         for ( auto it2 = iterators2.begin()
+             ; it2 != iterators2.end()
+             ; ++it2) {
+            if (rng() < erasure_cut) {
+               erase_void(c2, *it2);
+            }
+         }
+
          pause_timing();
-         res = (unsigned)c.size();
+         res = (unsigned)c1.size() + (unsigned)c2.size();
       }
       return res;
    }
@@ -528,6 +555,31 @@ struct destruction
          res = (unsigned int)c.size();
          resume_timing();                             // measure only the dtor below
       }                                               // ~Container() measured here
+      return res;
+   }
+};
+
+//Isolates the cost of clear() alone (destroys all elements but keeps the
+//reserved capacity), excluding make and the final destruction.
+template<typename Container>
+struct clearing
+{
+   unsigned int operator()(std::size_t n, double erasure_rate) const
+   {
+      unsigned int res = 0;
+      {
+         pause_timing();
+         auto c1 = make<Container>(n, erasure_rate);   // excluded
+         auto c2 = make<Container>(n, erasure_rate);   // excluded
+         auto c3 = make<Container>(n, erasure_rate);   // excluded
+         resume_timing();
+         c1.clear();                                   // measured
+         c2.clear();                                   // measured
+         c3.clear();                                   // measured
+         res = (unsigned int)(c1.size() + c2.size() + c3.size());
+         pause_timing();                              // exclude destruction
+      }
+      resume_timing();
       return res;
    }
 };
@@ -735,7 +787,7 @@ run_summary run_bench()
              << std::setw(41)  << "" << "\n"
              << std::setfill(current_fill);
 
-   table t;
+   table t;/*
    t.push_back(benchmark(
       "iteration", element_size,
       ::iteration<num>{}, ::iteration<den>{}));
@@ -753,7 +805,10 @@ run_summary run_bench()
       create_fill_and_destroy<num>{}, create_fill_and_destroy<den>{}));
    t.push_back(benchmark(
       "destroy (dtor)", element_size,
-      destruction<num>{}, destruction<den>{}));
+      destruction<num>{}, destruction<den>{}));*/
+   t.push_back(benchmark(
+      "clear", element_size,
+      clearing<num>{}, clearing<den>{}));/*
    t.push_back(benchmark(
       "creation (make)", element_size,
       creation<num>{}, creation<den>{}));
@@ -765,7 +820,7 @@ run_summary run_bench()
       quick_filling<num>{}, quick_filling<den>{}));
    t.push_back(benchmark(
       "erasure", element_size,
-      ::erasure<num>{}, ::erasure<den>{}));
+      ::erasure<num>{}, ::erasure<den>{}));*/
 
    std::cout << "\n" << std::setfill('-') << std::setw(41) << "" "\n"
              << "Geometric means (num/den time ratio), element size "
