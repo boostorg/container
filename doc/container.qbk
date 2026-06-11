@@ -1191,7 +1191,7 @@ The first table condenses each compiler/architecture into a single number: the [
 geomean of the five per-scenario geomeans of the corresponding per-configuration table below).
 
 [block'''
-<table id="hub_summary_overall" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_summary_overall" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>Overall geomean per compiler/architecture</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">compiler/architecture</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">overall geomean</th></tr>
@@ -1209,7 +1209,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_summary_gcc_15_x64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_summary_gcc_15_x64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>GCC 15, x64</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sizeof</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1225,7 +1225,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_summary_clang_20_x64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_summary_clang_20_x64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>Clang 20, x64</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sizeof</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1241,7 +1241,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_summary_clang_17_arm64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_summary_clang_17_arm64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>Clang 17, ARM64</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sizeof</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1257,7 +1257,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_summary_vs_2022_x64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_summary_vs_2022_x64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>VS 2022, x64</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sizeof</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1273,7 +1273,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_summary_gcc_15_x86" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_summary_gcc_15_x86" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>GCC 15, x86</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sizeof</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1289,7 +1289,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_summary_clang_20_x86" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_summary_clang_20_x86" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>Clang 20, x86</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sizeof</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1305,7 +1305,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_summary_vs_2022_x86" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_summary_vs_2022_x86" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>VS 2022, x86</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sizeof</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1327,7 +1327,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 [section:hub_gcc_15_x64 GCC 15, x64]
 
 [block'''
-<table id="hub_detailed_gcc_15_x64_16" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_gcc_15_x64_16" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 16</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1349,7 +1349,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_gcc_15_x64_32" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_gcc_15_x64_32" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 32</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1371,7 +1371,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_gcc_15_x64_64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_gcc_15_x64_64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 64</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1393,7 +1393,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_gcc_15_x64_80" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_gcc_15_x64_80" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 80</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1419,7 +1419,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 [section:hub_clang_20_x64 Clang 20, x64]
 
 [block'''
-<table id="hub_detailed_clang_20_x64_16" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_clang_20_x64_16" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 16</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1441,7 +1441,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_clang_20_x64_32" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_clang_20_x64_32" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 32</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1463,7 +1463,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_clang_20_x64_64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_clang_20_x64_64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 64</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1485,7 +1485,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_clang_20_x64_80" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_clang_20_x64_80" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 80</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1511,7 +1511,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 [section:hub_clang_17_arm64 Clang 17, ARM64]
 
 [block'''
-<table id="hub_detailed_clang_17_arm64_16" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_clang_17_arm64_16" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 16</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1533,7 +1533,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_clang_17_arm64_32" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_clang_17_arm64_32" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 32</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1555,7 +1555,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_clang_17_arm64_64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_clang_17_arm64_64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 64</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1577,7 +1577,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_clang_17_arm64_80" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_clang_17_arm64_80" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 80</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1603,7 +1603,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 [section:hub_vs_2022_x64 VS 2022, x64]
 
 [block'''
-<table id="hub_detailed_vs_2022_x64_16" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_vs_2022_x64_16" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 16</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1625,7 +1625,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_vs_2022_x64_32" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_vs_2022_x64_32" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 32</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1647,7 +1647,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_vs_2022_x64_64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_vs_2022_x64_64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 64</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1669,7 +1669,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_vs_2022_x64_80" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_vs_2022_x64_80" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 80</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1695,7 +1695,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 [section:hub_gcc_15_x86 GCC 15, x86]
 
 [block'''
-<table id="hub_detailed_gcc_15_x86_16" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_gcc_15_x86_16" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 16</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1717,7 +1717,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_gcc_15_x86_32" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_gcc_15_x86_32" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 32</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1739,7 +1739,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_gcc_15_x86_64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_gcc_15_x86_64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 64</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1761,7 +1761,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_gcc_15_x86_80" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_gcc_15_x86_80" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 80</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1787,7 +1787,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 [section:hub_clang_20_x86 Clang 20, x86]
 
 [block'''
-<table id="hub_detailed_clang_20_x86_16" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_clang_20_x86_16" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 16</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1809,7 +1809,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_clang_20_x86_32" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_clang_20_x86_32" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 32</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1831,7 +1831,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_clang_20_x86_64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_clang_20_x86_64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 64</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1853,7 +1853,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_clang_20_x86_80" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_clang_20_x86_80" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 80</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1879,7 +1879,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 [section:hub_vs_2022_x86 VS 2022, x86]
 
 [block'''
-<table id="hub_detailed_vs_2022_x86_16" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_vs_2022_x86_16" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 16</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1901,7 +1901,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_vs_2022_x86_32" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_vs_2022_x86_32" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 32</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1923,7 +1923,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_vs_2022_x86_64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_vs_2022_x86_64" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 64</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
@@ -1945,7 +1945,7 @@ geomean of the five per-scenario geomeans of the corresponding per-configuration
 ''']
 
 [block'''
-<table id="hub_detailed_vs_2022_x86_80" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:0.5em 0;">
+<table id="hub_detailed_vs_2022_x86_80" border="1" cellspacing="0" style="border-collapse:collapse; width:auto; margin:1.5em 0 2.5em 0;">
 <caption>sizeof(element): 80</caption>
 <thead>
 <tr><th style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;"></th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">insert, erase, insert</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">ins, erase, ins, destroy</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">range for</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">for_each</th><th colspan="5" style="border:1px solid #bbb; background-color:#f0f0f0; padding:2px 6px; white-space:nowrap; text-align:center;">sort</th></tr>
