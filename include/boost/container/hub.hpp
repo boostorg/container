@@ -36,6 +36,8 @@
 #include <memory_resource>
 #endif
 
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 #if defined(BOOST_NO_CXX20_HDR_CONCEPTS) || defined(BOOST_NO_CXX20_HDR_RANGES)
 #define BOOST_CONTAINER_HUB_NO_RANGES
 #elif BOOST_WORKAROUND(BOOST_CLANG_VERSION, < 170100) && \
@@ -113,9 +115,13 @@ do{                                                    \
 #pragma warning(disable:4714) /* marked as __forceinline not inlined */
 #endif
 
+#endif   //BOOST_CONTAINER_DOXYGEN_INVOKED
+
 namespace boost {
 
 namespace container {
+
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 template<typename T, typename Allocator = std::allocator<T>>
 class hub;
@@ -973,6 +979,8 @@ struct block_typedefs
 
 } /* namespace container::hub_detail */
 
+#endif   //BOOST_CONTAINER_DOXYGEN_INVOKED
+
 //! A hub is a container with constant-time insertion and erasure and element
 //! stability: pointers and iterators to an element remain valid until the
 //! element is erased. It is a nearly drop-in, more compact alternative to the
@@ -1730,7 +1738,7 @@ public:
   {
     return const_cast<hub*>(this)->get_iterator(p);
   }
-
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 private:
   template<typename U, typename A, typename F>
   friend std::pair<typename hub<U, A>::iterator, F> for_each_while(
@@ -2207,7 +2215,11 @@ private:
   block_list blist;
   size_type  num_blocks = 0;
   size_type  size_ = 0;
+
+  #endif //BOOST_CONTAINER_DOXYGEN_INVOKED
 };
+
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 #if !defined(BOOST_NO_CXX17_DEDUCTION_GUIDES)
 template<
@@ -2228,6 +2240,8 @@ hub(from_range_t, R&&, Allocator = Allocator())
   -> hub<std::ranges::range_value_t<R>, Allocator>;
 #endif
 #endif
+
+#endif   //BOOST_CONTAINER_DOXYGEN_INVOKED
 
 //! <b>Effects</b>: Equivalent to x.swap(y).
 //!
