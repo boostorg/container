@@ -1829,23 +1829,27 @@ class nest
       block_base_pointer pbb = first.pbb;
       if(pbb != last.pbb){
          do {
-            block_pointer pb = static_cast_block_pointer(pbb);
+            block_pointer const pb = static_cast_block_pointer(pbb);
+            const mask_type m      = pb->mask;
             pbb = pb->next;
+            pb->mask = 0;
             BOOST_IF_CONSTEXPR(prefetch_enabled) {
                BOOST_CONTAINER_NEST_PREFETCH(static_cast<block_type&>(*pbb).data());
             }
-            size_ -= priv_destroy_all_in_nonempty_block(pb);
+            size_ -= priv_destroy_all_in_nonempty_block(boost::movelib::to_raw_pointer(pb->data()), m);
             blist.unlink(pb);
             //Block is being fully emptied. If it was partial it is already in
             //the available list, so take it out first; then (re)link it at the
             //back, where all reserved (empty) blocks are kept grouped.
-            if(BOOST_LIKELY(pb->mask != full)) blist.unlink_available(pb);
+            if(BOOST_LIKELY(m != full))
+               blist.unlink_available(pb);
             blist.link_available_at_back(pb);
-            pb->mask = 0;
          } while(pbb != last.pbb);
          first = const_iterator(pbb, nest_detail::first_in_mask(pbb->mask));
       }
-      while(first != last) first = erase(first);
+
+      while(first != last)
+         first = erase(first);
       return iterator(last.pbb, last.n);
    }
 
@@ -1867,7 +1871,71 @@ class nest
    //!
    //! <b>Complexity</b>: Linear.
    void clear() BOOST_NOEXCEPT
-   { erase(begin(), end()); }
+   {
+      block_base_pointer const hdr = blist.header();
+#define BOOST_CONTAINER_NEST_CLEAR_BIDIR
+#if defined(BOOST_CONTAINER_NEST_CLEAR_BIDIR)
+      // Dual-cursor (bidirectional) traversal. A single cold next-pointer chase
+      // is address-serial: the address of block i+1 is produced by the load on
+      // block i, so it runs at one full DRAM miss per block and software
+      // prefetch cannot help. The main list is doubly linked, so we walk it from
+      // both ends toward the middle: the front (->next) and back (->prev) chains
+      // are independent, keeping two block-header misses in flight at once
+      // (memory-level parallelism) which hides the latency. clear() visits every
+      // block and block order is irrelevant, so this is a pure scheduling change
+      // with the same end state (main list emptied, every block reserved).
+      block_base_pointer f = blist.next;   // front cursor (advances via ->next)
+      block_base_pointer b = blist.prev;   // back  cursor (advances via ->prev)
+
+      while (f != hdr) {
+         // Two independent dependency chains; issue both header loads up front.
+         const mask_type          mf = f->mask;
+         const mask_type          mb = b->mask;
+         block_base_pointer const fn = f->next;   // capture advances before mutating
+         block_base_pointer const bp = b->prev;
+         f->mask = 0;
+         b->mask = 0;
+
+         BOOST_IF_CONSTEXPR(prefetch_enabled) {
+            BOOST_CONTAINER_NEST_PREFETCH(fn);
+            BOOST_CONTAINER_NEST_PREFETCH(bp);
+            BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value) {
+               BOOST_CONTAINER_NEST_PREFETCH_BLOCK(fn);
+               BOOST_CONTAINER_NEST_PREFETCH_BLOCK(bp);
+            }
+         }
+
+         block_pointer const pf = static_cast_block_pointer(f);
+         if (f == b) {                            // odd count: lone middle block
+            priv_clear_block(pf, mf);
+            break;
+         }
+         priv_clear_block(pf, mf);                                   // front
+         priv_clear_block(static_cast_block_pointer(b), mb);        // back
+         if (fn == b) break;                      // even count: that was the last pair
+         f = fn;
+         b = bp;
+      }
+#else
+      block_base_pointer pbb = blist.next;
+
+      while(pbb != hdr) {
+         const mask_type m = pbb->mask;   //!= 0 (main-list membership)
+         pbb->mask = 0;
+         block_pointer const pb = static_cast_block_pointer(pbb);
+         pbb = pbb->next;
+         BOOST_IF_CONSTEXPR(prefetch_enabled) {
+            BOOST_CONTAINER_NEST_PREFETCH(pbb->next);
+            BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value)
+               BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
+         }
+         priv_clear_block(pb, m);
+      }
+#endif
+
+      blist.next = blist.prev = hdr;
+      size_ = 0;
+   }
 
    //////////////////////////////////////////////
    //
@@ -2135,50 +2203,52 @@ class nest
    //
    //////////////////////////////////////////////
 
-   BOOST_CONTAINER_FORCEINLINE size_type priv_destroy_all_in_nonempty_block(block_pointer pb) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE size_type priv_destroy_all_in_nonempty_block(T* data, mask_type m) BOOST_NOEXCEPT
    {
-      BOOST_ASSERT(pb->mask != 0);
-      return priv_destroy_all_dispatch(pb,
-         dtl::bool_<dtl::is_trivially_destructible<T>::value>());
-
-//Missing checking if the allocator has "destroy"
-//      std::is_trivially_destructible<T>::value &&
-//      ( hub_detail::is_std_allocator<block_allocator>::value ||
-//      hub_detail::is_std_pmr_polymorphic_allocator<block_allocator>::value ||
-//     !hub_detail::allocator_has_destroy<block_allocator, T*>::value )>{});
-   }
-
-   BOOST_CONTAINER_FORCEINLINE size_type priv_destroy_all_dispatch(
-      block_pointer pb, dtl::true_type /* trivially destructible */) BOOST_NOEXCEPT
-   {
-      return (size_type)boost::core::popcount(pb->mask);
-   }
-
-   size_type priv_destroy_all_dispatch(
-      block_pointer pb, dtl::false_type /* use destroy */) BOOST_NOEXCEPT
-   {
-      mask_type m = pb->mask;
-      const size_type r = (size_type)boost::core::popcount(m);
-
-      BOOST_CONTAINER_UNROLL(4)
-      do {
-         int n = nest_detail::first_in_mask(m);
-         block_alloc_traits::destroy(al(), boost::movelib::to_raw_pointer(pb->data() + n));
-         m &= m - 1;
-      } while(m);
+      BOOST_ASSERT(m != 0);
+      const size_type r = (size_type)boost::core::popcount(m); (void)data;
+      BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value) {
+         BOOST_CONTAINER_UNROLL(4)
+         do {
+            int n = nest_detail::first_in_mask(m);
+            block_alloc_traits::destroy(al(), data + n);
+            m &= m - 1;
+         } while(m);
+      }
       return r;
    }
 
-   size_type priv_destroy_all_in_full_block(block_pointer pb) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE size_type priv_destroy_all_in_full_block(T* data, mask_type mask) BOOST_NOEXCEPT
    {
-      BOOST_ASSERT(pb->mask == full);
-      T* data = boost::movelib::to_raw_pointer(pb->data());
-      T *const data_end = data + N;
-      BOOST_CONTAINER_UNROLL(4)
-      for (; data != data_end; ++data) {
-         block_alloc_traits::destroy(al(), data);
+      (void)data; (void)mask;
+      BOOST_ASSERT(mask == full);
+      BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value) {
+         (void)mask;
+         T* const data_end = data + N;
+
+         BOOST_CONTAINER_UNROLL(4)
+         for (; data != data_end; ++data) {
+            block_alloc_traits::destroy(al(), data);
+         }
       }
       return (size_type)N;
+   }
+
+   // Per-block work shared by clear()'s traversal variants: destroy the live
+   // elements of 'pb' (using the captured pre-clear mask 'm') and, for a full
+   // block (which is not on the available list), append it there. The caller is
+   // responsible for resetting pb->mask to 0. Block order is irrelevant here.
+   BOOST_CONTAINER_FORCEINLINE void priv_clear_block(block_pointer pb, mask_type m) BOOST_NOEXCEPT
+   {
+      T* const pd = boost::movelib::to_raw_pointer(pb->data());
+      if (m == full) {
+         //Full blocks are not on the available list; add them. Partial blocks
+         //are already there. Every block becomes reserved (mask == 0).
+         priv_destroy_all_in_full_block(pd, m);
+         blist.link_available_at_back(pb);
+      }
+      else
+         priv_destroy_all_in_nonempty_block(pd, m);
    }
 
    //////////////////////////////////////////////
@@ -2225,12 +2295,12 @@ class nest
             BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value)
                BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
          }
-         BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value) {
-            if (pb->mask == full)
-               priv_destroy_all_in_full_block(pb);
-            else
-               priv_destroy_all_in_nonempty_block(pb);
-         }
+         T* const pd = boost::movelib::to_raw_pointer(pb->data());
+         if (pb->mask == full)
+            priv_destroy_all_in_full_block(pd, pb->mask);
+         else
+            priv_destroy_all_in_nonempty_block(pd, pb->mask);
+
          priv_delete_block(pb);
       }
 
