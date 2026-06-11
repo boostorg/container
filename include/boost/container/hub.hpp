@@ -209,7 +209,7 @@ struct block_base
     return pointer_traits<const_pointer>::pointer_to(x);
   }
 
-  BOOST_FORCEINLINE void link_available_before(pointer p) noexcept
+  BOOST_CONTAINER_FORCEINLINE void link_available_before(pointer p) noexcept
   {
     next_available = p;
     prev_available = p->prev_available;
@@ -217,7 +217,7 @@ struct block_base
     prev_available->next_available = pointer_to(*this);
   }
 
-  BOOST_FORCEINLINE void link_available_after(pointer p) noexcept
+  BOOST_CONTAINER_FORCEINLINE void link_available_after(pointer p) noexcept
   {
     prev_available = p;
     next_available = p->next_available;
@@ -225,13 +225,13 @@ struct block_base
     prev_available->next_available = pointer_to(*this);
   }
 
-  BOOST_FORCEINLINE void unlink_available() noexcept
+  BOOST_CONTAINER_FORCEINLINE void unlink_available() noexcept
   {
     prev_available->next_available = next_available;
     next_available->prev_available = prev_available;
   }
 
-  BOOST_FORCEINLINE void link_before(pointer p) noexcept
+  BOOST_CONTAINER_FORCEINLINE void link_before(pointer p) noexcept
   {
     next = p;
     prev = p->prev;
@@ -239,7 +239,7 @@ struct block_base
     prev->next = pointer_to(*this);
   }
 
-  BOOST_FORCEINLINE void unlink() noexcept
+  BOOST_CONTAINER_FORCEINLINE void unlink() noexcept
   {
     prev->next = next;
     next->prev = prev;
@@ -353,33 +353,33 @@ struct block_list: block<ValuePointer>
     return pointer_to(static_cast<const block_base&>(*this)); 
   }
 
-  BOOST_FORCEINLINE void link_at_back(block_pointer pb) noexcept 
+  BOOST_CONTAINER_FORCEINLINE void link_at_back(block_pointer pb) noexcept 
   {
     pb->link_before(header());
   }
 
-  BOOST_FORCEINLINE void link_before(
+  BOOST_CONTAINER_FORCEINLINE void link_before(
     block_pointer pbx, block_pointer pby) noexcept
   {
     pbx->link_before(pby);
   }
 
-  BOOST_FORCEINLINE static void unlink(block_pointer pb) noexcept
+  BOOST_CONTAINER_FORCEINLINE static void unlink(block_pointer pb) noexcept
   {
     pb->unlink();
   }
 
-  BOOST_FORCEINLINE void link_available_at_back(block_pointer pb) noexcept 
+  BOOST_CONTAINER_FORCEINLINE void link_available_at_back(block_pointer pb) noexcept 
   {
     pb->link_available_before(header());
   }
 
-  BOOST_FORCEINLINE void link_available_at_front(block_pointer pb) noexcept 
+  BOOST_CONTAINER_FORCEINLINE void link_available_at_front(block_pointer pb) noexcept 
   {
     pb->link_available_after(header());
   }
 
-  BOOST_FORCEINLINE void unlink_available(block_pointer pb) noexcept
+  BOOST_CONTAINER_FORCEINLINE void unlink_available(block_pointer pb) noexcept
   {
     pb->unlink_available();
   }
@@ -404,17 +404,17 @@ public:
   using reference = element_type&;
   using iterator_category = std::bidirectional_iterator_tag;
 
-  BOOST_FORCEINLINE iterator() = default;
-  BOOST_FORCEINLINE iterator(const iterator& x) noexcept: pbb{x.pbb}, n{x.n} {}
+  BOOST_CONTAINER_FORCEINLINE iterator() = default;
+  BOOST_CONTAINER_FORCEINLINE iterator(const iterator& x) noexcept: pbb{x.pbb}, n{x.n} {}
 
   template<
     typename Value2Pointer,
     typename = enable_if_consts_to_element_type_t<Value2Pointer>
   >
-  BOOST_FORCEINLINE iterator(const iterator<Value2Pointer>& x) noexcept: 
+  BOOST_CONTAINER_FORCEINLINE iterator(const iterator<Value2Pointer>& x) noexcept: 
     pbb{x.pbb}, n{x.n} {}
       
-  BOOST_FORCEINLINE iterator& operator=(const iterator& x) noexcept
+  BOOST_CONTAINER_FORCEINLINE iterator& operator=(const iterator& x) noexcept
   {
     pbb = x.pbb;
     n = x.n;
@@ -425,7 +425,7 @@ public:
     typename Value2Pointer,
     typename = enable_if_consts_to_element_type_t<Value2Pointer>
   >
-  BOOST_FORCEINLINE iterator& operator=(
+  BOOST_CONTAINER_FORCEINLINE iterator& operator=(
     const iterator<Value2Pointer>& x) noexcept
   {
     pbb = x.pbb;
@@ -433,17 +433,17 @@ public:
     return *this;
   }
 
-  BOOST_FORCEINLINE pointer operator->() const noexcept
+  BOOST_CONTAINER_FORCEINLINE pointer operator->() const noexcept
   {
     return static_cast<block&>(*pbb).data() + n;
   }
 
-  BOOST_FORCEINLINE reference operator*() const noexcept
+  BOOST_CONTAINER_FORCEINLINE reference operator*() const noexcept
   {
     return *operator->();
   }
 
-  BOOST_FORCEINLINE iterator& operator++() noexcept
+  BOOST_CONTAINER_FORCEINLINE iterator& operator++() noexcept
   {
     auto mask = pbb->mask & (full << 1 << n);
     if(BOOST_UNLIKELY(mask == 0)) {
@@ -456,14 +456,14 @@ public:
     return *this;
   }
 
-  BOOST_FORCEINLINE iterator operator++(int) noexcept
+  BOOST_CONTAINER_FORCEINLINE iterator operator++(int) noexcept
   {
     iterator tmp(*this);
     this->operator++();
     return tmp;
   }
 
-  BOOST_FORCEINLINE iterator& operator--() noexcept
+  BOOST_CONTAINER_FORCEINLINE iterator& operator--() noexcept
   {
     auto mask = pbb->mask & (full >> 1 >> (N - 1 - n));
     if(BOOST_UNLIKELY(mask == 0)) {
@@ -476,20 +476,20 @@ public:
     return *this;
   }
 
-  BOOST_FORCEINLINE iterator operator--(int) noexcept
+  BOOST_CONTAINER_FORCEINLINE iterator operator--(int) noexcept
   {
     iterator tmp(*this);
     this->operator--();
     return tmp;
   }
 
-  BOOST_FORCEINLINE friend bool operator==(
+  BOOST_CONTAINER_FORCEINLINE friend bool operator==(
     const iterator& x, const iterator& y) noexcept
   {
     return x.pbb == y.pbb && x.n == y.n;
   }
   
-  BOOST_FORCEINLINE friend bool operator!=(
+  BOOST_CONTAINER_FORCEINLINE friend bool operator!=(
     const iterator& x, const iterator& y) noexcept
   {
     return !(x == y);
@@ -517,10 +517,10 @@ private:
   static constexpr int N = block_base::N;
   static constexpr mask_type full = block_base::full;
 
-  BOOST_FORCEINLINE iterator(const_block_base_pointer pbb_, int n_) noexcept:
+  BOOST_CONTAINER_FORCEINLINE iterator(const_block_base_pointer pbb_, int n_) noexcept:
     pbb{const_cast_block_base_pointer(pbb_)}, n{n_} {}
 
-  BOOST_FORCEINLINE iterator(const_block_base_pointer pbb_) noexcept:
+  BOOST_CONTAINER_FORCEINLINE iterator(const_block_base_pointer pbb_) noexcept:
     pbb{const_cast_block_base_pointer(pbb_)}, 
     n{hub_detail::unchecked_countr_zero(pbb->mask)} 
   {}
@@ -541,7 +541,7 @@ struct inline_ref_caller
    F& f;
 
    template<typename T>
-   BOOST_FORCEINLINE auto operator()(T&& x) -> 
+   BOOST_CONTAINER_FORCEINLINE auto operator()(T&& x) -> 
      decltype(std::declval<F>()(std::declval<T&&>()))
    { 
      return f(std::forward<T>(x));
@@ -555,7 +555,7 @@ struct inline_ref_const_caller
    F& f;
 
    template<typename T>
-   BOOST_FORCEINLINE auto operator()(const T& x) -> 
+   BOOST_CONTAINER_FORCEINLINE auto operator()(const T& x) -> 
      decltype(std::declval<F>()(std::declval<const T&>()))
    { 
      return f(x);
@@ -568,7 +568,7 @@ struct inline_return_true_ref_caller
    F& f;
 
    template<typename T>
-   BOOST_FORCEINLINE bool operator()(T&& x)
+   BOOST_CONTAINER_FORCEINLINE bool operator()(T&& x)
    { 
      f(std::forward<T>(x));
      return true;
@@ -581,7 +581,7 @@ struct inline_return_true_ref_const_caller
    F& f;
 
    template<typename T>
-   BOOST_FORCEINLINE bool operator()(const T& x)
+   BOOST_CONTAINER_FORCEINLINE bool operator()(const T& x)
    { 
      f(x);
      return true;
@@ -1400,7 +1400,7 @@ public:
   //!
   //! <b>Complexity</b>: Constant. Exactly one object of type T is constructed.
   template<typename... Args>
-  BOOST_FORCEINLINE iterator emplace(Args&&... args)
+  BOOST_CONTAINER_FORCEINLINE iterator emplace(Args&&... args)
   {
     auto pbb = blist.next_available; /* for construct_or_restore_capacity */
     int  n;
@@ -1427,7 +1427,7 @@ public:
   //!
   //! <b>Complexity</b>: Constant.
   template<typename... Args>
-  BOOST_FORCEINLINE iterator emplace_hint(const_iterator, Args&&... args)
+  BOOST_CONTAINER_FORCEINLINE iterator emplace_hint(const_iterator, Args&&... args)
   {
     return emplace(std::forward<Args>(args)...);
   }
@@ -1439,11 +1439,11 @@ public:
   //! <b>Returns</b>: An iterator pointing to the new element.
   //!
   //! <b>Complexity</b>: Constant.
-  BOOST_FORCEINLINE iterator insert(const T& x) { return emplace(x); }
-  BOOST_FORCEINLINE iterator insert(const_iterator, const T& x)
+  BOOST_CONTAINER_FORCEINLINE iterator insert(const T& x) { return emplace(x); }
+  BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator, const T& x)
                              { return emplace(x); }
-  BOOST_FORCEINLINE iterator insert(T&& x) { return emplace(std::move(x)); }
-  BOOST_FORCEINLINE iterator insert(const_iterator, T&& x) 
+  BOOST_CONTAINER_FORCEINLINE iterator insert(T&& x) { return emplace(std::move(x)); }
+  BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator, T&& x) 
                              { return emplace(std::move(x)); }
 
   //! <b>Effects</b>: Inserts copies of the elements in il. Equivalent to
@@ -1511,7 +1511,7 @@ public:
   //!
   //! <b>Note</b>: Invalidates references, pointers and iterators referring to
   //!   the erased element.
-  BOOST_FORCEINLINE iterator erase(const_iterator pos)
+  BOOST_CONTAINER_FORCEINLINE iterator erase(const_iterator pos)
   {
     auto pbb = pos.pbb;
     auto n = pos.n;
@@ -1528,7 +1528,7 @@ public:
   //! <b>Note</b>: Potentially faster than erase(pos) as no return iterator needs
   //!   to be computed. Invalidates references, pointers and iterators referring
   //!   to the erased element.
-  BOOST_FORCEINLINE void erase_void(const_iterator pos)
+  BOOST_CONTAINER_FORCEINLINE void erase_void(const_iterator pos)
   {
     erase_impl(pos.pbb, pos.n);
   }
@@ -1860,7 +1860,7 @@ private:
     allocator_deallocate(al(), pb, 1);
   }
 
-  BOOST_FORCEINLINE block_pointer retrieve_available_block(int& n)
+  BOOST_CONTAINER_FORCEINLINE block_pointer retrieve_available_block(int& n)
   {
     if(BOOST_LIKELY(blist.next_available != blist.header())) {
       auto pb = static_cast_block_pointer(blist.next_available);
@@ -1873,7 +1873,7 @@ private:
     }
   }
 
-  BOOST_FORCEINLINE size_type destroy_all_in_nonempty_block(
+  BOOST_CONTAINER_FORCEINLINE size_type destroy_all_in_nonempty_block(
     block_pointer pb) noexcept
   {
     BOOST_ASSERT(pb->mask != 0);
@@ -1884,13 +1884,13 @@ private:
        !hub_detail::allocator_has_destroy<block_allocator, T*>::value )>{});
   }
 
-  BOOST_FORCEINLINE size_type destroy_all_in_nonempty_block(
+  BOOST_CONTAINER_FORCEINLINE size_type destroy_all_in_nonempty_block(
     block_pointer pb, std::true_type /* trivial destruction */) noexcept
   {
     return (size_type)core::popcount(pb->mask);
   }
 
-  BOOST_FORCEINLINE size_type destroy_all_in_nonempty_block(
+  BOOST_CONTAINER_FORCEINLINE size_type destroy_all_in_nonempty_block(
     block_pointer pb, std::false_type /* use allocator_destroy */) noexcept
   {
     size_type s = (size_type)core::popcount(pb->mask);
@@ -1905,7 +1905,7 @@ private:
     return s;
   }
 
-  BOOST_FORCEINLINE size_type destroy_all_in_full_block(
+  BOOST_CONTAINER_FORCEINLINE size_type destroy_all_in_full_block(
     block_pointer pb) noexcept
   {
     BOOST_ASSERT(pb->mask == full);
@@ -1972,7 +1972,7 @@ private:
     }
   }
 
-  BOOST_FORCEINLINE void erase_impl(block_base_pointer pbb, int n) noexcept
+  BOOST_CONTAINER_FORCEINLINE void erase_impl(block_base_pointer pbb, int n) noexcept
   {
     auto pb = static_cast_block_pointer(pbb);
     allocator_destroy(al(), boost::to_address(pb->data() + n));
@@ -2309,7 +2309,7 @@ erase_if(hub<T, Allocator>& x, Predicate pred)
 //! <b>Note</b>: Potentially faster than the equivalent loop thanks to internal
 //!   unrolling and prefetching.
 template<typename ValuePtr, typename F>
-BOOST_FORCEINLINE F for_each(
+BOOST_CONTAINER_FORCEINLINE F for_each(
   hub_detail::iterator<ValuePtr> first, hub_detail::iterator<ValuePtr> last,
   F f)
 {
@@ -2326,7 +2326,7 @@ BOOST_FORCEINLINE F for_each(
 //! <b>Note</b>: Potentially faster than range iteration thanks to internal
 //!   unrolling and prefetching.
 template<typename T, typename Allocator, typename F>
-BOOST_FORCEINLINE F for_each(hub<T, Allocator>& x, F f)
+BOOST_CONTAINER_FORCEINLINE F for_each(hub<T, Allocator>& x, F f)
 {
   container::for_each_while(
     x, hub_detail::inline_return_true_ref_caller<F>{f});
@@ -2334,7 +2334,7 @@ BOOST_FORCEINLINE F for_each(hub<T, Allocator>& x, F f)
 }
 
 template<typename T, typename Allocator, typename F>
-BOOST_FORCEINLINE F for_each(const hub<T, Allocator>& x, F f)
+BOOST_CONTAINER_FORCEINLINE F for_each(const hub<T, Allocator>& x, F f)
 {
   container::for_each_while(
     const_cast<hub<T, Allocator>&>(x),
@@ -2433,7 +2433,7 @@ for_each_while(hub<T, Allocator>& x, F f)
 
 template<typename T, typename Allocator, typename F>
 std::pair<typename hub<T, Allocator>::const_iterator, F>
-BOOST_FORCEINLINE for_each_while(const hub<T, Allocator>& x, F f)
+BOOST_CONTAINER_FORCEINLINE for_each_while(const hub<T, Allocator>& x, F f)
 {
   return {
     container::for_each_while(
