@@ -2251,6 +2251,23 @@ class nest
          priv_destroy_all_in_nonempty_block(pd, m);
    }
 
+   // Per-block work shared by priv_reset()'s traversal variants: destroy the
+   // live elements of a main-list block (mask 'm' != 0; partial or full) and
+   // free it. Empty/reserved blocks carry no elements and are freed directly
+   // with priv_delete_block instead. priv_delete_block does not unlink, so the
+   // caller may free blocks in any order provided list advances were captured
+   // from still-live nodes beforehand.
+   BOOST_CONTAINER_FORCEINLINE void priv_reset_block(block_pointer pb, mask_type m) BOOST_NOEXCEPT
+   {
+      BOOST_ASSERT(m != 0);
+      T* const pd = boost::movelib::to_raw_pointer(pb->data());
+      if (m == full)
+         priv_destroy_all_in_full_block(pd, m);
+      else
+         priv_destroy_all_in_nonempty_block(pd, m);
+      priv_delete_block(pb);
+   }
+
    //////////////////////////////////////////////
    //
    //   private: reset (destroy all + free)
@@ -2259,17 +2276,15 @@ class nest
 
    void priv_reset() BOOST_NOEXCEPT
    {
+      // Phase A sequential (empties), then a bidirectional main-list
+      // walk for partial+full blocks. The single forward next-pointer chase of
+      // variant 0 is address-serial (one DRAM miss per block, no MLP); walking
+      // the doubly-linked main list from both ends gives two independent
+      // header-miss streams. NOTE: because reset frees as it goes, neighbor data
+      // prefetch must not dereference an already-freed block, so the next-pair
+      // data prefetch is issued only on non-terminal iterations (when fn/bp are
+      // strictly inside the unprocessed (f, b) range and hence still alive).
       block_base_pointer const hdr = blist.header();
-
-      // Never touch a node belonging to the other
-      // linked list while iterating one list.
-      // It still relies on the partition invariant
-      // ([ partial ... partial | empty ... empty ]):
-      //   A) Walk the available list backwards, freeing empty
-      //      blocks that sit at the back of the available list and are not
-      //      on the main list.
-      //   B) Walk the main list forward, destroying the elements of every
-      //      remaining block (partial or full) and freeing it.
 
       // A) empty (reserved) blocks, from the back of the available list
       block_base_pointer pbb = hdr->prev_available;
@@ -2284,24 +2299,40 @@ class nest
          priv_delete_block(pb);
       }
 
-      // B) partial + full blocks, in main-list order
-      pbb = blist.next;
-      while(pbb != hdr) {
-         block_pointer const pb = static_cast_block_pointer(pbb);
-         pbb = pbb->next;
+      // B) partial + full blocks, from both ends of the main list
+      block_base_pointer f = blist.next;
+      block_base_pointer b = blist.prev;
+      while(f != hdr) {
+         const mask_type          mf = f->mask;
+         const mask_type          mb = b->mask;
+         block_base_pointer const fn = f->next;
+         block_base_pointer const bp = b->prev;
+         block_pointer      const pf = static_cast_block_pointer(f);
+
+         if(f == b) {                           // odd count: lone middle block
+            priv_reset_block(pf, mf);
+            break;
+         }
+
+         block_pointer const pbk       = static_cast_block_pointer(b);
+         const bool          last_pair = (fn == b);   // even count: final pair
 
          BOOST_IF_CONSTEXPR(prefetch_enabled){
-            BOOST_CONTAINER_NEST_PREFETCH(&pbb->next->next);
-            BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value)
-               BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
+            if(!last_pair){                     // fn, bp strictly inside (f,b): alive
+               BOOST_CONTAINER_NEST_PREFETCH(fn);
+               BOOST_CONTAINER_NEST_PREFETCH(bp);
+               BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value){
+                  BOOST_CONTAINER_NEST_PREFETCH_BLOCK(fn);
+                  BOOST_CONTAINER_NEST_PREFETCH_BLOCK(bp);
+               }
+            }
          }
-         T* const pd = boost::movelib::to_raw_pointer(pb->data());
-         if (pb->mask == full)
-            priv_destroy_all_in_full_block(pd, pb->mask);
-         else
-            priv_destroy_all_in_nonempty_block(pd, pb->mask);
 
-         priv_delete_block(pb);
+         priv_reset_block(pf, mf);
+         priv_reset_block(pbk, mb);
+         if(last_pair) break;
+         f = fn;
+         b = bp;
       }
 
       blist.reset();
