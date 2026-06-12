@@ -58,6 +58,8 @@ struct piecewise_construct_t;
 template <class Ptr>
 struct pointer_traits;
 
+struct from_range_t;
+
 BOOST_MOVE_STD_NS_END
 #include <boost/move/detail/std_ns_end.hpp>
 
@@ -70,6 +72,6 @@ enum class align_val_t : std::size_t;
 
 }  //namespace std
 
-#endif
+#endif   //defined(__cpp_aligned_new)
 
 #endif //#ifndef BOOST_CONTAINER_DETAIL_STD_FWD_HPP

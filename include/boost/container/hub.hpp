@@ -13,6 +13,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/detail/bit_utilities.hpp>
+#include <boost/container/detail/range_utils.hpp>   //from_range_t / from_range
 
 #include <algorithm>
 #include <boost/assert.hpp>
@@ -51,8 +52,15 @@
 #endif
 
 #if !defined(BOOST_CONTAINER_HUB_NO_RANGES)
+/* <ranges> is a very heavy header (~44k preprocessed lines on libstdc++) and the
+ * range members below only need begin/end access plus the container-compatible
+ * range constraint. We get those from <concepts> (std::convertible_to) and
+ * <iterator> (the classic std::begin/std::end customization points and the C++20
+ * iterator concepts/aliases), both of which hub already pulls in transitively,
+ * so dropping <ranges> costs no extra includes.
+ */
 #include <concepts>
-#include <ranges>
+#include <iterator>
 #endif
 
 /* Software prefetch hint accepting a (possibly fancy) pointer: convert to a raw
@@ -746,50 +754,49 @@ template<typename T>
 using type_identity_t = typename type_identity<T>::type;
 
 #if !defined(BOOST_CONTAINER_HUB_NO_RANGES)
+/* Minimal, <ranges>-free range access. The classic two-step idiom (bring
+ * std::begin/std::end into scope, then call unqualified so ADL-provided
+ * overloads are also considered) resolves begin/end for arrays, member
+ * begin()/end() and free begin()/end(), which covers every container-like
+ * range we care about here.
+ */
+namespace adl_range {
+
+using std::begin;
+using std::end;
+
+template<class R>
+constexpr auto adl_begin(R&& r) noexcept(noexcept(begin(r))) -> decltype(begin(r))
+{ return begin(r); }
+
+template<class R>
+constexpr auto adl_end(R&& r) noexcept(noexcept(end(r))) -> decltype(end(r))
+{ return end(r); }
+
+} /* namespace adl_range */
+
+template<class R>
+using range_iterator_t = decltype(adl_range::adl_begin(std::declval<R&>()));
+
+template<class R>
+using range_reference_t = std::iter_reference_t<range_iterator_t<R> >;
+
+template<class R>
+using range_value_t = std::iter_value_t<range_iterator_t<R> >;
+
+template<class R>
+concept input_range_like =
+  requires(R& r) {
+    adl_range::adl_begin(r);
+    adl_range::adl_end(r);
+  } &&
+  std::input_iterator<range_iterator_t<R> >;
+
 template<class R, class T>
 concept container_compatible_range =
-  std::ranges::input_range<R> &&
-  std::convertible_to<std::ranges::range_reference_t<R>, T>;
+  input_range_like<R> &&
+  std::convertible_to<range_reference_t<R>, T>;
 
-/* Use own from_range_t only if std::from_range_t does not exist.
- * Technique explained at
- https://bannalia.blogspot.com/2016/09/compile-time-checking-existence-of.html
- */
-
-struct from_range_t{ explicit from_range_t() = default; };
-struct from_range_t_hook{};
-
-} /* namespace hub_detail */
-} /* namespace container */
-} /* namespace boost */
-
-namespace std {
-
-template<> struct hash< ::boost::container::hub_detail::from_range_t_hook>
-{
-  using from_range_t_type = decltype([] {
-    using namespace ::boost::container::hub_detail;
-    return from_range_t{};
-  }());
-
-  /* make standard happy */
-  std::size_t operator()(
-    const ::boost::container::hub_detail::from_range_t_hook&) const;
-};
-
-}
-
-namespace boost {
-namespace container {
-
-/* TODO: this may collide with other same-named entities in different
- * parts of Boost.Container.
- */
-using from_range_t = 
-  typename std::hash<hub_detail::from_range_t_hook>::from_range_t_type;
-inline constexpr from_range_t from_range {};
-
-namespace hub_detail {
 #endif
 
 template<typename InputIterator>
@@ -1173,7 +1180,7 @@ public:
   void assign_range(R&& rg)
   {
     range_assign_impl(
-      std::ranges::begin(rg), std::ranges::end(rg),
+      hub_detail::adl_range::adl_begin(rg), hub_detail::adl_range::adl_end(rg),
       [this] (T* p, auto it) { allocator_construct(al(), p, *it); },
       [] (T* p, auto it) { *p = *it; });
   }
@@ -1393,7 +1400,7 @@ public:
   void insert_range(R&& rg)
   {
     range_insert_impl(
-      std::ranges::begin(rg), std::ranges::end(rg),
+      hub_detail::adl_range::adl_begin(rg), hub_detail::adl_range::adl_end(rg),
       [this] (T* p, auto it) { allocator_construct(al(), p, *it); });
   }
 #endif
@@ -2161,11 +2168,11 @@ hub(InputIterator, InputIterator, Allocator = Allocator())
 
 #if !defined(BOOST_CONTAINER_HUB_NO_RANGES)
 template<
-  std::ranges::input_range R,
-  typename Allocator = std::allocator<std::ranges::range_value_t<R>>
+  hub_detail::input_range_like R,
+  typename Allocator = std::allocator<hub_detail::range_value_t<R> >
 >
 hub(from_range_t, R&&, Allocator = Allocator())
-  -> hub<std::ranges::range_value_t<R>, Allocator>;
+  -> hub<hub_detail::range_value_t<R>, Allocator>;
 #endif
 #endif
 
