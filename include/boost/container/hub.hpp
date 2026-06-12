@@ -12,6 +12,7 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
+#include <boost/container/detail/bit_utilities.hpp>
 
 #include <algorithm>
 #include <boost/assert.hpp>
@@ -110,38 +111,7 @@ std::pair<hub_detail::iterator<ValuePtr>, F> for_each_while(
 
 namespace hub_detail {
 
-inline int unchecked_countr_zero(std::uint64_t x)
-{
-#if defined(BOOST_MSVC) && (defined(_M_X64) || defined(_M_ARM64))
-  unsigned long r;
-  _BitScanForward64(&r, x);
-  return (int)r;
-#elif defined(BOOST_GCC) || defined(BOOST_CLANG)
-  return (int)__builtin_ctzll(x);
-#else
-  BOOST_CONTAINER_ASSUME(x != 0);
-  return (int)core::countr_zero(x);
-#endif
-}
-
-inline int unchecked_countr_one(std::uint64_t x)
-{
-  return unchecked_countr_zero(~x);
-}
-
-inline int unchecked_countl_zero(std::uint64_t x)
-{
-#if defined(BOOST_MSVC) && (defined(_M_X64) || defined(_M_ARM64))
-  unsigned long r;
-  _BitScanReverse64(&r, x);
-  return (int)(63 - r);
-#elif defined(BOOST_GCC) || defined(BOOST_CLANG)
-  return (int)__builtin_clzll(x);
-#else  
-  BOOST_CONTAINER_ASSUME(x != 0);
-  return (int)core::countl_zero(x);
-#endif
-}
+//Shared bit helpers live in boost::container::dtl (detail/bit_utilities.hpp).
 
 template<typename Pointer, typename T>
 using pointer_rebind_t = 
@@ -410,7 +380,7 @@ public:
       BOOST_CONTAINER_HUB_PREFETCH_BLOCK(pbb->next, block);
       mask = pbb->mask;
     }
-    n = hub_detail::unchecked_countr_zero(mask);
+    n = dtl::unchecked_countr_zero(mask);
     return *this;
   }
 
@@ -430,7 +400,7 @@ public:
       BOOST_CONTAINER_HUB_PREFETCH_BLOCK(pbb->prev, block);
       mask = pbb->mask;
     }
-    n = N - 1 - hub_detail::unchecked_countl_zero(mask);
+    n = N - 1 - dtl::unchecked_countl_zero(mask);
     return *this;
   }
 
@@ -480,7 +450,7 @@ private:
 
   BOOST_CONTAINER_FORCEINLINE iterator(const_block_base_pointer pbb_) noexcept:
     pbb{const_cast_block_base_pointer(pbb_)}, 
-    n{hub_detail::unchecked_countr_zero(pbb->mask)} 
+    n{dtl::unchecked_countr_zero(pbb->mask)} 
   {}
 
   static block_base_pointer
@@ -1822,7 +1792,7 @@ private:
   {
     if(BOOST_LIKELY(blist.next_available != blist.header())) {
       auto pb = static_cast_block_pointer(blist.next_available);
-      n = hub_detail::unchecked_countr_one(pb->mask);
+      n = dtl::unchecked_countr_one(pb->mask);
       return pb;
     }
     else {
@@ -1856,7 +1826,7 @@ private:
     auto      pd = boost::to_address(pb->data());
     BOOST_CONTAINER_UNROLL(4)
     do {
-      auto n = hub_detail::unchecked_countr_zero(mask);
+      auto n = dtl::unchecked_countr_zero(mask);
       allocator_destroy(al(), pd + n);
       mask &= mask - 1;
     } while(mask);
@@ -1961,7 +1931,7 @@ private:
           break;
         }
         else if(first == last) return;
-        n = hub_detail::unchecked_countr_one(pb->mask);
+        n = dtl::unchecked_countr_one(pb->mask);
       }
     }
   }
@@ -2146,8 +2116,8 @@ private:
     }
     auto c = (std::min)(N - cx, cy);
     while(c--) {
-      auto n = hub_detail::unchecked_countr_one(pbx->mask);
-      auto m = N - 1 - hub_detail::unchecked_countl_zero(pby->mask);
+      auto n = dtl::unchecked_countr_one(pbx->mask);
+      auto m = N - 1 - dtl::unchecked_countl_zero(pby->mask);
       allocator_construct(
         al(), boost::to_address(pbx->data() + n), std::move(pby->data()[m]));
       allocator_destroy(al(), boost::to_address(pby->data() + m));
@@ -2159,8 +2129,8 @@ private:
   void compact(block_pointer pb)
   {
     for(; ; ) {
-      auto n = hub_detail::unchecked_countr_one(pb->mask);
-      auto m = N - 1 - hub_detail::unchecked_countl_zero(pb->mask);
+      auto n = dtl::unchecked_countr_one(pb->mask);
+      auto m = N - 1 - dtl::unchecked_countl_zero(pb->mask);
       if(n > m) return;
       allocator_construct(
         al(), boost::to_address(pb->data() + n), std::move(pb->data()[m]));
@@ -2248,7 +2218,7 @@ erase_if(hub<T, Allocator>& x, Predicate pred)
     BOOST_CONTAINER_HUB_PREFETCH_BLOCK(pbb, block);
     auto mask = pb->mask;
     do {
-      auto n = hub_detail::unchecked_countr_zero(mask);
+      auto n = dtl::unchecked_countr_zero(mask);
       if(pred(pb->data()[n])) x.erase_impl(pb, n);
       mask &= mask - 1;
     } while(mask);
@@ -2345,13 +2315,13 @@ std::pair<BOOST_CONTAINER_DOC1ST(HubIteratorType, hub_detail::iterator<ValuePtr>
       mask &= (is_last << last_n) - mask_type(1);
       BOOST_CONTAINER_HUB_PREFETCH(
         block::static_cast_block_pointer(pbb->next)->data());
-      auto next_n = hub_detail::unchecked_countr_zero(pbb->next->mask);
+      auto next_n = dtl::unchecked_countr_zero(pbb->next->mask);
       BOOST_CONTAINER_HUB_PREFETCH(
         block::static_cast_block_pointer(pbb->next)->data() + next_n);
       auto pd = block::static_cast_block_pointer(pbb)->data();
       BOOST_CONTAINER_UNROLL(4)
       while(mask) {
-        auto n = hub_detail::unchecked_countr_zero(mask);
+        auto n = dtl::unchecked_countr_zero(mask);
         if (!f(pd[n])) return {{pbb, n}, std::move(f)};
         mask &= mask - 1;
       }
@@ -2382,14 +2352,14 @@ for_each_while(hub<T, Allocator>& x, F f)
       BOOST_CONTAINER_HUB_PREFETCH(&pbb->next->mask);
       BOOST_CONTAINER_HUB_PREFETCH(
         block::static_cast_block_pointer(pbb->next)->data());
-      auto next_n = hub_detail::unchecked_countr_zero(pbb->next->mask);
+      auto next_n = dtl::unchecked_countr_zero(pbb->next->mask);
       BOOST_CONTAINER_HUB_PREFETCH(
         block::static_cast_block_pointer(pbb->next)->data() + next_n);
       auto pd = block::static_cast_block_pointer(pbb)->data();
       auto mask = pbb->mask;
       BOOST_CONTAINER_UNROLL(4)
       while(mask) {
-        auto n = hub_detail::unchecked_countr_zero(mask);
+        auto n = dtl::unchecked_countr_zero(mask);
         if (!f(pd[n])) return {{pbb, n}, std::move(f)};
         mask &= mask - 1;
       }

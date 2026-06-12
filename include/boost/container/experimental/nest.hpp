@@ -31,6 +31,7 @@
 #include <boost/container/new_allocator.hpp>
 #include <boost/container/allocator_traits.hpp>
 // container/detail
+#include <boost/container/detail/bit_utilities.hpp>
 #include <boost/container/detail/compare_functors.hpp>
 #include <boost/container/detail/iterator.hpp>
 #include <boost/container/detail/iterators.hpp>
@@ -78,11 +79,6 @@
 
 #if defined(BOOST_CONTAINER_NEST_SSE2)
 #include <emmintrin.h>
-#endif
-
-//_BitScanForward64 / _BitScanReverse64 used by the bit helpers below.
-#if defined(BOOST_MSVC) && (defined(_M_X64) || defined(_M_ARM64))
-#  include <intrin.h>
 #endif
 
 
@@ -224,38 +220,7 @@ struct pointer_rebind
 //
 //////////////////////////////////////////////
 
-BOOST_CONTAINER_FORCEINLINE int unchecked_countr_zero(boost::uint64_t x)
-{
-#if defined(BOOST_MSVC) && (defined(_M_X64) || defined(_M_ARM64))
-   unsigned long r;
-   _BitScanForward64(&r, x);
-   return (int)r;
-#elif defined(BOOST_GCC) || defined(BOOST_CLANG)
-   return (int)__builtin_ctzll(x);
-#else
-   BOOST_CONTAINER_ASSUME(x != 0);
-   return (int)boost::core::countr_zero(x);
-#endif
-}
-
-BOOST_CONTAINER_FORCEINLINE int unchecked_countr_one(boost::uint64_t x)
-{
-   return unchecked_countr_zero(~x);
-}
-
-BOOST_CONTAINER_FORCEINLINE int unchecked_countl_zero(boost::uint64_t x)
-{
-#if defined(BOOST_MSVC) && (defined(_M_X64) || defined(_M_ARM64))
-   unsigned long r;
-   _BitScanReverse64(&r, x);
-   return (int)(63 - r);
-#elif defined(BOOST_GCC) || defined(BOOST_CLANG)
-   return (int)__builtin_clzll(x);
-#else
-   BOOST_CONTAINER_ASSUME(x != 0);
-   return (int)boost::core::countl_zero(x);
-#endif
-}
+//Shared bit helpers live in boost::container::dtl (detail/bit_utilities.hpp).
 
 
 //////////////////////////////////////////////
@@ -623,12 +588,12 @@ BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, false>& x, blo
 
 BOOST_CONTAINER_FORCEINLINE int first_in_mask(boost::uint64_t m)
 {
-   return unchecked_countr_zero(m);
+   return dtl::unchecked_countr_zero(m);
 }
 
 BOOST_CONTAINER_FORCEINLINE int last_in_mask(boost::uint64_t m)
 {
-   return 63 - unchecked_countl_zero(m);
+   return 63 - dtl::unchecked_countl_zero(m);
 }
 
 } // namespace nest_detail
@@ -1638,7 +1603,7 @@ class nest
       int n;
       if (BOOST_LIKELY(pbb != blist.header())) {
          m = pbb->mask;
-         n = nest_detail::unchecked_countr_one(m);
+         n = dtl::unchecked_countr_one(m);
          pb = static_cast_block_pointer(pbb);
       }
       else {
@@ -1678,7 +1643,7 @@ class nest
       int n;                                                         \
       if (BOOST_LIKELY(pbb != blist.header())) {                     \
          m = pbb->mask;                                              \
-         n = nest_detail::unchecked_countr_one(m);                   \
+         n = dtl::unchecked_countr_one(m);                   \
          pb = static_cast_block_pointer(pbb);                        \
       }                                                              \
       else {                                                         \
@@ -2137,7 +2102,7 @@ class nest
    {
       if(BOOST_LIKELY(blist.next_available != blist.header())){
          block_pointer pb = static_cast_block_pointer(blist.next_available);
-         n = nest_detail::unchecked_countr_one(pb->mask);
+         n = dtl::unchecked_countr_one(pb->mask);
          return pb;
       }
       else {
@@ -2395,7 +2360,7 @@ class nest
                break;
             }
             else if(first == last) return;
-            n = nest_detail::unchecked_countr_one(pb->mask);
+            n = dtl::unchecked_countr_one(pb->mask);
          }
       }
    }
@@ -2761,7 +2726,7 @@ class nest
       }
       std::size_t c = (std::min)(N - cx, cy);
       while(c--) {
-         std::size_t n = static_cast<std::size_t>(nest_detail::unchecked_countr_one(pbx->mask));
+         std::size_t n = static_cast<std::size_t>(dtl::unchecked_countr_one(pbx->mask));
          std::size_t m = static_cast<std::size_t>(nest_detail::last_in_mask(pby->mask));
          block_alloc_traits::construct(
             al(), boost::movelib::to_raw_pointer(pbx->data() + n),
@@ -2776,7 +2741,7 @@ class nest
    void priv_compact_single(block_pointer pb)
    {
       for(; ;) {
-         std::size_t n = (std::size_t)nest_detail::unchecked_countr_one(pb->mask);
+         std::size_t n = (std::size_t)dtl::unchecked_countr_one(pb->mask);
          std::size_t m = static_cast<std::size_t>(nest_detail::last_in_mask(pb->mask));
          if(n > m) return;
          block_alloc_traits::construct(
