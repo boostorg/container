@@ -1,6 +1,7 @@
 /* Hub container.
  * 
  * Copyright 2025-2026 Joaquin M Lopez Munoz.
+ * Copyright 2026 Ion Gaztanaga.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at
  * http://www.boost.org/LICENSE_1_0.txt)
@@ -53,56 +54,13 @@
 #include <ranges>
 #endif
 
-#if !defined(BOOST_CONTAINER_HUB_DISABLE_SSE2)
-#if defined(BOOST_CONTAINER_HUB_ENABLE_SSE2)|| \
-    defined(__SSE2__) || \
-    defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
-#define BOOST_CONTAINER_HUB_SSE2
-#endif
-#endif
-
-#if defined(BOOST_CONTAINER_HUB_SSE2)
-#include <emmintrin.h>
-#endif
-
-#ifdef __has_builtin
-#define BOOST_CONTAINER_HUB_HAS_BUILTIN(x) __has_builtin(x)
-#else
-#define BOOST_CONTAINER_HUB_HAS_BUILTIN(x) 0
-#endif
-
-#if !defined(NDEBUG)
-#define BOOST_CONTAINER_HUB_ASSUME(cond) BOOST_ASSERT(cond)
-#elif BOOST_CONTAINER_HUB_HAS_BUILTIN(__builtin_assume)
-#define BOOST_CONTAINER_HUB_ASSUME(cond) __builtin_assume(cond)
-#elif defined(__GNUC__) || \
-      BOOST_CONTAINER_HUB_HAS_BUILTIN(__builtin_unreachable)
-#define BOOST_CONTAINER_HUB_ASSUME(cond) \
-  do{                                    \
-    if(!(cond)) __builtin_unreachable(); \
-  } while(0)
-#elif defined(_MSC_VER)
-#define BOOST_CONTAINER_HUB_ASSUME(cond) __assume(cond)
-#else
-#define BOOST_CONTAINER_HUB_ASSUME(cond) \
-  do{                                    \
-    static_cast<void>(false && (cond));  \
-  } while(0)
-#endif
-
-/* We use BOOST_CONTAINER_HUB_PREFETCH[_BLOCK] macros rather than proper
- * functions because of https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109985
+/* Software prefetch hint accepting a (possibly fancy) pointer: convert to a raw
+ * pointer and delegate to BOOST_CONTAINER_PREFETCH (workaround.hpp), which holds
+ * the per-compiler/-arch implementation (and is a macro, not a function, because
+ * of https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109985).
  */
-
-#if defined(BOOST_GCC) || defined(BOOST_CLANG)
 #define BOOST_CONTAINER_HUB_PREFETCH(p) \
-__builtin_prefetch((const char*)boost::to_address(p))
-#elif defined(BOOST_CONTAINER_HUB_SSE2)
-#define BOOST_CONTAINER_HUB_PREFETCH(p) \
-_mm_prefetch((const char*)boost::to_address(p), _MM_HINT_T0)
-#else
-#define BOOST_CONTAINER_HUB_PREFETCH(p) ((void)(p))
-#endif
+  BOOST_CONTAINER_PREFETCH(boost::to_address(p))
 
 #define BOOST_CONTAINER_HUB_PREFETCH_BLOCK(pbb, Block) \
 do{                                                    \
@@ -161,7 +119,7 @@ inline int unchecked_countr_zero(std::uint64_t x)
 #elif defined(BOOST_GCC) || defined(BOOST_CLANG)
   return (int)__builtin_ctzll(x);
 #else
-  BOOST_CONTAINER_HUB_ASSUME(x != 0);
+  BOOST_CONTAINER_ASSUME(x != 0);
   return (int)core::countr_zero(x);
 #endif
 }
@@ -180,7 +138,7 @@ inline int unchecked_countl_zero(std::uint64_t x)
 #elif defined(BOOST_GCC) || defined(BOOST_CLANG)
   return (int)__builtin_clzll(x);
 #else  
-  BOOST_CONTAINER_HUB_ASSUME(x != 0);
+  BOOST_CONTAINER_ASSUME(x != 0);
   return (int)core::countl_zero(x);
 #endif
 }
