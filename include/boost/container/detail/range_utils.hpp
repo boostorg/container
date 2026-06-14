@@ -65,6 +65,102 @@ static from_range_t from_range = BOOST_CONTAINER_DOC1ST(unspecified, *std_from_r
 
 namespace dtl {
 
+//Range begin()/end() access that depends on neither <ranges> nor <iterator>.
+namespace adl_range {
+
+//When decltype/trailing-return-types are available (C++11), adl_range below also
+//resolves ranges whose begin()/end() are free functions found only through ADL,
+//matching std::ranges::begin/std::ranges::end reachability. This needs neither
+//<ranges> nor <iterator> nor a (UB and fragile) forward declaration of
+//std::begin/std::end: member begin()/end() is detected directly and the ADL
+//fallback already reaches std::begin/std::end for types in namespace std (e.g.
+//std::valarray). In C++03 adl_range supports member begin()/end() and C arrays.
+#if !defined(BOOST_NO_CXX11_DECLTYPE) && !defined(BOOST_NO_CXX11_TRAILING_RESULT_TYPES)
+#  define BOOST_CONTAINER_RANGE_UTILS_ADL_FREE_FUNCTIONS
+#endif
+
+#if defined(BOOST_CONTAINER_RANGE_UTILS_ADL_FREE_FUNCTIONS)
+
+//Member begin()/end() is preferred; when there is no member, an unqualified
+//begin()/end() call is used, so free begin()/end() reachable through ADL are
+//picked up (this also reaches std::begin/std::end for types in namespace std,
+//such as std::valarray). C arrays have a dedicated overload. This mirrors
+//std::ranges::begin/std::ranges::end reachability, without including <iterator>
+//or forward declaring std::begin/std::end.
+//
+//Priority tags (int beats long in overload resolution) ensure the member form
+//wins when present and the ADL free-function form is only the fallback. The C&
+//parameter deduces const/non-const, selecting the right iterator type.
+template<class C>
+inline auto adl_begin_impl(C &c, int) -> decltype(c.begin())
+{  return c.begin();  }
+
+template<class C>
+inline auto adl_begin_impl(C &c, long) -> decltype(begin(c))
+{  return begin(c);  }
+
+template<class C>
+inline auto adl_end_impl(C &c, int) -> decltype(c.end())
+{  return c.end();  }
+
+template<class C>
+inline auto adl_end_impl(C &c, long) -> decltype(end(c))
+{  return end(c);  }
+
+template<class C>
+inline auto adl_begin(C &c) -> decltype(adl_begin_impl(c, 0))
+{  return adl_begin_impl(c, 0);  }
+
+template<class C>
+inline auto adl_end(C &c) -> decltype(adl_end_impl(c, 0))
+{  return adl_end_impl(c, 0);  }
+
+//C arrays (more specialized than the generic adl_begin/adl_end templates above).
+template<class T, std::size_t N>
+inline T* adl_begin(T (&array)[N])
+{  return array;  }
+
+template<class T, std::size_t N>
+inline T* adl_end(T (&array)[N])
+{  return array + N;  }
+
+#else //C++03: decltype/trailing return types are unavailable.
+
+//Member begin()/end() (every standard and Boost container, std::initializer_list,
+//std::span, std::string_view, ...) plus a dedicated overload for C arrays.
+//Free begin()/end() found only through ADL are not supported in this mode.
+//Written in a C++03-compatible way (no decltype/auto/trailing return type); the
+//const-reference overload is picked for const ranges via partial ordering.
+template<class C>
+inline typename C::iterator adl_begin(C &c)
+{  return c.begin();  }
+
+template<class C>
+inline typename C::const_iterator adl_begin(const C &c)
+{  return c.begin();  }
+
+template<class C>
+inline typename C::iterator adl_end(C &c)
+{  return c.end();  }
+
+template<class C>
+inline typename C::const_iterator adl_end(const C &c)
+{  return c.end();  }
+
+template<class T, std::size_t N>
+inline T* adl_begin(T (&array)[N])
+{  return array;  }
+
+template<class T, std::size_t N>
+inline T* adl_end(T (&array)[N])
+{  return array + N;  }
+
+#endif   //BOOST_CONTAINER_RANGE_UTILS_ADL_FREE_FUNCTIONS
+
+#undef BOOST_CONTAINER_RANGE_UTILS_ADL_FREE_FUNCTIONS
+
+}  //namespace adl_range
+
 struct from_range_construct_use
 {
    //Avoid warnings of unused "from_range"
