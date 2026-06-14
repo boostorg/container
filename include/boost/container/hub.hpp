@@ -19,12 +19,10 @@
 #include <boost/assert.hpp>
 #include <boost/config.hpp>
 #include <boost/config/workaround.hpp>
-#include <boost/core/allocator_access.hpp>
-#include <boost/core/bit.hpp>
-#include <boost/core/empty_value.hpp>
-#include <boost/core/no_exceptions_support.hpp>
-#include <boost/core/pointer_traits.hpp>
+#include <boost/container/allocator_traits.hpp>
 #include <boost/container/throw_exception.hpp>
+#include <boost/intrusive/pointer_traits.hpp>
+#include <boost/move/detail/to_raw_pointer.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -52,13 +50,7 @@
 #endif
 
 #if !defined(BOOST_CONTAINER_HUB_NO_RANGES)
-/* <ranges> is a very heavy header (~44k preprocessed lines on libstdc++) and the
- * range members below only need begin/end access plus the container-compatible
- * range constraint. We get those from <concepts> (std::convertible_to) and
- * <iterator> (the classic std::begin/std::end customization points and the C++20
- * iterator concepts/aliases), both of which hub already pulls in transitively,
- * so dropping <ranges> costs no extra includes.
- */
+
 #include <concepts>
 #include <iterator>
 #endif
@@ -69,7 +61,7 @@
  * of https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109985).
  */
 #define BOOST_CONTAINER_HUB_PREFETCH(p) \
-  BOOST_CONTAINER_PREFETCH(boost::to_address(p))
+  BOOST_CONTAINER_PREFETCH(boost::movelib::to_raw_pointer(p))
 
 #define BOOST_CONTAINER_HUB_PREFETCH_BLOCK(pbb, Block) \
 do{                                                    \
@@ -120,6 +112,30 @@ std::pair<hub_detail::iterator<ValuePtr>, F> for_each_while(
 namespace hub_detail {
 
 //Shared bit helpers live in boost::container::dtl (detail/bit_utilities.hpp).
+
+//Use Boost.Intrusive's pointer_traits (modeled on std::pointer_traits) so the
+//header does not depend on Boost.Core.
+using boost::intrusive::pointer_traits;
+
+//Thin alias templates over boost::container::allocator_traits replacing the
+//former boost::core::allocator_access helpers. The propagate_on_* / is_always_equal
+//members of boost::container::allocator_traits are Boost integral constants; wrap
+//their value in std::integral_constant so the std::true_type/std::false_type-based
+//tag-dispatch helpers (swap_if, if_constexpr, copy_assign_if, ...) keep matching.
+template<class A>
+using pocca_t = std::integral_constant<bool,
+   allocator_traits<A>::propagate_on_container_copy_assignment::value>;
+template<class A>
+using pocma_t = std::integral_constant<bool,
+   allocator_traits<A>::propagate_on_container_move_assignment::value>;
+template<class A>
+using pocs_t  = std::integral_constant<bool,
+   allocator_traits<A>::propagate_on_container_swap::value>;
+template<class A>
+using is_always_equal_t = std::integral_constant<bool,
+   allocator_traits<A>::is_always_equal::value>;
+template<class A, class U>
+using rebind_alloc_t = typename allocator_traits<A>::template portable_rebind_alloc<U>::type;
 
 template<typename Pointer, typename T>
 using pointer_rebind_t = 
@@ -664,7 +680,7 @@ struct buffer
   ~buffer()
   {
     if(data) {
-      for(; begin_ != end_; ++begin_) allocator_destroy(al, begin());
+      for(; begin_ != end_; ++begin_) allocator_traits<Allocator>::destroy(al, begin());
       deallocate_data();
     }
   }
@@ -676,14 +692,14 @@ struct buffer
   void emplace_back(Args&&... args)
   {
     BOOST_ASSERT(data && end_ != capacity);
-    allocator_construct(al, end(), std::forward<Args>(args)...);
+    allocator_traits<Allocator>::construct(al, end(), std::forward<Args>(args)...);
     ++end_;
   }
   
   void erase_front() noexcept
   {
     BOOST_ASSERT(data && begin_ != end_);
-    allocator_destroy(al, begin());
+    allocator_traits<Allocator>::destroy(al, begin());
     ++begin_;
   }
  
@@ -754,29 +770,11 @@ template<typename T>
 using type_identity_t = typename type_identity<T>::type;
 
 #if !defined(BOOST_CONTAINER_HUB_NO_RANGES)
-/* Minimal, <ranges>-free range access. The classic two-step idiom (bring
- * std::begin/std::end into scope, then call unqualified so ADL-provided
- * overloads are also considered) resolves begin/end for arrays, member
- * begin()/end() and free begin()/end(), which covers every container-like
- * range we care about here.
+/* begin()/end() access (without <ranges> or std::begin/std::end) lives in
+ * boost::container::dtl::adl_range (range_utils.hpp); reuse it here.
  */
-namespace adl_range {
-
-using std::begin;
-using std::end;
-
 template<class R>
-constexpr auto adl_begin(R&& r) noexcept(noexcept(begin(r))) -> decltype(begin(r))
-{ return begin(r); }
-
-template<class R>
-constexpr auto adl_end(R&& r) noexcept(noexcept(end(r))) -> decltype(end(r))
-{ return end(r); }
-
-} /* namespace adl_range */
-
-template<class R>
-using range_iterator_t = decltype(adl_range::adl_begin(std::declval<R&>()));
+using range_iterator_t = decltype(dtl::adl_range::adl_begin(std::declval<R&>()));
 
 template<class R>
 using range_reference_t = std::iter_reference_t<range_iterator_t<R> >;
@@ -787,8 +785,8 @@ using range_value_t = std::iter_value_t<range_iterator_t<R> >;
 template<class R>
 concept input_range_like =
   requires(R& r) {
-    adl_range::adl_begin(r);
-    adl_range::adl_end(r);
+    dtl::adl_range::adl_begin(r);
+    dtl::adl_range::adl_end(r);
   } &&
   std::input_iterator<range_iterator_t<R> >;
 
@@ -899,7 +897,7 @@ void swap_if(std::false_type, T&, T&) {}
 template<typename Allocator>
 struct block_typedefs
 {
-  using pointer = allocator_pointer_t<Allocator>;
+  using pointer = typename allocator_traits<Allocator>::pointer;
   template<typename Q>
   using pointer_rebind_t = hub_detail::pointer_rebind_t<pointer, Q>;
 
@@ -908,7 +906,8 @@ struct block_typedefs
   using const_block_base_pointer = pointer_rebind_t<const block_base>;
   using block = hub_detail::block<pointer>;
   using block_pointer = pointer_rebind_t<block>;
-  using block_allocator = allocator_rebind_t<Allocator,block>;
+  using block_allocator =
+    typename allocator_traits<Allocator>::template portable_rebind_alloc<block>::type;
   using block_list = hub_detail::block_list<pointer>;
 };
 
@@ -945,8 +944,7 @@ struct block_typedefs
 //!   the basic exception guarantee, whereas all const member functions (and free
 //!   functions taking \c hub by const reference) provide the strong guarantee.
 template<typename T, typename Allocator>
-class hub: empty_value<
-  typename hub_detail::block_typedefs<Allocator>::block_allocator, 0>
+class hub: hub_detail::block_typedefs<Allocator>::block_allocator
 {
   static_assert(
     !std::is_const<T>::value && !std::is_volatile<T>::value && 
@@ -954,18 +952,18 @@ class hub: empty_value<
     !std::is_void<T>::value,
     "T must be a cv-unqualified object type");
   static_assert(
-    std::is_same<T, allocator_value_type_t<Allocator>>::value,
+    std::is_same<T, typename allocator_traits<Allocator>::value_type>::value,
     "Allocator's value_type must be the same type as T");
 
 public:
   using value_type = T;
   using allocator_type = Allocator;
-  using pointer = allocator_pointer_t<Allocator>;
-  using const_pointer = allocator_const_pointer_t<Allocator>;
+  using pointer = typename allocator_traits<Allocator>::pointer;
+  using const_pointer = typename allocator_traits<Allocator>::const_pointer;
   using reference = T&;
   using const_reference = const T&;
-  using size_type = allocator_size_type_t<Allocator>;
-  using difference_type = allocator_difference_type_t<Allocator>;
+  using size_type = typename allocator_traits<Allocator>::size_type;
+  using difference_type = typename allocator_traits<Allocator>::difference_type;
   using iterator = hub_detail::iterator<pointer>;
   using const_iterator = hub_detail::iterator<const_pointer>;
   using reverse_iterator = std::reverse_iterator<iterator>;
@@ -982,7 +980,7 @@ public:
   //!
   //! <b>Complexity</b>: Constant.
   explicit hub(const Allocator& al_) noexcept: 
-    allocator_base{empty_init, al_} {}
+    allocator_base(al_) {}
 
   //! <b>Effects</b>: Constructs a hub with n default-inserted elements, using
   //!   the specified allocator.
@@ -993,7 +991,7 @@ public:
   explicit hub(size_type n, const Allocator& al_ = Allocator()): hub{al_}
   {
     range_insert_impl(size_type(0), n, [&, this] (T* p, size_type) {
-      allocator_construct(al(), p);
+      block_alloc_traits::construct(al(), p);
     });
   }
 
@@ -1042,7 +1040,7 @@ public:
   //!
   //! <b>Complexity</b>: Linear in x.size().
   hub(const hub& x):
-    hub{x, allocator_select_on_container_copy_construction(x.al())} {}
+    hub{x, block_alloc_traits::select_on_container_copy_construction(x.al())} {}
 
   //! <b>Effects</b>: Constructs a hub equal to x, using the given allocator.
   //!
@@ -1074,7 +1072,7 @@ public:
   //! <b>Complexity</b>: Constant, or linear in x.size() if elements are moved
   //!   one by one.
   hub(hub&& x, const hub_detail::type_identity_t<Allocator>& al_):
-    hub{std::move(x), al_, allocator_is_always_equal_t<Allocator>{}} {}
+    hub{std::move(x), al_, hub_detail::is_always_equal_t<Allocator>{}} {}
 
   //! <b>Effects</b>: Constructs a hub equal to il, using the specified allocator.
   //!
@@ -1098,8 +1096,7 @@ public:
   //! <b>Complexity</b>: Linear in size() + x.size().
   hub& operator=(const hub& x)
   {
-    using pocca =
-      allocator_propagate_on_container_copy_assignment_t<Allocator>;
+    using pocca = hub_detail::pocca_t<Allocator>;
 
     if(this != &x) {
       if(al() != x.al() && pocca::value) {
@@ -1131,17 +1128,17 @@ public:
   //!   are moved one by one.
   hub& operator=(hub&& x)
     noexcept(
-      allocator_propagate_on_container_move_assignment_t<Allocator>::value ||
-      allocator_is_always_equal_t<Allocator>::value)
+      hub_detail::pocma_t<Allocator>::value ||
+      hub_detail::is_always_equal_t<Allocator>::value)
   {
     if(this != &x) {
       move_assign(
         x, 
         std::integral_constant<
           bool,
-          allocator_propagate_on_container_move_assignment_t<Allocator>::
+          hub_detail::pocma_t<Allocator>::
             value ||
-          allocator_is_always_equal_t<Allocator>::value>{});
+          hub_detail::is_always_equal_t<Allocator>::value>{});
     }
     return *this;
   }
@@ -1167,7 +1164,7 @@ public:
   {
     range_assign_impl(
       first, last,
-      [this] (T* p, InputIterator it) { allocator_construct(al(), p, *it); },
+      [this] (T* p, InputIterator it) { block_alloc_traits::construct(al(), p, *it); },
       [] (T* p, InputIterator it) { *p = *it; });
   }
 
@@ -1180,8 +1177,8 @@ public:
   void assign_range(R&& rg)
   {
     range_assign_impl(
-      hub_detail::adl_range::adl_begin(rg), hub_detail::adl_range::adl_end(rg),
-      [this] (T* p, auto it) { allocator_construct(al(), p, *it); },
+      dtl::adl_range::adl_begin(rg), dtl::adl_range::adl_end(rg),
+      [this] (T* p, auto it) { block_alloc_traits::construct(al(), p, *it); },
       [] (T* p, auto it) { *p = *it; });
   }
 #endif
@@ -1193,7 +1190,7 @@ public:
   {
     range_assign_impl(
       size_type(0), n,
-      [&, this] (T* p, size_type) { allocator_construct(al(), p, x); },
+      [&, this] (T* p, size_type) { block_alloc_traits::construct(al(), p, x); },
       [&] (T* p, size_type) { *p = x; });
   }
 
@@ -1245,8 +1242,8 @@ public:
   size_type max_size() const noexcept 
   {
     std::size_t
-      bs = (std::size_t)allocator_max_size(al()) * sizeof(block),
-      vs = (std::size_t)allocator_max_size(Allocator(al())) * sizeof(T);
+      bs = (std::size_t)block_alloc_traits::max_size(al()) * sizeof(block),
+      vs = (std::size_t)value_alloc_traits::max_size(value_allocator(al())) * sizeof(T);
     return 
       (size_type)((std::min)(bs, vs) / (sizeof(block) + sizeof(T) * N) * N);
   }
@@ -1342,7 +1339,7 @@ public:
     auto pb = retrieve_available_block(n);
     auto mask = pb->mask;
     construct_or_restore_capacity(
-      boost::to_address(pb->data() + n), pbb, std::forward<Args>(args)...);
+      boost::movelib::to_raw_pointer(pb->data() + n), pbb, std::forward<Args>(args)...);
     mask |= mask + 1;
     pb->mask = mask;
     auto mask_plus_one = mask + 1;
@@ -1400,8 +1397,8 @@ public:
   void insert_range(R&& rg)
   {
     range_insert_impl(
-      hub_detail::adl_range::adl_begin(rg), hub_detail::adl_range::adl_end(rg),
-      [this] (T* p, auto it) { allocator_construct(al(), p, *it); });
+      dtl::adl_range::adl_begin(rg), dtl::adl_range::adl_end(rg),
+      [this] (T* p, auto it) { block_alloc_traits::construct(al(), p, *it); });
   }
 #endif
 
@@ -1420,7 +1417,7 @@ public:
   void insert(InputIterator first, InputIterator last)
   {
     range_insert_impl(first, last, [this] (T* p, InputIterator it) {
-      allocator_construct(al(), p, *it);
+      block_alloc_traits::construct(al(), p, *it);
     });
   }
 
@@ -1433,7 +1430,7 @@ public:
   void insert(size_type n, const T& x)
   {
     range_insert_impl(size_type(0), n, [&, this] (T* p, size_type) {
-      allocator_construct(al(), p, x);
+      block_alloc_traits::construct(al(), p, x);
     });
   }
 
@@ -1507,10 +1504,10 @@ public:
   //! <b>Complexity</b>: Constant.
   void swap(hub& x)
     noexcept(
-      allocator_propagate_on_container_swap_t<Allocator>::value ||
-      allocator_is_always_equal_t<Allocator>::value)
+      hub_detail::pocs_t<Allocator>::value ||
+      hub_detail::is_always_equal_t<Allocator>::value)
   {
-    using pocs = allocator_propagate_on_container_swap_t<Allocator>;
+    using pocs = hub_detail::pocs_t<Allocator>;
 
     hub_detail::if_constexpr(pocs{}, [&, this]{
       hub_detail::swap_if(pocs{}, al(), x.al());
@@ -1554,7 +1551,7 @@ public:
       blist.link_at_back(pb);
       --x.num_blocks;
       ++num_blocks;
-      auto s = core::popcount(pb->mask);
+      auto s = dtl::popcount(pb->mask);
       x.size_ -= (size_type)s;
       size_ += (size_type)s;
     }
@@ -1652,8 +1649,8 @@ public:
     std::less<const T*> less;
     for(auto pbb = blist.next; pbb != blist.header(); pbb = pbb-> next) {
       auto pb = static_cast_block_pointer(pbb);
-      if(!less(boost::to_address(p), boost::to_address(pb->data())) &&
-          less(boost::to_address(p), boost::to_address(pb->data() + N))) {
+      if(!less(boost::movelib::to_raw_pointer(p), boost::movelib::to_raw_pointer(pb->data())) &&
+          less(boost::movelib::to_raw_pointer(p), boost::movelib::to_raw_pointer(pb->data() + N))) {
         int n = (int)(p - pb->data());
         BOOST_ASSERT_MSG(
           (pb->mask & ((mask_type)(1) << n)) != 0,
@@ -1690,14 +1687,20 @@ private:
   using block_pointer = typename block_typedefs::block_pointer;
   using block_allocator = typename block_typedefs::block_allocator;
   using block_list = typename block_typedefs::block_list;
-  using allocator_base = empty_value<block_allocator, 0>;
+  //EBO: hub derives directly from block_allocator (like dtl::vector_alloc_holder).
+  using allocator_base = block_allocator;
+  using block_alloc_traits = allocator_traits<block_allocator>;
+  using value_allocator = hub_detail::rebind_alloc_t<Allocator, value_type>;
+  using value_alloc_traits = allocator_traits<value_allocator>;
   using mask_type = typename block_base::mask_type;
 
   static constexpr int N = block_base::N;
   static constexpr mask_type full = block_base::full;
 
-  block_allocator&       al() noexcept { return allocator_base::get(); }
-  const block_allocator& al() const noexcept { return allocator_base::get(); }
+  block_allocator&       al() noexcept
+  { return static_cast<block_allocator&>(*this); }
+  const block_allocator& al() const noexcept
+  { return static_cast<const block_allocator&>(*this); }
 
   struct reset_on_exit
   {
@@ -1708,7 +1711,7 @@ private:
 
   hub(
     hub&& x, const Allocator& al_, std::true_type /* equal allocs */) noexcept:
-    allocator_base{empty_init, al_}, blist{std::move(x.blist)},
+    allocator_base(al_), blist{std::move(x.blist)},
     num_blocks{x.num_blocks}, size_{x.size_}
   {
     x.num_blocks = 0;
@@ -1729,7 +1732,7 @@ private:
     else {
       reset_on_exit on_exit{x}; (void)on_exit;
       range_insert_impl(x.begin(), x.end(), [this] (T* p, iterator it) {
-        allocator_construct(al(), p, std::move(*it));
+        block_alloc_traits::construct(al(), p, std::move(*it));
       });
     }
   }
@@ -1737,7 +1740,7 @@ private:
   void move_assign(hub& x, std::true_type /* transfer structure */)
   {
     using pocma =
-      allocator_propagate_on_container_move_assignment_t<Allocator>;
+      hub_detail::pocma_t<Allocator>;
 
     reset();
     hub_detail::move_assign_if(pocma{}, al(), x.al());
@@ -1758,7 +1761,7 @@ private:
       range_assign_impl(
         x.begin(), x.end(),
         [this] (T* p, iterator it) 
-          { allocator_construct(al(), p, std::move(*it)); },
+          { block_alloc_traits::construct(al(), p, std::move(*it)); },
         [] (T* p, iterator it) 
           { *p = std::move(*it); });
     }
@@ -1772,17 +1775,17 @@ private:
 
   block_pointer create_new_available_block()
   {
-    auto pb = allocator_allocate(al(), 1);
+    auto pb = block_alloc_traits::allocate(al(), 1);
     pb->mask = 0;
-    BOOST_TRY {
-      allocator_rebind_t<Allocator, value_type> val(al());
-      pb->data_ = allocator_allocate(val, N);
+    BOOST_CONTAINER_TRY {
+      value_allocator val(al());
+      pb->data_ = value_alloc_traits::allocate(val, N);
     }
-    BOOST_CATCH(...) {
-      allocator_deallocate(al(), pb, 1);
-      BOOST_RETHROW;
+    BOOST_CONTAINER_CATCH(...) {
+      block_alloc_traits::deallocate(al(), pb, 1);
+      BOOST_CONTAINER_RETHROW;
     }
-    BOOST_CATCH_END
+    BOOST_CONTAINER_CATCH_END
     blist.link_available_at_back(pb);
     ++num_blocks;
     return pb;
@@ -1790,9 +1793,9 @@ private:
 
   void delete_block(block_pointer pb) noexcept
   {
-    allocator_rebind_t<Allocator, value_type> val(al());
-    allocator_deallocate(val, pb->data(), N);
-    allocator_deallocate(al(), pb, 1);
+    value_allocator val(al());
+    value_alloc_traits::deallocate(val, pb->data(), N);
+    block_alloc_traits::deallocate(al(), pb, 1);
   }
 
   BOOST_CONTAINER_FORCEINLINE block_pointer retrieve_available_block(int& n)
@@ -1822,19 +1825,19 @@ private:
   BOOST_CONTAINER_FORCEINLINE size_type destroy_all_in_nonempty_block(
     block_pointer pb, std::true_type /* trivial destruction */) noexcept
   {
-    return (size_type)core::popcount(pb->mask);
+    return (size_type)dtl::popcount(pb->mask);
   }
 
   BOOST_CONTAINER_FORCEINLINE size_type destroy_all_in_nonempty_block(
-    block_pointer pb, std::false_type /* use allocator_destroy */) noexcept
+    block_pointer pb, std::false_type /* use allocator destroy */) noexcept
   {
-    size_type s = (size_type)core::popcount(pb->mask);
+    size_type s = (size_type)dtl::popcount(pb->mask);
     auto      mask = pb->mask;
-    auto      pd = boost::to_address(pb->data());
+    auto      pd = boost::movelib::to_raw_pointer(pb->data());
     BOOST_CONTAINER_UNROLL(4)
     do {
       auto n = dtl::unchecked_countr_zero(mask);
-      allocator_destroy(al(), pd + n);
+      block_alloc_traits::destroy(al(), pd + n);
       mask &= mask - 1;
     } while(mask);
     return s;
@@ -1844,11 +1847,11 @@ private:
     block_pointer pb) noexcept
   {
     BOOST_ASSERT(pb->mask == full);
-    auto pd = boost::to_address(pb->data());
+    auto pd = boost::movelib::to_raw_pointer(pb->data());
     int  n = 0;
     BOOST_CONTAINER_UNROLL(4)
     for(; n < N; ++n) {
-      allocator_destroy(al(), pd + n);
+      block_alloc_traits::destroy(al(), pd + n);
     }
     return (size_type)N;
   }
@@ -1886,14 +1889,14 @@ private:
   inline void construct_or_restore_capacity(
     value_type* p, block_base_pointer pbb, Args&&... args)
   {
-    BOOST_TRY {
-      allocator_construct(al(), p, std::forward<Args>(args)...);
+    BOOST_CONTAINER_TRY {
+      block_alloc_traits::construct(al(), p, std::forward<Args>(args)...);
     }
-    BOOST_CATCH(...) {
+    BOOST_CONTAINER_CATCH(...) {
       restore_capacity_on_throw(pbb);
-      BOOST_RETHROW
+      BOOST_CONTAINER_RETHROW
     }
-    BOOST_CATCH_END
+    BOOST_CONTAINER_CATCH_END
   }
 
   BOOST_NOINLINE void restore_capacity_on_throw(
@@ -1910,7 +1913,7 @@ private:
   BOOST_CONTAINER_FORCEINLINE void erase_impl(block_base_pointer pbb, int n) noexcept
   {
     auto pb = static_cast_block_pointer(pbb);
-    allocator_destroy(al(), boost::to_address(pb->data() + n));
+    block_alloc_traits::destroy(al(), boost::movelib::to_raw_pointer(pb->data() + n));
     if(BOOST_UNLIKELY(pb->mask == full)) blist.link_available_at_front(pb);
     pb->mask &= ~((mask_type)(1) << n);
     if(BOOST_UNLIKELY(pb->mask == 0)) {
@@ -1929,7 +1932,7 @@ private:
       int  n;
       auto pb = retrieve_available_block(n);
       for(; ; ) {
-        construct_(boost::to_address(pb->data() + n), first++);
+        construct_(boost::movelib::to_raw_pointer(pb->data() + n), first++);
         ++size_;
         if(BOOST_UNLIKELY(pb->mask == 0)) blist.link_at_back(pb);
         pb->mask |= pb->mask +1;
@@ -1959,10 +1962,10 @@ private:
         n = 0;
         for(mask_type bit = 1; bit; bit <<= 1, ++n) {
           if(pb->mask & bit) { /* full slot */
-            insert_(boost::to_address(pb->data() + n), first++);
+            insert_(boost::movelib::to_raw_pointer(pb->data() + n), first++);
           }
           else { /* empty slot */
-            construct_(boost::to_address(pb->data() + n), first++);
+            construct_(boost::movelib::to_raw_pointer(pb->data() + n), first++);
             ++size_;
             pb->mask |= bit;
             if(pb->mask == full) blist.unlink_available(pb);
@@ -2062,7 +2065,7 @@ private:
         {static_cast<T**>(::operator new[](n * sizeof(T*)))};
       std::size_t i = 0;
       compact([&] (block_pointer pb) { 
-        p[i++] = boost::to_address(pb->data()); 
+        p[i++] = boost::movelib::to_raw_pointer(pb->data()); 
       });
       BOOST_ASSERT(i == n);
 
@@ -2115,8 +2118,8 @@ private:
 
   void compact(block_pointer pbx, block_pointer pby)
   {
-    auto cx = core::popcount(pbx->mask),
-         cy = core::popcount(pby->mask);
+    auto cx = dtl::popcount(pbx->mask),
+         cy = dtl::popcount(pby->mask);
     if(cx < cy) {
       std::swap(cx, cy);
       swap_payload(*pbx, *pby);
@@ -2125,9 +2128,9 @@ private:
     while(c--) {
       auto n = dtl::unchecked_countr_one(pbx->mask);
       auto m = N - 1 - dtl::unchecked_countl_zero(pby->mask);
-      allocator_construct(
-        al(), boost::to_address(pbx->data() + n), std::move(pby->data()[m]));
-      allocator_destroy(al(), boost::to_address(pby->data() + m));
+      block_alloc_traits::construct(
+        al(), boost::movelib::to_raw_pointer(pbx->data() + n), std::move(pby->data()[m]));
+      block_alloc_traits::destroy(al(), boost::movelib::to_raw_pointer(pby->data() + m));
       pbx->mask |= pbx->mask + 1;
       pby->mask &= ~((mask_type)(1) << m);
     }
@@ -2139,9 +2142,9 @@ private:
       auto n = dtl::unchecked_countr_one(pb->mask);
       auto m = N - 1 - dtl::unchecked_countl_zero(pb->mask);
       if(n > m) return;
-      allocator_construct(
-        al(), boost::to_address(pb->data() + n), std::move(pb->data()[m]));
-      allocator_destroy(al(), boost::to_address(pb->data() + m));
+      block_alloc_traits::construct(
+        al(), boost::movelib::to_raw_pointer(pb->data() + n), std::move(pb->data()[m]));
+      block_alloc_traits::destroy(al(), boost::movelib::to_raw_pointer(pb->data() + m));
       pb->mask |= pb->mask + 1;
       pb->mask &= ~((mask_type)(1) << m);
     }

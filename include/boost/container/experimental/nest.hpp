@@ -50,12 +50,9 @@
 #include <boost/move/detail/to_raw_pointer.hpp>
 // intrusive
 #include <boost/intrusive/pointer_traits.hpp>
-// core
+//
 #include <boost/assert.hpp>
-#include <boost/core/addressof.hpp>
-#include <boost/core/empty_value.hpp>
-#include <boost/core/no_exceptions_support.hpp>
-#include <boost/core/bit.hpp>
+#include <boost/container/detail/addressof.hpp>
 // std
 #include <algorithm>
 #include <cstddef>
@@ -1099,11 +1096,11 @@ template <class T, class Allocator = void, class Options = void>
 template <class T, class Allocator, class Options>
 #endif
 class nest
-   : private boost::empty_value<
-        typename nest_detail::block_typedefs<
-           typename real_allocator<T, Allocator>::type
-         , get_nest_opt<Options>::type::store_data_in_block
-        >::block_allocator, 0>
+   //EBO: nest derives directly from its (block) allocator
+   : private nest_detail::block_typedefs<
+        typename real_allocator<T, Allocator>::type
+      , get_nest_opt<Options>::type::store_data_in_block
+     >::block_allocator
 {
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    typedef typename real_allocator<T, Allocator>::type             ValueAllocator;
@@ -1118,7 +1115,7 @@ class nest
    typedef typename btd::block_type                                block_type;
    typedef typename btd::block_pointer                             block_pointer;
    typedef typename btd::block_allocator                           block_allocator;
-   typedef boost::empty_value<block_allocator, 0>                  allocator_base;
+   typedef block_allocator                                         allocator_base;
    typedef typename block_base::mask_type                          mask_type;
    typedef boost::container::allocator_traits<block_allocator>     block_alloc_traits;
 
@@ -1160,7 +1157,7 @@ class nest
    //!
    //! <b>Complexity</b>: Constant.
    nest() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<ValueAllocator>::value)
-      : allocator_base(boost::empty_init_t())
+      : allocator_base()
       , blist()
       , num_blocks(0)
       , size_(0)
@@ -1172,7 +1169,7 @@ class nest
    //!
    //! <b>Complexity</b>: Constant.
    explicit nest(const allocator_type& a) BOOST_NOEXCEPT_OR_NOTHROW
-      : allocator_base(boost::empty_init_t(), block_allocator(a))
+      : allocator_base(block_allocator(a))
       , blist()
       , num_blocks(0)
       , size_(0)
@@ -1185,7 +1182,7 @@ class nest
    //!
    //! <b>Complexity</b>: Linear to n.
    explicit nest(size_type n, const allocator_type& a = allocator_type())
-      : allocator_base(boost::empty_init_t(), block_allocator(a))
+      : allocator_base(block_allocator(a))
       , blist()
       , num_blocks(0)
       , size_(0)
@@ -1200,7 +1197,7 @@ class nest
    //!
    //! <b>Complexity</b>: Linear to n.
    nest(size_type n, const T& x, const allocator_type& a = allocator_type())
-      : allocator_base(boost::empty_init_t(), block_allocator(a))
+      : allocator_base(block_allocator(a))
       , blist()
       , num_blocks(0)
       , size_(0)
@@ -1221,7 +1218,7 @@ class nest
       , typename dtl::disable_if_convertible<InpIt, size_type>::type* = 0
       #endif
       )
-      : allocator_base(boost::empty_init_t(), block_allocator(a))
+      : allocator_base(block_allocator(a))
       , blist()
       , num_blocks(0)
       , size_(0)
@@ -1237,7 +1234,7 @@ class nest
    //!
    //! <b>Complexity</b>: Linear to the elements x contains.
    nest(const nest& x)
-      : allocator_base(boost::empty_init_t(), block_allocator(
+      : allocator_base(block_allocator(
            allocator_traits_type::select_on_container_copy_construction(x.priv_alloc())))
       , blist()
       , num_blocks(0)
@@ -1252,7 +1249,7 @@ class nest
    //!
    //! <b>Complexity</b>: Constant.
    nest(BOOST_RV_REF(nest) x) BOOST_NOEXCEPT_OR_NOTHROW
-      : allocator_base(boost::empty_init_t(), boost::move(x.al()))
+      : allocator_base(boost::move(x.al()))
       , blist(boost::move(x.blist))
       , num_blocks(x.num_blocks)
       , size_(x.size_)
@@ -1269,7 +1266,7 @@ class nest
    //!
    //! <b>Complexity</b>: Linear to the elements x contains.
    nest(const nest& x, const allocator_type& a)
-      : allocator_base(boost::empty_init_t(), block_allocator(a))
+      : allocator_base(block_allocator(a))
       , blist()
       , num_blocks(0)
       , size_(0)
@@ -1284,7 +1281,7 @@ class nest
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    nest(BOOST_RV_REF(nest) x, const allocator_type& a)
-      : allocator_base(boost::empty_init_t(), block_allocator(a))
+      : allocator_base(block_allocator(a))
       , blist()
       , num_blocks(0)
       , size_(0)
@@ -1307,7 +1304,7 @@ class nest
    //!
    //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()).
    nest(std::initializer_list<value_type> il, const allocator_type& a = allocator_type())
-      : allocator_base(boost::empty_init_t(), block_allocator(a))
+      : allocator_base(block_allocator(a))
       , blist()
       , num_blocks(0)
       , size_(0)
@@ -1929,7 +1926,7 @@ class nest
          blist.link_at_back(pb);
          --x.num_blocks;
          ++num_blocks;
-         size_type const s = (size_type)boost::core::popcount(pb->mask);
+         size_type const s = (size_type)dtl::popcount(pb->mask);
          x.size_ -= (size_type)s;
          size_ += (size_type)s;
       }
@@ -1954,7 +1951,7 @@ class nest
          const_iterator next_it = first;
          ++next_it;
          nest_detail::unique_pred_adaptor<T, BinaryPredicate> adaptor(
-            boost::addressof(*first), pred);
+            dtl::addressof(*first), pred);
          first = erase(next_it,
             nest_detail::find_if_not(next_it, last, adaptor));
       }
@@ -2041,8 +2038,8 @@ class nest
    //
    //////////////////////////////////////////////
 
-   block_allocator&       al() BOOST_NOEXCEPT       { return allocator_base::get(); }
-   const block_allocator& al() const BOOST_NOEXCEPT { return allocator_base::get(); }
+   block_allocator&       al() BOOST_NOEXCEPT       { return static_cast<block_allocator&>(*this); }
+   const block_allocator& al() const BOOST_NOEXCEPT { return static_cast<const block_allocator&>(*this); }
 
    allocator_type priv_alloc() const BOOST_NOEXCEPT
    { return allocator_type(al()); }
@@ -2061,15 +2058,15 @@ class nest
 
    void priv_allocate_block_data(block_pointer pb, dtl::bool_<false>)
    {
-      BOOST_TRY {
+      BOOST_CONTAINER_TRY {
          allocator_type val_al(al());
          pb->data_ = allocator_traits_type::allocate(val_al, N);
       }
-      BOOST_CATCH(...) {
+      BOOST_CONTAINER_CATCH(...) {
          block_alloc_traits::deallocate(al(), pb, 1);
-         BOOST_RETHROW;
+         BOOST_CONTAINER_RETHROW;
       }
-      BOOST_CATCH_END
+      BOOST_CONTAINER_CATCH_END
    }
 
    BOOST_CONTAINER_FORCEINLINE void priv_allocate_block_data(block_pointer, dtl::bool_<true>) BOOST_NOEXCEPT {}
@@ -2133,14 +2130,14 @@ class nest
    inline void priv_construct_or_restore_capacity
       (T* p, block_base_pointer pbb_prev, BOOST_FWD_REF(Args)... args)
    {
-      BOOST_TRY{
+      BOOST_CONTAINER_TRY{
          block_alloc_traits::construct(al(), p, boost::forward<Args>(args)...);
       }
-      BOOST_CATCH(...){
+      BOOST_CONTAINER_CATCH(...){
          this->priv_restore_capacity_on_throw(pbb_prev);
-         BOOST_RETHROW;
+         BOOST_CONTAINER_RETHROW;
       }
-      BOOST_CATCH_END
+      BOOST_CONTAINER_CATCH_END
    }
    #else
    #define BOOST_CONTAINER_NEST_CONSTRUCT_OR_RESTORE_CODE(N) \
@@ -2148,14 +2145,14 @@ class nest
    inline void priv_construct_or_restore_capacity                     \
       (T* p, block_base_pointer pbb_prev BOOST_MOVE_I##N BOOST_MOVE_UREF##N) \
    {                                                                  \
-      BOOST_TRY{                                                      \
+      BOOST_CONTAINER_TRY{                                                      \
          block_alloc_traits::construct(al(), p BOOST_MOVE_I##N BOOST_MOVE_FWD##N); \
       }                                                               \
-      BOOST_CATCH(...){                                               \
+      BOOST_CONTAINER_CATCH(...){                                               \
          this->priv_restore_capacity_on_throw(pbb_prev);              \
-         BOOST_RETHROW;                                               \
+         BOOST_CONTAINER_RETHROW;                                               \
       }                                                               \
-      BOOST_CATCH_END                                                 \
+      BOOST_CONTAINER_CATCH_END                                                 \
    }                                                                  \
    //
    BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_NEST_CONSTRUCT_OR_RESTORE_CODE)
@@ -2171,7 +2168,7 @@ class nest
    BOOST_CONTAINER_FORCEINLINE size_type priv_destroy_all_in_nonempty_block(T* data, mask_type m) BOOST_NOEXCEPT
    {
       BOOST_ASSERT(m != 0);
-      const size_type r = (size_type)boost::core::popcount(m); (void)data;
+      const size_type r = (size_type)dtl::popcount(m); (void)data;
       BOOST_IF_CONSTEXPR(!dtl::is_trivially_destructible<T>::value) {
          BOOST_CONTAINER_UNROLL(4)
          do {
@@ -2718,8 +2715,8 @@ class nest
 
    void priv_compact_pair(block_pointer pbx, block_pointer pby)
    {
-      std::size_t cx = static_cast<std::size_t>(boost::core::popcount(pbx->mask));
-      std::size_t cy = static_cast<std::size_t>(boost::core::popcount(pby->mask));
+      std::size_t cx = static_cast<std::size_t>(dtl::popcount(pbx->mask));
+      std::size_t cy = static_cast<std::size_t>(dtl::popcount(pby->mask));
       if(cx < cy) {
          boost::adl_move_swap(cx, cy);
          nest_detail::swap_payload(*pbx, *pby);

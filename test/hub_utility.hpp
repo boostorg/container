@@ -12,6 +12,7 @@
 #include <new>
 #include <vector>
 #include <type_traits>
+#include <boost/container/allocator_traits.hpp>
 
 template<typename T>
 std::vector<T> make_range(std::size_t n)
@@ -52,7 +53,10 @@ template<
 >
 struct rebind_value_type<Hub<T, Allocator>, U>
 {
-  using type = Hub<U, boost::allocator_rebind_t<Allocator, U>>;
+  using type = Hub<
+    U,
+    typename boost::container::allocator_traits<Allocator>::
+      template portable_rebind_alloc<U>::type>;
 };
 
 template<typename Hub, typename U>
@@ -67,7 +71,10 @@ template<
 >
 struct rebind_allocator<Hub<T, Allocator>, OtherAllocator>
 {
-  using type = Hub<T, boost::allocator_rebind_t<OtherAllocator, T>>;
+  using type = Hub<
+    T,
+    typename boost::container::allocator_traits<OtherAllocator>::
+      template portable_rebind_alloc<T>::type>;
 };
 
 template<typename Hub, typename OtherAllocator>
