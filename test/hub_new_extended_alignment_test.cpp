@@ -12,51 +12,23 @@ int main() { return 0; }
 
 #else
 
-#if !defined(__cpp_aligned_new) || __cpp_aligned_new < 201606L
-#include <boost/config/pragma_message.hpp>
-
-BOOST_PRAGMA_MESSAGE("Test skipped because aligned new is not available.")
-
-int main()
-{
-}
-#else
-#include <boost/config.hpp>
 #include <boost/container/hub.hpp>
 #include <boost/core/lightweight_test.hpp>
+#include <cstddef>
 #include <cstdint>
-#include <new>
 
-template<typename T>
-struct aligned_new_allocator
-{
-  using value_type = T;
-
-  aligned_new_allocator() = default;
-  template<typename U>
-  aligned_new_allocator(const aligned_new_allocator<U>&) {}
-
-  T* allocate(std::size_t n)
-  {
-    return static_cast<T*>(
-      ::operator new(n * sizeof(T), std::align_val_t{alignof(T)}));
-  }
-
-  void deallocate(T* p, std::size_t)
-  { 
-    ::operator delete(p, std::align_val_t{alignof(T)});
-  }
-
-  bool operator==(const aligned_new_allocator&) const { return true; }
-  bool operator!=(const aligned_new_allocator&) const { return false; }
-};
+/* boost::container::new_allocator (the default allocator) supports
+ * overalignment portably, so a plain hub<T> with the default allocator stores
+ * new-extended-aligned types correctly: no custom allocator nor an
+ * __cpp_aligned_new guard is required.
+ */
 
 #if defined(BOOST_MSVC)
 #pragma warning(push)
 #pragma warning(disable:4324) /* structure padded due to alignment specifier */
 #endif
 
-struct alignas(__STDCPP_DEFAULT_NEW_ALIGNMENT__ * 2)
+struct alignas(4 * alignof(std::max_align_t))
 new_extended_aligned_object
 {
   new_extended_aligned_object(int n_): n{n_} { check_alignment(); }
@@ -84,9 +56,8 @@ new_extended_aligned_object
 #pragma warning(pop) /* C4324 */
 #endif
 
-using new_extended_alignment_hub = boost::container::hub<
-  new_extended_aligned_object,
-  aligned_new_allocator<new_extended_aligned_object>>;
+using new_extended_alignment_hub =
+  boost::container::hub<new_extended_aligned_object>;
 
 /* The only internal sort function of hub<T> that allocates auxiliary memory
  * for T is transfer_sort: this function, however, is never called when T has
@@ -119,6 +90,5 @@ int main()
 
   return boost::report_errors();
 }
-#endif
 
 #endif

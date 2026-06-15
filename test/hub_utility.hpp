@@ -53,9 +53,12 @@ template<
 >
 struct rebind_value_type<Hub<T, Allocator>, U>
 {
+  //Use the container's resolved allocator_type rather than the Allocator
+  //template argument, which may be void (the default that selects new_allocator).
   using type = Hub<
     U,
-    typename boost::container::allocator_traits<Allocator>::
+    typename boost::container::allocator_traits<
+      typename Hub<T, Allocator>::allocator_type>::
       template portable_rebind_alloc<U>::type>;
 };
 

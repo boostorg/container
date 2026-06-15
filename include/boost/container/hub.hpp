@@ -12,6 +12,9 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
+
+// container
+#include <boost/container/container_fwd.hpp>
 #include <boost/container/detail/bit_utilities.hpp>
 #include <boost/container/detail/range_utils.hpp>   //from_range_t / from_range
 
@@ -20,15 +23,19 @@
 #include <boost/config.hpp>
 #include <boost/config/workaround.hpp>
 #include <boost/container/allocator_traits.hpp>
+#include <boost/container/new_allocator.hpp>        //default allocator when Allocator = void
 #include <boost/container/throw_exception.hpp>
+#include <boost/container/detail/addressof.hpp>     //dtl::addressof (avoids <memory>)
+#include <boost/container/detail/aligned_allocation.hpp> //portable (over)aligned nothrow alloc
+#include <boost/container/detail/std_fwd.hpp>       //forward declares std::allocator
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/move/detail/to_raw_pointer.hpp>
+#include <boost/move/unique_ptr.hpp>                //movelib::unique_ptr (avoids <memory>)
 #include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <initializer_list>
 #include <iterator>
-#include <memory>
 #include <new>
 #include <type_traits>
 #include <utility>
@@ -50,9 +57,9 @@
 #endif
 
 #if !defined(BOOST_CONTAINER_HUB_NO_RANGES)
-
+//<iterator> (std::input_iterator, std::iter_value_t/iter_reference_t) is already
+//included unconditionally below; only <concepts> (std::convertible_to) is extra.
 #include <concepts>
-#include <iterator>
 #endif
 
 /* Software prefetch hint accepting a (possibly fancy) pointer: convert to a raw
@@ -82,7 +89,8 @@ namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
-template<typename T, typename Allocator = std::allocator<T>>
+//Default argument for Allocator is provided by container_fwd.hpp
+template<typename T, typename Allocator>
 class hub;
 
 template<typename T, typename Allocator, typename Predicate>
@@ -709,41 +717,17 @@ struct buffer
   T*          data = nullptr;
 
 private:
-#if defined(__cpp_aligned_new) && __cpp_aligned_new >= 201606L
-  using aligned_new_required = std::integral_constant<
-    bool, (alignof(T) > __STDCPP_DEFAULT_NEW_ALIGNMENT__)>;
-
+  //Portable, nothrow, (over)aligned allocation: this is the same primitive
+  //boost::container::new_allocator relies on for overalignment, so there is no
+  //need to special-case __cpp_aligned_new here. The nothrow null return lets
+  //sort() fall back to a leaner algorithm when this (possibly large) scratch
+  //buffer cannot be allocated.
   void allocate_data(std::size_t n)
   {
-    data = static_cast<T*>(allocate(n * sizeof(T), aligned_new_required{}));
+    data = static_cast<T*>(dtl::aligned_allocate(alignof(T), n * sizeof(T)));
   }
 
-  static void* allocate(std::size_t m, std::false_type)
-  {
-    return ::operator new[](m, std::nothrow);
-  }
-
-  static void* allocate(std::size_t m, std::true_type)
-  {
-    return ::operator new[](m, std::align_val_t{alignof(T)}, std::nothrow);
-  }
-
-  void deallocate_data() { deallocate(data, aligned_new_required{}); }
-
-  static void deallocate(void* p, std::false_type) { ::operator delete[](p); }
-
-  static void deallocate(void* p, std::true_type) 
-  {
-    ::operator delete[](p, std::align_val_t{alignof(T)}); 
-  }
-#else
-  void allocate_data(std::size_t n)
-  {
-    data = static_cast<T*>(::operator new[](n * sizeof(T), std::nothrow));
-  }
-
-  void deallocate_data() { ::operator delete[](data); }
-#endif
+  void deallocate_data() { dtl::aligned_deallocate(data); }
 };
 
 template<typename T>
@@ -761,7 +745,7 @@ struct nodtor_deleter<T[]>
 };
 
 template<typename T>
-using nodtor_unique_ptr = std::unique_ptr<T, nodtor_deleter<T>>;
+using nodtor_unique_ptr = boost::movelib::unique_ptr<T, nodtor_deleter<T>>;
 
 template<typename T>
 struct type_identity { using type = T; };
@@ -929,7 +913,7 @@ struct block_typedefs
 //! \c trim_capacity or on container destruction. New blocks are allocated only
 //! when every block is full or when the user issues a \c reserve operation.
 //!
-//! \c hub<T,\ Allocator> is a model of \c Container, \c ReversibleContainer,
+//! \c hub<T, Allocator> is a model of \c Container, \c ReversibleContainer,
 //! \c AllocatorAwareContainer and \c SequenceContainer, with the following
 //! exceptions: operators \c == and \c != are not provided, and positional
 //! insertion of the form \c insert(position,\ ...) or \c emplace(position,\ ...)
@@ -937,15 +921,27 @@ struct block_typedefs
 //! \c LegacyBidirectionalIterator.
 //!
 //! \tparam T The cv-unqualified object type of the elements stored in the hub.
-//! \tparam Allocator An allocator whose value type is \c T.
+//! \tparam Allocator An allocator whose value type is \c T. If \c void (the
+//!   default), \c boost::container::new_allocator<T> is used.
 //!
 //! <b>Exception safety</b>: Except when explicitly noted, all non-const member
 //!   functions (and free functions taking \c hub by non-const reference) provide
 //!   the basic exception guarantee, whereas all const member functions (and free
 //!   functions taking \c hub by const reference) provide the strong guarantee.
-template<typename T, typename Allocator>
-class hub: hub_detail::block_typedefs<Allocator>::block_allocator
+#ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
+template<typename T, typename Allocator = void>
+class hub
+#else
+template<typename T, typename AllocatorOrVoid>
+class hub: hub_detail::block_typedefs<
+     typename real_allocator<T, AllocatorOrVoid>::type>::block_allocator
+#endif
 {
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+  //A void allocator argument selects boost::container::new_allocator<T>, as in
+  //the rest of the library; from here on Allocator is the resolved allocator.
+  typedef typename real_allocator<T, AllocatorOrVoid>::type Allocator;
+#endif
   static_assert(
     !std::is_const<T>::value && !std::is_volatile<T>::value && 
     !std::is_function<T>::value && !std::is_reference<T>::value && 
@@ -2024,7 +2020,7 @@ private:
 
       size_type i = 0;
       container::for_each(*this, [&] (value_type& x) {
-        p[i] = {std::addressof(x), i};
+        p[i] = {dtl::addressof(x), i};
         ++i;
       });
 
@@ -2160,21 +2156,29 @@ private:
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 #if !defined(BOOST_NO_CXX17_DEDUCTION_GUIDES)
-template<
-  typename InputIterator, 
-  typename Allocator = std::allocator<
-    typename std::iterator_traits<InputIterator>::value_type>
->
-hub(InputIterator, InputIterator, Allocator = Allocator())
-  -> hub<
-    typename std::iterator_traits<InputIterator>::value_type, Allocator>;
+template<typename InputIterator>
+hub(InputIterator, InputIterator)
+  -> hub<typename std::iterator_traits<InputIterator>::value_type>;
+
+template<typename InputIterator, typename Allocator>
+hub(InputIterator, InputIterator, Allocator)
+  -> hub<typename std::iterator_traits<InputIterator>::value_type, Allocator>;
+
+//The (initializer_list) case is covered by the implicit guide of the
+//initializer_list constructor (the allocator defaults to void); an explicit
+//guide is only needed to deduce a user-supplied allocator, since the resolved
+//in-class allocator type is a non-deduced context.
+template<typename T, typename Allocator>
+hub(std::initializer_list<T>, Allocator)
+  -> hub<T, Allocator>;
 
 #if !defined(BOOST_CONTAINER_HUB_NO_RANGES)
-template<
-  hub_detail::input_range_like R,
-  typename Allocator = std::allocator<hub_detail::range_value_t<R> >
->
-hub(from_range_t, R&&, Allocator = Allocator())
+template<hub_detail::input_range_like R>
+hub(from_range_t, R&&)
+  -> hub<hub_detail::range_value_t<R> >;
+
+template<hub_detail::input_range_like R, typename Allocator>
+hub(from_range_t, R&&, Allocator)
   -> hub<hub_detail::range_value_t<R>, Allocator>;
 #endif
 #endif
