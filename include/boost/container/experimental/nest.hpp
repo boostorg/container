@@ -31,6 +31,7 @@
 #include <boost/container/new_allocator.hpp>
 #include <boost/container/allocator_traits.hpp>
 // container/detail
+#include <boost/container/detail/aligned_allocation.hpp> //portable (over)aligned nothrow alloc
 #include <boost/container/detail/bit_utilities.hpp>
 #include <boost/container/detail/compare_functors.hpp>
 #include <boost/container/detail/iterator.hpp>
@@ -889,40 +890,17 @@ private:
    buffer(const buffer&);
    buffer& operator=(const buffer&);
 
-#if defined(__cpp_aligned_new) && __cpp_aligned_new >= 201606L
-   typedef dtl::bool_<(dtl::alignment_of<T>::value > __STDCPP_DEFAULT_NEW_ALIGNMENT__)>
-      aligned_new_required;
-
+   //Portable, nothrow, (over)aligned allocation: this is the same primitive
+   //boost::container::new_allocator relies on for overalignment, so there is no
+   //need to special-case __cpp_aligned_new here. The nothrow null return lets
+   //the sort routines fall back to a leaner algorithm when this (possibly large)
+   //scratch buffer cannot be allocated.
    void allocate_data(std::size_t m)
    {
-      data = static_cast<T*>(allocate_impl(m * sizeof(T), aligned_new_required()));
+      data = static_cast<T*>(dtl::aligned_allocate(dtl::alignment_of<T>::value, m * sizeof(T)));
    }
 
-   static void* allocate_impl(std::size_t m, dtl::false_type)
-   {
-      return ::operator new(m, std::nothrow);
-   }
-
-   static void* allocate_impl(std::size_t m, dtl::true_type)
-   {
-      return ::operator new(m, std::align_val_t(dtl::alignment_of<T>::value), std::nothrow);
-   }
-
-   void deallocate_data() { deallocate_impl(data, aligned_new_required()); }
-
-   static void deallocate_impl(void* p, dtl::false_type)
-   { ::operator delete(p); }
-
-   static void deallocate_impl(void* p, dtl::true_type)
-   { ::operator delete(p, std::align_val_t(dtl::alignment_of<T>::value)); }
-#else
-   void allocate_data(std::size_t m)
-   {
-      data = static_cast<T*>(::operator new(m * sizeof(T), std::nothrow));
-   }
-
-   void deallocate_data() { ::operator delete(static_cast<void*>(data)); }
-#endif
+   void deallocate_data() { dtl::aligned_deallocate(static_cast<void*>(data)); }
 };
 
 // RAII wrapper for raw memory (replaces unique_ptr with nodtor_deleter)
