@@ -29,7 +29,7 @@ int main() { return 0; }
 #pragma warning(disable:4324) /* structure padded due to alignment specifier */
 #endif
 
-struct alignas(4 * alignof(std::max_align_t))
+struct alignas(4 * sizeof(void*))
 new_extended_aligned_object
 {
   new_extended_aligned_object(int n_): n{n_} { check_alignment(); }
