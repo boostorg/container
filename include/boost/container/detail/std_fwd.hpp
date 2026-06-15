@@ -25,6 +25,17 @@
 
 #include <cstddef>
 
+//<version> is needed to reliably query the __cpp_lib_containers_ranges
+//feature-test macro, which tells whether the standard library provides
+//::std::from_range_t. It is one of the lightest standard headers (only macros).
+#if defined(__has_include)
+#  if __has_include(<version>)
+#     include <version>
+#  endif
+#elif BOOST_CXX_VERSION >= 202002L
+#  include <version>
+#endif
+
 #include <boost/move/detail/std_ns_begin.hpp>
 BOOST_MOVE_STD_NS_BEG
 
@@ -58,7 +69,11 @@ struct piecewise_construct_t;
 template <class Ptr>
 struct pointer_traits;
 
+//Only forward declare ::std::from_range_t when the standard library actually
+//provides it; otherwise there is no such type to refer to.
+#if defined(__cpp_lib_containers_ranges)
 struct from_range_t;
+#endif
 
 BOOST_MOVE_STD_NS_END
 #include <boost/move/detail/std_ns_end.hpp>
