@@ -2834,6 +2834,9 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
 
 [section:release_notes_boost_1_92_00 Boost 1.92 Release]
 
+* Added new [classref boost::container::hub hub] container designed by Joaqu\u00EDn M. L\u00F3pez Mu\u00F1oz.
+  See [link container.non_standard_containers.hub Hub Container] chapter for more information. 
+
 * Fixed bugs/issues:
    * [@https://github.com/boostorg/container/issues/334 GitHub #334: ['"Wrong overload resolution protection in implementation of P2363R5"]].
    * [@https://github.com/boostorg/container/issues/336 GitHub #336: ['"Compile error with erase and small_vector<std::string>"]].
