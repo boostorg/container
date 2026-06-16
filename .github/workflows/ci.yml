@@ -919,7 +919,7 @@ jobs:
     runs-on: ${{matrix.os}}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Test on ${{matrix.vm}}
         uses: cross-platform-actions/action@v1.2.0
         with:
@@ -1096,7 +1096,7 @@ jobs:
     container: ${{matrix.container}}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 3
 
