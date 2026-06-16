@@ -25,15 +25,30 @@
 
 #include <cstddef>
 
-//<version> is needed to reliably query the __cpp_lib_containers_ranges
-//feature-test macro, which tells whether the standard library provides
-//::std::from_range_t. It is one of the lightest standard headers (only macros).
+//<version> is needed to reliably query the C++23 library feature-test macros
+//for ::std::from_range_t / P1206R7. It is one of the lightest standard headers.
 #if defined(__has_include)
 #  if __has_include(<version>)
 #     include <version>
 #  endif
 #elif BOOST_CXX_VERSION >= 202002L
 #  include <version>
+#endif
+
+// Whether ::std::from_range_t tag is provided by the standard library.
+//
+// The official feature-test macro for std::from_range_t is
+// __cpp_lib_containers_ranges. However, std::from_range_t lives in <ranges>
+// next to std::ranges::to, whose specification uses the tag, so any library
+// that provides std::ranges::to necessarily provides std::from_range_t too.
+//
+// Some standard libraries (e.g. libc++ 17/18) ship std::ranges::to and
+// std::from_range_t -- defining __cpp_lib_ranges_to_container -- before they
+// complete the container support and define __cpp_lib_containers_ranges.
+// In that window only __cpp_lib_ranges_to_container is defined even though the
+// tag is already present.
+#if defined(__cpp_lib_ranges_to_container) || defined(__cpp_lib_containers_ranges)
+#  define BOOST_CONTAINER_DETAIL_STD_FROM_RANGE_SUPPORT
 #endif
 
 #include <boost/move/detail/std_ns_begin.hpp>
@@ -70,8 +85,8 @@ template <class Ptr>
 struct pointer_traits;
 
 //Only forward declare ::std::from_range_t when the standard library actually
-//provides it; otherwise there is no such type to refer to.
-#if defined(__cpp_lib_containers_ranges)
+//provides it; see BOOST_CONTAINER_DETAIL_STD_FROM_RANGE_SUPPORT above.
+#if defined(BOOST_CONTAINER_DETAIL_STD_FROM_RANGE_SUPPORT)
 struct from_range_t;
 #endif
 

@@ -26,20 +26,21 @@
 //!   Defines boost::container::from_range_t and the boost::container::from_range
 //!   tag, used to disambiguate the range-based members of the containers.
 //!
-//!   When the standard library provides ::std::from_range_t (feature-test macro
-//!   __cpp_lib_containers_ranges), from_range_t is a reference to it -following
-//!   the same technique as boost::container::piecewise_construct_t and
-//!   boost::container::allocator_arg_t- so the tag is the very same type as the
-//!   standard one and interoperates with ::std::from_range, yet the heavyweight
-//!   <ranges> header is not required. Otherwise, there is no standard type to
-//!   refer to and from_range_t is defined as a standalone type.
+//!   When the standard library provides ::std::from_range_t (see
+//!   BOOST_CONTAINER_DETAIL_STD_FROM_RANGE_SUPPORT in std_fwd.hpp), from_range_t
+//!   is a reference to it -following the same technique as
+//!   boost::container::piecewise_construct_t and boost::container::allocator_arg_t-
+//!   so the tag is the very same type as the standard one and interoperates with
+//!   ::std::from_range, yet the heavyweight <ranges> header is not required.
+//!   Otherwise, there is no standard type to refer to and from_range_t is defined
+//!   as a standalone type.
 
 namespace boost {
 namespace container {
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
-#if defined(__cpp_lib_containers_ranges)
+#if defined(BOOST_CONTAINER_DETAIL_STD_FROM_RANGE_SUPPORT)
 
    template <int Dummy = 0>
    struct std_from_range_holder
@@ -55,7 +56,7 @@ typedef const ::std::from_range_t & from_range_t;
 //! A instance of type from_range_t
 static from_range_t from_range = *std_from_range_holder<>::dummy;
 
-#else //!defined(__cpp_lib_containers_ranges)
+#else //!defined(BOOST_CONTAINER_DETAIL_STD_FROM_RANGE_SUPPORT)
 
 //The standard library does not provide ::std::from_range_t, so there is nothing
 //to interoperate with: from_range_t is a standalone type.
@@ -64,7 +65,7 @@ struct from_range_t {};
 //! A instance of type from_range_t
 static const from_range_t from_range = from_range_t();
 
-#endif   //defined(__cpp_lib_containers_ranges)
+#endif   //defined(BOOST_CONTAINER_DETAIL_STD_FROM_RANGE_SUPPORT)
 
 #else    //BOOST_CONTAINER_DOXYGEN_INVOKED
 
