@@ -921,7 +921,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Test on ${{matrix.vm}}
-        uses: cross-platform-actions/action@v0.30.0
+        uses: cross-platform-actions/action@v1.2.0
         with:
           operating_system: ${{matrix.vm}}
           version: ${{matrix.bsd_version}}
