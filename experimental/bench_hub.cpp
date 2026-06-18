@@ -898,7 +898,7 @@ void run_all(std::index_sequence<Is...>)
 
    //General (all-tests) geomean for each element size, shown only when more
    //than one element size was benchmarked, with one column per erasure rate.
-   if(num_exec > 1) {
+   BOOST_IF_CONSTEXPR(num_exec > 1) {
       std::cout << "\n ---- Per size ----\n";
       print_geomean_header(rates);
       for(std::size_t e = 0; e < num_exec; ++e) {
