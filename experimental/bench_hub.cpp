@@ -129,17 +129,20 @@ struct element_t
    element_t(int n_) : n{ n_ }
    {
       std::memset(payload, 0, sizeof(payload));
+      clobber();  //The barrier keeps previous writes as real work.
    }
 
    ~element_t()
    {
       std::memset(payload, 0, sizeof(payload));
+      clobber();  //The barrier keeps previous writes as real work.
    }
 
-   element_t(element_t&& x): n{x.n}
+   element_t(element_t&& x) : n{x.n}
    {
       std::memcpy(payload, x.payload, sizeof(payload));
       std::memset(x.payload, 0, sizeof(payload));
+      clobber();  //The barrier keeps previous writes as real work.
    }
 
    element_t& operator=(element_t&& x)
@@ -147,6 +150,7 @@ struct element_t
       n = x.n;
       std::memcpy(payload, x.payload, sizeof(payload));
       std::memset(x.payload, 0, sizeof(payload));
+      clobber();  //The barrier keeps previous writes as real work.
       return *this;
    }
 #else
@@ -787,7 +791,7 @@ run_summary run_bench()
              << std::setw(41)  << "" << "\n"
              << std::setfill(current_fill);
 
-   table t;/*
+   table t;
    t.push_back(benchmark(
       "iteration", element_size,
       ::iteration<num>{}, ::iteration<den>{}));
@@ -805,10 +809,10 @@ run_summary run_bench()
       create_fill_and_destroy<num>{}, create_fill_and_destroy<den>{}));
    t.push_back(benchmark(
       "destroy (dtor)", element_size,
-      destruction<num>{}, destruction<den>{}));*/
+      destruction<num>{}, destruction<den>{}));
    t.push_back(benchmark(
       "clear", element_size,
-      clearing<num>{}, clearing<den>{}));/*
+      clearing<num>{}, clearing<den>{}));
    t.push_back(benchmark(
       "creation (make)", element_size,
       creation<num>{}, creation<den>{}));
@@ -820,7 +824,7 @@ run_summary run_bench()
       quick_filling<num>{}, quick_filling<den>{}));
    t.push_back(benchmark(
       "erasure", element_size,
-      ::erasure<num>{}, ::erasure<den>{}));*/
+      ::erasure<num>{}, ::erasure<den>{}));
 
    std::cout << "\n" << std::setfill('-') << std::setw(41) << "" "\n"
              << "Geometric means (num/den time ratio), element size "
