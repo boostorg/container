@@ -1,28 +1,39 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2007-2013. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2007-2026. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
+//
+// Shared harness for the sequence-container insertion benchmarks. A runner
+// includes this header, defines the run_containers() customization point with
+// the concrete containers it wants to compare, and calls test_vectors<int>():
+//
+//    #include "bench_vector_common.hpp"
+//    template<class IntType, class Operation>
+//    void run_containers(unsigned numit, unsigned numele, bool bp)
+//    {
+//       vector_test_template< std::vector<IntType>, Operation >(numit, numele, "std::vector", bp);
+//       vector_test_template< bc::vector<IntType>,  Operation >(numit, numele, "vector",      bp);
+//    }
+//    int main(){ test_vectors<int>(); return 0; }
+//
+//////////////////////////////////////////////////////////////////////////////
 
-#include <vector>
-#include <deque>
-#include <boost/container/vector.hpp>
-#include <boost/container/deque.hpp>
-#include <boost/container/devector.hpp>
-#include <boost/container/small_vector.hpp>
-#include <boost/container/stable_vector.hpp>
-#include <boost/container/segtor.hpp>
+#ifndef BOOST_CONTAINER_BENCH_VECTOR_COMMON_HPP
+#define BOOST_CONTAINER_BENCH_VECTOR_COMMON_HPP
+
+#include <boost/config.hpp>
+#include <boost/container/detail/workaround.hpp>
+
 #include <iomanip>
-
-#include <memory>    //std::allocator
 #include <iostream>  //std::cout, std::endl
-#include <cstring>   //std::strcmp
-#include <boost/move/detail/nsec_clock.hpp>
+#include <cstddef>
 #include <typeinfo>
+#include <boost/move/detail/nsec_clock.hpp>
 
 #if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
 #pragma GCC diagnostic push
@@ -36,7 +47,6 @@
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MIN 0
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 0
 #include <boost/intrusive/detail/has_member_function_callable_with.hpp>
-
 
 //reserve
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_FUNCNAME reserve
@@ -54,7 +64,6 @@
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 1
 #include <boost/intrusive/detail/has_member_function_callable_with.hpp>
 
-//#pragma GCC diagnostic ignored "-Wunused-result"
 #if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
 #pragma GCC diagnostic pop
 #endif
@@ -64,6 +73,10 @@ using boost::move_detail::cpu_times;
 using boost::move_detail::nanosecond_type;
 
 namespace bc = boost::container;
+
+//Largest element count exercised by the harness. Fixed-capacity containers
+//(e.g. static_vector) must be sized at least this big.
+static const std::size_t bench_max_numele = 10000;
 
 class MyInt
 {
@@ -445,25 +458,30 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements, 
                << std::endl;
 }
 
+//Customization point implemented by every runner: run vector_test_template for
+//each container that the runner wants to compare.
+template<class IntType, class Operation>
+void run_containers(unsigned numit, unsigned numele, bool prereserve);
+
 template<class IntType, class Operation>
 void test_vectors_impl()
 {
    //#define SINGLE_TEST
-   #define SIMPLE_IT
+   //#define SIMPLE_IT
    #ifdef SINGLE_TEST
       #ifdef NDEBUG
-      std::size_t numit [] = { 1000 };
+      unsigned int numit [] = { 1000 };
       #else
-      std::size_t numit [] = { 20 };
+      unsigned int numit [] = { 20 };
       #endif
-      std::size_t numele [] = { 10000 };
+      unsigned int numele [] = { 10000 };
    #elif defined SIMPLE_IT
       #ifdef NDEBUG
-      std::size_t numit [] = { 150 };
+      unsigned int numit [] = { 150 };
       #else
-      std::size_t numit [] = { 10 };
+      unsigned int numit [] = { 10 };
       #endif
-      std::size_t numele [] = { 10000 };
+      unsigned int numele [] = { 10000 };
    #else
       #ifdef NDEBUG
       unsigned int numit []  = { 1000, 10000, 100000, 1000000 };
@@ -474,7 +492,7 @@ void test_vectors_impl()
    #endif
 
 
-#define RESERVE_ONLY 0
+//#define RESERVE_ONLY 0
 #define NORESERVE_ONLY 1
 
 //#define RESERVE_STRATEGY NORESERVE_ONLY
@@ -499,17 +517,7 @@ void test_vectors_impl()
       const std::size_t it_count = sizeof(numele)/sizeof(numele[0]);
       for(unsigned int i = 0; i < it_count; ++i){
          std::cout << "\n" << " ----  numit[i]: " << numit[i] << "   numele[i] : " << numele[i] << " ---- \n";
-         vector_test_template< std::vector<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                              "std::vector    ", bp);
-         vector_test_template< bc::vector<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i]        ,                       "vector         ", bp);
-         vector_test_template< bc::small_vector<IntType, 0, std::allocator<IntType> >, Operation >(numit[i], numele[i],                      "small_vector   ", bp);
-         vector_test_template< bc::devector<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                             "devector       ", bp);
-         vector_test_template< std::deque<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                               "std::deque     ", bp);
-         vector_test_template< bc::deque<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                                "deque          ", bp);
-         vector_test_template< bc::deque<IntType, std::allocator<IntType>,
-            typename bc::deque_options<bc::reservable<true> >::type       >, Operation >(numit[i], numele[i],                                "deque(reserv)  ", bp);
-         vector_test_template< bc::segtor<IntType, std::allocator<IntType> >, Operation >(numit[i], numele[i],                               "segtor         ", bp);
-         vector_test_template< bc::segtor<IntType, std::allocator<IntType>,
-            typename bc::segtor_options<bc::reservable<true> >::type       >, Operation >(numit[i], numele[i],                               "segtor(reserv) ", bp);
+         run_containers<IntType, Operation>(numit[i], numele[i], bp);
       }
       std::cout << "---------------------------------\n---------------------------------\n";
    }
@@ -536,10 +544,4 @@ void test_vectors()
    test_vectors_impl<IntType, insert_near_end_repeated<IntType> >();
 }
 
-int main()
-{
-   test_vectors<int>();
-   test_vectors<MyInt>();
-   test_vectors<MyFatInt>();
-   return 0;
-}
+#endif   //BOOST_CONTAINER_BENCH_VECTOR_COMMON_HPP

@@ -8,26 +8,24 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 //
-// Compares boost::container::static_vector against std::vector and
+// Compares boost::container::devector against boost::container::deque and
 // boost::container::vector.
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <vector>
 #include <memory>    //std::allocator
+#include <boost/container/devector.hpp>
+#include <boost/container/deque.hpp>
 #include <boost/container/vector.hpp>
-#include <boost/container/static_vector.hpp>
 
 #include "bench_vector_common.hpp"
 
 template<class IntType, class Operation>
 void run_containers(unsigned numit, unsigned numele, bool bp)
 {
-   //static_vector has a fixed capacity, so it must be sized for the largest
-   //element count exercised by the harness.
-   vector_test_template< bc::static_vector<IntType, bench_max_numele>,  Operation >(numit, numele, "static_vector  ", bp);
-   vector_test_template< std::vector<IntType, std::allocator<IntType> >, Operation >(numit, numele, "std::vector    ", bp);
-   vector_test_template< bc::vector<IntType, std::allocator<IntType> >,  Operation >(numit, numele, "vector         ", bp);
+   vector_test_template< bc::devector<IntType, std::allocator<IntType> >, Operation >(numit, numele, "devector       ", bp);
+   vector_test_template< bc::deque<IntType, std::allocator<IntType> >,    Operation >(numit, numele, "deque          ", bp);
+   vector_test_template< bc::vector<IntType, std::allocator<IntType> >,   Operation >(numit, numele, "vector         ", bp);
 }
 
 int main()
