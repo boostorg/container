@@ -737,10 +737,89 @@ class deque_base
       return 0;
    }
 
-   void prot_reallocate_map_and_nodes  //is_reservable == true
-      (dtl::bool_<true>, const size_type new_elems, const bool add_at_front)
+   //Single-ended map growth (reservable). The start node is permanently pinned at
+   //m_map[0], so the map is never recentered: every node pointer is copied to the
+   //front of a larger map and the extra trailing nodes are allocated. Because the
+   //node indices are preserved, the start/finish offsets need no fix-up.
+   void prot_reallocate_map_and_nodes  //is_reservable == true, single_ended == true
+      (dtl::bool_<true>, dtl::bool_<true>, const size_type new_elems, const bool add_at_front)
    {
-      BOOST_ASSERT(!(is_single_ended && add_at_front));  //logic_error
+      (void)add_at_front;
+      BOOST_ASSERT(!add_at_front);  //logic_error: single-ended never grows at front
+      const size_type old_map_size = this->members_.m_map_size;
+      const ptr_alloc_ptr old_map  = this->members_.m_map;
+      const size_type additional_nodes = size_type((new_elems - 1u)/get_block_size() + 1u);
+      const size_type new_active_nodes = size_type(old_map_size + additional_nodes);
+
+      //1.5x growth, but at least the needed nodes plus one spare (+1) and the
+      //single-ended back-spare (+1), matching the generic sizing.
+      const size_type new_map_size =
+         dtl::max_value(size_type(old_map_size + old_map_size/2u), size_type(new_active_nodes + 2u));
+
+      //The end position must be representable in stored_size_type
+      this->test_size_against_n_nodes(new_map_size);
+
+      const ptr_alloc_ptr new_map = this->prot_allocate_map(new_map_size);
+      const size_type new_nodes = size_type(new_map_size - old_map_size);
+
+      BOOST_CONTAINER_TRY {
+         this->prot_allocate_nodes(new_map + difference_type(old_map_size), new_nodes);
+      }
+      BOOST_CONTAINER_CATCH(...) {
+         this->prot_deallocate_map(new_map, new_map_size);
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+
+      boost::container::move_n(old_map, old_map_size, new_map);
+      this->prot_deallocate_map(old_map, old_map_size);
+
+      this->members_.m_map = new_map;
+      this->members_.m_map_size = static_cast<stored_size_type>(new_map_size);
+   }
+
+   //Single-ended map growth (non-reservable). Only the active nodes are allocated;
+   //they are copied to the front of a larger map (indices preserved) when the
+   //trailing slots are insufficient, then the requested nodes are allocated right
+   //after the finish node.
+   void prot_reallocate_map_and_nodes  //is_reservable == false, single_ended == true
+      (dtl::bool_<false>, dtl::bool_<true>, const size_type new_elems, const bool add_at_front)
+   {
+      (void)add_at_front;
+      BOOST_ASSERT(!add_at_front);  //logic_error: single-ended never grows at front
+      const size_type additional_nodes = size_type((new_elems - 1u)/get_block_size() + 1u);
+      const ptr_alloc_ptr old_map      = this->members_.m_map;
+      const size_type old_map_size     = this->members_.m_map_size;
+      const ptr_alloc_ptr finish_node  = this->prot_finish_node();
+
+      //start node is m_map[0], so the free slots are all those past the finish node
+      const size_type old_active_nodes = size_type(size_type(finish_node - old_map) + 1u);
+      const size_type unused_slots     = size_type(old_map_size - old_active_nodes);
+
+      if (additional_nodes > unused_slots) {
+         const size_type new_active_nodes = size_type(old_active_nodes + additional_nodes);
+         //Doubling size, but at least the needed nodes plus spares (matches generic)
+         const size_type new_map_size =
+            dtl::max_value(size_type(old_map_size*2u), size_type(new_active_nodes + 2u));
+
+         //The end position must be representable in stored_size_type
+         this->test_size_against_n_nodes(new_map_size);
+
+         const ptr_alloc_ptr new_map = this->prot_allocate_map(new_map_size);
+         //Active nodes keep their indices (start stays at 0), so offsets are unchanged
+         boost::container::move_n(old_map, old_active_nodes, new_map);
+         this->prot_deallocate_map(old_map, old_map_size);
+
+         this->members_.m_map = new_map;
+         this->members_.m_map_size = static_cast<stored_size_type>(new_map_size);
+      }
+
+      this->prot_allocate_nodes(this->prot_finish_node() + 1, additional_nodes);
+   }
+
+   void prot_reallocate_map_and_nodes  //is_reservable == true, single_ended == false
+      (dtl::bool_<true>, dtl::bool_<false>, const size_type new_elems, const bool add_at_front)
+   {
       const ptr_alloc_ptr start_node = this->prot_start_node();
       const ptr_alloc_ptr finish_node = this->prot_finish_node();
       const ptr_alloc_ptr next_finish_node = finish_node + 1u;
@@ -811,10 +890,9 @@ class deque_base
       this->prot_finish_update_node(new_nstart + difference_type(old_active_nodes - 1u));
    }
 
-   void prot_reallocate_map_and_nodes  //is_reservable == false
-      (dtl::bool_<false>, const size_type new_elems, const bool add_at_front)
+   void prot_reallocate_map_and_nodes  //is_reservable == false, single_ended == false
+      (dtl::bool_<false>, dtl::bool_<false>, const size_type new_elems, const bool add_at_front)
    {
-      BOOST_ASSERT(!(is_single_ended && add_at_front));  //logic_error
       const size_type additional_nodes = size_type((new_elems - 1u)/get_block_size() + 1u);
 
       const ptr_alloc_ptr start_node  = this->prot_start_node();
@@ -2615,7 +2693,8 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
 
       if (n > vacancies){  //n == 0 handled in the else part
          if(this->members_.m_map){
-            this->prot_reallocate_map_and_nodes(res_t(), size_type(n - vacancies), true);
+            //front growth is inherently double-ended
+            this->prot_reallocate_map_and_nodes(res_t(), dtl::bool_<false>(), size_type(n - vacancies), true);
          }
          else {
             this->prot_initialize_map_and_nodes(n);
@@ -2631,7 +2710,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
 
       if (n > vacancies){  //n == 0 handled in the else part
          if(this->members_.m_map){
-            this->prot_reallocate_map_and_nodes(res_t(), size_type(n - vacancies), false);
+            this->prot_reallocate_map_and_nodes(res_t(), dtl::bool_<is_single_ended>(), size_type(n - vacancies), false);
          }
          else{
             this->prot_initialize_map_and_nodes(n);
