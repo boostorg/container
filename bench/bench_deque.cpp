@@ -21,12 +21,13 @@
 #include "bench_vector_common.hpp"
 
 template<class IntType, class Operation>
-void run_containers(unsigned numit, unsigned numele, bool bp)
+void run_containers(runner<IntType, Operation>& r)
 {
-   vector_test_template< std::deque<IntType, std::allocator<IntType> >, Operation >(numit, numele, "std::deque     ", bp);
-   vector_test_template< bc::deque<IntType, std::allocator<IntType> >,  Operation >(numit, numele, "deque          ", bp);
-   vector_test_template< bc::deque<IntType, std::allocator<IntType>,
-      typename bc::deque_options<bc::reservable<true> >::type        >, Operation >(numit, numele, "deque(reserv)  ", bp);
+   //First registered container is the baseline (denominator).
+   r.template add< std::deque<IntType, std::allocator<IntType> > >("std::deque");
+   r.template add< bc::deque<IntType, std::allocator<IntType> >  >("deque");
+   r.template add< bc::deque<IntType, std::allocator<IntType>,
+      typename bc::deque_options<bc::reservable<true> >::type>   >("deque(resv)");
 }
 
 int main()

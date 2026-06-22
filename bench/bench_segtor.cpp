@@ -21,14 +21,15 @@
 #include "bench_vector_common.hpp"
 
 template<class IntType, class Operation>
-void run_containers(unsigned numit, unsigned numele, bool bp)
+void run_containers(runner<IntType, Operation>& r)
 {
-   vector_test_template< bc::deque<IntType, std::allocator<IntType> >,  Operation >(numit, numele, "deque          ", bp);
-   vector_test_template< bc::deque<IntType, std::allocator<IntType>,
-      typename bc::deque_options<bc::reservable<true> >::type        >, Operation >(numit, numele, "deque(reserv)  ", bp);
-   vector_test_template< bc::segtor<IntType, std::allocator<IntType> >, Operation >(numit, numele, "segtor         ", bp);
-   vector_test_template< bc::segtor<IntType, std::allocator<IntType>,
-      typename bc::segtor_options<bc::reservable<true> >::type        >, Operation >(numit, numele, "segtor(reserv) ", bp);
+   //First registered container is the baseline (denominator).
+   r.template add< bc::deque<IntType, std::allocator<IntType> >   >("deque");
+   r.template add< bc::deque<IntType, std::allocator<IntType>,
+      typename bc::deque_options<bc::reservable<true> >::type>    >("deque(resv)");
+   r.template add< bc::segtor<IntType, std::allocator<IntType> >  >("segtor");
+   r.template add< bc::segtor<IntType, std::allocator<IntType>,
+      typename bc::segtor_options<bc::reservable<true> >::type>   >("segtor(resv)");
 }
 
 int main()

@@ -21,11 +21,12 @@
 #include "bench_vector_common.hpp"
 
 template<class IntType, class Operation>
-void run_containers(unsigned numit, unsigned numele, bool bp)
+void run_containers(runner<IntType, Operation>& r)
 {
-   vector_test_template< bc::devector<IntType, std::allocator<IntType> >, Operation >(numit, numele, "devector       ", bp);
-   vector_test_template< bc::deque<IntType, std::allocator<IntType> >,    Operation >(numit, numele, "deque          ", bp);
-   vector_test_template< bc::vector<IntType, std::allocator<IntType> >,   Operation >(numit, numele, "vector         ", bp);
+   //First registered container is the baseline (denominator).
+   r.template add< bc::vector<IntType, std::allocator<IntType> >   >("vector");
+   r.template add< bc::deque<IntType, std::allocator<IntType> >    >("deque");
+   r.template add< bc::devector<IntType, std::allocator<IntType> > >("devector");
 }
 
 int main()

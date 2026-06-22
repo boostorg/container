@@ -21,13 +21,14 @@
 #include "bench_vector_common.hpp"
 
 template<class IntType, class Operation>
-void run_containers(unsigned numit, unsigned numele, bool bp)
+void run_containers(runner<IntType, Operation>& r)
 {
+   //First registered container is the baseline (denominator).
+   r.template add< std::vector<IntType, std::allocator<IntType> > >("std::vector");
+   r.template add< bc::vector<IntType, std::allocator<IntType> >  >("vector");
    //static_vector has a fixed capacity, so it must be sized for the largest
    //element count exercised by the harness.
-   vector_test_template< bc::static_vector<IntType, bench_max_numele>,  Operation >(numit, numele, "static_vector  ", bp);
-   vector_test_template< std::vector<IntType, std::allocator<IntType> >, Operation >(numit, numele, "std::vector    ", bp);
-   vector_test_template< bc::vector<IntType, std::allocator<IntType> >,  Operation >(numit, numele, "vector         ", bp);
+   r.template add< bc::static_vector<IntType, bench_max_numele>   >("static_vector");
 }
 
 int main()
