@@ -13,7 +13,6 @@
 // Design:
 //  - Auto-scaling measurement: each timing repeats the build until a minimum
 //    wall-clock budget elapses, runs several trials and discards the slowest
-//    quartile (no hand-tuned iteration counts).
 //  - Dead-store-elimination barriers: clobber()/escape() (bench_utils.hpp) wrap
 //    the measured region so the optimizer cannot delete the work.
 //  - Ratio output: every container is timed and reported as a num/den ratio
@@ -53,6 +52,8 @@
 #include <vector>
 
 #include <boost/move/detail/nsec_clock.hpp>
+#include <boost/container/vector.hpp>
+#include <boost/container/string.hpp>
 #include "bench_utils.hpp"   //clobber(), escape()
 
 #if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
@@ -105,18 +106,12 @@ struct bench_vector_defaults
 
 #if defined(LONG_BENCH)
    static const std::size_t min_size_exp = 2;
-   static const std::size_t max_size_exp = 4;
-   static const std::size_t num_trials   = 8;
+   static const std::size_t max_size_exp = 5;
+   static const std::size_t num_trials   = 6;
    //50 ms per trial
    static const nanosecond_type min_time_per_trial = nanosecond_type(50) * 1000000;
-#elif defined(NDEBUG)
-   static const std::size_t min_size_exp = 2;
-   static const std::size_t max_size_exp = 4;
-   static const std::size_t num_trials   = 4;
-   //20 ms per trial
-   static const nanosecond_type min_time_per_trial = nanosecond_type(20) * 1000000;
 #else
-   static const std::size_t min_size_exp = 2;
+   static const std::size_t min_size_exp = 3;
    static const std::size_t max_size_exp = 3;
    static const std::size_t num_trials   = 1;
    static const nanosecond_type min_time_per_trial = 0;
@@ -145,11 +140,11 @@ inline std::size_t bench_range_size(std::size_t n)
 }
 
 //Human-readable description of the range policy, e.g. "n/100".
-inline std::string bench_range_label()
+inline bc::string bench_range_label()
 {
    std::ostringstream o;
    o << "n/" << bench_vector_defaults::range_divisor;
-   return o.str();
+   return bc::string(o.str().c_str());
 }
 
 //Runtime 10^e (e is small here), used where e is only known at run time.
@@ -241,11 +236,11 @@ struct insert_end_range
    BOOST_CONTAINER_FORCEINLINE void operator()(C &c, int)
    {  c.insert(c.end(), &a_[0], &a_[0]+range_); }
 
-   std::string name() const
+   bc::string name() const
    {  return "insert_end_range(" + bench_range_label() + ")"; }
 
    std::size_t          range_;
-   std::vector<IntType> a_;
+   bc::vector<IntType>  a_;
 };
 
 template <class IntType>
@@ -262,7 +257,7 @@ struct insert_end_repeated
    BOOST_CONTAINER_FORCEINLINE void operator()(C &c, int i)
    {  c.insert(c.end(), range_, IntType(i)); }
 
-   std::string name() const
+   bc::string name() const
    {  return "insert_end_repeated(" + bench_range_label() + ")"; }
 
    std::size_t range_;
@@ -280,7 +275,7 @@ struct push_back
    BOOST_CONTAINER_FORCEINLINE void operator()(C &c, int i)
    {  c.push_back(IntType(i)); }
 
-   std::string name() const
+   bc::string name() const
    {  return "push_back"; }
 };
 
@@ -296,14 +291,14 @@ struct emplace_back
    BOOST_CONTAINER_FORCEINLINE void operator()(C &c, int i)
    {  c.emplace_back(IntType(i)); }
 
-   std::string name() const
+   bc::string name() const
    {  return "emplace_back"; }
 };
 
 template <class IntType>
-struct insert_near_end_repeated
+struct insert_near_end_rpt
 {
-   explicit insert_near_end_repeated(std::size_t n)
+   explicit insert_near_end_rpt(std::size_t n)
       : range_(bench_range_size(n))
    {}
 
@@ -319,8 +314,8 @@ struct insert_near_end_repeated
                range_, IntType(i));
    }
 
-   std::string name() const
-   {  return "insert_near_end_repeated(" + bench_range_label() + ")"; }
+   bc::string name() const
+   {  return "insert_near_end_rpt(" + bench_range_label() + ")"; }
 
    std::size_t range_;
 };
@@ -344,11 +339,11 @@ struct insert_near_end_range
                &a_[0], &a_[0]+range_);
    }
 
-   std::string name() const
+   bc::string name() const
    {  return "insert_near_end_range(" + bench_range_label() + ")"; }
 
    std::size_t          range_;
-   std::vector<IntType> a_;
+   bc::vector<IntType>  a_;
 };
 
 template <class IntType>
@@ -368,7 +363,7 @@ struct insert_near_end
       c.insert(it, IntType(i));
    }
 
-   std::string name() const
+   bc::string name() const
    {  return "insert_near_end"; }
 };
 
@@ -389,7 +384,7 @@ struct emplace_near_end
       c.emplace(it, IntType(i));
    }
 
-   std::string name() const
+   bc::string name() const
    {  return "emplace_near_end"; }
 };
 
@@ -421,7 +416,7 @@ BOOST_NOINLINE double measure(F f, std::size_t num_trials, nsec_t min_time_per_t
 {
    if(!num_trials) num_trials = 1;
 
-   std::vector<double> trials(num_trials);
+   bc::vector<double> trials(num_trials);
    for(std::size_t i = 0; i < num_trials; ++i) {
       std::size_t runs = 0;
       nsec_t      t1;
@@ -440,7 +435,7 @@ BOOST_NOINLINE double measure(F f, std::size_t num_trials, nsec_t min_time_per_t
    std::sort(trials.begin(), trials.end());
 
    const std::size_t ts         = trials.size();
-   const std::size_t ts_discard = ts / 4;   //drop the slowest quartile
+   const std::size_t ts_discard = ts / 3;   //drop the slowest
    double sum = 0.0;
    for(std::size_t i = ts_discard; i < ts; ++i) sum += trials[i];
    return sum / double(ts - ts_discard);
@@ -493,11 +488,11 @@ template<> inline const char* bench_type_name< ::boost::long_long_type>()  { ret
 // Report: collects per (operation,size) seconds for every container column and
 // prints a compact ratio table (each column divided by the first/baseline).
 ///////////////////////////////////////////////////////////////////////////////
-inline std::string bench_fmt2(double v)
+inline bc::string bench_fmt2(double v)
 {
    std::ostringstream o;
    o << std::fixed << std::setprecision(2) << v;
-   return o.str();
+   return bc::string(o.str().c_str());
 }
 
 class report
@@ -505,10 +500,10 @@ class report
    public:
    struct row
    {
-      std::string         op;
-      std::size_t         size_exp;
-      std::size_t         n_eff;
-      std::vector<double> sec;   //one per column; sec[0] is the baseline
+      bc::string         op;
+      std::size_t        size_exp;
+      std::size_t        n_eff;
+      bc::vector<double> sec;   //one per column; sec[0] is the baseline
    };
 
    report(const char* elem_name, bool prereserve)
@@ -517,10 +512,10 @@ class report
 
    bool has_columns() const { return !cols_.empty(); }
 
-   void set_columns(const std::vector<std::string>& names) { cols_ = names; }
+   void set_columns(const bc::vector<bc::string>& names) { cols_ = names; }
 
-   void add_row(const std::string& op, std::size_t size_exp,
-                std::size_t n_eff, const std::vector<double>& sec)
+   void add_row(const bc::string& op, std::size_t size_exp,
+                std::size_t n_eff, const bc::vector<double>& sec)
    {
       row r;
       r.op = op;
@@ -533,42 +528,62 @@ class report
    void print() const
    {
       const int op_w = 30, size_w = 7, col_w = 14;
+      //The baseline column (index 0) is always 1.0, so it is not printed.
+      const int printed_cols = cols_.empty() ? 0 : static_cast<int>(cols_.size()) - 1;
+      const int line_w = op_w + size_w + col_w * printed_cols;
 
-      std::cout << "\n" << std::string(41, '=') << "\n"
+      std::cout << "\n" << bc::string(41, '=') << "\n"
                 << "element=" << elem_name_
                 << "  prereserve=" << (prereserve_ ? "1" : "0") << "\n";
       if(!cols_.empty())
          std::cout << "ratio vs '" << cols_[0] << "' (denominator), lower is faster\n";
-      std::cout << std::string(41, '=') << "\n";
+      std::cout << bc::string(41, '=') << "\n";
 
-      //Header: operation, size and one column per container.
+      //Header: operation, size and one column per container (baseline omitted).
       std::cout << std::left << std::setw(op_w) << "operation"
                 << std::right << std::setw(size_w) << "size";
-      for(std::size_t c = 0; c < cols_.size(); ++c)
+      for(std::size_t c = 1; c < cols_.size(); ++c)
          std::cout << std::setw(col_w) << cols_[c];
       std::cout << "\n";
 
-      //Data rows: the per-container ratios.
-      for(std::size_t i = 0; i < rows_.size(); ++i) {
-         const row& r = rows_[i];
-         std::ostringstream se;
-         se << "1.E" << r.size_exp;
-         std::cout << std::left << std::setw(op_w) << r.op
-                   << std::right << std::setw(size_w) << se.str();
-         const double base = r.sec.empty() ? 0.0 : r.sec[0];
-         for(std::size_t c = 0; c < r.sec.size(); ++c) {
-            const double ratio = base > 0.0 ? r.sec[c] / base : 0.0;
-            std::cout << std::setw(col_w) << bench_fmt2(ratio);
+      //Data rows, grouped per operation. After each operation's size sweep a
+      //separator and a "geomeans" line (per-column geomean across that
+      //operation's sizes) are printed, followed by a blank separating line.
+      std::size_t i = 0;
+      while(i < rows_.size()) {
+         std::size_t j = i;
+         while(j < rows_.size() && rows_[j].op == rows_[i].op) ++j;
+
+         for(std::size_t k = i; k < j; ++k) {
+            const row& r = rows_[k];
+            std::ostringstream se;
+            se << "1.E" << r.size_exp;
+            std::cout << std::left << std::setw(op_w) << r.op
+                      << std::right << std::setw(size_w) << se.str();
+            const double base = r.sec.empty() ? 0.0 : r.sec[0];
+            for(std::size_t c = 1; c < r.sec.size(); ++c) {
+               const double ratio = base > 0.0 ? r.sec[c] / base : 0.0;
+               std::cout << std::setw(col_w) << bench_fmt2(ratio);
+            }
+            std::cout << "\n";
          }
-         std::cout << "\n";
+
+         std::cout << bc::string(static_cast<bc::string::size_type>(line_w), '-') << "\n";
+         std::cout << std::left << std::setw(op_w) << "geomeans"
+                   << std::right << std::setw(size_w) << "";
+         for(std::size_t c = 1; c < cols_.size(); ++c)
+            std::cout << std::setw(col_w) << bench_fmt2(column_geomean_range(c, i, j));
+         std::cout << "\n\n";
+
+         i = j;
       }
 
-      //Footer: per-column geomean (vertical), then the general geomean over
-      //every ratio cell of the table on its own line.
-      std::cout << std::string(41, '-') << "\n";
-      std::cout << std::left << std::setw(op_w) << "geomean (ratio)"
+      //Overall footer: per-column geomean across every operation/size, then the
+      //general geomean over every ratio cell of the table on its own line.
+      std::cout << bc::string(static_cast<bc::string::size_type>(line_w), '-') << "\n";
+      std::cout << std::left << std::setw(op_w) << "geomean (all)"
                 << std::right << std::setw(size_w) << "";
-      for(std::size_t c = 0; c < cols_.size(); ++c)
+      for(std::size_t c = 1; c < cols_.size(); ++c)
          std::cout << std::setw(col_w) << bench_fmt2(column_geomean(c));
       std::cout << "\n";
       std::cout << std::left << std::setw(op_w) << "general geomean"
@@ -576,12 +591,12 @@ class report
    }
 
    private:
-   //Geomean of one container column's ratios across all rows (vertical).
-   double column_geomean(std::size_t c) const
+   //Geomean of one container column's ratios over the row range [begin, end).
+   double column_geomean_range(std::size_t c, std::size_t begin, std::size_t end) const
    {
       double      log_sum = 0.0;
       std::size_t count   = 0;
-      for(std::size_t i = 0; i < rows_.size(); ++i) {
+      for(std::size_t i = begin; i < end; ++i) {
          const row& r = rows_[i];
          if(c < r.sec.size() && !r.sec.empty() && r.sec[0] > 0.0 && r.sec[c] > 0.0) {
             log_sum += std::log(r.sec[c] / r.sec[0]);
@@ -591,7 +606,12 @@ class report
       return count ? std::exp(log_sum / double(count)) : 0.0;
    }
 
-   //Geomean over every ratio cell of the table (all rows and columns).
+   //Geomean of one container column's ratios across all rows (vertical).
+   double column_geomean(std::size_t c) const
+   {  return column_geomean_range(c, 0, rows_.size());  }
+
+   //Geomean over every ratio cell of the table (all rows, all non-baseline
+   //columns; the baseline column is excluded since it is always 1.0).
    double general_geomean() const
    {
       double      log_sum = 0.0;
@@ -600,7 +620,7 @@ class report
          const row& r = rows_[i];
          const double base = r.sec.empty() ? 0.0 : r.sec[0];
          if(base > 0.0) {
-            for(std::size_t c = 0; c < r.sec.size(); ++c) {
+            for(std::size_t c = 1; c < r.sec.size(); ++c) {
                if(r.sec[c] > 0.0) { log_sum += std::log(r.sec[c] / base); ++count; }
             }
          }
@@ -608,10 +628,10 @@ class report
       return count ? std::exp(log_sum / double(count)) : 0.0;
    }
 
-   std::string              elem_name_;
-   bool                     prereserve_;
-   std::vector<std::string> cols_;
-   std::vector<row>         rows_;
+   bc::string                 elem_name_;
+   bool                       prereserve_;
+   bc::vector<bc::string>     cols_;
+   bc::vector<row>            rows_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -675,8 +695,8 @@ class runner
 
    report&                          rep_;
    bool                             prereserve_;
-   std::vector<std::string>         names_;
-   std::vector<std::vector<double> > sec_by_size_;   //[size_index][column]
+   bc::vector<bc::string>           names_;
+   bc::vector<bc::vector<double> >  sec_by_size_;   //[size_index][column]
 };
 
 //Customization point implemented by every runner: register (with add<>()) each
@@ -714,7 +734,7 @@ void test_vectors_pass(bool prereserve)
    add_operation<IntType, emplace_near_end<IntType> >(rep, prereserve);
    #endif
    add_operation<IntType, insert_near_end_range<IntType> >(rep, prereserve);
-   add_operation<IntType, insert_near_end_repeated<IntType> >(rep, prereserve);
+   add_operation<IntType, insert_near_end_rpt<IntType> >(rep, prereserve);
 
    rep.print();
 }
