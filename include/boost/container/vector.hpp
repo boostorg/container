@@ -1938,9 +1938,13 @@ private:
    template<class ...Args>
    inline reference emplace_back(BOOST_FWD_REF(Args)...args)
    {
-      T* const p = this->priv_raw_end();
       if (BOOST_LIKELY(this->room_enough())){
-         //There is more memory, just construct a new object at the end
+         //There is more memory, just construct a new object at the end.
+         //Deriving the end pointer inside this branch (instead of before the
+         //room_enough() test, where the slow path would also use it) lets the
+         //optimizer fold 'start + size' into the store's addressing mode and
+         //keep size as the sole induction variable in append loops.
+         T* const p = this->priv_raw_end();
          allocator_traits_type::construct(this->m_holder.alloc(), p, ::boost::forward<Args>(args)...);
          ++this->m_holder.m_size;
          return *p;
@@ -1948,7 +1952,7 @@ private:
       else{
          typedef dtl::insert_emplace_proxy<allocator_type, Args...> proxy_t;
          return *this->priv_insert_forward_range_no_capacity
-            (p, 1, proxy_t(::boost::forward<Args>(args)...), alloc_version());
+            (this->priv_raw_end(), 1, proxy_t(::boost::forward<Args>(args)...), alloc_version());
       }
    }
 
@@ -2019,17 +2023,20 @@ private:
    BOOST_MOVE_TMPL_LT##N BOOST_MOVE_CLASS##N BOOST_MOVE_GT##N \
    inline reference emplace_back(BOOST_MOVE_UREF##N)\
    {\
-      T* const p = this->priv_raw_end();\
       if (BOOST_LIKELY(this->room_enough())){\
+         /*Derive the end pointer inside this branch so the optimizer can fold*/\
+         /*'start + size' into the store and keep size as the sole induction*/\
+         /*variable in append loops (the slow path recomputes it).*/\
+         T* const p = this->priv_raw_end();\
          allocator_traits_type::construct (this->m_holder.alloc()\
-            , this->priv_raw_end() BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+            , p BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
          ++this->m_holder.m_size;\
          return *p;\
       }\
       else{\
          typedef dtl::insert_emplace_proxy_arg##N<allocator_type BOOST_MOVE_I##N BOOST_MOVE_TARG##N> proxy_t;\
          return *this->priv_insert_forward_range_no_capacity\
-            ( p, 1, proxy_t(BOOST_MOVE_FWD##N), alloc_version());\
+            ( this->priv_raw_end(), 1, proxy_t(BOOST_MOVE_FWD##N), alloc_version());\
       }\
    }\
    \
@@ -3335,8 +3342,12 @@ private:
       //There is enough memory
       T* const old_finish = this->priv_raw_end();
       allocator_type & a = this->m_holder.alloc();
+      //Number of trailing elements [raw_pos, old_finish). Expressing the shift
+      //length against the end pointer (n_after - 1) lets the compiler bound and
+      //fold a near-end shift to inline moves instead of an out-of-line memmove.
+      const size_type n_after = size_type(old_finish - raw_pos);
 
-      if (old_finish == raw_pos){
+      if (!n_after){
          insert_range_proxy.uninitialized_copy_n_and_update(a, old_finish, 1);
          ++this->m_holder.m_size;
       }
@@ -3348,7 +3359,7 @@ private:
          allocator_traits_type::construct(a, old_finish, ::boost::move(*before_old_finish));
          ++this->m_holder.m_size;
          //Copy previous to last objects to the initialized end
-         boost::container::move_backward(raw_pos, before_old_finish, old_finish);
+         boost::container::move_backward_n(before_old_finish, n_after - 1u, old_finish);
          //Insert new objects in the raw_pos
          insert_range_proxy.copy_n_and_update(a, raw_pos, 1);
       }

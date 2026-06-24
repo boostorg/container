@@ -12,6 +12,10 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#ifndef LONG_BENCH
+//#define LONG_BENCH
+#endif
+
 #include <vector>
 #include <memory>    //std::allocator
 #include <boost/container/vector.hpp>
@@ -23,7 +27,9 @@ void run_containers(runner<IntType, Operation>& r)
 {
    //First registered container is the baseline (denominator).
    r.template add< std::vector<IntType, std::allocator<IntType> > >("std::vector");
-   r.template add< bc::vector<IntType, std::allocator<IntType> >  >("vector");
+   r.template add< bc::vector<IntType, std::allocator<IntType> >  >("vector(1.6x)");
+   typedef typename bc::vector_options < bc::growth_factor<bc::growth_factor_100> >::type growth_100_t;
+   r.template add< bc::vector<IntType, std::allocator<IntType>, growth_100_t> >("vector(2x)");
 }
 
 int main()
