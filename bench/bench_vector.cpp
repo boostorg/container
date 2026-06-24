@@ -35,5 +35,6 @@ void run_containers(runner<IntType, Operation>& r)
 int main()
 {
    test_vectors<int>();
+   test_vectors<MyInt>();
    return 0;
 }

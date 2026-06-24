@@ -12,7 +12,11 @@
 #define BOOST_CONTAINER_BENCH_UTILS_HPP
 
 #include <boost/move/detail/nsec_clock.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/container/detail/workaround.hpp>
+#include <algorithm>
+#include <cstddef>
+#include <cstring>
 #include <vector>
 
 volatile int bench_utils_sink = 0;
@@ -123,5 +127,111 @@ typedef boost::move_detail::cpu_timer cpu_timer;
 
 BOOST_CONTAINER_FORCEINLINE void clobber()       { BOOST_CONTAINER_BENCH_CLOBBER(); }
 BOOST_CONTAINER_FORCEINLINE void escape(void* p) { BOOST_CONTAINER_BENCH_ESCAPE(p); }
+
+///////////////////////////////////////////////////////////////////////////////
+// Shared benchmark element types.
+//
+// MyInt: a non-trivial "int wrapper" used by several benchmarks to exercise the
+// non-trivially-copyable element code paths (its user-provided copy ctor, copy
+// assignment and destructor disable the trivial memcpy/relocation fast paths),
+// as opposed to a plain int. This single definition replaces the per-benchmark
+// copies that used to define their own MyInt. A benchmark that additionally
+// wants the "trivial destructor after move" optimization can still specialize
+// boost::has_trivial_destructor_after_move<MyInt> in its own translation unit.
+///////////////////////////////////////////////////////////////////////////////
+class MyInt
+{
+   int int_;
+
+   public:
+   MyInt(int i = 0)
+      : int_(i)
+   {}
+
+   MyInt(const MyInt &other)
+      : int_(other.int_)
+   {}
+
+   MyInt & operator=(const MyInt &other)
+   {
+      int_ = other.int_;
+      return *this;
+   }
+
+   ~MyInt()
+   {
+      int_ = 0;
+   }
+
+   int int_value() const { return int_; }
+
+   friend bool operator==(const MyInt& a, const MyInt& b) { return a.int_ == b.int_; }
+   friend bool operator!=(const MyInt& a, const MyInt& b) { return a.int_ != b.int_; }
+   friend bool operator< (const MyInt& a, const MyInt& b) { return a.int_ <  b.int_; }
+   friend bool operator> (const MyInt& a, const MyInt& b) { return a.int_ >  b.int_; }
+   friend bool operator<=(const MyInt& a, const MyInt& b) { return a.int_ <= b.int_; }
+   friend bool operator>=(const MyInt& a, const MyInt& b) { return a.int_ >= b.int_; }
+};
+
+//Benchmark element. The NonTrivial boolean (chosen by the caller, true by
+//default) selects between two layouts of identical size:
+// - NonTrivial == true: a move-only element whose user-defined special members
+//   do measurable work (memset/memcpy of the payload, kept alive by a compiler
+//   barrier). It uses Boost.Move so the definition is also valid in C++03.
+// - NonTrivial == false: a trivially copyable element carrying only the payload.
+template<std::size_t Size, bool NonTrivial = true>
+struct element_t;
+
+template<std::size_t Size>
+struct element_t<Size, true>
+{
+   BOOST_MOVABLE_BUT_NOT_COPYABLE(element_t)
+
+   public:
+   element_t(int n_) : n(n_)
+   {
+      std::memset(payload, 0, sizeof(payload));
+      clobber();  //The barrier keeps previous writes as real work.
+   }
+
+   ~element_t()
+   {
+      std::memset(payload, 0, sizeof(payload));
+      clobber();  //The barrier keeps previous writes as real work.
+   }
+
+   element_t(BOOST_RV_REF(element_t) x) : n(x.n)
+   {
+      std::memcpy(payload, x.payload, sizeof(payload));
+      std::memset(x.payload, 0, sizeof(payload));
+      clobber();  //The barrier keeps previous writes as real work.
+   }
+
+   element_t& operator=(BOOST_RV_REF(element_t) x)
+   {
+      n = x.n;
+      std::memcpy(payload, x.payload, sizeof(payload));
+      std::memset(x.payload, 0, sizeof(payload));
+      clobber();  //The barrier keeps previous writes as real work.
+      return *this;
+   }
+
+   operator int() const { return n; }
+
+   int n;
+   char payload[Size - sizeof(int)];
+};
+
+template<std::size_t Size>
+struct element_t<Size, false>
+{
+   element_t(int n_) : n(n_)
+   {}
+
+   operator int() const { return n; }
+
+   int n;
+   char payload[Size - sizeof(int)];
+};
 
 #endif   //BOOST_CONTAINER_BENCH_UTILS_HPP

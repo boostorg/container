@@ -13,6 +13,10 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#ifndef LONG_BENCH
+//#define LONG_BENCH
+#endif
+
 #include <vector>
 #include <memory>    //std::allocator
 #include <boost/container/vector.hpp>
