@@ -909,8 +909,8 @@ struct block_typedefs
 //! element is erased. It is a nearly drop-in, more compact alternative to the
 //! C++26 \c std::hive.
 //!
-//! Elements are stored in \e blocks of contiguous memory, each with a fixed
-//! capacity of 64 elements. The insertion position is chosen by the container,
+//! Elements of a hub are stored in \e blocks of contiguous memory, each with a fixed
+//! element capacity. The insertion position is chosen by the container,
 //! which may reuse the memory of previously erased elements. A block with at
 //! least one element is called \e active; an empty block kept internally for
 //! future reuse is called \e reserved. Reserved blocks are not used until all
@@ -938,49 +938,49 @@ template<typename T, typename Allocator = void>
 class hub
 #else
 template<typename T, typename AllocatorOrVoid>
-class hub: hub_detail::block_typedefs<
-      typename real_allocator<T, AllocatorOrVoid>::type>::block_allocator
+class hub
+   : hub_detail::block_typedefs<typename real_allocator<T, AllocatorOrVoid>::type>::block_allocator
 #endif
 {
-#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   //A void allocator argument selects boost::container::new_allocator<T>, as in
-   //the rest of the library; from here on Allocator is the resolved allocator.
-   typedef typename real_allocator<T, AllocatorOrVoid>::type Allocator;
-#endif
+   public:
+   //! new_allocator<T> is if Allocator is void, an alias for Allocator otherwise.
+   typedef BOOST_CONTAINER_IMPDEF
+      (typename real_allocator<T BOOST_MOVE_I AllocatorOrVoid>::type)     allocator_type;
+
+private:
    static_assert(
       !std::is_const<T>::value && !std::is_volatile<T>::value && 
       !std::is_function<T>::value && !std::is_reference<T>::value && 
       !std::is_void<T>::value,
       "T must be a cv-unqualified object type");
    static_assert(
-      std::is_same<T, typename allocator_traits<Allocator>::value_type>::value,
+      std::is_same<T, typename allocator_traits<allocator_type>::value_type>::value,
       "Allocator's value_type must be the same type as T");
 
 public:
    using value_type = T;
-   using allocator_type = Allocator;
-   using pointer = typename allocator_traits<Allocator>::pointer;
-   using const_pointer = typename allocator_traits<Allocator>::const_pointer;
+   using pointer = typename allocator_traits<allocator_type>::pointer;
+   using const_pointer = typename allocator_traits<allocator_type>::const_pointer;
    using reference = T&;
    using const_reference = const T&;
-   using size_type = typename allocator_traits<Allocator>::size_type;
-   using difference_type = typename allocator_traits<Allocator>::difference_type;
+   using size_type = typename allocator_traits<allocator_type>::size_type;
+   using difference_type = typename allocator_traits<allocator_type>::difference_type;
    using iterator = hub_detail::iterator<pointer>;
    using const_iterator = hub_detail::iterator<const_pointer>;
    using reverse_iterator = std::reverse_iterator<iterator>;
    using const_reverse_iterator = std::reverse_iterator<const_iterator>; 
 
-   //! <b>Effects</b>: Constructs an empty hub, using \c Allocator() as the allocator.
+   //! <b>Effects</b>: Constructs an empty hub, using \c allocator_type() as the allocator.
    //!
-   //! <b>Requires</b>: \c Allocator is DefaultConstructible.
+   //! <b>Requires</b>: \c allocator_type is DefaultConstructible.
    //!
    //! <b>Complexity</b>: Constant.
-   hub() noexcept(noexcept(Allocator())): hub{Allocator()} {}
+   hub() noexcept(noexcept(allocator_type())): hub{allocator_type()} {}
 
    //! <b>Effects</b>: Constructs an empty hub, using the specified allocator.
    //!
    //! <b>Complexity</b>: Constant.
-   explicit hub(const Allocator& al_) noexcept: 
+   explicit hub(const allocator_type& al_) noexcept: 
       allocator_base(al_) {}
 
    //! <b>Effects</b>: Constructs a hub with n default-inserted elements, using
@@ -989,7 +989,7 @@ public:
    //! <b>Requires</b>: T is DefaultInsertable into the hub.
    //!
    //! <b>Complexity</b>: Linear in n.
-   explicit hub(size_type n, const Allocator& al_ = Allocator()): hub{al_}
+   explicit hub(size_type n, const allocator_type& al_ = allocator_type()): hub{al_}
    {
       range_insert_impl(size_type(0), n, [&, this] (T* p, size_type) {
          block_alloc_traits::construct(al(), p);
@@ -1002,7 +1002,7 @@ public:
    //! <b>Requires</b>: T is CopyInsertable into the hub.
    //!
    //! <b>Complexity</b>: Linear in n.
-   hub(size_type n, const T& x, const Allocator& al_ = Allocator()): hub{al_}
+   hub(size_type n, const T& x, const allocator_type& al_ = allocator_type()): hub{al_}
    {
       insert(n, x);
    }
@@ -1012,12 +1012,12 @@ public:
    //!
    //! <b>Complexity</b>: Linear in std::distance(first, last).
    template<
-      typename InputIterator, 
-      typename = hub_detail::enable_if_is_input_iterator_t<InputIterator>
-   >
+      typename InputIterator 
+      BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename = hub_detail::enable_if_is_input_iterator_t<InputIterator>)
+      >
    hub(
       InputIterator first, InputIterator last,
-      const Allocator& al_ = Allocator()): hub{al_}
+      const allocator_type& al_ = allocator_type()): hub{al_}
    {
       insert(first, last);
    }
@@ -1027,8 +1027,8 @@ public:
    //!   specified allocator.
    //!
    //! <b>Complexity</b>: Linear in std::ranges::distance(rg).
-   template<hub_detail::container_compatible_range<T> R>
-   hub(from_range_t, R&& rg, const Allocator& al_ = Allocator()): hub{al_}
+   template< BOOST_CONTAINER_DOC1ST(std::ranges::input_range<T>, hub_detail::container_compatible_range<T>) R >
+   hub(from_range_t, R&& rg, const allocator_type& al_ = allocator_type()): hub{al_}
    {
       insert_range(std::forward<R>(rg));
    }
@@ -1048,7 +1048,8 @@ public:
    //! <b>Requires</b>: T is CopyInsertable into the hub.
    //!
    //! <b>Complexity</b>: Linear in x.size().
-   hub(const hub& x, const hub_detail::type_identity_t<Allocator>& al_):
+   hub( const hub& x
+      , const BOOST_CONTAINER_DOC1ST(allocator_type, hub_detail::type_identity_t<allocator_type>) &al_):
       hub(x.begin(), x.end(), al_) {}
 
    //! <b>Effects</b>: Move constructor. Element blocks are moved from x into
@@ -1059,9 +1060,9 @@ public:
    //!
    //! <b>Complexity</b>: Constant.
    hub(hub&& x) noexcept:
-      hub{std::move(x), Allocator(std::move(x.al())), std::true_type{}} {}
+      hub{std::move(x), allocator_type(std::move(x.al())), std::true_type{}} {}
 
-   //! <b>Effects</b>: Allocator-extended move constructor. If alloc equals
+   //! <b>Effects</b>: allocator_type-extended move constructor. If alloc equals
    //!   x.get_allocator() the element blocks are moved (iterators/pointers to x
    //!   remain valid as members of *this); otherwise each element is moved into
    //!   *this and references, pointers and iterators to x are invalidated.
@@ -1072,15 +1073,16 @@ public:
    //!
    //! <b>Complexity</b>: Constant, or linear in x.size() if elements are moved
    //!   one by one.
-   hub(hub&& x, const hub_detail::type_identity_t<Allocator>& al_):
-      hub{std::move(x), al_, hub_detail::is_always_equal_t<Allocator>{}} {}
+   hub( hub&& x
+      , const BOOST_CONTAINER_DOC1ST(allocator_type, hub_detail::type_identity_t<allocator_type>) &al_):
+      hub{std::move(x), al_, hub_detail::is_always_equal_t<allocator_type>{}} {}
 
    //! <b>Effects</b>: Constructs a hub equal to il, using the specified allocator.
    //!
    //! <b>Requires</b>: T is CopyInsertable into the hub.
    //!
    //! <b>Complexity</b>: Linear in il.size().
-   hub(std::initializer_list<T> il, const Allocator& al_ = Allocator()):
+   hub(std::initializer_list<T> il, const allocator_type& al_ = allocator_type()):
       hub{il.begin(), il.end(), al_} {}
 
    //! <b>Effects</b>: Destroys all elements and deallocates all blocks.
@@ -1097,7 +1099,7 @@ public:
    //! <b>Complexity</b>: Linear in size() + x.size().
    hub& operator=(const hub& x)
    {
-      using pocca = hub_detail::pocca_t<Allocator>;
+      using pocca = hub_detail::pocca_t<allocator_type>;
 
       if(this != &x) {
          if(al() != x.al() && pocca::value) {
@@ -1129,17 +1131,17 @@ public:
    //!   are moved one by one.
    hub& operator=(hub&& x)
       noexcept(
-         hub_detail::pocma_t<Allocator>::value ||
-         hub_detail::is_always_equal_t<Allocator>::value)
+         hub_detail::pocma_t<allocator_type>::value ||
+         hub_detail::is_always_equal_t<allocator_type>::value)
    {
       if(this != &x) {
          move_assign(
             x, 
             std::integral_constant<
                bool,
-               hub_detail::pocma_t<Allocator>::
+               hub_detail::pocma_t<allocator_type>::
                   value ||
-               hub_detail::is_always_equal_t<Allocator>::value>{});
+               hub_detail::is_always_equal_t<allocator_type>::value>{});
       }
       return *this;
    }
@@ -1158,9 +1160,9 @@ public:
    //!
    //! <b>Complexity</b>: Linear in size() + std::distance(first, last).
    template<
-      typename InputIterator,
-      typename = hub_detail::enable_if_is_input_iterator_t<InputIterator>
-   >
+      typename InputIterator
+      BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename = hub_detail::enable_if_is_input_iterator_t<InputIterator>)
+      >
    void assign(InputIterator first, InputIterator last)
    {
       range_assign_impl(
@@ -1174,7 +1176,7 @@ public:
    //!   in the range rg.
    //!
    //! <b>Complexity</b>: Linear in size() + std::ranges::distance(rg).
-   template<hub_detail::container_compatible_range<T> R>
+   template< BOOST_CONTAINER_DOC1ST(std::ranges::input_range<T>, hub_detail::container_compatible_range<T>) R >
    void assign_range(R&& rg)
    {
       range_assign_impl(
@@ -1390,11 +1392,11 @@ public:
    //!   is dereferenced exactly once.
    //!
    //! <b>Requires</b>: T is EmplaceConstructible into the hub from
-   //!   *ranges::begin(rg) and rg does not overlap *this.
+   //!   *ranges::begin(rg) and rg does not overlap with *this.
    //!
    //! <b>Complexity</b>: Linear in the number of elements inserted; one object of
    //!   type T is constructed per element.
-   template<hub_detail::container_compatible_range<T> R>
+   template< BOOST_CONTAINER_DOC1ST(std::ranges::input_range<T>, hub_detail::container_compatible_range<T>) R >
    void insert_range(R&& rg)
    {
       range_insert_impl(
@@ -1407,13 +1409,13 @@ public:
    //!   iterator in the range is dereferenced exactly once.
    //!
    //! <b>Requires</b>: T is EmplaceConstructible into the hub from *first and
-   //!   [first, last) does not overlap *this.
+   //!   [first, last) does not overlap with *this.
    //!
    //! <b>Complexity</b>: Linear in the number of elements inserted; one object of
    //!   type T is constructed per element.
    template<
-      typename InputIterator,
-      typename = hub_detail::enable_if_is_input_iterator_t<InputIterator>
+      typename InputIterator
+      BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I typename = hub_detail::enable_if_is_input_iterator_t<InputIterator>)
    >
    void insert(InputIterator first, InputIterator last)
    {
@@ -1505,10 +1507,10 @@ public:
    //! <b>Complexity</b>: Constant.
    void swap(hub& x)
       noexcept(
-         hub_detail::pocs_t<Allocator>::value ||
-         hub_detail::is_always_equal_t<Allocator>::value)
+         hub_detail::pocs_t<allocator_type>::value ||
+         hub_detail::is_always_equal_t<allocator_type>::value)
    {
-      using pocs = hub_detail::pocs_t<Allocator>;
+      using pocs = hub_detail::pocs_t<allocator_type>;
 
       hub_detail::if_constexpr(pocs{}, [&, this]{
          hub_detail::swap_if(pocs{}, al(), x.al());
@@ -1636,7 +1638,7 @@ public:
 #pragma warning(pop) //C4127
 #endif
 
-   //! <b>Effects</b>: Returns an iterator (or const_iterator) referring to the
+   //! <b>Effects</b>: Returns an iterator referring to the
    //!   same element as p.
    //!
    //! <b>Requires</b>: p points to an element in *this.
@@ -1666,10 +1668,19 @@ public:
 #endif
    }
 
+   //! <b>Effects</b>: Returns a const_iterator referring to the
+   //!   same element as p.
+   //!
+   //! <b>Requires</b>: p points to an element in *this.
+   //!
+   //! <b>Throws</b>: Nothing.
+   //!
+   //! <b>Complexity</b>: Linear in the number of active blocks in *this.
    const_iterator get_iterator(const_pointer p) const
    {
       return const_cast<hub*>(this)->get_iterator(p);
    }
+
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 private:
    template<typename U, typename A, typename F>
@@ -1678,7 +1689,7 @@ private:
    template<typename U, typename A, typename P>
    friend typename hub<U, A>::size_type erase_if(hub<U, A>&, P);
 
-   using block_typedefs = hub_detail::block_typedefs<Allocator>;
+   using block_typedefs = hub_detail::block_typedefs<allocator_type>;
    using block_base = typename block_typedefs::block_base;
    using block_base_pointer = typename block_typedefs::block_base_pointer;
    using const_block_base_pointer = 
@@ -1690,7 +1701,7 @@ private:
    //EBO: hub derives directly from block_allocator (like dtl::vector_alloc_holder).
    using allocator_base = block_allocator;
    using block_alloc_traits = allocator_traits<block_allocator>;
-   using value_allocator = hub_detail::rebind_alloc_t<Allocator, value_type>;
+   using value_allocator = hub_detail::rebind_alloc_t<allocator_type, value_type>;
    using value_alloc_traits = allocator_traits<value_allocator>;
    using mask_type = typename block_base::mask_type;
 
@@ -1710,7 +1721,7 @@ private:
    };
 
    hub(
-      hub&& x, const Allocator& al_, std::true_type /* equal allocs */) noexcept:
+      hub&& x, const allocator_type& al_, std::true_type /* equal allocs */) noexcept:
       allocator_base(al_), blist{std::move(x.blist)},
       num_blocks{x.num_blocks}, size_{x.size_}
    {
@@ -1719,7 +1730,7 @@ private:
    }
 
    hub(
-      hub&& x, const Allocator& al_, std::false_type /* maybe unequal allocs */):
+      hub&& x, const allocator_type& al_, std::false_type /* maybe unequal allocs */):
       hub{al_}
    {
       if(al() == x.al()) {
@@ -1740,7 +1751,7 @@ private:
    void move_assign(hub& x, std::true_type /* transfer structure */)
    {
       using pocma =
-         hub_detail::pocma_t<Allocator>;
+         hub_detail::pocma_t<allocator_type>;
 
       reset();
       hub_detail::move_assign_if(pocma{}, al(), x.al());
@@ -1991,7 +2002,7 @@ private:
    {
       //transfer to a buffer, sort and transfer back
       if(size_ > 1) {
-         hub_detail::buffer<T,Allocator> buf(size_, al());
+         hub_detail::buffer<T,allocator_type> buf(size_, al());
          if(!buf.data) return false;
 
          container::for_each(*this, [&] (value_type& x) {
@@ -2160,6 +2171,7 @@ private:
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
 #if !defined(BOOST_NO_CXX17_DEDUCTION_GUIDES)
+
 template<typename InputIterator>
 hub(InputIterator, InputIterator)
    -> hub<typename std::iterator_traits<InputIterator>::value_type>;
@@ -2173,19 +2185,18 @@ hub(InputIterator, InputIterator, Allocator)
 //guide is only needed to deduce a user-supplied allocator, since the resolved
 //in-class allocator type is a non-deduced context.
 template<typename T, typename Allocator>
-hub(std::initializer_list<T>, Allocator)
-   -> hub<T, Allocator>;
+hub(std::initializer_list<T>, Allocator) -> hub<T, Allocator>;
 
 #if !defined(BOOST_CONTAINER_HUB_NO_RANGES)
 template<hub_detail::input_range_like R>
-hub(from_range_t, R&&)
-   -> hub<hub_detail::range_value_t<R> >;
+hub(from_range_t, R&&) -> hub<hub_detail::range_value_t<R> >;
 
 template<hub_detail::input_range_like R, typename Allocator>
-hub(from_range_t, R&&, Allocator)
-   -> hub<hub_detail::range_value_t<R>, Allocator>;
-#endif
-#endif
+hub(from_range_t, R&&, Allocator) -> hub<hub_detail::range_value_t<R>, Allocator>;
+
+#endif   //BOOST_CONTAINER_HUB_NO_RANGES
+
+#endif   //BOOST_NO_CXX17_DEDUCTION_GUIDES
 
 #endif   //BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -2254,10 +2265,10 @@ erase_if(hub<T, Allocator>& x, Predicate pred)
 //!
 //! <b>Note</b>: Potentially faster than the equivalent loop thanks to internal
 //!   unrolling and prefetching.
-template<typename ValuePtr, typename F>
+template< BOOST_CONTAINER_DOC1ST(class ImplDefinedHubIterator, typename ValuePtr), typename F>
 BOOST_CONTAINER_FORCEINLINE F for_each
-   ( BOOST_CONTAINER_DOC1ST(HubIteratorType, hub_detail::iterator<ValuePtr>) first
-   , BOOST_CONTAINER_DOC1ST(HubIteratorType, hub_detail::iterator<ValuePtr>) last
+   ( BOOST_CONTAINER_DOC1ST(ImplDefinedHubIterator, hub_detail::iterator<ValuePtr>) first
+   , BOOST_CONTAINER_DOC1ST(ImplDefinedHubIterator, hub_detail::iterator<ValuePtr>) last
    , F f)
 {
    container::for_each_while(
@@ -2308,11 +2319,11 @@ BOOST_CONTAINER_FORCEINLINE F for_each(const hub<T, Allocator>& x, F f)
 //!
 //! <b>Note</b>: Potentially faster than the equivalent loop thanks to internal
 //!   unrolling and prefetching.
-template<typename ValuePtr, typename F>
-std::pair<BOOST_CONTAINER_DOC1ST(HubIteratorType, hub_detail::iterator<ValuePtr>) , F>
+template< BOOST_CONTAINER_DOC1ST(class ImplDefinedHubIterator, typename ValuePtr), typename F>
+std::pair<BOOST_CONTAINER_DOC1ST(ImplDefinedHubIterator, hub_detail::iterator<ValuePtr>), F>
    for_each_while
-   ( BOOST_CONTAINER_DOC1ST(HubIteratorType, hub_detail::iterator<ValuePtr>) first
-   , BOOST_CONTAINER_DOC1ST(HubIteratorType, hub_detail::iterator<ValuePtr>) last
+   ( BOOST_CONTAINER_DOC1ST(ImplDefinedHubIterator, hub_detail::iterator<ValuePtr>) first
+   , BOOST_CONTAINER_DOC1ST(ImplDefinedHubIterator, hub_detail::iterator<ValuePtr>) last
    , F f)
 {
    using iterator = hub_detail::iterator<ValuePtr>;
