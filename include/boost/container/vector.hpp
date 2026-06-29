@@ -836,7 +836,7 @@ public:
    typedef T                                                                           value_type;
    typedef BOOST_CONTAINER_IMPDEF
       (typename real_allocator<T BOOST_MOVE_I A>::type)                                allocator_type;
-   typedef boost::container::allocator_traits<allocator_type>                        allocator_traits_t;
+   typedef boost::container::allocator_traits<allocator_type>                          allocator_traits_t;
    typedef typename   allocator_traits<allocator_type>::pointer                        pointer;
    typedef typename   allocator_traits<allocator_type>::const_pointer                  const_pointer;
    typedef typename   allocator_traits<allocator_type>::reference                      reference;
