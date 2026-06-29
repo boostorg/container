@@ -220,62 +220,9 @@ BOOST_CONTAINER_FORCEINLINE void resume_timing()
 #include "plf_hive.h"
 #endif
 
-//Benchmark element. The NonTrivial boolean (chosen by Config::nontrivial_element,
-//true by default) selects between two layouts of identical size:
-// - NonTrivial == true: user-defined special members do measurable work
-//   (memset/memcpy of the payload, kept alive by a compiler barrier).
-// - NonTrivial == false: a trivially copyable element carrying only the payload.
-template<std::size_t Size, bool NonTrivial = true>
-struct element_t;
-
-template<std::size_t Size>
-struct element_t<Size, true>
-{
-   element_t(int n_) : n{ n_ }
-   {
-      std::memset(payload, 0, sizeof(payload));
-      clobber();  //The barrier keeps previous writes as real work.
-   }
-
-   ~element_t()
-   {
-      std::memset(payload, 0, sizeof(payload));
-      clobber();  //The barrier keeps previous writes as real work.
-   }
-
-   element_t(element_t&& x) : n{x.n}
-   {
-      std::memcpy(payload, x.payload, sizeof(payload));
-      std::memset(x.payload, 0, sizeof(payload));
-      clobber();  //The barrier keeps previous writes as real work.
-   }
-
-   element_t& operator=(element_t&& x)
-   {
-      n = x.n;
-      std::memcpy(payload, x.payload, sizeof(payload));
-      std::memset(x.payload, 0, sizeof(payload));
-      clobber();  //The barrier keeps previous writes as real work.
-      return *this;
-   }
-
-   operator int() const { return n; }
-
-   int n;
-   char payload[Size - sizeof(int)];
-};
-
-template<std::size_t Size>
-struct element_t<Size, false>
-{
-   element_t(int n_) : n{ n_ }
-   {}
-
-   operator int() const { return n; }
-
-   int n;
-   char payload[Size - sizeof(int)];
-};
+//Benchmark element (element_t<Size, NonTrivial>) is defined in bench_utils.hpp
+//so it can be shared across benchmarks. The NonTrivial boolean is chosen here
+//by Config::nontrivial_element (true by default).
 
 struct urbg
 {
