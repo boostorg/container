@@ -793,7 +793,7 @@ class stable_vector
    //! <b>Postcondition</b>: x == *this.
    //!
    //! <b>Complexity</b>: Linear to the elements x contains.
-   stable_vector(const stable_vector& x, const allocator_type &a)
+   stable_vector(const stable_vector& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : internal_data(a), index(a)
    {
       stable_vector_detail::clear_on_destroy<stable_vector> cod(*this);
@@ -808,7 +808,7 @@ class stable_vector
    //! <b>Throws</b>: If allocator_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise
-   stable_vector(BOOST_RV_REF(stable_vector) x, const allocator_type &a)
+   stable_vector(BOOST_RV_REF(stable_vector) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : internal_data(a), index(a)
    {
       if(this->priv_node_alloc() == x.priv_node_alloc()){

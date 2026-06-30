@@ -252,7 +252,7 @@ class deque : public deque_impl<T, Allocator, false, Options>
    //!   throws or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to the elements x contains.
-   deque(const deque& x, const allocator_type &a)
+   deque(const deque& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : base_type(x, a)
    {}
 
@@ -263,7 +263,7 @@ class deque : public deque_impl<T, Allocator, false, Options>
    //! <b>Throws</b>: If allocation or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
-   deque(BOOST_RV_REF(deque) x, const allocator_type &a)
+   deque(BOOST_RV_REF(deque) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : base_type(boost::move(static_cast<base_type&>(x)), a)
    {}
 

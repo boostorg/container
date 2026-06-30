@@ -1243,7 +1243,7 @@ class nest
    //! <b>Throws</b>: If allocator_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to the elements x contains.
-   nest(const nest& x, const allocator_type& a)
+   nest(const nest& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type)& a)
       : allocator_base(block_allocator(a))
       , blist()
       , num_blocks(0)
@@ -1258,7 +1258,7 @@ class nest
    //! <b>Throws</b>: If allocation or value_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
-   nest(BOOST_RV_REF(nest) x, const allocator_type& a)
+   nest(BOOST_RV_REF(nest) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type)& a)
       : allocator_base(block_allocator(a))
       , blist()
       , num_blocks(0)

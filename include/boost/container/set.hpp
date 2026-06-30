@@ -343,7 +343,7 @@ class set
    //! <b>Effects</b>: Copy constructs a set using the specified allocator.
    //!
    //! <b>Complexity</b>: Linear in x.size().
-   inline set(const set& x, const allocator_type &a)
+   inline set(const set& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : base_t(static_cast<const base_t&>(x), a)
    {}
 
@@ -351,7 +351,7 @@ class set
    //!                 Constructs *this using x's resources.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
-   inline set(BOOST_RV_REF(set) x, const allocator_type &a)
+   inline set(BOOST_RV_REF(set) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {}
 
@@ -1320,12 +1320,12 @@ class multiset
    {}
 
    //! @copydoc ::boost::container::set::set(const set &, const allocator_type &)
-   inline multiset(const multiset& x, const allocator_type &a)
+   inline multiset(const multiset& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : base_t(static_cast<const base_t&>(x), a)
    {}
 
    //! @copydoc ::boost::container::set::set(set &&, const allocator_type &)
-   inline multiset(BOOST_RV_REF(multiset) x, const allocator_type &a)
+   inline multiset(BOOST_RV_REF(multiset) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {}
 

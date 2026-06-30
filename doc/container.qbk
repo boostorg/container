@@ -2845,6 +2845,9 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
 * Added `unchecked_emplace_back` and `unchecked_push_back` to [classref boost::container::vector vector],
    [classref boost::container::static_vector static_vector] and [classref boost::container::small_vector small_vector].
 
+* Implemented C++23 [@https://wg21.link/P1518 P1518] change, modified allocator-extended constructors for all containers.
+  so that the deduction guides for containers are not overconstrained.
+
 [endsect]
 
 [section:release_notes_boost_1_91_00 Boost 1.91 Release]

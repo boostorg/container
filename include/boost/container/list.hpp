@@ -247,7 +247,7 @@ class list
    //! <b>Throws</b>: If allocator_type's default constructor or copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to the elements x contains.
-   list(const list& x, const allocator_type &a)
+   list(const list& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : AllocHolder(a)
    {  this->insert(this->cbegin(), x.begin(), x.end());   }
 
@@ -257,7 +257,7 @@ class list
    //! <b>Throws</b>: If allocation or value_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
-   list(BOOST_RV_REF(list) x, const allocator_type &a)
+   list(BOOST_RV_REF(list) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : AllocHolder(a)
    {
       if(this->node_alloc() == x.node_alloc()){

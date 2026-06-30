@@ -779,7 +779,7 @@ class basic_string
    //! <b>Postcondition</b>: x == *this.
    //!
    //! <b>Throws</b>: If allocation throws.
-   basic_string(const basic_string& s, const allocator_type &a)
+   basic_string(const basic_string& s, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       :  base_t(a)
    {
       this->priv_terminate_string();
@@ -792,7 +792,7 @@ class basic_string
    //! <b>Throws</b>: If allocation throws.
    //!
    //! <b>Complexity</b>: Constant if a == s.get_allocator(), linear otherwise.
-   basic_string(BOOST_RV_REF(basic_string) s, const allocator_type &a)
+   basic_string(BOOST_RV_REF(basic_string) s, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : base_t(a)
    {
       this->priv_terminate_string();

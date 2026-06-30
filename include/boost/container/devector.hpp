@@ -425,7 +425,7 @@ class devector
    *
    * **Complexity**: Linear in the size of `x`.
    */
-   devector(const devector& x, const allocator_type& allocator)
+   devector(const devector& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type)& allocator)
       : m_(reserve_uninitialized_t(), allocator, x.size())
    {
       this->construct_from_range(x.begin(), x.end());
@@ -463,7 +463,7 @@ class devector
    *
    * **Complexity**: Linear if allocator != rhs.get_allocator(), otherwise constant.
    */
-   devector(BOOST_RV_REF(devector) rhs, const allocator_type& allocator)
+   devector(BOOST_RV_REF(devector) rhs, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type)& allocator)
       : m_(review_implementation_t(), allocator, rhs.m_.buffer, rhs.m_.front_idx, rhs.m_.back_idx, rhs.m_.capacity)
    {
       // TODO should move elems-by-elems if the two allocators differ

@@ -243,7 +243,7 @@ class segtor : public deque_impl<T, Allocator, true, Options>
    //!   throws or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to the elements x contains.
-   segtor(const segtor& x, const allocator_type& a)
+   segtor(const segtor& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type)& a)
       : base_type(x, a)
    {}
 
@@ -254,7 +254,7 @@ class segtor : public deque_impl<T, Allocator, true, Options>
    //! <b>Throws</b>: If allocation or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
-   segtor(BOOST_RV_REF(segtor) x, const allocator_type& a)
+   segtor(BOOST_RV_REF(segtor) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type)& a)
       : base_type(boost::move(static_cast<base_type&>(x)), a)
    {}
 

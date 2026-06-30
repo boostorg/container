@@ -371,7 +371,7 @@ class map
    //! <b>Effects</b>: Copy constructs a map using the specified allocator.
    //!
    //! <b>Complexity</b>: Linear in x.size().
-   inline map(const map& x, const allocator_type &a)
+   inline map(const map& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : base_t(static_cast<const base_t&>(x), a)
    {}
 
@@ -381,7 +381,7 @@ class map
    //! <b>Complexity</b>: Constant if x == x.get_allocator(), linear otherwise.
    //!
    //! <b>Postcondition</b>: x is emptied.
-   inline map(BOOST_RV_REF(map) x, const allocator_type &a)
+   inline map(BOOST_RV_REF(map) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {}
 
@@ -1885,7 +1885,7 @@ class multimap
    //! <b>Effects</b>: Copy constructs a multimap.
    //!
    //! <b>Complexity</b>: Linear in x.size().
-   inline multimap(const multimap& x, const allocator_type &a)
+   inline multimap(const multimap& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : base_t(static_cast<const base_t&>(x), a)
    {}
 
@@ -1894,7 +1894,7 @@ class multimap
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    //!
    //! <b>Postcondition</b>: x is emptied.
-   inline multimap(BOOST_RV_REF(multimap) x, const allocator_type &a)
+   inline multimap(BOOST_RV_REF(multimap) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {}
 

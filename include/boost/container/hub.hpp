@@ -754,12 +754,6 @@ struct nodtor_deleter<T[]>
 template<typename T>
 using nodtor_unique_ptr = boost::movelib::unique_ptr<T, nodtor_deleter<T>>;
 
-template<typename T>
-struct type_identity { using type = T; };
-
-template<typename T>
-using type_identity_t = typename type_identity<T>::type;
-
 #if !defined(BOOST_CONTAINER_HUB_NO_RANGES)
 //begin()/end() access (without <ranges> or std::begin/std::end) lives in
 //boost::container::dtl::adl_range (range_utils.hpp); reuse it here.
@@ -1049,7 +1043,7 @@ public:
    //!
    //! <b>Complexity</b>: Linear in x.size().
    hub( const hub& x
-      , const BOOST_CONTAINER_DOC1ST(allocator_type, hub_detail::type_identity_t<allocator_type>) &al_):
+      , const BOOST_CONTAINER_DOC1ST(allocator_type, dtl::type_identity_t<allocator_type>) &al_):
       hub(x.begin(), x.end(), al_) {}
 
    //! <b>Effects</b>: Move constructor. Element blocks are moved from x into
@@ -1074,7 +1068,7 @@ public:
    //! <b>Complexity</b>: Constant, or linear in x.size() if elements are moved
    //!   one by one.
    hub( hub&& x
-      , const BOOST_CONTAINER_DOC1ST(allocator_type, hub_detail::type_identity_t<allocator_type>) &al_):
+      , const BOOST_CONTAINER_DOC1ST(allocator_type, dtl::type_identity_t<allocator_type>) &al_):
       hub{std::move(x), al_, hub_detail::is_always_equal_t<allocator_type>{}} {}
 
    //! <b>Effects</b>: Constructs a hub equal to il, using the specified allocator.

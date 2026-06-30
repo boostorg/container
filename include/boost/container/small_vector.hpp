@@ -959,7 +959,7 @@ class small_vector
    //! <b>Throws</b>: If allocation throws or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to other.size().
-   inline small_vector(const small_vector &other, const allocator_type &a)
+   inline small_vector(const small_vector &other, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : base_type(initial_capacity_t(), internal_capacity(), a)
    {  this->assign(other.cbegin(), other.cend());  }
 
@@ -1003,7 +1003,7 @@ class small_vector
    //! <b>Throws</b>: If allocation throws or T's move constructor throws.
    //!
    //! <b>Complexity</b>: Constant if the storage can be transferred, linear to other.size() otherwise.
-   inline small_vector(BOOST_RV_REF(small_vector) other, const allocator_type &a)
+   inline small_vector(BOOST_RV_REF(small_vector) other, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : base_type(initial_capacity_t(), internal_capacity(), a, other)
    {}
 

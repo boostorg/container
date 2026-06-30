@@ -1407,7 +1407,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       :  Base(BOOST_MOVE_BASE(Base, x))
    {  this->swap_members(x);   }
 
-   deque_impl(const deque_impl& x, const allocator_type &a)
+   deque_impl(const deque_impl& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       :  Base(a)
    {
       if(x.size()){
@@ -1416,7 +1416,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       }
    }
 
-   deque_impl(BOOST_RV_REF(deque_impl) x, const allocator_type &a)
+   deque_impl(BOOST_RV_REF(deque_impl) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       :  Base(a)
    {
       if(x.alloc() == a){

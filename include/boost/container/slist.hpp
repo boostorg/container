@@ -299,7 +299,7 @@ class slist
    //! <b>Throws</b>: If allocator_type's default constructor
    //!
    //! <b>Complexity</b>: Linear to the elements x contains.
-   slist(const slist& x, const allocator_type &a)
+   slist(const slist& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : AllocHolder(a)
    { this->insert_after(this->cbefore_begin(), x.begin(), x.end()); }
 
@@ -309,7 +309,7 @@ class slist
    //! <b>Throws</b>: If allocation or value_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
-   slist(BOOST_RV_REF(slist) x, const allocator_type &a)
+   slist(BOOST_RV_REF(slist) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : AllocHolder(a)
    {
       slist & sr = x;

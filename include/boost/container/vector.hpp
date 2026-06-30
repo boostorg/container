@@ -1196,7 +1196,7 @@ private:
    //!   throws or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Linear to the elements x contains.
-   vector(const vector &x, const allocator_type &a)
+   vector(const vector &x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       :  m_holder(vector_uninitialized_size, a, x.size())
    {
       #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
@@ -1214,7 +1214,7 @@ private:
    //! <b>Throws</b>: If allocation or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
-   vector(BOOST_RV_REF(vector) x, const allocator_type &a)
+   vector(BOOST_RV_REF(vector) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       :  m_holder( vector_uninitialized_size, a
                  //In this allocator move constructor the allocator won't be propagated --v
                  , is_propagable_from<false>(x.get_stored_allocator(), x.m_holder.start(), a) ? 0 : x.size()

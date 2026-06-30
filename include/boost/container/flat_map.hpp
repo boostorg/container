@@ -503,7 +503,7 @@ class flat_map
    //! <b>Effects</b>: Copy constructs a flat_map using the specified allocator.
    //!
    //! <b>Complexity</b>: Linear in x.size().
-   inline flat_map(const flat_map& x, const allocator_type &a)
+   inline flat_map(const flat_map& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : m_flat_tree(x.m_flat_tree, BOOST_CONTAINER_FORCE(const impl_allocator_type, a))
    {}
 
@@ -511,7 +511,7 @@ class flat_map
    //!   Constructs *this using x's resources.
    //!
    //! <b>Complexity</b>: Constant if x.get_allocator() == a, linear otherwise.
-   inline flat_map(BOOST_RV_REF(flat_map) x, const allocator_type &a)
+   inline flat_map(BOOST_RV_REF(flat_map) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : m_flat_tree(boost::move(x.m_flat_tree), BOOST_CONTAINER_FORCE(const impl_allocator_type, a))
    {}
 
@@ -2384,7 +2384,7 @@ class flat_multimap
    //!
    //! <b>Complexity</b>: Linear in x.size().
    inline
-   flat_multimap(const flat_multimap& x, const allocator_type &a)
+   flat_multimap(const flat_multimap& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : m_flat_tree(x.m_flat_tree, BOOST_CONTAINER_FORCE(const impl_allocator_type, a))
    {}
 
@@ -2393,7 +2393,7 @@ class flat_multimap
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    inline
-   flat_multimap(BOOST_RV_REF(flat_multimap) x, const allocator_type &a)
+   flat_multimap(BOOST_RV_REF(flat_multimap) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : m_flat_tree(boost::move(x.m_flat_tree), BOOST_CONTAINER_FORCE(const impl_allocator_type, a))
    {}
 

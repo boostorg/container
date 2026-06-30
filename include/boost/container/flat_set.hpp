@@ -374,7 +374,7 @@ class flat_set
    //! <b>Effects</b>: Copy constructs a container using the specified allocator.
    //!
    //! <b>Complexity</b>: Linear in x.size().
-   inline flat_set(const flat_set& x, const allocator_type &a)
+   inline flat_set(const flat_set& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : tree_t(static_cast<const tree_t&>(x), a)
    {}
 
@@ -382,7 +382,7 @@ class flat_set
    //!                 Constructs *this using x's resources.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise
-   inline flat_set(BOOST_RV_REF(flat_set) x, const allocator_type &a)
+   inline flat_set(BOOST_RV_REF(flat_set) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : tree_t(BOOST_MOVE_BASE(tree_t, x), a)
    {}
 
@@ -1526,12 +1526,12 @@ class flat_multiset
    {}
 
    //! @copydoc ::boost::container::flat_set::flat_set(const flat_set &, const allocator_type &)
-   inline flat_multiset(const flat_multiset& x, const allocator_type &a)
+   inline flat_multiset(const flat_multiset& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : tree_t(static_cast<const tree_t&>(x), a)
    {}
 
    //! @copydoc ::boost::container::flat_set::flat_set(flat_set &&, const allocator_type &)
-   inline flat_multiset(BOOST_RV_REF(flat_multiset) x, const allocator_type &a)
+   inline flat_multiset(BOOST_RV_REF(flat_multiset) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : tree_t(BOOST_MOVE_BASE(tree_t, x), a)
    {}
 
