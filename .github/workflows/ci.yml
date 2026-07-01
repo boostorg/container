@@ -443,9 +443,9 @@ jobs:
             install: g++
           # Linux, ARM64 Clang
           - toolset: clang
-            cxxstd: "03,11,14,17,20,23,26"
+            cxxstd: "03,11,14,17,20,2b"
             cxxflags: -pipe
-            os: ubuntu-26.04-arm
+            os: ubuntu-24.04-arm
             install:
               - clang
               - g++
