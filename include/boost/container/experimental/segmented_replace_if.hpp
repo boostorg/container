@@ -31,42 +31,6 @@ void segmented_replace_if(FwdIt first, Sent last, Pred pred, const T& BOOST_REST
 
 namespace detail_algo {
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-
-template <class RAIter, class Pred, class T>
-BOOST_CONTAINER_FORCEINLINE
-void segmented_replace_if_dispatch
-   (RAIter first, RAIter last, Pred pred, const T& BOOST_RESTRICT new_val
-   , const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
-{
-   typedef typename iterator_traits<RAIter>::difference_type difference_type;
-   difference_type n = last - first;
-
-   while(n >= difference_type(4)) {
-      if(pred(*first)) { *first = new_val; } ++first;
-      if(pred(*first)) { *first = new_val; } ++first;
-      if(pred(*first)) { *first = new_val; } ++first;
-      if(pred(*first)) { *first = new_val; } ++first;
-      n -= 4;
-   }
-
-   switch(n) {
-      case 3:
-         if(pred(*first)) { *first = new_val; } ++first;
-         BOOST_FALLTHROUGH;
-      case 2:
-         if(pred(*first)) { *first = new_val; } ++first;
-         BOOST_FALLTHROUGH;
-      case 1:
-         if(pred(*first)) { *first = new_val; }
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-}
-
-#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
-
 template <class FwdIt, class Sent, class Pred, class T, class Tag, class Cat>
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, FwdIt>::value>::type

@@ -53,67 +53,6 @@ namespace detail_algo {
 // per-segment basis.
 //////////////////////////////////////////////////////////////////////////////
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-
-// Unrolled fast path for random-access source 1 and source 2.  Each main-loop
-// iteration commits to four unrolled merge steps once we know both sources
-// have at least 4 elements left, amortising both source-boundary checks
-// across the batch.  The destination check stays inside each step; when
-// dst_last is unreachable_sentinel_t it folds to a compile-time false and
-// the compiler eliminates the branch, recovering the same code as a fully
-// unbounded loop.  After the main loop, a count-based tail finishes the
-// remaining < 4 elements on the smaller source.
-template <class RAIter1, class RAIter2, class DstIter, class DstSent, class Comp>
-BOOST_CONTAINER_FORCEINLINE
-typename iterator_enable_if_tag
-   <RAIter2, std::random_access_iterator_tag,
-      segtrio<RAIter1, RAIter2, DstIter>
-   >::type
-merge_dst_bounded
-   (RAIter1 first1, RAIter1 last1, RAIter2 first2, RAIter2 last2,
-    DstIter dst_first, DstSent dst_last, Comp comp,
-    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
-{
-   typedef typename iterator_traits<RAIter1>::difference_type sd1_t;
-   typedef typename iterator_traits<RAIter2>::difference_type sd2_t;
-
-   sd1_t n1 = last1 - first1;
-   sd2_t n2 = last2 - first2;
-
-   while(n1 >= sd1_t(4) && n2 >= sd2_t(4)) {
-      if(dst_first == dst_last) goto out_path;
-      if(comp(*first2, *first1)) { *dst_first = *first2; ++first2; --n2; }
-      else                       { *dst_first = *first1; ++first1; --n1; }
-      ++dst_first;
-
-      if(dst_first == dst_last) goto out_path;
-      if(comp(*first2, *first1)) { *dst_first = *first2; ++first2; --n2; }
-      else                       { *dst_first = *first1; ++first1; --n1; }
-      ++dst_first;
-
-      if(dst_first == dst_last) goto out_path;
-      if(comp(*first2, *first1)) { *dst_first = *first2; ++first2; --n2; }
-      else                       { *dst_first = *first1; ++first1; --n1; }
-      ++dst_first;
-
-      if(dst_first == dst_last) goto out_path;
-      if(comp(*first2, *first1)) { *dst_first = *first2; ++first2; --n2; }
-      else                       { *dst_first = *first1; ++first1; --n1; }
-      ++dst_first;
-   }
-
-   while(n1 > sd1_t(0) && n2 > sd2_t(0) && dst_first != dst_last) {
-      if(comp(*first2, *first1)) { *dst_first = *first2; ++first2; --n2; }
-      else                       { *dst_first = *first1; ++first1; --n1; }
-      ++dst_first;
-   }
-
-   out_path:
-   return segtrio<RAIter1, RAIter2, DstIter>(first1, first2, dst_first);
-}
-
-#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
-
 template <class Iter1, class Sent1, class Iter2, class Sent2, class DstIter, class DstSent,
           class Comp, class DstTag, class SrcCat>
 BOOST_CONTAINER_FORCEINLINE

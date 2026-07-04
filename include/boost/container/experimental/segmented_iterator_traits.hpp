@@ -326,24 +326,6 @@ struct deepest_local_iterator
 
 #include <boost/container/detail/config_end.hpp>
 
-//#define BOOST_CONTAINER_ENABLE_SEGMENTED_LOOP_UNROLLING
-#define BOOST_CONTAINER_DISABLE_SEGMENTED_LOOP_UNROLLING
-
-#if defined(BOOST_CONTAINER_ENABLE_SEGMENTED_LOOP_UNROLLING) && defined(BOOST_CONTAINER_DISABLE_SEGMENTED_LOOP_UNROLLING)
-   #error "Cannot define both BOOST_CONTAINER_ENABLE_SEGMENTED_LOOP_UNROLLING and BOOST_CONTAINER_DISABLE_SEGMENTED_LOOP_UNROLLING"
-#elif !defined(BOOST_CONTAINER_ENABLE_SEGMENTED_LOOP_UNROLLING) && !defined(BOOST_CONTAINER_DISABLE_SEGMENTED_LOOP_UNROLLING)
-   //Disable loop unrolling for clang, which generates suboptimal code in some case as clang auto-vectorizes
-   //loops more aggressively than other compilers, and loop unrolling can interfere with this optimization.
-   #if !defined(BOOST_CLANG)
-      #define BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
-   #endif
-#elif defined(BOOST_CONTAINER_ENABLE_SEGMENTED_LOOP_UNROLLING)
-   //Force loop unrolling
-   #define BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
-#else //defined(BOOST_CONTAINER_DISABLE_SEGMENTED_LOOP_UNROLLING)
-   // Force no loop unrolling
-#endif
-
 //////////////////////////////////////////////////////////////////////////////
 // BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO
 //
@@ -357,17 +339,6 @@ struct deepest_local_iterator
 //////////////////////////////////////////////////////////////////////////////
 
 //#define BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO
-
-// When defined, segmented algorithms that have a dual random-access fast path
-// (e.g. segmented_copy_if_dst_bounded) will not attempt to detect whether the
-// remaining source range fits the destination capacity and will always take the
-// fast path when both iterators are random-access.  This is useful for benchmarking
-// the advantage of the dual-RA optimisation in isolation.
-//
-//#define BOOST_CONTAINER_SEGMENTED_DISABLE_DUAL_RA_OPTIMIZATION
-#if !defined(BOOST_CONTAINER_SEGMENTED_DISABLE_DUAL_RA_OPTIMIZATION)
-#define BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION
-#endif
 
 // When defined, segmented algorithms that count elements (e.g. segmented_count,
 // segmented_count_if) will use a branchless counting strategy in their
@@ -405,6 +376,5 @@ struct deepest_local_iterator
 #else
 #error "Must define either BOOST_CONTAINER_SEGMENTED_ENABLE_PRAGMA_UNROLL or BOOST_CONTAINER_SEGMENTED_DISABLE_PRAGMA_UNROLL"
 #endif
-
 
 #endif // BOOST_CONTAINER_EXPERIMENTAL_SEGMENTED_ITERATOR_TRAITS_HPP

@@ -32,42 +32,6 @@ F segmented_for_each(InpIter first, Sent last, F f);
 
 namespace detail_algo {
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-
-template <class RAIter, class F>
-BOOST_CONTAINER_FORCEINLINE
-F segmented_for_each_dispatch
-   (RAIter first, RAIter last, F f, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
-{
-   typedef typename iterator_traits<RAIter>::difference_type difference_type;
-
-   difference_type n = last - first;
-   while(n >= difference_type(4)) {
-      f(*first); ++first;
-      f(*first); ++first;
-      f(*first); ++first;
-      f(*first); ++first;
-      n -= 4;
-   }
-
-   switch(n) {
-      case 3:
-         f(*first); ++first;
-         BOOST_FALLTHROUGH;
-      case 2:
-         f(*first); ++first;
-         BOOST_FALLTHROUGH;
-      case 1:
-         f(*first);
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-   return f;
-}
-
-#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
-
 template <class InpIter, class Sent, class F, class Tag, class Cat>
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, InpIter>::value, F>::type

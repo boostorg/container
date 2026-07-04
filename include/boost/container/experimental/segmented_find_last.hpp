@@ -63,59 +63,6 @@ BidirIt find_last_scan(BidirIt first, BidirIt last, const T& value,
    return last;
 }
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-
-template <class RAIter, class T>
-BOOST_CONTAINER_FORCEINLINE
-RAIter find_last_scan(RAIter first, RAIter const last, const T& value,
-                      non_segmented_iterator_tag, const std::random_access_iterator_tag&)
-{
-   typedef typename iterator_traits<RAIter>::difference_type difference_type;
-
-   RAIter cur = last;
-   difference_type n = cur - first;
-   while (n >= difference_type(4)) {
-      --cur;
-      if (*cur == value)
-         goto found;
-      --cur;
-      if (*cur == value)
-         goto found;
-      --cur;
-      if (*cur == value)
-         goto found;
-      --cur;
-      if (*cur == value)
-         goto found;
-      n -= 4;
-   }
-
-   switch(n) {
-      case 3:
-         --cur;
-         if (*cur == value)
-            goto found;
-         BOOST_FALLTHROUGH;
-      case 2:
-         --cur;
-         if (*cur == value)
-            goto found;
-         BOOST_FALLTHROUGH;
-      case 1:
-         --cur;
-         if (*cur == value)
-            goto found;
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-   return last;
-   found:
-   return cur;
-}
-
-#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
-
 //////////////////////////////////////////////
 // Segmented forward scan
 //////////////////////////////////////////////

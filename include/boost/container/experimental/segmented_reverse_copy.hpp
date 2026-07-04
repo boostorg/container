@@ -41,58 +41,6 @@ namespace detail_algo {
 // is optimised away, giving the same code as an unbounded loop.
 //////////////////////////////////////////////////////////////////////////////
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-
-template <class RAIter, class DstIter, class DstSent>
-BOOST_CONTAINER_FORCEINLINE segduo<RAIter, DstIter> segmented_reverse_copy_dst_bounded
-   (RAIter first, RAIter last, DstIter dst_first, DstSent dst_last,
-    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
-{
-   typedef typename iterator_traits<RAIter>::difference_type difference_type;
-
-   difference_type n = last - first;
-
-   while(n >= difference_type(4)) {
-      if(dst_first == dst_last)
-         goto out_path;
-      --last; *dst_first = *last; ++dst_first;
-      if(dst_first == dst_last)
-         goto out_path;
-      --last; *dst_first = *last; ++dst_first;
-      if(dst_first == dst_last)
-         goto out_path;
-      --last; *dst_first = *last; ++dst_first;
-      if(dst_first == dst_last)
-         goto out_path;
-      --last; *dst_first = *last; ++dst_first;
-      n -= 4;
-   }
-
-   switch(n) {
-      case 3:
-         if(dst_first == dst_last)
-            goto out_path;
-         --last; *dst_first = *last; ++dst_first;
-         BOOST_FALLTHROUGH;
-      case 2:
-         if(dst_first == dst_last)
-            goto out_path;
-         --last; *dst_first = *last; ++dst_first;
-         BOOST_FALLTHROUGH;
-      case 1:
-         if(dst_first == dst_last)
-            goto out_path;
-         --last; *dst_first = *last; ++dst_first;
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-   out_path:
-   return segduo<RAIter, DstIter>(last, dst_first);
-}
-
-#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
-
 template <class BidirIter, class DstIter, class DstSent, class DstTag, class SrcCat>
 BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<!DstTag::value, segduo<BidirIter, DstIter> >::type
 segmented_reverse_copy_dst_bounded
@@ -110,8 +58,6 @@ segmented_reverse_copy_dst_bounded
    return segduo<BidirIter, DstIter>(last, dst_first);
 }
 
-#if defined(BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION)
-
 template <class RASrcIter, class RADstIter>
 BOOST_CONTAINER_FORCEINLINE
 typename iterator_enable_if_tag
@@ -127,8 +73,6 @@ segmented_reverse_copy_dst_bounded
    return (segmented_reverse_copy_dst_bounded)(last - n, last, dst_first, unreachable_sentinel_t(),
       non_segmented_iterator_tag(), src_tag);
 }
-
-#endif   //BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION
 
 template <class BidirIter, class SegDstIter, class SrcCat>
 segduo<BidirIter, SegDstIter> segmented_reverse_copy_dst_bounded

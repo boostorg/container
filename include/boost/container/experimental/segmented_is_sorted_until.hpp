@@ -56,61 +56,6 @@ segduo<FwdIt, DeepIt> sorted_until_rec
    return segduo<FwdIt, DeepIt>(first, prev);
 }
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-
-// (1') Random-access unrolled variant of the non-segmented base case.
-template <class RAIter, class Comp, class DeepIt>
-segduo<RAIter, DeepIt> sorted_until_rec
-   (RAIter first, RAIter last, Comp comp,
-    DeepIt prev,
-    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
-{
-   typedef typename iterator_traits<RAIter>::difference_type difference_type;
-
-   difference_type n = last - first;
-
-   while (n >= difference_type(4)) {
-      if (comp(*first, *prev))
-         goto final_result;
-      prev = first; ++first;
-      if (comp(*first, *prev))
-         goto final_result;
-      prev = first; ++first;
-      if (comp(*first, *prev))
-         goto final_result;
-      prev = first; ++first;
-      if (comp(*first, *prev))
-         goto final_result;
-      prev = first; ++first;
-      n -= 4;
-   }
-
-   switch (n) {
-      case 3:
-         if (comp(*first, *prev))
-            goto final_result;
-         prev = first; ++first;
-         BOOST_FALLTHROUGH;
-      case 2:
-         if (comp(*first, *prev))
-            goto final_result;
-         prev = first; ++first;
-         BOOST_FALLTHROUGH;
-      case 1:
-         if (comp(*first, *prev))
-            goto final_result;
-         prev = first; ++first;
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-
-   final_result:
-   return segduo<RAIter, DeepIt>(first, prev);
-}
-
-#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
-
 // (2) Segmented iterator with a heterogeneous sentinel as end.
 //     Cannot locate `last`'s segment, so falls back to a simple linear loop.
 template <class SegIter, class Sent, class Comp, class DeepIt, class Tag, class Cat>

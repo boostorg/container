@@ -40,32 +40,6 @@ segduo<OutIter, Size> generate_n_scan
 {
    const Size range_sz = static_cast<Size>(last - first);
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-   const Size local_count = (std::size_t)count < range_sz ? count : (Size)range_sz;
-   Size cnt = local_count;
-   while(cnt >= Size(4)) {
-      *first = gen(); ++first;
-      *first = gen(); ++first;
-      *first = gen(); ++first;
-      *first = gen(); ++first;
-      cnt -= Size(4);
-   }
-
-   switch(cnt) {
-      case 3:
-         *first = gen(); ++first;
-         BOOST_FALLTHROUGH;
-      case 2:
-         *first = gen(); ++first;
-         BOOST_FALLTHROUGH;
-      case 1:
-         *first = gen(); ++first;
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-   return segduo<OutIter, Size>(first, count - local_count);
-#else
    const Size length = count < (Size)range_sz ? count : (Size)range_sz;
    count -= length;
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
@@ -73,7 +47,6 @@ segduo<OutIter, Size> generate_n_scan
       *first = gen();
    }
    return segduo<OutIter, Size>(first, count);
-#endif
 }
 
 template <class OutIter, class Size, class Generator, class Cat>

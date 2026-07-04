@@ -33,55 +33,6 @@ segmented_partition_copy(InIter first, Sent last, OutIter1 out_true, OutIter2 ou
 
 namespace detail_algo {
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-
-template <class InIter, class OutIter1, class OutIter2, class Pred>
-std::pair<OutIter1, OutIter2> segmented_partition_copy_dispatch
-   (InIter first, InIter last, OutIter1 out_true, OutIter2 out_false, Pred pred
-   , const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
-{
-   typedef typename iterator_traits<InIter>::difference_type difference_type;
-   difference_type n = last - first;
-
-   while(n >= difference_type(4)) {
-      if(pred(*first)) { *out_true  = *first; ++out_true;  }
-      else             { *out_false = *first; ++out_false; }
-      ++first;
-      if(pred(*first)) { *out_true  = *first; ++out_true;  }
-      else             { *out_false = *first; ++out_false; }
-      ++first;
-      if(pred(*first)) { *out_true  = *first; ++out_true;  }
-      else             { *out_false = *first; ++out_false; }
-      ++first;
-      if(pred(*first)) { *out_true  = *first; ++out_true;  }
-      else             { *out_false = *first; ++out_false; }
-      ++first;
-      n -= 4;
-   }
-
-   switch(n) {
-      case 3:
-         if(pred(*first)) { *out_true  = *first; ++out_true;  }
-         else             { *out_false = *first; ++out_false; }
-         ++first;
-         BOOST_FALLTHROUGH;
-      case 2:
-         if(pred(*first)) { *out_true  = *first; ++out_true;  }
-         else             { *out_false = *first; ++out_false; }
-         ++first;
-         BOOST_FALLTHROUGH;
-      case 1:
-         if(pred(*first)) { *out_true  = *first; ++out_true;  }
-         else             { *out_false = *first; ++out_false; }
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-   return std::pair<OutIter1, OutIter2>(out_true, out_false);
-}
-
-#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
-
 template <class InIter, class Sent, class OutIter1, class OutIter2, class Pred, class Tag, class Cat>
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, InIter>::value, std::pair<OutIter1, OutIter2> >::type

@@ -39,33 +39,6 @@ segduo<OutIter, Size> fill_n_scan
    , const T& value, non_segmented_iterator_tag, const std::random_access_iterator_tag &)
 {
    Size range_sz = static_cast<Size>(last - first);
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-   const Size local_count = (std::size_t)count < range_sz ? count : (Size)range_sz;
-
-   Size cnt = local_count;
-   while(cnt >= Size(4)) {
-      *first = value; ++first;
-      *first = value; ++first;
-      *first = value; ++first;
-      *first = value; ++first;
-      cnt -= Size(4);
-   }
-
-   switch(cnt) {
-      case 3:
-         *first = value; ++first;
-         BOOST_FALLTHROUGH;
-      case 2:
-         *first = value; ++first;
-         BOOST_FALLTHROUGH;
-      case 1:
-         *first = value; ++first;
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-   return segduo<OutIter, Size>(first, count - local_count);
-#else
    //If the whole range is fixed at compile time (e.g. deque)
    //some compilers (e.g. MSVC 2026) can use SIMD more efficiently
    //than when using count.
@@ -83,7 +56,6 @@ segduo<OutIter, Size> fill_n_scan
          *first = value;
       return segduo<OutIter, Size>(first, Size(0));
    }
-#endif
 }
 
 template <class OutIter, class Size, class T, class Cat>

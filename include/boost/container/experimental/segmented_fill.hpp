@@ -32,41 +32,6 @@ void segmented_fill(FwdIt first, Sent last, const T& value);
 
 namespace detail_algo {
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-
-template <class RAIter, class T>
-BOOST_CONTAINER_FORCEINLINE
-void segmented_fill_range
-   (RAIter first, RAIter last, const T& value, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
-{
-   typedef typename iterator_traits<RAIter>::difference_type difference_type;
-
-   difference_type n = last - first;
-   while(n >= difference_type(4)) {
-      *first = value; ++first;
-      *first = value; ++first;
-      *first = value; ++first;
-      *first = value; ++first;
-      n -= 4;
-   }
-
-   switch(n) {
-      case 3:
-         *first = value; ++first;
-         BOOST_FALLTHROUGH;
-      case 2:
-         *first = value; ++first;
-         BOOST_FALLTHROUGH;
-      case 1:
-         *first = value;
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-}
-
-#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
-
 template <class FwdIt, class Sent, class T, class Tag, class Cat>
 BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, FwdIt>::value>::type

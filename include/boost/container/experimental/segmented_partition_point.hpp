@@ -31,56 +31,6 @@ FwdIt segmented_partition_point(FwdIt first, Sent last, Predicate pred);
 
 namespace detail_algo {
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-
-template <class RAIter, class Predicate>
-RAIter segmented_partition_point_dispatch
-   (RAIter first, RAIter last, Predicate pred, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
-{
-   typedef typename iterator_traits<RAIter>::difference_type difference_type;
-
-   difference_type n = last - first;
-   while(n >= difference_type(4)) {
-      if(!pred(*first))
-         goto final_result;
-      ++first;
-      if(!pred(*first))
-         goto final_result;
-      ++first;
-      if(!pred(*first))
-         goto final_result;
-      ++first;
-      if(!pred(*first))
-         goto final_result;
-      ++first;
-      n -= 4;
-   }
-
-   switch(n) {
-      case 3:
-         if(!pred(*first))
-            goto final_result;
-         ++first;
-         BOOST_FALLTHROUGH;
-      case 2:
-         if(!pred(*first))
-            goto final_result;
-         ++first;
-         BOOST_FALLTHROUGH;
-      case 1:
-         if(!pred(*first))
-            goto final_result;
-         ++first;
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-   final_result:
-   return first;
-}
-
-#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
-
 template <class FwdIt, class Sent, class Predicate, class Tag, class Cat>
 typename algo_enable_if_c<
    !Tag::value || is_sentinel<Sent, FwdIt>::value, FwdIt>::type

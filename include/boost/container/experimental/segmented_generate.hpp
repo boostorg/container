@@ -24,7 +24,6 @@
 #include <boost/container/detail/iterator.hpp>
 #include <boost/move/utility_core.hpp>
 
-
 namespace boost {
 namespace container {
 
@@ -32,41 +31,6 @@ template <class FwdIt, class Sent, class Generator>
 void segmented_generate(FwdIt first, Sent last, Generator gen);
 
 namespace detail_algo {
-
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-
-template <class RAIter, class Generator>
-BOOST_CONTAINER_FORCEINLINE
-void segmented_generate_dispatch
-   (RAIter first, const RAIter last, Generator & BOOST_RESTRICT gen, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
-{
-   typedef typename iterator_traits<RAIter>::difference_type difference_type;
-
-   difference_type n = last - first;
-   while(n >= difference_type(4)) {
-      *first = gen(); ++first;
-      *first = gen(); ++first;
-      *first = gen(); ++first;
-      *first = gen(); ++first;
-      n -= 4;
-   }
-
-   switch(n) {
-      case 3:
-         *first = gen(); ++first;
-         BOOST_FALLTHROUGH;
-      case 2:
-         *first = gen(); ++first;
-         BOOST_FALLTHROUGH;
-      case 1:
-         *first = gen();
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-}
-
-#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
 
 template <class FwdIt, class Sent, class Generator, class Tag, class Cat>
  BOOST_CONTAINER_FORCEINLINE typename algo_enable_if_c<

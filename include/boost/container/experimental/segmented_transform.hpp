@@ -31,43 +31,6 @@ OutIter segmented_transform(InIter first, Sent last, OutIter result, UnaryOp op)
 
 namespace detail_algo {
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-
-template <class InIter, class OutIter, class UnaryOp>
-BOOST_CONTAINER_FORCEINLINE
-OutIter segmented_transform_dispatch
-   (InIter first, InIter last, OutIter result, UnaryOp op, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
-{
-   typedef typename iterator_traits<InIter>::difference_type difference_type;
-   difference_type n = last - first;
-
-   while(n >= difference_type(4)) {
-      *result = op(*first); ++first; ++result;
-      *result = op(*first); ++first; ++result;
-      *result = op(*first); ++first; ++result;
-      *result = op(*first); ++first; ++result;
-      n -= 4;
-   }
-
-   switch(n) {
-      case 3:
-         *result = op(*first); ++first; ++result;
-         BOOST_FALLTHROUGH;
-      case 2:
-         *result = op(*first); ++first; ++result;
-         BOOST_FALLTHROUGH;
-      case 1:
-         *result = op(*first); ++first; ++result;
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-   return result;
-}
-
-#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
-
-
 template <class InIter, class Sent, class OutIter, class UnaryOp, class Tag, class Cat>
 BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c<

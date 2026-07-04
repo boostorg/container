@@ -31,57 +31,6 @@ InpIter segmented_find(InpIter first, Sent last, const T& BOOST_RESTRICT value);
 
 namespace detail_algo {
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-
-template <class RAIter, class T>
-BOOST_CONTAINER_FORCEINLINE
-RAIter segmented_find_dispatch
-   (RAIter first, RAIter last, const T& BOOST_RESTRICT value, const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
-{
-   typedef typename iterator_traits<RAIter>::difference_type difference_type;
-
-   difference_type n = last - first;
-   while(n >= difference_type(4)) {
-      if(*first == value)
-         goto final_result;
-      ++first;
-      if(*first == value)
-         goto final_result;
-      ++first;
-      if(*first == value)
-         goto final_result;
-      ++first;
-      if(*first == value)
-         goto final_result;
-      ++first;
-      n -= 4;
-   }
-
-   switch(n) {
-      case 3:
-         if(*first == value)
-            goto final_result;
-         ++first;
-         BOOST_FALLTHROUGH;
-      case 2:
-         if(*first == value)
-            goto final_result;
-         ++first;
-         BOOST_FALLTHROUGH;
-      case 1:
-         if(*first == value)
-            goto final_result;
-         ++first;
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-   final_result:
-   return first;
-}
-
-#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
-
 template <class InpIter, class Sent, class T, class Tag, class Cat>
 BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c<

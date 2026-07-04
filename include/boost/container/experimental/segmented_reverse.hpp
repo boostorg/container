@@ -48,36 +48,12 @@ void segmented_reverse_dispatch(RAIter first, RAIter last, non_segmented_iterato
    typedef typename iterator_traits<RAIter>::difference_type difference_type;
    difference_type pairs = (last - first) / difference_type(2);
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-   while(pairs >= difference_type(4)) {
-      --last; boost::adl_move_swap(*first, *last); ++first;
-      --last; boost::adl_move_swap(*first, *last); ++first;
-      --last; boost::adl_move_swap(*first, *last); ++first;
-      --last; boost::adl_move_swap(*first, *last); ++first;
-      pairs -= 4;
-   }
-
-   switch(pairs) {
-      case 3:
-         --last; boost::adl_move_swap(*first, *last); ++first;
-         BOOST_FALLTHROUGH;
-      case 2:
-         --last; boost::adl_move_swap(*first, *last); ++first;
-         BOOST_FALLTHROUGH;
-      case 1:
-         --last; boost::adl_move_swap(*first, *last);
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-#else
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; pairs; --pairs) {
       --last;
       boost::adl_move_swap(*first, *last);
       ++first;
    }
-#endif
 }
 
 //////////////////////////////////////////////
@@ -112,36 +88,12 @@ segduo<It, It> segmented_reverse_disjoint_ranges
    difference_type n_l = l - l_beg;
    difference_type n = n_f < n_l ? n_f : n_l;
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-   while(n >= difference_type(4)) {
-      --l; boost::adl_move_swap(*f, *l); ++f;
-      --l; boost::adl_move_swap(*f, *l); ++f;
-      --l; boost::adl_move_swap(*f, *l); ++f;
-      --l; boost::adl_move_swap(*f, *l); ++f;
-      n -= 4;
-   }
-
-   switch(n) {
-      case 3:
-         --l; boost::adl_move_swap(*f, *l); ++f;
-         BOOST_FALLTHROUGH;
-      case 2:
-         --l; boost::adl_move_swap(*f, *l); ++f;
-         BOOST_FALLTHROUGH;
-      case 1:
-         --l; boost::adl_move_swap(*f, *l); ++f;
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-#else
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; n; --n) {
       --l;
       boost::adl_move_swap(*f, *l);
       ++f;
    }
-#endif
 
    return segduo<It, It>(f, l);
 }

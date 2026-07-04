@@ -51,59 +51,6 @@ struct equal_pred
 // is optimised away, giving the same code as an unbounded loop.
 //////////////////////////////////////////////////////////////////////////////
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-
-template <class RASrcIter, class Iter2, class Iter2Sent, class BinaryPred>
-BOOST_CONTAINER_FORCEINLINE
-segduo<RASrcIter, Iter2> segmented_equal_iter2_bounded
-   (RASrcIter first1, RASrcIter last1, Iter2 first2, Iter2Sent iter2_last, BinaryPred pred,
-    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
-{
-   typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
-
-   difference_type n = last1 - first1;
-
-   while(n >= difference_type(4)) {
-      if(first2 == iter2_last) goto out_path;
-      if(!pred(*first1, *first2)) goto out_path;
-      ++first1; ++first2;
-      if(first2 == iter2_last) goto out_path;
-      if(!pred(*first1, *first2)) goto out_path;
-      ++first1; ++first2;
-      if(first2 == iter2_last) goto out_path;
-      if(!pred(*first1, *first2)) goto out_path;
-      ++first1; ++first2;
-      if(first2 == iter2_last) goto out_path;
-      if(!pred(*first1, *first2)) goto out_path;
-      ++first1; ++first2;
-      n -= 4;
-   }
-
-   switch(n) {
-      case 3:
-         if(first2 == iter2_last) goto out_path;
-         if(!pred(*first1, *first2)) goto out_path;
-         ++first1; ++first2;
-         BOOST_FALLTHROUGH;
-      case 2:
-         if(first2 == iter2_last) goto out_path;
-         if(!pred(*first1, *first2)) goto out_path;
-         ++first1; ++first2;
-         BOOST_FALLTHROUGH;
-      case 1:
-         if(first2 == iter2_last) goto out_path;
-         if(!pred(*first1, *first2)) goto out_path;
-         ++first1; ++first2;
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-   out_path:
-   return segduo<RASrcIter, Iter2>(first1, first2);
-}
-
-#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
-
 template <class SrcIter, class Sent, class Iter2, class Iter2Sent, class BinaryPred, class Iter2Tag, class SrcCat>
 BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c<!Iter2Tag::value, segduo<SrcIter, Iter2> >::type
@@ -122,8 +69,6 @@ segmented_equal_iter2_bounded
    return segduo<SrcIter, Iter2>(first1, first2);
 }
 
-#if defined(BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION)
-
 template <class RASrcIter, class RAIter2, class BinaryPred>
 BOOST_CONTAINER_FORCEINLINE
 typename iterator_enable_if_tag
@@ -139,8 +84,6 @@ segmented_equal_iter2_bounded
    return (segmented_equal_iter2_bounded)(first1, first1 + n, first2, unreachable_sentinel_t(),
       pred, non_segmented_iterator_tag(), src_tag);
 }
-
-#endif   //BOOST_CONTAINER_SEGMENTED_ENABLE_DUAL_RA_OPTIMIZATION
 
 template <class SrcIter, class Sent, class SegIter2, class BinaryPred, class SrcCat>
 segduo<SrcIter, SegIter2> segmented_equal_iter2_bounded

@@ -31,42 +31,6 @@ void segmented_replace(FwdIt first, Sent last, const T& BOOST_RESTRICT old_val, 
 
 namespace detail_algo {
 
-#if defined(BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING)
-
-template <class RAIter, class T>
-BOOST_CONTAINER_FORCEINLINE
-void segmented_replace_dispatch
-   (RAIter first, RAIter last, const T& BOOST_RESTRICT old_val, const T& BOOST_RESTRICT new_val
-   , const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
-{
-   typedef typename iterator_traits<RAIter>::difference_type difference_type;
-   difference_type n = last - first;
-
-   while(n >= difference_type(4)) {
-      if(*first == old_val) { *first = new_val; } ++first;
-      if(*first == old_val) { *first = new_val; } ++first;
-      if(*first == old_val) { *first = new_val; } ++first;
-      if(*first == old_val) { *first = new_val; } ++first;
-      n -= 4;
-   }
-
-   switch(n) {
-      case 3:
-         if(*first == old_val) { *first = new_val; } ++first;
-         BOOST_FALLTHROUGH;
-      case 2:
-         if(*first == old_val) { *first = new_val; } ++first;
-         BOOST_FALLTHROUGH;
-      case 1:
-         if(*first == old_val) { *first = new_val; }
-         BOOST_FALLTHROUGH;
-      default:
-         break;
-   }
-}
-
-#endif   //BOOST_CONTAINER_SEGMENTED_LOOP_UNROLLING
-
 template <class FwdIt, class Sent, class T, class Tag, class Cat>
 BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c<
