@@ -253,6 +253,8 @@ namespace boost {
 
   #define BOOST_CONTAINER_UNROLL_PRAGMA(x) _Pragma(#x)
   #define BOOST_CONTAINER_UNROLL(n) BOOST_CONTAINER_UNROLL_PRAGMA(unroll n)
+  // Enable unrolling but let the compiler's cost model choose the factor.
+  #define BOOST_CONTAINER_AUTO_UNROLL BOOST_CONTAINER_UNROLL_PRAGMA(clang loop unroll(enable))
 
 #elif defined(BOOST_GCC) && defined(BOOST_GCC_VERSION) && (BOOST_GCC_VERSION >= 150000)
   // GCC < 15 emits an unsuppressible "ignoring loop annotation" warning
@@ -260,12 +262,16 @@ namespace boost {
   // unknown trip count, etc.). This was fixed in GCC 15.
   #define BOOST_CONTAINER_UNROLL_PRAGMA(x) _Pragma(#x)
   #define BOOST_CONTAINER_UNROLL(n) BOOST_CONTAINER_UNROLL_PRAGMA(GCC unroll n)
+  // GCC has no count-less "compiler chooses" unroll pragma, so use a fixed factor.
+  #define BOOST_CONTAINER_AUTO_UNROLL BOOST_CONTAINER_UNROLL_PRAGMA(GCC unroll 8)
 
 #elif defined(_MSC_VER) && _MSC_VER >= 1920
-  #define BOOST_CONTAINER_UNROLL(n) __pragma(warning(suppress: 4081)) __pragma(loop(unroll))
+  #define BOOST_CONTAINER_UNROLL(n)   __pragma(warning(suppress: 4081)) __pragma(loop(unroll))
+  #define BOOST_CONTAINER_AUTO_UNROLL __pragma(warning(suppress: 4081)) __pragma(loop(unroll))
 
 #else
   #define BOOST_CONTAINER_UNROLL(n)
+  #define BOOST_CONTAINER_AUTO_UNROLL
 #endif
 
 #ifdef __has_builtin
