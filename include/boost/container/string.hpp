@@ -3343,10 +3343,16 @@ class basic_string
 
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD
 
+//! <b>Deduction guide</b>: allows a `basic_string` to be constructed from the
+//! iterator range <code>[first, last)</code>, deducing the character type from the
+//! value type of `InputIterator` and using the default allocator.
 template <typename InputIterator>
 basic_string(InputIterator, InputIterator) ->
    basic_string<typename iterator_traits<InputIterator>::value_type>;
 
+//! <b>Deduction guide</b>: allows a `basic_string` to be constructed from the
+//! iterator range <code>[first, last)</code>, deducing the character type from the
+//! value type of `InputIterator` and taking the allocator type from the supplied allocator.
 template <typename InputIterator, typename Allocator>
 basic_string(InputIterator, InputIterator, Allocator const&) ->
    basic_string<typename iterator_traits<InputIterator>::value_type, Allocator>;

@@ -2952,6 +2952,9 @@ std::pair<typename nest<T, Allocator, Options>::const_iterator, F>
 
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD
 
+//! <b>Deduction guide</b>: allows a `nest` to be constructed from the iterator range
+//! <code>[first, last)</code>, deducing the element type from the value type of
+//! `InpIt` and optionally taking the allocator type from the supplied allocator.
 template<
    class InpIt,
    class Allocator = void

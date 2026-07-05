@@ -1511,10 +1511,17 @@ inline typename list<T, A>::size_type erase_if(list<T, A>& c, Pred pred)
 {  return c.remove_if(pred);  }
 
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD
+
+//! <b>Deduction guide</b>: allows a `list` to be constructed from the iterator
+//! range <code>[first, last)</code>, deducing the element type from the value type
+//! of `InputIterator` and using the default allocator.
 template <typename InputIterator>
 list(InputIterator, InputIterator) ->
    list<typename iterator_traits<InputIterator>::value_type>;
 
+//! <b>Deduction guide</b>: allows a `list` to be constructed from the iterator
+//! range <code>[first, last)</code>, deducing the element type from the value type
+//! of `InputIterator` and taking the allocator type from the supplied allocator.
 template <typename InputIterator, typename ValueAllocator>
 list(InputIterator, InputIterator, ValueAllocator const&) ->
    list<typename iterator_traits<InputIterator>::value_type, ValueAllocator>;

@@ -1683,10 +1683,16 @@ inline typename slist<T, A>::size_type erase_if(slist<T, A>& c, Pred pred)
 
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD
 
+//! <b>Deduction guide</b>: allows an `slist` to be constructed from the iterator
+//! range <code>[first, last)</code>, deducing the element type from the value type
+//! of `InpIt` and using the default allocator.
 template <typename InpIt>
 slist(InpIt, InpIt) ->
    slist<typename iterator_traits<InpIt>::value_type>;
 
+//! <b>Deduction guide</b>: allows an `slist` to be constructed from the iterator
+//! range <code>[first, last)</code>, deducing the element type from the value type
+//! of `InpIt` and taking the allocator type from the supplied allocator.
 template <typename InpIt, typename Allocator>
 slist(InpIt, InpIt, Allocator const&) ->
    slist<typename iterator_traits<InpIt>::value_type, Allocator>;
