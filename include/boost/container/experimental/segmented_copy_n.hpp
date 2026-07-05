@@ -99,32 +99,31 @@ segduo<SrcIter, SegDstIter> segmented_copy_n_dst_bounded
    typedef typename dst_traits::segment_iterator  dst_segment_iterator;
    typedef typename segmented_iterator_traits<dst_local_iterator>::is_segmented_iterator dst_is_local_seg_t;
 
-   dst_segment_iterator       sfirst = dst_traits::segment(dst_first);
-   const dst_segment_iterator slast  = dst_traits::segment(dst_last);
+   dst_segment_iterator       sdfirst = dst_traits::segment(dst_first);
+   const dst_segment_iterator sdlast  = dst_traits::segment(dst_last);
 
-   if(sfirst == slast) {
+   if(sdfirst == sdlast) {
       segduo<SrcIter, dst_local_iterator> r = (segmented_copy_n_dst_bounded)
          (first, last, count, dst_traits::local(dst_first), dst_traits::local(dst_last), dst_is_local_seg_t());
-      return segduo<SrcIter, SegDstIter>(r.first, dst_traits::compose(sfirst, r.second));
+      return segduo<SrcIter, SegDstIter>(r.first, dst_traits::compose(sdfirst, r.second));
    }
    else {
       segduo<SrcIter, dst_local_iterator> r = (segmented_copy_n_dst_bounded)
-         (first, last, count, dst_traits::local(dst_first), dst_traits::end(sfirst), dst_is_local_seg_t());
+         (first, last, count, dst_traits::local(dst_first), dst_traits::end(sdfirst), dst_is_local_seg_t());
       first = r.first;
-      if(count == 0 || first == last)
-         return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sfirst, r.second));
+      if (count != 0 && first != last) {
+         for (++sdfirst; sdfirst != sdlast; ++sdfirst) {
+            r = (segmented_copy_n_dst_bounded)
+               (first, last, count, dst_traits::begin(sdfirst), dst_traits::end(sdfirst), dst_is_local_seg_t());
+            first = r.first;
+            if (count == 0 || first == last)
+               return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sdfirst, r.second));
+         }
 
-      for(++sfirst; sfirst != slast; ++sfirst) {
          r = (segmented_copy_n_dst_bounded)
-            (first, last, count, dst_traits::begin(sfirst), dst_traits::end(sfirst), dst_is_local_seg_t());
-         first = r.first;
-         if(count == 0 || first == last)
-            return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sfirst, r.second));
+            (first, last, count, dst_traits::begin(sdlast), dst_traits::local(dst_last), dst_is_local_seg_t());
       }
-
-      r = (segmented_copy_n_dst_bounded)
-         (first, last, count, dst_traits::begin(slast), dst_traits::local(dst_last), dst_is_local_seg_t());
-      return segduo<SrcIter, SegDstIter>(r.first, dst_traits::compose(sfirst, r.second));
+      return segduo<SrcIter, SegDstIter>(r.first, dst_traits::compose(sdfirst, r.second));
    }
 }
 
