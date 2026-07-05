@@ -70,39 +70,47 @@ segmented_copy_if_dst_bounded
 {
    typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
 
-   difference_type src_n = last - first;
-   difference_type dst_n = difference_type(dst_last - dst_first);
-
    (void)src_tag;
-   RASrcIter cur     = first;
+   RASrcIter cur = first;
    RADstIter dst_cur = dst_first;
-   if(src_n <= dst_n) {
-      // Whole source fits the remaining destination capacity: lean pass,
-      // no destination-full check (mirrors the original single-chunk kernel).
-      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-      while(src_n) {
-         --src_n;
-         if(pred(*cur)) {
-            *dst_cur = *cur;
-            ++dst_cur;
+
+   const difference_type B = 32;
+   difference_type avail = last - cur;
+   for(;;) {
+      difference_type room  = dst_last - dst_cur;
+      difference_type chunk = room < avail ? room : avail;
+      if(chunk == 0)
+         goto end;
+      if(chunk >= B) {
+         avail -= B;
+         chunk = B;
+         BOOST_CONTAINER_SEGMENTED_AUTO_UNROLL
+         while(chunk) {
+            --chunk;
+            if(pred(*cur)) {
+               *dst_cur = *cur;
+               ++dst_cur;
+            }
+            ++cur;
          }
-         ++cur;
+      }
+      else{
+         break;
       }
    }
-   else {
-      // Source spans more than the destination segment: single bounded pass,
-      // check the destination only on a hit -- avoids repeated chunk set-ups.
-      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-      while(cur != last) {
-         if(pred(*cur)) {
-            if(dst_cur == dst_last)
-               break;
-            *dst_cur = *cur;
-            ++dst_cur;
-         }
-         ++cur;
+
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
+   while(cur != last) {
+      if(pred(*cur)) {
+         if (dst_cur == dst_last)
+            break;
+         *dst_cur = *cur;
+         ++dst_cur;
       }
+      ++cur;
    }
+   end:
+
    return segduo<RASrcIter, RADstIter>(cur, dst_cur);
 }
 
