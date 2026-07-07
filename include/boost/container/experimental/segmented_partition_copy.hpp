@@ -53,6 +53,51 @@ segmented_partition_copy_dispatch
    return std::pair<OutIter1, OutIter2>(out_true, out_false);
 }
 
+template <class RAInIter, class OutIter1, class OutIter2, class Pred>
+typename iterator_enable_if_tag
+   <RAInIter, std::random_access_iterator_tag, std::pair<OutIter1, OutIter2> >::type
+segmented_partition_copy_dispatch
+   (RAInIter first, RAInIter last, OutIter1 out_true, OutIter2 out_false, Pred pred,
+    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
+{
+   typedef typename iterator_traits<RAInIter>::difference_type difference_type;
+
+   RAInIter cur = first;
+   const difference_type B = 32;
+   difference_type n = last - cur;
+   while(n >= B) {
+      n -= B;
+      difference_type chunk = B;
+      BOOST_CONTAINER_SEGMENTED_AUTO_UNROLL
+      while(chunk) {
+         --chunk;
+         if(pred(*cur)) {
+            *out_true = *cur;
+            ++out_true;
+         }
+         else {
+            *out_false = *cur;
+            ++out_false;
+         }
+         ++cur;
+      }
+   }
+
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
+   while(cur != last) {
+      if(pred(*cur)) {
+         *out_true = *cur;
+         ++out_true;
+      }
+      else {
+         *out_false = *cur;
+         ++out_false;
+      }
+      ++cur;
+   }
+   return std::pair<OutIter1, OutIter2>(out_true, out_false);
+}
+
 template <class SegIter, class OutIter1, class OutIter2, class Pred, class Cat>
 std::pair<OutIter1, OutIter2>
 segmented_partition_copy_dispatch

@@ -50,6 +50,59 @@ segmented_remove_copy_dst_bounded
    return segduo<SrcIter, DstIter>(first, dst_first);
 }
 
+template <bool Move, class RASrcIter, class RADstIter, class T>
+typename iterator_enable_if_tag
+   <RADstIter, std::random_access_iterator_tag, segduo<RASrcIter, RADstIter> >::type
+segmented_remove_copy_dst_bounded
+   (RASrcIter first, RASrcIter last, RADstIter dst_first, RADstIter dst_last, const T& value,
+    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &src_tag)
+{
+   typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
+
+   (void)src_tag;
+   RASrcIter cur = first;
+   RADstIter dst_cur = dst_first;
+
+   const difference_type B = 32;
+   difference_type avail = last - cur;
+   for(;;) {
+      difference_type room  = dst_last - dst_cur;
+      difference_type chunk = room < avail ? room : avail;
+      if(chunk == 0)
+         goto end;
+      if(chunk >= B) {
+         avail -= B;
+         chunk = B;
+         BOOST_CONTAINER_SEGMENTED_AUTO_UNROLL
+         while(chunk) {
+            --chunk;
+            if(!(*cur == value)) {
+               transfer_op<Move>::apply(*dst_cur, *cur);
+               ++dst_cur;
+            }
+            ++cur;
+         }
+      }
+      else{
+         break;
+      }
+   }
+
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
+   while(cur != last) {
+      if(!(*cur == value)) {
+         if (dst_cur == dst_last)
+            break;
+         transfer_op<Move>::apply(*dst_cur, *cur);
+         ++dst_cur;
+      }
+      ++cur;
+   }
+   end:
+
+   return segduo<RASrcIter, RADstIter>(cur, dst_cur);
+}
+
 template <bool Move, class SrcIter, class Sent, class SegDstIter, class T, class SrcCat>
 segduo<SrcIter, SegDstIter> segmented_remove_copy_dst_bounded
    (SrcIter first, Sent last, SegDstIter dst_first, SegDstIter dst_last, const T& value,
