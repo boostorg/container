@@ -188,6 +188,15 @@ void test_do_allocate_deallocate()
 
       //new_allocator, high alignment
       mr.deallocate(mr.allocate(16, max_alignment_value*4u), 16, max_alignment_value*4u);
+
+      //new_allocator, zero size, low alignment: must return a non-null pointer
+      void *pz = mr.allocate(0, 1);
+      mr.deallocate(pz, 0, 1);
+
+      //new_allocator, zero size, high alignment
+      void *pza = mr.allocate(0, max_alignment_value*4u);
+      BOOST_TEST((std::size_t(pza) % (max_alignment_value*4u)) == 0u);
+      mr.deallocate(pza, 0, max_alignment_value*4u);
    }
    {
       typedef resource_adaptor<std ::allocator<int> > new_resource_alloc_t;
@@ -199,6 +208,17 @@ void test_do_allocate_deallocate()
 
       //std::allocator, high alignment
       mr.deallocate(mr.allocate(16, max_alignment_value*4u), 16, max_alignment_value*4u);
+
+      //std::allocator, zero size, low alignment: must return a non-null pointer
+      void *pz = mr.allocate(0, 1);
+      mr.deallocate(pz, 0, 1);
+
+      //std::allocator, zero size, high alignment: must return a non-null,
+      //correctly aligned pointer
+      void *pza = mr.allocate(0, max_alignment_value*4u);
+      BOOST_TEST(pza != 0);
+      BOOST_TEST((std::size_t(pza) % (max_alignment_value*4u)) == 0u);
+      mr.deallocate(pza, 0, max_alignment_value*4u);
    }
 }
 

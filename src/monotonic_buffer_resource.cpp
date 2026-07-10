@@ -145,6 +145,11 @@ void* monotonic_buffer_resource::do_allocate(std::size_t bytes, std::size_t alig
       #endif
    }
 
+   //A zero-sized request must still work correctly so treat it as a 1-byte allocation
+   if(!bytes){
+      bytes = 1u;
+   }
+
    //See if there is room in current buffer
    std::size_t aligner = 0u;
    if(this->remaining_storage(alignment, aligner) < bytes){

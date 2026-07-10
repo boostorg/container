@@ -360,6 +360,42 @@ void test_do_allocate()
    BOOST_TEST(mrl.m_info.size() == 0u);
 }
 
+void test_do_allocate_zero()
+{
+   //Regression test: after exhausting an external buffer, a zero-sized
+   //allocation requesting an alignment that needs padding used to underflow
+   //remaining_storage() (m_current_buffer_size wrapped around to SIZE_MAX)
+   //because the padding alone did not fit in the current buffer. In addition,
+   //a zero-sized allocation must return a non-null pointer to distinct storage.
+   memory_resource_logger mrl;
+   //An 8-aligned buffer of 7 bytes reproduces the reported scenario.
+   boost::move_detail::aligned_storage<8u, 8u>::type storage;
+   const std::size_t buffer_size = 7u;
+   {
+      monotonic_buffer_resource m(&storage, buffer_size, &mrl);
+      BOOST_TEST(m.remaining_storage(1u) == buffer_size);
+
+      //Exhaust the buffer with a byte-aligned allocation
+      void *const p_full = m.allocate(buffer_size, 1u);
+      BOOST_TEST(p_full != 0);
+      BOOST_TEST(m.remaining_storage(1u) == 0u);
+      BOOST_TEST(mrl.m_info.size() == 0u);
+
+      //A zero-sized allocation on an exhausted buffer must still work
+      void *const p_zero1 = m.allocate(0u, 1u);
+      BOOST_TEST(p_zero1 != 0);
+      BOOST_TEST(m.remaining_storage(1u) < m.next_buffer_size());
+
+      //A zero-sized allocation with a stricter alignment must honor it
+      void *const p_zero2 = m.allocate(0u, 4u);
+      BOOST_TEST((std::size_t(p_zero2) % 4u) == 0u);
+      BOOST_TEST(m.remaining_storage(1u) < m.next_buffer_size());
+   }
+   //All upstream memory must have been released
+   BOOST_TEST(mrl.m_mismatches == 0u);
+   BOOST_TEST(mrl.m_info.size() == 0u);
+}
+
 void test_do_deallocate()
 {
    memory_resource_logger mrl;
@@ -477,6 +513,7 @@ int main()
 
    test_upstream_resource();
    test_do_allocate();
+   test_do_allocate_zero();
    test_do_deallocate();
    test_do_is_equal();
    test_release();

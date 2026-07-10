@@ -391,6 +391,42 @@ void test_do_allocate_deallocate()
 }
 
 template<class PoolResource>
+void test_do_allocate_zero()
+{
+   //A zero-sized allocation must return a valid, non-null pointer that can be
+   //deallocated, and successive zero-sized allocations must return distinct
+   //blocks (pooled allocations never alias live blocks).
+   memory_resource_logger mrl;
+   {
+      derived_from_pool_resource<PoolResource> dmbr(&mrl);
+      //Zero bytes is served from the smallest pool
+      void *p0 = dmbr.do_allocate(0u, 1u);
+      BOOST_TEST(p0 != 0);
+      void *p1 = dmbr.do_allocate(0u, 1u);
+      BOOST_TEST(p1 != 0);
+      //Distinct live blocks must not alias
+      BOOST_TEST(p0 != p1);
+      //Both come from the smallest pool (index 0)
+      BOOST_TEST(dmbr.pool_index(0u) == 0u);
+
+      //Round-trip deallocation must not report mismatches
+      dmbr.do_deallocate(p1, 0u, 1u);
+      dmbr.do_deallocate(p0, 0u, 1u);
+      //Deallocated zero-sized blocks are cached, not returned to upstream
+      BOOST_TEST(dmbr.pool_cached_blocks(0u) >= 1u);
+
+      //A max-aligned zero-sized allocation must also succeed
+      void *p2 = dmbr.do_allocate(0u, memory_resource::max_align);
+      BOOST_TEST(p2 != 0);
+      BOOST_TEST((std::size_t(p2) % memory_resource::max_align) == 0u);
+      dmbr.do_deallocate(p2, 0u, memory_resource::max_align);
+   }
+   //All memory must have been released back to upstream on destruction
+   BOOST_TEST(mrl.m_mismatches == 0u);
+   BOOST_TEST(mrl.m_info.size() == 0u);
+}
+
+template<class PoolResource>
 void test_do_is_equal()
 {
    //`this == dynamic_cast<const PoolResource*>(&other)`.
@@ -487,6 +523,7 @@ void test_pool_resource()
    test_options_constructor<PoolResource>();
    test_options<PoolResource>();
    test_do_allocate_deallocate<PoolResource>();
+   test_do_allocate_zero<PoolResource>();
    test_do_is_equal<PoolResource>();
    test_release<PoolResource>();
    test_destructor<PoolResource>();

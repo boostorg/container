@@ -116,6 +116,11 @@ void test_new_delete_resource()
    #endif
    mr->deallocate(addr, 16, 1);
    BOOST_TEST(memcount == allocation_count);
+
+   //A zero-sized allocation must still work
+   void *const zero_addr = mr->allocate(0, 1);
+   mr->deallocate(zero_addr, 0, 1);
+   BOOST_TEST(memcount == allocation_count);
 }
 
 #endif   //BOOST_CONTAINER_ASAN
@@ -143,6 +148,24 @@ void test_null_memory_resource()
    BOOST_TEST(bad_allocexception_thrown == true);
    if(p)
       mr->deallocate(p, 1, 1);
+
+   //A zero-sized allocation must also fail (the standard permits a zero
+   //request to fail, and null_memory_resource always throws).
+   bool zero_bad_alloc_thrown = false;
+   void *pz = 0;
+   BOOST_CONTAINER_TRY{
+      pz = mr->allocate(0, 1);
+   }
+   BOOST_CONTAINER_CATCH(std::bad_alloc&) {
+      zero_bad_alloc_thrown = true;
+   }
+   BOOST_CONTAINER_CATCH(...) {
+   }
+   BOOST_CONTAINER_CATCH_END
+
+   BOOST_TEST(zero_bad_alloc_thrown == true);
+   if(pz)
+      mr->deallocate(pz, 0, 1);
    #endif   //BOOST_NO_EXCEPTIONS
 }
 
