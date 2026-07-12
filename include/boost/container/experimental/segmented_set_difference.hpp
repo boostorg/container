@@ -137,16 +137,10 @@ BOOST_CONTAINER_FORCEINLINE segtrio<Iter1, Iter2, OutIter> set_difference_seg2_d
    (Iter1 first1, Sent1 last1, Iter2 first2, Sent2 last2, OutIter result, Comp comp,
     non_segmented_iterator_tag, const Cat& src1_cat)
 {
-#if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
    typedef segmented_iterator_traits<OutIter>  out_traits;
    typedef typename out_traits::is_segmented_iterator is_out_seg_t;
    return (set_difference_until_exhausts)
       (first1, last1, first2, last2, result, comp, is_out_seg_t(), src1_cat);
-#else
-   return (set_difference_dst_bounded)
-      (first1, last1, first2, last2, result, unreachable_sentinel_t(),
-       comp, non_segmented_iterator_tag(), src1_cat);
-#endif
 }
 
 template <class Iter1, class Sent1, class SegIter2, class OutIter, class Comp, class Cat>
@@ -211,18 +205,12 @@ BOOST_CONTAINER_FORCEINLINE segtrio<FwdIt, InIter2, OutIter> set_difference_scan
     non_segmented_iterator_tag)
 {
    typedef sent_filter<FwdIt, Sent> sf1;
-#if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
    typedef sent_filter<InIter2, Sent2> sf2;
 
    return (set_difference_seg2_dispatch)
       (first1, last1, first2, last2, result, comp,
        typename sf2::seg_t(),
        typename sf1::cat_t());
-#else
-   return (set_difference_until_exhausts)
-      (first1, last1, first2, last2, result, comp,
-       non_segmented_iterator_tag(), typename sf1::cat_t());
-#endif
 }
 
 template <class SegIt, class InIter2, class Sent2, class OutIter, class Comp>

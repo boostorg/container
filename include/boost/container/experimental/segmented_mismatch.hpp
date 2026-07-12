@@ -218,16 +218,10 @@ typename algo_enable_if_c<
 segmented_mismatch_bounded_dispatch
    (SrcIter first1, Sent last1, InpIter2 first2, Sent2 last2, BinaryPred pred, Tag, Cat)
 {
-#if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
    typedef segmented_iterator_traits<InpIter2> iter2_traits;
    return (segmented_mismatch_iter2_bounded)
       (first1, last1, first2, last2, pred,
        typename iter2_traits::is_segmented_iterator(), Cat());
-#else
-   return (segmented_mismatch_iter2_bounded)
-      (first1, last1, first2, last2, pred,
-       non_segmented_iterator_tag(), Cat());
-#endif
 }
 
 template <class SegIter, class InpIter2, class Sent2, class BinaryPred, class Cat>

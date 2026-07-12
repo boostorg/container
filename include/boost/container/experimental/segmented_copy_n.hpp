@@ -185,14 +185,9 @@ OutIter copy_n_scan
    const Size range_sz = Size(last - first);
    Size min_count = count <= range_sz ? count : range_sz;
    count -= min_count;
-   #if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
-      typedef segmented_iterator_traits<OutIter> dst_traits;
-      return (segmented_copy_n_dst_dispatch)
-         (first, unreachable_sentinel_t(), min_count, result, typename dst_traits::is_segmented_iterator());
-   #else
-      return (segmented_copy_n_src_dst_bounded)
-         (first, unreachable_sentinel_t(), min_count, result, unreachable_sentinel_t()).second;
-   #endif
+   typedef segmented_iterator_traits<OutIter> dst_traits;
+   return (segmented_copy_n_dst_dispatch)
+      (first, unreachable_sentinel_t(), min_count, result, typename dst_traits::is_segmented_iterator());
 }
 
 template <class InIter, class Size, class OutIter, class Cat>
@@ -200,14 +195,9 @@ BOOST_CONTAINER_FORCEINLINE
 OutIter copy_n_scan
    (InIter first, InIter last, Size& BOOST_RESTRICT count, OutIter result, non_segmented_iterator_tag, const Cat &)
 {
-   #if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
-      typedef segmented_iterator_traits<OutIter> dst_traits;
-      return (segmented_copy_n_dst_dispatch)
-         (first, last, count, result, typename dst_traits::is_segmented_iterator());
-   #else
-      return (segmented_copy_n_dst_dispatch)
-         (first, last, count, result, non_segmented_iterator_tag());
-   #endif
+   typedef segmented_iterator_traits<OutIter> dst_traits;
+   return (segmented_copy_n_dst_dispatch)
+      (first, last, count, result, typename dst_traits::is_segmented_iterator());
 }
 
 template <class SegIt, class Size, class OutIter, class Cat>
@@ -276,14 +266,9 @@ template <class InIter, class Size, class OutIter, class Cat>
 BOOST_CONTAINER_FORCEINLINE OutIter segmented_copy_n_dispatch
    (InIter first, Size count, OutIter result, const non_segmented_iterator_tag &, const Cat&)
 {
-#if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
    typedef segmented_iterator_traits<OutIter> dst_traits;
    return (segmented_copy_n_dst_dispatch)
       (first, unreachable_sentinel_t(), count, result, typename dst_traits::is_segmented_iterator());
-#else
-   return (segmented_copy_n_src_dst_bounded)
-      (first, unreachable_sentinel_t(), count, result, unreachable_sentinel_t()).second;
-#endif
 }
 
 } // namespace detail_algo

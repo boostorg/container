@@ -192,14 +192,9 @@ typename algo_enable_if_c
    >::type
 segmented_equal_dispatch(SrcIter first1, Sent last1, InpIter2 first2, BinaryPred pred, Tag, Cat)
 {
-#if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
    typedef segmented_iterator_traits<InpIter2> iter2_traits;
    return (segmented_equal_iter2_dispatch)
       (first1, last1, first2, pred, typename iter2_traits::is_segmented_iterator(), Cat());
-#else
-   return (segmented_equal_iter2_dispatch)
-      (first1, last1, first2, pred, non_segmented_iterator_tag(), Cat());
-#endif
 }
 
 template <class SegIter, class InpIter2, class BinaryPred, class Cat>

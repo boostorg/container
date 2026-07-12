@@ -167,14 +167,9 @@ BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c<!Tag::value, OutIter>::type
    segmented_reverse_copy_dispatch(BidirIter first, BidirIter last, OutIter result, Tag, Cat)
 {
-#if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
    typedef segmented_iterator_traits<OutIter> dst_traits;
    return (segmented_reverse_copy_dst_dispatch)
       (first, last, result, typename dst_traits::is_segmented_iterator(), Cat());
-#else
-   return (segmented_reverse_copy_dst_dispatch)
-      (first, last, result, non_segmented_iterator_tag(), Cat());
-#endif
 }
 
 template <class SegIter, class OutIter, class Cat>

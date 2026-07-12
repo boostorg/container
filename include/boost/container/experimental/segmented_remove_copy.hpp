@@ -198,14 +198,9 @@ typename algo_enable_if_c<
 segmented_remove_copy_dispatch
    (SrcIter first, Sent last, OutIter result, const T& value, Tag, Cat)
 {
-#if !defined(BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO)
    typedef segmented_iterator_traits<OutIter> dst_traits;
    return (segmented_remove_copy_dst_dispatch<Move>)
       (first, last, result, value, typename dst_traits::is_segmented_iterator(), Cat());
-#else
-   return (segmented_remove_copy_dst_dispatch<Move>)
-      (first, last, result, value, non_segmented_iterator_tag(), Cat());
-#endif
 }
 
 template <bool Move, class SegIter, class OutIter, class T, class Cat>

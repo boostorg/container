@@ -326,20 +326,6 @@ struct deepest_local_iterator
 
 #include <boost/container/detail/config_end.hpp>
 
-//////////////////////////////////////////////////////////////////////////////
-// BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO
-//
-// When defined, segmented algorithms that write to an output iterator will
-// NOT exploit segmentation on the output side.  Only input (source) iterator
-// segmentation is used.  This is useful for benchmarking the advantage of
-// the segmented output optimisation in isolation.
-//
-// Define BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO before including any
-// segmented algorithm header to disable the optimisation.
-//////////////////////////////////////////////////////////////////////////////
-
-//#define BOOST_CONTAINER_DISABLE_MULTI_SEGMENTED_ALGO
-
 // When defined, segmented algorithms that count elements (e.g. segmented_count,
 // segmented_count_if) will use a branchless counting strategy in their
 // innermost loops, incrementing the count by the boolean result of the
