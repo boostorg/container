@@ -2832,6 +2832,12 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
 
 [section:release_notes Release Notes]
 
+[section:release_notes_boost_1_93_00 Boost 1.93 Release]
+
+* Added overaligned support for [classref boost::container::pmr::monotonic_buffer_resource monotonic_buffer_resource]. 
+
+[endsect]
+
 [section:release_notes_boost_1_92_00 Boost 1.92 Release]
 
 * Added new [classref boost::container::hub hub] container designed by Joaqu\u00EDn M. L\u00F3pez Mu\u00F1oz.

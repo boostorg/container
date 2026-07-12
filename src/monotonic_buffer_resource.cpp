@@ -145,13 +145,20 @@ void* monotonic_buffer_resource::do_allocate(std::size_t bytes, std::size_t alig
    //m_current_buffer_size in allocate_from_current().
    std::size_t aligner = 0u;
    if(!m_current_buffer || this->remaining_storage(alignment, aligner) < bytes || m_current_buffer_size < aligner){
-      //Update next_buffer_size to at least bytes
+      //The block obtained from the upstream resource is only guaranteed to be
+      //max_align-aligned, so for an over-aligned request reserve enough extra
+      //space to be able to realign the returned block inside the new buffer.
       const std::size_t extra_for_alignment = (alignment > memory_resource::max_align) ? (alignment - 1u) : 0u;
+      //Update next_buffer_size to at least bytes plus the realignment slack
       this->increase_next_buffer_at_least_to(bytes + extra_for_alignment);
       //Now allocate and update internal data
       m_current_buffer = (char*)m_memory_blocks.allocate(m_next_buffer_size);
       m_current_buffer_size = m_next_buffer_size;
       this->increase_next_buffer();
+      //Recompute the alignment padding for the freshly obtained buffer (which is
+      //only max_align-aligned). This is zero unless the request is over-aligned,
+      //in which case the reserved slack above guarantees "aligner + bytes" fits.
+      this->remaining_storage(alignment, aligner);
    }
    //Enough internal storage, extract from it. For a zero-sized block this returns
    //the current aligned position without consuming bytes, so repeated zero-sized
