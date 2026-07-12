@@ -362,36 +362,148 @@ void test_do_allocate()
 
 void test_do_allocate_zero()
 {
-   //Regression test: after exhausting an external buffer, a zero-sized
-   //allocation requesting an alignment that needs padding used to underflow
-   //remaining_storage() (m_current_buffer_size wrapped around to SIZE_MAX)
-   //because the padding alone did not fit in the current buffer. In addition,
-   //a zero-sized allocation must return a non-null pointer to distinct storage.
    memory_resource_logger mrl;
-   //An 8-aligned buffer of 7 bytes reproduces the reported scenario.
-   boost::move_detail::aligned_storage<8u, 8u>::type storage;
-   const std::size_t buffer_size = 7u;
+
+   //(1) Fresh resource without a buffer: a zero-sized allocation returns valid address
    {
-      monotonic_buffer_resource m(&storage, buffer_size, &mrl);
-      BOOST_TEST(m.remaining_storage(1u) == buffer_size);
-
-      //Exhaust the buffer with a byte-aligned allocation
-      void *const p_full = m.allocate(buffer_size, 1u);
-      BOOST_TEST(p_full != 0);
-      BOOST_TEST(m.remaining_storage(1u) == 0u);
-      BOOST_TEST(mrl.m_info.size() == 0u);
-
-      //A zero-sized allocation on an exhausted buffer must still work
-      void *const p_zero1 = m.allocate(0u, 1u);
-      BOOST_TEST(p_zero1 != 0);
+      monotonic_buffer_resource m(&mrl);
+      BOOST_TEST(m.current_buffer() == 0);
+      void *const p = m.allocate(0u, 1u);
+      BOOST_TEST(p != 0);
+      //No upstream allocation happened
+      BOOST_TEST(mrl.m_info.size() == 1u);
+      //remaining_storage() must not underflow
       BOOST_TEST(m.remaining_storage(1u) < m.next_buffer_size());
 
-      //A zero-sized allocation with a stricter alignment must honor it
-      void *const p_zero2 = m.allocate(0u, 4u);
-      BOOST_TEST((std::size_t(p_zero2) % 4u) == 0u);
+      //A new zero sized allocation would return the same address, but it should not trigger a new allocation
+      void *const p2 = m.allocate(0u, 1u);
+      BOOST_TEST(p == p2);
+      BOOST_TEST(mrl.m_info.size() == 1u);
+      //remaining_storage() must not underflow
       BOOST_TEST(m.remaining_storage(1u) < m.next_buffer_size());
    }
-   //All upstream memory must have been released
+   BOOST_TEST(mrl.m_mismatches == 0u);
+   BOOST_TEST(mrl.m_info.size() == 0u);
+
+   //(2) External buffer scenarios
+   {
+      boost::move_detail::aligned_storage<8u, 8u>::type storage;
+      const std::size_t buffer_size = 7u;
+      monotonic_buffer_resource m(&storage, buffer_size, &mrl);
+      char *const base = (char*)&storage;
+      BOOST_TEST(m.remaining_storage(1u) == buffer_size);
+
+      //A zero-sized allocation on a fresh, aligned buffer returns the current
+      //position without consuming storage; repeats return the same address.
+      void *const z0 = m.allocate(0u, 1u);
+      BOOST_TEST(z0 == base);
+      BOOST_TEST(m.remaining_storage(1u) == buffer_size);   //nothing consumed
+      void *const z0b = m.allocate(0u, 1u);
+      BOOST_TEST(z0b == z0);                                 //same address
+
+      //Exhaust the buffer
+      void *const full = m.allocate(buffer_size, 1u);
+      BOOST_TEST(full == base);
+      BOOST_TEST(m.remaining_storage(1u) == 0u);
+
+      //Zero-sized allocation on the exhausted (still 1-aligned) buffer returns
+      //the one-past-the-end position (non-null) without going upstream.
+      void *const zend = m.allocate(0u, 1u);
+      BOOST_TEST(zend == base + buffer_size);
+      BOOST_TEST(m.remaining_storage(1u) < m.next_buffer_size());
+      BOOST_TEST(mrl.m_info.size() == 0u);                   //no upstream alloc
+
+      //Zero-sized allocation that needs alignment padding which does not fit in
+      //the exhausted buffer returns null (no upstream allocation, no underflow).
+      void *const z4 = m.allocate(0u, 4u);
+      BOOST_TEST(z4 != 0);
+      BOOST_TEST(m.remaining_storage(1u) < m.next_buffer_size());
+      BOOST_TEST(mrl.m_info.size() == 1u);
+   }
+   BOOST_TEST(mrl.m_mismatches == 0u);
+   BOOST_TEST(mrl.m_info.size() == 0u);
+
+   //(3) Over-aligned zero-sized allocation from within a buffer returns an
+   //    aligned position without consuming bytes, and repeats are stable.
+   {
+      boost::move_detail::aligned_storage<32u, 8u>::type storage;
+      monotonic_buffer_resource m(&storage, 16u, &mrl);
+      char *const base = (char*)&storage;
+      //Misalign the current position by consuming 1 byte
+      void *const one = m.allocate(1u, 1u);
+      BOOST_TEST(one == base);
+      //Now current is base+1; a zero-sized 4-aligned request returns base+4
+      void *const z4 = m.allocate(0u, 4u);
+      BOOST_TEST(z4 == base + 4u);
+      BOOST_TEST((std::size_t(z4) % 4u) == 0u);
+      //Repeats return the same aligned address (no storage consumed)
+      void *const z4b = m.allocate(0u, 4u);
+      BOOST_TEST(z4b == z4);
+      //No upstream allocation for any of these
+      BOOST_TEST(mrl.m_info.size() == 0u);
+   }
+   BOOST_TEST(mrl.m_mismatches == 0u);
+   BOOST_TEST(mrl.m_info.size() == 0u);
+
+   //(4) A zero-sized allocation whose aligned position lands EXACTLY on the
+   //    one-past-the-end position of the current buffer must return that
+   //    (correctly aligned) past-the-end address, without allocating a new
+   //    buffer from upstream and without underflowing remaining_storage().
+   {
+      //8-aligned buffer of 4 bytes: end == base+4 is 4-aligned.
+      boost::move_detail::aligned_storage<8u, 8u>::type storage;
+      const std::size_t buffer_size = 4u;
+      monotonic_buffer_resource m(&storage, buffer_size, &mrl);
+      char *const base = (char*)&storage;
+      char *const buffer_end = base + buffer_size;
+
+      //Consume 2 bytes so the current position (base+2) is not 4-aligned and
+      //the first 4-aligned address at/after it is exactly the past-the-end
+      //position base+4.
+      void *const two = m.allocate(2u, 1u);
+      BOOST_TEST(two == base);
+      BOOST_TEST(m.remaining_storage(1u) == 2u);
+
+      //The 4-aligned zero-sized allocation must return the past-the-end address
+      void *const zend = m.allocate(0u, 4u);
+      BOOST_TEST(zend == buffer_end);
+      BOOST_TEST((std::size_t(zend) % 4u) == 0u);
+      //It consumed only the 2 bytes of padding; nothing remains, no underflow
+      BOOST_TEST(m.remaining_storage(1u) == 0u);
+      //No upstream buffer was requested
+      BOOST_TEST(mrl.m_info.size() == 0u);
+
+      void *const zend2 = m.allocate(0u, 4u);
+      BOOST_TEST(zend2 == buffer_end);
+   }
+   BOOST_TEST(mrl.m_mismatches == 0u);
+   BOOST_TEST(mrl.m_info.size() == 0u);
+
+   //(5) A zero-sized allocation whose alignment requirement would push the
+   //    aligned position STRICTLY beyond the one-past-the-end position of the
+   //    current buffer (even though the buffer still has unused bytes) must
+   //    allocate a new buffer
+   {
+      //8-aligned buffer of 6 bytes: end == base+6 is not 8-aligned.
+      boost::move_detail::aligned_storage<8u, 8u>::type storage;
+      const std::size_t buffer_size = 6u;
+      monotonic_buffer_resource m(&storage, buffer_size, &mrl);
+      char *const base = (char*)&storage;
+
+      //Consume 3 bytes so the current position is base+3 with 3 bytes left.
+      //The first 8-aligned address at/after base+3 is base+8, which is 2 bytes
+      //beyond the one-past-the-end position base+6.
+      void *const three = m.allocate(3u, 1u);
+      BOOST_TEST(three == base);
+      BOOST_TEST(m.remaining_storage(1u) == 3u);
+
+      //The 8-aligned zero-sized allocation cannot be placed, so it should trigger an allocation.
+      void *const zbeyond = m.allocate(0u, 8u);
+      BOOST_TEST(zbeyond != 0);
+      //No upstream buffer was requested.
+      BOOST_TEST(mrl.m_info.size() == 1u);
+   }
+
    BOOST_TEST(mrl.m_mismatches == 0u);
    BOOST_TEST(mrl.m_info.size() == 0u);
 }

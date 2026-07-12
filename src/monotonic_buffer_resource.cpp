@@ -136,34 +136,27 @@ void *monotonic_buffer_resource::allocate_from_current(std::size_t aligner, std:
 
 void* monotonic_buffer_resource::do_allocate(std::size_t bytes, std::size_t alignment)
 {
-   if(alignment > memory_resource::max_align){
-     (void)bytes; (void)alignment;
-      #if defined(BOOST_CONTAINER_USER_DEFINED_THROW_CALLBACKS) || defined(BOOST_NO_EXCEPTIONS)
-      throw_bad_alloc();
-      #else
-      throw std::bad_alloc();
-      #endif
-   }
+   BOOST_ASSERT((alignment & (alignment - 1u)) == 0u);  //Alignment must be a power of two
 
-   //A zero-sized request must still work correctly so treat it as a 1-byte allocation
-   if(!bytes){
-      bytes = 1u;
-   }
-
-   //See if there is room in current buffer
+   //See if there is room in the current buffer. remaining_storage() reports the
+   //alignment padding through "aligner"; note it clamps its return value to zero
+   //when that padding alone does not fit, so "m_current_buffer_size < aligner" is
+   //also tested to route the empty-block case below and to avoid underflowing
+   //m_current_buffer_size in allocate_from_current().
    std::size_t aligner = 0u;
-   if(this->remaining_storage(alignment, aligner) < bytes){
-      //The new buffer will be aligned to the strictest alignment so reset
-      //the aligner, which was needed for the old buffer.
-      aligner = 0u;
+   if(!m_current_buffer || this->remaining_storage(alignment, aligner) < bytes || m_current_buffer_size < aligner){
       //Update next_buffer_size to at least bytes
-      this->increase_next_buffer_at_least_to(bytes);
+      const std::size_t extra_for_alignment = (alignment > memory_resource::max_align) ? (alignment - 1u) : 0u;
+      this->increase_next_buffer_at_least_to(bytes + extra_for_alignment);
       //Now allocate and update internal data
       m_current_buffer = (char*)m_memory_blocks.allocate(m_next_buffer_size);
       m_current_buffer_size = m_next_buffer_size;
       this->increase_next_buffer();
    }
-   //Enough internal storage, extract from it
+   //Enough internal storage, extract from it. For a zero-sized block this returns
+   //the current aligned position without consuming bytes, so repeated zero-sized
+   //allocations that already meet the alignment yield the same address (following
+   //the libc++/MSVC behavior).
    return this->allocate_from_current(aligner, bytes);
 }
 
