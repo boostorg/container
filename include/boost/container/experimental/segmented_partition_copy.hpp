@@ -35,33 +35,6 @@ segmented_partition_copy(InIter first, Sent last, OutIter1 out_true, OutIter2 ou
 
 namespace detail_algo {
 
-//////////////////////////////////////////////////////////////////////////////
-// Output segmentation is handled the same way as segmented_copy_if, but with
-// two output dimensions instead of one.  For each output there are two steps:
-//
-//   *_dispatch : the driver.  It has no end iterator for its output range
-//                (partition_copy assumes enough room, exactly like std).  For a
-//                segmented output it walks segment by segment, bounding each
-//                segment with its real end() and delegating to *_bounded; for a
-//                flat output it just forwards, marking that output unbounded.
-//   *_bounded  : the fully-recursive worker over a *real* bounded sub-range
-//                [x_first, x_last).  It only ever receives real segment ends
-//                (never a sentinel) and recurses on nested (seg-of-seg) locals.
-//
-// The two outputs are nested (out_true outside, out_false inside) so a single
-// source scan advances both at their own data-dependent rate:
-//
-//   true_dispatch -> true_bounded -> false_dispatch -> false_bounded -> leaf
-//
-// While the inner (out_false) output is walked, out_true is threaded as a
-// "partner": the walk stops when the current out_true segment fills so the
-// outer stage can advance it.  A genuinely flat (non-segmented) output has no
-// end at all; that unboundedness is represented with unreachable_sentinel_t and
-// only ever reaches the leaf, where the corresponding fullness check folds away.
-//////////////////////////////////////////////////////////////////////////////
-
-// Whether the source and both outputs have room for a complete fixed block.
-// The unreachable-sentinel overloads remove the corresponding output checks.
 template <std::size_t BlockSize, class TIter, class FIter, class Diff>
 BOOST_CONTAINER_FORCEINLINE bool partition_copy_room_enough
    (TIter t_first, TIter t_last, FIter f_first, FIter f_last, Diff avail)
@@ -106,14 +79,6 @@ struct pc_output_is_ra
       < typename boost::container::iterator_traits<It>::iterator_category
       , std::random_access_iterator_tag >::value;
 };
-
-//////////////////////////////////////////////////////////////////////////////
-// Flat leaf: partitions [first, last) into the two flat local ranges
-// [t_first, t_last) and [f_first, f_last), stopping when the source is
-// exhausted or the range the current element must go to is full.  A flat
-// (unbounded) output is passed as unreachable_sentinel_t, whose fullness check
-// folds away, so the fully-flat top-level case degenerates to a tight loop.
-//////////////////////////////////////////////////////////////////////////////
 
 // Generic version (any source category).
 template <class SrcIter, class Sent, class TIter, class TSent, class FIter, class FSent,
@@ -186,8 +151,26 @@ partition_copy_leaf
       }
    }
 
-   return (partition_copy_leaf)
-      (cur, last, t_first, t_last, f_first, f_last, pred, std::input_iterator_tag());
+   bool true_output_full = false;
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
+   for(; cur != last; ++cur) {
+      if(pred(*cur)) {
+         if(t_first == t_last) {
+            true_output_full = true;
+            break;
+         }
+         *t_first = *cur;
+         ++t_first;
+      }
+      else {
+         if(f_first == f_last)
+            break;
+         *f_first = *cur;
+         ++f_first;
+      }
+   }
+   return segquartet<RASrcIter, TIter, FIter, bool>
+      (cur, t_first, f_first, true_output_full);
 }
 
 //////////////////////////////////////////////////////////////////////////////
