@@ -75,6 +75,25 @@ struct segtrio
       : first(sd.first), second(sd.second), third(sd.third) {}
 };
 
+template<class T1, class T2, class T3, class T4>
+struct segquartet
+{
+   T1 first;
+   T2 second;
+   T3 third;
+   T4 fourth;
+
+   BOOST_CONTAINER_FORCEINLINE segquartet() {}
+
+   template<class U1, class U2, class U3, class U4>
+   BOOST_CONTAINER_FORCEINLINE segquartet(const U1 &f, const U2 &s, const U3 &t, const U4 &q)
+      : first(f), second(s), third(t), fourth(q) {}
+
+   template<class U1, class U2, class U3, class U4>
+   BOOST_CONTAINER_FORCEINLINE segquartet(const segquartet<U1, U2, U3, U4> &sq)
+      : first(sq.first), second(sq.second), third(sq.third), fourth(sq.fourth) {}
+};
+
 struct unreachable_sentinel_t
 {
    template <class It>

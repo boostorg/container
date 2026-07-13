@@ -22,6 +22,8 @@
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
 #include <boost/container/detail/iterator.hpp>
+#include <boost/container/detail/type_traits.hpp>
+#include <cstddef>
 #include <utility>
 
 namespace boost {
@@ -33,69 +35,402 @@ segmented_partition_copy(InIter first, Sent last, OutIter1 out_true, OutIter2 ou
 
 namespace detail_algo {
 
-template <class InIter, class Sent, class OutIter1, class OutIter2, class Pred, class Tag, class Cat>
-typename algo_enable_if_c<
-   !Tag::value || is_sentinel<Sent, InIter>::value, std::pair<OutIter1, OutIter2> >::type
-segmented_partition_copy_dispatch
-   (InIter first, Sent last, OutIter1 out_true, OutIter2 out_false, Pred pred, Tag, Cat)
+//////////////////////////////////////////////////////////////////////////////
+// Output segmentation is handled the same way as segmented_copy_if, but with
+// two output dimensions instead of one.  For each output there are two steps:
+//
+//   *_dispatch : the driver.  It has no end iterator for its output range
+//                (partition_copy assumes enough room, exactly like std).  For a
+//                segmented output it walks segment by segment, bounding each
+//                segment with its real end() and delegating to *_bounded; for a
+//                flat output it just forwards, marking that output unbounded.
+//   *_bounded  : the fully-recursive worker over a *real* bounded sub-range
+//                [x_first, x_last).  It only ever receives real segment ends
+//                (never a sentinel) and recurses on nested (seg-of-seg) locals.
+//
+// The two outputs are nested (out_true outside, out_false inside) so a single
+// source scan advances both at their own data-dependent rate:
+//
+//   true_dispatch -> true_bounded -> false_dispatch -> false_bounded -> leaf
+//
+// While the inner (out_false) output is walked, out_true is threaded as a
+// "partner": the walk stops when the current out_true segment fills so the
+// outer stage can advance it.  A genuinely flat (non-segmented) output has no
+// end at all; that unboundedness is represented with unreachable_sentinel_t and
+// only ever reaches the leaf, where the corresponding fullness check folds away.
+//////////////////////////////////////////////////////////////////////////////
+
+// Whether the source and both outputs have room for a complete fixed block.
+// The unreachable-sentinel overloads remove the corresponding output checks.
+template <std::size_t BlockSize, class TIter, class FIter, class Diff>
+BOOST_CONTAINER_FORCEINLINE bool partition_copy_room_enough
+   (TIter t_first, TIter t_last, FIter f_first, FIter f_last, Diff avail)
 {
+   const Diff block_size = static_cast<Diff>(BlockSize);
+   return avail >= block_size &&
+      static_cast<Diff>(t_last - t_first) >= block_size &&
+      static_cast<Diff>(f_last - f_first) >= block_size;
+}
+
+template <std::size_t BlockSize, class TIter, class FIter, class Diff>
+BOOST_CONTAINER_FORCEINLINE bool partition_copy_room_enough
+   (TIter, unreachable_sentinel_t, FIter f_first, FIter f_last, Diff avail)
+{
+   const Diff block_size = static_cast<Diff>(BlockSize);
+   return avail >= block_size &&
+      static_cast<Diff>(f_last - f_first) >= block_size;
+}
+
+template <std::size_t BlockSize, class TIter, class FIter, class Diff>
+BOOST_CONTAINER_FORCEINLINE bool partition_copy_room_enough
+   (TIter t_first, TIter t_last, FIter, unreachable_sentinel_t, Diff avail)
+{
+   const Diff block_size = static_cast<Diff>(BlockSize);
+   return avail >= block_size &&
+      static_cast<Diff>(t_last - t_first) >= block_size;
+}
+
+template <std::size_t BlockSize, class TIter, class FIter, class Diff>
+BOOST_CONTAINER_FORCEINLINE bool partition_copy_room_enough
+   (TIter, unreachable_sentinel_t, FIter, unreachable_sentinel_t, Diff avail)
+{ return avail >= static_cast<Diff>(BlockSize); }
+
+// The block-based fast path measures each bounded output's remaining room with
+// last - first, so it is only valid when the output iterators are random
+// access.  A non-random-access (e.g. bidirectional) output falls back to the
+// element-by-element leaf.
+template <class It>
+struct pc_output_is_ra
+{
+   static const bool value = dtl::is_convertible
+      < typename boost::container::iterator_traits<It>::iterator_category
+      , std::random_access_iterator_tag >::value;
+};
+
+//////////////////////////////////////////////////////////////////////////////
+// Flat leaf: partitions [first, last) into the two flat local ranges
+// [t_first, t_last) and [f_first, f_last), stopping when the source is
+// exhausted or the range the current element must go to is full.  A flat
+// (unbounded) output is passed as unreachable_sentinel_t, whose fullness check
+// folds away, so the fully-flat top-level case degenerates to a tight loop.
+//////////////////////////////////////////////////////////////////////////////
+
+// Generic version (any source category).
+template <class SrcIter, class Sent, class TIter, class TSent, class FIter, class FSent,
+          class Pred, class SrcCat>
+BOOST_CONTAINER_FORCEINLINE
+segquartet<SrcIter, TIter, FIter, bool>
+partition_copy_leaf
+   (SrcIter first, Sent last, TIter t_first, TSent t_last, FIter f_first, FSent f_last,
+    Pred pred, const SrcCat &)
+{
+   bool true_output_full = false;
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first) {
       if(pred(*first)) {
-         *out_true = *first;
-         ++out_true;
+         if(t_first == t_last) {
+            true_output_full = true;
+            break;
+         }
+         *t_first = *first;
+         ++t_first;
       }
       else {
-         *out_false = *first;
-         ++out_false;
+         if(f_first == f_last)
+            break;
+         *f_first = *first;
+         ++f_first;
       }
    }
-   return std::pair<OutIter1, OutIter2>(out_true, out_false);
+   return segquartet<SrcIter, TIter, FIter, bool>
+      (first, t_first, f_first, true_output_full);
 }
 
-template <class RAInIter, class OutIter1, class OutIter2, class Pred>
-typename iterator_enable_if_tag
-   <RAInIter, std::random_access_iterator_tag, std::pair<OutIter1, OutIter2> >::type
-segmented_partition_copy_dispatch
-   (RAInIter first, RAInIter last, OutIter1 out_true, OutIter2 out_false, Pred pred,
-    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
+// Random-access-source fast path (needs random-access outputs too).  Process
+// fixed 32-element source blocks while both outputs have room for the worst
+// case (all 32 elements routed to either output), then finish with the generic
+// checked loop.  An unbounded output reports the available source count as its
+// room, so the same implementation handles zero, one or two bounded outputs.
+template <class RASrcIter, class TIter, class TSent, class FIter, class FSent, class Pred>
+BOOST_CONTAINER_FORCEINLINE
+typename algo_enable_if_c
+   < pc_output_is_ra<TIter>::value && pc_output_is_ra<FIter>::value
+   , segquartet<RASrcIter, TIter, FIter, bool> >::type
+partition_copy_leaf
+   (RASrcIter first, RASrcIter last, TIter t_first, TSent t_last, FIter f_first, FSent f_last,
+    Pred pred, const std::random_access_iterator_tag &)
 {
-   typedef typename iterator_traits<RAInIter>::difference_type difference_type;
+   typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
 
-   RAInIter cur = first;
+   RASrcIter cur = first;
    const difference_type B = 32;
-   difference_type n = last - cur;
-   while(n >= B) {
-      n -= B;
-      difference_type chunk = B;
+   difference_type avail = last - cur;
+   for(;;) {
+      if(!(partition_copy_room_enough<B>)(t_first, t_last, f_first, f_last, avail))
+         break;
+
+      avail -= B;
+
       BOOST_CONTAINER_SEGMENTED_AUTO_UNROLL
-      while(chunk) {
+      for (difference_type chunk = B; chunk; ) {
          --chunk;
          if(pred(*cur)) {
-            *out_true = *cur;
-            ++out_true;
+            *t_first = *cur;
+            ++t_first;
          }
          else {
-            *out_false = *cur;
-            ++out_false;
+            *f_first = *cur;
+            ++f_first;
          }
          ++cur;
       }
    }
 
-   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-   while(cur != last) {
-      if(pred(*cur)) {
-         *out_true = *cur;
-         ++out_true;
-      }
-      else {
-         *out_false = *cur;
-         ++out_false;
-      }
-      ++cur;
+   return (partition_copy_leaf)
+      (cur, last, t_first, t_last, f_first, f_last, pred, std::input_iterator_tag());
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Inner stage (out_false).  out_true has been reduced to a flat [t_first,
+// t_last) partner by the outer stage (t_last real when out_true is segmented,
+// unreachable when it is flat).
+//////////////////////////////////////////////////////////////////////////////
+
+// out_false local flat: out_false is a flat bounded range, hand both to the
+// leaf (the out_true partner end may still be a sentinel when out_true is flat).
+template <class SrcIter, class Sent, class TIter, class TSent, class FIter,
+          class Pred, class Cat>
+BOOST_CONTAINER_FORCEINLINE
+segquartet<SrcIter, TIter, FIter, bool>
+partition_copy_false_bounded
+   (SrcIter first, Sent last, TIter t_first, TSent t_last, FIter f_first, FIter f_last,
+    Pred pred, non_segmented_iterator_tag, const Cat &cat)
+{
+   return (partition_copy_leaf)(first, last, t_first, t_last, f_first, f_last, pred, cat);
+}
+
+// out_false local segmented (nested): walk the bounded [f_first, f_last) span,
+// recursing on the local structure.  Follows the classic same-segment /
+// initial-middle-final segmented walk, threading the source and the out_true
+// partner.  The recursive result records whether out_true blocked; otherwise a
+// non-drained return means this out_false sub-segment filled.
+template <class SrcIter, class Sent, class TIter, class TSent, class SegFIter,
+          class Pred, class Cat>
+segquartet<SrcIter, TIter, SegFIter, bool>
+partition_copy_false_bounded
+   (SrcIter first, Sent last, TIter t_first, TSent t_last, SegFIter f_first, SegFIter f_last,
+    Pred pred, segmented_iterator_tag, const Cat &cat)
+{
+   typedef segmented_iterator_traits<SegFIter> ftr;
+   typedef typename ftr::local_iterator        floc_t;
+   typedef typename ftr::segment_iterator      fseg_t;
+   typedef typename segmented_iterator_traits<floc_t>::is_segmented_iterator floc_seg_t;
+
+   fseg_t       fsfirst = ftr::segment(f_first);
+   const fseg_t fslast  = ftr::segment(f_last);
+
+   if(fsfirst == fslast) {
+      segquartet<SrcIter, TIter, floc_t, bool> r = (partition_copy_false_bounded)
+         (first, last, t_first, t_last, ftr::local(f_first), ftr::local(f_last), pred, floc_seg_t(), cat);
+      return segquartet<SrcIter, TIter, SegFIter, bool>
+         (r.first, r.second, ftr::compose(fsfirst, r.third), r.fourth);
    }
-   return std::pair<OutIter1, OutIter2>(out_true, out_false);
+   else {
+      segquartet<SrcIter, TIter, floc_t, bool> r = (partition_copy_false_bounded)
+         (first, last, t_first, t_last, ftr::local(f_first), ftr::end(fsfirst), pred, floc_seg_t(), cat);
+      first   = r.first;
+      t_first = r.second;
+      if(first != last && !r.fourth) {
+         for(++fsfirst; fsfirst != fslast; ++fsfirst) {
+            r = (partition_copy_false_bounded)
+               (first, last, t_first, t_last, ftr::begin(fsfirst), ftr::end(fsfirst), pred, floc_seg_t(), cat);
+            first   = r.first;
+            t_first = r.second;
+            if(first == last || r.fourth)
+               return segquartet<SrcIter, TIter, SegFIter, bool>
+                  (first, r.second, ftr::compose(fsfirst, r.third), r.fourth);
+         }
+         r = (partition_copy_false_bounded)
+            (first, last, t_first, t_last, ftr::begin(fslast), ftr::local(f_last), pred, floc_seg_t(), cat);
+      }
+      return segquartet<SrcIter, TIter, SegFIter, bool>
+         (r.first, r.second, ftr::compose(fsfirst, r.third), r.fourth);
+   }
+}
+
+// out_false flat (driver): out_false has no end, hand it to the leaf as an
+// unbounded output alongside the (bounded or unbounded) out_true partner.
+template <class SrcIter, class Sent, class TIter, class TSent, class FIter,
+          class Pred, class Cat>
+BOOST_CONTAINER_FORCEINLINE
+segtrio<SrcIter, TIter, FIter>
+partition_copy_false_dispatch
+   (SrcIter first, Sent last, TIter t_first, TSent t_last, FIter f_first,
+    Pred pred, non_segmented_iterator_tag, const Cat &cat)
+{
+   const segquartet<SrcIter, TIter, FIter, bool> r = (partition_copy_leaf)
+      (first, last, t_first, t_last, f_first, unreachable_sentinel_t(), pred, cat);
+   return segtrio<SrcIter, TIter, FIter>(r.first, r.second, r.third);
+}
+
+// out_false segmented (driver): refill over out_false segments without an
+// overall end, bounding each segment with its real end() and delegating to the
+// worker.  Stops when the source drains or the out_true partner fills;
+// otherwise the current out_false segment filled, so advance to the next one.
+template <class SrcIter, class Sent, class TIter, class TSent, class SegFIter,
+          class Pred, class Cat>
+segtrio<SrcIter, TIter, SegFIter>
+partition_copy_false_dispatch
+   (SrcIter first, Sent last, TIter t_first, TSent t_last, SegFIter f_first,
+    Pred pred, segmented_iterator_tag, const Cat &cat)
+{
+   typedef segmented_iterator_traits<SegFIter> ftr;
+   typedef typename ftr::local_iterator        floc_t;
+   typedef typename ftr::segment_iterator      fseg_t;
+   typedef typename segmented_iterator_traits<floc_t>::is_segmented_iterator floc_seg_t;
+
+   fseg_t fs   = ftr::segment(f_first);
+   floc_t f_lo = ftr::local(f_first);
+   for(;;) {
+      segquartet<SrcIter, TIter, floc_t, bool> r = (partition_copy_false_bounded)
+         (first, last, t_first, t_last, f_lo, ftr::end(fs), pred, floc_seg_t(), cat);
+      first   = r.first;
+      t_first = r.second;
+      if(first == last || r.fourth)
+         return segtrio<SrcIter, TIter, SegFIter>(first, t_first, ftr::compose(fs, r.third));
+      ++fs;
+      f_lo = ftr::begin(fs);
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Outer stage (out_true).  out_false is threaded whole (its own segmentation is
+// resolved by the inner stage), so these functions never carry an out_false end.
+//////////////////////////////////////////////////////////////////////////////
+
+// out_true local flat: out_true is now a flat bounded partner, peel out_false.
+template <class SrcIter, class Sent, class TIter, class FIter,
+          class Pred, class FTag, class Cat>
+BOOST_CONTAINER_FORCEINLINE
+segtrio<SrcIter, TIter, FIter>
+partition_copy_true_bounded
+   (SrcIter first, Sent last, TIter t_first, TIter t_last, FIter f_first,
+    Pred pred, non_segmented_iterator_tag, FTag f_tag, const Cat &cat)
+{
+   return (partition_copy_false_dispatch)
+      (first, last, t_first, t_last, f_first, pred, f_tag, cat);
+}
+
+// out_true local segmented (nested): walk the bounded [t_first, t_last) span,
+// recursing on the local structure.  Since out_false is fully handled by the
+// inner false stage below, a recursive call returns only when the source drains
+// or its out_true sub-range fills (a true element was blocked); the latter means
+// the sub-segment is full, so we advance to the next one.  Follows the classic
+// same-segment / initial-middle-final segmented walk.
+template <class SrcIter, class Sent, class SegTIter, class FIter,
+          class Pred, class FTag, class Cat>
+segtrio<SrcIter, SegTIter, FIter>
+partition_copy_true_bounded
+   (SrcIter first, Sent last, SegTIter t_first, SegTIter t_last, FIter f_first,
+    Pred pred, segmented_iterator_tag, FTag f_tag, const Cat &cat)
+{
+   typedef segmented_iterator_traits<SegTIter> ttr;
+   typedef typename ttr::local_iterator        tloc_t;
+   typedef typename ttr::segment_iterator      tseg_t;
+   typedef typename segmented_iterator_traits<tloc_t>::is_segmented_iterator tloc_seg_t;
+
+   tseg_t       tsfirst = ttr::segment(t_first);
+   const tseg_t tslast  = ttr::segment(t_last);
+
+   if(tsfirst == tslast) {
+      segtrio<SrcIter, tloc_t, FIter> r = (partition_copy_true_bounded)
+         (first, last, ttr::local(t_first), ttr::local(t_last), f_first, pred, tloc_seg_t(), f_tag, cat);
+      return segtrio<SrcIter, SegTIter, FIter>(r.first, ttr::compose(tsfirst, r.second), r.third);
+   }
+   else {
+      segtrio<SrcIter, tloc_t, FIter> r = (partition_copy_true_bounded)
+         (first, last, ttr::local(t_first), ttr::end(tsfirst), f_first, pred, tloc_seg_t(), f_tag, cat);
+      if(r.first != last) {
+         first   = r.first;
+         f_first = r.third;
+         for(++tsfirst; tsfirst != tslast; ++tsfirst) {
+            r = (partition_copy_true_bounded)
+               (first, last, ttr::begin(tsfirst), ttr::end(tsfirst), f_first, pred, tloc_seg_t(), f_tag, cat);
+            first   = r.first;
+            f_first = r.third;
+            if(first == last)
+               return segtrio<SrcIter, SegTIter, FIter>(first, ttr::compose(tsfirst, r.second), f_first);
+         }
+         r = (partition_copy_true_bounded)
+            (first, last, ttr::begin(tslast), ttr::local(t_last), f_first, pred, tloc_seg_t(), f_tag, cat);
+      }
+      return segtrio<SrcIter, SegTIter, FIter>(r.first, ttr::compose(tsfirst, r.second), r.third);
+   }
+}
+
+// out_true flat (driver): out_true has no end, peel out_false directly marking
+// out_true unbounded.
+template <class SrcIter, class Sent, class TIter, class FIter,
+          class Pred, class FTag, class Cat>
+BOOST_CONTAINER_FORCEINLINE
+segtrio<SrcIter, TIter, FIter>
+partition_copy_true_dispatch
+   (SrcIter first, Sent last, TIter t_first, FIter f_first,
+    Pred pred, non_segmented_iterator_tag, FTag f_tag, const Cat &cat)
+{
+   return (partition_copy_false_dispatch)
+      (first, last, t_first, unreachable_sentinel_t(), f_first, pred, f_tag, cat);
+}
+
+// out_true segmented (driver): refill over out_true segments without an overall
+// end, bounding each segment with its real end() and delegating to the worker.
+// out_false is unbounded here, so the only stop is source exhaustion; otherwise
+// the current out_true segment filled, so advance to the next one.
+template <class SrcIter, class Sent, class SegTIter, class FIter,
+          class Pred, class FTag, class Cat>
+segtrio<SrcIter, SegTIter, FIter>
+partition_copy_true_dispatch
+   (SrcIter first, Sent last, SegTIter t_first, FIter f_first,
+    Pred pred, segmented_iterator_tag, FTag f_tag, const Cat &cat)
+{
+   typedef segmented_iterator_traits<SegTIter> ttr;
+   typedef typename ttr::local_iterator        tloc_t;
+   typedef typename ttr::segment_iterator      tseg_t;
+   typedef typename segmented_iterator_traits<tloc_t>::is_segmented_iterator tloc_seg_t;
+
+   tseg_t ts   = ttr::segment(t_first);
+   tloc_t t_lo = ttr::local(t_first);
+   for(;;) {
+      segtrio<SrcIter, tloc_t, FIter> r = (partition_copy_true_bounded)
+         (first, last, t_lo, ttr::end(ts), f_first, pred, tloc_seg_t(), f_tag, cat);
+      first   = r.first;
+      f_first = r.third;
+      if(first == last)
+         return segtrio<SrcIter, SegTIter, FIter>(first, ttr::compose(ts, r.second), f_first);
+      ++ts;
+      t_lo = ttr::begin(ts);
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Source dispatch: walks the source (read pointer) segments.  The random
+// access / unrolling fast path lives in the leaf, so the non-segmented source
+// overload just enters the outer driver (which owns the output ends) and
+// forwards its iterator category down to the leaf.
+//////////////////////////////////////////////////////////////////////////////
+
+template <class InIter, class Sent, class OutIter1, class OutIter2, class Pred, class Tag, class Cat>
+BOOST_CONTAINER_FORCEINLINE
+typename algo_enable_if_c<
+   !Tag::value || is_sentinel<Sent, InIter>::value, std::pair<OutIter1, OutIter2> >::type
+segmented_partition_copy_dispatch
+   (InIter first, Sent last, OutIter1 out_true, OutIter2 out_false, Pred pred, Tag, Cat cat)
+{
+   typedef typename segmented_iterator_traits<OutIter1>::is_segmented_iterator t_seg_t;
+   typedef typename segmented_iterator_traits<OutIter2>::is_segmented_iterator f_seg_t;
+   segtrio<InIter, OutIter1, OutIter2> r = (partition_copy_true_dispatch)
+      (first, last, out_true, out_false, pred, t_seg_t(), f_seg_t(), cat);
+   return std::pair<OutIter1, OutIter2>(r.second, r.third);
 }
 
 template <class SegIter, class OutIter1, class OutIter2, class Pred, class Cat>
