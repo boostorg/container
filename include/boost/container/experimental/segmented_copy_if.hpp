@@ -22,6 +22,7 @@
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
 #include <boost/container/detail/iterator.hpp>
+#include <cstddef>
 
 namespace boost {
 namespace container {
@@ -61,6 +62,28 @@ segmented_copy_if_dst_bounded
    return segduo<SrcIter, DstIter>(first, dst_first);
 }
 
+template <std::size_t BlockSize, class RASrcIter, class RADstIter,
+          class Pred, class Diff>
+BOOST_CONTAINER_FORCEINLINE void copy_if_cleanup_blocks
+   (RASrcIter &cur, RADstIter &dst_cur, RADstIter dst_last,
+    Pred &pred, Diff &avail)
+{
+   const Diff block_size = static_cast<Diff>(BlockSize);
+   while(avail >= block_size &&
+         static_cast<Diff>(dst_last - dst_cur) >= block_size) {
+      avail -= block_size;
+      BOOST_CONTAINER_SEGMENTED_AUTO_UNROLL
+      for(Diff chunk = block_size; chunk; ) {
+         --chunk;
+         if(pred(*cur)) {
+            *dst_cur = *cur;
+            ++dst_cur;
+         }
+         ++cur;
+      }
+   }
+}
+
 template <class RASrcIter, class RADstIter, class Pred>
 typename iterator_enable_if_tag
    <RADstIter, std::random_access_iterator_tag, segduo<RASrcIter, RADstIter> >::type
@@ -74,44 +97,11 @@ segmented_copy_if_dst_bounded
    RASrcIter cur = first;
    RADstIter dst_cur = dst_first;
 
-   const difference_type B = 32;
    difference_type avail = last - cur;
-   for(;;) {
-      difference_type room  = dst_last - dst_cur;
-      difference_type chunk = room < avail ? room : avail;
-      if(chunk == 0)
-         goto end;
-      if(chunk >= B) {
-         avail -= B;
-         chunk = B;
-         BOOST_CONTAINER_SEGMENTED_AUTO_UNROLL
-         while(chunk) {
-            --chunk;
-            if(pred(*cur)) {
-               *dst_cur = *cur;
-               ++dst_cur;
-            }
-            ++cur;
-         }
-      }
-      else{
-         break;
-      }
-   }
+   (copy_if_cleanup_blocks<32>)(cur, dst_cur, dst_last, pred, avail);
 
-   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-   while(cur != last) {
-      if(pred(*cur)) {
-         if (dst_cur == dst_last)
-            break;
-         *dst_cur = *cur;
-         ++dst_cur;
-      }
-      ++cur;
-   }
-   end:
-
-   return segduo<RASrcIter, RADstIter>(cur, dst_cur);
+   return (segmented_copy_if_dst_bounded)
+      (cur, last, dst_cur, dst_last, pred, non_segmented_iterator_tag(), int());
 }
 
 template <class SrcIter, class Sent, class SegDstIter, class Pred, class SrcCat>
