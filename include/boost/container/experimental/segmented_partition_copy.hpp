@@ -68,10 +68,46 @@ BOOST_CONTAINER_FORCEINLINE bool partition_copy_room_enough
    (TIter, unreachable_sentinel_t, FIter, unreachable_sentinel_t, Diff avail)
 { return avail >= static_cast<Diff>(BlockSize); }
 
-// The block-based fast path measures each bounded output's remaining room with
-// last - first, so it is only valid when the output iterators are random
-// access.  A non-random-access (e.g. bidirectional) output falls back to the
-// element-by-element leaf.
+template <std::size_t BlockSize, class RASrcIter, class TIter, class TSent,
+          class FIter, class FSent, class Pred, class Diff>
+BOOST_CONTAINER_FORCEINLINE segquartet<RASrcIter, TIter, FIter, Diff>
+partition_copy_cleanup_blocks
+   (RASrcIter cur, TIter t_first, TSent t_last, FIter f_first, FSent f_last,
+    Pred pred, Diff avail, dtl::true_type)
+{
+   const Diff block_size = static_cast<Diff>(BlockSize);
+   while((partition_copy_room_enough<BlockSize>)
+            (t_first, t_last, f_first, f_last, avail)) {
+      avail -= block_size;
+      BOOST_CONTAINER_SEGMENTED_AUTO_UNROLL
+      for(Diff chunk = block_size; chunk; ) {
+         --chunk;
+         if(pred(*cur)) {
+            *t_first = *cur;
+            ++t_first;
+         }
+         else {
+            *f_first = *cur;
+            ++f_first;
+         }
+         ++cur;
+      }
+   }
+   return segquartet<RASrcIter, TIter, FIter, Diff>
+      (cur, t_first, f_first, avail);
+}
+
+template <std::size_t BlockSize, class RASrcIter, class TIter, class TSent,
+          class FIter, class FSent, class Pred, class Diff>
+BOOST_CONTAINER_FORCEINLINE segquartet<RASrcIter, TIter, FIter, Diff>
+partition_copy_cleanup_blocks
+   (RASrcIter cur, TIter t_first, TSent, FIter f_first, FSent, Pred, Diff avail,
+    dtl::false_type)
+{
+   return segquartet<RASrcIter, TIter, FIter, Diff>
+      (cur, t_first, f_first, avail);
+}
+
 template <class It>
 struct pc_output_is_ra
 {
@@ -80,7 +116,6 @@ struct pc_output_is_ra
       , std::random_access_iterator_tag >::value;
 };
 
-// Generic version (any source category).
 template <class SrcIter, class Sent, class TIter, class TSent, class FIter, class FSent,
           class Pred, class SrcCat>
 BOOST_CONTAINER_FORCEINLINE
@@ -113,9 +148,9 @@ partition_copy_leaf
 
 // Random-access-source fast path (needs random-access outputs too).  Process
 // fixed 32-element source blocks while both outputs have room for the worst
-// case (all 32 elements routed to either output), then finish with the generic
-// checked loop.  An unbounded output reports the available source count as its
-// room, so the same implementation handles zero, one or two bounded outputs.
+// case (all 32 elements routed to either output), use 8-element cleanup blocks
+// when an output is bounded, then finish with the generic checked loop.  An
+// unbounded output reports the available source count as its room.
 template <class RASrcIter, class TIter, class TSent, class FIter, class FSent, class Pred>
 BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c
@@ -126,51 +161,24 @@ partition_copy_leaf
     Pred pred, const std::random_access_iterator_tag &)
 {
    typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
+   typedef segquartet<RASrcIter, TIter, FIter, difference_type> cleanup_result;
 
-   RASrcIter cur = first;
-   const difference_type B = 32;
-   difference_type avail = last - cur;
-   for(;;) {
-      if(!(partition_copy_room_enough<B>)(t_first, t_last, f_first, f_last, avail))
-         break;
+   cleanup_result r = (partition_copy_cleanup_blocks<32>)
+      (first, t_first, t_last, f_first, f_last, pred, last - first,
+       dtl::true_type());
 
-      avail -= B;
+   typedef dtl::integral_constant
+      < bool
+      , !dtl::is_same<TSent, unreachable_sentinel_t>::value ||
+        !dtl::is_same<FSent, unreachable_sentinel_t>::value
+      > has_bounded_output_t;
+   r = (partition_copy_cleanup_blocks<8>)
+      (r.first, r.second, t_last, r.third, f_last, pred, r.fourth,
+       has_bounded_output_t());
 
-      BOOST_CONTAINER_SEGMENTED_AUTO_UNROLL
-      for (difference_type chunk = B; chunk; ) {
-         --chunk;
-         if(pred(*cur)) {
-            *t_first = *cur;
-            ++t_first;
-         }
-         else {
-            *f_first = *cur;
-            ++f_first;
-         }
-         ++cur;
-      }
-   }
-
-   bool true_output_full = false;
-   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-   for(; cur != last; ++cur) {
-      if(pred(*cur)) {
-         if(t_first == t_last) {
-            true_output_full = true;
-            break;
-         }
-         *t_first = *cur;
-         ++t_first;
-      }
-      else {
-         if(f_first == f_last)
-            break;
-         *f_first = *cur;
-         ++f_first;
-      }
-   }
-   return segquartet<RASrcIter, TIter, FIter, bool>
-      (cur, t_first, f_first, true_output_full);
+   return (partition_copy_leaf)
+      (r.first, last, r.second, t_last, r.third, f_last, pred,
+       int());
 }
 
 //////////////////////////////////////////////////////////////////////////////
