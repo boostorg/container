@@ -53,9 +53,10 @@ segmented_remove_copy_dst_bounded
 
 template <std::size_t BlockSize, bool Move, class RASrcIter, class RADstIter,
           class T, class Diff>
-BOOST_CONTAINER_FORCEINLINE void remove_copy_cleanup_blocks
-   (RASrcIter &cur, RADstIter &dst_cur, RADstIter dst_last,
-    const T &value, Diff &avail)
+BOOST_CONTAINER_FORCEINLINE segtrio<RASrcIter, RADstIter, Diff>
+remove_copy_cleanup_blocks
+   (RASrcIter cur, RADstIter dst_cur, RADstIter dst_last,
+    T value, Diff avail)
 {
    const Diff block_size = static_cast<Diff>(BlockSize);
    while(avail >= block_size &&
@@ -71,6 +72,7 @@ BOOST_CONTAINER_FORCEINLINE void remove_copy_cleanup_blocks
          ++cur;
       }
    }
+   return segtrio<RASrcIter, RADstIter, Diff>(cur, dst_cur, avail);
 }
 
 template <bool Move, class RASrcIter, class RADstIter, class T>
@@ -83,15 +85,12 @@ segmented_remove_copy_dst_bounded
    typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
 
    (void)src_tag;
-   RASrcIter cur = first;
-   RADstIter dst_cur = dst_first;
-
-   difference_type avail = last - cur;
-   (remove_copy_cleanup_blocks<32, Move>)
-      (cur, dst_cur, dst_last, value, avail);
+   segtrio<RASrcIter, RADstIter, difference_type> r =
+      (remove_copy_cleanup_blocks<32, Move>)
+         (first, dst_first, dst_last, value, last - first);
 
    return (segmented_remove_copy_dst_bounded<Move>)
-      (cur, last, dst_cur, dst_last, value, non_segmented_iterator_tag(), int());
+      (r.first, last, r.second, dst_last, value, non_segmented_iterator_tag(), int());
 }
 
 template <bool Move, class SrcIter, class Sent, class SegDstIter, class T, class SrcCat>
