@@ -56,7 +56,7 @@ template <std::size_t BlockSize, bool Move, class RASrcIter, class RADstIter,
 BOOST_CONTAINER_FORCEINLINE segtrio<RASrcIter, RADstIter, Diff>
 remove_copy_cleanup_blocks
    (RASrcIter cur, RADstIter dst_cur, RADstIter dst_last,
-    T value, Diff avail)
+    const T &value, Diff avail)
 {
    const Diff block_size = static_cast<Diff>(BlockSize);
    while(avail >= block_size &&
