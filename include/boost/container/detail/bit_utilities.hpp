@@ -39,7 +39,13 @@ namespace dtl {
 //! Precondition: x != 0 (the result is undefined otherwise).
 BOOST_CONTAINER_FORCEINLINE int unchecked_countr_zero(boost::uint64_t x)
 {
-#if defined(BOOST_MSVC) && (defined(_M_X64) || defined(_M_ARM64))
+#if defined(BOOST_MSVC) && defined(_M_X64)
+   //TZCNT encodes as REP BSF: pre-BMI1 CPUs execute it as BSF, which returns
+   //the same result for the nonzero inputs this function requires, so it is
+   //safe unconditionally and faster on modern (esp. AMD) CPUs where BSF is
+   //microcoded.
+   return (int)_tzcnt_u64(x);
+#elif defined(BOOST_MSVC) && defined(_M_ARM64)
    unsigned long r;
    _BitScanForward64(&r, x);
    return (int)r;
@@ -78,7 +84,12 @@ BOOST_CONTAINER_FORCEINLINE int unchecked_countr_one(boost::uint64_t x)
 //! Precondition: x != 0 (the result is undefined otherwise).
 BOOST_CONTAINER_FORCEINLINE int unchecked_countl_zero(boost::uint64_t x)
 {
-#if defined(BOOST_MSVC) && (defined(_M_X64) || defined(_M_ARM64))
+#if defined(BOOST_MSVC) && defined(_M_X64) && defined(__AVX2__)
+   //Unlike TZCNT/BSF, LZCNT and BSR give different results for nonzero input
+   //(count vs. index), so LZCNT can only be used when the target is known to
+   //support it (implied by AVX2).
+   return (int)_lzcnt_u64(x);
+#elif defined(BOOST_MSVC) && (defined(_M_X64) || defined(_M_ARM64))
    unsigned long r;
    _BitScanReverse64(&r, x);
    return (int)(63 - r);
