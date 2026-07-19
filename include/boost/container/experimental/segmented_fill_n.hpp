@@ -90,13 +90,13 @@ segduo<SegIt, Size> fill_n_scan(SegIt first, SegIt last, Size count, const T& va
    else {
       segduo<local_iterator, Size> r = fill_n_scan(traits::local(first), traits::end(scur), count, value, is_local_seg_t(), local_cat_t());
       count = r.second;
-      if (!count)
+      if (BOOST_CONTAINER_SEG_UNLIKELY(!count))
          return segduo<SegIt, Size>(traits::compose(scur, r.first), count);
 
       for (++scur; scur != slast; ++scur) {
          r = fill_n_scan(traits::begin(scur), traits::end(scur), count, value, is_local_seg_t(), local_cat_t());
          count = r.second;
-         if (!count)
+         if (BOOST_CONTAINER_SEG_UNLIKELY(!count))
             return segduo<SegIt, Size>(traits::compose(scur, r.first), count);
       }
       const local_iterator ll = traits::local(last);
@@ -130,7 +130,7 @@ SegIter segmented_fill_n_ref
          const segduo<local_iterator, Size> r = fill_n_scan(traits::begin(scur), traits::end(scur), count, value, is_local_seg_t(), local_cat_t());
          lcur  = r.first;
          count = r.second;
-         if (count == 0)
+         if (BOOST_CONTAINER_SEG_UNLIKELY(count == 0))
             break;
          ++scur;
       }

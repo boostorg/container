@@ -48,7 +48,7 @@ segmented_reverse_copy_dst_bounded
 {
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    while(first != last) {
-      if(dst_first == dst_last)
+      if(BOOST_CONTAINER_SEG_UNLIKELY(dst_first == dst_last))
          goto out_path;
       --last;
       *dst_first = *last;
@@ -96,14 +96,14 @@ segduo<BidirIter, SegDstIter> segmented_reverse_copy_dst_bounded
       segduo<BidirIter, dst_local_iterator> r = (segmented_reverse_copy_dst_bounded)
          (first, last, dst_traits::local(dst_first), dst_traits::end(sfirst), dst_is_local_seg_t(), SrcCat());
       last = r.first;
-      if(first == last)
+      if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
          return segduo<BidirIter, SegDstIter>(last, dst_traits::compose(sfirst, r.second));
 
       for(++sfirst; sfirst != slast; ++sfirst) {
          r = (segmented_reverse_copy_dst_bounded)
             (first, last, dst_traits::begin(sfirst), dst_traits::end(sfirst), dst_is_local_seg_t(), SrcCat());
          last = r.first;
-         if(first == last)
+         if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
             return segduo<BidirIter, SegDstIter>(last, dst_traits::compose(sfirst, r.second));
       }
 
@@ -149,7 +149,7 @@ SegDstIter segmented_reverse_copy_dst_dispatch
       const segduo<BidirIter, dst_local_iterator> r = (segmented_reverse_copy_dst_bounded)
          (first, last, dst_local, dst_end, dst_is_local_seg_t(), Cat());
       last = r.first;
-      if(first != last) {
+      if(BOOST_CONTAINER_SEG_LIKELY(first != last)) {
          ++dst_seg;
          dst_local = dst_traits::begin(dst_seg);
       }

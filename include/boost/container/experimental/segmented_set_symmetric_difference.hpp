@@ -122,7 +122,7 @@ segtrio<Iter1, Iter2, SegDstIter> set_symmetric_difference_until_exhausts
       first2    = r.second;
       dst_local = r.third;
 
-      if(dst_local != dst_end) {
+      if(BOOST_CONTAINER_SEG_UNLIKELY(dst_local != dst_end)) {
          return result_t(first1, first2, dst_traits::compose(dst_seg, dst_local));
       }
       ++dst_seg;
@@ -178,14 +178,14 @@ segtrio<Iter1, SegIter2, OutIter> set_symmetric_difference_seg2_dispatch
       local_result_t r = (set_symmetric_difference_seg2_dispatch)
          (first1, last1, lf2, src2_traits::end(sf2), result, comp,
           src2_is_local_seg_t(), cat);
-      if (r.first == last1)
+      if (BOOST_CONTAINER_SEG_UNLIKELY(r.first == last1))
          goto exit;
 
       for(++sf2; sf2 != sl2; ++sf2) {
          r = (set_symmetric_difference_seg2_dispatch)
             (r.first, last1, src2_traits::begin(sf2), src2_traits::end(sf2),
              r.third, comp, src2_is_local_seg_t(), cat);
-         if(r.first == last1)
+         if(BOOST_CONTAINER_SEG_UNLIKELY(r.first == last1))
             goto exit;
       }
 
@@ -246,13 +246,13 @@ segtrio<SegIt, InIter2, OutIter> set_symmetric_difference_scan
    else {
       local_result_t r = set_symmetric_difference_scan
          (lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
-      if(r.second == last2)
+      if(BOOST_CONTAINER_SEG_UNLIKELY(r.second == last2))
          return result_t(traits::compose(scur, r.first), r.second, r.third);
 
       for(++scur; scur != slast; ++scur) {
          r = set_symmetric_difference_scan
             (traits::begin(scur), traits::end(scur), r.second, last2, r.third, comp, is_local_seg_t());
-         if(r.second == last2)
+         if(BOOST_CONTAINER_SEG_UNLIKELY(r.second == last2))
             return result_t(traits::compose(scur, r.first), r.second, r.third);
       }
 

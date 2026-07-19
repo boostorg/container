@@ -384,4 +384,15 @@ struct deepest_local_iterator
 #error "Must define either BOOST_CONTAINER_SEGMENTED_ENABLE_PRAGMA_UNROLL or BOOST_CONTAINER_SEGMENTED_DISABLE_PRAGMA_UNROLL"
 #endif
 
+// Marks the segment-exhaustion checks inside leaf loops as unlikely: they
+// succeed at most once per segment while all other iterations take the
+// fall-through path.  The LIKELY variant is used when the loop structure
+// tests the continue condition instead of the exit condition.
+#if !defined(BOOST_CONTAINER_SEG_UNLIKELY)
+   #define BOOST_CONTAINER_SEG_UNLIKELY(x) BOOST_UNLIKELY(x)
+#endif
+#if !defined(BOOST_CONTAINER_SEG_LIKELY)
+   #define BOOST_CONTAINER_SEG_LIKELY(x)   BOOST_LIKELY(x)
+#endif
+
 #endif // BOOST_CONTAINER_EXPERIMENTAL_SEGMENTED_ITERATOR_TRAITS_HPP

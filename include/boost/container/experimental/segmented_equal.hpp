@@ -109,9 +109,7 @@ segduo<SrcIter, SegIter2> segmented_equal_iter2_bounded
          (first1, last1, iter2_traits::local(iter2_first), end2, pred, iter2_is_local_seg_t(), SrcCat());
       first1 = r.first;
       iter2_local_iterator loc2 = r.second;
-      if(first1 != last1 && loc2 != end2)
-         return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(sfirst, loc2));
-      if(first1 == last1)
+      if(BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1 || loc2 != end2))
          return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(sfirst, loc2));
 
       for(++sfirst; sfirst != slast; ++sfirst) {
@@ -120,9 +118,7 @@ segduo<SrcIter, SegIter2> segmented_equal_iter2_bounded
             (first1, last1, iter2_traits::begin(sfirst), end2, pred, iter2_is_local_seg_t(), SrcCat());
          first1 = r.first;
          loc2 = r.second;
-         if(first1 != last1 && loc2 != end2)
-            return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(sfirst, loc2));
-         if(first1 == last1)
+         if(BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1 || loc2 != end2))
             return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(sfirst, loc2));
       }
 
@@ -170,9 +166,9 @@ segduo<bool, SegIter2> segmented_equal_iter2_dispatch
          (first1, last1, loc2, end2, pred, iter2_is_local_seg_t(), Cat());
       first1 = r.first;
       loc2 = r.second;
-      if(first1 != last1 && loc2 != end2)
+      if(BOOST_CONTAINER_SEG_UNLIKELY(first1 != last1 && loc2 != end2))
          return segduo<bool, SegIter2>(false, iter2_traits::compose(seg2, loc2));
-      if(first1 != last1) {
+      if(BOOST_CONTAINER_SEG_LIKELY(first1 != last1)) {
          ++seg2;
          loc2 = iter2_traits::begin(seg2);
       }
@@ -217,13 +213,13 @@ segduo<bool, InpIter2> segmented_equal_dispatch
    else {
       segduo<bool, InpIter2> r = (segmented_equal_dispatch)
          (traits::local(first1), traits::end(sfirst), first2, pred, is_local_seg_t(), local_cat_t());
-      if(!r.first)
+      if(BOOST_CONTAINER_SEG_UNLIKELY(!r.first))
          return r;
 
       for(++sfirst; sfirst != slast; ++sfirst) {
          r = (segmented_equal_dispatch)
             (traits::begin(sfirst), traits::end(sfirst), r.second, pred, is_local_seg_t(), local_cat_t());
-         if(!r.first)
+         if(BOOST_CONTAINER_SEG_UNLIKELY(!r.first))
             return r;
       }
 

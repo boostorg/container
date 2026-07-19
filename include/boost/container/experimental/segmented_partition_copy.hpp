@@ -128,7 +128,7 @@ partition_copy_leaf
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first) {
       if(pred(*first)) {
-         if(t_first == t_last) {
+         if(BOOST_CONTAINER_SEG_UNLIKELY(t_first == t_last)) {
             true_output_full = true;
             break;
          }
@@ -136,7 +136,7 @@ partition_copy_leaf
          ++t_first;
       }
       else {
-         if(f_first == f_last)
+         if(BOOST_CONTAINER_SEG_UNLIKELY(f_first == f_last))
             break;
          *f_first = *first;
          ++f_first;
@@ -231,13 +231,13 @@ partition_copy_false_bounded
          (first, last, t_first, t_last, ftr::local(f_first), ftr::end(fsfirst), pred, floc_seg_t(), cat);
       first   = r.first;
       t_first = r.second;
-      if(first != last && !r.fourth) {
+      if(BOOST_CONTAINER_SEG_LIKELY(first != last && !r.fourth)) {
          for(++fsfirst; fsfirst != fslast; ++fsfirst) {
             r = (partition_copy_false_bounded)
                (first, last, t_first, t_last, ftr::begin(fsfirst), ftr::end(fsfirst), pred, floc_seg_t(), cat);
             first   = r.first;
             t_first = r.second;
-            if(first == last || r.fourth)
+            if(BOOST_CONTAINER_SEG_UNLIKELY(first == last || r.fourth))
                return segquartet<SrcIter, TIter, SegFIter, bool>
                   (first, r.second, ftr::compose(fsfirst, r.third), r.fourth);
          }
@@ -287,7 +287,7 @@ partition_copy_false_dispatch
          (first, last, t_first, t_last, f_lo, ftr::end(fs), pred, floc_seg_t(), cat);
       first   = r.first;
       t_first = r.second;
-      if(first == last || r.fourth)
+      if(BOOST_CONTAINER_SEG_UNLIKELY(first == last || r.fourth))
          return segtrio<SrcIter, TIter, SegFIter>(first, t_first, ftr::compose(fs, r.third));
       ++fs;
       f_lo = ftr::begin(fs);
@@ -341,7 +341,7 @@ partition_copy_true_bounded
    else {
       segtrio<SrcIter, tloc_t, FIter> r = (partition_copy_true_bounded)
          (first, last, ttr::local(t_first), ttr::end(tsfirst), f_first, pred, tloc_seg_t(), f_tag, cat);
-      if(r.first != last) {
+      if(BOOST_CONTAINER_SEG_LIKELY(r.first != last)) {
          first   = r.first;
          f_first = r.third;
          for(++tsfirst; tsfirst != tslast; ++tsfirst) {
@@ -349,7 +349,7 @@ partition_copy_true_bounded
                (first, last, ttr::begin(tsfirst), ttr::end(tsfirst), f_first, pred, tloc_seg_t(), f_tag, cat);
             first   = r.first;
             f_first = r.third;
-            if(first == last)
+            if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
                return segtrio<SrcIter, SegTIter, FIter>(first, ttr::compose(tsfirst, r.second), f_first);
          }
          r = (partition_copy_true_bounded)
@@ -396,7 +396,7 @@ partition_copy_true_dispatch
          (first, last, t_lo, ttr::end(ts), f_first, pred, tloc_seg_t(), f_tag, cat);
       first   = r.first;
       f_first = r.third;
-      if(first == last)
+      if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
          return segtrio<SrcIter, SegTIter, FIter>(first, ttr::compose(ts, r.second), f_first);
       ++ts;
       t_lo = ttr::begin(ts);

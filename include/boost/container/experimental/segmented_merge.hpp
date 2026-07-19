@@ -120,14 +120,14 @@ segtrio<Iter1, Iter2, SegDstIter> merge_dst_bounded
       local_result_t r = (merge_dst_bounded)
          ( first1, last1, first2, last2, dst_traits::local(dst_first)
          , dst_traits::end(sfirst), comp, dst_is_local_seg_t(), SrcCat());
-      if(r.first == last1 || r.second == last2)
+      if(BOOST_CONTAINER_SEG_UNLIKELY(r.first == last1 || r.second == last2))
          goto exit;
 
       for(++sfirst; sfirst != slast; ++sfirst) {
          r = (merge_dst_bounded)
             ( r.first, last1, r.second, last2, dst_traits::begin(sfirst)
             , dst_traits::end(sfirst), comp, dst_is_local_seg_t(), SrcCat());
-         if (r.first == last1 || r.second == last2)
+         if (BOOST_CONTAINER_SEG_UNLIKELY(r.first == last1 || r.second == last2))
             goto exit;
       }
 
@@ -194,7 +194,7 @@ segtrio<Iter1, Iter2, SegDstIter> merge_until_exhausts
       first2    = r.second;
       dst_local = r.third;
 
-      if(dst_local != dst_end) {
+      if(BOOST_CONTAINER_SEG_UNLIKELY(dst_local != dst_end)) {
          return result_t(first1, first2, dst_traits::compose(dst_seg, dst_local));
       }
       // dst segment full; advance to the next.
@@ -265,14 +265,14 @@ segtrio<Iter1, SegIter2, OutIter> merge_seg2_dispatch
       local_result_t r = (merge_seg2_dispatch)
          (first1, last1, lf2, src2_traits::end(sf2), result, comp,
           src2_is_local_seg_t(), cat);
-      if (r.first == last1)
+      if (BOOST_CONTAINER_SEG_UNLIKELY(r.first == last1))
          goto exit;
 
       for(++sf2; sf2 != sl2; ++sf2) {
          r = (merge_seg2_dispatch)
             (r.first, last1, src2_traits::begin(sf2), src2_traits::end(sf2),
              r.third, comp, src2_is_local_seg_t(), cat);
-         if(r.first == last1)
+         if(BOOST_CONTAINER_SEG_UNLIKELY(r.first == last1))
             goto exit;
       }
 
@@ -347,13 +347,13 @@ segtrio<SegIt, InIter2, OutIter> merge_scan
       // First (partial) segment of first1.
       local_result_t r = merge_scan
          (lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
-      if(r.second == last2)
+      if(BOOST_CONTAINER_SEG_UNLIKELY(r.second == last2))
          return result_t(traits::compose(scur, r.first), r.second, r.third);
 
       for(++scur; scur != slast; ++scur) {
          r = merge_scan
             (traits::begin(scur), traits::end(scur), r.second, last2, r.third, comp, is_local_seg_t());
-         if(r.second == last2)
+         if(BOOST_CONTAINER_SEG_UNLIKELY(r.second == last2))
             return result_t(traits::compose(scur, r.first), r.second, r.third);
       }
 
