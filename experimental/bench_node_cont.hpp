@@ -143,7 +143,7 @@ static boost::move_detail::nanosecond_type
 #ifndef ELEMENT_SIZES
 #ifdef LONG_BENCH
    //#define ELEMENT_SIZES { 32, 64, 96, 128, 192, 256 }
-   #define ELEMENT_SIZES { 32, 64, 128, 256 }
+   //#define ELEMENT_SIZES { 32, 64, 128, 256 }
    #define ELEMENT_SIZES { 64, 80 }
 #  else //LONG_BENCH
    //#define ELEMENT_SIZES { 128 }
