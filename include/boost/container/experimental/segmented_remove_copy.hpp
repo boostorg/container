@@ -76,7 +76,7 @@ remove_copy_cleanup_blocks
 }
 
 template <bool Move, class RASrcIter, class RADstIter, class T>
-typename iterator_enable_if_tag
+BOOST_CONTAINER_FORCEINLINE typename iterator_enable_if_tag
    <RADstIter, std::random_access_iterator_tag, segduo<RASrcIter, RADstIter> >::type
 segmented_remove_copy_dst_bounded
    (RASrcIter first, RASrcIter last, RADstIter dst_first, RADstIter dst_last, const T& value,
