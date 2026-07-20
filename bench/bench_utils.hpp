@@ -173,6 +173,79 @@ class MyInt
    friend bool operator>=(const MyInt& a, const MyInt& b) { return a.int_ >= b.int_; }
 };
 
+class MyFatInt
+{
+   int int0_;
+   int int1_;
+   int int2_;
+   int int3_;
+   int int4_;
+   int int5_;
+   int int6_;
+   int int7_;
+
+   public:
+   inline explicit MyFatInt(int i = 0)
+      : int0_(i++)
+      , int1_(i++)
+      , int2_(i++)
+      , int3_(i++)
+      , int4_(i++)
+      , int5_(i++)
+      , int6_(i++)
+      , int7_(i++)
+   {}
+
+   inline MyFatInt(const MyFatInt &other)
+      : int0_(other.int0_)
+      , int1_(other.int1_)
+      , int2_(other.int2_)
+      , int3_(other.int3_)
+      , int4_(other.int4_)
+      , int5_(other.int5_)
+      , int6_(other.int6_)
+      , int7_(other.int7_)
+   {}
+
+   inline MyFatInt & operator=(const MyFatInt &other)
+   {
+      int0_ = other.int0_;
+      int1_ = other.int1_;
+      int2_ = other.int2_;
+      int3_ = other.int3_;
+      int4_ = other.int4_;
+      int5_ = other.int5_;
+      int6_ = other.int6_;
+      int7_ = other.int7_;
+      return *this;
+   }
+
+   inline ~MyFatInt()
+   {
+      int0_ = 0;
+      int1_ = 0;
+      int2_ = 0;
+      int3_ = 0;
+      int4_ = 0;
+      int5_ = 0;
+      int6_ = 0;
+      int7_ = 0;
+   }
+
+   inline int int_value() const { return int0_; }
+
+   friend inline bool operator==(const MyFatInt& a, const MyFatInt& b) { return a.int0_ == b.int0_; }
+   friend inline bool operator!=(const MyFatInt& a, const MyFatInt& b) { return a.int0_ != b.int0_; }
+   friend inline bool operator<(const MyFatInt& a, const MyFatInt& b) { return a.int0_ < b.int0_; }
+   friend inline bool operator>(const MyFatInt& a, const MyFatInt& b) { return a.int0_ > b.int0_; }
+   friend inline bool operator<=(const MyFatInt& a, const MyFatInt& b) { return a.int0_ <= b.int0_; }
+   friend inline bool operator>=(const MyFatInt& a, const MyFatInt& b) { return a.int0_ >= b.int0_; }
+};
+
+inline int int_value(int x) { return x; }
+inline int int_value(const MyInt& x) { return x.int_value(); }
+inline int int_value(const MyFatInt& x) { return x.int_value(); }
+
 //Benchmark element. The NonTrivial boolean (chosen by the caller, true by
 //default) selects between two layouts of identical size:
 // - NonTrivial == true: a move-only element whose user-defined special members
