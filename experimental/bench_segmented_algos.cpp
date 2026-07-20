@@ -86,7 +86,6 @@
 #include "../bench/bench_utils.hpp"
 
 #define BOOST_CONTAINER_BENCH_SEGMENTED_GROUP 0
-#define BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED 0
 
 namespace bc = boost::container;
 
@@ -646,6 +645,11 @@ inline void print_subheader()
              << std::right << std::setw(16) << "< std/seg >"
              << std::right << std::setw(16) << "< std/nsg >"
              << '\n';
+}
+
+inline void print_group_header(int group, const char* desc)
+{
+   std::cout << "\n===== Group " << group << ": " << desc << " =====\n";
 }
 
 struct geomean_accumulator
@@ -2147,9 +2151,10 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    print_subheader();
 
    //////////////////////////////////////////////////////////////////
-   // Group 1: Algorithms with a single range
+   // Group 10: single range, sequential access
    //////////////////////////////////////////////////////////////////
 #if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 10
+   print_group_header(10, "single range, sequential access");
 
    //all_of
    bench_all_of(c, iters, cname, is_zero_or_positive<VT>(), "all_of(hit)");
@@ -2185,20 +2190,6 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_find_if_not(c, iters, cname, unequal_to_ref<VT>(half), "find_if_not(hit)");
    bench_find_if_not(c, iters, cname, is_zero_or_positive<VT>(), "find_if_not(miss)");
 
-#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED) || BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED
-   //find_last
-   bench_find_last(c, iters, cname, half, "find_last(hit)");
-   bench_find_last(c, iters, cname, min1, "find_last(miss)");
-
-   //find_last_if
-   bench_find_last_if(c, iters, cname, equal_to_ref<VT>(half), "find_last_if(hit)");
-   bench_find_last_if(c, iters, cname, is_negative<VT>(), "find_last_if(miss)");
-
-   //find_last_if_not
-   bench_find_last_if_not(c, iters, cname, unequal_to_ref<VT>(half), "find_last_if_not(hit)");
-   bench_find_last_if_not(c, iters, cname, is_zero_or_positive<VT>(), "find_last_if_not(miss)");
-#endif
-
    //for_each
    bench_for_each(c, iters, cname);
 
@@ -2219,12 +2210,6 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //none_of
    bench_none_of(c, iters, cname, is_negative<VT>(), "none_of(hit)");
    bench_none_of(c, iters, cname, equal_to_ref<VT>(VT(static_cast<int>(c.size()/2))),      "none_of(miss)");
-
-   #if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED) || BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED
-   //partition
-   bench_partition(c, iters, cname, is_odd<VT>(),      "partition(hit)");
-   bench_partition(c, iters, cname, is_negative<VT>(), "partition(miss)");
-   #endif
 
    //replace
    {
@@ -2249,9 +2234,10 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 #endif
 
    //////////////////////////////////////////////////////////////////
-   // Group 1.5: Algorithms with 1 range but two iterational directions
+   // Group 15: single range, non-sequential access pattern
    //////////////////////////////////////////////////////////////////
 #if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 15
+   print_group_header(15, "single range, non-sequential access pattern");
 
    //is_sorted
    {
@@ -2281,11 +2267,6 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //remove_if
    bench_remove_if(c, iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_if(hit)");
    bench_remove_if(c, iters, cname, is_negative<VT>(), "remove_if(miss)");
-
-#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED) || BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED
-   //reverse
-   bench_reverse(c, iters, cname);
-#endif
 
    //search_n
    bench_search_n(c, iters, cname, 1, half, "search_n(1hit)");
@@ -2321,13 +2302,37 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 #endif
 
    //////////////////////////////////////////////////////////////////
-   // Group 2: Algorithms with 2 ranges
+   // Group 17: single range, bidirectional iterator optimizations
    //////////////////////////////////////////////////////////////////
-#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 20
+#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 17
+   print_group_header(17, "single range, bidirectional iterator optimizations");
+
+   //find_last
+   bench_find_last(c, iters, cname, half, "find_last(hit)");
+   bench_find_last(c, iters, cname, min1, "find_last(miss)");
+
+   //find_last_if
+   bench_find_last_if(c, iters, cname, equal_to_ref<VT>(half), "find_last_if(hit)");
+   bench_find_last_if(c, iters, cname, is_negative<VT>(), "find_last_if(miss)");
+
+   //find_last_if_not
+   bench_find_last_if_not(c, iters, cname, unequal_to_ref<VT>(half), "find_last_if_not(hit)");
+   bench_find_last_if_not(c, iters, cname, is_zero_or_positive<VT>(), "find_last_if_not(miss)");
+
+   //partition
+   bench_partition(c, iters, cname, is_odd<VT>(),      "partition(hit)");
+   bench_partition(c, iters, cname, is_negative<VT>(), "partition(miss)");
+
+   //reverse
+   bench_reverse(c, iters, cname);
+
+#endif
 
    //////////////////////////////////////////////////////////////////
-   // Group 2a: input-only algorithms (all ranges are read-only inputs)
+   // Group 20: 2-range input-only algorithms (all ranges read-only)
    //////////////////////////////////////////////////////////////////
+#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 20
+   print_group_header(20, "2-range input-only algorithms");
 
    //equal
    {
@@ -2385,9 +2390,13 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_search(c, iters, cname, miss_pat, 3, "search(miss)");
    }
 
+#endif
+
    //////////////////////////////////////////////////////////////////
-   // Group 2b: algorithms writing through an output iterator
+   // Group 25: 2-range input-output algorithms (write through output iterator)
    //////////////////////////////////////////////////////////////////
+#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 25
+   print_group_header(25, "2-range input-output algorithms");
 
    //copy
    bench_copy<C,     vec_t>(c,  iters, cname, "copy(1S)");
@@ -2423,62 +2432,36 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_remove_copy_if<vec_t, C    >(cv, iters, cname, is_negative<VT>(), "remove_copy_if(2S miss)");
    bench_remove_copy_if<C,     C    >(c,  iters, cname, is_negative<VT>(), "remove_copy_if(2xS miss)");
 
-#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED) || BOOST_CONTAINER_BENCH_SEGMENTED_BIDIR_ENABLED
-   //reverse_copy
-   bench_reverse_copy<C,     vec_t>(c,  iters, cname, "reverse_copy(1S)");
-   bench_reverse_copy<vec_t, C    >(cv, iters, cname, "reverse_copy(2S)");
-   bench_reverse_copy<C,     C    >(c,  iters, cname, "reverse_copy(2xS)");
-#endif
+   //swap_ranges
+   bench_swap_ranges<C,     vec_t>(c,  iters, cname, "swap_ranges(1S)");
+   bench_swap_ranges<vec_t, C    >(cv, iters, cname, "swap_ranges(2S)");
+   bench_swap_ranges<C,     C    >(c,  iters, cname, "swap_ranges(2xS)");
 
    //transform
    bench_transform<C,     vec_t>(c,  iters, cname, "transform(1S)");
    bench_transform<vec_t, C    >(cv, iters, cname, "transform(2S)");
    bench_transform<C,     C    >(c,  iters, cname, "transform(2xS)");
 
-   //swap_ranges
-   bench_swap_ranges<C,     vec_t>(c,  iters, cname, "swap_ranges(1S)");
-   bench_swap_ranges<vec_t, C    >(cv, iters, cname, "swap_ranges(2S)");
-   bench_swap_ranges<C,     C    >(c,  iters, cname, "swap_ranges(2xS)");
+#endif
+
+   //////////////////////////////////////////////////////////////////
+   // Group 27: 2-range algorithms with bidirectional iterator optimizations
+   //////////////////////////////////////////////////////////////////
+#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 27
+   print_group_header(27, "2-range, bidirectional iterator optimizations");
+
+   //reverse_copy
+   bench_reverse_copy<C,     vec_t>(c,  iters, cname, "reverse_copy(1S)");
+   bench_reverse_copy<vec_t, C    >(cv, iters, cname, "reverse_copy(2S)");
+   bench_reverse_copy<C,     C    >(c,  iters, cname, "reverse_copy(2xS)");
 
 #endif
 
    //////////////////////////////////////////////////////////////////
-   // Group 3: Algorithms with 3 ranges
+   // Group 30: 3-range algorithms
    //////////////////////////////////////////////////////////////////
 #if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 30
-
-   //copy_if
-   bench_copy_if<C,     vec_t>(c,  iters, cname, is_odd<VT>(),      "copy_if(1S hit)");
-   bench_copy_if<vec_t, C    >(cv, iters, cname, is_odd<VT>(),      "copy_if(2S hit)");
-   bench_copy_if<C,     C    >(c,  iters, cname, is_odd<VT>(),      "copy_if(2xS hit)");
-   bench_copy_if<C,     vec_t>(c,  iters, cname, is_negative<VT>(), "copy_if(1S miss)");
-   bench_copy_if<vec_t, C    >(cv, iters, cname, is_negative<VT>(), "copy_if(2S miss)");
-   bench_copy_if<C,     C    >(c,  iters, cname, is_negative<VT>(), "copy_if(2xS miss)");
-
-   //remove_copy
-   bench_remove_copy<C,     vec_t>(c,  iters, cname, half, "remove_copy(1S hit)");
-   bench_remove_copy<vec_t, C    >(cv, iters, cname, half, "remove_copy(2S hit)");
-   bench_remove_copy<C,     C    >(c,  iters, cname, half, "remove_copy(2xS hit)");
-   bench_remove_copy<C,     vec_t>(c,  iters, cname, min1, "remove_copy(1S miss)");
-   bench_remove_copy<vec_t, C    >(cv, iters, cname, min1, "remove_copy(2S miss)");
-   bench_remove_copy<C,     C    >(c,  iters, cname, min1, "remove_copy(2xS miss)");
-
-   //remove_copy_if
-   bench_remove_copy_if<C,     vec_t>(c,  iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_copy_if(1S hit)");
-   bench_remove_copy_if<vec_t, C    >(cv, iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_copy_if(2S hit)");
-   bench_remove_copy_if<C,     C    >(c,  iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_copy_if(2xS hit)");
-   bench_remove_copy_if<C,     vec_t>(c,  iters, cname, is_negative<VT>(), "remove_copy_if(1S miss)");
-   bench_remove_copy_if<vec_t, C    >(cv, iters, cname, is_negative<VT>(), "remove_copy_if(2S miss)");
-   bench_remove_copy_if<C,     C    >(c,  iters, cname, is_negative<VT>(), "remove_copy_if(2xS miss)");
-
-   //partition_copy (range 1 = input, range 2 = out_true, range 3 = out_false)
-   bench_partition_copy<C,     vec_t, vec_t>(c,  iters, cname, "partition_copy(1S)");
-   bench_partition_copy<vec_t, C,     vec_t>(cv, iters, cname, "partition_copy(2S)");
-   bench_partition_copy<vec_t, vec_t, C    >(cv, iters, cname, "partition_copy(3S)");
-   bench_partition_copy<C,     C,     vec_t>(c,  iters, cname, "partition_copy(2xS)");
-   bench_partition_copy<C,     vec_t, C    >(c,  iters, cname, "partition_copy(1+3S)");
-   bench_partition_copy<vec_t, C,     C    >(cv, iters, cname, "partition_copy(2+3S)");
-   bench_partition_copy<C,     C,     C    >(c,  iters, cname, "partition_copy(3xS)");
+   print_group_header(30, "3-range algorithms");
 
    //merge
    {
@@ -2540,6 +2523,14 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_set_union<C,     C,     C    >(c,  c2,  iters, cname, "set_union(3xS)");
    }
 
+   //partition_copy (range 1 = input, range 2 = out_true, range 3 = out_false)
+   bench_partition_copy<C,     vec_t, vec_t>(c,  iters, cname, "partition_copy(1S)");
+   bench_partition_copy<vec_t, C,     vec_t>(cv, iters, cname, "partition_copy(2S)");
+   bench_partition_copy<vec_t, vec_t, C    >(cv, iters, cname, "partition_copy(3S)");
+   bench_partition_copy<C,     C,     vec_t>(c,  iters, cname, "partition_copy(2xS)");
+   bench_partition_copy<C,     vec_t, C    >(c,  iters, cname, "partition_copy(1+3S)");
+   bench_partition_copy<vec_t, C,     C    >(cv, iters, cname, "partition_copy(2+3S)");
+   bench_partition_copy<C,     C,     C    >(c,  iters, cname, "partition_copy(3xS)");
 #endif
 
    std::cout << '\n';
