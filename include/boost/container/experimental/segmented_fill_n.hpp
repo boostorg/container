@@ -32,32 +32,6 @@ FwdIt segmented_fill_n(FwdIt first, Size count, const T& value);
 
 namespace detail_algo {
 
-template <class OutIter, class Size, class T>
-BOOST_CONTAINER_FORCEINLINE
-segduo<OutIter, Size> fill_n_scan
-   ( OutIter first, OutIter last, Size count
-   , const T& value, non_segmented_iterator_tag, const std::random_access_iterator_tag &)
-{
-   Size range_sz = static_cast<Size>(last - first);
-   //If the whole range is fixed at compile time (e.g. deque)
-   //some compilers (e.g. MSVC 2026) can use SIMD more efficiently
-   //than when using count.
-   if (count >= range_sz) {
-      count -= range_sz;
-      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-      for (Size cnt = 0; cnt != range_sz; ++first, ++cnt){
-         *first = value;
-      }
-      return segduo<OutIter, Size>(first, count);
-   }
-   else {
-      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-      for (Size cnt = 0; cnt != count; ++first, ++cnt)
-         *first = value;
-      return segduo<OutIter, Size>(first, Size(0));
-   }
-}
-
 template <class OutIter, class Size, class T, class Cat>
 BOOST_CONTAINER_FORCEINLINE
 segduo<OutIter, Size> fill_n_scan
@@ -65,6 +39,24 @@ segduo<OutIter, Size> fill_n_scan
 {
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for (; count > 0 && first != last; ++first, --count)
+      *first = value;
+
+   return segduo<OutIter, Size>(first, count);
+}
+
+template <class OutIter, class Size, class T>
+BOOST_CONTAINER_FORCEINLINE
+segduo<OutIter, Size> fill_n_scan
+   ( OutIter first, OutIter last, Size count
+   , const T& value, non_segmented_iterator_tag, const std::random_access_iterator_tag &)
+{
+   typedef typename iterator_traits<OutIter>::difference_type difference_type;
+   const difference_type dst_n = last - first;
+   Size n = count < Size(dst_n) ? count : Size(dst_n);
+   count -= n;
+
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
+   for (; n > 0; ++first, --n)
       *first = value;
 
    return segduo<OutIter, Size>(first, count);
