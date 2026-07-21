@@ -218,6 +218,68 @@ void test_swap_ranges_movable_seg2()
       BOOST_TEST_EQ(other[static_cast<std::size_t>(i)].value(), i + 1);
 }
 
+void test_swap_ranges_segmented_second()
+{
+   test_detail::seg_vector<int> sv;
+   int a1[] = {1, 2, 3};
+   int a2[] = {4, 5};
+   int a3[] = {6, 7, 8, 9};
+   sv.add_segment_range(a1, a1 + 3);
+   sv.add_segment_range(a2, a2 + 2);
+   sv.add_segment_range(a3, a3 + 4);
+
+   test_detail::seg_vector<int> other;
+   int b1[] = {10, 20, 30, 40};
+   int b2[] = {50, 60, 70};
+   int b3[] = {80, 90};
+   other.add_segment_range(b1, b1 + 4);
+   other.add_segment_range(b2, b2 + 3);
+   other.add_segment_range(b3, b3 + 2);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   iter_t result = segmented_swap_ranges(sv.begin(), sv.end(), other.begin());
+
+   BOOST_TEST(result == other.end());
+
+   iter_t it = sv.begin();
+   for(int i = 0; i < 9; ++i, ++it)
+      BOOST_TEST_EQ(*it, (i + 1) * 10);
+
+   it = other.begin();
+   for(int i = 0; i < 9; ++i, ++it)
+      BOOST_TEST_EQ(*it, i + 1);
+}
+
+void test_swap_ranges_seg2_to_seg2()
+{
+   test_detail::seg2_vector<int> sv2;
+   int a1[] = {1, 2, 3};
+   int a2[] = {4, 5};
+   int a3[] = {6, 7, 8, 9};
+   sv2.add_flat_segment_range(a1, a1 + 3);
+   sv2.add_flat_segment_range(a2, a2 + 2);
+   sv2.add_flat_segment_range(a3, a3 + 4);
+
+   test_detail::seg2_vector<int> other;
+   int b1[] = {10, 20, 30, 40, 50};
+   int b2[] = {60, 70, 80, 90};
+   other.add_flat_segment_range(b1, b1 + 5);
+   other.add_flat_segment_range(b2, b2 + 4);
+
+   typedef test_detail::seg2_vector<int>::iterator iter_t;
+   iter_t result = segmented_swap_ranges(sv2.begin(), sv2.end(), other.begin());
+
+   BOOST_TEST(result == other.end());
+
+   iter_t it = sv2.begin();
+   for(int i = 0; i < 9; ++i, ++it)
+      BOOST_TEST_EQ(*it, (i + 1) * 10);
+
+   it = other.begin();
+   for(int i = 0; i < 9; ++i, ++it)
+      BOOST_TEST_EQ(*it, i + 1);
+}
+
 int main()
 {
    test_swap_ranges_full();
@@ -229,5 +291,7 @@ int main()
    test_swap_ranges_seg2();
    test_swap_ranges_movable_seg();
    test_swap_ranges_movable_seg2();
+   test_swap_ranges_segmented_second();
+   test_swap_ranges_seg2_to_seg2();
    return boost::report_errors();
 }
