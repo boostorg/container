@@ -192,6 +192,41 @@ template <> struct transfer_op<true>
    BOOST_CONTAINER_FORCEINLINE static void apply(D& d, S& s) { d = boost::move(s); }
 };
 
+//////////////////////////////////////////////////////////////////////////////
+// Combined check used by dual-RA fixed-block kernels: both source ranges
+// hold at least n elements and the destination has at least n free slots.
+// The unreachable_sentinel_t overload drops the destination test, which
+// always holds for unbounded output.
+//////////////////////////////////////////////////////////////////////////////
+
+template <class RAIter1, class RAIter2, class RADstIter, class Diff>
+BOOST_CONTAINER_FORCEINLINE bool seg_srcs_dst_room_at_least
+   (RAIter1 first1, RAIter1 last1, RAIter2 first2, RAIter2 last2,
+    RADstIter dst_first, RADstIter dst_last, Diff n)
+{
+   return static_cast<Diff>(last1 - first1) >= n
+       && static_cast<Diff>(last2 - first2) >= n
+       && static_cast<Diff>(dst_last - dst_first) >= n;
+}
+
+template <class RAIter1, class RAIter2, class DstIter, class Diff>
+BOOST_CONTAINER_FORCEINLINE bool seg_srcs_dst_room_at_least
+   (RAIter1 first1, RAIter1 last1, RAIter2 first2, RAIter2 last2,
+    DstIter, unreachable_sentinel_t, Diff n)
+{
+   return static_cast<Diff>(last1 - first1) >= n
+       && static_cast<Diff>(last2 - first2) >= n;
+}
+
+//! True when the iterator's category is (convertible to) random access.
+template <class It>
+struct seg_is_ra_iterator
+{
+   static const bool value = dtl::is_convertible
+      < typename boost::container::iterator_traits<It>::iterator_category
+      , std::random_access_iterator_tag >::value;
+};
+
 } // namespace detail_algo
 
 //! Traits class to detect and decompose segmented iterators.

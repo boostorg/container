@@ -23,6 +23,7 @@
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
 #include <boost/container/experimental/segmented_copy.hpp>
 #include <boost/container/detail/iterator.hpp>
+#include <cstddef>
 
 namespace boost {
 namespace container {
@@ -62,6 +63,47 @@ set_union_dst_bounded
    return segtrio<Iter1, Iter2, DstIter>(first1, first2, dst_first);
 }
 
+template <std::size_t BlockSize, class RAIter1, class RAIter2, class DstIter,
+          class DstSent, class Comp>
+BOOST_CONTAINER_FORCEINLINE segtrio<RAIter1, RAIter2, DstIter>
+set_union_blocks
+   (RAIter1 first1, RAIter1 last1, RAIter2 first2, RAIter2 last2,
+    DstIter dst_first, DstSent dst_last, Comp comp)
+{
+   typedef typename iterator_traits<RAIter1>::difference_type difference_type;
+   const difference_type block_size = static_cast<difference_type>(BlockSize);
+   while( (seg_srcs_dst_room_at_least)
+            (first1, last1, first2, last2, dst_first, dst_last, block_size)) {
+      BOOST_CONTAINER_SEGMENTED_AUTO_UNROLL
+      for(difference_type chunk = block_size; chunk; ) {
+         --chunk;
+         if      (comp(*first1, *first2)) { *dst_first = *first1;  ++first1;  }
+         else if (comp(*first2, *first1)) { *dst_first = *first2; ++first2; }
+         else                             { *dst_first = *first1;  ++first1; ++first2; }
+         ++dst_first;
+      }
+   }
+   return segtrio<RAIter1, RAIter2, DstIter>(first1, first2, dst_first);
+}
+
+template <class RAIter1, class RAIter2, class DstIter, class DstSent,
+          class Comp, class DstTag>
+BOOST_CONTAINER_FORCEINLINE
+typename algo_enable_if_c
+   < !DstTag::value && seg_is_ra_iterator<RAIter2>::value
+      && seg_is_ra_iterator<DstIter>::value
+   , segtrio<RAIter1, RAIter2, DstIter> >::type
+set_union_dst_bounded
+   (RAIter1 first1, RAIter1 last1, RAIter2 first2, RAIter2 last2,
+    DstIter dst_first, DstSent dst_last, Comp comp, DstTag dst_tag,
+    const std::random_access_iterator_tag &)
+{
+   segtrio<RAIter1, RAIter2, DstIter> r = (set_union_blocks<32>)
+      (first1, last1, first2, last2, dst_first, dst_last, comp);
+   return (set_union_dst_bounded)
+      (r.first, last1, r.second, last2, r.third, dst_last, comp, dst_tag, int());
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // set_union_until_exhausts: writes the union into result until src1 or src2
 // is exhausted.  No residue draining.
@@ -84,6 +126,7 @@ segtrio<Iter1, Iter2, DstIter> set_union_until_exhausts
 
 template <class Iter1, class Sent1, class Iter2, class Sent2, class SegDstIter,
           class Comp, class Cat>
+BOOST_CONTAINER_FORCEINLINE
 segtrio<Iter1, Iter2, SegDstIter> set_union_until_exhausts
    (Iter1 first1, Sent1 last1, Iter2 first2, Sent2 last2, SegDstIter result, Comp comp,
     const segmented_iterator_tag &, const Cat &src1_cat)
@@ -137,6 +180,7 @@ BOOST_CONTAINER_FORCEINLINE segtrio<Iter1, Iter2, OutIter> set_union_seg2_dispat
 }
 
 template <class Iter1, class Sent1, class SegIter2, class OutIter, class Comp, class Cat>
+BOOST_CONTAINER_FORCEINLINE
 segtrio<Iter1, SegIter2, OutIter> set_union_seg2_dispatch
    (Iter1 first1, Sent1 last1, SegIter2 first2, SegIter2 last2, OutIter result, Comp comp,
     segmented_iterator_tag, const Cat & cat)
@@ -207,6 +251,7 @@ BOOST_CONTAINER_FORCEINLINE segtrio<FwdIt, InIter2, OutIter> set_union_scan
 }
 
 template <class SegIt, class InIter2, class Sent2, class OutIter, class Comp>
+BOOST_CONTAINER_FORCEINLINE
 segtrio<SegIt, InIter2, OutIter> set_union_scan
    (SegIt first, SegIt last, InIter2 first2, Sent2 last2, OutIter result, Comp comp,
     segmented_iterator_tag)
