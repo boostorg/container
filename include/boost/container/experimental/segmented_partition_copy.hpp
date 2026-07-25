@@ -270,6 +270,7 @@ partition_copy_false_dispatch
 // otherwise the current out_false segment filled, so advance to the next one.
 template <class SrcIter, class Sent, class TIter, class TSent, class SegFIter,
           class Pred, class Cat>
+BOOST_CONTAINER_FORCEINLINE
 segtrio<SrcIter, TIter, SegFIter>
 partition_copy_false_dispatch
    (SrcIter first, Sent last, TIter t_first, TSent t_last, SegFIter f_first,
@@ -379,6 +380,7 @@ partition_copy_true_dispatch
 // the current out_true segment filled, so advance to the next one.
 template <class SrcIter, class Sent, class SegTIter, class FIter,
           class Pred, class FTag, class Cat>
+BOOST_CONTAINER_FORCEINLINE
 segtrio<SrcIter, SegTIter, FIter>
 partition_copy_true_dispatch
    (SrcIter first, Sent last, SegTIter t_first, FIter f_first,
@@ -425,6 +427,7 @@ segmented_partition_copy_dispatch
 }
 
 template <class SegIter, class OutIter1, class OutIter2, class Pred, class Cat>
+BOOST_CONTAINER_FORCEINLINE
 std::pair<OutIter1, OutIter2>
 segmented_partition_copy_dispatch
    (SegIter first, SegIter last, OutIter1 out_true, OutIter2 out_false, Pred pred, segmented_iterator_tag, Cat)

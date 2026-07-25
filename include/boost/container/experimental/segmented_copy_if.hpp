@@ -87,7 +87,7 @@ copy_if_cleanup_blocks
 }
 
 template <class RASrcIter, class RADstIter, class Pred>
-typename iterator_enable_if_tag
+BOOST_CONTAINER_FORCEINLINE typename iterator_enable_if_tag
    <RADstIter, std::random_access_iterator_tag, segduo<RASrcIter, RADstIter> >::type
 segmented_copy_if_dst_bounded
    (RASrcIter first, RASrcIter last, RADstIter dst_first, RADstIter dst_last, Pred pred,
@@ -159,6 +159,7 @@ BOOST_CONTAINER_FORCEINLINE DstIter segmented_copy_if_dst_dispatch
 }
 
 template <class SrcIter, class Sent, class SegDstIter, class Pred, class Cat>
+BOOST_CONTAINER_FORCEINLINE
 SegDstIter segmented_copy_if_dst_dispatch
    (SrcIter first, Sent last, SegDstIter result, Pred pred,
     const segmented_iterator_tag &, Cat)
