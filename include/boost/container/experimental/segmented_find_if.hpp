@@ -57,34 +57,31 @@ SegIter segmented_find_if_dispatch
    segment_iterator       sfirst = traits::segment(first);
    const segment_iterator slast  = traits::segment(last);
 
-   if(sfirst == slast) {
-      const local_iterator ll = traits::local(last);
-      const local_iterator r = (segmented_find_if_dispatch)(traits::local(first), ll, pred, is_local_seg_t(), local_cat_t());
-      if (r != ll)
-         return traits::compose(sfirst, r);
-   }
-   else {
+   local_iterator lb = traits::local(first);
+
+   if(BOOST_LIKELY(sfirst != slast)) {
       //First segment
       {
-         const local_iterator le = traits::end(sfirst);
-         const local_iterator r = (segmented_find_if_dispatch)(traits::local(first), le, pred, is_local_seg_t(), local_cat_t());
-         if (r != le)
+         const local_iterator fe = traits::end(sfirst);
+         const local_iterator r = (segmented_find_if_dispatch)(lb, fe, pred, is_local_seg_t(), local_cat_t());
+         if (r != fe)
             return traits::compose(sfirst, r);
       }
       //Middle segments
       for (++sfirst; sfirst != slast; ++sfirst) {
-         const local_iterator le = traits::end(sfirst);
-         const local_iterator r = (segmented_find_if_dispatch)(traits::begin(sfirst), le, pred, is_local_seg_t(), local_cat_t());
-         if (r != le)
-            return traits::compose(sfirst, r);
+         const local_iterator me = traits::end(sfirst);
+         const local_iterator mr = (segmented_find_if_dispatch)(traits::begin(sfirst), me, pred, is_local_seg_t(), local_cat_t());
+         if (mr != me)
+            return traits::compose(sfirst, mr);
       }
-      //Last segment
-      {
-         const local_iterator ll = traits::local(last);
-         const local_iterator r = (segmented_find_if_dispatch)(traits::begin(slast), traits::local(last), pred, is_local_seg_t(), local_cat_t());
-         if (r != ll)
-            return traits::compose(sfirst, r);
-      }
+      lb = traits::begin(slast);
+   }
+   //Last segment, shared with the single-segment case above
+   {
+      const local_iterator le = traits::local(last);
+      const local_iterator r  = (segmented_find_if_dispatch)(lb, le, pred, is_local_seg_t(), local_cat_t());
+      if (r != le)
+         return traits::compose(sfirst, r);
    }
    return last;
 }

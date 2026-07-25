@@ -58,15 +58,16 @@ F segmented_for_each_dispatch
    segment_iterator sfirst = traits::segment(first);
    segment_iterator slast  = traits::segment(last);
 
-   if(sfirst == slast) {
-      return (segmented_for_each_dispatch)(traits::local(first), traits::local(last), boost::move(f), is_local_seg_t(), local_cat_t());
-   }
-   else {
-      f = (segmented_for_each_dispatch)(traits::local(first), traits::end(sfirst), boost::move(f), is_local_seg_t(), local_cat_t());
+   local_iterator lb = traits::local(first);
+
+   if(BOOST_LIKELY(sfirst != slast)) {
+      f = (segmented_for_each_dispatch)(lb, traits::end(sfirst), boost::move(f), is_local_seg_t(), local_cat_t());
       for(++sfirst; sfirst != slast; ++sfirst)
          f = (segmented_for_each_dispatch)(traits::begin(sfirst), traits::end(sfirst), boost::move(f), is_local_seg_t(), local_cat_t());
-      return (segmented_for_each_dispatch)(traits::begin(sfirst), traits::local(last), boost::move(f), is_local_seg_t(), local_cat_t());
+      lb = traits::begin(slast);
    }
+   //Last segment, shared with the single-segment case above
+   return (segmented_for_each_dispatch)(lb, traits::local(last), boost::move(f), is_local_seg_t(), local_cat_t());
 }
 
 } // namespace detail_algo

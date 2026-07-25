@@ -66,18 +66,19 @@ typename boost::container::iterator_traits<SegIter>::difference_type
    segment_iterator sfirst = traits::segment(first);
    segment_iterator slast  = traits::segment(last);
 
-   if(sfirst == slast) {
-      return (segmented_count_dispatch)(traits::local(first), traits::local(last), value, is_local_seg_t(), local_cat_t());
-   }
-   else {
-      typename boost::container::iterator_traits<SegIter>::difference_type result = 0;
-      result += (segmented_count_dispatch)(traits::local(first), traits::end(sfirst), value, is_local_seg_t(), local_cat_t());
+   typename boost::container::iterator_traits<SegIter>::difference_type result = 0;
+   local_iterator lb = traits::local(first);
+
+   if(BOOST_LIKELY(sfirst != slast)) {
+      result += (segmented_count_dispatch)(lb, traits::end(sfirst), value, is_local_seg_t(), local_cat_t());
 
       for(++sfirst; sfirst != slast; ++sfirst)
          result += (segmented_count_dispatch)(traits::begin(sfirst), traits::end(sfirst), value, is_local_seg_t(), local_cat_t());
 
-      return result += (segmented_count_dispatch)(traits::begin(sfirst), traits::local(last), value, is_local_seg_t(), local_cat_t());
+      lb = traits::begin(slast);
    }
+   //Last segment, shared with the single-segment case above
+   return result += (segmented_count_dispatch)(lb, traits::local(last), value, is_local_seg_t(), local_cat_t());
 }
 
 } // namespace detail_algo

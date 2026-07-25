@@ -55,17 +55,18 @@ void segmented_fill_range
    segment_iterator sfirst = traits::segment(first);
    segment_iterator slast  = traits::segment(last);
 
-   if(sfirst == slast) {
-      (segmented_fill_range)(traits::local(first), traits::local(last), value, is_local_seg_t(), local_cat_t());
-   }
-   else {
-      (segmented_fill_range)(traits::local(first), traits::end(sfirst), value, is_local_seg_t(), local_cat_t());
+   local_iterator lb = traits::local(first);
+
+   if(BOOST_LIKELY(sfirst != slast)) {
+      (segmented_fill_range)(lb, traits::end(sfirst), value, is_local_seg_t(), local_cat_t());
 
       for(++sfirst; sfirst != slast; ++sfirst)
          (segmented_fill_range)(traits::begin(sfirst), traits::end(sfirst), value, is_local_seg_t(), local_cat_t());
 
-      (segmented_fill_range)(traits::begin(sfirst), traits::local(last), value, is_local_seg_t(), local_cat_t());
+      lb = traits::begin(slast);
    }
+   //Last segment, shared with the single-segment case above
+   (segmented_fill_range)(lb, traits::local(last), value, is_local_seg_t(), local_cat_t());
 }
 
 template <class FwdIt, class Sent, class T, class Cat>
