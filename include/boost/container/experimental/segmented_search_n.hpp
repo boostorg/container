@@ -181,7 +181,11 @@ segtrio<bool, Size, LocalIter> search_n_scan_segment
 
    // Phase 3: partial trailing run that could extend into the next segment.
    //
-   // Scans [lcur, lend) backward. Mirrors phase 2's verify-loop pattern
+   // Scans [lcur, lend) backward. Mirrors phase 2's verify-loop pattern.
+   //
+   // Both exits share one invariant: the returned position is the first
+   // element of the trailing run and the returned count is the length of
+   // that run, i.e. always "lend - <returned position>".
    {
       LocalIter tail = lend;
       if (tail == lcur)            // empty tail, nothing to scan.
@@ -194,19 +198,19 @@ segtrio<bool, Size, LocalIter> search_n_scan_segment
             goto tail_mismatch;
       } while (tail != lcur);
 
-      // Full tail run: every element in [lcur, lend) equals value.
-      // tail == lcur and (lend - lcur) > 0, so the run is non-empty.
-      return result_t(false, static_cast<Size>(lend - tail), tail);
+      // Full tail run: every element in [lcur, lend) equals value, so the
+      // run starts at "lcur" (== tail) and (lend - lcur) > 0.
+      return result_t(false, static_cast<Size>(lend - lcur), lcur);
 
-      // Mismatch at "tail"; the partial run starts one past it. On a
-      // first-iteration mismatch ("*(lend - 1) != value") the post-"++tail"
-      // value collapses to "lend", which the caller already interprets as
-      // "no match position" via "r.third != lend", so the assignment is
-      // safe to do unconditionally.
+      // Mismatch at "tail"; the partial run is [tail + 1, lend). On a
+      // first-iteration mismatch ("*(lend - 1) != value") "match_start"
+      // collapses to "lend": the run length is then 0 and the caller
+      // already interprets "lend" as "no match position" via
+      // "r.third != lend", so the return is safe to do unconditionally.
       tail_mismatch:
       LocalIter match_start = tail;
       ++match_start;
-      return result_t(false, static_cast<Size>(lend - tail), match_start);
+      return result_t(false, static_cast<Size>(lend - match_start), match_start);
    }
 }
 
