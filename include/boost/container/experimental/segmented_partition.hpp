@@ -165,7 +165,7 @@ segduo<It, It> partition_disjoint_bidir_ranges(It f, It f_end, It l_beg, It l, P
    typedef typename iterator_traits
       <local_iterator>::iterator_category       local_cat_t;
 
-   if (f == f_end || l == l_beg)
+   if (BOOST_UNLIKELY(f == f_end || l == l_beg))
       return segduo<It, It>(f, l);
 
    segment_iterator       fs     = traits::segment(f);

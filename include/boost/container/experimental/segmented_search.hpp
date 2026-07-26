@@ -130,7 +130,7 @@ template <class SegIter, class FwdIt2, class Sent2>
 SegIter segmented_search_dispatch
    (SegIter first, SegIter last, FwdIt2 s_first, Sent2 s_last, segmented_iterator_tag)
 {
-   if (s_first == s_last)
+   if (BOOST_UNLIKELY(s_first == s_last))
       return first;
 
    typedef typename iterator_traits<SegIter>::iterator_category cat_t;
@@ -162,7 +162,7 @@ typename algo_enable_if_c<
 segmented_search_dispatch
    (FwdIt1 first, Sent1 last, FwdIt2 s_first, Sent2 s_last, Tag)
 {
-   if (s_first == s_last)
+   if (BOOST_UNLIKELY(s_first == s_last))
       return first;
 
    equal_to_deref<FwdIt2> eq(s_first);

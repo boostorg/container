@@ -154,7 +154,7 @@ segduo<bool, SegIter2> segmented_equal_iter2_dispatch
    typedef typename iter2_traits::segment_iterator  iter2_segment_iterator;
    typedef typename segmented_iterator_traits<iter2_local_iterator>::is_segmented_iterator iter2_is_local_seg_t;
 
-   if(first1 == last1)
+   if(BOOST_UNLIKELY(first1 == last1))
       return segduo<bool, SegIter2>(true, first2);
 
    iter2_segment_iterator seg2 = iter2_traits::segment(first2);

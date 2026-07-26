@@ -110,7 +110,7 @@ segduo<It, It> segmented_reverse_disjoint_ranges(It f, It f_end, It l_beg, It l,
       <local_iterator>::iterator_category       local_cat_t;
 
    //Nothing to swap here if a range is empty
-   if (f == f_end || l == l_beg)
+   if (BOOST_UNLIKELY(f == f_end || l == l_beg))
       return segduo<It, It>(f, l);
 
    segment_iterator       fs     = traits::segment(f);

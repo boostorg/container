@@ -50,11 +50,11 @@ segmented_copy_dst_bounded
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first) {
       if(BOOST_CONTAINER_SEG_UNLIKELY(dst_first == dst_last))
-         goto out_path;
+         break;
       *dst_first = *first;
       ++dst_first;
    }
-   out_path:
+
    return segduo<SrcIter, DstIter>(first, dst_first);
 }
 
@@ -138,7 +138,7 @@ SegDstIter segmented_copy_dst_dispatch
    typedef typename dst_traits::segment_iterator  dst_segment_iterator;
    typedef typename segmented_iterator_traits<dst_local_iterator>::is_segmented_iterator dst_is_local_seg_t;
 
-   if(first == last)
+   if(BOOST_UNLIKELY(first == last))
       return result;
 
    dst_segment_iterator dst_seg   = dst_traits::segment(result);

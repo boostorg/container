@@ -155,7 +155,7 @@ SegDstIter segmented_remove_copy_dst_dispatch
    typedef typename dst_traits::segment_iterator  dst_segment_iterator;
    typedef typename segmented_iterator_traits<dst_local_iterator>::is_segmented_iterator dst_is_local_seg_t;
 
-   if(first == last)
+   if(BOOST_UNLIKELY(first == last))
       return result;
 
    dst_segment_iterator dst_seg   = dst_traits::segment(result);

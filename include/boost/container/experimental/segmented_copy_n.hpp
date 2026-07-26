@@ -153,7 +153,7 @@ SegDstIter segmented_copy_n_dst_dispatch
    typedef typename dst_traits::segment_iterator  dst_segment_iterator;
    typedef typename segmented_iterator_traits<dst_local_iterator>::is_segmented_iterator dst_is_local_seg_t;
 
-   if(count <= 0)
+   if(BOOST_UNLIKELY(count <= 0))
       return result;
 
    dst_segment_iterator dst_seg   = dst_traits::segment(result);
@@ -247,7 +247,7 @@ OutIter segmented_copy_n_dispatch
    typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
    typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
 
-   if(count <= 0) return result;
+   if(BOOST_UNLIKELY(count <= 0)) return result;
 
    segment_iterator scur = traits::segment(first);
    local_iterator   lcur = traits::local(first);

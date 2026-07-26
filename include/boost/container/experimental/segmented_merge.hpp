@@ -222,7 +222,7 @@ segtrio<Iter1, Iter2, SegDstIter> merge_until_exhausts
    typedef segtrio<Iter1, Iter2, dst_local_iterator>  bounded_t;
    typedef segtrio<Iter1, Iter2, SegDstIter>          result_t;
 
-   if(first1 == last1 || first2 == last2)
+   if(BOOST_UNLIKELY(first1 == last1 || first2 == last2))
       return result_t(first1, first2, result);
 
    dst_segment_iterator dst_seg   = dst_traits::segment(result);
@@ -295,7 +295,7 @@ segtrio<Iter1, SegIter2, OutIter> merge_seg2_dispatch
    typedef segtrio<Iter1, src2_local_iterator, OutIter> local_result_t;
    typedef segtrio<Iter1, SegIter2, OutIter>            result_t;
 
-   if(first1 == last1 || first2 == last2)
+   if(BOOST_UNLIKELY(first1 == last1 || first2 == last2))
       return result_t(first1, first2, result);
 
    src2_segment_iterator       sf2 = src2_traits::segment(first2);
@@ -379,7 +379,7 @@ segtrio<SegIt, InIter2, OutIter> merge_scan
    typedef segtrio<local_iterator, InIter2, OutIter> local_result_t;
    typedef segtrio<SegIt, InIter2, OutIter>          result_t;
 
-   if(first == last || first2 == last2)
+   if(BOOST_UNLIKELY(first == last || first2 == last2))
       return result_t(first, first2, result);
 
    segment_iterator       scur  = traits::segment(first);

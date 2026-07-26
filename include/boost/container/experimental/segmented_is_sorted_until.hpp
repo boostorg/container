@@ -128,7 +128,7 @@ template <class FwdIt, class Sent, class Comp>
 inline
 FwdIt segmented_is_sorted_until(FwdIt first, Sent last, Comp comp)
 {
-   if (first == last)
+   if (BOOST_UNLIKELY(first == last))
       return first;
 
    typedef segmented_iterator_traits<FwdIt>           traits;
@@ -149,7 +149,7 @@ template <class FwdIt, class Sent>
 inline
 FwdIt segmented_is_sorted_until(FwdIt first, Sent last)
 {
-   if (first == last)
+   if (BOOST_UNLIKELY(first == last))
       return first;
 
    typedef segmented_iterator_traits<FwdIt>           traits;
