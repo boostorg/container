@@ -217,21 +217,20 @@ OutIter segmented_copy_if_dispatch
    src_segment_iterator sfirst = src_traits::segment(first);
    const src_segment_iterator slast  = src_traits::segment(last);
 
-   if(sfirst == slast) {
-      return (segmented_copy_if_dispatch)
-         (src_traits::local(first), src_traits::local(last), result, pred, src_is_local_seg_t(), src_local_cat_t());
-   }
-   else {
+   src_local_iterator lb = src_traits::local(first);
+
+   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
       result = (segmented_copy_if_dispatch)
-         (src_traits::local(first), src_traits::end(sfirst), result, pred, src_is_local_seg_t(), src_local_cat_t());
+         (lb, src_traits::end(sfirst), result, pred, src_is_local_seg_t(), src_local_cat_t());
 
       for(++sfirst; sfirst != slast; ++sfirst)
          result = (segmented_copy_if_dispatch)
             (src_traits::begin(sfirst), src_traits::end(sfirst), result, pred, src_is_local_seg_t(), src_local_cat_t());
 
-      return (segmented_copy_if_dispatch)
-         (src_traits::begin(slast), src_traits::local(last), result, pred, src_is_local_seg_t(), src_local_cat_t());
+      lb = src_traits::begin(slast);
    }
+   return (segmented_copy_if_dispatch)
+      (lb, src_traits::local(last), result, pred, src_is_local_seg_t(), src_local_cat_t());
 }
 
 } // namespace detail_algo

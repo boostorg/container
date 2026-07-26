@@ -91,16 +91,12 @@ segduo<SegIter, DeepIt> sorted_until_rec
    segment_iterator       sfirst = traits::segment(first);
    const segment_iterator slast  = traits::segment(last);
 
-   if (sfirst == slast) {
-      const local_iterator ll = traits::local(last);
-      const local_result_t r = (sorted_until_rec)
-         (traits::local(first), ll, comp, prev, is_local_seg_t(), local_cat_t());
-      return segduo<SegIter, DeepIt>(traits::compose(sfirst, r.first), r.second);
-   }
-   else {
+   local_iterator lb = traits::local(first);
+
+   if (BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
       local_iterator le = traits::end(sfirst);
       local_result_t r = (sorted_until_rec)
-         (traits::local(first), le, comp, prev, is_local_seg_t(), local_cat_t());
+         (lb, le, comp, prev, is_local_seg_t(), local_cat_t());
       if (r.first != le)
          return segduo<SegIter, DeepIt>(traits::compose(sfirst, r.first), r.second);
 
@@ -111,10 +107,13 @@ segduo<SegIter, DeepIt> sorted_until_rec
          if (r.first != le)
             return segduo<SegIter, DeepIt>(traits::compose(sfirst, r.first), r.second);
       }
-      r = (sorted_until_rec)
-         (traits::begin(slast), traits::local(last), comp, r.second, is_local_seg_t(), local_cat_t());
-      return segduo<SegIter, DeepIt>(traits::compose(sfirst, r.first), r.second);
+
+      lb   = traits::begin(slast);
+      prev = r.second;
    }
+   const local_result_t r = (sorted_until_rec)
+      (lb, traits::local(last), comp, prev, is_local_seg_t(), local_cat_t());
+   return segduo<SegIter, DeepIt>(traits::compose(sfirst, r.first), r.second);
 }
 
 } // namespace detail_algo

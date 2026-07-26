@@ -98,15 +98,12 @@ segduo<SrcIter, SegIter2> segmented_equal_iter2_bounded
    iter2_segment_iterator       sfirst = iter2_traits::segment(iter2_first);
    const iter2_segment_iterator slast  = iter2_traits::segment(iter2_last);
 
-   if(sfirst == slast) {
-      segduo<SrcIter, iter2_local_iterator> r = (segmented_equal_iter2_bounded)
-         (first1, last1, iter2_traits::local(iter2_first), iter2_traits::local(iter2_last), pred, iter2_is_local_seg_t(), SrcCat());
-      return segduo<SrcIter, SegIter2>(r.first, iter2_traits::compose(sfirst, r.second));
-   }
-   else {
+   iter2_local_iterator lb2 = iter2_traits::local(iter2_first);
+
+   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
       iter2_local_iterator end2 = iter2_traits::end(sfirst);
       segduo<SrcIter, iter2_local_iterator> r = (segmented_equal_iter2_bounded)
-         (first1, last1, iter2_traits::local(iter2_first), end2, pred, iter2_is_local_seg_t(), SrcCat());
+         (first1, last1, lb2, end2, pred, iter2_is_local_seg_t(), SrcCat());
       first1 = r.first;
       iter2_local_iterator loc2 = r.second;
       if(BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1 || loc2 != end2))
@@ -122,10 +119,11 @@ segduo<SrcIter, SegIter2> segmented_equal_iter2_bounded
             return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(sfirst, loc2));
       }
 
-      r = (segmented_equal_iter2_bounded)
-         (first1, last1, iter2_traits::begin(slast), iter2_traits::local(iter2_last), pred, iter2_is_local_seg_t(), SrcCat());
-      return segduo<SrcIter, SegIter2>(r.first, iter2_traits::compose(sfirst, r.second));
+      lb2 = iter2_traits::begin(slast);
    }
+   const segduo<SrcIter, iter2_local_iterator> r = (segmented_equal_iter2_bounded)
+      (first1, last1, lb2, iter2_traits::local(iter2_last), pred, iter2_is_local_seg_t(), SrcCat());
+   return segduo<SrcIter, SegIter2>(r.first, iter2_traits::compose(sfirst, r.second));
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -206,13 +204,11 @@ segduo<bool, InpIter2> segmented_equal_dispatch
    segment_iterator       sfirst = traits::segment(first1);
    segment_iterator const slast  = traits::segment(last1);
 
-   if(sfirst == slast) {
-      return (segmented_equal_dispatch)
-         (traits::local(first1), traits::local(last1), first2, pred, is_local_seg_t(), local_cat_t());
-   }
-   else {
+   local_iterator lb = traits::local(first1);
+
+   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
       segduo<bool, InpIter2> r = (segmented_equal_dispatch)
-         (traits::local(first1), traits::end(sfirst), first2, pred, is_local_seg_t(), local_cat_t());
+         (lb, traits::end(sfirst), first2, pred, is_local_seg_t(), local_cat_t());
       if(BOOST_CONTAINER_SEG_UNLIKELY(!r.first))
          return r;
 
@@ -223,9 +219,11 @@ segduo<bool, InpIter2> segmented_equal_dispatch
             return r;
       }
 
-      return (segmented_equal_dispatch)
-         (traits::begin(slast), traits::local(last1), r.second, pred, is_local_seg_t(), local_cat_t());
+      lb     = traits::begin(slast);
+      first2 = r.second;
    }
+   return (segmented_equal_dispatch)
+      (lb, traits::local(last1), first2, pred, is_local_seg_t(), local_cat_t());
 }
 
 } // namespace detail_algo

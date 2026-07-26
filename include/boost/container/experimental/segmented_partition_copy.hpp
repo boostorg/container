@@ -442,18 +442,20 @@ segmented_partition_copy_dispatch
    segment_iterator sfirst = traits::segment(first);
    segment_iterator slast  = traits::segment(last);
 
-   if(sfirst == slast) {
-      return (segmented_partition_copy_dispatch)(traits::local(first), traits::local(last), out_true, out_false, pred, is_local_seg_t(), local_cat_t());
-   }
-   else {
-      pair_t p = (segmented_partition_copy_dispatch)(traits::local(first), traits::end(sfirst), out_true, out_false, pred, is_local_seg_t(), local_cat_t());
+   local_iterator lb = traits::local(first);
+
+   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
+      pair_t p = (segmented_partition_copy_dispatch)(lb, traits::end(sfirst), out_true, out_false, pred, is_local_seg_t(), local_cat_t());
 
       for(++sfirst; sfirst != slast; ++sfirst) {
          p = (segmented_partition_copy_dispatch)(traits::begin(sfirst), traits::end(sfirst), p.first, p.second, pred, is_local_seg_t(), local_cat_t());
       }
 
-      return (segmented_partition_copy_dispatch)(traits::begin(sfirst), traits::local(last), p.first, p.second, pred, is_local_seg_t(), local_cat_t());
+      lb        = traits::begin(slast);
+      out_true  = p.first;
+      out_false = p.second;
    }
+   return (segmented_partition_copy_dispatch)(lb, traits::local(last), out_true, out_false, pred, is_local_seg_t(), local_cat_t());
 }
 
 } // namespace detail_algo

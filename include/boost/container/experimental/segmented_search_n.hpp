@@ -285,17 +285,11 @@ segtrio<bool, Size, SegIter> search_n_scan_segment
    segment_iterator scur  = traits::segment(first);
    segment_iterator slast = traits::segment(last);
 
-   if(scur == slast) {
-      local_iterator lend = traits::local(last);
-      const sub_result_t r = search_n_scan_segment(traits::local(first), lend,
-                               consecutive, count, value, is_local_seg_t(), local_cat_t());
-      if(r.third != lend)
-         match_start = traits::compose(scur, r.third);
-      return result_t(r.first, r.second, match_start);
-   }
-   else {
+   local_iterator lb = traits::local(first);
+
+   if(BOOST_CONTAINER_SEG_LIKELY(scur != slast)) {
       local_iterator lend = traits::end(scur);
-      sub_result_t r = search_n_scan_segment(traits::local(first), lend,
+      sub_result_t r = search_n_scan_segment(lb, lend,
                                consecutive, count, value, is_local_seg_t(), local_cat_t());
       if(r.third != lend)
          match_start = traits::compose(scur, r.third);
@@ -311,14 +305,17 @@ segtrio<bool, Size, SegIter> search_n_scan_segment
          if(r.first)
             return result_t(true, r.second, match_start);
       }
-      {
-         lend = traits::local(last);
-         r = search_n_scan_segment(traits::begin(scur), lend,
-                               r.second, count, value, is_local_seg_t(), local_cat_t());
-         if(r.third != lend)
-            match_start = traits::compose(scur, r.third);
-         return result_t(r.first, r.second, match_start);
-      }
+
+      lb          = traits::begin(slast);
+      consecutive = r.second;
+   }
+   {
+      const local_iterator lend = traits::local(last);
+      const sub_result_t r = search_n_scan_segment(lb, lend,
+                               consecutive, count, value, is_local_seg_t(), local_cat_t());
+      if(r.third != lend)
+         match_start = traits::compose(scur, r.third);
+      return result_t(r.first, r.second, match_start);
    }
 }
 

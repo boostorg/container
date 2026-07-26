@@ -74,13 +74,10 @@ segduo<SegIt, Size> fill_n_scan(SegIt first, SegIt last, Size count, const T& va
    segment_iterator       scur  = traits::segment(first);
    segment_iterator const slast = traits::segment(last);
 
-   if(scur == slast) {
-      const local_iterator ll = traits::local(last);
-      const segduo<local_iterator, Size> r = (fill_n_scan)(traits::local(first), ll, count, value, is_local_seg_t(), local_cat_t());
-      return segduo<SegIt, Size>((r.first != ll) ? traits::compose(scur, r.first) : last, r.second);
-   }
-   else {
-      segduo<local_iterator, Size> r = fill_n_scan(traits::local(first), traits::end(scur), count, value, is_local_seg_t(), local_cat_t());
+   local_iterator lb = traits::local(first);
+
+   if(BOOST_CONTAINER_SEG_LIKELY(scur != slast)) {
+      segduo<local_iterator, Size> r = fill_n_scan(lb, traits::end(scur), count, value, is_local_seg_t(), local_cat_t());
       count = r.second;
       if (BOOST_CONTAINER_SEG_UNLIKELY(!count))
          return segduo<SegIt, Size>(traits::compose(scur, r.first), count);
@@ -91,10 +88,12 @@ segduo<SegIt, Size> fill_n_scan(SegIt first, SegIt last, Size count, const T& va
          if (BOOST_CONTAINER_SEG_UNLIKELY(!count))
             return segduo<SegIt, Size>(traits::compose(scur, r.first), count);
       }
-      const local_iterator ll = traits::local(last);
-      r = fill_n_scan(traits::begin(slast), ll, count, value, is_local_seg_t(), local_cat_t());
-      return segduo<SegIt, Size>((r.first != ll) ? traits::compose(scur, r.first) : last, r.second);
+
+      lb = traits::begin(slast);
    }
+   const local_iterator ll = traits::local(last);
+   const segduo<local_iterator, Size> r = (fill_n_scan)(lb, ll, count, value, is_local_seg_t(), local_cat_t());
+   return segduo<SegIt, Size>((r.first != ll) ? traits::compose(scur, r.first) : last, r.second);
 }
 
 template <class SegIter, class Size, class T>

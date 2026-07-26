@@ -81,14 +81,12 @@ SegIt find_last_scan(SegIt first, SegIt last, const T& value,
    segment_iterator       sfirst = traits::segment(first);
    const segment_iterator slast  = traits::segment(last);
 
-   if (sfirst == slast) {
-      return traits::compose
-         (sfirst, find_last_scan(traits::local(first), traits::local(last), value, is_local_seg_t(), local_cat_t()));
-   }
-   else {
+   local_iterator lb = traits::local(first);
+
+   if (BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
       {  // First segment
          const local_iterator le = traits::end(sfirst);
-         const local_iterator r = find_last_scan(traits::local(first), le, value, is_local_seg_t(), local_cat_t());
+         const local_iterator r = find_last_scan(lb, le, value, is_local_seg_t(), local_cat_t());
          if (r != le)
             result = traits::compose(sfirst, r);
       }
@@ -99,10 +97,19 @@ SegIt find_last_scan(SegIt first, SegIt last, const T& value,
          if (r != le)
             result = traits::compose(sfirst, r);
       }
-      // Last segment
-      return traits::compose
-         (sfirst, find_last_scan(traits::begin(slast), traits::local(last), value, is_local_seg_t(), local_cat_t()));
+
+      lb = traits::begin(slast);
    }
+   //A miss here must keep the match found in a previous segment, so it
+   //updates the running result instead of returning the composed local
+   //iterator directly.
+   {
+      const local_iterator ll = traits::local(last);
+      const local_iterator r  = find_last_scan(lb, ll, value, is_local_seg_t(), local_cat_t());
+      if (r != ll)
+         result = traits::compose(sfirst, r);
+   }
+   return result;
 }
 
 //////////////////////////////////////////////
@@ -120,30 +127,29 @@ SegIt find_last_scan(SegIt first, SegIt last, const T& value, segmented_iterator
 
    segment_iterator const sfirst = traits::segment(first);
    segment_iterator       slast  = traits::segment(last);
-   const local_iterator ll = traits::local(last);
 
-   if (sfirst == slast) {
-      return traits::compose
-         (sfirst, find_last_scan(traits::local(first), ll, value, is_local_seg_t(), local_cat_t()));
+   local_iterator le = traits::local(last);
+
+   if (BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
+      {  // Last segment (partial): [begin(slast), local(last))
+         const local_iterator r = find_last_scan(traits::begin(slast), le, value, is_local_seg_t(), local_cat_t());
+         if (r != le)
+            return traits::compose(slast, r);
+      }
+
+      // Middle segments in reverse
+      for (--slast; slast != sfirst; --slast) {
+         const local_iterator me = traits::end(slast);
+         const local_iterator r = find_last_scan(traits::begin(slast), me, value, is_local_seg_t(), local_cat_t());
+         if (r != me)
+            return traits::compose(slast, r);
+      }
+
+      le = traits::end(sfirst);
    }
 
-   {  // Last segment (partial): [begin(slast), local(last))
-      local_iterator r = find_last_scan(traits::begin(slast), ll, value, is_local_seg_t(), local_cat_t());
-      if (r != ll)
-         return traits::compose(slast, r);
-   }
-
-   // Middle segments in reverse
-   for (--slast; slast != sfirst; --slast) {
-      const local_iterator le = traits::end(slast);
-      const local_iterator r = find_last_scan(traits::begin(slast), le, value, is_local_seg_t(), local_cat_t());
-      if (r != le)
-         return traits::compose(slast, r);
-   }
-
-   {  // First segment (partial): [local(first), end(sfirst))
-      const local_iterator le = traits::end(sfirst);
-      const local_iterator r  = find_last_scan(traits::local(first), le, value, is_local_seg_t(), local_cat_t());
+   {  // First segment (partial): [local(first), le)
+      const local_iterator r = find_last_scan(traits::local(first), le, value, is_local_seg_t(), local_cat_t());
       if (r != le)
          return traits::compose(sfirst, r);
    }

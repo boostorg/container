@@ -59,7 +59,7 @@ SegIter segmented_find_dispatch
 
    local_iterator lb = traits::local(first);
 
-   if(BOOST_LIKELY(sfirst != slast)) {
+   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
       //First segment
       {
          const local_iterator fe = traits::end(sfirst);
@@ -76,7 +76,6 @@ SegIter segmented_find_dispatch
       }
       lb = traits::begin(slast);
    }
-   //Last segment, shared with the single-segment case above
    {
       const local_iterator le = traits::local(last);
       const local_iterator r  = (segmented_find_dispatch)(lb, le, value, is_local_seg_t(), local_cat_t());

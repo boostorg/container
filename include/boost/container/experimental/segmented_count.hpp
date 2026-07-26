@@ -69,7 +69,7 @@ typename boost::container::iterator_traits<SegIter>::difference_type
    typename boost::container::iterator_traits<SegIter>::difference_type result = 0;
    local_iterator lb = traits::local(first);
 
-   if(BOOST_LIKELY(sfirst != slast)) {
+   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
       result += (segmented_count_dispatch)(lb, traits::end(sfirst), value, is_local_seg_t(), local_cat_t());
 
       for(++sfirst; sfirst != slast; ++sfirst)
@@ -77,7 +77,6 @@ typename boost::container::iterator_traits<SegIter>::difference_type
 
       lb = traits::begin(slast);
    }
-   //Last segment, shared with the single-segment case above
    return result += (segmented_count_dispatch)(lb, traits::local(last), value, is_local_seg_t(), local_cat_t());
 }
 

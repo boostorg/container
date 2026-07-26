@@ -101,17 +101,14 @@ OuterIter stable_partition_scan(SegIt first, SegIt last, OuterIter result,
    segment_iterator const slast = traits::segment(last);
    local_iterator         lcur  = traits::local(first);
 
-   if(scur == slast) {
-      result = stable_partition_scan(lcur, traits::local(last), result, composer_t(composer, scur), pred, is_local_seg_t());
-   }
-   else {
+   if(BOOST_CONTAINER_SEG_LIKELY(scur != slast)) {
       result = stable_partition_scan(lcur, traits::end(scur), result, composer_t(composer, scur), pred, is_local_seg_t());
       for(++scur; scur != slast; ++scur) {
          result = stable_partition_scan(traits::begin(scur), traits::end(scur), result, composer_t(composer, scur), pred, is_local_seg_t());
       }
-      result = stable_partition_scan(traits::begin(scur), traits::local(last), result, composer_t(composer, scur), pred,is_local_seg_t());
+      lcur = traits::begin(slast);
    }
-   return result;
+   return stable_partition_scan(lcur, traits::local(last), result, composer_t(composer, scur), pred, is_local_seg_t());
 }
 
 template <class SegIter, class Pred>

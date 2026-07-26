@@ -213,10 +213,7 @@ OutIter copy_n_scan(SegIt first, SegIt last, Size& BOOST_RESTRICT count, OutIter
    segment_iterator slast = traits::segment(last);
    local_iterator   lcur  = traits::local(first);
 
-   if(scur == slast) {
-      return copy_n_scan(lcur, traits::local(last), count, result, is_local_seg_t(), local_cat_t());
-   }
-   else {
+   if(BOOST_CONTAINER_SEG_LIKELY(scur != slast)) {
       result = copy_n_scan(lcur, traits::end(scur), count, result, is_local_seg_t(), local_cat_t());
 
       if (BOOST_CONTAINER_SEG_UNLIKELY(!count))
@@ -228,8 +225,9 @@ OutIter copy_n_scan(SegIt first, SegIt last, Size& BOOST_RESTRICT count, OutIter
             return result;
       }
 
-      return copy_n_scan(traits::begin(scur), traits::local(last), count, result, is_local_seg_t(), local_cat_t());
+      lcur = traits::begin(slast);
    }
+   return copy_n_scan(lcur, traits::local(last), count, result, is_local_seg_t(), local_cat_t());
 }
 
 //////////////////////////////////////////////////////////////////////////////

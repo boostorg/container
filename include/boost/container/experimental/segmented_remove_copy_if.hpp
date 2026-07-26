@@ -119,14 +119,11 @@ segduo<SrcIter, SegDstIter> segmented_remove_copy_if_dst_bounded
    dst_segment_iterator       sfirst = dst_traits::segment(dst_first);
    const dst_segment_iterator slast  = dst_traits::segment(dst_last);
 
-   if(sfirst == slast) {
+   dst_local_iterator db = dst_traits::local(dst_first);
+
+   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
       segduo<SrcIter, dst_local_iterator> r = (segmented_remove_copy_if_dst_bounded<Move>)
-         (first, last, dst_traits::local(dst_first), dst_traits::local(dst_last), pred, dst_is_local_seg_t(), SrcCat());
-      return segduo<SrcIter, SegDstIter>(r.first, dst_traits::compose(sfirst, r.second));
-   }
-   else {
-      segduo<SrcIter, dst_local_iterator> r = (segmented_remove_copy_if_dst_bounded<Move>)
-         (first, last, dst_traits::local(dst_first), dst_traits::end(sfirst), pred, dst_is_local_seg_t(), SrcCat());
+         (first, last, db, dst_traits::end(sfirst), pred, dst_is_local_seg_t(), SrcCat());
       first = r.first;
       if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
          return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sfirst, r.second));
@@ -139,10 +136,11 @@ segduo<SrcIter, SegDstIter> segmented_remove_copy_if_dst_bounded
             return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sfirst, r.second));
       }
 
-      r = (segmented_remove_copy_if_dst_bounded<Move>)
-         (first, last, dst_traits::begin(slast), dst_traits::local(dst_last), pred, dst_is_local_seg_t(), SrcCat());
-      return segduo<SrcIter, SegDstIter>(r.first, dst_traits::compose(sfirst, r.second));
+      db = dst_traits::begin(slast);
    }
+   const segduo<SrcIter, dst_local_iterator> r = (segmented_remove_copy_if_dst_bounded<Move>)
+      (first, last, db, dst_traits::local(dst_last), pred, dst_is_local_seg_t(), SrcCat());
+   return segduo<SrcIter, SegDstIter>(r.first, dst_traits::compose(sfirst, r.second));
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -223,21 +221,20 @@ OutIter segmented_remove_copy_if_dispatch
    src_segment_iterator sfirst = src_traits::segment(first);
    const src_segment_iterator slast  = src_traits::segment(last);
 
-   if(sfirst == slast) {
-      return (segmented_remove_copy_if_dispatch<Move>)
-         (src_traits::local(first), src_traits::local(last), result, pred, src_is_local_seg_t(), src_local_cat_t());
-   }
-   else {
+   src_local_iterator lb = src_traits::local(first);
+
+   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
       result = (segmented_remove_copy_if_dispatch<Move>)
-         (src_traits::local(first), src_traits::end(sfirst), result, pred, src_is_local_seg_t(), src_local_cat_t());
+         (lb, src_traits::end(sfirst), result, pred, src_is_local_seg_t(), src_local_cat_t());
 
       for(++sfirst; sfirst != slast; ++sfirst)
          result = (segmented_remove_copy_if_dispatch<Move>)
             (src_traits::begin(sfirst), src_traits::end(sfirst), result, pred, src_is_local_seg_t(), src_local_cat_t());
 
-      return (segmented_remove_copy_if_dispatch<Move>)
-         (src_traits::begin(slast), src_traits::local(last), result, pred, src_is_local_seg_t(), src_local_cat_t());
+      lb = src_traits::begin(slast);
    }
+   return (segmented_remove_copy_if_dispatch<Move>)
+      (lb, src_traits::local(last), result, pred, src_is_local_seg_t(), src_local_cat_t());
 }
 
 } // namespace detail_algo

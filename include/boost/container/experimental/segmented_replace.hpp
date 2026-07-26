@@ -57,17 +57,17 @@ void segmented_replace_dispatch
    segment_iterator sfirst = traits::segment(first);
    segment_iterator slast  = traits::segment(last);
 
-   if(sfirst == slast) {
-      (segmented_replace_dispatch)(traits::local(first), traits::local(last), old_val, new_val, is_local_seg_t(), local_cat_t());
-   }
-   else {
-      (segmented_replace_dispatch)(traits::local(first), traits::end(sfirst), old_val, new_val, is_local_seg_t(), local_cat_t());
+   local_iterator lb = traits::local(first);
+
+   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
+      (segmented_replace_dispatch)(lb, traits::end(sfirst), old_val, new_val, is_local_seg_t(), local_cat_t());
 
       for(++sfirst; sfirst != slast; ++sfirst)
          (segmented_replace_dispatch)(traits::begin(sfirst), traits::end(sfirst), old_val, new_val, is_local_seg_t(), local_cat_t());
 
-      (segmented_replace_dispatch)(traits::begin(sfirst), traits::local(last), old_val, new_val, is_local_seg_t(), local_cat_t());
+      lb = traits::begin(slast);
    }
+   (segmented_replace_dispatch)(lb, traits::local(last), old_val, new_val, is_local_seg_t(), local_cat_t());
 }
 
 } // namespace detail_algo

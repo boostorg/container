@@ -58,18 +58,13 @@ SegIter segmented_partition_point_dispatch
    segment_iterator        scur = traits::segment(first);
    segment_iterator const slast = traits::segment(last);
 
-   if(scur == slast) {
-      const local_iterator ll = traits::local(last);
-      const local_iterator r  = (segmented_partition_point_dispatch)
-            (traits::local(first), ll, pred, is_local_seg_t(), local_cat_t());
-      if (r != ll)
-         return traits::compose(scur, r);
-   }
-   else {
+   local_iterator lb = traits::local(first);
+
+   if(BOOST_CONTAINER_SEG_LIKELY(scur != slast)) {
       {  //first segment
          const local_iterator le = traits::end(scur);
          const local_iterator r = (segmented_partition_point_dispatch)
-            (traits::local(first), le, pred, is_local_seg_t(), local_cat_t());
+            (lb, le, pred, is_local_seg_t(), local_cat_t());
          if (r != le)
             return traits::compose(scur, r);
       }
@@ -81,13 +76,14 @@ SegIter segmented_partition_point_dispatch
          if (r != le)
             return traits::compose(scur, r);
       }
-      {  //last segment
-         const local_iterator ll = traits::local(last);
-         const local_iterator r = (segmented_partition_point_dispatch)
-            (traits::begin(scur), ll, pred, is_local_seg_t(), local_cat_t());
-         if (r != ll)
-            return traits::compose(scur, r);
-      }
+      lb = traits::begin(slast);
+   }
+   {
+      const local_iterator ll = traits::local(last);
+      const local_iterator r  = (segmented_partition_point_dispatch)
+         (lb, ll, pred, is_local_seg_t(), local_cat_t());
+      if (r != ll)
+         return traits::compose(scur, r);
    }
    return last;
 }
