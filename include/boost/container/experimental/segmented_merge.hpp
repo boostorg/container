@@ -174,7 +174,7 @@ segtrio<Iter1, Iter2, SegDstIter> merge_dst_bounded
       }
 
       r = (merge_dst_bounded)
-         ( first1, last1, first2, last2, dst_traits::begin(slast)
+         ( r.first, last1, r.second, last2, dst_traits::begin(slast)
          , dst_traits::local(dst_last), comp, dst_is_local_seg_t(), SrcCat());
       exit:
       return result_t(r.first, r.second, dst_traits::compose(sfirst, r.third));
