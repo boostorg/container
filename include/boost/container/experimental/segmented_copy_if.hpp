@@ -120,14 +120,16 @@ segduo<SrcIter, SegDstIter> segmented_copy_if_dst_bounded
    dst_local_iterator db = dst_traits::local(dst_first);
 
    if(BOOST_CONTAINER_SEG_LIKELY(dsfirst != dslast)) {
-      segduo<SrcIter, dst_local_iterator> r = (segmented_copy_if_dst_bounded)
-         (first, last, db, dst_traits::end(dsfirst), pred, dst_is_local_seg_t(), SrcCat());
-      first = r.first;
-      if (BOOST_CONTAINER_SEG_UNLIKELY(first == last))
-         return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(dsfirst, r.second));
+      {
+         const segduo<SrcIter, dst_local_iterator> r = (segmented_copy_if_dst_bounded)
+            (first, last, db, dst_traits::end(dsfirst), pred, dst_is_local_seg_t(), SrcCat());
+         first = r.first;
+         if (BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+            return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(dsfirst, r.second));
+      }
 
       for (++dsfirst; dsfirst != dslast; ++dsfirst) {
-         r = (segmented_copy_if_dst_bounded)
+         const segduo<SrcIter, dst_local_iterator> r = (segmented_copy_if_dst_bounded)
             (first, last, dst_traits::begin(dsfirst), dst_traits::end(dsfirst), pred, dst_is_local_seg_t(), SrcCat());
          first = r.first;
          if (BOOST_CONTAINER_SEG_UNLIKELY(first == last))

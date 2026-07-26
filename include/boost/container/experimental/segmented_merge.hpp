@@ -154,23 +154,27 @@ segtrio<Iter1, Iter2, SegDstIter> merge_dst_bounded
    dst_local_iterator db = dst_traits::local(dst_first);
 
    if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
-      local_result_t r = (merge_dst_bounded)
-         ( first1, last1, first2, last2, db
-         , dst_traits::end(sfirst), comp, dst_is_local_seg_t(), SrcCat());
-      if(BOOST_CONTAINER_SEG_UNLIKELY(r.first == last1 || r.second == last2))
-         return result_t(r.first, r.second, dst_traits::compose(sfirst, r.third));
-
-      for(++sfirst; sfirst != slast; ++sfirst) {
-         r = (merge_dst_bounded)
-            ( r.first, last1, r.second, last2, dst_traits::begin(sfirst)
+      {
+         const local_result_t r = (merge_dst_bounded)
+            ( first1, last1, first2, last2, db
             , dst_traits::end(sfirst), comp, dst_is_local_seg_t(), SrcCat());
-         if (BOOST_CONTAINER_SEG_UNLIKELY(r.first == last1 || r.second == last2))
-            return result_t(r.first, r.second, dst_traits::compose(sfirst, r.third));
+         first1 = r.first;
+         first2 = r.second;
+         if(BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1 || first2 == last2))
+            return result_t(first1, first2, dst_traits::compose(sfirst, r.third));
       }
 
-      db     = dst_traits::begin(slast);
-      first1 = r.first;
-      first2 = r.second;
+      for(++sfirst; sfirst != slast; ++sfirst) {
+         const local_result_t r = (merge_dst_bounded)
+            ( first1, last1, first2, last2, dst_traits::begin(sfirst)
+            , dst_traits::end(sfirst), comp, dst_is_local_seg_t(), SrcCat());
+         first1 = r.first;
+         first2 = r.second;
+         if (BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1 || first2 == last2))
+            return result_t(first1, first2, dst_traits::compose(sfirst, r.third));
+      }
+
+      db = dst_traits::begin(slast);
    }
    const local_result_t r = (merge_dst_bounded)
       ( first1, last1, first2, last2, db
@@ -300,23 +304,27 @@ segtrio<Iter1, SegIter2, OutIter> merge_seg2_dispatch
 
    if(BOOST_CONTAINER_SEG_LIKELY(sf2 != sl2)) {
       // First (partial) segment of first2.
-      local_result_t r = (merge_seg2_dispatch)
-         (first1, last1, lf2, src2_traits::end(sf2), result, comp,
-          src2_is_local_seg_t(), cat);
-      if (BOOST_CONTAINER_SEG_UNLIKELY(r.first == last1))
-         return result_t(r.first, src2_traits::compose(sf2, r.second), r.third);
-
-      for(++sf2; sf2 != sl2; ++sf2) {
-         r = (merge_seg2_dispatch)
-            (r.first, last1, src2_traits::begin(sf2), src2_traits::end(sf2),
-             r.third, comp, src2_is_local_seg_t(), cat);
-         if(BOOST_CONTAINER_SEG_UNLIKELY(r.first == last1))
-            return result_t(r.first, src2_traits::compose(sf2, r.second), r.third);
+      {
+         const local_result_t r = (merge_seg2_dispatch)
+            (first1, last1, lf2, src2_traits::end(sf2), result, comp,
+             src2_is_local_seg_t(), cat);
+         first1 = r.first;
+         result = r.third;
+         if (BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1))
+            return result_t(first1, src2_traits::compose(sf2, r.second), result);
       }
 
-      lf2    = src2_traits::begin(sl2);
-      first1 = r.first;
-      result = r.third;
+      for(++sf2; sf2 != sl2; ++sf2) {
+         const local_result_t r = (merge_seg2_dispatch)
+            (first1, last1, src2_traits::begin(sf2), src2_traits::end(sf2),
+             result, comp, src2_is_local_seg_t(), cat);
+         first1 = r.first;
+         result = r.third;
+         if(BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1))
+            return result_t(first1, src2_traits::compose(sf2, r.second), result);
+      }
+
+      lf2 = src2_traits::begin(sl2);
    }
    // Final (partial) segment of first2, shared with the single-segment case.
    const local_result_t r = (merge_seg2_dispatch)
@@ -380,21 +388,25 @@ segtrio<SegIt, InIter2, OutIter> merge_scan
 
    if(BOOST_CONTAINER_SEG_LIKELY(scur != slast)) {
       // First (partial) segment of first1.
-      local_result_t r = merge_scan
-         (lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
-      if(BOOST_CONTAINER_SEG_UNLIKELY(r.second == last2))
-         return result_t(traits::compose(scur, r.first), r.second, r.third);
-
-      for(++scur; scur != slast; ++scur) {
-         r = merge_scan
-            (traits::begin(scur), traits::end(scur), r.second, last2, r.third, comp, is_local_seg_t());
-         if(BOOST_CONTAINER_SEG_UNLIKELY(r.second == last2))
-            return result_t(traits::compose(scur, r.first), r.second, r.third);
+      {
+         const local_result_t r = merge_scan
+            (lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
+         first2 = r.second;
+         result = r.third;
+         if(BOOST_CONTAINER_SEG_UNLIKELY(first2 == last2))
+            return result_t(traits::compose(scur, r.first), first2, result);
       }
 
-      lcur   = traits::begin(slast);
-      first2 = r.second;
-      result = r.third;
+      for(++scur; scur != slast; ++scur) {
+         const local_result_t r = merge_scan
+            (traits::begin(scur), traits::end(scur), first2, last2, result, comp, is_local_seg_t());
+         first2 = r.second;
+         result = r.third;
+         if(BOOST_CONTAINER_SEG_UNLIKELY(first2 == last2))
+            return result_t(traits::compose(scur, r.first), first2, result);
+      }
+
+      lcur = traits::begin(slast);
    }
    // Final (partial) segment of first1, shared with the single-segment case.
    const local_result_t r = merge_scan

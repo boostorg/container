@@ -163,7 +163,7 @@ partition_copy_leaf
    typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
    typedef segquartet<RASrcIter, TIter, FIter, difference_type> cleanup_result;
 
-   cleanup_result r = (partition_copy_cleanup_blocks<32>)
+   const cleanup_result r32 = (partition_copy_cleanup_blocks<32>)
       (first, t_first, t_last, f_first, f_last, pred, last - first,
        dtl::true_type());
 
@@ -172,12 +172,12 @@ partition_copy_leaf
       , !dtl::is_same<TSent, unreachable_sentinel_t>::value ||
         !dtl::is_same<FSent, unreachable_sentinel_t>::value
       > has_bounded_output_t;
-   r = (partition_copy_cleanup_blocks<8>)
-      (r.first, r.second, t_last, r.third, f_last, pred, r.fourth,
+   const cleanup_result r8 = (partition_copy_cleanup_blocks<8>)
+      (r32.first, r32.second, t_last, r32.third, f_last, pred, r32.fourth,
        has_bounded_output_t());
 
    return (partition_copy_leaf)
-      (r.first, last, r.second, t_last, r.third, f_last, pred,
+      (r8.first, last, r8.second, t_last, r8.third, f_last, pred,
        int());
 }
 
@@ -223,16 +223,18 @@ partition_copy_false_bounded
    floc_t fb = ftr::local(f_first);
 
    if(BOOST_CONTAINER_SEG_LIKELY(fsfirst != fslast)) {
-      segquartet<SrcIter, TIter, floc_t, bool> r = (partition_copy_false_bounded)
-         (first, last, t_first, t_last, fb, ftr::end(fsfirst), pred, floc_seg_t(), cat);
-      first   = r.first;
-      t_first = r.second;
-      if(BOOST_CONTAINER_SEG_UNLIKELY(first == last || r.fourth))
-         return segquartet<SrcIter, TIter, SegFIter, bool>
-            (first, t_first, ftr::compose(fsfirst, r.third), r.fourth);
+      {
+         const segquartet<SrcIter, TIter, floc_t, bool> r = (partition_copy_false_bounded)
+            (first, last, t_first, t_last, fb, ftr::end(fsfirst), pred, floc_seg_t(), cat);
+         first   = r.first;
+         t_first = r.second;
+         if(BOOST_CONTAINER_SEG_UNLIKELY(first == last || r.fourth))
+            return segquartet<SrcIter, TIter, SegFIter, bool>
+               (first, t_first, ftr::compose(fsfirst, r.third), r.fourth);
+      }
 
       for(++fsfirst; fsfirst != fslast; ++fsfirst) {
-         r = (partition_copy_false_bounded)
+         const segquartet<SrcIter, TIter, floc_t, bool> r = (partition_copy_false_bounded)
             (first, last, t_first, t_last, ftr::begin(fsfirst), ftr::end(fsfirst), pred, floc_seg_t(), cat);
          first   = r.first;
          t_first = r.second;
@@ -336,15 +338,17 @@ partition_copy_true_bounded
    tloc_t tb = ttr::local(t_first);
 
    if(BOOST_CONTAINER_SEG_LIKELY(tsfirst != tslast)) {
-      segtrio<SrcIter, tloc_t, FIter> r = (partition_copy_true_bounded)
-         (first, last, tb, ttr::end(tsfirst), f_first, pred, tloc_seg_t(), f_tag, cat);
-      first   = r.first;
-      f_first = r.third;
-      if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
-         return segtrio<SrcIter, SegTIter, FIter>(first, ttr::compose(tsfirst, r.second), f_first);
+      {
+         const segtrio<SrcIter, tloc_t, FIter> r = (partition_copy_true_bounded)
+            (first, last, tb, ttr::end(tsfirst), f_first, pred, tloc_seg_t(), f_tag, cat);
+         first   = r.first;
+         f_first = r.third;
+         if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+            return segtrio<SrcIter, SegTIter, FIter>(first, ttr::compose(tsfirst, r.second), f_first);
+      }
 
       for(++tsfirst; tsfirst != tslast; ++tsfirst) {
-         r = (partition_copy_true_bounded)
+         const segtrio<SrcIter, tloc_t, FIter> r = (partition_copy_true_bounded)
             (first, last, ttr::begin(tsfirst), ttr::end(tsfirst), f_first, pred, tloc_seg_t(), f_tag, cat);
          first   = r.first;
          f_first = r.third;
@@ -442,6 +446,11 @@ segmented_partition_copy_dispatch
    local_iterator lb = traits::local(first);
 
    if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
+      // NOT converted to the scoped-const form: both members are full output
+      // iterators, so carrying them through out_true/out_false costs two
+      // copies per iteration.  There is no early return here to pay for them,
+      // and it measured +3.6% on these walkers under GCC and +0.1% under
+      // Clang, so direct threading stays.
       pair_t p = (segmented_partition_copy_dispatch)(lb, traits::end(sfirst), out_true, out_false, pred, is_local_seg_t(), local_cat_t());
 
       for(++sfirst; sfirst != slast; ++sfirst) {

@@ -225,23 +225,27 @@ segtrio<Iter1, SegIter2, OutIter> set_difference_seg2_dispatch
    src2_local_iterator         lf2 = src2_traits::local(first2);
 
    if(BOOST_CONTAINER_SEG_LIKELY(sf2 != sl2)) {
-      local_result_t r = (set_difference_seg2_dispatch)
-         (first1, last1, lf2, src2_traits::end(sf2), result, comp,
-          src2_is_local_seg_t(), cat);
-      if (BOOST_CONTAINER_SEG_UNLIKELY(r.first == last1))
-         return result_t(r.first, src2_traits::compose(sf2, r.second), r.third);
-
-      for(++sf2; sf2 != sl2; ++sf2) {
-         r = (set_difference_seg2_dispatch)
-            (r.first, last1, src2_traits::begin(sf2), src2_traits::end(sf2),
-             r.third, comp, src2_is_local_seg_t(), cat);
-         if(BOOST_CONTAINER_SEG_UNLIKELY(r.first == last1))
-            return result_t(r.first, src2_traits::compose(sf2, r.second), r.third);
+      {
+         const local_result_t r = (set_difference_seg2_dispatch)
+            (first1, last1, lf2, src2_traits::end(sf2), result, comp,
+             src2_is_local_seg_t(), cat);
+         first1 = r.first;
+         result = r.third;
+         if (BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1))
+            return result_t(first1, src2_traits::compose(sf2, r.second), result);
       }
 
-      lf2    = src2_traits::begin(sl2);
-      first1 = r.first;
-      result = r.third;
+      for(++sf2; sf2 != sl2; ++sf2) {
+         const local_result_t r = (set_difference_seg2_dispatch)
+            (first1, last1, src2_traits::begin(sf2), src2_traits::end(sf2),
+             result, comp, src2_is_local_seg_t(), cat);
+         first1 = r.first;
+         result = r.third;
+         if(BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1))
+            return result_t(first1, src2_traits::compose(sf2, r.second), result);
+      }
+
+      lf2 = src2_traits::begin(sl2);
    }
    const local_result_t r = (set_difference_seg2_dispatch)
       (first1, last1, lf2, src2_traits::local(last2), result, comp,
@@ -291,21 +295,25 @@ segtrio<SegIt, InIter2, OutIter> set_difference_scan
    local_iterator         lcur  = traits::local(first);
 
    if(BOOST_CONTAINER_SEG_LIKELY(scur != slast)) {
-      local_result_t r = set_difference_scan
-         (lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
-      if(BOOST_CONTAINER_SEG_UNLIKELY(r.second == last2))
-         return result_t(traits::compose(scur, r.first), r.second, r.third);
-
-      for(++scur; scur != slast; ++scur) {
-         r = set_difference_scan
-            (traits::begin(scur), traits::end(scur), r.second, last2, r.third, comp, is_local_seg_t());
-         if(BOOST_CONTAINER_SEG_UNLIKELY(r.second == last2))
-            return result_t(traits::compose(scur, r.first), r.second, r.third);
+      {
+         const local_result_t r = set_difference_scan
+            (lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
+         first2 = r.second;
+         result = r.third;
+         if(BOOST_CONTAINER_SEG_UNLIKELY(first2 == last2))
+            return result_t(traits::compose(scur, r.first), first2, result);
       }
 
-      lcur   = traits::begin(slast);
-      first2 = r.second;
-      result = r.third;
+      for(++scur; scur != slast; ++scur) {
+         const local_result_t r = set_difference_scan
+            (traits::begin(scur), traits::end(scur), first2, last2, result, comp, is_local_seg_t());
+         first2 = r.second;
+         result = r.third;
+         if(BOOST_CONTAINER_SEG_UNLIKELY(first2 == last2))
+            return result_t(traits::compose(scur, r.first), first2, result);
+      }
+
+      lcur = traits::begin(slast);
    }
    const local_result_t r = set_difference_scan
       (lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());

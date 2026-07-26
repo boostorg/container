@@ -108,18 +108,20 @@ segduo<SrcIter, SegIter2> segmented_mismatch_iter2_bounded
    iter2_local_iterator lb2 = iter2_traits::local(iter2_first);
 
    if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
-      segduo<SrcIter, iter2_local_iterator> r = (segmented_mismatch_iter2_bounded)
-         (first1, last1, lb2, iter2_traits::end(sfirst), pred, iter2_is_local_seg_t(), SrcCat());
-      first1 = r.first;
-      iter2_local_iterator loc2 = r.second;
-      if(BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1 || loc2 != iter2_traits::end(sfirst)))
-         return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(sfirst, loc2));
+      {
+         const segduo<SrcIter, iter2_local_iterator> r = (segmented_mismatch_iter2_bounded)
+            (first1, last1, lb2, iter2_traits::end(sfirst), pred, iter2_is_local_seg_t(), SrcCat());
+         first1 = r.first;
+         const iter2_local_iterator loc2 = r.second;
+         if(BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1 || loc2 != iter2_traits::end(sfirst)))
+            return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(sfirst, loc2));
+      }
 
       for(++sfirst; sfirst != slast; ++sfirst) {
-         r = (segmented_mismatch_iter2_bounded)
+         const segduo<SrcIter, iter2_local_iterator> r = (segmented_mismatch_iter2_bounded)
             (first1, last1, iter2_traits::begin(sfirst), iter2_traits::end(sfirst), pred, iter2_is_local_seg_t(), SrcCat());
          first1 = r.first;
-         loc2 = r.second;
+         const iter2_local_iterator loc2 = r.second;
          if(BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1 || loc2 != iter2_traits::end(sfirst)))
             return segduo<SrcIter, SegIter2>(first1, iter2_traits::compose(sfirst, loc2));
       }
@@ -243,22 +245,25 @@ segduo<SegIter, InpIter2> segmented_mismatch_bounded_dispatch
 
    if (BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
       local_iterator le = traits::end(sfirst);
-      local_return_t r = (segmented_mismatch_bounded_dispatch)
-         (lb, le, first2, last2, pred, is_local_seg_t(), local_cat_t());
-      // Early exit: stopped inside segment (mismatch) or iter2 exhausted.
-      if (BOOST_CONTAINER_SEG_UNLIKELY(r.first != le || r.second == last2))
-         return return_t(traits::compose(sfirst, r.first), r.second);
+      {
+         const local_return_t r = (segmented_mismatch_bounded_dispatch)
+            (lb, le, first2, last2, pred, is_local_seg_t(), local_cat_t());
+         first2 = r.second;
+         // Early exit: stopped inside segment (mismatch) or iter2 exhausted.
+         if (BOOST_CONTAINER_SEG_UNLIKELY(r.first != le || first2 == last2))
+            return return_t(traits::compose(sfirst, r.first), first2);
+      }
 
       for (++sfirst; sfirst != slast; ++sfirst) {
          le = traits::end(sfirst);
-         r = (segmented_mismatch_bounded_dispatch)
-            (traits::begin(sfirst), le, r.second, last2, pred, is_local_seg_t(), local_cat_t());
-         if (BOOST_CONTAINER_SEG_UNLIKELY(r.first != le || r.second == last2))
-            return return_t(traits::compose(sfirst, r.first), r.second);
+         const local_return_t r = (segmented_mismatch_bounded_dispatch)
+            (traits::begin(sfirst), le, first2, last2, pred, is_local_seg_t(), local_cat_t());
+         first2 = r.second;
+         if (BOOST_CONTAINER_SEG_UNLIKELY(r.first != le || first2 == last2))
+            return return_t(traits::compose(sfirst, r.first), first2);
       }
 
-      lb     = traits::begin(slast);
-      first2 = r.second;
+      lb = traits::begin(slast);
    }
    {
       const local_iterator ll = traits::local(last1);

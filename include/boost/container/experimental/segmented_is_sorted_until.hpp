@@ -95,21 +95,24 @@ segduo<SegIter, DeepIt> sorted_until_rec
 
    if (BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
       local_iterator le = traits::end(sfirst);
-      local_result_t r = (sorted_until_rec)
-         (lb, le, comp, prev, is_local_seg_t(), local_cat_t());
-      if (r.first != le)
-         return segduo<SegIter, DeepIt>(traits::compose(sfirst, r.first), r.second);
+      {
+         const local_result_t r = (sorted_until_rec)
+            (lb, le, comp, prev, is_local_seg_t(), local_cat_t());
+         if (r.first != le)
+            return segduo<SegIter, DeepIt>(traits::compose(sfirst, r.first), r.second);
+         prev = r.second;
+      }
 
       for (++sfirst; sfirst != slast; ++sfirst) {
          le = traits::end(sfirst);
-         r = (sorted_until_rec)
-            (traits::begin(sfirst), le, comp, r.second, is_local_seg_t(), local_cat_t());
+         const local_result_t r = (sorted_until_rec)
+            (traits::begin(sfirst), le, comp, prev, is_local_seg_t(), local_cat_t());
          if (r.first != le)
             return segduo<SegIter, DeepIt>(traits::compose(sfirst, r.first), r.second);
+         prev = r.second;
       }
 
-      lb   = traits::begin(slast);
-      prev = r.second;
+      lb = traits::begin(slast);
    }
    const local_result_t r = (sorted_until_rec)
       (lb, traits::local(last), comp, prev, is_local_seg_t(), local_cat_t());

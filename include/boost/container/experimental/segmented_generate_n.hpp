@@ -76,13 +76,15 @@ segduo<SegIt, Size> generate_n_scan(SegIt first, SegIt last, Size count, Generat
    local_iterator lb = traits::local(first);
 
    if(BOOST_CONTAINER_SEG_LIKELY(scur != slast)) {
-      segduo<local_iterator, Size> r = generate_n_scan(lb, traits::end(scur), count, gen, is_local_seg_t(), local_cat_t());
-      count = r.second;
-      if (BOOST_CONTAINER_SEG_UNLIKELY(!count))
-         return segduo<SegIt, Size>(traits::compose(scur, r.first), count);
+      {
+         const segduo<local_iterator, Size> r = generate_n_scan(lb, traits::end(scur), count, gen, is_local_seg_t(), local_cat_t());
+         count = r.second;
+         if (BOOST_CONTAINER_SEG_UNLIKELY(!count))
+            return segduo<SegIt, Size>(traits::compose(scur, r.first), count);
+      }
 
       for (++scur; scur != slast; ++scur) {
-         r = generate_n_scan(traits::begin(scur), traits::end(scur), count, gen, is_local_seg_t(), local_cat_t());
+         const segduo<local_iterator, Size> r = generate_n_scan(traits::begin(scur), traits::end(scur), count, gen, is_local_seg_t(), local_cat_t());
          count = r.second;
          if (BOOST_CONTAINER_SEG_UNLIKELY(!count))
             return segduo<SegIt, Size>(traits::compose(scur, r.first), count);
