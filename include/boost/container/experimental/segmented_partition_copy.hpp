@@ -220,33 +220,33 @@ partition_copy_false_bounded
    fseg_t       fsfirst = ftr::segment(f_first);
    const fseg_t fslast  = ftr::segment(f_last);
 
-   if(fsfirst == fslast) {
+   floc_t fb = ftr::local(f_first);
+
+   if(BOOST_CONTAINER_SEG_LIKELY(fsfirst != fslast)) {
       segquartet<SrcIter, TIter, floc_t, bool> r = (partition_copy_false_bounded)
-         (first, last, t_first, t_last, ftr::local(f_first), ftr::local(f_last), pred, floc_seg_t(), cat);
-      return segquartet<SrcIter, TIter, SegFIter, bool>
-         (r.first, r.second, ftr::compose(fsfirst, r.third), r.fourth);
-   }
-   else {
-      segquartet<SrcIter, TIter, floc_t, bool> r = (partition_copy_false_bounded)
-         (first, last, t_first, t_last, ftr::local(f_first), ftr::end(fsfirst), pred, floc_seg_t(), cat);
+         (first, last, t_first, t_last, fb, ftr::end(fsfirst), pred, floc_seg_t(), cat);
       first   = r.first;
       t_first = r.second;
-      if(BOOST_CONTAINER_SEG_LIKELY(first != last && !r.fourth)) {
-         for(++fsfirst; fsfirst != fslast; ++fsfirst) {
-            r = (partition_copy_false_bounded)
-               (first, last, t_first, t_last, ftr::begin(fsfirst), ftr::end(fsfirst), pred, floc_seg_t(), cat);
-            first   = r.first;
-            t_first = r.second;
-            if(BOOST_CONTAINER_SEG_UNLIKELY(first == last || r.fourth))
-               return segquartet<SrcIter, TIter, SegFIter, bool>
-                  (first, r.second, ftr::compose(fsfirst, r.third), r.fourth);
-         }
+      if(BOOST_CONTAINER_SEG_UNLIKELY(first == last || r.fourth))
+         return segquartet<SrcIter, TIter, SegFIter, bool>
+            (first, t_first, ftr::compose(fsfirst, r.third), r.fourth);
+
+      for(++fsfirst; fsfirst != fslast; ++fsfirst) {
          r = (partition_copy_false_bounded)
-            (first, last, t_first, t_last, ftr::begin(fslast), ftr::local(f_last), pred, floc_seg_t(), cat);
+            (first, last, t_first, t_last, ftr::begin(fsfirst), ftr::end(fsfirst), pred, floc_seg_t(), cat);
+         first   = r.first;
+         t_first = r.second;
+         if(BOOST_CONTAINER_SEG_UNLIKELY(first == last || r.fourth))
+            return segquartet<SrcIter, TIter, SegFIter, bool>
+               (first, t_first, ftr::compose(fsfirst, r.third), r.fourth);
       }
-      return segquartet<SrcIter, TIter, SegFIter, bool>
-         (r.first, r.second, ftr::compose(fsfirst, r.third), r.fourth);
+
+      fb = ftr::begin(fslast);
    }
+   const segquartet<SrcIter, TIter, floc_t, bool> r = (partition_copy_false_bounded)
+      (first, last, t_first, t_last, fb, ftr::local(f_last), pred, floc_seg_t(), cat);
+   return segquartet<SrcIter, TIter, SegFIter, bool>
+      (r.first, r.second, ftr::compose(fsfirst, r.third), r.fourth);
 }
 
 // out_false flat (driver): out_false has no end, hand it to the leaf as an
@@ -270,7 +270,6 @@ partition_copy_false_dispatch
 // otherwise the current out_false segment filled, so advance to the next one.
 template <class SrcIter, class Sent, class TIter, class TSent, class SegFIter,
           class Pred, class Cat>
-BOOST_CONTAINER_FORCEINLINE
 segtrio<SrcIter, TIter, SegFIter>
 partition_copy_false_dispatch
    (SrcIter first, Sent last, TIter t_first, TSent t_last, SegFIter f_first,
@@ -334,30 +333,30 @@ partition_copy_true_bounded
    tseg_t       tsfirst = ttr::segment(t_first);
    const tseg_t tslast  = ttr::segment(t_last);
 
-   if(tsfirst == tslast) {
+   tloc_t tb = ttr::local(t_first);
+
+   if(BOOST_CONTAINER_SEG_LIKELY(tsfirst != tslast)) {
       segtrio<SrcIter, tloc_t, FIter> r = (partition_copy_true_bounded)
-         (first, last, ttr::local(t_first), ttr::local(t_last), f_first, pred, tloc_seg_t(), f_tag, cat);
-      return segtrio<SrcIter, SegTIter, FIter>(r.first, ttr::compose(tsfirst, r.second), r.third);
-   }
-   else {
-      segtrio<SrcIter, tloc_t, FIter> r = (partition_copy_true_bounded)
-         (first, last, ttr::local(t_first), ttr::end(tsfirst), f_first, pred, tloc_seg_t(), f_tag, cat);
-      if(BOOST_CONTAINER_SEG_LIKELY(r.first != last)) {
+         (first, last, tb, ttr::end(tsfirst), f_first, pred, tloc_seg_t(), f_tag, cat);
+      first   = r.first;
+      f_first = r.third;
+      if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+         return segtrio<SrcIter, SegTIter, FIter>(first, ttr::compose(tsfirst, r.second), f_first);
+
+      for(++tsfirst; tsfirst != tslast; ++tsfirst) {
+         r = (partition_copy_true_bounded)
+            (first, last, ttr::begin(tsfirst), ttr::end(tsfirst), f_first, pred, tloc_seg_t(), f_tag, cat);
          first   = r.first;
          f_first = r.third;
-         for(++tsfirst; tsfirst != tslast; ++tsfirst) {
-            r = (partition_copy_true_bounded)
-               (first, last, ttr::begin(tsfirst), ttr::end(tsfirst), f_first, pred, tloc_seg_t(), f_tag, cat);
-            first   = r.first;
-            f_first = r.third;
-            if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
-               return segtrio<SrcIter, SegTIter, FIter>(first, ttr::compose(tsfirst, r.second), f_first);
-         }
-         r = (partition_copy_true_bounded)
-            (first, last, ttr::begin(tslast), ttr::local(t_last), f_first, pred, tloc_seg_t(), f_tag, cat);
+         if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+            return segtrio<SrcIter, SegTIter, FIter>(first, ttr::compose(tsfirst, r.second), f_first);
       }
-      return segtrio<SrcIter, SegTIter, FIter>(r.first, ttr::compose(tsfirst, r.second), r.third);
+
+      tb = ttr::begin(tslast);
    }
+   const segtrio<SrcIter, tloc_t, FIter> r = (partition_copy_true_bounded)
+      (first, last, tb, ttr::local(t_last), f_first, pred, tloc_seg_t(), f_tag, cat);
+   return segtrio<SrcIter, SegTIter, FIter>(r.first, ttr::compose(tsfirst, r.second), r.third);
 }
 
 // out_true flat (driver): out_true has no end, peel out_false directly marking
@@ -380,7 +379,6 @@ partition_copy_true_dispatch
 // the current out_true segment filled, so advance to the next one.
 template <class SrcIter, class Sent, class SegTIter, class FIter,
           class Pred, class FTag, class Cat>
-BOOST_CONTAINER_FORCEINLINE
 segtrio<SrcIter, SegTIter, FIter>
 partition_copy_true_dispatch
    (SrcIter first, Sent last, SegTIter t_first, FIter f_first,
@@ -427,7 +425,6 @@ segmented_partition_copy_dispatch
 }
 
 template <class SegIter, class OutIter1, class OutIter2, class Pred, class Cat>
-BOOST_CONTAINER_FORCEINLINE
 std::pair<OutIter1, OutIter2>
 segmented_partition_copy_dispatch
    (SegIter first, SegIter last, OutIter1 out_true, OutIter2 out_false, Pred pred, segmented_iterator_tag, Cat)

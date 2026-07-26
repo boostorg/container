@@ -159,7 +159,6 @@ BOOST_CONTAINER_FORCEINLINE DstIter segmented_remove_copy_if_dst_dispatch
 }
 
 template <bool Move, class SrcIter, class Sent, class SegDstIter, class Pred, class Cat>
-BOOST_CONTAINER_FORCEINLINE
 SegDstIter segmented_remove_copy_if_dst_dispatch
    (SrcIter first, Sent last, SegDstIter result, Pred pred,
     const segmented_iterator_tag &, Cat)

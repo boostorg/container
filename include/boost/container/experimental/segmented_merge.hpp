@@ -136,7 +136,6 @@ merge_dst_bounded
 
 template <class Iter1, class Sent1, class Iter2, class Sent2, class SegDstIter,
           class Comp, class SrcCat>
-BOOST_CONTAINER_FORCEINLINE
 segtrio<Iter1, Iter2, SegDstIter> merge_dst_bounded
    (Iter1 first1, Sent1 last1, Iter2 first2, Sent2 last2,
     SegDstIter dst_first, SegDstIter dst_last, Comp comp,
@@ -152,33 +151,31 @@ segtrio<Iter1, Iter2, SegDstIter> merge_dst_bounded
    dst_segment_iterator       sfirst = dst_traits::segment(dst_first);
    const dst_segment_iterator slast  = dst_traits::segment(dst_last);
 
-   if(sfirst == slast) {
+   dst_local_iterator db = dst_traits::local(dst_first);
+
+   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
       local_result_t r = (merge_dst_bounded)
-         ( first1, last1, first2, last2, dst_traits::local(dst_first)
-         , dst_traits::local(dst_last), comp, dst_is_local_seg_t(), SrcCat());
-      return result_t(r.first, r.second, dst_traits::compose(sfirst, r.third));
-   }
-   else {
-      local_result_t r = (merge_dst_bounded)
-         ( first1, last1, first2, last2, dst_traits::local(dst_first)
+         ( first1, last1, first2, last2, db
          , dst_traits::end(sfirst), comp, dst_is_local_seg_t(), SrcCat());
       if(BOOST_CONTAINER_SEG_UNLIKELY(r.first == last1 || r.second == last2))
-         goto exit;
+         return result_t(r.first, r.second, dst_traits::compose(sfirst, r.third));
 
       for(++sfirst; sfirst != slast; ++sfirst) {
          r = (merge_dst_bounded)
             ( r.first, last1, r.second, last2, dst_traits::begin(sfirst)
             , dst_traits::end(sfirst), comp, dst_is_local_seg_t(), SrcCat());
          if (BOOST_CONTAINER_SEG_UNLIKELY(r.first == last1 || r.second == last2))
-            goto exit;
+            return result_t(r.first, r.second, dst_traits::compose(sfirst, r.third));
       }
 
-      r = (merge_dst_bounded)
-         ( r.first, last1, r.second, last2, dst_traits::begin(slast)
-         , dst_traits::local(dst_last), comp, dst_is_local_seg_t(), SrcCat());
-      exit:
-      return result_t(r.first, r.second, dst_traits::compose(sfirst, r.third));
+      db     = dst_traits::begin(slast);
+      first1 = r.first;
+      first2 = r.second;
    }
+   const local_result_t r = (merge_dst_bounded)
+      ( first1, last1, first2, last2, db
+      , dst_traits::local(dst_last), comp, dst_is_local_seg_t(), SrcCat());
+   return result_t(r.first, r.second, dst_traits::compose(sfirst, r.third));
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -210,7 +207,6 @@ segtrio<Iter1, Iter2, DstIter> merge_until_exhausts
 
 template <class Iter1, class Sent1, class Iter2, class Sent2, class SegDstIter,
           class Comp, class Cat>
-BOOST_CONTAINER_FORCEINLINE
 segtrio<Iter1, Iter2, SegDstIter> merge_until_exhausts
    (Iter1 first1, Sent1 last1, Iter2 first2, Sent2 last2, SegDstIter result, Comp comp,
     const segmented_iterator_tag &, const Cat &src1_cat)
@@ -237,10 +233,15 @@ segtrio<Iter1, Iter2, SegDstIter> merge_until_exhausts
       first2    = r.second;
       dst_local = r.third;
 
-      if(BOOST_CONTAINER_SEG_UNLIKELY(dst_local != dst_end)) {
+      // Stop on source exhaustion, not on "the segment did not fill": when
+      // the output ends exactly on a segment boundary both hold at once, and
+      // stepping dst_seg then walks off the end of the destination.  compose()
+      // normalises a local iterator sitting on the segment end, the same way
+      // segmented_copy_dst_dispatch relies on.
+      if(BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1 || first2 == last2)) {
          return result_t(first1, first2, dst_traits::compose(dst_seg, dst_local));
       }
-      // dst segment full; advance to the next.
+      // dst segment full and both sources still live; advance to the next.
       ++dst_seg;
       dst_local = dst_traits::begin(dst_seg);
    }
@@ -278,7 +279,6 @@ BOOST_CONTAINER_FORCEINLINE segtrio<Iter1, Iter2, OutIter> merge_seg2_dispatch
 }
 
 template <class Iter1, class Sent1, class SegIter2, class OutIter, class Comp, class Cat>
-BOOST_CONTAINER_FORCEINLINE
 segtrio<Iter1, SegIter2, OutIter> merge_seg2_dispatch
    (Iter1 first1, Sent1 last1, SegIter2 first2, SegIter2 last2, OutIter result, Comp comp,
     segmented_iterator_tag, const Cat & cat)
@@ -298,35 +298,31 @@ segtrio<Iter1, SegIter2, OutIter> merge_seg2_dispatch
    const src2_segment_iterator sl2 = src2_traits::segment(last2);
    src2_local_iterator         lf2 = src2_traits::local(first2);
 
-   if(sf2 == sl2) {
-      local_result_t r = (merge_seg2_dispatch)
-         (first1, last1, lf2, src2_traits::local(last2), result, comp,
-          src2_is_local_seg_t(), cat);
-      return result_t(r.first, src2_traits::compose(sf2, r.second), r.third);
-   }
-   else {
+   if(BOOST_CONTAINER_SEG_LIKELY(sf2 != sl2)) {
       // First (partial) segment of first2.
       local_result_t r = (merge_seg2_dispatch)
          (first1, last1, lf2, src2_traits::end(sf2), result, comp,
           src2_is_local_seg_t(), cat);
       if (BOOST_CONTAINER_SEG_UNLIKELY(r.first == last1))
-         goto exit;
+         return result_t(r.first, src2_traits::compose(sf2, r.second), r.third);
 
       for(++sf2; sf2 != sl2; ++sf2) {
          r = (merge_seg2_dispatch)
             (r.first, last1, src2_traits::begin(sf2), src2_traits::end(sf2),
              r.third, comp, src2_is_local_seg_t(), cat);
          if(BOOST_CONTAINER_SEG_UNLIKELY(r.first == last1))
-            goto exit;
+            return result_t(r.first, src2_traits::compose(sf2, r.second), r.third);
       }
 
-      // Final (partial) segment of first2.
-      r = (merge_seg2_dispatch)
-         (r.first, last1, src2_traits::begin(sf2), src2_traits::local(last2),
-          r.third, comp, src2_is_local_seg_t(), cat);
-      exit:
-      return result_t(r.first, src2_traits::compose(sf2, r.second), r.third);
+      lf2    = src2_traits::begin(sl2);
+      first1 = r.first;
+      result = r.third;
    }
+   // Final (partial) segment of first2, shared with the single-segment case.
+   const local_result_t r = (merge_seg2_dispatch)
+      (first1, last1, lf2, src2_traits::local(last2), result, comp,
+       src2_is_local_seg_t(), cat);
+   return result_t(r.first, src2_traits::compose(sf2, r.second), r.third);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -364,7 +360,6 @@ BOOST_CONTAINER_FORCEINLINE segtrio<FwdIt, InIter2, OutIter> merge_scan
 }
 
 template <class SegIt, class InIter2, class Sent2, class OutIter, class Comp>
-BOOST_CONTAINER_FORCEINLINE
 segtrio<SegIt, InIter2, OutIter> merge_scan
    (SegIt first, SegIt last, InIter2 first2, Sent2 last2, OutIter result, Comp comp, segmented_iterator_tag)
 {
@@ -383,12 +378,7 @@ segtrio<SegIt, InIter2, OutIter> merge_scan
    segment_iterator const slast = traits::segment(last);
    local_iterator         lcur  = traits::local(first);
 
-   if(scur == slast) {
-      local_result_t r = merge_scan
-         (lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());
-      return result_t(traits::compose(scur, r.first), r.second, r.third);
-   }
-   else {
+   if(BOOST_CONTAINER_SEG_LIKELY(scur != slast)) {
       // First (partial) segment of first1.
       local_result_t r = merge_scan
          (lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
@@ -402,31 +392,18 @@ segtrio<SegIt, InIter2, OutIter> merge_scan
             return result_t(traits::compose(scur, r.first), r.second, r.third);
       }
 
-      // Final (partial) segment of first1.
-      r = merge_scan
-         (traits::begin(scur), traits::local(last), r.second, last2, r.third, comp, is_local_seg_t());
-      return result_t(traits::compose(scur, r.first), r.second, r.third);
+      lcur   = traits::begin(slast);
+      first2 = r.second;
+      result = r.third;
    }
+   // Final (partial) segment of first1, shared with the single-segment case.
+   const local_result_t r = merge_scan
+      (lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());
+   return result_t(traits::compose(scur, r.first), r.second, r.third);
 }
 
 } // namespace detail_algo
 
-// Top-level entry points are intentionally NOT BOOST_CONTAINER_FORCEINLINE.
-// They compose the entire merge (scan + per-segment dispatch + dual drains),
-// so the resulting body is large enough that force-inlining it into a hot
-// caller (e.g. an unrolled benchmark Duff's device, or any size-tight
-// outer loop) blows out MSVC's decoded-uop cache (DSB).  The standard
-// library's std::merge is outlined by MSVC for the same reason and that's
-// part of why it benchmarks well.  We mirror that policy here: leave the
-// top-level call as a regular template function and let the compiler
-// decide whether to inline at each call site.  All inner helpers
-// (merge_scan, merge_seg2_dispatch, merge_until_exhausts, merge_dst_bounded)
-// remain force-inlined so a single out-of-line top-level call still
-// produces a tight, fully-monomorphised body.  This covers *every* overload
-// of those helpers, segmented ones included: the segmented overloads are the
-// ones the recursion actually goes through, and if any of them is left to the
-// compiler's discretion GCC emits an out-of-line clone per segmentation level
-// and packs/unpacks the iterator state around each call.
 template <class InIter1, class Sent1, class InIter2, class Sent2, class OutIter, class Comp>
 inline OutIter segmented_merge
    (InIter1 first1, Sent1 last1, InIter2 first2, Sent2 last2, OutIter result, Comp comp)

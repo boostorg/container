@@ -184,17 +184,19 @@ OutIter segmented_reverse_copy_dispatch
    segment_iterator const sfirst = traits::segment(first);
    segment_iterator       slast  = traits::segment(last);
 
-   if(sfirst == slast) {
-      return (segmented_reverse_copy_dispatch)(traits::local(first), traits::local(last), result, is_local_seg_t(), local_cat_t());
-   }
-   else {
-      result = (segmented_reverse_copy_dispatch)(traits::begin(slast), traits::local(last), result, is_local_seg_t(), local_cat_t());
+   //The walk runs backwards, so the shared final call is the *first* segment
+   //and the piece of state hoisted out of the merge is its end bound.
+   local_iterator le = traits::local(last);
+
+   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
+      result = (segmented_reverse_copy_dispatch)(traits::begin(slast), le, result, is_local_seg_t(), local_cat_t());
 
       for (--slast; slast != sfirst; --slast)
          result = (segmented_reverse_copy_dispatch)(traits::begin(slast), traits::end(slast), result, is_local_seg_t(), local_cat_t());
 
-      return (segmented_reverse_copy_dispatch)(traits::local(first), traits::end(sfirst), result, is_local_seg_t(), local_cat_t());
+      le = traits::end(sfirst);
    }
+   return (segmented_reverse_copy_dispatch)(traits::local(first), le, result, is_local_seg_t(), local_cat_t());
 }
 
 } // namespace detail_algo
