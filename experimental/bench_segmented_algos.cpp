@@ -8,10 +8,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-// Force aggressive function/loop alignment to eliminate instruction cache-line
-// alignment noise from benchmark measurements. Without this, identical code can
-// show up to 1.8x performance variation depending on where the linker happens
-// to place each template instantiation relative to 64-byte cache-line boundaries.
+// Identical machine code varies by up to 2x in speed depending only on where
+// the hot loop starts inside its 64-byte fetch window.
 // Requires GCC >= 9: GCC 8's #pragma GCC optimize applies optimization attributes
 // to all functions in the TU, conflicting with __attribute__((always_inline)) on
 // friend operators defined in headers (e.g. wrapped_iterator), causing
@@ -20,7 +18,7 @@
    #pragma GCC optimize("align-functions=64", "align-loops=32")
 #elif defined(__clang__)
    // Clang has no file-wide pragma for alignment. Use command-line flags:
-   //   -falign-functions=64 -falign-loops=32
+   //   -falign-functions=64 -falign-loops=64  when comparing two code shapes,
 #elif defined(_MSC_VER)
    // MSVC has no pragma or attribute for function/loop alignment control.
 #endif
