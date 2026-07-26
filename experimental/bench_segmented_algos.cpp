@@ -85,7 +85,9 @@
 #include <boost/container/experimental/wrapped_iterator.hpp>
 #include "../bench/bench_utils.hpp"
 
-#define BOOST_CONTAINER_BENCH_SEGMENTED_GROUP 0
+#ifndef BOOST_CONTAINER_BENCH_SEGMENTED_GROUP
+//#define BOOST_CONTAINER_BENCH_SEGMENTED_GROUP 15
+#endif   //BOOST_CONTAINER_BENCH_SEGMENTED_GROUP
 
 namespace bc = boost::container;
 
@@ -566,16 +568,14 @@ inline double calc_ns_per_elem(boost::move_detail::nanosecond_type ns,
 
 inline void print_subheader()
 {
-   std::cout << std::left  << std::setw(24) << "< algo >"
-             << std::right << std::setw(16) << "< nsg/seg >"
-             << std::right << std::setw(16) << "< std/seg >"
-             << std::right << std::setw(16) << "< std/nsg >"
+   std::cout << std::left  << std::setw(28) << "< algo >"
+             << std::right << std::setw(12) << "< nsg/seg >"
+             << std::right << std::setw(12) << "< std/seg >"
+             << std::right << std::setw(12) << "< std/nsg >"
+             << std::right << std::setw(11) << "< seg ns >"
+             << std::right << std::setw(11) << "< std ns >"
+             << std::right << std::setw(11) << "< nsg ns >"
              << '\n';
-}
-
-inline void print_group_header(int group, const char* desc)
-{
-   std::cout << "\n===== Group " << group << ": " << desc << " =====\n";
 }
 
 struct geomean_accumulator
@@ -613,6 +613,13 @@ struct geomean_accumulator
       }
    }
 
+   void add_ratios(double nsg_seg_ratio, double std_seg_ratio, double std_nsg_ratio)
+   {
+      add_nsg_over_seg(nsg_seg_ratio);
+      add_std_over_seg(std_seg_ratio);
+      add_std_over_nsg(std_nsg_ratio);
+   }
+
    double std_over_seg_result() const
    {
       return std_over_seg_count > 0 ? std::exp(std_over_seg_log_sum / std_over_seg_count) : 0.0;
@@ -628,7 +635,36 @@ struct geomean_accumulator
       return nseg_over_seg_count > 0 ? std::exp(ns_over_std_over_seg_log_sum / nseg_over_seg_count) : 0.0;
    }
 
-} g_geomean = { 0.0, 0.0, 0.0, 0, 0, 0 };
+   bool empty() const
+   {
+      return nseg_over_seg_count == 0 && std_over_seg_count == 0 && std_over_nsg_count == 0;
+   }
+
+} g_geomean = { 0.0, 0.0, 0.0, 0, 0, 0 },
+  g_group_geomean = { 0.0, 0.0, 0.0, 0, 0, 0 };
+
+inline void print_geomean_line(const char* label, const geomean_accumulator& acc)
+{
+   std::cout << std::left  << std::setw(28) << label
+             << std::right << std::setw(12) << std::fixed << std::setprecision(2) << acc.nsg_over_seg_result()
+             << std::right << std::setw(12) << std::fixed << std::setprecision(2) << acc.std_over_seg_result()
+             << std::right << std::setw(12) << std::fixed << std::setprecision(2) << acc.std_over_nsg_result()
+             << '\n';
+}
+
+inline void print_group_header(int group, const char* desc, const char* vtname)
+{
+   g_group_geomean.reset();
+   std::cout << "\n===== Group " << group << ": " << desc << " [" << vtname << "] =====\n";
+}
+
+inline void print_group_geomean()
+{
+   if (!g_group_geomean.empty()) {
+      std::cout << "-------------------------------------------------------------------------------------------------\n";
+      print_geomean_line("group geomean", g_group_geomean);
+   }
+}
 
 inline void print_ratio(const char* algo, const char*,
                         double std_ns, double seg_ns, double nsg_ns)
@@ -636,13 +672,15 @@ inline void print_ratio(const char* algo, const char*,
    double nsg_seg_ratio   = (seg_ns > 0.0) ? nsg_ns / seg_ns : 0.0;
    double std_seg_ratio   = (seg_ns > 0.0) ? std_ns / seg_ns : 0.0;
    double std_nsg_ratio   = (std_ns > 0.0) ? std_ns / nsg_ns : 0.0;
-   g_geomean.add_std_over_seg(std_seg_ratio);
-   g_geomean.add_std_over_nsg(std_nsg_ratio);
-   g_geomean.add_nsg_over_seg(nsg_seg_ratio);
-   std::cout << std::left  << std::setw(24) << algo
-             << std::right << std::setw(16) << std::fixed << std::setprecision(2) << nsg_seg_ratio
-             << std::right << std::setw(16) << std::fixed << std::setprecision(2) << std_seg_ratio
-             << std::right << std::setw(16) << std::fixed << std::setprecision(2) << std_nsg_ratio
+   g_geomean.add_ratios(nsg_seg_ratio, std_seg_ratio, std_nsg_ratio);
+   g_group_geomean.add_ratios(nsg_seg_ratio, std_seg_ratio, std_nsg_ratio);
+   std::cout << std::left  << std::setw(28) << algo
+             << std::right << std::setw(12) << std::fixed << std::setprecision(2) << nsg_seg_ratio
+             << std::right << std::setw(12) << std::fixed << std::setprecision(2) << std_seg_ratio
+             << std::right << std::setw(12) << std::fixed << std::setprecision(2) << std_nsg_ratio
+             << std::right << std::setw(11) << std::fixed << std::setprecision(3) << seg_ns
+             << std::right << std::setw(11) << std::fixed << std::setprecision(3) << std_ns
+             << std::right << std::setw(11) << std::fixed << std::setprecision(3) << nsg_ns
              << '\n';
 }
 
@@ -2063,6 +2101,8 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    typedef typename C::value_type VT;
    typedef boost::container::vector<VT> vec_t;
 
+   const char* const vtname = typeid(VT).name();
+
    const VT zero(0);
    const VT min1(-1);
    const VT quart((int)c.size()/4);
@@ -2080,7 +2120,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    // Group 10: single range, sequential access
    //////////////////////////////////////////////////////////////////
 #if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 10
-   print_group_header(10, "single range, sequential access");
+   print_group_header(10, "single range, sequential access", vtname);
 
    //all_of
    bench_all_of(c, iters, cname, is_zero_or_positive<VT>(), "all_of(hit)");
@@ -2157,13 +2197,14 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //bench_stable_partition(c, iters, cname, is_odd<VT>(),      "stable_partition(hit)");
    //bench_stable_partition(c, iters, cname, is_negative<VT>(), "stable_partition(miss)");
 
+   print_group_geomean();
 #endif
 
    //////////////////////////////////////////////////////////////////
    // Group 15: single range, non-sequential access pattern
    //////////////////////////////////////////////////////////////////
 #if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 15
-   print_group_header(15, "single range, non-sequential access pattern");
+   print_group_header(15, "single range, non-sequential access pattern", vtname);
 
    //is_sorted
    {
@@ -2186,9 +2227,15 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //bench_partition_point(c, iters, cname, is_zero_or_positive<VT>(),                           "partition_point(miss)");
 
    //remove
-
-   bench_remove(c, iters, cname, half,  "remove(hit)");
-   bench_remove(c, iters, cname, min1,  "remove(miss)");
+   {
+      C c2(c);
+      std::size_t p = 0;
+      for (typename C::iterator it = c2.begin(); it != c2.end(); ++it, ++p)
+         if ((p & 1) == 0)
+            *it = half;
+      bench_remove(c2, iters, cname, half, "remove(hit)");
+      bench_remove(c, iters, cname, min1, "remove(miss)");
+   }
 
    //remove_if
    bench_remove_if(c, iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_if(hit)");
@@ -2224,14 +2271,15 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 
       bench_search_n(c_sn, iters, cname, 8, min1, "search_n(8mid)");
    }
-
+   
+   print_group_geomean();
 #endif
 
    //////////////////////////////////////////////////////////////////
    // Group 17: single range, bidirectional iterator optimizations
    //////////////////////////////////////////////////////////////////
 #if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 17
-   print_group_header(17, "single range, bidirectional iterator optimizations");
+   print_group_header(17, "single range, bidirectional iterator optimizations", vtname);
 
    //find_last
    bench_find_last(c, iters, cname, half, "find_last(hit)");
@@ -2252,13 +2300,14 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //reverse
    bench_reverse(c, iters, cname);
 
+   print_group_geomean();
 #endif
 
    //////////////////////////////////////////////////////////////////
    // Group 20: 2-range input-only algorithms (all ranges read-only)
    //////////////////////////////////////////////////////////////////
 #if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 20
-   print_group_header(20, "2-range input-only algorithms");
+   print_group_header(20, "2-range input-only algorithms", vtname);
 
    //equal
    {
@@ -2266,12 +2315,12 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       vec_t c2v(c2.begin(), c2.end());
       bench_equal<C,     vec_t>(c,  c2v, iters, cname, "equal(1S hit)");
       bench_equal<vec_t, C    >(cv, c2,  iters, cname, "equal(2S hit)");
-      bench_equal<C,     C    >(c,  c2,  iters, cname, "equal(2xS hit)");
+      bench_equal<C,     C    >(c,  c2,  iters, cname, "equal(1+2S hit)");
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
       c2v.assign(c2.begin(), c2.end());
       bench_equal<C,     vec_t>(c,  c2v, iters, cname, "equal(1S miss)");
       bench_equal<vec_t, C    >(cv, c2,  iters, cname, "equal(2S miss)");
-      bench_equal<C,     C    >(c,  c2,  iters, cname, "equal(2xS miss)");
+      bench_equal<C,     C    >(c,  c2,  iters, cname, "equal(1+2S miss)");
    }
 
    //mismatch
@@ -2281,13 +2330,13 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       vec_t c2v(c2.begin(), c2.end());
       bench_mismatch<C,     vec_t>(c,  c2v, iters, cname, "mismatch(1S hit)");
       bench_mismatch<vec_t, C    >(cv, c2,  iters, cname, "mismatch(2S hit)");
-      bench_mismatch<C,     C    >(c,  c2,  iters, cname, "mismatch(2xS hit)");
+      bench_mismatch<C,     C    >(c,  c2,  iters, cname, "mismatch(1+2S hit)");
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) =
          *boost::container::make_iterator_uadvance(c.begin(), c.size()/2);
       c2v.assign(c2.begin(), c2.end());
       bench_mismatch<C,     vec_t>(c,  c2v, iters, cname, "mismatch(1S miss)");
       bench_mismatch<vec_t, C    >(cv, c2,  iters, cname, "mismatch(2S miss)");
-      bench_mismatch<C,     C    >(c,  c2,  iters, cname, "mismatch(2xS miss)");
+      bench_mismatch<C,     C    >(c,  c2,  iters, cname, "mismatch(1+2S miss)");
    }
 
    //mismatch (two ranges)
@@ -2297,17 +2346,17 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       vec_t c2v(c2.begin(), c2.end());
       bench_mismatch_2r<C,     vec_t>(c,  c2v, iters, cname, "mismatch_2r(1S hit)");
       bench_mismatch_2r<vec_t, C    >(cv, c2,  iters, cname, "mismatch_2r(2S hit)");
-      bench_mismatch_2r<C,     C    >(c,  c2,  iters, cname, "mismatch_2r(2xS hit)");
+      bench_mismatch_2r<C,     C    >(c,  c2,  iters, cname, "mismatch_2r(1+2S hit)");
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) =
          *boost::container::make_iterator_uadvance(c.begin(), c.size()/2);
       c2v.assign(c2.begin(), c2.end());
       bench_mismatch_2r<C,     vec_t>(c,  c2v, iters, cname, "mismatch_2r(1S miss)");
       bench_mismatch_2r<vec_t, C    >(cv, c2,  iters, cname, "mismatch_2r(2S miss)");
-      bench_mismatch_2r<C,     C    >(c,  c2,  iters, cname, "mismatch_2r(2xS miss)");
+      bench_mismatch_2r<C,     C    >(c,  c2,  iters, cname, "mismatch_2r(1+2S miss)");
    }
 
    //search (haystack is range 1, the small pattern is range 2; only the
-   //haystack is a segmented range here, so no 2S/2xS variants apply)
+   //haystack is a segmented range here, so no 2S/1+2S variants apply)
    {
       int ihalf = static_cast<int>(c.size() / 2);
       VT hit_pat[] = {half, VT(ihalf + 1), VT(ihalf + 2)};
@@ -2316,78 +2365,81 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_search(c, iters, cname, miss_pat, 3, "search(miss)");
    }
 
+   print_group_geomean();
 #endif
 
    //////////////////////////////////////////////////////////////////
    // Group 25: 2-range input-output algorithms (write through output iterator)
    //////////////////////////////////////////////////////////////////
 #if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 25
-   print_group_header(25, "2-range input-output algorithms");
+   print_group_header(25, "2-range input-output algorithms", vtname);
 
    //copy
    bench_copy<C,     vec_t>(c,  iters, cname, "copy(1S)");
    bench_copy<vec_t, C    >(cv, iters, cname, "copy(2S)");
-   bench_copy<C,     C    >(c,  iters, cname, "copy(2xS)");
+   bench_copy<C,     C    >(c,  iters, cname, "copy(1+2S)");
 
    //copy_if
    bench_copy_if<C,     vec_t>(c,  iters, cname, is_odd<VT>(),      "copy_if(1S hit)");
    bench_copy_if<vec_t, C    >(cv, iters, cname, is_odd<VT>(),      "copy_if(2S hit)");
-   bench_copy_if<C,     C    >(c,  iters, cname, is_odd<VT>(),      "copy_if(2xS hit)");
+   bench_copy_if<C,     C    >(c,  iters, cname, is_odd<VT>(),      "copy_if(1+2S hit)");
    bench_copy_if<C,     vec_t>(c,  iters, cname, is_negative<VT>(), "copy_if(1S miss)");
    bench_copy_if<vec_t, C    >(cv, iters, cname, is_negative<VT>(), "copy_if(2S miss)");
-   bench_copy_if<C,     C    >(c,  iters, cname, is_negative<VT>(), "copy_if(2xS miss)");
+   bench_copy_if<C,     C    >(c,  iters, cname, is_negative<VT>(), "copy_if(1+2S miss)");
 
    //copy_n
    bench_copy_n<C,     vec_t>(c,  iters, cname, "copy_n(1S)");
    bench_copy_n<vec_t, C    >(cv, iters, cname, "copy_n(2S)");
-   bench_copy_n<C,     C    >(c,  iters, cname, "copy_n(2xS)");
+   bench_copy_n<C,     C    >(c,  iters, cname, "copy_n(1+2S)");
 
    //remove_copy
    bench_remove_copy<C,     vec_t>(c,  iters, cname, half, "remove_copy(1S hit)");
    bench_remove_copy<vec_t, C    >(cv, iters, cname, half, "remove_copy(2S hit)");
-   bench_remove_copy<C,     C    >(c,  iters, cname, half, "remove_copy(2xS hit)");
+   bench_remove_copy<C,     C    >(c,  iters, cname, half, "remove_copy(1+2S hit)");
    bench_remove_copy<C,     vec_t>(c,  iters, cname, min1, "remove_copy(1S miss)");
    bench_remove_copy<vec_t, C    >(cv, iters, cname, min1, "remove_copy(2S miss)");
-   bench_remove_copy<C,     C    >(c,  iters, cname, min1, "remove_copy(2xS miss)");
+   bench_remove_copy<C,     C    >(c,  iters, cname, min1, "remove_copy(1+2S miss)");
 
    //remove_copy_if
    bench_remove_copy_if<C,     vec_t>(c,  iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_copy_if(1S hit)");
    bench_remove_copy_if<vec_t, C    >(cv, iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_copy_if(2S hit)");
-   bench_remove_copy_if<C,     C    >(c,  iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_copy_if(2xS hit)");
+   bench_remove_copy_if<C,     C    >(c,  iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_copy_if(1+2S hit)");
    bench_remove_copy_if<C,     vec_t>(c,  iters, cname, is_negative<VT>(), "remove_copy_if(1S miss)");
    bench_remove_copy_if<vec_t, C    >(cv, iters, cname, is_negative<VT>(), "remove_copy_if(2S miss)");
-   bench_remove_copy_if<C,     C    >(c,  iters, cname, is_negative<VT>(), "remove_copy_if(2xS miss)");
+   bench_remove_copy_if<C,     C    >(c,  iters, cname, is_negative<VT>(), "remove_copy_if(1+2S miss)");
 
    //swap_ranges
    bench_swap_ranges<C,     vec_t>(c,  iters, cname, "swap_ranges(1S)");
    bench_swap_ranges<vec_t, C    >(cv, iters, cname, "swap_ranges(2S)");
-   bench_swap_ranges<C,     C    >(c,  iters, cname, "swap_ranges(2xS)");
+   bench_swap_ranges<C,     C    >(c,  iters, cname, "swap_ranges(1+2S)");
 
    //transform
    bench_transform<C,     vec_t>(c,  iters, cname, "transform(1S)");
    bench_transform<vec_t, C    >(cv, iters, cname, "transform(2S)");
-   bench_transform<C,     C    >(c,  iters, cname, "transform(2xS)");
+   bench_transform<C,     C    >(c,  iters, cname, "transform(1+2S)");
 
+   print_group_geomean();
 #endif
 
    //////////////////////////////////////////////////////////////////
    // Group 27: 2-range algorithms with bidirectional iterator optimizations
    //////////////////////////////////////////////////////////////////
 #if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 27
-   print_group_header(27, "2-range, bidirectional iterator optimizations");
+   print_group_header(27, "2-range, bidirectional iterator optimizations", vtname);
 
    //reverse_copy
    bench_reverse_copy<C,     vec_t>(c,  iters, cname, "reverse_copy(1S)");
    bench_reverse_copy<vec_t, C    >(cv, iters, cname, "reverse_copy(2S)");
-   bench_reverse_copy<C,     C    >(c,  iters, cname, "reverse_copy(2xS)");
+   bench_reverse_copy<C,     C    >(c,  iters, cname, "reverse_copy(1+2S)");
 
+   print_group_geomean();
 #endif
 
    //////////////////////////////////////////////////////////////////
    // Group 30: 3-range algorithms
    //////////////////////////////////////////////////////////////////
 #if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 30
-   print_group_header(30, "3-range algorithms");
+   print_group_header(30, "3-range algorithms", vtname);
 
    //merge
    {
@@ -2399,10 +2451,10 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_merge<C,     vec_t, vec_t>(c,  c2v, iters, cname, "merge(1S)");
       bench_merge<vec_t, C,     vec_t>(cv, c2,  iters, cname, "merge(2S)");
       bench_merge<vec_t, vec_t, C    >(cv, c2v, iters, cname, "merge(3S)");
-      bench_merge<C,     C,     vec_t>(c,  c2,  iters, cname, "merge(2xS)");
+      bench_merge<C,     C,     vec_t>(c,  c2,  iters, cname, "merge(1+2S)");
       bench_merge<C,     vec_t, C    >(c,  c2v, iters, cname, "merge(1+3S)");
       bench_merge<vec_t, C,     C    >(cv, c2,  iters, cname, "merge(2+3S)");
-      bench_merge<C,     C,     C    >(c,  c2,  iters, cname, "merge(3xS)");
+      bench_merge<C,     C,     C    >(c,  c2,  iters, cname, "merge(1+2+3S)");
    }
 
    //set_difference, set_intersection, set_symmetric_difference, set_union
@@ -2416,57 +2468,54 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_set_difference<C,     vec_t, vec_t>(c,  c2v, iters, cname, "set_difference(1S)");
       bench_set_difference<vec_t, C,     vec_t>(cv, c2,  iters, cname, "set_difference(2S)");
       bench_set_difference<vec_t, vec_t, C    >(cv, c2v, iters, cname, "set_difference(3S)");
-      bench_set_difference<C,     C,     vec_t>(c,  c2,  iters, cname, "set_difference(2xS)");
+      bench_set_difference<C,     C,     vec_t>(c,  c2,  iters, cname, "set_difference(1+2S)");
       bench_set_difference<C,     vec_t, C    >(c,  c2v, iters, cname, "set_difference(1+3S)");
       bench_set_difference<vec_t, C,     C    >(cv, c2,  iters, cname, "set_difference(2+3S)");
-      bench_set_difference<C,     C,     C    >(c,  c2,  iters, cname, "set_difference(3xS)");
+      bench_set_difference<C,     C,     C    >(c,  c2,  iters, cname, "set_difference(1+2+3S)");
 
       // set_intersection
       bench_set_intersection<C,     vec_t, vec_t>(c,  c2v, iters, cname, "set_intersection(1S)");
       bench_set_intersection<vec_t, C,     vec_t>(cv, c2,  iters, cname, "set_intersection(2S)");
       bench_set_intersection<vec_t, vec_t, C    >(cv, c2v, iters, cname, "set_intersection(3S)");
-      bench_set_intersection<C,     C,     vec_t>(c,  c2,  iters, cname, "set_intersection(2xS)");
+      bench_set_intersection<C,     C,     vec_t>(c,  c2,  iters, cname, "set_intersection(1+2S)");
       bench_set_intersection<C,     vec_t, C    >(c,  c2v, iters, cname, "set_intersection(1+3S)");
       bench_set_intersection<vec_t, C,     C    >(cv, c2,  iters, cname, "set_intersection(2+3S)");
-      bench_set_intersection<C,     C,     C    >(c,  c2,  iters, cname, "set_intersection(3xS)");
+      bench_set_intersection<C,     C,     C    >(c,  c2,  iters, cname, "set_intersection(1+2+3S)");
 
       // set_symmetric_difference
       bench_set_symmetric_difference<C,     vec_t, vec_t>(c,  c2v, iters, cname, "set_sym_diff(1S)");
       bench_set_symmetric_difference<vec_t, C,     vec_t>(cv, c2,  iters, cname, "set_sym_diff(2S)");
       bench_set_symmetric_difference<vec_t, vec_t, C    >(cv, c2v, iters, cname, "set_sym_diff(3S)");
-      bench_set_symmetric_difference<C,     C,     vec_t>(c,  c2,  iters, cname, "set_sym_diff(2xS)");
+      bench_set_symmetric_difference<C,     C,     vec_t>(c,  c2,  iters, cname, "set_sym_diff(1+2S)");
       bench_set_symmetric_difference<C,     vec_t, C    >(c,  c2v, iters, cname, "set_sym_diff(1+3S)");
       bench_set_symmetric_difference<vec_t, C,     C    >(cv, c2,  iters, cname, "set_sym_diff(2+3S)");
-      bench_set_symmetric_difference<C,     C,     C    >(c,  c2,  iters, cname, "set_sym_diff(3xS)");
+      bench_set_symmetric_difference<C,     C,     C    >(c,  c2,  iters, cname, "set_sym_diff(1+2+3S)");
 
       // set_union
       bench_set_union<C,     vec_t, vec_t>(c,  c2v, iters, cname, "set_union(1S)");
       bench_set_union<vec_t, C,     vec_t>(cv, c2,  iters, cname, "set_union(2S)");
       bench_set_union<vec_t, vec_t, C    >(cv, c2v, iters, cname, "set_union(3S)");
-      bench_set_union<C,     C,     vec_t>(c,  c2,  iters, cname, "set_union(2xS)");
+      bench_set_union<C,     C,     vec_t>(c,  c2,  iters, cname, "set_union(1+2S)");
       bench_set_union<C,     vec_t, C    >(c,  c2v, iters, cname, "set_union(1+3S)");
       bench_set_union<vec_t, C,     C    >(cv, c2,  iters, cname, "set_union(2+3S)");
-      bench_set_union<C,     C,     C    >(c,  c2,  iters, cname, "set_union(3xS)");
+      bench_set_union<C,     C,     C    >(c,  c2,  iters, cname, "set_union(1+2+3S)");
    }
 
    //partition_copy (range 1 = input, range 2 = out_true, range 3 = out_false)
    bench_partition_copy<C,     vec_t, vec_t>(c,  iters, cname, "partition_copy(1S)");
    bench_partition_copy<vec_t, C,     vec_t>(cv, iters, cname, "partition_copy(2S)");
    bench_partition_copy<vec_t, vec_t, C    >(cv, iters, cname, "partition_copy(3S)");
-   bench_partition_copy<C,     C,     vec_t>(c,  iters, cname, "partition_copy(2xS)");
+   bench_partition_copy<C,     C,     vec_t>(c,  iters, cname, "partition_copy(1+2S)");
    bench_partition_copy<C,     vec_t, C    >(c,  iters, cname, "partition_copy(1+3S)");
    bench_partition_copy<vec_t, C,     C    >(cv, iters, cname, "partition_copy(2+3S)");
-   bench_partition_copy<C,     C,     C    >(c,  iters, cname, "partition_copy(3xS)");
+   bench_partition_copy<C,     C,     C    >(c,  iters, cname, "partition_copy(1+2+3S)");
+
+   print_group_geomean();
 #endif
 
    std::cout << '\n';
    print_subheader();
-
-   std::cout << std::left  << std::setw(24) << "algo geomean"
-             << std::right << std::setw(16) << std::fixed << std::setprecision(2) << g_geomean.nsg_over_seg_result()
-             << std::right << std::setw(16) << std::fixed << std::setprecision(2) << g_geomean.std_over_seg_result()
-             << std::right << std::setw(16) << std::fixed << std::setprecision(2) << g_geomean.std_over_nsg_result()
-             << '\n';
+   print_geomean_line("algo geomean", g_geomean);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2496,15 +2545,7 @@ void run_benchmarks()
       run_all(dq, iter, "deque");
          std::cout << "\n";
    }
-/*
-   {
-      std::cout << "--- bc::nest<" << typeid(T).name() << "> ---\n";
-      bc::nest<T> nt;
-      fill_test_data(nt, N);
-      run_all(nt, iter, "nest");
-      std::cout << "\n";
-   }
-*/
+
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2515,6 +2556,6 @@ int main()
 {
    //run_benchmarks<int>();
    run_benchmarks<MyInt>();
-   //run_benchmarks<MyFatInt>();
+   run_benchmarks<MyFatInt>();
    return 0;
 }
