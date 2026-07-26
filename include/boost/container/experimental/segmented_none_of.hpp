@@ -57,24 +57,20 @@ bool segmented_none_of_dispatch
    segment_iterator       sfirst = traits::segment(first);
    const segment_iterator slast  = traits::segment(last);
 
-   if(sfirst == slast) {
-      if(!(segmented_none_of_dispatch)(traits::local(first), traits::local(last), pred, is_local_seg_t(), local_cat_t()))
-         return false;
-   }
-   else {
+   local_iterator lb = traits::local(first);
+
+   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
       //First segment
-      if(!(segmented_none_of_dispatch)(traits::local(first), traits::end(sfirst), pred, is_local_seg_t(), local_cat_t()))
+      if(!(segmented_none_of_dispatch)(lb, traits::end(sfirst), pred, is_local_seg_t(), local_cat_t()))
          return false;
       //Middle segments
       for (++sfirst; sfirst != slast; ++sfirst) {
          if(!(segmented_none_of_dispatch)(traits::begin(sfirst), traits::end(sfirst), pred, is_local_seg_t(), local_cat_t()))
             return false;
       }
-      //Last segment
-      if(!(segmented_none_of_dispatch)(traits::begin(slast), traits::local(last), pred, is_local_seg_t(), local_cat_t()))
-         return false;
+      lb = traits::begin(slast);
    }
-   return true;
+   return (segmented_none_of_dispatch)(lb, traits::local(last), pred, is_local_seg_t(), local_cat_t());
 }
 
 } // namespace detail_algo
