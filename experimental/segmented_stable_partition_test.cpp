@@ -42,27 +42,6 @@ void test_stable_partition_basic()
    BOOST_TEST_EQ(dist, 3);
 }
 
-void test_stable_partition_segmented()
-{
-   test_detail::seg_vector<int> sv;
-   int a1[] = {3, 2, 1};
-   int a2[] = {6, 5, 4};
-   sv.add_segment_range(a1, a1 + 3);
-   sv.add_segment_range(a2, a2 + 3);
-
-   typedef test_detail::seg_vector<int>::iterator iter_t;
-   iter_t mid = segmented_stable_partition(sv.begin(), sv.end(), is_even());
-
-   iter_t it = sv.begin();
-   BOOST_TEST_EQ(*it, 2); ++it;
-   BOOST_TEST_EQ(*it, 6); ++it;
-   BOOST_TEST_EQ(*it, 4); ++it;
-   BOOST_TEST(it == mid);
-   BOOST_TEST_EQ(*it, 3); ++it;
-   BOOST_TEST_EQ(*it, 1); ++it;
-   BOOST_TEST_EQ(*it, 5);
-}
-
 void test_stable_partition_empty()
 {
    boost::container::vector<int> v;
@@ -112,27 +91,6 @@ void test_stable_partition_non_segmented()
 }
 
 
-void test_stable_partition_seg2()
-{
-   test_detail::seg2_vector<int> sv2;
-   int a1[] = {1, 2, 3};
-   int a2[] = {4, 5, 6};
-   sv2.add_flat_segment_range(a1, a1 + 3);
-   sv2.add_flat_segment_range(a2, a2 + 3);
-
-   typedef test_detail::seg2_vector<int>::iterator iter_t;
-   iter_t mid = segmented_stable_partition(sv2.begin(), sv2.end(), is_even());
-
-   iter_t it = sv2.begin();
-   BOOST_TEST_EQ(*it, 2); ++it;
-   BOOST_TEST_EQ(*it, 4); ++it;
-   BOOST_TEST_EQ(*it, 6); ++it;
-   BOOST_TEST(it == mid);
-   BOOST_TEST_EQ(*it, 1); ++it;
-   BOOST_TEST_EQ(*it, 3); ++it;
-   BOOST_TEST_EQ(*it, 5);
-}
-
 void test_stable_partition_movable_seg()
 {
    typedef test_detail::movable_int mi;
@@ -177,15 +135,94 @@ void test_stable_partition_movable_seg2()
    BOOST_TEST_EQ(it->value(), 5);
 }
 
+// Stable-partitions a sub-range whose segmentation shape is dictated by a
+// branch spec, so that every level of the recursive dispatch is exercised on
+// its single-segment path, on its multi-segment path and on the multi-segment
+// path with empty segments interleaved.  The whole resulting sequence is
+// compared against a naive stable partition of a flat copy taken beforehand,
+// which pins the relative order within each side as well as the partition
+// point, and the guard just past the end must survive untouched.
+struct stable_partition_shape_check
+{
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      typedef typename Cont::iterator iter_t;
+      const iter_t first = c.begin();
+      const iter_t last  = test_detail::iter_at(c, n);
+
+      const boost::container::vector<int> before = test_detail::flatten_n_ints(c, n);
+      boost::container::vector<int> expected;
+      expected.reserve(before.size());
+      for(std::size_t i = 0; i != before.size(); ++i)
+         if(before[i] % 2 == 0) expected.push_back(before[i]);
+      const std::size_t ntrue = expected.size();
+      for(std::size_t i = 0; i != before.size(); ++i)
+         if(before[i] % 2 != 0) expected.push_back(before[i]);
+
+      const iter_t mid = segmented_stable_partition(first, last, is_even());
+      BOOST_TEST(mid == test_detail::iter_at(c, ntrue));
+
+      const boost::container::vector<int> after = test_detail::flatten_n_ints(c, n);
+      BOOST_TEST_EQ(after.size(), expected.size());
+      for(std::size_t i = 0; i != after.size(); ++i)
+         BOOST_TEST_EQ(after[i], expected[i]);
+
+      BOOST_TEST(test_detail::filler_intact(c, n, -999));
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_stable_partition_shape_matrix()
+{
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      int vals[16];
+
+      //Alternating parities.  The filler is odd, so an algorithm that reaches
+      //past the end sees an element it would have to move.
+      for(int i = 0; i != 16; ++i)
+         vals[i] = i + 1;
+      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_shape_check());
+
+      //Nothing to move: already partitioned, all true, all false.
+      for(int i = 0; i != 16; ++i)
+         vals[i] = 2*i + 2;
+      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_shape_check());
+      for(int i = 0; i != 16; ++i)
+         vals[i] = 2*i + 1;
+      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_shape_check());
+      for(int i = 0; i != 16; ++i)
+         vals[i] = (i < 8) ? 2*i + 2 : 2*i + 1;
+      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_shape_check());
+
+      //Fully reversed: every odd precedes every even.
+      for(int i = 0; i != 16; ++i)
+         vals[i] = (i < 8) ? 2*i + 1 : 2*i + 2;
+      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_shape_check());
+
+      //A single element on one side of the predicate, at each position in turn.
+      for(std::size_t p = 0; p != n; ++p) {
+         for(std::size_t i = 0; i != 16u; ++i)
+            vals[i] = (i == p) ? int(2*i + 2) : int(2*i + 1);
+         test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_shape_check());
+
+         for(std::size_t i = 0; i != 16u; ++i)
+            vals[i] = (i == p) ? int(2*i + 1) : int(2*i + 2);
+         test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_shape_check());
+      }
+   }
+}
+
 int main()
 {
+   test_stable_partition_shape_matrix();
    test_stable_partition_basic();
-   test_stable_partition_segmented();
    test_stable_partition_empty();
    test_stable_partition_all_true();
    test_stable_partition_all_false();
    test_stable_partition_non_segmented();
-   test_stable_partition_seg2();
    test_stable_partition_movable_seg();
    test_stable_partition_movable_seg2();
    return boost::report_errors();

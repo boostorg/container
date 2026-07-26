@@ -34,18 +34,6 @@ void test_replace_basic()
    BOOST_TEST_EQ(*it, 4);
 }
 
-void test_replace_none()
-{
-   test_detail::seg_vector<int> sv;
-   sv.add_segment(3, 5);
-
-   segmented_replace(sv.begin(), sv.end(), 1, 99);
-
-   test_detail::seg_vector<int>::iterator it = sv.begin();
-   for(; it != sv.end(); ++it)
-      BOOST_TEST_EQ(*it, 5);
-}
-
 void test_replace_empty()
 {
    test_detail::seg_vector<int> sv;
@@ -120,14 +108,84 @@ void test_replace_seg2()
       BOOST_TEST_EQ(*it, expected[i]);
 }
 
+// Replaces within a sub-range whose segmentation shape is dictated by a branch
+// spec, so that every level of the recursive dispatch is exercised on its
+// single-segment path, on its multi-segment path and on the multi-segment path
+// with empty segments interleaved.  The guard element just past the end holds
+// the very value being replaced, so an algorithm that writes past the end is
+// caught by filler_intact rather than going unnoticed.
+struct replace_shape_check
+{
+   int oldv;
+   int newv;
+
+   replace_shape_check(int o, int nv) : oldv(o), newv(nv) {}
+
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      typedef typename Cont::iterator iter_t;
+      const iter_t first = c.begin();
+      const iter_t last  = test_detail::iter_at(c, n);
+
+      const boost::container::vector<int> before = test_detail::flatten_n_ints(c, n);
+
+      segmented_replace(first, last, oldv, newv);
+
+      const boost::container::vector<int> after = test_detail::flatten_n_ints(c, n);
+      BOOST_TEST_EQ(after.size(), before.size());
+      for(std::size_t i = 0; i != after.size(); ++i)
+         BOOST_TEST_EQ(after[i], before[i] == oldv ? newv : before[i]);
+
+      BOOST_TEST(test_detail::filler_intact(c, n, oldv));
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_replace_shape_matrix()
+{
+   //Every value appears twice, so a replacement has to happen more than once
+   //and, for the smaller values, in more than one segment.
+   int vals[16];
+   for(int i = 0; i != 16; ++i)
+      vals[i] = i/2 + 1;
+
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      //Every value present in the range plus one that is absent from it.
+      for(std::size_t v = 0; v <= n/2u + 1u; ++v) {
+         const int oldv = int(v);
+         test_detail::for_each_shape_all<int>(vals, n, oldv, replace_shape_check(oldv, 999));
+      }
+   }
+}
+
+void test_replace_single_segment_sentinel()
+{
+   test_detail::seg_vector<int> sv;
+   int a[] = {1, 2, 1, 3, 1, 4, 1};
+   sv.add_segment_range(a, a + 7);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   segmented_replace(test_detail::iter_at(sv, 1),
+                     test_detail::make_sentinel(test_detail::iter_at(sv, 6)), 1, 99);
+
+   int expected[] = {1, 2, 99, 3, 99, 4, 1};
+   iter_t it = sv.begin();
+   for(int i = 0; i < 7; ++i, ++it)
+      BOOST_TEST_EQ(*it, expected[i]);
+}
+
 int main()
 {
+   test_replace_shape_matrix();
    test_replace_basic();
-   test_replace_none();
    test_replace_empty();
    test_replace_non_segmented();
    test_replace_sentinel_segmented();
    test_replace_sentinel_non_segmented();
    test_replace_seg2();
+   test_replace_single_segment_sentinel();
    return boost::report_errors();
 }

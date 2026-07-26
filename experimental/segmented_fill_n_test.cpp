@@ -15,20 +15,8 @@
 
 using namespace boost::container;
 
-void test_fill_n_full()
-{
-   test_detail::seg_vector<int> sv;
-   sv.add_segment(3, 0);
-   sv.add_segment(4, 0);
-   sv.add_segment(2, 0);
-
-   segmented_fill_n(sv.begin(), 9, 42);
-
-   test_detail::seg_vector<int>::iterator it = sv.begin();
-   for(; it != sv.end(); ++it)
-      BOOST_TEST_EQ(*it, 42);
-}
-
+//A count that spans several segments, with the returned iterator checked
+//against the first element left untouched.
 void test_fill_n_partial()
 {
    test_detail::seg_vector<int> sv;
@@ -54,19 +42,7 @@ void test_fill_n_partial()
    BOOST_TEST_EQ(*it, 9);
 }
 
-void test_fill_n_zero()
-{
-   test_detail::seg_vector<int> sv;
-   sv.add_segment(3, 99);
-
-   test_detail::seg_vector<int>::iterator result = segmented_fill_n(sv.begin(), 0, 0);
-   BOOST_TEST(result == sv.begin());
-
-   test_detail::seg_vector<int>::iterator it = sv.begin();
-   for(; it != sv.end(); ++it)
-      BOOST_TEST_EQ(*it, 99);
-}
-
+//A count that stops short of the end of the only segment.
 void test_fill_n_single_segment()
 {
    test_detail::seg_vector<int> sv;
@@ -95,30 +71,65 @@ void test_fill_n_non_segmented()
    BOOST_TEST_EQ(v[4], 0);
 }
 
-void test_fill_n_seg2()
+// Fills count elements from a chosen offset into a range whose segmentation
+// shape is dictated by a branch spec, so that every level of the recursive
+// dispatch is exercised on its single-segment path, on its multi-segment path
+// and on the multi-segment path with empty segments interleaved.  Sweeping
+// both the offset and the count covers a count that stops short of the end of
+// a segment, one that exactly consumes it and one that spans several; a count
+// larger than the range is deliberately never tried, because the public API
+// takes no end bound and so has nothing to stop against.
+//
+// The returned iterator is compared against iter_at, which normalises by
+// stepping: at an exact segment boundary that lands on the next non-empty
+// segment's begin, so a return value left dangling at the old segment's end
+// compares unequal.
+struct fill_n_shape_check
 {
-   test_detail::seg2_vector<int> sv2;
-   int a1[] = {0, 0, 0};
-   int a2[] = {0, 0, 0};
-   int a3[] = {0, 0, 0};
-   sv2.add_flat_segment_range(a1, a1 + 3);
-   sv2.add_flat_segment_range(a2, a2 + 3);
-   sv2.add_flat_segment_range(a3, a3 + 3);
+   std::size_t offset;
+   std::size_t count;
 
-   segmented_fill_n(sv2.begin(), 9, 42);
+   fill_n_shape_check(std::size_t o, std::size_t k) : offset(o), count(k) {}
 
-   test_detail::seg2_vector<int>::iterator it = sv2.begin();
-   for(; it != sv2.end(); ++it)
-      BOOST_TEST_EQ(*it, 42);
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      typedef typename Cont::iterator iter_t;
+      const boost::container::vector<int> before = test_detail::flatten_n_ints(c, n);
+
+      const iter_t r = segmented_fill_n(test_detail::iter_at(c, offset), count, 42);
+      BOOST_TEST(r == test_detail::iter_at(c, offset + count));
+
+      const boost::container::vector<int> after = test_detail::flatten_n_ints(c, n);
+      BOOST_TEST_EQ(after.size(), before.size());
+      for(std::size_t i = 0; i != after.size(); ++i)
+         BOOST_TEST_EQ(after[i], (i >= offset && i < offset + count) ? 42 : before[i]);
+
+      BOOST_TEST(test_detail::filler_intact(c, n, -999));
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_fill_n_shape_matrix()
+{
+   int vals[16];
+   for(int i = 0; i != 16; ++i)
+      vals[i] = i + 1;
+
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      for(std::size_t offset = 0; offset <= n; ++offset)
+         for(std::size_t k = 0; offset + k <= n; ++k)
+            test_detail::for_each_shape_all<int>(vals, n, -999, fill_n_shape_check(offset, k));
+   }
 }
 
 int main()
 {
-   test_fill_n_full();
+   test_fill_n_shape_matrix();
    test_fill_n_partial();
-   test_fill_n_zero();
    test_fill_n_single_segment();
    test_fill_n_non_segmented();
-   test_fill_n_seg2();
    return boost::report_errors();
 }

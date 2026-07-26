@@ -20,27 +20,22 @@ struct is_positive
    bool operator()(int x) const { return x > 0; }
 };
 
-void test_all_of_true()
+struct not_equals_val
 {
-   test_detail::seg_vector<int> sv;
-   int a1[] = {1, 2, 3};
-   int a2[] = {4, 5, 6};
-   sv.add_segment_range(a1, a1 + 3);
-   sv.add_segment_range(a2, a2 + 3);
+   int v;
+   not_equals_val(int x) : v(x) {}
+   bool operator()(int x) const { return x != v; }
+};
 
-   BOOST_TEST(segmented_all_of(sv.begin(), sv.end(), is_positive()));
-}
-
-void test_all_of_false()
+// Violated by several elements at once, so that the early exit has to happen
+// at the first of them. The x > 0 term keeps the negative out-of-range guard
+// out, whatever the modulus.
+struct not_multiple_of
 {
-   test_detail::seg_vector<int> sv;
-   int a1[] = {1, 2, 3};
-   int a2[] = {-4, 5, 6};
-   sv.add_segment_range(a1, a1 + 3);
-   sv.add_segment_range(a2, a2 + 3);
-
-   BOOST_TEST(!segmented_all_of(sv.begin(), sv.end(), is_positive()));
-}
+   int m;
+   not_multiple_of(int x) : m(x) {}
+   bool operator()(int x) const { return !(x > 0 && (x % m) == 0); }
+};
 
 void test_all_of_empty()
 {
@@ -84,25 +79,211 @@ void test_all_of_sentinel_non_segmented()
    BOOST_TEST(!segmented_all_of(v.begin(), test_detail::make_sentinel(v.end()), is_positive()));
 }
 
-void test_all_of_seg2()
+// Runs segmented_all_of over a range whose segmentation shape is dictated by a
+// branch spec, so that every level of the recursive dispatch is exercised on
+// its single-segment, its multi-segment and its empty-segment path.
+// segmented_all_of is segmented_none_of under a negated predicate, so what
+// this checks on top of the none_of matrix is that the negation is applied
+// with the right sense.
+template<class Pred>
+struct all_of_shape_check
 {
-   test_detail::seg2_vector<int> sv2;
-   int a1[] = {1, 2, 3};
-   int a2[] = {-4, 5, 6};
-   sv2.add_flat_segment_range(a1, a1 + 3);
-   sv2.add_flat_segment_range(a2, a2 + 3);
+   Pred pred;
 
-   BOOST_TEST(!segmented_all_of(sv2.begin(), sv2.end(), is_positive()));
+   explicit all_of_shape_check(Pred p) : pred(p) {}
+
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      typedef typename Cont::iterator iter_t;
+      const iter_t first = c.begin();
+      const iter_t last  = test_detail::iter_at(c, n);
+
+      // Reference: naive scan over a flattened copy of the logical range. The
+      // guard past the end is deliberately not part of it.
+      const boost::container::vector<int> flat = test_detail::flatten_n_ints(c, n);
+      bool expected = true;
+      for(std::size_t i = 0; i != flat.size(); ++i) {
+         if(!pred(flat[i])) { expected = false; break; }
+      }
+
+      BOOST_TEST_EQ(segmented_all_of(first, last, pred), expected);
+      BOOST_TEST(spec != 0);
+   }
+};
+
+// Bidirectional and forward iterators instantiate every dispatch template
+// separately, so each shape is driven through both.
+template<class Pred>
+void run_all_of_shapes(const int* vals, std::size_t n, Pred pred)
+{
+   test_detail::for_each_shape_all<int>(vals, n, -999, all_of_shape_check<Pred>(pred));
+   test_detail::for_each_shape_all_fwd<int>(vals, n, -999, all_of_shape_check<Pred>(pred));
+}
+
+void test_all_of_shape_matrix()
+{
+   int vals[16];
+   for(int i = 0; i != 16; ++i)
+      vals[i] = i + 1;
+
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      // The single failing element at the first position, at every interior
+      // one and at the last one; then a value no element has; then the guard
+      // value, which lies past the end and must never fail the range.
+      for(std::size_t v = 0; v <= n + 1u; ++v)
+         run_all_of_shapes(vals, n, not_equals_val((v <= n) ? int(v) : -999));
+      // Predicates failed by many elements: all of them, every second one and
+      // every third one, so a failure in an earlier segment coexists with
+      // failures in later ones.
+      run_all_of_shapes(vals, n, not_multiple_of(1));
+      run_all_of_shapes(vals, n, not_multiple_of(2));
+      run_all_of_shapes(vals, n, not_multiple_of(3));
+      // Failed by nothing at all, guard included.
+      run_all_of_shapes(vals, n, is_positive());
+   }
+}
+
+//----------------------------------------------------------------------------
+// Single-segment cases with data before the start of the range. The shape
+// matrix always starts its range at the container's first element, so the
+// lower bound is only exercised here: each range below leaves a failing
+// element just before its start, and a negative guard just past its end.
+//----------------------------------------------------------------------------
+
+void test_all_of_single_segment_interior()
+{
+   test_detail::seg_vector<int> sv;
+   int a[] = {10, 20, 30, 40, 50, -60};
+   sv.add_segment_range(a, a + 6);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   const iter_t first = test_detail::iter_at(sv, 1);
+   const iter_t last  = test_detail::iter_at(sv, 5);
+
+   BOOST_TEST(!segmented_all_of(first, last, not_equals_val(20)));
+   BOOST_TEST(!segmented_all_of(first, last, not_equals_val(50)));
+   BOOST_TEST(segmented_all_of(first, last, not_equals_val(35)));
+   BOOST_TEST(segmented_all_of(first, last, not_equals_val(10)));
+   BOOST_TEST(segmented_all_of(first, last, is_positive()));
+}
+
+void test_all_of_single_segment_sentinel()
+{
+   test_detail::seg_vector<int> sv;
+   int a[] = {10, 20, 30, 40, 50, -60};
+   sv.add_segment_range(a, a + 6);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   const iter_t first = test_detail::iter_at(sv, 1);
+   const iter_t last  = test_detail::iter_at(sv, 5);
+
+   BOOST_TEST(!segmented_all_of(first, test_detail::make_sentinel(last), not_equals_val(20)));
+   BOOST_TEST(!segmented_all_of(first, test_detail::make_sentinel(last), not_equals_val(50)));
+   BOOST_TEST(segmented_all_of(first, test_detail::make_sentinel(last), is_positive()));
+}
+
+void test_all_of_single_segment_seg2_inner_multi()
+{
+   test_detail::seg_vector<int> inner;
+   int a1[] = {10, 20, 30};
+   int a2[] = {40, 50, 60, -99};
+   inner.add_segment_range(a1, a1 + 3);
+   inner.add_segment_range(a2, a2 + 4);
+
+   test_detail::seg2_vector<int> sv2;
+   sv2.add_segment(inner);
+
+   typedef test_detail::seg2_vector<int>::iterator iter_t;
+   const iter_t first = test_detail::iter_at(sv2, 1);
+   const iter_t last  = test_detail::iter_at(sv2, 6);
+
+   BOOST_TEST(!segmented_all_of(first, last, not_equals_val(20)));
+   BOOST_TEST(!segmented_all_of(first, last, not_equals_val(40)));
+   BOOST_TEST(!segmented_all_of(first, last, not_equals_val(60)));
+   BOOST_TEST(segmented_all_of(first, last, not_equals_val(10)));
+   BOOST_TEST(segmented_all_of(first, last, is_positive()));
+}
+
+void test_all_of_single_segment_seg2_single_inner()
+{
+   test_detail::seg_vector<int> inner;
+   int a[] = {10, 20, 30, 40, 50, 60, -99};
+   inner.add_segment_range(a, a + 7);
+
+   test_detail::seg2_vector<int> sv2;
+   sv2.add_segment(inner);
+
+   typedef test_detail::seg2_vector<int>::iterator iter_t;
+   const iter_t first = test_detail::iter_at(sv2, 1);
+   const iter_t last  = test_detail::iter_at(sv2, 5);
+
+   BOOST_TEST(!segmented_all_of(first, last, not_equals_val(20)));
+   BOOST_TEST(!segmented_all_of(first, last, not_equals_val(50)));
+   BOOST_TEST(segmented_all_of(first, last, not_equals_val(35)));
+   BOOST_TEST(segmented_all_of(first, last, not_equals_val(10)));
+   BOOST_TEST(segmented_all_of(first, last, is_positive()));
+}
+
+// The whole suite instantiates the bidirectional category only; the forward
+// one is a different instantiation of every dispatch template.
+void test_all_of_single_segment_forward()
+{
+   typedef test_detail::seg_vector<int, std::forward_iterator_tag> cont_t;
+   typedef cont_t::iterator iter_t;
+
+   cont_t sv;
+   int a[] = {10, 20, 30, 40, 50, 60, -99};
+   sv.add_segment_range(a, a + 7);
+
+   const iter_t whole_last = test_detail::iter_at(sv, 6);
+   BOOST_TEST(!segmented_all_of(sv.begin(), whole_last, not_equals_val(10)));
+   BOOST_TEST(!segmented_all_of(sv.begin(), whole_last, not_equals_val(60)));
+   BOOST_TEST(segmented_all_of(sv.begin(), whole_last, is_positive()));
+
+   const iter_t first = test_detail::iter_at(sv, 1);
+   const iter_t last  = test_detail::iter_at(sv, 5);
+   BOOST_TEST(!segmented_all_of(first, last, not_equals_val(20)));
+   BOOST_TEST(!segmented_all_of(first, last, not_equals_val(50)));
+   BOOST_TEST(segmented_all_of(first, last, not_equals_val(10)));
+   BOOST_TEST(segmented_all_of(first, last, not_equals_val(60)));
+}
+
+// Forward category, multi-segment, with the failure in an earlier segment and
+// none in the last one: the last-segment call must not discard it.
+void test_all_of_forward_failure_before_last_segment()
+{
+   typedef test_detail::seg_vector<int, std::forward_iterator_tag> cont_t;
+   typedef cont_t::iterator iter_t;
+
+   cont_t sv;
+   int a1[] = {10, 20, 30};
+   int a2[] = {40, 50};
+   int a3[] = {60, 70, 80};
+   sv.add_segment_range(a1, a1 + 3);
+   sv.add_segment_range(a2, a2 + 2);
+   sv.add_segment_range(a3, a3 + 3);
+
+   const iter_t last = test_detail::iter_at(sv, 7);
+   BOOST_TEST(!segmented_all_of(sv.begin(), last, not_equals_val(20)));
+   BOOST_TEST(!segmented_all_of(sv.begin(), last, not_equals_val(40)));
+   BOOST_TEST(segmented_all_of(sv.begin(), last, not_equals_val(80)));
 }
 
 int main()
 {
-   test_all_of_true();
-   test_all_of_false();
+   test_all_of_shape_matrix();
    test_all_of_empty();
    test_all_of_non_segmented();
    test_all_of_sentinel_segmented();
    test_all_of_sentinel_non_segmented();
-   test_all_of_seg2();
+   test_all_of_single_segment_interior();
+   test_all_of_single_segment_sentinel();
+   test_all_of_single_segment_seg2_inner_multi();
+   test_all_of_single_segment_seg2_single_inner();
+   test_all_of_single_segment_forward();
+   test_all_of_forward_failure_before_last_segment();
    return boost::report_errors();
 }

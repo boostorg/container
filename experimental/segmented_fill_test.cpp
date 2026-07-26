@@ -36,18 +36,6 @@ void test_fill_empty_range()
    BOOST_TEST_EQ(sv.total_size(), 0u);
 }
 
-void test_fill_single_segment()
-{
-   test_detail::seg_vector<int> sv;
-   sv.add_segment(5, 0);
-
-   segmented_fill(sv.begin(), sv.end(), 99);
-
-   test_detail::seg_vector<int>::iterator it = sv.begin();
-   for(; it != sv.end(); ++it)
-      BOOST_TEST_EQ(*it, 99);
-}
-
 void test_fill_partial_range()
 {
    test_detail::seg_vector<int> sv;
@@ -128,15 +116,70 @@ void test_fill_seg2()
       BOOST_TEST_EQ(*it, 42);
 }
 
+// Fills a sub-range whose segmentation shape is dictated by a branch spec, so
+// that every level of the recursive dispatch is exercised on its
+// single-segment path, on its multi-segment path and on the multi-segment path
+// with empty segments interleaved.  The guard just past the end must survive
+// untouched: fill writes, so an overrun corrupts the container rather than
+// merely misreading it.
+struct fill_shape_check
+{
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      typedef typename Cont::iterator iter_t;
+      const iter_t first = c.begin();
+      const iter_t last  = test_detail::iter_at(c, n);
+
+      segmented_fill(first, last, 42);
+
+      const boost::container::vector<int> after = test_detail::flatten_n_ints(c, n);
+      BOOST_TEST_EQ(after.size(), n);
+      for(std::size_t i = 0; i != after.size(); ++i)
+         BOOST_TEST_EQ(after[i], 42);
+
+      BOOST_TEST(test_detail::filler_intact(c, n, -999));
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_fill_shape_matrix()
+{
+   int vals[16];
+   for(int i = 0; i != 16; ++i)
+      vals[i] = i + 1;
+
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s)
+      test_detail::for_each_shape_all<int>(vals, sizes[s], -999, fill_shape_check());
+}
+
+void test_fill_single_segment_sentinel()
+{
+   test_detail::seg_vector<int> sv;
+   int a[] = {1, 2, 3, 4, 5, 6, 7};
+   sv.add_segment_range(a, a + 7);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   segmented_fill(test_detail::iter_at(sv, 1),
+                  test_detail::make_sentinel(test_detail::iter_at(sv, 6)), 42);
+
+   int expected[] = {1, 42, 42, 42, 42, 42, 7};
+   iter_t it = sv.begin();
+   for(int i = 0; i < 7; ++i, ++it)
+      BOOST_TEST_EQ(*it, expected[i]);
+}
+
 int main()
 {
+   test_fill_shape_matrix();
    test_fill_full_range();
    test_fill_empty_range();
-   test_fill_single_segment();
    test_fill_partial_range();
    test_fill_non_segmented();
    test_fill_sentinel_segmented();
    test_fill_sentinel_non_segmented();
    test_fill_seg2();
+   test_fill_single_segment_sentinel();
    return boost::report_errors();
 }

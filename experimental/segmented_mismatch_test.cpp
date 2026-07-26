@@ -701,8 +701,701 @@ void test_mismatch_2r_seg_to_seg_every_position()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Single-segment coverage.
+//
+// The segmented walkers take their single-segment branch only when
+// segment(first) == segment(last).  A range spanning a whole seg_vector can
+// never do that, because the end iterator lives in the trailing sentinel
+// segment; these tests therefore build one oversized segment and use a
+// proper sub-range of it.  Both returned iterators are checked by their
+// offset from the start of their own range.
+//////////////////////////////////////////////////////////////////////////////
+
+// S1: one segment, range starting at the segment edge.
+void test_mismatch_single_segment_full_range()
+{
+   int vals[] = {10, 20, 30, 40, 50, 60};
+   test_detail::seg_vector<int> sv;
+   test_detail::make_range(sv, "s", vals, 6, -1);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   const iter_t last = test_detail::iter_at(sv, 6);
+
+   int ref[] = {10, 20, 30, 40, 50, 60, 999};
+   std::pair<iter_t, int*> r = segmented_mismatch(sv.begin(), last, ref);
+   BOOST_TEST(r.first  == last);
+   BOOST_TEST(r.second == ref + 6);
+
+   int ref_bad[] = {10, 20, 30, 99, 50, 60, 999};
+   r = segmented_mismatch(sv.begin(), last, ref_bad);
+   BOOST_TEST(r.first  == test_detail::iter_at(sv, 3));
+   BOOST_TEST(r.second == ref_bad + 3);
+}
+
+// S2: one segment, both endpoints strictly interior; the mismatch lands at
+// the first element, at the last one and nowhere.
+void test_mismatch_single_segment_interior_bounds()
+{
+   test_detail::seg_vector<int> sv;
+   int a[] = {-7, 10, 20, 30, 40, 50, -8};
+   sv.add_segment_range(a, a + 7);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   const iter_t first = test_detail::iter_at(sv, 1);
+   const iter_t last  = test_detail::iter_at(sv, 6);
+
+   int ref[] = {10, 20, 30, 40, 50, 777};
+   std::pair<iter_t, int*> r = segmented_mismatch(first, last, ref);
+   BOOST_TEST(r.first  == last);
+   BOOST_TEST(r.second == ref + 5);
+
+   int ref_at_first[] = {99, 20, 30, 40, 50, 777};
+   r = segmented_mismatch(first, last, ref_at_first);
+   BOOST_TEST(r.first  == first);
+   BOOST_TEST(r.second == ref_at_first);
+
+   int ref_at_last[] = {10, 20, 30, 40, 99, 777};
+   r = segmented_mismatch(first, last, ref_at_last);
+   BOOST_TEST(r.first  == test_detail::iter_at(sv, 5));
+   BOOST_TEST(r.second == ref_at_last + 4);
+}
+
+// S3: one segment, empty range positioned mid-segment.
+void test_mismatch_single_segment_empty_range()
+{
+   test_detail::seg_vector<int> sv;
+   int a[] = {10, 20, 30, 40, 50, 60};
+   sv.add_segment_range(a, a + 6);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   const iter_t mid = test_detail::iter_at(sv, 3);
+
+   int ref[] = {99, 99, 99};
+   std::pair<iter_t, int*> r = segmented_mismatch(mid, mid, ref);
+   BOOST_TEST(r.first  == mid);
+   BOOST_TEST(r.second == ref);
+}
+
+// S4: S2 through the sentinel overload.
+void test_mismatch_single_segment_sentinel()
+{
+   test_detail::seg_vector<int> sv;
+   int a[] = {-7, 10, 20, 30, 40, 50, -8};
+   sv.add_segment_range(a, a + 7);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   const iter_t first = test_detail::iter_at(sv, 1);
+   const iter_t last  = test_detail::iter_at(sv, 6);
+
+   int ref[] = {10, 20, 30, 40, 50, 777};
+   std::pair<iter_t, int*> r =
+      segmented_mismatch(first, test_detail::make_sentinel(last), ref);
+   BOOST_TEST(r.first  == last);
+   BOOST_TEST(r.second == ref + 5);
+
+   int ref_bad[] = {10, 20, 99, 40, 50, 777};
+   r = segmented_mismatch(first, test_detail::make_sentinel(last), ref_bad);
+   BOOST_TEST(r.first  == test_detail::iter_at(sv, 3));
+   BOOST_TEST(r.second == ref_bad + 2);
+}
+
+// S1 and S2 through the predicate-taking overload.
+void test_mismatch_single_segment_pred()
+{
+   int vals[] = {1, 2, 3, 4, 5, 6};
+   test_detail::seg_vector<int> sv;
+   test_detail::make_range(sv, "s", vals, 6, -1);
+
+   typedef test_mismatch_double_eq double_eq;
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   const iter_t last = test_detail::iter_at(sv, 6);
+
+   int ref[] = {2, 4, 6, 8, 10, 12};
+   std::pair<iter_t, int*> r = segmented_mismatch(sv.begin(), last, ref, double_eq());
+   BOOST_TEST(r.first  == last);
+   BOOST_TEST(r.second == ref + 6);
+
+   const iter_t first = test_detail::iter_at(sv, 2);
+   int ref_bad[] = {6, 8, 99, 999};
+   r = segmented_mismatch(first, last, ref_bad, double_eq());
+   BOOST_TEST(r.first  == test_detail::iter_at(sv, 4));
+   BOOST_TEST(r.second == ref_bad + 2);
+}
+
+// S5: one outer segment holding several inner segments.
+void test_mismatch_single_segment_seg2_outer()
+{
+   int vals[] = {10, 20, 30, 40, 50};
+   test_detail::seg2_vector<int> sv2;
+   test_detail::make_range(sv2, "sm", vals, 5, -1);
+
+   typedef test_detail::seg2_vector<int>::iterator iter_t;
+   const iter_t last = test_detail::iter_at(sv2, 5);
+
+   int ref[] = {10, 20, 30, 40, 50, 777};
+   std::pair<iter_t, int*> r = segmented_mismatch(sv2.begin(), last, ref);
+   BOOST_TEST(r.first  == last);
+   BOOST_TEST(r.second == ref + 5);
+
+   int ref_bad[] = {10, 20, 30, 99, 50, 777};
+   r = segmented_mismatch(sv2.begin(), last, ref_bad);
+   BOOST_TEST(r.first  == test_detail::iter_at(sv2, 3));
+   BOOST_TEST(r.second == ref_bad + 3);
+}
+
+// S6: single segment at both levels of recursion.
+void test_mismatch_single_segment_seg2_both_levels()
+{
+   int vals[] = {10, 20, 30, 40, 50};
+   test_detail::seg2_vector<int> sv2;
+   test_detail::make_range(sv2, "ss", vals, 5, -1);
+
+   typedef test_detail::seg2_vector<int>::iterator iter_t;
+   const iter_t first = test_detail::iter_at(sv2, 1);
+   const iter_t last  = test_detail::iter_at(sv2, 4);
+
+   int ref[] = {20, 30, 40, 777};
+   std::pair<iter_t, int*> r = segmented_mismatch(first, last, ref);
+   BOOST_TEST(r.first  == last);
+   BOOST_TEST(r.second == ref + 3);
+
+   int ref_bad[] = {20, 99, 40, 777};
+   r = segmented_mismatch(first, last, ref_bad);
+   BOOST_TEST(r.first  == test_detail::iter_at(sv2, 2));
+   BOOST_TEST(r.second == ref_bad + 1);
+}
+
+// M4: multi-segment first range against a single-segment second range.
+void test_mismatch_single_segment_second_range()
+{
+   test_detail::seg_vector<int> sv1;
+   int a1[] = {10, 20, 30};
+   int a2[] = {40, 50};
+   sv1.add_segment_range(a1, a1 + 3);
+   sv1.add_segment_range(a2, a2 + 2);
+
+   const int N = 5;
+   int vals[] = {10, 20, 30, 40, 50, 60, 70};
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+
+   test_detail::seg_vector<int> sv2;
+   sv2.add_segment_range(vals, vals + 7);
+   std::pair<iter_t, iter_t> r = segmented_mismatch(sv1.begin(), sv1.end(), sv2.begin());
+   BOOST_TEST(r.first  == sv1.end());
+   BOOST_TEST(r.second == test_detail::iter_at(sv2, 5));
+
+   for(int pos = 0; pos < N; ++pos) {
+      int ref[7];
+      for(int j = 0; j < 7; ++j) ref[j] = vals[j];
+      ref[pos] = -1;
+
+      test_detail::seg_vector<int> sv_bad;
+      sv_bad.add_segment_range(ref, ref + 7);
+      r = segmented_mismatch(sv1.begin(), sv1.end(), sv_bad.begin());
+      BOOST_TEST(r.first  == test_detail::iter_at(sv1, static_cast<std::size_t>(pos)));
+      BOOST_TEST(r.second == test_detail::iter_at(sv_bad, static_cast<std::size_t>(pos)));
+   }
+}
+
+// M4 reversed: single-segment first range against a multi-segment second one.
+void test_mismatch_single_segment_first_range()
+{
+   test_detail::seg_vector<int> sv1;
+   int a[] = {-7, 10, 20, 30, 40, 50, -8};
+   sv1.add_segment_range(a, a + 7);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   const iter_t first = test_detail::iter_at(sv1, 1);
+   const iter_t last  = test_detail::iter_at(sv1, 6);
+
+   test_detail::seg_vector<int> sv2;
+   int b1[] = {10, 20};
+   int b2[] = {30};
+   int b3[] = {40, 50, 60};
+   sv2.add_segment_range(b1, b1 + 2);
+   sv2.add_segment_range(b2, b2 + 1);
+   sv2.add_segment_range(b3, b3 + 3);
+
+   std::pair<iter_t, iter_t> r = segmented_mismatch(first, last, sv2.begin());
+   BOOST_TEST(r.first  == last);
+   BOOST_TEST(r.second == test_detail::iter_at(sv2, 5));
+
+   test_detail::seg_vector<int> sv3;
+   int c1[] = {10, 20};
+   int c2[] = {30};
+   int c3[] = {99, 50, 60};
+   sv3.add_segment_range(c1, c1 + 2);
+   sv3.add_segment_range(c2, c2 + 1);
+   sv3.add_segment_range(c3, c3 + 3);
+
+   r = segmented_mismatch(first, last, sv3.begin());
+   BOOST_TEST(r.first  == test_detail::iter_at(sv1, 4));
+   BOOST_TEST(r.second == test_detail::iter_at(sv3, 3));
+}
+
+// M3: both ranges single-segment, second range longer than the first.
+void test_mismatch_single_segment_both_ranges()
+{
+   test_detail::seg_vector<int> sv1;
+   int a[] = {-7, 10, 20, 30, 40, 50, -8};
+   sv1.add_segment_range(a, a + 7);
+
+   test_detail::seg_vector<int> sv2;
+   int b[] = {10, 20, 30, 40, 50, 60, 70};
+   sv2.add_segment_range(b, b + 7);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   const iter_t first = test_detail::iter_at(sv1, 1);
+   const iter_t last  = test_detail::iter_at(sv1, 6);
+
+   std::pair<iter_t, iter_t> r = segmented_mismatch(first, last, sv2.begin());
+   BOOST_TEST(r.first  == last);
+   BOOST_TEST(r.second == test_detail::iter_at(sv2, 5));
+
+   test_detail::seg_vector<int> sv3;
+   int c[] = {10, 20, 30, 40, 99, 60, 70};
+   sv3.add_segment_range(c, c + 7);
+   r = segmented_mismatch(first, last, sv3.begin());
+   BOOST_TEST(r.first  == test_detail::iter_at(sv1, 5));
+   BOOST_TEST(r.second == test_detail::iter_at(sv3, 4));
+
+   r = segmented_mismatch(first, first, sv2.begin());
+   BOOST_TEST(r.first  == first);
+   BOOST_TEST(r.second == sv2.begin());
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Single-segment coverage for the two-range (bounded) overloads.
+//////////////////////////////////////////////////////////////////////////////
+
+// S1/S2 on the first range, flat second range.
+void test_mismatch_2r_single_segment_first_range()
+{
+   test_detail::seg_vector<int> sv;
+   int a[] = {-7, 10, 20, 30, 40, 50, -8};
+   sv.add_segment_range(a, a + 7);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   const iter_t first = test_detail::iter_at(sv, 1);
+   const iter_t last  = test_detail::iter_at(sv, 6);
+
+   int ref[] = {10, 20, 30, 40, 50};
+   std::pair<iter_t, int*> r = segmented_mismatch(first, last, ref, ref + 5);
+   BOOST_TEST(r.first  == last);
+   BOOST_TEST(r.second == ref + 5);
+
+   int ref_at_first[] = {99, 20, 30, 40, 50};
+   r = segmented_mismatch(first, last, ref_at_first, ref_at_first + 5);
+   BOOST_TEST(r.first  == first);
+   BOOST_TEST(r.second == ref_at_first);
+
+   int ref_at_last[] = {10, 20, 30, 40, 99};
+   r = segmented_mismatch(first, last, ref_at_last, ref_at_last + 5);
+   BOOST_TEST(r.first  == test_detail::iter_at(sv, 5));
+   BOOST_TEST(r.second == ref_at_last + 4);
+
+   int vals[] = {10, 20, 30, 40, 50, 60};
+   test_detail::seg_vector<int> sv_edge;
+   test_detail::make_range(sv_edge, "s", vals, 6, -1);
+   const iter_t edge_last = test_detail::iter_at(sv_edge, 6);
+   std::pair<iter_t, int*> re =
+      segmented_mismatch(sv_edge.begin(), edge_last, vals, vals + 6);
+   BOOST_TEST(re.first  == edge_last);
+   BOOST_TEST(re.second == vals + 6);
+}
+
+// S3: empty first range positioned mid-segment.
+void test_mismatch_2r_single_segment_empty_range()
+{
+   test_detail::seg_vector<int> sv;
+   int a[] = {10, 20, 30, 40, 50, 60};
+   sv.add_segment_range(a, a + 6);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   const iter_t mid = test_detail::iter_at(sv, 3);
+
+   int ref[] = {99, 99, 99};
+   std::pair<iter_t, int*> r = segmented_mismatch(mid, mid, ref, ref + 3);
+   BOOST_TEST(r.first  == mid);
+   BOOST_TEST(r.second == ref);
+}
+
+// S4: interior sub-range closed by a sentinel.
+void test_mismatch_2r_single_segment_sentinel()
+{
+   test_detail::seg_vector<int> sv;
+   int a[] = {-7, 10, 20, 30, 40, 50, -8};
+   sv.add_segment_range(a, a + 7);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   const iter_t first = test_detail::iter_at(sv, 1);
+   const iter_t last  = test_detail::iter_at(sv, 6);
+
+   int ref[] = {10, 20, 30, 40, 50};
+   std::pair<iter_t, int*> r =
+      segmented_mismatch(first, test_detail::make_sentinel(last), ref, ref + 5);
+   BOOST_TEST(r.first  == last);
+   BOOST_TEST(r.second == ref + 5);
+
+   int ref_bad[] = {10, 20, 99, 40, 50};
+   r = segmented_mismatch(first, test_detail::make_sentinel(last), ref_bad, ref_bad + 5);
+   BOOST_TEST(r.first  == test_detail::iter_at(sv, 3));
+   BOOST_TEST(r.second == ref_bad + 2);
+}
+
+// S5/S6 on the first range.
+void test_mismatch_2r_single_segment_seg2()
+{
+   int vals[] = {10, 20, 30, 40, 50};
+   typedef test_detail::seg2_vector<int>::iterator iter_t;
+
+   test_detail::seg2_vector<int> outer_single;
+   test_detail::make_range(outer_single, "sm", vals, 5, -1);
+   const iter_t last_sm = test_detail::iter_at(outer_single, 5);
+
+   int ref[] = {10, 20, 30, 40, 50};
+   std::pair<iter_t, int*> r =
+      segmented_mismatch(outer_single.begin(), last_sm, ref, ref + 5);
+   BOOST_TEST(r.first  == last_sm);
+   BOOST_TEST(r.second == ref + 5);
+
+   int ref_bad[] = {10, 20, 30, 99, 50};
+   r = segmented_mismatch(outer_single.begin(), last_sm, ref_bad, ref_bad + 5);
+   BOOST_TEST(r.first  == test_detail::iter_at(outer_single, 3));
+   BOOST_TEST(r.second == ref_bad + 3);
+
+   test_detail::seg2_vector<int> both_single;
+   test_detail::make_range(both_single, "ss", vals, 5, -1);
+   const iter_t first_ss = test_detail::iter_at(both_single, 1);
+   const iter_t last_ss  = test_detail::iter_at(both_single, 4);
+
+   int ref_ss[] = {20, 30, 40};
+   r = segmented_mismatch(first_ss, last_ss, ref_ss, ref_ss + 3);
+   BOOST_TEST(r.first  == last_ss);
+   BOOST_TEST(r.second == ref_ss + 3);
+
+   int ref_ss_bad[] = {20, 30, 99};
+   r = segmented_mismatch(first_ss, last_ss, ref_ss_bad, ref_ss_bad + 3);
+   BOOST_TEST(r.first  == test_detail::iter_at(both_single, 3));
+   BOOST_TEST(r.second == ref_ss_bad + 2);
+}
+
+// M4: multi-segment first range against a second range that is an interior
+// sub-range of a single segment, i.e. bounded on both sides.
+void test_mismatch_2r_single_segment_second_range()
+{
+   test_detail::seg_vector<int> sv1;
+   int a1[] = {10, 20, 30};
+   int a2[] = {40, 50};
+   sv1.add_segment_range(a1, a1 + 3);
+   sv1.add_segment_range(a2, a2 + 2);
+
+   test_detail::seg_vector<int> sv2;
+   int b[] = {-9, 10, 20, 30, 40, 50, -6};
+   sv2.add_segment_range(b, b + 7);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   const iter_t first2 = test_detail::iter_at(sv2, 1);
+   const iter_t last2  = test_detail::iter_at(sv2, 6);
+
+   std::pair<iter_t, iter_t> r =
+      segmented_mismatch(sv1.begin(), sv1.end(), first2, last2);
+   BOOST_TEST(r.first  == sv1.end());
+   BOOST_TEST(r.second == last2);
+
+   test_detail::seg_vector<int> sv3;
+   int c[] = {-9, 10, 20, 99, 40, 50, -6};
+   sv3.add_segment_range(c, c + 7);
+   r = segmented_mismatch(sv1.begin(), sv1.end(),
+                          test_detail::iter_at(sv3, 1), test_detail::iter_at(sv3, 6));
+   BOOST_TEST(r.first  == test_detail::iter_at(sv1, 2));
+   BOOST_TEST(r.second == test_detail::iter_at(sv3, 3));
+
+   // Mismatch on the very first element of the single-segment second range.
+   test_detail::seg_vector<int> sv4;
+   int d[] = {-9, 99, 20, 30, 40, 50, -6};
+   sv4.add_segment_range(d, d + 7);
+   r = segmented_mismatch(sv1.begin(), sv1.end(),
+                          test_detail::iter_at(sv4, 1), test_detail::iter_at(sv4, 6));
+   BOOST_TEST(r.first  == sv1.begin());
+   BOOST_TEST(r.second == test_detail::iter_at(sv4, 1));
+
+   // Mismatch on the very last element of the single-segment second range.
+   test_detail::seg_vector<int> sv5;
+   int e[] = {-9, 10, 20, 30, 40, 99, -6};
+   sv5.add_segment_range(e, e + 7);
+   r = segmented_mismatch(sv1.begin(), sv1.end(),
+                          test_detail::iter_at(sv5, 1), test_detail::iter_at(sv5, 6));
+   BOOST_TEST(r.first  == test_detail::iter_at(sv1, 4));
+   BOOST_TEST(r.second == test_detail::iter_at(sv5, 5));
+}
+
+// M3: both ranges are interior sub-ranges of a single segment.
+void test_mismatch_2r_single_segment_both_ranges()
+{
+   test_detail::seg_vector<int> sv1;
+   int a[] = {-7, 10, 20, 30, 40, 50, -8};
+   sv1.add_segment_range(a, a + 7);
+
+   test_detail::seg_vector<int> sv2;
+   int b[] = {-9, 10, 20, 30, 40, 50, -6};
+   sv2.add_segment_range(b, b + 7);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   const iter_t first1 = test_detail::iter_at(sv1, 1);
+   const iter_t last1  = test_detail::iter_at(sv1, 6);
+   const iter_t first2 = test_detail::iter_at(sv2, 1);
+   const iter_t last2  = test_detail::iter_at(sv2, 6);
+
+   std::pair<iter_t, iter_t> r = segmented_mismatch(first1, last1, first2, last2);
+   BOOST_TEST(r.first  == last1);
+   BOOST_TEST(r.second == last2);
+
+   test_detail::seg_vector<int> sv3;
+   int c[] = {-9, 10, 99, 30, 40, 50, -6};
+   sv3.add_segment_range(c, c + 7);
+   r = segmented_mismatch(first1, last1,
+                          test_detail::iter_at(sv3, 1), test_detail::iter_at(sv3, 6));
+   BOOST_TEST(r.first  == test_detail::iter_at(sv1, 2));
+   BOOST_TEST(r.second == test_detail::iter_at(sv3, 2));
+
+   // Both empty, both positioned mid-segment.
+   r = segmented_mismatch(first1, first1, first2, first2);
+   BOOST_TEST(r.first  == first1);
+   BOOST_TEST(r.second == first2);
+}
+
+// Unequal lengths in both directions, with single-segment ranges: the walk
+// stops either because the first range ran out or because the second did.
+void test_mismatch_2r_single_segment_unequal_lengths()
+{
+   test_detail::seg_vector<int> sv1;
+   int a[] = {-7, 10, 20, 30, 40, 50, -8};
+   sv1.add_segment_range(a, a + 7);
+
+   test_detail::seg_vector<int> sv2;
+   int b[] = {-9, 10, 20, 30, 40, 50, -6};
+   sv2.add_segment_range(b, b + 7);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+
+   // Second range shorter: stops at last2, first range still has elements.
+   std::pair<iter_t, iter_t> r = segmented_mismatch
+      ( test_detail::iter_at(sv1, 1), test_detail::iter_at(sv1, 6)
+      , test_detail::iter_at(sv2, 1), test_detail::iter_at(sv2, 4));
+   BOOST_TEST(r.first  == test_detail::iter_at(sv1, 4));
+   BOOST_TEST(r.second == test_detail::iter_at(sv2, 4));
+
+   // First range shorter: stops at last1, second range still has elements.
+   r = segmented_mismatch
+      ( test_detail::iter_at(sv1, 1), test_detail::iter_at(sv1, 3)
+      , test_detail::iter_at(sv2, 1), test_detail::iter_at(sv2, 6));
+   BOOST_TEST(r.first  == test_detail::iter_at(sv1, 3));
+   BOOST_TEST(r.second == test_detail::iter_at(sv2, 3));
+
+   // Second range empty while the first still has elements.
+   r = segmented_mismatch
+      ( test_detail::iter_at(sv1, 1), test_detail::iter_at(sv1, 6)
+      , test_detail::iter_at(sv2, 2), test_detail::iter_at(sv2, 2));
+   BOOST_TEST(r.first  == test_detail::iter_at(sv1, 1));
+   BOOST_TEST(r.second == test_detail::iter_at(sv2, 2));
+}
+
+// The comparator-taking two-range overload on single-segment ranges.
+void test_mismatch_2r_single_segment_with_pred()
+{
+   int vals[] = {1, 2, 3, 4, 5, 6};
+   test_detail::seg_vector<int> sv;
+   test_detail::make_range(sv, "s", vals, 6, -1);
+
+   typedef test_mismatch_double_eq double_eq;
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   const iter_t first = test_detail::iter_at(sv, 1);
+   const iter_t last  = test_detail::iter_at(sv, 5);
+
+   int ref[] = {4, 6, 8, 10};
+   std::pair<iter_t, int*> r =
+      segmented_mismatch(first, last, ref, ref + 4, double_eq());
+   BOOST_TEST(r.first  == last);
+   BOOST_TEST(r.second == ref + 4);
+
+   int ref_bad[] = {4, 6, 99, 10};
+   r = segmented_mismatch(first, last, ref_bad, ref_bad + 4, double_eq());
+   BOOST_TEST(r.first  == test_detail::iter_at(sv, 3));
+   BOOST_TEST(r.second == ref_bad + 2);
+}
+
+// M4 with a recursively segmented second range whose outer level holds a
+// single segment.
+void test_mismatch_2r_single_segment_second_range_seg2()
+{
+   test_detail::seg_vector<int> sv1;
+   int a1[] = {10, 20, 30};
+   int a2[] = {40, 50};
+   sv1.add_segment_range(a1, a1 + 3);
+   sv1.add_segment_range(a2, a2 + 2);
+
+   int b[] = {10, 20, 30, 40, 50};
+   typedef test_detail::seg_vector<int>::iterator iter1_t;
+   typedef test_detail::seg2_vector<int>::iterator iter2_t;
+
+   test_detail::seg2_vector<int> sv2;
+   test_detail::make_range(sv2, "sm", b, 5, -1);
+   std::pair<iter1_t, iter2_t> r = segmented_mismatch
+      (sv1.begin(), sv1.end(), sv2.begin(), test_detail::iter_at(sv2, 5));
+   BOOST_TEST(r.first  == sv1.end());
+   BOOST_TEST(r.second == test_detail::iter_at(sv2, 5));
+
+   int c[] = {10, 20, 99, 40, 50};
+   test_detail::seg2_vector<int> sv3;
+   test_detail::make_range(sv3, "ss", c, 5, -1);
+   r = segmented_mismatch
+      (sv1.begin(), sv1.end(), sv3.begin(), test_detail::iter_at(sv3, 5));
+   BOOST_TEST(r.first  == test_detail::iter_at(sv1, 2));
+   BOOST_TEST(r.second == test_detail::iter_at(sv3, 2));
+}
+
+// Mismatch at every position of a single-segment first range, and nowhere.
+void test_mismatch_2r_single_segment_every_position()
+{
+   test_detail::seg_vector<int> sv;
+   int a[] = {-7, 10, 20, 30, 40, 50, -8};
+   sv.add_segment_range(a, a + 7);
+
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+   const iter_t first = test_detail::iter_at(sv, 1);
+   const iter_t last  = test_detail::iter_at(sv, 6);
+
+   const int N = 5;
+   int vals[] = {10, 20, 30, 40, 50};
+
+   std::pair<iter_t, int*> r = segmented_mismatch(first, last, vals, vals + N);
+   BOOST_TEST(r.first  == last);
+   BOOST_TEST(r.second == vals + N);
+
+   for(int pos = 0; pos < N; ++pos) {
+      int ref[5];
+      for(int j = 0; j < N; ++j) ref[j] = vals[j];
+      ref[pos] = -1;
+
+      r = segmented_mismatch(first, last, ref, ref + N);
+      BOOST_TEST(r.first  == test_detail::iter_at(sv, static_cast<std::size_t>(pos) + 1u));
+      BOOST_TEST(r.second == ref + pos);
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Shape matrix.
+//
+// Like segmented_equal, segmented_mismatch advances two independently
+// segmented ranges together, so the cross product of the two ranges' shapes
+// is what matters.  Both returned iterators are checked against the position
+// the naive scan reports, which is a stronger statement than "the walk
+// stopped somewhere sensible": with the 'e' shapes in play, several distinct
+// (segment, local) pairs denote the same logical position and only a
+// correctly normalised result compares equal to iter_at.
+//
+// Range 2 is one element longer than range 1 and ends in a value found
+// nowhere else, so a walker that reads one element past last1 sees range 1's
+// guard against it and reports a mismatch that should not exist.
+//////////////////////////////////////////////////////////////////////////////
+
+const int mismatch_shape_tail = 12345;
+
+struct mismatch_shape_check
+{
+   std::size_t bad_pos;
+
+   explicit mismatch_shape_check(std::size_t p) : bad_pos(p) {}
+
+   void report(const char* s1, std::size_t n1, const char* s2) const
+   {
+      BOOST_LIGHTWEIGHT_TEST_OSTREAM
+         << "   shapes \"" << s1 << "\" / \"" << s2 << "\", n = " << n1
+         << ", differing at " << bad_pos << std::endl;
+   }
+
+   template<class C1, class C2>
+   void operator()(C1& c1, std::size_t n1, const char* s1,
+                   C2& c2, std::size_t n2, const char* s2) const
+   {
+      typedef typename C1::iterator iter1_t;
+      typedef typename C2::iterator iter2_t;
+
+      const boost::container::vector<int> f1 = test_detail::flatten_n_ints(c1, n1);
+      const boost::container::vector<int> f2 = test_detail::flatten_n_ints(c2, n2);
+
+      std::size_t k = f1.size();
+      for(std::size_t i = 0; i != f1.size(); ++i) {
+         if(f1[i] != f2[i]) { k = i; break; }
+      }
+
+      const iter1_t first1 = c1.begin();
+      const iter1_t last1  = test_detail::iter_at(c1, n1);
+      const iter2_t last2  = test_detail::iter_at(c2, n2);
+
+      // Unbounded second range.
+      std::pair<iter1_t, iter2_t> r = segmented_mismatch(first1, last1, c2.begin());
+      if(!BOOST_TEST(r.first == test_detail::iter_at(c1, k)))
+         this->report(s1, n1, s2);
+      if(!BOOST_TEST(r.second == test_detail::iter_at(c2, k)))
+         this->report(s1, n1, s2);
+
+      // Second range bounded too.  n2 > n1, so the common prefix is still n1
+      // and the answer must not change.
+      r = segmented_mismatch(first1, last1, c2.begin(), last2);
+      if(!BOOST_TEST(r.first == test_detail::iter_at(c1, k)))
+         this->report(s1, n1, s2);
+      if(!BOOST_TEST(r.second == test_detail::iter_at(c2, k)))
+         this->report(s1, n1, s2);
+
+      // The mirror image: range 2 bounded short, so the walk stops on the
+      // second range whenever the ranges agree that far.
+      const std::size_t half = n1 / 2u;
+      const std::size_t k_half = k < half ? k : half;
+      r = segmented_mismatch(first1, last1, c2.begin(), test_detail::iter_at(c2, half));
+      if(!BOOST_TEST(r.first == test_detail::iter_at(c1, k_half)))
+         this->report(s1, n1, s2);
+      if(!BOOST_TEST(r.second == test_detail::iter_at(c2, k_half)))
+         this->report(s1, n1, s2);
+
+      if(!BOOST_TEST(test_detail::filler_intact(c1, n1, -999)))
+         this->report(s1, n1, s2);
+      if(!BOOST_TEST(test_detail::filler_intact(c2, n2, -999)))
+         this->report(s1, n1, s2);
+   }
+};
+
+void test_mismatch_shape_matrix()
+{
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 9u };
+
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n1 = sizes[s];
+      const std::size_t n2 = n1 + 1u;
+
+      int v1[10] = {};
+      for(std::size_t i = 0; i != n1; ++i)
+         v1[i] = int(i) + 1;
+
+      for(std::size_t bad = 0; bad <= n1; ++bad) {
+         int v2[11] = {};
+         for(std::size_t i = 0; i != n1; ++i)
+            v2[i] = v1[i];
+         v2[n1] = mismatch_shape_tail;
+         if(bad != n1)
+            v2[bad] = -7;
+
+         test_detail::for_each_shape2_all<int, int>
+            (v1, n1, v2, n2, -999, mismatch_shape_check(bad));
+      }
+   }
+}
+
 int main()
 {
+   test_mismatch_shape_matrix();
    test_mismatch_matching();
    test_mismatch_found();
    test_mismatch_first_segment();
@@ -738,6 +1431,30 @@ int main()
    test_mismatch_2r_seg2_to_seg2();
    test_mismatch_2r_every_position();
    test_mismatch_2r_seg_to_seg_every_position();
+
+   // Single-segment coverage, unbounded second range:
+   test_mismatch_single_segment_full_range();
+   test_mismatch_single_segment_interior_bounds();
+   test_mismatch_single_segment_empty_range();
+   test_mismatch_single_segment_sentinel();
+   test_mismatch_single_segment_pred();
+   test_mismatch_single_segment_seg2_outer();
+   test_mismatch_single_segment_seg2_both_levels();
+   test_mismatch_single_segment_second_range();
+   test_mismatch_single_segment_first_range();
+   test_mismatch_single_segment_both_ranges();
+
+   // Single-segment coverage, two-range overloads:
+   test_mismatch_2r_single_segment_first_range();
+   test_mismatch_2r_single_segment_empty_range();
+   test_mismatch_2r_single_segment_sentinel();
+   test_mismatch_2r_single_segment_seg2();
+   test_mismatch_2r_single_segment_second_range();
+   test_mismatch_2r_single_segment_both_ranges();
+   test_mismatch_2r_single_segment_unequal_lengths();
+   test_mismatch_2r_single_segment_with_pred();
+   test_mismatch_2r_single_segment_second_range_seg2();
+   test_mismatch_2r_single_segment_every_position();
 
    return boost::report_errors();
 }

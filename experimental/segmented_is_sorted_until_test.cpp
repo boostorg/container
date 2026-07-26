@@ -15,55 +15,9 @@
 
 using namespace boost::container;
 
-void test_is_sorted_until_segmented()
-{
-   test_detail::seg_vector<int> sv;
-   int a1[] = {1, 2, 3};
-   int a2[] = {4, 2, 6};
-   sv.add_segment_range(a1, a1 + 3);
-   sv.add_segment_range(a2, a2 + 3);
-
-   test_detail::seg_vector<int>::iterator it = segmented_is_sorted_until(sv.begin(), sv.end());
-   BOOST_TEST(it != sv.end());
-   BOOST_TEST_EQ(*it, 2);
-}
-
-void test_is_sorted_until_boundary()
-{
-   test_detail::seg_vector<int> sv;
-   int a1[] = {1, 5};
-   int a2[] = {3, 7};
-   sv.add_segment_range(a1, a1 + 2);
-   sv.add_segment_range(a2, a2 + 2);
-
-   test_detail::seg_vector<int>::iterator it = segmented_is_sorted_until(sv.begin(), sv.end());
-   BOOST_TEST(it != sv.end());
-   BOOST_TEST_EQ(*it, 3);
-}
-
-void test_is_sorted_until_all_sorted()
-{
-   test_detail::seg_vector<int> sv;
-   int a1[] = {1, 2};
-   int a2[] = {3, 4};
-   sv.add_segment_range(a1, a1 + 2);
-   sv.add_segment_range(a2, a2 + 2);
-
-   test_detail::seg_vector<int>::iterator it = segmented_is_sorted_until(sv.begin(), sv.end());
-   BOOST_TEST(it == sv.end());
-}
-
 void test_is_sorted_until_empty()
 {
    test_detail::seg_vector<int> sv;
-   test_detail::seg_vector<int>::iterator it = segmented_is_sorted_until(sv.begin(), sv.end());
-   BOOST_TEST(it == sv.end());
-}
-
-void test_is_sorted_until_single()
-{
-   test_detail::seg_vector<int> sv;
-   sv.add_segment(1, 42);
    test_detail::seg_vector<int>::iterator it = segmented_is_sorted_until(sv.begin(), sv.end());
    BOOST_TEST(it == sv.end());
 }
@@ -72,19 +26,6 @@ struct greater_comp
 {
    bool operator()(int a, int b) const { return a > b; }
 };
-
-void test_is_sorted_until_with_comp()
-{
-   test_detail::seg_vector<int> sv;
-   int a1[] = {9, 7, 5};
-   int a2[] = {3, 1};
-   sv.add_segment_range(a1, a1 + 3);
-   sv.add_segment_range(a2, a2 + 2);
-
-   test_detail::seg_vector<int>::iterator it =
-      segmented_is_sorted_until(sv.begin(), sv.end(), greater_comp());
-   BOOST_TEST(it == sv.end());
-}
 
 void test_is_sorted_until_non_segmented()
 {
@@ -117,20 +58,6 @@ void test_is_sorted_until_sentinel_non_segmented()
       segmented_is_sorted_until(v.begin(), test_detail::make_sentinel(v.end()));
    BOOST_TEST(it != v.end());
    BOOST_TEST_EQ(*it, 3);
-}
-
-void test_is_sorted_until_seg2()
-{
-   test_detail::seg2_vector<int> sv2;
-   int a1[] = {1, 2, 3};
-   int a2[] = {4, 2, 6};
-   sv2.add_flat_segment_range(a1, a1 + 3);
-   sv2.add_flat_segment_range(a2, a2 + 3);
-
-   test_detail::seg2_vector<int>::iterator it =
-      segmented_is_sorted_until(sv2.begin(), sv2.end());
-   BOOST_TEST(it != sv2.end());
-   BOOST_TEST_EQ(*it, 2);
 }
 
 void test_is_sorted_until_every_position()
@@ -201,19 +128,123 @@ void test_is_sorted_until_every_position_seg2()
    }
 }
 
+// Runs segmented_is_sorted_until over a sub-range whose segmentation shape is
+// dictated by a branch spec, so that every level of the recursive dispatch is
+// exercised on its single-segment path, on its multi-segment path and on the
+// multi-segment path with empty segments interleaved.  The algorithm carries
+// the previous element across segment boundaries, so the shapes with empty
+// segments are the interesting ones: the carry has to survive however many
+// segments contribute nothing.
+struct is_sorted_until_shape_check
+{
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      typedef typename Cont::iterator iter_t;
+      const iter_t first = c.begin();
+      const iter_t last  = test_detail::iter_at(c, n);
+
+      // Reference: naive adjacent scan over a flattened copy of the range.
+      const boost::container::vector<int> flat = test_detail::flatten_ints(first, last);
+      std::size_t expected = flat.size();
+      for(std::size_t i = 1u; i < flat.size(); ++i) {
+         if(flat[i] < flat[i - 1u]) { expected = i; break; }
+      }
+
+      BOOST_TEST(segmented_is_sorted_until(first, last) == test_detail::iter_at(c, expected));
+      BOOST_TEST(spec != 0);
+   }
+};
+
+//The same for the explicit-comparator overload, which is a separate template.
+struct is_sorted_until_greater_shape_check
+{
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      typedef typename Cont::iterator iter_t;
+      const iter_t first = c.begin();
+      const iter_t last  = test_detail::iter_at(c, n);
+
+      const boost::container::vector<int> flat = test_detail::flatten_ints(first, last);
+      std::size_t expected = flat.size();
+      for(std::size_t i = 1u; i < flat.size(); ++i) {
+         if(flat[i] > flat[i - 1u]) { expected = i; break; }
+      }
+
+      BOOST_TEST(segmented_is_sorted_until(first, last, greater_comp())
+                 == test_detail::iter_at(c, expected));
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_is_sorted_until_shape_matrix()
+{
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      int vals[16];
+
+      //Ascending, i.e. sorted all the way to the end.
+      for(int i = 0; i != 16; ++i)
+         vals[i] = (i + 1) * 10;
+      test_detail::for_each_shape_all<int>(vals, n, -999, is_sorted_until_shape_check());
+
+      //One inversion, at each adjacent pair in turn: p == 1 is the first pair
+      //and p == n-1 the last one.
+      for(std::size_t p = 1u; p < n; ++p) {
+         for(int i = 0; i != 16; ++i)
+            vals[i] = (i + 1) * 10;
+         vals[p] = vals[p - 1u] - 1;
+         test_detail::for_each_shape_all<int>(vals, n, -999, is_sorted_until_shape_check());
+      }
+
+      //Descending, under the explicit comparator.
+      for(int i = 0; i != 16; ++i)
+         vals[i] = (16 - i) * 10;
+      test_detail::for_each_shape_all<int>(vals, n, 99999, is_sorted_until_greater_shape_check());
+
+      for(std::size_t p = 1u; p < n; ++p) {
+         for(int i = 0; i != 16; ++i)
+            vals[i] = (16 - i) * 10;
+         vals[p] = vals[p - 1u] + 1;
+         test_detail::for_each_shape_all<int>(vals, n, 99999, is_sorted_until_greater_shape_check());
+      }
+   }
+}
+
+void test_is_sorted_until_single_segment_sentinel()
+{
+   typedef test_detail::seg_vector<int>::iterator iter_t;
+
+   {
+      test_detail::seg_vector<int> sv;
+      int a[] = {100, 10, 20, 30, 40, 50, 5};
+      sv.add_segment_range(a, a + 7);
+      const iter_t first = test_detail::iter_at(sv, 1);
+      const iter_t last  = test_detail::iter_at(sv, 6);
+      BOOST_TEST(segmented_is_sorted_until(first, test_detail::make_sentinel(last)) == last);
+   }
+   {
+      test_detail::seg_vector<int> sv;
+      int a[] = {100, 10, 20, 30, 40, 35, 5};
+      sv.add_segment_range(a, a + 7);
+      const iter_t first = test_detail::iter_at(sv, 1);
+      const iter_t last  = test_detail::iter_at(sv, 6);
+      BOOST_TEST(segmented_is_sorted_until(first, test_detail::make_sentinel(last))
+                 == test_detail::iter_at(sv, 5));
+   }
+}
+
 int main()
 {
-   test_is_sorted_until_segmented();
-   test_is_sorted_until_boundary();
-   test_is_sorted_until_all_sorted();
+   test_is_sorted_until_shape_matrix();
    test_is_sorted_until_empty();
-   test_is_sorted_until_single();
-   test_is_sorted_until_with_comp();
    test_is_sorted_until_non_segmented();
    test_is_sorted_until_sentinel_segmented();
    test_is_sorted_until_sentinel_non_segmented();
-   test_is_sorted_until_seg2();
    test_is_sorted_until_every_position();
    test_is_sorted_until_every_position_seg2();
+   test_is_sorted_until_single_segment_sentinel();
    return boost::report_errors();
 }
