@@ -101,7 +101,7 @@ segtrio<bool, Size, LocalIter> search_n_scan_segment
       // Step "lcur" itself to the verify probe position; no separate cursor.
       lcur += (ncheck - 1);
       Size left = static_cast<Size>(ncheck);
-      BOOST_CONTAINER_UNROLL(4)
+      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
       do {
          if(!(*lcur == value))
             goto phase1_mismatch; // Mismatch, jump to cleanup logic
@@ -159,7 +159,7 @@ segtrio<bool, Size, LocalIter> search_n_scan_segment
          // count) avoids forming "original_lcur - 1" when the run lands
          // right at the start of the segment.
          Size left = count;
-         BOOST_CONTAINER_UNROLL(4)
+         BOOST_CONTAINER_SEGMENTED_UNROLL(4)
          do {  //count is always >= 2 because it's tested in the outer function
             if(!(*lcur == value))
                goto phase2_mismatch;
@@ -191,7 +191,7 @@ segtrio<bool, Size, LocalIter> search_n_scan_segment
       if (tail == lcur)            // empty tail, nothing to scan.
          return result_t(false, 0, lend);
 
-      BOOST_CONTAINER_UNROLL(4)
+      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
       do {
          --tail;
          if (!(*tail == value))
@@ -416,7 +416,7 @@ FwdIt search_n_top_dispatch
       // at the start of the range -- the OLD `back = probe; Size left =
       // count - 1` shape, but with `first` itself as the cursor.
       Size left = count;
-      BOOST_CONTAINER_UNROLL(4)
+      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
       do {
          if (!(*first == value))
             goto probe_mismatch;

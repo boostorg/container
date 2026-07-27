@@ -96,7 +96,7 @@ BOOST_CONTAINER_FORCEINLINE
 BidirIt partition_scan(BidirIt first, BidirIt last, Pred pred, non_segmented_iterator_tag, const Cat&)
 {
    while (true) {
-      BOOST_CONTAINER_UNROLL(4)
+      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
       for (; first != last; ++first) {
          if (!pred(*first))
             goto back_search;
@@ -105,7 +105,7 @@ BidirIt partition_scan(BidirIt first, BidirIt last, Pred pred, non_segmented_ite
       break;
       back_search:
 
-      BOOST_CONTAINER_UNROLL(4)
+      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
       do {
          if (first == --last)
             goto ret_first;
@@ -128,7 +128,7 @@ segduo<It, It> partition_disjoint_bidir_ranges
    (It f, It const f_end, It const l_beg, It l, Pred pred, non_segmented_iterator_tag, const Cat &)
 {
    while (true) {
-      BOOST_CONTAINER_UNROLL(4)
+      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
       for (; f != f_end; ++f) {
          if (!pred(*f))
             goto back_search;
@@ -138,7 +138,7 @@ segduo<It, It> partition_disjoint_bidir_ranges
 
       back_search:
       if (l != l_beg) {
-         BOOST_CONTAINER_UNROLL(4)
+         BOOST_CONTAINER_SEGMENTED_UNROLL(4)
          do {
             if (pred(*(--l)))
                goto swap_step;
