@@ -202,43 +202,26 @@ SegIt segmented_partition_dispatch(SegIt first, SegIt last, Pred pred, segmented
    local_iterator f_loc = traits::local(first);
    local_iterator l_loc = traits::local(last);
 
-   if (sf != sl) {
-      local_iterator f_end = traits::end(sf);
-      local_iterator l_beg = traits::begin(sl);
+   while (sf != sl) {
+      const local_iterator f_end = traits::end(sf);
+      const local_iterator l_beg = traits::begin(sl);
 
-      while (true) {
-         {  const segduo<local_iterator, local_iterator> r =
-               partition_disjoint_bidir_ranges(f_loc, f_end, l_beg, l_loc, pred, is_local_seg_t(), local_cat_t());
-            f_loc = r.first;
-            l_loc = r.second; }
+      const segduo<local_iterator, local_iterator> r =
+         partition_disjoint_bidir_ranges(f_loc, f_end, l_beg, l_loc, pred, is_local_seg_t(), local_cat_t());
+      f_loc = r.first;
+      l_loc = r.second;
 
-         if (l_loc == l_beg) {
-            if (f_loc == f_end) {
-               ++sf;
-               if (sf == sl) {
-                  return traits::compose(sf, l_beg);
-               }
-               f_loc = traits::begin(sf);
-               f_end = traits::end(sf);
-            }
-
-            --sl;
-            if (sf == sl) {
-               l_loc = f_end;
-               break;
-            }
-            l_beg = traits::begin(sl);
-            l_loc = traits::end(sl);
-         }
-         else {
-            ++sf;
-            if (sf == sl) {
-               f_loc = l_beg;
-               break;
-            }
-            f_loc = traits::begin(sf);
-            f_end = traits::end(sf);
-         }
+      if (f_loc == f_end) {
+         ++sf;
+         f_loc = traits::begin(sf);
+         //Advancing the forward cursor may make sf == sl; the backward cursor
+         //must not then step past it.
+         if (sf == sl)
+            break;
+      }
+      if (l_loc == l_beg) {
+         --sl;
+         l_loc = traits::end(sl);
       }
    }
 
