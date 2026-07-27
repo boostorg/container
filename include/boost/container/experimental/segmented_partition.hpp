@@ -93,29 +93,22 @@ FwdIt segmented_partition_dispatch(FwdIt first, Sent last, Pred pred, Tag tag, c
 
 template <class BidirIt, class Pred, class Cat>
 BOOST_CONTAINER_FORCEINLINE
-BidirIt partition_scan(BidirIt first, BidirIt last, Pred pred, non_segmented_iterator_tag, const Cat&)
+BidirIt segmented_partition_dispatch(BidirIt first, BidirIt last, Pred pred, non_segmented_iterator_tag, const Cat&)
 {
-   while (true) {
-      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-      for (; first != last; ++first) {
-         if (!pred(*first))
-            goto back_search;
+   while (first != last) {
+      while (pred(*first)) {
+         if (++first == last)
+            goto first_ret;
       }
 
-      break;
-      back_search:
-
-      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
       do {
          if (first == --last)
-            goto ret_first;
+            goto first_ret;
       } while (!pred(*last));
-
       boost::adl_move_swap(*first, *last);
       ++first;
    }
-
-   ret_first:
+   first_ret:
    return first;
 }
 
@@ -127,29 +120,22 @@ BOOST_CONTAINER_FORCEINLINE
 segduo<It, It> partition_disjoint_bidir_ranges
    (It f, It const f_end, It const l_beg, It l, Pred pred, non_segmented_iterator_tag, const Cat &)
 {
-   while (true) {
-      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-      for (; f != f_end; ++f) {
-         if (!pred(*f))
-            goto back_search;
+   while (f != f_end) {
+      while (pred(*f)) {
+         if (++f == f_end)
+            goto duo_ret;
       }
 
-      goto duo_ret;
+      do {
+         if (l == l_beg)
+            goto duo_ret;
+         --l;
+      } while (!pred(*l));
 
-      back_search:
-      if (l != l_beg) {
-         BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-         do {
-            if (pred(*(--l)))
-               goto swap_step;
-         } while (l != l_beg);
-      }
-      goto duo_ret;
-
-      swap_step:
       boost::adl_move_swap(*f, *l);
       ++f;
    }
+
    duo_ret:
    return segduo<It, It>(f, l);
 }
@@ -203,7 +189,7 @@ segduo<It, It> partition_disjoint_bidir_ranges(It f, It f_end, It l_beg, It l, P
 }
 
 template <class SegIt, class Pred>
-SegIt partition_scan(SegIt first, SegIt last, Pred pred, segmented_iterator_tag, const std::bidirectional_iterator_tag&)
+SegIt segmented_partition_dispatch(SegIt first, SegIt last, Pred pred, segmented_iterator_tag, const std::bidirectional_iterator_tag&)
 {
    typedef segmented_iterator_traits<SegIt>  traits;
    typedef typename traits::local_iterator   local_iterator;
@@ -221,10 +207,10 @@ SegIt partition_scan(SegIt first, SegIt last, Pred pred, segmented_iterator_tag,
       local_iterator l_beg = traits::begin(sl);
 
       while (true) {
-         segduo<local_iterator, local_iterator> r =
-            partition_disjoint_bidir_ranges(f_loc, f_end, l_beg, l_loc, pred, is_local_seg_t(), local_cat_t());
-         f_loc = r.first;
-         l_loc = r.second;
+         {  const segduo<local_iterator, local_iterator> r =
+               partition_disjoint_bidir_ranges(f_loc, f_end, l_beg, l_loc, pred, is_local_seg_t(), local_cat_t());
+            f_loc = r.first;
+            l_loc = r.second; }
 
          if (l_loc == l_beg) {
             if (f_loc == f_end) {
@@ -256,14 +242,7 @@ SegIt partition_scan(SegIt first, SegIt last, Pred pred, segmented_iterator_tag,
       }
    }
 
-   return traits::compose(sf, partition_scan(f_loc, l_loc, pred, is_local_seg_t(), local_cat_t()));
-}
-
-template <class FwdIt, class Sent, class Pred, class Tag, class Cat>
-BOOST_CONTAINER_FORCEINLINE
-FwdIt segmented_partition_dispatch(FwdIt first, Sent last, Pred pred, Tag tag, const Cat& cat)
-{
-   return (partition_scan)(first, last, pred, tag, cat);
+   return traits::compose(sf, segmented_partition_dispatch(f_loc, l_loc, pred, is_local_seg_t(), local_cat_t()));
 }
 
 } // namespace detail_algo
