@@ -207,11 +207,12 @@ SegIt segmented_partition_dispatch(SegIt first, SegIt last, Pred pred, segmented
    while (sf != sl) {
       const local_iterator f_end = traits::end(sf);
       const local_iterator l_beg = traits::begin(sl);
-
-      const segduo<local_iterator, local_iterator> r =
-         partition_disjoint_bidir_ranges(f_loc, f_end, l_beg, l_loc, pred, is_local_seg_t(), local_cat_t());
-      f_loc = r.first;
-      l_loc = r.second;
+      {
+         const segduo<local_iterator, local_iterator> r =
+            partition_disjoint_bidir_ranges(f_loc, f_end, l_beg, l_loc, pred, is_local_seg_t(), local_cat_t());
+         f_loc = r.first;
+         l_loc = r.second;
+      }
 
       if (f_loc == f_end) {
          ++sf;
