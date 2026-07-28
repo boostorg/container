@@ -52,6 +52,12 @@
 //GCC 12 seems a bit confused about array access error with small_vector
 #  if defined(BOOST_GCC) && (BOOST_GCC >= 110000)
 #     pragma GCC diagnostic ignored "-Wstringop-overread"
+#  endif
+//GCC 10 reports a spurious -Wstringop-overflow on vector reallocation: once
+//uninitialized_move_and_insert_alloc is inlined it cannot prove that the tail
+//range [pos, last) is empty for a push_back, so the one-past-the-end 'pos' of
+//the old buffer is diagnosed as a source region of size 0. Cf. GCC PR100366.
+#  if defined(BOOST_GCC) && (BOOST_GCC >= 100000)
 #     pragma GCC diagnostic ignored "-Wstringop-overflow"
 #  endif
 #  pragma GCC diagnostic ignored "-Warray-bounds"
