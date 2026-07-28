@@ -116,46 +116,36 @@ segduo<It, It> segmented_reverse_disjoint_ranges(It f, It f_end, It l_beg, It l,
    segment_iterator       fs     = traits::segment(f);
    const segment_iterator fs_end = traits::segment(f_end);
    local_iterator         fi     = traits::local(f);
-   local_iterator         fi_end = (fs == fs_end) ? traits::local(f_end) : traits::end(fs);
 
    segment_iterator       ls     = traits::segment(l);
    const segment_iterator ls_beg = traits::segment(l_beg);
    local_iterator         li     = traits::local(l);
-   local_iterator         li_beg = (ls == ls_beg) ? traits::local(l_beg) : traits::begin(ls);
 
-   //At least one of the two sides is guaranteed to be fully consumed after this loop
-   //since the ranges are guaranteed not to overlap
    while (true) {
-      //Reverse the front and back segments recursively
-      segduo<local_iterator, local_iterator> r =
-         segmented_reverse_disjoint_ranges(fi, fi_end, li_beg, li, is_local_seg_t(), local_cat_t());
-      fi = r.first;
-      li = r.second;
+      const local_iterator fi_end = (fs == fs_end) ? traits::local(f_end) : traits::end(fs);
+      const local_iterator li_beg = (ls == ls_beg) ? traits::local(l_beg) : traits::begin(ls);
+      {
+         const segduo<local_iterator, local_iterator> r =
+            segmented_reverse_disjoint_ranges(fi, fi_end, li_beg, li, is_local_seg_t(), local_cat_t());
+         fi = r.first;
+         li = r.second;
+      }
 
-      //Independent advancement of forward and backward segments since ranges do not to overlap
-
-      //Check if the forward segment was fully consumed
       if (fi == fi_end) {
-         //Check if there are no more segments to advance on the forward side, in which case we are done
          if (fs == fs_end)
-            return segduo<It, It>(f_end, traits::compose(ls, li));
-         //Advance the forward segment
+            break;
          ++fs;
          fi = traits::begin(fs);
-         fi_end = (fs == fs_end) ? traits::local(f_end) : traits::end(fs);
       }
-
-      //Check if the backward segment was fully consumed
       if (li == li_beg) {
-         //Check if there are no more segments to retreat on the backward side, in which case we are done
          if (ls == ls_beg)
-            return segduo<It, It>(traits::compose(fs, fi), l_beg);
-         //Retreat the backward segment
+            break;
          --ls;
          li = traits::end(ls);
-         li_beg = (ls == ls_beg) ? traits::local(l_beg) : traits::begin(ls);
       }
    }
+
+   return segduo<It, It>(traits::compose(fs, fi), traits::compose(ls, li));
 }
 
 template <class SegIt, class Cat>
@@ -174,50 +164,27 @@ void segmented_reverse_dispatch(SegIt first, SegIt last, segmented_iterator_tag,
    local_iterator f_loc = traits::local(first);
    local_iterator l_loc = traits::local(last);
 
-   if (sf != sl) {
-      local_iterator f_end = traits::end(sf);
-      local_iterator l_beg = traits::begin(sl);
+   while (sf != sl) {
+      const local_iterator f_end = traits::end(sf);
+      const local_iterator l_beg = traits::begin(sl);
 
-      while (true) {
-         segduo<local_iterator, local_iterator> r =
-            segmented_reverse_disjoint_ranges(f_loc, f_end, l_beg, l_loc, is_local_seg_t(), local_cat_t());
-         f_loc = r.first;
-         l_loc = r.second;
+      const segduo<local_iterator, local_iterator> r =
+         segmented_reverse_disjoint_ranges(f_loc, f_end, l_beg, l_loc, is_local_seg_t(), local_cat_t());
+      f_loc = r.first;
+      l_loc = r.second;
 
-         //Check if the backward side reached the end of its segment
-         if (l_loc == l_beg) {
-            //If both sides reached the end of their respective segments
-            //advance the forward segment and retreat the backward segment
-            if (f_loc == f_end) {
-               ++sf;
-               //If both segments were adjacent and we exhausted both, we are done
-               if (sf == sl)
-                  return;
-
-               f_loc = traits::begin(sf);
-               f_end = traits::end(sf);
-            }
-
-            --sl;
-            if (sf == sl) {
-               l_loc = f_end;
-               break;
-            }
-            l_beg = traits::begin(sl);
-            l_loc = traits::end(sl);
-         }
-         else {   //The forward side reached the end of its segment
-            ++sf;
-            if (sf == sl) {
-               f_loc = l_beg;
-               break;
-            }
-            f_loc = traits::begin(sf);
-            f_end = traits::end(sf);
-         }
+      if (f_loc == f_end) {
+         ++sf;
+         f_loc = traits::begin(sf);
+         if (sf == sl)
+            break;
+      }
+      if (l_loc == l_beg) {
+         --sl;
+         l_loc = traits::end(sl);
       }
    }
-   //Final reverse loop within the final segment
+
    segmented_reverse_dispatch(f_loc, l_loc, is_local_seg_t(), local_cat_t());
 }
 
