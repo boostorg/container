@@ -157,35 +157,37 @@ segduo<It, It> partition_disjoint_bidir_ranges(It f, It f_end, It l_beg, It l, P
    segment_iterator       fs     = traits::segment(f);
    const segment_iterator fs_end = traits::segment(f_end);
    local_iterator         fi     = traits::local(f);
-   local_iterator         fi_end = (fs == fs_end) ? traits::local(f_end) : traits::end(fs);
 
    segment_iterator       ls     = traits::segment(l);
    const segment_iterator ls_beg = traits::segment(l_beg);
    local_iterator         li     = traits::local(l);
-   local_iterator         li_beg = (ls == ls_beg) ? traits::local(l_beg) : traits::begin(ls);
 
    while (true) {
-      segduo<local_iterator, local_iterator> r =
-         partition_disjoint_bidir_ranges(fi, fi_end, li_beg, li, pred, is_local_seg_t(), local_cat_t());
-      fi = r.first;
-      li = r.second;
+      const local_iterator fi_end = (fs == fs_end) ? traits::local(f_end) : traits::end(fs);
+      const local_iterator li_beg = (ls == ls_beg) ? traits::local(l_beg) : traits::begin(ls);
+      {
+         const segduo<local_iterator, local_iterator> r =
+            partition_disjoint_bidir_ranges(fi, fi_end, li_beg, li, pred, is_local_seg_t(), local_cat_t());
+         fi = r.first;
+         li = r.second;
+      }
 
       if (fi == fi_end) {
          if (fs == fs_end)
-            return segduo<It, It>(f_end, traits::compose(ls, li));
+            break;
          ++fs;
          fi = traits::begin(fs);
-         fi_end = (fs == fs_end) ? traits::local(f_end) : traits::end(fs);
       }
 
       if (li == li_beg) {
          if (ls == ls_beg)
-            return segduo<It, It>(traits::compose(fs, fi), l_beg);
+            break;
          --ls;
          li = traits::end(ls);
-         li_beg = (ls == ls_beg) ? traits::local(l_beg) : traits::begin(ls);
       }
    }
+
+   return segduo<It, It>(traits::compose(fs, fi), traits::compose(ls, li));
 }
 
 template <class SegIt, class Pred>
