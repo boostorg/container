@@ -57,41 +57,44 @@ namespace detail_algo {
 template <class Iter1, class Sent1, class Iter2, class Sent2, class DstIter, class DstSent,
           class Comp, class DstTag, class SrcCat>
 BOOST_CONTAINER_FORCEINLINE
-typename algo_enable_if_c<!DstTag::value, segtrio<Iter1, Iter2, DstIter> >::type
+typename algo_enable_if_c<!DstTag::value, segquartet<Iter1, Iter2, DstIter, bool> >::type
 merge_dst_bounded
    (Iter1 first1, Sent1 last1, Iter2 first2, Sent2 last2,
     DstIter dst_first, DstSent dst_last, Comp comp, DstTag, SrcCat)
 {
-   // Per-iteration the loop only checks exhaustion on the side that was
-   // just consumed (the other side and dst position are unchanged by the
-   // current step).  This matches the STL textbook merge structure and
-   // produces tight branch-based code on MSVC/GCC: each branch of the
-   // merge step ends with `break`, so the loop-bottom test reflects the
-   // consumed side only and MSVC emits a single cmp+branch per element.
-   // On clang the same shape is preserved, and because each branch ends
-   // in a different exhaustion check, if-conversion to a cmov chain is
-   // prevented (cmov would serialise the iteration and cost ~3x on
-   // predictable data).  When dst_last is unreachable_sentinel_t the
-   // dst-full check folds away.
-   if(first1 != last1 && first2 != last2 && dst_first != dst_last) {
-      while(true) {
-         if(comp(*first2, *first1)) {
-            *dst_first = *first2;
-            ++first2;
-            ++dst_first;
-            if(first2 == last2 || dst_first == dst_last)
-               break;
-         }
-         else {
-            *dst_first = *first1;
-            ++first1;
-            ++dst_first;
-            if(first1 == last1 || dst_first == dst_last)
-               break;
+   bool src_done = true;
+   if(first1 != last1 && first2 != last2) {
+      if(dst_first != dst_last) {
+         while(true) {
+            if(comp(*first2, *first1)) {
+               *dst_first = *first2;
+               ++first2;
+               ++dst_first;
+               if(first2 == last2)
+                  break;
+               if(dst_first == dst_last) {
+                  src_done = false;
+                  break;
+               }
+            }
+            else {
+               *dst_first = *first1;
+               ++first1;
+               ++dst_first;
+               if(first1 == last1)
+                  break;
+               if(dst_first == dst_last) {
+                  src_done = false;
+                  break;
+               }
+            }
          }
       }
+      else {
+         src_done = false;
+      }
    }
-   return segtrio<Iter1, Iter2, DstIter>(first1, first2, dst_first);
+   return segquartet<Iter1, Iter2, DstIter, bool>(first1, first2, dst_first, src_done);
 }
 
 template <std::size_t BlockSize, class RAIter1, class RAIter2, class DstIter,
@@ -122,7 +125,7 @@ BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c
    < !DstTag::value && seg_is_ra_iterator<RAIter2>::value
       && seg_is_ra_iterator<DstIter>::value
-   , segtrio<RAIter1, RAIter2, DstIter> >::type
+   , segquartet<RAIter1, RAIter2, DstIter, bool> >::type
 merge_dst_bounded
    (RAIter1 first1, RAIter1 last1, RAIter2 first2, RAIter2 last2,
     DstIter dst_first, DstSent dst_last, Comp comp, DstTag dst_tag,
@@ -136,7 +139,7 @@ merge_dst_bounded
 
 template <class Iter1, class Sent1, class Iter2, class Sent2, class SegDstIter,
           class Comp, class SrcCat>
-segtrio<Iter1, Iter2, SegDstIter> merge_dst_bounded
+segquartet<Iter1, Iter2, SegDstIter, bool> merge_dst_bounded
    (Iter1 first1, Sent1 last1, Iter2 first2, Sent2 last2,
     SegDstIter dst_first, SegDstIter dst_last, Comp comp,
     segmented_iterator_tag, SrcCat)
@@ -145,8 +148,8 @@ segtrio<Iter1, Iter2, SegDstIter> merge_dst_bounded
    typedef typename dst_traits::local_iterator    dst_local_iterator;
    typedef typename dst_traits::segment_iterator  dst_segment_iterator;
    typedef typename segmented_iterator_traits<dst_local_iterator>::is_segmented_iterator dst_is_local_seg_t;
-   typedef segtrio<Iter1, Iter2, dst_local_iterator>  local_result_t;
-   typedef segtrio<Iter1, Iter2, SegDstIter>          result_t;
+   typedef segquartet<Iter1, Iter2, dst_local_iterator, bool>  local_result_t;
+   typedef segquartet<Iter1, Iter2, SegDstIter, bool>          result_t;
 
    dst_segment_iterator       sfirst = dst_traits::segment(dst_first);
    const dst_segment_iterator slast  = dst_traits::segment(dst_last);
@@ -160,8 +163,8 @@ segtrio<Iter1, Iter2, SegDstIter> merge_dst_bounded
             , dst_traits::end(sfirst), comp, dst_is_local_seg_t(), SrcCat());
          first1 = r.first;
          first2 = r.second;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1 || first2 == last2))
-            return result_t(first1, first2, dst_traits::compose(sfirst, r.third));
+         if(BOOST_CONTAINER_SEG_UNLIKELY(r.fourth))
+            return result_t(first1, first2, dst_traits::compose(sfirst, r.third), true);
       }
 
       for(++sfirst; sfirst != slast; ++sfirst) {
@@ -170,8 +173,8 @@ segtrio<Iter1, Iter2, SegDstIter> merge_dst_bounded
             , dst_traits::end(sfirst), comp, dst_is_local_seg_t(), SrcCat());
          first1 = r.first;
          first2 = r.second;
-         if (BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1 || first2 == last2))
-            return result_t(first1, first2, dst_traits::compose(sfirst, r.third));
+         if (BOOST_CONTAINER_SEG_UNLIKELY(r.fourth))
+            return result_t(first1, first2, dst_traits::compose(sfirst, r.third), true);
       }
 
       db = dst_traits::begin(slast);
@@ -179,7 +182,7 @@ segtrio<Iter1, Iter2, SegDstIter> merge_dst_bounded
    const local_result_t r = (merge_dst_bounded)
       ( first1, last1, first2, last2, db
       , dst_traits::local(dst_last), comp, dst_is_local_seg_t(), SrcCat());
-   return result_t(r.first, r.second, dst_traits::compose(sfirst, r.third));
+   return result_t(r.first, r.second, dst_traits::compose(sfirst, r.third), r.fourth);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -204,9 +207,12 @@ segtrio<Iter1, Iter2, DstIter> merge_until_exhausts
    (Iter1 first1, Sent1 last1, Iter2 first2, Sent2 last2, DstIter result, Comp comp,
     const /*non_segmented_iterator_tag*/Tag &, const Cat &src1_cat)
 {
-   return (merge_dst_bounded)
+   //An unbounded destination can only stop on source exhaustion, so the leaf's
+   //flag is a constant here and drops out.
+   const segquartet<Iter1, Iter2, DstIter, bool> r = (merge_dst_bounded)
       (first1, last1, first2, last2, result, unreachable_sentinel_t(),
        comp, non_segmented_iterator_tag(), src1_cat);
+   return segtrio<Iter1, Iter2, DstIter>(r.first, r.second, r.third);
 }
 
 template <class Iter1, class Sent1, class Iter2, class Sent2, class SegDstIter,
@@ -219,8 +225,8 @@ segtrio<Iter1, Iter2, SegDstIter> merge_until_exhausts
    typedef typename dst_traits::local_iterator    dst_local_iterator;
    typedef typename dst_traits::segment_iterator  dst_segment_iterator;
    typedef typename segmented_iterator_traits<dst_local_iterator>::is_segmented_iterator dst_is_local_seg_t;
-   typedef segtrio<Iter1, Iter2, dst_local_iterator>  bounded_t;
-   typedef segtrio<Iter1, Iter2, SegDstIter>          result_t;
+   typedef segquartet<Iter1, Iter2, dst_local_iterator, bool>  bounded_t;
+   typedef segtrio<Iter1, Iter2, SegDstIter>                   result_t;
 
    if(BOOST_UNLIKELY(first1 == last1 || first2 == last2))
       return result_t(first1, first2, result);
@@ -241,8 +247,9 @@ segtrio<Iter1, Iter2, SegDstIter> merge_until_exhausts
       // the output ends exactly on a segment boundary both hold at once, and
       // stepping dst_seg then walks off the end of the destination.  compose()
       // normalises a local iterator sitting on the segment end, the same way
-      // segmented_copy_dst_dispatch relies on.
-      if(BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1 || first2 == last2)) {
+      // segmented_copy_dst_dispatch relies on.  fourth already answers that
+      // question, and gives source exhaustion priority on such a tie.
+      if(BOOST_CONTAINER_SEG_UNLIKELY(r.fourth)) {
          return result_t(first1, first2, dst_traits::compose(dst_seg, dst_local));
       }
       // dst segment full and both sources still live; advance to the next.

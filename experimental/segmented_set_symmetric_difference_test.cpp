@@ -517,13 +517,11 @@ void test_set_symmetric_difference_single_segment_with_comp()
 // empty segments the two source walkers must skip independently of each
 // other -- are enumerated in full.
 //
-// The destination is enumerated at depth 1 only.
-// segmented_set_symmetric_difference has no segmented_iterator_tag overload
-// of set_symmetric_difference_dst_bounded, so a two-level segmented
-// destination does not compile: the until_exhausts layer would have to hand
-// the leaf kernel a local iterator that is itself segmented.  That gap in
-// the header is known and queued for a separate fix; once it lands this can
-// become a plain for_each_shape3_all.
+// The destination is enumerated by for_each_dest_shape_all, so it is walked at
+// both depths and over both spec families.  A two-level destination is what
+// reaches the segmented_iterator_tag overload of
+// set_symmetric_difference_dst_bounded, where the local iterator handed to the
+// level below is itself still segmented.
 //
 // Two destination sizes are run per combination.  The output length is
 // data-dependent, so the guard at index n3 only catches an overrun of the
@@ -532,11 +530,83 @@ void test_set_symmetric_difference_single_segment_with_comp()
 // second size leaves three unwritten slots, which must still hold the fill.
 //////////////////////////////////////////////////////////////////////////////
 
+//! One destination shape: runs the algorithm into it and checks the result,
+//! the written prefix, the untouched tail and the guard.
+struct set_symmetric_difference_dst_check
+{
+   const boost::container::vector<int>* ref;
+   const char* s1;
+   std::size_t n1;
+   const char* s2;
+   std::size_t n2;
+
+   set_symmetric_difference_dst_check(const boost::container::vector<int>& r,
+                                      const char* a1, std::size_t b1,
+                                      const char* a2, std::size_t b2)
+      : ref(&r), s1(a1), n1(b1), s2(a2), n2(b2)
+   {}
+
+   void report(const char* s3, std::size_t n3) const
+   {
+      BOOST_LIGHTWEIGHT_TEST_OSTREAM
+         << "   shapes \"" << s1 << "\"(" << n1 << ") / \"" << s2 << "\"(" << n2
+         << ") -> \"" << s3 << "\"(" << n3 << ")" << std::endl;
+   }
+
+   template<class C1, class C2, class Dst>
+   void run(C1& c1, C2& c2, Dst& out, std::size_t n3, const char* s3) const
+   {
+      typedef typename Dst::iterator dst_iter_t;
+
+      const dst_iter_t r = segmented_set_symmetric_difference
+         ( c1.begin(), test_detail::iter_at(c1, n1)
+         , c2.begin(), test_detail::iter_at(c2, n2)
+         , out.begin());
+
+      if(!BOOST_TEST(r == test_detail::iter_at(out, ref->size())))
+         this->report(s3, n3);
+
+      // flatten_n_ints, not flatten_all_ints: the guard past index n3
+      // is not part of the answer, and is checked on its own below.
+      const boost::container::vector<int> got = test_detail::flatten_n_ints(out, n3);
+      for(std::size_t k = 0; k != n3; ++k) {
+         const int want = k < ref->size() ? (*ref)[k] : -1;
+         if(!BOOST_TEST_EQ(got[k], want)) {
+            this->report(s3, n3);
+            break;
+         }
+      }
+
+      if(!BOOST_TEST(test_detail::filler_intact(out, n3, -999)))
+         this->report(s3, n3);
+   }
+};
+
+//! Binds the two inputs so the destination combinator can supply the third.
+template<class C1, class C2>
+struct set_symmetric_difference_dst_bind
+{
+   C1* c1;
+   C2* c2;
+   set_symmetric_difference_dst_check chk;
+
+   set_symmetric_difference_dst_bind(C1& a, C2& b,
+                                     const set_symmetric_difference_dst_check& c)
+      : c1(&a), c2(&b), chk(c)
+   {}
+
+   template<class Dst>
+   void operator()(Dst& out, std::size_t n3, const char* s3) const
+   {  chk.run(*c1, *c2, out, n3, s3);  }
+};
+
 struct set_symmetric_difference_shape_check
 {
    std::size_t extra;   // destination slots beyond the expected output length
 
-   explicit set_symmetric_difference_shape_check(std::size_t e) : extra(e) {}
+   explicit set_symmetric_difference_shape_check(std::size_t e)
+      : extra(e)
+   {}
 
    void report(const char* s1, std::size_t n1, const char* s2, std::size_t n2,
                const char* s3, std::size_t n3) const
@@ -550,9 +620,6 @@ struct set_symmetric_difference_shape_check
    void operator()(C1& c1, std::size_t n1, const char* s1,
                    C2& c2, std::size_t n2, const char* s2) const
    {
-      typedef test_detail::seg_vector<int>           dst_t;
-      typedef test_detail::seg_vector<int>::iterator dst_iter_t;
-
       const boost::container::vector<int> f1 = test_detail::flatten_n_ints(c1, n1);
       const boost::container::vector<int> f2 = test_detail::flatten_n_ints(c2, n2);
 
@@ -572,38 +639,9 @@ struct set_symmetric_difference_shape_check
 
       const std::size_t n3 = ref.size() + extra;
 
-      for(std::size_t fam = 0; fam != test_detail::shape_all_families(); ++fam) {
-         std::size_t cnt = 0;
-         const char* const* dspecs = test_detail::shape_specs_family(fam, 1u, cnt);
-         for(std::size_t d = 0; d != cnt; ++d) {
-            if(!test_detail::shape_feasible(dspecs[d], n3)) continue;
-
-            dst_t out;
-            test_detail::make_dest_range(out, dspecs[d], n3, -1, -999);
-
-            const dst_iter_t r = segmented_set_symmetric_difference
-               ( c1.begin(), test_detail::iter_at(c1, n1)
-               , c2.begin(), test_detail::iter_at(c2, n2)
-               , out.begin());
-
-            if(!BOOST_TEST(r == test_detail::iter_at(out, ref.size())))
-               this->report(s1, n1, s2, n2, dspecs[d], n3);
-
-            // flatten_n_ints, not flatten_all_ints: the guard past index n3
-            // is not part of the answer, and is checked on its own below.
-            const boost::container::vector<int> got = test_detail::flatten_n_ints(out, n3);
-            for(std::size_t k = 0; k != n3; ++k) {
-               const int want = k < ref.size() ? ref[k] : -1;
-               if(!BOOST_TEST_EQ(got[k], want)) {
-                  this->report(s1, n1, s2, n2, dspecs[d], n3);
-                  break;
-               }
-            }
-
-            if(!BOOST_TEST(test_detail::filler_intact(out, n3, -999)))
-               this->report(s1, n1, s2, n2, dspecs[d], n3);
-         }
-      }
+      const set_symmetric_difference_dst_bind<C1, C2> dst
+         (c1, c2, set_symmetric_difference_dst_check(ref, s1, n1, s2, n2));
+      test_detail::for_each_dest_shape_all<int>(n3, -1, -999, dst);
 
       // Neither input is an output.
       if(!BOOST_TEST(test_detail::filler_intact(c1, n1, -999)))

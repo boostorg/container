@@ -124,26 +124,32 @@ partition_copy_leaf
    (SrcIter first, Sent last, TIter t_first, TSent t_last, FIter f_first, FSent f_last,
     Pred pred, const SrcCat &)
 {
-   bool true_output_full = false;
+   // fourth says whether [f_first, f_last) filled, the only stop a caller
+   // walking out_false segments can resume from.  Every exit sets it to a
+   // constant, so a caller that would otherwise also re-test source exhaustion
+   // just tests the flag.  The source test (the loop condition) precedes the
+   // output tests, so a source and an output running out on the same element
+   // counts as source exhaustion, which is what those callers require.
+   bool false_output_full = false;
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first) {
       if(pred(*first)) {
-         if(BOOST_CONTAINER_SEG_UNLIKELY(t_first == t_last)) {
-            true_output_full = true;
+         if(BOOST_CONTAINER_SEG_UNLIKELY(t_first == t_last))
             break;
-         }
          *t_first = *first;
          ++t_first;
       }
       else {
-         if(BOOST_CONTAINER_SEG_UNLIKELY(f_first == f_last))
+         if(BOOST_CONTAINER_SEG_UNLIKELY(f_first == f_last)) {
+            false_output_full = true;
             break;
+         }
          *f_first = *first;
          ++f_first;
       }
    }
    return segquartet<SrcIter, TIter, FIter, bool>
-      (first, t_first, f_first, true_output_full);
+      (first, t_first, f_first, false_output_full);
 }
 
 // Random-access-source fast path (needs random-access outputs too).  Process
@@ -203,8 +209,9 @@ partition_copy_false_bounded
 // out_false local segmented (nested): walk the bounded [f_first, f_last) span,
 // recursing on the local structure.  Follows the classic same-segment /
 // initial-middle-final segmented walk, threading the source and the out_true
-// partner.  The recursive result records whether out_true blocked; otherwise a
-// non-drained return means this out_false sub-segment filled.
+// partner.  The recursive result says whether the sub-segment filled, the only
+// stop that can be resumed by moving on to the next one; anything else (source
+// drained, out_true blocked) has to be handed back to the outer stage.
 template <class SrcIter, class Sent, class TIter, class TSent, class SegFIter,
           class Pred, class Cat>
 segquartet<SrcIter, TIter, SegFIter, bool>
@@ -228,9 +235,9 @@ partition_copy_false_bounded
             (first, last, t_first, t_last, fb, ftr::end(fsfirst), pred, floc_seg_t(), cat);
          first   = r.first;
          t_first = r.second;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(first == last || r.fourth))
+         if(BOOST_CONTAINER_SEG_UNLIKELY(!r.fourth))
             return segquartet<SrcIter, TIter, SegFIter, bool>
-               (first, t_first, ftr::compose(fsfirst, r.third), r.fourth);
+               (first, t_first, ftr::compose(fsfirst, r.third), false);
       }
 
       for(++fsfirst; fsfirst != fslast; ++fsfirst) {
@@ -238,9 +245,9 @@ partition_copy_false_bounded
             (first, last, t_first, t_last, ftr::begin(fsfirst), ftr::end(fsfirst), pred, floc_seg_t(), cat);
          first   = r.first;
          t_first = r.second;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(first == last || r.fourth))
+         if(BOOST_CONTAINER_SEG_UNLIKELY(!r.fourth))
             return segquartet<SrcIter, TIter, SegFIter, bool>
-               (first, t_first, ftr::compose(fsfirst, r.third), r.fourth);
+               (first, t_first, ftr::compose(fsfirst, r.third), false);
       }
 
       fb = ftr::begin(fslast);
@@ -268,8 +275,9 @@ partition_copy_false_dispatch
 
 // out_false segmented (driver): refill over out_false segments without an
 // overall end, bounding each segment with its real end() and delegating to the
-// worker.  Stops when the source drains or the out_true partner fills;
-// otherwise the current out_false segment filled, so advance to the next one.
+// worker.  The current out_false segment filling is the only stop that can be
+// resumed here, so the flag alone decides whether to advance to the next
+// segment or hand control back to the out_true stage.
 template <class SrcIter, class Sent, class TIter, class TSent, class SegFIter,
           class Pred, class Cat>
 segtrio<SrcIter, TIter, SegFIter>
@@ -289,7 +297,7 @@ partition_copy_false_dispatch
          (first, last, t_first, t_last, f_lo, ftr::end(fs), pred, floc_seg_t(), cat);
       first   = r.first;
       t_first = r.second;
-      if(BOOST_CONTAINER_SEG_UNLIKELY(first == last || r.fourth))
+      if(BOOST_CONTAINER_SEG_UNLIKELY(!r.fourth))
          return segtrio<SrcIter, TIter, SegFIter>(first, t_first, ftr::compose(fs, r.third));
       ++fs;
       f_lo = ftr::begin(fs);
