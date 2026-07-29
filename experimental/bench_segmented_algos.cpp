@@ -84,7 +84,7 @@
 #include "../bench/bench_utils.hpp"
 
 #ifndef BOOST_CONTAINER_BENCH_SEGMENTED_GROUP
-//#define BOOST_CONTAINER_BENCH_SEGMENTED_GROUP 15
+#define BOOST_CONTAINER_BENCH_SEGMENTED_GROUP 20
 #endif   //BOOST_CONTAINER_BENCH_SEGMENTED_GROUP
 
 namespace bc = boost::container;
@@ -654,6 +654,7 @@ inline void print_group_header(int group, const char* desc, const char* vtname)
 {
    g_group_geomean.reset();
    std::cout << "\n===== Group " << group << ": " << desc << " [" << vtname << "] =====\n";
+   print_subheader();
 }
 
 inline void print_group_geomean()
@@ -2112,7 +2113,6 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    vec_t cv(c.begin(), c.end());
 
    g_geomean.reset();
-   print_subheader();
 
    //////////////////////////////////////////////////////////////////
    // Group 10: single range, sequential access
@@ -2526,7 +2526,7 @@ void run_benchmarks()
    //#define BENCH_ON
    #if defined(NDEBUG) && defined(BENCH_ON)
    const std::size_t N    = 100000;
-   const std::size_t iter = 5000;   
+   const std::size_t iter = 5000;
    #else
    const std::size_t N    = 10000;
    const std::size_t iter = 1;
@@ -2554,6 +2554,7 @@ int main()
 {
    //run_benchmarks<int>();
    run_benchmarks<MyInt>();
-   run_benchmarks<MyFatInt>();
+   run_benchmarks<MyFatInt<4> >();
+   run_benchmarks<MyFatInt<8> >();
    return 0;
 }
