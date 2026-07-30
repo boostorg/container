@@ -84,7 +84,7 @@
 #include "../bench/bench_utils.hpp"
 
 #ifndef BOOST_CONTAINER_BENCH_SEGMENTED_GROUP
-#define BOOST_CONTAINER_BENCH_SEGMENTED_GROUP 20
+//#define BOOST_CONTAINER_BENCH_SEGMENTED_GROUP 20
 #endif   //BOOST_CONTAINER_BENCH_SEGMENTED_GROUP
 
 namespace bc = boost::container;
@@ -641,13 +641,13 @@ struct geomean_accumulator
 } g_geomean = { 0.0, 0.0, 0.0, 0, 0, 0 },
   g_group_geomean = { 0.0, 0.0, 0.0, 0, 0, 0 };
 
-inline void print_geomean_line(const char* label, const geomean_accumulator& acc)
+inline void print_geomean_line(const char* label, const geomean_accumulator& acc, const char* vtname)
 {
    std::cout << std::left  << std::setw(28) << label
              << std::right << std::setw(12) << std::fixed << std::setprecision(2) << acc.nsg_over_seg_result()
              << std::right << std::setw(12) << std::fixed << std::setprecision(2) << acc.std_over_seg_result()
              << std::right << std::setw(12) << std::fixed << std::setprecision(2) << acc.std_over_nsg_result()
-             << '\n';
+             << "       [" << vtname << "]\n";
 }
 
 inline void print_group_header(int group, const char* desc, const char* vtname)
@@ -657,11 +657,11 @@ inline void print_group_header(int group, const char* desc, const char* vtname)
    print_subheader();
 }
 
-inline void print_group_geomean()
+inline void print_group_geomean(const char* vtname)
 {
    if (!g_group_geomean.empty()) {
       std::cout << "-------------------------------------------------------------------------------------------------\n";
-      print_geomean_line("group geomean", g_group_geomean);
+      print_geomean_line("group geomean", g_group_geomean, vtname);
    }
 }
 
@@ -2195,7 +2195,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //bench_stable_partition(c, iters, cname, is_odd<VT>(),      "stable_partition(hit)");
    //bench_stable_partition(c, iters, cname, is_negative<VT>(), "stable_partition(miss)");
 
-   print_group_geomean();
+   print_group_geomean(vtname);
 #endif
 
    //////////////////////////////////////////////////////////////////
@@ -2270,7 +2270,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_search_n(c_sn, iters, cname, 8, min1, "search_n(8mid)");
    }
    
-   print_group_geomean();
+   print_group_geomean(vtname);
 #endif
 
    //////////////////////////////////////////////////////////////////
@@ -2298,7 +2298,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //reverse
    bench_reverse(c, iters, cname);
 
-   print_group_geomean();
+   print_group_geomean(vtname);
 #endif
 
    //////////////////////////////////////////////////////////////////
@@ -2363,7 +2363,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_search(c, iters, cname, miss_pat, 3, "search(miss)");
    }
 
-   print_group_geomean();
+   print_group_geomean(vtname);
 #endif
 
    //////////////////////////////////////////////////////////////////
@@ -2416,7 +2416,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_transform<vec_t, C    >(cv, iters, cname, "transform(2S)");
    bench_transform<C,     C    >(c,  iters, cname, "transform(1+2S)");
 
-   print_group_geomean();
+   print_group_geomean(vtname);
 #endif
 
    //////////////////////////////////////////////////////////////////
@@ -2430,7 +2430,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_reverse_copy<vec_t, C    >(cv, iters, cname, "reverse_copy(2S)");
    bench_reverse_copy<C,     C    >(c,  iters, cname, "reverse_copy(1+2S)");
 
-   print_group_geomean();
+   print_group_geomean(vtname);
 #endif
 
    //////////////////////////////////////////////////////////////////
@@ -2508,12 +2508,12 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_partition_copy<vec_t, C,     C    >(cv, iters, cname, "partition_copy(2+3S)");
    bench_partition_copy<C,     C,     C    >(c,  iters, cname, "partition_copy(1+2+3S)");
 
-   print_group_geomean();
+   print_group_geomean(vtname);
 #endif
 
    std::cout << '\n';
    print_subheader();
-   print_geomean_line("algo geomean", g_geomean);
+   print_geomean_line("algo geomean", g_geomean, vtname);
 }
 
 //////////////////////////////////////////////////////////////////////////////
