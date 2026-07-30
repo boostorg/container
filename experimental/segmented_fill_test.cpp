@@ -49,7 +49,7 @@ void test_fill_partial_range()
    // Fill only the middle segment by constructing sub-range iterators
    typedef test_detail::seg_vector<int>::iterator iter_t;
    typedef segmented_iterator_traits<iter_t> traits;
-   typename traits::segment_iterator seg_begin = traits::segment(sv.begin());
+   traits::segment_iterator seg_begin = traits::segment(sv.begin());
    ++seg_begin; // second segment
    iter_t mid_begin = traits::compose(seg_begin, traits::begin(seg_begin));
    iter_t mid_end   = traits::compose(seg_begin, traits::end(seg_begin));
