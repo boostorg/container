@@ -93,30 +93,31 @@ segduo<SegIter, DeepIt> sorted_until_rec
 
    local_iterator lb = traits::local(first);
 
-   if (BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
-      local_iterator le = traits::end(sfirst);
+   for (;;) {
+      //Partial segments (first and last) share this call site
+      const bool last_seg = sfirst == slast;
+      const local_iterator le = last_seg ? traits::local(last) : traits::end(sfirst);
       {
          const local_result_t r = (sorted_until_rec)
             (lb, le, comp, prev, is_local_seg_t(), local_cat_t());
-         if (r.first != le)
+         if (last_seg || r.first != le)
             return segduo<SegIter, DeepIt>(traits::compose(sfirst, r.first), r.second);
          prev = r.second;
       }
 
+      //Middle segments keep their own call site: begin/end both come from
+      //sfirst, so the leaf can be specialised for full segments
       for (++sfirst; sfirst != slast; ++sfirst) {
-         le = traits::end(sfirst);
+         const local_iterator me = traits::end(sfirst);
          const local_result_t r = (sorted_until_rec)
-            (traits::begin(sfirst), le, comp, prev, is_local_seg_t(), local_cat_t());
-         if (r.first != le)
+            (traits::begin(sfirst), me, comp, prev, is_local_seg_t(), local_cat_t());
+         if (r.first != me)
             return segduo<SegIter, DeepIt>(traits::compose(sfirst, r.first), r.second);
          prev = r.second;
       }
 
-      lb = traits::begin(slast);
+      lb = traits::begin(sfirst);
    }
-   const local_result_t r = (sorted_until_rec)
-      (lb, traits::local(last), comp, prev, is_local_seg_t(), local_cat_t());
-   return segduo<SegIter, DeepIt>(traits::compose(sfirst, r.first), r.second);
 }
 
 } // namespace detail_algo

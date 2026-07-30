@@ -57,15 +57,18 @@ void segmented_fill_range
 
    local_iterator lb = traits::local(first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
-      (segmented_fill_range)(lb, traits::end(sfirst), value, is_local_seg_t(), local_cat_t());
+   for(;;) {
+      const bool last_seg = sfirst == slast;
+      const local_iterator le = last_seg ? traits::local(last) : traits::end(sfirst);
+      (segmented_fill_range)(lb, le, value, is_local_seg_t(), local_cat_t());
+      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+         break;
 
       for(++sfirst; sfirst != slast; ++sfirst)
          (segmented_fill_range)(traits::begin(sfirst), traits::end(sfirst), value, is_local_seg_t(), local_cat_t());
 
-      lb = traits::begin(slast);
+      lb = traits::begin(sfirst);
    }
-   (segmented_fill_range)(lb, traits::local(last), value, is_local_seg_t(), local_cat_t());
 }
 
 template <class FwdIt, class Sent, class T, class Cat>

@@ -229,17 +229,22 @@ partition_copy_false_bounded
 
    floc_t fb = ftr::local(f_first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(fsfirst != fslast)) {
+   for(;;) {
+      //Partial segments (first and last) share this call site
+      const bool last_seg = fsfirst == fslast;
+      const floc_t fe = last_seg ? ftr::local(f_last) : ftr::end(fsfirst);
       {
          const segquartet<SrcIter, TIter, floc_t, bool> r = (partition_copy_false_bounded)
-            (first, last, t_first, t_last, fb, ftr::end(fsfirst), pred, floc_seg_t(), cat);
+            (first, last, t_first, t_last, fb, fe, pred, floc_seg_t(), cat);
          first   = r.first;
          t_first = r.second;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(!r.fourth))
+         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(!r.fourth))
             return segquartet<SrcIter, TIter, SegFIter, bool>
-               (first, t_first, ftr::compose(fsfirst, r.third), false);
+               (first, t_first, ftr::compose(fsfirst, r.third), r.fourth);
       }
 
+      //Middle segments keep their own call site: begin/end both come from
+      //fsfirst, so the leaf can be specialised for full segments
       for(++fsfirst; fsfirst != fslast; ++fsfirst) {
          const segquartet<SrcIter, TIter, floc_t, bool> r = (partition_copy_false_bounded)
             (first, last, t_first, t_last, ftr::begin(fsfirst), ftr::end(fsfirst), pred, floc_seg_t(), cat);
@@ -250,12 +255,8 @@ partition_copy_false_bounded
                (first, t_first, ftr::compose(fsfirst, r.third), false);
       }
 
-      fb = ftr::begin(fslast);
+      fb = ftr::begin(fsfirst);
    }
-   const segquartet<SrcIter, TIter, floc_t, bool> r = (partition_copy_false_bounded)
-      (first, last, t_first, t_last, fb, ftr::local(f_last), pred, floc_seg_t(), cat);
-   return segquartet<SrcIter, TIter, SegFIter, bool>
-      (r.first, r.second, ftr::compose(fsfirst, r.third), r.fourth);
 }
 
 // out_false flat (driver): out_false has no end, hand it to the leaf as an
@@ -345,16 +346,21 @@ partition_copy_true_bounded
 
    tloc_t tb = ttr::local(t_first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(tsfirst != tslast)) {
+   for(;;) {
+      //Partial segments (first and last) share this call site
+      const bool last_seg = tsfirst == tslast;
+      const tloc_t te = last_seg ? ttr::local(t_last) : ttr::end(tsfirst);
       {
          const segtrio<SrcIter, tloc_t, FIter> r = (partition_copy_true_bounded)
-            (first, last, tb, ttr::end(tsfirst), f_first, pred, tloc_seg_t(), f_tag, cat);
+            (first, last, tb, te, f_first, pred, tloc_seg_t(), f_tag, cat);
          first   = r.first;
          f_first = r.third;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(first == last))
             return segtrio<SrcIter, SegTIter, FIter>(first, ttr::compose(tsfirst, r.second), f_first);
       }
 
+      //Middle segments keep their own call site: begin/end both come from
+      //tsfirst, so the leaf can be specialised for full segments
       for(++tsfirst; tsfirst != tslast; ++tsfirst) {
          const segtrio<SrcIter, tloc_t, FIter> r = (partition_copy_true_bounded)
             (first, last, ttr::begin(tsfirst), ttr::end(tsfirst), f_first, pred, tloc_seg_t(), f_tag, cat);
@@ -364,11 +370,8 @@ partition_copy_true_bounded
             return segtrio<SrcIter, SegTIter, FIter>(first, ttr::compose(tsfirst, r.second), f_first);
       }
 
-      tb = ttr::begin(tslast);
+      tb = ttr::begin(tsfirst);
    }
-   const segtrio<SrcIter, tloc_t, FIter> r = (partition_copy_true_bounded)
-      (first, last, tb, ttr::local(t_last), f_first, pred, tloc_seg_t(), f_tag, cat);
-   return segtrio<SrcIter, SegTIter, FIter>(r.first, ttr::compose(tsfirst, r.second), r.third);
 }
 
 // out_true flat (driver): out_true has no end, peel out_false directly marking
@@ -453,23 +456,29 @@ segmented_partition_copy_dispatch
 
    local_iterator lb = traits::local(first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
+   for(;;) {
+      //Partial segments (first and last) share this call site
+      const bool last_seg = sfirst == slast;
+      const local_iterator le = last_seg ? traits::local(last) : traits::end(sfirst);
       // NOT converted to the scoped-const form: both members are full output
       // iterators, so carrying them through out_true/out_false costs two
       // copies per iteration.  There is no early return here to pay for them,
       // and it measured +3.6% on these walkers under GCC and +0.1% under
       // Clang, so direct threading stays.
-      pair_t p = (segmented_partition_copy_dispatch)(lb, traits::end(sfirst), out_true, out_false, pred, is_local_seg_t(), local_cat_t());
+      pair_t p = (segmented_partition_copy_dispatch)(lb, le, out_true, out_false, pred, is_local_seg_t(), local_cat_t());
+      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+         return p;
 
+      //Middle segments keep their own call site: begin/end both come from
+      //sfirst, so the leaf can be specialised for full segments
       for(++sfirst; sfirst != slast; ++sfirst) {
          p = (segmented_partition_copy_dispatch)(traits::begin(sfirst), traits::end(sfirst), p.first, p.second, pred, is_local_seg_t(), local_cat_t());
       }
 
-      lb        = traits::begin(slast);
+      lb        = traits::begin(sfirst);
       out_true  = p.first;
       out_false = p.second;
    }
-   return (segmented_partition_copy_dispatch)(lb, traits::local(last), out_true, out_false, pred, is_local_seg_t(), local_cat_t());
 }
 
 } // namespace detail_algo

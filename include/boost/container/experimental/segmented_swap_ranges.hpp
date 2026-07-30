@@ -79,12 +79,14 @@ segduo<SrcIter, SegDstIter> segmented_swap_ranges_dst_bounded
 
    dst_local_iterator db = dst_traits::local(dst_first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
+   for(;;) {
+      const bool last_seg = sfirst == slast;
+      const dst_local_iterator de = last_seg ? dst_traits::local(dst_last) : dst_traits::end(sfirst);
       {
          const segduo<SrcIter, dst_local_iterator> r = (segmented_swap_ranges_dst_bounded)
-            (first, last, db, dst_traits::end(sfirst), dst_is_local_seg_t(), SrcCat());
+            (first, last, db, de, dst_is_local_seg_t(), SrcCat());
          first = r.first;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(first == last))
             return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sfirst, r.second));
       }
 
@@ -96,11 +98,8 @@ segduo<SrcIter, SegDstIter> segmented_swap_ranges_dst_bounded
             return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sfirst, r.second));
       }
 
-      db = dst_traits::begin(slast);
+      db = dst_traits::begin(sfirst);
    }
-   const segduo<SrcIter, dst_local_iterator> r = (segmented_swap_ranges_dst_bounded)
-      (first, last, db, dst_traits::local(dst_last), dst_is_local_seg_t(), SrcCat());
-   return segduo<SrcIter, SegDstIter>(r.first, dst_traits::compose(sfirst, r.second));
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -178,18 +177,20 @@ FwdIt2 segmented_swap_ranges_dispatch (SegIter first1, SegIter last1, FwdIt2 fir
 
    src_local_iterator lb = src_traits::local(first1);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
+   for(;;) {
+      const bool last_seg = sfirst == slast;
+      const src_local_iterator le = last_seg ? src_traits::local(last1) : src_traits::end(sfirst);
       first2 = (segmented_swap_ranges_dispatch)
-         (lb, src_traits::end(sfirst), first2, src_is_local_seg_t(), src_local_cat_t());
+         (lb, le, first2, src_is_local_seg_t(), src_local_cat_t());
+      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+         return first2;
 
       for(++sfirst; sfirst != slast; ++sfirst)
          first2 = (segmented_swap_ranges_dispatch)
             (src_traits::begin(sfirst), src_traits::end(sfirst), first2, src_is_local_seg_t(), src_local_cat_t());
 
-      lb = src_traits::begin(slast);
+      lb = src_traits::begin(sfirst);
    }
-   return (segmented_swap_ranges_dispatch)
-      (lb, src_traits::local(last1), first2, src_is_local_seg_t(), src_local_cat_t());
 }
 
 } // namespace detail_algo

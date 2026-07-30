@@ -60,32 +60,28 @@ SegIter segmented_partition_point_dispatch
 
    local_iterator lb = traits::local(first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(scur != slast)) {
-      {  //first segment
-         const local_iterator le = traits::end(scur);
-         const local_iterator r = (segmented_partition_point_dispatch)
-            (lb, le, pred, is_local_seg_t(), local_cat_t());
-         if (r != le)
-            return traits::compose(scur, r);
-      }
-      //middle segments
-      for(++scur; scur != slast; ++scur) {
-         const local_iterator le = traits::end(scur);
-         const local_iterator r = (segmented_partition_point_dispatch)
-            (traits::begin(scur), le, pred, is_local_seg_t(), local_cat_t());
-         if (r != le)
-            return traits::compose(scur, r);
-      }
-      lb = traits::begin(slast);
-   }
-   {
-      const local_iterator ll = traits::local(last);
-      const local_iterator r  = (segmented_partition_point_dispatch)
-         (lb, ll, pred, is_local_seg_t(), local_cat_t());
-      if (r != ll)
+   for(;;) {
+      //Partial segments (first and last) share this call site
+      const bool last_seg = scur == slast;
+      const local_iterator le = last_seg ? traits::local(last) : traits::end(scur);
+      const local_iterator r = (segmented_partition_point_dispatch)
+         (lb, le, pred, is_local_seg_t(), local_cat_t());
+      if (r != le)
          return traits::compose(scur, r);
+      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+         return last;
+
+      //middle segments keep their own call site: begin/end both come from
+      //scur, so the leaf can be specialised for full segments
+      for(++scur; scur != slast; ++scur) {
+         const local_iterator me = traits::end(scur);
+         const local_iterator mr = (segmented_partition_point_dispatch)
+            (traits::begin(scur), me, pred, is_local_seg_t(), local_cat_t());
+         if (mr != me)
+            return traits::compose(scur, mr);
+      }
+      lb = traits::begin(scur);
    }
-   return last;
 }
 
 } // namespace detail_algo

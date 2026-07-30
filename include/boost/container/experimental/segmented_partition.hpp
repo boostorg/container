@@ -65,15 +65,18 @@ OutIter partition_scan(SegIt first, SegIt last, OutIter result, Pred pred, segme
    segment_iterator slast = traits::segment(last);
    local_iterator   lcur  = traits::local(first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(scur != slast)) {
-      result = partition_scan(lcur, traits::end(scur), result, pred, is_local_seg_t(), local_cat_t());
+   for(;;) {
+      const bool last_seg = scur == slast;
+      const local_iterator le = last_seg ? traits::local(last) : traits::end(scur);
+      result = partition_scan(lcur, le, result, pred, is_local_seg_t(), local_cat_t());
+      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+         return result;
 
       for(++scur; scur != slast; ++scur)
          result = partition_scan(traits::begin(scur), traits::end(scur), result, pred, is_local_seg_t(), local_cat_t());
 
-      lcur = traits::begin(slast);
+      lcur = traits::begin(scur);
    }
-   return partition_scan(lcur, traits::local(last), result, pred, is_local_seg_t(), local_cat_t());
 }
 
 template <class FwdIt, class Sent, class Pred, class Tag>

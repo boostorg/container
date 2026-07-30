@@ -291,8 +291,10 @@ segtrio<bool, Size, SegIter> search_n_scan_segment
 
    local_iterator lb = traits::local(first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(scur != slast)) {
-      local_iterator lend = traits::end(scur);
+   for(;;) {
+      //Partial segments (first and last) share this call site
+      const bool last_seg = scur == slast;
+      const local_iterator lend = last_seg ? traits::local(last) : traits::end(scur);
       {
          const sub_result_t r = search_n_scan_segment(lb, lend,
                                   consecutive, count, value, is_local_seg_t(), local_cat_t());
@@ -301,28 +303,24 @@ segtrio<bool, Size, SegIter> search_n_scan_segment
             match_start = traits::compose(scur, r.third);
          if(r.first)
             return result_t(true, consecutive, match_start);
+         if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+            return result_t(false, consecutive, match_start);
       }
 
+      //Middle segments keep their own call site: begin/end both come from
+      //scur, so the leaf can be specialised for full segments
       for(++scur; scur != slast; ++scur) {
-         lend = traits::end(scur);
-         const sub_result_t r = search_n_scan_segment(traits::begin(scur), lend,
+         const local_iterator mend = traits::end(scur);
+         const sub_result_t r = search_n_scan_segment(traits::begin(scur), mend,
                                   consecutive, count, value, is_local_seg_t(), local_cat_t());
          consecutive = r.second;
-         if(r.third != lend)
+         if(r.third != mend)
             match_start = traits::compose(scur, r.third);
          if(r.first)
             return result_t(true, consecutive, match_start);
       }
 
-      lb = traits::begin(slast);
-   }
-   {
-      const local_iterator lend = traits::local(last);
-      const sub_result_t r = search_n_scan_segment(lb, lend,
-                               consecutive, count, value, is_local_seg_t(), local_cat_t());
-      if(r.third != lend)
-         match_start = traits::compose(scur, r.third);
-      return result_t(r.first, r.second, match_start);
+      lb = traits::begin(scur);
    }
 }
 

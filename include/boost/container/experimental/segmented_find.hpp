@@ -59,30 +59,26 @@ SegIter segmented_find_dispatch
 
    local_iterator lb = traits::local(first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
-      //First segment
-      {
-         const local_iterator fe = traits::end(sfirst);
-         const local_iterator r = (segmented_find_dispatch)(lb, fe, value, is_local_seg_t(), local_cat_t());
-         if (r != fe)
-            return traits::compose(sfirst, r);
-      }
-      //Middle segments
+   for(;;) {
+      //Partial segments (first and last) share this call site
+      const bool last_seg = sfirst == slast;
+      const local_iterator le = last_seg ? traits::local(last) : traits::end(sfirst);
+      const local_iterator r = (segmented_find_dispatch)(lb, le, value, is_local_seg_t(), local_cat_t());
+      if (r != le)
+         return traits::compose(sfirst, r);
+      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+         return last;
+
+      //Middle segments keep their own call site: begin/end both come from
+      //sfirst, so the leaf can be specialised for full segments
       for (++sfirst; sfirst != slast; ++sfirst) {
          const local_iterator me = traits::end(sfirst);
          const local_iterator mr = (segmented_find_dispatch)(traits::begin(sfirst), me, value, is_local_seg_t(), local_cat_t());
          if (mr != me)
             return traits::compose(sfirst, mr);
       }
-      lb = traits::begin(slast);
+      lb = traits::begin(sfirst);
    }
-   {
-      const local_iterator le = traits::local(last);
-      const local_iterator r  = (segmented_find_dispatch)(lb, le, value, is_local_seg_t(), local_cat_t());
-      if (r != le)
-         return traits::compose(sfirst, r);
-   }
-   return last;
 }
 
 } // namespace detail_algo

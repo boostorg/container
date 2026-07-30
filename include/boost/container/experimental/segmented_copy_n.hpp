@@ -104,12 +104,16 @@ segduo<SrcIter, SegDstIter> segmented_copy_n_dst_bounded
 
    dst_local_iterator db = dst_traits::local(dst_first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(sdfirst != sdlast)) {
+   for(;;) {
+      const bool last_seg = sdfirst == sdlast;
+      //count is carried by reference, so the shared partial call sees the
+      //remaining count without any extra threading here.
+      const dst_local_iterator de = last_seg ? dst_traits::local(dst_last) : dst_traits::end(sdfirst);
       {
          const segduo<SrcIter, dst_local_iterator> r = (segmented_copy_n_dst_bounded)
-            (first, last, count, db, dst_traits::end(sdfirst), dst_is_local_seg_t());
+            (first, last, count, db, de, dst_is_local_seg_t());
          first = r.first;
-         if (BOOST_CONTAINER_SEG_UNLIKELY(count == 0 || first == last))
+         if (last_seg || BOOST_CONTAINER_SEG_UNLIKELY(count == 0 || first == last))
             return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sdfirst, r.second));
       }
 
@@ -121,13 +125,8 @@ segduo<SrcIter, SegDstIter> segmented_copy_n_dst_bounded
             return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sdfirst, r.second));
       }
 
-      db = dst_traits::begin(sdlast);
+      db = dst_traits::begin(sdfirst);
    }
-   //count is carried by reference, so the shared final call sees the
-   //remaining count without any extra threading here.
-   const segduo<SrcIter, dst_local_iterator> r = (segmented_copy_n_dst_bounded)
-      (first, last, count, db, dst_traits::local(dst_last), dst_is_local_seg_t());
-   return segduo<SrcIter, SegDstIter>(r.first, dst_traits::compose(sdfirst, r.second));
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -216,21 +215,25 @@ OutIter copy_n_scan(SegIt first, SegIt last, Size& BOOST_RESTRICT count, OutIter
    segment_iterator slast = traits::segment(last);
    local_iterator   lcur  = traits::local(first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(scur != slast)) {
-      result = copy_n_scan(lcur, traits::end(scur), count, result, is_local_seg_t(), local_cat_t());
+   for(;;) {
+      //Partial segments (first and last) share this call site
+      const bool last_seg = scur == slast;
+      const local_iterator le = last_seg ? traits::local(last) : traits::end(scur);
+      result = copy_n_scan(lcur, le, count, result, is_local_seg_t(), local_cat_t());
 
-      if (BOOST_CONTAINER_SEG_UNLIKELY(!count))
+      if (last_seg || BOOST_CONTAINER_SEG_UNLIKELY(!count))
          return result;
 
+      //Middle segments keep their own call site: begin/end both come from
+      //scur, so the leaf can be specialised for full segments
       for (++scur; scur != slast; ++scur) {
          result = copy_n_scan(traits::begin(scur), traits::end(scur), count, result, is_local_seg_t(), local_cat_t());
          if (BOOST_CONTAINER_SEG_UNLIKELY(!count))
             return result;
       }
 
-      lcur = traits::begin(slast);
+      lcur = traits::begin(scur);
    }
-   return copy_n_scan(lcur, traits::local(last), count, result, is_local_seg_t(), local_cat_t());
 }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -75,14 +75,21 @@ segduo<SegIt, Size> generate_n_scan(SegIt first, SegIt last, Size count, Generat
 
    local_iterator lb = traits::local(first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(scur != slast)) {
+   for(;;) {
+      //Partial segments (first and last) share this call site
+      const bool last_seg = scur == slast;
+      const local_iterator le = last_seg ? traits::local(last) : traits::end(scur);
       {
-         const segduo<local_iterator, Size> r = generate_n_scan(lb, traits::end(scur), count, gen, is_local_seg_t(), local_cat_t());
+         const segduo<local_iterator, Size> r = generate_n_scan(lb, le, count, gen, is_local_seg_t(), local_cat_t());
          count = r.second;
          if (BOOST_CONTAINER_SEG_UNLIKELY(!count))
             return segduo<SegIt, Size>(traits::compose(scur, r.first), count);
+         if (BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+            return segduo<SegIt, Size>(last, count);
       }
 
+      //Middle segments keep their own call site: begin/end both come from
+      //scur, so the leaf can be specialised for full segments
       for (++scur; scur != slast; ++scur) {
          const segduo<local_iterator, Size> r = generate_n_scan(traits::begin(scur), traits::end(scur), count, gen, is_local_seg_t(), local_cat_t());
          count = r.second;
@@ -90,11 +97,8 @@ segduo<SegIt, Size> generate_n_scan(SegIt first, SegIt last, Size count, Generat
             return segduo<SegIt, Size>(traits::compose(scur, r.first), count);
       }
 
-      lb = traits::begin(slast);
+      lb = traits::begin(scur);
    }
-   const local_iterator ll = traits::local(last);
-   const segduo<local_iterator, Size> r = (generate_n_scan)(lb, ll, count, gen, is_local_seg_t(), local_cat_t());
-   return segduo<SegIt, Size>((r.first != ll) ? traits::compose(scur, r.first) : last, r.second);
 }
 
 template <class SegIter, class Size, class Generator>

@@ -124,13 +124,15 @@ segtrio<SrcIter, SegIter2, bool> segmented_equal_iter2_bounded
 
    iter2_local_iterator lb2 = iter2_traits::local(first2);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
+   for(;;) {
+      const bool last_seg = sfirst == slast;
+      const iter2_local_iterator le2 = last_seg ? iter2_traits::local(last2) : iter2_traits::end(sfirst);
       {
          const local_result_t r = (segmented_equal_iter2_bounded)
-            (first1, last1, lb2, iter2_traits::end(sfirst), pred, iter2_is_local_seg_t(), SrcCat());
+            (first1, last1, lb2, le2, pred, iter2_is_local_seg_t(), SrcCat());
          first1 = r.first;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(r.third))
-            return result_t(first1, iter2_traits::compose(sfirst, r.second), true);
+         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(r.third))
+            return result_t(first1, iter2_traits::compose(sfirst, r.second), r.third);
       }
 
       for(++sfirst; sfirst != slast; ++sfirst) {
@@ -142,11 +144,8 @@ segtrio<SrcIter, SegIter2, bool> segmented_equal_iter2_bounded
             return result_t(first1, iter2_traits::compose(sfirst, r.second), true);
       }
 
-      lb2 = iter2_traits::begin(slast);
+      lb2 = iter2_traits::begin(sfirst);
    }
-   const local_result_t r = (segmented_equal_iter2_bounded)
-      (first1, last1, lb2, iter2_traits::local(last2), pred, iter2_is_local_seg_t(), SrcCat());
-   return result_t(r.first, iter2_traits::compose(sfirst, r.second), r.third);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -230,17 +229,22 @@ segduo<bool, InpIter2> segmented_equal_dispatch
 
    local_iterator lb = traits::local(first1);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
+   for(;;) {
+      //Partial segments (first and last) share this call site
+      const bool last_seg = sfirst == slast;
+      const local_iterator le = last_seg ? traits::local(last1) : traits::end(sfirst);
       // NOT converted to the scoped-const form: InpIter2 is a full segmented
       // iterator here, so carrying it through `first2` costs a copy per
       // iteration that threading `r.second` straight into the next call
       // avoids.  Measured +4.1% on this walker under GCC against -0.2% under
       // Clang, so direct threading stays.
       segduo<bool, InpIter2> r = (segmented_equal_dispatch)
-         (lb, traits::end(sfirst), first2, pred, is_local_seg_t(), local_cat_t());
-      if(BOOST_CONTAINER_SEG_UNLIKELY(!r.first))
+         (lb, le, first2, pred, is_local_seg_t(), local_cat_t());
+      if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(!r.first))
          return r;
 
+      //Middle segments keep their own call site: begin/end both come from
+      //sfirst, so the leaf can be specialised for full segments
       for(++sfirst; sfirst != slast; ++sfirst) {
          r = (segmented_equal_dispatch)
             (traits::begin(sfirst), traits::end(sfirst), r.second, pred, is_local_seg_t(), local_cat_t());
@@ -248,11 +252,9 @@ segduo<bool, InpIter2> segmented_equal_dispatch
             return r;
       }
 
-      lb     = traits::begin(slast);
+      lb     = traits::begin(sfirst);
       first2 = r.second;
    }
-   return (segmented_equal_dispatch)
-      (lb, traits::local(last1), first2, pred, is_local_seg_t(), local_cat_t());
 }
 
 } // namespace detail_algo

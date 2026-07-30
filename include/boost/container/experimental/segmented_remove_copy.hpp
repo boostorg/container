@@ -108,12 +108,14 @@ segduo<SrcIter, SegDstIter> segmented_remove_copy_dst_bounded
 
    dst_local_iterator db = dst_traits::local(dst_first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
+   for(;;) {
+      const bool last_seg = sfirst == slast;
+      const dst_local_iterator de = last_seg ? dst_traits::local(dst_last) : dst_traits::end(sfirst);
       {
          const segduo<SrcIter, dst_local_iterator> r = (segmented_remove_copy_dst_bounded<Move>)
-            (first, last, db, dst_traits::end(sfirst), value, dst_is_local_seg_t(), SrcCat());
+            (first, last, db, de, value, dst_is_local_seg_t(), SrcCat());
          first = r.first;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(first == last))
             return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sfirst, r.second));
       }
 
@@ -125,11 +127,8 @@ segduo<SrcIter, SegDstIter> segmented_remove_copy_dst_bounded
             return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sfirst, r.second));
       }
 
-      db = dst_traits::begin(slast);
+      db = dst_traits::begin(sfirst);
    }
-   const segduo<SrcIter, dst_local_iterator> r = (segmented_remove_copy_dst_bounded<Move>)
-      (first, last, db, dst_traits::local(dst_last), value, dst_is_local_seg_t(), SrcCat());
-   return segduo<SrcIter, SegDstIter>(r.first, dst_traits::compose(sfirst, r.second));
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -208,18 +207,20 @@ OutIter segmented_remove_copy_dispatch
 
    src_local_iterator lb = src_traits::local(first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
+   for(;;) {
+      const bool last_seg = sfirst == slast;
+      const src_local_iterator le = last_seg ? src_traits::local(last) : src_traits::end(sfirst);
       result = (segmented_remove_copy_dispatch<Move>)
-         (lb, src_traits::end(sfirst), result, value, src_is_local_seg_t(), src_local_cat_t());
+         (lb, le, result, value, src_is_local_seg_t(), src_local_cat_t());
+      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+         return result;
 
       for(++sfirst; sfirst != slast; ++sfirst)
          result = (segmented_remove_copy_dispatch<Move>)
             (src_traits::begin(sfirst), src_traits::end(sfirst), result, value, src_is_local_seg_t(), src_local_cat_t());
 
-      lb = src_traits::begin(slast);
+      lb = src_traits::begin(sfirst);
    }
-   return (segmented_remove_copy_dispatch<Move>)
-      (lb, src_traits::local(last), result, value, src_is_local_seg_t(), src_local_cat_t());
 }
 
 } // namespace detail_algo

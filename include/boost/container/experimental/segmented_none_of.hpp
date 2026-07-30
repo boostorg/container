@@ -59,18 +59,23 @@ bool segmented_none_of_dispatch
 
    local_iterator lb = traits::local(first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
-      //First segment
-      if(!(segmented_none_of_dispatch)(lb, traits::end(sfirst), pred, is_local_seg_t(), local_cat_t()))
+   for(;;) {
+      //Partial segments (first and last) share this call site
+      const bool last_seg = sfirst == slast;
+      const local_iterator le = last_seg ? traits::local(last) : traits::end(sfirst);
+      if(!(segmented_none_of_dispatch)(lb, le, pred, is_local_seg_t(), local_cat_t()))
          return false;
-      //Middle segments
+      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+         return true;
+
+      //Middle segments keep their own call site: begin/end both come from
+      //sfirst, so the leaf can be specialised for full segments
       for (++sfirst; sfirst != slast; ++sfirst) {
          if(!(segmented_none_of_dispatch)(traits::begin(sfirst), traits::end(sfirst), pred, is_local_seg_t(), local_cat_t()))
             return false;
       }
-      lb = traits::begin(slast);
+      lb = traits::begin(sfirst);
    }
-   return (segmented_none_of_dispatch)(lb, traits::local(last), pred, is_local_seg_t(), local_cat_t());
 }
 
 } // namespace detail_algo

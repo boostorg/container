@@ -69,15 +69,18 @@ typename boost::container::iterator_traits<SegIter>::difference_type
    typename boost::container::iterator_traits<SegIter>::difference_type result = 0;
    local_iterator lb = traits::local(first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
-      result += (segmented_count_dispatch)(lb, traits::end(sfirst), value, is_local_seg_t(), local_cat_t());
+   for(;;) {
+      const bool last_seg = sfirst == slast;
+      const local_iterator le = last_seg ? traits::local(last) : traits::end(sfirst);
+      result += (segmented_count_dispatch)(lb, le, value, is_local_seg_t(), local_cat_t());
+      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+         return result;
 
       for(++sfirst; sfirst != slast; ++sfirst)
          result += (segmented_count_dispatch)(traits::begin(sfirst), traits::end(sfirst), value, is_local_seg_t(), local_cat_t());
 
-      lb = traits::begin(slast);
+      lb = traits::begin(sfirst);
    }
-   return result += (segmented_count_dispatch)(lb, traits::local(last), value, is_local_seg_t(), local_cat_t());
 }
 
 } // namespace detail_algo

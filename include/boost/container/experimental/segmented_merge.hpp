@@ -156,17 +156,22 @@ segquartet<Iter1, Iter2, SegDstIter, bool> merge_dst_bounded
 
    dst_local_iterator db = dst_traits::local(dst_first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
+   for(;;) {
+      //Partial segments (first and last) share this call site
+      const bool last_seg = sfirst == slast;
+      const dst_local_iterator de = last_seg ? dst_traits::local(dst_last) : dst_traits::end(sfirst);
       {
          const local_result_t r = (merge_dst_bounded)
             ( first1, last1, first2, last2, db
-            , dst_traits::end(sfirst), comp, dst_is_local_seg_t(), SrcCat());
+            , de, comp, dst_is_local_seg_t(), SrcCat());
          first1 = r.first;
          first2 = r.second;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(r.fourth))
-            return result_t(first1, first2, dst_traits::compose(sfirst, r.third), true);
+         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(r.fourth))
+            return result_t(first1, first2, dst_traits::compose(sfirst, r.third), r.fourth);
       }
 
+      //Middle segments keep their own call site: begin/end both come from
+      //sfirst, so the leaf can be specialised for full segments
       for(++sfirst; sfirst != slast; ++sfirst) {
          const local_result_t r = (merge_dst_bounded)
             ( first1, last1, first2, last2, dst_traits::begin(sfirst)
@@ -177,12 +182,8 @@ segquartet<Iter1, Iter2, SegDstIter, bool> merge_dst_bounded
             return result_t(first1, first2, dst_traits::compose(sfirst, r.third), true);
       }
 
-      db = dst_traits::begin(slast);
+      db = dst_traits::begin(sfirst);
    }
-   const local_result_t r = (merge_dst_bounded)
-      ( first1, last1, first2, last2, db
-      , dst_traits::local(dst_last), comp, dst_is_local_seg_t(), SrcCat());
-   return result_t(r.first, r.second, dst_traits::compose(sfirst, r.third), r.fourth);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -309,18 +310,22 @@ segtrio<Iter1, SegIter2, OutIter> merge_seg2_dispatch
    const src2_segment_iterator sl2 = src2_traits::segment(last2);
    src2_local_iterator         lf2 = src2_traits::local(first2);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(sf2 != sl2)) {
-      // First (partial) segment of first2.
+   for(;;) {
+      // Partial segments (first and last) of first2 share this call site.
+      const bool last_seg = sf2 == sl2;
+      const src2_local_iterator le2 = last_seg ? src2_traits::local(last2) : src2_traits::end(sf2);
       {
          const local_result_t r = (merge_seg2_dispatch)
-            (first1, last1, lf2, src2_traits::end(sf2), result, comp,
+            (first1, last1, lf2, le2, result, comp,
              src2_is_local_seg_t(), cat);
          first1 = r.first;
          result = r.third;
-         if (BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1))
+         if (last_seg || BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1))
             return result_t(first1, src2_traits::compose(sf2, r.second), result);
       }
 
+      // Middle segments keep their own call site: begin/end both come from
+      // sf2, so the leaf can be specialised for full segments.
       for(++sf2; sf2 != sl2; ++sf2) {
          const local_result_t r = (merge_seg2_dispatch)
             (first1, last1, src2_traits::begin(sf2), src2_traits::end(sf2),
@@ -331,13 +336,8 @@ segtrio<Iter1, SegIter2, OutIter> merge_seg2_dispatch
             return result_t(first1, src2_traits::compose(sf2, r.second), result);
       }
 
-      lf2 = src2_traits::begin(sl2);
+      lf2 = src2_traits::begin(sf2);
    }
-   // Final (partial) segment of first2, shared with the single-segment case.
-   const local_result_t r = (merge_seg2_dispatch)
-      (first1, last1, lf2, src2_traits::local(last2), result, comp,
-       src2_is_local_seg_t(), cat);
-   return result_t(r.first, src2_traits::compose(sf2, r.second), r.third);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -393,17 +393,21 @@ segtrio<SegIt, InIter2, OutIter> merge_scan
    segment_iterator const slast = traits::segment(last);
    local_iterator         lcur  = traits::local(first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(scur != slast)) {
-      // First (partial) segment of first1.
+   for(;;) {
+      // Partial segments (first and last) of first1 share this call site.
+      const bool last_seg = scur == slast;
+      const local_iterator le = last_seg ? traits::local(last) : traits::end(scur);
       {
          const local_result_t r = merge_scan
-            (lcur, traits::end(scur), first2, last2, result, comp, is_local_seg_t());
+            (lcur, le, first2, last2, result, comp, is_local_seg_t());
          first2 = r.second;
          result = r.third;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(first2 == last2))
+         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(first2 == last2))
             return result_t(traits::compose(scur, r.first), first2, result);
       }
 
+      // Middle segments keep their own call site: begin/end both come from
+      // scur, so the leaf can be specialised for full segments.
       for(++scur; scur != slast; ++scur) {
          const local_result_t r = merge_scan
             (traits::begin(scur), traits::end(scur), first2, last2, result, comp, is_local_seg_t());
@@ -413,12 +417,8 @@ segtrio<SegIt, InIter2, OutIter> merge_scan
             return result_t(traits::compose(scur, r.first), first2, result);
       }
 
-      lcur = traits::begin(slast);
+      lcur = traits::begin(scur);
    }
-   // Final (partial) segment of first1, shared with the single-segment case.
-   const local_result_t r = merge_scan
-      (lcur, traits::local(last), first2, last2, result, comp, is_local_seg_t());
-   return result_t(traits::compose(scur, r.first), r.second, r.third);
 }
 
 } // namespace detail_algo

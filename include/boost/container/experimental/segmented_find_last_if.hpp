@@ -83,33 +83,32 @@ SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred,
 
    local_iterator lb = traits::local(first);
 
-   if (BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
-      {  // First segment
-         const local_iterator le = traits::end(sfirst);
+   for (;;) {
+      //Partial segments (first and last) share this call site.
+      //A miss here must keep the match found in a previous segment, so it
+      //updates the running result instead of returning the composed local
+      //iterator directly.
+      const bool last_seg = sfirst == slast;
+      const local_iterator le = last_seg ? traits::local(last) : traits::end(sfirst);
+      {
          const local_iterator r = find_last_if_scan(lb, le, pred, is_local_seg_t(), local_cat_t());
          if (r != le)
             result = traits::compose(sfirst, r);
+         if (BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+            return result;
       }
-         // Middle segments
+
+      //Middle segments keep their own call site: begin/end both come from
+      //sfirst, so the leaf can be specialised for full segments
       for (++sfirst; sfirst != slast; ++sfirst) {
-         const local_iterator le = traits::end(sfirst);
-         const local_iterator r = find_last_if_scan(traits::begin(sfirst), le, pred, is_local_seg_t(), local_cat_t());
-         if (r != le)
+         const local_iterator me = traits::end(sfirst);
+         const local_iterator r = find_last_if_scan(traits::begin(sfirst), me, pred, is_local_seg_t(), local_cat_t());
+         if (r != me)
             result = traits::compose(sfirst, r);
       }
 
-      lb = traits::begin(slast);
+      lb = traits::begin(sfirst);
    }
-   //A miss here must keep the match found in a previous segment, so it
-   //updates the running result instead of returning the composed local
-   //iterator directly.
-   {
-      const local_iterator ll = traits::local(last);
-      const local_iterator r  = find_last_if_scan(lb, ll, pred, is_local_seg_t(), local_cat_t());
-      if (r != ll)
-         result = traits::compose(sfirst, r);
-   }
-   return result;
 }
 
 //////////////////////////////////////////////
@@ -130,14 +129,21 @@ SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred, segmented_iterator_t
 
    local_iterator le = traits::local(last);
 
-   if (BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
-      {  // Last segment (partial): [begin(slast), local(last))
-         const local_iterator r = find_last_if_scan(traits::begin(slast), le, pred, is_local_seg_t(), local_cat_t());
+   for (;;) {
+      //Partial segments (last and first) share this call site: the walk runs
+      //backwards, so the fused bound is the *begin* of the scanned range.
+      const bool first_seg = sfirst == slast;
+      const local_iterator lb = first_seg ? traits::local(first) : traits::begin(slast);
+      {
+         const local_iterator r = find_last_if_scan(lb, le, pred, is_local_seg_t(), local_cat_t());
          if (r != le)
             return traits::compose(slast, r);
+         if (BOOST_CONTAINER_SEG_UNLIKELY(first_seg))
+            return last;
       }
 
-      // Middle segments in reverse
+      //Middle segments (in reverse) keep their own call site: begin/end both
+      //come from slast, so the leaf can be specialised for full segments
       for (--slast; slast != sfirst; --slast) {
          const local_iterator me = traits::end(slast);
          const local_iterator r = find_last_if_scan(traits::begin(slast), me, pred, is_local_seg_t(), local_cat_t());
@@ -147,14 +153,6 @@ SegIt find_last_if_scan(SegIt first, SegIt last, Pred pred, segmented_iterator_t
 
       le = traits::end(sfirst);
    }
-
-   {  // First segment (partial): [local(first), le)
-      const local_iterator r = find_last_if_scan(traits::local(first), le, pred, is_local_seg_t(), local_cat_t());
-      if (r != le)
-         return traits::compose(sfirst, r);
-   }
-
-   return last;
 }
 
 //////////////////////////////////////////////

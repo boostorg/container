@@ -89,12 +89,14 @@ segduo<BidirIter, SegDstIter> segmented_reverse_copy_dst_bounded
 
    dst_local_iterator db = dst_traits::local(dst_first);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
+   for(;;) {
+      const bool last_seg = sfirst == slast;
+      const dst_local_iterator de = last_seg ? dst_traits::local(dst_last) : dst_traits::end(sfirst);
       {
          const segduo<BidirIter, dst_local_iterator> r = (segmented_reverse_copy_dst_bounded)
-            (first, last, db, dst_traits::end(sfirst), dst_is_local_seg_t(), SrcCat());
+            (first, last, db, de, dst_is_local_seg_t(), SrcCat());
          last = r.first;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(first == last))
             return segduo<BidirIter, SegDstIter>(last, dst_traits::compose(sfirst, r.second));
       }
 
@@ -106,11 +108,8 @@ segduo<BidirIter, SegDstIter> segmented_reverse_copy_dst_bounded
             return segduo<BidirIter, SegDstIter>(last, dst_traits::compose(sfirst, r.second));
       }
 
-      db = dst_traits::begin(slast);
+      db = dst_traits::begin(sfirst);
    }
-   const segduo<BidirIter, dst_local_iterator> r = (segmented_reverse_copy_dst_bounded)
-      (first, last, db, dst_traits::local(dst_last), dst_is_local_seg_t(), SrcCat());
-   return segduo<BidirIter, SegDstIter>(r.first, dst_traits::compose(sfirst, r.second));
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -186,19 +185,24 @@ OutIter segmented_reverse_copy_dispatch
    segment_iterator const sfirst = traits::segment(first);
    segment_iterator       slast  = traits::segment(last);
 
-   //The walk runs backwards, so the shared final call is the *first* segment
-   //and the piece of state hoisted out of the merge is its end bound.
    local_iterator le = traits::local(last);
 
-   if(BOOST_CONTAINER_SEG_LIKELY(sfirst != slast)) {
-      result = (segmented_reverse_copy_dispatch)(traits::begin(slast), le, result, is_local_seg_t(), local_cat_t());
+   for(;;) {
+      //Partial segments (last and first) share this call site: the walk runs
+      //backwards, so the fused bound is the *begin* of the copied range.
+      const bool first_seg = sfirst == slast;
+      const local_iterator lb = first_seg ? traits::local(first) : traits::begin(slast);
+      result = (segmented_reverse_copy_dispatch)(lb, le, result, is_local_seg_t(), local_cat_t());
+      if(BOOST_CONTAINER_SEG_UNLIKELY(first_seg))
+         return result;
 
+      //Middle segments (in reverse) keep their own call site: begin/end both
+      //come from slast, so the leaf can be specialised for full segments
       for (--slast; slast != sfirst; --slast)
          result = (segmented_reverse_copy_dispatch)(traits::begin(slast), traits::end(slast), result, is_local_seg_t(), local_cat_t());
 
       le = traits::end(sfirst);
    }
-   return (segmented_reverse_copy_dispatch)(traits::local(first), le, result, is_local_seg_t(), local_cat_t());
 }
 
 } // namespace detail_algo
