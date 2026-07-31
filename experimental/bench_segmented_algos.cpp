@@ -15,7 +15,7 @@
 // friend operators defined in headers (e.g. wrapped_iterator), causing
 // -Werror=attributes errors.
 #if defined(__GNUC__) && !defined(__clang__) && (__GNUC__ >= 9)
-   #pragma GCC optimize("align-functions=64", "align-loops=32")
+   //#pragma GCC optimize("align-functions=64", "align-loops=32")
 #elif defined(__clang__)
    // Clang has no file-wide pragma for alignment. Use command-line flags:
    //   -falign-functions=64 -falign-loops=64  when comparing two code shapes,
@@ -46,6 +46,7 @@
 #include <boost/container/experimental/segmented_fill.hpp>
 #include <boost/container/experimental/segmented_fill_n.hpp>
 #include <boost/container/experimental/segmented_find.hpp>
+#include <boost/container/experimental/segmented_find_end.hpp>
 #include <boost/container/experimental/segmented_find_if.hpp>
 #include <boost/container/experimental/segmented_find_if_not.hpp>
 #include <boost/container/experimental/segmented_find_last.hpp>
@@ -62,7 +63,6 @@
 #include <boost/container/experimental/segmented_is_sorted_until.hpp>
 #include <boost/container/experimental/segmented_partition.hpp>
 #include <boost/container/experimental/segmented_partition_copy.hpp>
-#include <boost/container/experimental/segmented_partition_point.hpp>
 #include <boost/container/experimental/segmented_remove.hpp>
 #include <boost/container/experimental/segmented_remove_if.hpp>
 #include <boost/container/experimental/segmented_remove_copy.hpp>
@@ -84,7 +84,7 @@
 #include "../bench/bench_utils.hpp"
 
 #ifndef BOOST_CONTAINER_BENCH_SEGMENTED_GROUP
-//#define BOOST_CONTAINER_BENCH_SEGMENTED_GROUP 20
+#define BOOST_CONTAINER_BENCH_SEGMENTED_GROUP 20
 #endif   //BOOST_CONTAINER_BENCH_SEGMENTED_GROUP
 
 namespace bc = boost::container;
@@ -155,23 +155,6 @@ class equal_to_ref
    BOOST_CONTAINER_FORCEINLINE bool operator()(const U &t)const
    {
       return t_ == t;
-   }
-};
-
-template<class T>
-class less_than_ref
-{
-   typedef T value_type;
-   const value_type& t_;
-public:
-   BOOST_CONTAINER_FORCEINLINE explicit less_than_ref(const value_type& t)
-      : t_(t)
-   {
-   }
-   template <class U>
-   BOOST_CONTAINER_FORCEINLINE bool operator()(const U& t)const
-   {
-      return t < t_;
    }
 };
 
@@ -314,14 +297,6 @@ partition_copy(InIt first, InIt last,
    return std::pair<OutIt1, OutIt2>(out_true, out_false);
 }
 
-template<class FwdIt, class Pred>
-FwdIt partition_point(FwdIt first, FwdIt last, Pred pred)
-{
-   for (; first != last; ++first)
-      if (!pred(*first)) return first;
-   return last;
-}
-
 #else
 
    using std::all_of;
@@ -334,7 +309,6 @@ FwdIt partition_point(FwdIt first, FwdIt last, Pred pred)
    using std::is_sorted_until;
    using std::is_partitioned;
    using std::partition_copy;
-   using std::partition_point;
 
 #endif
 
@@ -709,7 +683,9 @@ BOOST_NOINLINE boost::move_detail::nanosecond_type measure_batch(std::size_t ite
       reset_f();
    } while (true);
    }
-   return t.elapsed();
+   //elapsed() is median * batches, i.e. the time for batches * 8 calls, but the
+   //first batch only runs iters % 8 of them. Rescale to the calls actually made.
+   return t.elapsed() * iters / (8u * ((iters + 7u) / 8u));
 }
 
 struct noop_reset {
@@ -1348,6 +1324,26 @@ struct seg_search {
    { clobber(); cit_t it = bc::segmented_search(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pattern, pattern + pat_size); result = (it == iter_w<Wrap>::wrap(c.end())) ? 0 : 1; escape(&result); }
 };
 
+// --- find_end ---
+template<class C>
+struct std_find_end {
+   typedef typename C::const_iterator cit_t;
+   typedef typename C::value_type VT;
+   const C &c; const VT *pattern; std::size_t pat_size; int &result;
+   std_find_end(const C &c_, const VT *p_, std::size_t ps_, int &r_) : c(c_), pattern(p_), pat_size(ps_), result(r_) {}
+   BOOST_CONTAINER_FORCEINLINE void operator()()
+   { clobber(); cit_t it = std::find_end(c.begin(), c.end(), pattern, pattern + pat_size); result = (it == c.end()) ? 0 : 1; escape(&result); }
+};
+template<class C, bool Wrap = false>
+struct seg_find_end {
+   typedef typename iter_wt<Wrap, typename C::const_iterator>::type cit_t;
+   typedef typename C::value_type VT;
+   const C &c; const VT *pattern; std::size_t pat_size; int &result;
+   seg_find_end(const C &c_, const VT *p_, std::size_t ps_, int &r_) : c(c_), pattern(p_), pat_size(ps_), result(r_) {}
+   BOOST_CONTAINER_FORCEINLINE void operator()()
+   { clobber(); cit_t it = bc::segmented_find_end(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pattern, pattern + pat_size); result = (it == iter_w<Wrap>::wrap(c.end())) ? 0 : 1; escape(&result); }
+};
+
 // --- search_n ---
 template<class C>
 struct std_search_n {
@@ -1446,24 +1442,6 @@ struct seg_partition_copy {
    seg_partition_copy(const C &c_, OutT1 &t_, OutT2 &f_) : c(c_), t_out(t_), f_out(f_) {}
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_partition_copy(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(t_out.begin()), iter_w<Wrap>::wrap(f_out.begin()), is_odd<VT>()); escape(&*t_out.begin()); }
-};
-
-// --- partition_point ---
-template<class C, class Pred>
-struct std_partition_point {
-   typedef typename C::const_iterator cit_t;
-   const C &c; Pred pred; int &result;
-   std_partition_point(const C &c_, Pred p_, int &r_) : c(c_), pred(p_), result(r_) {}
-   BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); cit_t it = bench_detail::partition_point(c.begin(), c.end(), pred); result = (it == c.end()) ? 1 : 0; escape(&result); }
-};
-template<class C, class Pred, bool Wrap = false>
-struct seg_partition_point {
-   typedef typename iter_wt<Wrap, typename C::const_iterator>::type cit_t;
-   const C &c; Pred pred; int &result;
-   seg_partition_point(const C &c_, Pred p_, int &r_) : c(c_), pred(p_), result(r_) {}
-   BOOST_CONTAINER_FORCEINLINE void operator()()
-   { clobber(); cit_t it = bc::segmented_partition_point(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred); result = (it == iter_w<Wrap>::wrap(c.end())) ? 1 : 0; escape(&result); }
 };
 
 // --- Batch: replace_if ---
@@ -1987,6 +1965,18 @@ void bench_search(const C &c, std::size_t iters, const char* cname,
 }
 
 template<class C>
+void bench_find_end(const C &c, std::size_t iters, const char* cname,
+                    const typename C::value_type* pattern, std::size_t pat_size,
+                    const char* label)
+{
+   int result = 0;
+   compare_batch(iters, c.size(),
+      bench_ops::std_find_end<C>(c, pattern, pat_size, result),
+      bench_ops::seg_find_end<C>(c, pattern, pat_size, result),
+      bench_ops::seg_find_end<C, true>(c, pattern, pat_size, result), label, cname);
+}
+
+template<class C>
 void bench_search_n(const C &c, std::size_t iters, const char* cname,
                     typename C::difference_type count,
                     const typename C::value_type& val, const char* label)
@@ -2077,17 +2067,6 @@ void bench_partition_copy(const InC &c, std::size_t iters, const char* cname, co
       bench_ops::std_partition_copy<InC, OutC1, OutC2>(c, t_out, f_out),
       bench_ops::seg_partition_copy<InC, OutC1, OutC2>(c, t_out, f_out),
       bench_ops::seg_partition_copy<InC, OutC1, OutC2, true>(c, t_out, f_out), label, cname);
-}
-
-template<class C, class Pred>
-void bench_partition_point(const C &c, std::size_t iters, const char* cname,
-                           Pred pred, const char* label)
-{
-   int result = 0;
-   compare_batch(iters, c.size(),
-      bench_ops::std_partition_point<C, Pred>(c, pred, result),
-      bench_ops::seg_partition_point<C, Pred>(c, pred, result),
-      bench_ops::seg_partition_point<C, Pred, true>(c, pred, result), label, cname);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2219,10 +2198,6 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
       bench_is_sorted_until(c2, iters, cname, "is_sorted_until(miss)");
    }
-
-   //partition_point (not tested since it's not optimized for random access iterators)
-   //bench_partition_point(c, iters, cname, less_than_ref<VT>(static_cast<VT>((int)c.size()/2)), "partition_point(hit)");
-   //bench_partition_point(c, iters, cname, is_zero_or_positive<VT>(),                           "partition_point(miss)");
 
    //remove
    {
@@ -2361,6 +2336,15 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_search(c, iters, cname, hit_pat, 3, "search(hit)");
       VT miss_pat[] = {min1, VT(-2), VT(-3)};
       bench_search(c, iters, cname, miss_pat, 3, "search(miss)");
+   }
+
+   //find_end (same shape as search: only the haystack is segmented)
+   {
+      int ihalf = static_cast<int>(c.size() / 2);
+      VT hit_pat[] = {half, VT(ihalf + 1), VT(ihalf + 2)};
+      bench_find_end(c, iters, cname, hit_pat, 3, "find_end(hit)");
+      VT miss_pat[] = {min1, VT(-2), VT(-3)};
+      bench_find_end(c, iters, cname, miss_pat, 3, "find_end(miss)");
    }
 
    print_group_geomean(vtname);
@@ -2526,7 +2510,7 @@ void run_benchmarks()
    //#define BENCH_ON
    #if defined(NDEBUG) && defined(BENCH_ON)
    const std::size_t N    = 100000;
-   const std::size_t iter = 5000;
+   const std::size_t iter = 3000;
    #else
    const std::size_t N    = 10000;
    const std::size_t iter = 1;
@@ -2554,7 +2538,7 @@ int main()
 {
    //run_benchmarks<int>();
    run_benchmarks<MyInt>();
-   run_benchmarks<MyFatInt<4> >();
-   run_benchmarks<MyFatInt<8> >();
+   //run_benchmarks<MyFatInt<4> >();
+   //run_benchmarks<MyFatInt<8> >();
    return 0;
 }
