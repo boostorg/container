@@ -517,7 +517,7 @@ void test_mismatch_2r_sentinel_first_range()
    std::pair<seg_it, int*> r = segmented_mismatch
       (sv.begin(), test_detail::make_sentinel(sv.end()),
        ref, ref + 9,
-       boost::container::detail_algo::mismatch_equal());
+       boost::container::detail_algo::segmented_default_equal_to());
    BOOST_TEST(r.first  == sv.end());
    BOOST_TEST(r.second == ref + 9);
 }

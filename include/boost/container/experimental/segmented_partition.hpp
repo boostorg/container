@@ -20,7 +20,7 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
-#include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/container/experimental/detail/segmented_common_algo.hpp>
 #include <boost/container/experimental/segmented_find_if_not.hpp>
 #include <boost/container/experimental/segmented_find_last_if.hpp>
 #include <boost/move/adl_move_swap.hpp>

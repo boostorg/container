@@ -20,9 +20,8 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
-#include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/container/experimental/detail/segmented_common_algo.hpp>
 #include <boost/container/experimental/segmented_find_if.hpp>
-#include <boost/container/experimental/segmented_mismatch.hpp>
 
 namespace boost {
 namespace container {
@@ -33,171 +32,144 @@ FwdIt1 segmented_search
 
 namespace detail_algo {
 
-/* ---------------------------------------------------------------------------
-   Original (non-recursive) implementation. Kept here for reference.
-   It only exploits one level of segmentation on the [first, last) haystack
-   and no segmentation on the [s_first, s_last) needle. The verification
-   step (matches_at) walks the fully composed segmented iterator one element
-   at a time, which pays the segmented-increment cost on every step.
-
-template <class FwdIt1, class Sent, class FwdIt2, class Sent2>
-bool matches_at(FwdIt1 pos, Sent last, FwdIt2 s_first, Sent2 s_last)
-{
-   for(; s_first != s_last; ++s_first, ++pos)
-      if(pos == last || !(*pos == *s_first))
-         return false;
-   return true;
-}
-
-// Non-recursive: match verification (matches_at) must span across segment
-// boundaries using the full segmented iterator.
-template <class SegIter, class FwdIt2, class Sent2>
-SegIter segmented_search_dispatch
-   (SegIter first, SegIter last, FwdIt2 s_first, Sent2 s_last, segmented_iterator_tag)
-{
-   if(s_first == s_last) return first;
-
-   typedef segmented_iterator_traits<SegIter> traits;
-   typedef typename traits::local_iterator    local_iterator;
-   typedef typename traits::segment_iterator  segment_iterator;
-
-   segment_iterator scur  = traits::segment(first);
-   segment_iterator slast = traits::segment(last);
-   local_iterator   lcur  = traits::local(first);
-
-   if(scur == slast) {
-      local_iterator lend = traits::local(last);
-      for(; lcur != lend; ++lcur) {
-         if(*lcur == *s_first) {
-            SegIter pos = traits::compose(scur, lcur);
-            if(matches_at(pos, last, s_first, s_last))
-               return pos;
-         }
-      }
-   }
-   else {
-      {
-         local_iterator lend = traits::end(scur);
-         for(; lcur != lend; ++lcur) {
-            if(*lcur == *s_first) {
-               SegIter pos = traits::compose(scur, lcur);
-               if(matches_at(pos, last, s_first, s_last))
-                  return pos;
-            }
-         }
-      }
-      for(++scur; scur != slast; ++scur) {
-         local_iterator lb = traits::begin(scur);
-         local_iterator le = traits::end(scur);
-         for(lcur = lb; lcur != le; ++lcur) {
-            if(*lcur == *s_first) {
-               SegIter pos = traits::compose(scur, lcur);
-               if(matches_at(pos, last, s_first, s_last))
-                  return pos;
-            }
-         }
-      }
-      {
-         local_iterator lb = traits::begin(scur);
-         local_iterator ll = traits::local(last);
-         for(lcur = lb; lcur != ll; ++lcur) {
-            if(*lcur == *s_first) {
-               SegIter pos = traits::compose(scur, lcur);
-               if(matches_at(pos, last, s_first, s_last))
-                  return pos;
-            }
-         }
-      }
-   }
-   return last;
-}
---------------------------------------------------------------------------- */
+//////////////////////////////////////////////////////////////////////////////
+// Find-then-verify.  segmented_find_if locates every candidate (it walks the
+// haystack recursively and reaches the unrolled leaves), and the verify below
+// checks the rest of the needle at each candidate.
+//
+// The verify advances the haystack cursor one element at a time and recurses
+// over the needle's segments.  A counted walk over the haystack instead would
+// have to produce the remaining haystack length, the remaining needle length
+// and their minimum before the first comparison; almost every candidate dies
+// on its second element, so that prologue is paid in full for a comparison it
+// never reaches.  Leaving it out also keeps the candidate loop small, which
+// is what the surrounding segmented_find_if scan is sensitive to.
+//
+// equal_to_deref keeps the search proxy-safe: *s_first is re-evaluated on
+// every comparison, so a prvalue proxy never outlives its call.
+//////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-// Recursive segmented dispatch: find-then-verify.
+// Verify leaf: lock-step walk of [it, last) against the non-segmented needle
+// range [s_it, s_last).  Returns the haystack cursor plus whether the needle
+// range was consumed; the cursor is what tells a false start (cursor still
+// inside the haystack) from an exhausted haystack.
 //
-// 1. segmented_find_if locates a candidate c where *c == *s_first, walking
-//    the source recursively (exploits every level of segmentation and uses
-//    the unrolled RA fast path at the leaves).
-// 2. segmented_mismatch_bounded_dispatch verifies the match starting at
-//    (c, s_first), bounded on both sides, recursive on both sides.
-//
-// The equal_to_deref predicate keeps the search proxy-safe: *s_first is
-// re-evaluated on every comparison, so a prvalue proxy never outlives the
-// call that produced it.
+// Entered with it != last and s_it != s_last, so the comparison comes first
+// and the two bound tests only run after an element has matched.
 //////////////////////////////////////////////////////////////////////////////
-template <class SegIter, class FwdIt2, class Sent2>
-SegIter segmented_search_dispatch
-   (SegIter first, SegIter last, FwdIt2 s_first, Sent2 s_last, segmented_iterator_tag)
+template <class FwdIt1, class Sent1, class FwdIt2, class Sent2, class NdlTag>
+BOOST_CONTAINER_FORCEINLINE
+typename algo_enable_if_c
+   <!NdlTag::value || is_sentinel<Sent2, FwdIt2>::value, segduo<FwdIt1, bool> >::type
+segmented_search_verify(FwdIt1 it, Sent1 last, FwdIt2 s_it, Sent2 s_last, NdlTag)
 {
-   if (BOOST_UNLIKELY(s_first == s_last))
+   for(;;) {
+      if(!(*it == *s_it))
+         return segduo<FwdIt1, bool>(it, false);
+      ++it;
+      ++s_it;
+      if(s_it == s_last)
+         return segduo<FwdIt1, bool>(it, true);
+      if(it == last)
+         return segduo<FwdIt1, bool>(it, false);
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Segmented needle: walk the needle's segments, feeding each local range to
+// the verify above, which recurses when the local iterator is itself
+// segmented.  The haystack cursor is threaded through untouched, so a
+// haystack of any segmentation depth is handled by the leaf.
+//
+// A needle segment can be empty and the haystack can run out between two
+// needle segments, so the haystack bound is tested right before each call
+// rather than after it: only a call that still has needle left to compare
+// turns an exhausted haystack into a rejected candidate.
+//////////////////////////////////////////////////////////////////////////////
+template <class FwdIt1, class Sent1, class SegIt2>
+segduo<FwdIt1, bool> segmented_search_verify
+   (FwdIt1 it, Sent1 last, SegIt2 s_it, SegIt2 s_last, segmented_iterator_tag)
+{
+   typedef segmented_iterator_traits<SegIt2>       ndl_traits;
+   typedef typename ndl_traits::local_iterator     local_iterator;
+   typedef typename ndl_traits::segment_iterator   segment_iterator;
+   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+   typedef segduo<FwdIt1, bool>                    result_t;
+
+   segment_iterator       sfirst = ndl_traits::segment(s_it);
+   const segment_iterator slast  = ndl_traits::segment(s_last);
+
+   local_iterator lb = ndl_traits::local(s_it);
+
+   for(;;) {
+      //Partial segments (first and last) share this call site
+      const bool last_seg = sfirst == slast;
+      const local_iterator le = last_seg ? ndl_traits::local(s_last) : ndl_traits::end(sfirst);
+      if(lb != le) {
+         if(BOOST_UNLIKELY(it == last))
+            return result_t(it, false);
+         const result_t r = (segmented_search_verify)(it, last, lb, le, is_local_seg_t());
+         if(!r.second)
+            return r;
+         it = r.first;
+      }
+      if(BOOST_UNLIKELY(last_seg))
+         return result_t(it, true);
+
+      //Middle segments keep their own call site: begin/end both come from
+      //sfirst, so the leaf can be specialised for full segments
+      for(++sfirst; sfirst != slast; ++sfirst) {
+         const local_iterator mb = ndl_traits::begin(sfirst);
+         const local_iterator me = ndl_traits::end(sfirst);
+         if(mb == me)
+            continue;
+         if(BOOST_UNLIKELY(it == last))
+            return result_t(it, false);
+         const result_t r = (segmented_search_verify)(it, last, mb, me, is_local_seg_t());
+         if(!r.second)
+            return r;
+         it = r.first;
+      }
+
+      lb = ndl_traits::begin(sfirst);
+   }
+}
+
+template <class FwdIt1, class Sent1, class FwdIt2, class Sent2>
+FwdIt1 segmented_search_dispatch(FwdIt1 first, Sent1 last, FwdIt2 s_first, Sent2 s_last)
+{
+   typedef typename segmented_iterator_traits<FwdIt2>::is_segmented_iterator ndl_tag_t;
+
+   if(BOOST_UNLIKELY(s_first == s_last))
       return first;
-
-   typedef typename iterator_traits<SegIter>::iterator_category cat_t;
 
    equal_to_deref<FwdIt2> eq(s_first);
 
-   while (first != last) {
-      //Search for the first element of the needle. This exploits segmentation
+   while(first != last) {
       first = boost::container::segmented_find_if(first, last, eq);
-      if (first == last)   // no match for the first needle element -> no match at all
+      if(first == last)
          return last;
 
-      //Verify the rest of the needle, bounded on both sides. This exploits
-      //segmentation.  The verification starts one past both cursors: the
-      //candidate's first element has just been matched by segmented_find_if,
-      //and handing it to mismatch again would compare it twice, which for a
-      //one-element needle already exceeds the (last1 - first1) * (last2 -
-      //first2) applications [alg.search] allows.
-      SegIter it = first;
+      //Verification starts one past both cursors: segmented_find_if has just
+      //matched the candidate's first element, and comparing it again would
+      //over-apply by one, which for a one-element needle already exceeds the
+      //(last1 - first1) * (last2 - first2) applications [alg.search] allows.
+      FwdIt1 it = first;
       ++it;
       FwdIt2 s_it = s_first;
       ++s_it;
-      if (s_it == s_last)
+      if(s_it == s_last)
          return first;          // one-element needle -> already matched
-      if (it == last)
+      if(it == last)
          return last;           // source exhausted before needle
 
-      segduo<SegIter, FwdIt2> r = (segmented_mismatch_bounded_dispatch)
-         (it, last, s_it, s_last, mismatch_equal(), segmented_iterator_tag(), cat_t());
-
-      if (r.second == s_last)
+      const segduo<FwdIt1, bool> r = (segmented_search_verify)
+         (it, last, s_it, s_last, ndl_tag_t());
+      if(r.second)
          return first;          // full needle consumed -> match
-      if (r.first == last)
+      if(r.first == last)
          return last;           // source exhausted before needle
-      ++first;
-   }
-   return last;
-}
-
-template <class FwdIt1, class Sent1, class FwdIt2, class Sent2, class Tag>
-typename algo_enable_if_c<
-   !Tag::value || is_sentinel<Sent1, FwdIt1>::value, FwdIt1>::type
-segmented_search_dispatch
-   (FwdIt1 first, Sent1 last, FwdIt2 s_first, Sent2 s_last, Tag)
-{
-   if (BOOST_UNLIKELY(s_first == s_last))
-      return first;
-
-   equal_to_deref<FwdIt2> eq(s_first);
-
-   while (first != last) {
-      first = boost::container::segmented_find_if(first, last, eq);
-      if (first == last)
-         return last;
-
-      FwdIt1 it = first;
-      FwdIt2 s_it = s_first;
-      for(;;) {
-         ++it;
-         ++s_it;
-         if(s_it == s_last)
-            return first;
-         if(it == last)
-            return last;
-         if(!(*it == *s_it))
-            break;
-      }
       ++first;
    }
    return last;
@@ -212,9 +184,7 @@ template <class FwdIt1, class Sent1, class FwdIt2, class Sent2>
 BOOST_CONTAINER_FORCEINLINE
 FwdIt1 segmented_search(FwdIt1 first, Sent1 last, FwdIt2 s_first, Sent2 s_last)
 {
-   typedef segmented_iterator_traits<FwdIt1> traits;
-   return detail_algo::segmented_search_dispatch
-      (first, last, s_first, s_last, typename traits::is_segmented_iterator());
+   return detail_algo::segmented_search_dispatch(first, last, s_first, s_last);
 }
 
 } // namespace container

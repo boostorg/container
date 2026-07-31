@@ -12,6 +12,7 @@
 #include <boost/core/lightweight_test.hpp>
 #include "segmented_test_helper.hpp"
 #include <boost/container/vector.hpp>
+#include <boost/container/deque.hpp>
 
 using namespace boost::container;
 
@@ -679,6 +680,377 @@ void test_equal_predicate_count()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Four-argument overloads.
+//
+// [alg.equal] gives the two-range form different semantics from the
+// one-and-a-half-range form: ranges of different lengths are unequal, where
+// the three-argument form only ever looks at last1 - first1 elements.
+//////////////////////////////////////////////////////////////////////////////
+
+// Element-wise reference answer, independent of the algorithm under test.
+// std::equal's own four-iterator form is C++14, so it is not usable at C++03.
+bool ref_equal(const boost::container::vector<int>& a,
+               const boost::container::vector<int>& b)
+{
+   if(a.size() != b.size())
+      return false;
+   for(std::size_t i = 0; i != a.size(); ++i) {
+      if(a[i] != b[i])
+         return false;
+   }
+   return true;
+}
+
+void test_equal4_flat()
+{
+   int a[] = {1, 2, 3, 4};
+   int b[] = {1, 2, 3, 4, 5};
+
+   BOOST_TEST(segmented_equal(a, a + 4, b, b + 4));
+   BOOST_TEST(segmented_equal(a, a + 4, b, b + 4, eq_int()));
+
+   // Different lengths, either way round.
+   BOOST_TEST(!segmented_equal(a, a + 4, b, b + 5));
+   BOOST_TEST(!segmented_equal(b, b + 5, a, a + 4));
+   BOOST_TEST(!segmented_equal(a, a + 4, b, b + 5, eq_int()));
+   BOOST_TEST(!segmented_equal(b, b + 5, a, a + 4, eq_int()));
+
+   // Same length, differing content, at each position in turn.
+   for(int pos = 0; pos != 4; ++pos) {
+      int c[4];
+      for(int j = 0; j != 4; ++j) c[j] = a[j];
+      c[pos] = -1;
+      BOOST_TEST(!segmented_equal(a, a + 4, c, c + 4));
+   }
+
+   // Empty on one side, on the other, and on both.
+   BOOST_TEST(segmented_equal(a, a, b, b));
+   BOOST_TEST(!segmented_equal(a, a, b, b + 1));
+   BOOST_TEST(!segmented_equal(a, a + 1, b, b));
+   BOOST_TEST(segmented_equal(a, a, b, b, test_equal_double_eq()));
+
+   // The predicate is not required to be symmetric.
+   int d[] = {2, 4, 6, 8};
+   BOOST_TEST(segmented_equal(a, a + 4, d, d + 4, test_equal_double_eq()));
+   BOOST_TEST(!segmented_equal(a, a + 4, d, d + 3, test_equal_double_eq()));
+}
+
+// bc::vector: random access and flat, so the sized fast path is taken.
+void test_equal4_vector()
+{
+   boost::container::vector<int> v1, v2;
+   for(int i = 0; i != 6; ++i) { v1.push_back(i); v2.push_back(i); }
+
+   BOOST_TEST(segmented_equal(v1.begin(), v1.end(), v2.begin(), v2.end()));
+   v2.push_back(6);
+   BOOST_TEST(!segmented_equal(v1.begin(), v1.end(), v2.begin(), v2.end()));
+   BOOST_TEST(!segmented_equal(v2.begin(), v2.end(), v1.begin(), v1.end()));
+}
+
+// bc::deque: random access and segmented, the case the sized fast path has to
+// decide about, since last - first there is block arithmetic rather than a
+// pointer subtraction.
+void test_equal4_deque()
+{
+   boost::container::deque<int> d1, d2;
+   for(int i = 0; i != 300; ++i) { d1.push_back(i); d2.push_back(i); }
+
+   BOOST_TEST(segmented_equal(d1.begin(), d1.end(), d2.begin(), d2.end()));
+   BOOST_TEST(segmented_equal(d1.begin(), d1.end(), d2.begin(), d2.end(), eq_int()));
+
+   d2.push_back(300);
+   BOOST_TEST(!segmented_equal(d1.begin(), d1.end(), d2.begin(), d2.end()));
+   BOOST_TEST(!segmented_equal(d2.begin(), d2.end(), d1.begin(), d1.end()));
+   d2.pop_back();
+
+   // Difference in the middle of a block and on a block boundary.
+   d2[150] = -1;
+   BOOST_TEST(!segmented_equal(d1.begin(), d1.end(), d2.begin(), d2.end()));
+   d2[150] = 150;
+   d2[0] = -1;
+   BOOST_TEST(!segmented_equal(d1.begin(), d1.end(), d2.begin(), d2.end()));
+   d2[0] = 0;
+
+   // A sub-range that starts and ends inside a block.
+   boost::container::deque<int>::iterator f1 = d1.begin(), l1 = d1.begin();
+   boost::container::deque<int>::iterator f2 = d2.begin(), l2 = d2.begin();
+   for(int i = 0; i != 37; ++i)  { ++f1; ++f2; }
+   for(int i = 0; i != 211; ++i) { ++l1; ++l2; }
+   BOOST_TEST(segmented_equal(f1, l1, f2, l2));
+   BOOST_TEST(!segmented_equal(f1, l1, f2, d2.end()));
+
+   // Deque against a flat range of the same contents.
+   boost::container::vector<int> v;
+   for(int i = 0; i != 300; ++i) v.push_back(i);
+   BOOST_TEST(segmented_equal(d1.begin(), d1.end(), v.begin(), v.end()));
+   BOOST_TEST(!segmented_equal(d1.begin(), d1.end(), v.begin(), v.end() - 1));
+}
+
+// seg_vector's iterator is bidirectional, so these all take the walking path.
+void test_equal4_segmented()
+{
+   test_detail::seg_vector<int> sv1;
+   int a1[] = {1, 2, 3};
+   int a2[] = {4, 5};
+   int a3[] = {6, 7, 8, 9};
+   sv1.add_segment_range(a1, a1 + 3);
+   sv1.add_segment_range(a2, a2 + 2);
+   sv1.add_segment_range(a3, a3 + 4);
+
+   test_detail::seg_vector<int> sv2;
+   int b1[] = {1, 2};
+   int b2[] = {3, 4, 5, 6};
+   int b3[] = {7, 8, 9};
+   sv2.add_segment_range(b1, b1 + 2);
+   sv2.add_segment_range(b2, b2 + 4);
+   sv2.add_segment_range(b3, b3 + 3);
+
+   // Same nine elements, segmented differently on the two sides.
+   BOOST_TEST(segmented_equal(sv1.begin(), sv1.end(), sv2.begin(), sv2.end()));
+   BOOST_TEST(segmented_equal(sv1.begin(), sv1.end(), sv2.begin(), sv2.end(), eq_int()));
+
+   // A shorter second range, cut mid-segment and on a segment boundary.
+   BOOST_TEST(!segmented_equal(sv1.begin(), sv1.end(), sv2.begin(), test_detail::iter_at(sv2, 8)));
+   BOOST_TEST(!segmented_equal(sv1.begin(), sv1.end(), sv2.begin(), test_detail::iter_at(sv2, 2)));
+   BOOST_TEST(!segmented_equal(sv1.begin(), test_detail::iter_at(sv1, 3), sv2.begin(), sv2.end()));
+
+   // Empty ranges.
+   BOOST_TEST(segmented_equal(sv1.begin(), sv1.begin(), sv2.begin(), sv2.begin()));
+   BOOST_TEST(!segmented_equal(sv1.begin(), sv1.begin(), sv2.begin(), test_detail::iter_at(sv2, 1)));
+   BOOST_TEST(!segmented_equal(sv1.begin(), test_detail::iter_at(sv1, 1), sv2.begin(), sv2.begin()));
+
+   // Flat against segmented and back.
+   int flat[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+   BOOST_TEST(segmented_equal(flat, flat + 9, sv1.begin(), sv1.end()));
+   BOOST_TEST(!segmented_equal(flat, flat + 8, sv1.begin(), sv1.end()));
+   BOOST_TEST(segmented_equal(sv1.begin(), sv1.end(), flat, flat + 9));
+   BOOST_TEST(!segmented_equal(sv1.begin(), sv1.end(), flat, flat + 10));
+
+   test_detail::seg_vector<int> sv_bad;
+   int c1[] = {1, 2, 3, 4};
+   int c2[] = {5, 6, 99, 8, 9};
+   sv_bad.add_segment_range(c1, c1 + 4);
+   sv_bad.add_segment_range(c2, c2 + 5);
+   BOOST_TEST(!segmented_equal(sv1.begin(), sv1.end(), sv_bad.begin(), sv_bad.end()));
+}
+
+void test_equal4_seg2()
+{
+   int vals[] = {1, 2, 3, 4, 5, 6, 7};
+
+   test_detail::seg2_vector<int> sv1;
+   test_detail::make_range(sv1, "sm", vals, 7, -1);
+   test_detail::seg2_vector<int> sv2;
+   test_detail::make_range(sv2, "ss", vals, 7, -1);
+
+   const test_detail::seg2_vector<int>::iterator l1 = test_detail::iter_at(sv1, 7);
+   const test_detail::seg2_vector<int>::iterator l2 = test_detail::iter_at(sv2, 7);
+
+   BOOST_TEST(segmented_equal(sv1.begin(), l1, sv2.begin(), l2));
+   BOOST_TEST(!segmented_equal(sv1.begin(), l1, sv2.begin(), test_detail::iter_at(sv2, 6)));
+   BOOST_TEST(!segmented_equal(sv1.begin(), test_detail::iter_at(sv1, 6), sv2.begin(), l2));
+   BOOST_TEST(segmented_equal(sv1.begin(), l1, vals, vals + 7));
+   BOOST_TEST(!segmented_equal(sv1.begin(), l1, vals, vals + 6));
+}
+
+void test_equal4_sentinel()
+{
+   test_detail::seg_vector<int> sv;
+   int a[] = {1, 2, 3, 4, 5};
+   sv.add_segment_range(a, a + 5);
+
+   const test_detail::seg_vector<int>::iterator last = test_detail::iter_at(sv, 5);
+
+   int ref[] = {1, 2, 3, 4, 5, 6};
+   BOOST_TEST(segmented_equal(sv.begin(), test_detail::make_sentinel(last), ref, ref + 5, eq_int()));
+   BOOST_TEST(!segmented_equal(sv.begin(), test_detail::make_sentinel(last), ref, ref + 6, eq_int()));
+   BOOST_TEST(!segmented_equal(sv.begin(), test_detail::make_sentinel(last), ref, ref + 4, eq_int()));
+
+   // Sentinel on the second range too.
+   BOOST_TEST(segmented_equal(ref, ref + 5, sv.begin(),
+                              test_detail::make_sentinel(last), eq_int()));
+   BOOST_TEST(!segmented_equal(ref, ref + 6, sv.begin(),
+                               test_detail::make_sentinel(last), eq_int()));
+
+   boost::container::vector<int> v;
+   for(int i = 1; i != 6; ++i) v.push_back(i);
+   BOOST_TEST(segmented_equal(v.begin(), test_detail::make_sentinel(v.end()), ref, ref + 5, eq_int()));
+   BOOST_TEST(!segmented_equal(v.begin(), test_detail::make_sentinel(v.end()), ref, ref + 6, eq_int()));
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Four-argument shape matrix, cross-checked against a flattened reference.
+//////////////////////////////////////////////////////////////////////////////
+
+struct equal4_shape_check
+{
+   template<class C1, class C2>
+   void operator()(C1& c1, std::size_t n1, const char* s1,
+                   C2& c2, std::size_t n2, const char* s2) const
+   {
+      typedef typename C1::iterator iter1_t;
+      typedef typename C2::iterator iter2_t;
+
+      const boost::container::vector<int> f1 = test_detail::flatten_n_ints(c1, n1);
+      const boost::container::vector<int> f2 = test_detail::flatten_n_ints(c2, n2);
+      const bool expected = ref_equal(f1, f2);
+
+      const iter1_t first1 = c1.begin();
+      const iter1_t last1  = test_detail::iter_at(c1, n1);
+      const iter2_t first2 = c2.begin();
+      const iter2_t last2  = test_detail::iter_at(c2, n2);
+
+      if(!BOOST_TEST_EQ(segmented_equal(first1, last1, first2, last2), expected))
+         BOOST_LIGHTWEIGHT_TEST_OSTREAM
+            << "   shapes \"" << s1 << "\"/" << n1 << " \"" << s2 << "\"/" << n2 << std::endl;
+
+      if(!BOOST_TEST_EQ(segmented_equal(first1, last1, first2, last2, eq_int()), expected))
+         BOOST_LIGHTWEIGHT_TEST_OSTREAM
+            << "   shapes \"" << s1 << "\"/" << n1 << " \"" << s2 << "\"/" << n2 << std::endl;
+
+      // The sentinel overload reaches a different set of dispatch templates.
+      if(!BOOST_TEST_EQ(segmented_equal(first1, test_detail::make_sentinel(last1),
+                                        first2, last2, eq_int()), expected))
+         BOOST_LIGHTWEIGHT_TEST_OSTREAM
+            << "   shapes \"" << s1 << "\"/" << n1 << " \"" << s2 << "\"/" << n2 << std::endl;
+
+      // Neither range is an output, so both guards must still be intact.
+      BOOST_TEST(test_detail::filler_intact(c1, n1, -999));
+      BOOST_TEST(test_detail::filler_intact(c2, n2, -999));
+   }
+};
+
+void test_equal4_shape_matrix()
+{
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u };
+
+   for(std::size_t i = 0; i != sizeof(sizes)/sizeof(sizes[0]); ++i) {
+   for(std::size_t j = 0; j != sizeof(sizes)/sizeof(sizes[0]); ++j) {
+      const std::size_t n1 = sizes[i];
+      const std::size_t n2 = sizes[j];
+
+      int v1[6] = {};
+      int v2[6] = {};
+      for(std::size_t k = 0; k != n1; ++k) v1[k] = int(k) + 1;
+      for(std::size_t k = 0; k != n2; ++k) v2[k] = int(k) + 1;
+
+      // Once with the common prefix agreeing, once with it differing.
+      test_detail::for_each_shape2_all<int, int>
+         (v1, n1, v2, n2, -999, equal4_shape_check());
+
+      if(n2 != 0u) {
+         v2[n2 - 1u] = -7;
+         test_detail::for_each_shape2_all<int, int>
+            (v1, n1, v2, n2, -999, equal4_shape_check());
+      }
+   }
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Four-argument predicate application count.
+//
+// [alg.equal] allows at most min(last1 - first1, last2 - first2)
+// applications, and none at all when the two sized ranges differ in length:
+// the answer is then already known from the lengths.
+//////////////////////////////////////////////////////////////////////////////
+
+void test_equal4_predicate_count_sized()
+{
+   boost::container::vector<int> v1, v2;
+   for(int i = 0; i != 8; ++i) { v1.push_back(i); v2.push_back(i); }
+
+   // Different lengths, both ranges sized: the predicate is never applied.
+   {
+      test_detail::op_counter calls;
+      BOOST_TEST(!segmented_equal(v1.begin(), v1.end(), v2.begin(), v2.end() - 1,
+                                  test_detail::counting_pred(calls, eq_int())));
+      BOOST_TEST_EQ(calls.n, 0u);
+   }
+   {
+      test_detail::op_counter calls;
+      BOOST_TEST(!segmented_equal(v1.begin(), v1.end() - 3, v2.begin(), v2.end(),
+                                  test_detail::counting_pred(calls, eq_int())));
+      BOOST_TEST_EQ(calls.n, 0u);
+   }
+   // Raw pointers take the same path.
+   {
+      int a[4] = {1, 2, 3, 4};
+      int b[3] = {1, 2, 3};
+      test_detail::op_counter calls;
+      BOOST_TEST(!segmented_equal(a, a + 4, b, b + 3,
+                                  test_detail::counting_pred(calls, eq_int())));
+      BOOST_TEST_EQ(calls.n, 0u);
+   }
+   // Segmented and random access: the same O(1) decision on a deque.
+   {
+      boost::container::deque<int> d1, d2;
+      for(int i = 0; i != 200; ++i) { d1.push_back(i); d2.push_back(i); }
+      d2.push_back(200);
+      test_detail::op_counter calls;
+      BOOST_TEST(!segmented_equal(d1.begin(), d1.end(), d2.begin(), d2.end(),
+                                  test_detail::counting_pred(calls, eq_int())));
+      BOOST_TEST_EQ(calls.n, 0u);
+   }
+
+   // Equal lengths: at most n, and at least enough to reach the difference.
+   {
+      test_detail::op_counter calls;
+      BOOST_TEST(segmented_equal(v1.begin(), v1.end(), v2.begin(), v2.end(),
+                                 test_detail::counting_pred(calls, eq_int())));
+      BOOST_TEST_EQ(calls.n, 8u);
+   }
+   for(std::size_t bad = 0; bad != 8u; ++bad) {
+      boost::container::vector<int> v3(v2);
+      v3[bad] = -1;
+      test_detail::op_counter calls;
+      BOOST_TEST(!segmented_equal(v1.begin(), v1.end(), v3.begin(), v3.end(),
+                                  test_detail::counting_pred(calls, eq_int())));
+      BOOST_TEST(calls.n <= 8u);
+      BOOST_TEST(calls.n >= bad + 1u);
+   }
+}
+
+struct equal4_count_check
+{
+   template<class C1, class C2>
+   void operator()(C1& c1, std::size_t n1, const char* s1,
+                   C2& c2, std::size_t n2, const char* s2) const
+   {
+      const std::size_t shorter = n1 < n2 ? n1 : n2;
+
+      test_detail::op_counter calls;
+      segmented_equal(c1.begin(), test_detail::iter_at(c1, n1),
+                      c2.begin(), test_detail::iter_at(c2, n2),
+                      test_detail::counting_pred(calls, eq_int()));
+      if(!BOOST_TEST(calls.n <= shorter))
+         BOOST_LIGHTWEIGHT_TEST_OSTREAM
+            << "   shapes \"" << s1 << "\"/" << n1 << " \"" << s2 << "\"/" << n2
+            << ", calls = " << calls.n << std::endl;
+   }
+};
+
+void test_equal4_predicate_count_walked()
+{
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u };
+
+   for(std::size_t i = 0; i != sizeof(sizes)/sizeof(sizes[0]); ++i) {
+   for(std::size_t j = 0; j != sizeof(sizes)/sizeof(sizes[0]); ++j) {
+      const std::size_t n1 = sizes[i];
+      const std::size_t n2 = sizes[j];
+
+      int v1[6] = {};
+      int v2[6] = {};
+      for(std::size_t k = 0; k != n1; ++k) v1[k] = int(k) + 1;
+      for(std::size_t k = 0; k != n2; ++k) v2[k] = int(k) + 1;
+
+      test_detail::for_each_shape2_all<int, int>
+         (v1, n1, v2, n2, -999, equal4_count_check());
+   }
+   }
+}
+
 int main()
 {
    test_equal_shape_matrix();
@@ -712,5 +1084,17 @@ int main()
    test_equal_single_segment_every_position();
 
    test_equal_predicate_count();
+
+   // Four-argument overloads:
+   test_equal4_flat();
+   test_equal4_vector();
+   test_equal4_deque();
+   test_equal4_segmented();
+   test_equal4_seg2();
+   test_equal4_sentinel();
+   test_equal4_shape_matrix();
+   test_equal4_predicate_count_sized();
+   test_equal4_predicate_count_walked();
+
    return boost::report_errors();
 }

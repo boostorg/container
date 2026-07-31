@@ -20,8 +20,10 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
-#include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/container/experimental/detail/segmented_common_algo.hpp>
 #include <boost/container/detail/iterators.hpp>
+#include <boost/container/detail/mpl.hpp>
+#include <boost/container/detail/type_traits.hpp>
 
 namespace boost {
 namespace container {
@@ -32,121 +34,13 @@ bool segmented_equal(InpIter1 first1, Sent last1, InpIter2 first2, BinaryPred pr
 template <class InpIter1, class Sent, class InpIter2>
 bool segmented_equal(InpIter1 first1, Sent last1, InpIter2 first2);
 
+template <class InpIter1, class Sent1, class InpIter2, class Sent2, class BinaryPred>
+bool segmented_equal(InpIter1 first1, Sent1 last1, InpIter2 first2, Sent2 last2, BinaryPred pred);
+
+template <class InpIter1, class Sent1, class InpIter2>
+bool segmented_equal(InpIter1 first1, Sent1 last1, InpIter2 first2, InpIter2 last2);
+
 namespace detail_algo {
-
-struct equal_pred
-{
-   template <class T, class U>
-   BOOST_CONTAINER_FORCEINLINE bool operator()(const T& a, const U& b) const { return a == b; }
-};
-
-//////////////////////////////////////////////////////////////////////////////
-// Bounded iter2 helper: compares source [first1, last1) against
-// [first2, last2), stopping when source, iter2, or a mismatch
-// is encountered.
-// Returns segtrio<SrcIter, Iter2, bool> with the final positions of both
-// iterators and the reason the walk stopped.
-// Recursively walks iter2 segments when iter2 is segmented.
-//
-// third is true when the walk ended for a reason the caller cannot resume
-// from (a mismatch was found, or the source was consumed), and false when
-// only [first2, last2) ran out.  That last case is the only one in which a
-// segmented caller advances to its next segment and calls again, so one flag
-// is enough to drive the segment loop.  Reporting it here spares the caller
-// the two comparisons it would otherwise need to re-derive it, which are the
-// very comparisons this helper has just made.
-//
-// When last2 is unreachable_sentinel_t the segment-boundary check is
-// optimised away, giving the same code as an unbounded loop, and third folds
-// to a constant true.
-//////////////////////////////////////////////////////////////////////////////
-
-template <class SrcIter, class Sent, class Iter2, class Iter2Sent, class BinaryPred, class Iter2Tag, class SrcCat>
-BOOST_CONTAINER_FORCEINLINE
-typename algo_enable_if_c<!Iter2Tag::value, segtrio<SrcIter, Iter2, bool> >::type
-segmented_equal_iter2_bounded
-   (SrcIter first1, Sent last1, Iter2 first2, Iter2Sent last2, BinaryPred pred, Iter2Tag, SrcCat)
-{
-   typedef segtrio<SrcIter, Iter2, bool> result_t;
-
-   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-   for(; first1 != last1; ++first1) {
-      if(first2 == last2)
-         return result_t(first1, first2, false);
-      if(!pred(*first1, *first2))
-         return result_t(first1, first2, true);
-      ++first2;
-   }
-   return result_t(first1, first2, true);
-}
-
-template <class RASrcIter, class RAIter2, class BinaryPred>
-BOOST_CONTAINER_FORCEINLINE
-typename iterator_enable_if_tag
-   <RAIter2, std::random_access_iterator_tag, segtrio<RASrcIter, RAIter2, bool> >::type
-segmented_equal_iter2_bounded
-   (RASrcIter first1, RASrcIter last1, RAIter2 first2, RAIter2 last2, BinaryPred pred,
-    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
-{
-   typedef segtrio<RASrcIter, RAIter2, bool> result_t;
-   typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
-   const difference_type src_n  = last1 - first1;
-   const difference_type iter2_n = difference_type(last2 - first2);
-   difference_type n = src_n < iter2_n ? src_n : iter2_n;
-
-   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-   while(n) {
-      --n;
-      if(!pred(*first1, *first2))
-         return result_t(first1, first2, true);
-      ++first1;
-      ++first2;
-   }
-
-   return result_t(first1, first2, first1 == last1);
-}
-
-template <class SrcIter, class Sent, class SegIter2, class BinaryPred, class SrcCat>
-segtrio<SrcIter, SegIter2, bool> segmented_equal_iter2_bounded
-   (SrcIter first1, Sent last1, SegIter2 first2, SegIter2 last2, BinaryPred pred,
-    segmented_iterator_tag, SrcCat)
-{
-   typedef segmented_iterator_traits<SegIter2>  iter2_traits;
-   typedef typename iter2_traits::local_iterator    iter2_local_iterator;
-   typedef typename iter2_traits::segment_iterator  iter2_segment_iterator;
-   typedef typename segmented_iterator_traits<iter2_local_iterator>::is_segmented_iterator iter2_is_local_seg_t;
-
-   typedef segtrio<SrcIter, SegIter2, bool>              result_t;
-   typedef segtrio<SrcIter, iter2_local_iterator, bool>  local_result_t;
-
-   iter2_segment_iterator       sfirst = iter2_traits::segment(first2);
-   const iter2_segment_iterator slast  = iter2_traits::segment(last2);
-
-   iter2_local_iterator lb2 = iter2_traits::local(first2);
-
-   for(;;) {
-      const bool last_seg = sfirst == slast;
-      const iter2_local_iterator le2 = last_seg ? iter2_traits::local(last2) : iter2_traits::end(sfirst);
-      {
-         const local_result_t r = (segmented_equal_iter2_bounded)
-            (first1, last1, lb2, le2, pred, iter2_is_local_seg_t(), SrcCat());
-         first1 = r.first;
-         if(last_seg || BOOST_UNLIKELY(r.third))
-            return result_t(first1, iter2_traits::compose(sfirst, r.second), r.third);
-      }
-
-      for(++sfirst; sfirst != slast; ++sfirst) {
-         const local_result_t r = (segmented_equal_iter2_bounded)
-            (first1, last1, iter2_traits::begin(sfirst), iter2_traits::end(sfirst), pred
-            , iter2_is_local_seg_t(), SrcCat());
-         first1 = r.first;
-         if(BOOST_UNLIKELY(r.third))
-            return result_t(first1, iter2_traits::compose(sfirst, r.second), true);
-      }
-
-      lb2 = iter2_traits::begin(sfirst);
-   }
-}
 
 //////////////////////////////////////////////////////////////////////////////
 // Iter2 dispatch: routes to bounded helper.
@@ -161,7 +55,7 @@ BOOST_CONTAINER_FORCEINLINE segduo<bool, InpIter2> segmented_equal_iter2_dispatc
 {
    //r.third is a constant true for an unbounded iter2, so the result still
    //comes from the source position.
-   const segtrio<SrcIter, InpIter2, bool> r = (segmented_equal_iter2_bounded)
+   const segtrio<SrcIter, InpIter2, bool> r = (segmented_iter2_bounded)
       (first1, last1, first2, unreachable_sentinel_t(), pred, non_segmented_iterator_tag(), Cat());
    return segduo<bool, InpIter2>(r.first == last1, r.second);
 }
@@ -183,7 +77,7 @@ segduo<bool, SegIter2> segmented_equal_iter2_dispatch
    iter2_local_iterator   loc2 = iter2_traits::local(first2);
 
    for(;;) {
-      const segtrio<SrcIter, iter2_local_iterator, bool> r = (segmented_equal_iter2_bounded)
+      const segtrio<SrcIter, iter2_local_iterator, bool> r = (segmented_iter2_bounded)
          (first1, last1, loc2, iter2_traits::end(seg2), pred, iter2_is_local_seg_t(), Cat());
       first1 = r.first;
       loc2   = r.second;
@@ -233,11 +127,6 @@ segduo<bool, InpIter2> segmented_equal_dispatch
       //Partial segments (first and last) share this call site
       const bool last_seg = sfirst == slast;
       const local_iterator le = last_seg ? traits::local(last1) : traits::end(sfirst);
-      // NOT converted to the scoped-const form: InpIter2 is a full segmented
-      // iterator here, so carrying it through `first2` costs a copy per
-      // iteration that threading `r.second` straight into the next call
-      // avoids.  Measured +4.1% on this walker under GCC against -0.2% under
-      // Clang, so direct threading stays.
       segduo<bool, InpIter2> r = (segmented_equal_dispatch)
          (lb, le, first2, pred, is_local_seg_t(), local_cat_t());
       if(last_seg || BOOST_UNLIKELY(!r.first))
@@ -255,6 +144,126 @@ segduo<bool, InpIter2> segmented_equal_dispatch
       lb     = traits::begin(sfirst);
       first2 = r.second;
    }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Two-range source dispatch: same walk as segmented_equal_dispatch above but
+// with last2 threaded through, so the walk also stops when [first2, last2)
+// runs out.  Returns segduo<bool, InpIter2> whose first is true only when the
+// source was consumed without a mismatch; the caller still has to check the
+// final iter2 against last2 to tell "both ended together" from "the second
+// range had elements left over".
+//
+// Reached only when the two ranges are not both sized; the sized case is
+// answered by comparing the two lengths and then reusing the unbounded walk,
+// which needs no per-element iter2 bound check at all.
+//////////////////////////////////////////////////////////////////////////////
+
+template <class SrcIter, class Sent, class InpIter2, class Sent2, class BinaryPred, class Tag, class Cat>
+BOOST_CONTAINER_FORCEINLINE
+typename algo_enable_if_c
+   < !Tag::value || is_sentinel<Sent, SrcIter>::value
+   , segduo<bool, InpIter2>
+   >::type
+segmented_equal_bounded_dispatch
+   (SrcIter first1, Sent last1, InpIter2 first2, Sent2 last2, BinaryPred pred, Tag, Cat)
+{
+   //A true sentinel cannot be decomposed into a segment, so the iter2 walk is
+   //downgraded to the flat leaf; sent_filter leaves the natural segmentation
+   //in place whenever last2 is an iterator.
+   typedef typename sent_filter<InpIter2, Sent2>::seg_t iter2_seg_t;
+   const segtrio<SrcIter, InpIter2, bool> r = (segmented_iter2_bounded)
+      (first1, last1, first2, last2, pred, iter2_seg_t(), Cat());
+   //A mismatch and an exhausted iter2 both leave first1 short of last1, so
+   //this single comparison covers every reason the walk could have stopped
+   //other than a fully consumed source.
+   return segduo<bool, InpIter2>(r.first == last1, r.second);
+}
+
+template <class SegIter, class InpIter2, class Sent2, class BinaryPred, class Cat>
+segduo<bool, InpIter2> segmented_equal_bounded_dispatch
+   (SegIter first1, SegIter last1, InpIter2 first2, Sent2 last2, BinaryPred pred,
+    segmented_iterator_tag, Cat)
+{
+   typedef segmented_iterator_traits<SegIter>  traits;
+   typedef typename traits::local_iterator     local_iterator;
+   typedef typename traits::segment_iterator   segment_iterator;
+   typedef typename segmented_iterator_traits<local_iterator>::is_segmented_iterator is_local_seg_t;
+   typedef typename iterator_traits<local_iterator>::iterator_category local_cat_t;
+
+   segment_iterator       sfirst = traits::segment(first1);
+   segment_iterator const slast  = traits::segment(last1);
+
+   local_iterator lb = traits::local(first1);
+
+   for(;;) {
+      //Partial segments (first and last) share this call site
+      const bool last_seg = sfirst == slast;
+      const local_iterator le = last_seg ? traits::local(last1) : traits::end(sfirst);
+      segduo<bool, InpIter2> r = (segmented_equal_bounded_dispatch)
+         (lb, le, first2, last2, pred, is_local_seg_t(), local_cat_t());
+      if(last_seg || BOOST_UNLIKELY(!r.first))
+         return r;
+
+      //Middle segments keep their own call site: begin/end both come from
+      //sfirst, so the leaf can be specialised for full segments
+      for(++sfirst; sfirst != slast; ++sfirst) {
+         r = (segmented_equal_bounded_dispatch)
+            (traits::begin(sfirst), traits::end(sfirst), r.second, last2, pred
+            , is_local_seg_t(), local_cat_t());
+         if(BOOST_UNLIKELY(!r.first))
+            return r;
+      }
+
+      lb     = traits::begin(sfirst);
+      first2 = r.second;
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Two-range entry point, selected at compile time on whether both ranges are
+// sized.  "Sized" here means each range is closed by an iterator of its own
+// type (not a sentinel) whose category is random access, so that last - first
+// is a constant-time expression.
+//
+// Segmented random-access iterators qualify: bc::deque's operator- is block
+// arithmetic, a handful of instructions, which is cheaper than the segment
+// decomposition the walk itself would have to do before comparing anything.
+//
+// The sized form answers unequal lengths without applying the predicate once,
+// which is the whole point of the four-argument overload; when the lengths do
+// match it drops the iter2 bound entirely and reuses the unbounded walk, so
+// the common equal-length case costs the same as the three-argument call.
+//////////////////////////////////////////////////////////////////////////////
+
+template <class Iter1, class Sent1, class Iter2, class Sent2>
+struct segmented_equal_is_sized
+{
+   static const bool value =
+      dtl::is_same<Iter1, Sent1>::value && dtl::is_same<Iter2, Sent2>::value
+      && seg_is_ra_iterator<Iter1>::value && seg_is_ra_iterator<Iter2>::value;
+   typedef dtl::bool_<value> type;
+};
+
+template <class RAIter1, class RAIter2, class BinaryPred>
+BOOST_CONTAINER_FORCEINLINE bool segmented_equal_sized_dispatch
+   (RAIter1 first1, RAIter1 last1, RAIter2 first2, RAIter2 last2, BinaryPred pred, dtl::true_)
+{
+   typedef typename iterator_traits<RAIter1>::difference_type difference_type;
+   if((last1 - first1) != difference_type(last2 - first2))
+      return false;
+   return boost::container::segmented_equal(first1, last1, first2, pred);
+}
+
+template <class InpIter1, class Sent1, class InpIter2, class Sent2, class BinaryPred>
+BOOST_CONTAINER_FORCEINLINE bool segmented_equal_sized_dispatch
+   (InpIter1 first1, Sent1 last1, InpIter2 first2, Sent2 last2, BinaryPred pred, dtl::false_)
+{
+   typedef segmented_iterator_traits<InpIter1> traits;
+   const segduo<bool, InpIter2> r = (segmented_equal_bounded_dispatch)
+      (first1, last1, first2, last2, pred, typename traits::is_segmented_iterator()
+      , typename iterator_traits<InpIter1>::iterator_category());
+   return r.first && r.second == last2;
 }
 
 } // namespace detail_algo
@@ -277,7 +286,42 @@ template <class InpIter1, class Sent, class InpIter2>
 BOOST_CONTAINER_FORCEINLINE
 bool segmented_equal(InpIter1 first1, Sent last1, InpIter2 first2)
 {
-   return boost::container::segmented_equal(first1, last1, first2, detail_algo::equal_pred());
+   return boost::container::segmented_equal
+      (first1, last1, first2, detail_algo::segmented_default_equal_to());
+}
+
+//! Returns \c true if [first1, last1) and [first2, last2) have the same
+//! length and every pair of corresponding elements satisfies \c pred.
+//! Ranges of different lengths compare unequal.
+//! Exploits segmentation on both ranges.
+//!
+//! When both ranges are closed by a random-access iterator of their own type
+//! the two lengths are compared first, so unequal lengths are reported
+//! without applying \c pred at all.  Otherwise \c pred is applied at most
+//! \c min(last1 - first1, last2 - first2) times.
+template <class InpIter1, class Sent1, class InpIter2, class Sent2, class BinaryPred>
+BOOST_CONTAINER_FORCEINLINE
+bool segmented_equal(InpIter1 first1, Sent1 last1, InpIter2 first2, Sent2 last2, BinaryPred pred)
+{
+   typedef detail_algo::segmented_equal_is_sized<InpIter1, Sent1, InpIter2, Sent2> sized_t;
+   return detail_algo::segmented_equal_sized_dispatch
+      (first1, last1, first2, last2, pred, typename sized_t::type());
+}
+
+//! Returns \c true if [first1, last1) and [first2, last2) have the same
+//! length and compare equal element by element.
+//! Ranges of different lengths compare unequal.
+//! Exploits segmentation on both ranges.
+//!
+//! Note: \c last2 must have the same type as \c first2. To pass a sentinel
+//! type for the end of the second range, use the overload with an explicit
+//! predicate.
+template <class InpIter1, class Sent1, class InpIter2>
+BOOST_CONTAINER_FORCEINLINE
+bool segmented_equal(InpIter1 first1, Sent1 last1, InpIter2 first2, InpIter2 last2)
+{
+   return boost::container::segmented_equal
+      (first1, last1, first2, last2, detail_algo::segmented_default_equal_to());
 }
 
 } // namespace container
