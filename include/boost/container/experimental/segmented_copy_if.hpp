@@ -49,13 +49,26 @@ typename algo_enable_if_c<!DstTag::value, segduo<SrcIter, DstIter> >::type
 segmented_copy_if_dst_bounded
    (SrcIter first, Sent last, DstIter dst_first, DstSent dst_last, Pred pred, DstTag, SrcCat)
 {
+   //[alg.copy] mandates exactly last - first applications of pred.  Testing an
+   //element, discovering the destination segment is full and returning makes the
+   //enclosing destination walker call this leaf again on the same element, which
+   //re-applies pred.  Checking the destination once on entry and again after each
+   //write removes that: when the destination fills, `first` has already moved
+   //past the element that was written, so the next call resumes on an untested
+   //element.  With an unreachable_sentinel_t destination both checks fold away,
+   //so the flat path is unchanged.
+   if(BOOST_CONTAINER_SEG_UNLIKELY(dst_first == dst_last))
+      return segduo<SrcIter, DstIter>(first, dst_first);
+
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first) {
       if(pred(*first)) {
-         if(BOOST_CONTAINER_SEG_UNLIKELY(dst_first == dst_last))
-            goto out_path;
          *dst_first = *first;
          ++dst_first;
+         if(BOOST_CONTAINER_SEG_UNLIKELY(dst_first == dst_last)) {
+            ++first;
+            goto out_path;
+         }
       }
    }
    out_path:

@@ -125,27 +125,45 @@ partition_copy_leaf
     Pred pred, const SrcCat &)
 {
    // fourth says whether [f_first, f_last) filled, the only stop a caller
-   // walking out_false segments can resume from.  Every exit sets it to a
-   // constant, so a caller that would otherwise also re-test source exhaustion
-   // just tests the flag.  The source test (the loop condition) precedes the
-   // output tests, so a source and an output running out on the same element
-   // counts as source exhaustion, which is what those callers require.
+   // walking out_false segments can resume from, so a caller that would
+   // otherwise also re-test source exhaustion just tests the flag.  A source and
+   // an output running out on the same element counts as source exhaustion,
+   // which is what those callers require, so the out_false exits report the flag
+   // as "source left".
+   //
+   // [alg.partitions] mandates exactly last - first applications of pred.
+   // Testing an element, discovering that the output it belongs to is full and
+   // returning makes the enclosing walker call this leaf again on the same
+   // element, which re-applies pred.  Each output is therefore tested once on
+   // entry and again after each write to it: when one fills, `first` has already
+   // moved past the element that was written, so the next call resumes on an
+   // untested element, and the loop body can take for granted that both outputs
+   // have room.  With unreachable_sentinel_t outputs the tests fold away, so the
+   // flat path is unchanged.
+   if(BOOST_CONTAINER_SEG_UNLIKELY(t_first == t_last))
+      return segquartet<SrcIter, TIter, FIter, bool>(first, t_first, f_first, false);
+   if(BOOST_CONTAINER_SEG_UNLIKELY(f_first == f_last))
+      return segquartet<SrcIter, TIter, FIter, bool>(first, t_first, f_first, first != last);
+
    bool false_output_full = false;
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first) {
       if(pred(*first)) {
-         if(BOOST_CONTAINER_SEG_UNLIKELY(t_first == t_last))
-            break;
          *t_first = *first;
          ++t_first;
-      }
-      else {
-         if(BOOST_CONTAINER_SEG_UNLIKELY(f_first == f_last)) {
-            false_output_full = true;
+         if(BOOST_CONTAINER_SEG_UNLIKELY(t_first == t_last)) {
+            ++first;
             break;
          }
+      }
+      else {
          *f_first = *first;
          ++f_first;
+         if(BOOST_CONTAINER_SEG_UNLIKELY(f_first == f_last)) {
+            ++first;
+            false_output_full = first != last;
+            break;
+         }
       }
    }
    return segquartet<SrcIter, TIter, FIter, bool>
