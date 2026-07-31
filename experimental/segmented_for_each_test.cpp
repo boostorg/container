@@ -176,6 +176,40 @@ void test_for_each_single_segment_sentinel()
       BOOST_TEST_EQ(*it, expected[i]);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Function application count.
+//
+// [alg.foreach] mandates "Applies f exactly last - first times", so a segment
+// walked twice or one skipped is caught here even in the cases where the
+// accumulated answer still comes out right.
+//////////////////////////////////////////////////////////////////////////////
+
+struct for_each_count_check
+{
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      test_detail::op_counter calls;
+      segmented_for_each(c.begin(), test_detail::iter_at(c, n),
+                         test_detail::counting_fun<doubler, void>(calls, doubler()));
+
+      BOOST_TEST_EQ(calls.n, n);
+      BOOST_TEST(test_detail::filler_intact(c, n, -999));
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_for_each_application_count()
+{
+   int vals[16];
+   for(int i = 0; i != 16; ++i)
+      vals[i] = i + 1;
+
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s)
+      test_detail::for_each_shape_all<int>(vals, sizes[s], -999, for_each_count_check());
+}
+
 int main()
 {
    test_for_each_shape_matrix();
@@ -186,5 +220,6 @@ int main()
    test_for_each_sentinel_non_segmented();
    test_for_each_seg2();
    test_for_each_single_segment_sentinel();
+   test_for_each_application_count();
    return boost::report_errors();
 }

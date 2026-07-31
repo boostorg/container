@@ -277,6 +277,53 @@ void test_find_last_forward_match_in_earlier_segment_seg2()
    BOOST_TEST(segmented_find_last(sv2.begin(), last, 6) == last);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Comparison count.
+//
+// [alg.find.last] mandates "At most last - first applications of the
+// corresponding predicate and projection", which holds for the backward scan
+// a bidirectional range allows as much as for the forward one a forward range
+// forces.  There is no predicate overload, so the count comes from the value
+// type.
+//////////////////////////////////////////////////////////////////////////////
+
+struct find_last_comparison_check
+{
+   int value;
+
+   explicit find_last_comparison_check(int v) : value(v) {}
+
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      test_detail::counted_int_ops().reset();
+      segmented_find_last(c.begin(), test_detail::iter_at(c, n), test_detail::counted_int(value));
+      const std::size_t applied = test_detail::counted_int_ops().cmp;
+
+      BOOST_TEST(applied <= n);
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_find_last_comparison_count()
+{
+   int vals[16];
+   for(int i = 0; i != 16; ++i)
+      vals[i] = i/2 + 1;
+
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      for(std::size_t v = 0; v <= n + 1u; ++v) {
+         const int target = (v <= n) ? int(v) : -999;
+         test_detail::for_each_shape_all<test_detail::counted_int>
+            (vals, n, -999, find_last_comparison_check(target));
+         test_detail::for_each_shape_all_fwd<test_detail::counted_int>
+            (vals, n, -999, find_last_comparison_check(target));
+      }
+   }
+}
+
 int main()
 {
    test_find_last_shape_matrix();
@@ -292,5 +339,6 @@ int main()
    test_find_last_single_segment_sentinel();
    test_find_last_forward_match_in_earlier_segment();
    test_find_last_forward_match_in_earlier_segment_seg2();
+   test_find_last_comparison_count();
    return boost::report_errors();
 }

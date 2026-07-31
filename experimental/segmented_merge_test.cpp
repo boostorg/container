@@ -990,6 +990,69 @@ void test_merge_shape_matrix()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Comparison count.
+//
+// [alg.merge] mandates "At most N - 1 comparisons", N being the total input
+// length.  That is far tighter than the set operations allow, so a single
+// element re-compared at a destination boundary already breaks it.
+//////////////////////////////////////////////////////////////////////////////
+
+struct less_comp
+{
+   bool operator()(int a, int b) const { return a < b; }
+};
+
+inline std::size_t merge_comparison_bound(std::size_t n1, std::size_t n2)
+{
+   const std::size_t total = n1 + n2;
+   return total ? total - 1u : 0u;
+}
+
+struct merge_count_check
+{
+   template<class C1, class C2>
+   void operator()(C1& c1, std::size_t n1, const char* s1,
+                   C2& c2, std::size_t n2, const char* s2) const
+   {
+      boost::container::vector<int> flat(n1 + n2 + 1u, -1);
+      {
+         test_detail::op_counter calls;
+         segmented_merge(c1.begin(), test_detail::iter_at(c1, n1),
+                         c2.begin(), test_detail::iter_at(c2, n2),
+                         flat.begin(), test_detail::counting_pred(calls, less_comp()));
+         BOOST_TEST(calls.n <= merge_comparison_bound(n1, n2));
+      }
+
+      for(std::size_t block = 1u; block <= 3u; ++block) {
+         test_detail::seg_vector<int> out;
+         for(std::size_t room = 0; room <= n1 + n2; room += block)
+            out.add_segment(block, -1);
+
+         test_detail::op_counter calls;
+         segmented_merge(c1.begin(), test_detail::iter_at(c1, n1),
+                         c2.begin(), test_detail::iter_at(c2, n2),
+                         out.begin(), test_detail::counting_pred(calls, less_comp()));
+         BOOST_TEST(calls.n <= merge_comparison_bound(n1, n2));
+      }
+
+      BOOST_TEST(s1 != 0 && s2 != 0);
+   }
+};
+
+void test_merge_comparison_count()
+{
+   const int v1[] = {1, 2, 2, 3, 5, 8};
+   const int v2[] = {2, 3, 3, 4, 8, 9};
+
+   static const std::size_t pairs[][2] =
+      { {0u, 0u}, {0u, 3u}, {3u, 0u}, {1u, 1u}, {2u, 4u}, {4u, 2u}, {5u, 6u} };
+
+   for(std::size_t p = 0; p != sizeof(pairs)/sizeof(pairs[0]); ++p)
+      test_detail::for_each_shape2_all<int, int>
+         (v1, pairs[p][0], v2, pairs[p][1], -999, merge_count_check());
+}
+
 int main()
 {
    test_merge_shape_matrix();
@@ -1031,5 +1094,6 @@ int main()
    test_merge_single_segment_sentinel();
    test_merge_single_segment_with_comp();
 
+   test_merge_comparison_count();
    return boost::report_errors();
 }

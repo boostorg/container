@@ -211,6 +211,53 @@ void test_is_sorted_single_segment_sentinel()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Comparison count.
+//
+// [alg.sorted] states the complexity of is_sorted/is_sorted_until as "Linear",
+// so what is pinned here is the constant: a scan comparing each adjacent pair
+// once needs last - first - 1 comparisons, and anything above last - first
+// means a pair compared twice, which is what a segment boundary invites.
+//////////////////////////////////////////////////////////////////////////////
+
+struct is_sorted_count_check
+{
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      test_detail::op_counter calls;
+      segmented_is_sorted(c.begin(), test_detail::iter_at(c, n),
+                          test_detail::counting_pred(calls, greater_comp()));
+
+      BOOST_TEST(calls.n <= n);
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_is_sorted_comparison_count()
+{
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      int vals[16];
+
+      //Descending, so the range is sorted under greater_comp and the scan has
+      //to run to the end.
+      for(int i = 0; i != 16; ++i)
+         vals[i] = (16 - i) * 10;
+      test_detail::for_each_shape_all<int>(vals, n, 99999, is_sorted_count_check());
+
+      //One inversion at each adjacent pair in turn, so the early exit lands at
+      //every position, inside a segment and at a boundary.
+      for(std::size_t p = 1u; p < n; ++p) {
+         for(int i = 0; i != 16; ++i)
+            vals[i] = (16 - i) * 10;
+         vals[p] = vals[p - 1u] + 1;
+         test_detail::for_each_shape_all<int>(vals, n, 99999, is_sorted_count_check());
+      }
+   }
+}
+
 int main()
 {
    test_is_sorted_shape_matrix();
@@ -222,5 +269,6 @@ int main()
    test_is_sorted_sentinel_non_segmented();
    test_is_sorted_seg2();
    test_is_sorted_single_segment_sentinel();
+   test_is_sorted_comparison_count();
    return boost::report_errors();
 }

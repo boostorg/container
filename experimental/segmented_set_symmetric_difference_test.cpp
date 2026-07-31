@@ -670,6 +670,72 @@ void test_set_symmetric_difference_shape_matrix()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Comparison count.
+//
+// [set.symmetric.difference] mandates "At most 2 * ((last1 - first1) + (last2
+// - first2)) - 1 comparisons".  The destination is laid out in segments of
+// one, two and three elements as well as flat, since it is the destination
+// boundaries that make the leaf return mid-merge and the walker call it again.
+//////////////////////////////////////////////////////////////////////////////
+
+struct less_int
+{
+   bool operator()(int a, int b) const { return a < b; }
+};
+
+inline std::size_t set_symmetric_difference_comparison_bound(std::size_t n1, std::size_t n2)
+{
+   const std::size_t total = n1 + n2;
+   return total ? 2u*total - 1u : 0u;
+}
+
+struct set_symmetric_difference_count_check
+{
+   template<class C1, class C2>
+   void operator()(C1& c1, std::size_t n1, const char* s1,
+                   C2& c2, std::size_t n2, const char* s2) const
+   {
+      boost::container::vector<int> flat(n1 + n2 + 1u, -1);
+      {
+         test_detail::op_counter calls;
+         segmented_set_symmetric_difference
+            (c1.begin(), test_detail::iter_at(c1, n1),
+             c2.begin(), test_detail::iter_at(c2, n2),
+             flat.begin(), test_detail::counting_pred(calls, less_int()));
+         BOOST_TEST(calls.n <= set_symmetric_difference_comparison_bound(n1, n2));
+      }
+
+      for(std::size_t block = 1u; block <= 3u; ++block) {
+         test_detail::seg_vector<int> out;
+         for(std::size_t room = 0; room <= n1 + n2; room += block)
+            out.add_segment(block, -1);
+
+         test_detail::op_counter calls;
+         segmented_set_symmetric_difference
+            (c1.begin(), test_detail::iter_at(c1, n1),
+             c2.begin(), test_detail::iter_at(c2, n2),
+             out.begin(), test_detail::counting_pred(calls, less_int()));
+         BOOST_TEST(calls.n <= set_symmetric_difference_comparison_bound(n1, n2));
+      }
+
+      BOOST_TEST(s1 != 0 && s2 != 0);
+   }
+};
+
+void test_set_symmetric_difference_comparison_count()
+{
+   const int v1[] = {1, 2, 2, 3, 5, 8};
+   const int v2[] = {2, 3, 3, 4, 8, 9};
+
+   static const std::size_t pairs[][2] =
+      { {0u, 0u}, {0u, 3u}, {3u, 0u}, {1u, 1u}, {2u, 4u}, {4u, 2u}, {5u, 6u} };
+
+   for(std::size_t p = 0; p != sizeof(pairs)/sizeof(pairs[0]); ++p)
+      test_detail::for_each_shape2_all<int, int>
+         (v1, pairs[p][0], v2, pairs[p][1], -999, set_symmetric_difference_count_check());
+}
+
 int main()
 {
    test_set_symmetric_difference_shape_matrix();
@@ -697,5 +763,6 @@ int main()
    test_set_symmetric_difference_single_segment_sentinel();
    test_set_symmetric_difference_single_segment_with_comp();
 
+   test_set_symmetric_difference_comparison_count();
    return boost::report_errors();
 }

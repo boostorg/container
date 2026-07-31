@@ -399,6 +399,80 @@ void test_search_n_forward_run_before_last_segment()
    BOOST_TEST(segmented_search_n(sv.begin(), last, 4, 2) == last);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Comparison count.
+//
+// [alg.search] mandates "At most last - first comparisons" for search_n --
+// LWG 714 lowered the original N * count bound, so the run scanner is not
+// allowed to re-compare the elements of an abandoned partial run.  There is
+// no predicate overload, so the count comes from the value type.
+//////////////////////////////////////////////////////////////////////////////
+
+struct search_n_comparison_check
+{
+   int count;
+   int value;
+
+   search_n_comparison_check(int cnt, int v) : count(cnt), value(v) {}
+
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      test_detail::counted_int_ops().reset();
+      segmented_search_n(c.begin(), test_detail::iter_at(c, n), count,
+                         test_detail::counted_int(value));
+      const std::size_t applied = test_detail::counted_int_ops().cmp;
+
+      BOOST_TEST(applied <= n);
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void run_search_n_count_shapes(const int* vals, std::size_t n, int count, int value)
+{
+   test_detail::for_each_shape_all<test_detail::counted_int>
+      (vals, n, -999, search_n_comparison_check(count, value));
+   test_detail::for_each_shape_all_fwd<test_detail::counted_int>
+      (vals, n, -999, search_n_comparison_check(count, value));
+}
+
+void test_search_n_comparison_count()
+{
+   const std::size_t sizes[] = { 0u, 1u, 2u, 3u, 5u, 8u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      std::size_t i = 0;
+      int vals[16] = { 0 };
+
+      for(int count = 0; count <= int(n) + 1; ++count) {
+         // A single run of every length at every start position.
+         for(std::size_t p = 0; p != n; ++p) {
+            for(std::size_t len = 1u; p + len <= n; ++len) {
+               for(i = 0; i != n; ++i)
+                  vals[i] = (i >= p && i < p + len) ? 7 : 100 + int(i);
+               run_search_n_count_shapes(vals, n, count, 7);
+            }
+         }
+
+         // Two runs separated by a single hole, so a partial run has to be
+         // abandoned and restarted without looking at anything twice.
+         for(std::size_t g = 0; g != n; ++g) {
+            for(i = 0; i != n; ++i)
+               vals[i] = (i == g) ? 100 : 7;
+            run_search_n_count_shapes(vals, n, count, 7);
+         }
+
+         for(i = 0; i != n; ++i)
+            vals[i] = (i % 2u == 0u) ? 7 : 100;
+         run_search_n_count_shapes(vals, n, count, 7);
+
+         for(i = 0; i != n; ++i)
+            vals[i] = 100 + int(i);
+         run_search_n_count_shapes(vals, n, count, 7);
+      }
+   }
+}
+
 int main()
 {
    test_search_n_shape_matrix();
@@ -417,5 +491,6 @@ int main()
    test_search_n_single_segment_seg2_single_inner();
    test_search_n_single_segment_forward();
    test_search_n_forward_run_before_last_segment();
+   test_search_n_comparison_count();
    return boost::report_errors();
 }

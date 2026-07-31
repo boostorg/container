@@ -386,6 +386,52 @@ void test_remove_shape_matrix()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Comparison count.
+//
+// [alg.remove] mandates "Exactly last - first applications of the
+// corresponding predicate or comparison", so an element compared twice at a
+// segment boundary is a conformance failure.  segmented_remove is built from
+// segmented_find plus segmented_remove_copy, and the count is what catches
+// the join between them re-testing the element find stopped on.
+//////////////////////////////////////////////////////////////////////////////
+
+struct remove_comparison_check
+{
+   template<class C>
+   void operator()(C& c, std::size_t n, const char* spec) const
+   {
+      test_detail::counted_int_ops().reset();
+      segmented_remove(c.begin(), test_detail::iter_at(c, n),
+                       test_detail::counted_int(shape_removed));
+      const std::size_t applied = test_detail::counted_int_ops().cmp;
+
+      BOOST_TEST_EQ(applied, n);
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_remove_comparison_count()
+{
+   static const int mixed[]  = {1, 2, 3, 2, 4, 2, 5, 6, 2, 7};
+   static const int edges[]  = {2, 1, 3, 4, 5, 2};
+   static const int none[]   = {1, 3, 5, 7, 9, 11};
+   static const int all_rm[] = {2, 2, 2, 2, 2, 2};
+   static const int* const sets[] = {mixed, edges, none, all_rm};
+   static const std::size_t set_len[] = {10u, 6u, 6u, 6u};
+   static const std::size_t sizes[] = {0u, 1u, 2u, 3u, 5u, 6u, 10u};
+
+   for(std::size_t s = 0; s != sizeof(sets)/sizeof(sets[0]); ++s) {
+      for(std::size_t i = 0; i != sizeof(sizes)/sizeof(sizes[0]); ++i) {
+         const std::size_t n = sizes[i];
+         if(n > set_len[s])
+            continue;
+         test_detail::for_each_shape_all<test_detail::counted_int>
+            (sets[s], n, shape_filler, remove_comparison_check());
+      }
+   }
+}
+
 int main()
 {
    test_remove_segmented();
@@ -407,5 +453,6 @@ int main()
    test_remove_movable_seg();
    test_remove_movable_seg2();
    test_remove_shape_matrix();
+   test_remove_comparison_count();
    return boost::report_errors();
 }

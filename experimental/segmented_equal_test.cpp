@@ -607,6 +607,78 @@ void test_equal_shape_matrix()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Predicate application count.
+//
+// [alg.equal] mandates "At most last1 - first1 applications of the
+// corresponding predicate".  The lower bound below is what stops the check
+// from passing vacuously: the answer cannot be known before the first
+// differing position has been looked at.
+//////////////////////////////////////////////////////////////////////////////
+
+struct eq_int
+{
+   bool operator()(int a, int b) const { return a == b; }
+};
+
+struct equal_count_check
+{
+   // Index of the element of range 2 that was corrupted, or n1 for none.
+   std::size_t bad_pos;
+
+   explicit equal_count_check(std::size_t p) : bad_pos(p) {}
+
+   template<class C1, class C2>
+   void operator()(C1& c1, std::size_t n1, const char* s1,
+                   C2& c2, std::size_t n2, const char* s2) const
+   {
+      const std::size_t needed = bad_pos < n1 ? bad_pos + 1u : n1;
+
+      {
+         test_detail::op_counter calls;
+         segmented_equal(c1.begin(), test_detail::iter_at(c1, n1), c2.begin(),
+                         test_detail::counting_pred(calls, eq_int()));
+         BOOST_TEST(calls.n <= n1);
+         BOOST_TEST(calls.n >= needed);
+      }
+      {
+         test_detail::op_counter calls;
+         segmented_equal(c1.begin(), test_detail::make_sentinel(test_detail::iter_at(c1, n1)),
+                         c2.begin(), test_detail::counting_pred(calls, eq_int()));
+         BOOST_TEST(calls.n <= n1);
+         BOOST_TEST(calls.n >= needed);
+      }
+
+      BOOST_TEST(s1 != 0 && s2 != 0 && n2 != 0);
+   }
+};
+
+void test_equal_predicate_count()
+{
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 9u };
+
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n1 = sizes[s];
+      const std::size_t n2 = n1 + 1u;
+
+      int v1[10] = {};
+      for(std::size_t i = 0; i != n1; ++i)
+         v1[i] = int(i) + 1;
+
+      for(std::size_t bad = 0; bad <= n1; ++bad) {
+         int v2[11] = {};
+         for(std::size_t i = 0; i != n1; ++i)
+            v2[i] = v1[i];
+         v2[n1] = equal_shape_tail;
+         if(bad != n1)
+            v2[bad] = -7;
+
+         test_detail::for_each_shape2_all<int, int>
+            (v1, n1, v2, n2, -999, equal_count_check(bad));
+      }
+   }
+}
+
 int main()
 {
    test_equal_shape_matrix();
@@ -639,5 +711,6 @@ int main()
    test_equal_single_segment_flat_first_range();
    test_equal_single_segment_every_position();
 
+   test_equal_predicate_count();
    return boost::report_errors();
 }

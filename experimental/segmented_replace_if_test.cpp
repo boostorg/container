@@ -210,6 +210,49 @@ void test_replace_if_single_segment_sentinel()
       BOOST_TEST_EQ(*it, expected[i]);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Predicate application count.
+//
+// [alg.replace] mandates "Exactly last - first applications of the
+// corresponding predicate", so a segment walked twice or an element skipped is
+// caught here even where the rewritten values still come out right.
+//////////////////////////////////////////////////////////////////////////////
+
+struct replace_if_count_check
+{
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      test_detail::op_counter calls;
+      segmented_replace_if(c.begin(), test_detail::iter_at(c, n),
+                           test_detail::counting_pred(calls, is_negative()), 0);
+
+      BOOST_TEST_EQ(calls.n, n);
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_replace_if_predicate_count()
+{
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      int vals[16];
+
+      for(int i = 0; i != 16; ++i)
+         vals[i] = (i % 2) ? (i + 1) : -(i + 1);
+      test_detail::for_each_shape_all<int>(vals, n, -6, replace_if_count_check());
+
+      for(int i = 0; i != 16; ++i)
+         vals[i] = i + 1;
+      test_detail::for_each_shape_all<int>(vals, n, -6, replace_if_count_check());
+
+      for(int i = 0; i != 16; ++i)
+         vals[i] = -(i + 1);
+      test_detail::for_each_shape_all<int>(vals, n, -6, replace_if_count_check());
+   }
+}
+
 int main()
 {
    test_replace_if_shape_matrix();
@@ -220,5 +263,6 @@ int main()
    test_replace_if_sentinel_non_segmented();
    test_replace_if_seg2();
    test_replace_if_single_segment_sentinel();
+   test_replace_if_predicate_count();
    return boost::report_errors();
 }

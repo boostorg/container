@@ -272,6 +272,66 @@ void test_any_of_forward_hit_before_last_segment()
    BOOST_TEST(!segmented_any_of(sv.begin(), last, equals_val(80)));
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Predicate application count.
+//
+// [alg.any.of] mandates "At most last - first applications of the predicate".
+// The lower bound is not in the standard but follows from the answer: true
+// cannot be returned without having applied pred to every element up to and
+// including the first hit, and false cannot be returned without having applied
+// it to all of them.  Bracketing the count catches an element retested when
+// the scan crosses a segment boundary.
+//////////////////////////////////////////////////////////////////////////////
+
+template<class Pred>
+struct any_of_count_check
+{
+   Pred pred;
+
+   explicit any_of_count_check(Pred p) : pred(p) {}
+
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      const boost::container::vector<int> flat = test_detail::flatten_n_ints(c, n);
+      std::size_t needed = n;
+      for(std::size_t i = 0; i != n; ++i)
+         if(pred(flat[i])) { needed = i + 1u; break; }
+
+      test_detail::op_counter calls;
+      segmented_any_of(c.begin(), test_detail::iter_at(c, n),
+                       test_detail::counting_pred(calls, pred));
+
+      BOOST_TEST(calls.n <= n);
+      BOOST_TEST(calls.n >= needed);
+      BOOST_TEST(spec != 0);
+   }
+};
+
+template<class Pred>
+void run_any_of_count_shapes(const int* vals, std::size_t n, Pred pred)
+{
+   test_detail::for_each_shape_all<int>(vals, n, -999, any_of_count_check<Pred>(pred));
+   test_detail::for_each_shape_all_fwd<int>(vals, n, -999, any_of_count_check<Pred>(pred));
+}
+
+void test_any_of_predicate_count()
+{
+   int vals[16];
+   for(int i = 0; i != 16; ++i)
+      vals[i] = i + 1;
+
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      for(std::size_t v = 0; v <= n + 1u; ++v)
+         run_any_of_count_shapes(vals, n, equals_val((v <= n) ? int(v) : -999));
+      run_any_of_count_shapes(vals, n, multiple_of(1));
+      run_any_of_count_shapes(vals, n, multiple_of(3));
+      run_any_of_count_shapes(vals, n, is_negative());
+   }
+}
+
 int main()
 {
    test_any_of_shape_matrix();
@@ -285,5 +345,6 @@ int main()
    test_any_of_single_segment_seg2_single_inner();
    test_any_of_single_segment_forward();
    test_any_of_forward_hit_before_last_segment();
+   test_any_of_predicate_count();
    return boost::report_errors();
 }

@@ -586,6 +586,95 @@ void test_copy_if_unrolled_blocks()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Predicate application count.
+//
+// [alg.copy] mandates "Exactly last - first applications of the corresponding
+// predicate", whatever the segmentation of either range.  A leaf that applies
+// pred, then finds the destination segment full and returns without consuming
+// the element it has just tested hands that element back to the destination
+// walker, which re-applies pred to it; only an equality catches that.
+//////////////////////////////////////////////////////////////////////////////
+
+struct copy_if_count_check
+{
+   template<class CSrc, class CDst>
+   void operator()(CSrc& src, std::size_t n_src, const char* src_spec,
+                   CDst& dst, std::size_t n_dst, const char* dst_spec) const
+   {
+      test_detail::op_counter calls;
+      segmented_copy_if(src.begin(), test_detail::iter_at(src, n_src), dst.begin(),
+                        test_detail::counting_pred(calls, is_even()));
+
+      BOOST_TEST_EQ(calls.n, n_src);
+      BOOST_TEST(test_detail::filler_intact(dst, n_dst, shape_filler));
+      BOOST_TEST(src_spec != 0 && dst_spec != 0);
+   }
+};
+
+void copy_if_add_block(test_detail::seg_vector<int>& c, std::size_t block)
+{  c.add_segment(block, 0);   }
+
+void copy_if_add_block(test_detail::seg2_vector<int>& c, std::size_t block)
+{
+   test_detail::seg_vector<int> inner;
+   inner.add_segment(block, 0);
+   c.add_segment(inner);
+}
+
+// Destination segments of a handful of elements each, so that boundary
+// crossings dominate: with 64 elements and blocks of 8 there are seven of them,
+// and the depth-2 destination multiplies them.
+template<class CDst>
+void copy_if_count_small_dst(std::size_t n, std::size_t block, bool all_match)
+{
+   boost::container::vector<int> src;
+   src.reserve(n);
+   for(std::size_t i = 0; i != n; ++i)
+      src.push_back(all_match ? 2*static_cast<int>(i) + 2 : 2*static_cast<int>(i) + 1);
+
+   CDst dst;
+   for(std::size_t room = 0; room < n; room += block)
+      copy_if_add_block(dst, block);
+
+   test_detail::op_counter calls;
+   segmented_copy_if(src.begin(), src.end(), dst.begin(),
+                     test_detail::counting_pred(calls, is_even()));
+   BOOST_TEST_EQ(calls.n, n);
+}
+
+void test_copy_if_predicate_count()
+{
+   static const int mixed[]   = {2, 7, 4, 9, 6, 11, 8, 13, 10, 15};
+   static const int all_hit[] = {2, 4, 6, 8, 10, 12};
+   static const int no_hit[]  = {1, 3, 5, 7, 9, 11};
+   static const int* const sets[] = {mixed, all_hit, no_hit};
+   static const std::size_t set_len[] = {10u, 6u, 6u};
+   static const std::size_t sizes[] = {0u, 1u, 2u, 3u, 5u, 6u};
+
+   for(std::size_t s = 0; s != sizeof(sets)/sizeof(sets[0]); ++s) {
+      for(std::size_t i = 0; i != sizeof(sizes)/sizeof(sizes[0]); ++i) {
+         const std::size_t n_src = sizes[i];
+         if(n_src > set_len[s])
+            continue;
+         const std::size_t m = shape_match_count(sets[s], n_src);
+         test_detail::for_each_shape2_all<int, int>
+            (sets[s], n_src, shape_dst_vals, m, shape_filler, copy_if_count_check());
+         test_detail::for_each_shape2_all<int, int>
+            (sets[s], n_src, shape_dst_vals, m + 3u, shape_filler, copy_if_count_check());
+      }
+   }
+
+   static const std::size_t blocks[] = {1u, 2u, 3u, 8u, 16u};
+   for(std::size_t b = 0; b != sizeof(blocks)/sizeof(blocks[0]); ++b) {
+      for(int am = 0; am != 2; ++am) {
+         const bool a = am != 0;
+         copy_if_count_small_dst<test_detail::seg_vector<int> >(64u, blocks[b], a);
+         copy_if_count_small_dst<test_detail::seg2_vector<int> >(64u, blocks[b], a);
+      }
+   }
+}
+
 int main()
 {
    test_copy_if_full_range();
@@ -610,5 +699,6 @@ int main()
    test_copy_if_single_segment_dst_from_flat();
    test_copy_if_shape_matrix();
    test_copy_if_unrolled_blocks();
+   test_copy_if_predicate_count();
    return boost::report_errors();
 }

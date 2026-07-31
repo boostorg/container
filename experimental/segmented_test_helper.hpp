@@ -44,6 +44,98 @@ public:
    friend std::ostream& operator<<(std::ostream& os, const movable_int& m) { return os << m.val_; }
 };
 
+//! Applications of a function object, counted outside it.  The algorithms take
+//! their function objects by value and copy them through several dispatch
+//! layers, so a counter kept as a member of the functor would be incremented in
+//! a copy the test never sees again.
+struct op_counter
+{
+   std::size_t n;
+
+   op_counter() : n(0) {}
+   void reset() { n = 0; }
+};
+
+//! Wraps a callable so that every application bumps an op_counter owned by the
+//! caller.  Result is the wrapped callable's return type, which C++03 cannot
+//! deduce; counting_pred() supplies it for the bool-returning common case.
+template<class F, class Result>
+class counting_fun
+{
+   op_counter* c_;
+   F f_;
+
+public:
+   counting_fun(op_counter& c, F f) : c_(&c), f_(f) {}
+
+   Result operator()() const
+   {  ++c_->n; return f_();   }
+
+   template<class T>
+   Result operator()(T& x) const
+   {  ++c_->n; return f_(x);   }
+
+   template<class T, class U>
+   Result operator()(T& x, U& y) const
+   {  ++c_->n; return f_(x, y);   }
+};
+
+//! Predicates and comparisons all return bool, so their result type does not
+//! have to be spelled out at every call site.
+template<class F>
+counting_fun<F, bool> counting_pred(op_counter& c, F f)
+{  return counting_fun<F, bool>(c, f);   }
+
+//! Operations counted_int performs.  The algorithms specified in terms of
+//! comparisons, assignments or swaps of the element type take a value rather
+//! than a function object, so there is nothing for the test to wrap and the
+//! counters have to be reachable from the type's own operators.
+struct value_op_counter
+{
+   std::size_t cmp;
+   std::size_t assign;
+   std::size_t swp;
+
+   value_op_counter() : cmp(0), assign(0), swp(0) {}
+   void reset() { cmp = 0; assign = 0; swp = 0; }
+};
+
+inline value_op_counter& counted_int_ops()
+{
+   static value_op_counter c;
+   return c;
+}
+
+//! int whose comparisons, assignments and swaps bump counted_int_ops().
+//! Construction deliberately does not, so that building a range leaves the
+//! counters alone and only the algorithm under test has to be bracketed by a
+//! reset.
+class counted_int
+{
+   int v_;
+
+public:
+   counted_int(int v = 0) : v_(v) {}
+   counted_int(const counted_int& o) : v_(o.v_) {}
+
+   int value() const { return v_; }
+
+   counted_int& operator=(const counted_int& o)
+   {  ++counted_int_ops().assign; v_ = o.v_; return *this;   }
+
+   friend bool operator==(const counted_int& a, const counted_int& b)
+   {  ++counted_int_ops().cmp; return a.v_ == b.v_;   }
+
+   friend bool operator!=(const counted_int& a, const counted_int& b)
+   {  ++counted_int_ops().cmp; return a.v_ != b.v_;   }
+
+   friend void swap(counted_int& a, counted_int& b)
+   {  ++counted_int_ops().swp; const int t = a.v_; a.v_ = b.v_; b.v_ = t;   }
+
+   friend std::ostream& operator<<(std::ostream& os, const counted_int& c)
+   {  return os << c.v_;   }
+};
+
 // Cat selects the advertised iterator category.  Algorithms such as
 // segmented_find_last have distinct segmented implementations for forward and
 // for bidirectional iterators, so both have to be instantiable from a test.
@@ -436,6 +528,20 @@ public:
 //                          true while the guard still holds filler, i.e. the
 //                          algorithm has not written past the end.
 //
+// Operation counting, for the complexity requirements stated as a number of
+// applications of a predicate, comparison or operation.
+//   op_counter             a counter living outside the function object.
+//   counting_fun<F, R>(c, f)
+//                          f, with every application counted in c.  R is f's
+//                          return type.
+//   counting_pred(c, f)    the same for a bool-returning f, whose result type
+//                          therefore needs no spelling out.
+//   counted_int            element type whose comparisons, assignments and
+//                          swaps are counted, for the algorithms that take a
+//                          value instead of a function object.
+//   counted_int_ops()      the cmp/assign/swp counters counted_int bumps;
+//                          reset() them immediately before the call.
+//
 // Combinators.  Each one walks the core m/s specs first, in their original
 // order, and then the empty-segment ones.  Each builds every range afresh for
 // every combination, so a callable is free to mutate the ranges it is handed.
@@ -587,6 +693,7 @@ typename Cont::iterator iter_at(Cont& c, std::size_t n)
 
 inline int seg_value_of(int v)                { return v; }
 inline int seg_value_of(const movable_int& m) { return m.value(); }
+inline int seg_value_of(const counted_int& c) { return c.value(); }
 
 template<class It>
 boost::container::vector<int> flatten_ints(It first, It last)

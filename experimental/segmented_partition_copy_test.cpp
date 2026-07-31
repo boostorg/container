@@ -630,6 +630,99 @@ void test_partition_copy_unrolled_blocks()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Predicate application count.
+//
+// [alg.partitions] mandates "Exactly last - first applications of pred" for
+// partition_copy, whatever the segmentation of the source and of either
+// output.  A leaf that applies pred, then finds one of the two destination
+// segments full and returns without consuming the element it has just tested
+// hands that element back to the walker, which re-applies pred to it.
+//////////////////////////////////////////////////////////////////////////////
+
+struct partition_copy_count_check
+{
+   template<class CSrc, class CTrue, class CFalse>
+   void operator()(CSrc& src,  std::size_t n_src, const char* src_spec,
+                   CTrue& tdst, std::size_t n_t,  const char* t_spec,
+                   CFalse& fdst, std::size_t n_f, const char* f_spec) const
+   {
+      test_detail::op_counter calls;
+      segmented_partition_copy(src.begin(), test_detail::iter_at(src, n_src),
+                               tdst.begin(), fdst.begin(),
+                               test_detail::counting_pred(calls, is_even()));
+
+      BOOST_TEST_EQ(calls.n, n_src);
+      BOOST_TEST(test_detail::filler_intact(tdst, n_t, shape_filler));
+      BOOST_TEST(test_detail::filler_intact(fdst, n_f, shape_filler));
+      BOOST_TEST(src_spec != 0 && t_spec != 0 && f_spec != 0);
+   }
+};
+
+void partition_copy_add_block(test_detail::seg_vector<int>& c, std::size_t block)
+{  c.add_segment(block, 0);   }
+
+void partition_copy_add_block(test_detail::seg2_vector<int>& c, std::size_t block)
+{
+   test_detail::seg_vector<int> inner;
+   inner.add_segment(block, 0);
+   c.add_segment(inner);
+}
+
+// Output segments of a handful of elements each, so that boundary crossings
+// dominate: both outputs cross, and the depth-2 form multiplies the crossings.
+template<class CDst>
+void partition_copy_count_small_dst(std::size_t n, std::size_t block)
+{
+   boost::container::vector<int> src;
+   src.reserve(n);
+   for(std::size_t i = 0; i != n; ++i)
+      src.push_back(static_cast<int>(i) + 1);
+
+   CDst tdst, fdst;
+   for(std::size_t room = 0; room < n; room += block) {
+      partition_copy_add_block(tdst, block);
+      partition_copy_add_block(fdst, block);
+   }
+
+   test_detail::op_counter calls;
+   segmented_partition_copy(src.begin(), src.end(), tdst.begin(), fdst.begin(),
+                            test_detail::counting_pred(calls, is_even()));
+   BOOST_TEST_EQ(calls.n, n);
+}
+
+void test_partition_copy_predicate_count()
+{
+   static const int mixed[]  = {1, 2, 3, 4, 5, 6, 7, 8};
+   static const int t_only[] = {2, 4, 6, 8, 10, 12};
+   static const int f_only[] = {1, 3, 5, 7, 9, 11};
+   static const int* const sets[] = {mixed, t_only, f_only};
+   static const std::size_t set_len[] = {8u, 6u, 6u};
+   static const std::size_t sizes[] = {0u, 1u, 2u, 5u};
+
+   for(std::size_t s = 0; s != sizeof(sets)/sizeof(sets[0]); ++s) {
+      for(std::size_t i = 0; i != sizeof(sizes)/sizeof(sizes[0]); ++i) {
+         const std::size_t n = sizes[i];
+         if(n > set_len[s])
+            continue;
+         const std::size_t nt = shape_true_count(sets[s], n);
+         const std::size_t nf = n - nt;
+         test_detail::for_each_shape3_all<int, int, int>
+            (sets[s], n, shape_dst_vals, nt, shape_dst_vals, nf,
+             shape_filler, partition_copy_count_check());
+         test_detail::for_each_shape3_all<int, int, int>
+            (sets[s], n, shape_dst_vals, nt + 2u, shape_dst_vals, nf + 2u,
+             shape_filler, partition_copy_count_check());
+      }
+   }
+
+   static const std::size_t blocks[] = {1u, 2u, 3u, 8u, 16u};
+   for(std::size_t b = 0; b != sizeof(blocks)/sizeof(blocks[0]); ++b) {
+      partition_copy_count_small_dst<test_detail::seg_vector<int> >(64u, blocks[b]);
+      partition_copy_count_small_dst<test_detail::seg2_vector<int> >(64u, blocks[b]);
+   }
+}
+
 int main()
 {
    test_partition_copy_segmented();
@@ -651,5 +744,6 @@ int main()
    test_partition_copy_single_segment_outs_from_flat();
    test_partition_copy_shape_matrix();
    test_partition_copy_unrolled_blocks();
+   test_partition_copy_predicate_count();
    return boost::report_errors();
 }

@@ -406,6 +406,55 @@ void test_remove_if_shape_matrix()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Predicate application count.
+//
+// [alg.remove] mandates "Exactly last - first applications of the corresponding
+// predicate".  segmented_remove_if reaches that total in two pieces, the
+// find_if that locates the first match and the compacting pass over the rest,
+// so an element tested by both, or one re-tested when the write pointer crosses
+// a segment boundary, shows up as a surplus here.
+//////////////////////////////////////////////////////////////////////////////
+
+template<class Pred>
+struct remove_if_count_check
+{
+   template<class C>
+   void operator()(C& c, std::size_t n, const char* spec) const
+   {
+      test_detail::op_counter calls;
+      segmented_remove_if(c.begin(), test_detail::iter_at(c, n),
+                          test_detail::counting_pred(calls, Pred()));
+
+      BOOST_TEST_EQ(calls.n, n);
+      BOOST_TEST(test_detail::filler_intact(c, n, shape_filler));
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_remove_if_predicate_count()
+{
+   static const int mixed[]  = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+   static const int edges[]  = {2, 1, 3, 5, 7, 4};
+   static const int odds[]   = {1, 3, 5, 7, 9, 11};
+   static const int evens[]  = {2, 4, 6, 8, 10, 12};
+   static const int* const sets[] = {mixed, edges, odds, evens};
+   static const std::size_t set_len[] = {10u, 6u, 6u, 6u};
+   static const std::size_t sizes[] = {0u, 1u, 2u, 3u, 5u, 6u, 10u};
+
+   for(std::size_t s = 0; s != sizeof(sets)/sizeof(sets[0]); ++s) {
+      for(std::size_t i = 0; i != sizeof(sizes)/sizeof(sizes[0]); ++i) {
+         const std::size_t n = sizes[i];
+         if(n > set_len[s])
+            continue;
+         test_detail::for_each_shape_all<int>
+            (sets[s], n, shape_filler, remove_if_count_check<is_even>());
+         test_detail::for_each_shape_all<int>
+            (sets[s], n, shape_filler, remove_if_count_check<is_odd>());
+      }
+   }
+}
+
 int main()
 {
    test_remove_if_segmented();
@@ -428,5 +477,6 @@ int main()
    test_remove_if_movable_seg();
    test_remove_if_movable_seg2();
    test_remove_if_shape_matrix();
+   test_remove_if_predicate_count();
    return boost::report_errors();
 }

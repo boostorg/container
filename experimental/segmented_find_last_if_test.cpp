@@ -310,6 +310,65 @@ void test_find_last_if_forward_match_in_earlier_segment_seg2()
    BOOST_TEST(segmented_find_last_if(sv2.begin(), last, equals_val(6)) == last);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Predicate application count.
+//
+// [alg.find.last] mandates "At most last - first applications of the
+// corresponding predicate", so neither the forward implementation, which has
+// to walk the whole range, nor the bidirectional one, which scans backwards
+// from the end, may retest an element at a segment boundary.
+//////////////////////////////////////////////////////////////////////////////
+
+template<class Pred>
+struct find_last_if_count_check
+{
+   Pred pred;
+
+   explicit find_last_if_count_check(Pred p) : pred(p) {}
+
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      test_detail::op_counter calls;
+      segmented_find_last_if(c.begin(), test_detail::iter_at(c, n),
+                             test_detail::counting_pred(calls, pred));
+
+      BOOST_TEST(calls.n <= n);
+      BOOST_TEST(spec != 0);
+   }
+};
+
+template<class Pred>
+void run_find_last_if_count_shapes(const int* vals, std::size_t n, Pred pred)
+{
+   test_detail::for_each_shape_all<int>(vals, n, -999, find_last_if_count_check<Pred>(pred));
+   test_detail::for_each_shape_all_fwd<int>(vals, n, -999, find_last_if_count_check<Pred>(pred));
+}
+
+void test_find_last_if_predicate_count()
+{
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      int vals[16];
+
+      for(int i = 0; i != 16; ++i)
+         vals[i] = i/2 + 1;
+      for(std::size_t v = 0; v <= n + 1u; ++v)
+         run_find_last_if_count_shapes(vals, n, equals_val((v <= n) ? int(v) : -999));
+
+      for(std::size_t p = 0; p != n; ++p) {
+         for(std::size_t i = 0; i != 16u; ++i)
+            vals[i] = (i == p) ? -int(i + 1u) : int(i + 1u);
+         run_find_last_if_count_shapes(vals, n, is_negative());
+      }
+
+      for(int i = 0; i != 16; ++i)
+         vals[i] = i + 1;
+      run_find_last_if_count_shapes(vals, n, is_negative());
+   }
+}
+
 int main()
 {
    test_find_last_if_shape_matrix();
@@ -325,5 +384,6 @@ int main()
    test_find_last_if_single_segment_sentinel();
    test_find_last_if_forward_match_in_earlier_segment();
    test_find_last_if_forward_match_in_earlier_segment_seg2();
+   test_find_last_if_predicate_count();
    return boost::report_errors();
 }

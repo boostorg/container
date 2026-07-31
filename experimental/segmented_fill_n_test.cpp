@@ -125,11 +125,57 @@ void test_fill_n_shape_matrix()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Assignment count.
+//
+// [alg.fill] mandates "Exactly n assignments", so a slot written twice at a
+// segment boundary is a conformance failure.  The count is taken from the
+// value type, fill_n having no functor to instrument.
+//////////////////////////////////////////////////////////////////////////////
+
+struct fill_n_assignment_check
+{
+   std::size_t offset;
+   std::size_t count;
+
+   fill_n_assignment_check(std::size_t o, std::size_t k) : offset(o), count(k) {}
+
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      const test_detail::counted_int value(42);
+
+      test_detail::counted_int_ops().reset();
+      segmented_fill_n(test_detail::iter_at(c, offset), count, value);
+      const std::size_t applied = test_detail::counted_int_ops().assign;
+
+      BOOST_TEST_EQ(applied, count);
+      BOOST_TEST(spec != 0 && n >= count);
+   }
+};
+
+void test_fill_n_assignment_count()
+{
+   int vals[16];
+   for(int i = 0; i != 16; ++i)
+      vals[i] = i + 1;
+
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      for(std::size_t offset = 0; offset <= n; ++offset)
+         for(std::size_t k = 0; offset + k <= n; ++k)
+            test_detail::for_each_shape_all<test_detail::counted_int>
+               (vals, n, -999, fill_n_assignment_check(offset, k));
+   }
+}
+
 int main()
 {
    test_fill_n_shape_matrix();
    test_fill_n_partial();
    test_fill_n_single_segment();
    test_fill_n_non_segmented();
+   test_fill_n_assignment_count();
    return boost::report_errors();
 }

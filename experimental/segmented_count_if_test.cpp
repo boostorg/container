@@ -295,6 +295,41 @@ void test_count_if_forward_multi_segment()
    BOOST_TEST_EQ(segmented_count_if(sv.begin(), test_detail::iter_at(sv, 7), is_negative()), 0);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Predicate application count.
+//
+// [alg.count] mandates "Exactly last - first applications of the corresponding
+// predicate", so a segment walked twice or an element skipped shows up here
+// even in the cases where the returned total still comes out right.
+//////////////////////////////////////////////////////////////////////////////
+
+struct count_if_count_check
+{
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      test_detail::op_counter calls;
+      segmented_count_if(c.begin(), test_detail::iter_at(c, n),
+                         test_detail::counting_pred(calls, is_even()));
+
+      BOOST_TEST_EQ(calls.n, n);
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_count_if_predicate_count()
+{
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      int vals[16] = { 0 };
+      for(std::size_t i = 0; i != n; ++i)
+         vals[i] = int(i) + 1;
+      test_detail::for_each_shape_all<int>(vals, n, -999, count_if_count_check());
+      test_detail::for_each_shape_all_fwd<int>(vals, n, -999, count_if_count_check());
+   }
+}
+
 int main()
 {
    test_count_if_shape_matrix();
@@ -310,5 +345,6 @@ int main()
    test_count_if_single_segment_seg2_single_inner();
    test_count_if_single_segment_forward();
    test_count_if_forward_multi_segment();
+   test_count_if_predicate_count();
    return boost::report_errors();
 }

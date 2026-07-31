@@ -177,6 +177,51 @@ void test_replace_single_segment_sentinel()
       BOOST_TEST_EQ(*it, expected[i]);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Comparison count.
+//
+// [alg.replace] mandates "Exactly last - first applications of the
+// corresponding predicate", so an element compared twice at a segment
+// boundary is a conformance failure.  There is no predicate overload, so the
+// count comes from the value type.
+//////////////////////////////////////////////////////////////////////////////
+
+struct replace_comparison_check
+{
+   int oldv;
+
+   explicit replace_comparison_check(int o) : oldv(o) {}
+
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      test_detail::counted_int_ops().reset();
+      segmented_replace(c.begin(), test_detail::iter_at(c, n),
+                        test_detail::counted_int(oldv), test_detail::counted_int(999));
+      const std::size_t applied = test_detail::counted_int_ops().cmp;
+
+      BOOST_TEST_EQ(applied, n);
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_replace_comparison_count()
+{
+   int vals[16];
+   for(int i = 0; i != 16; ++i)
+      vals[i] = i/2 + 1;
+
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      for(std::size_t v = 0; v <= n/2u + 1u; ++v) {
+         const int oldv = int(v);
+         test_detail::for_each_shape_all<test_detail::counted_int>
+            (vals, n, oldv, replace_comparison_check(oldv));
+      }
+   }
+}
+
 int main()
 {
    test_replace_shape_matrix();
@@ -187,5 +232,6 @@ int main()
    test_replace_sentinel_non_segmented();
    test_replace_seg2();
    test_replace_single_segment_sentinel();
+   test_replace_comparison_count();
    return boost::report_errors();
 }

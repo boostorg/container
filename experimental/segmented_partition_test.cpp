@@ -343,6 +343,54 @@ void test_partition_forward_matches_in_earlier_segment()
    BOOST_TEST_EQ(*test_detail::iter_at(sv, 6), 99);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Predicate application count.
+//
+// [alg.partitions] mandates that partition performs "Exactly N applications of
+// the predicate", N = last - first, whichever iterator category is used, so
+// neither the two-ended bidirectional scan nor the forward one may retest an
+// element when it crosses a segment boundary.
+//////////////////////////////////////////////////////////////////////////////
+
+struct partition_count_check
+{
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      test_detail::op_counter calls;
+      segmented_partition(c.begin(), test_detail::iter_at(c, n),
+                          test_detail::counting_pred(calls, is_even()));
+
+      BOOST_TEST_EQ(calls.n, n);
+      BOOST_TEST(test_detail::filler_intact(c, n, -999));
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_partition_predicate_count()
+{
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      int vals[16];
+
+      for(int i = 0; i != 16; ++i)
+         vals[i] = i + 1;
+      run_partition_shapes(vals, n, partition_count_check());
+
+      for(int i = 0; i != 16; ++i)
+         vals[i] = 2*i + 2;
+      run_partition_shapes(vals, n, partition_count_check());
+      for(int i = 0; i != 16; ++i)
+         vals[i] = 2*i + 1;
+      run_partition_shapes(vals, n, partition_count_check());
+
+      for(int i = 0; i != 16; ++i)
+         vals[i] = (i < 8) ? 2*i + 1 : 2*i + 2;
+      run_partition_shapes(vals, n, partition_count_check());
+   }
+}
+
 int main()
 {
    test_partition_shape_matrix();
@@ -356,5 +404,6 @@ int main()
    test_partition_movable_seg2();
    test_partition_single_segment_sentinel();
    test_partition_forward_matches_in_earlier_segment();
+   test_partition_predicate_count();
    return boost::report_errors();
 }

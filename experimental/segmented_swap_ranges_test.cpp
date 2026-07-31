@@ -552,6 +552,40 @@ void test_swap_ranges_shape_matrix()
           shape_filler, swap_ranges_shape_check());
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Swap count.
+//
+// [alg.swap] mandates "Exactly last1 - first1 swaps", so a pair swapped twice
+// at a segment boundary is a conformance failure -- and, unlike a re-read, it
+// would also put the values back where they started.
+//////////////////////////////////////////////////////////////////////////////
+
+struct swap_ranges_count_check
+{
+   template<class C1, class C2>
+   void operator()(C1& c1, std::size_t n1, const char* s1,
+                   C2& c2, std::size_t n2, const char* s2) const
+   {
+      test_detail::counted_int_ops().reset();
+      segmented_swap_ranges(c1.begin(), test_detail::iter_at(c1, n1), c2.begin());
+      const std::size_t applied = test_detail::counted_int_ops().swp;
+
+      BOOST_TEST_EQ(applied, n1);
+      BOOST_TEST(s1 != 0 && s2 != 0 && n2 >= n1);
+   }
+};
+
+void test_swap_ranges_swap_count()
+{
+   static const std::size_t sizes[][2] =
+      { {0, 0}, {1, 1}, {1, 3}, {2, 2}, {3, 3}, {3, 6}, {5, 5}, {6, 10} };
+
+   for(std::size_t i = 0; i != sizeof(sizes)/sizeof(sizes[0]); ++i)
+      test_detail::for_each_shape2_all<test_detail::counted_int, test_detail::counted_int>
+         (shape_first_vals, sizes[i][0], shape_second_vals, sizes[i][1],
+          shape_filler, swap_ranges_count_check());
+}
+
 int main()
 {
    test_swap_ranges_full();
@@ -575,5 +609,6 @@ int main()
    test_swap_ranges_single_segment_second_from_flat();
 
    test_swap_ranges_shape_matrix();
+   test_swap_ranges_swap_count();
    return boost::report_errors();
 }

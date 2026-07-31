@@ -446,6 +446,61 @@ void test_transform_shape_matrix()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Operation application count.
+//
+// [alg.transform] mandates "Exactly last1 - first1 applications of op",
+// whatever the segmentation of either range, so an element handed to op again
+// after the destination walker steps to the next segment is caught here.
+//////////////////////////////////////////////////////////////////////////////
+
+struct transform_count_check
+{
+   template<class CSrc, class CDst>
+   void operator()(CSrc& src, std::size_t n_src, const char* src_spec,
+                   CDst& dst, std::size_t n_dst, const char* dst_spec) const
+   {
+      test_detail::op_counter calls;
+      segmented_transform(src.begin(), test_detail::iter_at(src, n_src), dst.begin(),
+                          test_detail::counting_fun<times_two, int>(calls, times_two()));
+
+      BOOST_TEST_EQ(calls.n, n_src);
+      BOOST_TEST(test_detail::filler_intact(dst, n_dst, shape_filler));
+      BOOST_TEST(src_spec != 0 && dst_spec != 0);
+   }
+};
+
+void test_transform_operation_count()
+{
+   static const std::size_t sizes[][2] =
+      { {0, 0}, {1, 1}, {1, 3}, {2, 2}, {3, 3}, {3, 6}, {5, 5}, {6, 10} };
+
+   for(std::size_t i = 0; i != sizeof(sizes)/sizeof(sizes[0]); ++i)
+      test_detail::for_each_shape2_all<int, int>
+         (shape_src_vals, sizes[i][0], shape_dst_vals, sizes[i][1],
+          shape_filler, transform_count_check());
+
+   // Destination segments of a handful of elements each, so that boundary
+   // crossings dominate rather than being a single mid-range event.
+   static const std::size_t blocks[] = {1u, 2u, 3u, 8u, 16u};
+   const std::size_t n = 64u;
+   boost::container::vector<int> in;
+   in.reserve(n);
+   for(std::size_t i = 0; i != n; ++i)
+      in.push_back(static_cast<int>(i) + 1);
+
+   for(std::size_t b = 0; b != sizeof(blocks)/sizeof(blocks[0]); ++b) {
+      test_detail::seg_vector<int> out;
+      for(std::size_t room = 0; room < n; room += blocks[b])
+         out.add_segment(blocks[b], 0);
+
+      test_detail::op_counter calls;
+      segmented_transform(in.begin(), in.end(), out.begin(),
+                          test_detail::counting_fun<times_two, int>(calls, times_two()));
+      BOOST_TEST_EQ(calls.n, n);
+   }
+}
+
 int main()
 {
    test_transform_full_range();
@@ -468,5 +523,6 @@ int main()
    test_transform_single_segment_dst_from_flat();
 
    test_transform_shape_matrix();
+   test_transform_operation_count();
    return boost::report_errors();
 }

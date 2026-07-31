@@ -1393,6 +1393,92 @@ void test_mismatch_shape_matrix()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Predicate application count.
+//
+// [mismatch] mandates "At most last1 - first1 applications of the
+// corresponding predicate", and min(last1 - first1, last2 - first2) for the
+// four-iterator form.  The lower bound below is what stops the check from
+// passing vacuously: the returned position cannot be known before the element
+// at it has been looked at.
+//////////////////////////////////////////////////////////////////////////////
+
+struct mismatch_eq_int
+{
+   bool operator()(int a, int b) const { return a == b; }
+};
+
+struct mismatch_count_check
+{
+   // Index of the element of range 2 that was corrupted, or n1 for none.
+   std::size_t bad_pos;
+
+   explicit mismatch_count_check(std::size_t p) : bad_pos(p) {}
+
+   template<class C1, class C2>
+   void operator()(C1& c1, std::size_t n1, const char* s1,
+                   C2& c2, std::size_t n2, const char* s2) const
+   {
+      const std::size_t k = bad_pos < n1 ? bad_pos : n1;
+
+      {
+         test_detail::op_counter calls;
+         segmented_mismatch(c1.begin(), test_detail::iter_at(c1, n1), c2.begin(),
+                            test_detail::counting_pred(calls, mismatch_eq_int()));
+         BOOST_TEST(calls.n <= n1);
+         BOOST_TEST(calls.n >= (k < n1 ? k + 1u : n1));
+      }
+      {
+         test_detail::op_counter calls;
+         segmented_mismatch(c1.begin(), test_detail::iter_at(c1, n1),
+                            c2.begin(), test_detail::iter_at(c2, n2),
+                            test_detail::counting_pred(calls, mismatch_eq_int()));
+         BOOST_TEST(calls.n <= (n1 < n2 ? n1 : n2));
+         BOOST_TEST(calls.n >= (k < n1 ? k + 1u : n1));
+      }
+      {
+         // Second range bounded short, so the walk can also stop on it.
+         const std::size_t half = n1 / 2u;
+         const std::size_t k_half = k < half ? k : half;
+
+         test_detail::op_counter calls;
+         segmented_mismatch(c1.begin(), test_detail::iter_at(c1, n1),
+                            c2.begin(), test_detail::iter_at(c2, half),
+                            test_detail::counting_pred(calls, mismatch_eq_int()));
+         BOOST_TEST(calls.n <= half);
+         BOOST_TEST(calls.n >= (k_half < half ? k_half + 1u : half));
+      }
+
+      BOOST_TEST(s1 != 0 && s2 != 0);
+   }
+};
+
+void test_mismatch_predicate_count()
+{
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 9u };
+
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n1 = sizes[s];
+      const std::size_t n2 = n1 + 1u;
+
+      int v1[10] = {};
+      for(std::size_t i = 0; i != n1; ++i)
+         v1[i] = int(i) + 1;
+
+      for(std::size_t bad = 0; bad <= n1; ++bad) {
+         int v2[11] = {};
+         for(std::size_t i = 0; i != n1; ++i)
+            v2[i] = v1[i];
+         v2[n1] = mismatch_shape_tail;
+         if(bad != n1)
+            v2[bad] = -7;
+
+         test_detail::for_each_shape2_all<int, int>
+            (v1, n1, v2, n2, -999, mismatch_count_check(bad));
+      }
+   }
+}
+
 int main()
 {
    test_mismatch_shape_matrix();
@@ -1456,5 +1542,6 @@ int main()
    test_mismatch_2r_single_segment_second_range_seg2();
    test_mismatch_2r_single_segment_every_position();
 
+   test_mismatch_predicate_count();
    return boost::report_errors();
 }

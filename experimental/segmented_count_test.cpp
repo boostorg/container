@@ -257,6 +257,56 @@ void test_count_forward_multi_segment()
    BOOST_TEST_EQ(segmented_count(sv.begin(), test_detail::iter_at(sv, 7), 99), 0);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Comparison count.
+//
+// [alg.count] mandates "Exactly last - first applications of the corresponding
+// predicate", so an element compared twice at a segment boundary is a
+// conformance failure, not just a slowdown.  There is no comparator overload,
+// so the count is taken from the value type itself.
+//////////////////////////////////////////////////////////////////////////////
+
+struct count_comparison_check
+{
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      const test_detail::counted_int target(3);
+
+      test_detail::counted_int_ops().reset();
+      segmented_count(c.begin(), test_detail::iter_at(c, n), target);
+      const std::size_t applied = test_detail::counted_int_ops().cmp;
+
+      BOOST_TEST_EQ(applied, n);
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_count_comparison_count()
+{
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      int vals[16];
+
+      // No match, every element a match, and a scattering of matches.
+      for(std::size_t i = 0; i != 16u; ++i)
+         vals[i] = int(i) + 100;
+      test_detail::for_each_shape_all<test_detail::counted_int>
+         (vals, n, -999, count_comparison_check());
+
+      for(std::size_t i = 0; i != 16u; ++i)
+         vals[i] = 3;
+      test_detail::for_each_shape_all<test_detail::counted_int>
+         (vals, n, -999, count_comparison_check());
+
+      for(std::size_t i = 0; i != 16u; ++i)
+         vals[i] = int(i) % 3 == 0 ? 3 : int(i) + 100;
+      test_detail::for_each_shape_all<test_detail::counted_int>
+         (vals, n, -999, count_comparison_check());
+   }
+}
+
 int main()
 {
    test_count_shape_matrix();
@@ -270,5 +320,6 @@ int main()
    test_count_single_segment_seg2_single_inner();
    test_count_single_segment_forward();
    test_count_forward_multi_segment();
+   test_count_comparison_count();
    return boost::report_errors();
 }

@@ -215,6 +215,53 @@ void test_stable_partition_shape_matrix()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Predicate application count.
+//
+// [alg.partitions] mandates that stable_partition performs "Exactly N
+// applications of the predicate", N = last - first, however much extra memory
+// it uses and however the range is segmented.
+//////////////////////////////////////////////////////////////////////////////
+
+struct stable_partition_count_check
+{
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      test_detail::op_counter calls;
+      segmented_stable_partition(c.begin(), test_detail::iter_at(c, n),
+                                 test_detail::counting_pred(calls, is_even()));
+
+      BOOST_TEST_EQ(calls.n, n);
+      BOOST_TEST(test_detail::filler_intact(c, n, -999));
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_stable_partition_predicate_count()
+{
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      int vals[16];
+
+      for(int i = 0; i != 16; ++i)
+         vals[i] = i + 1;
+      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_count_check());
+
+      for(int i = 0; i != 16; ++i)
+         vals[i] = 2*i + 2;
+      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_count_check());
+      for(int i = 0; i != 16; ++i)
+         vals[i] = 2*i + 1;
+      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_count_check());
+
+      for(int i = 0; i != 16; ++i)
+         vals[i] = (i < 8) ? 2*i + 1 : 2*i + 2;
+      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_count_check());
+   }
+}
+
 int main()
 {
    test_stable_partition_shape_matrix();
@@ -225,5 +272,6 @@ int main()
    test_stable_partition_non_segmented();
    test_stable_partition_movable_seg();
    test_stable_partition_movable_seg2();
+   test_stable_partition_predicate_count();
    return boost::report_errors();
 }

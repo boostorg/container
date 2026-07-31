@@ -406,6 +406,57 @@ void test_find_forward_match_before_last_segment()
    BOOST_TEST(segmented_find(sv.begin(), last, 80) == last);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Comparison count.
+//
+// [alg.find] mandates "At most last - first applications of the corresponding
+// predicate".  The lower bound is what stops the check from passing vacuously:
+// the answer cannot be known before the element at it has been compared.
+// There is no predicate overload, so the count comes from the value type.
+//////////////////////////////////////////////////////////////////////////////
+
+struct find_comparison_check
+{
+   int value;
+
+   explicit find_comparison_check(int v) : value(v) {}
+
+   template<class Cont>
+   void operator()(Cont& c, std::size_t n, const char* spec) const
+   {
+      const boost::container::vector<int> flat = test_detail::flatten_n_ints(c, n);
+      std::size_t expected = flat.size();
+      for(std::size_t i = 0; i != flat.size(); ++i) {
+         if(flat[i] == value) { expected = i; break; }
+      }
+
+      test_detail::counted_int_ops().reset();
+      segmented_find(c.begin(), test_detail::iter_at(c, n), test_detail::counted_int(value));
+      const std::size_t applied = test_detail::counted_int_ops().cmp;
+
+      BOOST_TEST(applied <= n);
+      BOOST_TEST(applied >= (expected < n ? expected + 1u : n));
+      BOOST_TEST(spec != 0);
+   }
+};
+
+void test_find_comparison_count()
+{
+   int vals[16];
+   for(int i = 0; i != 16; ++i)
+      vals[i] = i + 1;
+
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n = sizes[s];
+      for(std::size_t v = 0; v <= n + 1u; ++v) {
+         const int target = (v <= n) ? int(v) : -999;
+         test_detail::for_each_shape_all<test_detail::counted_int>
+            (vals, n, -999, find_comparison_check(target));
+      }
+   }
+}
+
 int main()
 {
    test_find_shape_matrix();
@@ -427,5 +478,6 @@ int main()
    test_find_single_segment_seg2_single_inner();
    test_find_single_segment_forward();
    test_find_forward_match_before_last_segment();
+   test_find_comparison_count();
    return boost::report_errors();
 }

@@ -557,6 +557,69 @@ void test_search_forward_match_before_last_segment()
               == test_detail::iter_at(sv, 7));
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Comparison count.
+//
+// [alg.search] mandates "At most (last1 - first1) * (last2 - first2)
+// applications of the corresponding predicate".  There is no predicate
+// overload, so the count comes from the value type.
+//////////////////////////////////////////////////////////////////////////////
+
+struct search_comparison_check
+{
+   template<class C1, class C2>
+   void operator()(C1& hay, std::size_t n1, const char* s1,
+                   C2& ndl, std::size_t n2, const char* s2) const
+   {
+      test_detail::counted_int_ops().reset();
+      segmented_search(hay.begin(), test_detail::iter_at(hay, n1),
+                       ndl.begin(), test_detail::iter_at(ndl, n2));
+      const std::size_t applied = test_detail::counted_int_ops().cmp;
+
+      BOOST_TEST(applied <= n1 * n2);
+      BOOST_TEST(s1 != 0 && s2 != 0);
+   }
+};
+
+void run_search_count_shapes(const int* hay, std::size_t n1, const int* ndl, std::size_t n2)
+{
+   test_detail::for_each_shape2_all<test_detail::counted_int, test_detail::counted_int>
+      (hay, n1, ndl, n2, -999, search_comparison_check());
+}
+
+void test_search_comparison_count()
+{
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 8u };
+   for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s) {
+      const std::size_t n1 = sizes[s];
+      int hay[16] = { 0 };
+      int ndl[16] = { 0 };
+      std::size_t i = 0, j = 0;
+
+      // Periodic haystack: many candidate starts per needle, so every false
+      // start has to be rejected and the re-comparisons pile up fastest.
+      for(i = 0; i != n1; ++i)
+         hay[i] = int(i % 3u) + 1;
+
+      const std::size_t maxlen = (n1 + 1u < 4u) ? n1 + 1u : 4u;
+      run_search_count_shapes(hay, n1, ndl, 0u);
+
+      for(std::size_t len = 1u; len <= maxlen; ++len) {
+         for(std::size_t off = 0; off + len <= n1; ++off) {
+            for(j = 0; j != len; ++j)
+               ndl[j] = hay[off + j];
+            run_search_count_shapes(hay, n1, ndl, len);
+
+            ndl[len - 1u] = 500;
+            run_search_count_shapes(hay, n1, ndl, len);
+         }
+         for(j = 0; j != len; ++j)
+            ndl[j] = 500 + int(j);
+         run_search_count_shapes(hay, n1, ndl, len);
+      }
+   }
+}
+
 int main()
 {
    test_search_shape_matrix();
@@ -580,5 +643,6 @@ int main()
    test_search_single_segment_haystack_and_needle();
    test_search_single_segment_forward();
    test_search_forward_match_before_last_segment();
+   test_search_comparison_count();
    return boost::report_errors();
 }

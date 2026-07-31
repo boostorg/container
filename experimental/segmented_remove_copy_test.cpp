@@ -463,6 +463,100 @@ void test_remove_copy_unrolled_blocks()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Comparison count.
+//
+// [alg.remove] mandates "Exactly last - first applications of the
+// corresponding predicate or comparison", whatever the segmentation of either
+// range.  A leaf that compares an element, then finds the destination segment
+// full and returns without consuming it hands that element back to the
+// destination walker, which compares it again; only an equality catches that.
+// There is no predicate overload, so the count comes from the value type.
+//////////////////////////////////////////////////////////////////////////////
+
+struct remove_copy_count_check
+{
+   template<class CSrc, class CDst>
+   void operator()(CSrc& src, std::size_t n_src, const char* src_spec,
+                   CDst& dst, std::size_t n_dst, const char* dst_spec) const
+   {
+      test_detail::counted_int_ops().reset();
+      segmented_remove_copy(src.begin(), test_detail::iter_at(src, n_src), dst.begin(),
+                            test_detail::counted_int(shape_removed));
+      const std::size_t applied = test_detail::counted_int_ops().cmp;
+
+      BOOST_TEST_EQ(applied, n_src);
+      BOOST_TEST(src_spec != 0 && dst_spec != 0 && n_dst <= n_src + 3u);
+   }
+};
+
+void remove_copy_add_block(test_detail::seg_vector<test_detail::counted_int>& c, std::size_t block)
+{  c.add_segment(block, test_detail::counted_int(0));   }
+
+void remove_copy_add_block(test_detail::seg2_vector<test_detail::counted_int>& c, std::size_t block)
+{
+   test_detail::seg_vector<test_detail::counted_int> inner;
+   inner.add_segment(block, test_detail::counted_int(0));
+   c.add_segment(inner);
+}
+
+// Destination segments of a handful of elements each, so that boundary
+// crossings dominate: with 64 elements and blocks of 8 there are seven of them,
+// and the depth-2 destination multiplies them.
+template<class CDst>
+void remove_copy_count_small_dst(std::size_t n, std::size_t block, bool all_kept)
+{
+   boost::container::vector<test_detail::counted_int> src;
+   src.reserve(n);
+   for(std::size_t i = 0; i != n; ++i)
+      src.push_back(test_detail::counted_int
+         (all_kept ? static_cast<int>(i) + 10 : shape_removed));
+
+   CDst dst;
+   for(std::size_t room = 0; room < n; room += block)
+      remove_copy_add_block(dst, block);
+
+   test_detail::counted_int_ops().reset();
+   segmented_remove_copy(src.begin(), src.end(), dst.begin(),
+                         test_detail::counted_int(shape_removed));
+   BOOST_TEST_EQ(test_detail::counted_int_ops().cmp, n);
+}
+
+void test_remove_copy_comparison_count()
+{
+   static const int mixed[]  = {1, 2, 3, 2, 4, 2, 5, 6, 2, 7};
+   static const int edges[]  = {2, 1, 3, 4, 5, 2};
+   static const int none[]   = {1, 3, 5, 7, 9, 11};
+   static const int all_rm[] = {2, 2, 2, 2, 2, 2};
+   static const int* const sets[] = {mixed, edges, none, all_rm};
+   static const std::size_t set_len[] = {10u, 6u, 6u, 6u};
+   static const std::size_t sizes[] = {0u, 1u, 2u, 3u, 5u, 6u};
+
+   for(std::size_t s = 0; s != sizeof(sets)/sizeof(sets[0]); ++s) {
+      for(std::size_t i = 0; i != sizeof(sizes)/sizeof(sizes[0]); ++i) {
+         const std::size_t n_src = sizes[i];
+         if(n_src > set_len[s])
+            continue;
+         const std::size_t m = shape_survivor_count(sets[s], n_src);
+         test_detail::for_each_shape2_all<test_detail::counted_int, test_detail::counted_int>
+            (sets[s], n_src, shape_dst_vals, m, shape_filler, remove_copy_count_check());
+         test_detail::for_each_shape2_all<test_detail::counted_int, test_detail::counted_int>
+            (sets[s], n_src, shape_dst_vals, m + 3u, shape_filler, remove_copy_count_check());
+      }
+   }
+
+   static const std::size_t blocks[] = {1u, 2u, 3u, 8u, 16u};
+   for(std::size_t b = 0; b != sizeof(blocks)/sizeof(blocks[0]); ++b) {
+      for(int ak = 0; ak != 2; ++ak) {
+         const bool a = ak != 0;
+         remove_copy_count_small_dst<test_detail::seg_vector<test_detail::counted_int> >
+            (64u, blocks[b], a);
+         remove_copy_count_small_dst<test_detail::seg2_vector<test_detail::counted_int> >
+            (64u, blocks[b], a);
+      }
+   }
+}
+
 int main()
 {
    test_remove_copy_segmented();
@@ -483,5 +577,6 @@ int main()
    test_remove_copy_single_segment_dst_from_flat();
    test_remove_copy_shape_matrix();
    test_remove_copy_unrolled_blocks();
+   test_remove_copy_comparison_count();
    return boost::report_errors();
 }
