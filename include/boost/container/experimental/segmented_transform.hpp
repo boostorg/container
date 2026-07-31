@@ -38,7 +38,7 @@ segmented_transform_dst_bounded
 {
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first) {
-      if(BOOST_CONTAINER_SEG_UNLIKELY(dst_first == dst_last))
+      if(BOOST_UNLIKELY(dst_first == dst_last))
          goto out_path;
       *dst_first = op(*first);
       ++dst_first;
@@ -85,7 +85,7 @@ segduo<SrcIter, SegDstIter> segmented_transform_dst_bounded
          const segduo<SrcIter, dst_local_iterator> r = (segmented_transform_dst_bounded)
             (first, last, db, de, op, dst_is_local_seg_t(), SrcCat());
          first = r.first;
-         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+         if(last_seg || BOOST_UNLIKELY(first == last))
             return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sfirst, r.second));
       }
 
@@ -93,7 +93,7 @@ segduo<SrcIter, SegDstIter> segmented_transform_dst_bounded
          const segduo<SrcIter, dst_local_iterator> r = (segmented_transform_dst_bounded)
             (first, last, dst_traits::begin(sfirst), dst_traits::end(sfirst), op, dst_is_local_seg_t(), SrcCat());
          first = r.first;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+         if(BOOST_UNLIKELY(first == last))
             return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sfirst, r.second));
       }
 
@@ -137,7 +137,7 @@ SegDstIter segmented_transform_dst_dispatch
       const segduo<SrcIter, dst_local_iterator> r = (segmented_transform_dst_bounded)
          (first, last, dst_local, dst_end, op, dst_is_local_seg_t(), Cat());
       first = r.first;
-      if(BOOST_CONTAINER_SEG_LIKELY(first != last)) {
+      if(BOOST_LIKELY(first != last)) {
          ++dst_seg;
          dst_local = dst_traits::begin(dst_seg);
       }
@@ -183,7 +183,7 @@ OutIter segmented_transform_dispatch
       const src_local_iterator le = last_seg ? src_traits::local(last) : src_traits::end(sfirst);
       result = (segmented_transform_dispatch)
          (lb, le, result, op, src_is_local_seg_t(), src_local_cat_t());
-      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+      if(BOOST_UNLIKELY(last_seg))
          return result;
 
       for(++sfirst; sfirst != slast; ++sfirst)

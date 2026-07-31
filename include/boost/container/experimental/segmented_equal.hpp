@@ -131,7 +131,7 @@ segtrio<SrcIter, SegIter2, bool> segmented_equal_iter2_bounded
          const local_result_t r = (segmented_equal_iter2_bounded)
             (first1, last1, lb2, le2, pred, iter2_is_local_seg_t(), SrcCat());
          first1 = r.first;
-         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(r.third))
+         if(last_seg || BOOST_UNLIKELY(r.third))
             return result_t(first1, iter2_traits::compose(sfirst, r.second), r.third);
       }
 
@@ -140,7 +140,7 @@ segtrio<SrcIter, SegIter2, bool> segmented_equal_iter2_bounded
             (first1, last1, iter2_traits::begin(sfirst), iter2_traits::end(sfirst), pred
             , iter2_is_local_seg_t(), SrcCat());
          first1 = r.first;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(r.third))
+         if(BOOST_UNLIKELY(r.third))
             return result_t(first1, iter2_traits::compose(sfirst, r.second), true);
       }
 
@@ -187,7 +187,7 @@ segduo<bool, SegIter2> segmented_equal_iter2_dispatch
          (first1, last1, loc2, iter2_traits::end(seg2), pred, iter2_is_local_seg_t(), Cat());
       first1 = r.first;
       loc2   = r.second;
-      if(BOOST_CONTAINER_SEG_UNLIKELY(r.third))
+      if(BOOST_UNLIKELY(r.third))
          break;
       ++seg2;
       loc2 = iter2_traits::begin(seg2);
@@ -240,7 +240,7 @@ segduo<bool, InpIter2> segmented_equal_dispatch
       // Clang, so direct threading stays.
       segduo<bool, InpIter2> r = (segmented_equal_dispatch)
          (lb, le, first2, pred, is_local_seg_t(), local_cat_t());
-      if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(!r.first))
+      if(last_seg || BOOST_UNLIKELY(!r.first))
          return r;
 
       //Middle segments keep their own call site: begin/end both come from
@@ -248,7 +248,7 @@ segduo<bool, InpIter2> segmented_equal_dispatch
       for(++sfirst; sfirst != slast; ++sfirst) {
          r = (segmented_equal_dispatch)
             (traits::begin(sfirst), traits::end(sfirst), r.second, pred, is_local_seg_t(), local_cat_t());
-         if(BOOST_CONTAINER_SEG_UNLIKELY(!r.first))
+         if(BOOST_UNLIKELY(!r.first))
             return r;
       }
 

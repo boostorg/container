@@ -105,7 +105,7 @@ OuterIter stable_partition_scan(SegIt first, SegIt last, OuterIter result,
       const bool last_seg = scur == slast;
       const local_iterator le = last_seg ? traits::local(last) : traits::end(scur);
       result = stable_partition_scan(lcur, le, result, composer_t(composer, scur), pred, is_local_seg_t());
-      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+      if(BOOST_UNLIKELY(last_seg))
          return result;
       for(++scur; scur != slast; ++scur) {
          result = stable_partition_scan(traits::begin(scur), traits::end(scur), result, composer_t(composer, scur), pred, is_local_seg_t());

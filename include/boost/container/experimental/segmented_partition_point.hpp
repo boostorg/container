@@ -68,7 +68,7 @@ SegIter segmented_partition_point_dispatch
          (lb, le, pred, is_local_seg_t(), local_cat_t());
       if (r != le)
          return traits::compose(scur, r);
-      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+      if(BOOST_UNLIKELY(last_seg))
          return last;
 
       //middle segments keep their own call site: begin/end both come from

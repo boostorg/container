@@ -48,7 +48,7 @@ segmented_reverse_copy_dst_bounded
 {
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    while(first != last) {
-      if(BOOST_CONTAINER_SEG_UNLIKELY(dst_first == dst_last))
+      if(BOOST_UNLIKELY(dst_first == dst_last))
          goto out_path;
       --last;
       *dst_first = *last;
@@ -96,7 +96,7 @@ segduo<BidirIter, SegDstIter> segmented_reverse_copy_dst_bounded
          const segduo<BidirIter, dst_local_iterator> r = (segmented_reverse_copy_dst_bounded)
             (first, last, db, de, dst_is_local_seg_t(), SrcCat());
          last = r.first;
-         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+         if(last_seg || BOOST_UNLIKELY(first == last))
             return segduo<BidirIter, SegDstIter>(last, dst_traits::compose(sfirst, r.second));
       }
 
@@ -104,7 +104,7 @@ segduo<BidirIter, SegDstIter> segmented_reverse_copy_dst_bounded
          const segduo<BidirIter, dst_local_iterator> r = (segmented_reverse_copy_dst_bounded)
             (first, last, dst_traits::begin(sfirst), dst_traits::end(sfirst), dst_is_local_seg_t(), SrcCat());
          last = r.first;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+         if(BOOST_UNLIKELY(first == last))
             return segduo<BidirIter, SegDstIter>(last, dst_traits::compose(sfirst, r.second));
       }
 
@@ -148,7 +148,7 @@ SegDstIter segmented_reverse_copy_dst_dispatch
       const segduo<BidirIter, dst_local_iterator> r = (segmented_reverse_copy_dst_bounded)
          (first, last, dst_local, dst_end, dst_is_local_seg_t(), Cat());
       last = r.first;
-      if(BOOST_CONTAINER_SEG_LIKELY(first != last)) {
+      if(BOOST_LIKELY(first != last)) {
          ++dst_seg;
          dst_local = dst_traits::begin(dst_seg);
       }
@@ -193,7 +193,7 @@ OutIter segmented_reverse_copy_dispatch
       const bool first_seg = sfirst == slast;
       const local_iterator lb = first_seg ? traits::local(first) : traits::begin(slast);
       result = (segmented_reverse_copy_dispatch)(lb, le, result, is_local_seg_t(), local_cat_t());
-      if(BOOST_CONTAINER_SEG_UNLIKELY(first_seg))
+      if(BOOST_UNLIKELY(first_seg))
          return result;
 
       //Middle segments (in reverse) keep their own call site: begin/end both

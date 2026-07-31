@@ -166,7 +166,7 @@ segquartet<Iter1, Iter2, SegDstIter, bool> merge_dst_bounded
             , de, comp, dst_is_local_seg_t(), SrcCat());
          first1 = r.first;
          first2 = r.second;
-         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(r.fourth))
+         if(last_seg || BOOST_UNLIKELY(r.fourth))
             return result_t(first1, first2, dst_traits::compose(sfirst, r.third), r.fourth);
       }
 
@@ -178,7 +178,7 @@ segquartet<Iter1, Iter2, SegDstIter, bool> merge_dst_bounded
             , dst_traits::end(sfirst), comp, dst_is_local_seg_t(), SrcCat());
          first1 = r.first;
          first2 = r.second;
-         if (BOOST_CONTAINER_SEG_UNLIKELY(r.fourth))
+         if (BOOST_UNLIKELY(r.fourth))
             return result_t(first1, first2, dst_traits::compose(sfirst, r.third), true);
       }
 
@@ -250,7 +250,7 @@ segtrio<Iter1, Iter2, SegDstIter> merge_until_exhausts
       // normalises a local iterator sitting on the segment end, the same way
       // segmented_copy_dst_dispatch relies on.  fourth already answers that
       // question, and gives source exhaustion priority on such a tie.
-      if(BOOST_CONTAINER_SEG_UNLIKELY(r.fourth)) {
+      if(BOOST_UNLIKELY(r.fourth)) {
          return result_t(first1, first2, dst_traits::compose(dst_seg, dst_local));
       }
       // dst segment full and both sources still live; advance to the next.
@@ -320,7 +320,7 @@ segtrio<Iter1, SegIter2, OutIter> merge_seg2_dispatch
              src2_is_local_seg_t(), cat);
          first1 = r.first;
          result = r.third;
-         if (last_seg || BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1))
+         if (last_seg || BOOST_UNLIKELY(first1 == last1))
             return result_t(first1, src2_traits::compose(sf2, r.second), result);
       }
 
@@ -332,7 +332,7 @@ segtrio<Iter1, SegIter2, OutIter> merge_seg2_dispatch
              result, comp, src2_is_local_seg_t(), cat);
          first1 = r.first;
          result = r.third;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(first1 == last1))
+         if(BOOST_UNLIKELY(first1 == last1))
             return result_t(first1, src2_traits::compose(sf2, r.second), result);
       }
 
@@ -402,7 +402,7 @@ segtrio<SegIt, InIter2, OutIter> merge_scan
             (lcur, le, first2, last2, result, comp, is_local_seg_t());
          first2 = r.second;
          result = r.third;
-         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(first2 == last2))
+         if(last_seg || BOOST_UNLIKELY(first2 == last2))
             return result_t(traits::compose(scur, r.first), first2, result);
       }
 
@@ -413,7 +413,7 @@ segtrio<SegIt, InIter2, OutIter> merge_scan
             (traits::begin(scur), traits::end(scur), first2, last2, result, comp, is_local_seg_t());
          first2 = r.second;
          result = r.third;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(first2 == last2))
+         if(BOOST_UNLIKELY(first2 == last2))
             return result_t(traits::compose(scur, r.first), first2, result);
       }
 

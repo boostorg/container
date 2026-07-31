@@ -303,7 +303,7 @@ segtrio<bool, Size, SegIter> search_n_scan_segment
             match_start = traits::compose(scur, r.third);
          if(r.first)
             return result_t(true, consecutive, match_start);
-         if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+         if(BOOST_UNLIKELY(last_seg))
             return result_t(false, consecutive, match_start);
       }
 

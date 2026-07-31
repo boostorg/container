@@ -66,7 +66,7 @@ SegIter segmented_find_dispatch
       const local_iterator r = (segmented_find_dispatch)(lb, le, value, is_local_seg_t(), local_cat_t());
       if (r != le)
          return traits::compose(sfirst, r);
-      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+      if(BOOST_UNLIKELY(last_seg))
          return last;
 
       //Middle segments keep their own call site: begin/end both come from

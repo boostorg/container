@@ -72,7 +72,7 @@ typename boost::container::iterator_traits<SegIter>::difference_type
       const bool last_seg = sfirst == slast;
       const local_iterator le = last_seg ? traits::local(last) : traits::end(sfirst);
       result += (segmented_count_if_dispatch)(lb, le, pred, is_local_seg_t(), local_cat_t());
-      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+      if(BOOST_UNLIKELY(last_seg))
          return result;
 
       for(++sfirst; sfirst != slast; ++sfirst)

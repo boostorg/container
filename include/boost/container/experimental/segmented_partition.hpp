@@ -69,7 +69,7 @@ OutIter partition_scan(SegIt first, SegIt last, OutIter result, Pred pred, segme
       const bool last_seg = scur == slast;
       const local_iterator le = last_seg ? traits::local(last) : traits::end(scur);
       result = partition_scan(lcur, le, result, pred, is_local_seg_t(), local_cat_t());
-      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+      if(BOOST_UNLIKELY(last_seg))
          return result;
 
       for(++scur; scur != slast; ++scur)

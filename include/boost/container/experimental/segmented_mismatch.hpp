@@ -126,7 +126,7 @@ segtrio<SrcIter, SegIter2, bool> segmented_mismatch_iter2_bounded
          const local_result_t r = (segmented_mismatch_iter2_bounded)
             (first1, last1, lb2, le2, pred, iter2_is_local_seg_t(), SrcCat());
          first1 = r.first;
-         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(r.third))
+         if(last_seg || BOOST_UNLIKELY(r.third))
             return result_t(first1, iter2_traits::compose(sfirst, r.second), r.third);
       }
 
@@ -135,7 +135,7 @@ segtrio<SrcIter, SegIter2, bool> segmented_mismatch_iter2_bounded
             (first1, last1, iter2_traits::begin(sfirst), iter2_traits::end(sfirst), pred
             , iter2_is_local_seg_t(), SrcCat());
          first1 = r.first;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(r.third))
+         if(BOOST_UNLIKELY(r.third))
             return result_t(first1, iter2_traits::compose(sfirst, r.second), true);
       }
 
@@ -170,7 +170,7 @@ segduo<SrcIter, SegIter2> segmented_mismatch_iter2_dispatch
          (first1, last1, loc2, iter2_traits::end(seg2), pred, iter2_is_local_seg_t(), Cat());
       first1 = r.first;
       loc2   = r.second;
-      if(BOOST_CONTAINER_SEG_UNLIKELY(r.third))
+      if(BOOST_UNLIKELY(r.third))
          break;
       ++seg2;
       loc2 = iter2_traits::begin(seg2);
@@ -266,9 +266,9 @@ segduo<SegIter, InpIter2> segmented_mismatch_bounded_dispatch
             (lb, le, first2, last2, pred, is_local_seg_t(), local_cat_t());
          first2 = r.second;
          // Early exit: stopped inside segment (mismatch) or iter2 exhausted.
-         if (BOOST_CONTAINER_SEG_UNLIKELY(r.first != le || first2 == last2))
+         if (BOOST_UNLIKELY(r.first != le || first2 == last2))
             return return_t(traits::compose(sfirst, r.first), first2);
-         if (BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+         if (BOOST_UNLIKELY(last_seg))
             return return_t(last1, first2);
       }
 
@@ -279,7 +279,7 @@ segduo<SegIter, InpIter2> segmented_mismatch_bounded_dispatch
          const local_return_t r = (segmented_mismatch_bounded_dispatch)
             (traits::begin(sfirst), me, first2, last2, pred, is_local_seg_t(), local_cat_t());
          first2 = r.second;
-         if (BOOST_CONTAINER_SEG_UNLIKELY(r.first != me || first2 == last2))
+         if (BOOST_UNLIKELY(r.first != me || first2 == last2))
             return return_t(traits::compose(sfirst, r.first), first2);
       }
 

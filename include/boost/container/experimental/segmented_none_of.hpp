@@ -65,7 +65,7 @@ bool segmented_none_of_dispatch
       const local_iterator le = last_seg ? traits::local(last) : traits::end(sfirst);
       if(!(segmented_none_of_dispatch)(lb, le, pred, is_local_seg_t(), local_cat_t()))
          return false;
-      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+      if(BOOST_UNLIKELY(last_seg))
          return true;
 
       //Middle segments keep their own call site: begin/end both come from

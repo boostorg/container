@@ -64,7 +64,7 @@ F segmented_for_each_dispatch
       const bool last_seg = sfirst == slast;
       const local_iterator le = last_seg ? traits::local(last) : traits::end(sfirst);
       f = (segmented_for_each_dispatch)(lb, le, boost::move(f), is_local_seg_t(), local_cat_t());
-      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+      if(BOOST_UNLIKELY(last_seg))
          return boost::move(f);
       for(++sfirst; sfirst != slast; ++sfirst)
          f = (segmented_for_each_dispatch)(traits::begin(sfirst), traits::end(sfirst), boost::move(f), is_local_seg_t(), local_cat_t());

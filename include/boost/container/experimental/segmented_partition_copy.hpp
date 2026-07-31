@@ -140,9 +140,9 @@ partition_copy_leaf
    // untested element, and the loop body can take for granted that both outputs
    // have room.  With unreachable_sentinel_t outputs the tests fold away, so the
    // flat path is unchanged.
-   if(BOOST_CONTAINER_SEG_UNLIKELY(t_first == t_last))
+   if(BOOST_UNLIKELY(t_first == t_last))
       return segquartet<SrcIter, TIter, FIter, bool>(first, t_first, f_first, false);
-   if(BOOST_CONTAINER_SEG_UNLIKELY(f_first == f_last))
+   if(BOOST_UNLIKELY(f_first == f_last))
       return segquartet<SrcIter, TIter, FIter, bool>(first, t_first, f_first, first != last);
 
    bool false_output_full = false;
@@ -151,7 +151,7 @@ partition_copy_leaf
       if(pred(*first)) {
          *t_first = *first;
          ++t_first;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(t_first == t_last)) {
+         if(BOOST_UNLIKELY(t_first == t_last)) {
             ++first;
             break;
          }
@@ -159,7 +159,7 @@ partition_copy_leaf
       else {
          *f_first = *first;
          ++f_first;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(f_first == f_last)) {
+         if(BOOST_UNLIKELY(f_first == f_last)) {
             ++first;
             false_output_full = first != last;
             break;
@@ -256,7 +256,7 @@ partition_copy_false_bounded
             (first, last, t_first, t_last, fb, fe, pred, floc_seg_t(), cat);
          first   = r.first;
          t_first = r.second;
-         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(!r.fourth))
+         if(last_seg || BOOST_UNLIKELY(!r.fourth))
             return segquartet<SrcIter, TIter, SegFIter, bool>
                (first, t_first, ftr::compose(fsfirst, r.third), r.fourth);
       }
@@ -268,7 +268,7 @@ partition_copy_false_bounded
             (first, last, t_first, t_last, ftr::begin(fsfirst), ftr::end(fsfirst), pred, floc_seg_t(), cat);
          first   = r.first;
          t_first = r.second;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(!r.fourth))
+         if(BOOST_UNLIKELY(!r.fourth))
             return segquartet<SrcIter, TIter, SegFIter, bool>
                (first, t_first, ftr::compose(fsfirst, r.third), false);
       }
@@ -316,7 +316,7 @@ partition_copy_false_dispatch
          (first, last, t_first, t_last, f_lo, ftr::end(fs), pred, floc_seg_t(), cat);
       first   = r.first;
       t_first = r.second;
-      if(BOOST_CONTAINER_SEG_UNLIKELY(!r.fourth))
+      if(BOOST_UNLIKELY(!r.fourth))
          return segtrio<SrcIter, TIter, SegFIter>(first, t_first, ftr::compose(fs, r.third));
       ++fs;
       f_lo = ftr::begin(fs);
@@ -373,7 +373,7 @@ partition_copy_true_bounded
             (first, last, tb, te, f_first, pred, tloc_seg_t(), f_tag, cat);
          first   = r.first;
          f_first = r.third;
-         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+         if(last_seg || BOOST_UNLIKELY(first == last))
             return segtrio<SrcIter, SegTIter, FIter>(first, ttr::compose(tsfirst, r.second), f_first);
       }
 
@@ -384,7 +384,7 @@ partition_copy_true_bounded
             (first, last, ttr::begin(tsfirst), ttr::end(tsfirst), f_first, pred, tloc_seg_t(), f_tag, cat);
          first   = r.first;
          f_first = r.third;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+         if(BOOST_UNLIKELY(first == last))
             return segtrio<SrcIter, SegTIter, FIter>(first, ttr::compose(tsfirst, r.second), f_first);
       }
 
@@ -429,7 +429,7 @@ partition_copy_true_dispatch
          (first, last, t_lo, ttr::end(ts), f_first, pred, tloc_seg_t(), f_tag, cat);
       first   = r.first;
       f_first = r.third;
-      if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+      if(BOOST_UNLIKELY(first == last))
          return segtrio<SrcIter, SegTIter, FIter>(first, ttr::compose(ts, r.second), f_first);
       ++ts;
       t_lo = ttr::begin(ts);
@@ -484,7 +484,7 @@ segmented_partition_copy_dispatch
       // and it measured +3.6% on these walkers under GCC and +0.1% under
       // Clang, so direct threading stays.
       pair_t p = (segmented_partition_copy_dispatch)(lb, le, out_true, out_false, pred, is_local_seg_t(), local_cat_t());
-      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+      if(BOOST_UNLIKELY(last_seg))
          return p;
 
       //Middle segments keep their own call site: begin/end both come from

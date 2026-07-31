@@ -94,7 +94,7 @@ SegIt find_last_scan(SegIt first, SegIt last, const T& value,
          const local_iterator r = find_last_scan(lb, le, value, is_local_seg_t(), local_cat_t());
          if (r != le)
             result = traits::compose(sfirst, r);
-         if (BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+         if (BOOST_UNLIKELY(last_seg))
             return result;
       }
 
@@ -138,7 +138,7 @@ SegIt find_last_scan(SegIt first, SegIt last, const T& value, segmented_iterator
          const local_iterator r = find_last_scan(lb, le, value, is_local_seg_t(), local_cat_t());
          if (r != le)
             return traits::compose(slast, r);
-         if (BOOST_CONTAINER_SEG_UNLIKELY(first_seg))
+         if (BOOST_UNLIKELY(first_seg))
             return last;
       }
 

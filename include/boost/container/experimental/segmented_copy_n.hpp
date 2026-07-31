@@ -51,7 +51,7 @@ segmented_copy_n_src_dst_bounded
 {
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; count > 0; ++first, --count) {
-      if(BOOST_CONTAINER_SEG_UNLIKELY(dst_first == dst_last || first == last))
+      if(BOOST_UNLIKELY(dst_first == dst_last || first == last))
          goto out_path;
       *dst_first = *first;
       ++dst_first;
@@ -113,7 +113,7 @@ segduo<SrcIter, SegDstIter> segmented_copy_n_dst_bounded
          const segduo<SrcIter, dst_local_iterator> r = (segmented_copy_n_dst_bounded)
             (first, last, count, db, de, dst_is_local_seg_t());
          first = r.first;
-         if (last_seg || BOOST_CONTAINER_SEG_UNLIKELY(count == 0 || first == last))
+         if (last_seg || BOOST_UNLIKELY(count == 0 || first == last))
             return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sdfirst, r.second));
       }
 
@@ -121,7 +121,7 @@ segduo<SrcIter, SegDstIter> segmented_copy_n_dst_bounded
          const segduo<SrcIter, dst_local_iterator> r = (segmented_copy_n_dst_bounded)
             (first, last, count, dst_traits::begin(sdfirst), dst_traits::end(sdfirst), dst_is_local_seg_t());
          first = r.first;
-         if (BOOST_CONTAINER_SEG_UNLIKELY(count == 0 || first == last))
+         if (BOOST_UNLIKELY(count == 0 || first == last))
             return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sdfirst, r.second));
       }
 
@@ -166,7 +166,7 @@ SegDstIter segmented_copy_n_dst_dispatch
       //The src-exhaustion check matters when this routine is invoked with
       //a per-segment src range (count typically larger than the range);
       //it returns control to the outer source-segment loop.
-      if(BOOST_CONTAINER_SEG_UNLIKELY(count == 0 || first == last))
+      if(BOOST_UNLIKELY(count == 0 || first == last))
          return dst_traits::compose(dst_seg, r.second);
       ++dst_seg;
       dst_local = dst_traits::begin(dst_seg);
@@ -221,14 +221,14 @@ OutIter copy_n_scan(SegIt first, SegIt last, Size& BOOST_RESTRICT count, OutIter
       const local_iterator le = last_seg ? traits::local(last) : traits::end(scur);
       result = copy_n_scan(lcur, le, count, result, is_local_seg_t(), local_cat_t());
 
-      if (last_seg || BOOST_CONTAINER_SEG_UNLIKELY(!count))
+      if (last_seg || BOOST_UNLIKELY(!count))
          return result;
 
       //Middle segments keep their own call site: begin/end both come from
       //scur, so the leaf can be specialised for full segments
       for (++scur; scur != slast; ++scur) {
          result = copy_n_scan(traits::begin(scur), traits::end(scur), count, result, is_local_seg_t(), local_cat_t());
-         if (BOOST_CONTAINER_SEG_UNLIKELY(!count))
+         if (BOOST_UNLIKELY(!count))
             return result;
       }
 
@@ -258,7 +258,7 @@ OutIter segmented_copy_n_dispatch
    while(1) {
       result = copy_n_scan(lcur, traits::end(scur), count, result, is_local_seg_t(), local_cat_t());
 
-      if(BOOST_CONTAINER_SEG_UNLIKELY(count == 0))
+      if(BOOST_UNLIKELY(count == 0))
          break;
       ++scur;
       lcur = traits::begin(scur);

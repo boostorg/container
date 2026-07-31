@@ -63,7 +63,7 @@ void segmented_replace_dispatch
       const bool last_seg = sfirst == slast;
       const local_iterator le = last_seg ? traits::local(last) : traits::end(sfirst);
       (segmented_replace_dispatch)(lb, le, old_val, new_val, is_local_seg_t(), local_cat_t());
-      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+      if(BOOST_UNLIKELY(last_seg))
          break;
 
       for(++sfirst; sfirst != slast; ++sfirst)

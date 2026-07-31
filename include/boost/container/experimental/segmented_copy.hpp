@@ -49,7 +49,7 @@ segmented_copy_dst_bounded
 {
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first) {
-      if(BOOST_CONTAINER_SEG_UNLIKELY(dst_first == dst_last))
+      if(BOOST_UNLIKELY(dst_first == dst_last))
          break;
       *dst_first = *first;
       ++dst_first;
@@ -96,7 +96,7 @@ segduo<SrcIter, SegDstIter> segmented_copy_dst_bounded
          const segduo<SrcIter, dst_local_iterator> r = (segmented_copy_dst_bounded)
             (first, last, db, de, dst_is_local_seg_t(), SrcCat());
          first = r.first;
-         if(last_seg || BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+         if(last_seg || BOOST_UNLIKELY(first == last))
             return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sfirst, r.second));
       }
 
@@ -104,7 +104,7 @@ segduo<SrcIter, SegDstIter> segmented_copy_dst_bounded
          const segduo<SrcIter, dst_local_iterator> r = (segmented_copy_dst_bounded)
             (first, last, dst_traits::begin(sfirst), dst_traits::end(sfirst), dst_is_local_seg_t(), SrcCat());
          first = r.first;
-         if(BOOST_CONTAINER_SEG_UNLIKELY(first == last))
+         if(BOOST_UNLIKELY(first == last))
             return segduo<SrcIter, SegDstIter>(first, dst_traits::compose(sfirst, r.second));
       }
 
@@ -192,7 +192,7 @@ OutIter segmented_copy_dispatch(SegIter first, SegIter last, OutIter result, seg
       const src_local_iterator le = last_seg ? src_traits::local(last) : src_traits::end(sfirst);
       result = (segmented_copy_dispatch)
          (lb, le, result, src_is_local_seg_t(), src_local_cat_t());
-      if(BOOST_CONTAINER_SEG_UNLIKELY(last_seg))
+      if(BOOST_UNLIKELY(last_seg))
          return result;
 
       for(++sfirst; sfirst != slast; ++sfirst)
