@@ -34,7 +34,14 @@ namespace container {
 template <class InpIter, class Sent, class Pred>
 inline bool segmented_is_partitioned(InpIter first, Sent last, Pred pred)
 {
+   //[alg.partitions] mandates at most last - first applications of pred.
+   //segmented_find_if_not stops *on* the element that failed pred, so resuming
+   //the scan there would apply pred to it a second time; stepping past it first
+   //keeps the two walks over disjoint element ranges.
    first = (segmented_find_if_not)(first, last, pred);
+   if (first == last)
+      return true;
+   ++first;
    return (segmented_none_of)(first, last, pred);
 }
 
