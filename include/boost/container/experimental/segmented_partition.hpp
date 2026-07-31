@@ -80,7 +80,7 @@ OutIter partition_scan(SegIt first, SegIt last, OutIter result, Pred pred, segme
 }
 
 template <class FwdIt, class Sent, class Pred, class Tag>
-FwdIt segmented_partition_dispatch(FwdIt first, Sent last, Pred pred, Tag tag, const std::forward_iterator_tag &cat)
+FwdIt segmented_partition_dispatch(FwdIt first, Sent last, Pred pred, bool, Tag tag, const std::forward_iterator_tag &cat)
 {
    first = (segmented_find_if_not)(first, last, pred);
    if (first == last)
@@ -94,10 +94,30 @@ FwdIt segmented_partition_dispatch(FwdIt first, Sent last, Pred pred, Tag tag, c
 // Bidirectional (Hoare-style) partition
 //////////////////////////////////////////////
 
+// The Hoare walk alternates between two states: scanning forward for an
+// element that fails pred, and scanning backward for one that satisfies it.
+// A segment boundary can interrupt either.  Interrupting the backward scan
+// leaves the forward cursor *on* an element already known to fail pred, and a
+// walker that simply resumed the leaf there would test it again -- breaking
+// the "exactly last - first applications of the predicate" [alg.partitions]
+// mandates.  `pending` carries that knowledge across the boundary: on entry it
+// means "pred(*f) is already known false, go straight to the backward scan",
+// and on return it means the same to the caller.  segmented_partition always
+// enters with a literal false, so the flat path folds the extra branch away.
+
 template <class BidirIt, class Pred, class Cat>
 BOOST_CONTAINER_FORCEINLINE
-BidirIt segmented_partition_dispatch(BidirIt first, BidirIt last, Pred pred, non_segmented_iterator_tag, const Cat&)
+BidirIt segmented_partition_dispatch(BidirIt first, BidirIt last, Pred pred, bool pending, non_segmented_iterator_tag, const Cat&)
 {
+   if (pending) {
+      do {
+         if (first == --last)
+            goto first_ret;
+      } while (!pred(*last));
+      boost::adl_move_swap(*first, *last);
+      ++first;
+   }
+
    while (first != last) {
       while (pred(*first)) {
          if (++first == last)
@@ -116,13 +136,25 @@ BidirIt segmented_partition_dispatch(BidirIt first, BidirIt last, Pred pred, non
 }
 
 // Hoare-style partition on two non-overlapping ranges [f, f_end) (forward) and [l_beg, l) (backward).
-// Returns segduo with the final positions of f and l. // At least one side is fully consumed on return.
+// Returns segtrio with the final positions of f and l plus the `pending` state
+// described above. // At least one side is fully consumed on return.
 
 template <class It, class Pred, class Cat>
 BOOST_CONTAINER_FORCEINLINE
-segduo<It, It> partition_disjoint_bidir_ranges
-   (It f, It const f_end, It const l_beg, It l, Pred pred, non_segmented_iterator_tag, const Cat &)
+segtrio<It, It, bool> partition_disjoint_bidir_ranges
+   (It f, It const f_end, It const l_beg, It l, Pred pred, bool pending, non_segmented_iterator_tag, const Cat &)
 {
+   if (pending) {
+      do {
+         if (l == l_beg)
+            goto pending_ret;
+         --l;
+      } while (!pred(*l));
+
+      boost::adl_move_swap(*f, *l);
+      ++f;
+   }
+
    while (f != f_end) {
       while (pred(*f)) {
          if (++f == f_end)
@@ -131,7 +163,7 @@ segduo<It, It> partition_disjoint_bidir_ranges
 
       do {
          if (l == l_beg)
-            goto duo_ret;
+            goto pending_ret;
          --l;
       } while (!pred(*l));
 
@@ -140,11 +172,14 @@ segduo<It, It> partition_disjoint_bidir_ranges
    }
 
    duo_ret:
-   return segduo<It, It>(f, l);
+   return segtrio<It, It, bool>(f, l, false);
+   pending_ret:
+   return segtrio<It, It, bool>(f, l, true);
 }
 
 template <class It, class Pred, class Cat>
-segduo<It, It> partition_disjoint_bidir_ranges(It f, It f_end, It l_beg, It l, Pred pred, segmented_iterator_tag, const Cat&)
+segtrio<It, It, bool> partition_disjoint_bidir_ranges
+   (It f, It f_end, It l_beg, It l, Pred pred, bool pending, segmented_iterator_tag, const Cat&)
 {
    typedef segmented_iterator_traits<It>        traits;
    typedef typename traits::segment_iterator    segment_iterator;
@@ -155,7 +190,7 @@ segduo<It, It> partition_disjoint_bidir_ranges(It f, It f_end, It l_beg, It l, P
       <local_iterator>::iterator_category       local_cat_t;
 
    if (BOOST_UNLIKELY(f == f_end || l == l_beg))
-      return segduo<It, It>(f, l);
+      return segtrio<It, It, bool>(f, l, pending);
 
    segment_iterator       fs     = traits::segment(f);
    const segment_iterator fs_end = traits::segment(f_end);
@@ -169,10 +204,11 @@ segduo<It, It> partition_disjoint_bidir_ranges(It f, It f_end, It l_beg, It l, P
       const local_iterator fi_end = (fs == fs_end) ? traits::local(f_end) : traits::end(fs);
       const local_iterator li_beg = (ls == ls_beg) ? traits::local(l_beg) : traits::begin(ls);
       {
-         const segduo<local_iterator, local_iterator> r =
-            partition_disjoint_bidir_ranges(fi, fi_end, li_beg, li, pred, is_local_seg_t(), local_cat_t());
+         const segtrio<local_iterator, local_iterator, bool> r =
+            partition_disjoint_bidir_ranges(fi, fi_end, li_beg, li, pred, pending, is_local_seg_t(), local_cat_t());
          fi = r.first;
          li = r.second;
+         pending = r.third;
       }
 
       if (fi == fi_end) {
@@ -190,11 +226,11 @@ segduo<It, It> partition_disjoint_bidir_ranges(It f, It f_end, It l_beg, It l, P
       }
    }
 
-   return segduo<It, It>(traits::compose(fs, fi), traits::compose(ls, li));
+   return segtrio<It, It, bool>(traits::compose(fs, fi), traits::compose(ls, li), pending);
 }
 
 template <class SegIt, class Pred>
-SegIt segmented_partition_dispatch(SegIt first, SegIt last, Pred pred, segmented_iterator_tag, const std::bidirectional_iterator_tag&)
+SegIt segmented_partition_dispatch(SegIt first, SegIt last, Pred pred, bool pending, segmented_iterator_tag, const std::bidirectional_iterator_tag&)
 {
    typedef segmented_iterator_traits<SegIt>  traits;
    typedef typename traits::local_iterator   local_iterator;
@@ -211,10 +247,11 @@ SegIt segmented_partition_dispatch(SegIt first, SegIt last, Pred pred, segmented
       const local_iterator f_end = traits::end(sf);
       const local_iterator l_beg = traits::begin(sl);
       {
-         const segduo<local_iterator, local_iterator> r =
-            partition_disjoint_bidir_ranges(f_loc, f_end, l_beg, l_loc, pred, is_local_seg_t(), local_cat_t());
+         const segtrio<local_iterator, local_iterator, bool> r =
+            partition_disjoint_bidir_ranges(f_loc, f_end, l_beg, l_loc, pred, pending, is_local_seg_t(), local_cat_t());
          f_loc = r.first;
          l_loc = r.second;
+         pending = r.third;
       }
 
       if (f_loc == f_end) {
@@ -231,7 +268,7 @@ SegIt segmented_partition_dispatch(SegIt first, SegIt last, Pred pred, segmented
       }
    }
 
-   return traits::compose(sf, segmented_partition_dispatch(f_loc, l_loc, pred, is_local_seg_t(), local_cat_t()));
+   return traits::compose(sf, segmented_partition_dispatch(f_loc, l_loc, pred, pending, is_local_seg_t(), local_cat_t()));
 }
 
 } // namespace detail_algo
@@ -249,7 +286,7 @@ FwdIt segmented_partition(FwdIt first, Sent last, Pred pred)
    typedef detail_algo::sent_filter<FwdIt, Sent> sf;
 
    return detail_algo::segmented_partition_dispatch
-      ( first, last, pred
+      ( first, last, pred, false
       , typename sf::seg_t()
       , typename sf::cat_t());
 }

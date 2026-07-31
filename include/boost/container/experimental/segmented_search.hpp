@@ -143,9 +143,23 @@ SegIter segmented_search_dispatch
       if (first == last)   // no match for the first needle element -> no match at all
          return last;
 
-      //Verify the rest of the needle, bounded on both sides. This exploits segmentation
+      //Verify the rest of the needle, bounded on both sides. This exploits
+      //segmentation.  The verification starts one past both cursors: the
+      //candidate's first element has just been matched by segmented_find_if,
+      //and handing it to mismatch again would compare it twice, which for a
+      //one-element needle already exceeds the (last1 - first1) * (last2 -
+      //first2) applications [alg.search] allows.
+      SegIter it = first;
+      ++it;
+      FwdIt2 s_it = s_first;
+      ++s_it;
+      if (s_it == s_last)
+         return first;          // one-element needle -> already matched
+      if (it == last)
+         return last;           // source exhausted before needle
+
       segduo<SegIter, FwdIt2> r = (segmented_mismatch_bounded_dispatch)
-         (first, last, s_first, s_last, mismatch_equal(), segmented_iterator_tag(), cat_t());
+         (it, last, s_it, s_last, mismatch_equal(), segmented_iterator_tag(), cat_t());
 
       if (r.second == s_last)
          return first;          // full needle consumed -> match

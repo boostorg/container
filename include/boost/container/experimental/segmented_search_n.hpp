@@ -57,18 +57,25 @@ namespace detail_algo {
 //   past the mismatch -- with "consecutive > 0", no in-segment run can
 //   start at or before the probe, so the entire range up to the probe
 //   can be skipped without inspection on a probe miss.
-// Phase 2: probe at "lcur + (count - 1)". On match, verify backward to
+// Phase 2: probe at "run_from + (count - 1)". On match, verify backward to
 //   find the run start; on mismatch advance the probe by "count"
 //   positions instead of 1 (Boyer-Moore). The mismatched element cannot
 //   belong to any complete run that fits in [probe - count + 1, probe],
 //   so the next candidate run can only start past it. This makes the
 //   scan O(n / count) on the value-sparse portion of the range.
-// Phase 3: once "probe >= lend", scan the tail to detect a partial
-//   trailing run that the next segment may extend. Bounded by phase 2's
-//   exit position: "*(probe - count) != value" is known, so the scan
-//   range is (probe - count, lend) of length "lend - probe + count - 1",
-//   which is in [0, count - 1] -- often well below count - 1, and
-//   exactly 0 when the last probe landed at "lend - 1" and missed.
+// Phase 3: once the next probe would fall past "lend", scan the tail to
+//   detect a partial trailing run that the next segment may extend.
+//   Bounded by phase 2's exit position, so the scan range is in
+//   [0, count - 1] -- exactly 0 when the last probe landed at "lend - 1".
+//
+// Two cursors run through all three phases: "run_from" is the first element
+// of the run being verified and "lcur" the first element not compared yet,
+// so the elements of [run_from, lcur) are already known to equal "value".
+// Every backward verify sweeps only [lcur, probe] and every phase hands the
+// pair on to the next, which is what holds the scan to the "at most
+// last - first comparisons" [alg.search] mandates: a verify that always
+// swept a full "count" positions would re-compare the matched tail of the
+// run the previous verify abandoned.
 template <class LocalIter, class Size, class T>
 segtrio<bool, Size, LocalIter> search_n_scan_segment
    (LocalIter lcur, LocalIter const lend,
@@ -78,18 +85,16 @@ segtrio<bool, Size, LocalIter> search_n_scan_segment
    typedef segtrio<bool, Size, LocalIter> result_t;
    typedef typename iterator_traits<LocalIter>::difference_type difference_type;
 
-   // Phase 1: extend a partial run (consecutive > 0) carried from the previous segment.
+   LocalIter run_from = lcur;
+
+   // Phase 1: extend a partial run (consecutive > 0) carried from the previous
+   // segment. The verify starts at "probe = original_lcur + ncheck - 1" (the
+   // last position the carry-over needs to cover) and sweeps the ncheck
+   // positions [original_lcur, probe] backward.
    //
-   // Single-cursor verify mirroring phase 2's V3 shape: `lcur` is stepped
-   // to "verify_probe = original_lcur + ncheck - 1" (the last position the
-   // carry-over needs to cover) and the inner loop sweeps the ncheck
-   // positions [original_lcur, verify_probe] backward via "--lcur".
-   //
-   // OOB safety: exactly ncheck - 1 decrements (not ncheck) are executed
-   // on the full-match path, exiting via "if (--left == 0)" before the
-   // final --lcur. This avoids forming "original_lcur - 1" -- UB for raw
-   // pointers, which the segmented deque path always supplies as
-   // chunk-start pointers.
+   // OOB safety: the sweep stops on "p == lcur" before the final --p, so
+   // "original_lcur - 1" is never formed -- UB for raw pointers, which the
+   // segmented deque path always supplies as chunk-start pointers.
    if(consecutive > 0) {
       // Handles the case where the segment too short to complete the run.
       const difference_type need   = static_cast<difference_type>(count - consecutive);
@@ -98,90 +103,83 @@ segtrio<bool, Size, LocalIter> search_n_scan_segment
       if(BOOST_UNLIKELY(ncheck == 0))   // Empty segment; carry-over preserved for the next one.
          return result_t(false, consecutive, lend);
 
-      // Step "lcur" itself to the verify probe position; no separate cursor.
-      lcur += (ncheck - 1);
-      Size left = static_cast<Size>(ncheck);
+      const LocalIter probe = lcur + (ncheck - 1);
+      LocalIter p = probe;
       BOOST_CONTAINER_SEGMENTED_UNROLL(4)
       do {
-         if(!(*lcur == value))
+         if(!(*p == value))
             goto phase1_mismatch; // Mismatch, jump to cleanup logic
-         if (--left == 0) {
-            goto full_match;
+         if(p == lcur) {
+            // Full backwards verification: run start = original_lcur, which
+            // lies in a previous segment. Put "start of the run" return to
+            // sentinel so the outer match_start is not updated.
+            consecutive += static_cast<Size>(ncheck);
+            return result_t(consecutive == count, consecutive, lend);
          }
-         --lcur;
+         --p;
       } while(true);
 
-      full_match:
-      // Full backwards verification: run start = original_lcur.
-      // Put "start of the run" return to sentinel so the outer
-      // match_start is not updated.
-      consecutive += static_cast<Size>(ncheck);
-      return result_t(consecutive == count, consecutive, lend);
-
-      // Mismatch, reset consecutive counter and step past the failing position.
+      // Mismatch at "p": the next candidate run starts right after it and the
+      // elements of (p, probe] are already known to match, so phase 2 resumes
+      // with the two cursors apart.
       phase1_mismatch:
-      consecutive = 0;
+      run_from = p;
+      ++run_from;
+      lcur = probe;
       ++lcur;
    }
 
    const difference_type dcount    = static_cast<difference_type>(count);
-   const difference_type remaining = lend - lcur;
+   const difference_type remaining = lend - run_from;
 
    // Phase 2: Only meaningful if a full run fits (dcount <= remaining)
-   //          No partial run. Skip-by-count probing.
+   //          Skip-by-count probing.
    //
-   // Single-cursor Boyer-Moore: at the top of each outer iteration `lcur`
-   // sits at the verify probe position. The inner verify checks *lcur
-   // (its first iteration replaces an outer "if(*probe == value)" gate)
-   // then walks down via "--lcur", sweeping the count positions
-   // [verify_probe - (count - 1), verify_probe].
+   // Boyer-Moore: at the top of each outer iteration `probe` sits at the last
+   // position the candidate run starting at `run_from` needs, and the inner
+   // verify sweeps the still uncompared [lcur, probe] backward.
    //
-   // After an inner mismatch at iter K (K in [1, count]) `lcur` lands at
-   // LKNM = verify_probe - (K - 1); the next outer iter's verify_probe is
-   // verify_probe + (count - K + 1), so the advance from LKNM is
-   // (count - K + 1) + (K - 1) = count -- a constant `dcount`, regardless
-   // of K. The BM acceleration is entirely encoded in how far the inner
-   // loop decrements `lcur` before mismatching, and the outer step is just
-   // dcount.
+   // After an inner mismatch at position p the candidate run start becomes
+   // p + 1 and the next probe is p + 1 + (count - 1) = p + dcount -- the
+   // constant step is what gives the BM acceleration, and the sweep below it
+   // shrinks by however many positions the mismatched verify had matched.
    //
    // OOB safety: `lend_safe = lend - dcount` is precomputed once (well-formed
-   // because dcount <= remaining = lend - original_lcur). The guard
-   // `lcur >= lend_safe` is a pointer comparison only -- no new pointer is
-   // ever formed past `lend`. When `lcur < lend_safe`, `lcur + dcount`
+   // because dcount <= remaining = lend - run_from). The guard
+   // `p >= lend_safe` is a pointer comparison only -- no new pointer is
+   // ever formed past `lend`. When `p < lend_safe`, `p + dcount`
    // lands at most at `lend - 1`, which is dereferenceable.
    if(dcount <= remaining) {
-      // First verify probe: original_lcur + dcount - 1, in [original_lcur, lend).
-      lcur += (dcount - 1);
-      const LocalIter lend_safe = lend - dcount;  // largest lcur that can advance
+      const LocalIter lend_safe = lend - dcount;  // largest run start that can advance
+      LocalIter probe = run_from + (dcount - 1);  // in [lcur, lend)
       while (true) {
-         // Inner verify sweeps the count positions [verify_probe - (count - 1),
-         // verify_probe] backward. Doing exactly count - 1 decrements (not
-         // count) avoids forming "original_lcur - 1" when the run lands
-         // right at the start of the segment.
-         Size left = count;
+         LocalIter p = probe;
          BOOST_CONTAINER_SEGMENTED_UNROLL(4)
          do {  //count is always >= 2 because it's tested in the outer function
-            if(!(*lcur == value))
+            if(!(*p == value))
                goto phase2_mismatch;
-            if (--left == 0)
-               // Run start: lcur = verify_probe - (count - 1).
-               return result_t(true, count, lcur);
-            --lcur;
+            if(p == lcur)
+               // [run_from, lcur) matched earlier, [lcur, probe] just now.
+               return result_t(true, count, run_from);
+            --p;
          } while (true);
 
          phase2_mismatch: ;
-         // lcur at LKNM (failed check). OOB-safe advance to next verify probe.
-         if (lcur >= lend_safe)
+         run_from = p;
+         ++run_from;
+         lcur = probe;
+         ++lcur;
+         if (p >= lend_safe)
             break;
-         lcur += dcount;
+         probe = p + dcount;
       }
-      // Exit: lcur at LKNM. The phase-3 tail scan starts one past it.
-      ++lcur;
    }
 
    // Phase 3: partial trailing run that could extend into the next segment.
    //
-   // Scans [lcur, lend) backward. Mirrors phase 2's verify-loop pattern.
+   // Scans the still uncompared [lcur, lend) backward. Reaching lcur with
+   // every element matching extends the run down to "run_from", the elements
+   // in between having been matched by the verify that ended phase 2.
    //
    // Both exits share one invariant: the returned position is the first
    // element of the trailing run and the returned count is the length of
@@ -189,7 +187,7 @@ segtrio<bool, Size, LocalIter> search_n_scan_segment
    {
       LocalIter tail = lend;
       if (tail == lcur)            // empty tail, nothing to scan.
-         return result_t(false, 0, lend);
+         return result_t(false, static_cast<Size>(lend - run_from), run_from);
 
       BOOST_CONTAINER_SEGMENTED_UNROLL(4)
       do {
@@ -198,9 +196,8 @@ segtrio<bool, Size, LocalIter> search_n_scan_segment
             goto tail_mismatch;
       } while (tail != lcur);
 
-      // Full tail run: every element in [lcur, lend) equals value, so the
-      // run starts at "lcur" (== tail) and (lend - lcur) > 0.
-      return result_t(false, static_cast<Size>(lend - lcur), lcur);
+      // Full tail run: every element in [run_from, lend) equals value.
+      return result_t(false, static_cast<Size>(lend - run_from), run_from);
 
       // Mismatch at "tail"; the partial run is [tail + 1, lend). On a
       // first-iteration mismatch ("*(lend - 1) != value") "match_start"
@@ -382,55 +379,50 @@ FwdIt search_n_top_dispatch
    const difference_type dcount = static_cast<difference_type>(count);
    // dcount <= last - first guaranteed by search_n_range_shorter_than.
    //
-   // Single-cursor Boyer-Moore: `first` (a by-value parameter, private to
-   // this frame) is repurposed as the running probe. After the initial
-   // advance to "first + dcount - 1" it no longer means "start of the
-   // search range" -- it tracks the verify probe through the rest of the
-   // function. `last_safe = last - dcount` is precomputed before the
-   // mutation while `first` still names the original lower bound.
+   // Boyer-Moore: `first` (a by-value parameter, private to this frame) is
+   // repurposed as the running probe. After the initial advance to
+   // "first + dcount - 1" it no longer means "start of the search range" --
+   // it tracks the verify probe through the rest of the function.
+   // `last_safe = last - dcount` is precomputed before the mutation while
+   // `first` still names the original lower bound.
    //
-   // The inner verify checks *first (its first iteration replaces the old
-   // "if (*probe == value)" outer check) then walks down via "--first",
-   // sweeping the count positions [verify_probe - (count - 1), verify_probe].
+   // `cur` is the first element not compared yet, so the elements between
+   // the candidate run start (probe - (count - 1)) and `cur` are already
+   // known to equal `value` and the inner verify sweeps only [cur, probe].
+   // Sweeping a full `count` positions instead would re-compare the matched
+   // tail of the run the previous verify abandoned, which [alg.search]
+   // forbids: LWG 714 lowered the bound to "at most last - first
+   // comparisons".
    //
-   // After an inner mismatch at iter K (K in [1, count]) `first` lands at
-   // LKNM = verify_probe - (K - 1); the next outer iter's verify_probe is
-   // verify_probe + (count - K + 1), so the advance from LKNM is
-   // (count - K + 1) + (K - 1) = count -- a constant `dcount`, regardless
-   // of K. So the BM acceleration is entirely encoded in how far the inner
-   // loop decrements `first` before mismatching, and the outer step is just
-   // dcount.
+   // After an inner mismatch at position p the candidate run start becomes
+   // p + 1 and the next probe is p + 1 + (count - 1) = p + dcount -- the
+   // constant step is what gives the BM acceleration.
    //
-   // OOB safety: the guard `first >= last_safe` is a pure pointer
-   // comparison -- no new pointer is ever formed past `last`. When
-   // `first < last_safe`, `first + dcount` lands at most at `last - 1`,
-   // which is dereferenceable.
-   const FwdIt last_safe = last - dcount;  // largest probe pos that can advance
+   // OOB safety: the guard `p >= last_safe` is a pure pointer comparison --
+   // no new pointer is ever formed past `last`. When `p < last_safe`,
+   // `p + dcount` lands at most at `last - 1`, which is dereferenceable.
+   // The sweep stops on "p == cur" before the final --p, so a pointer below
+   // the original `first` is never formed either.
+   const FwdIt last_safe = last - dcount;  // largest run start that can advance
+   FwdIt cur = first;                      // first element not compared yet
    first += (dcount - 1);                  // first becomes the verify probe
    while (true) {
-      // Inner verify sweeps the count positions [verify_probe - (count - 1),
-      // verify_probe] backward. Doing exactly count - 1 decrements (not
-      // count) avoids forming "original_first - 1" when the run lands right
-      // at the start of the range -- the OLD `back = probe; Size left =
-      // count - 1` shape, but with `first` itself as the cursor.
-      Size left = count;
+      FwdIt p = first;
       BOOST_CONTAINER_SEGMENTED_UNROLL(4)
       do {
-         if (!(*first == value))
+         if (!(*p == value))
             goto probe_mismatch;
-         if (--left == 0)
-            return first;             // run start: first = verify_probe - (count - 1)
-         --first;
+         if (p == cur)
+            return first - (dcount - 1);  // run start
+         --p;
       } while (true);
 
       probe_mismatch: ;
-      // first at LKNM (failed check). OOB-safe advance to next verify probe:
-      // last_safe = last - dcount is precomputed, so the test forms no new
-      // pointer. When first < last_safe, first + dcount lands at most at
-      // last - 1, which is dereferenceable.
-      if (first >= last_safe)
+      cur = first;
+      ++cur;
+      if (p >= last_safe)
          return last;
-      first += dcount;
+      first = p + dcount;
    }
 }
 
