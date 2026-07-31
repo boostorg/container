@@ -324,9 +324,40 @@ std::pair<InIt1, InIt2> mismatch(InIt1 first1, InIt1 last1, InIt2 first2, InIt2 
    return std::pair<InIt1, InIt2>(first1, first2);
 }
 
+// Portable two-range std::equal (std::equal with 4 args is C++14).  The
+// random-access overload keeps the O(1) length short circuit so the std
+// column stays a fair reference for the equal_2r(len) row.
+template<class InIt1, class InIt2>
+bool equal_2r_dispatch(InIt1 first1, InIt1 last1, InIt2 first2, InIt2 last2,
+                       std::input_iterator_tag, std::input_iterator_tag)
+{
+   while (first1 != last1 && first2 != last2 && *first1 == *first2) {
+      ++first1; ++first2;
+   }
+   return first1 == last1 && first2 == last2;
+}
+
+template<class RAIt1, class RAIt2>
+bool equal_2r_dispatch(RAIt1 first1, RAIt1 last1, RAIt2 first2, RAIt2 last2,
+                       std::random_access_iterator_tag, std::random_access_iterator_tag)
+{
+   if ((last1 - first1) != (last2 - first2))
+      return false;
+   return std::equal(first1, last1, first2);
+}
+
+template<class InIt1, class InIt2>
+bool equal(InIt1 first1, InIt1 last1, InIt2 first2, InIt2 last2)
+{
+   return equal_2r_dispatch(first1, last1, first2, last2,
+      typename std::iterator_traits<InIt1>::iterator_category(),
+      typename std::iterator_traits<InIt2>::iterator_category());
+}
+
 #else
 
 using std::mismatch;
+using std::equal;
 
 #endif
 
@@ -1022,6 +1053,22 @@ struct seg_equal {
    { clobber(); result = bc::segmented_equal(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(range2.begin())) ? 1 : 0; escape(&result); }
 };
 
+// --- equal (two-range) ---
+template<class C, class R2>
+struct std_equal_2r {
+   const C &c; const R2 &range2; int &result;
+   std_equal_2r(const C &c_, const R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
+   BOOST_CONTAINER_FORCEINLINE void operator()()
+   { clobber(); result = bench_detail::equal(c.begin(), c.end(), range2.begin(), range2.end()) ? 1 : 0; escape(&result); }
+};
+template<class C, class R2, bool Wrap = false>
+struct seg_equal_2r {
+   const C &c; const R2 &range2; int &result;
+   seg_equal_2r(const C &c_, const R2 &r2_, int &r_) : c(c_), range2(r2_), result(r_) {}
+   BOOST_CONTAINER_FORCEINLINE void operator()()
+   { clobber(); result = bc::segmented_equal(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(range2.begin()), iter_w<Wrap>::wrap(range2.end())) ? 1 : 0; escape(&result); }
+};
+
 // --- replace ---
 template<class C>
 struct std_replace_op {
@@ -1713,6 +1760,17 @@ void bench_equal(const InC1 &c, const InC2 &c2, std::size_t iters, const char* c
       bench_ops::seg_equal<InC1, InC2, true>(c, c2, result), label, cname);
 }
 
+template<class InC1, class InC2>
+void bench_equal_2r(const InC1 &c, const InC2 &c2, std::size_t iters, const char* cname,
+                    const char* label)
+{
+   int result = 0;
+   compare_batch(iters, c.size(),
+      bench_ops::std_equal_2r<InC1, InC2>(c, c2, result),
+      bench_ops::seg_equal_2r<InC1, InC2>(c, c2, result),
+      bench_ops::seg_equal_2r<InC1, InC2, true>(c, c2, result), label, cname);
+}
+
 template<class C>
 void bench_replace(const C &c, std::size_t iters, const char* cname,
                    const typename C::value_type& old_val,
@@ -2294,6 +2352,25 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_equal<C,     vec_t>(c,  c2v, iters, cname, "equal(1S miss)");
       bench_equal<vec_t, C    >(cv, c2,  iters, cname, "equal(2S miss)");
       bench_equal<C,     C    >(c,  c2,  iters, cname, "equal(1+2S miss)");
+   }
+
+   //equal (two ranges)
+   {
+      C c2(c);
+      vec_t c2v(c2.begin(), c2.end());
+      bench_equal_2r<C,     vec_t>(c,  c2v, iters, cname, "equal_2r(1S hit)");
+      bench_equal_2r<vec_t, C    >(cv, c2,  iters, cname, "equal_2r(2S hit)");
+      bench_equal_2r<C,     C    >(c,  c2,  iters, cname, "equal_2r(1+2S hit)");
+      *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
+      c2v.assign(c2.begin(), c2.end());
+      bench_equal_2r<C,     vec_t>(c,  c2v, iters, cname, "equal_2r(1S miss)");
+      bench_equal_2r<vec_t, C    >(cv, c2,  iters, cname, "equal_2r(2S miss)");
+      bench_equal_2r<C,     C    >(c,  c2,  iters, cname, "equal_2r(1+2S miss)");
+      //Only the four-argument form can answer from the lengths alone, so this
+      //row is the one that shows the O(1) short circuit; it is a fair race
+      //because four-argument std::equal short circuits the same way
+      c2.pop_back();
+      bench_equal_2r<C,     C    >(c,  c2,  iters, cname, "equal_2r(1+2S len)");
    }
 
    //mismatch
