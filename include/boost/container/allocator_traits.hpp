@@ -275,8 +275,17 @@ struct allocator_traits
 {
    //allocator_type
    typedef Allocator allocator_type;
-   //value_type
+   #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
+   #pragma GCC diagnostic push
+   #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+   #endif
+
+   //value_type (std::allocator<void>::value_type is deprecated since C++17)
    typedef typename allocator_type::value_type value_type;
+
+   #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
+   #pragma GCC diagnostic pop
+   #endif
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
       //! Allocator::pointer if such a type exists; otherwise, value_type*
@@ -555,8 +564,18 @@ struct allocator_traits
 
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    private:
+   #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
+   #pragma GCC diagnostic push
+   #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+   #endif
+
+   //std::allocator<T>::allocate(n, hint) is deprecated since C++17
    inline static pointer priv_allocate(dtl::true_type, Allocator &a, size_type n, const_void_pointer p)
    {  return a.allocate(n, p);  }
+
+   #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
+   #pragma GCC diagnostic pop
+   #endif
 
    inline static pointer priv_allocate(dtl::false_type, Allocator &a, size_type n, const_void_pointer)
    {  return a.allocate(n);  }
