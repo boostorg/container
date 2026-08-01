@@ -68,46 +68,6 @@ BOOST_CONTAINER_FORCEINLINE bool partition_copy_room_enough
    (TIter, unreachable_sentinel_t, FIter, unreachable_sentinel_t, Diff avail)
 { return avail >= static_cast<Diff>(BlockSize); }
 
-template <std::size_t BlockSize, class RASrcIter, class TIter, class TSent,
-          class FIter, class FSent, class Pred, class Diff>
-BOOST_CONTAINER_FORCEINLINE segquartet<RASrcIter, TIter, FIter, Diff>
-partition_copy_cleanup_blocks
-   (RASrcIter cur, TIter t_first, TSent t_last, FIter f_first, FSent f_last,
-    Pred pred, Diff avail, dtl::true_type)
-{
-   const Diff block_size = static_cast<Diff>(BlockSize);
-   while((partition_copy_room_enough<BlockSize>)
-            (t_first, t_last, f_first, f_last, avail)) {
-      avail -= block_size;
-      BOOST_CONTAINER_SEGMENTED_AUTO_UNROLL
-      for(Diff chunk = block_size; chunk; ) {
-         --chunk;
-         if(pred(*cur)) {
-            *t_first = *cur;
-            ++t_first;
-         }
-         else {
-            *f_first = *cur;
-            ++f_first;
-         }
-         ++cur;
-      }
-   }
-   return segquartet<RASrcIter, TIter, FIter, Diff>
-      (cur, t_first, f_first, avail);
-}
-
-template <std::size_t BlockSize, class RASrcIter, class TIter, class TSent,
-          class FIter, class FSent, class Pred, class Diff>
-BOOST_CONTAINER_FORCEINLINE segquartet<RASrcIter, TIter, FIter, Diff>
-partition_copy_cleanup_blocks
-   (RASrcIter cur, TIter t_first, TSent, FIter f_first, FSent, Pred, Diff avail,
-    dtl::false_type)
-{
-   return segquartet<RASrcIter, TIter, FIter, Diff>
-      (cur, t_first, f_first, avail);
-}
-
 template <class It>
 struct pc_output_is_ra
 {
@@ -140,10 +100,12 @@ partition_copy_leaf
    // untested element, and the loop body can take for granted that both outputs
    // have room.  With unreachable_sentinel_t outputs the tests fold away, so the
    // flat path is unchanged.
+   typedef segquartet<SrcIter, TIter, FIter, bool> result_t;
+
    if(BOOST_UNLIKELY(t_first == t_last))
-      return segquartet<SrcIter, TIter, FIter, bool>(first, t_first, f_first, false);
+      return result_t(first, t_first, f_first, false);
    if(BOOST_UNLIKELY(f_first == f_last))
-      return segquartet<SrcIter, TIter, FIter, bool>(first, t_first, f_first, first != last);
+      return result_t(first, t_first, f_first, first != last);
 
    bool false_output_full = false;
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
@@ -166,15 +128,13 @@ partition_copy_leaf
          }
       }
    }
-   return segquartet<SrcIter, TIter, FIter, bool>
-      (first, t_first, f_first, false_output_full);
+   return result_t(first, t_first, f_first, false_output_full);
 }
 
-// Random-access-source fast path (needs random-access outputs too).  Process
-// fixed 32-element source blocks while both outputs have room for the worst
-// case (all 32 elements routed to either output), use 8-element cleanup blocks
-// when an output is bounded, then finish with the generic checked loop.  An
-// unbounded output reports the available source count as its room.
+// Random-access-source fast path (needs random-access outputs too).
+// Three loops: both outputs have room for a full block; source-only blocks
+// with per-write checks; residual.  An unbounded output folds its capacity
+// tests away via unreachable_sentinel_t.
 template <class RASrcIter, class TIter, class TSent, class FIter, class FSent, class Pred>
 BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c
@@ -185,24 +145,66 @@ partition_copy_leaf
     Pred pred, const std::random_access_iterator_tag &)
 {
    typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
-   typedef segquartet<RASrcIter, TIter, FIter, difference_type> cleanup_result;
+   typedef segquartet<RASrcIter, TIter, FIter, bool> result_t;
+   const difference_type block_size = 16;
+   difference_type n = last - first;
+   bool false_output_full = false;
 
-   const cleanup_result r32 = (partition_copy_cleanup_blocks<32>)
-      (first, t_first, t_last, f_first, f_last, pred, last - first,
-       dtl::true_type());
+   if(BOOST_UNLIKELY(t_first == t_last))
+      return result_t(first, t_first, f_first, false);
+   if(BOOST_UNLIKELY(f_first == f_last))
+      return result_t(first, t_first, f_first, first != last);
 
-   typedef dtl::integral_constant
-      < bool
-      , !dtl::is_same<TSent, unreachable_sentinel_t>::value ||
-        !dtl::is_same<FSent, unreachable_sentinel_t>::value
-      > has_bounded_output_t;
-   const cleanup_result r8 = (partition_copy_cleanup_blocks<8>)
-      (r32.first, r32.second, t_last, r32.third, f_last, pred, r32.fourth,
-       has_bounded_output_t());
+   //Avoid output checks if source and both outputs are big enough
+   while((partition_copy_room_enough<16>)
+            (t_first, t_last, f_first, f_last, n)) {
+      n -= block_size;
+      BOOST_CONTAINER_SEGMENTED_AUTO_UNROLL
+      for(difference_type chunk = block_size; chunk; ) {
+         --chunk;
+         if(pred(*first)) {
+            *t_first = *first;
+            ++t_first;
+         }
+         else {
+            *f_first = *first;
+            ++f_first;
+         }
+         ++first;
+      }
+   }
 
-   return (partition_copy_leaf)
-      (r8.first, last, r8.second, t_last, r8.third, f_last, pred,
-       int());
+   //Loop 1 may exhaust an output exactly; do not write past the end.
+   if(BOOST_UNLIKELY(t_first == t_last))
+      goto out_ret;
+   if(BOOST_UNLIKELY(f_first == f_last)) {
+      false_output_full = first != last;
+      goto out_ret;
+   }
+
+   //Remaining elements
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
+   for(; n; --n, ++first) {
+      if(pred(*first)) {
+         *t_first = *first;
+         ++t_first;
+         if(BOOST_UNLIKELY(t_first == t_last)) {
+            ++first;
+            goto out_ret;
+         }
+      }
+      else {
+         *f_first = *first;
+         ++f_first;
+         if(BOOST_UNLIKELY(f_first == f_last)) {
+            ++first;
+            false_output_full = first != last;
+            goto out_ret;
+         }
+      }
+   }
+   out_ret:
+   return result_t(first, t_first, f_first, false_output_full);
 }
 
 //////////////////////////////////////////////////////////////////////////////

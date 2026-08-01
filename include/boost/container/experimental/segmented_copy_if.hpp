@@ -58,7 +58,7 @@ segmented_copy_if_dst_bounded
    //element.  With an unreachable_sentinel_t destination both checks fold away,
    //so the flat path is unchanged.
    if(BOOST_UNLIKELY(dst_first == dst_last))
-      return segduo<SrcIter, DstIter>(first, dst_first);
+      goto out_path;
 
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    for(; first != last; ++first) {
@@ -75,46 +75,58 @@ segmented_copy_if_dst_bounded
    return segduo<SrcIter, DstIter>(first, dst_first);
 }
 
-template <std::size_t BlockSize, class RASrcIter, class RADstIter,
-          class Pred, class Diff>
-BOOST_CONTAINER_FORCEINLINE segtrio<RASrcIter, RADstIter, Diff>
-copy_if_cleanup_blocks
-   (RASrcIter cur, RADstIter dst_cur, RADstIter dst_last,
-    Pred pred, Diff avail)
-{
-   const Diff block_size = static_cast<Diff>(BlockSize);
-   while(avail >= block_size &&
-         static_cast<Diff>(dst_last - dst_cur) >= block_size) {
-      avail -= block_size;
-      BOOST_CONTAINER_SEGMENTED_AUTO_UNROLL
-      for(Diff chunk = block_size; chunk; ) {
-         --chunk;
-         if(pred(*cur)) {
-            *dst_cur = *cur;
-            ++dst_cur;
-         }
-         ++cur;
-      }
-   }
-   return segtrio<RASrcIter, RADstIter, Diff>(cur, dst_cur, avail);
-}
-
 template <class RASrcIter, class RADstIter, class Pred>
 BOOST_CONTAINER_FORCEINLINE typename iterator_enable_if_tag
    <RADstIter, std::random_access_iterator_tag, segduo<RASrcIter, RADstIter> >::type
 segmented_copy_if_dst_bounded
    (RASrcIter first, RASrcIter last, RADstIter dst_first, RADstIter dst_last, Pred pred,
-    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &src_tag)
+    const non_segmented_iterator_tag &, const std::random_access_iterator_tag &)
 {
+   //[alg.copy] same dest-after-write contract as the generic leaf.  Dest capacity
+   //is tested only after a write, so a miss scan never touches the destination
+   //bound.  The old blocked helper rechecked (dst_last - dst) every 32 source
+   //elements even when nothing was written.
    typedef typename iterator_traits<RASrcIter>::difference_type difference_type;
+   typedef segduo<RASrcIter, RADstIter> result_t;
+   const difference_type block_size = 16;
+   difference_type n = last - first;
 
-   (void)src_tag;
-   segtrio<RASrcIter, RADstIter, difference_type> r =
-      (copy_if_cleanup_blocks<32>)
-         (first, dst_first, dst_last, pred, last - first);
+   if(BOOST_UNLIKELY(dst_first == dst_last))
+      goto out_ret;
 
-   return (segmented_copy_if_dst_bounded)
-      (r.first, last, r.second, dst_last, pred, non_segmented_iterator_tag(), int());
+   // Avoid destination check if both input and output ranges are big enough
+   while(n >= block_size &&
+         static_cast<difference_type>(dst_last - dst_first) >= block_size) {
+      n -= block_size;
+      BOOST_CONTAINER_SEGMENTED_AUTO_UNROLL
+      for(difference_type chunk = block_size; chunk; ) {
+         --chunk;
+         if(pred(*first)) {
+            *dst_first = *first;
+            ++dst_first;
+         }
+         ++first;
+      }
+   }
+
+   //Loop 1 may exhaust the destination exactly; do not write past the end.
+   if(BOOST_UNLIKELY(dst_first == dst_last))
+      goto out_ret;
+
+   // Remaining elements
+   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
+   for(; n; --n, ++first) {
+      if(pred(*first)) {
+         *dst_first = *first;
+         ++dst_first;
+         if(BOOST_UNLIKELY(dst_first == dst_last)) {
+            ++first;
+            goto out_ret;
+         }
+      }
+   }
+   out_ret:
+   return result_t(first, dst_first);
 }
 
 template <class SrcIter, class Sent, class SegDstIter, class Pred, class SrcCat>
