@@ -446,13 +446,15 @@ segmented_iter2_bounded
    const difference_type iter2_n = difference_type(last2 - first2);
    difference_type n = src_n < iter2_n ? src_n : iter2_n;
 
-   bool stop = true;
+   bool stop;
 
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
    while(n) {
       --n;
-      if(!pred(*first1, *first2))
+      if (!pred(*first1, *first2)) {
+         stop = true;
          goto out_path;
+      }
       ++first1;
       ++first2;
    }
