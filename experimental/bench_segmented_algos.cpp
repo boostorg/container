@@ -325,8 +325,7 @@ std::pair<InIt1, InIt2> mismatch(InIt1 first1, InIt1 last1, InIt2 first2, InIt2 
 }
 
 // Portable two-range std::equal (std::equal with 4 args is C++14).  The
-// random-access overload keeps the O(1) length short circuit so the std
-// column stays a fair reference for the equal_2r(len) row.
+// random-access overload keeps the O(1) length short circuit.
 template<class InIt1, class InIt2>
 bool equal_2r_dispatch(InIt1 first1, InIt1 last1, InIt2 first2, InIt2 last2,
                        std::input_iterator_tag, std::input_iterator_tag)
@@ -2366,11 +2365,6 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_equal_2r<C,     vec_t>(c,  c2v, iters, cname, "equal_2r(1S miss)");
       bench_equal_2r<vec_t, C    >(cv, c2,  iters, cname, "equal_2r(2S miss)");
       bench_equal_2r<C,     C    >(c,  c2,  iters, cname, "equal_2r(1+2S miss)");
-      //Only the four-argument form can answer from the lengths alone, so this
-      //row is the one that shows the O(1) short circuit; it is a fair race
-      //because four-argument std::equal short circuits the same way
-      c2.pop_back();
-      bench_equal_2r<C,     C    >(c,  c2,  iters, cname, "equal_2r(1+2S len)");
    }
 
    //mismatch
@@ -2413,15 +2407,6 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_search(c, iters, cname, hit_pat, 3, "search(hit)");
       VT miss_pat[] = {min1, VT(-2), VT(-3)};
       bench_search(c, iters, cname, miss_pat, 3, "search(miss)");
-   }
-
-   //find_end (same shape as search: only the haystack is segmented)
-   {
-      int ihalf = static_cast<int>(c.size() / 2);
-      VT hit_pat[] = {half, VT(ihalf + 1), VT(ihalf + 2)};
-      bench_find_end(c, iters, cname, hit_pat, 3, "find_end(hit)");
-      VT miss_pat[] = {min1, VT(-2), VT(-3)};
-      bench_find_end(c, iters, cname, miss_pat, 3, "find_end(miss)");
    }
 
    print_group_geomean(vtname);
@@ -2490,6 +2475,15 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_reverse_copy<C,     vec_t>(c,  iters, cname, "reverse_copy(1S)");
    bench_reverse_copy<vec_t, C    >(cv, iters, cname, "reverse_copy(2S)");
    bench_reverse_copy<C,     C    >(c,  iters, cname, "reverse_copy(1+2S)");
+
+   //find_end (same shape as search: only the haystack is segmented)
+   {
+      int ihalf = static_cast<int>(c.size() / 2);
+      VT hit_pat[] = {half, VT(ihalf + 1), VT(ihalf + 2)};
+      bench_find_end(c, iters, cname, hit_pat, 3, "find_end(hit)");
+      VT miss_pat[] = {min1, VT(-2), VT(-3)};
+      bench_find_end(c, iters, cname, miss_pat, 3, "find_end(miss)");
+   }
 
    print_group_geomean(vtname);
 #endif
@@ -2615,7 +2609,7 @@ int main()
 {
    //run_benchmarks<int>();
    run_benchmarks<MyInt>();
-   //run_benchmarks<MyFatInt<4> >();
-   //run_benchmarks<MyFatInt<8> >();
+   run_benchmarks<MyFatInt<4> >();
+   run_benchmarks<MyFatInt<8> >();
    return 0;
 }
