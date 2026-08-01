@@ -250,9 +250,14 @@ BOOST_CONTAINER_FORCEINLINE bool segmented_equal_sized_dispatch
    (RAIter1 first1, RAIter1 last1, RAIter2 first2, RAIter2 last2, BinaryPred pred, dtl::true_)
 {
    typedef typename iterator_traits<RAIter1>::difference_type difference_type;
+   typedef segmented_iterator_traits<RAIter1>                 traits;
+
    if((last1 - first1) != difference_type(last2 - first2))
       return false;
-   return boost::container::segmented_equal(first1, last1, first2, pred);
+
+   return detail_algo::segmented_equal_dispatch
+      ( first1, last1, first2, pred, typename traits::is_segmented_iterator()
+      , typename iterator_traits<RAIter1>::iterator_category()).first;
 }
 
 template <class InpIter1, class Sent1, class InpIter2, class Sent2, class BinaryPred>
