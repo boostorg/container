@@ -41,6 +41,7 @@ void segmented_reverse_dispatch(BidirIt first, BidirIt last, non_segmented_itera
    }
 }
 
+#if BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 template <class RAIter>
 BOOST_CONTAINER_FORCEINLINE
 void segmented_reverse_dispatch(RAIter first, RAIter last, non_segmented_iterator_tag, const std::random_access_iterator_tag &)
@@ -55,6 +56,7 @@ void segmented_reverse_dispatch(RAIter first, RAIter last, non_segmented_iterato
       ++first;
    }
 }
+#endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
 //////////////////////////////////////////////
 // segmented_reverse_disjoint_ranges: swaps elements between
@@ -77,6 +79,7 @@ segduo<It, It> segmented_reverse_disjoint_ranges
    return segduo<It, It>(f, l);
 }
 
+#if BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 template <class It>
 BOOST_CONTAINER_FORCEINLINE
 segduo<It, It> segmented_reverse_disjoint_ranges
@@ -97,6 +100,7 @@ segduo<It, It> segmented_reverse_disjoint_ranges
 
    return segduo<It, It>(f, l);
 }
+#endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
 template <class It, class Cat>
 segduo<It, It> segmented_reverse_disjoint_ranges(It f, It f_end, It l_beg, It l, segmented_iterator_tag, const Cat&)

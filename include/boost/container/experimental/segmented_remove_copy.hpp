@@ -64,6 +64,7 @@ segmented_remove_copy_dst_bounded
    return segduo<SrcIter, DstIter>(first, dst_first);
 }
 
+#if BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 template <bool Move, class RASrcIter, class RADstIter, class T>
 BOOST_CONTAINER_FORCEINLINE typename iterator_enable_if_tag
    <RADstIter, std::random_access_iterator_tag, segduo<RASrcIter, RADstIter> >::type
@@ -114,6 +115,7 @@ segmented_remove_copy_dst_bounded
    out_ret:
    return result_t(first, dst_first);
 }
+#endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
 template <bool Move, class SrcIter, class Sent, class SegDstIter, class T, class SrcCat>
 segduo<SrcIter, SegDstIter> segmented_remove_copy_dst_bounded

@@ -76,6 +76,7 @@ namespace detail_algo {
 // last - first comparisons" [alg.search] mandates: a verify that always
 // swept a full "count" positions would re-compare the matched tail of the
 // run the previous verify abandoned.
+#if BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 template <class LocalIter, class Size, class T>
 segtrio<bool, Size, LocalIter> search_n_scan_segment
    (LocalIter lcur, LocalIter const lend,
@@ -210,6 +211,7 @@ segtrio<bool, Size, LocalIter> search_n_scan_segment
       return result_t(false, static_cast<Size>(lend - match_start), match_start);
    }
 }
+#endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
 // Initial value for "match_start" used by the forward scan below.
 //
@@ -322,6 +324,7 @@ segtrio<bool, Size, SegIter> search_n_scan_segment
 }
 
 // Cheap O(1) size guard available when first/last are a same-typed RA pair.
+#if BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 template <class FwdIt, class Size>
 BOOST_CONTAINER_FORCEINLINE
 bool search_n_range_shorter_than
@@ -330,6 +333,7 @@ bool search_n_range_shorter_than
    typedef typename iterator_traits<FwdIt>::difference_type difference_type;
    return (last - first) < static_cast<difference_type>(count);
 }
+#endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
 template <class FwdIt, class Sent, class Size, class Cat>
 BOOST_CONTAINER_FORCEINLINE
@@ -369,6 +373,7 @@ FwdIt search_n_top_dispatch
 // chunk_size/count probes -- vastly cheaper than recomputing
 // "first + pidx" (which forces a chunk-base load on the critical path of
 // every probe).
+#if BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 template <class FwdIt, class Size, class T>
 BOOST_CONTAINER_FORCEINLINE
 FwdIt search_n_top_dispatch
@@ -425,6 +430,7 @@ FwdIt search_n_top_dispatch
       first = p + dcount;
    }
 }
+#endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
 } // namespace detail_algo
 

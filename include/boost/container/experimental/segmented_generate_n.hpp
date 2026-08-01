@@ -32,6 +32,7 @@ OutIt segmented_generate_n(OutIt first, Size count, Generator gen);
 
 namespace detail_algo {
 
+#if BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 template <class OutIter, class Size, class Generator>
 BOOST_CONTAINER_FORCEINLINE
 segduo<OutIter, Size> generate_n_scan
@@ -48,6 +49,7 @@ segduo<OutIter, Size> generate_n_scan
    }
    return segduo<OutIter, Size>(first, count);
 }
+#endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
 template <class OutIter, class Size, class Generator, class Cat>
 BOOST_CONTAINER_FORCEINLINE

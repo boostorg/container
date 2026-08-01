@@ -44,6 +44,7 @@ segduo<OutIter, Size> fill_n_scan
    return segduo<OutIter, Size>(first, count);
 }
 
+#if BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 template <class OutIter, class Size, class T>
 BOOST_CONTAINER_FORCEINLINE
 segduo<OutIter, Size> fill_n_scan
@@ -61,6 +62,7 @@ segduo<OutIter, Size> fill_n_scan
 
    return segduo<OutIter, Size>(first, count);
 }
+#endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
 template <class SegIt, class Size, class T, class Cat>
 segduo<SegIt, Size> fill_n_scan(SegIt first, SegIt last, Size count, const T& value, segmented_iterator_tag, const Cat &)

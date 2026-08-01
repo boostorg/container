@@ -122,6 +122,7 @@ set_symmetric_difference_blocks
    return segtrio<RAIter1, RAIter2, DstIter>(first1, first2, dst_first);
 }
 
+#if BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 // Dual-RA fast path: processes fixed 32-element blocks free of boundary
 // checks, then finishes with the generic checked loop (SrcCat = int so this
 // overload cannot re-match).  Bounded destinations are enabled everywhere
@@ -144,6 +145,7 @@ set_symmetric_difference_dst_bounded
    return (set_symmetric_difference_dst_bounded)
       (r.first, last1, r.second, last2, r.third, dst_last, comp, dst_tag, int());
 }
+#endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
 template <class Iter1, class Sent1, class Iter2, class Sent2, class SegDstIter,
           class Comp, class SrcCat>

@@ -43,6 +43,13 @@
 //
 //#define BOOST_CONTAINER_SEGMENTED_COUNT_BRANCHLESS
 
+// Enables random-access leaf specializations for some segmented algorithms
+// Defaults to 1; define to 0 before including segmented headers to fall back
+// to the generic leaves.
+#if !defined(BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS)
+#define BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS 1
+#endif
+
 #define BOOST_CONTAINER_SEGMENTED_DISABLE_PRAGMA_UNROLL
 //#define BOOST_CONTAINER_SEGMENTED_ENABLE_PRAGMA_UNROLL
 
@@ -432,6 +439,7 @@ segmented_iter2_bounded
    return result_t(first1, first2, stop);
 }
 
+#if BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 template <class RASrcIter, class RAIter2, class BinaryPred>
 BOOST_CONTAINER_FORCEINLINE
 typename iterator_enable_if_tag
@@ -466,6 +474,7 @@ segmented_iter2_bounded
    out_path:
    return result_t(first1, first2, stop);
 }
+#endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
 template <class SrcIter, class Sent, class SegIter2, class BinaryPred, class SrcCat>
 segtrio<SrcIter, SegIter2, bool> segmented_iter2_bounded

@@ -60,6 +60,7 @@ segmented_copy_n_src_dst_bounded
    return segduo<SrcIter, DstIter>(first, dst_first);
 }
 
+#if BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 template <class SrcIter, class SrcSent, class Size, class DstIter, class DstSent>
 BOOST_CONTAINER_FORCEINLINE
    typename iterator_disable_if_tag
@@ -89,6 +90,15 @@ segmented_copy_n_dst_bounded
    count -= (n_initial - n);
    return r;
 }
+#else
+template <class SrcIter, class SrcSent, class Size, class DstIter, class DstSent>
+BOOST_CONTAINER_FORCEINLINE segduo<SrcIter, DstIter>
+segmented_copy_n_dst_bounded
+   (SrcIter first, SrcSent last, Size& BOOST_RESTRICT count, DstIter dst_first, DstSent dst_last, const non_segmented_iterator_tag &)
+{
+   return (segmented_copy_n_src_dst_bounded)(first, last, count, dst_first, dst_last);
+}
+#endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
 template <class SrcIter, class SrcSent, class Size, class SegDstIter>
 segduo<SrcIter, SegDstIter> segmented_copy_n_dst_bounded
@@ -178,6 +188,7 @@ SegDstIter segmented_copy_n_dst_dispatch
 // boundaries and count, then delegates to the destination dispatch layer.
 //////////////////////////////////////////////////////////////////////////////
 
+#if BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 template <class InIter, class Size, class OutIter>
 BOOST_CONTAINER_FORCEINLINE
 OutIter copy_n_scan
@@ -191,6 +202,7 @@ OutIter copy_n_scan
    return (segmented_copy_n_dst_dispatch)
       (first, unreachable_sentinel_t(), min_count, result, typename dst_traits::is_segmented_iterator());
 }
+#endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
 template <class InIter, class Size, class OutIter, class Cat>
 BOOST_CONTAINER_FORCEINLINE

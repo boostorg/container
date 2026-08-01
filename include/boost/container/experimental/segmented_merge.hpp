@@ -119,6 +119,7 @@ merge_blocks
    return segtrio<RAIter1, RAIter2, DstIter>(first1, first2, dst_first);
 }
 
+#if BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 template <class RAIter1, class RAIter2, class DstIter, class DstSent,
           class Comp, class DstTag>
 BOOST_CONTAINER_FORCEINLINE
@@ -136,6 +137,7 @@ merge_dst_bounded
    return (merge_dst_bounded)
       (r.first, last1, r.second, last2, r.third, dst_last, comp, dst_tag, int());
 }
+#endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
 template <class Iter1, class Sent1, class Iter2, class Sent2, class SegDstIter,
           class Comp, class SrcCat>

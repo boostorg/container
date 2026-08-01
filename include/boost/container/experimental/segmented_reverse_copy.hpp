@@ -58,6 +58,7 @@ segmented_reverse_copy_dst_bounded
    return segduo<BidirIter, DstIter>(last, dst_first);
 }
 
+#if BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 template <class RASrcIter, class RADstIter>
 BOOST_CONTAINER_FORCEINLINE
 typename iterator_enable_if_tag
@@ -73,6 +74,7 @@ segmented_reverse_copy_dst_bounded
    return (segmented_reverse_copy_dst_bounded)(last - n, last, dst_first, unreachable_sentinel_t(),
       non_segmented_iterator_tag(), src_tag);
 }
+#endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
 template <class BidirIter, class SegDstIter, class SrcCat>
 segduo<BidirIter, SegDstIter> segmented_reverse_copy_dst_bounded

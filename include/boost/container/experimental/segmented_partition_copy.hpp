@@ -131,10 +131,11 @@ partition_copy_leaf
    return result_t(first, t_first, f_first, false_output_full);
 }
 
+#if BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 // Random-access-source fast path (needs random-access outputs too).
-// Three loops: both outputs have room for a full block; source-only blocks
-// with per-write checks; residual.  An unbounded output folds its capacity
-// tests away via unreachable_sentinel_t.
+// Two loops: both outputs have room for a full block; residual with
+// per-write checks.  An unbounded output folds its capacity tests away via
+// unreachable_sentinel_t.
 template <class RASrcIter, class TIter, class TSent, class FIter, class FSent, class Pred>
 BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c
@@ -206,6 +207,7 @@ partition_copy_leaf
    out_ret:
    return result_t(first, t_first, f_first, false_output_full);
 }
+#endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
 //////////////////////////////////////////////////////////////////////////////
 // Inner stage (out_false).  out_true has been reduced to a flat [t_first,
