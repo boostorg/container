@@ -146,26 +146,27 @@ FwdIt1 segmented_search_dispatch(FwdIt1 first, Sent1 last, FwdIt2 s_first, Sent2
 
    equal_to_deref<FwdIt2> eq(s_first);
 
+   //Try one-element needle
+   FwdIt2 s_second = s_first;
+   ++s_second;
+   if(BOOST_UNLIKELY(s_second == s_last))
+      return boost::container::segmented_find_if(first, last, eq);
+
    while(first != last) {
       first = boost::container::segmented_find_if(first, last, eq);
-      if(first == last)
+      if(BOOST_UNLIKELY(first == last))
          return last;
 
       //Verification starts one past both cursors: segmented_find_if has just
       //matched the candidate's first element, and comparing it again would
-      //over-apply by one, which for a one-element needle already exceeds the
-      //(last1 - first1) * (last2 - first2) applications [alg.search] allows.
+      //waste one predicate application on every candidate.
       FwdIt1 it = first;
       ++it;
-      FwdIt2 s_it = s_first;
-      ++s_it;
-      if(s_it == s_last)
-         return first;          // one-element needle -> already matched
       if(it == last)
          return last;           // source exhausted before needle
 
       const segduo<FwdIt1, bool> r = (segmented_search_verify)
-         (it, last, s_it, s_last, ndl_tag_t());
+         (it, last, s_second, s_last, ndl_tag_t());
       if(r.second)
          return first;          // full needle consumed -> match
       if(r.first == last)
