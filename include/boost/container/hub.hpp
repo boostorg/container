@@ -1936,10 +1936,14 @@ private:
       while(first != last) {
          int  n;
          auto pb = retrieve_available_block(n);
+         if(pb->mask == 0) {
+            //blocks used are empty from this point on (reserved or newly allocated)
+            range_insert_adjacent(first, last, construct_, pb);
+            return;
+         }
          for(; ; ) {
             construct_(boost::movelib::to_raw_pointer(pb->data() + n), first++);
             ++size_;
-            if(BOOST_UNLIKELY(pb->mask == 0)) blist.link_at_back(pb);
             pb->mask |= pb->mask +1;
             if(pb->mask == full) {
                blist.unlink_available(pb);
@@ -1948,6 +1952,46 @@ private:
             else if(first == last) return;
             n = dtl::unchecked_countr_one(pb->mask);
          }
+      }
+   }
+
+   template<typename Incrementable, typename Sentinel, typename Construct>
+   void range_insert_adjacent(
+      Incrementable& first, Sentinel last, Construct construct_, block_pointer pb)
+   {
+      for(;;) {
+         BOOST_ASSERT(pb->mask == 0);
+         T* p = boost::movelib::to_raw_pointer(pb->data());
+         int i = 0;
+         BOOST_CONTAINER_TRY {
+            for(;;) {
+               construct_(p + i, first++);
+               if(++i == N || first == last) break;
+            }
+         }
+         BOOST_CONTAINER_CATCH(...) {
+            if(i != 0) {
+               blist.link_at_back(pb);
+               size_ += (size_type)i;
+               pb->mask = (mask_type(1) << i) - 1;
+            }
+            BOOST_CONTAINER_RETHROW;
+         }
+         BOOST_CONTAINER_CATCH_END
+
+         blist.link_at_back(pb);
+         size_ += (size_type)i;
+         if(i == N) {
+            pb->mask = full;
+            blist.unlink_available(pb);
+         }
+         else {
+            pb->mask = (mask_type(1) << i) - 1;
+            return;
+         }
+         if(first == last) return;
+         int n;
+         pb = retrieve_available_block(n);
       }
    }
 
