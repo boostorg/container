@@ -2836,6 +2836,9 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
 
 * Added overaligned support for [classref boost::container::pmr::monotonic_buffer_resource monotonic_buffer_resource]. 
 
+* Fixed bugs/issues/enhancements:
+   * [@https://github.com/boostorg/container/pull/339 GitHub #339: ['"optimized range insertion for boost::container::hub"]].
+
 [endsect]
 
 [section:release_notes_boost_1_92_00 Boost 1.92 Release]
