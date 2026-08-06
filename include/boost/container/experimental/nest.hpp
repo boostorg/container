@@ -2323,12 +2323,16 @@ class nest
       while(first != last) {
          int  n;
          block_pointer pb = priv_retrieve_available_block(n);
+         if(pb->mask == 0) {
+            //blocks used are empty from this point on (reserved or newly allocated)
+            priv_range_insert_adjacent(first, last, pb);
+            return;
+         }
          for(; ; ) {
             block_alloc_traits::construct(
                al(), boost::movelib::to_raw_pointer(pb->data() + n), *first);
             ++first;
             ++size_;
-            if(BOOST_UNLIKELY(pb->mask == 0)) blist.link_at_back(pb);
             pb->mask |= pb->mask + 1;
             if(pb->mask == full){
                blist.unlink_available(pb);
@@ -2337,6 +2341,46 @@ class nest
             else if(first == last) return;
             n = dtl::unchecked_countr_one(pb->mask);
          }
+      }
+   }
+
+   template<class InpIt>
+   void priv_range_insert_adjacent(InpIt& first, InpIt last, block_pointer pb)
+   {
+      for(;;) {
+         BOOST_ASSERT(pb->mask == 0);
+         T* p = boost::movelib::to_raw_pointer(pb->data());
+         int i = 0;
+         BOOST_CONTAINER_TRY {
+            for(;;) {
+               block_alloc_traits::construct(al(), p + i, *first);
+               ++first;
+               if(++i == (int)N || first == last) break;
+            }
+         }
+         BOOST_CONTAINER_CATCH(...) {
+            if(i != 0) {
+               blist.link_at_back(pb);
+               size_ += (size_type)i;
+               pb->mask = (mask_type(1) << i) - 1;
+            }
+            BOOST_CONTAINER_RETHROW;
+         }
+         BOOST_CONTAINER_CATCH_END
+
+         blist.link_at_back(pb);
+         size_ += (size_type)i;
+         if(i == (int)N) {
+            pb->mask = full;
+            blist.unlink_available(pb);
+         }
+         else {
+            pb->mask = (mask_type(1) << i) - 1;
+            return;
+         }
+         if(first == last) return;
+         int n;
+         pb = priv_retrieve_available_block(n);
       }
    }
 
