@@ -10,9 +10,9 @@
 #ifndef BOOST_CONTAINER_TEST_EMPLACE_TEST_HPP
 #define BOOST_CONTAINER_TEST_EMPLACE_TEST_HPP
 
+#include <boost/container/detail/config_begin.hpp>
 #include <iostream>
 #include <typeinfo>
-#include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/is_pair.hpp>

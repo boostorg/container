@@ -17,6 +17,7 @@
 #pragma warning (disable : 4127)
 #pragma warning (disable : 4244)
 #pragma warning (disable : 4267)
+#pragma warning (disable : 4530) // C++ exception handler used, but unwind semantics are not enabled
 #endif
 
 #include <boost/container/adaptive_pool.hpp>

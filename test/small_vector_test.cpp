@@ -17,6 +17,9 @@
 
 #include <boost/container/allocator_traits.hpp>
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4530) // C++ exception handler used, but unwind semantics are not enabled
+#endif
 #include <iostream>
 
 struct boost_container_small_vector;

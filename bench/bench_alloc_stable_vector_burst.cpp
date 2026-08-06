@@ -14,6 +14,7 @@
 #pragma warning (disable : 4673)
 #pragma warning (disable : 4671)
 #pragma warning (disable : 4244)
+#pragma warning (disable : 4530) // C++ exception handler used, but unwind semantics are not enabled
 #endif
 
 #include <memory>    //std::allocator

@@ -9,6 +9,9 @@
 //////////////////////////////////////////////////////////////////////////////
 #include <memory>
 #include <vector>
+#ifdef _MSC_VER
+#pragma warning(disable : 4530) // C++ exception handler used, but unwind semantics are not enabled
+#endif
 #include <iostream>
 #include <list>
 

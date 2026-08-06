@@ -13,6 +13,9 @@
 // (http://github.com/HowardHinnant/papers/blob/master/insert_vs_emplace.html)
 //
 //////////////////////////////////////////////////////////////////////////////
+#ifdef _MSC_VER
+#pragma warning(disable : 4530) // C++ exception handler used, but unwind semantics are not enabled
+#endif
 #include <iostream>
 #include <boost/move/utility_core.hpp>
 #include <boost/container/vector.hpp>

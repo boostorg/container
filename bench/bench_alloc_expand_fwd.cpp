@@ -12,6 +12,7 @@
 #pragma warning (disable : 4512)
 #pragma warning (disable : 4267)
 #pragma warning (disable : 4244)
+#pragma warning (disable : 4530) // C++ exception handler used, but unwind semantics are not enabled
 #endif
 
 #define BOOST_CONTAINER_VECTOR_ALLOC_STATS

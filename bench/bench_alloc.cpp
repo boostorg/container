@@ -10,6 +10,7 @@
 
 #ifdef _MSC_VER
 #pragma warning (disable : 4512)
+#pragma warning (disable : 4530) // C++ exception handler used, but unwind semantics are not enabled
 #endif
 
 #include <boost/container/detail/dlmalloc.hpp>

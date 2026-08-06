@@ -12,6 +12,9 @@
 #include <boost/container/new_allocator.hpp>
 #include <boost/move/traits.hpp>
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4530) // C++ exception handler used, but unwind semantics are not enabled
+#endif
 #include <iostream>
 #include <memory> //for std::allocator
 

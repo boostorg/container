@@ -11,6 +11,7 @@
 #ifndef BOOST_CONTAINER_BENCH_BENCH_SET_HPP
 #define BOOST_CONTAINER_BENCH_BENCH_SET_HPP
 
+#include <boost/container/detail/config_begin.hpp>
 #include <iostream>
 #include <boost/move/detail/nsec_clock.hpp>
 #include <algorithm> //sort
@@ -478,5 +479,7 @@ void launch_tests(const char *BoostContName, const char *StdContName)
       extensions_time< BoostClass >(get_range_t::sorted_unique());
    }
 }
+
+#include <boost/container/detail/config_end.hpp>
 
 #endif   //#ifndef BOOST_CONTAINER_BENCH_BENCH_SET_HPP

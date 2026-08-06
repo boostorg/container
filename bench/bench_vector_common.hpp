@@ -38,6 +38,7 @@
 #ifndef BOOST_CONTAINER_BENCH_VECTOR_COMMON_HPP
 #define BOOST_CONTAINER_BENCH_VECTOR_COMMON_HPP
 
+#include <boost/container/detail/config_begin.hpp>
 #include <boost/config.hpp>
 #include <boost/container/detail/workaround.hpp>
 
@@ -753,5 +754,7 @@ void test_vectors()
    if(bench_vector_defaults::run_prereserve)
       test_vectors_pass<IntType>(true);
 }
+
+#include <boost/container/detail/config_end.hpp>
 
 #endif   //BOOST_CONTAINER_BENCH_VECTOR_COMMON_HPP
