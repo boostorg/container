@@ -91,9 +91,6 @@ segmented_copy_if_dst_bounded
    const difference_type block_size = 16;
    difference_type n = last - first;
 
-   if(BOOST_UNLIKELY(dst_first == dst_last))
-      goto out_ret;
-
    // Avoid destination check if both input and output ranges are big enough
    while(n >= block_size &&
          static_cast<difference_type>(dst_last - dst_first) >= block_size) {
