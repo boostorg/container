@@ -21,7 +21,7 @@ int main() { return 0; }
 #include <boost/config.hpp>
 #include <boost/config/workaround.hpp>
 #include <boost/container/hub.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 #include <climits>
 #include <iterator>
 #include <new>

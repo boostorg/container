@@ -9,7 +9,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <boost/container/experimental/nest.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 #include <algorithm>
 #include <functional>
 #include <vector>

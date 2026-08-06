@@ -10,7 +10,7 @@
 #include <boost/container/string.hpp>
 #include <boost/container/allocator.hpp>
 #include <boost/container/detail/next_capacity.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 #include <climits>
 
 using namespace boost::container;

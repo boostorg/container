@@ -8,7 +8,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 #include <boost/container/pmr/memory_resource.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 #include "derived_from_memory_resource.hpp"
 
 #include <cstdlib>

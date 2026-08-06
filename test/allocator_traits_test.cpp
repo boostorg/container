@@ -17,7 +17,7 @@
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #include <boost/move/detail/fwd_macros.hpp>
 #endif
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 
 template<class T>
 class SimpleAllocator

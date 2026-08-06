@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <boost/container/experimental/nest.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 #include <boost/core/pointer_traits.hpp>
 #include <boost/move/core.hpp>
 #include <boost/move/utility_core.hpp>

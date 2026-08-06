@@ -8,7 +8,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 #include <boost/container/pmr/resource_adaptor.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 #include "propagation_test_allocator.hpp"
 #include "derived_from_memory_resource.hpp"
 #include <boost/container/new_allocator.hpp>

@@ -12,7 +12,7 @@
 #define BOOST_CONTAINER_TEST_COMPARISON_TEST_HPP
 
 #include <deque>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 
 namespace boost {
 namespace container {

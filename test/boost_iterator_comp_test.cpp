@@ -6,7 +6,7 @@
 #include <boost/container/vector.hpp>
 #include <boost/container/list.hpp>
 #include <boost/container/slist.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 
 using namespace boost::container;
 

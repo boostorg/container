@@ -38,7 +38,7 @@
 #include <boost/container/stable_vector.hpp>
 #include <vector>
 #include <iterator>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 
 int main()
 {

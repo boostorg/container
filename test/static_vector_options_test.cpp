@@ -9,7 +9,7 @@
 //////////////////////////////////////////////////////////////////////////////
 #define BOOST_ENABLE_ASSERT_HANDLER
 #include <boost/container/static_vector.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 #include <new> //for bad_alloc
 #include <boost/assert.hpp>
 #include <cstdlib>

@@ -10,7 +10,7 @@
 #define BOOST_CONTAINER_USER_DEFINED_THROW_CALLBACKS
 
 #include <boost/container/throw_exception.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 
 using namespace boost::container;
 

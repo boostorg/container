@@ -11,7 +11,7 @@
 #include <boost/container/new_allocator.hpp>
 #include <boost/container/allocator.hpp>
 #include <boost/container/options.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 
 using namespace boost::container;
 

@@ -18,7 +18,7 @@ int main() { return 0; }
 #include <boost/config/workaround.hpp>
 #include <boost/container/hub.hpp>
 #include <boost/core/detail/splitmix64.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 
 struct big_nontrivial_int
 {

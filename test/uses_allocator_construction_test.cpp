@@ -9,7 +9,7 @@
 //////////////////////////////////////////////////////////////////////////////
 #include <boost/container/uses_allocator_construction.hpp>
 #include <boost/container/detail/type_traits.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 
 typedef int    arg1_t;
 typedef void * arg2_t;

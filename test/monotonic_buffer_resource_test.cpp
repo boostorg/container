@@ -10,7 +10,7 @@
 
 #include <boost/container/pmr/monotonic_buffer_resource.hpp>
 #include <boost/container/pmr/global_resource.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 #include "derived_from_memory_resource.hpp"
 #include "memory_resource_logger.hpp"
 

@@ -25,7 +25,7 @@
 #endif
 
 //test
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 
 #include "allocator_argument_tester.hpp"
 

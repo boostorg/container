@@ -14,7 +14,7 @@ int main() { return 0; }
 #else
 
 #include <boost/container/hub.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 
 
 int main()

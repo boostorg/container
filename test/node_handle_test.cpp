@@ -7,7 +7,7 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 #include <boost/container/node_handle.hpp>
 #include <boost/container/new_allocator.hpp>
 #include <boost/move/utility_core.hpp>

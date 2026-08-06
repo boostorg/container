@@ -9,7 +9,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <boost/container/pmr/unsynchronized_pool_resource.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 #include "pool_resource_test.hpp"
 
 int main()

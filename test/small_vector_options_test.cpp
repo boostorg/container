@@ -9,7 +9,7 @@
 //////////////////////////////////////////////////////////////////////////////
 #include <boost/container/small_vector.hpp>
 #include <boost/container/allocator.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 #include <boost/assert.hpp>
 using namespace boost::container;
 

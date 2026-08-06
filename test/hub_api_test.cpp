@@ -20,7 +20,7 @@ int main() { return 0; }
 #include <boost/container/pmr/hub.hpp>
 #include <boost/container/throw_exception.hpp>
 #include <boost/core/allocator_access.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 #include <boost/core/pointer_traits.hpp>
 
 /* GCC on Darwin cannot parse the system <mach/message.h> header

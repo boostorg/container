@@ -8,13 +8,17 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4530) // C++ exception handler used, but unwind semantics are not enabled
+#endif
+
 // the tests trigger deprecation warnings when compiled with msvc in C++17 mode
 #if defined(_MSVC_LANG) && _MSVC_LANG > 201402
 // warning STL4009: std::allocator<void> is deprecated in C++17
 # define _SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING
 #endif
 
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 #include <boost/container/detail/copy_move_algo.hpp>
 #include <boost/container/detail/advanced_insert_int.hpp>
 #include <boost/container/detail/algorithm.hpp>

@@ -34,7 +34,7 @@
 #include "default_init_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 
 using namespace boost::container;
 

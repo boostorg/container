@@ -12,7 +12,7 @@
 #include "emplace_test.hpp"
 #include<boost/move/utility_core.hpp>
 #include<boost/move/detail/fwd_macros.hpp>
-#include<boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 
 //non_copymovable_int
 //copyable_int

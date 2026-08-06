@@ -21,7 +21,7 @@
 #include <boost/container/flat_map.hpp>
 #include <boost/intrusive/detail/mpl.hpp>
 
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 #include <cstring>
 #include <iterator>
 #include <new>

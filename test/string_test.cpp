@@ -8,6 +8,10 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4530) // C++ exception handler used, but unwind semantics are not enabled
+#endif
+
 #include <boost/container/vector.hpp>
 #include <boost/container/string.hpp>
 #include <string>
@@ -26,7 +30,7 @@
 #include "comparison_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 #include <boost/utility/string_view.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 #include <boost/core/lightweight_test_trait.hpp>
 #if BOOST_CXX_VERSION >= 201103L
 #include <boost/functional/hash.hpp>

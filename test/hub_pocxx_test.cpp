@@ -16,7 +16,7 @@ int main() { return 0; }
 #include <boost/config.hpp>
 #include <boost/container/hub.hpp>
 #include <boost/core/allocator_access.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 #include <type_traits>
 #include "hub_utility.hpp"
 

@@ -11,7 +11,7 @@
 #include <boost/container/string.hpp>
 #include <boost/utility/string_view.hpp>
 
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 
 #if defined(__cpp_lib_string_view) && (__cpp_lib_string_view >= 201606L)
 #define BOOST_CONTAINER_TEST_HAS_STD_STRING_VIEW

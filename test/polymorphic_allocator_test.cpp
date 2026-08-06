@@ -9,7 +9,7 @@
 //////////////////////////////////////////////////////////////////////////////
 #include <boost/container/pmr/polymorphic_allocator.hpp>
 #include <boost/container/pmr/global_resource.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "lightweight_test.hpp"
 
 #include "derived_from_memory_resource.hpp"
 #include "propagation_test_allocator.hpp"
