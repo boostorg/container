@@ -109,20 +109,19 @@ partition_copy_leaf
 
    bool false_output_full = false;
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-   for(; first != last; ++first) {
+   while(first != last) {
       if(pred(*first)) {
          *t_first = *first;
          ++t_first;
-         if(BOOST_UNLIKELY(t_first == t_last)) {
-            ++first;
+         ++first;
+         if(BOOST_UNLIKELY(t_first == t_last))
             break;
-         }
       }
       else {
          *f_first = *first;
          ++f_first;
+         ++first;
          if(BOOST_UNLIKELY(f_first == f_last)) {
-            ++first;
             false_output_full = first != last;
             break;
          }
@@ -185,22 +184,23 @@ partition_copy_leaf
 
    //Remaining elements
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-   for(; n; --n, ++first) {
+   while(n) {
       if(pred(*first)) {
          *t_first = *first;
          ++t_first;
-         if(BOOST_UNLIKELY(t_first == t_last)) {
-            ++first;
-            goto out_ret;
-         }
+         ++first;
+         --n;
+         if(BOOST_UNLIKELY(t_first == t_last))
+            break;
       }
       else {
          *f_first = *first;
          ++f_first;
+         ++first;
+         --n;
          if(BOOST_UNLIKELY(f_first == f_last)) {
-            ++first;
             false_output_full = first != last;
-            goto out_ret;
+            break;
          }
       }
    }

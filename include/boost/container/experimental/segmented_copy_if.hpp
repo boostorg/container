@@ -47,7 +47,7 @@ template <class SrcIter, class Sent, class DstIter, class DstSent, class Pred, c
 BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c<!DstTag::value, segduo<SrcIter, DstIter> >::type
 segmented_copy_if_dst_bounded
-   (SrcIter first, Sent last, DstIter dst_first, DstSent dst_last, Pred pred, DstTag, SrcCat)
+(SrcIter first, Sent last, DstIter dst_first, DstSent dst_last, Pred pred, DstTag, SrcCat)
 {
    //[alg.copy] mandates exactly last - first applications of pred.  Testing an
    //element, discovering the destination segment is full and returning makes the
@@ -57,21 +57,20 @@ segmented_copy_if_dst_bounded
    //past the element that was written, so the next call resumes on an untested
    //element.  With an unreachable_sentinel_t destination both checks fold away,
    //so the flat path is unchanged.
-   if(BOOST_UNLIKELY(dst_first == dst_last))
-      goto out_path;
-
-   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-   for(; first != last; ++first) {
-      if(pred(*first)) {
-         *dst_first = *first;
-         ++dst_first;
-         if(BOOST_UNLIKELY(dst_first == dst_last)) {
+   if (BOOST_LIKELY(dst_first != dst_last)) {
+      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
+      while (first != last) {
+         if (pred(*first)) {
+            *dst_first = *first;
+            ++dst_first;
             ++first;
-            goto out_path;
+            if (BOOST_UNLIKELY(dst_first == dst_last))
+               break;
          }
+         else
+            ++first;
       }
    }
-   out_path:
    return segduo<SrcIter, DstIter>(first, dst_first);
 }
 
@@ -116,14 +115,18 @@ segmented_copy_if_dst_bounded
 
    // Remaining elements
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-   for(; n; --n, ++first) {
+   while(n) {
       if(pred(*first)) {
          *dst_first = *first;
          ++dst_first;
-         if(BOOST_UNLIKELY(dst_first == dst_last)) {
-            ++first;
-            goto out_ret;
-         }
+         ++first;
+         --n;
+         if(BOOST_UNLIKELY(dst_first == dst_last))
+            break;
+      }
+      else {
+         ++first;
+         --n;
       }
    }
    out_ret:

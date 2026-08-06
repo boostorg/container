@@ -59,21 +59,20 @@ segmented_remove_copy_if_dst_bounded
    //past the element that was written, so the next call resumes on an untested
    //element.  With an unreachable_sentinel_t destination both checks fold away,
    //so the flat path is unchanged.
-   if(BOOST_UNLIKELY(dst_first == dst_last))
-      return segduo<SrcIter, DstIter>(first, dst_first);
-
-   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-   for(; first != last; ++first) {
-      if(!pred(*first)) {
-         transfer_op<Move>::apply(*dst_first, *first);
-         ++dst_first;
-         if(BOOST_UNLIKELY(dst_first == dst_last)) {
+   if(BOOST_LIKELY(dst_first != dst_last)) {
+      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
+      while(first != last) {
+         if(!pred(*first)) {
+            transfer_op<Move>::apply(*dst_first, *first);
+            ++dst_first;
             ++first;
-            goto out_path;
+            if(BOOST_UNLIKELY(dst_first == dst_last))
+               break;
          }
+         else
+            ++first;
       }
    }
-   out_path:
    return segduo<SrcIter, DstIter>(first, dst_first);
 }
 
@@ -90,9 +89,6 @@ segmented_remove_copy_if_dst_bounded
    typedef segduo<RASrcIter, RADstIter> result_t;
    const difference_type block_size = 16;
    difference_type n = last - first;
-
-   if(BOOST_UNLIKELY(dst_first == dst_last))
-      goto out_ret;
 
    //Avoid destination check if both input and output ranges are big enough
    while(n >= block_size &&
@@ -115,14 +111,18 @@ segmented_remove_copy_if_dst_bounded
 
    //Remaining elements
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-   for(; n; --n, ++first) {
+   while(n) {
       if(!pred(*first)) {
          transfer_op<Move>::apply(*dst_first, *first);
          ++dst_first;
-         if(BOOST_UNLIKELY(dst_first == dst_last)) {
-            ++first;
-            goto out_ret;
-         }
+         ++first;
+         --n;
+         if(BOOST_UNLIKELY(dst_first == dst_last))
+            break;
+      }
+      else {
+         ++first;
+         --n;
       }
    }
    out_ret:
