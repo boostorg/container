@@ -237,12 +237,6 @@ class deque_iterator
    deque_iterator& operator++() BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_ASSERT(!!m_cur);
-      // Written as check-then-increment with an explicit else so that m_cur is
-      // assigned differently in each arm (load vs add).  This prevents MSVC from
-      // if-converting the m_node advance into a cmov, which would serialize a
-      // load-through-cmov chain (~7 cy) on every iteration instead of letting the
-      // branch predictor hide it (mispredicts only 1/block_size of the time).
-      #if 0
       const Pointer last = *m_node + (get_block_ssize() - 1);
       if (BOOST_UNLIKELY(this->m_cur == last)) {
          ++this->m_node;
@@ -251,15 +245,6 @@ class deque_iterator
       else {
          ++this->m_cur;
       }
-      #else
-      //Old code still here for reference
-      ++this->m_cur;
-      const Pointer last = *m_node + get_block_ssize();
-      if (BOOST_UNLIKELY(this->m_cur == last)) {
-         ++this->m_node;
-         this->m_cur = *this->m_node;
-      }
-      #endif
 
       return *this;
    }
