@@ -9,7 +9,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <boost/container/experimental/segmented_equal.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "../test/lightweight_test.hpp"
 #include "segmented_test_helper.hpp"
 #include <boost/container/vector.hpp>
 #include <boost/container/deque.hpp>

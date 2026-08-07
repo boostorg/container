@@ -9,7 +9,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <boost/container/experimental/segmented_replace_if.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "../test/lightweight_test.hpp"
 #include "segmented_test_helper.hpp"
 #include <boost/container/vector.hpp>
 

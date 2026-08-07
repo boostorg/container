@@ -10,7 +10,7 @@
 
 #include <boost/container/experimental/segmented_find_last.hpp>
 #include <boost/container/experimental/segmented_find.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include "../test/lightweight_test.hpp"
 #include "segmented_test_helper.hpp"
 #include <boost/container/vector.hpp>
 
