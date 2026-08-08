@@ -34,58 +34,244 @@
 
 #include <boost/container/deque.hpp>
 #include <boost/container/experimental/nest.hpp>
-
-#include <boost/container/experimental/segmented_all_of.hpp>
-#include <boost/container/experimental/segmented_any_of.hpp>
-#include <boost/container/experimental/segmented_copy.hpp>
-#include <boost/container/experimental/segmented_copy_if.hpp>
-#include <boost/container/experimental/segmented_copy_n.hpp>
-#include <boost/container/experimental/segmented_count.hpp>
-#include <boost/container/experimental/segmented_count_if.hpp>
-#include <boost/container/experimental/segmented_equal.hpp>
-#include <boost/container/experimental/segmented_fill.hpp>
-#include <boost/container/experimental/segmented_fill_n.hpp>
-#include <boost/container/experimental/segmented_find.hpp>
-#include <boost/container/experimental/segmented_find_end.hpp>
-#include <boost/container/experimental/segmented_find_if.hpp>
-#include <boost/container/experimental/segmented_find_if_not.hpp>
-#include <boost/container/experimental/segmented_find_last.hpp>
-#include <boost/container/experimental/segmented_find_last_if.hpp>
-#include <boost/container/experimental/segmented_find_last_if_not.hpp>
-#include <boost/container/experimental/segmented_for_each.hpp>
-#include <boost/container/experimental/segmented_generate.hpp>
-#include <boost/container/experimental/segmented_generate_n.hpp>
-#include <boost/container/experimental/segmented_is_partitioned.hpp>
-#include <boost/container/experimental/segmented_is_sorted.hpp>
-#include <boost/container/experimental/segmented_merge.hpp>
-#include <boost/container/experimental/segmented_mismatch.hpp>
-#include <boost/container/experimental/segmented_none_of.hpp>
-#include <boost/container/experimental/segmented_is_sorted_until.hpp>
-#include <boost/container/experimental/segmented_partition.hpp>
-#include <boost/container/experimental/segmented_partition_copy.hpp>
-#include <boost/container/experimental/segmented_remove.hpp>
-#include <boost/container/experimental/segmented_remove_if.hpp>
-#include <boost/container/experimental/segmented_remove_copy.hpp>
-#include <boost/container/experimental/segmented_remove_copy_if.hpp>
-#include <boost/container/experimental/segmented_replace.hpp>
-#include <boost/container/experimental/segmented_replace_if.hpp>
-#include <boost/container/experimental/segmented_reverse.hpp>
-#include <boost/container/experimental/segmented_reverse_copy.hpp>
-#include <boost/container/experimental/segmented_search.hpp>
-#include <boost/container/experimental/segmented_search_n.hpp>
-#include <boost/container/experimental/segmented_set_difference.hpp>
-#include <boost/container/experimental/segmented_set_intersection.hpp>
-#include <boost/container/experimental/segmented_set_symmetric_difference.hpp>
-#include <boost/container/experimental/segmented_set_union.hpp>
-#include <boost/container/experimental/segmented_stable_partition.hpp>
-#include <boost/container/experimental/segmented_swap_ranges.hpp>
-#include <boost/container/experimental/segmented_transform.hpp>
 #include <boost/container/experimental/wrapped_iterator.hpp>
 #include "../bench/bench_utils.hpp"
 
-#ifndef BOOST_CONTAINER_BENCH_SEGMENTED_GROUP
-#define BOOST_CONTAINER_BENCH_SEGMENTED_GROUP 20
-#endif   //BOOST_CONTAINER_BENCH_SEGMENTED_GROUP
+// Optional filters (all undefined => run everything):
+//   -DGROUP=25                 only that group (0 also means all)
+//   -DALGO=COPY_N              only that algorithm (compile-time; see IDs below)
+//   -DTYPE=MyInt               only that value type
+//   -D'TYPE=MyFatInt<4>'       quote angle brackets for the shell
+//
+// Examples:
+//   -DGROUP=25 -DALGO=COPY_N -DTYPE=MyInt
+//   -DGROUP=25                 all algos in group 25, all types
+
+// Algorithm IDs for -DALGO=... (distinct integers; names are uppercase).
+#define ALL_OF 1
+#define ANY_OF 2
+#define COUNT 3
+#define COUNT_IF 4
+#define FILL 5
+#define FILL_N 6
+#define FIND 7
+#define FIND_IF 8
+#define FIND_IF_NOT 9
+#define FOR_EACH 10
+#define GENERATE 11
+#define GENERATE_N 12
+#define IS_PARTITIONED 13
+#define NONE_OF 14
+#define REPLACE 15
+#define REPLACE_IF 16
+#define STABLE_PARTITION 17
+#define IS_SORTED 18
+#define IS_SORTED_UNTIL 19
+#define REMOVE 20
+#define REMOVE_IF 21
+#define SEARCH_N 22
+#define FIND_LAST 23
+#define FIND_LAST_IF 24
+#define FIND_LAST_IF_NOT 25
+#define PARTITION 26
+#define REVERSE 27
+#define EQUAL 28
+#define EQUAL_2R 29
+#define MISMATCH 30
+#define MISMATCH_2R 31
+#define SEARCH 32
+#define COPY 33
+#define COPY_IF 34
+#define COPY_N 35
+#define REMOVE_COPY 36
+#define REMOVE_COPY_IF 37
+#define SWAP_RANGES 38
+#define TRANSFORM 39
+#define REVERSE_COPY 40
+#define FIND_END 41
+#define MERGE 42
+#define SET_DIFFERENCE 43
+#define SET_INTERSECTION 44
+#define SET_SYMMETRIC_DIFFERENCE 45
+#define SET_UNION 46
+#define PARTITION_COPY 47
+
+#if !defined(ALGO)
+#define BENCH_IF_ALGO(id) 1
+#else
+#define BENCH_IF_ALGO(id) (ALGO == (id))
+#endif
+
+#if BENCH_IF_ALGO(ALL_OF)
+#include <boost/container/experimental/segmented_all_of.hpp>
+#endif
+#if BENCH_IF_ALGO(ANY_OF)
+#include <boost/container/experimental/segmented_any_of.hpp>
+#endif
+#if BENCH_IF_ALGO(COPY)
+#include <boost/container/experimental/segmented_copy.hpp>
+#endif
+#if BENCH_IF_ALGO(COPY_IF)
+#include <boost/container/experimental/segmented_copy_if.hpp>
+#endif
+#if BENCH_IF_ALGO(COPY_N)
+#include <boost/container/experimental/segmented_copy_n.hpp>
+#endif
+#if BENCH_IF_ALGO(COUNT)
+#include <boost/container/experimental/segmented_count.hpp>
+#endif
+#if BENCH_IF_ALGO(COUNT_IF)
+#include <boost/container/experimental/segmented_count_if.hpp>
+#endif
+#if BENCH_IF_ALGO(EQUAL) || BENCH_IF_ALGO(EQUAL_2R)
+#include <boost/container/experimental/segmented_equal.hpp>
+#endif
+#if BENCH_IF_ALGO(FILL)
+#include <boost/container/experimental/segmented_fill.hpp>
+#endif
+#if BENCH_IF_ALGO(FILL_N)
+#include <boost/container/experimental/segmented_fill_n.hpp>
+#endif
+#if BENCH_IF_ALGO(FIND)
+#include <boost/container/experimental/segmented_find.hpp>
+#endif
+#if BENCH_IF_ALGO(FIND_END)
+#include <boost/container/experimental/segmented_find_end.hpp>
+#endif
+#if BENCH_IF_ALGO(FIND_IF)
+#include <boost/container/experimental/segmented_find_if.hpp>
+#endif
+#if BENCH_IF_ALGO(FIND_IF_NOT)
+#include <boost/container/experimental/segmented_find_if_not.hpp>
+#endif
+#if BENCH_IF_ALGO(FIND_LAST)
+#include <boost/container/experimental/segmented_find_last.hpp>
+#endif
+#if BENCH_IF_ALGO(FIND_LAST_IF)
+#include <boost/container/experimental/segmented_find_last_if.hpp>
+#endif
+#if BENCH_IF_ALGO(FIND_LAST_IF_NOT)
+#include <boost/container/experimental/segmented_find_last_if_not.hpp>
+#endif
+#if BENCH_IF_ALGO(FOR_EACH)
+#include <boost/container/experimental/segmented_for_each.hpp>
+#endif
+#if BENCH_IF_ALGO(GENERATE)
+#include <boost/container/experimental/segmented_generate.hpp>
+#endif
+#if BENCH_IF_ALGO(GENERATE_N)
+#include <boost/container/experimental/segmented_generate_n.hpp>
+#endif
+#if BENCH_IF_ALGO(IS_PARTITIONED)
+#include <boost/container/experimental/segmented_is_partitioned.hpp>
+#endif
+#if BENCH_IF_ALGO(IS_SORTED)
+#include <boost/container/experimental/segmented_is_sorted.hpp>
+#endif
+#if BENCH_IF_ALGO(MERGE)
+#include <boost/container/experimental/segmented_merge.hpp>
+#endif
+#if BENCH_IF_ALGO(MISMATCH) || BENCH_IF_ALGO(MISMATCH_2R)
+#include <boost/container/experimental/segmented_mismatch.hpp>
+#endif
+#if BENCH_IF_ALGO(NONE_OF)
+#include <boost/container/experimental/segmented_none_of.hpp>
+#endif
+#if BENCH_IF_ALGO(IS_SORTED_UNTIL)
+#include <boost/container/experimental/segmented_is_sorted_until.hpp>
+#endif
+#if BENCH_IF_ALGO(PARTITION)
+#include <boost/container/experimental/segmented_partition.hpp>
+#endif
+#if BENCH_IF_ALGO(PARTITION_COPY)
+#include <boost/container/experimental/segmented_partition_copy.hpp>
+#endif
+#if BENCH_IF_ALGO(REMOVE)
+#include <boost/container/experimental/segmented_remove.hpp>
+#endif
+#if BENCH_IF_ALGO(REMOVE_IF)
+#include <boost/container/experimental/segmented_remove_if.hpp>
+#endif
+#if BENCH_IF_ALGO(REMOVE_COPY)
+#include <boost/container/experimental/segmented_remove_copy.hpp>
+#endif
+#if BENCH_IF_ALGO(REMOVE_COPY_IF)
+#include <boost/container/experimental/segmented_remove_copy_if.hpp>
+#endif
+#if BENCH_IF_ALGO(REPLACE)
+#include <boost/container/experimental/segmented_replace.hpp>
+#endif
+#if BENCH_IF_ALGO(REPLACE_IF)
+#include <boost/container/experimental/segmented_replace_if.hpp>
+#endif
+#if BENCH_IF_ALGO(REVERSE)
+#include <boost/container/experimental/segmented_reverse.hpp>
+#endif
+#if BENCH_IF_ALGO(REVERSE_COPY)
+#include <boost/container/experimental/segmented_reverse_copy.hpp>
+#endif
+#if BENCH_IF_ALGO(SEARCH)
+#include <boost/container/experimental/segmented_search.hpp>
+#endif
+#if BENCH_IF_ALGO(SEARCH_N)
+#include <boost/container/experimental/segmented_search_n.hpp>
+#endif
+#if BENCH_IF_ALGO(SET_DIFFERENCE)
+#include <boost/container/experimental/segmented_set_difference.hpp>
+#endif
+#if BENCH_IF_ALGO(SET_INTERSECTION)
+#include <boost/container/experimental/segmented_set_intersection.hpp>
+#endif
+#if BENCH_IF_ALGO(SET_SYMMETRIC_DIFFERENCE)
+#include <boost/container/experimental/segmented_set_symmetric_difference.hpp>
+#endif
+#if BENCH_IF_ALGO(SET_UNION)
+#include <boost/container/experimental/segmented_set_union.hpp>
+#endif
+#if BENCH_IF_ALGO(STABLE_PARTITION)
+#include <boost/container/experimental/segmented_stable_partition.hpp>
+#endif
+#if BENCH_IF_ALGO(SWAP_RANGES)
+#include <boost/container/experimental/segmented_swap_ranges.hpp>
+#endif
+#if BENCH_IF_ALGO(TRANSFORM)
+#include <boost/container/experimental/segmented_transform.hpp>
+#endif
+
+#define BENCH_GROUP10_HAS_ALGO \
+   ( BENCH_IF_ALGO(ALL_OF) || BENCH_IF_ALGO(ANY_OF) || BENCH_IF_ALGO(COUNT) \
+   || BENCH_IF_ALGO(COUNT_IF) || BENCH_IF_ALGO(FILL) || BENCH_IF_ALGO(FILL_N) \
+   || BENCH_IF_ALGO(FIND) || BENCH_IF_ALGO(FIND_IF) || BENCH_IF_ALGO(FIND_IF_NOT) \
+   || BENCH_IF_ALGO(FOR_EACH) || BENCH_IF_ALGO(GENERATE) || BENCH_IF_ALGO(GENERATE_N) \
+   || BENCH_IF_ALGO(IS_PARTITIONED) || BENCH_IF_ALGO(NONE_OF) \
+   || BENCH_IF_ALGO(REPLACE) || BENCH_IF_ALGO(REPLACE_IF) \
+   || BENCH_IF_ALGO(STABLE_PARTITION) )
+
+#define BENCH_GROUP15_HAS_ALGO \
+   ( BENCH_IF_ALGO(IS_SORTED) || BENCH_IF_ALGO(IS_SORTED_UNTIL) \
+   || BENCH_IF_ALGO(REMOVE) || BENCH_IF_ALGO(REMOVE_IF) || BENCH_IF_ALGO(SEARCH_N) )
+
+#define BENCH_GROUP17_HAS_ALGO \
+   ( BENCH_IF_ALGO(FIND_LAST) || BENCH_IF_ALGO(FIND_LAST_IF) \
+   || BENCH_IF_ALGO(FIND_LAST_IF_NOT) || BENCH_IF_ALGO(PARTITION) \
+   || BENCH_IF_ALGO(REVERSE) )
+
+#define BENCH_GROUP20_HAS_ALGO \
+   ( BENCH_IF_ALGO(EQUAL) || BENCH_IF_ALGO(EQUAL_2R) || BENCH_IF_ALGO(MISMATCH) \
+   || BENCH_IF_ALGO(MISMATCH_2R) || BENCH_IF_ALGO(SEARCH) )
+
+#define BENCH_GROUP25_HAS_ALGO \
+   ( BENCH_IF_ALGO(COPY) || BENCH_IF_ALGO(COPY_IF) || BENCH_IF_ALGO(COPY_N) \
+   || BENCH_IF_ALGO(REMOVE_COPY) || BENCH_IF_ALGO(REMOVE_COPY_IF) \
+   || BENCH_IF_ALGO(SWAP_RANGES) || BENCH_IF_ALGO(TRANSFORM) )
+
+#define BENCH_GROUP27_HAS_ALGO \
+   ( BENCH_IF_ALGO(REVERSE_COPY) || BENCH_IF_ALGO(FIND_END) )
+
+#define BENCH_GROUP30_HAS_ALGO \
+   ( BENCH_IF_ALGO(MERGE) || BENCH_IF_ALGO(SET_DIFFERENCE) \
+   || BENCH_IF_ALGO(SET_INTERSECTION) || BENCH_IF_ALGO(SET_SYMMETRIC_DIFFERENCE) \
+   || BENCH_IF_ALGO(SET_UNION) || BENCH_IF_ALGO(PARTITION_COPY) )
 
 namespace bc = boost::container;
 
@@ -782,6 +968,7 @@ struct batch_reset {
    { bs.idx = 0; bs.c1 = bs.c2 = bs.c3 = bs.c4 = bs.c5 = bs.c6 = bs.c7 = bs.c8 = bs.orig; }
 };
 
+#if BENCH_IF_ALGO(ALL_OF)
 // --- all_of ---
 template<class C, class Pred>
 struct std_all_of {
@@ -797,7 +984,9 @@ struct seg_all_of {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = bc::segmented_all_of(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred) ? 1 : 0; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(ANY_OF)
 // --- any_of ---
 template<class C, class Pred>
 struct std_any_of {
@@ -813,7 +1002,9 @@ struct seg_any_of {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = bc::segmented_any_of(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred) ? 1 : 0; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(NONE_OF)
 // --- none_of ---
 template<class C, class Pred>
 struct std_none_of {
@@ -829,7 +1020,9 @@ struct seg_none_of {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = bc::segmented_none_of(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred) ? 1 : 0; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(FOR_EACH)
 // --- for_each ---
 template<class C>
 struct std_for_each {
@@ -847,7 +1040,9 @@ struct seg_for_each {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { summer<VT> s; clobber(); s = bc::segmented_for_each(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), s); result = s.sum; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(COPY)
 // --- copy ---
 template<class C, class OutT>
 struct std_copy {
@@ -863,7 +1058,9 @@ struct seg_copy {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_copy(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin())); escape(&*out.begin()); }
 };
+#endif
 
+#if BENCH_IF_ALGO(COPY_IF)
 // --- copy_if ---
 template<class C, class OutT, class Pred>
 struct std_copy_if {
@@ -879,7 +1076,9 @@ struct seg_copy_if {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_copy_if(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin()), pred); escape(&*out.begin()); }
 };
+#endif
 
+#if BENCH_IF_ALGO(FILL)
 // --- fill ---
 template<class C>
 struct std_fill {
@@ -895,7 +1094,9 @@ struct seg_fill {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_fill(iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), val); escape(&c2); }
 };
+#endif
 
+#if BENCH_IF_ALGO(COUNT)
 // --- count ---
 template<class C>
 struct std_count {
@@ -911,7 +1112,9 @@ struct seg_count {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = static_cast<int>(bc::segmented_count(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), val)); escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(COUNT_IF)
 // --- count_if ---
 template<class C, class Pred>
 struct std_count_if {
@@ -927,7 +1130,9 @@ struct seg_count_if {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = static_cast<int>(bc::segmented_count_if(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred)); escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(FIND)
 // --- find ---
 template<class C>
 struct std_find {
@@ -945,7 +1150,9 @@ struct seg_find {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = bc::segmented_find(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), val); result = (it == iter_w<Wrap>::wrap(c.end())) ? 0 : 1; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(FIND_IF)
 // --- find_if ---
 template<class C, class Pred>
 struct std_find_if {
@@ -963,7 +1170,9 @@ struct seg_find_if {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = bc::segmented_find_if(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred); result = (it != iter_w<Wrap>::wrap(c.end())) ? int_value(*it) : -1; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(FIND_IF_NOT)
 // --- find_if_not ---
 template<class C, class Pred>
 struct std_find_if_not {
@@ -981,7 +1190,9 @@ struct seg_find_if_not {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = bc::segmented_find_if_not(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred); result = (it != iter_w<Wrap>::wrap(c.end())) ? int_value(*it) : -1; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(FIND_LAST)
 // --- find_last ---
 template<class C>
 struct std_find_last {
@@ -999,7 +1210,9 @@ struct seg_find_last {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = bc::segmented_find_last(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), val); result = (it == iter_w<Wrap>::wrap(c.end())) ? 0 : 1; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(FIND_LAST_IF)
 // --- find_last_if ---
 template<class C, class Pred>
 struct std_find_last_if {
@@ -1017,7 +1230,9 @@ struct seg_find_last_if {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = bc::segmented_find_last_if(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred); result = (it != iter_w<Wrap>::wrap(c.end())) ? int_value(*it) : -1; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(FIND_LAST_IF_NOT)
 // --- find_last_if_not ---
 template<class C, class Pred>
 struct std_find_last_if_not {
@@ -1035,7 +1250,9 @@ struct seg_find_last_if_not {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = bc::segmented_find_last_if_not(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred); result = (it != iter_w<Wrap>::wrap(c.end())) ? int_value(*it) : -1; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(EQUAL)
 // --- equal ---
 template<class C, class R2>
 struct std_equal {
@@ -1051,7 +1268,9 @@ struct seg_equal {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = bc::segmented_equal(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(range2.begin())) ? 1 : 0; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(EQUAL_2R)
 // --- equal (two-range) ---
 template<class C, class R2>
 struct std_equal_2r {
@@ -1067,7 +1286,9 @@ struct seg_equal_2r {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = bc::segmented_equal(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(range2.begin()), iter_w<Wrap>::wrap(range2.end())) ? 1 : 0; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(REPLACE)
 // --- replace ---
 template<class C>
 struct std_replace_op {
@@ -1085,7 +1306,9 @@ struct seg_replace_op {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_replace(iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), *pold_val, *pnew_val); escape(&c2); cptr pt(pold_val); pold_val = pnew_val; pnew_val = pt; }
 };
+#endif
 
+#if BENCH_IF_ALGO(TRANSFORM)
 // --- transform ---
 template<class C, class OutT>
 struct std_transform {
@@ -1103,7 +1326,9 @@ struct seg_transform {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_transform(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin()), add_one<VT>()); escape(&*out.begin()); }
 };
+#endif
 
+#if BENCH_IF_ALGO(FILL_N)
 // --- fill_n ---
 template<class C>
 struct std_fill_n {
@@ -1119,7 +1344,9 @@ struct seg_fill_n {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_fill_n(iter_w<Wrap>::wrap(c2.begin()), n, val); escape(&c2); }
 };
+#endif
 
+#if BENCH_IF_ALGO(COPY_N)
 // --- copy_n ---
 template<class C, class OutT>
 struct std_copy_n {
@@ -1135,7 +1362,9 @@ struct seg_copy_n {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_copy_n(iter_w<Wrap>::wrap(c.begin()), n, iter_w<Wrap>::wrap(out.begin())); escape(&*out.begin()); }
 };
+#endif
 
+#if BENCH_IF_ALGO(GENERATE)
 // --- generate ---
 template<class C>
 struct std_generate {
@@ -1153,7 +1382,9 @@ struct seg_generate {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_generate(iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(GENERATE_N)
 // --- generate_n ---
 template<class C>
 struct std_generate_n {
@@ -1171,7 +1402,9 @@ struct seg_generate_n {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_generate_n(iter_w<Wrap>::wrap(c2.begin()), n, counter<VT>()); result = int_value(*c2.begin()); escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(REMOVE_COPY)
 // --- remove_copy ---
 template<class C, class OutT>
 struct std_remove_copy {
@@ -1187,7 +1420,9 @@ struct seg_remove_copy {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_remove_copy(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin()), val); escape(&*out.begin()); }
 };
+#endif
 
+#if BENCH_IF_ALGO(REMOVE_COPY_IF)
 // --- remove_copy_if ---
 template<class C, class OutT, class Pred>
 struct std_remove_copy_if {
@@ -1203,7 +1438,9 @@ struct seg_remove_copy_if {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_remove_copy_if(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin()), pred); escape(&*out.begin()); }
 };
+#endif
 
+#if BENCH_IF_ALGO(REVERSE)
 // --- reverse ---
 template<class C>
 struct std_reverse {
@@ -1219,7 +1456,9 @@ struct seg_reverse {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_reverse(iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end())); result = int_value(*c2.begin()); escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(REVERSE_COPY)
 // --- reverse_copy ---
 template<class C, class OutT>
 struct std_reverse_copy {
@@ -1235,7 +1474,9 @@ struct seg_reverse_copy {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_reverse_copy(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(out.begin())); escape(&*out.begin()); }
 };
+#endif
 
+#if BENCH_IF_ALGO(IS_SORTED)
 // --- is_sorted ---
 template<class C>
 struct std_is_sorted {
@@ -1251,7 +1492,9 @@ struct seg_is_sorted {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = bc::segmented_is_sorted(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end())) ? 1 : 0; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(IS_SORTED_UNTIL)
 // --- is_sorted_until ---
 template<class C>
 struct std_is_sorted_until {
@@ -1269,7 +1512,9 @@ struct seg_is_sorted_until {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = bc::segmented_is_sorted_until(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end())); result = (it == iter_w<Wrap>::wrap(c.end())) ? 1 : 0; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(IS_PARTITIONED)
 // --- is_partitioned ---
 template<class C, class Pred>
 struct std_is_partitioned {
@@ -1285,7 +1530,9 @@ struct seg_is_partitioned {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = bc::segmented_is_partitioned(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pred) ? 1 : 0; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(MERGE)
 // --- merge ---
 template<class C1, class C2, class OutT>
 struct std_merge {
@@ -1301,7 +1548,9 @@ struct seg_merge {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_merge(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&*out.begin()); }
 };
+#endif
 
+#if BENCH_IF_ALGO(MISMATCH)
 // --- mismatch ---
 template<class C, class R2>
 struct std_mismatch {
@@ -1317,7 +1566,9 @@ struct seg_mismatch {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = (bc::segmented_mismatch(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(range2.begin())).first == iter_w<Wrap>::wrap(c.end())) ? 1 : 0; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(MISMATCH_2R)
 // --- mismatch (two-range) ---
 template<class C, class R2>
 struct std_mismatch_2r {
@@ -1333,7 +1584,9 @@ struct seg_mismatch_2r {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); result = (bc::segmented_mismatch(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(range2.begin()), iter_w<Wrap>::wrap(range2.end())).first == iter_w<Wrap>::wrap(c.end())) ? 1 : 0; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(SWAP_RANGES)
 // --- swap_ranges ---
 template<class C1, class C2>
 struct std_swap_ranges {
@@ -1349,7 +1602,9 @@ struct seg_swap_ranges {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_swap_ranges(iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(c3.begin())); result = int_value(*c2.begin()); escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(SEARCH)
 // --- search ---
 template<class C>
 struct std_search {
@@ -1369,7 +1624,9 @@ struct seg_search {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = bc::segmented_search(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pattern, pattern + pat_size); result = (it == iter_w<Wrap>::wrap(c.end())) ? 0 : 1; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(FIND_END)
 // --- find_end ---
 template<class C>
 struct std_find_end {
@@ -1389,7 +1646,9 @@ struct seg_find_end {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = bc::segmented_find_end(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), pattern, pattern + pat_size); result = (it == iter_w<Wrap>::wrap(c.end())) ? 0 : 1; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(SEARCH_N)
 // --- search_n ---
 template<class C>
 struct std_search_n {
@@ -1407,7 +1666,9 @@ struct seg_search_n {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); cit_t it = bc::segmented_search_n(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), cnt, val); result = (it == iter_w<Wrap>::wrap(c.end())) ? 0 : 1; escape(&result); }
 };
+#endif
 
+#if BENCH_IF_ALGO(SET_UNION)
 // --- set_union ---
 template<class C1, class C2, class OutT>
 struct std_set_union {
@@ -1423,7 +1684,9 @@ struct seg_set_union {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_set_union(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&*out.begin()); }
 };
+#endif
 
+#if BENCH_IF_ALGO(SET_DIFFERENCE)
 // --- set_difference ---
 template<class C1, class C2, class OutT>
 struct std_set_difference {
@@ -1439,7 +1702,9 @@ struct seg_set_difference {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_set_difference(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&*out.begin()); }
 };
+#endif
 
+#if BENCH_IF_ALGO(SET_INTERSECTION)
 // --- set_intersection ---
 template<class C1, class C2, class OutT>
 struct std_set_intersection {
@@ -1455,7 +1720,9 @@ struct seg_set_intersection {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_set_intersection(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&*out.begin()); }
 };
+#endif
 
+#if BENCH_IF_ALGO(SET_SYMMETRIC_DIFFERENCE)
 // --- set_symmetric_difference ---
 template<class C1, class C2, class OutT>
 struct std_set_symmetric_difference {
@@ -1471,7 +1738,9 @@ struct seg_set_symmetric_difference {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_set_symmetric_difference(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(c2.begin()), iter_w<Wrap>::wrap(c2.end()), iter_w<Wrap>::wrap(out.begin())); escape(&*out.begin()); }
 };
+#endif
 
+#if BENCH_IF_ALGO(PARTITION_COPY)
 // --- partition_copy ---
 template<class C, class OutT1, class OutT2>
 struct std_partition_copy {
@@ -1489,7 +1758,9 @@ struct seg_partition_copy {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_partition_copy(iter_w<Wrap>::wrap(c.begin()), iter_w<Wrap>::wrap(c.end()), iter_w<Wrap>::wrap(t_out.begin()), iter_w<Wrap>::wrap(f_out.begin()), is_odd<VT>()); escape(&*t_out.begin()); }
 };
+#endif
 
+#if BENCH_IF_ALGO(REPLACE_IF)
 // --- Batch: replace_if ---
 template<class C, class Pred>
 struct std_replace_if_batch {
@@ -1505,7 +1776,9 @@ struct seg_replace_if_batch {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); bc::segmented_replace_if(iter_w<Wrap>::wrap(bs.cs[bs.idx]->begin()), iter_w<Wrap>::wrap(bs.cs[bs.idx]->end()), pred, new_val); escape(bs.cs[bs.idx]); ++bs.idx; }
 };
+#endif
 
+#if BENCH_IF_ALGO(REMOVE)
 // --- Batch: remove ---
 template<class C>
 struct std_remove_batch {
@@ -1523,7 +1796,9 @@ struct seg_remove_batch {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); it_t it = bc::segmented_remove(iter_w<Wrap>::wrap(bs.cs[bs.idx]->begin()), iter_w<Wrap>::wrap(bs.cs[bs.idx]->end()), val); result = (it == iter_w<Wrap>::wrap(bs.cs[bs.idx]->end())) ? 1 : 0; escape(&result); ++bs.idx; }
 };
+#endif
 
+#if BENCH_IF_ALGO(REMOVE_IF)
 // --- Batch: remove_if ---
 template<class C, class Pred>
 struct std_remove_if_batch {
@@ -1541,7 +1816,9 @@ struct seg_remove_if_batch {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); it_t it = bc::segmented_remove_if(iter_w<Wrap>::wrap(bs.cs[bs.idx]->begin()), iter_w<Wrap>::wrap(bs.cs[bs.idx]->end()), pred); result = (it == iter_w<Wrap>::wrap(bs.cs[bs.idx]->end())) ? 1 : 0; escape(&result); ++bs.idx; }
 };
+#endif
 
+#if BENCH_IF_ALGO(PARTITION)
 // --- Batch: partition ---
 template<class C, class Pred>
 struct std_partition_batch {
@@ -1559,7 +1836,9 @@ struct seg_partition_batch {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); it_t it = bc::segmented_partition(iter_w<Wrap>::wrap(bs.cs[bs.idx]->begin()), iter_w<Wrap>::wrap(bs.cs[bs.idx]->end()), pred); result = (it == iter_w<Wrap>::wrap(bs.cs[bs.idx]->end())) ? 1 : 0; escape(&result); ++bs.idx; }
 };
+#endif
 
+#if BENCH_IF_ALGO(STABLE_PARTITION)
 // --- Batch: stable_partition ---
 template<class C, class Pred>
 struct std_stable_partition_batch {
@@ -1577,6 +1856,7 @@ struct seg_stable_partition_batch {
    BOOST_CONTAINER_FORCEINLINE void operator()()
    { clobber(); it_t it = bc::segmented_stable_partition(iter_w<Wrap>::wrap(bs.cs[bs.idx]->begin()), iter_w<Wrap>::wrap(bs.cs[bs.idx]->end()), pred); result = (it == iter_w<Wrap>::wrap(bs.cs[bs.idx]->end())) ? 1 : 0; escape(&result); ++bs.idx; }
 };
+#endif
 
 } // namespace bench_ops
 
@@ -1584,6 +1864,7 @@ struct seg_stable_partition_batch {
 // Individual benchmarks
 //////////////////////////////////////////////////////////////////////////////
 
+#if BENCH_IF_ALGO(ALL_OF)
 template<class C, class Pred>
 void bench_all_of(const C &c, std::size_t iters, const char* cname,
                   Pred pred, const char* label)
@@ -1594,7 +1875,9 @@ void bench_all_of(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_all_of<C, Pred>(c, pred, result),
       bench_ops::seg_all_of<C, Pred, true>(c, pred, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(ANY_OF)
 template<class C, class Pred>
 void bench_any_of(const C &c, std::size_t iters, const char* cname,
                   Pred pred, const char* label)
@@ -1605,7 +1888,9 @@ void bench_any_of(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_any_of<C, Pred>(c, pred, result),
       bench_ops::seg_any_of<C, Pred, true>(c, pred, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(NONE_OF)
 template<class C, class Pred>
 void bench_none_of(const C &c, std::size_t iters, const char* cname,
                    Pred pred, const char* label)
@@ -1616,7 +1901,9 @@ void bench_none_of(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_none_of<C, Pred>(c, pred, result),
       bench_ops::seg_none_of<C, Pred, true>(c, pred, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(FOR_EACH)
 template<class C>
 void bench_for_each(const C &c, std::size_t iters, const char* cname)
 {
@@ -1626,7 +1913,9 @@ void bench_for_each(const C &c, std::size_t iters, const char* cname)
       bench_ops::seg_for_each<C>(c, result),
       bench_ops::seg_for_each<C, true>(c, result), "for_each", cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(COPY)
 template<class InC, class OutC>
 void bench_copy(const InC &c, std::size_t iters, const char* cname, const char* label)
 {
@@ -1636,7 +1925,9 @@ void bench_copy(const InC &c, std::size_t iters, const char* cname, const char* 
       bench_ops::seg_copy<InC, OutC>(c, out),
       bench_ops::seg_copy<InC, OutC, true>(c, out), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(COPY_IF)
 template<class InC, class OutC, class Pred>
 void bench_copy_if(const InC &c, std::size_t iters, const char* cname,
                    Pred pred, const char* label)
@@ -1647,7 +1938,9 @@ void bench_copy_if(const InC &c, std::size_t iters, const char* cname,
       bench_ops::seg_copy_if<InC, OutC, Pred>(c, out, pred),
       bench_ops::seg_copy_if<InC, OutC, Pred, true>(c, out, pred), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(FILL)
 template<class C>
 void bench_fill(const C &c, std::size_t iters, const char* cname)
 {
@@ -1659,7 +1952,9 @@ void bench_fill(const C &c, std::size_t iters, const char* cname)
       bench_ops::seg_fill<C>(c2, val),
       bench_ops::seg_fill<C, true>(c2, val), "fill", cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(COUNT)
 template<class C>
 void bench_count(const C &c, std::size_t iters, const char* cname,
                  const typename C::value_type& val, const char* label)
@@ -1670,7 +1965,9 @@ void bench_count(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_count<C>(c, val, result),
       bench_ops::seg_count<C, true>(c, val, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(COUNT_IF)
 template<class C, class Pred>
 void bench_count_if(const C &c, std::size_t iters, const char* cname,
                     Pred pred, const char* label)
@@ -1681,7 +1978,9 @@ void bench_count_if(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_count_if<C, Pred>(c, pred, result),
       bench_ops::seg_count_if<C, Pred, true>(c, pred, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(FIND)
 template<class C>
 void bench_find(const C &c, std::size_t iters, const char* cname,
                 const typename C::value_type& val, const char* label)
@@ -1692,7 +1991,9 @@ void bench_find(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_find<C>(c, val, result),
       bench_ops::seg_find<C, true>(c, val, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(FIND_IF)
 template<class C, class Pred>
 void bench_find_if(const C &c, std::size_t iters, const char* cname,
                    Pred pred, const char* label)
@@ -1703,7 +2004,9 @@ void bench_find_if(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_find_if<C, Pred>(c, pred, result),
       bench_ops::seg_find_if<C, Pred, true>(c, pred, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(FIND_IF_NOT)
 template<class C, class Pred>
 void bench_find_if_not(const C &c, std::size_t iters, const char* cname,
                        Pred pred, const char* label)
@@ -1714,7 +2017,9 @@ void bench_find_if_not(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_find_if_not<C, Pred>(c, pred, result),
       bench_ops::seg_find_if_not<C, Pred, true>(c, pred, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(FIND_LAST)
 template<class C>
 void bench_find_last(const C &c, std::size_t iters, const char* cname,
                      const typename C::value_type& val, const char* label)
@@ -1725,7 +2030,9 @@ void bench_find_last(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_find_last<C>(c, val, result),
       bench_ops::seg_find_last<C, true>(c, val, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(FIND_LAST_IF)
 template<class C, class Pred>
 void bench_find_last_if(const C &c, std::size_t iters, const char* cname,
                         Pred pred, const char* label)
@@ -1736,7 +2043,9 @@ void bench_find_last_if(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_find_last_if<C, Pred>(c, pred, result),
       bench_ops::seg_find_last_if<C, Pred, true>(c, pred, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(FIND_LAST_IF_NOT)
 template<class C, class Pred>
 void bench_find_last_if_not(const C &c, std::size_t iters, const char* cname,
                             Pred pred, const char* label)
@@ -1747,7 +2056,9 @@ void bench_find_last_if_not(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_find_last_if_not<C, Pred>(c, pred, result),
       bench_ops::seg_find_last_if_not<C, Pred, true>(c, pred, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(EQUAL)
 template<class InC1, class InC2>
 void bench_equal(const InC1 &c, const InC2 &c2, std::size_t iters, const char* cname,
                  const char* label)
@@ -1758,7 +2069,9 @@ void bench_equal(const InC1 &c, const InC2 &c2, std::size_t iters, const char* c
       bench_ops::seg_equal<InC1, InC2>(c, c2, result),
       bench_ops::seg_equal<InC1, InC2, true>(c, c2, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(EQUAL_2R)
 template<class InC1, class InC2>
 void bench_equal_2r(const InC1 &c, const InC2 &c2, std::size_t iters, const char* cname,
                     const char* label)
@@ -1769,7 +2082,9 @@ void bench_equal_2r(const InC1 &c, const InC2 &c2, std::size_t iters, const char
       bench_ops::seg_equal_2r<InC1, InC2>(c, c2, result),
       bench_ops::seg_equal_2r<InC1, InC2, true>(c, c2, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(REPLACE)
 template<class C>
 void bench_replace(const C &c, std::size_t iters, const char* cname,
                    const typename C::value_type& old_val,
@@ -1785,7 +2100,9 @@ void bench_replace(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_replace_op<C>(c2b, p2o, p2n),
       bench_ops::seg_replace_op<C, true>(c2c, p3o, p3n), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(REPLACE_IF)
 template<class C, class Pred>
 void bench_replace_if(const C &c, std::size_t iters, const char* cname,
                       Pred pred, const typename C::value_type& new_val,
@@ -1798,7 +2115,9 @@ void bench_replace_if(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_replace_if_batch<C, Pred, true>(bs3, pred, new_val), bench_ops::batch_reset<C>(bs3),
       label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(TRANSFORM)
 template<class InC, class OutC>
 void bench_transform(const InC &c, std::size_t iters, const char* cname, const char* label)
 {
@@ -1808,7 +2127,9 @@ void bench_transform(const InC &c, std::size_t iters, const char* cname, const c
       bench_ops::seg_transform<InC, OutC>(c, out),
       bench_ops::seg_transform<InC, OutC, true>(c, out), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(FILL_N)
 template<class C>
 void bench_fill_n(const C &c, std::size_t iters, const char* cname)
 {
@@ -1822,7 +2143,9 @@ void bench_fill_n(const C &c, std::size_t iters, const char* cname)
       bench_ops::seg_fill_n<C>(c2, n, val),
       bench_ops::seg_fill_n<C, true>(c2, n, val), "fill_n", cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(COPY_N)
 template<class InC, class OutC>
 void bench_copy_n(const InC &c, std::size_t iters, const char* cname, const char* label)
 {
@@ -1834,7 +2157,9 @@ void bench_copy_n(const InC &c, std::size_t iters, const char* cname, const char
       bench_ops::seg_copy_n<InC, OutC>(c, n, out),
       bench_ops::seg_copy_n<InC, OutC, true>(c, n, out), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(GENERATE)
 template<class C>
 void bench_generate(const C &c, std::size_t iters, const char* cname)
 {
@@ -1845,7 +2170,9 @@ void bench_generate(const C &c, std::size_t iters, const char* cname)
       bench_ops::seg_generate<C>(c2, result),
       bench_ops::seg_generate<C, true>(c2, result), "generate", cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(GENERATE_N)
 template<class C>
 void bench_generate_n(const C &c, std::size_t iters, const char* cname)
 {
@@ -1858,7 +2185,9 @@ void bench_generate_n(const C &c, std::size_t iters, const char* cname)
       bench_ops::seg_generate_n<C>(c2, n, result),
       bench_ops::seg_generate_n<C, true>(c2, n, result), "generate_n", cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(REMOVE)
 template<class C>
 void bench_remove(const C &c, std::size_t iters, const char* cname,
                   const typename C::value_type& val, const char* label)
@@ -1871,7 +2200,9 @@ void bench_remove(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_remove_batch<C, true>(bs3, val, result), bench_ops::batch_reset<C>(bs3),
       label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(REMOVE_IF)
 template<class C, class Pred>
 void bench_remove_if(const C &c, std::size_t iters, const char* cname,
                      Pred pred, const char* label)
@@ -1884,7 +2215,9 @@ void bench_remove_if(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_remove_if_batch<C, Pred, true>(bs3, pred, result), bench_ops::batch_reset<C>(bs3),
       label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(REMOVE_COPY)
 template<class InC, class OutC>
 void bench_remove_copy(const InC &c, std::size_t iters, const char* cname,
                        const typename InC::value_type& val, const char* label)
@@ -1895,7 +2228,9 @@ void bench_remove_copy(const InC &c, std::size_t iters, const char* cname,
       bench_ops::seg_remove_copy<InC, OutC>(c, out, val),
       bench_ops::seg_remove_copy<InC, OutC, true>(c, out, val), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(REMOVE_COPY_IF)
 template<class InC, class OutC, class Pred>
 void bench_remove_copy_if(const InC &c, std::size_t iters, const char* cname,
                           Pred pred, const char* label)
@@ -1906,7 +2241,9 @@ void bench_remove_copy_if(const InC &c, std::size_t iters, const char* cname,
       bench_ops::seg_remove_copy_if<InC, OutC, Pred>(c, out, pred),
       bench_ops::seg_remove_copy_if<InC, OutC, Pred, true>(c, out, pred), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(REVERSE)
 template<class C>
 void bench_reverse(const C &c, std::size_t iters, const char* cname)
 {
@@ -1917,7 +2254,9 @@ void bench_reverse(const C &c, std::size_t iters, const char* cname)
       bench_ops::seg_reverse<C>(c2, result),
       bench_ops::seg_reverse<C, true>(c2, result), "reverse", cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(REVERSE_COPY)
 template<class InC, class OutC>
 void bench_reverse_copy(const InC &c, std::size_t iters, const char* cname, const char* label)
 {
@@ -1927,7 +2266,9 @@ void bench_reverse_copy(const InC &c, std::size_t iters, const char* cname, cons
       bench_ops::seg_reverse_copy<InC, OutC>(c, out),
       bench_ops::seg_reverse_copy<InC, OutC, true>(c, out), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(IS_SORTED)
 template<class C>
 void bench_is_sorted(const C &c, std::size_t iters, const char* cname,
                      const char* label)
@@ -1938,7 +2279,9 @@ void bench_is_sorted(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_is_sorted<C>(c, result),
       bench_ops::seg_is_sorted<C, true>(c, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(IS_SORTED_UNTIL)
 template<class C>
 void bench_is_sorted_until(const C &c, std::size_t iters, const char* cname,
                            const char* label)
@@ -1949,7 +2292,9 @@ void bench_is_sorted_until(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_is_sorted_until<C>(c, result),
       bench_ops::seg_is_sorted_until<C, true>(c, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(IS_PARTITIONED)
 template<class C, class Pred>
 void bench_is_partitioned(const C &c, std::size_t iters, const char* cname,
                           Pred pred, const char* label)
@@ -1960,7 +2305,9 @@ void bench_is_partitioned(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_is_partitioned<C, Pred>(c, pred, result),
       bench_ops::seg_is_partitioned<C, Pred, true>(c, pred, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(MERGE)
 template<class C1, class C2, class OutT>
 void bench_merge(const C1 &c1, const C2 &c2, std::size_t iters,
                  const char* cname, const char* label)
@@ -1971,7 +2318,9 @@ void bench_merge(const C1 &c1, const C2 &c2, std::size_t iters,
       bench_ops::seg_merge<C1, C2, OutT>(c1, c2, out),
       bench_ops::seg_merge<C1, C2, OutT, true>(c1, c2, out), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(MISMATCH)
 template<class InC1, class InC2>
 void bench_mismatch(const InC1 &c, const InC2 &c2, std::size_t iters, const char* cname,
                     const char* label)
@@ -1982,7 +2331,9 @@ void bench_mismatch(const InC1 &c, const InC2 &c2, std::size_t iters, const char
       bench_ops::seg_mismatch<InC1, InC2>(c, c2, result),
       bench_ops::seg_mismatch<InC1, InC2, true>(c, c2, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(MISMATCH_2R)
 template<class InC1, class InC2>
 void bench_mismatch_2r(const InC1 &c, const InC2 &c2, std::size_t iters, const char* cname,
                        const char* label)
@@ -1993,7 +2344,9 @@ void bench_mismatch_2r(const InC1 &c, const InC2 &c2, std::size_t iters, const c
       bench_ops::seg_mismatch_2r<InC1, InC2>(c, c2, result),
       bench_ops::seg_mismatch_2r<InC1, InC2, true>(c, c2, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(SWAP_RANGES)
 template<class C1, class C2>
 void bench_swap_ranges(const C1 &c, std::size_t iters, const char* cname, const char* label)
 {
@@ -2008,7 +2361,9 @@ void bench_swap_ranges(const C1 &c, std::size_t iters, const char* cname, const 
       bench_ops::seg_swap_ranges<C1, C2>(a, b, result),
       bench_ops::seg_swap_ranges<C1, C2, true>(a, b, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(SEARCH)
 template<class C>
 void bench_search(const C &c, std::size_t iters, const char* cname,
                   const typename C::value_type* pattern, std::size_t pat_size,
@@ -2020,7 +2375,9 @@ void bench_search(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_search<C>(c, pattern, pat_size, result),
       bench_ops::seg_search<C, true>(c, pattern, pat_size, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(FIND_END)
 template<class C>
 void bench_find_end(const C &c, std::size_t iters, const char* cname,
                     const typename C::value_type* pattern, std::size_t pat_size,
@@ -2032,7 +2389,9 @@ void bench_find_end(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_find_end<C>(c, pattern, pat_size, result),
       bench_ops::seg_find_end<C, true>(c, pattern, pat_size, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(SEARCH_N)
 template<class C>
 void bench_search_n(const C &c, std::size_t iters, const char* cname,
                     typename C::difference_type count,
@@ -2044,7 +2403,9 @@ void bench_search_n(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_search_n<C>(c, count, val, result),
       bench_ops::seg_search_n<C, true>(c, count, val, result), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(SET_UNION)
 template<class C1, class C2, class OutT>
 void bench_set_union(const C1 &c, const C2 &c2, std::size_t iters,
                      const char* cname, const char* label)
@@ -2055,7 +2416,9 @@ void bench_set_union(const C1 &c, const C2 &c2, std::size_t iters,
       bench_ops::seg_set_union<C1, C2, OutT>(c, c2, out),
       bench_ops::seg_set_union<C1, C2, OutT, true>(c, c2, out), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(SET_DIFFERENCE)
 template<class C1, class C2, class OutT>
 void bench_set_difference(const C1 &c, const C2 &c2, std::size_t iters,
                            const char* cname, const char* label)
@@ -2066,7 +2429,9 @@ void bench_set_difference(const C1 &c, const C2 &c2, std::size_t iters,
       bench_ops::seg_set_difference<C1, C2, OutT>(c, c2, out),
       bench_ops::seg_set_difference<C1, C2, OutT, true>(c, c2, out), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(SET_INTERSECTION)
 template<class C1, class C2, class OutT>
 void bench_set_intersection(const C1 &c, const C2 &c2, std::size_t iters,
                              const char* cname, const char* label)
@@ -2077,7 +2442,9 @@ void bench_set_intersection(const C1 &c, const C2 &c2, std::size_t iters,
       bench_ops::seg_set_intersection<C1, C2, OutT>(c, c2, out),
       bench_ops::seg_set_intersection<C1, C2, OutT, true>(c, c2, out), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(SET_SYMMETRIC_DIFFERENCE)
 template<class C1, class C2, class OutT>
 void bench_set_symmetric_difference(const C1 &c, const C2 &c2, std::size_t iters,
                                      const char* cname, const char* label)
@@ -2088,7 +2455,9 @@ void bench_set_symmetric_difference(const C1 &c, const C2 &c2, std::size_t iters
       bench_ops::seg_set_symmetric_difference<C1, C2, OutT>(c, c2, out),
       bench_ops::seg_set_symmetric_difference<C1, C2, OutT, true>(c, c2, out), label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(PARTITION)
 template<class C, class Pred>
 void bench_partition(const C &c, std::size_t iters, const char* cname,
                      Pred pred, const char* label)
@@ -2101,7 +2470,9 @@ void bench_partition(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_partition_batch<C, Pred, true>(bs3, pred, result), bench_ops::batch_reset<C>(bs3),
       label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(STABLE_PARTITION)
 template<class C, class Pred>
 void bench_stable_partition(const C &c, std::size_t iters, const char* cname,
                             Pred pred, const char* label)
@@ -2114,7 +2485,9 @@ void bench_stable_partition(const C &c, std::size_t iters, const char* cname,
       bench_ops::seg_stable_partition_batch<C, Pred, true>(bs3, pred, result), bench_ops::batch_reset<C>(bs3),
       label, cname);
 }
+#endif
 
+#if BENCH_IF_ALGO(PARTITION_COPY)
 template<class InC, class OutC1, class OutC2>
 void bench_partition_copy(const InC &c, std::size_t iters, const char* cname, const char* label)
 {
@@ -2125,6 +2498,8 @@ void bench_partition_copy(const InC &c, std::size_t iters, const char* cname, co
       bench_ops::seg_partition_copy<InC, OutC1, OutC2>(c, t_out, f_out),
       bench_ops::seg_partition_copy<InC, OutC1, OutC2, true>(c, t_out, f_out), label, cname);
 }
+#endif
+
 
 //////////////////////////////////////////////////////////////////////////////
 // Run all benchmarks for a container type
@@ -2153,65 +2528,79 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //////////////////////////////////////////////////////////////////
    // Group 10: single range, sequential access
    //////////////////////////////////////////////////////////////////
-#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 10
+#if (!defined(GROUP) || GROUP == 0 || GROUP == 10) && BENCH_GROUP10_HAS_ALGO
    print_group_header(10, "single range, sequential access", vtname);
 
-   //all_of
+#if BENCH_IF_ALGO(ALL_OF)
    bench_all_of(c, iters, cname, is_zero_or_positive<VT>(), "all_of(hit)");
    bench_all_of(c, iters, cname, unequal_to_ref<VT>(half), "all_of(miss)");
+#endif
 
-   //any_of
+#if BENCH_IF_ALGO(ANY_OF)
    bench_any_of(c, iters, cname, equal_to_ref<VT>(half),   "any_of(hit)");
    bench_any_of(c, iters, cname, is_negative<VT>(), "any_of(miss)");
+#endif
 
-   //count
+#if BENCH_IF_ALGO(COUNT)
    bench_count(c, iters, cname, zero,  "count(hit)");
    bench_count(c, iters, cname, min1, "count(miss)");
+#endif
 
-   //count_if
+#if BENCH_IF_ALGO(COUNT_IF)
    bench_count_if(c, iters, cname, is_odd<VT>(),      "count_if(hit)");
    bench_count_if(c, iters, cname, is_negative<VT>(), "count_if(miss)");
+#endif
 
-   //fill
+#if BENCH_IF_ALGO(FILL)
    bench_fill(c, iters, cname);
+#endif
 
-   //fill_n
+#if BENCH_IF_ALGO(FILL_N)
    bench_fill_n(c, iters, cname);
+#endif
 
-   //find
+#if BENCH_IF_ALGO(FIND)
    bench_find(c, iters, cname, half, "find(hit)");
    bench_find(c, iters, cname, min1, "find(miss)");
+#endif
 
-   //find_if
+#if BENCH_IF_ALGO(FIND_IF)
    bench_find_if(c, iters, cname, equal_to_ref<VT>(half), "find_if(hit)");
    bench_find_if(c, iters, cname, is_negative<VT>(), "find_if(miss)");
+#endif
 
-   //find_if_not
+#if BENCH_IF_ALGO(FIND_IF_NOT)
    bench_find_if_not(c, iters, cname, unequal_to_ref<VT>(half), "find_if_not(hit)");
    bench_find_if_not(c, iters, cname, is_zero_or_positive<VT>(), "find_if_not(miss)");
+#endif
 
-   //for_each
+#if BENCH_IF_ALGO(FOR_EACH)
    bench_for_each(c, iters, cname);
+#endif
 
-   //generate
+#if BENCH_IF_ALGO(GENERATE)
    bench_generate(c, iters, cname);
+#endif
 
-   //generate_n
+#if BENCH_IF_ALGO(GENERATE_N)
    bench_generate_n(c, iters, cname);
+#endif
 
-   //is_partitioned
+#if BENCH_IF_ALGO(IS_PARTITIONED)
    {
       bench_is_partitioned(c, iters, cname, is_negative<VT>(), "is_partitioned(hit)");
       C c2(c);
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
       bench_is_partitioned(c2, iters, cname, is_negative<VT>(), "is_partitioned(miss)");
    }
+#endif
 
-   //none_of
+#if BENCH_IF_ALGO(NONE_OF)
    bench_none_of(c, iters, cname, is_negative<VT>(), "none_of(hit)");
    bench_none_of(c, iters, cname, equal_to_ref<VT>(VT(static_cast<int>(c.size()/2))),      "none_of(miss)");
+#endif
 
-   //replace
+#if BENCH_IF_ALGO(REPLACE)
    {
       C c2(c);
       is_odd<VT> is_odd_pred;
@@ -2222,14 +2611,18 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_replace(c2, iters, cname, min1,  VT(-2),  "replace(hit)");
    }
    bench_replace(c, iters, cname, min1, VT(-2), "replace(miss)");
+#endif
 
-   //replace_if
+#if BENCH_IF_ALGO(REPLACE_IF)
    bench_replace_if(c, iters, cname, is_odd<VT>(),      VT(-2), "replace_if(hit)");
    bench_replace_if(c, iters, cname, is_negative<VT>(), VT(-2), "replace_if(miss)");
+#endif
 
    //stable_partition (not tested since it's not optimized for random access iterators)
+   //#if BENCH_IF_ALGO(STABLE_PARTITION)
    //bench_stable_partition(c, iters, cname, is_odd<VT>(),      "stable_partition(hit)");
    //bench_stable_partition(c, iters, cname, is_negative<VT>(), "stable_partition(miss)");
+   //#endif
 
    print_group_geomean(vtname);
 #endif
@@ -2237,26 +2630,28 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //////////////////////////////////////////////////////////////////
    // Group 15: single range, non-sequential access pattern
    //////////////////////////////////////////////////////////////////
-#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 15
+#if (!defined(GROUP) || GROUP == 0 || GROUP == 15) && BENCH_GROUP15_HAS_ALGO
    print_group_header(15, "single range, non-sequential access pattern", vtname);
 
-   //is_sorted
+#if BENCH_IF_ALGO(IS_SORTED)
    {
       bench_is_sorted(c, iters, cname, "is_sorted(hit)");
       C c2(c);
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
       bench_is_sorted(c2, iters, cname, "is_sorted(miss)");
    }
+#endif
 
-   //is_sorted_until
+#if BENCH_IF_ALGO(IS_SORTED_UNTIL)
    {
       bench_is_sorted_until(c, iters, cname, "is_sorted_until(hit)");
       C c2(c);
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
       bench_is_sorted_until(c2, iters, cname, "is_sorted_until(miss)");
    }
+#endif
 
-   //remove
+#if BENCH_IF_ALGO(REMOVE)
    {
       C c2(c);
       std::size_t p = 0;
@@ -2266,12 +2661,14 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_remove(c2, iters, cname, half, "remove(hit)");
       bench_remove(c, iters, cname, min1, "remove(miss)");
    }
+#endif
 
-   //remove_if
+#if BENCH_IF_ALGO(REMOVE_IF)
    bench_remove_if(c, iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_if(hit)");
    bench_remove_if(c, iters, cname, is_negative<VT>(), "remove_if(miss)");
+#endif
 
-   //search_n
+#if BENCH_IF_ALGO(SEARCH_N)
    bench_search_n(c, iters, cname, 1, half, "search_n(1hit)");
    bench_search_n(c, iters, cname, 3, min1, "search_n(miss)");
 
@@ -2301,34 +2698,40 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 
       bench_search_n(c_sn, iters, cname, 8, min1, "search_n(8mid)");
    }
-   
+#endif
+
    print_group_geomean(vtname);
 #endif
 
    //////////////////////////////////////////////////////////////////
    // Group 17: single range, bidirectional iterator optimizations
    //////////////////////////////////////////////////////////////////
-#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 17
+#if (!defined(GROUP) || GROUP == 0 || GROUP == 17) && BENCH_GROUP17_HAS_ALGO
    print_group_header(17, "single range, bidirectional iterator optimizations", vtname);
 
-   //find_last
+#if BENCH_IF_ALGO(FIND_LAST)
    bench_find_last(c, iters, cname, half, "find_last(hit)");
    bench_find_last(c, iters, cname, min1, "find_last(miss)");
+#endif
 
-   //find_last_if
+#if BENCH_IF_ALGO(FIND_LAST_IF)
    bench_find_last_if(c, iters, cname, equal_to_ref<VT>(half), "find_last_if(hit)");
    bench_find_last_if(c, iters, cname, is_negative<VT>(), "find_last_if(miss)");
+#endif
 
-   //find_last_if_not
+#if BENCH_IF_ALGO(FIND_LAST_IF_NOT)
    bench_find_last_if_not(c, iters, cname, unequal_to_ref<VT>(half), "find_last_if_not(hit)");
    bench_find_last_if_not(c, iters, cname, is_zero_or_positive<VT>(), "find_last_if_not(miss)");
+#endif
 
-   //partition
+#if BENCH_IF_ALGO(PARTITION)
    bench_partition(c, iters, cname, is_odd<VT>(),      "partition(hit)");
    bench_partition(c, iters, cname, is_negative<VT>(), "partition(miss)");
+#endif
 
-   //reverse
+#if BENCH_IF_ALGO(REVERSE)
    bench_reverse(c, iters, cname);
+#endif
 
    print_group_geomean(vtname);
 #endif
@@ -2336,10 +2739,10 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //////////////////////////////////////////////////////////////////
    // Group 20: 2-range input-only algorithms (all ranges read-only)
    //////////////////////////////////////////////////////////////////
-#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 20
+#if (!defined(GROUP) || GROUP == 0 || GROUP == 20) && BENCH_GROUP20_HAS_ALGO
    print_group_header(20, "2-range input-only algorithms", vtname);
 
-   //equal
+#if BENCH_IF_ALGO(EQUAL)
    {
       C c2(c);
       vec_t c2v(c2.begin(), c2.end());
@@ -2352,8 +2755,9 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_equal<vec_t, C    >(cv, c2,  iters, cname, "equal(2S miss)");
       bench_equal<C,     C    >(c,  c2,  iters, cname, "equal(1+2S miss)");
    }
+#endif
 
-   //equal (two ranges)
+#if BENCH_IF_ALGO(EQUAL_2R)
    {
       C c2(c);
       vec_t c2v(c2.begin(), c2.end());
@@ -2366,8 +2770,9 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_equal_2r<vec_t, C    >(cv, c2,  iters, cname, "equal_2r(2S miss)");
       bench_equal_2r<C,     C    >(c,  c2,  iters, cname, "equal_2r(1+2S miss)");
    }
+#endif
 
-   //mismatch
+#if BENCH_IF_ALGO(MISMATCH)
    {
       C c2(c);
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
@@ -2382,8 +2787,9 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_mismatch<vec_t, C    >(cv, c2,  iters, cname, "mismatch(2S miss)");
       bench_mismatch<C,     C    >(c,  c2,  iters, cname, "mismatch(1+2S miss)");
    }
+#endif
 
-   //mismatch (two ranges)
+#if BENCH_IF_ALGO(MISMATCH_2R)
    {
       C c2(c);
       *boost::container::make_iterator_uadvance(c2.begin(), c2.size()/2) = min1;
@@ -2398,7 +2804,9 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_mismatch_2r<vec_t, C    >(cv, c2,  iters, cname, "mismatch_2r(2S miss)");
       bench_mismatch_2r<C,     C    >(c,  c2,  iters, cname, "mismatch_2r(1+2S miss)");
    }
+#endif
 
+#if BENCH_IF_ALGO(SEARCH)
    //search (haystack is range 1, the small pattern is range 2; only the
    //haystack is a segmented range here, so no 2S/1+2S variants apply)
    {
@@ -2408,6 +2816,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       VT miss_pat[] = {min1, VT(-2), VT(-3)};
       bench_search(c, iters, cname, miss_pat, 3, "search(miss)");
    }
+#endif
 
    print_group_geomean(vtname);
 #endif
@@ -2415,52 +2824,59 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //////////////////////////////////////////////////////////////////
    // Group 25: 2-range input-output algorithms (write through output iterator)
    //////////////////////////////////////////////////////////////////
-#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 25
+#if (!defined(GROUP) || GROUP == 0 || GROUP == 25) && BENCH_GROUP25_HAS_ALGO
    print_group_header(25, "2-range input-output algorithms", vtname);
 
-   //copy
+#if BENCH_IF_ALGO(COPY)
    bench_copy<C,     vec_t>(c,  iters, cname, "copy(1S)");
    bench_copy<vec_t, C    >(cv, iters, cname, "copy(2S)");
    bench_copy<C,     C    >(c,  iters, cname, "copy(1+2S)");
+#endif
 
-   //copy_if
+#if BENCH_IF_ALGO(COPY_IF)
    bench_copy_if<C,     vec_t>(c,  iters, cname, is_odd<VT>(),      "copy_if(1S hit)");
    bench_copy_if<vec_t, C    >(cv, iters, cname, is_odd<VT>(),      "copy_if(2S hit)");
    bench_copy_if<C,     C    >(c,  iters, cname, is_odd<VT>(),      "copy_if(1+2S hit)");
    bench_copy_if<C,     vec_t>(c,  iters, cname, is_negative<VT>(), "copy_if(1S miss)");
    bench_copy_if<vec_t, C    >(cv, iters, cname, is_negative<VT>(), "copy_if(2S miss)");
    bench_copy_if<C,     C    >(c,  iters, cname, is_negative<VT>(), "copy_if(1+2S miss)");
+#endif
 
-   //copy_n
+#if BENCH_IF_ALGO(COPY_N)
    bench_copy_n<C,     vec_t>(c,  iters, cname, "copy_n(1S)");
    bench_copy_n<vec_t, C    >(cv, iters, cname, "copy_n(2S)");
    bench_copy_n<C,     C    >(c,  iters, cname, "copy_n(1+2S)");
+#endif
 
-   //remove_copy
+#if BENCH_IF_ALGO(REMOVE_COPY)
    bench_remove_copy<C,     vec_t>(c,  iters, cname, half, "remove_copy(1S hit)");
    bench_remove_copy<vec_t, C    >(cv, iters, cname, half, "remove_copy(2S hit)");
    bench_remove_copy<C,     C    >(c,  iters, cname, half, "remove_copy(1+2S hit)");
    bench_remove_copy<C,     vec_t>(c,  iters, cname, min1, "remove_copy(1S miss)");
    bench_remove_copy<vec_t, C    >(cv, iters, cname, min1, "remove_copy(2S miss)");
    bench_remove_copy<C,     C    >(c,  iters, cname, min1, "remove_copy(1+2S miss)");
+#endif
 
-   //remove_copy_if
+#if BENCH_IF_ALGO(REMOVE_COPY_IF)
    bench_remove_copy_if<C,     vec_t>(c,  iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_copy_if(1S hit)");
    bench_remove_copy_if<vec_t, C    >(cv, iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_copy_if(2S hit)");
    bench_remove_copy_if<C,     C    >(c,  iters, cname, less_and_greater_ref<VT>(quart, threequart), "remove_copy_if(1+2S hit)");
    bench_remove_copy_if<C,     vec_t>(c,  iters, cname, is_negative<VT>(), "remove_copy_if(1S miss)");
    bench_remove_copy_if<vec_t, C    >(cv, iters, cname, is_negative<VT>(), "remove_copy_if(2S miss)");
    bench_remove_copy_if<C,     C    >(c,  iters, cname, is_negative<VT>(), "remove_copy_if(1+2S miss)");
+#endif
 
-   //swap_ranges
+#if BENCH_IF_ALGO(SWAP_RANGES)
    bench_swap_ranges<C,     vec_t>(c,  iters, cname, "swap_ranges(1S)");
    bench_swap_ranges<vec_t, C    >(cv, iters, cname, "swap_ranges(2S)");
    bench_swap_ranges<C,     C    >(c,  iters, cname, "swap_ranges(1+2S)");
+#endif
 
-   //transform
+#if BENCH_IF_ALGO(TRANSFORM)
    bench_transform<C,     vec_t>(c,  iters, cname, "transform(1S)");
    bench_transform<vec_t, C    >(cv, iters, cname, "transform(2S)");
    bench_transform<C,     C    >(c,  iters, cname, "transform(1+2S)");
+#endif
 
    print_group_geomean(vtname);
 #endif
@@ -2468,14 +2884,16 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //////////////////////////////////////////////////////////////////
    // Group 27: 2-range algorithms with bidirectional iterator optimizations
    //////////////////////////////////////////////////////////////////
-#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 27
+#if (!defined(GROUP) || GROUP == 0 || GROUP == 27) && BENCH_GROUP27_HAS_ALGO
    print_group_header(27, "2-range, bidirectional iterator optimizations", vtname);
 
-   //reverse_copy
+#if BENCH_IF_ALGO(REVERSE_COPY)
    bench_reverse_copy<C,     vec_t>(c,  iters, cname, "reverse_copy(1S)");
    bench_reverse_copy<vec_t, C    >(cv, iters, cname, "reverse_copy(2S)");
    bench_reverse_copy<C,     C    >(c,  iters, cname, "reverse_copy(1+2S)");
+#endif
 
+#if BENCH_IF_ALGO(FIND_END)
    //find_end (same shape as search: only the haystack is segmented)
    {
       int ihalf = static_cast<int>(c.size() / 2);
@@ -2484,6 +2902,7 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       VT miss_pat[] = {min1, VT(-2), VT(-3)};
       bench_find_end(c, iters, cname, miss_pat, 3, "find_end(miss)");
    }
+#endif
 
    print_group_geomean(vtname);
 #endif
@@ -2491,10 +2910,10 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    //////////////////////////////////////////////////////////////////
    // Group 30: 3-range algorithms
    //////////////////////////////////////////////////////////////////
-#if !defined(BOOST_CONTAINER_BENCH_SEGMENTED_GROUP) || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 0 || BOOST_CONTAINER_BENCH_SEGMENTED_GROUP == 30
+#if (!defined(GROUP) || GROUP == 0 || GROUP == 30) && BENCH_GROUP30_HAS_ALGO
    print_group_header(30, "3-range algorithms", vtname);
 
-   //merge
+#if BENCH_IF_ALGO(MERGE)
    {
       C c2(c);
       for (typename C::iterator it = c2.begin(); it != c2.end(); ++it)
@@ -2509,15 +2928,17 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_merge<vec_t, C,     C    >(cv, c2,  iters, cname, "merge(2+3S)");
       bench_merge<C,     C,     C    >(c,  c2,  iters, cname, "merge(1+2+3S)");
    }
+#endif
 
-   //set_difference, set_intersection, set_symmetric_difference, set_union
+#if BENCH_IF_ALGO(SET_DIFFERENCE) || BENCH_IF_ALGO(SET_INTERSECTION) \
+ || BENCH_IF_ALGO(SET_SYMMETRIC_DIFFERENCE) || BENCH_IF_ALGO(SET_UNION)
    {
       C c2(c);
       for (typename C::iterator it = c2.begin(); it != c2.end(); ++it)
          *it = VT(int_value(*it) * 2);
       vec_t c2v(c2.begin(), c2.end());
 
-      // set_difference
+#if BENCH_IF_ALGO(SET_DIFFERENCE)
       bench_set_difference<C,     vec_t, vec_t>(c,  c2v, iters, cname, "set_difference(1S)");
       bench_set_difference<vec_t, C,     vec_t>(cv, c2,  iters, cname, "set_difference(2S)");
       bench_set_difference<vec_t, vec_t, C    >(cv, c2v, iters, cname, "set_difference(3S)");
@@ -2525,8 +2946,9 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_set_difference<C,     vec_t, C    >(c,  c2v, iters, cname, "set_difference(1+3S)");
       bench_set_difference<vec_t, C,     C    >(cv, c2,  iters, cname, "set_difference(2+3S)");
       bench_set_difference<C,     C,     C    >(c,  c2,  iters, cname, "set_difference(1+2+3S)");
+#endif
 
-      // set_intersection
+#if BENCH_IF_ALGO(SET_INTERSECTION)
       bench_set_intersection<C,     vec_t, vec_t>(c,  c2v, iters, cname, "set_intersection(1S)");
       bench_set_intersection<vec_t, C,     vec_t>(cv, c2,  iters, cname, "set_intersection(2S)");
       bench_set_intersection<vec_t, vec_t, C    >(cv, c2v, iters, cname, "set_intersection(3S)");
@@ -2534,8 +2956,9 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_set_intersection<C,     vec_t, C    >(c,  c2v, iters, cname, "set_intersection(1+3S)");
       bench_set_intersection<vec_t, C,     C    >(cv, c2,  iters, cname, "set_intersection(2+3S)");
       bench_set_intersection<C,     C,     C    >(c,  c2,  iters, cname, "set_intersection(1+2+3S)");
+#endif
 
-      // set_symmetric_difference
+#if BENCH_IF_ALGO(SET_SYMMETRIC_DIFFERENCE)
       bench_set_symmetric_difference<C,     vec_t, vec_t>(c,  c2v, iters, cname, "set_sym_diff(1S)");
       bench_set_symmetric_difference<vec_t, C,     vec_t>(cv, c2,  iters, cname, "set_sym_diff(2S)");
       bench_set_symmetric_difference<vec_t, vec_t, C    >(cv, c2v, iters, cname, "set_sym_diff(3S)");
@@ -2543,8 +2966,9 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_set_symmetric_difference<C,     vec_t, C    >(c,  c2v, iters, cname, "set_sym_diff(1+3S)");
       bench_set_symmetric_difference<vec_t, C,     C    >(cv, c2,  iters, cname, "set_sym_diff(2+3S)");
       bench_set_symmetric_difference<C,     C,     C    >(c,  c2,  iters, cname, "set_sym_diff(1+2+3S)");
+#endif
 
-      // set_union
+#if BENCH_IF_ALGO(SET_UNION)
       bench_set_union<C,     vec_t, vec_t>(c,  c2v, iters, cname, "set_union(1S)");
       bench_set_union<vec_t, C,     vec_t>(cv, c2,  iters, cname, "set_union(2S)");
       bench_set_union<vec_t, vec_t, C    >(cv, c2v, iters, cname, "set_union(3S)");
@@ -2552,9 +2976,11 @@ void run_all(const C& c, std::size_t iters, const char* cname)
       bench_set_union<C,     vec_t, C    >(c,  c2v, iters, cname, "set_union(1+3S)");
       bench_set_union<vec_t, C,     C    >(cv, c2,  iters, cname, "set_union(2+3S)");
       bench_set_union<C,     C,     C    >(c,  c2,  iters, cname, "set_union(1+2+3S)");
+#endif
    }
+#endif
 
-   //partition_copy (range 1 = input, range 2 = out_true, range 3 = out_false)
+#if BENCH_IF_ALGO(PARTITION_COPY)
    bench_partition_copy<C,     vec_t, vec_t>(c,  iters, cname, "partition_copy(1S)");
    bench_partition_copy<vec_t, C,     vec_t>(cv, iters, cname, "partition_copy(2S)");
    bench_partition_copy<vec_t, vec_t, C    >(cv, iters, cname, "partition_copy(3S)");
@@ -2562,13 +2988,16 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_partition_copy<C,     vec_t, C    >(c,  iters, cname, "partition_copy(1+3S)");
    bench_partition_copy<vec_t, C,     C    >(cv, iters, cname, "partition_copy(2+3S)");
    bench_partition_copy<C,     C,     C    >(c,  iters, cname, "partition_copy(1+2+3S)");
+#endif
 
    print_group_geomean(vtname);
 #endif
 
+#if !defined(ALGO)
    std::cout << '\n';
    print_subheader();
    print_geomean_line("algo geomean", g_geomean, vtname);
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2581,7 +3010,7 @@ void run_benchmarks()
    //#define BENCH_ON
    #if defined(NDEBUG) && defined(BENCH_ON)
    const std::size_t N    = 100000;
-   const std::size_t iter = 3000;
+   const std::size_t iter = 5000;
    #else
    const std::size_t N    = 10000;
    const std::size_t iter = 1;
@@ -2607,9 +3036,12 @@ void run_benchmarks()
 
 int main()
 {
-   //run_benchmarks<int>();
+#if defined(TYPE)
+   run_benchmarks<TYPE>();
+#else
    run_benchmarks<MyInt>();
    run_benchmarks<MyFatInt<4> >();
    run_benchmarks<MyFatInt<8> >();
+#endif
    return 0;
 }
