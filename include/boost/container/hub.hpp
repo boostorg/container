@@ -969,7 +969,7 @@ public:
    //! <b>Requires</b>: \c allocator_type is DefaultConstructible.
    //!
    //! <b>Complexity</b>: Constant.
-   hub() noexcept(noexcept(allocator_type())): hub{allocator_type()} {}
+   hub() noexcept(noexcept(allocator_type())): hub(allocator_type()) {}
 
    //! <b>Effects</b>: Constructs an empty hub, using the specified allocator.
    //!
@@ -983,7 +983,7 @@ public:
    //! <b>Requires</b>: T is DefaultInsertable into the hub.
    //!
    //! <b>Complexity</b>: Linear in n.
-   explicit hub(size_type n, const allocator_type& al_ = allocator_type()): hub{al_}
+   explicit hub(size_type n, const allocator_type& al_ = allocator_type()): hub(al_)
    {
       range_insert_impl(size_type(0), n, [&, this] (T* p, size_type) {
          block_alloc_traits::construct(al(), p);
@@ -996,7 +996,7 @@ public:
    //! <b>Requires</b>: T is CopyInsertable into the hub.
    //!
    //! <b>Complexity</b>: Linear in n.
-   hub(size_type n, const T& x, const allocator_type& al_ = allocator_type()): hub{al_}
+   hub(size_type n, const T& x, const allocator_type& al_ = allocator_type()): hub(al_)
    {
       insert(n, x);
    }
@@ -1011,7 +1011,7 @@ public:
       >
    hub(
       InputIterator first, InputIterator last,
-      const allocator_type& al_ = allocator_type()): hub{al_}
+      const allocator_type& al_ = allocator_type()): hub(al_)
    {
       insert(first, last);
    }
@@ -1022,7 +1022,7 @@ public:
    //!
    //! <b>Complexity</b>: Linear in std::ranges::distance(rg).
    template< BOOST_CONTAINER_DOC1ST(std::ranges::input_range<T>, hub_detail::container_compatible_range<T>) R >
-   hub(from_range_t, R&& rg, const allocator_type& al_ = allocator_type()): hub{al_}
+   hub(from_range_t, R&& rg, const allocator_type& al_ = allocator_type()): hub(al_)
    {
       insert_range(std::forward<R>(rg));
    }
@@ -1035,7 +1035,7 @@ public:
    //!
    //! <b>Complexity</b>: Linear in x.size().
    hub(const hub& x):
-      hub{x, block_alloc_traits::select_on_container_copy_construction(x.al())} {}
+      hub(x, block_alloc_traits::select_on_container_copy_construction(x.al())) {}
 
    //! <b>Effects</b>: Constructs a hub equal to x, using the given allocator.
    //!
@@ -1054,7 +1054,7 @@ public:
    //!
    //! <b>Complexity</b>: Constant.
    hub(hub&& x) noexcept:
-      hub{std::move(x), allocator_type(std::move(x.al())), std::true_type{}} {}
+      hub(std::move(x), allocator_type(std::move(x.al())), std::true_type{}) {}
 
    //! <b>Effects</b>: allocator_type-extended move constructor. If alloc equals
    //!   x.get_allocator() the element blocks are moved (iterators/pointers to x
@@ -1069,7 +1069,7 @@ public:
    //!   one by one.
    hub( hub&& x
       , const BOOST_CONTAINER_DOC1ST(allocator_type, dtl::type_identity_t<allocator_type>) &al_):
-      hub{std::move(x), al_, hub_detail::is_always_equal_t<allocator_type>{}} {}
+      hub(std::move(x), al_, hub_detail::is_always_equal_t<allocator_type>{}) {}
 
    //! <b>Effects</b>: Constructs a hub equal to il, using the specified allocator.
    //!
@@ -1077,7 +1077,7 @@ public:
    //!
    //! <b>Complexity</b>: Linear in il.size().
    hub(std::initializer_list<T> il, const allocator_type& al_ = allocator_type()):
-      hub{il.begin(), il.end(), al_} {}
+      hub(il.begin(), il.end(), al_) {}
 
    //! <b>Effects</b>: Destroys all elements and deallocates all blocks.
    //!
@@ -1725,7 +1725,7 @@ private:
 
    hub(
       hub&& x, const allocator_type& al_, std::false_type /* maybe unequal allocs */):
-      hub{al_}
+      hub(al_)
    {
       if(al() == x.al()) {
          blist = std::move(x.blist);
