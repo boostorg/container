@@ -1065,8 +1065,9 @@ struct get_nest_opt<nest_opt<B, P> >
 //! efficient insertion and erasure operations in constant time.
 //!
 //! \tparam T The type of object stored in the nest
-//! \tparam Allocator The allocator used for all internal memory management, use void
-//!   for the default allocator
+//! \tparam Allocator The allocator used for all internal memory management. Use void
+//!   for the default allocator. An allocator whose \c value_type is \c void
+//!   is rebound to \c T.
 //! \tparam Options A type produced from \c boost::container::nest_options (e.g. \c store_data_in_block).
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class T, class Allocator = void, class Options = void>

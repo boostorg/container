@@ -497,7 +497,9 @@ class stable_vector_iterator
 //! operations provide stronger exception safety guarantees than in std::vector.
 //!
 //! \tparam T The type of object that is stored in the stable_vector
-//! \tparam Allocator The allocator used for all internal memory management
+//! \tparam Allocator The allocator used for all internal memory management.
+//!   Use void for the default allocator. An allocator whose \c value_type is
+//!   \c void is rebound to \c T.
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class T, class Allocator = void >
 #else

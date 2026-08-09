@@ -737,10 +737,46 @@ struct allocator_traits
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
+//! Obtains the allocator type used by a container from the allocator
+//! template argument. If \c AllocatorOrVoid is \c void, yields
+//! \c new_allocator<T>. If \c AllocatorOrVoid::value_type is \c void,
+//! yields the allocator rebound to \c T via \c portable_rebind_alloc.
+//! Otherwise, yields \c AllocatorOrVoid unchanged.
+//!
+//! portable_rebind_alloc is only formed when value_type is void (partial
+//! specialization). Eager if_c would break allocators that are not
+//! pointer_rebind-able (e.g. static_storage_allocator).
+
+#if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
+template
+   < class T
+   , class AllocatorOrVoid
+   , bool = dtl::is_same<typename AllocatorOrVoid::value_type, void>::value
+   >
+struct real_allocator_rebind
+{
+   typedef AllocatorOrVoid type;
+};
+
+template<class T, class AllocatorOrVoid>
+struct real_allocator_rebind<T, AllocatorOrVoid, true>
+{
+   typedef typename allocator_traits<AllocatorOrVoid>::template
+      portable_rebind_alloc<T>::type type;
+};
+
+#if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
+#pragma GCC diagnostic pop
+#endif
+
 template<class T, class AllocatorOrVoid>
 struct real_allocator
 {
-   typedef AllocatorOrVoid type;
+   typedef typename real_allocator_rebind<T, AllocatorOrVoid>::type type;
 };
 
 template<class T>

@@ -10,6 +10,7 @@
 
 #include <boost/container/pmr/string.hpp>
 #include <boost/container/detail/type_traits.hpp>
+#include "void_allocator_test.hpp"
 
 int main()
 {
@@ -26,5 +27,17 @@ int main()
       BOOST_CONTAINER_STATIC_ASSERT(( is_same<string_t, pmr::string >::value ));
       BOOST_CONTAINER_STATIC_ASSERT(( is_same<wstring_t, pmr::wstring >::value ));
    #endif
+   ////////////////////////////////////
+   //    Void value_type allocator
+   ////////////////////////////////////
+   {
+      typedef basic_string<char, std::char_traits<char>, pmr::polymorphic_allocator<void> > voidalloc_cont_t;
+      if(!test::test_void_allocator
+            < voidalloc_cont_t
+            , pmr::polymorphic_allocator<char> >()) {
+         return 1;
+      }
+   }
+
    return 0;
 }

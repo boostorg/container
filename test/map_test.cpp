@@ -11,12 +11,14 @@
 #include <boost/container/adaptive_pool.hpp>
 
 #include <map>
+#include <iostream>
 
 #include "print_container.hpp"
 #include "movable_int.hpp"
 #include "dummy_test_allocator.hpp"
 #include "map_test.hpp"
 #include "propagate_allocator_test.hpp"
+#include "void_allocator_test.hpp"
 #include "emplace_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 
@@ -416,6 +418,16 @@ int main ()
       std::pair<const pair_t,pair_t> p;
       s.insert(p);
       s.emplace(p);
+   }
+
+   ////////////////////////////////////
+   //    Void value_type allocator
+   ////////////////////////////////////
+   if(!test::test_void_allocator
+         < map<int, int, std::less<int>, new_allocator<void> >
+         , new_allocator< std::pair<const int, int> > >()) {
+      std::cerr << "test_void_allocator map failed" << std::endl;
+      return 1;
    }
 
    ////////////////////////////////////

@@ -2050,6 +2050,65 @@ then the operation is constant time, even with an O(1) size.
 
 [endsect]
 
+[section:void_allocator_argument The ['void] allocator argument]
+
+[*Boost.Container] treats `void` specially in the allocator template argument in two
+related ways, so that the container's `allocator_type` always has the correct
+`value_type`. This applies to sequence and associative containers alike
+(including [classref boost::container::map map], where the rebound
+`value_type` is `std::pair<const Key, T>`).
+
+[section:void_allocator_type Allocator template argument is ['void]]
+
+When the allocator argument is the type `void`, the library selects its
+default allocator for the container's `value_type`.
+
+[endsect]
+
+[section:void_value_type_allocator Allocator with ['void] value type]
+
+Standard containers typically require the allocator's `value_type` to match the
+container's element type, which forces repeating that type in every declaration:
+
+``
+boost::container::vector<MyType, MyAlloc<MyType> > v;
+boost::container::map   <Key, T, Compare, MyAlloc< std::pair<const Key, T> > > m;
+``
+
+[*Boost.Container] also accepts an allocator whose `value_type` is `void`,
+so that those types can be used as type-erased allocators. The container's
+`allocator_type` is the rebound allocator.
+
+[import ../example/doc_void_allocator.cpp]
+[doc_void_allocator]
+
+[*Benefits]. Accepting void-valued allocators has several advantages:
+
+* [*The element type is written once]. In `vector<MyType, MyAlloc<MyType> >` the
+  element type appears twice and both occurrences must be kept in sync.
+
+* [*It avoids a whole class of `value_type` mismatches in associative containers],
+  where the required allocator `value_type` is not the obvious one and is not even
+  the same across container families:
+  [classref boost::container::map map] requires
+  `MyAlloc< std::pair<const Key, T> >` (note the `const`) whereas
+  [classref boost::container::flat_map flat_map] requires
+  `MyAlloc< std::pair<Key, T> >` (no `const`). Writing `MyAlloc<void>` is correct
+  for both.
+
+* [*It removes rebinding boilerplate from generic code]. Code that is parameterized
+  on an allocator and instantiates containers of several element types no longer
+  needs to explicitly rebind, the allocator can be forwarded as a single template argument.
+
+Rebinding happens entirely at compile time, so there is no runtime cost.
+Since the container's `allocator_type` is the rebound allocator, so
+`AllocatorAwareContainer` semantics (propagation traits, `get_allocator()`,
+allocator-extended constructors) are unchanged.
+
+[endsect]
+
+[endsect]
+
 [endsect]
 
 [section:configurable_containers Extended functionality: Configurable containers]
@@ -2833,6 +2892,9 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
 [section:release_notes Release Notes]
 
 [section:release_notes_boost_1_93_00 Boost 1.93 Release]
+
+* Containers now accept allocators whose \c value_type is \c void; such allocators
+  are rebound to the container's element type via \c real_allocator.
 
 * Added overaligned support for [classref boost::container::pmr::monotonic_buffer_resource monotonic_buffer_resource]. 
 

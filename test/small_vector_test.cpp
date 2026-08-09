@@ -12,6 +12,7 @@
 #include "vector_test.hpp"
 #include "movable_int.hpp"
 #include "propagate_allocator_test.hpp"
+#include "void_allocator_test.hpp"
 #include "default_init_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 
@@ -486,6 +487,16 @@ int main()
 
    if (test::vector_test< small_vector<int, 2000> >())
       return 1;
+
+   ////////////////////////////////////
+   //    Void value_type allocator
+   ////////////////////////////////////
+   if(!test::test_void_allocator
+         < small_vector<int, 8, new_allocator<void> >
+         , new_allocator<int> >()) {
+      std::cerr << "test_void_allocator small_vector failed" << std::endl;
+      return 1;
+   }
 
    if (test_cont_variants< new_allocator<void> >())
       return 1;

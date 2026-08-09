@@ -14,6 +14,8 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <boost/container/experimental/nest.hpp>
+#include "void_allocator_test.hpp"
+#include <boost/container/new_allocator.hpp>
 #include "lightweight_test.hpp"
 #include <boost/core/pointer_traits.hpp>
 #include <boost/move/core.hpp>
@@ -994,6 +996,14 @@ int main()
       test_all<nest_stateful_t>(stateful_allocator<int>(42));
       test_move_with_unequal_allocators<nest_stateful_t>();
    }
+
+   
+   ////////////////////////////////////
+   //    Void value_type allocator
+   ////////////////////////////////////
+   BOOST_TEST((test::test_void_allocator
+         < nest<int, new_allocator<void> >
+         , new_allocator<int> >()));
 
    return boost::report_errors();
 }

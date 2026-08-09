@@ -821,8 +821,9 @@ struct get_vector_opt<void, AllocatorSizeType>
 //! elements in a vector may vary dynamically; memory management is automatic.
 //!
 //! \tparam T The type of object that is stored in the vector
-//! \tparam A The allocator used for all internal memory management, use void
-//!   for the default allocator
+//! \tparam A The allocator used for all internal memory management. Use void
+//!   for the default allocator. An allocator whose \c value_type is \c void
+//!   is rebound to \c T.
 //! \tparam Options A type produced from \c boost::container::vector_options.
 template <class T, class A BOOST_CONTAINER_DOCONLY(= void), class Options BOOST_CONTAINER_DOCONLY(= void) >
 class vector

@@ -40,8 +40,9 @@ namespace container {
 //! and removal of elements at the end of the sequence, and linear time insertion and removal of elements in the middle.
 //!
 //! \tparam T The type of object that is stored in the deque
-//! \tparam A The allocator used for all internal memory management, use void
-//!   for the default allocator
+//! \tparam A The allocator used for all internal memory management. Use void
+//!   for the default allocator. An allocator whose \c value_type is \c void
+//!   is rebound to \c T.
 //! \tparam Options A type produced from \c boost::container::deque_options.
 template <class T, class Allocator = void, class Options = void>
 #else

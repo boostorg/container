@@ -10,6 +10,7 @@
 
 #include <boost/container/pmr/set.hpp>
 #include <boost/container/detail/type_traits.hpp>
+#include "void_allocator_test.hpp"
 #include <boost/container/pmr/monotonic_buffer_resource.hpp>
 
 int main()
@@ -26,5 +27,17 @@ int main()
    intcontainer_t cont(pmr::get_default_resource());
    typedef intcontainer_t::value_type value_type;
    cont.insert(value_type());
+   ////////////////////////////////////
+   //    Void value_type allocator
+   ////////////////////////////////////
+   {
+      typedef set<int, std::less<int>, pmr::polymorphic_allocator<void> > voidalloc_cont_t;
+      if(!test::test_void_allocator
+            < voidalloc_cont_t
+            , pmr::polymorphic_allocator<int> >()) {
+         return 1;
+      }
+   }
+
    return 0;
 }

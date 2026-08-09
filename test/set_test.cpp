@@ -9,6 +9,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 #include <set>
+#include <iostream>
 #include <boost/container/set.hpp>
 #include <boost/container/adaptive_pool.hpp>
 
@@ -17,6 +18,7 @@
 #include "dummy_test_allocator.hpp"
 #include "set_test.hpp"
 #include "propagate_allocator_test.hpp"
+#include "void_allocator_test.hpp"
 #include "emplace_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 #include <utility> //for std::pair
@@ -433,6 +435,16 @@ int main ()
          < set<test::movable_int, less_transparent>
          >())
       return 1;
+
+   ////////////////////////////////////
+   //    Void value_type allocator
+   ////////////////////////////////////
+   if(!test::test_void_allocator
+         < set<int, std::less<int>, new_allocator<void> >
+         , new_allocator<int> >()) {
+      std::cerr << "test_void_allocator set failed" << std::endl;
+      return 1;
+   }
 
    ////////////////////////////////////
    //    Testing allocator implementations

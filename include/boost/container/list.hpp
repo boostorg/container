@@ -108,8 +108,9 @@ struct intrusive_list_type
 //! or mutation is explicit.
 //!
 //! \tparam T The type of object that is stored in the list
-//! \tparam Allocator The allocator used for all internal memory management, use void
-//!   for the default allocator
+//! \tparam Allocator The allocator used for all internal memory management. Use void
+//!   for the default allocator. An allocator whose \c value_type is \c void
+//!   is rebound to \c T.
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class T, class Allocator = void >
 class list

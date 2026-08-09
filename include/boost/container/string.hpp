@@ -602,7 +602,9 @@ class basic_string_base
 //!
 //! \tparam CharT The type of character it contains.
 //! \tparam Traits The Character Traits type, which encapsulates basic character operations
-//! \tparam Allocator The allocator, used for internal memory management.
+//! \tparam Allocator The allocator, used for internal memory management. Use void
+//!   for the default allocator. An allocator whose \c value_type is \c void
+//!   is rebound to \c CharT.
 //! \tparam Options A type produced from \c boost::container::string_options.
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
 template <class CharT, class Traits = std::char_traits<CharT>, class Allocator = void, class Options = void >

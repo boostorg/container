@@ -67,7 +67,8 @@ namespace container {
 //! \tparam T is the <code>mapped_type</code>
 //! \tparam Compare is the ordering function for Keys (e.g. <i>std::less<Key></i>).
 //! \tparam Allocator is the allocator to allocate the <code>value_type</code>s
-//!   (e.g. <i>allocator< std::pair<const Key, T> > </i>).
+//!   (e.g. <i>allocator< std::pair<const Key, T> > </i>). An allocator whose
+//!   \c value_type is \c void is rebound to the map's \c value_type.
 //! \tparam Options is an packed option type generated using using boost::container::tree_assoc_options.
 template < class Key, class T, class Compare = std::less<Key>
          , class Allocator = void, class Options = tree_assoc_defaults >
@@ -1610,7 +1611,8 @@ namespace container {
 //! \tparam Value is the <code>mapped_type</code>
 //! \tparam Compare is the ordering function for Keys (e.g. <i>std::less<Key></i>).
 //! \tparam Allocator is the allocator to allocate the <code>value_type</code>s
-//!   (e.g. <i>allocator< std::pair<const Key, T> > </i>).
+//!   (e.g. <i>allocator< std::pair<const Key, T> > </i>). An allocator whose
+//!   \c value_type is \c void is rebound to the map's \c value_type.
 //! \tparam Options is an packed option type generated using using boost::container::tree_assoc_options.
 template < class Key, class T, class Compare = std::less<Key>
          , class Allocator = new_allocator< std::pair< const Key, T> >, class Options = tree_assoc_defaults>

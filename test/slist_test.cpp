@@ -16,6 +16,7 @@
 #include "movable_int.hpp"
 #include "list_test.hpp"
 #include "propagate_allocator_test.hpp"
+#include "void_allocator_test.hpp"
 #include "emplace_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 
@@ -194,6 +195,16 @@ int main ()
          }
       }
    }
+   ////////////////////////////////////
+   //    Void value_type allocator
+   ////////////////////////////////////
+   if(!test::test_void_allocator
+         < slist<int, new_allocator<void> >
+         , new_allocator<int> >()) {
+      std::cerr << "test_void_allocator slist failed" << std::endl;
+      return 1;
+   }
+
    ////////////////////////////////////
    //    Testing allocator implementations
    ////////////////////////////////////

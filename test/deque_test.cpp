@@ -30,6 +30,7 @@
 #include <string>
 #include "emplace_test.hpp"
 #include "propagate_allocator_test.hpp"
+#include "void_allocator_test.hpp"
 #include "vector_test.hpp"
 #include "default_init_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
@@ -460,6 +461,16 @@ int main ()
       d.resize(1);
    }
 
+
+   ////////////////////////////////////
+   //    Void value_type allocator
+   ////////////////////////////////////
+   if(!test::test_void_allocator
+         < deque<int, new_allocator<void> >
+         , new_allocator<int> >()) {
+      std::cerr << "test_void_allocator deque failed" << std::endl;
+      return 1;
+   }
 
    ////////////////////////////////////
    //    Allocator implementations

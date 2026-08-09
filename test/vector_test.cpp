@@ -28,6 +28,7 @@
 #include "expand_bwd_test_allocator.hpp"
 #include "expand_bwd_test_template.hpp"
 #include "propagate_allocator_test.hpp"
+#include "void_allocator_test.hpp"
 #include "vector_test.hpp"
 #include "default_init_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
@@ -269,6 +270,16 @@ int main()
       vector<recursive_vector> move_assign;
       move_assign = boost::move(move_ctor);
       move_assign.swap(original);
+   }
+
+   ////////////////////////////////////
+   //    Void value_type allocator
+   ////////////////////////////////////
+   if(!test::test_void_allocator
+         < vector<int, new_allocator<void> >
+         , new_allocator<int> >()) {
+      std::cerr << "test_void_allocator vector failed" << std::endl;
+      return 1;
    }
 
    ////////////////////////////////////

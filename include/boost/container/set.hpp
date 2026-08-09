@@ -59,7 +59,8 @@ namespace container {
 //!
 //! \tparam Key is the type to be inserted in the set, which is also the key_type
 //! \tparam Compare is the comparison functor used to order keys
-//! \tparam Allocator is the allocator to be used to allocate memory for this container
+//! \tparam Allocator is the allocator to be used to allocate memory for this container.
+//!   An allocator whose \c value_type is \c void is rebound to \c Key.
 //! \tparam Options is an packed option type generated using using boost::container::tree_assoc_options.
 template <class Key, class Compare = std::less<Key>, class Allocator = new_allocator<Key>, class Options = void>
 #else
@@ -1139,7 +1140,8 @@ namespace container {
 //!
 //! \tparam Key is the type to be inserted in the set, which is also the key_type
 //! \tparam Compare is the comparison functor used to order keys
-//! \tparam Allocator is the allocator to be used to allocate memory for this container
+//! \tparam Allocator is the allocator to be used to allocate memory for this container.
+//!   An allocator whose \c value_type is \c void is rebound to \c Key.
 //! \tparam Options is an packed option type generated using using boost::container::tree_assoc_options.
 template <class Key, class Compare = std::less<Key>, class Allocator = new_allocator<Key>, class Options = tree_assoc_defaults >
 #else

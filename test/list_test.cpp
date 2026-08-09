@@ -17,6 +17,7 @@
 #include "movable_int.hpp"
 #include "list_test.hpp"
 #include "propagate_allocator_test.hpp"
+#include "void_allocator_test.hpp"
 #include "emplace_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 
@@ -173,6 +174,16 @@ int main ()
       list<recursive_list> move_assign;
       move_assign = boost::move(move_ctor);
       move_assign.swap(original);
+   }
+
+   ////////////////////////////////////
+   //    Void value_type allocator
+   ////////////////////////////////////
+   if(!test::test_void_allocator
+         < list<int, new_allocator<void> >
+         , new_allocator<int> >()) {
+      std::cerr << "test_void_allocator list failed" << std::endl;
+      return 1;
    }
 
    ////////////////////////////////////

@@ -9,6 +9,8 @@
 //////////////////////////////////////////////////////////////////////////////
 #include <cstddef>
 #include <boost/container/allocator_traits.hpp>
+#include <boost/container/new_allocator.hpp>
+#include <boost/container/vector.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/function_detector.hpp>
 #include <boost/container/detail/pair.hpp>
@@ -17,6 +19,7 @@
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #include <boost/move/detail/fwd_macros.hpp>
 #endif
+#include "dummy_test_allocator.hpp"
 #include "lightweight_test.hpp"
 
 template<class T>
@@ -254,10 +257,33 @@ void test_void_allocator()
    boost::container::allocator_traits<ComplexAllocator<void> > comtraits; (void)comtraits;
 }
 
+void test_real_allocator_void_value_type()
+{
+   using namespace boost::container;
+   using namespace boost::container::dtl;
+
+   BOOST_CONTAINER_STATIC_ASSERT((is_same<real_allocator<int, void>::type, new_allocator<int> >::value));
+   BOOST_CONTAINER_STATIC_ASSERT((is_same<real_allocator<int, SimpleAllocator<int> >::type, SimpleAllocator<int> >::value));
+   BOOST_CONTAINER_STATIC_ASSERT((is_same<real_allocator<int, SimpleAllocator<void> >::type, SimpleAllocator<int> >::value));
+   BOOST_CONTAINER_STATIC_ASSERT((is_same<real_allocator<int, ComplexAllocator<void> >::type, ComplexAllocator<int> >::value));
+
+   typedef vector<int, test::simple_allocator<void> > vector_t;
+   BOOST_CONTAINER_STATIC_ASSERT((is_same<vector_t::allocator_type, test::simple_allocator<int> >::value));
+
+   test::simple_allocator<void> a;
+   vector_t v(a);
+   v.push_back(1);
+   v.push_back(2);
+   BOOST_TEST(v.size() == 2u);
+   BOOST_TEST(v[0] == 1);
+   BOOST_TEST(v[1] == 2);
+}
+
 int main()
 {
    using namespace boost::container::dtl;
    test_void_allocator();
+   test_real_allocator_void_value_type();
 
    //SimpleAllocator
    BOOST_CONTAINER_STATIC_ASSERT(( is_same<boost::container::allocator_traits

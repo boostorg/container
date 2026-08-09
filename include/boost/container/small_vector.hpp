@@ -802,7 +802,7 @@ inline typename small_vector_allocator<T, VoidAlloc, Options>::pointer
 //! \tparam T The type of object that is stored in the small_vector
 //! \tparam N The number of preallocated elements stored inside small_vector. It shall be less than Allocator::max_size();
 //! \tparam Allocator The allocator used for memory management when the number of elements exceeds N. Use void
-//!   for the default allocator
+//!   for the default allocator. An allocator whose \c value_type is \c void is rebound to \c T.
 //! \tparam Options A type produced from \c boost::container::small_vector_options.
 template <class T, std::size_t N, class Allocator BOOST_CONTAINER_DOCONLY(= void), class Options BOOST_CONTAINER_DOCONLY(= void) >
 class small_vector

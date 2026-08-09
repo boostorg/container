@@ -14,6 +14,8 @@
 
 #include <boost/container/vector.hpp>
 #include <boost/container/string.hpp>
+#include "void_allocator_test.hpp"
+#include <boost/container/new_allocator.hpp>
 #include <string>
 #include <vector>
 #include <boost/container/detail/algorithm.hpp> //equal()
@@ -2489,5 +2491,13 @@ int main()
 
    test_with_lightweight_test();
 
-   return boost::report_errors();
+   
+   ////////////////////////////////////
+   //    Void value_type allocator
+   ////////////////////////////////////
+   BOOST_TEST((test::test_void_allocator
+         < basic_string<char, std::char_traits<char>, new_allocator<void> >
+         , new_allocator<char> >()));
+
+return boost::report_errors();
 }

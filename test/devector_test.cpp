@@ -25,6 +25,7 @@
 #include <boost/type_traits/is_nothrow_move_constructible.hpp>
 #include "dummy_test_allocator.hpp"
 #include "propagate_allocator_test.hpp"
+#include "void_allocator_test.hpp"
 #include "check_equal_containers.hpp"
 #include "movable_int.hpp"
 
@@ -3905,6 +3906,16 @@ int main()
    //    Allocator implementations
    ////////////////////////////////////
    //       std:allocator
+   ////////////////////////////////////
+   //    Void value_type allocator
+   ////////////////////////////////////
+   if(!test::test_void_allocator
+         < devector<int, new_allocator<void> >
+         , new_allocator<int> >()) {
+      std::cerr << "test_void_allocator devector failed" << std::endl;
+      return 1;
+   }
+
    if (test_cont_variants< std::allocator<void> >()) {
       std::cerr << "test_cont_variants< std::allocator<void> > failed" << std::endl;
       return 1;

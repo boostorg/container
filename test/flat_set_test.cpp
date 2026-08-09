@@ -24,6 +24,7 @@
 #include "movable_int.hpp"
 #include "set_test.hpp"
 #include "propagate_allocator_test.hpp"
+#include "void_allocator_test.hpp"
 #include "emplace_test.hpp"
 #include "container_common_tests.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
@@ -682,6 +683,16 @@ int main()
       return 1;
 
    if(!test_heterogeneous_lookup_by_partial_key()){
+      return 1;
+   }
+
+   ////////////////////////////////////
+   //    Void value_type allocator
+   ////////////////////////////////////
+   if(!test::test_void_allocator
+         < flat_set<int, std::less<int>, new_allocator<void> >
+         , new_allocator<int> >()) {
+      std::cerr << "test_void_allocator flat_set failed" << std::endl;
       return 1;
    }
 

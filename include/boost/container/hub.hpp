@@ -921,7 +921,8 @@ struct block_typedefs
 //!
 //! \tparam T The cv-unqualified object type of the elements stored in the hub.
 //! \tparam Allocator An allocator whose value type is \c T. If \c void (the
-//!   default), \c boost::container::new_allocator<T> is used.
+//!   default), \c boost::container::new_allocator<T> is used. An allocator
+//!   whose \c value_type is \c void is rebound to \c T.
 //!
 //! <b>Exception safety</b>: Except when explicitly noted, all non-const member
 //!   functions (and free functions taking \c hub by non-const reference) provide
@@ -937,7 +938,8 @@ class hub
 #endif
 {
    public:
-   //! new_allocator<T> is if Allocator is void, an alias for Allocator otherwise.
+   //! \c new_allocator<T> if Allocator is void, the allocator rebound to \c T
+   //! if Allocator's \c value_type is \c void, otherwise an alias for Allocator.
    typedef BOOST_CONTAINER_IMPDEF
       (typename real_allocator<T BOOST_MOVE_I AllocatorOrVoid>::type)     allocator_type;
 

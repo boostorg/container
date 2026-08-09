@@ -19,6 +19,8 @@
 #include "expand_bwd_test_template.hpp"
 #include "dummy_test_allocator.hpp"
 #include "propagate_allocator_test.hpp"
+#include "void_allocator_test.hpp"
+#include <boost/container/new_allocator.hpp>
 #include "vector_test.hpp"
 #include "default_init_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
@@ -125,6 +127,16 @@ int main()
       sv.emplace_back();
       sv.resize(10);
       sv.resize(1);
+   }
+
+   ////////////////////////////////////
+   //    Void value_type allocator
+   ////////////////////////////////////
+   if(!test::test_void_allocator
+         < stable_vector<int, new_allocator<void> >
+         , new_allocator<int> >()) {
+      std::cerr << "test_void_allocator stable_vector failed" << std::endl;
+      return 1;
    }
 
    ////////////////////////////////////

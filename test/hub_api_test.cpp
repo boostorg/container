@@ -17,6 +17,8 @@ int main() { return 0; }
 #include <boost/config.hpp>
 #include <boost/config/workaround.hpp>
 #include <boost/container/hub.hpp>
+#include "void_allocator_test.hpp"
+#include <boost/container/new_allocator.hpp>
 #include <boost/container/pmr/hub.hpp>
 #include <boost/container/throw_exception.hpp>
 #include <boost/core/allocator_access.hpp>
@@ -783,7 +785,15 @@ int main()
 
   test_ctad<boost::container::hub>();
 
-  return boost::report_errors();
+  
+   ////////////////////////////////////
+   //    Void value_type allocator
+   ////////////////////////////////////
+   BOOST_TEST((boost::container::test::test_void_allocator
+         < boost::container::hub<int, boost::container::new_allocator<void> >
+         , boost::container::new_allocator<int> >()));
+
+   return boost::report_errors();
 }
 
 #endif
