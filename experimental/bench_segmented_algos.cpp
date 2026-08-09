@@ -96,7 +96,11 @@
 #define SET_UNION 46
 #define PARTITION_COPY 47
 
-#define BENCH_IF_ALGO(id) (!defined(ALGO) || (ALGO == (id)))
+#if !defined(ALGO)
+#define ALGO 0
+#endif
+
+#define BENCH_IF_ALGO(id) ((ALGO == 0) || (ALGO == (id)))
 
 #if BENCH_IF_ALGO(ALL_OF)
 #include <boost/container/experimental/segmented_all_of.hpp>
