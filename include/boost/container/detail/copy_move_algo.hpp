@@ -61,6 +61,10 @@
 #     pragma GCC diagnostic ignored "-Wstringop-overflow"
 #  endif
 #  pragma GCC diagnostic ignored "-Warray-bounds"
+//GCC reports a spurious -Wnonnull on memmove/memset once empty-container
+//insert paths are inlined: the call is on a dead branch, but the compiler
+//still sees a null buffer pointer.
+#  pragma GCC diagnostic ignored "-Wnonnull"
 #endif
 
 namespace boost {
@@ -232,7 +236,8 @@ inline F memmove(I f, I l, F r) BOOST_NOEXCEPT_OR_NOTHROW
    value_type *const dest_raw = boost::movelib::iterator_to_raw_pointer(r);
    const value_type *const beg_raw = boost::movelib::iterator_to_raw_pointer(f);
    const value_type *const end_raw = boost::movelib::iterator_to_raw_pointer(l);
-   if(BOOST_LIKELY(beg_raw != end_raw && dest_raw && beg_raw)){
+   if(BOOST_LIKELY(beg_raw != end_raw)){
+      BOOST_ASSERT(dest_raw && beg_raw);
       const std::size_t n = std::size_t(end_raw - beg_raw)   ;
       std::memmove(reinterpret_cast<void *>(dest_raw), beg_raw, sizeof(value_type)*n);
       r += static_cast<r_difference_type>(n);
@@ -250,8 +255,8 @@ inline F memmove_n(I f, std::size_t n, F r) BOOST_NOEXCEPT_OR_NOTHROW
    if(BOOST_LIKELY(n != 0)){
       void *dst = boost::movelib::iterator_to_raw_pointer(r);
       const void *src = boost::movelib::iterator_to_raw_pointer(f);
-      if (dst && src)
-         std::memmove(dst, src, sizeof(value_type)*n);
+      BOOST_ASSERT(dst && src);
+      std::memmove(dst, src, sizeof(value_type)*n);
       r += static_cast<r_difference_type>(n);
    }
 
@@ -268,8 +273,8 @@ inline I memmove_n_source(I f, std::size_t n, F r) BOOST_NOEXCEPT_OR_NOTHROW
       typedef typename boost::container::iterator_traits<I>::difference_type i_difference_type;
       void *dst = boost::movelib::iterator_to_raw_pointer(r);
       const void *src = boost::movelib::iterator_to_raw_pointer(f);
-      if (dst && src)
-         std::memmove(dst, src, sizeof(value_type)*n);
+      BOOST_ASSERT(dst && src);
+      std::memmove(dst, src, sizeof(value_type)*n);
       f += static_cast<i_difference_type>(n);
    }
    return f;
@@ -287,8 +292,8 @@ inline I memmove_n_source_dest(I f, std::size_t n, F &r) BOOST_NOEXCEPT_OR_NOTHR
    if(BOOST_LIKELY(n != 0)){
       void *dst = boost::movelib::iterator_to_raw_pointer(r);
       const void *src = boost::movelib::iterator_to_raw_pointer(f);
-      if (dst && src)
-         std::memmove(dst, src, sizeof(value_type)*n);
+      BOOST_ASSERT(dst && src);
+      std::memmove(dst, src, sizeof(value_type)*n);
       f += i_difference_type(n);
       r += f_difference_type(n);
    }
@@ -668,7 +673,9 @@ inline typename dtl::enable_if_memzero_initializable<F, F>::type
    typedef typename boost::container::iterator_traits<F>::difference_type r_difference_type;
 
    if (BOOST_LIKELY(n != 0)){
-      std::memset((void*)boost::movelib::iterator_to_raw_pointer(r), 0, sizeof(value_type)*n);
+      void *const dst = (void*)boost::movelib::iterator_to_raw_pointer(r);
+      BOOST_ASSERT(dst);
+      std::memset(dst, 0, sizeof(value_type)*n);
       r += static_cast<r_difference_type>(n);
    }
    return r;
@@ -972,7 +979,10 @@ inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, F>::type
    const std::size_t n = boost::container::iterator_udistance(f, l);
    if (BOOST_LIKELY(n != 0)){
       r -= n;
-      std::memmove(reinterpret_cast<void *>((boost::movelib::iterator_to_raw_pointer)(r)), (boost::movelib::iterator_to_raw_pointer)(f), sizeof(value_type)*n);
+      void *const dst = (boost::movelib::iterator_to_raw_pointer)(r);
+      const void *const src = (boost::movelib::iterator_to_raw_pointer)(f);
+      BOOST_ASSERT(dst && src);
+      std::memmove(dst, src, sizeof(value_type)*n);
    }
    return r;
 }
@@ -1006,9 +1016,10 @@ inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, F>::type
    typedef typename boost::container::iter_value<I>::type value_type;
    if (BOOST_LIKELY(n != 0)){
       r -= n;
-      std::memmove (reinterpret_cast<void *>((boost::movelib::iterator_to_raw_pointer)(r))
-                  , reinterpret_cast<const void *>((boost::movelib::iterator_to_raw_pointer)(l) - n)
-                  , sizeof(value_type)*n);
+      void *const dst = (boost::movelib::iterator_to_raw_pointer)(r);
+      const void *const src = (boost::movelib::iterator_to_raw_pointer)(l) - n;
+      BOOST_ASSERT(dst && src);
+      std::memmove(dst, src, sizeof(value_type)*n);
    }
    return r;
 }
@@ -1044,9 +1055,10 @@ inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, I>::type
    if (BOOST_LIKELY(n != 0)){
       r -= n;
       l -= n;
-      std::memmove( reinterpret_cast<void *>((boost::movelib::iterator_to_raw_pointer)(r))
-                  , l
-                  , sizeof(value_type)*n);
+      void *const dst = (boost::movelib::iterator_to_raw_pointer)(r);
+      const void *const src = (boost::movelib::iterator_to_raw_pointer)(l);
+      BOOST_ASSERT(dst && src);
+      std::memmove(dst, src, sizeof(value_type)*n);
    }
    return l;
 }
