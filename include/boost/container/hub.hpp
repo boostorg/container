@@ -1078,7 +1078,8 @@ public:
    //! <b>Requires</b>: T is CopyInsertable into the hub.
    //!
    //! <b>Complexity</b>: Linear in il.size().
-   hub(std::initializer_list<T> il, const allocator_type& al_ = allocator_type()):
+   hub(std::initializer_list<T> il
+      , const BOOST_CONTAINER_DOC1ST(allocator_type, dtl::type_identity_t<allocator_type>) &al_ = allocator_type()):
       hub(il.begin(), il.end(), al_) {}
 
    //! <b>Effects</b>: Destroys all elements and deallocates all blocks.
