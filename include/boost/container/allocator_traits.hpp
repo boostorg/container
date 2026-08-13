@@ -746,16 +746,37 @@ struct allocator_traits
 //! portable_rebind_alloc is only formed when value_type is void (partial
 //! specialization). Eager if_c would break allocators that are not
 //! pointer_rebind-able (e.g. static_storage_allocator).
+//!
+//! The default argument must not form AllocatorOrVoid::value_type when
+//! AllocatorOrVoid is void: GCC 7 instantiates real_allocator's primary
+//! template (and thus this default) while forming hub's initializer_list
+//! constructor / C++17 deduction guides.
 
 #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
+namespace dtl {
+
+template<class A, bool = is_same<A, void>::value>
+struct is_void_value_type
+{
+   BOOST_STATIC_CONSTEXPR bool value = is_same<typename A::value_type, void>::value;
+};
+
+template<class A>
+struct is_void_value_type<A, true>
+{
+   BOOST_STATIC_CONSTEXPR bool value = false;
+};
+
+}  //namespace dtl {
+
 template
    < class T
    , class AllocatorOrVoid
-   , bool = dtl::is_same<typename AllocatorOrVoid::value_type, void>::value
+   , bool = dtl::is_void_value_type<AllocatorOrVoid>::value
    >
 struct real_allocator_rebind
 {
@@ -767,6 +788,12 @@ struct real_allocator_rebind<T, AllocatorOrVoid, true>
 {
    typedef typename allocator_traits<AllocatorOrVoid>::template
       portable_rebind_alloc<T>::type type;
+};
+
+template<class T>
+struct real_allocator_rebind<T, void>
+{
+   typedef new_allocator<T> type;
 };
 
 #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
