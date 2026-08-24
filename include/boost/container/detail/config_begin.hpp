@@ -59,9 +59,19 @@
 #if BOOST_GCC < 90300
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #endif
+//-Wsuggest-override asks for a keyword the language does not have
+#if defined(BOOST_NO_CXX11_OVERRIDE) && (BOOST_GCC >= 50100)
+#pragma GCC diagnostic ignored "-Wsuggest-override"
+#endif
 #endif
 
 #if defined(BOOST_CLANG)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpass-failed"   // ignore some missed optimization warnings
+//See the note on -Wsuggest-override above
+#if defined(BOOST_NO_CXX11_OVERRIDE) && defined(__has_warning)
+#if __has_warning("-Wsuggest-override")
+#pragma clang diagnostic ignored "-Wsuggest-override"
+#endif
+#endif
 #endif

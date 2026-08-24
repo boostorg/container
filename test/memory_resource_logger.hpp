@@ -16,6 +16,9 @@
 #include <boost/container/throw_exception.hpp>
 #include <cstdlib>
 
+//config_begin/config_end also silence -Wsuggest-override in C++03
+#include <boost/container/detail/config_begin.hpp>
+
 class memory_resource_logger
    : public boost::container::pmr::memory_resource
 {
@@ -83,5 +86,7 @@ class memory_resource_logger
       m_mismatches = 0u;
    }
 };
+
+#include <boost/container/detail/config_end.hpp>
 
 #endif   //#ifndef BOOST_CONTAINER_TEST_MEMORY_RESOURCE_TESTER_HPP

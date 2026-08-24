@@ -13,6 +13,9 @@
 
 #include <boost/container/pmr/memory_resource.hpp>
 
+//config_begin/config_end also silence -Wsuggest-override in C++03
+#include <boost/container/detail/config_begin.hpp>
+
 class derived_from_memory_resource
    : public boost::container::pmr::memory_resource
 {
@@ -83,5 +86,7 @@ class derived_from_memory_resource
 };
 
 bool derived_from_memory_resource::destructor_called = false;
+
+#include <boost/container/detail/config_end.hpp>
 
 #endif   //#ifndef BOOST_CONTAINER_TEST_DERIVED_FROM_MEMORY_RESOURCE_HPP
