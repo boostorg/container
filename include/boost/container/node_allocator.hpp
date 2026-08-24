@@ -283,6 +283,7 @@ class node_allocator
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       dlmalloc_memchain ch;
+      BOOST_CONTAINER_MEMCHAIN_INIT(&ch);
       dlmalloc_multialloc_arrays(n_elements, elem_sizes, sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch);
       if(BOOST_UNLIKELY(BOOST_CONTAINER_MEMCHAIN_EMPTY(&ch))){
          boost::container::throw_bad_alloc();
