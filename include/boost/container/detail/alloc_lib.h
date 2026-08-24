@@ -109,7 +109,7 @@ typedef struct boost_cont_memchain_impl
    do{\
       boost_cont_memchain *____chain____ = (PMEMCHAIN);\
       boost_cont_memchain_node *____tmp_mem____   = (boost_cont_memchain_node *)(MEM);\
-      boost_cont_memchain *____root____  = &((PMEMCHAIN)->root_node);\
+      boost_cont_memchain_node *____root____  = &((PMEMCHAIN)->root_node);\
       if(!____chain____->root_node.next_node_ptr){\
          ____chain____->last_node_ptr = ____tmp_mem____;\
       }\
