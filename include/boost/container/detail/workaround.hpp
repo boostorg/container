@@ -315,6 +315,13 @@ namespace boost {
 //Marks the listed (1-based) pointer parameters as never null, allowing the
 //compiler to assume so at call sites and warn if a null literal is passed.
 //No-op on compilers lacking the attribute (e.g. MSVC).
+//
+//C++03 does not have variadic macros (the compilers that offer the attribute
+//all support them as an extension, but -pedantic triggers the warning).
+#if defined(__GNUC__) || defined(__clang__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wvariadic-macros"
+#endif
 #if defined(__has_attribute)
 #  if __has_attribute(nonnull)
 #     define BOOST_CONTAINER_NONNULL(...) __attribute__((nonnull(__VA_ARGS__)))
@@ -322,6 +329,9 @@ namespace boost {
 #endif
 #ifndef BOOST_CONTAINER_NONNULL
 #  define BOOST_CONTAINER_NONNULL(...)
+#endif
+#if defined(__GNUC__) || defined(__clang__)
+#  pragma GCC diagnostic pop
 #endif
 
 //Software prefetch hint for a raw pointer 'p' (no fancy-pointer support).
