@@ -272,7 +272,7 @@ class node_allocator
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after( chain.before_begin()
-                             , (T*)static_cast<void*>(BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch))
+                             , (T*)static_cast<void*>(BOOST_CONTAINER_MEMCHAIN_FIRSTMEM(&ch))
                              , (T*)static_cast<void*>(BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch))
                              , BOOST_CONTAINER_MEMCHAIN_SIZE(&ch));
    }
@@ -289,7 +289,7 @@ class node_allocator
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after( chain.before_begin()
-                             , (T*)static_cast<void*>(BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch))
+                             , (T*)static_cast<void*>(BOOST_CONTAINER_MEMCHAIN_FIRSTMEM(&ch))
                              , (T*)static_cast<void*>(BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch))
                              , BOOST_CONTAINER_MEMCHAIN_SIZE(&ch));
    }
