@@ -100,6 +100,26 @@ ForwardIt unique(ForwardIt first, ForwardIt const last)
    return first;
 }
 
+//Writes "number" as text without going through the CRT. std::sprintf is
+//deprecated in several compilers and there is no portable printf that is both
+//warning-free and available for every character type.
+template<class CharType>
+void write_number(CharType *buffer, unsigned long long number, const CharType *digits)
+{
+   CharType *buf = buffer;
+   bool go_ahead = true;
+   while(go_ahead){
+      const unsigned long long rem = number % 10u;
+      number = number / 10u;
+      *buf = digits[rem];
+      ++buf;
+      if(!number){
+         *buf = 0;
+         go_ahead = false;
+      }
+   }
+}
+
 template<class CharType>
 struct string_literals;
 
@@ -116,30 +136,8 @@ struct string_literals<char>
       {  return "LongLongLongLongLongLongLongLongLongLongLongLongLongString";  }
    static char Char()
       {  return 'C';  }
-   static void sprintf_number(char *buf, int number)
-   {
-      std::sprintf(buf, "%i", number);
-   }
-   static void sprintf_number(char *buf, unsigned number)
-   {
-      std::sprintf(buf, "%u", number);
-   }
-   static void sprintf_number(char *buf, long number)
-   {
-      std::sprintf(buf, "%li", number);
-   }
-   static void sprintf_number(char *buf, unsigned long number)
-   {
-      std::sprintf(buf, "%lu", number);
-   }
-   static void sprintf_number(char *buf, long long number)
-   {
-      std::sprintf(buf, "%lli", number);
-   }
-   static void sprintf_number(char *buf, unsigned long long number)
-   {
-      std::sprintf(buf, "%llu", number);
-   }
+   static void sprintf_number(char *buffer, unsigned long long number)
+   {  write_number(buffer, number, "0123456789");  }
 };
 
 template<>
@@ -156,25 +154,7 @@ struct string_literals<wchar_t>
    static wchar_t Char()
       {  return L'C';  }
    static void sprintf_number(wchar_t *buffer, unsigned long long number)
-   {
-      //For compilers without wsprintf, print it backwards
-      const wchar_t *digits = L"0123456789";
-      wchar_t *buf = buffer;
-
-      bool go_ahead = true;
-      while(go_ahead){
-         unsigned long long rem = number % 10;
-         number  = number / 10;
-
-         *buf = digits[rem];
-         ++buf;
-         if(!number){
-            *buf = 0;
-            go_ahead = false;
-         }
-      }
-
-   }
+   {  write_number(buffer, number, L"0123456789");  }
 };
 
 template<class CharType>
