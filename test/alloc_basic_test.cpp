@@ -12,6 +12,7 @@
 #include <boost/container/allocator.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/list.hpp>
+#include "extended_allocator_test.hpp"
 
 using namespace boost::container;
 
@@ -115,5 +116,12 @@ int main()
       return 1;
    if(!list_test())
       return 1;
+   //The Version 2 chain interface: containers reach it only for some
+   //sizes, so exercise it directly.
+   if(boost::container::test::extended_allocator_test< allocator<int, 2> >("allocator<int>"))
+      return 1;
+   if(boost::container::test::extended_allocator_test< allocator<double, 2> >("allocator<double>"))
+      return 1;
+
    return 0;
 }
