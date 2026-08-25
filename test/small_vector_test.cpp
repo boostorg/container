@@ -295,6 +295,25 @@ bool test_small_vector_base_test()
 //small vector has internal storage so some special swap cases must be tested
 bool test_swap()
 {
+   {  //Unqualified swap must use small_vector's capacity-aware swap through ADL
+      typedef boost::container::small_vector<int, 2> small_vec;
+      small_vec v;
+      v.push_back(1);
+      v.push_back(11);
+
+      small_vec w;
+      w.push_back(2);
+      w.push_back(22);
+
+      small_vec v_copy = v;
+      small_vec w_copy = w;
+
+      swap(v, w);
+
+      if (w != v_copy || v != w_copy || !v.is_small() || !w.is_small())
+         return false;
+   }
+
    typedef boost::container::small_vector<int, 10> vec;
    {  //v bigger than static capacity, w empty
       vec v;
