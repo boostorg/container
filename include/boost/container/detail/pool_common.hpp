@@ -21,6 +21,7 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
+#include <boost/container/container_fwd.hpp>   //bi namespace alias
 
 #include <boost/intrusive/slist.hpp>
 

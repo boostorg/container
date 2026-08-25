@@ -26,6 +26,7 @@
 #include <boost/container/detail/node_pool.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/multiallocation_chain.hpp>
+#include <boost/container/detail/version_type.hpp>
 #include <boost/move/detail/iterator_to_raw_pointer.hpp>
 #include <boost/container/detail/dlmalloc.hpp>
 #include <boost/container/detail/singleton.hpp>
