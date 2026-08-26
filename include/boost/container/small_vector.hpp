@@ -461,6 +461,14 @@ class small_vector_base
    inline void swap(small_vector_base &other)
    {  return this->base_type::prot_swap_small(other, 0u);  }
 
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Complexity</b>: Constant if both use heap storage, linear in the small
+   //!   buffers otherwise.
+   inline friend void swap(small_vector_base &x, small_vector_base &y)
+      BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
+   {  x.swap(y);  }
+
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED
    public:
    typedef T                                                                           value_type;
