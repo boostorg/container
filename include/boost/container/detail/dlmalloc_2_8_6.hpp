@@ -4999,8 +4999,15 @@ static void* internal_memalign(mstate m, size_t alignment, size_t bytes) {
     mem = internal_malloc(m, req);
     if (mem != 0) {
       mchunkptr p = mem2chunk(mem);
-      if (PREACTION(m))
+      if (PREACTION(m)) {
+        /* Boost.Container: upstream returns 0 here and leaks the block
+           internal_malloc() just returned. Nothing has been modified yet,
+           so hand it back through the normal free path, which takes the
+           lock itself: a transient acquisition failure no longer costs a
+           permanent leak. */
+        internal_free(m, mem);
         return 0;
+      }
       if ((((size_t)(mem)) & (alignment - 1)) != 0) { /* misaligned */
         /*
           Find an aligned spot inside chunk.  Since we need to give
@@ -5121,7 +5128,13 @@ static void** ialloc(mstate m,
   if (mem == 0)
     return 0;
 
-  if (PREACTION(m)) return 0;
+  if (PREACTION(m)) {
+    /* Boost.Container: as in internal_memalign - upstream leaks the block
+       internal_malloc() just returned. Nothing has been modified yet (the
+       mmap flag is already restored above), so give it back. */
+    internal_free(m, mem);
+    return 0;
+  }
   p = mem2chunk(mem);
   remainder_size = chunksize(p);
 
