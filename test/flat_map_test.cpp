@@ -23,6 +23,7 @@
 #include "emplace_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 #include "flat_map_test.hpp"
+#include "unqualified_swap_test.hpp"
 
 #include <map>
 #include <utility>
@@ -313,8 +314,29 @@ bool test_heterogeneous_lookup_by_partial_key()
 
 }}}   //namespace boost::container::test
 
+bool test_unqualified_swap()
+{
+   namespace us = boost_container_test_unqualified_swap;
+   {  typedef boost::container::flat_map<int, int> cont;
+      cont a;  a.insert(cont::value_type(1, 10));  a.insert(cont::value_type(2, 20));
+      cont b;  b.insert(cont::value_type(7, 70));  b.insert(cont::value_type(8, 80));
+      if(!us::test_unqualified_swap(a, b))
+         return false;
+   }
+   {  typedef boost::container::flat_multimap<int, int> cont;
+      cont a;  a.insert(cont::value_type(1, 10));  a.insert(cont::value_type(2, 20));
+      cont b;  b.insert(cont::value_type(7, 70));  b.insert(cont::value_type(8, 80));
+      if(!us::test_unqualified_swap(a, b))
+         return false;
+   }
+   return true;
+}
+
 int main()
 {
+   if(!test_unqualified_swap())
+      return 1;
+
    using namespace boost::container::test;
 
    //Allocator argument container

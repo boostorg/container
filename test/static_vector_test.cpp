@@ -15,6 +15,7 @@
 #include <boost/container/detail/config_begin.hpp>
 
 #include "static_vector_test.hpp"
+#include "unqualified_swap_test.hpp"
 
 
 template <typename T, size_t N>
@@ -717,8 +718,35 @@ void static_vector_triviality(){}
 BOOST_CONTAINER_STATIC_ASSERT_MSG(5*sizeof(void*) == sizeof(static_vector<void*, 4>), "sizeof has an unexpected value");
 
 
+struct static_vector_data
+{
+   template<class C>
+   const char *operator()(const C &c) const
+   {  return reinterpret_cast<const char *>(c.data());  }
+};
+
+struct static_vector_always_internal
+{
+   template<class C>
+   bool operator()(const C &) const
+   {  return true;  }   //static_vector never allocates
+};
+
+bool test_unqualified_swap()
+{
+   namespace us = boost_container_test_unqualified_swap;
+   typedef boost::container::static_vector<int, 10> static_vec;
+   static_vec a;  a.push_back(1);  a.push_back(2);
+   static_vec b;  b.push_back(7);  b.push_back(8);  b.push_back(9);
+   return us::test_unqualified_swap_internal_buffer
+             (a, b, static_vector_data(), static_vector_always_internal());
+}
+
 int main(int, char* [])
 {
+   if(!test_unqualified_swap())
+      return 1;
+
    using boost::container::test::movable_and_copyable_int;
    using boost::container::test::produce_movable_and_copyable_int;
    BOOST_TEST(counting_value::count() == 0);

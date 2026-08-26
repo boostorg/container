@@ -33,6 +33,7 @@
 #include "../../intrusive/test/iterator_test.hpp"
 #include <boost/utility/string_view.hpp>
 #include "lightweight_test.hpp"
+#include "unqualified_swap_test.hpp"
 #include <boost/core/lightweight_test_trait.hpp>
 #if BOOST_CXX_VERSION >= 201103L
 #include <boost/functional/hash.hpp>
@@ -2384,8 +2385,56 @@ void test_with_lightweight_test()
 BOOST_CONTAINER_STATIC_ASSERT_MSG(3*sizeof(void*) == sizeof(string), "sizeof has an unexpected value");
 
 
+struct basic_string_data
+{
+   template<class S>
+   const char *operator()(const S &s) const
+   {  return reinterpret_cast<const char *>(s.data());  }
+};
+
+//"Short" here means the characters live inside the string object itself
+struct basic_string_is_short
+{
+   template<class S>
+   bool operator()(const S &s) const
+   {
+      const char *const d = reinterpret_cast<const char *>(s.data());
+      return d >= reinterpret_cast<const char *>(&s)
+          && d <  reinterpret_cast<const char *>(&s) + sizeof s;
+   }
+};
+
+bool test_unqualified_swap()
+{
+   namespace us = boost_container_test_unqualified_swap;
+   {  typedef boost::container::basic_string<char> str;
+      str a("abc");
+      str b("xyzw");
+      if(!us::test_unqualified_swap_internal_buffer
+            (a, b, basic_string_data(), basic_string_is_short()))
+         return false;
+   }
+   {  //Long strings take the heap path instead
+      typedef boost::container::basic_string<char> str;
+      str a(200u, 'a');
+      str b(300u, 'b');
+      if(!us::test_unqualified_swap(a, b))
+         return false;
+   }
+   {  typedef boost::container::basic_string<wchar_t> wstr;
+      wstr a(3u, L'a');
+      wstr b(4u, L'b');
+      if(!us::test_unqualified_swap(a, b))
+         return false;
+   }
+   return true;
+}
+
 int main()
 {
+   if(!test_unqualified_swap())
+      return 1;
+
    if(string_test<char>()){
       return 1;
    }

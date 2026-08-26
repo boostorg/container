@@ -28,6 +28,7 @@
 #include "emplace_test.hpp"
 #include "container_common_tests.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
+#include "unqualified_swap_test.hpp"
 
 using namespace boost::container;
 
@@ -616,8 +617,29 @@ struct alloc_propagate_base<boost_container_flat_multiset>
 
 }}}   //boost::container::test
 
+bool test_unqualified_swap()
+{
+   namespace us = boost_container_test_unqualified_swap;
+   {  typedef boost::container::flat_set<int> cont;
+      cont a;  a.insert(1);  a.insert(2);
+      cont b;  b.insert(7);  b.insert(8);  b.insert(9);
+      if(!us::test_unqualified_swap(a, b))
+         return false;
+   }
+   {  typedef boost::container::flat_multiset<int> cont;
+      cont a;  a.insert(1);  a.insert(2);
+      cont b;  b.insert(7);  b.insert(8);  b.insert(9);
+      if(!us::test_unqualified_swap(a, b))
+         return false;
+   }
+   return true;
+}
+
 int main()
 {
+   if(!test_unqualified_swap())
+      return 1;
+
    using namespace boost::container::test;
 
    //Allocator argument container

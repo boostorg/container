@@ -21,6 +21,7 @@
 #include "void_allocator_test.hpp"
 #include "emplace_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
+#include "unqualified_swap_test.hpp"
 
 using namespace boost::container;
 
@@ -392,8 +393,29 @@ bool constructor_template_auto_deduction_test()
 BOOST_CONTAINER_STATIC_ASSERT_MSG(4*sizeof(void*) == sizeof(map<int, int>), "sizeof has an unexpected value");
 BOOST_CONTAINER_STATIC_ASSERT_MSG(4*sizeof(void*) == sizeof(multimap<int, int>), "sizeof has an unexpected value");
 
+bool test_unqualified_swap()
+{
+   namespace us = boost_container_test_unqualified_swap;
+   {  typedef boost::container::map<int, int> cont;
+      cont a;  a.insert(cont::value_type(1, 10));  a.insert(cont::value_type(2, 20));
+      cont b;  b.insert(cont::value_type(7, 70));  b.insert(cont::value_type(8, 80));
+      if(!us::test_unqualified_swap(a, b))
+         return false;
+   }
+   {  typedef boost::container::multimap<int, int> cont;
+      cont a;  a.insert(cont::value_type(1, 10));  a.insert(cont::value_type(2, 20));
+      cont b;  b.insert(cont::value_type(7, 70));  b.insert(cont::value_type(8, 80));
+      if(!us::test_unqualified_swap(a, b))
+         return false;
+   }
+   return true;
+}
+
 int main ()
 {
+   if(!test_unqualified_swap())
+      return 1;
+
    using namespace boost::container::test;
    //Recursive container instantiation
    {

@@ -21,6 +21,7 @@
 #include "void_allocator_test.hpp"
 #include "emplace_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
+#include "unqualified_swap_test.hpp"
 #include <utility> //for std::pair
 
 using namespace boost::container;
@@ -386,8 +387,29 @@ void test_merge_from_different_comparison()
 BOOST_CONTAINER_STATIC_ASSERT_MSG(4*sizeof(void*) == sizeof(set<int>), "sizeof has an unexpected value");
 BOOST_CONTAINER_STATIC_ASSERT_MSG(4*sizeof(void*) == sizeof(multiset<int>), "sizeof has an unexpected value");
 
+bool test_unqualified_swap()
+{
+   namespace us = boost_container_test_unqualified_swap;
+   {  typedef boost::container::set<int> cont;
+      cont a;  a.insert(1);  a.insert(2);
+      cont b;  b.insert(7);  b.insert(8);  b.insert(9);
+      if(!us::test_unqualified_swap(a, b))
+         return false;
+   }
+   {  typedef boost::container::multiset<int> cont;
+      cont a;  a.insert(1);  a.insert(2);
+      cont b;  b.insert(7);  b.insert(8);  b.insert(9);
+      if(!us::test_unqualified_swap(a, b))
+         return false;
+   }
+   return true;
+}
+
 int main ()
 {
+   if(!test_unqualified_swap())
+      return 1;
+
    using namespace boost::container::test;
    //Recursive container instantiation
    {

@@ -36,6 +36,7 @@
 #include "../../intrusive/test/iterator_test.hpp"
 
 #include "lightweight_test.hpp"
+#include "unqualified_swap_test.hpp"
 
 using namespace boost::container;
 
@@ -427,8 +428,23 @@ struct alloc_propagate_base<boost_container_deque>
 //Test the expected sizeof()
 BOOST_CONTAINER_STATIC_ASSERT_MSG(4*sizeof(void*) == sizeof(deque<int>), "sizeof has an unexpected value");
 
+bool test_unqualified_swap()
+{
+   namespace us = boost_container_test_unqualified_swap;
+   {  typedef boost::container::deque<int> cont;
+      cont a;  a.push_back(1);  a.push_back(2);
+      cont b;  b.push_back(7);  b.push_back(8);  b.push_back(9);
+      if(!us::test_unqualified_swap(a, b))
+         return false;
+   }
+   return true;
+}
+
 int main ()
 {
+   if(!test_unqualified_swap())
+      return 1;
+
    if(!do_recursive_deque_test())
       return 1;
 

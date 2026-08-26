@@ -19,6 +19,7 @@
 #include "void_allocator_test.hpp"
 #include "emplace_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
+#include "unqualified_swap_test.hpp"
 
 using namespace boost::container;
 
@@ -177,8 +178,23 @@ struct alloc_propagate_base<boost_container_slist>
 //Test the expected sizeof()
 BOOST_CONTAINER_STATIC_ASSERT_MSG(2*sizeof(void*) == sizeof(slist<int>), "sizeof has an unexpected value");
 
+bool test_unqualified_swap()
+{
+   namespace us = boost_container_test_unqualified_swap;
+   {  typedef boost::container::slist<int> cont;
+      cont a;  a.push_front(1);  a.push_front(2);
+      cont b;  b.push_front(7);  b.push_front(8);  b.push_front(9);
+      if(!us::test_unqualified_swap(a, b))
+         return false;
+   }
+   return true;
+}
+
 int main ()
 {
+   if(!test_unqualified_swap())
+      return 1;
+
    recursive_slist_test();
    {
       //Now test move semantics

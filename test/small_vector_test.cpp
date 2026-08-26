@@ -15,6 +15,7 @@
 #include "void_allocator_test.hpp"
 #include "default_init_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
+#include "unqualified_swap_test.hpp"
 
 #include <boost/container/allocator_traits.hpp>
 
@@ -496,8 +497,64 @@ using namespace boost::container;
 //Test the expected sizeof()
 BOOST_CONTAINER_STATIC_ASSERT_MSG(7*sizeof(void*) == sizeof(small_vector<void*, 4>), "sizeof has an unexpected value");
 
+struct small_vector_data
+{
+   template<class C>
+   const char *operator()(const C &c) const
+   {  return reinterpret_cast<const char *>(c.data());  }
+};
+
+struct small_vector_is_small
+{
+   template<class C>
+   bool operator()(const C &c) const
+   {  return c.is_small();  }
+};
+
+bool test_unqualified_swap()
+{
+   namespace us = boost_container_test_unqualified_swap;
+   typedef boost::container::small_vector<int, 4>   small_vec;
+   typedef boost::container::small_vector_base<int> small_vec_base;
+
+   //small_vector itself
+   {
+      small_vec a;  a.push_back(1);  a.push_back(2);
+      small_vec b;  b.push_back(7);  b.push_back(8);  b.push_back(9);
+      if(!us::test_unqualified_swap_internal_buffer
+            (a, b, small_vector_data(), small_vector_is_small()))
+         return false;
+   }
+   //...and through small_vector_base, the documented way to pass a
+   //small_vector to a function without templating on N
+   {
+      small_vec a;  a.push_back(1);  a.push_back(2);
+      small_vec b;  b.push_back(7);  b.push_back(8);  b.push_back(9);
+      small_vec_base &ba = a;
+      small_vec_base &bb = b;
+      swap(ba, bb);
+      if(a.size() != 3u || a[0] != 7 || a[1] != 8 || a[2] != 9)
+         return false;
+      if(b.size() != 2u || b[0] != 1 || b[1] != 2)
+         return false;
+      //Each must still be using its own inline buffer, not the other's
+      if(!a.is_small() || !b.is_small())
+         return false;
+      if(small_vector_data()(a) <  reinterpret_cast<const char *>(&a) ||
+         small_vector_data()(a) >= reinterpret_cast<const char *>(&a) + sizeof a)
+         return false;
+      if(small_vector_data()(b) <  reinterpret_cast<const char *>(&b) ||
+         small_vector_data()(b) >= reinterpret_cast<const char *>(&b) + sizeof b)
+         return false;
+   }
+   return true;
+}
+
 int main()
 {
+   if(!test_unqualified_swap())
+      return 1;
+
    if(!test_swap())
       return 1;
 
