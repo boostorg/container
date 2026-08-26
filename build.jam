@@ -17,7 +17,7 @@ project /boost/container
     ;
 
 explicit
-    [ alias boost_container : build//boost_container ]
+    [ alias boost_container : : : : <library>$(boost_dependencies) ]
     [ alias all : boost_container example test bench experimental ]
     ;
 

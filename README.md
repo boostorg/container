@@ -10,7 +10,7 @@ Distributed under the [Boost Software License, Version 1.0](http://www.boost.org
 ### Properties
 
 * C++03
-* Mostly header-only, library compilation is required for few features.
+* Header-only (globals such as the PMR default resource and the Extended Allocators' heap are shared process-wide, even across DLLs/shared objects).
 * Supports compiler modes without exceptions support (e.g. `-fno-exceptions`).
 
 ### Build Status

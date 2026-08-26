@@ -73,25 +73,6 @@
 #define BOOST_CONTAINER_DOCIGN(T) T
 #define BOOST_CONTAINER_DOCONLY(T)
 
-/*
-   we need to import/export our code only if the user has specifically
-   asked for it by defining either BOOST_ALL_DYN_LINK if they want all boost
-   libraries to be dynamically linked, or BOOST_CONTAINER_DYN_LINK
-   if they want just this one to be dynamically liked:
-*/
-#if defined(BOOST_ALL_DYN_LINK) || defined(BOOST_CONTAINER_DYN_LINK)
-
-   /* export if this is our own source, otherwise import: */
-   #ifdef BOOST_CONTAINER_SOURCE
-   #  define BOOST_CONTAINER_DECL BOOST_SYMBOL_EXPORT
-   #else
-   #  define BOOST_CONTAINER_DECL BOOST_SYMBOL_IMPORT
-   
-   #endif  /* BOOST_CONTAINER_SOURCE */
-#else
-   #define BOOST_CONTAINER_DECL
-#endif  /* DYN_LINK */
-
 //#define BOOST_CONTAINER_DISABLE_FORCEINLINE
 
 #if defined(BOOST_CONTAINER_DISABLE_FORCEINLINE)

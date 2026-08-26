@@ -19,9 +19,6 @@ project
       <library>/boost/utility//boost_utility
       <library>/boost/tuple//boost_tuple
       <library>/boost/container_hash//boost_container_hash
-
-      <link>shared:<define>BOOST_CONTAINER_DYN_LINK=1
-      <toolset>gcc-cygwin:<link>static
     ;
 
 # this rule enumerates through all the sources and invokes
@@ -41,7 +38,31 @@ rule test_all
       ] ;
    }
 
+   # Two-translation-unit test: proves the header-only dlmalloc links without
+   # duplicate symbols and shares one heap between translation units
+   all_rules += [ run dlmalloc_multi_tu/dlmalloc_multi_tu_test.cpp dlmalloc_multi_tu/dlmalloc_multi_tu_test_other.cpp
+                      /boost/container//boost_container ] ;
+
+   # Intermodule test: an executable plus two shared libraries, each inlining
+   # its own copy of Boost.Container, must share the process-wide globals
+   # (PMR default resource, resource singletons, and the dlmalloc heap)
+   all_rules += [ run intermodule_multi_tu/intermodule_test.cpp
+                      bc_intermodule_lib_a bc_intermodule_lib_b
+                      /boost/container//boost_container ] ;
+
    return $(all_rules) ;
 }
+
+# Shared libraries for the intermodule test (always shared, even in
+# link=static runs: the whole point is crossing module boundaries)
+lib bc_intermodule_lib_a
+   : intermodule_multi_tu/intermodule_lib_a.cpp /boost/container//boost_container
+   : <link>shared
+   ;
+
+lib bc_intermodule_lib_b
+   : intermodule_multi_tu/intermodule_lib_b.cpp /boost/container//boost_container
+   : <link>shared
+   ;
 
 test-suite container_test : [ test_all r ] ;

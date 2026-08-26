@@ -17,7 +17,6 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
-#include <boost/container/detail/auto_link.hpp>
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/container/detail/pool_resource.hpp>
 
@@ -57,7 +56,7 @@ namespace pmr {
 //! An unsynchronized_pool_resource class may not be accessed from multiple threads
 //! simultaneously and thus avoids the cost of synchronization entirely in
 //! single-threaded applications.
-class BOOST_CONTAINER_DECL unsynchronized_pool_resource
+class unsynchronized_pool_resource
    : public memory_resource
 {
    pool_resource m_resource;
@@ -184,6 +183,70 @@ class BOOST_CONTAINER_DECL unsynchronized_pool_resource
    //! <b>Note</b>: Non-standard extension.
    std::size_t pool_cached_blocks(std::size_t pool_idx) const;
 };
+
+#if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//    Inline implementation (formerly src/unsynchronized_pool_resource.cpp)
+//
+//////////////////////////////////////////////////////////////////////////////
+
+inline unsynchronized_pool_resource::unsynchronized_pool_resource(const pool_options& opts, memory_resource* upstream) BOOST_NOEXCEPT
+   : m_resource(opts, upstream)
+{}
+
+inline unsynchronized_pool_resource::unsynchronized_pool_resource() BOOST_NOEXCEPT
+   : m_resource()
+{}
+
+inline unsynchronized_pool_resource::unsynchronized_pool_resource(memory_resource* upstream) BOOST_NOEXCEPT
+   : m_resource(upstream)
+{}
+
+inline unsynchronized_pool_resource::unsynchronized_pool_resource(const pool_options& opts) BOOST_NOEXCEPT
+   : m_resource(opts)
+{}
+
+inline unsynchronized_pool_resource::~unsynchronized_pool_resource() //virtual
+{}
+
+inline void unsynchronized_pool_resource::release()
+{
+   m_resource.release();
+}
+
+inline memory_resource* unsynchronized_pool_resource::upstream_resource() const
+{  return m_resource.upstream_resource();  }
+
+inline pool_options unsynchronized_pool_resource::options() const
+{  return m_resource.options();  }
+
+inline void* unsynchronized_pool_resource::do_allocate(std::size_t bytes, std::size_t alignment) //virtual
+{  return m_resource.do_allocate(bytes, alignment);  }
+
+inline void unsynchronized_pool_resource::do_deallocate(void* p, std::size_t bytes, std::size_t alignment) //virtual
+{  return m_resource.do_deallocate(p, bytes, alignment);  }
+
+inline bool unsynchronized_pool_resource::do_is_equal(const memory_resource& other) const BOOST_NOEXCEPT //virtual
+{  return this == &other;  }
+
+inline std::size_t unsynchronized_pool_resource::pool_count() const
+{  return m_resource.pool_count();  }
+
+inline std::size_t unsynchronized_pool_resource::pool_index(std::size_t bytes) const
+{  return m_resource.pool_index(bytes);  }
+
+inline std::size_t unsynchronized_pool_resource::pool_next_blocks_per_chunk(std::size_t pool_idx) const
+{  return m_resource.pool_next_blocks_per_chunk(pool_idx);  }
+
+inline std::size_t unsynchronized_pool_resource::pool_block(std::size_t pool_idx) const
+{  return m_resource.pool_block(pool_idx);  }
+
+inline std::size_t unsynchronized_pool_resource::pool_cached_blocks(std::size_t pool_idx) const
+{  return m_resource.pool_cached_blocks(pool_idx);  }
+
+#endif   //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
 }  //namespace pmr {
 }  //namespace container {

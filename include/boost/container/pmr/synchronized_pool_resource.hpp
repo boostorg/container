@@ -17,7 +17,6 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
-#include <boost/container/detail/auto_link.hpp>
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/container/detail/pool_resource.hpp>
 #include <boost/container/detail/thread_mutex.hpp>
@@ -58,7 +57,7 @@ namespace pmr {
 //! A synchronized_pool_resource may be accessed from multiple threads without
 //! external synchronization and may have thread-specific pools to reduce
 //! synchronization costs.
-class BOOST_CONTAINER_DECL synchronized_pool_resource
+class synchronized_pool_resource
    : public memory_resource
 {
    dtl::thread_mutex m_mut;
@@ -129,6 +128,98 @@ class BOOST_CONTAINER_DECL synchronized_pool_resource
    //! @copydoc ::boost::container::pmr::unsynchronized_pool_resource::pool_cached_blocks(std::size_t)const
    std::size_t pool_cached_blocks(std::size_t pool_idx) const;
 };
+
+#if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//    Inline implementation (formerly src/synchronized_pool_resource.cpp)
+//
+//////////////////////////////////////////////////////////////////////////////
+
+namespace sync_pr_dtl {
+
+class thread_mutex_lock
+{
+   dtl::thread_mutex &m_mut;
+
+   public:
+   explicit thread_mutex_lock(dtl::thread_mutex &m)
+      : m_mut(m)
+   {
+      m_mut.lock();
+   }
+
+   ~thread_mutex_lock()
+   {
+      m_mut.unlock();
+   }
+};
+
+}  //namespace sync_pr_dtl {
+
+inline synchronized_pool_resource::synchronized_pool_resource(const pool_options& opts, memory_resource* upstream) BOOST_NOEXCEPT
+   : m_mut(), m_pool_resource(opts, upstream)
+{}
+
+inline synchronized_pool_resource::synchronized_pool_resource() BOOST_NOEXCEPT
+   : m_mut(), m_pool_resource()
+{}
+
+inline synchronized_pool_resource::synchronized_pool_resource(memory_resource* upstream) BOOST_NOEXCEPT
+   : m_mut(), m_pool_resource(upstream)
+{}
+
+inline synchronized_pool_resource::synchronized_pool_resource(const pool_options& opts) BOOST_NOEXCEPT
+   : m_mut(), m_pool_resource(opts)
+{}
+
+inline synchronized_pool_resource::~synchronized_pool_resource() //virtual
+{}
+
+inline void synchronized_pool_resource::release()
+{
+   sync_pr_dtl::thread_mutex_lock lck(m_mut); (void)lck;
+   m_pool_resource.release();
+}
+
+inline memory_resource* synchronized_pool_resource::upstream_resource() const
+{  return m_pool_resource.upstream_resource();  }
+
+inline pool_options synchronized_pool_resource::options() const
+{  return m_pool_resource.options();  }
+
+inline void* synchronized_pool_resource::do_allocate(std::size_t bytes, std::size_t alignment) //virtual
+{
+   sync_pr_dtl::thread_mutex_lock lck(m_mut); (void)lck;
+   return m_pool_resource.do_allocate(bytes, alignment);
+}
+
+inline void synchronized_pool_resource::do_deallocate(void* p, std::size_t bytes, std::size_t alignment) //virtual
+{
+   sync_pr_dtl::thread_mutex_lock lck(m_mut); (void)lck;
+   return m_pool_resource.do_deallocate(p, bytes, alignment);
+}
+
+inline bool synchronized_pool_resource::do_is_equal(const memory_resource& other) const BOOST_NOEXCEPT //virtual
+{  return this == &other;  }
+
+inline std::size_t synchronized_pool_resource::pool_count() const
+{  return m_pool_resource.pool_count();  }
+
+inline std::size_t synchronized_pool_resource::pool_index(std::size_t bytes) const
+{  return m_pool_resource.pool_index(bytes);  }
+
+inline std::size_t synchronized_pool_resource::pool_next_blocks_per_chunk(std::size_t pool_idx) const
+{  return m_pool_resource.pool_next_blocks_per_chunk(pool_idx);  }
+
+inline std::size_t synchronized_pool_resource::pool_block(std::size_t pool_idx) const
+{  return m_pool_resource.pool_block(pool_idx);  }
+
+inline std::size_t synchronized_pool_resource::pool_cached_blocks(std::size_t pool_idx) const
+{  return m_pool_resource.pool_cached_blocks(pool_idx);  }
+
+#endif   //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
 }  //namespace pmr {
 }  //namespace container {

@@ -54,7 +54,6 @@ doxygen autodoc
                                    \"BOOST_CONTAINER_SCOPEDALLOC_DUMMYTRUE=\"\\
                                    \"BOOST_CONTAINER_SCOPEDALLOC_ALLINNER=InnerAllocs...\"\\
                                    \"BOOST_CONTAINER_SCOPEDALLOC_ALLINNERCLASS=typename... InnerAllocs\"\\
-                                   \"BOOST_CONTAINER_DECL=\"\\
                                    \"BOOST_CONTAINER_CONSTANT_VAR=static constexpr \"\\
                                    \"BOOST_CONTAINER_FORCEINLINE=inline\" \\
                                    "

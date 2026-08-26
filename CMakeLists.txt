@@ -4,52 +4,20 @@
 
 cmake_minimum_required(VERSION 3.5...3.16)
 
-project(boost_container VERSION "${BOOST_SUPERPROJECT_VERSION}" LANGUAGES C CXX)
+project(boost_container VERSION "${BOOST_SUPERPROJECT_VERSION}" LANGUAGES CXX)
 
-option(BOOST_CONTAINER_HEADER_ONLY "Disable Extended Allocators and some Polymorphic Memory Resources classes" OFF)
-
-if(BOOST_CONTAINER_HEADER_ONLY)
-  add_library(boost_container INTERFACE)
-  set(_populate INTERFACE)
-else()
-  add_library(boost_container
-    src/alloc_lib.c
-    src/dlmalloc.cpp
-    src/global_resource.cpp
-    src/monotonic_buffer_resource.cpp
-    src/pool_resource.cpp
-    src/synchronized_pool_resource.cpp
-    src/unsynchronized_pool_resource.cpp
-  )
-  set(_populate PUBLIC)
-endif()
-
-
+add_library(boost_container INTERFACE)
 add_library(Boost::container ALIAS boost_container)
 
-target_include_directories(boost_container ${_populate} include)
+target_include_directories(boost_container INTERFACE include)
 
 target_link_libraries(boost_container
-  ${_populate}
+  INTERFACE
     Boost::assert
     Boost::config
     Boost::intrusive
     Boost::move
 )
-
-target_compile_definitions(boost_container
-  ${_populate} BOOST_CONTAINER_NO_LIB
-  # Source files already define BOOST_CONTAINER_SOURCE
-  # PRIVATE BOOST_CONTAINER_SOURCE
-)
-
-if(NOT BOOST_CONTAINER_HEADER_ONLY)
-  if(BUILD_SHARED_LIBS)
-    target_compile_definitions(boost_container ${_populate} BOOST_CONTAINER_DYN_LINK)
-  else()
-    target_compile_definitions(boost_container ${_populate} BOOST_CONTAINER_STATIC_LINK)
-  endif()
-endif()
 
 if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/CMakeLists.txt")
 
