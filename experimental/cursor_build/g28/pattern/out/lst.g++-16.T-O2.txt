@@ -1,0 +1,1919 @@
+
+/tmp/g28static/probe.g++-16.T-O2.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchIPiS3_NS0_14deque_iteratorIS3_Lb0ELj0ELj0EmEESt26random_access_iterator_tagEET1_T_T0_S7_RKNS0_22segmented_iterator_tagET2_.isra.0>:
+       0:	mov    %rdi,%r9
+       3:	cmp    %rdx,%rsi
+       6:	je     f2 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchIPiS3_NS0_14deque_iteratorIS3_Lb0ELj0ELj0EmEESt26random_access_iterator_tagEET1_T_T0_S7_RKNS0_22segmented_iterator_tagET2_.isra.0+0xf2>
+       c:	push   %rbp
+       d:	mov    %rdx,%r10
+      10:	push   %rbx
+      11:	nopl   0x0(%rax)
+      15:	data16 cs nopw 0x0(%rax,%rax,1)
+      20:	mov    (%r8),%rax
+      23:	mov    %r10,%rdx
+      26:	sub    %rsi,%rdx
+      29:	lea    0x400(%rax),%r11
+      30:	mov    %rdx,%rdi
+      33:	mov    %r11,%rax
+      36:	sar    $0x2,%rdi
+      3a:	sub    %rcx,%rax
+      3d:	mov    %rax,%rbx
+      40:	sar    $0x2,%rbx
+      44:	cmp    %rax,%rdx
+      47:	cmovge %rbx,%rdi
+      4b:	shl    $0x2,%rdi
+      4f:	lea    (%rsi,%rdi,1),%rbp
+      53:	cmp    %rbp,%rsi
+      56:	je     c6 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchIPiS3_NS0_14deque_iteratorIS3_Lb0ELj0ELj0EmEESt26random_access_iterator_tagEET1_T_T0_S7_RKNS0_22segmented_iterator_tagET2_.isra.0+0xc6>
+      58:	lea    -0x4(%rdi),%rdx
+      5c:	xor    %eax,%eax
+      5e:	shr    $0x2,%rdx
+      62:	add    $0x1,%rdx
+      66:	and    $0x3,%edx
+      69:	je     99 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchIPiS3_NS0_14deque_iteratorIS3_Lb0ELj0ELj0EmEESt26random_access_iterator_tagEET1_T_T0_S7_RKNS0_22segmented_iterator_tagET2_.isra.0+0x99>
+      6b:	cmp    $0x1,%rdx
+      6f:	je     8a <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchIPiS3_NS0_14deque_iteratorIS3_Lb0ELj0ELj0EmEESt26random_access_iterator_tagEET1_T_T0_S7_RKNS0_22segmented_iterator_tagET2_.isra.0+0x8a>
+      71:	cmp    $0x2,%rdx
+      75:	je     80 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchIPiS3_NS0_14deque_iteratorIS3_Lb0ELj0ELj0EmEESt26random_access_iterator_tagEET1_T_T0_S7_RKNS0_22segmented_iterator_tagET2_.isra.0+0x80>
+      77:	mov    (%rsi),%edx
+      79:	mov    $0x4,%eax
+      7e:	mov    %edx,(%rcx)
+      80:	mov    (%rsi,%rax,1),%edx
+      83:	mov    %edx,(%rcx,%rax,1)
+      86:	add    $0x4,%rax
+      8a:	mov    (%rsi,%rax,1),%edx
+      8d:	mov    %edx,(%rcx,%rax,1)
+      90:	add    $0x4,%rax
+      94:	cmp    %rax,%rdi
+      97:	je     c0 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchIPiS3_NS0_14deque_iteratorIS3_Lb0ELj0ELj0EmEESt26random_access_iterator_tagEET1_T_T0_S7_RKNS0_22segmented_iterator_tagET2_.isra.0+0xc0>
+      99:	mov    (%rsi,%rax,1),%edx
+      9c:	mov    %edx,(%rcx,%rax,1)
+      9f:	mov    0x4(%rsi,%rax,1),%edx
+      a3:	mov    %edx,0x4(%rcx,%rax,1)
+      a7:	mov    0x8(%rsi,%rax,1),%edx
+      ab:	mov    %edx,0x8(%rcx,%rax,1)
+      af:	mov    0xc(%rsi,%rax,1),%edx
+      b3:	mov    %edx,0xc(%rcx,%rax,1)
+      b7:	add    $0x10,%rax
+      bb:	cmp    %rax,%rdi
+      be:	jne    99 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchIPiS3_NS0_14deque_iteratorIS3_Lb0ELj0ELj0EmEESt26random_access_iterator_tagEET1_T_T0_S7_RKNS0_22segmented_iterator_tagET2_.isra.0+0x99>
+      c0:	sub    %rsi,%rcx
+      c3:	add    %rbp,%rcx
+      c6:	cmp    %rbp,%r10
+      c9:	je     e0 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchIPiS3_NS0_14deque_iteratorIS3_Lb0ELj0ELj0EmEESt26random_access_iterator_tagEET1_T_T0_S7_RKNS0_22segmented_iterator_tagET2_.isra.0+0xe0>
+      cb:	add    $0x8,%r8
+      cf:	mov    %rbp,%rsi
+      d2:	mov    (%r8),%rcx
+      d5:	jmp    20 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchIPiS3_NS0_14deque_iteratorIS3_Lb0ELj0ELj0EmEESt26random_access_iterator_tagEET1_T_T0_S7_RKNS0_22segmented_iterator_tagET2_.isra.0+0x20>
+      da:	nopw   0x0(%rax,%rax,1)
+      e0:	cmp    %r11,%rcx
+      e3:	je     fd <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchIPiS3_NS0_14deque_iteratorIS3_Lb0ELj0ELj0EmEESt26random_access_iterator_tagEET1_T_T0_S7_RKNS0_22segmented_iterator_tagET2_.isra.0+0xfd>
+      e5:	mov    %r9,%rax
+      e8:	pop    %rbx
+      e9:	pop    %rbp
+      ea:	mov    %rcx,(%r9)
+      ed:	mov    %r8,0x8(%r9)
+      f1:	ret
+      f2:	mov    %rcx,(%rdi)
+      f5:	mov    %rdi,%rax
+      f8:	mov    %r8,0x8(%rdi)
+      fc:	ret
+      fd:	mov    0x8(%r8),%rcx
+     101:	add    $0x8,%r8
+     105:	jmp    e5 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchIPiS3_NS0_14deque_iteratorIS3_Lb0ELj0ELj0EmEESt26random_access_iterator_tagEET1_T_T0_S7_RKNS0_22segmented_iterator_tagET2_.isra.0+0xe5>
+     107:	nopw   0x0(%rax,%rax,1)
+
+0000000000000110 <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0>:
+     110:	mov    %rsi,%rax
+     113:	push   %rbx
+     114:	mov    %rdi,%rcx
+     117:	mov    (%rdi),%rdi
+     11a:	mov    (%rax),%rbx
+     11d:	mov    0x8(%rcx),%r8
+     121:	mov    %edx,%esi
+     123:	xor    %r10d,%r10d
+     126:	mov    0x8(%rax),%r11
+     12a:	cmp    %rbx,%rdi
+     12d:	je     1f0 <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0xe0>
+     133:	xchg   %ax,%ax
+     135:	data16 cs nopw 0x0(%rax,%rax,1)
+     140:	mov    0x8(%rdi),%rdx
+     144:	mov    (%rdi),%rax
+     147:	lea    (%rax,%rdx,4),%r9
+     14b:	cmp    %r8,%r9
+     14e:	je     1e0 <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0xd0>
+     154:	mov    %r9,%rcx
+     157:	mov    %r8,%rax
+     15a:	xor    %edx,%edx
+     15c:	sub    %r8,%rcx
+     15f:	sub    $0x4,%rcx
+     163:	shr    $0x2,%rcx
+     167:	add    $0x1,%rcx
+     16b:	and    $0x3,%ecx
+     16e:	je     1a9 <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x99>
+     170:	cmp    $0x1,%rcx
+     174:	je     196 <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x86>
+     176:	cmp    $0x2,%rcx
+     17a:	je     188 <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x78>
+     17c:	xor    %edx,%edx
+     17e:	cmp    (%r8),%esi
+     181:	sete   %dl
+     184:	add    $0x4,%rax
+     188:	xor    %ecx,%ecx
+     18a:	cmp    (%rax),%esi
+     18c:	sete   %cl
+     18f:	add    $0x4,%rax
+     193:	add    %rcx,%rdx
+     196:	xor    %ecx,%ecx
+     198:	cmp    (%rax),%esi
+     19a:	sete   %cl
+     19d:	add    $0x4,%rax
+     1a1:	add    %rcx,%rdx
+     1a4:	cmp    %r9,%rax
+     1a7:	je     1dd <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0xcd>
+     1a9:	xor    %ecx,%ecx
+     1ab:	cmp    (%rax),%esi
+     1ad:	sete   %cl
+     1b0:	add    %rcx,%rdx
+     1b3:	xor    %ecx,%ecx
+     1b5:	cmp    0x4(%rax),%esi
+     1b8:	sete   %cl
+     1bb:	add    %rcx,%rdx
+     1be:	xor    %ecx,%ecx
+     1c0:	cmp    0x8(%rax),%esi
+     1c3:	sete   %cl
+     1c6:	add    %rcx,%rdx
+     1c9:	xor    %ecx,%ecx
+     1cb:	cmp    0xc(%rax),%esi
+     1ce:	sete   %cl
+     1d1:	add    $0x10,%rax
+     1d5:	add    %rcx,%rdx
+     1d8:	cmp    %r9,%rax
+     1db:	jne    1a9 <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x99>
+     1dd:	add    %rdx,%r10
+     1e0:	add    $0x18,%rdi
+     1e4:	mov    (%rdi),%r8
+     1e7:	cmp    %rdi,%rbx
+     1ea:	jne    140 <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x30>
+     1f0:	cmp    %r8,%r11
+     1f3:	je     288 <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x178>
+     1f9:	mov    %r11,%rdx
+     1fc:	xor    %eax,%eax
+     1fe:	sub    %r8,%rdx
+     201:	sub    $0x4,%rdx
+     205:	shr    $0x2,%rdx
+     209:	add    $0x1,%rdx
+     20d:	and    $0x3,%edx
+     210:	je     24d <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x13d>
+     212:	cmp    $0x1,%rdx
+     216:	je     239 <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x129>
+     218:	cmp    $0x2,%rdx
+     21c:	je     22a <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x11a>
+     21e:	xor    %eax,%eax
+     220:	cmp    %esi,(%r8)
+     223:	sete   %al
+     226:	add    $0x4,%r8
+     22a:	xor    %edx,%edx
+     22c:	cmp    %esi,(%r8)
+     22f:	sete   %dl
+     232:	add    $0x4,%r8
+     236:	add    %rdx,%rax
+     239:	xor    %edx,%edx
+     23b:	cmp    %esi,(%r8)
+     23e:	sete   %dl
+     241:	add    $0x4,%r8
+     245:	add    %rdx,%rax
+     248:	cmp    %r8,%r11
+     24b:	je     285 <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x175>
+     24d:	xor    %edx,%edx
+     24f:	cmp    %esi,(%r8)
+     252:	sete   %dl
+     255:	add    %rdx,%rax
+     258:	xor    %edx,%edx
+     25a:	cmp    %esi,0x4(%r8)
+     25e:	sete   %dl
+     261:	add    %rdx,%rax
+     264:	xor    %edx,%edx
+     266:	cmp    %esi,0x8(%r8)
+     26a:	sete   %dl
+     26d:	add    %rdx,%rax
+     270:	xor    %edx,%edx
+     272:	cmp    %esi,0xc(%r8)
+     276:	sete   %dl
+     279:	add    $0x10,%r8
+     27d:	add    %rdx,%rax
+     280:	cmp    %r8,%r11
+     283:	jne    24d <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x13d>
+     285:	add    %rax,%r10
+     288:	mov    %r10,%rax
+     28b:	pop    %rbx
+     28c:	ret
+     28d:	nopl   (%rax)
+
+0000000000000290 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchINS0_12vec_iteratorIPiLb0EEES5_N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEESt26random_access_iterator_tagEET1_T_T0_SB_RKNS0_22segmented_iterator_tagET2_.isra.0>:
+     290:	sub    $0x20,%rsp
+     294:	mov    (%rdx),%rax
+     297:	mov    %rdi,%r11
+     29a:	mov    %rbx,(%rsp)
+     29e:	mov    %rsi,%rbx
+     2a1:	mov    (%rsi),%rsi
+     2a4:	movdqu (%rcx),%xmm0
+     2a8:	cmp    %rax,%rsi
+     2ab:	je     3d1 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchINS0_12vec_iteratorIPiLb0EEES5_N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEESt26random_access_iterator_tagEET1_T_T0_SB_RKNS0_22segmented_iterator_tagET2_.isra.0+0x141>
+     2b1:	mov    %r12,0x10(%rsp)
+     2b6:	movhlps %xmm0,%xmm1
+     2b9:	movq   %xmm0,%r8
+     2be:	mov    %rbp,0x8(%rsp)
+     2c3:	movq   %xmm1,%rcx
+     2c8:	mov    %rdx,%rbp
+     2cb:	nopl   0x0(%rax,%rax,1)
+     2d0:	mov    0x8(%r8),%rdi
+     2d4:	mov    (%r8),%rdx
+     2d7:	sub    %rsi,%rax
+     2da:	mov    %r8,%r10
+     2dd:	lea    (%rdx,%rdi,4),%r12
+     2e1:	mov    %rax,%rdi
+     2e4:	mov    %r12,%rdx
+     2e7:	sar    $0x2,%rdi
+     2eb:	sub    %rcx,%rdx
+     2ee:	mov    %rdx,%r9
+     2f1:	sar    $0x2,%r9
+     2f5:	cmp    %rdx,%rax
+     2f8:	cmovge %r9,%rdi
+     2fc:	shl    $0x2,%rdi
+     300:	lea    (%rsi,%rdi,1),%r9
+     304:	cmp    %rsi,%r9
+     307:	je     377 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchINS0_12vec_iteratorIPiLb0EEES5_N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEESt26random_access_iterator_tagEET1_T_T0_SB_RKNS0_22segmented_iterator_tagET2_.isra.0+0xe7>
+     309:	lea    -0x4(%rdi),%rdx
+     30d:	xor    %eax,%eax
+     30f:	shr    $0x2,%rdx
+     313:	add    $0x1,%rdx
+     317:	and    $0x3,%edx
+     31a:	je     34a <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchINS0_12vec_iteratorIPiLb0EEES5_N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEESt26random_access_iterator_tagEET1_T_T0_SB_RKNS0_22segmented_iterator_tagET2_.isra.0+0xba>
+     31c:	cmp    $0x1,%rdx
+     320:	je     33b <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchINS0_12vec_iteratorIPiLb0EEES5_N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEESt26random_access_iterator_tagEET1_T_T0_SB_RKNS0_22segmented_iterator_tagET2_.isra.0+0xab>
+     322:	cmp    $0x2,%rdx
+     326:	je     331 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchINS0_12vec_iteratorIPiLb0EEES5_N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEESt26random_access_iterator_tagEET1_T_T0_SB_RKNS0_22segmented_iterator_tagET2_.isra.0+0xa1>
+     328:	mov    (%rsi),%edx
+     32a:	mov    $0x4,%eax
+     32f:	mov    %edx,(%rcx)
+     331:	mov    (%rsi,%rax,1),%edx
+     334:	mov    %edx,(%rcx,%rax,1)
+     337:	add    $0x4,%rax
+     33b:	mov    (%rsi,%rax,1),%edx
+     33e:	mov    %edx,(%rcx,%rax,1)
+     341:	add    $0x4,%rax
+     345:	cmp    %rax,%rdi
+     348:	je     371 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchINS0_12vec_iteratorIPiLb0EEES5_N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEESt26random_access_iterator_tagEET1_T_T0_SB_RKNS0_22segmented_iterator_tagET2_.isra.0+0xe1>
+     34a:	mov    (%rsi,%rax,1),%edx
+     34d:	mov    %edx,(%rcx,%rax,1)
+     350:	mov    0x4(%rsi,%rax,1),%edx
+     354:	mov    %edx,0x4(%rcx,%rax,1)
+     358:	mov    0x8(%rsi,%rax,1),%edx
+     35c:	mov    %edx,0x8(%rcx,%rax,1)
+     360:	mov    0xc(%rsi,%rax,1),%edx
+     364:	mov    %edx,0xc(%rcx,%rax,1)
+     368:	add    $0x10,%rax
+     36c:	cmp    %rax,%rdi
+     36f:	jne    34a <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchINS0_12vec_iteratorIPiLb0EEES5_N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEESt26random_access_iterator_tagEET1_T_T0_SB_RKNS0_22segmented_iterator_tagET2_.isra.0+0xba>
+     371:	sub    %rsi,%rcx
+     374:	add    %r9,%rcx
+     377:	mov    %r9,(%rbx)
+     37a:	mov    0x0(%rbp),%rax
+     37e:	add    $0x18,%r8
+     382:	cmp    %rax,%r9
+     385:	je     398 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchINS0_12vec_iteratorIPiLb0EEES5_N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEESt26random_access_iterator_tagEET1_T_T0_SB_RKNS0_22segmented_iterator_tagET2_.isra.0+0x108>
+     387:	mov    (%r8),%rcx
+     38a:	mov    %r9,%rsi
+     38d:	jmp    2d0 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchINS0_12vec_iteratorIPiLb0EEES5_N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEESt26random_access_iterator_tagEET1_T_T0_SB_RKNS0_22segmented_iterator_tagET2_.isra.0+0x40>
+     392:	nopw   0x0(%rax,%rax,1)
+     398:	cmp    %rcx,%r12
+     39b:	jne    3b4 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchINS0_12vec_iteratorIPiLb0EEES5_N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEESt26random_access_iterator_tagEET1_T_T0_SB_RKNS0_22segmented_iterator_tagET2_.isra.0+0x124>
+     39d:	nopl   (%rax)
+     3a0:	mov    %r8,%r10
+     3a3:	lea    0x18(%r8),%r8
+     3a7:	mov    0x8(%r10),%rax
+     3ab:	shl    $0x2,%rax
+     3af:	je     3a0 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchINS0_12vec_iteratorIPiLb0EEES5_N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEESt26random_access_iterator_tagEET1_T_T0_SB_RKNS0_22segmented_iterator_tagET2_.isra.0+0x110>
+     3b1:	mov    (%r10),%rcx
+     3b4:	mov    0x8(%rsp),%rbp
+     3b9:	mov    0x10(%rsp),%r12
+     3be:	mov    %r10,(%r11)
+     3c1:	mov    %r11,%rax
+     3c4:	mov    %rcx,0x8(%r11)
+     3c8:	mov    (%rsp),%rbx
+     3cc:	add    $0x20,%rsp
+     3d0:	ret
+     3d1:	movups %xmm0,(%rdi)
+     3d4:	mov    %r11,%rax
+     3d7:	mov    (%rsp),%rbx
+     3db:	add    $0x20,%rsp
+     3df:	ret
+
+00000000000003e0 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0>:
+     3e0:	mov    %rsi,%rax
+     3e3:	mov    (%rdx),%r10
+     3e6:	mov    (%rsi),%rsi
+     3e9:	mov    %rdi,%r8
+     3ec:	mov    0x8(%rax),%rax
+     3f0:	mov    %rdx,%r9
+     3f3:	cmp    %r10,%rsi
+     3f6:	je     4b0 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0xd0>
+     3fc:	nopl   0x0(%rax)
+     400:	mov    0x8(%rsi),%rdi
+     404:	mov    (%rsi),%rdx
+     407:	lea    (%rdx,%rdi,4),%rdi
+     40b:	cmp    %rax,%rdi
+     40e:	je     4a0 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0xc0>
+     414:	mov    %rdi,%rdx
+     417:	sub    %rax,%rdx
+     41a:	sub    $0x4,%rdx
+     41e:	shr    $0x2,%rdx
+     422:	add    $0x1,%rdx
+     426:	and    $0x3,%edx
+     429:	je     460 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x80>
+     42b:	cmp    $0x1,%rdx
+     42f:	je     44f <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x6f>
+     431:	cmp    $0x2,%rdx
+     435:	je     443 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x63>
+     437:	cmp    %ecx,(%rax)
+     439:	je     530 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x150>
+     43f:	add    $0x4,%rax
+     443:	cmp    %ecx,(%rax)
+     445:	je     530 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x150>
+     44b:	add    $0x4,%rax
+     44f:	cmp    %ecx,(%rax)
+     451:	je     530 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x150>
+     457:	add    $0x4,%rax
+     45b:	cmp    %rax,%rdi
+     45e:	je     4a0 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0xc0>
+     460:	cmp    %ecx,(%rax)
+     462:	je     530 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x150>
+     468:	lea    0x4(%rax),%rdx
+     46c:	mov    %rdx,%rax
+     46f:	cmp    %ecx,(%rdx)
+     471:	je     530 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x150>
+     477:	add    $0x4,%rax
+     47b:	cmp    %ecx,(%rax)
+     47d:	je     530 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x150>
+     483:	lea    0x8(%rdx),%rax
+     487:	cmp    %ecx,0x8(%rdx)
+     48a:	je     530 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x150>
+     490:	lea    0xc(%rdx),%rax
+     494:	cmp    %rax,%rdi
+     497:	jne    460 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x80>
+     499:	nopl   0x0(%rax)
+     4a0:	add    $0x18,%rsi
+     4a4:	mov    (%rsi),%rax
+     4a7:	cmp    %rsi,%r10
+     4aa:	jne    400 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x20>
+     4b0:	mov    0x8(%r9),%rdi
+     4b4:	cmp    %rax,%rdi
+     4b7:	je     51e <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x13e>
+     4b9:	mov    %rdi,%rdx
+     4bc:	sub    %rax,%rdx
+     4bf:	sub    $0x4,%rdx
+     4c3:	shr    $0x2,%rdx
+     4c7:	add    $0x1,%rdx
+     4cb:	and    $0x3,%edx
+     4ce:	je     4f5 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x115>
+     4d0:	cmp    $0x1,%rdx
+     4d4:	je     4e8 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x108>
+     4d6:	cmp    $0x2,%rdx
+     4da:	jne    573 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x193>
+     4e0:	cmp    %ecx,(%rax)
+     4e2:	je     544 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x164>
+     4e4:	add    $0x4,%rax
+     4e8:	cmp    %ecx,(%rax)
+     4ea:	je     544 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x164>
+     4ec:	add    $0x4,%rax
+     4f0:	cmp    %rax,%rdi
+     4f3:	je     51e <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x13e>
+     4f5:	cmp    %ecx,(%rax)
+     4f7:	je     544 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x164>
+     4f9:	lea    0x4(%rax),%rdx
+     4fd:	mov    %rdx,%rax
+     500:	cmp    %ecx,(%rdx)
+     502:	je     544 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x164>
+     504:	add    $0x4,%rax
+     508:	cmp    %ecx,(%rax)
+     50a:	je     544 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x164>
+     50c:	lea    0x8(%rdx),%rax
+     510:	cmp    %ecx,0x8(%rdx)
+     513:	je     544 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x164>
+     515:	lea    0xc(%rdx),%rax
+     519:	cmp    %rax,%rdi
+     51c:	jne    4f5 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x115>
+     51e:	mov    %rax,0x8(%r8)
+     522:	mov    %r8,%rax
+     525:	mov    %r10,(%r8)
+     528:	ret
+     529:	nopl   0x0(%rax)
+     530:	cmp    %rax,%rdi
+     533:	je     4a0 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0xc0>
+     539:	mov    %rax,0x8(%r8)
+     53d:	mov    %r8,%rax
+     540:	mov    %rsi,(%r8)
+     543:	ret
+     544:	cmp    %rax,%rdi
+     547:	je     51e <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x13e>
+     549:	mov    0x8(%rsi),%rcx
+     54d:	mov    (%rsi),%rdx
+     550:	lea    (%rdx,%rcx,4),%rdx
+     554:	cmp    %rdx,%rax
+     557:	jne    539 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x159>
+     559:	nopl   0x0(%rax)
+     560:	mov    0x20(%rsi),%rax
+     564:	add    $0x18,%rsi
+     568:	shl    $0x2,%rax
+     56c:	je     560 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x180>
+     56e:	mov    (%rsi),%rax
+     571:	jmp    539 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x159>
+     573:	cmp    %ecx,(%rax)
+     575:	je     544 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x164>
+     577:	add    $0x4,%rax
+     57b:	jmp    4e0 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0+0x100>
+
+0000000000000580 <_Z14probe_fill_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi>:
+     580:	endbr64
+     584:	mov    (%rdi),%rax
+     587:	mov    0x8(%rsi),%r8
+     58b:	mov    %rdx,%rcx
+     58e:	mov    0x8(%rdi),%rdi
+     592:	mov    (%rsi),%r9
+     595:	cmp    %r8,%rdi
+     598:	je     61b <_Z14probe_fill_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x9b>
+     59e:	xchg   %ax,%ax
+     5a0:	mov    (%rdi),%rsi
+     5a3:	add    $0x400,%rsi
+     5aa:	cmp    %rax,%rsi
+     5ad:	je     60f <_Z14probe_fill_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x8f>
+     5af:	mov    %rsi,%rdx
+     5b2:	sub    %rax,%rdx
+     5b5:	sub    $0x4,%rdx
+     5b9:	shr    $0x2,%rdx
+     5bd:	add    $0x1,%rdx
+     5c1:	and    $0x3,%edx
+     5c4:	je     5f2 <_Z14probe_fill_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x72>
+     5c6:	cmp    $0x1,%rdx
+     5ca:	je     5e4 <_Z14probe_fill_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x64>
+     5cc:	cmp    $0x2,%rdx
+     5d0:	je     5db <_Z14probe_fill_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x5b>
+     5d2:	mov    (%rcx),%edx
+     5d4:	add    $0x4,%rax
+     5d8:	mov    %edx,-0x4(%rax)
+     5db:	mov    (%rcx),%edx
+     5dd:	add    $0x4,%rax
+     5e1:	mov    %edx,-0x4(%rax)
+     5e4:	mov    (%rcx),%edx
+     5e6:	add    $0x4,%rax
+     5ea:	mov    %edx,-0x4(%rax)
+     5ed:	cmp    %rax,%rsi
+     5f0:	je     60f <_Z14probe_fill_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x8f>
+     5f2:	mov    (%rcx),%edx
+     5f4:	add    $0x10,%rax
+     5f8:	mov    %edx,-0x10(%rax)
+     5fb:	mov    (%rcx),%edx
+     5fd:	mov    %edx,-0xc(%rax)
+     600:	mov    (%rcx),%edx
+     602:	mov    %edx,-0x8(%rax)
+     605:	mov    (%rcx),%edx
+     607:	mov    %edx,-0x4(%rax)
+     60a:	cmp    %rax,%rsi
+     60d:	jne    5f2 <_Z14probe_fill_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x72>
+     60f:	add    $0x8,%rdi
+     613:	mov    (%rdi),%rax
+     616:	cmp    %rdi,%r8
+     619:	jne    5a0 <_Z14probe_fill_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x20>
+     61b:	cmp    %rax,%r9
+     61e:	je     680 <_Z14probe_fill_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x100>
+     620:	mov    %r9,%rdx
+     623:	sub    %rax,%rdx
+     626:	sub    $0x4,%rdx
+     62a:	shr    $0x2,%rdx
+     62e:	add    $0x1,%rdx
+     632:	and    $0x3,%edx
+     635:	je     663 <_Z14probe_fill_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0xe3>
+     637:	cmp    $0x1,%rdx
+     63b:	je     655 <_Z14probe_fill_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0xd5>
+     63d:	cmp    $0x2,%rdx
+     641:	je     64c <_Z14probe_fill_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0xcc>
+     643:	mov    (%rcx),%edx
+     645:	add    $0x4,%rax
+     649:	mov    %edx,-0x4(%rax)
+     64c:	mov    (%rcx),%edx
+     64e:	add    $0x4,%rax
+     652:	mov    %edx,-0x4(%rax)
+     655:	mov    (%rcx),%edx
+     657:	add    $0x4,%rax
+     65b:	mov    %edx,-0x4(%rax)
+     65e:	cmp    %rax,%r9
+     661:	je     681 <_Z14probe_fill_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x101>
+     663:	mov    (%rcx),%edx
+     665:	add    $0x10,%rax
+     669:	mov    %edx,-0x10(%rax)
+     66c:	mov    (%rcx),%edx
+     66e:	mov    %edx,-0xc(%rax)
+     671:	mov    (%rcx),%edx
+     673:	mov    %edx,-0x8(%rax)
+     676:	mov    (%rcx),%edx
+     678:	mov    %edx,-0x4(%rax)
+     67b:	cmp    %rax,%r9
+     67e:	jne    663 <_Z14probe_fill_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0xe3>
+     680:	ret
+     681:	ret
+     682:	nopl   (%rax)
+     685:	data16 cs nopw 0x0(%rax,%rax,1)
+
+0000000000000690 <_Z13probe_fill_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi>:
+     690:	endbr64
+     694:	mov    (%rsi),%r10
+     697:	mov    0x8(%rsi),%r9
+     69b:	mov    %rdx,%rcx
+     69e:	mov    (%rdi),%rsi
+     6a1:	mov    0x8(%rdi),%rdi
+     6a5:	cmp    %r10,%rsi
+     6a8:	je     72e <_Z13probe_fill_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x9e>
+     6ae:	xchg   %ax,%ax
+     6b0:	mov    0x8(%rsi),%rdx
+     6b4:	mov    (%rsi),%rax
+     6b7:	lea    (%rax,%rdx,4),%r8
+     6bb:	cmp    %rdi,%r8
+     6be:	je     722 <_Z13probe_fill_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x92>
+     6c0:	mov    %r8,%rdx
+     6c3:	mov    %rdi,%rax
+     6c6:	sub    %rdi,%rdx
+     6c9:	sub    $0x4,%rdx
+     6cd:	shr    $0x2,%rdx
+     6d1:	add    $0x1,%rdx
+     6d5:	and    $0x3,%edx
+     6d8:	je     705 <_Z13probe_fill_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x75>
+     6da:	cmp    $0x1,%rdx
+     6de:	je     6f7 <_Z13probe_fill_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x67>
+     6e0:	cmp    $0x2,%rdx
+     6e4:	je     6ee <_Z13probe_fill_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x5e>
+     6e6:	mov    (%rcx),%edx
+     6e8:	add    $0x4,%rax
+     6ec:	mov    %edx,(%rdi)
+     6ee:	mov    (%rcx),%edx
+     6f0:	add    $0x4,%rax
+     6f4:	mov    %edx,-0x4(%rax)
+     6f7:	mov    (%rcx),%edx
+     6f9:	add    $0x4,%rax
+     6fd:	mov    %edx,-0x4(%rax)
+     700:	cmp    %r8,%rax
+     703:	je     722 <_Z13probe_fill_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x92>
+     705:	mov    (%rcx),%edx
+     707:	add    $0x10,%rax
+     70b:	mov    %edx,-0x10(%rax)
+     70e:	mov    (%rcx),%edx
+     710:	mov    %edx,-0xc(%rax)
+     713:	mov    (%rcx),%edx
+     715:	mov    %edx,-0x8(%rax)
+     718:	mov    (%rcx),%edx
+     71a:	mov    %edx,-0x4(%rax)
+     71d:	cmp    %r8,%rax
+     720:	jne    705 <_Z13probe_fill_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x75>
+     722:	add    $0x18,%rsi
+     726:	mov    (%rsi),%rdi
+     729:	cmp    %rsi,%r10
+     72c:	jne    6b0 <_Z13probe_fill_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x20>
+     72e:	cmp    %rdi,%r9
+     731:	je     793 <_Z13probe_fill_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x103>
+     733:	mov    %r9,%rax
+     736:	sub    %rdi,%rax
+     739:	sub    $0x4,%rax
+     73d:	shr    $0x2,%rax
+     741:	add    $0x1,%rax
+     745:	and    $0x3,%eax
+     748:	je     776 <_Z13probe_fill_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xe6>
+     74a:	cmp    $0x1,%rax
+     74e:	je     768 <_Z13probe_fill_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xd8>
+     750:	cmp    $0x2,%rax
+     754:	je     75f <_Z13probe_fill_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xcf>
+     756:	mov    (%rcx),%eax
+     758:	add    $0x4,%rdi
+     75c:	mov    %eax,-0x4(%rdi)
+     75f:	mov    (%rcx),%eax
+     761:	add    $0x4,%rdi
+     765:	mov    %eax,-0x4(%rdi)
+     768:	mov    (%rcx),%eax
+     76a:	add    $0x4,%rdi
+     76e:	mov    %eax,-0x4(%rdi)
+     771:	cmp    %r9,%rdi
+     774:	je     794 <_Z13probe_fill_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x104>
+     776:	mov    (%rcx),%eax
+     778:	add    $0x10,%rdi
+     77c:	mov    %eax,-0x10(%rdi)
+     77f:	mov    (%rcx),%eax
+     781:	mov    %eax,-0xc(%rdi)
+     784:	mov    (%rcx),%eax
+     786:	mov    %eax,-0x8(%rdi)
+     789:	mov    (%rcx),%eax
+     78b:	mov    %eax,-0x4(%rdi)
+     78e:	cmp    %r9,%rdi
+     791:	jne    776 <_Z13probe_fill_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xe6>
+     793:	ret
+     794:	ret
+     795:	data16 cs nopw 0x0(%rax,%rax,1)
+
+00000000000007a0 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi>:
+     7a0:	endbr64
+     7a4:	push   %r12
+     7a6:	mov    %rdx,%rcx
+     7a9:	push   %rbp
+     7aa:	push   %rbx
+     7ab:	mov    (%rsi),%rbp
+     7ae:	mov    (%rdi),%r10
+     7b1:	mov    0x8(%rsi),%rbx
+     7b5:	mov    0x10(%rsi),%r12
+     7b9:	mov    0x10(%rdi),%r8
+     7bd:	mov    0x8(%rdi),%rsi
+     7c1:	cmp    %rbp,%r10
+     7c4:	je     91d <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x17d>
+     7ca:	nopw   0x0(%rax,%rax,1)
+     7d0:	mov    0x8(%r10),%rax
+     7d4:	lea    -0x3(%rax,%rax,2),%rdx
+     7d9:	mov    (%r10),%rax
+     7dc:	lea    (%rax,%rdx,8),%r9
+     7e0:	mov    (%r9),%r11
+     7e3:	cmp    %r9,%rsi
+     7e6:	je     86f <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xcf>
+     7ec:	nopl   0x0(%rax)
+     7f0:	mov    0x8(%rsi),%rdx
+     7f4:	mov    (%rsi),%rax
+     7f7:	lea    (%rax,%rdx,4),%rdi
+     7fb:	cmp    %r8,%rdi
+     7fe:	je     863 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xc3>
+     800:	mov    %rdi,%rdx
+     803:	mov    %r8,%rax
+     806:	sub    %r8,%rdx
+     809:	sub    $0x4,%rdx
+     80d:	shr    $0x2,%rdx
+     811:	add    $0x1,%rdx
+     815:	and    $0x3,%edx
+     818:	je     846 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xa6>
+     81a:	cmp    $0x1,%rdx
+     81e:	je     838 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x98>
+     820:	cmp    $0x2,%rdx
+     824:	je     82f <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x8f>
+     826:	mov    (%rcx),%edx
+     828:	add    $0x4,%rax
+     82c:	mov    %edx,(%r8)
+     82f:	mov    (%rcx),%edx
+     831:	add    $0x4,%rax
+     835:	mov    %edx,-0x4(%rax)
+     838:	mov    (%rcx),%edx
+     83a:	add    $0x4,%rax
+     83e:	mov    %edx,-0x4(%rax)
+     841:	cmp    %rdi,%rax
+     844:	je     863 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xc3>
+     846:	mov    (%rcx),%edx
+     848:	add    $0x10,%rax
+     84c:	mov    %edx,-0x10(%rax)
+     84f:	mov    (%rcx),%edx
+     851:	mov    %edx,-0xc(%rax)
+     854:	mov    (%rcx),%edx
+     856:	mov    %edx,-0x8(%rax)
+     859:	mov    (%rcx),%edx
+     85b:	mov    %edx,-0x4(%rax)
+     85e:	cmp    %rdi,%rax
+     861:	jne    846 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xa6>
+     863:	add    $0x18,%rsi
+     867:	mov    (%rsi),%r8
+     86a:	cmp    %rsi,%r9
+     86d:	jne    7f0 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x50>
+     86f:	cmp    %r8,%r11
+     872:	je     8d7 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x137>
+     874:	mov    %r11,%rdx
+     877:	mov    %r8,%rax
+     87a:	sub    %r8,%rdx
+     87d:	sub    $0x4,%rdx
+     881:	shr    $0x2,%rdx
+     885:	add    $0x1,%rdx
+     889:	and    $0x3,%edx
+     88c:	je     8ba <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x11a>
+     88e:	cmp    $0x1,%rdx
+     892:	je     8ac <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x10c>
+     894:	cmp    $0x2,%rdx
+     898:	je     8a3 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x103>
+     89a:	mov    (%rcx),%edx
+     89c:	add    $0x4,%rax
+     8a0:	mov    %edx,(%r8)
+     8a3:	mov    (%rcx),%edx
+     8a5:	add    $0x4,%rax
+     8a9:	mov    %edx,-0x4(%rax)
+     8ac:	mov    (%rcx),%edx
+     8ae:	add    $0x4,%rax
+     8b2:	mov    %edx,-0x4(%rax)
+     8b5:	cmp    %r11,%rax
+     8b8:	je     8d7 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x137>
+     8ba:	mov    (%rcx),%edx
+     8bc:	add    $0x10,%rax
+     8c0:	mov    %edx,-0x10(%rax)
+     8c3:	mov    (%rcx),%edx
+     8c5:	mov    %edx,-0xc(%rax)
+     8c8:	mov    (%rcx),%edx
+     8ca:	mov    %edx,-0x8(%rax)
+     8cd:	mov    (%rcx),%edx
+     8cf:	mov    %edx,-0x4(%rax)
+     8d2:	cmp    %r11,%rax
+     8d5:	jne    8ba <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x11a>
+     8d7:	mov    0x18(%r10),%rsi
+     8db:	add    $0x18,%r10
+     8df:	mov    0x8(%rsi),%rax
+     8e3:	shl    $0x2,%rax
+     8e7:	jne    911 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x171>
+     8e9:	lea    0x18(%rsi),%rax
+     8ed:	nopl   0x0(%rax,%rax,1)
+     8f5:	data16 cs nopw 0x0(%rax,%rax,1)
+     900:	mov    %rax,%rsi
+     903:	lea    0x18(%rax),%rax
+     907:	mov    0x8(%rsi),%rdi
+     90b:	shl    $0x2,%rdi
+     90f:	je     900 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x160>
+     911:	mov    (%rsi),%r8
+     914:	cmp    %r10,%rbp
+     917:	jne    7d0 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x30>
+     91d:	cmp    %rsi,%rbx
+     920:	je     9af <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x20f>
+     926:	cs nopw 0x0(%rax,%rax,1)
+     930:	mov    0x8(%rsi),%rdx
+     934:	mov    (%rsi),%rax
+     937:	lea    (%rax,%rdx,4),%rdi
+     93b:	cmp    %r8,%rdi
+     93e:	je     9a3 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x203>
+     940:	mov    %rdi,%rdx
+     943:	mov    %r8,%rax
+     946:	sub    %r8,%rdx
+     949:	sub    $0x4,%rdx
+     94d:	shr    $0x2,%rdx
+     951:	add    $0x1,%rdx
+     955:	and    $0x3,%edx
+     958:	je     986 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x1e6>
+     95a:	cmp    $0x1,%rdx
+     95e:	je     978 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x1d8>
+     960:	cmp    $0x2,%rdx
+     964:	je     96f <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x1cf>
+     966:	mov    (%rcx),%edx
+     968:	add    $0x4,%rax
+     96c:	mov    %edx,(%r8)
+     96f:	mov    (%rcx),%edx
+     971:	add    $0x4,%rax
+     975:	mov    %edx,-0x4(%rax)
+     978:	mov    (%rcx),%edx
+     97a:	add    $0x4,%rax
+     97e:	mov    %edx,-0x4(%rax)
+     981:	cmp    %rax,%rdi
+     984:	je     9a3 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x203>
+     986:	mov    (%rcx),%edx
+     988:	add    $0x10,%rax
+     98c:	mov    %edx,-0x10(%rax)
+     98f:	mov    (%rcx),%edx
+     991:	mov    %edx,-0xc(%rax)
+     994:	mov    (%rcx),%edx
+     996:	mov    %edx,-0x8(%rax)
+     999:	mov    (%rcx),%edx
+     99b:	mov    %edx,-0x4(%rax)
+     99e:	cmp    %rax,%rdi
+     9a1:	jne    986 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x1e6>
+     9a3:	add    $0x18,%rsi
+     9a7:	mov    (%rsi),%r8
+     9aa:	cmp    %rsi,%rbx
+     9ad:	jne    930 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x190>
+     9af:	cmp    %r8,%r12
+     9b2:	je     a1b <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x27b>
+     9b4:	mov    %r12,%rax
+     9b7:	sub    %r8,%rax
+     9ba:	sub    $0x4,%rax
+     9be:	shr    $0x2,%rax
+     9c2:	add    $0x1,%rax
+     9c6:	and    $0x3,%eax
+     9c9:	je     9fa <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x25a>
+     9cb:	cmp    $0x1,%rax
+     9cf:	je     9eb <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x24b>
+     9d1:	cmp    $0x2,%rax
+     9d5:	je     9e1 <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x241>
+     9d7:	mov    (%rcx),%eax
+     9d9:	add    $0x4,%r8
+     9dd:	mov    %eax,-0x4(%r8)
+     9e1:	mov    (%rcx),%eax
+     9e3:	add    $0x4,%r8
+     9e7:	mov    %eax,-0x4(%r8)
+     9eb:	mov    (%rcx),%eax
+     9ed:	add    $0x4,%r8
+     9f1:	mov    %eax,-0x4(%r8)
+     9f5:	cmp    %r8,%r12
+     9f8:	je     a1b <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x27b>
+     9fa:	mov    (%rcx),%eax
+     9fc:	add    $0x10,%r8
+     a00:	mov    %eax,-0x10(%r8)
+     a04:	mov    (%rcx),%eax
+     a06:	mov    %eax,-0xc(%r8)
+     a0a:	mov    (%rcx),%eax
+     a0c:	mov    %eax,-0x8(%r8)
+     a10:	mov    (%rcx),%eax
+     a12:	mov    %eax,-0x4(%r8)
+     a16:	cmp    %r8,%r12
+     a19:	jne    9fa <_Z13probe_fill_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x25a>
+     a1b:	pop    %rbx
+     a1c:	pop    %rbp
+     a1d:	pop    %r12
+     a1f:	ret
+
+0000000000000a20 <_Z15probe_count_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi>:
+     a20:	endbr64
+     a24:	mov    0x8(%rsi),%r11
+     a28:	mov    0x8(%rdi),%r8
+     a2c:	xor    %r9d,%r9d
+     a2f:	mov    (%rsi),%r10
+     a32:	mov    (%rdi),%rax
+     a35:	mov    (%rdx),%esi
+     a37:	cmp    %r11,%r8
+     a3a:	je     aeb <_Z15probe_count_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0xcb>
+     a40:	mov    (%r8),%rdi
+     a43:	add    $0x400,%rdi
+     a4a:	cmp    %rdi,%rax
+     a4d:	je     adb <_Z15probe_count_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0xbb>
+     a53:	mov    %rdi,%rcx
+     a56:	xor    %edx,%edx
+     a58:	sub    %rax,%rcx
+     a5b:	sub    $0x4,%rcx
+     a5f:	shr    $0x2,%rcx
+     a63:	add    $0x1,%rcx
+     a67:	and    $0x3,%ecx
+     a6a:	je     aa4 <_Z15probe_count_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x84>
+     a6c:	cmp    $0x1,%rcx
+     a70:	je     a91 <_Z15probe_count_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x71>
+     a72:	cmp    $0x2,%rcx
+     a76:	je     a83 <_Z15probe_count_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x63>
+     a78:	xor    %edx,%edx
+     a7a:	cmp    (%rax),%esi
+     a7c:	sete   %dl
+     a7f:	add    $0x4,%rax
+     a83:	xor    %ecx,%ecx
+     a85:	cmp    (%rax),%esi
+     a87:	sete   %cl
+     a8a:	add    $0x4,%rax
+     a8e:	add    %rcx,%rdx
+     a91:	xor    %ecx,%ecx
+     a93:	cmp    (%rax),%esi
+     a95:	sete   %cl
+     a98:	add    $0x4,%rax
+     a9c:	add    %rcx,%rdx
+     a9f:	cmp    %rax,%rdi
+     aa2:	je     ad8 <_Z15probe_count_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0xb8>
+     aa4:	xor    %ecx,%ecx
+     aa6:	cmp    (%rax),%esi
+     aa8:	sete   %cl
+     aab:	add    %rcx,%rdx
+     aae:	xor    %ecx,%ecx
+     ab0:	cmp    0x4(%rax),%esi
+     ab3:	sete   %cl
+     ab6:	add    %rcx,%rdx
+     ab9:	xor    %ecx,%ecx
+     abb:	cmp    0x8(%rax),%esi
+     abe:	sete   %cl
+     ac1:	add    %rcx,%rdx
+     ac4:	xor    %ecx,%ecx
+     ac6:	cmp    0xc(%rax),%esi
+     ac9:	sete   %cl
+     acc:	add    $0x10,%rax
+     ad0:	add    %rcx,%rdx
+     ad3:	cmp    %rax,%rdi
+     ad6:	jne    aa4 <_Z15probe_count_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x84>
+     ad8:	add    %rdx,%r9
+     adb:	add    $0x8,%r8
+     adf:	mov    (%r8),%rax
+     ae2:	cmp    %r8,%r11
+     ae5:	jne    a40 <_Z15probe_count_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x20>
+     aeb:	cmp    %rax,%r10
+     aee:	je     b7c <_Z15probe_count_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x15c>
+     af4:	mov    %r10,%rcx
+     af7:	xor    %edx,%edx
+     af9:	sub    %rax,%rcx
+     afc:	sub    $0x4,%rcx
+     b00:	shr    $0x2,%rcx
+     b04:	add    $0x1,%rcx
+     b08:	and    $0x3,%ecx
+     b0b:	je     b45 <_Z15probe_count_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x125>
+     b0d:	cmp    $0x1,%rcx
+     b11:	je     b32 <_Z15probe_count_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x112>
+     b13:	cmp    $0x2,%rcx
+     b17:	je     b24 <_Z15probe_count_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x104>
+     b19:	xor    %edx,%edx
+     b1b:	cmp    %esi,(%rax)
+     b1d:	sete   %dl
+     b20:	add    $0x4,%rax
+     b24:	xor    %ecx,%ecx
+     b26:	cmp    %esi,(%rax)
+     b28:	sete   %cl
+     b2b:	add    $0x4,%rax
+     b2f:	add    %rcx,%rdx
+     b32:	xor    %ecx,%ecx
+     b34:	cmp    %esi,(%rax)
+     b36:	sete   %cl
+     b39:	add    $0x4,%rax
+     b3d:	add    %rcx,%rdx
+     b40:	cmp    %rax,%r10
+     b43:	je     b79 <_Z15probe_count_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x159>
+     b45:	xor    %ecx,%ecx
+     b47:	cmp    %esi,(%rax)
+     b49:	sete   %cl
+     b4c:	add    %rcx,%rdx
+     b4f:	xor    %ecx,%ecx
+     b51:	cmp    %esi,0x4(%rax)
+     b54:	sete   %cl
+     b57:	add    %rcx,%rdx
+     b5a:	xor    %ecx,%ecx
+     b5c:	cmp    %esi,0x8(%rax)
+     b5f:	sete   %cl
+     b62:	add    %rcx,%rdx
+     b65:	xor    %ecx,%ecx
+     b67:	cmp    %esi,0xc(%rax)
+     b6a:	sete   %cl
+     b6d:	add    $0x10,%rax
+     b71:	add    %rcx,%rdx
+     b74:	cmp    %rax,%r10
+     b77:	jne    b45 <_Z15probe_count_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x125>
+     b79:	add    %rdx,%r9
+     b7c:	mov    %r9,%rax
+     b7f:	ret
+
+0000000000000b80 <_Z14probe_count_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi>:
+     b80:	endbr64
+     b84:	sub    $0x38,%rsp
+     b88:	movdqu (%rdi),%xmm0
+     b8c:	movdqu (%rsi),%xmm1
+     b90:	mov    %fs:0x28,%rax
+     b99:	mov    %rax,0x28(%rsp)
+     b9e:	xor    %eax,%eax
+     ba0:	mov    (%rdx),%edx
+     ba2:	lea    0x10(%rsp),%rsi
+     ba7:	mov    %rsp,%rdi
+     baa:	movaps %xmm1,0x10(%rsp)
+     baf:	movaps %xmm0,(%rsp)
+     bb3:	call   110 <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0>
+     bb8:	mov    0x28(%rsp),%rdx
+     bbd:	sub    %fs:0x28,%rdx
+     bc6:	jne    bcd <_Z14probe_count_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x4d>
+     bc8:	add    $0x38,%rsp
+     bcc:	ret
+     bcd:	call   bd2 <_Z14probe_count_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x52>
+     bd2:	nopl   (%rax)
+     bd5:	data16 cs nopw 0x0(%rax,%rax,1)
+
+0000000000000be0 <_Z14probe_count_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi>:
+     be0:	endbr64
+     be4:	push   %r15
+     be6:	push   %r14
+     be8:	push   %r13
+     bea:	push   %r12
+     bec:	push   %rbp
+     bed:	push   %rbx
+     bee:	xor    %ebx,%ebx
+     bf0:	sub    $0x38,%rsp
+     bf4:	mov    (%rdi),%r15
+     bf7:	movdqu 0x8(%rsi),%xmm0
+     bfc:	mov    %fs:0x28,%r14
+     c05:	mov    %r14,0x28(%rsp)
+     c0a:	mov    (%rsi),%r14
+     c0d:	mov    0x8(%rdi),%rax
+     c11:	mov    0x10(%rdi),%rcx
+     c15:	mov    %rsp,%r12
+     c18:	mov    (%rdx),%r13d
+     c1b:	lea    0x10(%rsp),%rbp
+     c20:	cmp    %r14,%r15
+     c23:	je     c96 <_Z14probe_count_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xb6>
+     c25:	data16 cs nopw 0x0(%rax,%rax,1)
+     c30:	mov    0x8(%r15),%rdx
+     c34:	mov    %rbp,%rdi
+     c37:	mov    %rcx,0x18(%rsp)
+     c3c:	add    $0x18,%r15
+     c40:	mov    %rax,0x10(%rsp)
+     c45:	lea    -0x3(%rdx,%rdx,2),%rsi
+     c4a:	mov    -0x18(%r15),%rdx
+     c4e:	lea    (%rdx,%rsi,8),%rdx
+     c52:	mov    (%rdx),%rsi
+     c55:	mov    %rdx,(%rsp)
+     c59:	mov    %r13d,%edx
+     c5c:	mov    %rsi,0x8(%rsp)
+     c61:	mov    %r12,%rsi
+     c64:	call   110 <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0>
+     c69:	add    %rax,%rbx
+     c6c:	mov    (%r15),%rax
+     c6f:	mov    0x8(%rax),%rcx
+     c73:	shl    $0x2,%rcx
+     c77:	jne    c8e <_Z14probe_count_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xae>
+     c79:	nopl   0x0(%rax)
+     c80:	mov    0x20(%rax),%rdi
+     c84:	add    $0x18,%rax
+     c88:	shl    $0x2,%rdi
+     c8c:	je     c80 <_Z14probe_count_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xa0>
+     c8e:	mov    (%rax),%rcx
+     c91:	cmp    %r15,%r14
+     c94:	jne    c30 <_Z14probe_count_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x50>
+     c96:	mov    %r13d,%edx
+     c99:	mov    %r12,%rsi
+     c9c:	mov    %rbp,%rdi
+     c9f:	mov    %rax,0x10(%rsp)
+     ca4:	mov    %rcx,0x18(%rsp)
+     ca9:	movaps %xmm0,(%rsp)
+     cad:	call   110 <_ZN5boost9container11detail_algo24segmented_count_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EENSt15iterator_traitsIT_E15difference_typeES8_S8_RKT0_NS0_22segmented_iterator_tagET1_.isra.0>
+     cb2:	add    %rbx,%rax
+     cb5:	mov    0x28(%rsp),%rdx
+     cba:	sub    %fs:0x28,%rdx
+     cc3:	jne    cd4 <_Z14probe_count_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xf4>
+     cc5:	add    $0x38,%rsp
+     cc9:	pop    %rbx
+     cca:	pop    %rbp
+     ccb:	pop    %r12
+     ccd:	pop    %r13
+     ccf:	pop    %r14
+     cd1:	pop    %r15
+     cd3:	ret
+     cd4:	call   cd9 <_Z14probe_count_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xf9>
+     cd9:	nopl   0x0(%rax)
+
+0000000000000ce0 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi>:
+     ce0:	endbr64
+     ce4:	mov    %rdi,%r9
+     ce7:	mov    0x8(%rdx),%r8
+     ceb:	mov    0x8(%rsi),%rdi
+     cef:	mov    %rdx,%r10
+     cf2:	mov    (%rsi),%rax
+     cf5:	mov    (%rcx),%ecx
+     cf7:	cmp    %r8,%rdi
+     cfa:	je     db0 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0xd0>
+     d00:	mov    (%rdi),%rsi
+     d03:	add    $0x400,%rsi
+     d0a:	cmp    %rsi,%rax
+     d0d:	je     da0 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0xc0>
+     d13:	mov    %rsi,%rdx
+     d16:	sub    %rax,%rdx
+     d19:	sub    $0x4,%rdx
+     d1d:	shr    $0x2,%rdx
+     d21:	add    $0x1,%rdx
+     d25:	and    $0x3,%edx
+     d28:	je     d5f <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x7f>
+     d2a:	cmp    $0x1,%rdx
+     d2e:	je     d4e <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x6e>
+     d30:	cmp    $0x2,%rdx
+     d34:	je     d42 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x62>
+     d36:	cmp    (%rax),%ecx
+     d38:	je     e30 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x150>
+     d3e:	add    $0x4,%rax
+     d42:	cmp    (%rax),%ecx
+     d44:	je     e30 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x150>
+     d4a:	add    $0x4,%rax
+     d4e:	cmp    (%rax),%ecx
+     d50:	je     e30 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x150>
+     d56:	add    $0x4,%rax
+     d5a:	cmp    %rax,%rsi
+     d5d:	je     da0 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0xc0>
+     d5f:	cmp    (%rax),%ecx
+     d61:	je     e30 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x150>
+     d67:	lea    0x4(%rax),%rdx
+     d6b:	mov    %rdx,%rax
+     d6e:	cmp    (%rdx),%ecx
+     d70:	je     e30 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x150>
+     d76:	add    $0x4,%rax
+     d7a:	cmp    (%rax),%ecx
+     d7c:	je     e30 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x150>
+     d82:	lea    0x8(%rdx),%rax
+     d86:	cmp    0x8(%rdx),%ecx
+     d89:	je     e30 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x150>
+     d8f:	lea    0xc(%rdx),%rax
+     d93:	cmp    %rax,%rsi
+     d96:	jne    d5f <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x7f>
+     d98:	nopl   0x0(%rax,%rax,1)
+     da0:	add    $0x8,%rdi
+     da4:	mov    (%rdi),%rax
+     da7:	cmp    %rdi,%r8
+     daa:	jne    d00 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x20>
+     db0:	mov    (%r10),%rsi
+     db3:	cmp    %rax,%rsi
+     db6:	je     e1d <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x13d>
+     db8:	mov    %rsi,%rdx
+     dbb:	sub    %rax,%rdx
+     dbe:	sub    $0x4,%rdx
+     dc2:	shr    $0x2,%rdx
+     dc6:	add    $0x1,%rdx
+     dca:	and    $0x3,%edx
+     dcd:	je     df4 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x114>
+     dcf:	cmp    $0x1,%rdx
+     dd3:	je     de7 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x107>
+     dd5:	cmp    $0x2,%rdx
+     dd9:	jne    e70 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x190>
+     ddf:	cmp    (%rax),%ecx
+     de1:	je     e44 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x164>
+     de3:	add    $0x4,%rax
+     de7:	cmp    (%rax),%ecx
+     de9:	je     e44 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x164>
+     deb:	add    $0x4,%rax
+     def:	cmp    %rax,%rsi
+     df2:	je     e1d <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x13d>
+     df4:	cmp    (%rax),%ecx
+     df6:	je     e44 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x164>
+     df8:	lea    0x4(%rax),%rdx
+     dfc:	mov    %rdx,%rax
+     dff:	cmp    (%rdx),%ecx
+     e01:	je     e44 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x164>
+     e03:	add    $0x4,%rax
+     e07:	cmp    (%rax),%ecx
+     e09:	je     e44 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x164>
+     e0b:	lea    0x8(%rdx),%rax
+     e0f:	cmp    0x8(%rdx),%ecx
+     e12:	je     e44 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x164>
+     e14:	lea    0xc(%rdx),%rax
+     e18:	cmp    %rax,%rsi
+     e1b:	jne    df4 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x114>
+     e1d:	mov    %rax,(%r9)
+     e20:	mov    %r9,%rax
+     e23:	mov    %r8,0x8(%r9)
+     e27:	ret
+     e28:	nopl   0x0(%rax,%rax,1)
+     e30:	cmp    %rsi,%rax
+     e33:	je     da0 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0xc0>
+     e39:	mov    %rax,(%r9)
+     e3c:	mov    %r9,%rax
+     e3f:	mov    %rdi,0x8(%r9)
+     e43:	ret
+     e44:	cmp    %rax,%rsi
+     e47:	je     e1d <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x13d>
+     e49:	test   %rdi,%rdi
+     e4c:	je     e39 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x159>
+     e4e:	mov    (%rdi),%rsi
+     e51:	lea    0x400(%rsi),%rdx
+     e58:	cmp    %rdx,%rax
+     e5b:	jne    e39 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x159>
+     e5d:	mov    0x8(%rdi),%rax
+     e61:	add    $0x8,%rdi
+     e65:	jmp    e39 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x159>
+     e67:	nopw   0x0(%rax,%rax,1)
+     e70:	cmp    (%rax),%ecx
+     e72:	je     e44 <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0x164>
+     e74:	add    $0x4,%rax
+     e78:	jmp    ddf <_Z14probe_find_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_RKi+0xff>
+     e7d:	nopl   (%rax)
+
+0000000000000e80 <_Z13probe_find_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi>:
+     e80:	endbr64
+     e84:	sub    $0x38,%rsp
+     e88:	movdqu (%rsi),%xmm0
+     e8c:	movdqu (%rdx),%xmm1
+     e90:	mov    %fs:0x28,%r11
+     e99:	mov    %r11,0x28(%rsp)
+     e9e:	mov    %rdi,%r11
+     ea1:	mov    (%rcx),%ecx
+     ea3:	lea    0x10(%rsp),%rdx
+     ea8:	mov    %rsp,%rsi
+     eab:	movaps %xmm1,0x10(%rsp)
+     eb0:	movaps %xmm0,(%rsp)
+     eb4:	call   3e0 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0>
+     eb9:	mov    0x28(%rsp),%rax
+     ebe:	sub    %fs:0x28,%rax
+     ec7:	jne    ed1 <_Z13probe_find_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x51>
+     ec9:	mov    %r11,%rax
+     ecc:	add    $0x38,%rsp
+     ed0:	ret
+     ed1:	call   ed6 <_Z13probe_find_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x56>
+     ed6:	cs nopw 0x0(%rax,%rax,1)
+
+0000000000000ee0 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi>:
+     ee0:	endbr64
+     ee4:	sub    $0x88,%rsp
+     eeb:	mov    (%rsi),%r11
+     eee:	mov    0x8(%rsi),%rax
+     ef2:	mov    %rbx,0x58(%rsp)
+     ef7:	mov    %rdi,%rbx
+     efa:	lea    0x20(%rsp),%r8
+     eff:	mov    %r13,0x70(%rsp)
+     f04:	mov    %r14,0x78(%rsp)
+     f09:	mov    %r15,0x80(%rsp)
+     f11:	movdqu (%rdx),%xmm0
+     f15:	lea    0x10(%rsp),%r15
+     f1a:	movdqu 0x8(%rdx),%xmm1
+     f1f:	movq   %xmm0,%r13
+     f24:	mov    %fs:0x28,%rdi
+     f2d:	mov    %rdi,0x48(%rsp)
+     f32:	mov    %rcx,%rdi
+     f35:	mov    0x10(%rsi),%rcx
+     f39:	lea    0x30(%rsp),%rsi
+     f3e:	mov    (%rdi),%r14d
+     f41:	cmp    %r13,%r11
+     f44:	je     10d0 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x1f0>
+     f4a:	mov    %rbp,0x60(%rsp)
+     f4f:	lea    0x10(%rsp),%r15
+     f54:	lea    0x20(%rsp),%r8
+     f59:	mov    %r12,0x68(%rsp)
+     f5e:	lea    0x30(%rsp),%rsi
+     f63:	mov    0x8(%r11),%rdx
+     f67:	mov    %rcx,0x38(%rsp)
+     f6c:	mov    %r14d,%ecx
+     f6f:	mov    %rax,0x30(%rsp)
+     f74:	lea    -0x3(%rdx,%rdx,2),%rdi
+     f79:	mov    (%r11),%rdx
+     f7c:	mov    %r8,0x8(%rsp)
+     f81:	mov    %rsi,(%rsp)
+     f85:	lea    (%rdx,%rdi,8),%rbp
+     f89:	mov    %r8,%rdx
+     f8c:	mov    %r15,%rdi
+     f8f:	mov    0x0(%rbp),%r12
+     f93:	mov    %rbp,0x20(%rsp)
+     f98:	mov    %r12,0x28(%rsp)
+     f9d:	call   3e0 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0>
+     fa2:	mov    0x10(%rsp),%rax
+     fa7:	mov    0x18(%rsp),%rdx
+     fac:	mov    (%rsp),%rsi
+     fb0:	mov    0x8(%rsp),%r8
+     fb5:	cmp    %rax,%rbp
+     fb8:	je     1008 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x128>
+     fba:	mov    0x60(%rsp),%rbp
+     fbf:	mov    0x68(%rsp),%r12
+     fc4:	mov    %r11,(%rbx)
+     fc7:	mov    %rax,0x8(%rbx)
+     fcb:	mov    %rdx,0x10(%rbx)
+     fcf:	mov    0x48(%rsp),%rax
+     fd4:	sub    %fs:0x28,%rax
+     fdd:	jne    11c2 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x2e2>
+     fe3:	mov    %rbx,%rax
+     fe6:	mov    0x70(%rsp),%r13
+     feb:	mov    0x58(%rsp),%rbx
+     ff0:	mov    0x78(%rsp),%r14
+     ff5:	mov    0x80(%rsp),%r15
+     ffd:	add    $0x88,%rsp
+    1004:	ret
+    1005:	nopl   (%rax)
+    1008:	cmp    %rdx,%r12
+    100b:	je     1070 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x190>
+    100d:	cmp    %r12,%rdx
+    1010:	jne    fba <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xda>
+    1012:	mov    0x18(%r11),%rsi
+    1016:	add    $0x18,%r11
+    101a:	mov    0x8(%rsi),%rax
+    101e:	shl    $0x2,%rax
+    1022:	jne    11af <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x2cf>
+    1028:	lea    0x18(%rsi),%rdx
+    102c:	nopw   0x0(%rax,%rax,1)
+    1035:	data16 cs nopw 0x0(%rax,%rax,1)
+    1040:	mov    %rdx,%rax
+    1043:	lea    0x18(%rdx),%rdx
+    1047:	mov    0x8(%rax),%rdi
+    104b:	shl    $0x2,%rdi
+    104f:	je     1040 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x160>
+    1051:	mov    (%rax),%rdx
+    1054:	mov    0x8(%r11),%rcx
+    1058:	lea    -0x3(%rcx,%rcx,2),%rcx
+    105d:	lea    (%rsi,%rcx,8),%rcx
+    1061:	mov    (%rcx),%r12
+    1064:	cmp    %rax,%rcx
+    1067:	jne    fba <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xda>
+    106d:	jmp    100d <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x12d>
+    106f:	nop
+    1070:	mov    0x18(%r11),%rax
+    1074:	add    $0x18,%r11
+    1078:	mov    0x8(%rax),%rcx
+    107c:	shl    $0x2,%rcx
+    1080:	jne    10b1 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x1d1>
+    1082:	lea    0x18(%rax),%rdx
+    1086:	nopl   0x0(%rax)
+    108a:	data16 cs nopw 0x0(%rax,%rax,1)
+    1095:	data16 cs nopw 0x0(%rax,%rax,1)
+    10a0:	mov    %rdx,%rax
+    10a3:	lea    0x18(%rdx),%rdx
+    10a7:	mov    0x8(%rax),%rcx
+    10ab:	shl    $0x2,%rcx
+    10af:	je     10a0 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x1c0>
+    10b1:	mov    (%rax),%rcx
+    10b4:	cmp    %r13,%r11
+    10b7:	jne    f63 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x83>
+    10bd:	mov    0x60(%rsp),%rbp
+    10c2:	mov    0x68(%rsp),%r12
+    10c7:	nopw   0x0(%rax,%rax,1)
+    10d0:	mov    %rcx,0x38(%rsp)
+    10d5:	mov    %r8,%rdx
+    10d8:	mov    %r14d,%ecx
+    10db:	mov    %r15,%rdi
+    10de:	mov    %rax,0x30(%rsp)
+    10e3:	movaps %xmm1,0x20(%rsp)
+    10e8:	call   3e0 <_ZN5boost9container11detail_algo23segmented_find_dispatchIN11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEEiS5_EET_S7_S7_RKT0_NS0_22segmented_iterator_tagET1_.isra.0>
+    10ed:	mov    0x10(%rsp),%rdx
+    10f2:	movq   %xmm1,%rax
+    10f7:	mov    0x18(%rsp),%rcx
+    10fc:	cmp    %rax,%rdx
+    10ff:	je     1130 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x250>
+    1101:	mov    0x8(%r13),%rax
+    1105:	lea    -0x3(%rax,%rax,2),%rsi
+    110a:	mov    0x0(%r13),%rax
+    110e:	lea    (%rax,%rsi,8),%rax
+    1112:	cmp    %rax,%rdx
+    1115:	je     1150 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x270>
+    1117:	mov    %r13,(%rbx)
+    111a:	mov    %rdx,0x8(%rbx)
+    111e:	mov    %rcx,0x10(%rbx)
+    1122:	jmp    fcf <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xef>
+    1127:	nopw   0x0(%rax,%rax,1)
+    1130:	movhlps %xmm1,%xmm2
+    1133:	movq   %xmm2,%rax
+    1138:	cmp    %rax,%rcx
+    113b:	jne    1101 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x221>
+    113d:	mov    %rcx,0x10(%rbx)
+    1141:	movups %xmm0,(%rbx)
+    1144:	jmp    fcf <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0xef>
+    1149:	nopl   0x0(%rax)
+    1150:	mov    (%rdx),%rax
+    1153:	cmp    %rax,%rcx
+    1156:	jne    1117 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x237>
+    1158:	mov    0x18(%r13),%rsi
+    115c:	add    $0x18,%r13
+    1160:	mov    0x8(%rsi),%rax
+    1164:	shl    $0x2,%rax
+    1168:	jne    11ba <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x2da>
+    116a:	lea    0x18(%rsi),%rax
+    116e:	nopl   0x0(%rax)
+    1175:	data16 cs nopw 0x0(%rax,%rax,1)
+    1180:	mov    %rax,%rdx
+    1183:	lea    0x18(%rax),%rax
+    1187:	mov    0x8(%rdx),%rcx
+    118b:	shl    $0x2,%rcx
+    118f:	je     1180 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x2a0>
+    1191:	mov    (%rdx),%rcx
+    1194:	mov    0x8(%r13),%rax
+    1198:	lea    -0x3(%rax,%rax,2),%rax
+    119d:	lea    (%rsi,%rax,8),%rsi
+    11a1:	mov    (%rsi),%rax
+    11a4:	cmp    %rdx,%rsi
+    11a7:	jne    1117 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x237>
+    11ad:	jmp    1153 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x273>
+    11af:	mov    (%rsi),%rdx
+    11b2:	mov    %rsi,%rax
+    11b5:	jmp    1054 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x174>
+    11ba:	mov    (%rsi),%rcx
+    11bd:	mov    %rsi,%rdx
+    11c0:	jmp    1194 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x2b4>
+    11c2:	mov    %rbp,0x60(%rsp)
+    11c7:	mov    %r12,0x68(%rsp)
+    11cc:	call   11d1 <_Z13probe_find_d2N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_RKi+0x2f1>
+    11d1:	nopl   0x0(%rax)
+    11d5:	data16 cs nopw 0x0(%rax,%rax,1)
+
+00000000000011e0 <_Z18probe_copy_deq_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_S3_>:
+    11e0:	endbr64
+    11e4:	push   %r13
+    11e6:	mov    %rsi,%rax
+    11e9:	push   %r12
+    11eb:	mov    %rdi,%r12
+    11ee:	push   %rbp
+    11ef:	push   %rbx
+    11f0:	sub    $0x28,%rsp
+    11f4:	mov    0x8(%rdx),%rbp
+    11f8:	mov    0x8(%rax),%rbx
+    11fc:	mov    %fs:0x28,%rsi
+    1205:	mov    %rsi,0x18(%rsp)
+    120a:	mov    %rcx,%rsi
+    120d:	mov    (%rdx),%r13
+    1210:	mov    (%rsi),%rcx
+    1213:	mov    0x8(%rsi),%r8
+    1217:	mov    (%rax),%rsi
+    121a:	cmp    %rbp,%rbx
+    121d:	je     1247 <_Z18probe_copy_deq_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_S3_+0x67>
+    121f:	nop
+    1220:	mov    (%rbx),%rax
+    1223:	mov    %rsp,%rdi
+    1226:	add    $0x8,%rbx
+    122a:	lea    0x400(%rax),%rdx
+    1231:	call   0 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchIPiS3_NS0_14deque_iteratorIS3_Lb0ELj0ELj0EmEESt26random_access_iterator_tagEET1_T_T0_S7_RKNS0_22segmented_iterator_tagET2_.isra.0>
+    1236:	mov    (%rsp),%rcx
+    123a:	mov    0x8(%rsp),%r8
+    123f:	mov    (%rbx),%rsi
+    1242:	cmp    %rbx,%rbp
+    1245:	jne    1220 <_Z18probe_copy_deq_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_S3_+0x40>
+    1247:	mov    %r13,%rdx
+    124a:	mov    %r12,%rdi
+    124d:	call   0 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchIPiS3_NS0_14deque_iteratorIS3_Lb0ELj0ELj0EmEESt26random_access_iterator_tagEET1_T_T0_S7_RKNS0_22segmented_iterator_tagET2_.isra.0>
+    1252:	mov    0x18(%rsp),%rax
+    1257:	sub    %fs:0x28,%rax
+    1260:	jne    1270 <_Z18probe_copy_deq_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_S3_+0x90>
+    1262:	add    $0x28,%rsp
+    1266:	mov    %r12,%rax
+    1269:	pop    %rbx
+    126a:	pop    %rbp
+    126b:	pop    %r12
+    126d:	pop    %r13
+    126f:	ret
+    1270:	call   1275 <_Z18probe_copy_deq_deqN5boost9container14deque_iteratorIPiLb0ELj0ELj0EmEES3_S3_+0x95>
+    1275:	data16 cs nopw 0x0(%rax,%rax,1)
+
+0000000000001280 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi>:
+    1280:	endbr64
+    1284:	sub    $0x28,%rsp
+    1288:	mov    %rsi,%rcx
+    128b:	mov    (%rdi),%r11
+    128e:	mov    %rdi,%rax
+    1291:	mov    %r12,0x10(%rsp)
+    1296:	mov    (%rcx),%r12
+    1299:	mov    %rdx,%rsi
+    129c:	mov    %rbp,0x8(%rsp)
+    12a1:	mov    0x8(%rdi),%rdi
+    12a5:	mov    %r13,0x18(%rsp)
+    12aa:	mov    0x8(%rcx),%rbp
+    12ae:	mov    0x10(%rcx),%r13
+    12b2:	mov    0x10(%rax),%rcx
+    12b6:	cmp    %r12,%r11
+    12b9:	je     1441 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x1c1>
+    12bf:	mov    %rbx,(%rsp)
+    12c3:	xchg   %ax,%ax
+    12c5:	data16 cs nopw 0x0(%rax,%rax,1)
+    12d0:	mov    0x8(%r11),%rax
+    12d4:	lea    -0x3(%rax,%rax,2),%rdx
+    12d9:	mov    (%r11),%rax
+    12dc:	lea    (%rax,%rdx,8),%r10
+    12e0:	mov    (%r10),%rbx
+    12e3:	cmp    %r10,%rdi
+    12e6:	je     1384 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x104>
+    12ec:	nopl   0x0(%rax)
+    12f0:	mov    0x8(%rdi),%rdx
+    12f4:	mov    (%rdi),%rax
+    12f7:	lea    (%rax,%rdx,4),%r9
+    12fb:	cmp    %r9,%rcx
+    12fe:	je     1374 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0xf4>
+    1300:	mov    %r9,%r8
+    1303:	xor    %eax,%eax
+    1305:	sub    %rcx,%r8
+    1308:	lea    -0x4(%r8),%rdx
+    130c:	shr    $0x2,%rdx
+    1310:	add    $0x1,%rdx
+    1314:	and    $0x3,%edx
+    1317:	je     1347 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0xc7>
+    1319:	cmp    $0x1,%rdx
+    131d:	je     1338 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0xb8>
+    131f:	cmp    $0x2,%rdx
+    1323:	je     132e <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0xae>
+    1325:	mov    (%rcx),%edx
+    1327:	mov    $0x4,%eax
+    132c:	mov    %edx,(%rsi)
+    132e:	mov    (%rcx,%rax,1),%edx
+    1331:	mov    %edx,(%rsi,%rax,1)
+    1334:	add    $0x4,%rax
+    1338:	mov    (%rcx,%rax,1),%edx
+    133b:	mov    %edx,(%rsi,%rax,1)
+    133e:	add    $0x4,%rax
+    1342:	cmp    %r8,%rax
+    1345:	je     136e <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0xee>
+    1347:	mov    (%rcx,%rax,1),%edx
+    134a:	mov    %edx,(%rsi,%rax,1)
+    134d:	mov    0x4(%rcx,%rax,1),%edx
+    1351:	mov    %edx,0x4(%rsi,%rax,1)
+    1355:	mov    0x8(%rcx,%rax,1),%edx
+    1359:	mov    %edx,0x8(%rsi,%rax,1)
+    135d:	mov    0xc(%rcx,%rax,1),%edx
+    1361:	mov    %edx,0xc(%rsi,%rax,1)
+    1365:	add    $0x10,%rax
+    1369:	cmp    %r8,%rax
+    136c:	jne    1347 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0xc7>
+    136e:	sub    %rcx,%rsi
+    1371:	add    %r9,%rsi
+    1374:	add    $0x18,%rdi
+    1378:	mov    (%rdi),%rcx
+    137b:	cmp    %rdi,%r10
+    137e:	jne    12f0 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x70>
+    1384:	cmp    %rcx,%rbx
+    1387:	je     13fd <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x17d>
+    1389:	mov    %rbx,%r8
+    138c:	xor    %eax,%eax
+    138e:	sub    %rcx,%r8
+    1391:	lea    -0x4(%r8),%rdx
+    1395:	shr    $0x2,%rdx
+    1399:	add    $0x1,%rdx
+    139d:	and    $0x3,%edx
+    13a0:	je     13d0 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x150>
+    13a2:	cmp    $0x1,%rdx
+    13a6:	je     13c1 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x141>
+    13a8:	cmp    $0x2,%rdx
+    13ac:	je     13b7 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x137>
+    13ae:	mov    (%rcx),%edx
+    13b0:	mov    $0x4,%eax
+    13b5:	mov    %edx,(%rsi)
+    13b7:	mov    (%rcx,%rax,1),%edx
+    13ba:	mov    %edx,(%rsi,%rax,1)
+    13bd:	add    $0x4,%rax
+    13c1:	mov    (%rcx,%rax,1),%edx
+    13c4:	mov    %edx,(%rsi,%rax,1)
+    13c7:	add    $0x4,%rax
+    13cb:	cmp    %rax,%r8
+    13ce:	je     13f7 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x177>
+    13d0:	mov    (%rcx,%rax,1),%edx
+    13d3:	mov    %edx,(%rsi,%rax,1)
+    13d6:	mov    0x4(%rcx,%rax,1),%edx
+    13da:	mov    %edx,0x4(%rsi,%rax,1)
+    13de:	mov    0x8(%rcx,%rax,1),%edx
+    13e2:	mov    %edx,0x8(%rsi,%rax,1)
+    13e6:	mov    0xc(%rcx,%rax,1),%edx
+    13ea:	mov    %edx,0xc(%rsi,%rax,1)
+    13ee:	add    $0x10,%rax
+    13f2:	cmp    %rax,%r8
+    13f5:	jne    13d0 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x150>
+    13f7:	add    %rbx,%rsi
+    13fa:	sub    %rcx,%rsi
+    13fd:	mov    0x18(%r11),%rdi
+    1401:	add    $0x18,%r11
+    1405:	mov    0x8(%rdi),%rax
+    1409:	shl    $0x2,%rax
+    140d:	jne    1431 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x1b1>
+    140f:	lea    0x18(%rdi),%rax
+    1413:	xchg   %ax,%ax
+    1415:	data16 cs nopw 0x0(%rax,%rax,1)
+    1420:	mov    %rax,%rdi
+    1423:	lea    0x18(%rax),%rax
+    1427:	mov    0x8(%rdi),%rbx
+    142b:	shl    $0x2,%rbx
+    142f:	je     1420 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x1a0>
+    1431:	mov    (%rdi),%rcx
+    1434:	cmp    %r11,%r12
+    1437:	jne    12d0 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x50>
+    143d:	mov    (%rsp),%rbx
+    1441:	cmp    %rdi,%rbp
+    1444:	je     14e4 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x264>
+    144a:	nopw   0x0(%rax,%rax,1)
+    1450:	mov    0x8(%rdi),%rdx
+    1454:	mov    (%rdi),%rax
+    1457:	lea    (%rax,%rdx,4),%r10
+    145b:	cmp    %rcx,%r10
+    145e:	je     14d4 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x254>
+    1460:	mov    %r10,%r9
+    1463:	xor    %eax,%eax
+    1465:	sub    %rcx,%r9
+    1468:	lea    -0x4(%r9),%rdx
+    146c:	shr    $0x2,%rdx
+    1470:	add    $0x1,%rdx
+    1474:	and    $0x3,%edx
+    1477:	je     14a7 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x227>
+    1479:	cmp    $0x1,%rdx
+    147d:	je     1498 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x218>
+    147f:	cmp    $0x2,%rdx
+    1483:	je     148e <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x20e>
+    1485:	mov    (%rcx),%edx
+    1487:	mov    $0x4,%eax
+    148c:	mov    %edx,(%rsi)
+    148e:	mov    (%rcx,%rax,1),%edx
+    1491:	mov    %edx,(%rsi,%rax,1)
+    1494:	add    $0x4,%rax
+    1498:	mov    (%rcx,%rax,1),%edx
+    149b:	mov    %edx,(%rsi,%rax,1)
+    149e:	add    $0x4,%rax
+    14a2:	cmp    %rax,%r9
+    14a5:	je     14ce <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x24e>
+    14a7:	mov    (%rcx,%rax,1),%edx
+    14aa:	mov    %edx,(%rsi,%rax,1)
+    14ad:	mov    0x4(%rcx,%rax,1),%edx
+    14b1:	mov    %edx,0x4(%rsi,%rax,1)
+    14b5:	mov    0x8(%rcx,%rax,1),%edx
+    14b9:	mov    %edx,0x8(%rsi,%rax,1)
+    14bd:	mov    0xc(%rcx,%rax,1),%edx
+    14c1:	mov    %edx,0xc(%rsi,%rax,1)
+    14c5:	add    $0x10,%rax
+    14c9:	cmp    %rax,%r9
+    14cc:	jne    14a7 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x227>
+    14ce:	sub    %rcx,%rsi
+    14d1:	add    %r10,%rsi
+    14d4:	add    $0x18,%rdi
+    14d8:	mov    (%rdi),%rcx
+    14db:	cmp    %rdi,%rbp
+    14de:	jne    1450 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x1d0>
+    14e4:	cmp    %rcx,%r13
+    14e7:	je     155d <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x2dd>
+    14e9:	mov    %r13,%r8
+    14ec:	xor    %eax,%eax
+    14ee:	sub    %rcx,%r8
+    14f1:	lea    -0x4(%r8),%rdx
+    14f5:	shr    $0x2,%rdx
+    14f9:	add    $0x1,%rdx
+    14fd:	and    $0x3,%edx
+    1500:	je     1530 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x2b0>
+    1502:	cmp    $0x1,%rdx
+    1506:	je     1521 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x2a1>
+    1508:	cmp    $0x2,%rdx
+    150c:	je     1517 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x297>
+    150e:	mov    (%rcx),%edx
+    1510:	mov    $0x4,%eax
+    1515:	mov    %edx,(%rsi)
+    1517:	mov    (%rcx,%rax,1),%edx
+    151a:	mov    %edx,(%rsi,%rax,1)
+    151d:	add    $0x4,%rax
+    1521:	mov    (%rcx,%rax,1),%edx
+    1524:	mov    %edx,(%rsi,%rax,1)
+    1527:	add    $0x4,%rax
+    152b:	cmp    %r8,%rax
+    152e:	je     1557 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x2d7>
+    1530:	mov    (%rcx,%rax,1),%edx
+    1533:	mov    %edx,(%rsi,%rax,1)
+    1536:	mov    0x4(%rcx,%rax,1),%edx
+    153a:	mov    %edx,0x4(%rsi,%rax,1)
+    153e:	mov    0x8(%rcx,%rax,1),%edx
+    1542:	mov    %edx,0x8(%rsi,%rax,1)
+    1546:	mov    0xc(%rcx,%rax,1),%edx
+    154a:	mov    %edx,0xc(%rsi,%rax,1)
+    154e:	add    $0x10,%rax
+    1552:	cmp    %r8,%rax
+    1555:	jne    1530 <_Z18probe_copy_d2_flatN11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEES2_Pi+0x2b0>
+    1557:	add    %r13,%rsi
+    155a:	sub    %rcx,%rsi
+    155d:	mov    0x8(%rsp),%rbp
+    1562:	mov    0x10(%rsp),%r12
+    1567:	mov    %rsi,%rax
+    156a:	mov    0x18(%rsp),%r13
+    156f:	add    $0x28,%rsp
+    1573:	ret
+    1574:	nop
+    1575:	data16 cs nopw 0x0(%rax,%rax,1)
+
+0000000000001580 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE>:
+    1580:	endbr64
+    1584:	sub    $0x28,%rsp
+    1588:	mov    %rbx,(%rsp)
+    158c:	mov    %rdi,%rbx
+    158f:	mov    %rsi,%rdi
+    1592:	movdqu (%rcx),%xmm0
+    1596:	mov    0x10(%rcx),%rsi
+    159a:	cmp    %rdx,%rdi
+    159d:	je     1887 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x307>
+    15a3:	mov    %rbp,0x8(%rsp)
+    15a8:	movhlps %xmm0,%xmm1
+    15ab:	mov    %rdx,%r10
+    15ae:	mov    %r13,0x18(%rsp)
+    15b3:	movq   %xmm1,%rcx
+    15b8:	mov    %r12,0x10(%rsp)
+    15bd:	movq   %xmm0,%r12
+    15c2:	nopl   (%rax)
+    15c5:	data16 cs nopw 0x0(%rax,%rax,1)
+    15d0:	mov    0x8(%r12),%rax
+    15d5:	lea    -0x3(%rax,%rax,2),%rdx
+    15da:	mov    (%r12),%rax
+    15de:	lea    (%rax,%rdx,8),%rbp
+    15e2:	mov    0x0(%rbp),%r13
+    15e6:	cmp    %rcx,%rbp
+    15e9:	je     16b3 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x133>
+    15ef:	nop
+    15f0:	mov    0x8(%rcx),%rdx
+    15f4:	mov    (%rcx),%rax
+    15f7:	lea    (%rax,%rdx,4),%r11
+    15fb:	mov    %r10,%rdx
+    15fe:	mov    %r11,%rax
+    1601:	sub    %rdi,%rdx
+    1604:	sub    %rsi,%rax
+    1607:	mov    %rdx,%r8
+    160a:	mov    %rax,%r9
+    160d:	sar    $0x2,%r8
+    1611:	sar    $0x2,%r9
+    1615:	cmp    %rax,%rdx
+    1618:	cmovge %r9,%r8
+    161c:	shl    $0x2,%r8
+    1620:	lea    (%rdi,%r8,1),%r9
+    1624:	cmp    %rdi,%r9
+    1627:	je     169a <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x11a>
+    1629:	lea    -0x4(%r8),%rdx
+    162d:	xor    %eax,%eax
+    162f:	shr    $0x2,%rdx
+    1633:	add    $0x1,%rdx
+    1637:	and    $0x3,%edx
+    163a:	je     166a <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0xea>
+    163c:	cmp    $0x1,%rdx
+    1640:	je     165b <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0xdb>
+    1642:	cmp    $0x2,%rdx
+    1646:	je     1651 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0xd1>
+    1648:	mov    (%rdi),%edx
+    164a:	mov    $0x4,%eax
+    164f:	mov    %edx,(%rsi)
+    1651:	mov    (%rdi,%rax,1),%edx
+    1654:	mov    %edx,(%rsi,%rax,1)
+    1657:	add    $0x4,%rax
+    165b:	mov    (%rdi,%rax,1),%edx
+    165e:	mov    %edx,(%rsi,%rax,1)
+    1661:	add    $0x4,%rax
+    1665:	cmp    %rax,%r8
+    1668:	je     1691 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x111>
+    166a:	mov    (%rdi,%rax,1),%edx
+    166d:	mov    %edx,(%rsi,%rax,1)
+    1670:	mov    0x4(%rdi,%rax,1),%edx
+    1674:	mov    %edx,0x4(%rsi,%rax,1)
+    1678:	mov    0x8(%rdi,%rax,1),%edx
+    167c:	mov    %edx,0x8(%rsi,%rax,1)
+    1680:	mov    0xc(%rdi,%rax,1),%edx
+    1684:	mov    %edx,0xc(%rsi,%rax,1)
+    1688:	add    $0x10,%rax
+    168c:	cmp    %rax,%r8
+    168f:	jne    166a <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0xea>
+    1691:	sub    %rdi,%rsi
+    1694:	mov    %r9,%rdi
+    1697:	add    %r9,%rsi
+    169a:	cmp    %rdi,%r10
+    169d:	je     17e0 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x260>
+    16a3:	add    $0x18,%rcx
+    16a7:	mov    (%rcx),%rsi
+    16aa:	cmp    %rcx,%rbp
+    16ad:	jne    15f0 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x70>
+    16b3:	mov    %r10,%rdx
+    16b6:	mov    %r13,%rax
+    16b9:	sub    %rdi,%rdx
+    16bc:	sub    %rsi,%rax
+    16bf:	mov    %rax,%r9
+    16c2:	mov    %rdx,%r8
+    16c5:	sar    $0x2,%r9
+    16c9:	sar    $0x2,%r8
+    16cd:	cmp    %rax,%rdx
+    16d0:	cmovge %r9,%r8
+    16d4:	shl    $0x2,%r8
+    16d8:	lea    (%rdi,%r8,1),%r9
+    16dc:	cmp    %rdi,%r9
+    16df:	je     1752 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x1d2>
+    16e1:	lea    -0x4(%r8),%rdx
+    16e5:	xor    %eax,%eax
+    16e7:	shr    $0x2,%rdx
+    16eb:	add    $0x1,%rdx
+    16ef:	and    $0x3,%edx
+    16f2:	je     1722 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x1a2>
+    16f4:	cmp    $0x1,%rdx
+    16f8:	je     1713 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x193>
+    16fa:	cmp    $0x2,%rdx
+    16fe:	je     1709 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x189>
+    1700:	mov    (%rdi),%edx
+    1702:	mov    $0x4,%eax
+    1707:	mov    %edx,(%rsi)
+    1709:	mov    (%rdi,%rax,1),%edx
+    170c:	mov    %edx,(%rsi,%rax,1)
+    170f:	add    $0x4,%rax
+    1713:	mov    (%rdi,%rax,1),%edx
+    1716:	mov    %edx,(%rsi,%rax,1)
+    1719:	add    $0x4,%rax
+    171d:	cmp    %r8,%rax
+    1720:	je     1749 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x1c9>
+    1722:	mov    (%rdi,%rax,1),%edx
+    1725:	mov    %edx,(%rsi,%rax,1)
+    1728:	mov    0x4(%rdi,%rax,1),%edx
+    172c:	mov    %edx,0x4(%rsi,%rax,1)
+    1730:	mov    0x8(%rdi,%rax,1),%edx
+    1734:	mov    %edx,0x8(%rsi,%rax,1)
+    1738:	mov    0xc(%rdi,%rax,1),%edx
+    173c:	mov    %edx,0xc(%rsi,%rax,1)
+    1740:	add    $0x10,%rax
+    1744:	cmp    %r8,%rax
+    1747:	jne    1722 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x1a2>
+    1749:	sub    %rdi,%rsi
+    174c:	mov    %r9,%rdi
+    174f:	add    %r9,%rsi
+    1752:	mov    0x8(%rcx),%rdx
+    1756:	mov    (%rcx),%rax
+    1759:	lea    (%rax,%rdx,4),%rax
+    175d:	cmp    %rax,%rsi
+    1760:	jne    1794 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x214>
+    1762:	lea    0x18(%rcx),%rax
+    1766:	nopl   0x0(%rax)
+    176a:	data16 cs nopw 0x0(%rax,%rax,1)
+    1775:	data16 cs nopw 0x0(%rax,%rax,1)
+    1780:	mov    %rax,%rcx
+    1783:	lea    0x18(%rax),%rax
+    1787:	mov    0x8(%rcx),%rsi
+    178b:	shl    $0x2,%rsi
+    178f:	je     1780 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x200>
+    1791:	mov    (%rcx),%rsi
+    1794:	cmp    %rdi,%r10
+    1797:	je     1814 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x294>
+    1799:	mov    0x18(%r12),%rcx
+    179e:	add    $0x18,%r12
+    17a2:	mov    0x8(%rcx),%rax
+    17a6:	shl    $0x2,%rax
+    17aa:	jne    17d1 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x251>
+    17ac:	lea    0x18(%rcx),%rax
+    17b0:	nopl   0x0(%rax,%rax,1)
+    17b5:	data16 cs nopw 0x0(%rax,%rax,1)
+    17c0:	mov    %rax,%rcx
+    17c3:	lea    0x18(%rax),%rax
+    17c7:	mov    0x8(%rcx),%rsi
+    17cb:	shl    $0x2,%rsi
+    17cf:	je     17c0 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x240>
+    17d1:	mov    (%rcx),%rsi
+    17d4:	jmp    15d0 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x50>
+    17d9:	nopl   0x0(%rax)
+    17e0:	cmp    %rsi,%r11
+    17e3:	jne    1814 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x294>
+    17e5:	lea    0x18(%rcx),%rax
+    17e9:	nop
+    17ea:	data16 cs nopw 0x0(%rax,%rax,1)
+    17f5:	data16 cs nopw 0x0(%rax,%rax,1)
+    1800:	mov    %rax,%rcx
+    1803:	lea    0x18(%rax),%rax
+    1807:	mov    0x8(%rcx),%rdi
+    180b:	shl    $0x2,%rdi
+    180f:	je     1800 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x280>
+    1811:	mov    (%rcx),%rsi
+    1814:	cmp    %rcx,%rbp
+    1817:	je     1880 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x300>
+    1819:	mov    %rbx,%rax
+    181c:	mov    0x8(%rsp),%rbp
+    1821:	mov    0x18(%rsp),%r13
+    1826:	mov    %r12,(%rbx)
+    1829:	mov    %rcx,0x8(%rbx)
+    182d:	mov    0x10(%rsp),%r12
+    1832:	mov    %rsi,0x10(%rbx)
+    1836:	mov    (%rsp),%rbx
+    183a:	add    $0x28,%rsp
+    183e:	ret
+    183f:	mov    0x18(%r12),%rax
+    1844:	add    $0x18,%r12
+    1848:	mov    0x8(%rax),%rcx
+    184c:	shl    $0x2,%rcx
+    1850:	jne    189a <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x31a>
+    1852:	lea    0x18(%rax),%rdx
+    1856:	mov    %rdx,%rcx
+    1859:	lea    0x18(%rdx),%rdx
+    185d:	mov    0x8(%rcx),%rdi
+    1861:	shl    $0x2,%rdi
+    1865:	je     1856 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x2d6>
+    1867:	mov    (%rcx),%rsi
+    186a:	mov    0x8(%r12),%rdx
+    186f:	lea    -0x3(%rdx,%rdx,2),%rdx
+    1874:	lea    (%rax,%rdx,8),%rax
+    1878:	mov    (%rax),%r13
+    187b:	cmp    %rcx,%rax
+    187e:	jne    1819 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x299>
+    1880:	cmp    %r13,%rsi
+    1883:	jne    1819 <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x299>
+    1885:	jmp    183f <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x2bf>
+    1887:	mov    %rsi,0x10(%rbx)
+    188b:	mov    %rbx,%rax
+    188e:	movups %xmm0,(%rbx)
+    1891:	mov    (%rsp),%rbx
+    1895:	add    $0x28,%rsp
+    1899:	ret
+    189a:	mov    (%rax),%rsi
+    189d:	mov    %rax,%rcx
+    18a0:	jmp    186a <_Z18probe_copy_flat_d2PKiS0_N11test_detail20seg2_vector_iteratorIiSt26bidirectional_iterator_tagEE+0x2ea>
+    18a2:	nopl   (%rax)
+    18a5:	data16 cs nopw 0x0(%rax,%rax,1)
+
+00000000000018b0 <_Z16probe_copy_d1_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_S2_>:
+    18b0:	endbr64
+    18b4:	push   %r15
+    18b6:	push   %r14
+    18b8:	push   %r13
+    18ba:	push   %r12
+    18bc:	push   %rbp
+    18bd:	push   %rbx
+    18be:	sub    $0x58,%rsp
+    18c2:	mov    (%rdx),%r13
+    18c5:	mov    (%rsi),%r14
+    18c8:	mov    %rdi,0x8(%rsp)
+    18cd:	mov    0x8(%rdx),%r15
+    18d1:	lea    0x20(%rsp),%rbp
+    18d6:	lea    0x30(%rsp),%r12
+    18db:	movdqu (%rcx),%xmm0
+    18df:	mov    0x8(%rsi),%rdx
+    18e3:	lea    0x18(%rsp),%rbx
+    18e8:	mov    %fs:0x28,%rax
+    18f1:	mov    %rax,0x48(%rsp)
+    18f6:	xor    %eax,%eax
+    18f8:	cmp    %r13,%r14
+    18fb:	je     193f <_Z16probe_copy_d1_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_S2_+0x8f>
+    18fd:	nopl   (%rax)
+    1900:	mov    0x8(%r14),%rsi
+    1904:	mov    (%r14),%rcx
+    1907:	mov    %rdx,0x10(%rsp)
+    190c:	mov    %rbp,%rdi
+    190f:	mov    %rbx,%rdx
+    1912:	add    $0x18,%r14
+    1916:	movaps %xmm0,0x30(%rsp)
+    191b:	lea    (%rcx,%rsi,4),%rcx
+    191f:	lea    0x10(%rsp),%rsi
+    1924:	mov    %rcx,0x18(%rsp)
+    1929:	mov    %r12,%rcx
+    192c:	call   290 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchINS0_12vec_iteratorIPiLb0EEES5_N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEESt26random_access_iterator_tagEET1_T_T0_SB_RKNS0_22segmented_iterator_tagET2_.isra.0>
+    1931:	movdqa 0x20(%rsp),%xmm0
+    1937:	mov    (%r14),%rdx
+    193a:	cmp    %r14,%r13
+    193d:	jne    1900 <_Z16probe_copy_d1_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_S2_+0x50>
+    193f:	mov    0x8(%rsp),%rdi
+    1944:	mov    %rdx,0x18(%rsp)
+    1949:	mov    %r12,%rcx
+    194c:	mov    %rbp,%rdx
+    194f:	mov    %rbx,%rsi
+    1952:	mov    %r15,0x20(%rsp)
+    1957:	movaps %xmm0,0x30(%rsp)
+    195c:	call   290 <_ZN5boost9container11detail_algo27segmented_copy_dst_dispatchINS0_12vec_iteratorIPiLb0EEES5_N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEESt26random_access_iterator_tagEET1_T_T0_SB_RKNS0_22segmented_iterator_tagET2_.isra.0>
+    1961:	mov    0x48(%rsp),%rax
+    1966:	sub    %fs:0x28,%rax
+    196f:	jne    1985 <_Z16probe_copy_d1_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_S2_+0xd5>
+    1971:	mov    0x8(%rsp),%rax
+    1976:	add    $0x58,%rsp
+    197a:	pop    %rbx
+    197b:	pop    %rbp
+    197c:	pop    %r12
+    197e:	pop    %r13
+    1980:	pop    %r14
+    1982:	pop    %r15
+    1984:	ret
+    1985:	call   198a <_Z16probe_copy_d1_d1N11test_detail19seg_vector_iteratorIiSt26bidirectional_iterator_tagEES2_S2_+0xda>

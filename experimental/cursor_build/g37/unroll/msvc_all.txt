@@ -1,0 +1,192 @@
+==================== x64 segmented_copy_if_test base c++17 ====================
+MSVCSTAT rc=0 sec=0,99 peakMB=110,4
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.44321s < 211640064328 - 211644496436 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.38473s < 211644498380 - 211648345695 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.07637s < 211648354749 - 211649118439 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_copy_if_test_base_c++17\t.exe]
+EXESIZE=375808
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_remove_copy_if_test base c++17 ====================
+MSVCSTAT rc=0 sec=0,97 peakMB=104,2
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.44234s < 211663196290 - 211667619673 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.36548s < 211667621880 - 211671276673 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.06984s < 211671284957 - 211671983329 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_remove_copy_if_test_base_c++17\t.exe]
+EXESIZE=367104
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_remove_copy_test base c++17 ====================
+MSVCSTAT rc=0 sec=1,1 peakMB=105,3
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.51100s < 211685850029 - 211690959991 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.43366s < 211690962297 - 211695298874 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.08643s < 211695308742 - 211696173068 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_remove_copy_test_base_c++17\t.exe]
+EXESIZE=369152
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_partition_copy_test base c++17 ====================
+MSVCSTAT rc=0 sec=1,18 peakMB=144,5
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.48341s < 211710337422 - 211715171528 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_partition_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.55993s < 211715173787 - 211720773055 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_partition_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.07145s < 211720781317 - 211721495798 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_partition_copy_test_base_c++17\t.exe]
+EXESIZE=452608
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_copy_if_test base c++20 ====================
+MSVCSTAT rc=0 sec=1,19 peakMB=108,6
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.65815s < 211736617818 - 211743199342 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.38902s < 211743201473 - 211747091695 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.08614s < 211747100167 - 211747961578 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_copy_if_test_base_c++20\t.exe]
+EXESIZE=374784
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_remove_copy_if_test base c++20 ====================
+MSVCSTAT rc=0 sec=1,2 peakMB=108,2
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.66255s < 211761563271 - 211768188767 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.36585s < 211768190554 - 211771849023 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.07288s < 211771856939 - 211772585748 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_remove_copy_if_test_base_c++20\t.exe]
+EXESIZE=366080
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_remove_copy_test base c++20 ====================
+MSVCSTAT rc=0 sec=1,32 peakMB=114,8
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.74077s < 211786698132 - 211794105839 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.41861s < 211794108087 - 211798294222 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.07247s < 211798302756 - 211799027481 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_remove_copy_test_base_c++20\t.exe]
+EXESIZE=368128
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_partition_copy_test base c++20 ====================
+MSVCSTAT rc=0 sec=1,49 peakMB=154,8
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.70673s < 211813313881 - 211820381175 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_partition_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.59232s < 211820383347 - 211826306498 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_partition_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.06997s < 211826315993 - 211827015688 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_partition_copy_test_base_c++20\t.exe]
+EXESIZE=452096
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_copy_if_test p2_final c++17 ====================
+MSVCSTAT rc=0 sec=0,98 peakMB=110,5
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.44312s < 211841605314 - 211846036470 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.39225s < 211846038379 - 211849960893 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.07117s < 211849969363 - 211850681028 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_copy_if_test_p2_final_c++17\t.exe]
+EXESIZE=377344
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_remove_copy_if_test p2_final c++17 ====================
+MSVCSTAT rc=0 sec=0,96 peakMB=104,1
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.44333s < 211863569984 - 211868003285 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.37759s < 211868005630 - 211871781502 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.08256s < 211871789553 - 211872615154 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_remove_copy_if_test_p2_final_c++17\t.exe]
+EXESIZE=368640
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_remove_copy_test p2_final c++17 ====================
+MSVCSTAT rc=0 sec=1,09 peakMB=107,7
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.51246s < 211885789683 - 211890914283 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.41745s < 211890916591 - 211895091042 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.07875s < 211895100710 - 211895888250 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_remove_copy_test_p2_final_c++17\t.exe]
+EXESIZE=369152
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_partition_copy_test p2_final c++17 ====================
+MSVCSTAT rc=0 sec=1,19 peakMB=139,8
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.48446s < 211910015268 - 211914859858 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_partition_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.55477s < 211914862261 - 211920409995 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_partition_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.07021s < 211920418850 - 211921120973 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_partition_copy_test_p2_final_c++17\t.exe]
+EXESIZE=452608
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_copy_if_test p2_final c++20 ====================
+MSVCSTAT rc=0 sec=1,22 peakMB=110,9
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.65943s < 211935750101 - 211942344372 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.41307s < 211942346897 - 211946477632 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.08944s < 211946487292 - 211947381719 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_copy_if_test_p2_final_c++20\t.exe]
+EXESIZE=376832
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_remove_copy_if_test p2_final c++20 ====================
+MSVCSTAT rc=0 sec=1,19 peakMB=108,8
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.66338s < 211960890829 - 211967524637 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.38675s < 211967527053 - 211971394532 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.06879s < 211971403618 - 211972091476 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_remove_copy_if_test_p2_final_c++20\t.exe]
+EXESIZE=367616
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_remove_copy_test p2_final c++20 ====================
+MSVCSTAT rc=0 sec=1,29 peakMB=115,1
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.74171s < 211986045885 - 211993463018 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.42881s < 211993465411 - 211997753517 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.07492s < 211997761535 - 211998510693 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_remove_copy_test_p2_final_c++20\t.exe]
+EXESIZE=368128
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_partition_copy_test p2_final c++20 ====================
+MSVCSTAT rc=0 sec=1,49 peakMB=140,6
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.70981s < 212012318159 - 212019416273 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_partition_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.57340s < 212019418422 - 212025152433 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_partition_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.07688s < 212025161487 - 212025930267 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_partition_copy_test_p2_final_c++20\t.exe]
+EXESIZE=452096
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_copy_if_test p2_all4 c++17 ====================
+MSVCSTAT rc=0 sec=0,97 peakMB=110,9
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.44279s < 212041275873 - 212045703802 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.40216s < 212045706012 - 212049727568 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.07177s < 212049736769 - 212050454455 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_copy_if_test_p2_all4_c++17\t.exe]
+EXESIZE=377344
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_remove_copy_if_test p2_all4 c++17 ====================
+MSVCSTAT rc=0 sec=0,97 peakMB=101,9
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.44588s < 212063862378 - 212068321163 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.36385s < 212068323370 - 212071961900 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.07425s < 212071970346 - 212072712846 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_remove_copy_if_test_p2_all4_c++17\t.exe]
+EXESIZE=368640
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_remove_copy_test p2_all4 c++17 ====================
+MSVCSTAT rc=0 sec=1,1 peakMB=107,7
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.51779s < 212086428198 - 212091606132 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.43059s < 212091608332 - 212095914208 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.09381s < 212095923206 - 212096861311 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_remove_copy_test_p2_all4_c++17\t.exe]
+EXESIZE=370688
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_partition_copy_test p2_all4 c++17 ====================
+MSVCSTAT rc=0 sec=1,22 peakMB=138,9
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.48525s < 212110295588 - 212115148054 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_partition_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.61276s < 212115150473 - 212121278037 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_partition_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.07166s < 212121286394 - 212122002971 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_partition_copy_test_p2_all4_c++17\t.exe]
+EXESIZE=454656
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_copy_if_test p2_all4 c++20 ====================
+MSVCSTAT rc=0 sec=1,26 peakMB=110,4
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.66251s < 212136649818 - 212143274871 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.42417s < 212143276740 - 212147518422 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.08848s < 212147527432 - 212148412273 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_copy_if_test_p2_all4_c++20\t.exe]
+EXESIZE=376832
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_remove_copy_if_test p2_all4 c++20 ====================
+MSVCSTAT rc=0 sec=1,18 peakMB=108,7
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.66003s < 212162532558 - 212169132829 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.38139s < 212169135390 - 212172949276 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.07121s < 212172957667 - 212173669720 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_remove_copy_if_test_p2_all4_c++20\t.exe]
+EXESIZE=367616
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_remove_copy_test p2_all4 c++20 ====================
+MSVCSTAT rc=0 sec=1,32 peakMB=114,8
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.74307s < 212187762944 - 212195193689 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.42519s < 212195195879 - 212199447785 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_remove_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.07158s < 212199455950 - 212200171796 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_remove_copy_test_p2_all4_c++20\t.exe]
+EXESIZE=369664
+No errors detected.
+RESULT: PASS 
+==================== x64 segmented_partition_copy_test p2_all4 c++20 ====================
+MSVCSTAT rc=0 sec=1,51 peakMB=143,2
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.71072s < 212214165095 - 212221272332 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_partition_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.62693s < 212221274620 - 212227543944 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_partition_copy_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.07899s < 212227553373 - 212228343249 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_partition_copy_test_p2_all4_c++20\t.exe]
+EXESIZE=454144
+No errors detected.
+RESULT: PASS 

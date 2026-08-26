@@ -1,0 +1,123 @@
+nice: warning: setpriority: Permission denied (os error 13)
+=== Segmented algorithm benchmark [5MyInt] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<5MyInt> ---
+
+===== Group 10: single range, sequential access [5MyInt] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+all_of(hit)                         1.49        1.38        0.93      0.172      0.237      0.255
+all_of(miss)                        4.24        2.47        0.58      0.049      0.121      0.208
+any_of(hit)                         3.54        2.09        0.59      0.059      0.124      0.210
+any_of(miss)                        1.53        1.38        0.90      0.175      0.243      0.269
+count(hit)                          7.94        8.03        1.01      0.054      0.434      0.430
+count(miss)                         7.95        7.95        1.00      0.054      0.431      0.431
+count_if(hit)                       9.49        9.49        1.00      0.035      0.330      0.330
+count_if(miss)                      9.00        8.84        0.98      0.037      0.324      0.330
+fill                                9.97       10.29        1.03      0.029      0.300      0.291
+fill_n                              7.59        9.24        1.22      0.031      0.284      0.233
+find(hit)                           4.31        2.47        0.57      0.049      0.121      0.211
+find(miss)                          3.28        2.48        0.76      0.098      0.242      0.320
+find_if(hit)                        4.21        2.42        0.57      0.050      0.121      0.211
+find_if(miss)                       1.71        1.42        0.83      0.175      0.249      0.300
+find_if_not(hit)                    4.31        2.48        0.58      0.050      0.124      0.216
+find_if_not(miss)                   1.72        1.38        0.80      0.175      0.242      0.302
+for_each                            5.33        5.35        1.00      0.054      0.289      0.288
+generate                            6.06        5.85        0.97      0.046      0.270      0.279
+generate_n                          7.31        7.31        1.00      0.047      0.343      0.343
+is_partitioned(hit)                 2.14        1.35        0.63      0.175      0.237      0.375
+is_partitioned(miss)                3.20        1.35        0.42      0.088      0.119      0.281
+none_of(hit)                        1.49        1.38        0.93      0.172      0.237      0.256
+none_of(miss)                       4.24        2.53        0.60      0.049      0.124      0.208
+replace(hit)                        3.06        3.01        0.99      0.145      0.436      0.443
+replace(miss)                       3.19        3.28        1.03      0.161      0.529      0.515
+replace_if(hit)                     2.79        2.64        0.94      0.160      0.422      0.447
+replace_if(miss)                    3.15        3.17        1.00      0.175      0.555      0.553
+-------------------------------------------------------------------------------------------------
+group geomean                       3.90        3.20        0.82
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        3.90        3.20        0.82
+
+
+=== Segmented algorithm benchmark [8MyFatIntILm4EE] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<8MyFatIntILm4EE> ---
+
+===== Group 10: single range, sequential access [8MyFatIntILm4EE] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+all_of(hit)                         1.62        1.40        0.87      0.177      0.247      0.286
+all_of(miss)                        3.41        2.04        0.60      0.061      0.126      0.210
+any_of(hit)                         3.33        1.94        0.58      0.063      0.123      0.210
+any_of(miss)                        1.65        1.41        0.85      0.180      0.253      0.297
+count(hit)                          2.82        2.81        1.00      0.156      0.438      0.439
+count(miss)                         2.82        2.81        1.00      0.156      0.438      0.439
+count_if(hit)                       1.80        1.81        1.00      0.165      0.299      0.297
+count_if(miss)                      1.90        1.89        1.00      0.157      0.297      0.298
+fill                                1.05        1.06        1.01      0.507      0.536      0.532
+fill_n                              1.00        1.06        1.06      0.509      0.540      0.509
+find(hit)                           3.46        2.01        0.58      0.061      0.123      0.211
+find(miss)                          2.33        1.78        0.77      0.140      0.250      0.327
+find_if(hit)                        3.34        1.94        0.58      0.063      0.123      0.211
+find_if(miss)                       1.79        1.37        0.76      0.180      0.246      0.322
+find_if_not(hit)                    3.36        2.02        0.60      0.062      0.126      0.209
+find_if_not(miss)                   1.78        1.37        0.77      0.180      0.246      0.320
+for_each                            2.24        2.10        0.94      0.156      0.326      0.348
+generate                            1.40        1.40        1.00      0.491      0.685      0.687
+generate_n                          1.08        1.07        1.00      0.552      0.593      0.593
+is_partitioned(hit)                 2.23        1.37        0.61      0.180      0.246      0.401
+is_partitioned(miss)                3.10        1.37        0.44      0.088      0.120      0.272
+none_of(hit)                        1.61        1.43        0.89      0.177      0.253      0.285
+none_of(miss)                       3.35        1.97        0.59      0.062      0.123      0.208
+replace(hit)                        1.87        1.65        0.88      0.303      0.499      0.566
+replace(miss)                       2.30        2.45        1.07      0.197      0.483      0.453
+replace_if(hit)                     1.40        1.15        0.82      0.402      0.464      0.565
+replace_if(miss)                    2.98        3.03        1.02      0.168      0.510      0.502
+-------------------------------------------------------------------------------------------------
+group geomean                       2.11        1.69        0.80
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        2.11        1.69        0.80
+
+
+=== Segmented algorithm benchmark [8MyFatIntILm8EE] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<8MyFatIntILm8EE> ---
+
+===== Group 10: single range, sequential access [8MyFatIntILm8EE] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+all_of(hit)                         1.16        1.03        0.88      0.290      0.297      0.337
+all_of(miss)                        1.66        1.12        0.67      0.131      0.147      0.218
+any_of(hit)                         1.65        1.12        0.68      0.131      0.147      0.216
+any_of(miss)                        1.18        1.03        0.87      0.290      0.297      0.341
+count(hit)                          1.56        1.56        1.00      0.294      0.459      0.460
+count(miss)                         1.56        1.56        1.00      0.294      0.459      0.460
+count_if(hit)                       1.21        1.18        0.98      0.295      0.348      0.356
+count_if(miss)                      1.14        1.16        1.01      0.303      0.350      0.346
+fill                                1.00        1.08        1.08      1.040      1.121      1.041
+fill_n                              0.98        1.00        1.02      1.040      1.043      1.019
+find(hit)                           1.63        1.12        0.69      0.131      0.147      0.214
+find(miss)                          1.21        1.03        0.85      0.289      0.299      0.350
+find_if(hit)                        1.66        1.11        0.67      0.131      0.146      0.218
+find_if(miss)                       1.19        1.03        0.87      0.296      0.304      0.351
+find_if_not(hit)                    1.65        1.13        0.69      0.133      0.150      0.219
+find_if_not(miss)                   1.21        1.05        0.87      0.291      0.304      0.351
+for_each                            1.18        1.13        0.95      0.303      0.342      0.359
+generate                            0.96        0.96        1.00      0.986      0.943      0.943
+generate_n                          1.55        1.56        1.00      0.633      0.985      0.983
+is_partitioned(hit)                 1.42        1.01        0.72      0.294      0.297      0.416
+is_partitioned(miss)                2.57        1.10        0.43      0.131      0.144      0.337
+none_of(hit)                        1.18        1.02        0.87      0.291      0.298      0.344
+none_of(miss)                       1.67        1.12        0.67      0.131      0.147      0.219
+replace(hit)                        1.45        1.39        0.96      0.542      0.756      0.784
+replace(miss)                       1.98        1.97        1.00      0.299      0.588      0.590
+replace_if(hit)                     1.24        1.15        0.93      0.616      0.709      0.762
+replace_if(miss)                    1.39        1.40        1.01      0.409      0.574      0.567
+-------------------------------------------------------------------------------------------------
+group geomean                       1.38        1.17        0.85
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        1.38        1.17        0.85
+

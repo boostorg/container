@@ -1,0 +1,1124 @@
+<!-- wp:heading -->
+<h2 class="wp-block-heading">From one segmented range to two</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>In the <a href="https://boostedcpp.net/2026/05/18/neoclassical-c-segmented-iterators-revisited-1/">first installment</a> of this series we revisited Matt Austern's <em><a href="https://lafstern.org/matt/segmented.pdf">Segmented Iterators and Hierarchical Algorithms</a></em> paper and measured what a modern compiler can do when a single-range, single-pass algorithm (<code>find</code>, <code>fill</code>, <code>count</code>, <code>for_each</code>, ...) is decomposed into per-segment flat loops. The results were encouraging: once the per-element block-boundary check disappears from the inner loop, auto-vectorisers wake up and speedups of 3×-6× (with 17× corner cases) appear on small trivially-comparable types.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>This second installment moves one step up in difficulty: algorithms that read from one range and <em>write</em> to another one, such as <code>copy</code>, <code>copy_n</code>, <code>copy_if</code>, <code>remove_copy</code>, <code>remove_copy_if</code>, <code>swap_ranges</code> and <code>transform</code>. Now there are two ranges in play and <em>each</em> of them may be segmented, may be flat, or both at the same time.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>The good news is that the two ranges are independent: the input walks forward, the output walks forward, and neither influences the shape of the other. The bad news is that the output side is not symmetrical to the input side, and this asymmetry is where all the interesting problems (and all the interesting performance results) of this article come from.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Challenges with the output range</h2>
+<!-- /wp:heading -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Iterating the output to obtain segment bounds</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Austern's original scheme decomposes a <em>range</em> <code>[first, last)</code> into its segments: <strong>you need both endpoints (first + last) to discover the (potentially recursive) segment boundaries</strong>. His paper's worked example is <code>hierarchical_fill</code>, and its shape is the template that every single-range hierarchical algorithm follows:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"language":"cpp","style":{"typography":{"fontSize":"14px"}},"backgroundColor":"theme-3"} -->
+<pre class="wp-block-code has-theme-3-background-color has-background" style="font-size:14px"><code>hierarchical_fill(first, last, value):
+    sfirst = segment(first)            // segment containing the first element
+    slast  = segment(last)             // segment containing the one-past-last
+
+    if sfirst == slast: // whole range lives in one segment
+        fill_dispatch(local(first), local(last), value)
+    else:
+        fill_dispatch(local(first), end(sfirst), value) //first segment: partial
+
+        for seg = sfirst + 1 while seg != slast, ++seg: // middle segments: full
+            fill_dispatch(begin(seg), end(seg), value)
+
+        fill_dispatch(begin(slast), local(last), value) // last segment: partial</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>The three <code>fill_dispatch</code> calls need a <code>local_iterator</code> <strong>range</strong>; if that <code>local_iterator</code> is itself segmented, <code>fill_dispatch</code> calls <code>hierarchical_fill</code> again until the local iterator is flat, at which point it calls the classic STL-like <code>fill</code>. However, the STL <strong>output interface provides only a single output iterator</strong> (<code>std::copy(first, last, result)</code>) with no <code>result_end</code> argument and thus no <code>segment(result_end)</code> to compute and follow Austern's decomposition. <code>result</code> is assumed <strong>unbounded</strong>.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">State of the art for segmented outputs</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>This is less well charted than the input segmentation side, but there are some interesting implementations. Some examples:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li><strong>libstdc++</strong> specializes output iterator segmentation for <code>deque</code> in <a href="https://github.com/gcc-mirror/gcc/blob/master/libstdc%2B%2B-v3/include/bits/deque.tcc"><code>bits/deque.tcc</code></a>. Its destination overload of <code>__copy_move_a1</code> walks deque blocks, but it needs a random-access input and, since it targets <code>deque</code> specifically, it is neither recursive nor extensible.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>libc++</strong> is the closest prior art, with all the machinery private (not intended for user iterators). <a href="https://github.com/llvm/llvm-project/blob/main/libcxx/include/__iterator/segmented_iterator.h"><code>__segmented_iterator_traits</code></a> implements Austern's protocol (<code>__segment</code>/<code>__local</code>/<code>__begin</code>/<code>__end</code>/<code>__compose</code>), and <a href="https://github.com/llvm/llvm-project/blob/main/libcxx/include/__algorithm/copy.h"><code>copy.h</code></a> has a segmented-destination overload handling random-access local iterators.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>HPX</strong> offers a <em>public</em> traits framework (<a href="https://github.com/TheHPXProject/hpx/blob/master/libs/core/algorithms/include/hpx/algorithms/traits/segmented_iterator_traits.hpp"><code>segmented_iterator_traits</code></a>). The <a href="https://github.com/STEllAR-GROUP/hpx/blob/master/libs/full/segmented_algorithms/include/hpx/parallel/segmented_algorithms/copy.hpp"><code>segmented_copy</code></a> algorithm uses local iterators for both input and output and recomposes both sides, but advances source and destination segments in lockstep, so it does not handle mismatched segment boundaries.</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>This article will try to outline a scheme that is simultaneously <strong>generic</strong> and <strong>recursive</strong>, and that supports <strong>independent segmentation on both sides</strong>, together with the problems encountered and the benchmark results.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Handling the missing bound for output iterators</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>The proposal is a two-phase approach that handles the unbounded output iterator and discovers (recursively) its segment boundaries.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li><strong>Phase 1: Unbounded, outermost level</strong>: Like some of the mentioned libraries do, we ask <code>segmented_iterator_traits</code> for the segment it belongs to (<code>result_seg = segment(result)</code>) and obtain the end of that segment (<code>local_result_end = end(result_seg)</code>). We don't know where this <em>"top"</em> segment concatenation will end (as <code>result</code> is unbounded), but we do know that there should be enough segments to hold the number of elements to be written. When this top-level segment (<code>[local(result), local_result_end)</code>) is processed, we advance to the next segment (<code>++result_seg</code>) and continue processing. <strong>This level is enough to handle single-level segmented types like <code>deque</code></strong>.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Phase 2: Bounded, inner levels</strong>: Once we have a bounded range <code>[local(result), local_result_end)</code>, then we can use Austern's pattern. The inner <code>local_iterator</code> lives inside a segment whose extent was chosen by its parent, so it is a <em>bounded</em> range: when it runs out of room it has to stop and report back, so that the parent can advance <em>its</em> segment iterator and process a fresh sub-range. <strong>These levels are needed for multi-level segmentations like multi-dimensional matrix types</strong>.</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/two_phase_segmented_output.png" alt="Two-phase segmented output"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>So let's try to write some pseudo-code implementing this idea for output iterators. For simplicity, let's ignore any input range segmentation:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"language":"cpp","style":{"typography":{"fontSize":"14px"}},"backgroundColor":"theme-3"} -->
+<pre class="wp-block-code has-theme-3-background-color has-background" style="font-size:14px"><code>unbounded_copy(first, last, result):        // result is unbounded
+    result_seg   = segment(result)          // Obtain result&#39;s current segment
+    local_result = local(result)            // Obtain result&#39;s local position
+
+    while first != last:        // Unbounded output loop
+       local_result_end = end(result_seg)   // Obtain the missing local bound
+
+       (first, local_result) =  // &#91;local_result, local_result_end) is *bounded*
+          bounded_copy(first, last, local_result, local_result_end)
+
+       if first != last:        // if destination segment full
+          ++result_seg          // only outermost may advance
+          local_result = begin(result_seg)
+
+    return compose(result_seg, local_result)
+
+bounded_copy(first, last, dst, dst_end):    // both ends known
+    if dst is segmented:
+       // Austern first/middle/last calling bounded_copy recursively
+    else:
+       // leaf: process until input or destination exhausted
+       while first != last and dst != dst_end:
+          *dst++ = *first++
+       return (first, dst)</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Writing <code>hierarchical_copy_if</code> supporting input + output segmented iterators</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Before explaining the difficulties and the code, it is worth recalling what we are starting from. This is the canonical implementation of <code>std::copy_if</code>, essentially unchanged since the original HP STL:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"language":"cpp","style":{"typography":{"fontSize":"14px"}},"backgroundColor":"theme-3"} -->
+<pre class="wp-block-code has-theme-3-background-color has-background" style="font-size:14px"><code>template &lt;class InputIt, class OutputIt, class Pred&gt;
+OutputIt copy_if(InputIt first, InputIt last, OutputIt result, Pred pred)
+{
+   for (; first != last; ++first)
+      if(pred(*first)) {
+         *result = *first;
+         ++result;
+      }
+   return result;
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>It's incredibly simple code, with no helper functions and no traits.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Main steps to write <code>hierarchical_copy_if</code> in classic C++</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>In order to write a <code>hierarchical_copy_if</code> that is generic and recursive, and that supports independent segmentation on both sides, we should:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li>Implement the Austern pattern handling a potentially recursively segmented input range.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Once the input range has been peeled down to the flat (non-segmented) level, dispatch the implementation depending on the output iterator segmentation.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Implement the unbounded segmentation phase for the output iterator.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Implement the bounded segmentation phase for the output iterator.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Implement the leaf algorithm where both input and output iterators are flat and bounded. This leaf must return information about both iterators so that the parent can handle segmentation.</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Note 1: Effect of bounded destinations</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>In the classic STL interface the loop of the <code>copy</code>-family algorithms is bounded only by the <em>input</em>. That's an advantage for the code generator, even if the output iterator is complex (e.g. <code>deque::iterator</code>), as the innermost loop has exactly one termination condition:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"language":"cpp","style":{"typography":{"fontSize":"14px"}},"backgroundColor":"theme-3"} -->
+<pre class="wp-block-code has-theme-3-background-color has-background" style="font-size:14px"><code>for(; first != last; ++first) {
+   *dst_first = *first;
+   ++dst_first;
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>The produced code is efficient, and if the branch predictor does a good job for the <code>deque::iterator</code> internal segment logic, the CPU can process that loop quite efficiently. But once the destination is segmented, the write loop must stop at whichever comes first: input exhausted <em>or</em> destination segment full:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"language":"cpp","style":{"typography":{"fontSize":"14px"}},"backgroundColor":"theme-3"} -->
+<pre class="wp-block-code has-theme-3-background-color has-background" style="font-size:14px"><code>for(; first != last; ++first) {
+   if(dst_first == dst_last)   //destination segment full?
+      break;
+   *dst_first = *first;
+   ++dst_first;
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>This implies two loop-carried exit conditions instead of one, and this shape is not something that auto-vectorisers like; we will see the effect clearly in the benchmarks, especially when additional conditions (like predicates) are handled inside the leaf loop.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Note 2: Predicate call contracts</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>The second complication is related to correctness. For the conditionally-writing algorithms (<code>copy_if</code>, <code>remove_copy</code>, <code>remove_copy_if</code>) the standard mandates exactly <em>last - first</em> applications of the predicate. A hierarchical implementation, once both the input and output ranges have been flattened, splits the work into many leaf calls, and a leaf call may stop <em>in the middle of the input</em> because its destination segment filled up.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>The obvious way to write the bounded leaf is to test the destination just before writing:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"language":"cpp","style":{"typography":{"fontSize":"14px"}},"backgroundColor":"theme-3"} -->
+<pre class="wp-block-code has-theme-3-background-color has-background" style="font-size:14px"><code>for(; first != last; ++first) {
+   if(pred(*first)) {
+      if(dst_first == dst_last)   //destination segment full?
+         break;                   //Predicate called but output not produced
+      *dst_first = *first;
+      ++dst_first;
+   }
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>But this approach is correct only at a price, as the loop can stop <em>between</em> testing an element and writing it. If the upper layer advances to the next destination segment and calls the leaf again, it resumes on that same element and <code>pred</code> is applied to it twice, breaking the guarantee. To avoid it, the leaf would have to report a third piece of state (<em>"a write is owed on <code>*first</code>"</em>) and <strong>every enclosing level would need a special case to settle that write</strong> before resuming and calling the predicate again.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Another alternative is to <em>reorder</em> the test: check the destination once on entry, and then again only after a successful write:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"language":"cpp","style":{"typography":{"fontSize":"14px"}},"backgroundColor":"theme-3"} -->
+<pre class="wp-block-code has-theme-3-background-color has-background" style="font-size:14px"><code>if(dst_first == dst_last)         //no room at all: nothing tested yet
+   return {first, dst_first};
+
+for(; first != last; ++first) {
+   if(pred(*first)) {
+      *dst_first = *first;
+      ++dst_first;
+      if(dst_first == dst_last) { //destination segment full?
+         ++first;                 //consume the element just written
+         break;
+      }
+   }
+}
+return {first, dst_first};</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>Now the leaf never stops in the gap. On return, <code>first</code> either equals <code>last</code> or points at an element the predicate has <em>never seen</em>, so the caller simply calls again with a fresh destination segment. In any case, the predicate guarantee implies extra per-segment tests that can hurt performance, as those checks might subtly affect inlining, instruction cache usage and branch prediction.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading"><code>hierarchical_copy_if</code>, a possible implementation</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Now, let's take a deep breath. Implementing all the steps and notes outlined before is no longer <em>simple</em>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"language":"cpp","style":{"typography":{"fontSize":"14px"}},"backgroundColor":"theme-3"} -->
+<pre class="wp-block-code has-theme-3-background-color has-background" style="font-size:14px"><code>// (1) LEAF — both iterators are flat. Stops on input exhausted or
+// destination full, and reports both final positions. To properly
+// implement the predicate call guarantee, on return &#39;first&#39; is always
+// at an element pred has never seen, so the caller can resume with a
+// fresh segment and no extra state.
+template &lt;class InIt, class DstIt, class Pred&gt;
+pair&lt;InIt, DstIt&gt; copy_if_bounded
+   ( InIt first, InIt last, DstIt dst, DstIt dst_end
+   , Pred pred, non_segmented_iterator_tag)
+{
+   if (dst == dst_end)                 // no room: nothing tested
+      return {first, dst};
+
+   for (; first != last; ++first) {
+      if (pred(*first)) {              // exactly once per element, ever
+         *dst = *first;
+         ++dst;
+         if (dst == dst_end) {
+            ++first;                   // consume the element just written
+            break;
+         }
+      }
+   }
+   return {first, dst};
+}
+
+// (2) BOUNDED SEGMENTED DESTINATION — used at every level below the outermost.
+// Both destination endpoints are known, so Austern&#39;s decomposition is applied.
+template &lt;class InIt, class SegDst, class Pred&gt;
+pair&lt;InIt, SegDst&gt; copy_if_bounded
+   ( InIt first, InIt last, SegDst dst_first, SegDst dst_last
+   , Pred pred, segmented_iterator_tag)
+{
+   using out_tr    = segmented_iterator_traits&lt;SegDst&gt;;
+   using local_it  = typename out_tr::local_iterator;
+   using seg_it    = typename out_tr::segment_iterator;
+   using local_tag = typename segmented_iterator_traits
+                        &lt;local_it&gt;::is_segmented_iterator;
+
+   seg_it       sfirst = out_tr::segment(dst_first);
+   const seg_it slast  = out_tr::segment(dst_last);
+
+   if (sfirst == slast) {   //whole output range in one segment
+      auto r = copy_if_bounded 
+         ( first, last, out_tr::local(dst_first), out_tr::local(dst_last)
+         , pred, local_tag());
+      return {r.first, out_tr::compose(sfirst, r.second)};
+   }
+
+   auto r = copy_if_bounded // first: &#91;local(dst_first), end(sfirst))
+      ( first, last, out_tr::local(dst_first), out_tr::end(sfirst)
+      , pred, local_tag());
+   first = r.first;
+   if (first == last)
+      return {first, out_tr::compose(sfirst, r.second)};
+
+   for (++sfirst; sfirst != slast; ++sfirst) {// middle: &#91;begin(seg), end(seg))
+      r = copy_if_bounded
+         ( first, last, out_tr::begin(sfirst), out_tr::end(sfirst)
+         , pred, local_tag());
+      first = r.first;
+      if (first == last)
+         return {first, out_tr::compose(sfirst, r.second)};
+   }
+
+   r = copy_if_bounded  // last: &#91;begin(slast), local(dst_last))
+      ( first, last, out_tr::begin(sfirst), out_tr::local(dst_last)
+      , pred, local_tag());
+   return {r.first, out_tr::compose(sfirst, r.second)};
+}
+
+// (3) UNBOUNDED DESTINATION, SEGMENTED — the outermost segmentation
+// level for destination
+template &lt;class InIt, class SegOut, class Pred&gt;
+SegOut copy_if_dst_dispatch(InIt first, InIt last, SegOut result, Pred pred,
+    segmented_iterator_tag)
+{
+   using out_tr    = segmented_iterator_traits&lt;SegOut&gt;;
+   using local_it  = typename out_tr::local_iterator;
+   using seg_it    = typename out_tr::segment_iterator;
+   using local_tag = typename segmented_iterator_traits&lt;local_it&gt;
+       ::is_segmented_iterator;
+
+   if (first == last)
+      return result;
+
+   seg_it   seg   = out_tr::segment(result);
+   local_it local = out_tr::local(result);
+
+   for (;;) { // Convert unbounded iterator into a bounded local iterator range.
+      auto r = copy_if_bounded(first, last, local, out_tr::end(seg), pred,
+          local_tag());
+      first = r.first;
+      if (first == last)
+         return out_tr::compose(seg, r.second);
+      ++seg;        // go to the next segment
+      local = out_tr::begin(seg);
+   }
+}
+
+// (3b) the classic STL case: no output bound, so no destination test at all.
+template &lt;class InIt, class OutIt, class Pred&gt;
+OutIt copy_if_dst_dispatch(InIt first, InIt last, OutIt result, Pred pred,
+    non_segmented_iterator_tag)
+{
+   for (; first != last; ++first) {
+      if (pred(*first)) {
+         *result = *first;
+         ++result;
+      }
+   }
+   return result;
+}
+
+// (4) SOURCE SIDE — Austern first/middle/last over the input.
+template &lt;class SegIn, class OutIt, class Pred&gt;
+OutIt copy_if_src_dispatch(SegIn first, SegIn last, OutIt result, Pred pred,
+    segmented_iterator_tag)
+{
+   using tr    = segmented_iterator_traits&lt;SegIn&gt;;
+   using local_it  = typename tr::local_iterator;
+   using seg_it    = typename tr::segment_iterator;
+   using local_tag = typename segmented_iterator_traits&lt;local_it&gt;
+       ::is_segmented_iterator;
+
+   seg_it       sfirst = tr::segment(first);
+   const seg_it slast  = tr::segment(last);
+
+   if (sfirst == slast)
+      return copy_if_src_dispatch(tr::local(first), tr::local(last), result,
+          pred, local_tag());
+
+   result = copy_if_src_dispatch(tr::local(first), tr::end(sfirst), result,
+       pred, local_tag());
+   for (++sfirst; sfirst != slast; ++sfirst)
+      result = copy_if_src_dispatch(tr::begin(sfirst), tr::end(sfirst), result,
+          pred, local_tag());
+   return copy_if_src_dispatch(tr::begin(sfirst), tr::local(last), result, pred,
+        local_tag());
+}
+
+// (4b) Source flat: hand over to the destination side.
+template &lt;class InIt, class OutIt, class Pred&gt;
+OutIt copy_if_src_dispatch(InIt first, InIt last, OutIt result, Pred pred,
+    non_segmented_iterator_tag)
+{
+   using out_traits = segmented_iterator_traits&lt;OutIt&gt;;
+   return copy_if_dst_dispatch
+      (first, last, result, pred, typename out_traits::is_segmented_iterator());
+}
+
+// (5) MAIN ALGORITHM — dispatch on input segmentation; destination is
+// handled later.
+template &lt;class InIt, class OutIt, class Pred&gt;
+OutIt hierarchical_copy_if(InIt first, InIt last, OutIt result, Pred pred)
+{
+   using in_tr = segmented_iterator_traits&lt;InIt&gt;;
+   return copy_if_src_dispatch
+      (first, last, result, pred, typename in_tr::is_segmented_iterator());
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">How Boost.Container is experimenting with output segmentation</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p><a href="https://www.boost.org/doc/libs/latest/doc/html/container.html">Boost.Container's</a> experimental headers under <code>boost/container/experimental/</code> turn the design sketched above into a working prototype library. The goal is not a drop-in replacement for <code>&lt;algorithm></code> yet — it is a testbed for a traits-driven, recursively segmented algorithm suite that can be measured against <code>std::</code> on the same containers and iteratively refined. The main design points:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><strong>Extensible traits.</strong> <a href="https://github.com/boostorg/container/blob/develop/include/boost/container/experimental/segmented_iterator_traits.hpp"><code>segmented_iterator_traits</code></a> exposes Austern's protocol — <code>segment</code> / <code>local</code> / <code>begin</code> / <code>end</code> / <code>compose</code> — as a public customization point. User iterators can opt in by specializing the traits.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><strong>Recursive on both sides.</strong> Every dispatch peels one level and asks whether the <code>local_iterator</code> is itself segmented. The output iterator segmentation is handled using the <strong>two-phase output</strong> approach explained earlier.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><strong>Independent segmentation, not lockstep.</strong> Source and destination are walked by separate outer loops. A source segment may spill across several destination segments, and vice versa.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><strong>Predicate-once contracts.</strong> Conditionally writing algorithms (<code>segmented_copy_if</code>, <code>segmented_remove_copy_if</code>) honour the classic STL rule of exactly <code>last - first</code> predicate applications.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>So in the next chapter we'll use that experimental Boost code to benchmark segmented input-output algorithms and compare them with the Standard library.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Benchmarking segmented input-output algorithms</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>The invariants of the benchmarks are essentially the same as in the first article:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li>Every test runs against boost::container::deque with a fixed block size of 128 elements per block, with size() == 100'000 .</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>The per-call cost is averaged over several thousand invocations.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>The container is filled with contiguous positive values 0, 1, 2, …, N-1 (all elements non-negative, distinct, strictly ascending).</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Where the algorithm takes a predicate or a value, the harness probes both a (hit) and a (miss) variant.</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>Since these are two-range algorithms, each of them is measured in three <em>shape</em> variants that describe which of the two ranges is segmented:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Shape</th><th style="border:1px solid #999;padding:6px 10px;text-align:left">Input range</th><th style="border:1px solid #999;padding:6px 10px;text-align:left">Output range</th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>1S</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">segmented (<code>deque</code>)</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">flat (<code>vector</code>)</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>2S</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">flat (<code>vector</code>)</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">segmented (<code>deque</code>)</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>1+2S</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">segmented (<code>deque</code>)</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">segmented (<code>deque</code>)</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>The seven algorithms and their hit/miss variants (30 sub-benchmarks in total, each in the three shapes above):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Algorithm</th><th style="border:1px solid #999;padding:6px 10px;text-align:left">Hit case</th><th style="border:1px solid #999;padding:6px 10px;text-align:left">Miss case</th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">Copies all <code>N</code> elements.</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">—</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_n</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">Copies the first <code>N</code> elements through the <code>_n</code> overload.</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">—</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">Predicate <code>is_odd(x)</code> — true for half the elements; half the writes happen.</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">Predicate <code>x &lt; 0</code> — never true; full scan, zero writes.</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">Value = <code>N/2</code> — present exactly once; all but one element written.</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">Value = <code>-1</code> — never present; all elements written.</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">Predicate <code>x &lt; N/4 or x &gt; 3N/4</code> — true for half the elements; half the writes happen.</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">Predicate <code>x &lt; 0</code> — never true; all elements written.</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>swap_ranges</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">Swaps all <code>N</code> elements between the two ranges.</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">—</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>transform</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">Applies <code>x + 1</code> to every element, writing the result.</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">—</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>Three element types are used this time:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li>MyInt — wraps a single int (4 bytes, trivially-comparable).</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>MyFatInt&lt;4&gt; — wraps four ints (16 bytes), comparing only its first field.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>MyFatInt&lt;8&gt; — wraps eight ints (32 bytes), comparing only its first field.</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p><em>Note: all three types have user-provided copy operations, so they are <em>not</em> trivially copyable. Neither the standard library nor Boost can collapse any of these copies into <code>memmove</code>; every measurement below reflects genuine loop code generation</em>.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>As in the first article, each algorithm is executed in three modes, and for every algorithm and every value type the benchmark prints three columns:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Column</th><th style="border:1px solid #999;padding:6px 10px;text-align:left">What it isolates</th><th style="border:1px solid #999;padding:6px 10px;text-align:left">Meaning of ratio &gt; 1.0</th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">Same Boost implementation, same iterator object, with segmentation advertised or not</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">Boost segmented algorithm path is X times faster than the Boost non-segmented path</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">How the segmented version compares to the platform's stock implementation</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">Boost segmented path is X times faster than the <code>std::</code> algorithm</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">How the platform's stock implementation compares to the same flat loop without the segmentation tag</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">Boost non-segmented path is X times faster than the <code>std::</code> algorithm, this ratio should be near 1.0</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>Tested compilers / standard libraries:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li>MSVC 2026 x64 — Toolset v14.51, Microsoft STL — Windows, /O2 /std:c++20 .</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>GCC 16 — WSL Ubuntu 26.04, libstdc++, -O3 -std=c++20 .</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Clang 22 — WSL Ubuntu 26.04, libstdc++, -O3 -std=c++20 .</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">First benchmark: Segmented input-output algorithms</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>The first configuration is the direct generalisation of the first article: the input range is decomposed into segments exactly as before, the output range is decomposed with the same (potentially recursive) technique, and the leaves are bounded write loops carrying the two exit conditions shown earlier, plus the bookkeeping needed to honour the predicate-call contract.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Geomean per compiler, split by shape:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":4} -->
+<h4 class="wp-block-heading">Shape <code>1S</code> — 1S (segmented input, flat output)</h4>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyInt</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.55</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.61</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.04</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.07</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.97</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.12</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.15</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyFatInt&lt;4&gt;</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.38</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.23</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.90</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.82</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.80</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyFatInt&lt;8&gt;</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.06</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.81</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.75</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>Per-algorithm for <code>MyInt</code>, shape <code>1S</code> (geomean of the three compilers; per-compiler breakdowns are in the Annex):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Algorithm</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.56</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.70</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.90</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.88</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.94</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.24</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.76</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_n</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.92</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.84</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.32</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.74</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.18</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.28</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.85</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.25</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.88</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.85</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.31</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.31</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>swap_ranges</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.64</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.47</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>transform</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.32</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.14</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>geomean</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>2.90</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>2.91</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>1.00</strong></td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench1_per_algo_myint_1s.png" alt="First benchmark: std/seg per algorithm, T = MyInt, shape = 1S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench1_per_algo_myfatint4_1s.png" alt="First benchmark: std/seg per algorithm, T = MyFatInt&lt;4&gt;, shape = 1S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench1_per_algo_myfatint8_1s.png" alt="First benchmark: std/seg per algorithm, T = MyFatInt&lt;8&gt;, shape = 1S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:heading {"level":4} -->
+<h4 class="wp-block-heading">Shape <code>2S</code> — 2S (flat input, segmented output)</h4>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyInt</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.05</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.02</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.77</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.83</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.08</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.86</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.88</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyFatInt&lt;4&gt;</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.04</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.04</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.04</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.42</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.35</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyFatInt&lt;8&gt;</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.02</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.02</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.02</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.23</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.19</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>Per-algorithm for <code>MyInt</code>, shape <code>2S</code> (geomean of the three compilers; per-compiler breakdowns are in the Annex):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Algorithm</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.63</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.64</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.93</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.92</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.77</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.68</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.87</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_n</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.43</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.59</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.12</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.95</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.02</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.04</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.28</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.23</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>swap_ranges</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.49</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.60</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.07</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>transform</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.56</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.47</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.94</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>geomean</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>1.14</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>1.17</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>1.02</strong></td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench1_per_algo_myint_2s.png" alt="First benchmark: std/seg per algorithm, T = MyInt, shape = 2S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench1_per_algo_myfatint4_2s.png" alt="First benchmark: std/seg per algorithm, T = MyFatInt&lt;4&gt;, shape = 2S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench1_per_algo_myfatint8_2s.png" alt="First benchmark: std/seg per algorithm, T = MyFatInt&lt;8&gt;, shape = 2S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:heading {"level":4} -->
+<h4 class="wp-block-heading">Shape <code>1+2S</code> — 1+2S (segmented input and output)</h4>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyInt</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.36</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.36</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.97</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.04</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.76</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.64</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyFatInt&lt;4&gt;</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.30</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.36</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.04</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.27</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.25</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.44</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.94</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.79</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyFatInt&lt;8&gt;</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.08</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.09</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.15</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.75</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.25</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.71</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>Per-algorithm for <code>MyInt</code>, shape <code>1+2S</code> (geomean of the three compilers; per-compiler breakdowns are in the Annex):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Algorithm</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.54</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.54</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.09</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.99</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.95</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.07</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_n</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.42</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.69</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.08</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.54</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.52</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.93</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.89</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.43</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.46</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.02</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.90</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.88</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>swap_ranges</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.20</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.30</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>transform</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.62</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.63</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>geomean</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>2.16</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>2.16</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>1.00</strong></td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench1_per_algo_myint_1p2s.png" alt="First benchmark: std/seg per algorithm, T = MyInt, shape = 1+2S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench1_per_algo_myfatint4_1p2s.png" alt="First benchmark: std/seg per algorithm, T = MyFatInt&lt;4&gt;, shape = 1+2S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench1_per_algo_myfatint8_1p2s.png" alt="First benchmark: std/seg per algorithm, T = MyFatInt&lt;8&gt;, shape = 1+2S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Reading the first benchmark</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>The distribution is bimodal, and the split follows the shape column, not the algorithm:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li>The 1S variants — segmented input, flat output — behave like the first article. The output is a plain vector iterator, the leaves are the same flat scans that vectorised so well in part 1.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>The 2S variants — flat input, segmented output — are the sore spot. Several of them are slower than the flat fallback (copy_if(2S miss), copy_if(2S hit), remove_copy(2S hit)...), and on individual compilers the damage is bigger.</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>Why does segmenting <em>only the output</em> hurt so much, when segmenting only the input helps so much? Looking at the generated assembly, we can identify three causes:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li><strong>The bounded write loop does not vectorise</strong>. With the destination bound live inside the loop there are two loop-carried exit conditions, and both GCC and Clang give up on SIMD for the plain copy(2S) leaf. MSVC is the exception: its vectoriser handles some of the two-exit loops, which is one reason its 2S column degrades less.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Conditional writes plus a destination bound is the worst combination</strong>. In copy_if / remove_copy_if the store address advances data-dependently (only on predicate hits), which already rules out straightforward vectorisation — the standard's <em>"exactly N predicate applications"</em> contract also forbids speculative execution alternatives, and adding the destination-full test puts a second unpredictable branch in the loop.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Per-segment bookkeeping is not negligible</strong>. With the needed machinery (compose/decompose, input-output iterator returns...), some compilers might not inline some calls, the calling convention might use addresses instead of registers, and inlining decisions can be altered.</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>The element-type columns also give us important information:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li>The <code>MyFatInt&lt;8&gt;</code> geomeans converge towards 1.0× (no speedup vs std). The reads and writes of a <code>copy</code> over thousands of 32-byte elements saturate the memory subsystem, the CPU becomes bandwidth-limited.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><code>MyFatInt&lt;4&gt;</code> (16 bytes) sits in between: part of the working set is cache-resident, so moderate segmentation gains can be achieved.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>It is worth noting that MSVC has a noticeable speedup even on the <code>MyFatInt&lt;8&gt;</code> type, not because its segmented code is faster in absolute terms, but because the non-segmented cases were slower, leaving more room below the bandwidth ceiling.</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Second benchmark: taking advantage of random-access leaves</h2>
+<!-- /wp:heading -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">The optimization</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>There is an observation that can help the <code>2S</code> cases (destination-only segmentation):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li>When the destination is a segmented container like <code>deque</code>, the localmost destination iterator is probably a <em>random-access</em> iterator.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>The same holds for the source when it is flat or when it has been decomposed down to its flat iterators. </li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>And when both the input and the output leaves are random-access, the two-exit-condition loop (source or destination range exhausted) can be optimized: the leaf knows <em>up front</em> how many elements fit.</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p><strong>For the unconditional algorithms</strong> (<code>copy</code>, <code>copy_n</code>, <code>swap_ranges</code>, <code>transform</code>, and <code>remove_copy(miss)</code>-like flows), instead of testing the destination on every element, the leaf can compute the number of elements to process once and can fall back to the single-exit loop:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"language":"cpp","style":{"typography":{"fontSize":"14px"}},"backgroundColor":"theme-3"} -->
+<pre class="wp-block-code has-theme-3-background-color has-background" style="font-size:14px"><code>//Random-access source and destination: precompute the trip count,
+//then run the single-exit loop
+for( difference_type n = min(last - first, dst_last - dst_first)
+   ; n ; ++first, ++dst_first) {
+   --n;
+   *dst_first = *first;
+}</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>One subtraction and one comparison can replace N per-element destination tests, and — more importantly — the inner loop recovers a single-exit shape that can help auto-vectorisers.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><strong>For the conditionally-writing algorithms</strong> (<code>copy_if</code>, <code>remove_copy</code>...) the trip count cannot be precomputed (the number of writes is predicate-dependent), but the check can still be <em>amortised</em>: as long as the destination has at least <code>B</code> slots free, a block of <code>B</code> source elements can be processed with no destination test at all, because even if every predicate hits, all the writes fit in the destination. Moreover, if <code>B</code> is a power of two, it will probably help the optimizer select better instructions:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code {"language":"cpp","style":{"typography":{"fontSize":"14px"}},"backgroundColor":"theme-3"} -->
+<pre class="wp-block-code has-theme-3-background-color has-background" style="font-size:14px"><code>//Random-access source and destination: if both have room to process
+//B elements in the worst case, then the inner loop is greatly simplified
+difference_type n = last - first;
+while(n &gt;= B &#38;&#38; (dst_last - dst_first) &gt;= B) {
+   n -= B;
+   for(difference_type chunk = B; chunk; --chunk, ++first) {
+      if(pred(*first)) {
+         *dst_first = *first;
+         ++dst_first;
+      }
+   }
+}
+//tail: per-element destination checks...</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>The destination test now runs once per <code>B</code> elements (e.g. 16 in the Boost implementation) instead of once per element, the predicate is still applied exactly once per element, and the loop body might be light enough for the compiler to unroll.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Benchmark results</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Same benchmark, same machine, same compilers, with these random-access leaves enabled. We will split the results by shape again:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":4} -->
+<h4 class="wp-block-heading">Shape <code>1S</code> — 1S (segmented input, flat output)</h4>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyInt</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.92</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.87</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.95</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.29</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.27</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyFatInt&lt;4&gt;</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.05</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.06</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.41</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.18</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.84</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.65</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.64</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyFatInt&lt;8&gt;</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.02</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.09</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.04</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.95</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.79</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.74</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench2_per_algo_myint_1s.png" alt="Second benchmark: std/seg per algorithm, T = MyInt, shape = 1S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench2_per_algo_myfatint4_1s.png" alt="Second benchmark: std/seg per algorithm, T = MyFatInt&lt;4&gt;, shape = 1S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench2_per_algo_myfatint8_1s.png" alt="Second benchmark: std/seg per algorithm, T = MyFatInt&lt;8&gt;, shape = 1S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:heading {"level":4} -->
+<h4 class="wp-block-heading">Shape <code>2S</code> — 2S (flat input, segmented output)</h4>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyInt</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.78</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.81</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.56</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.61</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.02</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.59</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.59</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyFatInt&lt;4&gt;</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.30</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.32</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.02</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.24</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.30</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.05</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.55</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.47</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.95</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyFatInt&lt;8&gt;</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.19</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.14</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench2_per_algo_myint_2s.png" alt="Second benchmark: std/seg per algorithm, T = MyInt, shape = 2S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench2_per_algo_myfatint4_2s.png" alt="Second benchmark: std/seg per algorithm, T = MyFatInt&lt;4&gt;, shape = 2S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench2_per_algo_myfatint8_2s.png" alt="Second benchmark: std/seg per algorithm, T = MyFatInt&lt;8&gt;, shape = 2S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:heading {"level":4} -->
+<h4 class="wp-block-heading">Shape <code>1+2S</code> — 1+2S (segmented input and output)</h4>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyInt</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.24</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.24</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.02</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.89</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.67</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.45</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyFatInt&lt;4&gt;</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.53</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.58</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.56</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.62</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.04</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.59</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.06</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.79</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p>T = <code>MyFatInt&lt;8&gt;</code>:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Compiler</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code></th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code></th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">GCC 16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.09</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.09</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">Clang 22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left">MSVC 2026</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.81</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.28</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.71</td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench2_per_algo_myint_1p2s.png" alt="Second benchmark: std/seg per algorithm, T = MyInt, shape = 1+2S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench2_per_algo_myfatint4_1p2s.png" alt="Second benchmark: std/seg per algorithm, T = MyFatInt&lt;4&gt;, shape = 1+2S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/bench2_per_algo_myfatint8_1p2s.png" alt="Second benchmark: std/seg per algorithm, T = MyFatInt&lt;8&gt;, shape = 1+2S"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Reading the random-access iterator optimized benchmark</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Good news: the <code>MyInt</code> geomean is greatly improved, and the previously identified weak points improve:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li>The <strong>unconditional <code>2S</code> (segmented output)</strong> cases are fixed. The generated assembly confirms the mechanism: with the trip count precomputed, the leaf loop compiles to the same SIMD body as the 1S case. The 2S rows are now statistically indistinguishable from 1S rows — segmenting the output has become as profitable as segmenting the input.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>The <strong><code>1+2S</code> cases (segmented input+output</strong>) improve the most in absolute terms because both decompositions now bottom out in a single flat vectorised loop per (source-block × destination-block) intersection, and the intersections are computed with subtractions, not per-element tests.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>The <strong><code>1S</code> (segmented input)</strong> rows are unaffected, as expected: they never executed the bounded leaves in the first place.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>The <strong>conditional algorithms improve</strong> thanks to the block-amortised destination check, but are still behind. The data-dependent store position is still there, so the loop is faster scalar code, but not vectorised code. That gap is not a segmentation problem; it is the price of having a predicate.</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>On the fat types the improvements are real but bounded again by the memory bandwidth. Once the algorithm saturates the bus, executing fewer instructions barely improves times.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Final conclusions</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Let's see the geomean of <code>std/seg</code> (Boost segmented algorithm is X times faster than <code>std</code>) across all 30 sub-benchmarks for each compiler, comparing the forward-iterator leaves of the first benchmark with the random-access leaves of the second, one chart per value type:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/conclusions_std_seg_myint.png" alt="Geomean std/seg per compiler, T = MyInt"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/conclusions_std_seg_myfatint4.png" alt="Geomean std/seg per compiler, T = MyFatInt&lt;4&gt;"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/conclusions_std_seg_myfatint8.png" alt="Geomean std/seg per compiler, T = MyFatInt&lt;8&gt;"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>Some findings about segmented input-output algorithms that are worth carrying forward from this analysis:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li><strong>Austern's decomposition can be extended to output ranges</strong>, but it needs special handling. A bounded, two-exit-condition write loop defeats today's auto-vectorisers, and predicate-dependent writes can make the algorithm slower than a flat loop.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Random-access optimizations are important</strong>. When the localmost iterators on both sides are random-access, precomputing the trip count for unconditional algorithms, and block-amortising the destination check for conditional ones, yields a compiler-friendly inner loop.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>The standard's predicate-call contract has a measurable impact</strong>. Exactly-N predicate applications forbid speculative or re-scanning implementations, forcing leaves to report input-consumption and output-position precisely and keeping the conditionally-writing algorithms less optimizable. A hypothetical relaxed contract would open the door to better-performing algorithms.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Segmented gains are not universal</strong>: for some types and algorithms, memory bandwidth is a hard limit that can't be surpassed. Segmented algorithms shine where memory pressure is low and the work is instruction-bound.</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>In the first article we ended by noting that Austern's abstraction <em>ages into</em> hardware improvements. This second article adds a nuance: the abstraction is also restricted by <em>interface</em> decisions. The STL's unbounded output iterators are a good simplification, but we might need novel improvements to Austern's pattern to fully exploit segmented algorithm opportunities.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Achieved speedups are very encouraging and Austern's proposal seems a promising research line to improve good old C++ algorithms. Let's hope C++ algorithm experts can find time to improve and incorporate these ideas into a future C++ standard.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:separator -->
+<hr class="wp-block-separator has-alpha-channel-opacity"/>
+<!-- /wp:separator -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Annex: Per-compiler results</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Each compiler section shows one chart per value type: 30 sub-benchmarks on the X axis and paired bars for the first and second benchmark configurations (<code>std/seg</code> ratio). The Y axis is not shared between charts — the goal is to see each compiler's internal ranking and the first-vs-second contrast. The tables list every sub-benchmark for <code>T = MyInt</code> (B1 = first benchmark, B2 = second benchmark).</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">GCC 16</h3>
+<!-- /wp:heading -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/annex_gcc16_myint.png" alt="GCC 16 per-algorithm results, T = MyInt"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/annex_gcc16_myfatint4.png" alt="GCC 16 per-algorithm results, T = MyFatInt&lt;4&gt;"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/annex_gcc16_myfatint8.png" alt="GCC 16 per-algorithm results, T = MyFatInt&lt;8&gt;"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>GCC is the compiler that gains the most <em>relative</em> ground from the random-access leaves on <code>MyInt</code>: the geomean doubles (1.31× → 2.57×). Without them, GCC only keeps the <code>1S</code> store-heavy loops (<code>transform(1S)</code> 3.55×, <code>swap_ranges(1S)</code> 3.49×) and everything touching a segmented destination sits at 0.68×-1.4×. With them, the whole <code>copy</code>/<code>copy_n</code>/<code>swap_ranges</code>/<code>transform</code> family lands in the 3.2×-7.1× band (<code>copy_n(1+2S)</code> 7.06×, <code>transform(1+2S)</code> 6.82×). The conditional algorithms settle at 1.8×-3.1× — GCC does not if-convert the blocked <code>copy_if</code> body, so the predicate branch stays, but the amortised destination check still pays. On <code>MyFatInt&lt;4&gt;</code> the geomean moves 1.11× → 1.30×; on <code>MyFatInt&lt;8&gt;</code> nothing moves — pure bandwidth.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Algorithm</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code> B1</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code> B1</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code> B1</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code> B2</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code> B2</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code> B2</th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy(1S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.58</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.78</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.08</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.32</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.17</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.95</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy(2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.11</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.11</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.33</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.34</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy(1+2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.11</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.26</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.14</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.59</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.32</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.95</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(1S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.15</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.08</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.94</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.20</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.60</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.74</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.06</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(1+2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.02</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.75</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.87</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.06</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.02</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(1S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.12</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.10</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.89</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.92</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.78</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.68</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.87</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.68</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.81</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.08</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(1+2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.55</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.39</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.89</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.20</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.05</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.93</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_n(1S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.92</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.88</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.95</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.51</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.32</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_n(2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.94</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.85</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.91</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.46</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.14</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.93</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_n(1+2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.38</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.67</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.21</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.30</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">7.06</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.12</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(1S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.51</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.24</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.72</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.31</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.76</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.40</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.36</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.24</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.18</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(1+2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.04</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.06</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.02</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.03</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.24</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.10</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(1S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.19</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.53</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.29</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.47</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.24</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.84</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.19</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.17</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.81</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.85</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.02</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(1+2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.52</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.49</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.98</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.94</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(1S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.14</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.18</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.11</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.13</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.93</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.99</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(1+2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.33</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.26</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.95</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.15</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.04</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.95</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(1S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.53</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.53</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.28</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.52</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.19</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.21</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.35</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.12</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.07</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(1+2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.32</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.34</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.02</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.17</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.10</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>swap_ranges(1S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.47</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.49</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.46</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.97</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.15</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>swap_ranges(2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.75</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.75</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.96</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.99</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>swap_ranges(1+2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.07</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.92</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.28</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.25</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>transform(1S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.98</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.55</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.89</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.04</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.40</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.84</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>transform(2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.95</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.92</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.17</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.28</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.02</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>transform(1+2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.36</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.50</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.10</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.84</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.82</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>geomean</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>1.30</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>1.31</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>1.01</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>2.59</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>2.57</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>0.99</strong></td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Clang 22</h3>
+<!-- /wp:heading -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/annex_clang22_myint.png" alt="Clang 22 per-algorithm results, T = MyInt"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/annex_clang22_myfatint4.png" alt="Clang 22 per-algorithm results, T = MyFatInt&lt;4&gt;"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/annex_clang22_myfatint8.png" alt="Clang 22 per-algorithm results, T = MyFatInt&lt;8&gt;"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>Clang shows the starkest before/after contrast, because its vectoriser is both the most eager and the most easily blocked. In the first benchmark it produces the best <code>1S</code> numbers of the matrix (<code>transform(1S)</code> 7.17×, <code>copy(1S)</code> 5.85×) <em>and</em> the worst <code>2S</code> numbers (<code>copy(2S)</code> 0.67×, <code>remove_copy(2S miss)</code> 0.69×, <code>transform(2S)</code> 0.70×) — the bounded write loop completely disables its SIMD engine. With the random-access leaves the same rows read 4.42×, 1.53× and 5.76×, and <code>transform</code> posts 5.8×-7.4× across all three shapes. An interesting oddity: <code>copy_if(1S miss)</code> shows <code>std/nsg</code> ≈ 0.5, meaning libstdc++'s <code>std::copy_if</code> is twice as fast as the plain flat loop on a miss-heavy scan — libstdc++ hand-hoists the write out of the branch in a way Clang rewards; the segmented path matches that trick only partially. On <code>MyFatInt&lt;4&gt;</code> the geomean moves 1.17× → 1.35×, on <code>MyFatInt&lt;8&gt;</code> 1.06× → 1.07×: the bandwidth ceiling again.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Algorithm</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code> B1</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code> B1</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code> B1</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code> B2</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code> B2</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code> B2</th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy(1S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.77</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.85</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.94</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.92</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy(2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.67</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.67</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.42</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.42</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy(1+2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.85</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.58</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.99</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.99</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(1S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.67</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.59</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.65</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.74</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.05</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.80</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.80</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.28</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.23</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(1+2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.49</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.49</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.77</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.74</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(1S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.29</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.38</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.45</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.58</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.45</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.53</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.87</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.69</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.79</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.88</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.07</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(1+2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.05</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.82</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.70</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_n(1S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.36</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.45</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.21</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_n(2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.59</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.91</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.55</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.99</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">7.79</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.56</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_n(1+2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.26</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.52</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.04</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">7.78</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">8.15</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.05</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(1S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.73</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.31</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.34</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.64</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.32</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.41</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.83</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.79</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.95</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.46</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.40</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(1+2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.04</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.12</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.14</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(1S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.53</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.32</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.52</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.53</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.30</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.51</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.70</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.69</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.56</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.53</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(1+2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.95</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.06</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.07</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(1S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.83</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.82</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.78</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.56</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.88</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.78</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.81</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.04</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.44</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.45</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(1+2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.05</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.23</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.17</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.66</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.47</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.93</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(1S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.59</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.54</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.59</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.55</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.79</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.33</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.68</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.39</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.82</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.76</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(1+2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.18</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.13</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.19</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.17</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>swap_ranges(1S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.93</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.32</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.88</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.33</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.87</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>swap_ranges(2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.90</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.11</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.37</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.38</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.23</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>swap_ranges(1+2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">7.99</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.28</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.72</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.74</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>transform(1S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">7.07</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">7.17</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">7.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.89</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>transform(2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.80</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.70</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.87</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.61</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.76</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.87</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>transform(1+2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.88</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.88</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">7.43</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">7.44</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>geomean</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>1.67</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>1.71</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>1.03</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>3.14</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>3.11</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>0.99</strong></td></tr></tbody></table></figure>
+<!-- /wp:html -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">MSVC 2026 (toolset v14.51)</h3>
+<!-- /wp:heading -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/annex_msvc145_myint.png" alt="MSVC 2026 per-algorithm results, T = MyInt"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/annex_msvc145_myfatint4.png" alt="MSVC 2026 per-algorithm results, T = MyFatInt&lt;4&gt;"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://boostedcpp.net/wp-content/uploads/2026/08/annex_msvc145_myfatint8.png" alt="MSVC 2026 per-algorithm results, T = MyFatInt&lt;8&gt;"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>MSVC starts from the highest first-benchmark baseline (3.28× geomean on <code>MyInt</code>) for two reasons: its v14.51 vectoriser survives some of the bounded write loops that stop GCC and Clang cold, and its scalar flat loops are comparatively slow, which inflates every <code>X/seg</code> ratio. Still, the random-access leaves lift it to 4.45×, and the conditional algorithms respond more dramatically here than anywhere else: <code>copy_if(1+2S hit)</code> jumps from 3.02× to 9.84× and <code>copy_if(1+2S miss)</code> from 2.87× to 7.10× — the v14.51 back-end if-converts the blocked predicate body into branchless code once the destination check leaves the loop. The lingering weak spot is the flat-source <code>2S</code> family (<code>remove_copy(2S)</code>, <code>copy_if(2S)</code> around 1.0×-1.7×), where the Microsoft STL's own loops are already reasonable and the deque write side dominates. MSVC is also the only compiler that keeps meaningful gains on <code>MyFatInt&lt;8&gt;</code> (1.38× and 1.36× geomean, essentially unchanged between benchmarks): its scalar baseline is far enough from the bandwidth ceiling that per-block iteration still shows.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="wp-block-table"><table class="has-fixed-layout" style="border-collapse:collapse;width:100%;border:1px solid #999"><thead><tr><th style="border:1px solid #999;padding:6px 10px;text-align:left">Algorithm</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code> B1</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code> B1</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code> B1</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>nsg/seg</code> B2</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/seg</code> B2</th><th style="border:1px solid #999;padding:6px 10px;text-align:left"><code>std/nsg</code> B2</th></tr></thead><tbody><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy(1S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.37</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.38</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.94</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.94</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy(2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.87</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.88</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.49</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.49</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy(1+2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.83</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.37</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.92</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.82</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.25</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.92</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(1S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.11</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.13</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.76</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.77</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.84</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.84</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.33</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.33</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(1+2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.02</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.02</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">9.83</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">9.84</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(1S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.30</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.31</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.34</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.35</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.68</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.66</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.94</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.08</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_if(1+2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.87</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.87</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">7.10</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">7.10</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_n(1S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.04</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.04</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.89</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.89</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_n(2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.19</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.99</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.96</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.94</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>copy_n(1+2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.63</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.63</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.10</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.11</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(1S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.92</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.92</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.44</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.44</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.76</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.81</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.07</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.72</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.68</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(1+2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.40</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.27</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.55</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.54</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(1S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.50</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.51</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.50</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.50</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.27</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.29</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.50</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.46</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.97</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy(1+2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.77</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.77</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.75</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.75</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(1S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.57</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.57</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.99</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.82</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.96</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.05</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.10</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.05</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.31</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.36</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.02</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(1+2S hit)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">2.08</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.99</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.95</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.77</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">6.25</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.92</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(1S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.09</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.22</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.03</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.19</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.19</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.18</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.16</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.32</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.30</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.98</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>remove_copy_if(1+2S miss)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.41</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.41</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.87</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.87</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>swap_ranges(1S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.85</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.93</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.01</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.91</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.92</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>swap_ranges(2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.89</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.89</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.89</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.89</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>swap_ranges(1+2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.56</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.19</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.92</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.73</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.26</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.92</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>transform(1S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.34</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.34</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.48</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.47</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>transform(2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.97</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">4.98</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.95</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.95</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">1.00</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><code>transform(1+2S)</code></td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.58</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">3.29</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.92</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.98</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">5.51</td><td style="border:1px solid #999;padding:6px 10px;text-align:left">0.92</td></tr><tr><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>geomean</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>3.30</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>3.28</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>0.99</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>4.50</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>4.45</strong></td><td style="border:1px solid #999;padding:6px 10px;text-align:left"><strong>0.99</strong></td></tr></tbody></table></figure>
+<!-- /wp:html -->

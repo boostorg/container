@@ -1,0 +1,151 @@
+############ 1. conformance probe against the CURRENT tree ############
+g++-16: rc=0 mismatches=0
+clang++-22: rc=0 mismatches=0
+SHAPE vs the pre-change baseline captured earlier: IDENTICAL
+
+--- per algorithm/destination, applied vs mandated (current tree) ---
+copy_if flat                             applied=1800     mandated=1800     extra=0
+copy_if deque8                           applied=1800     mandated=1800     extra=0
+copy_if deque128                         applied=1800     mandated=1800     extra=0
+copy_if seg1(8)                          applied=1800     mandated=1800     extra=0
+copy_if seg1(128)                        applied=1800     mandated=1800     extra=0
+copy_if seg1(8,empties)                  applied=1800     mandated=1800     extra=0
+copy_if seg2(8x4)                        applied=1800     mandated=1800     extra=0
+copy_if seg2(128x4)                      applied=1800     mandated=1800     extra=0
+remove_copy flat                         applied=1200     mandated=1200     extra=0
+remove_copy deque8                       applied=1200     mandated=1200     extra=0
+remove_copy deque128                     applied=1200     mandated=1200     extra=0
+remove_copy seg1(8)                      applied=1200     mandated=1200     extra=0
+remove_copy seg1(128)                    applied=1200     mandated=1200     extra=0
+remove_copy seg1(8,empties)              applied=1200     mandated=1200     extra=0
+remove_copy seg2(8x4)                    applied=1200     mandated=1200     extra=0
+remove_copy seg2(128x4)                  applied=1200     mandated=1200     extra=0
+remove_copy_if flat                      applied=1800     mandated=1800     extra=0
+remove_copy_if deque8                    applied=1800     mandated=1800     extra=0
+remove_copy_if deque128                  applied=1800     mandated=1800     extra=0
+remove_copy_if seg1(8)                   applied=1800     mandated=1800     extra=0
+remove_copy_if seg1(128)                 applied=1800     mandated=1800     extra=0
+remove_copy_if seg1(8,empties)           applied=1800     mandated=1800     extra=0
+remove_copy_if seg2(8x4)                 applied=1800     mandated=1800     extra=0
+remove_copy_if seg2(128x4)               applied=1800     mandated=1800     extra=0
+partition_copy flat                      applied=1800     mandated=1800     extra=0
+partition_copy deque8                    applied=1800     mandated=1800     extra=0
+partition_copy deque128                  applied=1800     mandated=1800     extra=0
+partition_copy seg1(8)                   applied=1800     mandated=1800     extra=0
+partition_copy seg1(128)                 applied=1800     mandated=1800     extra=0
+partition_copy seg1(8,empties)           applied=1800     mandated=1800     extra=0
+partition_copy seg2(8x4)                 applied=1800     mandated=1800     extra=0
+partition_copy seg2(128x4)               applied=1800     mandated=1800     extra=0
+remove flat                              applied=300      mandated=300      extra=0
+remove_if flat                           applied=300      mandated=300      extra=0
+remove deque8                            applied=300      mandated=300      extra=0
+remove_if deque8                         applied=300      mandated=300      extra=0
+remove deque128                          applied=300      mandated=300      extra=0
+remove_if deque128                       applied=300      mandated=300      extra=0
+remove seg1(8)                           applied=300      mandated=300      extra=0
+remove_if seg1(8)                        applied=300      mandated=300      extra=0
+remove seg1(128)                         applied=300      mandated=300      extra=0
+remove_if seg1(128)                      applied=300      mandated=300      extra=0
+remove seg1(8,empties)                   applied=300      mandated=300      extra=0
+remove_if seg1(8,empties)                applied=300      mandated=300      extra=0
+remove seg2(8x4)                         applied=300      mandated=300      extra=0
+remove_if seg2(8x4)                      applied=300      mandated=300      extra=0
+remove seg2(128x4)                       applied=300      mandated=300      extra=0
+remove_if seg2(128x4)                    applied=300      mandated=300      extra=0
+
+############ 2. set_*/merge comparison-count survey (untouched family) ############
+merge                  dst=flat         n1=200  n2=200  comparisons=333    bound=399    within
+set_union              dst=flat         n1=200  n2=200  comparisons=399    bound=799    within
+set_difference         dst=flat         n1=200  n2=200  comparisons=399    bound=799    within
+set_intersection       dst=flat         n1=200  n2=200  comparisons=399    bound=799    within
+set_sym_difference     dst=flat         n1=200  n2=200  comparisons=399    bound=799    within
+merge                  dst=deque2       n1=200  n2=200  comparisons=333    bound=399    within
+set_union              dst=deque2       n1=200  n2=200  comparisons=399    bound=799    within
+set_difference         dst=deque2       n1=200  n2=200  comparisons=465    bound=799    within
+set_intersection       dst=deque2       n1=200  n2=200  comparisons=465    bound=799    within
+set_sym_difference     dst=deque2       n1=200  n2=200  comparisons=531    bound=799    within
+merge                  dst=deque8       n1=200  n2=200  comparisons=333    bound=399    within
+set_union              dst=deque8       n1=200  n2=200  comparisons=399    bound=799    within
+set_difference         dst=deque8       n1=200  n2=200  comparisons=415    bound=799    within
+set_intersection       dst=deque8       n1=200  n2=200  comparisons=415    bound=799    within
+set_sym_difference     dst=deque8       n1=200  n2=200  comparisons=431    bound=799    within
+merge                  dst=seg1(1)      n1=200  n2=200  comparisons=333    bound=399    within
+set_union              dst=seg1(1)      n1=200  n2=200  comparisons=399    bound=799    within
+set_difference         dst=seg1(1)      n1=200  n2=200  comparisons=531    bound=799    within
+set_intersection       dst=seg1(1)      n1=200  n2=200  comparisons=531    bound=799    within
+set_sym_difference     dst=seg1(1)      n1=200  n2=200  comparisons=663    bound=799    within
+merge                  dst=seg1(8)      n1=200  n2=200  comparisons=333    bound=399    within
+set_union              dst=seg1(8)      n1=200  n2=200  comparisons=399    bound=799    within
+set_difference         dst=seg1(8)      n1=200  n2=200  comparisons=415    bound=799    within
+set_intersection       dst=seg1(8)      n1=200  n2=200  comparisons=415    bound=799    within
+set_sym_difference     dst=seg1(8)      n1=200  n2=200  comparisons=431    bound=799    within
+merge                  dst=seg2(1x2)    n1=200  n2=200  comparisons=333    bound=399    within
+set_union              dst=seg2(1x2)    n1=200  n2=200  comparisons=399    bound=799    within
+set_difference         dst=seg2(1x2)    n1=200  n2=200  comparisons=597    bound=799    within
+set_intersection       dst=seg2(1x2)    n1=200  n2=200  comparisons=597    bound=799    within
+set_sym_difference     dst=seg2(1x2)    n1=200  n2=200  comparisons=795    bound=799    within
+merge                  dst=seg2(8x4)    n1=200  n2=200  comparisons=333    bound=399    within
+set_union              dst=seg2(8x4)    n1=200  n2=200  comparisons=399    bound=799    within
+set_difference         dst=seg2(8x4)    n1=200  n2=200  comparisons=419    bound=799    within
+set_intersection       dst=seg2(8x4)    n1=200  n2=200  comparisons=419    bound=799    within
+set_sym_difference     dst=seg2(8x4)    n1=200  n2=200  comparisons=439    bound=799    within
+over_bound_cases=0
+
+############ 3. test matrix against the CURRENT tree ############
+test                       g++-16/03 g++-16/11 g++-16/17 g++-16/20 clang++-22/03 clang++-22/11 clang++-22/17 clang++-22/20
+copy_if                    pass     pass     pass     pass     pass     pass     pass     pass    
+remove_copy                pass     pass     pass     pass     pass     pass     pass     pass    
+remove_copy_if             pass     pass     pass     pass     pass     pass     pass     pass    
+remove                     pass     pass     pass     pass     pass     pass     pass     pass    
+remove_if                  pass     pass     pass     pass     pass     pass     pass     pass    
+partition_copy             pass     pass     pass     pass     pass     pass     pass     pass    
+copy                       pass     pass     pass     pass     pass     pass     pass     pass    
+transform                  pass     pass     pass     pass     pass     pass     pass     pass    
+copy_n                     pass     pass     pass     pass     pass     pass     pass     pass    
+reverse_copy               pass     pass     pass     pass     pass     pass     pass     pass    
+swap_ranges                pass     pass     pass     pass     pass     pass     pass     pass    
+merge                      pass     pass     pass     pass     pass     pass     pass     pass    
+set_union                  pass     pass     pass     pass     pass     pass     pass     pass    
+set_difference             pass     pass     pass     pass     pass     pass     pass     pass    
+set_intersection           pass     pass     pass     pass     pass     pass     pass     pass    
+set_symmetric_difference   pass     pass     pass     pass     pass     pass     pass     pass    
+stable_partition           pass     pass     pass     pass     pass     pass     pass     pass    
+partition                  RUNFAIL  RUNFAIL  RUNFAIL  RUNFAIL  RUNFAIL  RUNFAIL  RUNFAIL  RUNFAIL 
+matrix: 144 configurations, 8 not clean: partition/g++-16/03:run partition/g++-16/11:run partition/g++-16/17:run partition/g++-16/20:run partition/clang++-22/03:run partition/clang++-22/11:run partition/clang++-22/17:run partition/clang++-22/20:run
+
+############ 4. sanitisers, C++20 -O1 -fsanitize=address,undefined ############
+copy_if            clang++-22   clean
+copy_if            g++-16       clean
+remove_copy        clang++-22   clean
+remove_copy        g++-16       clean
+remove_copy_if     clang++-22   clean
+remove_copy_if     g++-16       clean
+remove             clang++-22   clean
+remove             g++-16       clean
+remove_if          clang++-22   clean
+remove_if          g++-16       clean
+partition_copy     clang++-22   clean
+partition_copy     g++-16       clean
+copy               clang++-22   clean
+copy               g++-16       clean
+370_probe          clang++-22   clean, mismatches=0
+370_probe          g++-16       clean, mismatches=0
+
+############ 5. g22 depth survey ############
+algorithm                  depth1   depth2  
+copy                       ok       ok      
+copy_if                    ok       ok      
+copy_n                     ok       ok      
+transform                  ok       ok      
+remove_copy                ok       ok      
+remove_copy_if             ok       ok      
+reverse_copy               ok       ok      
+swap_ranges                ok       ok      
+merge                      ok       ok      
+set_union                  ok       ok      
+set_difference             ok       ok      
+set_intersection           ok       ok      
+set_symmetric_difference   ok       ok      
+partition_copy             ok       ok      
+depth survey all ok: 1
+DONE-FINAL

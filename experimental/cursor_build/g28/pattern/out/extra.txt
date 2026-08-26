@@ -1,0 +1,45 @@
+﻿############ 0. corrected .text* totals, -O2, all variants ############
+  g++-16 base .text*=7866
+  g++-16 T .text*=6538
+  g++-16 F .text*=4508
+  g++-16 H .text*=7325
+  g++-16 W .text*=8154
+  clang++-22 base .text*=12998
+  clang++-22 T .text*=8155
+  clang++-22 F .text*=4361
+  clang++-22 H .text*=9064
+  clang++-22 W .text*=13081
+
+############ 1. -O3 spot check (totals only) ############
+g++-16       base     TOTAL(matched)                                       insns=4383  cmp=619  jcc=673  call=12  jmp=106
+g++-16       T        TOTAL(matched)                                       insns=3167  cmp=472  jcc=499  call=0   jmp=66 
+g++-16       F        TOTAL(matched)                                       insns=1739  cmp=241  jcc=260  call=0   jmp=37 
+g++-16       H        TOTAL(matched)                                       insns=3494  cmp=465  jcc=497  call=5   jmp=78 
+g++-16       W        TOTAL(matched)                                       insns=4464  cmp=616  jcc=678  call=11  jmp=103
+clang++-22   base     TOTAL(matched)                                       insns=3560  cmp=467  jcc=446  call=8   jmp=128
+clang++-22   T        TOTAL(matched)                                       insns=2187  cmp=269  jcc=257  call=6   jmp=89 
+clang++-22   F        TOTAL(matched)                                       insns=1252  cmp=150  jcc=144  call=2   jmp=42 
+clang++-22   H        TOTAL(matched)                                       insns=2492  cmp=314  jcc=304  call=6   jmp=92 
+clang++-22   W        TOTAL(matched)                                       insns=3547  cmp=457  jcc=435  call=8   jmp=125
+
+############ 2. ICF experiment (E shape, lld --icf=all) ############
+
+############ 3. compile time / peak RSS (c++20 -O2, probe TU) ############
+  g++-16 base: 1.53s wall, 130532 KB maxRSS
+  g++-16 T: 2.47s wall, 127508 KB maxRSS
+  g++-16 F: 2.39s wall, 124076 KB maxRSS
+  g++-16 H: 2.44s wall, 129704 KB maxRSS
+  g++-16 W: 2.54s wall, 131356 KB maxRSS
+  clang++-22 base: 0.99s wall, 153848 KB maxRSS
+  clang++-22 T: 1.26s wall, 153096 KB maxRSS
+  clang++-22 F: 1.21s wall, 153320 KB maxRSS
+  clang++-22 H: 1.27s wall, 153556 KB maxRSS
+  clang++-22 W: 1.32s wall, 153608 KB maxRSS
+
+############ 4. compile time / peak RSS on the heaviest affected test (copy) ############
+  g++-16 base: 2.49s wall, 179904 KB maxRSS
+  g++-16 F: 3.32s wall, 176972 KB maxRSS
+  g++-16 H: 3.38s wall, 178772 KB maxRSS
+  clang++-22 base: 1.50s wall, 160460 KB maxRSS
+  clang++-22 F: 1.79s wall, 160104 KB maxRSS
+  clang++-22 H: 1.80s wall, 160416 KB maxRSS

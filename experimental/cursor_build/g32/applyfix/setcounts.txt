@@ -1,0 +1,37 @@
+merge                  dst=flat         n1=200  n2=200  comparisons=333    bound=399    within
+set_union              dst=flat         n1=200  n2=200  comparisons=399    bound=799    within
+set_difference         dst=flat         n1=200  n2=200  comparisons=399    bound=799    within
+set_intersection       dst=flat         n1=200  n2=200  comparisons=399    bound=799    within
+set_sym_difference     dst=flat         n1=200  n2=200  comparisons=399    bound=799    within
+merge                  dst=deque2       n1=200  n2=200  comparisons=333    bound=399    within
+set_union              dst=deque2       n1=200  n2=200  comparisons=399    bound=799    within
+set_difference         dst=deque2       n1=200  n2=200  comparisons=465    bound=799    within
+set_intersection       dst=deque2       n1=200  n2=200  comparisons=465    bound=799    within
+set_sym_difference     dst=deque2       n1=200  n2=200  comparisons=531    bound=799    within
+merge                  dst=deque8       n1=200  n2=200  comparisons=333    bound=399    within
+set_union              dst=deque8       n1=200  n2=200  comparisons=399    bound=799    within
+set_difference         dst=deque8       n1=200  n2=200  comparisons=415    bound=799    within
+set_intersection       dst=deque8       n1=200  n2=200  comparisons=415    bound=799    within
+set_sym_difference     dst=deque8       n1=200  n2=200  comparisons=431    bound=799    within
+merge                  dst=seg1(1)      n1=200  n2=200  comparisons=333    bound=399    within
+set_union              dst=seg1(1)      n1=200  n2=200  comparisons=399    bound=799    within
+set_difference         dst=seg1(1)      n1=200  n2=200  comparisons=531    bound=799    within
+set_intersection       dst=seg1(1)      n1=200  n2=200  comparisons=531    bound=799    within
+set_sym_difference     dst=seg1(1)      n1=200  n2=200  comparisons=663    bound=799    within
+merge                  dst=seg1(8)      n1=200  n2=200  comparisons=333    bound=399    within
+set_union              dst=seg1(8)      n1=200  n2=200  comparisons=399    bound=799    within
+set_difference         dst=seg1(8)      n1=200  n2=200  comparisons=415    bound=799    within
+set_intersection       dst=seg1(8)      n1=200  n2=200  comparisons=415    bound=799    within
+set_sym_difference     dst=seg1(8)      n1=200  n2=200  comparisons=431    bound=799    within
+merge                  dst=seg2(1x2)    n1=200  n2=200  comparisons=333    bound=399    within
+set_union              dst=seg2(1x2)    n1=200  n2=200  comparisons=399    bound=799    within
+set_difference         dst=seg2(1x2)    n1=200  n2=200  comparisons=597    bound=799    within
+set_intersection       dst=seg2(1x2)    n1=200  n2=200  comparisons=597    bound=799    within
+set_sym_difference     dst=seg2(1x2)    n1=200  n2=200  comparisons=795    bound=799    within
+merge                  dst=seg2(8x4)    n1=200  n2=200  comparisons=333    bound=399    within
+set_union              dst=seg2(8x4)    n1=200  n2=200  comparisons=399    bound=799    within
+set_difference         dst=seg2(8x4)    n1=200  n2=200  comparisons=419    bound=799    within
+set_intersection       dst=seg2(8x4)    n1=200  n2=200  comparisons=419    bound=799    within
+set_sym_difference     dst=seg2(8x4)    n1=200  n2=200  comparisons=439    bound=799    within
+
+over_bound_cases=0

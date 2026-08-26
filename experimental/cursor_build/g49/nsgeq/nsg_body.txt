@@ -1,0 +1,1135 @@
+0000000000009080 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)>:
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:697
+    9080:	push   %rbp
+    9081:	push   %r15
+    9083:	push   %r14
+    9085:	push   %r13
+    9087:	push   %r12
+    9089:	push   %rbx
+    908a:	sub    $0x48,%rsp
+    908e:	mov    %rdi,%r14
+    9091:	lea    0x80(%rsp),%r15
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:699
+    9099:	lea    0x7(%rdi),%rbx
+    909d:	lea    0x8(%rsp),%rsi
+boost::move_detail::nsec_clock():
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/move/detail/nsec_clock.hpp:170
+    90a2:	mov    $0x4,%edi
+    90a7:	call   20d0 <clock_gettime@plt>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/move/detail/nsec_clock.hpp:172
+    90ac:	imul   $0x3b9aca00,0x8(%rsp),%rax
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/move/detail/nsec_clock.hpp:173
+    90b5:	add    0x10(%rsp),%rax
+    90ba:	mov    %rax,0x40(%rsp)
+    90bf:	mov    %rbx,0x30(%rsp)
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:699
+    90c4:	shr    $0x3,%rbx
+    90c8:	mov    %r14,0x38(%rsp)
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:701
+    90cd:	and    $0x7,%r14d
+    90d1:	lea    0x25f98(%rip),%rcx        # 2f070 <_IO_stdin_used+0x70>
+    90d8:	movslq (%rcx,%r14,4),%rax
+    90dc:	add    %rcx,%rax
+    90df:	mov    %rbx,0x28(%rsp)
+    90e4:	jmp    *%rax
+    90e6:	mov    $0x1,%al
+    90e8:	xor    %r13d,%r13d
+    90eb:	xor    %r12d,%r12d
+    90ee:	xor    %ebx,%ebx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:114
+    90f0:	test   $0x1,%al
+    90f2:	je     918f <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x10f>
+    90f8:	jmp    91b1 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x131>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    90fd:	mov    (%r15),%rax
+    9100:	xor    %r13d,%r13d
+    9103:	xor    %r12d,%r12d
+    9106:	xor    %ebx,%ebx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:701
+    9108:	jmp    94ca <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x44a>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    910d:	mov    (%r15),%rax
+    9110:	xor    %r13d,%r13d
+    9113:	xor    %r12d,%r12d
+    9116:	xor    %ebx,%ebx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:701
+    9118:	jmp    964a <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x5ca>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    911d:	mov    (%r15),%rax
+    9120:	xor    %r13d,%r13d
+    9123:	xor    %r12d,%r12d
+    9126:	xor    %ebx,%ebx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:701
+    9128:	jmp    958a <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x50a>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    912d:	mov    (%r15),%rax
+    9130:	xor    %r13d,%r13d
+    9133:	xor    %r12d,%r12d
+    9136:	xor    %ebx,%ebx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:701
+    9138:	jmp    928a <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x20a>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    913d:	mov    (%r15),%rax
+    9140:	xor    %r13d,%r13d
+    9143:	xor    %r12d,%r12d
+    9146:	xor    %ebx,%ebx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:701
+    9148:	jmp    970a <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x68a>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    914d:	mov    (%r15),%rax
+    9150:	xor    %r13d,%r13d
+    9153:	xor    %r12d,%r12d
+    9156:	xor    %ebx,%ebx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:701
+    9158:	jmp    940a <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x38a>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    915d:	mov    (%r15),%rax
+    9160:	xor    %r13d,%r13d
+    9163:	xor    %r12d,%r12d
+    9166:	xor    %ebx,%ebx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:701
+    9168:	jmp    934a <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x2ca>
+    916d:	mov    %rax,%rbx
+    9170:	mov    0x18(%rsp),%rdi
+std::_Vector_base<unsigned long, std::allocator<unsigned long> >::~_Vector_base():
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_vector.h:397
+    9175:	test   %rdi,%rdi
+    9178:	je     9187 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x107>
+    917a:	mov    0x20(%rsp),%rsi
+    917f:	sub    %rdi,%rsi
+std::__new_allocator<unsigned long>::deallocate(unsigned long*, unsigned long):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/new_allocator.h:183
+    9182:	call   20f0 <operator delete(void*, unsigned long)@plt>
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+    9187:	mov    %rbx,%rdi
+    918a:	call   2180 <_Unwind_Resume@plt>
+    918f:	lea    0x8(%rsp),%rsi
+boost::move_detail::nsec_clock():
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/move/detail/nsec_clock.hpp:170
+    9194:	mov    $0x4,%edi
+    9199:	call   20d0 <clock_gettime@plt>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/move/detail/nsec_clock.hpp:172
+    919e:	imul   $0x3b9aca00,0x8(%rsp),%rax
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/move/detail/nsec_clock.hpp:173
+    91a7:	add    0x10(%rsp),%rax
+    91ac:	mov    %rax,0x40(%rsp)
+bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>::operator()():
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    91b1:	mov    (%r15),%rax
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    91b4:	mov    (%rax),%rdi
+    91b7:	mov    $0x1,%esi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    91bc:	test   %rdi,%rdi
+    91bf:	je     927f <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x1ff>
+boost::container::deque_members_holder<boost::container::new_allocator<MyInt>, unsigned long, false>::get_start_off() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:483
+    91c5:	mov    0x10(%rax),%rcx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    91c9:	mov    %rcx,%r8
+    91cc:	shr    $0x7,%r8
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    91d0:	and    $0x7f,%ecx
+    91d3:	shl    $0x2,%ecx
+    91d6:	add    (%rdi,%r8,8),%rcx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_finish() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1138
+    91da:	mov    0x18(%rax),%rdx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_off_to_it(unsigned long) const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    91de:	mov    %rdx,%r9
+    91e1:	shr    $0x7,%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    91e5:	and    $0x7f,%edx
+    91e8:	shl    $0x2,%edx
+    91eb:	add    (%rdi,%r9,8),%rdx
+bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>::operator()():
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    91ef:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    91f2:	je     927f <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x1ff>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    91f8:	lea    (%rdi,%r8,8),%rsi
+    91fc:	mov    0x8(%r15),%rdi
+boost::container::vector_alloc_holder<boost::container::new_allocator<MyInt>, unsigned long, boost::move_detail::integral_constant<unsigned int, 1u> >::start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/vector.hpp:594
+    9200:	mov    (%rdi),%rdi
+    9203:	mov    $0x200,%r8d
+operator==(MyInt const&, MyInt const&):
+    9209:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    9218:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    9227:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    9236:	cs nopw 0x0(%rax,%rax,1)
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:168
+    9240:	mov    (%rcx),%r9d
+    9243:	cmp    (%rdi),%r9d
+bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>::operator()():
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:427
+    9246:	jne    9276 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x1f6>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:240
+    9248:	add    $0x4,%rcx
+    924c:	mov    (%rsi),%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:241
+    924f:	add    %r8,%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:242
+    9252:	cmp    %r9,%rcx
+    9255:	je     9262 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x1e2>
+    9257:	add    $0x4,%rdi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    925b:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    925e:	jne    9240 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x1c0>
+    9260:	jmp    9273 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x1f3>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:244
+    9262:	mov    0x8(%rsi),%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:243
+    9266:	add    $0x8,%rsi
+    926a:	add    $0x4,%rdi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    926e:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    9271:	jne    9240 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x1c0>
+    9273:	mov    %rdx,%rcx
+boost::container::operator==(boost::container::deque_iterator<MyInt*, true, 0u, 128u, unsigned long> const&, boost::container::deque_iterator<MyInt*, true, 0u, 128u, unsigned long> const&):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:341
+    9276:	xor    %esi,%esi
+    9278:	cmp    %rdx,%rcx
+    927b:	sete   %sil
+bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>::operator()():
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    927f:	mov    0x10(%r15),%rcx
+    9283:	mov    %esi,(%rcx)
+    9285:	mov    %rcx,0x8(%rsp)
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    928a:	mov    (%rax),%rdi
+    928d:	mov    $0x1,%esi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    9292:	test   %rdi,%rdi
+    9295:	je     933f <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x2bf>
+boost::container::deque_members_holder<boost::container::new_allocator<MyInt>, unsigned long, false>::get_start_off() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:483
+    929b:	mov    0x10(%rax),%rcx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    929f:	mov    %rcx,%r8
+    92a2:	shr    $0x7,%r8
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    92a6:	and    $0x7f,%ecx
+    92a9:	shl    $0x2,%ecx
+    92ac:	add    (%rdi,%r8,8),%rcx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_finish() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1138
+    92b0:	mov    0x18(%rax),%rdx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_off_to_it(unsigned long) const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    92b4:	mov    %rdx,%r9
+    92b7:	shr    $0x7,%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    92bb:	and    $0x7f,%edx
+    92be:	shl    $0x2,%edx
+    92c1:	add    (%rdi,%r9,8),%rdx
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    92c5:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    92c8:	je     933f <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x2bf>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    92ca:	lea    (%rdi,%r8,8),%rsi
+    92ce:	mov    0x8(%r15),%rdi
+boost::container::vector_alloc_holder<boost::container::new_allocator<MyInt>, unsigned long, boost::move_detail::integral_constant<unsigned int, 1u> >::start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/vector.hpp:594
+    92d2:	mov    (%rdi),%rdi
+    92d5:	mov    $0x200,%r8d
+operator==(MyInt const&, MyInt const&):
+    92db:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    92ea:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    92f9:	nopl   0x0(%rax)
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:168
+    9300:	mov    (%rcx),%r9d
+    9303:	cmp    (%rdi),%r9d
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:427
+    9306:	jne    9336 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x2b6>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:240
+    9308:	add    $0x4,%rcx
+    930c:	mov    (%rsi),%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:241
+    930f:	add    %r8,%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:242
+    9312:	cmp    %r9,%rcx
+    9315:	je     9322 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x2a2>
+    9317:	add    $0x4,%rdi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    931b:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    931e:	jne    9300 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x280>
+    9320:	jmp    9333 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x2b3>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:244
+    9322:	mov    0x8(%rsi),%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:243
+    9326:	add    $0x8,%rsi
+    932a:	add    $0x4,%rdi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    932e:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    9331:	jne    9300 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x280>
+    9333:	mov    %rdx,%rcx
+boost::container::operator==(boost::container::deque_iterator<MyInt*, true, 0u, 128u, unsigned long> const&, boost::container::deque_iterator<MyInt*, true, 0u, 128u, unsigned long> const&):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:341
+    9336:	xor    %esi,%esi
+    9338:	cmp    %rdx,%rcx
+    933b:	sete   %sil
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    933f:	mov    0x10(%r15),%rcx
+    9343:	mov    %esi,(%rcx)
+    9345:	mov    %rcx,0x8(%rsp)
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    934a:	mov    (%rax),%rdi
+    934d:	mov    $0x1,%esi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    9352:	test   %rdi,%rdi
+    9355:	je     93ff <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x37f>
+boost::container::deque_members_holder<boost::container::new_allocator<MyInt>, unsigned long, false>::get_start_off() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:483
+    935b:	mov    0x10(%rax),%rcx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    935f:	mov    %rcx,%r8
+    9362:	shr    $0x7,%r8
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    9366:	and    $0x7f,%ecx
+    9369:	shl    $0x2,%ecx
+    936c:	add    (%rdi,%r8,8),%rcx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_finish() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1138
+    9370:	mov    0x18(%rax),%rdx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_off_to_it(unsigned long) const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    9374:	mov    %rdx,%r9
+    9377:	shr    $0x7,%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    937b:	and    $0x7f,%edx
+    937e:	shl    $0x2,%edx
+    9381:	add    (%rdi,%r9,8),%rdx
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    9385:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    9388:	je     93ff <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x37f>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    938a:	lea    (%rdi,%r8,8),%rsi
+    938e:	mov    0x8(%r15),%rdi
+boost::container::vector_alloc_holder<boost::container::new_allocator<MyInt>, unsigned long, boost::move_detail::integral_constant<unsigned int, 1u> >::start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/vector.hpp:594
+    9392:	mov    (%rdi),%rdi
+    9395:	mov    $0x200,%r8d
+operator==(MyInt const&, MyInt const&):
+    939b:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    93aa:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    93b9:	nopl   0x0(%rax)
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:168
+    93c0:	mov    (%rcx),%r9d
+    93c3:	cmp    (%rdi),%r9d
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:427
+    93c6:	jne    93f6 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x376>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:240
+    93c8:	add    $0x4,%rcx
+    93cc:	mov    (%rsi),%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:241
+    93cf:	add    %r8,%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:242
+    93d2:	cmp    %r9,%rcx
+    93d5:	je     93e2 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x362>
+    93d7:	add    $0x4,%rdi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    93db:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    93de:	jne    93c0 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x340>
+    93e0:	jmp    93f3 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x373>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:244
+    93e2:	mov    0x8(%rsi),%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:243
+    93e6:	add    $0x8,%rsi
+    93ea:	add    $0x4,%rdi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    93ee:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    93f1:	jne    93c0 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x340>
+    93f3:	mov    %rdx,%rcx
+boost::container::operator==(boost::container::deque_iterator<MyInt*, true, 0u, 128u, unsigned long> const&, boost::container::deque_iterator<MyInt*, true, 0u, 128u, unsigned long> const&):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:341
+    93f6:	xor    %esi,%esi
+    93f8:	cmp    %rdx,%rcx
+    93fb:	sete   %sil
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    93ff:	mov    0x10(%r15),%rcx
+    9403:	mov    %esi,(%rcx)
+    9405:	mov    %rcx,0x8(%rsp)
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    940a:	mov    (%rax),%rdi
+    940d:	mov    $0x1,%esi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    9412:	test   %rdi,%rdi
+    9415:	je     94bf <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x43f>
+boost::container::deque_members_holder<boost::container::new_allocator<MyInt>, unsigned long, false>::get_start_off() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:483
+    941b:	mov    0x10(%rax),%rcx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    941f:	mov    %rcx,%r8
+    9422:	shr    $0x7,%r8
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    9426:	and    $0x7f,%ecx
+    9429:	shl    $0x2,%ecx
+    942c:	add    (%rdi,%r8,8),%rcx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_finish() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1138
+    9430:	mov    0x18(%rax),%rdx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_off_to_it(unsigned long) const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    9434:	mov    %rdx,%r9
+    9437:	shr    $0x7,%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    943b:	and    $0x7f,%edx
+    943e:	shl    $0x2,%edx
+    9441:	add    (%rdi,%r9,8),%rdx
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    9445:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    9448:	je     94bf <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x43f>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    944a:	lea    (%rdi,%r8,8),%rsi
+    944e:	mov    0x8(%r15),%rdi
+boost::container::vector_alloc_holder<boost::container::new_allocator<MyInt>, unsigned long, boost::move_detail::integral_constant<unsigned int, 1u> >::start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/vector.hpp:594
+    9452:	mov    (%rdi),%rdi
+    9455:	mov    $0x200,%r8d
+operator==(MyInt const&, MyInt const&):
+    945b:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    946a:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    9479:	nopl   0x0(%rax)
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:168
+    9480:	mov    (%rcx),%r9d
+    9483:	cmp    (%rdi),%r9d
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:427
+    9486:	jne    94b6 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x436>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:240
+    9488:	add    $0x4,%rcx
+    948c:	mov    (%rsi),%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:241
+    948f:	add    %r8,%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:242
+    9492:	cmp    %r9,%rcx
+    9495:	je     94a2 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x422>
+    9497:	add    $0x4,%rdi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    949b:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    949e:	jne    9480 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x400>
+    94a0:	jmp    94b3 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x433>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:244
+    94a2:	mov    0x8(%rsi),%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:243
+    94a6:	add    $0x8,%rsi
+    94aa:	add    $0x4,%rdi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    94ae:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    94b1:	jne    9480 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x400>
+    94b3:	mov    %rdx,%rcx
+boost::container::operator==(boost::container::deque_iterator<MyInt*, true, 0u, 128u, unsigned long> const&, boost::container::deque_iterator<MyInt*, true, 0u, 128u, unsigned long> const&):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:341
+    94b6:	xor    %esi,%esi
+    94b8:	cmp    %rdx,%rcx
+    94bb:	sete   %sil
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    94bf:	mov    0x10(%r15),%rcx
+    94c3:	mov    %esi,(%rcx)
+    94c5:	mov    %rcx,0x8(%rsp)
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    94ca:	mov    (%rax),%rdi
+    94cd:	mov    $0x1,%esi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    94d2:	test   %rdi,%rdi
+    94d5:	je     957f <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x4ff>
+boost::container::deque_members_holder<boost::container::new_allocator<MyInt>, unsigned long, false>::get_start_off() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:483
+    94db:	mov    0x10(%rax),%rcx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    94df:	mov    %rcx,%r8
+    94e2:	shr    $0x7,%r8
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    94e6:	and    $0x7f,%ecx
+    94e9:	shl    $0x2,%ecx
+    94ec:	add    (%rdi,%r8,8),%rcx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_finish() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1138
+    94f0:	mov    0x18(%rax),%rdx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_off_to_it(unsigned long) const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    94f4:	mov    %rdx,%r9
+    94f7:	shr    $0x7,%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    94fb:	and    $0x7f,%edx
+    94fe:	shl    $0x2,%edx
+    9501:	add    (%rdi,%r9,8),%rdx
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    9505:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    9508:	je     957f <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x4ff>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    950a:	lea    (%rdi,%r8,8),%rsi
+    950e:	mov    0x8(%r15),%rdi
+boost::container::vector_alloc_holder<boost::container::new_allocator<MyInt>, unsigned long, boost::move_detail::integral_constant<unsigned int, 1u> >::start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/vector.hpp:594
+    9512:	mov    (%rdi),%rdi
+    9515:	mov    $0x200,%r8d
+operator==(MyInt const&, MyInt const&):
+    951b:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    952a:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    9539:	nopl   0x0(%rax)
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:168
+    9540:	mov    (%rcx),%r9d
+    9543:	cmp    (%rdi),%r9d
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:427
+    9546:	jne    9576 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x4f6>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:240
+    9548:	add    $0x4,%rcx
+    954c:	mov    (%rsi),%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:241
+    954f:	add    %r8,%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:242
+    9552:	cmp    %r9,%rcx
+    9555:	je     9562 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x4e2>
+    9557:	add    $0x4,%rdi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    955b:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    955e:	jne    9540 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x4c0>
+    9560:	jmp    9573 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x4f3>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:244
+    9562:	mov    0x8(%rsi),%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:243
+    9566:	add    $0x8,%rsi
+    956a:	add    $0x4,%rdi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    956e:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    9571:	jne    9540 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x4c0>
+    9573:	mov    %rdx,%rcx
+boost::container::operator==(boost::container::deque_iterator<MyInt*, true, 0u, 128u, unsigned long> const&, boost::container::deque_iterator<MyInt*, true, 0u, 128u, unsigned long> const&):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:341
+    9576:	xor    %esi,%esi
+    9578:	cmp    %rdx,%rcx
+    957b:	sete   %sil
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    957f:	mov    0x10(%r15),%rcx
+    9583:	mov    %esi,(%rcx)
+    9585:	mov    %rcx,0x8(%rsp)
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    958a:	mov    (%rax),%rdi
+    958d:	mov    $0x1,%esi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    9592:	test   %rdi,%rdi
+    9595:	je     963f <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x5bf>
+boost::container::deque_members_holder<boost::container::new_allocator<MyInt>, unsigned long, false>::get_start_off() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:483
+    959b:	mov    0x10(%rax),%rcx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    959f:	mov    %rcx,%r8
+    95a2:	shr    $0x7,%r8
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    95a6:	and    $0x7f,%ecx
+    95a9:	shl    $0x2,%ecx
+    95ac:	add    (%rdi,%r8,8),%rcx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_finish() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1138
+    95b0:	mov    0x18(%rax),%rdx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_off_to_it(unsigned long) const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    95b4:	mov    %rdx,%r9
+    95b7:	shr    $0x7,%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    95bb:	and    $0x7f,%edx
+    95be:	shl    $0x2,%edx
+    95c1:	add    (%rdi,%r9,8),%rdx
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    95c5:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    95c8:	je     963f <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x5bf>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    95ca:	lea    (%rdi,%r8,8),%rsi
+    95ce:	mov    0x8(%r15),%rdi
+boost::container::vector_alloc_holder<boost::container::new_allocator<MyInt>, unsigned long, boost::move_detail::integral_constant<unsigned int, 1u> >::start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/vector.hpp:594
+    95d2:	mov    (%rdi),%rdi
+    95d5:	mov    $0x200,%r8d
+operator==(MyInt const&, MyInt const&):
+    95db:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    95ea:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    95f9:	nopl   0x0(%rax)
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:168
+    9600:	mov    (%rcx),%r9d
+    9603:	cmp    (%rdi),%r9d
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:427
+    9606:	jne    9636 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x5b6>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:240
+    9608:	add    $0x4,%rcx
+    960c:	mov    (%rsi),%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:241
+    960f:	add    %r8,%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:242
+    9612:	cmp    %r9,%rcx
+    9615:	je     9622 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x5a2>
+    9617:	add    $0x4,%rdi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    961b:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    961e:	jne    9600 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x580>
+    9620:	jmp    9633 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x5b3>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:244
+    9622:	mov    0x8(%rsi),%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:243
+    9626:	add    $0x8,%rsi
+    962a:	add    $0x4,%rdi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    962e:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    9631:	jne    9600 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x580>
+    9633:	mov    %rdx,%rcx
+boost::container::operator==(boost::container::deque_iterator<MyInt*, true, 0u, 128u, unsigned long> const&, boost::container::deque_iterator<MyInt*, true, 0u, 128u, unsigned long> const&):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:341
+    9636:	xor    %esi,%esi
+    9638:	cmp    %rdx,%rcx
+    963b:	sete   %sil
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    963f:	mov    0x10(%r15),%rcx
+    9643:	mov    %esi,(%rcx)
+    9645:	mov    %rcx,0x8(%rsp)
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    964a:	mov    (%rax),%rdi
+    964d:	mov    $0x1,%esi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    9652:	test   %rdi,%rdi
+    9655:	je     96ff <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x67f>
+boost::container::deque_members_holder<boost::container::new_allocator<MyInt>, unsigned long, false>::get_start_off() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:483
+    965b:	mov    0x10(%rax),%rcx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    965f:	mov    %rcx,%r8
+    9662:	shr    $0x7,%r8
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    9666:	and    $0x7f,%ecx
+    9669:	shl    $0x2,%ecx
+    966c:	add    (%rdi,%r8,8),%rcx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_finish() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1138
+    9670:	mov    0x18(%rax),%rdx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_off_to_it(unsigned long) const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    9674:	mov    %rdx,%r9
+    9677:	shr    $0x7,%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    967b:	and    $0x7f,%edx
+    967e:	shl    $0x2,%edx
+    9681:	add    (%rdi,%r9,8),%rdx
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    9685:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    9688:	je     96ff <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x67f>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    968a:	lea    (%rdi,%r8,8),%rsi
+    968e:	mov    0x8(%r15),%rdi
+boost::container::vector_alloc_holder<boost::container::new_allocator<MyInt>, unsigned long, boost::move_detail::integral_constant<unsigned int, 1u> >::start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/vector.hpp:594
+    9692:	mov    (%rdi),%rdi
+    9695:	mov    $0x200,%r8d
+operator==(MyInt const&, MyInt const&):
+    969b:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    96aa:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    96b9:	nopl   0x0(%rax)
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:168
+    96c0:	mov    (%rcx),%r9d
+    96c3:	cmp    (%rdi),%r9d
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:427
+    96c6:	jne    96f6 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x676>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:240
+    96c8:	add    $0x4,%rcx
+    96cc:	mov    (%rsi),%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:241
+    96cf:	add    %r8,%r9
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:242
+    96d2:	cmp    %r9,%rcx
+    96d5:	je     96e2 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x662>
+    96d7:	add    $0x4,%rdi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    96db:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    96de:	jne    96c0 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x640>
+    96e0:	jmp    96f3 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x673>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:244
+    96e2:	mov    0x8(%rsi),%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:243
+    96e6:	add    $0x8,%rsi
+    96ea:	add    $0x4,%rdi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    96ee:	cmp    %rdx,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    96f1:	jne    96c0 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x640>
+    96f3:	mov    %rdx,%rcx
+boost::container::operator==(boost::container::deque_iterator<MyInt*, true, 0u, 128u, unsigned long> const&, boost::container::deque_iterator<MyInt*, true, 0u, 128u, unsigned long> const&):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:341
+    96f6:	xor    %esi,%esi
+    96f8:	cmp    %rdx,%rcx
+    96fb:	sete   %sil
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    96ff:	mov    0x10(%r15),%rcx
+    9703:	mov    %esi,(%rcx)
+    9705:	mov    %rcx,0x8(%rsp)
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    970a:	mov    (%rax),%rsi
+    970d:	mov    $0x1,%edx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    9712:	test   %rsi,%rsi
+    9715:	je     97be <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x73e>
+boost::container::deque_members_holder<boost::container::new_allocator<MyInt>, unsigned long, false>::get_start_off() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:483
+    971b:	mov    0x10(%rax),%rcx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    971f:	mov    %rcx,%rdi
+    9722:	shr    $0x7,%rdi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    9726:	and    $0x7f,%ecx
+    9729:	shl    $0x2,%ecx
+    972c:	add    (%rsi,%rdi,8),%rcx
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_finish() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1138
+    9730:	mov    0x18(%rax),%rax
+boost::container::deque_base<boost::container::new_allocator<MyInt>, boost::container::deque_opt<0ul, 128ul, unsigned long, false>, false>::prot_off_to_it(unsigned long) const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1070
+    9734:	mov    %rax,%r8
+    9737:	shr    $0x7,%r8
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:1071
+    973b:	and    $0x7f,%eax
+    973e:	shl    $0x2,%eax
+    9741:	add    (%rsi,%r8,8),%rax
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    9745:	cmp    %rax,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    9748:	je     97be <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x73e>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    974a:	lea    (%rsi,%rdi,8),%rdx
+    974e:	mov    0x8(%r15),%rsi
+boost::container::vector_alloc_holder<boost::container::new_allocator<MyInt>, unsigned long, boost::move_detail::integral_constant<unsigned int, 1u> >::start() const:
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/vector.hpp:594
+    9752:	mov    (%rsi),%rsi
+    9755:	mov    $0x200,%edi
+operator==(MyInt const&, MyInt const&):
+    975a:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    9769:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    9778:	nopl   0x0(%rax,%rax,1)
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:168
+    9780:	mov    (%rcx),%r8d
+    9783:	cmp    (%rsi),%r8d
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:427
+    9786:	jne    97b6 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x736>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:240
+    9788:	add    $0x4,%rcx
+    978c:	mov    (%rdx),%r8
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:241
+    978f:	add    %rdi,%r8
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:242
+    9792:	cmp    %r8,%rcx
+    9795:	je     97a2 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x722>
+    9797:	add    $0x4,%rsi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    979b:	cmp    %rax,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    979e:	jne    9780 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x700>
+    97a0:	jmp    97b3 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x733>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:244
+    97a2:	mov    0x8(%rdx),%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:243
+    97a6:	add    $0x8,%rdx
+    97aa:	add    $0x4,%rsi
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:345
+    97ae:	cmp    %rax,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/experimental/detail/segmented_common_algo.hpp:421
+    97b1:	jne    9780 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x700>
+    97b3:	mov    %rax,%rcx
+boost::container::operator==(boost::container::deque_iterator<MyInt*, true, 0u, 128u, unsigned long> const&, boost::container::deque_iterator<MyInt*, true, 0u, 128u, unsigned long> const&):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/container/detail/deque_impl.hpp:341
+    97b6:	xor    %edx,%edx
+    97b8:	cmp    %rax,%rcx
+    97bb:	sete   %dl
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:1053
+    97be:	mov    0x10(%r15),%rax
+    97c2:	mov    %edx,(%rax)
+    97c4:	mov    %rax,0x8(%rsp)
+escape(void*):
+    97c9:	lea    0x8(%rsp),%rsi
+boost::move_detail::nsec_clock():
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/move/detail/nsec_clock.hpp:170
+    97ce:	mov    $0x4,%edi
+    97d3:	call   20d0 <clock_gettime@plt>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/move/detail/nsec_clock.hpp:172
+    97d8:	imul   $0x3b9aca00,0x8(%rsp),%rax
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/../../../boost/move/detail/nsec_clock.hpp:173
+    97e1:	mov    0x10(%rsp),%r14
+    97e6:	sub    0x40(%rsp),%r14
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:108
+    97eb:	add    %rax,%r14
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/vector.tcc:118
+    97ee:	cmp    %rbx,%r12
+    97f1:	je     981d <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x79d>
+_ZSt12construct_atImJmEQaant20is_unbounded_array_vIT_ErqXgsnwcvPvLi0E_S0_pispclsr3stdE7declvalIT0_EEEEEPS0_S3_DpOS2_():
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_construct.h:110
+    97f3:	mov    %r14,(%r12)
+    97f7:	mov    0x28(%rsp),%rcx
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+    97fc:	add    $0x8,%r12
+    9800:	xor    %eax,%eax
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:713
+    9802:	dec    %rcx
+    9805:	je     98c1 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x841>
+    980b:	mov    %rcx,0x28(%rsp)
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:114
+    9810:	test   $0x1,%al
+    9812:	je     918f <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x10f>
+    9818:	jmp    91b1 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x131>
+    981d:	mov    %r12,0x20(%rsp)
+std::vector<unsigned long, std::allocator<unsigned long> >::size() const:
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_vector.h:1109
+    9822:	mov    %r12,%rbx
+    9825:	mov    %r13,0x18(%rsp)
+    982a:	sub    %r13,%rbx
+    982d:	movabs $0x7ffffffffffffff8,%rax
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_vector.h:2194
+    9837:	cmp    %rax,%rbx
+    983a:	je     99c6 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x946>
+std::vector<unsigned long, std::allocator<unsigned long> >::size() const:
+    9840:	mov    %rbx,%r12
+    9843:	sar    $0x3,%r12
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_vector.h:2197
+    9847:	cmp    $0x1,%r12
+    984b:	adc    %r12,%r12
+    984e:	movabs $0xfffffffffffffff,%rax
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_vector.h:2198
+    9858:	cmp    %rax,%r12
+    985b:	cmovae %rax,%r12
+std::__new_allocator<unsigned long>::allocate(unsigned long, void const*):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/new_allocator.h:162
+    985f:	lea    0x0(,%r12,8),%rdi
+    9867:	call   20e0 <operator new(unsigned long)@plt>
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+    986c:	mov    %rax,%r13
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/vector.tcc:595
+    986f:	lea    (%rax,%rbx,1),%rbp
+_ZSt12construct_atImJmEQaant20is_unbounded_array_vIT_ErqXgsnwcvPvLi0E_S0_pispclsr3stdE7declvalIT0_EEEEEPS0_S3_DpOS2_():
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_construct.h:110
+    9873:	mov    %r14,(%rax,%rbx,1)
+std::enable_if<std::__is_bitwise_relocatable<unsigned long>::value, unsigned long*>::type std::__relocate_a_1<unsigned long, unsigned long>(unsigned long*, unsigned long*, unsigned long*, std::allocator<unsigned long>&):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_uninitialized.h:1381
+    9877:	test   %rbx,%rbx
+    987a:	mov    0x18(%rsp),%r14
+    987f:	jle    988f <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x80f>
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_uninitialized.h:1393
+    9881:	mov    %r13,%rdi
+    9884:	mov    %r14,%rsi
+    9887:	mov    %rbx,%rdx
+    988a:	call   20c0 <memcpy@plt>
+std::vector<unsigned long, std::allocator<unsigned long> >::_Guard_alloc::~_Guard_alloc():
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_vector.h:1872
+    988f:	test   %r14,%r14
+    9892:	je     989f <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x81f>
+std::__new_allocator<unsigned long>::deallocate(unsigned long*, unsigned long):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/new_allocator.h:183
+    9894:	mov    %r14,%rdi
+    9897:	mov    %rbx,%rsi
+    989a:	call   20f0 <operator delete(void*, unsigned long)@plt>
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/vector.tcc:655
+    989f:	lea    0x0(,%r12,8),%rbx
+    98a7:	add    %r13,%rbx
+    98aa:	mov    0x28(%rsp),%rcx
+    98af:	mov    %rbp,%r12
+    98b2:	add    $0x8,%r12
+    98b6:	xor    %eax,%eax
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:713
+    98b8:	dec    %rcx
+    98bb:	jne    980b <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x78b>
+_ZN9__gnu_cxx17__normal_iteratorIPKmSt6vectorImSaImEEEFeqERKS6_S8_QrqXeqcldtfp_4baseEcldtfp0_4baseERSt14convertible_toIbEE():
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_iterator.h:1198
+    98c1:	cmp    %r12,%r13
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:63
+    98c4:	je     995b <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x8db>
+__gnu_cxx::operator-(__gnu_cxx::__normal_iterator<unsigned long*, std::vector<unsigned long, std::allocator<unsigned long> > > const&, __gnu_cxx::__normal_iterator<unsigned long*, std::vector<unsigned long, std::allocator<unsigned long> > > const&):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_iterator.h:1352
+    98ca:	mov    %r12,%r14
+    98cd:	sub    %r13,%r14
+    98d0:	mov    %r14,%rbp
+    98d3:	sar    $0x3,%rbp
+int std::__countl_zero<unsigned long>(unsigned long):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bit:211
+    98d7:	bsr    %rbp,%rdx
+    98db:	xor    $0x3f,%edx
+void std::__sort<__gnu_cxx::__normal_iterator<unsigned long*, std::vector<unsigned long, std::allocator<unsigned long> > >, std::less<void> >(__gnu_cxx::__normal_iterator<unsigned long*, std::vector<unsigned long, std::allocator<unsigned long> > >, __gnu_cxx::__normal_iterator<unsigned long*, std::vector<unsigned long, std::allocator<unsigned long> > >, std::less<void>):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_algo.h:1914
+    98de:	add    %edx,%edx
+    98e0:	xor    $0x7e,%rdx
+    98e4:	mov    %r13,0x18(%rsp)
+    98e9:	mov    %rbx,0x20(%rsp)
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_algo.h:1913
+    98ee:	mov    %r13,%rdi
+    98f1:	mov    %r12,%rsi
+    98f4:	call   9ec0 <void std::__introsort_loop<__gnu_cxx::__normal_iterator<unsigned long*, std::vector<unsigned long, std::allocator<unsigned long> > >, long, std::less<void> >(__gnu_cxx::__normal_iterator<unsigned long*, std::vector<unsigned long, std::allocator<unsigned long> > >, __gnu_cxx::__normal_iterator<unsigned long*, std::vector<unsigned long, std::allocator<unsigned long> > >, long, std::less<void>)>
+    98f9:	mov    %r13,0x18(%rsp)
+    98fe:	mov    %rbx,0x20(%rsp)
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_algo.h:1916
+    9903:	mov    %r13,%rdi
+    9906:	mov    %r12,%rsi
+    9909:	call   a2c0 <void std::__final_insertion_sort<__gnu_cxx::__normal_iterator<unsigned long*, std::vector<unsigned long, std::allocator<unsigned long> > >, std::less<void> >(__gnu_cxx::__normal_iterator<unsigned long*, std::vector<unsigned long, std::allocator<unsigned long> > >, __gnu_cxx::__normal_iterator<unsigned long*, std::vector<unsigned long, std::allocator<unsigned long> > >, std::less<void>)>
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+    990e:	movabs $0xcccccccccccccccd,%rcx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:68
+    9918:	mov    %rbp,%rax
+    991b:	mul    %rcx
+    991e:	shr    $0x4,%rdx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:69
+    9922:	lea    (%rdx,%rdx,1),%rcx
+    9926:	xor    %eax,%eax
+    9928:	cmp    %rbp,%rcx
+    992b:	cmovb  %rdx,%rax
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:74
+    992f:	mov    %rbp,%rdx
+    9932:	sub    %rax,%rdx
+    9935:	sub    %rax,%rdx
+std::vector<unsigned long, std::allocator<unsigned long> >::operator[](unsigned long):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_vector.h:1254
+    9938:	and    $0xfffffffffffffffe,%rdx
+    993c:	lea    0x0(,%rdx,4),%rdx
+    9944:	add    %r13,%rdx
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:77
+    9947:	test   $0x8,%r14b
+    994b:	jne    996c <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x8ec>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:80
+    994d:	mov    (%rdx,%rax,8),%rcx
+    9951:	add    -0x8(%rdx,%rax,8),%rcx
+    9956:	shr    $1,%rcx
+    9959:	jmp    9970 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x8f0>
+    995b:	xor    %ebp,%ebp
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_vector.h:397
+    995d:	test   %r13,%r13
+    9960:	je     99bf <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x93f>
+    9962:	sub    %r13,%rbx
+    9965:	mov    0x30(%rsp),%r14
+    996a:	jmp    9984 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x904>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:78
+    996c:	mov    (%rdx,%rax,8),%rcx
+    9970:	mov    0x38(%rsp),%rax
+    9975:	lea    0x7(%rax),%r14
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_vector.h:375
+    9979:	sub    %r13,%rbx
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/./../bench/bench_utils.hpp:93
+    997c:	imul   %rax,%rbp
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_vector.h:398
+    9980:	imul   %rcx,%rbp
+std::__new_allocator<unsigned long>::deallocate(unsigned long*, unsigned long):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/new_allocator.h:183
+    9984:	mov    %r13,%rdi
+    9987:	mov    %rbx,%rsi
+    998a:	call   20f0 <operator delete(void*, unsigned long)@plt>
+unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:719
+    998f:	mov    %rbp,%rax
+    9992:	or     %r14,%rax
+    9995:	and    $0xfffffffffffffff8,%r14
+    9999:	shr    $0x20,%rax
+    999d:	je     99a9 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x929>
+    999f:	mov    %rbp,%rax
+    99a2:	xor    %edx,%edx
+    99a4:	div    %r14
+    99a7:	jmp    99b0 <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x930>
+    99a9:	mov    %ebp,%eax
+    99ab:	xor    %edx,%edx
+    99ad:	div    %r14d
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:720
+    99b0:	add    $0x48,%rsp
+    99b4:	pop    %rbx
+    99b5:	pop    %r12
+    99b7:	pop    %r13
+    99b9:	pop    %r14
+    99bb:	pop    %r15
+    99bd:	pop    %rbp
+    99be:	ret
+    99bf:	mov    0x30(%rsp),%r14
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_vector.h:397
+    99c4:	jmp    998f <unsigned long measure_batch<bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset>(unsigned long, bench_ops::seg_equal<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, boost::container::vector<MyInt, void, void>, true>, noop_reset)+0x90f>
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/stl_vector.h:2195
+    99c6:	lea    0x25e41(%rip),%rdi        # 2f80e <_IO_stdin_used+0x80e>
+    99cd:	call   2080 <std::__throw_length_error(char const*)@plt>
+    99d2:	cs nopw 0x0(%rax,%rax,1)
+    99dc:	cs nopw 0x0(%rax,%rax,1)
+    99e6:	cs nopw 0x0(%rax,%rax,1)
+    99f0:	cs nopw 0x0(%rax,%rax,1)
+    99fa:	nopw   0x0(%rax,%rax,1)
+
+0000000000009a00 <print_ratio(char const*, char const*, double, double, double)>:
+print_ratio(char const*, char const*, double, double, double):
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:675
+    9a00:	push   %rbp
+    9a01:	push   %r14
+    9a03:	push   %rbx
+    9a04:	sub    $0x50,%rsp
+    9a08:	mov    %rdi,%rbx
+    9a0b:	xorpd  %xmm4,%xmm4
+    9a0f:	xorpd  %xmm3,%xmm3
+    9a13:	movsd  %xmm3,0x18(%rsp)
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:676
+    9a19:	ucomisd %xmm4,%xmm1
+    9a1d:	jbe    9a27 <print_ratio(char const*, char const*, double, double, double)+0x27>
+    9a1f:	movapd %xmm2,%xmm3
+    9a23:	divsd  %xmm1,%xmm3
+    9a27:	movsd  %xmm3,0x10(%rsp)
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:677
+    9a2d:	movapd %xmm0,%xmm3
+    9a31:	divsd  %xmm1,%xmm3
+    9a35:	cmpltsd %xmm1,%xmm4
+    9a3a:	andpd  %xmm3,%xmm4
+    9a3e:	movapd %xmm4,0x20(%rsp)
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:678
+    9a44:	xorpd  %xmm3,%xmm3
+    9a48:	ucomisd %xmm3,%xmm0
+    9a4c:	jbe    9a5c <print_ratio(char const*, char const*, double, double, double)+0x5c>
+    9a4e:	movapd %xmm0,%xmm3
+    9a52:	divsd  %xmm2,%xmm3
+    9a56:	movsd  %xmm3,0x18(%rsp)
+    9a5c:	movsd  %xmm1,0x38(%rsp)
+    9a62:	movsd  %xmm0,0x40(%rsp)
+    9a68:	movsd  %xmm2,0x48(%rsp)
+    9a6e:	xorpd  %xmm1,%xmm1
+    9a72:	movsd  0x10(%rsp),%xmm0
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:613
+    9a78:	ucomisd %xmm1,%xmm0
+    9a7c:	ja     9b4c <print_ratio(char const*, char const*, double, double, double)+0x14c>
+    9a82:	movapd 0x20(%rsp),%xmm0
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:597
+    9a88:	ucomisd %xmm1,%xmm0
+    9a8c:	ja     9b81 <print_ratio(char const*, char const*, double, double, double)+0x181>
+    9a92:	xorpd  %xmm1,%xmm1
+    9a96:	movsd  0x18(%rsp),%xmm0
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:605
+    9a9c:	ucomisd %xmm1,%xmm0
+    9aa0:	ja     9bb6 <print_ratio(char const*, char const*, double, double, double)+0x1b6>
+    9aa6:	movsd  0x10(%rsp),%xmm0
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:613
+    9aac:	ucomisd %xmm1,%xmm0
+    9ab0:	ja     9beb <print_ratio(char const*, char const*, double, double, double)+0x1eb>
+    9ab6:	xorpd  %xmm1,%xmm1
+    9aba:	movapd 0x20(%rsp),%xmm0
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:597
+    9ac0:	ucomisd %xmm1,%xmm0
+    9ac4:	ja     9c20 <print_ratio(char const*, char const*, double, double, double)+0x220>
+    9aca:	movsd  0x18(%rsp),%xmm0
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:605
+    9ad0:	ucomisd %xmm1,%xmm0
+    9ad4:	jbe    9af7 <print_ratio(char const*, char const*, double, double, double)+0xf7>
+    9ad6:	movsd  0x18(%rsp),%xmm0
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:606
+    9adc:	call   20b0 <log@plt>
+    9ae1:	addsd  0x29627(%rip),%xmm0        # 33110 <g_group_geomean+0x8>
+    9ae9:	movsd  %xmm0,0x2961f(%rip)        # 33110 <g_group_geomean+0x8>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:607
+    9af1:	incl   0x2962d(%rip)        # 33124 <g_group_geomean+0x1c>
+std::ostream::operator<<(std::ios_base& (*)(std::ios_base&)):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/ostream.h:140
+    9af7:	mov    0x294c2(%rip),%r14        # 32fc0 <std::cout@GLIBCXX_3.4>
+    9afe:	mov    (%r14),%rax
+    9b01:	mov    -0x18(%rax),%rcx
+    9b05:	mov    $0xffffff4f,%edx
+std::operator&(std::_Ios_Fmtflags, std::_Ios_Fmtflags):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/ios_base.h:87
+    9b0a:	and    0x18(%r14,%rcx,1),%edx
+std::operator|(std::_Ios_Fmtflags, std::_Ios_Fmtflags):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/ios_base.h:92
+    9b0f:	or     $0x20,%edx
+std::operator|=(std::_Ios_Fmtflags&, std::_Ios_Fmtflags):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/ios_base.h:107
+    9b12:	mov    %edx,0x18(%r14,%rcx,1)
+std::basic_ostream<char, std::char_traits<char> >& std::operator<< <char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, std::_Setw):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/iomanip:252
+    9b17:	mov    -0x18(%rax),%rcx
+std::ios_base::width(long):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/ios_base.h:801
+    9b1b:	movq   $0x1c,0x10(%r14,%rcx,1)
+print_ratio(char const*, char const*, double, double, double):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/ostream.h:736
+    9b24:	test   %rbx,%rbx
+    9b27:	je     9c5a <print_ratio(char const*, char const*, double, double, double)+0x25a>
+std::char_traits<char>::length(char const*):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/char_traits.h:396
+    9b2d:	mov    %rbx,%rdi
+    9b30:	call   2060 <strlen@plt>
+print_ratio(char const*, char const*, double, double, double):
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/ostream.h:739
+    9b35:	mov    0x29484(%rip),%rdi        # 32fc0 <std::cout@GLIBCXX_3.4>
+    9b3c:	mov    %rbx,%rsi
+    9b3f:	mov    %rax,%rdx
+    9b42:	call   2100 <std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long)@plt>
+    9b47:	jmp    9c6f <print_ratio(char const*, char const*, double, double, double)+0x26f>
+    9b4c:	movsd  0x10(%rsp),%xmm0
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:614
+    9b52:	call   20b0 <log@plt>
+    9b57:	xorpd  %xmm1,%xmm1
+    9b5b:	addsd  0x2958d(%rip),%xmm0        # 330f0 <g_geomean+0x10>
+    9b63:	movsd  %xmm0,0x29585(%rip)        # 330f0 <g_geomean+0x10>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:615
+    9b6b:	incl   0x2958f(%rip)        # 33100 <g_geomean+0x20>
+    9b71:	movapd 0x20(%rsp),%xmm0
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:597
+    9b77:	ucomisd %xmm1,%xmm0
+    9b7b:	jbe    9a92 <print_ratio(char const*, char const*, double, double, double)+0x92>
+    9b81:	movapd 0x20(%rsp),%xmm0
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:598
+    9b87:	call   20b0 <log@plt>
+    9b8c:	addsd  0x2954c(%rip),%xmm0        # 330e0 <g_geomean>
+    9b94:	movsd  %xmm0,0x29544(%rip)        # 330e0 <g_geomean>
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/bench_segmented_algos.cpp:599

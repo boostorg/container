@@ -1,0 +1,97 @@
+    3500:	sub    $0x18,%rsp
+    3504:	mov    %rdi,%r10
+    3507:	mov    (%rsi),%rdi
+    350a:	mov    %rbp,0x8(%rsp)
+    350f:	mov    (%rdx),%rbp
+    3512:	mov    %r12,0x10(%rsp)
+    3517:	mov    %r8,%r12
+    351a:	cmp    %rbp,%rdi
+    351d:	je     3666 
+    3523:	mov    %rbx,(%rsp)
+    3527:	mov    %rsi,%r11
+    352a:	mov    %rdx,%rbx
+    352d:	mov    (%r12),%rax
+    3531:	mov    %rbp,%r8
+    3534:	sub    %rdi,%r8
+    3537:	lea    0x200(%rax),%r9
+    353e:	cmp    $0x7c,%r8
+    3542:	jle    35e3 
+    3548:	sar    $0x2,%r8
+    354c:	lea    0x80(%rdi),%rsi
+    3553:	nop
+    3554:	data16 cs nopw 0x0(%rax,%rax,1)
+    355f:	data16 cs nopw 0x0(%rax,%rax,1)
+    356a:	data16 cs nopw 0x0(%rax,%rax,1)
+    3575:	data16 cs nopw 0x0(%rax,%rax,1)
+    3580:	mov    %r9,%rax
+    3583:	sub    %rcx,%rax
+    3586:	cmp    $0x7c,%rax
+    358a:	jle    35e3 
+    358c:	sub    $0x20,%r8
+    3590:	mov    %rdi,%rax
+    3593:	xchg   %ax,%ax
+    3595:	data16 cs nopw 0x0(%rax,%rax,1)
+    35a0:	cs nopw 0x0(%rax,%rax,1)
+    35aa:	data16 cs nopw 0x0(%rax,%rax,1)
+    35b5:	data16 cs nopw 0x0(%rax,%rax,1)
+    35c0:	mov    (%rax),%edx
+    35c2:	test   %edx,%edx
+    35c4:	jns    35cc 
+    35c6:	mov    %edx,(%rcx)
+    35c8:	add    $0x4,%rcx
+    35cc:	add    $0x4,%rax
+    35d0:	cmp    %rax,%rsi
+    35d3:	jne    35c0 
+    35d5:	sub    $0xffffffffffffff80,%rdi
+    35d9:	sub    $0xffffffffffffff80,%rsi
+    35dd:	cmp    $0x1f,%r8
+    35e1:	jg     3580 
+    35e3:	cmp    %r9,%rcx
+    35e6:	je     362c 
+    35e8:	cmp    %rbp,%rdi
+    35eb:	jne    35f9 
+    35ed:	jmp    360e 
+    35ef:	nop
+    35f0:	add    $0x4,%rdi
+    35f4:	cmp    %rbp,%rdi
+    35f7:	je     360e 
+    35f9:	mov    (%rdi),%eax
+    35fb:	test   %eax,%eax
+    35fd:	jns    35f0 
+    35ff:	mov    %eax,(%rcx)
+    3601:	add    $0x4,%rcx
+    3605:	cmp    %rcx,%r9
+    3608:	jne    35f0 
+    360a:	lea    0x4(%rdi),%rbp
+    360e:	mov    %rbp,(%r11)
+    3611:	mov    (%rbx),%rax
+    3614:	cmp    %rax,%rbp
+    3617:	je     363a 
+    3619:	add    $0x8,%r12
+    361d:	mov    %rbp,%rdi
+    3620:	mov    (%r12),%rcx
+    3624:	mov    %rax,%rbp
+    3627:	jmp    352d 
+    362c:	mov    %rdi,%rbp
+    362f:	mov    %rbp,(%r11)
+    3632:	mov    (%rbx),%rax
+    3635:	cmp    %rax,%rbp
+    3638:	jne    3619 
+    363a:	mov    (%r12),%rax
+    363e:	add    $0x200,%rax
+    3644:	cmp    %rax,%rcx
+    3647:	je     366f 
+    3649:	mov    %rcx,(%r10)
+    364c:	mov    (%rsp),%rbx
+    3650:	mov    %r12,0x8(%r10)
+    3654:	mov    0x8(%rsp),%rbp
+    3659:	mov    0x10(%rsp),%r12
+    365e:	mov    %r10,%rax
+    3661:	add    $0x18,%rsp
+    3665:	ret
+    3666:	mov    %rcx,(%r10)
+    3669:	mov    %r8,0x8(%r10)
+    366d:	jmp    3654 
+    366f:	mov    0x8(%r12),%rcx
+    3674:	add    $0x8,%r12
+    3678:	jmp    3649 

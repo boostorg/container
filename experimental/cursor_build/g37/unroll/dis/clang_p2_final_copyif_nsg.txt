@@ -1,0 +1,1193 @@
+
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/cursor_build/g37/unroll/bin/b_clang++-22_p2_final_g25:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000007bf00 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_>:
+   7bf00:	55                   	push   %rbp
+   7bf01:	41 57                	push   %r15
+   7bf03:	41 56                	push   %r14
+   7bf05:	41 55                	push   %r13
+   7bf07:	41 54                	push   %r12
+   7bf09:	53                   	push   %rbx
+   7bf0a:	48 83 ec 38          	sub    $0x38,%rsp
+   7bf0e:	48 89 fb             	mov    %rdi,%rbx
+   7bf11:	4c 8d 6c 24 70       	lea    0x70(%rsp),%r13
+   7bf16:	48 8d 74 24 08       	lea    0x8(%rsp),%rsi
+   7bf1b:	bf 04 00 00 00       	mov    $0x4,%edi
+   7bf20:	e8 ab 61 f8 ff       	call   20d0 <clock_gettime@plt>
+   7bf25:	48 69 44 24 08 00 ca 	imul   $0x3b9aca00,0x8(%rsp),%rax
+   7bf2c:	9a 3b 
+   7bf2e:	48 03 44 24 10       	add    0x10(%rsp),%rax
+   7bf33:	48 89 44 24 30       	mov    %rax,0x30(%rsp)
+   7bf38:	48 8d 43 07          	lea    0x7(%rbx),%rax
+   7bf3c:	48 c1 e8 03          	shr    $0x3,%rax
+   7bf40:	48 89 44 24 28       	mov    %rax,0x28(%rsp)
+   7bf45:	83 e3 07             	and    $0x7,%ebx
+   7bf48:	48 8d 05 11 be 0f 00 	lea    0xfbe11(%rip),%rax        # 177d60 <_IO_stdin_used+0xd60>
+   7bf4f:	48 63 0c 98          	movslq (%rax,%rbx,4),%rcx
+   7bf53:	48 01 c1             	add    %rax,%rcx
+   7bf56:	ff e1                	jmp    *%rcx
+   7bf58:	b0 01                	mov    $0x1,%al
+   7bf5a:	45 31 e4             	xor    %r12d,%r12d
+   7bf5d:	31 ed                	xor    %ebp,%ebp
+   7bf5f:	45 31 f6             	xor    %r14d,%r14d
+   7bf62:	a8 01                	test   $0x1,%al
+   7bf64:	0f 85 45 01 00 00    	jne    7c0af <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1af>
+   7bf6a:	e9 1e 01 00 00       	jmp    7c08d <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x18d>
+   7bf6f:	49 8b 45 00          	mov    0x0(%r13),%rax
+   7bf73:	45 31 e4             	xor    %r12d,%r12d
+   7bf76:	31 ed                	xor    %ebp,%ebp
+   7bf78:	45 31 f6             	xor    %r14d,%r14d
+   7bf7b:	48 8b 38             	mov    (%rax),%rdi
+   7bf7e:	48 85 ff             	test   %rdi,%rdi
+   7bf81:	0f 85 0c 09 00 00    	jne    7c893 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x993>
+   7bf87:	49 8b 4d 08          	mov    0x8(%r13),%rcx
+   7bf8b:	48 8b 11             	mov    (%rcx),%rdx
+   7bf8e:	e9 ef 0a 00 00       	jmp    7ca82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xb82>
+   7bf93:	49 8b 45 00          	mov    0x0(%r13),%rax
+   7bf97:	45 31 e4             	xor    %r12d,%r12d
+   7bf9a:	31 ed                	xor    %ebp,%ebp
+   7bf9c:	45 31 f6             	xor    %r14d,%r14d
+   7bf9f:	48 8b 38             	mov    (%rax),%rdi
+   7bfa2:	48 85 ff             	test   %rdi,%rdi
+   7bfa5:	0f 85 e8 0c 00 00    	jne    7cc93 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xd93>
+   7bfab:	49 8b 4d 08          	mov    0x8(%r13),%rcx
+   7bfaf:	48 8b 11             	mov    (%rcx),%rdx
+   7bfb2:	e9 cb 0e 00 00       	jmp    7ce82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xf82>
+   7bfb7:	49 8b 45 00          	mov    0x0(%r13),%rax
+   7bfbb:	45 31 e4             	xor    %r12d,%r12d
+   7bfbe:	31 ed                	xor    %ebp,%ebp
+   7bfc0:	45 31 f6             	xor    %r14d,%r14d
+   7bfc3:	48 8b 38             	mov    (%rax),%rdi
+   7bfc6:	48 85 ff             	test   %rdi,%rdi
+   7bfc9:	0f 85 c4 0a 00 00    	jne    7ca93 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xb93>
+   7bfcf:	49 8b 4d 08          	mov    0x8(%r13),%rcx
+   7bfd3:	48 8b 11             	mov    (%rcx),%rdx
+   7bfd6:	e9 a7 0c 00 00       	jmp    7cc82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xd82>
+   7bfdb:	49 8b 45 00          	mov    0x0(%r13),%rax
+   7bfdf:	45 31 e4             	xor    %r12d,%r12d
+   7bfe2:	31 ed                	xor    %ebp,%ebp
+   7bfe4:	45 31 f6             	xor    %r14d,%r14d
+   7bfe7:	48 8b 38             	mov    (%rax),%rdi
+   7bfea:	48 85 ff             	test   %rdi,%rdi
+   7bfed:	0f 85 a9 02 00 00    	jne    7c29c <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x39c>
+   7bff3:	49 8b 4d 08          	mov    0x8(%r13),%rcx
+   7bff7:	48 8b 11             	mov    (%rcx),%rdx
+   7bffa:	e9 83 04 00 00       	jmp    7c482 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x582>
+   7bfff:	49 8b 45 00          	mov    0x0(%r13),%rax
+   7c003:	45 31 e4             	xor    %r12d,%r12d
+   7c006:	31 ed                	xor    %ebp,%ebp
+   7c008:	45 31 f6             	xor    %r14d,%r14d
+   7c00b:	48 8b 30             	mov    (%rax),%rsi
+   7c00e:	48 85 f6             	test   %rsi,%rsi
+   7c011:	0f 85 7c 0e 00 00    	jne    7ce93 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xf93>
+   7c017:	49 8b 45 08          	mov    0x8(%r13),%rax
+   7c01b:	48 8b 08             	mov    (%rax),%rcx
+   7c01e:	e9 5f 10 00 00       	jmp    7d082 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1182>
+   7c023:	49 8b 45 00          	mov    0x0(%r13),%rax
+   7c027:	45 31 e4             	xor    %r12d,%r12d
+   7c02a:	31 ed                	xor    %ebp,%ebp
+   7c02c:	45 31 f6             	xor    %r14d,%r14d
+   7c02f:	48 8b 38             	mov    (%rax),%rdi
+   7c032:	48 85 ff             	test   %rdi,%rdi
+   7c035:	0f 85 58 06 00 00    	jne    7c693 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x793>
+   7c03b:	49 8b 4d 08          	mov    0x8(%r13),%rcx
+   7c03f:	48 8b 11             	mov    (%rcx),%rdx
+   7c042:	e9 3b 08 00 00       	jmp    7c882 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x982>
+   7c047:	49 8b 45 00          	mov    0x0(%r13),%rax
+   7c04b:	45 31 e4             	xor    %r12d,%r12d
+   7c04e:	31 ed                	xor    %ebp,%ebp
+   7c050:	45 31 f6             	xor    %r14d,%r14d
+   7c053:	48 8b 38             	mov    (%rax),%rdi
+   7c056:	48 85 ff             	test   %rdi,%rdi
+   7c059:	0f 85 34 04 00 00    	jne    7c493 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x593>
+   7c05f:	49 8b 4d 08          	mov    0x8(%r13),%rcx
+   7c063:	48 8b 11             	mov    (%rcx),%rdx
+   7c066:	e9 17 06 00 00       	jmp    7c682 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x782>
+   7c06b:	49 89 c6             	mov    %rax,%r14
+   7c06e:	48 8b 7c 24 18       	mov    0x18(%rsp),%rdi
+   7c073:	48 85 ff             	test   %rdi,%rdi
+   7c076:	74 0d                	je     7c085 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x185>
+   7c078:	48 8b 74 24 20       	mov    0x20(%rsp),%rsi
+   7c07d:	48 29 fe             	sub    %rdi,%rsi
+   7c080:	e8 6b 60 f8 ff       	call   20f0 <_ZdlPvm@plt>
+   7c085:	4c 89 f7             	mov    %r14,%rdi
+   7c088:	e8 f3 60 f8 ff       	call   2180 <_Unwind_Resume@plt>
+   7c08d:	48 8d 74 24 08       	lea    0x8(%rsp),%rsi
+   7c092:	bf 04 00 00 00       	mov    $0x4,%edi
+   7c097:	e8 34 60 f8 ff       	call   20d0 <clock_gettime@plt>
+   7c09c:	48 69 44 24 08 00 ca 	imul   $0x3b9aca00,0x8(%rsp),%rax
+   7c0a3:	9a 3b 
+   7c0a5:	48 03 44 24 10       	add    0x10(%rsp),%rax
+   7c0aa:	48 89 44 24 30       	mov    %rax,0x30(%rsp)
+   7c0af:	49 8b 45 00          	mov    0x0(%r13),%rax
+   7c0b3:	48 8b 38             	mov    (%rax),%rdi
+   7c0b6:	48 85 ff             	test   %rdi,%rdi
+   7c0b9:	0f 84 c5 01 00 00    	je     7c284 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x384>
+   7c0bf:	48 8b 70 10          	mov    0x10(%rax),%rsi
+   7c0c3:	48 8b 48 18          	mov    0x18(%rax),%rcx
+   7c0c7:	49 89 f0             	mov    %rsi,%r8
+   7c0ca:	49 c1 e8 07          	shr    $0x7,%r8
+   7c0ce:	83 e6 7f             	and    $0x7f,%esi
+   7c0d1:	c1 e6 02             	shl    $0x2,%esi
+   7c0d4:	4a 03 34 c7          	add    (%rdi,%r8,8),%rsi
+   7c0d8:	48 89 ca             	mov    %rcx,%rdx
+   7c0db:	48 c1 ea 07          	shr    $0x7,%rdx
+   7c0df:	83 e1 7f             	and    $0x7f,%ecx
+   7c0e2:	c1 e1 02             	shl    $0x2,%ecx
+   7c0e5:	48 03 0c d7          	add    (%rdi,%rdx,8),%rcx
+   7c0e9:	49 8b 55 08          	mov    0x8(%r13),%rdx
+   7c0ed:	48 8b 12             	mov    (%rdx),%rdx
+   7c0f0:	48 39 ce             	cmp    %rcx,%rsi
+   7c0f3:	0f 84 92 01 00 00    	je     7c28b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x38b>
+   7c0f9:	4a 8d 3c c7          	lea    (%rdi,%r8,8),%rdi
+   7c0fd:	49 89 d0             	mov    %rdx,%r8
+   7c100:	44 8b 0e             	mov    (%rsi),%r9d
+   7c103:	45 85 c9             	test   %r9d,%r9d
+   7c106:	79 07                	jns    7c10f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x20f>
+   7c108:	45 89 08             	mov    %r9d,(%r8)
+   7c10b:	49 83 c0 04          	add    $0x4,%r8
+   7c10f:	48 83 c6 04          	add    $0x4,%rsi
+   7c113:	4c 8b 0f             	mov    (%rdi),%r9
+   7c116:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c11d:	4c 39 d6             	cmp    %r10,%rsi
+   7c120:	0f 84 48 01 00 00    	je     7c26e <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x36e>
+   7c126:	48 39 ce             	cmp    %rcx,%rsi
+   7c129:	0f 84 5c 01 00 00    	je     7c28b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x38b>
+   7c12f:	44 8b 16             	mov    (%rsi),%r10d
+   7c132:	45 85 d2             	test   %r10d,%r10d
+   7c135:	0f 88 85 00 00 00    	js     7c1c0 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x2c0>
+   7c13b:	48 83 c6 04          	add    $0x4,%rsi
+   7c13f:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c146:	4c 39 d6             	cmp    %r10,%rsi
+   7c149:	0f 84 8c 00 00 00    	je     7c1db <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x2db>
+   7c14f:	48 39 ce             	cmp    %rcx,%rsi
+   7c152:	0f 84 33 01 00 00    	je     7c28b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x38b>
+   7c158:	44 8b 16             	mov    (%rsi),%r10d
+   7c15b:	45 85 d2             	test   %r10d,%r10d
+   7c15e:	0f 88 9c 00 00 00    	js     7c200 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x300>
+   7c164:	48 83 c6 04          	add    $0x4,%rsi
+   7c168:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c16f:	4c 39 d6             	cmp    %r10,%rsi
+   7c172:	0f 84 a3 00 00 00    	je     7c21b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x31b>
+   7c178:	48 39 ce             	cmp    %rcx,%rsi
+   7c17b:	0f 84 0a 01 00 00    	je     7c28b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x38b>
+   7c181:	44 8b 16             	mov    (%rsi),%r10d
+   7c184:	45 85 d2             	test   %r10d,%r10d
+   7c187:	0f 88 b3 00 00 00    	js     7c240 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x340>
+   7c18d:	48 83 c6 04          	add    $0x4,%rsi
+   7c191:	49 81 c1 00 02 00 00 	add    $0x200,%r9
+   7c198:	4c 39 ce             	cmp    %r9,%rsi
+   7c19b:	0f 84 ba 00 00 00    	je     7c25b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x35b>
+   7c1a1:	48 39 ce             	cmp    %rcx,%rsi
+   7c1a4:	0f 85 56 ff ff ff    	jne    7c100 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x200>
+   7c1aa:	e9 dc 00 00 00       	jmp    7c28b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x38b>
+   7c1af:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c1b6:	0f 1f 84 00 00 00 00 
+   7c1bd:	00 
+   7c1be:	66 90                	xchg   %ax,%ax
+   7c1c0:	45 89 10             	mov    %r10d,(%r8)
+   7c1c3:	49 83 c0 04          	add    $0x4,%r8
+   7c1c7:	48 83 c6 04          	add    $0x4,%rsi
+   7c1cb:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c1d2:	4c 39 d6             	cmp    %r10,%rsi
+   7c1d5:	0f 85 74 ff ff ff    	jne    7c14f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x24f>
+   7c1db:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7c1df:	48 83 c7 08          	add    $0x8,%rdi
+   7c1e3:	4c 89 ce             	mov    %r9,%rsi
+   7c1e6:	48 39 ce             	cmp    %rcx,%rsi
+   7c1e9:	0f 85 69 ff ff ff    	jne    7c158 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x258>
+   7c1ef:	e9 97 00 00 00       	jmp    7c28b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x38b>
+   7c1f4:	66 66 66 2e 0f 1f 84 	data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c1fb:	00 00 00 00 00 
+   7c200:	45 89 10             	mov    %r10d,(%r8)
+   7c203:	49 83 c0 04          	add    $0x4,%r8
+   7c207:	48 83 c6 04          	add    $0x4,%rsi
+   7c20b:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c212:	4c 39 d6             	cmp    %r10,%rsi
+   7c215:	0f 85 5d ff ff ff    	jne    7c178 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x278>
+   7c21b:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7c21f:	48 83 c7 08          	add    $0x8,%rdi
+   7c223:	4c 89 ce             	mov    %r9,%rsi
+   7c226:	48 39 ce             	cmp    %rcx,%rsi
+   7c229:	0f 85 52 ff ff ff    	jne    7c181 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x281>
+   7c22f:	eb 5a                	jmp    7c28b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x38b>
+   7c231:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c238:	0f 1f 84 00 00 00 00 
+   7c23f:	00 
+   7c240:	45 89 10             	mov    %r10d,(%r8)
+   7c243:	49 83 c0 04          	add    $0x4,%r8
+   7c247:	48 83 c6 04          	add    $0x4,%rsi
+   7c24b:	49 81 c1 00 02 00 00 	add    $0x200,%r9
+   7c252:	4c 39 ce             	cmp    %r9,%rsi
+   7c255:	0f 85 46 ff ff ff    	jne    7c1a1 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x2a1>
+   7c25b:	48 8b 77 08          	mov    0x8(%rdi),%rsi
+   7c25f:	48 83 c7 08          	add    $0x8,%rdi
+   7c263:	48 39 ce             	cmp    %rcx,%rsi
+   7c266:	0f 85 94 fe ff ff    	jne    7c100 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x200>
+   7c26c:	eb 1d                	jmp    7c28b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x38b>
+   7c26e:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7c272:	48 83 c7 08          	add    $0x8,%rdi
+   7c276:	4c 89 ce             	mov    %r9,%rsi
+   7c279:	48 39 ce             	cmp    %rcx,%rsi
+   7c27c:	0f 85 ad fe ff ff    	jne    7c12f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x22f>
+   7c282:	eb 07                	jmp    7c28b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x38b>
+   7c284:	49 8b 4d 08          	mov    0x8(%r13),%rcx
+   7c288:	48 8b 11             	mov    (%rcx),%rdx
+   7c28b:	48 89 54 24 08       	mov    %rdx,0x8(%rsp)
+   7c290:	48 8b 38             	mov    (%rax),%rdi
+   7c293:	48 85 ff             	test   %rdi,%rdi
+   7c296:	0f 84 57 fd ff ff    	je     7bff3 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xf3>
+   7c29c:	48 8b 70 10          	mov    0x10(%rax),%rsi
+   7c2a0:	48 8b 48 18          	mov    0x18(%rax),%rcx
+   7c2a4:	49 89 f0             	mov    %rsi,%r8
+   7c2a7:	49 c1 e8 07          	shr    $0x7,%r8
+   7c2ab:	83 e6 7f             	and    $0x7f,%esi
+   7c2ae:	c1 e6 02             	shl    $0x2,%esi
+   7c2b1:	4a 03 34 c7          	add    (%rdi,%r8,8),%rsi
+   7c2b5:	48 89 ca             	mov    %rcx,%rdx
+   7c2b8:	48 c1 ea 07          	shr    $0x7,%rdx
+   7c2bc:	83 e1 7f             	and    $0x7f,%ecx
+   7c2bf:	c1 e1 02             	shl    $0x2,%ecx
+   7c2c2:	48 03 0c d7          	add    (%rdi,%rdx,8),%rcx
+   7c2c6:	49 8b 55 08          	mov    0x8(%r13),%rdx
+   7c2ca:	48 8b 12             	mov    (%rdx),%rdx
+   7c2cd:	48 39 ce             	cmp    %rcx,%rsi
+   7c2d0:	0f 84 ac 01 00 00    	je     7c482 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x582>
+   7c2d6:	4a 8d 3c c7          	lea    (%rdi,%r8,8),%rdi
+   7c2da:	49 89 d0             	mov    %rdx,%r8
+   7c2dd:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c2e4:	0f 1f 84 00 00 00 00 
+   7c2eb:	00 
+   7c2ec:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c2f3:	0f 1f 84 00 00 00 00 
+   7c2fa:	00 
+   7c2fb:	0f 1f 44 00 00       	nopl   0x0(%rax,%rax,1)
+   7c300:	44 8b 0e             	mov    (%rsi),%r9d
+   7c303:	45 85 c9             	test   %r9d,%r9d
+   7c306:	79 07                	jns    7c30f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x40f>
+   7c308:	45 89 08             	mov    %r9d,(%r8)
+   7c30b:	49 83 c0 04          	add    $0x4,%r8
+   7c30f:	48 83 c6 04          	add    $0x4,%rsi
+   7c313:	4c 8b 0f             	mov    (%rdi),%r9
+   7c316:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c31d:	4c 39 d6             	cmp    %r10,%rsi
+   7c320:	0f 84 48 01 00 00    	je     7c46e <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x56e>
+   7c326:	48 39 ce             	cmp    %rcx,%rsi
+   7c329:	0f 84 53 01 00 00    	je     7c482 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x582>
+   7c32f:	44 8b 16             	mov    (%rsi),%r10d
+   7c332:	45 85 d2             	test   %r10d,%r10d
+   7c335:	0f 88 85 00 00 00    	js     7c3c0 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x4c0>
+   7c33b:	48 83 c6 04          	add    $0x4,%rsi
+   7c33f:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c346:	4c 39 d6             	cmp    %r10,%rsi
+   7c349:	0f 84 8c 00 00 00    	je     7c3db <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x4db>
+   7c34f:	48 39 ce             	cmp    %rcx,%rsi
+   7c352:	0f 84 2a 01 00 00    	je     7c482 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x582>
+   7c358:	44 8b 16             	mov    (%rsi),%r10d
+   7c35b:	45 85 d2             	test   %r10d,%r10d
+   7c35e:	0f 88 9c 00 00 00    	js     7c400 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x500>
+   7c364:	48 83 c6 04          	add    $0x4,%rsi
+   7c368:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c36f:	4c 39 d6             	cmp    %r10,%rsi
+   7c372:	0f 84 a3 00 00 00    	je     7c41b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x51b>
+   7c378:	48 39 ce             	cmp    %rcx,%rsi
+   7c37b:	0f 84 01 01 00 00    	je     7c482 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x582>
+   7c381:	44 8b 16             	mov    (%rsi),%r10d
+   7c384:	45 85 d2             	test   %r10d,%r10d
+   7c387:	0f 88 b3 00 00 00    	js     7c440 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x540>
+   7c38d:	48 83 c6 04          	add    $0x4,%rsi
+   7c391:	49 81 c1 00 02 00 00 	add    $0x200,%r9
+   7c398:	4c 39 ce             	cmp    %r9,%rsi
+   7c39b:	0f 84 ba 00 00 00    	je     7c45b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x55b>
+   7c3a1:	48 39 ce             	cmp    %rcx,%rsi
+   7c3a4:	0f 85 56 ff ff ff    	jne    7c300 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x400>
+   7c3aa:	e9 d3 00 00 00       	jmp    7c482 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x582>
+   7c3af:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c3b6:	0f 1f 84 00 00 00 00 
+   7c3bd:	00 
+   7c3be:	66 90                	xchg   %ax,%ax
+   7c3c0:	45 89 10             	mov    %r10d,(%r8)
+   7c3c3:	49 83 c0 04          	add    $0x4,%r8
+   7c3c7:	48 83 c6 04          	add    $0x4,%rsi
+   7c3cb:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c3d2:	4c 39 d6             	cmp    %r10,%rsi
+   7c3d5:	0f 85 74 ff ff ff    	jne    7c34f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x44f>
+   7c3db:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7c3df:	48 83 c7 08          	add    $0x8,%rdi
+   7c3e3:	4c 89 ce             	mov    %r9,%rsi
+   7c3e6:	48 39 ce             	cmp    %rcx,%rsi
+   7c3e9:	0f 85 69 ff ff ff    	jne    7c358 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x458>
+   7c3ef:	e9 8e 00 00 00       	jmp    7c482 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x582>
+   7c3f4:	66 66 66 2e 0f 1f 84 	data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c3fb:	00 00 00 00 00 
+   7c400:	45 89 10             	mov    %r10d,(%r8)
+   7c403:	49 83 c0 04          	add    $0x4,%r8
+   7c407:	48 83 c6 04          	add    $0x4,%rsi
+   7c40b:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c412:	4c 39 d6             	cmp    %r10,%rsi
+   7c415:	0f 85 5d ff ff ff    	jne    7c378 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x478>
+   7c41b:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7c41f:	48 83 c7 08          	add    $0x8,%rdi
+   7c423:	4c 89 ce             	mov    %r9,%rsi
+   7c426:	48 39 ce             	cmp    %rcx,%rsi
+   7c429:	0f 85 52 ff ff ff    	jne    7c381 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x481>
+   7c42f:	eb 51                	jmp    7c482 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x582>
+   7c431:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c438:	0f 1f 84 00 00 00 00 
+   7c43f:	00 
+   7c440:	45 89 10             	mov    %r10d,(%r8)
+   7c443:	49 83 c0 04          	add    $0x4,%r8
+   7c447:	48 83 c6 04          	add    $0x4,%rsi
+   7c44b:	49 81 c1 00 02 00 00 	add    $0x200,%r9
+   7c452:	4c 39 ce             	cmp    %r9,%rsi
+   7c455:	0f 85 46 ff ff ff    	jne    7c3a1 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x4a1>
+   7c45b:	48 8b 77 08          	mov    0x8(%rdi),%rsi
+   7c45f:	48 83 c7 08          	add    $0x8,%rdi
+   7c463:	48 39 ce             	cmp    %rcx,%rsi
+   7c466:	0f 85 94 fe ff ff    	jne    7c300 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x400>
+   7c46c:	eb 14                	jmp    7c482 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x582>
+   7c46e:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7c472:	48 83 c7 08          	add    $0x8,%rdi
+   7c476:	4c 89 ce             	mov    %r9,%rsi
+   7c479:	48 39 ce             	cmp    %rcx,%rsi
+   7c47c:	0f 85 ad fe ff ff    	jne    7c32f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x42f>
+   7c482:	48 89 54 24 08       	mov    %rdx,0x8(%rsp)
+   7c487:	48 8b 38             	mov    (%rax),%rdi
+   7c48a:	48 85 ff             	test   %rdi,%rdi
+   7c48d:	0f 84 cc fb ff ff    	je     7c05f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x15f>
+   7c493:	48 8b 70 10          	mov    0x10(%rax),%rsi
+   7c497:	48 8b 48 18          	mov    0x18(%rax),%rcx
+   7c49b:	49 89 f0             	mov    %rsi,%r8
+   7c49e:	49 c1 e8 07          	shr    $0x7,%r8
+   7c4a2:	83 e6 7f             	and    $0x7f,%esi
+   7c4a5:	c1 e6 02             	shl    $0x2,%esi
+   7c4a8:	4a 03 34 c7          	add    (%rdi,%r8,8),%rsi
+   7c4ac:	48 89 ca             	mov    %rcx,%rdx
+   7c4af:	48 c1 ea 07          	shr    $0x7,%rdx
+   7c4b3:	83 e1 7f             	and    $0x7f,%ecx
+   7c4b6:	c1 e1 02             	shl    $0x2,%ecx
+   7c4b9:	48 03 0c d7          	add    (%rdi,%rdx,8),%rcx
+   7c4bd:	49 8b 55 08          	mov    0x8(%r13),%rdx
+   7c4c1:	48 8b 12             	mov    (%rdx),%rdx
+   7c4c4:	48 39 ce             	cmp    %rcx,%rsi
+   7c4c7:	0f 84 b5 01 00 00    	je     7c682 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x782>
+   7c4cd:	4a 8d 3c c7          	lea    (%rdi,%r8,8),%rdi
+   7c4d1:	49 89 d0             	mov    %rdx,%r8
+   7c4d4:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c4db:	0f 1f 84 00 00 00 00 
+   7c4e2:	00 
+   7c4e3:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c4ea:	0f 1f 84 00 00 00 00 
+   7c4f1:	00 
+   7c4f2:	66 66 66 66 66 2e 0f 	data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c4f9:	1f 84 00 00 00 00 00 
+   7c500:	44 8b 0e             	mov    (%rsi),%r9d
+   7c503:	45 85 c9             	test   %r9d,%r9d
+   7c506:	79 07                	jns    7c50f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x60f>
+   7c508:	45 89 08             	mov    %r9d,(%r8)
+   7c50b:	49 83 c0 04          	add    $0x4,%r8
+   7c50f:	48 83 c6 04          	add    $0x4,%rsi
+   7c513:	4c 8b 0f             	mov    (%rdi),%r9
+   7c516:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c51d:	4c 39 d6             	cmp    %r10,%rsi
+   7c520:	0f 84 48 01 00 00    	je     7c66e <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x76e>
+   7c526:	48 39 ce             	cmp    %rcx,%rsi
+   7c529:	0f 84 53 01 00 00    	je     7c682 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x782>
+   7c52f:	44 8b 16             	mov    (%rsi),%r10d
+   7c532:	45 85 d2             	test   %r10d,%r10d
+   7c535:	0f 88 85 00 00 00    	js     7c5c0 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x6c0>
+   7c53b:	48 83 c6 04          	add    $0x4,%rsi
+   7c53f:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c546:	4c 39 d6             	cmp    %r10,%rsi
+   7c549:	0f 84 8c 00 00 00    	je     7c5db <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x6db>
+   7c54f:	48 39 ce             	cmp    %rcx,%rsi
+   7c552:	0f 84 2a 01 00 00    	je     7c682 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x782>
+   7c558:	44 8b 16             	mov    (%rsi),%r10d
+   7c55b:	45 85 d2             	test   %r10d,%r10d
+   7c55e:	0f 88 9c 00 00 00    	js     7c600 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x700>
+   7c564:	48 83 c6 04          	add    $0x4,%rsi
+   7c568:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c56f:	4c 39 d6             	cmp    %r10,%rsi
+   7c572:	0f 84 a3 00 00 00    	je     7c61b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x71b>
+   7c578:	48 39 ce             	cmp    %rcx,%rsi
+   7c57b:	0f 84 01 01 00 00    	je     7c682 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x782>
+   7c581:	44 8b 16             	mov    (%rsi),%r10d
+   7c584:	45 85 d2             	test   %r10d,%r10d
+   7c587:	0f 88 b3 00 00 00    	js     7c640 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x740>
+   7c58d:	48 83 c6 04          	add    $0x4,%rsi
+   7c591:	49 81 c1 00 02 00 00 	add    $0x200,%r9
+   7c598:	4c 39 ce             	cmp    %r9,%rsi
+   7c59b:	0f 84 ba 00 00 00    	je     7c65b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x75b>
+   7c5a1:	48 39 ce             	cmp    %rcx,%rsi
+   7c5a4:	0f 85 56 ff ff ff    	jne    7c500 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x600>
+   7c5aa:	e9 d3 00 00 00       	jmp    7c682 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x782>
+   7c5af:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c5b6:	0f 1f 84 00 00 00 00 
+   7c5bd:	00 
+   7c5be:	66 90                	xchg   %ax,%ax
+   7c5c0:	45 89 10             	mov    %r10d,(%r8)
+   7c5c3:	49 83 c0 04          	add    $0x4,%r8
+   7c5c7:	48 83 c6 04          	add    $0x4,%rsi
+   7c5cb:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c5d2:	4c 39 d6             	cmp    %r10,%rsi
+   7c5d5:	0f 85 74 ff ff ff    	jne    7c54f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x64f>
+   7c5db:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7c5df:	48 83 c7 08          	add    $0x8,%rdi
+   7c5e3:	4c 89 ce             	mov    %r9,%rsi
+   7c5e6:	48 39 ce             	cmp    %rcx,%rsi
+   7c5e9:	0f 85 69 ff ff ff    	jne    7c558 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x658>
+   7c5ef:	e9 8e 00 00 00       	jmp    7c682 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x782>
+   7c5f4:	66 66 66 2e 0f 1f 84 	data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c5fb:	00 00 00 00 00 
+   7c600:	45 89 10             	mov    %r10d,(%r8)
+   7c603:	49 83 c0 04          	add    $0x4,%r8
+   7c607:	48 83 c6 04          	add    $0x4,%rsi
+   7c60b:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c612:	4c 39 d6             	cmp    %r10,%rsi
+   7c615:	0f 85 5d ff ff ff    	jne    7c578 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x678>
+   7c61b:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7c61f:	48 83 c7 08          	add    $0x8,%rdi
+   7c623:	4c 89 ce             	mov    %r9,%rsi
+   7c626:	48 39 ce             	cmp    %rcx,%rsi
+   7c629:	0f 85 52 ff ff ff    	jne    7c581 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x681>
+   7c62f:	eb 51                	jmp    7c682 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x782>
+   7c631:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c638:	0f 1f 84 00 00 00 00 
+   7c63f:	00 
+   7c640:	45 89 10             	mov    %r10d,(%r8)
+   7c643:	49 83 c0 04          	add    $0x4,%r8
+   7c647:	48 83 c6 04          	add    $0x4,%rsi
+   7c64b:	49 81 c1 00 02 00 00 	add    $0x200,%r9
+   7c652:	4c 39 ce             	cmp    %r9,%rsi
+   7c655:	0f 85 46 ff ff ff    	jne    7c5a1 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x6a1>
+   7c65b:	48 8b 77 08          	mov    0x8(%rdi),%rsi
+   7c65f:	48 83 c7 08          	add    $0x8,%rdi
+   7c663:	48 39 ce             	cmp    %rcx,%rsi
+   7c666:	0f 85 94 fe ff ff    	jne    7c500 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x600>
+   7c66c:	eb 14                	jmp    7c682 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x782>
+   7c66e:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7c672:	48 83 c7 08          	add    $0x8,%rdi
+   7c676:	4c 89 ce             	mov    %r9,%rsi
+   7c679:	48 39 ce             	cmp    %rcx,%rsi
+   7c67c:	0f 85 ad fe ff ff    	jne    7c52f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x62f>
+   7c682:	48 89 54 24 08       	mov    %rdx,0x8(%rsp)
+   7c687:	48 8b 38             	mov    (%rax),%rdi
+   7c68a:	48 85 ff             	test   %rdi,%rdi
+   7c68d:	0f 84 a8 f9 ff ff    	je     7c03b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x13b>
+   7c693:	48 8b 70 10          	mov    0x10(%rax),%rsi
+   7c697:	48 8b 48 18          	mov    0x18(%rax),%rcx
+   7c69b:	49 89 f0             	mov    %rsi,%r8
+   7c69e:	49 c1 e8 07          	shr    $0x7,%r8
+   7c6a2:	83 e6 7f             	and    $0x7f,%esi
+   7c6a5:	c1 e6 02             	shl    $0x2,%esi
+   7c6a8:	4a 03 34 c7          	add    (%rdi,%r8,8),%rsi
+   7c6ac:	48 89 ca             	mov    %rcx,%rdx
+   7c6af:	48 c1 ea 07          	shr    $0x7,%rdx
+   7c6b3:	83 e1 7f             	and    $0x7f,%ecx
+   7c6b6:	c1 e1 02             	shl    $0x2,%ecx
+   7c6b9:	48 03 0c d7          	add    (%rdi,%rdx,8),%rcx
+   7c6bd:	49 8b 55 08          	mov    0x8(%r13),%rdx
+   7c6c1:	48 8b 12             	mov    (%rdx),%rdx
+   7c6c4:	48 39 ce             	cmp    %rcx,%rsi
+   7c6c7:	0f 84 b5 01 00 00    	je     7c882 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x982>
+   7c6cd:	4a 8d 3c c7          	lea    (%rdi,%r8,8),%rdi
+   7c6d1:	49 89 d0             	mov    %rdx,%r8
+   7c6d4:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c6db:	0f 1f 84 00 00 00 00 
+   7c6e2:	00 
+   7c6e3:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c6ea:	0f 1f 84 00 00 00 00 
+   7c6f1:	00 
+   7c6f2:	66 66 66 66 66 2e 0f 	data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c6f9:	1f 84 00 00 00 00 00 
+   7c700:	44 8b 0e             	mov    (%rsi),%r9d
+   7c703:	45 85 c9             	test   %r9d,%r9d
+   7c706:	79 07                	jns    7c70f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x80f>
+   7c708:	45 89 08             	mov    %r9d,(%r8)
+   7c70b:	49 83 c0 04          	add    $0x4,%r8
+   7c70f:	48 83 c6 04          	add    $0x4,%rsi
+   7c713:	4c 8b 0f             	mov    (%rdi),%r9
+   7c716:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c71d:	4c 39 d6             	cmp    %r10,%rsi
+   7c720:	0f 84 48 01 00 00    	je     7c86e <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x96e>
+   7c726:	48 39 ce             	cmp    %rcx,%rsi
+   7c729:	0f 84 53 01 00 00    	je     7c882 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x982>
+   7c72f:	44 8b 16             	mov    (%rsi),%r10d
+   7c732:	45 85 d2             	test   %r10d,%r10d
+   7c735:	0f 88 85 00 00 00    	js     7c7c0 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x8c0>
+   7c73b:	48 83 c6 04          	add    $0x4,%rsi
+   7c73f:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c746:	4c 39 d6             	cmp    %r10,%rsi
+   7c749:	0f 84 8c 00 00 00    	je     7c7db <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x8db>
+   7c74f:	48 39 ce             	cmp    %rcx,%rsi
+   7c752:	0f 84 2a 01 00 00    	je     7c882 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x982>
+   7c758:	44 8b 16             	mov    (%rsi),%r10d
+   7c75b:	45 85 d2             	test   %r10d,%r10d
+   7c75e:	0f 88 9c 00 00 00    	js     7c800 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x900>
+   7c764:	48 83 c6 04          	add    $0x4,%rsi
+   7c768:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c76f:	4c 39 d6             	cmp    %r10,%rsi
+   7c772:	0f 84 a3 00 00 00    	je     7c81b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x91b>
+   7c778:	48 39 ce             	cmp    %rcx,%rsi
+   7c77b:	0f 84 01 01 00 00    	je     7c882 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x982>
+   7c781:	44 8b 16             	mov    (%rsi),%r10d
+   7c784:	45 85 d2             	test   %r10d,%r10d
+   7c787:	0f 88 b3 00 00 00    	js     7c840 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x940>
+   7c78d:	48 83 c6 04          	add    $0x4,%rsi
+   7c791:	49 81 c1 00 02 00 00 	add    $0x200,%r9
+   7c798:	4c 39 ce             	cmp    %r9,%rsi
+   7c79b:	0f 84 ba 00 00 00    	je     7c85b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x95b>
+   7c7a1:	48 39 ce             	cmp    %rcx,%rsi
+   7c7a4:	0f 85 56 ff ff ff    	jne    7c700 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x800>
+   7c7aa:	e9 d3 00 00 00       	jmp    7c882 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x982>
+   7c7af:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c7b6:	0f 1f 84 00 00 00 00 
+   7c7bd:	00 
+   7c7be:	66 90                	xchg   %ax,%ax
+   7c7c0:	45 89 10             	mov    %r10d,(%r8)
+   7c7c3:	49 83 c0 04          	add    $0x4,%r8
+   7c7c7:	48 83 c6 04          	add    $0x4,%rsi
+   7c7cb:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c7d2:	4c 39 d6             	cmp    %r10,%rsi
+   7c7d5:	0f 85 74 ff ff ff    	jne    7c74f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x84f>
+   7c7db:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7c7df:	48 83 c7 08          	add    $0x8,%rdi
+   7c7e3:	4c 89 ce             	mov    %r9,%rsi
+   7c7e6:	48 39 ce             	cmp    %rcx,%rsi
+   7c7e9:	0f 85 69 ff ff ff    	jne    7c758 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x858>
+   7c7ef:	e9 8e 00 00 00       	jmp    7c882 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x982>
+   7c7f4:	66 66 66 2e 0f 1f 84 	data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c7fb:	00 00 00 00 00 
+   7c800:	45 89 10             	mov    %r10d,(%r8)
+   7c803:	49 83 c0 04          	add    $0x4,%r8
+   7c807:	48 83 c6 04          	add    $0x4,%rsi
+   7c80b:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c812:	4c 39 d6             	cmp    %r10,%rsi
+   7c815:	0f 85 5d ff ff ff    	jne    7c778 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x878>
+   7c81b:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7c81f:	48 83 c7 08          	add    $0x8,%rdi
+   7c823:	4c 89 ce             	mov    %r9,%rsi
+   7c826:	48 39 ce             	cmp    %rcx,%rsi
+   7c829:	0f 85 52 ff ff ff    	jne    7c781 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x881>
+   7c82f:	eb 51                	jmp    7c882 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x982>
+   7c831:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c838:	0f 1f 84 00 00 00 00 
+   7c83f:	00 
+   7c840:	45 89 10             	mov    %r10d,(%r8)
+   7c843:	49 83 c0 04          	add    $0x4,%r8
+   7c847:	48 83 c6 04          	add    $0x4,%rsi
+   7c84b:	49 81 c1 00 02 00 00 	add    $0x200,%r9
+   7c852:	4c 39 ce             	cmp    %r9,%rsi
+   7c855:	0f 85 46 ff ff ff    	jne    7c7a1 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x8a1>
+   7c85b:	48 8b 77 08          	mov    0x8(%rdi),%rsi
+   7c85f:	48 83 c7 08          	add    $0x8,%rdi
+   7c863:	48 39 ce             	cmp    %rcx,%rsi
+   7c866:	0f 85 94 fe ff ff    	jne    7c700 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x800>
+   7c86c:	eb 14                	jmp    7c882 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x982>
+   7c86e:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7c872:	48 83 c7 08          	add    $0x8,%rdi
+   7c876:	4c 89 ce             	mov    %r9,%rsi
+   7c879:	48 39 ce             	cmp    %rcx,%rsi
+   7c87c:	0f 85 ad fe ff ff    	jne    7c72f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x82f>
+   7c882:	48 89 54 24 08       	mov    %rdx,0x8(%rsp)
+   7c887:	48 8b 38             	mov    (%rax),%rdi
+   7c88a:	48 85 ff             	test   %rdi,%rdi
+   7c88d:	0f 84 f4 f6 ff ff    	je     7bf87 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x87>
+   7c893:	48 8b 70 10          	mov    0x10(%rax),%rsi
+   7c897:	48 8b 48 18          	mov    0x18(%rax),%rcx
+   7c89b:	49 89 f0             	mov    %rsi,%r8
+   7c89e:	49 c1 e8 07          	shr    $0x7,%r8
+   7c8a2:	83 e6 7f             	and    $0x7f,%esi
+   7c8a5:	c1 e6 02             	shl    $0x2,%esi
+   7c8a8:	4a 03 34 c7          	add    (%rdi,%r8,8),%rsi
+   7c8ac:	48 89 ca             	mov    %rcx,%rdx
+   7c8af:	48 c1 ea 07          	shr    $0x7,%rdx
+   7c8b3:	83 e1 7f             	and    $0x7f,%ecx
+   7c8b6:	c1 e1 02             	shl    $0x2,%ecx
+   7c8b9:	48 03 0c d7          	add    (%rdi,%rdx,8),%rcx
+   7c8bd:	49 8b 55 08          	mov    0x8(%r13),%rdx
+   7c8c1:	48 8b 12             	mov    (%rdx),%rdx
+   7c8c4:	48 39 ce             	cmp    %rcx,%rsi
+   7c8c7:	0f 84 b5 01 00 00    	je     7ca82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xb82>
+   7c8cd:	4a 8d 3c c7          	lea    (%rdi,%r8,8),%rdi
+   7c8d1:	49 89 d0             	mov    %rdx,%r8
+   7c8d4:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c8db:	0f 1f 84 00 00 00 00 
+   7c8e2:	00 
+   7c8e3:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c8ea:	0f 1f 84 00 00 00 00 
+   7c8f1:	00 
+   7c8f2:	66 66 66 66 66 2e 0f 	data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c8f9:	1f 84 00 00 00 00 00 
+   7c900:	44 8b 0e             	mov    (%rsi),%r9d
+   7c903:	45 85 c9             	test   %r9d,%r9d
+   7c906:	79 07                	jns    7c90f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xa0f>
+   7c908:	45 89 08             	mov    %r9d,(%r8)
+   7c90b:	49 83 c0 04          	add    $0x4,%r8
+   7c90f:	48 83 c6 04          	add    $0x4,%rsi
+   7c913:	4c 8b 0f             	mov    (%rdi),%r9
+   7c916:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c91d:	4c 39 d6             	cmp    %r10,%rsi
+   7c920:	0f 84 48 01 00 00    	je     7ca6e <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xb6e>
+   7c926:	48 39 ce             	cmp    %rcx,%rsi
+   7c929:	0f 84 53 01 00 00    	je     7ca82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xb82>
+   7c92f:	44 8b 16             	mov    (%rsi),%r10d
+   7c932:	45 85 d2             	test   %r10d,%r10d
+   7c935:	0f 88 85 00 00 00    	js     7c9c0 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xac0>
+   7c93b:	48 83 c6 04          	add    $0x4,%rsi
+   7c93f:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c946:	4c 39 d6             	cmp    %r10,%rsi
+   7c949:	0f 84 8c 00 00 00    	je     7c9db <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xadb>
+   7c94f:	48 39 ce             	cmp    %rcx,%rsi
+   7c952:	0f 84 2a 01 00 00    	je     7ca82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xb82>
+   7c958:	44 8b 16             	mov    (%rsi),%r10d
+   7c95b:	45 85 d2             	test   %r10d,%r10d
+   7c95e:	0f 88 9c 00 00 00    	js     7ca00 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xb00>
+   7c964:	48 83 c6 04          	add    $0x4,%rsi
+   7c968:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c96f:	4c 39 d6             	cmp    %r10,%rsi
+   7c972:	0f 84 a3 00 00 00    	je     7ca1b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xb1b>
+   7c978:	48 39 ce             	cmp    %rcx,%rsi
+   7c97b:	0f 84 01 01 00 00    	je     7ca82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xb82>
+   7c981:	44 8b 16             	mov    (%rsi),%r10d
+   7c984:	45 85 d2             	test   %r10d,%r10d
+   7c987:	0f 88 b3 00 00 00    	js     7ca40 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xb40>
+   7c98d:	48 83 c6 04          	add    $0x4,%rsi
+   7c991:	49 81 c1 00 02 00 00 	add    $0x200,%r9
+   7c998:	4c 39 ce             	cmp    %r9,%rsi
+   7c99b:	0f 84 ba 00 00 00    	je     7ca5b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xb5b>
+   7c9a1:	48 39 ce             	cmp    %rcx,%rsi
+   7c9a4:	0f 85 56 ff ff ff    	jne    7c900 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xa00>
+   7c9aa:	e9 d3 00 00 00       	jmp    7ca82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xb82>
+   7c9af:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c9b6:	0f 1f 84 00 00 00 00 
+   7c9bd:	00 
+   7c9be:	66 90                	xchg   %ax,%ax
+   7c9c0:	45 89 10             	mov    %r10d,(%r8)
+   7c9c3:	49 83 c0 04          	add    $0x4,%r8
+   7c9c7:	48 83 c6 04          	add    $0x4,%rsi
+   7c9cb:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7c9d2:	4c 39 d6             	cmp    %r10,%rsi
+   7c9d5:	0f 85 74 ff ff ff    	jne    7c94f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xa4f>
+   7c9db:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7c9df:	48 83 c7 08          	add    $0x8,%rdi
+   7c9e3:	4c 89 ce             	mov    %r9,%rsi
+   7c9e6:	48 39 ce             	cmp    %rcx,%rsi
+   7c9e9:	0f 85 69 ff ff ff    	jne    7c958 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xa58>
+   7c9ef:	e9 8e 00 00 00       	jmp    7ca82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xb82>
+   7c9f4:	66 66 66 2e 0f 1f 84 	data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7c9fb:	00 00 00 00 00 
+   7ca00:	45 89 10             	mov    %r10d,(%r8)
+   7ca03:	49 83 c0 04          	add    $0x4,%r8
+   7ca07:	48 83 c6 04          	add    $0x4,%rsi
+   7ca0b:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7ca12:	4c 39 d6             	cmp    %r10,%rsi
+   7ca15:	0f 85 5d ff ff ff    	jne    7c978 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xa78>
+   7ca1b:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7ca1f:	48 83 c7 08          	add    $0x8,%rdi
+   7ca23:	4c 89 ce             	mov    %r9,%rsi
+   7ca26:	48 39 ce             	cmp    %rcx,%rsi
+   7ca29:	0f 85 52 ff ff ff    	jne    7c981 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xa81>
+   7ca2f:	eb 51                	jmp    7ca82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xb82>
+   7ca31:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7ca38:	0f 1f 84 00 00 00 00 
+   7ca3f:	00 
+   7ca40:	45 89 10             	mov    %r10d,(%r8)
+   7ca43:	49 83 c0 04          	add    $0x4,%r8
+   7ca47:	48 83 c6 04          	add    $0x4,%rsi
+   7ca4b:	49 81 c1 00 02 00 00 	add    $0x200,%r9
+   7ca52:	4c 39 ce             	cmp    %r9,%rsi
+   7ca55:	0f 85 46 ff ff ff    	jne    7c9a1 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xaa1>
+   7ca5b:	48 8b 77 08          	mov    0x8(%rdi),%rsi
+   7ca5f:	48 83 c7 08          	add    $0x8,%rdi
+   7ca63:	48 39 ce             	cmp    %rcx,%rsi
+   7ca66:	0f 85 94 fe ff ff    	jne    7c900 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xa00>
+   7ca6c:	eb 14                	jmp    7ca82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xb82>
+   7ca6e:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7ca72:	48 83 c7 08          	add    $0x8,%rdi
+   7ca76:	4c 89 ce             	mov    %r9,%rsi
+   7ca79:	48 39 ce             	cmp    %rcx,%rsi
+   7ca7c:	0f 85 ad fe ff ff    	jne    7c92f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xa2f>
+   7ca82:	48 89 54 24 08       	mov    %rdx,0x8(%rsp)
+   7ca87:	48 8b 38             	mov    (%rax),%rdi
+   7ca8a:	48 85 ff             	test   %rdi,%rdi
+   7ca8d:	0f 84 3c f5 ff ff    	je     7bfcf <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xcf>
+   7ca93:	48 8b 70 10          	mov    0x10(%rax),%rsi
+   7ca97:	48 8b 48 18          	mov    0x18(%rax),%rcx
+   7ca9b:	49 89 f0             	mov    %rsi,%r8
+   7ca9e:	49 c1 e8 07          	shr    $0x7,%r8
+   7caa2:	83 e6 7f             	and    $0x7f,%esi
+   7caa5:	c1 e6 02             	shl    $0x2,%esi
+   7caa8:	4a 03 34 c7          	add    (%rdi,%r8,8),%rsi
+   7caac:	48 89 ca             	mov    %rcx,%rdx
+   7caaf:	48 c1 ea 07          	shr    $0x7,%rdx
+   7cab3:	83 e1 7f             	and    $0x7f,%ecx
+   7cab6:	c1 e1 02             	shl    $0x2,%ecx
+   7cab9:	48 03 0c d7          	add    (%rdi,%rdx,8),%rcx
+   7cabd:	49 8b 55 08          	mov    0x8(%r13),%rdx
+   7cac1:	48 8b 12             	mov    (%rdx),%rdx
+   7cac4:	48 39 ce             	cmp    %rcx,%rsi
+   7cac7:	0f 84 b5 01 00 00    	je     7cc82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xd82>
+   7cacd:	4a 8d 3c c7          	lea    (%rdi,%r8,8),%rdi
+   7cad1:	49 89 d0             	mov    %rdx,%r8
+   7cad4:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7cadb:	0f 1f 84 00 00 00 00 
+   7cae2:	00 
+   7cae3:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7caea:	0f 1f 84 00 00 00 00 
+   7caf1:	00 
+   7caf2:	66 66 66 66 66 2e 0f 	data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7caf9:	1f 84 00 00 00 00 00 
+   7cb00:	44 8b 0e             	mov    (%rsi),%r9d
+   7cb03:	45 85 c9             	test   %r9d,%r9d
+   7cb06:	79 07                	jns    7cb0f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xc0f>
+   7cb08:	45 89 08             	mov    %r9d,(%r8)
+   7cb0b:	49 83 c0 04          	add    $0x4,%r8
+   7cb0f:	48 83 c6 04          	add    $0x4,%rsi
+   7cb13:	4c 8b 0f             	mov    (%rdi),%r9
+   7cb16:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7cb1d:	4c 39 d6             	cmp    %r10,%rsi
+   7cb20:	0f 84 48 01 00 00    	je     7cc6e <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xd6e>
+   7cb26:	48 39 ce             	cmp    %rcx,%rsi
+   7cb29:	0f 84 53 01 00 00    	je     7cc82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xd82>
+   7cb2f:	44 8b 16             	mov    (%rsi),%r10d
+   7cb32:	45 85 d2             	test   %r10d,%r10d
+   7cb35:	0f 88 85 00 00 00    	js     7cbc0 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xcc0>
+   7cb3b:	48 83 c6 04          	add    $0x4,%rsi
+   7cb3f:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7cb46:	4c 39 d6             	cmp    %r10,%rsi
+   7cb49:	0f 84 8c 00 00 00    	je     7cbdb <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xcdb>
+   7cb4f:	48 39 ce             	cmp    %rcx,%rsi
+   7cb52:	0f 84 2a 01 00 00    	je     7cc82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xd82>
+   7cb58:	44 8b 16             	mov    (%rsi),%r10d
+   7cb5b:	45 85 d2             	test   %r10d,%r10d
+   7cb5e:	0f 88 9c 00 00 00    	js     7cc00 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xd00>
+   7cb64:	48 83 c6 04          	add    $0x4,%rsi
+   7cb68:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7cb6f:	4c 39 d6             	cmp    %r10,%rsi
+   7cb72:	0f 84 a3 00 00 00    	je     7cc1b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xd1b>
+   7cb78:	48 39 ce             	cmp    %rcx,%rsi
+   7cb7b:	0f 84 01 01 00 00    	je     7cc82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xd82>
+   7cb81:	44 8b 16             	mov    (%rsi),%r10d
+   7cb84:	45 85 d2             	test   %r10d,%r10d
+   7cb87:	0f 88 b3 00 00 00    	js     7cc40 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xd40>
+   7cb8d:	48 83 c6 04          	add    $0x4,%rsi
+   7cb91:	49 81 c1 00 02 00 00 	add    $0x200,%r9
+   7cb98:	4c 39 ce             	cmp    %r9,%rsi
+   7cb9b:	0f 84 ba 00 00 00    	je     7cc5b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xd5b>
+   7cba1:	48 39 ce             	cmp    %rcx,%rsi
+   7cba4:	0f 85 56 ff ff ff    	jne    7cb00 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xc00>
+   7cbaa:	e9 d3 00 00 00       	jmp    7cc82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xd82>
+   7cbaf:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7cbb6:	0f 1f 84 00 00 00 00 
+   7cbbd:	00 
+   7cbbe:	66 90                	xchg   %ax,%ax
+   7cbc0:	45 89 10             	mov    %r10d,(%r8)
+   7cbc3:	49 83 c0 04          	add    $0x4,%r8
+   7cbc7:	48 83 c6 04          	add    $0x4,%rsi
+   7cbcb:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7cbd2:	4c 39 d6             	cmp    %r10,%rsi
+   7cbd5:	0f 85 74 ff ff ff    	jne    7cb4f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xc4f>
+   7cbdb:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7cbdf:	48 83 c7 08          	add    $0x8,%rdi
+   7cbe3:	4c 89 ce             	mov    %r9,%rsi
+   7cbe6:	48 39 ce             	cmp    %rcx,%rsi
+   7cbe9:	0f 85 69 ff ff ff    	jne    7cb58 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xc58>
+   7cbef:	e9 8e 00 00 00       	jmp    7cc82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xd82>
+   7cbf4:	66 66 66 2e 0f 1f 84 	data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7cbfb:	00 00 00 00 00 
+   7cc00:	45 89 10             	mov    %r10d,(%r8)
+   7cc03:	49 83 c0 04          	add    $0x4,%r8
+   7cc07:	48 83 c6 04          	add    $0x4,%rsi
+   7cc0b:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7cc12:	4c 39 d6             	cmp    %r10,%rsi
+   7cc15:	0f 85 5d ff ff ff    	jne    7cb78 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xc78>
+   7cc1b:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7cc1f:	48 83 c7 08          	add    $0x8,%rdi
+   7cc23:	4c 89 ce             	mov    %r9,%rsi
+   7cc26:	48 39 ce             	cmp    %rcx,%rsi
+   7cc29:	0f 85 52 ff ff ff    	jne    7cb81 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xc81>
+   7cc2f:	eb 51                	jmp    7cc82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xd82>
+   7cc31:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7cc38:	0f 1f 84 00 00 00 00 
+   7cc3f:	00 
+   7cc40:	45 89 10             	mov    %r10d,(%r8)
+   7cc43:	49 83 c0 04          	add    $0x4,%r8
+   7cc47:	48 83 c6 04          	add    $0x4,%rsi
+   7cc4b:	49 81 c1 00 02 00 00 	add    $0x200,%r9
+   7cc52:	4c 39 ce             	cmp    %r9,%rsi
+   7cc55:	0f 85 46 ff ff ff    	jne    7cba1 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xca1>
+   7cc5b:	48 8b 77 08          	mov    0x8(%rdi),%rsi
+   7cc5f:	48 83 c7 08          	add    $0x8,%rdi
+   7cc63:	48 39 ce             	cmp    %rcx,%rsi
+   7cc66:	0f 85 94 fe ff ff    	jne    7cb00 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xc00>
+   7cc6c:	eb 14                	jmp    7cc82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xd82>
+   7cc6e:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7cc72:	48 83 c7 08          	add    $0x8,%rdi
+   7cc76:	4c 89 ce             	mov    %r9,%rsi
+   7cc79:	48 39 ce             	cmp    %rcx,%rsi
+   7cc7c:	0f 85 ad fe ff ff    	jne    7cb2f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xc2f>
+   7cc82:	48 89 54 24 08       	mov    %rdx,0x8(%rsp)
+   7cc87:	48 8b 38             	mov    (%rax),%rdi
+   7cc8a:	48 85 ff             	test   %rdi,%rdi
+   7cc8d:	0f 84 18 f3 ff ff    	je     7bfab <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xab>
+   7cc93:	48 8b 70 10          	mov    0x10(%rax),%rsi
+   7cc97:	48 8b 48 18          	mov    0x18(%rax),%rcx
+   7cc9b:	49 89 f0             	mov    %rsi,%r8
+   7cc9e:	49 c1 e8 07          	shr    $0x7,%r8
+   7cca2:	83 e6 7f             	and    $0x7f,%esi
+   7cca5:	c1 e6 02             	shl    $0x2,%esi
+   7cca8:	4a 03 34 c7          	add    (%rdi,%r8,8),%rsi
+   7ccac:	48 89 ca             	mov    %rcx,%rdx
+   7ccaf:	48 c1 ea 07          	shr    $0x7,%rdx
+   7ccb3:	83 e1 7f             	and    $0x7f,%ecx
+   7ccb6:	c1 e1 02             	shl    $0x2,%ecx
+   7ccb9:	48 03 0c d7          	add    (%rdi,%rdx,8),%rcx
+   7ccbd:	49 8b 55 08          	mov    0x8(%r13),%rdx
+   7ccc1:	48 8b 12             	mov    (%rdx),%rdx
+   7ccc4:	48 39 ce             	cmp    %rcx,%rsi
+   7ccc7:	0f 84 b5 01 00 00    	je     7ce82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xf82>
+   7cccd:	4a 8d 3c c7          	lea    (%rdi,%r8,8),%rdi
+   7ccd1:	49 89 d0             	mov    %rdx,%r8
+   7ccd4:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7ccdb:	0f 1f 84 00 00 00 00 
+   7cce2:	00 
+   7cce3:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7ccea:	0f 1f 84 00 00 00 00 
+   7ccf1:	00 
+   7ccf2:	66 66 66 66 66 2e 0f 	data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7ccf9:	1f 84 00 00 00 00 00 
+   7cd00:	44 8b 0e             	mov    (%rsi),%r9d
+   7cd03:	45 85 c9             	test   %r9d,%r9d
+   7cd06:	79 07                	jns    7cd0f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xe0f>
+   7cd08:	45 89 08             	mov    %r9d,(%r8)
+   7cd0b:	49 83 c0 04          	add    $0x4,%r8
+   7cd0f:	48 83 c6 04          	add    $0x4,%rsi
+   7cd13:	4c 8b 0f             	mov    (%rdi),%r9
+   7cd16:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7cd1d:	4c 39 d6             	cmp    %r10,%rsi
+   7cd20:	0f 84 48 01 00 00    	je     7ce6e <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xf6e>
+   7cd26:	48 39 ce             	cmp    %rcx,%rsi
+   7cd29:	0f 84 53 01 00 00    	je     7ce82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xf82>
+   7cd2f:	44 8b 16             	mov    (%rsi),%r10d
+   7cd32:	45 85 d2             	test   %r10d,%r10d
+   7cd35:	0f 88 85 00 00 00    	js     7cdc0 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xec0>
+   7cd3b:	48 83 c6 04          	add    $0x4,%rsi
+   7cd3f:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7cd46:	4c 39 d6             	cmp    %r10,%rsi
+   7cd49:	0f 84 8c 00 00 00    	je     7cddb <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xedb>
+   7cd4f:	48 39 ce             	cmp    %rcx,%rsi
+   7cd52:	0f 84 2a 01 00 00    	je     7ce82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xf82>
+   7cd58:	44 8b 16             	mov    (%rsi),%r10d
+   7cd5b:	45 85 d2             	test   %r10d,%r10d
+   7cd5e:	0f 88 9c 00 00 00    	js     7ce00 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xf00>
+   7cd64:	48 83 c6 04          	add    $0x4,%rsi
+   7cd68:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7cd6f:	4c 39 d6             	cmp    %r10,%rsi
+   7cd72:	0f 84 a3 00 00 00    	je     7ce1b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xf1b>
+   7cd78:	48 39 ce             	cmp    %rcx,%rsi
+   7cd7b:	0f 84 01 01 00 00    	je     7ce82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xf82>
+   7cd81:	44 8b 16             	mov    (%rsi),%r10d
+   7cd84:	45 85 d2             	test   %r10d,%r10d
+   7cd87:	0f 88 b3 00 00 00    	js     7ce40 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xf40>
+   7cd8d:	48 83 c6 04          	add    $0x4,%rsi
+   7cd91:	49 81 c1 00 02 00 00 	add    $0x200,%r9
+   7cd98:	4c 39 ce             	cmp    %r9,%rsi
+   7cd9b:	0f 84 ba 00 00 00    	je     7ce5b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xf5b>
+   7cda1:	48 39 ce             	cmp    %rcx,%rsi
+   7cda4:	0f 85 56 ff ff ff    	jne    7cd00 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xe00>
+   7cdaa:	e9 d3 00 00 00       	jmp    7ce82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xf82>
+   7cdaf:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7cdb6:	0f 1f 84 00 00 00 00 
+   7cdbd:	00 
+   7cdbe:	66 90                	xchg   %ax,%ax
+   7cdc0:	45 89 10             	mov    %r10d,(%r8)
+   7cdc3:	49 83 c0 04          	add    $0x4,%r8
+   7cdc7:	48 83 c6 04          	add    $0x4,%rsi
+   7cdcb:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7cdd2:	4c 39 d6             	cmp    %r10,%rsi
+   7cdd5:	0f 85 74 ff ff ff    	jne    7cd4f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xe4f>
+   7cddb:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7cddf:	48 83 c7 08          	add    $0x8,%rdi
+   7cde3:	4c 89 ce             	mov    %r9,%rsi
+   7cde6:	48 39 ce             	cmp    %rcx,%rsi
+   7cde9:	0f 85 69 ff ff ff    	jne    7cd58 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xe58>
+   7cdef:	e9 8e 00 00 00       	jmp    7ce82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xf82>
+   7cdf4:	66 66 66 2e 0f 1f 84 	data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7cdfb:	00 00 00 00 00 
+   7ce00:	45 89 10             	mov    %r10d,(%r8)
+   7ce03:	49 83 c0 04          	add    $0x4,%r8
+   7ce07:	48 83 c6 04          	add    $0x4,%rsi
+   7ce0b:	4d 8d 91 00 02 00 00 	lea    0x200(%r9),%r10
+   7ce12:	4c 39 d6             	cmp    %r10,%rsi
+   7ce15:	0f 85 5d ff ff ff    	jne    7cd78 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xe78>
+   7ce1b:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7ce1f:	48 83 c7 08          	add    $0x8,%rdi
+   7ce23:	4c 89 ce             	mov    %r9,%rsi
+   7ce26:	48 39 ce             	cmp    %rcx,%rsi
+   7ce29:	0f 85 52 ff ff ff    	jne    7cd81 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xe81>
+   7ce2f:	eb 51                	jmp    7ce82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xf82>
+   7ce31:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7ce38:	0f 1f 84 00 00 00 00 
+   7ce3f:	00 
+   7ce40:	45 89 10             	mov    %r10d,(%r8)
+   7ce43:	49 83 c0 04          	add    $0x4,%r8
+   7ce47:	48 83 c6 04          	add    $0x4,%rsi
+   7ce4b:	49 81 c1 00 02 00 00 	add    $0x200,%r9
+   7ce52:	4c 39 ce             	cmp    %r9,%rsi
+   7ce55:	0f 85 46 ff ff ff    	jne    7cda1 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xea1>
+   7ce5b:	48 8b 77 08          	mov    0x8(%rdi),%rsi
+   7ce5f:	48 83 c7 08          	add    $0x8,%rdi
+   7ce63:	48 39 ce             	cmp    %rcx,%rsi
+   7ce66:	0f 85 94 fe ff ff    	jne    7cd00 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xe00>
+   7ce6c:	eb 14                	jmp    7ce82 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xf82>
+   7ce6e:	4c 8b 4f 08          	mov    0x8(%rdi),%r9
+   7ce72:	48 83 c7 08          	add    $0x8,%rdi
+   7ce76:	4c 89 ce             	mov    %r9,%rsi
+   7ce79:	48 39 ce             	cmp    %rcx,%rsi
+   7ce7c:	0f 85 ad fe ff ff    	jne    7cd2f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0xe2f>
+   7ce82:	48 89 54 24 08       	mov    %rdx,0x8(%rsp)
+   7ce87:	48 8b 30             	mov    (%rax),%rsi
+   7ce8a:	48 85 f6             	test   %rsi,%rsi
+   7ce8d:	0f 84 84 f1 ff ff    	je     7c017 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x117>
+   7ce93:	48 8b 50 10          	mov    0x10(%rax),%rdx
+   7ce97:	48 8b 40 18          	mov    0x18(%rax),%rax
+   7ce9b:	48 89 d7             	mov    %rdx,%rdi
+   7ce9e:	48 c1 ef 07          	shr    $0x7,%rdi
+   7cea2:	83 e2 7f             	and    $0x7f,%edx
+   7cea5:	c1 e2 02             	shl    $0x2,%edx
+   7cea8:	48 03 14 fe          	add    (%rsi,%rdi,8),%rdx
+   7ceac:	48 89 c1             	mov    %rax,%rcx
+   7ceaf:	48 c1 e9 07          	shr    $0x7,%rcx
+   7ceb3:	83 e0 7f             	and    $0x7f,%eax
+   7ceb6:	c1 e0 02             	shl    $0x2,%eax
+   7ceb9:	48 03 04 ce          	add    (%rsi,%rcx,8),%rax
+   7cebd:	49 8b 4d 08          	mov    0x8(%r13),%rcx
+   7cec1:	48 8b 09             	mov    (%rcx),%rcx
+   7cec4:	48 39 c2             	cmp    %rax,%rdx
+   7cec7:	0f 84 b5 01 00 00    	je     7d082 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1182>
+   7cecd:	48 8d 34 fe          	lea    (%rsi,%rdi,8),%rsi
+   7ced1:	48 89 cf             	mov    %rcx,%rdi
+   7ced4:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7cedb:	0f 1f 84 00 00 00 00 
+   7cee2:	00 
+   7cee3:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7ceea:	0f 1f 84 00 00 00 00 
+   7cef1:	00 
+   7cef2:	66 66 66 66 66 2e 0f 	data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7cef9:	1f 84 00 00 00 00 00 
+   7cf00:	44 8b 02             	mov    (%rdx),%r8d
+   7cf03:	45 85 c0             	test   %r8d,%r8d
+   7cf06:	79 07                	jns    7cf0f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x100f>
+   7cf08:	44 89 07             	mov    %r8d,(%rdi)
+   7cf0b:	48 83 c7 04          	add    $0x4,%rdi
+   7cf0f:	48 83 c2 04          	add    $0x4,%rdx
+   7cf13:	4c 8b 06             	mov    (%rsi),%r8
+   7cf16:	4d 8d 88 00 02 00 00 	lea    0x200(%r8),%r9
+   7cf1d:	4c 39 ca             	cmp    %r9,%rdx
+   7cf20:	0f 84 48 01 00 00    	je     7d06e <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x116e>
+   7cf26:	48 39 c2             	cmp    %rax,%rdx
+   7cf29:	0f 84 53 01 00 00    	je     7d082 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1182>
+   7cf2f:	44 8b 0a             	mov    (%rdx),%r9d
+   7cf32:	45 85 c9             	test   %r9d,%r9d
+   7cf35:	0f 88 85 00 00 00    	js     7cfc0 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x10c0>
+   7cf3b:	48 83 c2 04          	add    $0x4,%rdx
+   7cf3f:	4d 8d 88 00 02 00 00 	lea    0x200(%r8),%r9
+   7cf46:	4c 39 ca             	cmp    %r9,%rdx
+   7cf49:	0f 84 8c 00 00 00    	je     7cfdb <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x10db>
+   7cf4f:	48 39 c2             	cmp    %rax,%rdx
+   7cf52:	0f 84 2a 01 00 00    	je     7d082 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1182>
+   7cf58:	44 8b 0a             	mov    (%rdx),%r9d
+   7cf5b:	45 85 c9             	test   %r9d,%r9d
+   7cf5e:	0f 88 9c 00 00 00    	js     7d000 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1100>
+   7cf64:	48 83 c2 04          	add    $0x4,%rdx
+   7cf68:	4d 8d 88 00 02 00 00 	lea    0x200(%r8),%r9
+   7cf6f:	4c 39 ca             	cmp    %r9,%rdx
+   7cf72:	0f 84 a3 00 00 00    	je     7d01b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x111b>
+   7cf78:	48 39 c2             	cmp    %rax,%rdx
+   7cf7b:	0f 84 01 01 00 00    	je     7d082 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1182>
+   7cf81:	44 8b 0a             	mov    (%rdx),%r9d
+   7cf84:	45 85 c9             	test   %r9d,%r9d
+   7cf87:	0f 88 b3 00 00 00    	js     7d040 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1140>
+   7cf8d:	48 83 c2 04          	add    $0x4,%rdx
+   7cf91:	49 81 c0 00 02 00 00 	add    $0x200,%r8
+   7cf98:	4c 39 c2             	cmp    %r8,%rdx
+   7cf9b:	0f 84 ba 00 00 00    	je     7d05b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x115b>
+   7cfa1:	48 39 c2             	cmp    %rax,%rdx
+   7cfa4:	0f 85 56 ff ff ff    	jne    7cf00 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1000>
+   7cfaa:	e9 d3 00 00 00       	jmp    7d082 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1182>
+   7cfaf:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7cfb6:	0f 1f 84 00 00 00 00 
+   7cfbd:	00 
+   7cfbe:	66 90                	xchg   %ax,%ax
+   7cfc0:	44 89 0f             	mov    %r9d,(%rdi)
+   7cfc3:	48 83 c7 04          	add    $0x4,%rdi
+   7cfc7:	48 83 c2 04          	add    $0x4,%rdx
+   7cfcb:	4d 8d 88 00 02 00 00 	lea    0x200(%r8),%r9
+   7cfd2:	4c 39 ca             	cmp    %r9,%rdx
+   7cfd5:	0f 85 74 ff ff ff    	jne    7cf4f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x104f>
+   7cfdb:	4c 8b 46 08          	mov    0x8(%rsi),%r8
+   7cfdf:	48 83 c6 08          	add    $0x8,%rsi
+   7cfe3:	4c 89 c2             	mov    %r8,%rdx
+   7cfe6:	48 39 c2             	cmp    %rax,%rdx
+   7cfe9:	0f 85 69 ff ff ff    	jne    7cf58 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1058>
+   7cfef:	e9 8e 00 00 00       	jmp    7d082 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1182>
+   7cff4:	66 66 66 2e 0f 1f 84 	data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7cffb:	00 00 00 00 00 
+   7d000:	44 89 0f             	mov    %r9d,(%rdi)
+   7d003:	48 83 c7 04          	add    $0x4,%rdi
+   7d007:	48 83 c2 04          	add    $0x4,%rdx
+   7d00b:	4d 8d 88 00 02 00 00 	lea    0x200(%r8),%r9
+   7d012:	4c 39 ca             	cmp    %r9,%rdx
+   7d015:	0f 85 5d ff ff ff    	jne    7cf78 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1078>
+   7d01b:	4c 8b 46 08          	mov    0x8(%rsi),%r8
+   7d01f:	48 83 c6 08          	add    $0x8,%rsi
+   7d023:	4c 89 c2             	mov    %r8,%rdx
+   7d026:	48 39 c2             	cmp    %rax,%rdx
+   7d029:	0f 85 52 ff ff ff    	jne    7cf81 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1081>
+   7d02f:	eb 51                	jmp    7d082 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1182>
+   7d031:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   7d038:	0f 1f 84 00 00 00 00 
+   7d03f:	00 
+   7d040:	44 89 0f             	mov    %r9d,(%rdi)
+   7d043:	48 83 c7 04          	add    $0x4,%rdi
+   7d047:	48 83 c2 04          	add    $0x4,%rdx
+   7d04b:	49 81 c0 00 02 00 00 	add    $0x200,%r8
+   7d052:	4c 39 c2             	cmp    %r8,%rdx
+   7d055:	0f 85 46 ff ff ff    	jne    7cfa1 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x10a1>
+   7d05b:	48 8b 56 08          	mov    0x8(%rsi),%rdx
+   7d05f:	48 83 c6 08          	add    $0x8,%rsi
+   7d063:	48 39 c2             	cmp    %rax,%rdx
+   7d066:	0f 85 94 fe ff ff    	jne    7cf00 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1000>
+   7d06c:	eb 14                	jmp    7d082 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1182>
+   7d06e:	4c 8b 46 08          	mov    0x8(%rsi),%r8
+   7d072:	48 83 c6 08          	add    $0x8,%rsi
+   7d076:	4c 89 c2             	mov    %r8,%rdx
+   7d079:	48 39 c2             	cmp    %rax,%rdx
+   7d07c:	0f 85 ad fe ff ff    	jne    7cf2f <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x102f>
+   7d082:	48 89 4c 24 08       	mov    %rcx,0x8(%rsp)
+   7d087:	48 8d 74 24 08       	lea    0x8(%rsp),%rsi
+   7d08c:	bf 04 00 00 00       	mov    $0x4,%edi
+   7d091:	e8 3a 50 f8 ff       	call   20d0 <clock_gettime@plt>
+   7d096:	48 69 44 24 08 00 ca 	imul   $0x3b9aca00,0x8(%rsp),%rax
+   7d09d:	9a 3b 
+   7d09f:	48 8b 5c 24 10       	mov    0x10(%rsp),%rbx
+   7d0a4:	48 2b 5c 24 30       	sub    0x30(%rsp),%rbx
+   7d0a9:	48 01 c3             	add    %rax,%rbx
+   7d0ac:	4c 39 f5             	cmp    %r14,%rbp
+   7d0af:	74 2a                	je     7d0db <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x11db>
+   7d0b1:	48 89 5d 00          	mov    %rbx,0x0(%rbp)
+   7d0b5:	48 8b 4c 24 28       	mov    0x28(%rsp),%rcx
+   7d0ba:	48 83 c5 08          	add    $0x8,%rbp
+   7d0be:	31 c0                	xor    %eax,%eax
+   7d0c0:	48 ff c9             	dec    %rcx
+   7d0c3:	0f 84 af 00 00 00    	je     7d178 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1278>
+   7d0c9:	48 89 4c 24 28       	mov    %rcx,0x28(%rsp)
+   7d0ce:	a8 01                	test   $0x1,%al
+   7d0d0:	0f 84 b7 ef ff ff    	je     7c08d <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x18d>
+   7d0d6:	e9 d4 ef ff ff       	jmp    7c0af <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1af>
+   7d0db:	48 89 6c 24 20       	mov    %rbp,0x20(%rsp)
+   7d0e0:	49 89 ee             	mov    %rbp,%r14
+   7d0e3:	4c 89 64 24 18       	mov    %r12,0x18(%rsp)
+   7d0e8:	4d 29 e6             	sub    %r12,%r14
+   7d0eb:	48 b8 f8 ff ff ff ff 	movabs $0x7ffffffffffffff8,%rax
+   7d0f2:	ff ff 7f 
+   7d0f5:	49 39 c6             	cmp    %rax,%r14
+   7d0f8:	0f 84 3d 01 00 00    	je     7d23b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x133b>
+   7d0fe:	4c 89 f5             	mov    %r14,%rbp
+   7d101:	48 c1 fd 03          	sar    $0x3,%rbp
+   7d105:	48 83 fd 01          	cmp    $0x1,%rbp
+   7d109:	48 11 ed             	adc    %rbp,%rbp
+   7d10c:	48 b8 ff ff ff ff ff 	movabs $0xfffffffffffffff,%rax
+   7d113:	ff ff 0f 
+   7d116:	48 39 c5             	cmp    %rax,%rbp
+   7d119:	48 0f 43 e8          	cmovae %rax,%rbp
+   7d11d:	48 8d 3c ed 00 00 00 	lea    0x0(,%rbp,8),%rdi
+   7d124:	00 
+   7d125:	e8 b6 4f f8 ff       	call   20e0 <_Znwm@plt>
+   7d12a:	49 89 c4             	mov    %rax,%r12
+   7d12d:	4e 8d 3c 30          	lea    (%rax,%r14,1),%r15
+   7d131:	4a 89 1c 30          	mov    %rbx,(%rax,%r14,1)
+   7d135:	4d 85 f6             	test   %r14,%r14
+   7d138:	48 8b 5c 24 18       	mov    0x18(%rsp),%rbx
+   7d13d:	7e 0e                	jle    7d14d <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x124d>
+   7d13f:	4c 89 e7             	mov    %r12,%rdi
+   7d142:	48 89 de             	mov    %rbx,%rsi
+   7d145:	4c 89 f2             	mov    %r14,%rdx
+   7d148:	e8 73 4f f8 ff       	call   20c0 <memcpy@plt>
+   7d14d:	48 85 db             	test   %rbx,%rbx
+   7d150:	74 0b                	je     7d15d <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x125d>
+   7d152:	48 89 df             	mov    %rbx,%rdi
+   7d155:	4c 89 f6             	mov    %r14,%rsi
+   7d158:	e8 93 4f f8 ff       	call   20f0 <_ZdlPvm@plt>
+   7d15d:	4d 8d 34 ec          	lea    (%r12,%rbp,8),%r14
+   7d161:	48 8b 4c 24 28       	mov    0x28(%rsp),%rcx
+   7d166:	4c 89 fd             	mov    %r15,%rbp
+   7d169:	48 83 c5 08          	add    $0x8,%rbp
+   7d16d:	31 c0                	xor    %eax,%eax
+   7d16f:	48 ff c9             	dec    %rcx
+   7d172:	0f 85 51 ff ff ff    	jne    7d0c9 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x11c9>
+   7d178:	49 39 ec             	cmp    %rbp,%r12
+   7d17b:	0f 84 89 00 00 00    	je     7d20a <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x130a>
+   7d181:	48 89 eb             	mov    %rbp,%rbx
+   7d184:	4c 29 e3             	sub    %r12,%rbx
+   7d187:	49 89 df             	mov    %rbx,%r15
+   7d18a:	49 c1 ff 03          	sar    $0x3,%r15
+   7d18e:	49 0f bd d7          	bsr    %r15,%rdx
+   7d192:	83 f2 3f             	xor    $0x3f,%edx
+   7d195:	01 d2                	add    %edx,%edx
+   7d197:	48 83 f2 7e          	xor    $0x7e,%rdx
+   7d19b:	4c 89 64 24 18       	mov    %r12,0x18(%rsp)
+   7d1a0:	4c 89 74 24 20       	mov    %r14,0x20(%rsp)
+   7d1a5:	4c 89 e7             	mov    %r12,%rdi
+   7d1a8:	48 89 ee             	mov    %rbp,%rsi
+   7d1ab:	e8 50 fe f8 ff       	call   d000 <_ZSt16__introsort_loopIN9__gnu_cxx17__normal_iteratorIPmSt6vectorImSaImEEEElSt4lessIvEEvT_S9_T0_T1_>
+   7d1b0:	4c 89 64 24 18       	mov    %r12,0x18(%rsp)
+   7d1b5:	4c 89 74 24 20       	mov    %r14,0x20(%rsp)
+   7d1ba:	4c 89 e7             	mov    %r12,%rdi
+   7d1bd:	48 89 ee             	mov    %rbp,%rsi
+   7d1c0:	e8 3b 02 f9 ff       	call   d400 <_ZSt22__final_insertion_sortIN9__gnu_cxx17__normal_iteratorIPmSt6vectorImSaImEEEESt4lessIvEEvT_S9_T0_>
+   7d1c5:	48 b9 cd cc cc cc cc 	movabs $0xcccccccccccccccd,%rcx
+   7d1cc:	cc cc cc 
+   7d1cf:	4c 89 f8             	mov    %r15,%rax
+   7d1d2:	48 f7 e1             	mul    %rcx
+   7d1d5:	48 c1 ea 04          	shr    $0x4,%rdx
+   7d1d9:	48 8d 0c 12          	lea    (%rdx,%rdx,1),%rcx
+   7d1dd:	31 c0                	xor    %eax,%eax
+   7d1df:	4c 39 f9             	cmp    %r15,%rcx
+   7d1e2:	48 0f 42 c2          	cmovb  %rdx,%rax
+   7d1e6:	4c 89 fa             	mov    %r15,%rdx
+   7d1e9:	48 29 c2             	sub    %rax,%rdx
+   7d1ec:	48 29 c2             	sub    %rax,%rdx
+   7d1ef:	48 83 e2 fe          	and    $0xfffffffffffffffe,%rdx
+   7d1f3:	49 8d 0c 94          	lea    (%r12,%rdx,4),%rcx
+   7d1f7:	f6 c3 08             	test   $0x8,%bl
+   7d1fa:	75 17                	jne    7d213 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1313>
+   7d1fc:	48 8b 1c c1          	mov    (%rcx,%rax,8),%rbx
+   7d200:	48 03 5c c1 f8       	add    -0x8(%rcx,%rax,8),%rbx
+   7d205:	48 d1 eb             	shr    $1,%rbx
+   7d208:	eb 0d                	jmp    7d217 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1317>
+   7d20a:	31 db                	xor    %ebx,%ebx
+   7d20c:	4d 85 e4             	test   %r12,%r12
+   7d20f:	75 0a                	jne    7d21b <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x131b>
+   7d211:	eb 16                	jmp    7d229 <_Z13measure_batchIN9bench_ops11seg_copy_ifIN5boost9container5dequeI5MyIntvNS3_9deque_optILm0ELm128EvLb0EEEEENS3_6vectorIS5_vvEE11is_negativeIS5_ELb1EEE10noop_resetEmmT_T0_+0x1329>
+   7d213:	48 8b 1c c1          	mov    (%rcx,%rax,8),%rbx
+   7d217:	49 0f af df          	imul   %r15,%rbx
+   7d21b:	4d 29 e6             	sub    %r12,%r14
+   7d21e:	4c 89 e7             	mov    %r12,%rdi
+   7d221:	4c 89 f6             	mov    %r14,%rsi
+   7d224:	e8 c7 4e f8 ff       	call   20f0 <_ZdlPvm@plt>
+   7d229:	48 89 d8             	mov    %rbx,%rax
+   7d22c:	48 83 c4 38          	add    $0x38,%rsp
+   7d230:	5b                   	pop    %rbx
+   7d231:	41 5c                	pop    %r12
+   7d233:	41 5d                	pop    %r13
+   7d235:	41 5e                	pop    %r14
+   7d237:	41 5f                	pop    %r15
+   7d239:	5d                   	pop    %rbp
+   7d23a:	c3                   	ret
+   7d23b:	48 8d 3d cc c9 0f 00 	lea    0xfc9cc(%rip),%rdi        # 179c0e <_IO_stdin_used+0x2c0e>
+   7d242:	e8 39 4e f8 ff       	call   2080 <_ZSt20__throw_length_errorPKc@plt>

@@ -1,0 +1,176 @@
+nice: warning: setpriority: Permission denied (os error 13)
+=== Segmented algorithm benchmark [i] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<i> ---
+
+===== Group 25: 2-range input-output algorithms [i] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+copy(1S)                            2.39        2.39        1.00      0.107      0.255      0.255
+copy(2S)                            5.52        5.54        1.00      0.051      0.282      0.281
+copy(1+2S)                          5.94        5.99        1.01      0.063      0.379      0.376
+copy_if(1S hit)                     1.22        1.88        1.54      0.223      0.419      0.273
+copy_if(2S hit)                     0.75        1.39        1.85      0.334      0.464      0.251
+copy_if(1+2S hit)                   0.84        1.35        1.61      0.383      0.517      0.321
+copy_if(1S miss)                    1.34        1.96        1.46      0.249      0.488      0.334
+copy_if(2S miss)                    0.60        0.90        1.50      0.256      0.231      0.154
+copy_if(1+2S miss)                  0.77        1.06        1.38      0.311      0.329      0.239
+copy_n(1S)                          5.38        5.17        0.96      0.052      0.269      0.280
+copy_n(2S)                          5.35        5.01        0.94      0.052      0.259      0.276
+copy_n(1+2S)                        5.61        7.65        1.37      0.063      0.485      0.355
+remove_copy(1S hit)                 1.05        1.28        1.22      0.283      0.362      0.297
+remove_copy(2S hit)                 1.29        1.75        1.36      0.259      0.454      0.335
+remove_copy(1+2S hit)               1.43        1.91        1.34      0.273      0.522      0.391
+remove_copy(1S miss)                1.05        1.22        1.16      0.283      0.345      0.297
+remove_copy(2S miss)                1.25        1.35        1.08      0.259      0.350      0.325
+remove_copy(1+2S miss)              1.46        1.73        1.19      0.268      0.464      0.390
+remove_copy_if(1S hit)              1.26        2.29        1.81      0.287      0.657      0.362
+remove_copy_if(2S hit)              0.86        1.35        1.56      0.359      0.485      0.310
+remove_copy_if(1+2S hit)            0.90        1.20        1.33      0.448      0.538      0.403
+remove_copy_if(1S miss)             1.07        1.46        1.37      0.282      0.412      0.300
+remove_copy_if(2S miss)             1.25        1.27        1.01      0.257      0.326      0.322
+remove_copy_if(1+2S miss)           1.49        1.74        1.16      0.264      0.458      0.394
+swap_ranges(1S)                     3.06        3.06        1.00      0.102      0.311      0.311
+swap_ranges(2S)                     3.91        3.91        1.00      0.083      0.326      0.326
+swap_ranges(1+2S)                   4.40        4.00        0.91      0.100      0.399      0.439
+transform(1S)                       2.99        3.15        1.05      0.106      0.335      0.317
+transform(2S)                       5.87        5.86        1.00      0.054      0.318      0.318
+transform(1+2S)                     6.57        9.37        1.43      0.065      0.606      0.425
+-------------------------------------------------------------------------------------------------
+group geomean                       1.91        2.34        1.23       [i]
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        1.91        2.34        1.23       [i]
+
+
+=== Segmented algorithm benchmark [5MyInt] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<5MyInt> ---
+
+===== Group 25: 2-range input-output algorithms [5MyInt] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+copy(1S)                            2.37        2.37        1.00      0.108      0.255      0.255
+copy(2S)                            5.27        5.27        1.00      0.053      0.281      0.281
+copy(1+2S)                          5.70        5.79        1.02      0.065      0.374      0.368
+copy_if(1S hit)                     1.27        1.88        1.48      0.224      0.422      0.285
+copy_if(2S hit)                     0.83        1.47        1.78      0.307      0.451      0.253
+copy_if(1+2S hit)                   0.83        1.33        1.60      0.383      0.510      0.319
+copy_if(1S miss)                    1.37        1.93        1.41      0.250      0.481      0.342
+copy_if(2S miss)                    0.60        0.90        1.50      0.256      0.231      0.154
+copy_if(1+2S miss)                  0.78        1.23        1.57      0.306      0.376      0.239
+copy_n(1S)                          5.42        5.11        0.94      0.053      0.269      0.286
+copy_n(2S)                          5.18        4.88        0.94      0.053      0.259      0.275
+copy_n(1+2S)                        5.41        7.39        1.37      0.064      0.474      0.347
+remove_copy(1S hit)                 1.07        1.27        1.19      0.283      0.361      0.303
+remove_copy(2S hit)                 1.29        1.76        1.37      0.260      0.457      0.334
+remove_copy(1+2S hit)               1.44        1.85        1.29      0.274      0.507      0.394
+remove_copy(1S miss)                1.13        1.22        1.08      0.283      0.346      0.319
+remove_copy(2S miss)                1.30        1.33        1.02      0.259      0.345      0.338
+remove_copy(1+2S miss)              1.46        1.69        1.16      0.269      0.456      0.392
+remove_copy_if(1S hit)              1.27        2.26        1.78      0.287      0.648      0.365
+remove_copy_if(2S hit)              0.87        1.38        1.57      0.347      0.477      0.303
+remove_copy_if(1+2S hit)            0.86        1.20        1.39      0.460      0.552      0.396
+remove_copy_if(1S miss)             1.07        1.46        1.37      0.282      0.412      0.301
+remove_copy_if(2S miss)             1.25        1.32        1.05      0.258      0.339      0.322
+remove_copy_if(1+2S miss)           1.50        1.68        1.12      0.264      0.445      0.396
+swap_ranges(1S)                     3.32        3.32        1.00      0.102      0.340      0.339
+swap_ranges(2S)                     4.37        3.87        0.89      0.084      0.326      0.368
+swap_ranges(1+2S)                   4.04        3.92        0.97      0.100      0.393      0.405
+transform(1S)                       3.00        3.17        1.05      0.106      0.337      0.319
+transform(2S)                       5.93        5.93        1.00      0.054      0.318      0.318
+transform(1+2S)                     6.47        6.59        1.02      0.066      0.432      0.424
+-------------------------------------------------------------------------------------------------
+group geomean                       1.92        2.32        1.21       [5MyInt]
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        1.92        2.32        1.21       [5MyInt]
+
+
+=== Segmented algorithm benchmark [8MyFatIntILm2EE] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<8MyFatIntILm2EE> ---
+
+===== Group 25: 2-range input-output algorithms [8MyFatIntILm2EE] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+copy(1S)                            1.54        1.51        0.98      0.169      0.255      0.261
+copy(2S)                            2.05        2.01        0.98      0.133      0.267      0.272
+copy(1+2S)                          2.63        2.73        1.04      0.141      0.383      0.369
+copy_if(1S hit)                     1.19        1.10        0.93      0.298      0.329      0.354
+copy_if(2S hit)                     1.33        1.40        1.05      0.285      0.399      0.380
+copy_if(1+2S hit)                   1.33        1.48        1.11      0.279      0.414      0.372
+copy_if(1S miss)                    1.45        2.89        1.99      0.175      0.507      0.254
+copy_if(2S miss)                    0.62        0.95        1.53      0.250      0.237      0.155
+copy_if(1+2S miss)                  0.97        1.38        1.43      0.249      0.343      0.241
+copy_n(1S)                          2.11        2.88        1.36      0.137      0.394      0.289
+copy_n(2S)                          2.13        2.16        1.01      0.135      0.292      0.288
+copy_n(1+2S)                        2.82        3.32        1.18      0.143      0.476      0.404
+remove_copy(1S hit)                 0.71        1.13        1.58      0.456      0.516      0.325
+remove_copy(2S hit)                 1.37        1.51        1.11      0.354      0.536      0.485
+remove_copy(1+2S hit)               1.34        1.35        1.01      0.367      0.495      0.491
+remove_copy(1S miss)                0.70        1.06        1.52      0.459      0.489      0.323
+remove_copy(2S miss)                1.40        1.61        1.15      0.342      0.550      0.477
+remove_copy(1+2S miss)              1.37        1.46        1.06      0.354      0.515      0.484
+remove_copy_if(1S hit)              1.07        1.60        1.49      0.361      0.577      0.387
+remove_copy_if(2S hit)              0.85        1.39        1.62      0.416      0.577      0.355
+remove_copy_if(1+2S hit)            0.93        1.24        1.33      0.466      0.576      0.432
+remove_copy_if(1S miss)             0.70        1.09        1.56      0.450      0.492      0.315
+remove_copy_if(2S miss)             1.44        1.56        1.08      0.336      0.526      0.485
+remove_copy_if(1+2S miss)           1.40        1.44        1.02      0.344      0.495      0.483
+swap_ranges(1S)                     3.49        3.53        1.01      0.172      0.609      0.601
+swap_ranges(2S)                     2.80        2.75        0.98      0.175      0.481      0.490
+swap_ranges(1+2S)                   2.21        2.26        1.02      0.188      0.425      0.416
+transform(1S)                       2.25        2.48        1.10      0.139      0.345      0.313
+transform(2S)                       2.28        2.16        0.95      0.138      0.299      0.315
+transform(1+2S)                     3.65        3.52        0.96      0.144      0.506      0.525
+-------------------------------------------------------------------------------------------------
+group geomean                       1.49        1.76        1.18       [8MyFatIntILm2EE]
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        1.49        1.76        1.18       [8MyFatIntILm2EE]
+
+
+=== Segmented algorithm benchmark [8MyFatIntILm8EE] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<8MyFatIntILm8EE> ---
+
+===== Group 25: 2-range input-output algorithms [8MyFatIntILm8EE] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+copy(1S)                            1.01        1.01        1.00      0.623      0.629      0.628
+copy(2S)                            1.00        1.02        1.02      0.622      0.633      0.623
+copy(1+2S)                          1.13        1.13        1.00      0.623      0.701      0.702
+copy_if(1S hit)                     1.05        1.01        0.96      0.567      0.571      0.598
+copy_if(2S hit)                     0.97        1.01        1.04      0.599      0.607      0.582
+copy_if(1+2S hit)                   1.08        1.06        0.99      0.599      0.637      0.646
+copy_if(1S miss)                    1.04        1.50        1.44      0.294      0.441      0.307
+copy_if(2S miss)                    0.96        1.01        1.05      0.302      0.307      0.292
+copy_if(1+2S miss)                  0.97        1.27        1.31      0.319      0.405      0.309
+copy_n(1S)                          1.01        1.00        0.99      0.622      0.622      0.627
+copy_n(2S)                          1.02        1.02        1.00      0.624      0.639      0.639
+copy_n(1+2S)                        1.08        1.04        0.95      0.622      0.644      0.674
+remove_copy(1S hit)                 0.94        0.99        1.06      1.080      1.075      1.013
+remove_copy(2S hit)                 1.10        1.09        1.00      1.039      1.137      1.143
+remove_copy(1+2S hit)               1.05        1.06        1.01      1.084      1.146      1.138
+remove_copy(1S miss)                0.94        0.99        1.06      1.078      1.068      1.012
+remove_copy(2S miss)                1.11        1.10        0.99      1.024      1.125      1.133
+remove_copy(1+2S miss)              1.08        1.04        0.96      1.072      1.113      1.155
+remove_copy_if(1S hit)              1.02        1.15        1.13      0.738      0.846      0.751
+remove_copy_if(2S hit)              1.01        1.09        1.08      0.727      0.795      0.734
+remove_copy_if(1+2S hit)            1.02        1.10        1.08      0.765      0.843      0.781
+remove_copy_if(1S miss)             1.00        1.03        1.04      0.991      1.024      0.987
+remove_copy_if(2S miss)             1.13        1.10        0.97      0.959      1.056      1.089
+remove_copy_if(1+2S miss)           1.12        1.12        1.00      0.980      1.093      1.095
+swap_ranges(1S)                     0.99        0.98        0.99      0.744      0.732      0.738
+swap_ranges(2S)                     0.95        0.94        0.99      0.780      0.736      0.741
+swap_ranges(1+2S)                   1.19        1.19        1.00      0.770      0.920      0.917
+transform(1S)                       1.01        1.01        1.00      0.621      0.630      0.627
+transform(2S)                       1.02        1.02        1.00      0.622      0.633      0.635
+transform(1+2S)                     1.07        1.05        0.98      0.621      0.654      0.664
+-------------------------------------------------------------------------------------------------
+group geomean                       1.03        1.07        1.03       [8MyFatIntILm8EE]
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        1.03        1.07        1.03       [8MyFatIntILm8EE]
+

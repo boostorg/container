@@ -1,0 +1,2 @@
+g++-16 total .text: 2888194
+clang++-22 total .text: 2538512

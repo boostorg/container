@@ -1,0 +1,242 @@
+==================== x86  segmented_set_union_test ====================
+segmented_set_union_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x86  segmented_set_intersection_test ====================
+segmented_set_intersection_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x86  segmented_set_difference_test ====================
+segmented_set_difference_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x86  segmented_set_symmetric_difference_test ====================
+segmented_set_symmetric_difference_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x86  segmented_copy_test ====================
+segmented_copy_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x86  segmented_merge_test ====================
+segmented_merge_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x86  segmented_partition_copy_test ====================
+segmented_partition_copy_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x86  segmented_find_last_test ====================
+segmented_find_last_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x86  segmented_remove_copy_test ====================
+segmented_remove_copy_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x86  segmented_copy_if_test ====================
+segmented_copy_if_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x86  segmented_fill_test ====================
+segmented_fill_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x64  segmented_set_union_test ====================
+segmented_set_union_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x64  segmented_set_intersection_test ====================
+segmented_set_intersection_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x64  segmented_set_difference_test ====================
+segmented_set_difference_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x64  segmented_set_symmetric_difference_test ====================
+segmented_set_symmetric_difference_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x64  segmented_copy_test ====================
+segmented_copy_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x64  segmented_merge_test ====================
+segmented_merge_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x64  segmented_partition_copy_test ====================
+segmented_partition_copy_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x64  segmented_find_last_test ====================
+segmented_find_last_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x64  segmented_remove_copy_test ====================
+segmented_remove_copy_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x64  segmented_copy_if_test ====================
+segmented_copy_if_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+
+==================== x64  segmented_fill_test ====================
+segmented_fill_test.cpp
+cmd.exe : No errors detected.
+En D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g27\prune\275_msvc.ps1: 20 Carácter: 12
++     $out = & cmd /c "`"$script`" $arch $t" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No errors detected.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+RESULT: PASS 
+

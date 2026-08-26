@@ -1,0 +1,69 @@
+﻿=== build+run matrix (variant x test x compiler x std) ===
+  E fill     g++-16        c++03:pass c++11:pass c++17:pass c++20:pass
+  E fill     clang++-22    c++03:pass c++11:pass c++17:pass c++20:pass
+  E count    g++-16        c++03:pass c++11:pass c++17:pass c++20:pass
+  E count    clang++-22    c++03:pass c++11:pass c++17:pass c++20:pass
+  E find     g++-16        c++03:pass c++11:pass c++17:pass c++20:pass
+  E find     clang++-22    c++03:pass c++11:pass c++17:pass c++20:pass
+  E copy     g++-16        c++03:pass c++11:pass c++17:pass c++20:pass
+  E copy     clang++-22    c++03:pass c++11:pass c++17:pass c++20:pass
+  T fill     g++-16        c++03:pass c++11:pass c++17:pass c++20:pass
+  T fill     clang++-22    c++03:pass c++11:pass c++17:pass c++20:pass
+  T count    g++-16        c++03:pass c++11:pass c++17:pass c++20:pass
+  T count    clang++-22    c++03:pass c++11:pass c++17:pass c++20:pass
+  T find     g++-16        c++03:pass c++11:pass c++17:pass c++20:pass
+  T find     clang++-22    c++03:pass c++11:pass c++17:pass c++20:pass
+  T copy     g++-16        c++03:pass c++11:pass c++17:pass c++20:pass
+  T copy     clang++-22    c++03:pass c++11:pass c++17:pass c++20:pass
+  F fill     g++-16        c++03:pass c++11:pass c++17:pass c++20:pass
+  F fill     clang++-22    c++03:pass c++11:pass c++17:pass c++20:pass
+  F count    g++-16        c++03:pass c++11:pass c++17:pass c++20:pass
+  F count    clang++-22    c++03:pass c++11:pass c++17:pass c++20:pass
+  F find     g++-16        c++03:pass c++11:pass c++17:pass c++20:pass
+  F find     clang++-22    c++03:pass c++11:pass c++17:pass c++20:pass
+  F copy     g++-16        c++03:pass c++11:pass c++17:pass c++20:pass
+  F copy     clang++-22    c++03:pass c++11:pass c++17:pass c++20:pass
+  W fill     g++-16        c++03:pass c++11:pass c++17:pass c++20:pass
+  W fill     clang++-22    c++03:pass c++11:pass c++17:pass c++20:pass
+  W count    g++-16        c++03:pass c++11:pass c++17:pass c++20:pass
+  W count    clang++-22    c++03:pass c++11:pass c++17:pass c++20:pass
+  W find     g++-16        c++03:pass c++11:pass c++17:pass c++20:pass
+  W find     clang++-22    c++03:pass c++11:pass c++17:pass c++20:pass
+  W copy     g++-16        c++03:pass c++11:pass c++17:pass c++20:pass
+  W copy     clang++-22    c++03:pass c++11:pass c++17:pass c++20:pass
+
+=== asan+ubsan -O1 c++20 ===
+  E g++-16       fill     clean
+  E g++-16       count    clean
+  E g++-16       find     clean
+  E g++-16       copy     clean
+  E clang++-22   fill     clean
+  E clang++-22   count    clean
+  E clang++-22   find     clean
+  E clang++-22   copy     clean
+  T g++-16       fill     clean
+  T g++-16       count    clean
+  T g++-16       find     clean
+  T g++-16       copy     clean
+  T clang++-22   fill     clean
+  T clang++-22   count    clean
+  T clang++-22   find     clean
+  T clang++-22   copy     clean
+  F g++-16       fill     clean
+  F g++-16       count    clean
+  F g++-16       find     clean
+  F g++-16       copy     clean
+  F clang++-22   fill     clean
+  F clang++-22   count    clean
+  F clang++-22   find     clean
+  F clang++-22   copy     clean
+  W g++-16       fill     clean
+  W g++-16       count    clean
+  W g++-16       find     clean
+  W g++-16       copy     clean
+  W clang++-22   fill     clean
+  W clang++-22   count    clean
+  W clang++-22   find     clean
+  W clang++-22   copy     clean
+
+283: ALL OK

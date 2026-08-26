@@ -1,0 +1,1292 @@
+
+########## ra_onesided_probe.clang.s ##########
+
+===== copy_generic_bounded (simd=True, lines=121) =====
+copy_generic_bounded:                   # @copy_generic_bounded
+	.cfi_startproc
+# %bb.0:
+	cmpq	%rsi, %rdi
+	je	.LBB0_1
+# %bb.3:
+	cmpq	%rcx, %rdx
+	je	.LBB0_1
+# %bb.4:
+	movq	%rcx, %rax
+	subq	%rdx, %rax
+	addq	$-4, %rax
+	shrq	$2, %rax
+	movq	%rsi, %r8
+	subq	%rdi, %r8
+	addq	$-4, %r8
+	shrq	$2, %r8
+	cmpq	%r8, %rax
+	cmovbq	%rax, %r8
+	cmpq	$19, %r8
+	jb	.LBB0_5
+# %bb.6:
+	movl	%esi, %eax
+	subl	%edi, %eax
+	movl	%ecx, %r9d
+	subl	%edx, %r9d
+	orl	%eax, %r9d
+	testb	$3, %r9b
+	setne	%al
+	movq	%rdx, %r9
+	subq	%rdi, %r9
+	cmpq	$32, %r9
+	setb	%r9b
+	orb	%al, %r9b
+	je	.LBB0_7
+.LBB0_5:
+	movq	%rdi, %r9
+	movq	%rdx, %rax
+.LBB0_10:
+	addq	$4, %r9
+	.p2align	4
+.LBB0_11:                               # =>This Inner Loop Header: Depth=1
+	movl	-4(%r9), %edx
+	movl	%edx, (%rax)
+	addq	$4, %rax
+	cmpq	%rsi, %r9
+	je	.LBB0_2
+# %bb.12:                               #   in Loop: Header=BB0_11 Depth=1
+	addq	$4, %r9
+	cmpq	%rcx, %rax
+	jne	.LBB0_11
+.LBB0_2:
+	retq
+.LBB0_1:
+	movq	%rdx, %rax
+	retq
+.LBB0_7:
+	incq	%r8
+	movq	%r8, %r10
+	andq	$-8, %r10
+	leaq	(%rdi,%r10,4), %r9
+	leaq	(%rdx,%r10,4), %rax
+	xorl	%r11d, %r11d
+	.p2align	4
+.LBB0_8:                                # =>This Inner Loop Header: Depth=1
+	movups	(%rdi,%r11,4), %xmm0
+	movups	16(%rdi,%r11,4), %xmm1
+	movups	%xmm0, (%rdx,%r11,4)
+	movups	%xmm1, 16(%rdx,%r11,4)
+	addq	$8, %r11
+	cmpq	%r11, %r10
+	jne	.LBB0_8
+# %bb.9:
+	cmpq	%r10, %r8
+	jne	.LBB0_10
+	jmp	.LBB0_2
+.Lfunc_end0:
+	.size	copy_generic_bounded, .Lfunc_end0-copy_generic_bounded
+	.cfi_endproc
+                                        # -- End function
+	.globl	copy_both_ra                    # -- Begin function copy_both_ra
+	.p2align	4
+	.type	copy_both_ra,@function
+copy_both_ra:                           # @copy_both_ra
+	.cfi_startproc
+# %bb.0:
+	subq	%rdi, %rsi
+	sarq	$2, %rsi
+	subq	%rdx, %rcx
+	sarq	$2, %rcx
+
+===== copy_both_ra (simd=True, lines=121) =====
+copy_both_ra:                           # @copy_both_ra
+	.cfi_startproc
+# %bb.0:
+	subq	%rdi, %rsi
+	sarq	$2, %rsi
+	subq	%rdx, %rcx
+	sarq	$2, %rcx
+	cmpq	%rcx, %rsi
+	cmovlq	%rsi, %rcx
+	testq	%rcx, %rcx
+	je	.LBB1_1
+# %bb.3:
+	leaq	(,%rcx,4), %r8
+	addq	$-4, %r8
+	cmpq	$28, %r8
+	setb	%al
+	movq	%rdx, %rsi
+	subq	%rdi, %rsi
+	cmpq	$32, %rsi
+	setb	%sil
+	orb	%al, %sil
+	je	.LBB1_5
+# %bb.4:
+	movq	%rdi, %rsi
+	movq	%rdx, %rax
+	jmp	.LBB1_8
+.LBB1_1:
+	movq	%rdx, %rax
+	retq
+.LBB1_5:
+	shrq	$2, %r8
+	incq	%r8
+	movq	%r8, %r9
+	andq	$-8, %r9
+	leaq	(%rdi,%r9,4), %rsi
+	leaq	(%rdx,%r9,4), %rax
+	xorl	%r10d, %r10d
+	.p2align	4
+.LBB1_6:                                # =>This Inner Loop Header: Depth=1
+	movups	(%rdi,%r10,4), %xmm0
+	movups	16(%rdi,%r10,4), %xmm1
+	movups	%xmm0, (%rdx,%r10,4)
+	movups	%xmm1, 16(%rdx,%r10,4)
+	addq	$8, %r10
+	cmpq	%r10, %r9
+	jne	.LBB1_6
+# %bb.7:
+	cmpq	%r9, %r8
+	je	.LBB1_2
+.LBB1_8:
+	leaq	(%rdi,%rcx,4), %rcx
+	.p2align	4
+.LBB1_9:                                # =>This Inner Loop Header: Depth=1
+	movl	(%rsi), %edx
+	movl	%edx, (%rax)
+	addq	$4, %rsi
+	addq	$4, %rax
+	cmpq	%rcx, %rsi
+	jne	.LBB1_9
+.LBB1_2:
+	retq
+.Lfunc_end1:
+	.size	copy_both_ra, .Lfunc_end1-copy_both_ra
+	.cfi_endproc
+                                        # -- End function
+	.globl	copy_ra_dst_only                # -- Begin function copy_ra_dst_only
+	.p2align	4
+	.type	copy_ra_dst_only,@function
+copy_ra_dst_only:                       # @copy_ra_dst_only
+	.cfi_startproc
+# %bb.0:
+	subq	%rdx, %rcx
+	setne	%al
+	cmpq	%rsi, %rdi
+	setne	%r8b
+	andb	%al, %r8b
+	cmpb	$1, %r8b
+	jne	.LBB2_1
+# %bb.3:
+	sarq	$2, %rcx
+	movq	%rsi, %r9
+	subq	%rdi, %r9
+	addq	$-4, %r9
+	shrq	$2, %r9
+	leaq	-1(%rcx), %rax
+	cmpq	%rax, %r9
+	cmovaeq	%rax, %r9
+	cmpq	$11, %r9
+	jb	.LBB2_4
+# %bb.5:
+
+===== copy_ra_dst_only (simd=True, lines=121) =====
+copy_ra_dst_only:                       # @copy_ra_dst_only
+	.cfi_startproc
+# %bb.0:
+	subq	%rdx, %rcx
+	setne	%al
+	cmpq	%rsi, %rdi
+	setne	%r8b
+	andb	%al, %r8b
+	cmpb	$1, %r8b
+	jne	.LBB2_1
+# %bb.3:
+	sarq	$2, %rcx
+	movq	%rsi, %r9
+	subq	%rdi, %r9
+	addq	$-4, %r9
+	shrq	$2, %r9
+	leaq	-1(%rcx), %rax
+	cmpq	%rax, %r9
+	cmovaeq	%rax, %r9
+	cmpq	$11, %r9
+	jb	.LBB2_4
+# %bb.5:
+	movl	%esi, %eax
+	subl	%edi, %eax
+	testb	$3, %al
+	setne	%al
+	movq	%rdx, %r8
+	subq	%rdi, %r8
+	cmpq	$32, %r8
+	setb	%r8b
+	orb	%al, %r8b
+	je	.LBB2_6
+.LBB2_4:
+	movq	%rdx, %rax
+	movq	%rdi, %r8
+.LBB2_9:
+	decq	%rcx
+	addq	$4, %r8
+	.p2align	4
+.LBB2_10:                               # =>This Inner Loop Header: Depth=1
+	movl	-4(%r8), %edx
+	movl	%edx, (%rax)
+	addq	$4, %rax
+	addq	$-1, %rcx
+	jae	.LBB2_2
+# %bb.11:                               #   in Loop: Header=BB2_10 Depth=1
+	cmpq	%rsi, %r8
+	leaq	4(%r8), %r8
+	jne	.LBB2_10
+.LBB2_2:
+	retq
+.LBB2_1:
+	movq	%rdx, %rax
+	retq
+.LBB2_6:
+	incq	%r9
+	movabsq	$9223372036854775800, %r10      # imm = 0x7FFFFFFFFFFFFFF8
+	andq	%r9, %r10
+	leaq	(%rdx,%r10,4), %rax
+	subq	%r10, %rcx
+	leaq	(%rdi,%r10,4), %r8
+	xorl	%r11d, %r11d
+	.p2align	4
+.LBB2_7:                                # =>This Inner Loop Header: Depth=1
+	movups	(%rdi,%r11,4), %xmm0
+	movups	16(%rdi,%r11,4), %xmm1
+	movups	%xmm0, (%rdx,%r11,4)
+	movups	%xmm1, 16(%rdx,%r11,4)
+	addq	$8, %r11
+	cmpq	%r11, %r10
+	jne	.LBB2_7
+# %bb.8:
+	cmpq	%r10, %r9
+	jne	.LBB2_9
+	jmp	.LBB2_2
+.Lfunc_end2:
+	.size	copy_ra_dst_only, .Lfunc_end2-copy_ra_dst_only
+	.cfi_endproc
+                                        # -- End function
+	.globl	copy_ra_src_only_bounded        # -- Begin function copy_ra_src_only_bounded
+	.p2align	4
+	.type	copy_ra_src_only_bounded,@function
+copy_ra_src_only_bounded:               # @copy_ra_src_only_bounded
+	.cfi_startproc
+# %bb.0:
+	subq	%rdi, %rsi
+	setne	%al
+	cmpq	%rcx, %rdx
+	setne	%r8b
+	andb	%al, %r8b
+
+===== copy_ra_src_only_bounded (simd=True, lines=121) =====
+copy_ra_src_only_bounded:               # @copy_ra_src_only_bounded
+	.cfi_startproc
+# %bb.0:
+	subq	%rdi, %rsi
+	setne	%al
+	cmpq	%rcx, %rdx
+	setne	%r8b
+	andb	%al, %r8b
+	cmpb	$1, %r8b
+	jne	.LBB3_1
+# %bb.3:
+	sarq	$2, %rsi
+	movq	%rcx, %r9
+	subq	%rdx, %r9
+	addq	$-4, %r9
+	shrq	$2, %r9
+	leaq	-1(%rsi), %rax
+	cmpq	%rax, %r9
+	cmovaeq	%rax, %r9
+	cmpq	$11, %r9
+	jb	.LBB3_4
+# %bb.5:
+	movl	%ecx, %eax
+	subl	%edx, %eax
+	testb	$3, %al
+	setne	%al
+	movq	%rdx, %r8
+	subq	%rdi, %r8
+	cmpq	$32, %r8
+	setb	%r8b
+	orb	%al, %r8b
+	je	.LBB3_6
+.LBB3_4:
+	movq	%rdi, %r8
+	movq	%rdx, %rax
+.LBB3_9:
+	decq	%rsi
+	.p2align	4
+.LBB3_10:                               # =>This Inner Loop Header: Depth=1
+	movl	(%r8), %edx
+	movl	%edx, (%rax)
+	addq	$4, %rax
+	addq	$-1, %rsi
+	jae	.LBB3_2
+# %bb.11:                               #   in Loop: Header=BB3_10 Depth=1
+	addq	$4, %r8
+	cmpq	%rcx, %rax
+	jne	.LBB3_10
+.LBB3_2:
+	retq
+.LBB3_1:
+	movq	%rdx, %rax
+	retq
+.LBB3_6:
+	incq	%r9
+	movabsq	$9223372036854775800, %r10      # imm = 0x7FFFFFFFFFFFFFF8
+	andq	%r9, %r10
+	leaq	(%rdi,%r10,4), %r8
+	subq	%r10, %rsi
+	leaq	(%rdx,%r10,4), %rax
+	xorl	%r11d, %r11d
+	.p2align	4
+.LBB3_7:                                # =>This Inner Loop Header: Depth=1
+	movups	(%rdi,%r11,4), %xmm0
+	movups	16(%rdi,%r11,4), %xmm1
+	movups	%xmm0, (%rdx,%r11,4)
+	movups	%xmm1, 16(%rdx,%r11,4)
+	addq	$8, %r11
+	cmpq	%r11, %r10
+	jne	.LBB3_7
+# %bb.8:
+	cmpq	%r10, %r9
+	jne	.LBB3_9
+	jmp	.LBB3_2
+.Lfunc_end3:
+	.size	copy_ra_src_only_bounded, .Lfunc_end3-copy_ra_src_only_bounded
+	.cfi_endproc
+                                        # -- End function
+	.globl	copy_ra_src_unbounded           # -- Begin function copy_ra_src_unbounded
+	.p2align	4
+	.type	copy_ra_src_unbounded,@function
+copy_ra_src_unbounded:                  # @copy_ra_src_unbounded
+	.cfi_startproc
+# %bb.0:
+	cmpq	%rsi, %rdi
+	je	.LBB4_1
+# %bb.3:
+	movq	%rsi, %r8
+	subq	%rdi, %r8
+	addq	$-4, %r8
+
+===== copy_ra_src_unbounded (simd=True, lines=121) =====
+copy_ra_src_unbounded:                  # @copy_ra_src_unbounded
+	.cfi_startproc
+# %bb.0:
+	cmpq	%rsi, %rdi
+	je	.LBB4_1
+# %bb.3:
+	movq	%rsi, %r8
+	subq	%rdi, %r8
+	addq	$-4, %r8
+	cmpq	$28, %r8
+	setb	%al
+	movq	%rdx, %rcx
+	subq	%rdi, %rcx
+	cmpq	$32, %rcx
+	setb	%cl
+	orb	%al, %cl
+	je	.LBB4_5
+# %bb.4:
+	movq	%rdx, %rax
+	movq	%rdi, %rcx
+	jmp	.LBB4_8
+.LBB4_1:
+	movq	%rdx, %rax
+	retq
+.LBB4_5:
+	shrq	$2, %r8
+	incq	%r8
+	movq	%r8, %r9
+	andq	$-8, %r9
+	leaq	(%rdx,%r9,4), %rax
+	leaq	(%rdi,%r9,4), %rcx
+	xorl	%r10d, %r10d
+	.p2align	4
+.LBB4_6:                                # =>This Inner Loop Header: Depth=1
+	movups	(%rdi,%r10,4), %xmm0
+	movups	16(%rdi,%r10,4), %xmm1
+	movups	%xmm0, (%rdx,%r10,4)
+	movups	%xmm1, 16(%rdx,%r10,4)
+	addq	$8, %r10
+	cmpq	%r10, %r9
+	jne	.LBB4_6
+# %bb.7:
+	cmpq	%r9, %r8
+	je	.LBB4_2
+	.p2align	4
+.LBB4_8:                                # =>This Inner Loop Header: Depth=1
+	movl	(%rcx), %edx
+	movl	%edx, (%rax)
+	addq	$4, %rcx
+	addq	$4, %rax
+	cmpq	%rsi, %rcx
+	jne	.LBB4_8
+.LBB4_2:
+	retq
+.Lfunc_end4:
+	.size	copy_ra_src_unbounded, .Lfunc_end4-copy_ra_src_unbounded
+	.cfi_endproc
+                                        # -- End function
+	.globl	copy_ra_src_counted             # -- Begin function copy_ra_src_counted
+	.p2align	4
+	.type	copy_ra_src_counted,@function
+copy_ra_src_counted:                    # @copy_ra_src_counted
+	.cfi_startproc
+# %bb.0:
+	subq	%rdi, %rsi
+	je	.LBB5_1
+# %bb.3:
+	sarq	$2, %rsi
+	cmpq	$8, %rsi
+	setb	%al
+	movq	%rdx, %rcx
+	subq	%rdi, %rcx
+	cmpq	$32, %rcx
+	setb	%cl
+	orb	%al, %cl
+	je	.LBB5_5
+# %bb.4:
+	movq	%rsi, %rcx
+	movq	%rdx, %rax
+	movq	%rdi, %r8
+	jmp	.LBB5_8
+.LBB5_1:
+	movq	%rdx, %rax
+	retq
+.LBB5_5:
+	movq	%rsi, %r9
+	andq	$-8, %r9
+	movl	%esi, %ecx
+	andl	$7, %ecx
+	leaq	(%rdx,%r9,4), %rax
+
+===== copy_ra_src_counted (simd=True, lines=121) =====
+copy_ra_src_counted:                    # @copy_ra_src_counted
+	.cfi_startproc
+# %bb.0:
+	subq	%rdi, %rsi
+	je	.LBB5_1
+# %bb.3:
+	sarq	$2, %rsi
+	cmpq	$8, %rsi
+	setb	%al
+	movq	%rdx, %rcx
+	subq	%rdi, %rcx
+	cmpq	$32, %rcx
+	setb	%cl
+	orb	%al, %cl
+	je	.LBB5_5
+# %bb.4:
+	movq	%rsi, %rcx
+	movq	%rdx, %rax
+	movq	%rdi, %r8
+	jmp	.LBB5_8
+.LBB5_1:
+	movq	%rdx, %rax
+	retq
+.LBB5_5:
+	movq	%rsi, %r9
+	andq	$-8, %r9
+	movl	%esi, %ecx
+	andl	$7, %ecx
+	leaq	(%rdx,%r9,4), %rax
+	leaq	(%rdi,%r9,4), %r8
+	xorl	%r10d, %r10d
+	.p2align	4
+.LBB5_6:                                # =>This Inner Loop Header: Depth=1
+	movups	(%rdi,%r10,4), %xmm0
+	movups	16(%rdi,%r10,4), %xmm1
+	movups	%xmm0, (%rdx,%r10,4)
+	movups	%xmm1, 16(%rdx,%r10,4)
+	addq	$8, %r10
+	cmpq	%r10, %r9
+	jne	.LBB5_6
+# %bb.7:
+	cmpq	%r9, %rsi
+	je	.LBB5_2
+.LBB5_8:
+	leaq	-1(%rcx), %rdx
+	movq	%rcx, %rsi
+	andq	$7, %rsi
+	je	.LBB5_12
+# %bb.9:
+	xorl	%edi, %edi
+	.p2align	4
+.LBB5_10:                               # =>This Inner Loop Header: Depth=1
+	movl	(%r8), %r9d
+	movl	%r9d, (%rax)
+	addq	$4, %r8
+	addq	$4, %rax
+	incq	%rdi
+	cmpq	%rdi, %rsi
+	jne	.LBB5_10
+# %bb.11:
+	subq	%rdi, %rcx
+.LBB5_12:
+	cmpq	$7, %rdx
+	jb	.LBB5_2
+# %bb.13:
+	xorl	%edx, %edx
+	.p2align	4
+.LBB5_14:                               # =>This Inner Loop Header: Depth=1
+	movl	(%r8,%rdx,4), %esi
+	movl	%esi, (%rax)
+	movl	4(%r8,%rdx,4), %esi
+	movl	%esi, 4(%rax)
+	movl	8(%r8,%rdx,4), %esi
+	movl	%esi, 8(%rax)
+	movl	12(%r8,%rdx,4), %esi
+	movl	%esi, 12(%rax)
+	movl	16(%r8,%rdx,4), %esi
+	movl	%esi, 16(%rax)
+	movl	20(%r8,%rdx,4), %esi
+	movl	%esi, 20(%rax)
+	movl	24(%r8,%rdx,4), %esi
+	movl	%esi, 24(%rax)
+	movl	28(%r8,%rdx,4), %esi
+	movl	%esi, 28(%rax)
+	addq	$32, %rax
+	addq	$8, %rdx
+	cmpq	%rdx, %rcx
+	jne	.LBB5_14
+.LBB5_2:
+	retq
+
+===== copy_if_generic (simd=False, lines=121) =====
+copy_if_generic:                        # @copy_if_generic
+	.cfi_startproc
+# %bb.0:
+	movq	%rdx, %rax
+	cmpq	%rcx, %rdx
+	jne	.LBB6_1
+	jmp	.LBB6_5
+	.p2align	4
+.LBB6_4:                                #   in Loop: Header=BB6_1 Depth=1
+	addq	$4, %rdi
+.LBB6_1:                                # =>This Inner Loop Header: Depth=1
+	cmpq	%rsi, %rdi
+	je	.LBB6_5
+# %bb.2:                                #   in Loop: Header=BB6_1 Depth=1
+	movl	(%rdi), %edx
+	testb	$1, %dl
+	je	.LBB6_4
+# %bb.3:                                #   in Loop: Header=BB6_1 Depth=1
+	movl	%edx, (%rax)
+	addq	$4, %rax
+	cmpq	%rcx, %rax
+	jne	.LBB6_4
+.LBB6_5:
+	retq
+.Lfunc_end6:
+	.size	copy_if_generic, .Lfunc_end6-copy_if_generic
+	.cfi_endproc
+                                        # -- End function
+	.globl	copy_if_both_ra                 # -- Begin function copy_if_both_ra
+	.p2align	4
+	.type	copy_if_both_ra,@function
+copy_if_both_ra:                        # @copy_if_both_ra
+	.cfi_startproc
+# %bb.0:
+	movq	%rdx, %rax
+	cmpq	%rcx, %rdx
+	je	.LBB7_43
+# %bb.1:
+	subq	%rdi, %rsi
+	sarq	$2, %rsi
+	cmpq	$16, %rsi
+	setl	%dl
+	movq	%rcx, %r8
+	subq	%rax, %r8
+	cmpq	$61, %r8
+	setl	%r8b
+	orb	%dl, %r8b
+	jne	.LBB7_2
+	.p2align	4
+.LBB7_3:                                # =>This Inner Loop Header: Depth=1
+	movl	(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_4
+# %bb.5:                                #   in Loop: Header=BB7_3 Depth=1
+	movl	4(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_6
+.LBB7_7:                                #   in Loop: Header=BB7_3 Depth=1
+	movl	8(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_8
+.LBB7_9:                                #   in Loop: Header=BB7_3 Depth=1
+	movl	12(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_10
+.LBB7_11:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	16(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_12
+.LBB7_13:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	20(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_14
+.LBB7_15:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	24(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_16
+.LBB7_17:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	28(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_18
+.LBB7_19:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	32(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_20
+.LBB7_21:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	36(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_22
+.LBB7_23:                               #   in Loop: Header=BB7_3 Depth=1
+
+===== copy_if_both_ra (simd=False, lines=121) =====
+copy_if_both_ra:                        # @copy_if_both_ra
+	.cfi_startproc
+# %bb.0:
+	movq	%rdx, %rax
+	cmpq	%rcx, %rdx
+	je	.LBB7_43
+# %bb.1:
+	subq	%rdi, %rsi
+	sarq	$2, %rsi
+	cmpq	$16, %rsi
+	setl	%dl
+	movq	%rcx, %r8
+	subq	%rax, %r8
+	cmpq	$61, %r8
+	setl	%r8b
+	orb	%dl, %r8b
+	jne	.LBB7_2
+	.p2align	4
+.LBB7_3:                                # =>This Inner Loop Header: Depth=1
+	movl	(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_4
+# %bb.5:                                #   in Loop: Header=BB7_3 Depth=1
+	movl	4(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_6
+.LBB7_7:                                #   in Loop: Header=BB7_3 Depth=1
+	movl	8(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_8
+.LBB7_9:                                #   in Loop: Header=BB7_3 Depth=1
+	movl	12(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_10
+.LBB7_11:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	16(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_12
+.LBB7_13:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	20(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_14
+.LBB7_15:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	24(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_16
+.LBB7_17:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	28(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_18
+.LBB7_19:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	32(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_20
+.LBB7_21:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	36(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_22
+.LBB7_23:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	40(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_24
+.LBB7_25:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	44(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_26
+.LBB7_27:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	48(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_28
+.LBB7_29:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	52(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_30
+.LBB7_31:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	56(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_32
+.LBB7_33:                               #   in Loop: Header=BB7_3 Depth=1
+	movl	60(%rdi), %edx
+	testb	$1, %dl
+	jne	.LBB7_34
+.LBB7_35:                               #   in Loop: Header=BB7_3 Depth=1
+	addq	$64, %rdi
+	leaq	-16(%rsi), %rdx
+	cmpq	$32, %rsi
+	jge	.LBB7_36
+	jmp	.LBB7_37
+	.p2align	4
+.LBB7_4:                                #   in Loop: Header=BB7_3 Depth=1
+
+===== copy_if_ra_dst_only (simd=False, lines=121) =====
+copy_if_ra_dst_only:                    # @copy_if_ra_dst_only
+	.cfi_startproc
+# %bb.0:
+	movq	%rdx, %rax
+	cmpq	%rcx, %rdx
+	jne	.LBB8_1
+.LBB8_9:
+	retq
+	.p2align	4
+.LBB8_8:                                #   in Loop: Header=BB8_1 Depth=1
+	cmpq	%rsi, %rdi
+	je	.LBB8_9
+.LBB8_1:                                # =>This Loop Header: Depth=1
+                                        #     Child Loop BB8_4 Depth 2
+	movq	%rcx, %rdx
+	subq	%rax, %rdx
+	cmpq	$61, %rdx
+	jl	.LBB8_10
+# %bb.2:                                #   in Loop: Header=BB8_1 Depth=1
+	cmpq	%rsi, %rdi
+	je	.LBB8_10
+# %bb.3:                                #   in Loop: Header=BB8_1 Depth=1
+	movl	$60, %edx
+	.p2align	4
+.LBB8_4:                                #   Parent Loop BB8_1 Depth=1
+                                        # =>  This Inner Loop Header: Depth=2
+	movl	(%rdi), %r8d
+	testb	$1, %r8b
+	je	.LBB8_6
+# %bb.5:                                #   in Loop: Header=BB8_4 Depth=2
+	movl	%r8d, (%rax)
+	addq	$4, %rax
+.LBB8_6:                                #   in Loop: Header=BB8_4 Depth=2
+	addq	$4, %rdi
+	testq	%rdx, %rdx
+	je	.LBB8_8
+# %bb.7:                                #   in Loop: Header=BB8_4 Depth=2
+	addq	$-4, %rdx
+	cmpq	%rsi, %rdi
+	jne	.LBB8_4
+	jmp	.LBB8_8
+.LBB8_10:
+	cmpq	%rcx, %rax
+	jne	.LBB8_11
+	jmp	.LBB8_9
+	.p2align	4
+.LBB8_14:                               #   in Loop: Header=BB8_11 Depth=1
+	addq	$4, %rdi
+.LBB8_11:                               # =>This Inner Loop Header: Depth=1
+	cmpq	%rsi, %rdi
+	je	.LBB8_9
+# %bb.12:                               #   in Loop: Header=BB8_11 Depth=1
+	movl	(%rdi), %edx
+	testb	$1, %dl
+	je	.LBB8_14
+# %bb.13:                               #   in Loop: Header=BB8_11 Depth=1
+	movl	%edx, (%rax)
+	addq	$4, %rax
+	cmpq	%rcx, %rax
+	jne	.LBB8_14
+	jmp	.LBB8_9
+.Lfunc_end8:
+	.size	copy_if_ra_dst_only, .Lfunc_end8-copy_if_ra_dst_only
+	.cfi_endproc
+                                        # -- End function
+	.globl	copy_if_ra_src_unbounded        # -- Begin function copy_if_ra_src_unbounded
+	.p2align	4
+	.type	copy_if_ra_src_unbounded,@function
+copy_if_ra_src_unbounded:               # @copy_if_ra_src_unbounded
+	.cfi_startproc
+# %bb.0:
+	movq	%rdx, %rax
+	subq	%rdi, %rsi
+	je	.LBB9_12
+# %bb.1:
+	movq	%rsi, %rcx
+	sarq	$2, %rcx
+	testb	$4, %sil
+	je	.LBB9_5
+# %bb.2:
+	movl	(%rdi), %edx
+	testb	$1, %dl
+	je	.LBB9_4
+# %bb.3:
+	movl	%edx, (%rax)
+	addq	$4, %rax
+.LBB9_4:
+	decq	%rcx
+	addq	$4, %rdi
+.LBB9_5:
+
+===== copy_if_ra_src_unbounded (simd=False, lines=121) =====
+copy_if_ra_src_unbounded:               # @copy_if_ra_src_unbounded
+	.cfi_startproc
+# %bb.0:
+	movq	%rdx, %rax
+	subq	%rdi, %rsi
+	je	.LBB9_12
+# %bb.1:
+	movq	%rsi, %rcx
+	sarq	$2, %rcx
+	testb	$4, %sil
+	je	.LBB9_5
+# %bb.2:
+	movl	(%rdi), %edx
+	testb	$1, %dl
+	je	.LBB9_4
+# %bb.3:
+	movl	%edx, (%rax)
+	addq	$4, %rax
+.LBB9_4:
+	decq	%rcx
+	addq	$4, %rdi
+.LBB9_5:
+	cmpq	$4, %rsi
+	jne	.LBB9_6
+.LBB9_12:
+	retq
+.LBB9_6:
+	xorl	%edx, %edx
+	jmp	.LBB9_7
+	.p2align	4
+.LBB9_11:                               #   in Loop: Header=BB9_7 Depth=1
+	addq	$2, %rdx
+	cmpq	%rdx, %rcx
+	je	.LBB9_12
+.LBB9_7:                                # =>This Inner Loop Header: Depth=1
+	movl	(%rdi,%rdx,4), %esi
+	testb	$1, %sil
+	jne	.LBB9_8
+# %bb.9:                                #   in Loop: Header=BB9_7 Depth=1
+	movl	4(%rdi,%rdx,4), %esi
+	testb	$1, %sil
+	je	.LBB9_11
+	jmp	.LBB9_10
+	.p2align	4
+.LBB9_8:                                #   in Loop: Header=BB9_7 Depth=1
+	movl	%esi, (%rax)
+	addq	$4, %rax
+	movl	4(%rdi,%rdx,4), %esi
+	testb	$1, %sil
+	je	.LBB9_11
+.LBB9_10:                               #   in Loop: Header=BB9_7 Depth=1
+	movl	%esi, (%rax)
+	addq	$4, %rax
+	jmp	.LBB9_11
+.Lfunc_end9:
+	.size	copy_if_ra_src_unbounded, .Lfunc_end9-copy_if_ra_src_unbounded
+	.cfi_endproc
+                                        # -- End function
+	.globl	equal_generic                   # -- Begin function equal_generic
+	.p2align	4
+	.type	equal_generic,@function
+equal_generic:                          # @equal_generic
+	.cfi_startproc
+# %bb.0:
+	cmpq	%rsi, %rdi
+	sete	%al
+	je	.LBB10_7
+# %bb.1:
+	cmpq	%rcx, %rdx
+	je	.LBB10_7
+# %bb.2:
+	addq	$4, %rdx
+	addq	$4, %rdi
+	.p2align	4
+.LBB10_3:                               # =>This Inner Loop Header: Depth=1
+	movl	-4(%rdi), %eax
+	cmpl	-4(%rdx), %eax
+	jne	.LBB10_4
+# %bb.5:                                #   in Loop: Header=BB10_3 Depth=1
+	cmpq	%rsi, %rdi
+	sete	%al
+	je	.LBB10_7
+# %bb.6:                                #   in Loop: Header=BB10_3 Depth=1
+	addq	$4, %rdi
+	cmpq	%rcx, %rdx
+	leaq	4(%rdx), %rdx
+	jne	.LBB10_3
+.LBB10_7:
+                                        # kill: def $al killed $al killed $eax
+	retq
+
+===== equal_generic (simd=False, lines=121) =====
+equal_generic:                          # @equal_generic
+	.cfi_startproc
+# %bb.0:
+	cmpq	%rsi, %rdi
+	sete	%al
+	je	.LBB10_7
+# %bb.1:
+	cmpq	%rcx, %rdx
+	je	.LBB10_7
+# %bb.2:
+	addq	$4, %rdx
+	addq	$4, %rdi
+	.p2align	4
+.LBB10_3:                               # =>This Inner Loop Header: Depth=1
+	movl	-4(%rdi), %eax
+	cmpl	-4(%rdx), %eax
+	jne	.LBB10_4
+# %bb.5:                                #   in Loop: Header=BB10_3 Depth=1
+	cmpq	%rsi, %rdi
+	sete	%al
+	je	.LBB10_7
+# %bb.6:                                #   in Loop: Header=BB10_3 Depth=1
+	addq	$4, %rdi
+	cmpq	%rcx, %rdx
+	leaq	4(%rdx), %rdx
+	jne	.LBB10_3
+.LBB10_7:
+                                        # kill: def $al killed $al killed $eax
+	retq
+.LBB10_4:
+	xorl	%eax, %eax
+                                        # kill: def $al killed $al killed $eax
+	retq
+.Lfunc_end10:
+	.size	equal_generic, .Lfunc_end10-equal_generic
+	.cfi_endproc
+                                        # -- End function
+	.globl	equal_both_ra                   # -- Begin function equal_both_ra
+	.p2align	4
+	.type	equal_both_ra,@function
+equal_both_ra:                          # @equal_both_ra
+	.cfi_startproc
+# %bb.0:
+	movq	%rsi, %rax
+	subq	%rdi, %rax
+	sarq	$2, %rax
+	subq	%rdx, %rcx
+	sarq	$2, %rcx
+	cmpq	%rcx, %rax
+	cmovlq	%rax, %rcx
+	testq	%rcx, %rcx
+	je	.LBB11_6
+# %bb.1:
+	leaq	(%rdi,%rcx,4), %rax
+	shlq	$2, %rcx
+	xorl	%r8d, %r8d
+	.p2align	4
+.LBB11_2:                               # =>This Inner Loop Header: Depth=1
+	movl	(%rdi,%r8), %r9d
+	cmpl	(%rdx,%r8), %r9d
+	jne	.LBB11_3
+# %bb.4:                                #   in Loop: Header=BB11_2 Depth=1
+	addq	$4, %r8
+	cmpq	%r8, %rcx
+	jne	.LBB11_2
+# %bb.5:
+	movq	%rax, %rdi
+.LBB11_6:
+	cmpq	%rsi, %rdi
+	sete	%al
+                                        # kill: def $al killed $al killed $eax
+	retq
+.LBB11_3:
+	xorl	%eax, %eax
+                                        # kill: def $al killed $al killed $eax
+	retq
+.Lfunc_end11:
+	.size	equal_both_ra, .Lfunc_end11-equal_both_ra
+	.cfi_endproc
+                                        # -- End function
+	.globl	equal_ra_src_only               # -- Begin function equal_ra_src_only
+	.p2align	4
+	.type	equal_ra_src_only,@function
+equal_ra_src_only:                      # @equal_ra_src_only
+	.cfi_startproc
+# %bb.0:
+	subq	%rdi, %rsi
+	sete	%al
+	je	.LBB12_7
+# %bb.1:
+
+===== equal_both_ra (simd=False, lines=121) =====
+equal_both_ra:                          # @equal_both_ra
+	.cfi_startproc
+# %bb.0:
+	movq	%rsi, %rax
+	subq	%rdi, %rax
+	sarq	$2, %rax
+	subq	%rdx, %rcx
+	sarq	$2, %rcx
+	cmpq	%rcx, %rax
+	cmovlq	%rax, %rcx
+	testq	%rcx, %rcx
+	je	.LBB11_6
+# %bb.1:
+	leaq	(%rdi,%rcx,4), %rax
+	shlq	$2, %rcx
+	xorl	%r8d, %r8d
+	.p2align	4
+.LBB11_2:                               # =>This Inner Loop Header: Depth=1
+	movl	(%rdi,%r8), %r9d
+	cmpl	(%rdx,%r8), %r9d
+	jne	.LBB11_3
+# %bb.4:                                #   in Loop: Header=BB11_2 Depth=1
+	addq	$4, %r8
+	cmpq	%r8, %rcx
+	jne	.LBB11_2
+# %bb.5:
+	movq	%rax, %rdi
+.LBB11_6:
+	cmpq	%rsi, %rdi
+	sete	%al
+                                        # kill: def $al killed $al killed $eax
+	retq
+.LBB11_3:
+	xorl	%eax, %eax
+                                        # kill: def $al killed $al killed $eax
+	retq
+.Lfunc_end11:
+	.size	equal_both_ra, .Lfunc_end11-equal_both_ra
+	.cfi_endproc
+                                        # -- End function
+	.globl	equal_ra_src_only               # -- Begin function equal_ra_src_only
+	.p2align	4
+	.type	equal_ra_src_only,@function
+equal_ra_src_only:                      # @equal_ra_src_only
+	.cfi_startproc
+# %bb.0:
+	subq	%rdi, %rsi
+	sete	%al
+	je	.LBB12_7
+# %bb.1:
+	cmpq	%rcx, %rdx
+	je	.LBB12_7
+# %bb.2:
+	sarq	$2, %rsi
+	decq	%rsi
+	addq	$4, %rdx
+	.p2align	4
+.LBB12_3:                               # =>This Inner Loop Header: Depth=1
+	movl	(%rdi), %eax
+	cmpl	-4(%rdx), %eax
+	jne	.LBB12_4
+# %bb.5:                                #   in Loop: Header=BB12_3 Depth=1
+	subq	$1, %rsi
+	setb	%al
+	jb	.LBB12_7
+# %bb.6:                                #   in Loop: Header=BB12_3 Depth=1
+	addq	$4, %rdi
+	cmpq	%rcx, %rdx
+	leaq	4(%rdx), %rdx
+	jne	.LBB12_3
+.LBB12_7:
+                                        # kill: def $al killed $al killed $eax
+	retq
+.LBB12_4:
+	xorl	%eax, %eax
+                                        # kill: def $al killed $al killed $eax
+	retq
+.Lfunc_end12:
+	.size	equal_ra_src_only, .Lfunc_end12-equal_ra_src_only
+	.cfi_endproc
+                                        # -- End function
+	.globl	equal_ra_dst_only               # -- Begin function equal_ra_dst_only
+	.p2align	4
+	.type	equal_ra_dst_only,@function
+equal_ra_dst_only:                      # @equal_ra_dst_only
+	.cfi_startproc
+# %bb.0:
+	subq	%rdx, %rcx
+	setne	%al
+	cmpq	%rsi, %rdi
+
+===== equal_ra_src_only (simd=False, lines=121) =====
+equal_ra_src_only:                      # @equal_ra_src_only
+	.cfi_startproc
+# %bb.0:
+	subq	%rdi, %rsi
+	sete	%al
+	je	.LBB12_7
+# %bb.1:
+	cmpq	%rcx, %rdx
+	je	.LBB12_7
+# %bb.2:
+	sarq	$2, %rsi
+	decq	%rsi
+	addq	$4, %rdx
+	.p2align	4
+.LBB12_3:                               # =>This Inner Loop Header: Depth=1
+	movl	(%rdi), %eax
+	cmpl	-4(%rdx), %eax
+	jne	.LBB12_4
+# %bb.5:                                #   in Loop: Header=BB12_3 Depth=1
+	subq	$1, %rsi
+	setb	%al
+	jb	.LBB12_7
+# %bb.6:                                #   in Loop: Header=BB12_3 Depth=1
+	addq	$4, %rdi
+	cmpq	%rcx, %rdx
+	leaq	4(%rdx), %rdx
+	jne	.LBB12_3
+.LBB12_7:
+                                        # kill: def $al killed $al killed $eax
+	retq
+.LBB12_4:
+	xorl	%eax, %eax
+                                        # kill: def $al killed $al killed $eax
+	retq
+.Lfunc_end12:
+	.size	equal_ra_src_only, .Lfunc_end12-equal_ra_src_only
+	.cfi_endproc
+                                        # -- End function
+	.globl	equal_ra_dst_only               # -- Begin function equal_ra_dst_only
+	.p2align	4
+	.type	equal_ra_dst_only,@function
+equal_ra_dst_only:                      # @equal_ra_dst_only
+	.cfi_startproc
+# %bb.0:
+	subq	%rdx, %rcx
+	setne	%al
+	cmpq	%rsi, %rdi
+	setne	%r8b
+	andb	%al, %r8b
+	cmpb	$1, %r8b
+	jne	.LBB13_6
+# %bb.1:
+	sarq	$2, %rcx
+	decq	%rcx
+	.p2align	4
+.LBB13_2:                               # =>This Inner Loop Header: Depth=1
+	movl	(%rdi), %eax
+	cmpl	(%rdx), %eax
+	jne	.LBB13_3
+# %bb.4:                                #   in Loop: Header=BB13_2 Depth=1
+	addq	$4, %rdi
+	addq	$-1, %rcx
+	jae	.LBB13_6
+# %bb.5:                                #   in Loop: Header=BB13_2 Depth=1
+	addq	$4, %rdx
+	cmpq	%rsi, %rdi
+	jne	.LBB13_2
+.LBB13_6:
+	cmpq	%rsi, %rdi
+	sete	%al
+                                        # kill: def $al killed $al killed $eax
+	retq
+.LBB13_3:
+	xorl	%eax, %eax
+                                        # kill: def $al killed $al killed $eax
+	retq
+.Lfunc_end13:
+	.size	equal_ra_dst_only, .Lfunc_end13-equal_ra_dst_only
+	.cfi_endproc
+                                        # -- End function
+	.globl	merge_ra_dst_block              # -- Begin function merge_ra_dst_block
+	.p2align	4
+	.type	merge_ra_dst_block,@function
+merge_ra_dst_block:                     # @merge_ra_dst_block
+	.cfi_startproc
+# %bb.0:
+	movq	%r8, %rax
+	subq	%r8, %r9
+	cmpq	$125, %r9
+	setge	%r8b
+
+===== equal_ra_dst_only (simd=False, lines=121) =====
+equal_ra_dst_only:                      # @equal_ra_dst_only
+	.cfi_startproc
+# %bb.0:
+	subq	%rdx, %rcx
+	setne	%al
+	cmpq	%rsi, %rdi
+	setne	%r8b
+	andb	%al, %r8b
+	cmpb	$1, %r8b
+	jne	.LBB13_6
+# %bb.1:
+	sarq	$2, %rcx
+	decq	%rcx
+	.p2align	4
+.LBB13_2:                               # =>This Inner Loop Header: Depth=1
+	movl	(%rdi), %eax
+	cmpl	(%rdx), %eax
+	jne	.LBB13_3
+# %bb.4:                                #   in Loop: Header=BB13_2 Depth=1
+	addq	$4, %rdi
+	addq	$-1, %rcx
+	jae	.LBB13_6
+# %bb.5:                                #   in Loop: Header=BB13_2 Depth=1
+	addq	$4, %rdx
+	cmpq	%rsi, %rdi
+	jne	.LBB13_2
+.LBB13_6:
+	cmpq	%rsi, %rdi
+	sete	%al
+                                        # kill: def $al killed $al killed $eax
+	retq
+.LBB13_3:
+	xorl	%eax, %eax
+                                        # kill: def $al killed $al killed $eax
+	retq
+.Lfunc_end13:
+	.size	equal_ra_dst_only, .Lfunc_end13-equal_ra_dst_only
+	.cfi_endproc
+                                        # -- End function
+	.globl	merge_ra_dst_block              # -- Begin function merge_ra_dst_block
+	.p2align	4
+	.type	merge_ra_dst_block,@function
+merge_ra_dst_block:                     # @merge_ra_dst_block
+	.cfi_startproc
+# %bb.0:
+	movq	%r8, %rax
+	subq	%r8, %r9
+	cmpq	$125, %r9
+	setge	%r8b
+	cmpq	%rsi, %rdi
+	setne	%r10b
+	cmpq	%rcx, %rdx
+	setne	%r11b
+	andb	%r10b, %r11b
+	andb	%r8b, %r11b
+	cmpb	$1, %r11b
+	jne	.LBB14_6
+# %bb.1:
+	pushq	%rbp
+	.cfi_def_cfa_offset 16
+	pushq	%r15
+	.cfi_def_cfa_offset 24
+	pushq	%r14
+	.cfi_def_cfa_offset 32
+	pushq	%rbx
+	.cfi_def_cfa_offset 40
+	.cfi_offset %rbx, -40
+	.cfi_offset %r14, -32
+	.cfi_offset %r15, -24
+	.cfi_offset %rbp, -16
+	addq	$-128, %r9
+	.p2align	4
+.LBB14_2:                               # =>This Inner Loop Header: Depth=1
+	movl	(%rdx), %r8d
+	movl	(%rdi), %r10d
+	xorl	%r11d, %r11d
+	xorl	%ebx, %ebx
+	cmpl	%r10d, %r8d
+	setge	%r11b
+	setl	%bl
+	cmovll	%r8d, %r10d
+	leaq	(%rdi,%r11,4), %r8
+	leaq	(%rdx,%rbx,4), %r14
+	movl	%r10d, (%rax)
+	movl	(%rdx,%rbx,4), %edx
+	movl	(%rdi,%r11,4), %edi
+	xorl	%r10d, %r10d
+	xorl	%r11d, %r11d
+	cmpl	%edi, %edx
+	setge	%r10b
+
+

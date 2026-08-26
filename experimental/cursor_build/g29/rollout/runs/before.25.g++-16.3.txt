@@ -1,0 +1,55 @@
+nice: warning: setpriority: Permission denied (os error 13)
+=== Segmented algorithm benchmark [5MyInt] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<5MyInt> ---
+
+===== Group 25: 2-range input-output algorithms [5MyInt] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+copy(1S)                            2.67        2.44        0.92      0.135      0.329      0.360
+copy(2S)                            1.94        2.54        1.31      0.132      0.336      0.256
+copy(1+2S)                          2.93        3.09        1.06      0.147      0.454      0.430
+copy_if(1S hit)                     3.84        3.88        1.01      0.138      0.533      0.528
+copy_if(2S hit)                     1.77        2.17        1.23      0.164      0.355      0.289
+copy_if(1+2S hit)                   3.23        2.75        0.85      0.163      0.448      0.525
+copy_if(1S miss)                    2.47        2.52        1.02      0.226      0.570      0.559
+copy_if(2S miss)                    0.70        1.43        2.05      0.166      0.237      0.116
+copy_if(1+2S miss)                  2.37        2.11        0.89      0.168      0.355      0.398
+copy_n(1S)                          1.92        2.29        1.19      0.134      0.307      0.257
+copy_n(2S)                          1.92        2.13        1.11      0.131      0.281      0.253
+copy_n(1+2S)                        2.57        3.45        1.34      0.141      0.485      0.362
+remove_copy(1S hit)                 1.93        1.89        0.98      0.244      0.461      0.470
+remove_copy(2S hit)                 1.29        2.06        1.60      0.227      0.467      0.293
+remove_copy(1+2S hit)               2.59        2.06        0.79      0.238      0.491      0.618
+remove_copy(1S miss)                1.94        1.97        1.02      0.233      0.460      0.452
+remove_copy(2S miss)                1.29        1.87        1.45      0.226      0.424      0.293
+remove_copy(1+2S miss)              1.98        2.03        1.03      0.229      0.466      0.454
+remove_copy_if(1S hit)              2.05        1.90        0.93      0.292      0.555      0.600
+remove_copy_if(2S hit)              1.50        1.82        1.21      0.247      0.451      0.372
+remove_copy_if(1+2S hit)            2.53        2.35        0.93      0.265      0.621      0.670
+remove_copy_if(1S miss)             1.68        1.59        0.95      0.233      0.370      0.390
+remove_copy_if(2S miss)             1.84        1.96        1.06      0.208      0.408      0.383
+remove_copy_if(1+2S miss)           2.78        2.45        0.88      0.216      0.530      0.602
+swap_ranges(1S)                     1.53        1.62        1.06      0.251      0.407      0.384
+swap_ranges(2S)                     1.31        1.53        1.18      0.252      0.387      0.329
+swap_ranges(1+2S)                   2.29        2.35        1.03      0.265      0.624      0.608
+transform(1S)                       2.07        2.13        1.03      0.178      0.378      0.367
+transform(2S)                       1.58        2.07        1.30      0.183      0.377      0.289
+transform(1+2S)                     2.83        2.64        0.93      0.171      0.451      0.483
+-------------------------------------------------------------------------------------------------
+group geomean                       2.01        2.18        1.09
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        2.01        2.18        1.09
+
+
+=== Segmented algorithm benchmark [8MyFatIntILm4EE] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<8MyFatIntILm4EE> ---
+
+===== Group 25: 2-range input-output algorithms [8MyFatIntILm4EE] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+copy(1S)                            1.06        1.05        0.99      0.292      0.305      0.310
+copy(2S)                            0.98        1.01        1.04      0.299      0.303      0.292
+copy(1+2S)                          1.58        1.49       

@@ -1,0 +1,4 @@
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/segmented_fill_test.cpp:52:4: warning: 'typename' outside of a template is a C++11 extension [-Wc++11-extensions]
+   52 |    typename traits::segment_iterator seg_begin = traits::segment(sv.begin());
+      |    ^~~~~~~~
+1 warning generated.

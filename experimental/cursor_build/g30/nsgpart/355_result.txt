@@ -1,0 +1,13 @@
+loop bytes = 26; crossing predicted for pad > 38
+pad= 0  fit    ns/elem=0.252  (scan ok)
+pad= 8  fit    ns/elem=0.246  (scan ok)
+pad=16  fit    ns/elem=0.247  (scan ok)
+pad=24  fit    ns/elem=0.323  (scan ok)
+pad=32  fit    ns/elem=0.329  (scan ok)
+pad=36  fit    ns/elem=0.239  (scan ok)
+pad=40  CROSS  ns/elem=0.460  (scan ok)
+pad=44  CROSS  ns/elem=0.513  (scan ok)
+pad=48  CROSS  ns/elem=0.459  (scan ok)
+pad=52  CROSS  ns/elem=0.512  (scan ok)
+pad=56  CROSS  ns/elem=0.317  (scan ok)
+pad=60  CROSS  ns/elem=0.363  (scan ok)

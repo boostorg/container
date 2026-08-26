@@ -1,0 +1,84 @@
+
+=== Segmented algorithm benchmark [i] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<i> ---
+
+===== Group 30: 3-range algorithms [i] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+partition_copy(1S)                  1.12        1.19        1.06      0.279      0.332      0.312
+partition_copy(2S)                  1.25        1.25        1.00      0.274      0.343      0.343
+partition_copy(3S)                  0.85        0.83        0.98      0.380      0.315      0.323
+partition_copy(1+2S)                2.06        1.70        0.83      0.266      0.452      0.547
+partition_copy(1+3S)                1.41        1.43        1.02      0.263      0.377      0.370
+partition_copy(2+3S)                1.43        1.38        0.96      0.314      0.432      0.449
+partition_copy(1+2+3S)              2.05        1.59        0.78      0.276      0.440      0.566
+-------------------------------------------------------------------------------------------------
+group geomean                       1.39        1.31        0.94       [i]
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        1.39        1.31        0.94       [i]
+
+
+=== Segmented algorithm benchmark [5MyInt] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<5MyInt> ---
+
+===== Group 30: 3-range algorithms [5MyInt] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+partition_copy(1S)                  1.24        1.27        1.03      0.259      0.329      0.321
+partition_copy(2S)                  1.26        1.25        0.99      0.274      0.342      0.345
+partition_copy(3S)                  0.84        0.83        1.00      0.381      0.318      0.319
+partition_copy(1+2S)                2.03        1.84        0.91      0.268      0.493      0.544
+partition_copy(1+3S)                1.41        1.41        1.00      0.262      0.371      0.370
+partition_copy(2+3S)                1.42        1.24        0.87      0.312      0.388      0.444
+partition_copy(1+2+3S)              1.98        1.55        0.78      0.279      0.431      0.552
+-------------------------------------------------------------------------------------------------
+group geomean                       1.40        1.31        0.94       [5MyInt]
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        1.40        1.31        0.94       [5MyInt]
+
+
+=== Segmented algorithm benchmark [8MyFatIntILm2EE] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<8MyFatIntILm2EE> ---
+
+===== Group 30: 3-range algorithms [8MyFatIntILm2EE] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+partition_copy(1S)                  1.31        1.29        0.98      0.276      0.354      0.362
+partition_copy(2S)                  0.92        0.99        1.08      0.393      0.389      0.360
+partition_copy(3S)                  1.19        0.90        0.75      0.368      0.330      0.439
+partition_copy(1+2S)                1.03        1.21        1.17      0.372      0.449      0.382
+partition_copy(1+3S)                1.24        1.09        0.88      0.374      0.408      0.462
+partition_copy(2+3S)                1.81        1.46        0.81      0.290      0.422      0.523
+partition_copy(1+2+3S)              1.78        1.41        0.80      0.299      0.423      0.531
+-------------------------------------------------------------------------------------------------
+group geomean                       1.29        1.18        0.91       [8MyFatIntILm2EE]
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        1.29        1.18        0.91       [8MyFatIntILm2EE]
+
+
+=== Segmented algorithm benchmark [8MyFatIntILm8EE] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<8MyFatIntILm8EE> ---
+
+===== Group 30: 3-range algorithms [8MyFatIntILm8EE] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+partition_copy(1S)                  1.03        1.01        0.98      0.636      0.644      0.658
+partition_copy(2S)                  1.00        0.98        0.98      0.648      0.635      0.647
+partition_copy(3S)                  1.00        0.98        0.98      0.647      0.636      0.647
+partition_copy(1+2S)                1.01        1.00        0.99      0.656      0.658      0.661
+partition_copy(1+3S)                1.01        0.99        0.98      0.658      0.650      0.666
+partition_copy(2+3S)                1.01        0.99        0.97      0.655      0.647      0.665
+partition_copy(1+2+3S)              1.04        1.08        1.03      0.655      0.706      0.684
+-------------------------------------------------------------------------------------------------
+group geomean                       1.02        1.00        0.99       [8MyFatIntILm8EE]
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        1.02        1.00        0.99       [8MyFatIntILm8EE]
+

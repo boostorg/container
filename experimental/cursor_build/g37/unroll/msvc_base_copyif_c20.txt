@@ -1,0 +1,8 @@
+==================== x64 segmented_copy_if_test base c++20 ====================
+MSVCSTAT rc=0 sec=1,34 peakMB=8,3
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c1xx.dll)=0.80354s < 211256600014 - 211264635402 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\c2.dll)=0.41306s < 211264637244 - 211268767835 > BB [D:\Data\LocalGit\boost\libs\container\experimental\cursor_build\g37\unroll\tests\segmented_copy_if_test.cpp]
+time(C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe)=0.07162s < 211268776215 - 211269492421 > [C:\Users\IGAZTA~1\AppData\Local\Temp\g37_x64_segmented_copy_if_test_base_c++20\t.exe]
+EXESIZE=374784
+No errors detected.
+RESULT: PASS 

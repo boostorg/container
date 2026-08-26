@@ -1,0 +1,23 @@
+
+=== Segmented algorithm benchmark [5MyInt] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<5MyInt> ---
+
+===== Group 17: single range, bidirectional iterator optimizations [5MyInt] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+find_last(hit)                      2.26        2.32        1.02      0.069      0.160      0.157
+find_last(miss)                     2.67        2.65        0.99      0.139      0.368      0.371
+find_last_if(hit)                   1.68        1.68        1.00      0.070      0.117      0.117
+find_last_if(miss)                  1.72        1.75        1.02      0.222      0.389      0.381
+find_last_if_not(hit)               1.66        1.66        1.00      0.071      0.117      0.117
+find_last_if_not(miss)              1.80        1.80        1.00      0.212      0.382      0.382
+partition(hit)                      1.20        1.22        1.02      0.304      0.370      0.364
+partition(miss)                     1.25        1.38        1.11      0.257      0.356      0.320
+reverse                             4.36        7.04        1.62      0.049      0.346      0.214
+-------------------------------------------------------------------------------------------------
+group geomean                       1.91        2.05        1.07       [5MyInt]
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        1.91        2.05        1.07       [5MyInt]
+

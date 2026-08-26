@@ -1,0 +1,474 @@
+
+############ nsg miss/is_negative : 832 insns ############
+-- inner-loop alignment summary (loops <= 12 insns) --
+  loop @  e4c0 bytes= 38 mod32= 0 mod64= 0 cross64=no  body=10
+  loop @  e620 bytes= 38 mod32= 0 mod64=32 cross64=YES body=10
+  loop @  e6c0 bytes= 38 mod32= 0 mod64= 0 cross64=no  body=10
+  loop @  e760 bytes= 38 mod32= 0 mod64=32 cross64=YES body=10
+  loop @  e800 bytes= 38 mod32= 0 mod64= 0 cross64=no  body=10
+  loop @  e8a0 bytes= 38 mod32= 0 mod64=32 cross64=YES body=10
+  loop @  e940 bytes= 38 mod32= 0 mod64= 0 cross64=no  body=10
+  loop @  e9e0 bytes= 38 mod32= 0 mod64=32 cross64=YES body=10
+  loop @  ea70 bytes= 26 mod32=16 mod64=48 cross64=YES body=8
+  loop @  ea79 bytes= 37 mod32=25 mod64=57 cross64=YES body=10
+  loop @  eab0 bytes= 26 mod32=16 mod64=48 cross64=YES body=8
+  loop @  eab9 bytes= 37 mod32=25 mod64=57 cross64=YES body=10
+  loop @  eb30 bytes= 26 mod32=16 mod64=48 cross64=YES body=8
+  loop @  eb39 bytes= 37 mod32=25 mod64=57 cross64=YES body=10
+  loop @  eb80 bytes= 26 mod32= 0 mod64= 0 cross64=no  body=8
+  loop @  eb89 bytes= 37 mod32= 9 mod64= 9 cross64=no  body=10
+  loop @  ebf0 bytes= 26 mod32=16 mod64=48 cross64=YES body=8
+  loop @  ebf9 bytes= 37 mod32=25 mod64=57 cross64=YES body=10
+  loop @  ec30 bytes= 30 mod32=16 mod64=48 cross64=YES body=8
+  loop @  ec34 bytes= 43 mod32=20 mod64=52 cross64=YES body=11
+  loop @  ed80 bytes= 30 mod32= 0 mod64= 0 cross64=no  body=8
+  loop @  ed84 bytes= 43 mod32= 4 mod64= 4 cross64=no  body=11
+  loop @  edd0 bytes= 30 mod32=16 mod64=16 cross64=no  body=8
+  loop @  edd4 bytes= 43 mod32=20 mod64=20 cross64=no  body=11
+-- largest loop bodies (outer loops), first occurrence --
+  --- outer loop e9e0..eb21 (86 insns) ---
+      e9e0: mov    (%rax),%edx
+      e9e2: test   %edx,%edx
+      e9e4: jns    eac5 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x6c5>
+      e9ea: mov    (%rsi),%rdx
+      e9ed: add    $0x4,%rax
+      e9f1: add    $0x200,%rdx
+      e9f8: cmp    %rdx,%rax
+      e9fb: je     eb10 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x710>
+      ea01: cmp    %rax,%rcx
+      ea04: jne    e9e0 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x5e0>
+      ea06: xor    %eax,%eax
+      ea08: cmp    %rcx,%r9
+      ea0b: sete   %al
+      ea0e: mov    %eax,0x0(%rbp)
+      ea11: mov    %rbp,%rax
+      ea14: addl   $0x1,0x140(%r13)
+      ea1c: movslq 0x140(%r13),%rax
+      ea23: mov    0x100(%r13,%rax,8),%rdx
+      ea2b: mov    0x18(%rdx),%rax
+      ea2f: mov    (%rdx),%rcx
+      ea32: mov    0x10(%rdx),%rdx
+      ea36: mov    %rax,%rsi
+      ea39: shr    $0x7,%rsi
+      ea3d: lea    (%rcx,%rsi,8),%rdi
+      ea41: mov    %rdx,%rsi
+      ea44: shr    $0x7,%rsi
+      ea48: lea    (%rcx,%rsi,8),%rsi
+      ea4c: test   %rdi,%rdi
+      ea4f: je     e490 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x90>
+      ea55: mov    (%rdi),%rcx
+      ea58: and    $0x7f,%eax
+      ea5b: lea    (%rcx,%rax,4),%r9
+      ea5f: xor    %eax,%eax
+      ea61: test   %rsi,%rsi
+      ea64: jne    e49c <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x9c>
+      ea6a: jmp    e4a6 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xa6>
+      ea6f: nop
+      ea70: sub    $0x4,%rcx
+      ea74: cmp    %rcx,%rax
+      ea77: je     eaa0 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x6a0>
+      ea79: mov    (%rcx),%r8d
+      ea7c: test   %r8d,%r8d
+      ea7f: js     ee70 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xa70>
+      ea85: cmp    %rcx,(%rdi)
+      ea88: jne    ea70 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x670>
+      ea8a: mov    -0x8(%rdi),%rcx
+      ea8e: sub    $0x8,%rdi
+      ea92: add    $0x1fc,%rcx
+      ea99: cmp    %rcx,%rax
+      ea9c: jne    ea79 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x679>
+      ea9e: xchg   %ax,%ax
+      eaa0: cmp    %rax,%r9
+      eaa3: sete   %al
+      eaa6: movzbl %al,%eax
+      eaa9: jmp    e4ee <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xee>
+      eaae: xchg   %ax,%ax
+      eab0: sub    $0x4,%rcx
+      eab4: cmp    %rcx,%rax
+      eab7: je     eae0 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x6e0>
+      eab9: mov    (%rcx),%r8d
+      eabc: test   %r8d,%r8d
+      eabf: js     eea0 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xaa0>
+      eac5: cmp    %rcx,(%rdi)
+      eac8: jne    eab0 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x6b0>
+      eaca: mov    -0x8(%rdi),%rcx
+      eace: sub    $0x8,%rdi
+      ead2: add    $0x1fc,%rcx
+      ead9: cmp    %rcx,%rax
+      eadc: jne    eab9 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x6b9>
+      eade: xchg   %ax,%ax
+      eae0: cmp    %rax,%r9
+      eae3: sete   %al
+      eae6: movzbl %al,%eax
+      eae9: jmp    ea0e <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x60e>
+      eaee: xchg   %ax,%ax
+      eaf0: mov    0x8(%rsi),%rax
+      eaf4: cmp    %rax,%rcx
+      eaf7: je     e4e6 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xe6>
+      eafd: add    $0x8,%rsi
+      eb01: jmp    e4c0 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xc0>
+      eb06: cs nopw 0x0(%rax,%rax,1)
+      eb10: mov    0x8(%rsi),%rax
+      eb14: cmp    %rax,%rcx
+      eb17: je     ea06 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x606>
+      eb1d: add    $0x8,%rsi
+      eb21: jmp    e9e0 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x5e0>
+
+############ seg miss/is_negative : 448 insns ############
+-- inner-loop alignment summary (loops <= 12 insns) --
+  loop @  f891 bytes= 21 mod32=17 mod64=17 cross64=no  body=4
+-- largest loop bodies (outer loops), first occurrence --
+  --- outer loop f809..f868 (24 insns) ---
+      f809: lea    0x8(%r9,%r14,1),%r14
+      f80e: test   %r8,%r8
+      f811: je     f82b <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, false>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, false>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x66b>
+      f813: sub    %r8,%rcx
+      f816: mov    %r8,%rdi
+      f819: mov    %r9,0x8(%rsp)
+      f81e: mov    %rcx,%rsi
+      f821: call   2270 <operator delete(void*, unsigned long)@plt>
+      f826: mov    0x8(%rsp),%r9
+      f82b: mov    %r9,0x40(%rsp)
+      f830: add    %r15,%r9
+      f833: mov    %r14,0x48(%rsp)
+      f838: mov    %r9,0x50(%rsp)
+      f83d: jmp    f284 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, false>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, false>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xc4>
+      f842: nopw   0x0(%rax,%rax,1)
+      f848: mov    %r8,%rsi
+      f84b: mov    %r14,%rdx
+      f84e: mov    %rax,%rdi
+      f851: mov    %r8,0x8(%rsp)
+      f856: call   2240 <memcpy@plt>
+      f85b: mov    0x10(%rsp),%rcx
+      f860: mov    0x8(%rsp),%r8
+      f865: mov    %rax,%r9
+      f868: jmp    f809 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, false>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt>, false>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x649>
+
+############ std miss/is_negative : 809 insns ############
+-- inner-loop alignment summary (loops <= 12 insns) --
+  loop @  fa06 bytes= 38 mod32= 6 mod64= 6 cross64=no  body=10
+  loop @  faa2 bytes= 38 mod32= 2 mod64=34 cross64=YES body=10
+  loop @  fb56 bytes= 38 mod32=22 mod64=22 cross64=no  body=10
+  loop @  fc06 bytes= 38 mod32= 6 mod64= 6 cross64=no  body=10
+  loop @  fc60 bytes= 24 mod32= 0 mod64=32 cross64=no  body=8
+  loop @  fc73 bytes= 34 mod32=19 mod64=51 cross64=YES body=10
+  loop @  fcd0 bytes= 24 mod32=16 mod64=16 cross64=no  body=8
+  loop @  fce3 bytes= 34 mod32= 3 mod64=35 cross64=YES body=10
+  loop @  fe52 bytes= 38 mod32=18 mod64=18 cross64=no  body=10
+  loop @  ff36 bytes= 38 mod32=22 mod64=54 cross64=YES body=10
+  loop @  ffe0 bytes= 38 mod32= 0 mod64=32 cross64=YES body=10
+  loop @ 1007c bytes= 38 mod32=28 mod64=60 cross64=YES body=10
+  loop @ 100d0 bytes= 24 mod32=16 mod64=16 cross64=no  body=8
+  loop @ 100e3 bytes= 34 mod32= 3 mod64=35 cross64=YES body=10
+  loop @ 10150 bytes= 24 mod32=16 mod64=16 cross64=no  body=8
+  loop @ 10163 bytes= 34 mod32= 3 mod64=35 cross64=YES body=10
+  loop @ 101d0 bytes= 24 mod32=16 mod64=16 cross64=no  body=8
+  loop @ 101e3 bytes= 34 mod32= 3 mod64=35 cross64=YES body=10
+  loop @ 10240 bytes= 24 mod32= 0 mod64= 0 cross64=no  body=8
+  loop @ 10253 bytes= 34 mod32=19 mod64=19 cross64=no  body=10
+  loop @ 103c0 bytes= 24 mod32= 0 mod64= 0 cross64=no  body=8
+  loop @ 103d3 bytes= 34 mod32=19 mod64=19 cross64=no  body=10
+  loop @ 10440 bytes= 28 mod32= 0 mod64= 0 cross64=no  body=8
+  loop @ 1044d bytes= 40 mod32=13 mod64=13 cross64=no  body=11
+-- largest loop bodies (outer loops), first occurrence --
+  --- outer loop fae8..fc35 (88 insns) ---
+      fae8: mov    %eax,0x0(%rbp)
+      faeb: mov    %rbp,%rax
+      faee: addl   $0x1,0x140(%r13)
+      faf6: movslq 0x140(%r13),%rax
+      fafd: mov    0x100(%r13,%rax,8),%rax
+      fb05: mov    0x18(%rax),%rdx
+      fb09: mov    (%rax),%rcx
+      fb0c: mov    0x10(%rax),%rax
+      fb10: mov    %rdx,%rsi
+      fb13: shr    $0x7,%rsi
+      fb17: mov    %rax,%rdi
+      fb1a: shr    $0x7,%rdi
+      fb1e: lea    (%rcx,%rsi,8),%rsi
+      fb22: lea    (%rcx,%rdi,8),%r8
+      fb26: test   %rsi,%rsi
+      fb29: je     fea0 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x5a0>
+      fb2f: mov    (%rsi),%rcx
+      fb32: and    $0x7f,%edx
+      fb35: lea    (%rcx,%rdx,4),%r9
+      fb39: xor    %edx,%edx
+      fb3b: test   %r8,%r8
+      fb3e: je     fb4a <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x24a>
+      fb40: mov    (%r8),%rdx
+      fb43: and    $0x7f,%eax
+      fb46: lea    (%rdx,%rax,4),%rdx
+      fb4a: cmp    %r9,%rdx
+      fb4d: je     feac <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x5ac>
+      fb53: mov    %r9,%rax
+      fb56: mov    (%rdx),%edi
+      fb58: test   %edi,%edi
+      fb5a: jns    100b0 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x7b0>
+      fb60: mov    (%r8),%rdi
+      fb63: add    $0x4,%rdx
+      fb67: lea    0x200(%rdi),%rcx
+      fb6e: cmp    %rcx,%rdx
+      fb71: je     102f0 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x9f0>
+      fb77: cmp    %rdx,%rax
+      fb7a: jne    fb56 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x256>
+      fb7c: cmp    %r9,%rax
+      fb7f: sete   %al
+      fb82: movzbl %al,%eax
+      fb85: jmp    f998 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x98>
+      fb8a: nopw   0x0(%rax,%rax,1)
+      fb90: xor    %eax,%eax
+      fb92: cmp    %rdx,%r9
+      fb95: sete   %al
+      fb98: mov    %eax,0x0(%rbp)
+      fb9b: mov    %rbp,%rax
+      fb9e: addl   $0x1,0x140(%r13)
+      fba6: movslq 0x140(%r13),%rax
+      fbad: mov    0x100(%r13,%rax,8),%rax
+      fbb5: mov    0x18(%rax),%rdx
+      fbb9: mov    (%rax),%rcx
+      fbbc: mov    0x10(%rax),%rax
+      fbc0: mov    %rdx,%rsi
+      fbc3: shr    $0x7,%rsi
+      fbc7: mov    %rax,%rdi
+      fbca: shr    $0x7,%rdi
+      fbce: lea    (%rcx,%rsi,8),%rsi
+      fbd2: lea    (%rcx,%rdi,8),%r8
+      fbd6: test   %rsi,%rsi
+      fbd9: je     10380 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xa80>
+      fbdf: mov    (%rsi),%rcx
+      fbe2: and    $0x7f,%edx
+      fbe5: lea    (%rcx,%rdx,4),%r9
+      fbe9: xor    %edx,%edx
+      fbeb: test   %r8,%r8
+      fbee: je     fbfa <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x2fa>
+      fbf0: mov    (%r8),%rdx
+      fbf3: and    $0x7f,%eax
+      fbf6: lea    (%rdx,%rax,4),%rdx
+      fbfa: cmp    %r9,%rdx
+      fbfd: je     1038c <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xa8c>
+      fc03: mov    %r9,%rax
+      fc06: mov    (%rdx),%edi
+      fc08: test   %edi,%edi
+      fc0a: jns    10130 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x830>
+      fc10: mov    (%r8),%rdi
+      fc13: add    $0x4,%rdx
+      fc17: lea    0x200(%rdi),%rcx
+      fc1e: cmp    %rcx,%rdx
+      fc21: je     10410 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xb10>
+      fc27: cmp    %rdx,%rax
+      fc2a: jne    fc06 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x306>
+      fc2c: cmp    %r9,%rax
+      fc2f: sete   %al
+      fc32: movzbl %al,%eax
+      fc35: jmp    fae8 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_negative<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x1e8>
+
+############ nsg hit/is_odd : 828 insns ############
+-- inner-loop alignment summary (loops <= 12 insns) --
+  loop @ 10700 bytes= 39 mod32= 0 mod64= 0 cross64=no  body=10
+  loop @ 10860 bytes= 39 mod32= 0 mod64=32 cross64=YES body=10
+  loop @ 10900 bytes= 39 mod32= 0 mod64= 0 cross64=no  body=10
+  loop @ 109a0 bytes= 39 mod32= 0 mod64=32 cross64=YES body=10
+  loop @ 10a40 bytes= 39 mod32= 0 mod64= 0 cross64=no  body=10
+  loop @ 10ae0 bytes= 39 mod32= 0 mod64=32 cross64=YES body=10
+  loop @ 10b80 bytes= 39 mod32= 0 mod64= 0 cross64=no  body=10
+  loop @ 10c20 bytes= 39 mod32= 0 mod64=32 cross64=YES body=10
+  loop @ 10cb0 bytes= 27 mod32=16 mod64=48 cross64=YES body=8
+  loop @ 10cb9 bytes= 38 mod32=25 mod64=57 cross64=YES body=10
+  loop @ 10cf0 bytes= 27 mod32=16 mod64=48 cross64=YES body=8
+  loop @ 10cf9 bytes= 38 mod32=25 mod64=57 cross64=YES body=10
+  loop @ 10d70 bytes= 27 mod32=16 mod64=48 cross64=YES body=8
+  loop @ 10d79 bytes= 38 mod32=25 mod64=57 cross64=YES body=10
+  loop @ 10dc0 bytes= 27 mod32= 0 mod64= 0 cross64=no  body=8
+  loop @ 10dc9 bytes= 38 mod32= 9 mod64= 9 cross64=no  body=10
+  loop @ 10e30 bytes= 27 mod32=16 mod64=48 cross64=YES body=8
+  loop @ 10e39 bytes= 38 mod32=25 mod64=57 cross64=YES body=10
+  loop @ 10e70 bytes= 31 mod32=16 mod64=48 cross64=YES body=8
+  loop @ 10e74 bytes= 44 mod32=20 mod64=52 cross64=YES body=11
+  loop @ 10fc0 bytes= 31 mod32= 0 mod64= 0 cross64=no  body=8
+  loop @ 10fc4 bytes= 44 mod32= 4 mod64= 4 cross64=no  body=11
+  loop @ 11010 bytes= 31 mod32=16 mod64=16 cross64=no  body=8
+  loop @ 11014 bytes= 44 mod32=20 mod64=20 cross64=no  body=11
+-- largest loop bodies (outer loops), first occurrence --
+  --- outer loop 10c20..10d61 (85 insns) ---
+     10c20: mov    (%rax),%edx
+     10c22: test   $0x1,%dl
+     10c25: je     10d06 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x6c6>
+     10c2b: mov    (%rsi),%rdx
+     10c2e: add    $0x4,%rax
+     10c32: add    $0x200,%rdx
+     10c39: cmp    %rdx,%rax
+     10c3c: je     10d50 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x710>
+     10c42: cmp    %rax,%rcx
+     10c45: jne    10c20 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x5e0>
+     10c47: xor    %eax,%eax
+     10c49: cmp    %rcx,%r9
+     10c4c: sete   %al
+     10c4f: mov    %eax,0x0(%rbp)
+     10c52: mov    %rbp,%rax
+     10c55: addl   $0x1,0x140(%r13)
+     10c5d: movslq 0x140(%r13),%rax
+     10c64: mov    0x100(%r13,%rax,8),%rdx
+     10c6c: mov    0x18(%rdx),%rax
+     10c70: mov    (%rdx),%rcx
+     10c73: mov    0x10(%rdx),%rdx
+     10c77: mov    %rax,%rsi
+     10c7a: shr    $0x7,%rsi
+     10c7e: lea    (%rcx,%rsi,8),%rdi
+     10c82: mov    %rdx,%rsi
+     10c85: shr    $0x7,%rsi
+     10c89: lea    (%rcx,%rsi,8),%rsi
+     10c8d: test   %rdi,%rdi
+     10c90: je     106d0 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x90>
+     10c96: mov    (%rdi),%rcx
+     10c99: and    $0x7f,%eax
+     10c9c: lea    (%rcx,%rax,4),%r9
+     10ca0: xor    %eax,%eax
+     10ca2: test   %rsi,%rsi
+     10ca5: jne    106dc <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x9c>
+     10cab: jmp    106e6 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xa6>
+     10cb0: sub    $0x4,%rcx
+     10cb4: cmp    %rcx,%rax
+     10cb7: je     10ce0 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x6a0>
+     10cb9: mov    (%rcx),%r8d
+     10cbc: test   $0x1,%r8b
+     10cc0: jne    110b0 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xa70>
+     10cc6: cmp    %rcx,(%rdi)
+     10cc9: jne    10cb0 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x670>
+     10ccb: mov    -0x8(%rdi),%rcx
+     10ccf: sub    $0x8,%rdi
+     10cd3: add    $0x1fc,%rcx
+     10cda: cmp    %rcx,%rax
+     10cdd: jne    10cb9 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x679>
+     10cdf: nop
+     10ce0: cmp    %rax,%r9
+     10ce3: sete   %al
+     10ce6: movzbl %al,%eax
+     10ce9: jmp    1072f <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xef>
+     10cee: xchg   %ax,%ax
+     10cf0: sub    $0x4,%rcx
+     10cf4: cmp    %rcx,%rax
+     10cf7: je     10d20 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x6e0>
+     10cf9: mov    (%rcx),%r8d
+     10cfc: test   $0x1,%r8b
+     10d00: jne    110e0 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xaa0>
+     10d06: cmp    %rcx,(%rdi)
+     10d09: jne    10cf0 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x6b0>
+     10d0b: mov    -0x8(%rdi),%rcx
+     10d0f: sub    $0x8,%rdi
+     10d13: add    $0x1fc,%rcx
+     10d1a: cmp    %rcx,%rax
+     10d1d: jne    10cf9 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x6b9>
+     10d1f: nop
+     10d20: cmp    %rax,%r9
+     10d23: sete   %al
+     10d26: movzbl %al,%eax
+     10d29: jmp    10c4f <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x60f>
+     10d2e: xchg   %ax,%ax
+     10d30: mov    0x8(%rsi),%rax
+     10d34: cmp    %rax,%rcx
+     10d37: je     10727 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xe7>
+     10d3d: add    $0x8,%rsi
+     10d41: jmp    10700 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xc0>
+     10d46: cs nopw 0x0(%rax,%rax,1)
+     10d50: mov    0x8(%rsi),%rax
+     10d54: cmp    %rax,%rcx
+     10d57: je     10c47 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x607>
+     10d5d: add    $0x8,%rsi
+     10d61: jmp    10c20 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, true>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x5e0>
+
+############ seg hit/is_odd : 448 insns ############
+-- inner-loop alignment summary (loops <= 12 insns) --
+  loop @ 11ad1 bytes= 21 mod32=17 mod64=17 cross64=no  body=4
+-- largest loop bodies (outer loops), first occurrence --
+  --- outer loop 11a49..11aa8 (24 insns) ---
+     11a49: lea    0x8(%r9,%r14,1),%r14
+     11a4e: test   %r8,%r8
+     11a51: je     11a6b <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, false>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, false>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x66b>
+     11a53: sub    %r8,%rcx
+     11a56: mov    %r8,%rdi
+     11a59: mov    %r9,0x8(%rsp)
+     11a5e: mov    %rcx,%rsi
+     11a61: call   2270 <operator delete(void*, unsigned long)@plt>
+     11a66: mov    0x8(%rsp),%r9
+     11a6b: mov    %r9,0x40(%rsp)
+     11a70: add    %r15,%r9
+     11a73: mov    %r14,0x48(%rsp)
+     11a78: mov    %r9,0x50(%rsp)
+     11a7d: jmp    114c4 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, false>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, false>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xc4>
+     11a82: nopw   0x0(%rax,%rax,1)
+     11a88: mov    %r8,%rsi
+     11a8b: mov    %r14,%rdx
+     11a8e: mov    %rax,%rdi
+     11a91: mov    %r8,0x8(%rsp)
+     11a96: call   2240 <memcpy@plt>
+     11a9b: mov    0x10(%rsp),%rcx
+     11aa0: mov    0x8(%rsp),%r8
+     11aa5: mov    %rax,%r9
+     11aa8: jmp    11a49 <unsigned long measure_batch<bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, false>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::seg_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt>, false>, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x649>
+
+############ std hit/is_odd : 833 insns ############
+-- inner-loop alignment summary (loops <= 12 insns) --
+  loop @ 11c50 bytes= 40 mod32=16 mod64=16 cross64=no  body=10
+  loop @ 11ca0 bytes= 25 mod32= 0 mod64=32 cross64=no  body=8
+  loop @ 11cb4 bytes= 35 mod32=20 mod64=52 cross64=YES body=10
+  loop @ 11d70 bytes= 40 mod32=16 mod64=48 cross64=YES body=10
+  loop @ 11db0 bytes= 25 mod32=16 mod64=48 cross64=YES body=8
+  loop @ 11dc4 bytes= 35 mod32= 4 mod64= 4 cross64=no  body=10
+  loop @ 11e90 bytes= 40 mod32=16 mod64=16 cross64=no  body=10
+  loop @ 11ed0 bytes= 25 mod32=16 mod64=16 cross64=no  body=8
+  loop @ 11ee4 bytes= 35 mod32= 4 mod64=36 cross64=YES body=10
+  loop @ 11fb0 bytes= 40 mod32=16 mod64=48 cross64=YES body=10
+  loop @ 11ff0 bytes= 25 mod32=16 mod64=48 cross64=YES body=8
+  loop @ 12004 bytes= 35 mod32= 4 mod64= 4 cross64=no  body=10
+  loop @ 12178 bytes= 40 mod32=24 mod64=56 cross64=YES body=10
+  loop @ 121c0 bytes= 29 mod32= 0 mod64= 0 cross64=no  body=8
+  loop @ 121cd bytes= 41 mod32=13 mod64=13 cross64=no  body=11
+  loop @ 122b0 bytes= 40 mod32=16 mod64=48 cross64=YES body=10
+  loop @ 122f0 bytes= 25 mod32=16 mod64=48 cross64=YES body=8
+  loop @ 12304 bytes= 35 mod32= 4 mod64= 4 cross64=no  body=10
+  loop @ 123d0 bytes= 40 mod32=16 mod64=16 cross64=no  body=10
+  loop @ 12420 bytes= 25 mod32= 0 mod64=32 cross64=no  body=8
+  loop @ 12434 bytes= 35 mod32=20 mod64=52 cross64=YES body=10
+  loop @ 124e8 bytes= 40 mod32= 8 mod64=40 cross64=YES body=10
+  loop @ 12520 bytes= 25 mod32= 0 mod64=32 cross64=no  body=8
+  loop @ 12534 bytes= 35 mod32=20 mod64=52 cross64=YES body=10
+-- largest loop bodies (outer loops), first occurrence --
+  --- outer loop 122b0..12344 (39 insns) ---
+     122b0: mov    (%r8),%rdi
+     122b3: add    $0x4,%rdx
+     122b7: lea    0x200(%rdi),%rcx
+     122be: cmp    %rcx,%rdx
+     122c1: je     12710 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xbd0>
+     122c7: cmp    %rdx,%rax
+     122ca: je     12721 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xbe1>
+     122d0: mov    (%rdx),%edi
+     122d2: test   $0x1,%dil
+     122d6: jne    122b0 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x770>
+     122d8: cmp    %rax,(%rsi)
+     122db: je     127e6 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xca6>
+     122e1: sub    $0x4,%rax
+     122e5: cmp    %rdx,%rax
+     122e8: jne    122fd <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x7bd>
+     122ea: jmp    12827 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0xce7>
+     122ef: nop
+     122f0: sub    $0x4,%rax
+     122f4: cmp    %rdx,%rax
+     122f7: je     11f30 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x3f0>
+     122fd: mov    (%rax),%ecx
+     122ff: test   $0x1,%cl
+     12302: jne    12340 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x800>
+     12304: cmp    (%rsi),%rax
+     12307: jne    122f0 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x7b0>
+     12309: mov    -0x8(%rsi),%rax
+     1230d: add    $0x1fc,%rax
+     12313: cmp    %rdx,%rax
+     12316: je     11f30 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x3f0>
+     1231c: mov    (%rax),%ecx
+     1231e: sub    $0x8,%rsi
+     12322: test   $0x1,%cl
+     12325: je     12304 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x7c4>
+     12327: nopl   (%rax)
+     1232a: data16 cs nopw 0x0(%rax,%rax,1)
+     12335: data16 cs nopw 0x0(%rax,%rax,1)
+     12340: mov    %ecx,(%rdx)
+     12342: mov    %edi,(%rax)
+     12344: jmp    122b0 <unsigned long measure_batch<bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > > >(unsigned long, bench_ops::std_partition_batch<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> >, is_odd<MyInt> >, bench_ops::batch_reset<boost::container::deque<MyInt, void, boost::container::deque_opt<0ul, 128ul, void, false> > >) [clone .isra.0]+0x770>

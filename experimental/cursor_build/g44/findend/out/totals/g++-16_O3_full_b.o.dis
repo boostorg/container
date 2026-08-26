@@ -1,0 +1,1691 @@
+
+/mnt/d/Data/LocalGit/boost/libs/container/experimental/cursor_build/g44/findend/out/totals/g++-16_O3_full_b.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]>:
+       0:	push   %rbx
+       1:	movdqu (%rdx),%xmm0
+       5:	mov    %rdi,%r9
+       8:	mov    (%rsi),%r10
+       b:	mov    0x8(%rsi),%r11
+       f:	movhlps %xmm0,%xmm1
+      12:	movq   %xmm0,%rdi
+      17:	movq   %xmm1,%rsi
+      1c:	mov    %r11,%r8
+      1f:	cmp    %rdi,%r10
+      22:	je     27 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x27>
+      24:	mov    (%rdi),%r8
+      27:	mov    %rsi,%rdx
+      2a:	mov    %rsi,%rax
+      2d:	sub    %r8,%rdx
+      30:	shr    $0x2,%rdx
+      34:	and    $0x3,%edx
+      37:	je     70 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x70>
+      39:	mov    (%rcx),%ebx
+      3b:	lea    -0x4(%rsi),%rax
+      3f:	cmp    %ebx,-0x4(%rsi)
+      42:	je     9c <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x9c>
+      44:	cmp    $0x1,%rdx
+      48:	je     70 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x70>
+      4a:	cmp    $0x2,%rdx
+      4e:	je     59 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x59>
+      50:	lea    -0x8(%rsi),%rax
+      54:	cmp    %ebx,-0x8(%rsi)
+      57:	je     9c <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x9c>
+      59:	sub    $0x4,%rax
+      5d:	mov    (%rcx),%ebx
+      5f:	cmp    %ebx,(%rax)
+      61:	je     9c <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x9c>
+      63:	xchg   %ax,%ax
+      65:	data16 cs nopw 0x0(%rax,%rax,1)
+      70:	cmp    %r8,%rax
+      73:	je     a5 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0xa5>
+      75:	lea    -0x4(%rax),%rdx
+      79:	mov    (%rcx),%ebx
+      7b:	mov    %rdx,%rax
+      7e:	cmp    %ebx,(%rdx)
+      80:	je     9c <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x9c>
+      82:	sub    $0x4,%rax
+      86:	cmp    %ebx,(%rax)
+      88:	je     9c <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x9c>
+      8a:	lea    -0x8(%rdx),%rax
+      8e:	cmp    %ebx,-0x8(%rdx)
+      91:	je     9c <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x9c>
+      93:	lea    -0xc(%rdx),%rax
+      97:	cmp    %ebx,-0xc(%rdx)
+      9a:	jne    70 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x70>
+      9c:	cmp    %rsi,%rax
+      9f:	jne    16e <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x16e>
+      a5:	cmp    %rdi,%r10
+      a8:	je     165 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x165>
+      ae:	xchg   %ax,%ax
+      b0:	sub    $0x18,%rdi
+      b4:	cmp    %rdi,%r10
+      b7:	je     155 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x155>
+      bd:	mov    (%rdi),%r8
+      c0:	mov    0x8(%rdi),%rax
+      c4:	lea    (%r8,%rax,4),%rsi
+      c8:	mov    %rsi,%rdx
+      cb:	mov    %rsi,%rax
+      ce:	sub    %r8,%rdx
+      d1:	shr    $0x2,%rdx
+      d5:	and    $0x3,%edx
+      d8:	je     110 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x110>
+      da:	mov    (%rcx),%ebx
+      dc:	lea    -0x4(%rsi),%rax
+      e0:	cmp    %ebx,-0x4(%rsi)
+      e3:	je     140 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x140>
+      e5:	cmp    $0x1,%rdx
+      e9:	je     110 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x110>
+      eb:	cmp    $0x2,%rdx
+      ef:	je     fa <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0xfa>
+      f1:	lea    -0x8(%rsi),%rax
+      f5:	cmp    %ebx,-0x8(%rsi)
+      f8:	je     140 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x140>
+      fa:	sub    $0x4,%rax
+      fe:	mov    (%rcx),%ebx
+     100:	cmp    %ebx,(%rax)
+     102:	je     140 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x140>
+     104:	nop
+     105:	data16 cs nopw 0x0(%rax,%rax,1)
+     110:	cmp    %rax,%r8
+     113:	je     b0 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0xb0>
+     115:	lea    -0x4(%rax),%rdx
+     119:	mov    (%rcx),%ebx
+     11b:	mov    %rdx,%rax
+     11e:	cmp    %ebx,(%rdx)
+     120:	je     140 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x140>
+     122:	sub    $0x4,%rax
+     126:	cmp    %ebx,(%rax)
+     128:	je     140 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x140>
+     12a:	lea    -0x8(%rdx),%rax
+     12e:	cmp    %ebx,-0x8(%rdx)
+     131:	je     140 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x140>
+     133:	lea    -0xc(%rdx),%rax
+     137:	cmp    %ebx,-0xc(%rdx)
+     13a:	jne    110 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x110>
+     13c:	nopl   0x0(%rax)
+     140:	cmp    %rax,%rsi
+     143:	je     b0 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0xb0>
+     149:	mov    %rax,0x8(%r9)
+     14d:	pop    %rbx
+     14e:	mov    %r9,%rax
+     151:	mov    %rdi,(%r9)
+     154:	ret
+     155:	mov    0x8(%r10),%rdx
+     159:	mov    (%r10),%rax
+     15c:	lea    (%rax,%rdx,4),%rsi
+     160:	jmp    1c <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x1c>
+     165:	mov    %r9,%rax
+     168:	movups %xmm0,(%r9)
+     16c:	pop    %rbx
+     16d:	ret
+     16e:	mov    0x8(%rdi),%rcx
+     172:	mov    (%rdi),%rdx
+     175:	lea    (%rdx,%rcx,4),%rdx
+     179:	cmp    %rdx,%rax
+     17c:	jne    149 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x149>
+     17e:	mov    0x20(%rdi),%rax
+     182:	add    $0x18,%rdi
+     186:	shl    $0x2,%rax
+     18a:	je     17e <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x17e>
+     18c:	mov    (%rdi),%rax
+     18f:	jmp    149 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]+0x149>
+     191:	nopl   0x0(%rax)
+     195:	data16 cs nopw 0x0(%rax,%rax,1)
+
+00000000000001a0 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]>:
+     1a0:	mov    %rsi,%r10
+     1a3:	mov    %rdi,%r9
+     1a6:	mov    %rdx,%rdi
+     1a9:	push   %rbx
+     1aa:	mov    0x8(%r10),%rdx
+     1ae:	mov    (%rsi),%rsi
+     1b1:	mov    %rcx,%rax
+     1b4:	mov    (%rdi),%r10
+     1b7:	mov    0x8(%rdi),%r11
+     1bb:	cmp    %rsi,%r10
+     1be:	je     300 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x160>
+     1c4:	mov    0x8(%rsi),%rdi
+     1c8:	mov    (%rsi),%rcx
+     1cb:	lea    (%rcx,%rdi,4),%rcx
+     1cf:	cmp    %rdx,%rcx
+     1d2:	jne    1f3 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x53>
+     1d4:	jmp    249 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0xa9>
+     1d6:	cs nopw 0x0(%rax,%rax,1)
+     1e0:	mov    (%rax),%ebx
+     1e2:	cmp    %ebx,(%rdx)
+     1e4:	jne    1fb <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x5b>
+     1e6:	add    $0x4,%rdx
+     1ea:	add    $0x4,%rax
+     1ee:	cmp    %rdx,%rcx
+     1f1:	je     249 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0xa9>
+     1f3:	mov    %rdx,%rdi
+     1f6:	cmp    %rax,%r8
+     1f9:	jne    1e0 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x40>
+     1fb:	mov    0x8(%rsi),%rcx
+     1ff:	mov    (%rsi),%rdx
+     202:	lea    (%rdx,%rcx,4),%rdx
+     206:	cmp    %rdx,%rdi
+     209:	jne    234 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x94>
+     20b:	lea    0x18(%rsi),%rdx
+     20f:	nopw   0x0(%rax,%rax,1)
+     215:	data16 cs nopw 0x0(%rax,%rax,1)
+     220:	mov    %rdx,%rsi
+     223:	lea    0x18(%rdx),%rdx
+     227:	mov    0x8(%rsi),%rbx
+     22b:	shl    $0x2,%rbx
+     22f:	je     220 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x80>
+     231:	mov    (%rsi),%rdi
+     234:	mov    %rax,0x10(%r9)
+     238:	pop    %rbx
+     239:	mov    %r9,%rax
+     23c:	mov    %rsi,(%r9)
+     23f:	mov    %rdi,0x8(%r9)
+     243:	movb   $0x0,0x18(%r9)
+     248:	ret
+     249:	cmp    %rax,%r8
+     24c:	je     32f <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x18f>
+     252:	cmp    %rsi,%r10
+     255:	je     30d <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x16d>
+     25b:	nopl   0x0(%rax,%rax,1)
+     260:	add    $0x18,%rsi
+     264:	mov    (%rsi),%rdx
+     267:	cmp    %rsi,%r10
+     26a:	je     1bb <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x1b>
+     270:	mov    0x8(%rsi),%rcx
+     274:	lea    (%rdx,%rcx,4),%rcx
+     278:	cmp    %rcx,%rdx
+     27b:	jne    293 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0xf3>
+     27d:	jmp    2f0 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x150>
+     27f:	nop
+     280:	mov    (%rax),%edi
+     282:	cmp    %edi,(%rdx)
+     284:	jne    298 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0xf8>
+     286:	add    $0x4,%rdx
+     28a:	add    $0x4,%rax
+     28e:	cmp    %rdx,%rcx
+     291:	je     2f0 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x150>
+     293:	cmp    %rax,%r8
+     296:	jne    280 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0xe0>
+     298:	cmp    %rdx,%rcx
+     29b:	jne    2d4 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x134>
+     29d:	lea    0x18(%rsi),%rdx
+     2a1:	nopw   0x0(%rax,%rax,1)
+     2aa:	data16 cs nopw 0x0(%rax,%rax,1)
+     2b5:	data16 cs nopw 0x0(%rax,%rax,1)
+     2c0:	mov    %rdx,%rsi
+     2c3:	lea    0x18(%rdx),%rdx
+     2c7:	mov    0x8(%rsi),%rbx
+     2cb:	shl    $0x2,%rbx
+     2cf:	je     2c0 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x120>
+     2d1:	mov    (%rsi),%rdx
+     2d4:	mov    %rax,0x10(%r9)
+     2d8:	pop    %rbx
+     2d9:	mov    %r9,%rax
+     2dc:	mov    %rsi,(%r9)
+     2df:	mov    %rdx,0x8(%r9)
+     2e3:	movb   $0x0,0x18(%r9)
+     2e8:	ret
+     2e9:	nopl   0x0(%rax)
+     2f0:	cmp    %rax,%r8
+     2f3:	jne    260 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0xc0>
+     2f9:	jmp    298 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0xf8>
+     2fb:	nopl   0x0(%rax,%rax,1)
+     300:	cmp    %rdx,%r11
+     303:	je     322 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x182>
+     305:	mov    %r11,%rcx
+     308:	jmp    1f3 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x53>
+     30d:	mov    %rax,0x10(%r9)
+     311:	pop    %rbx
+     312:	mov    %r9,%rax
+     315:	mov    %rsi,(%r9)
+     318:	mov    %r11,0x8(%r9)
+     31c:	movb   $0x1,0x18(%r9)
+     321:	ret
+     322:	cmp    %rax,%r8
+     325:	jne    30d <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x16d>
+     327:	mov    %r11,%rdi
+     32a:	jmp    1fb <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x5b>
+     32f:	mov    %rcx,%rdi
+     332:	jmp    1fb <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x5b>
+     337:	nopw   0x0(%rax,%rax,1)
+
+0000000000000340 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]>:
+     340:	sub    $0x98,%rsp
+     347:	mov    %rbx,0x68(%rsp)
+     34c:	mov    (%rdx),%rbx
+     34f:	mov    %rbp,0x70(%rsp)
+     354:	mov    %rdi,%rbp
+     357:	mov    %rsi,%rdi
+     35a:	mov    %r12,0x78(%rsp)
+     35f:	mov    0x8(%rdi),%rax
+     363:	mov    %r15,0x90(%rsp)
+     36b:	mov    (%rdi),%r12
+     36e:	movdqu 0x8(%rdx),%xmm0
+     373:	mov    0x8(%rdx),%r15
+     377:	mov    %fs:0x28,%rsi
+     380:	mov    %rsi,0x58(%rsp)
+     385:	mov    %rcx,%rsi
+     388:	mov    0x10(%rdi),%rcx
+     38c:	mov    0x10(%rdx),%rdi
+     390:	mov    %rdi,0x8(%rsp)
+     395:	cmp    %r12,%rbx
+     398:	je     58d <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x24d>
+     39e:	mov    0x8(%r12),%rdx
+     3a3:	mov    %rcx,0x18(%rsp)
+     3a8:	mov    %rsi,%rcx
+     3ab:	lea    0x10(%rsp),%rsi
+     3b0:	mov    %r13,0x80(%rsp)
+     3b8:	lea    -0x3(%rdx,%rdx,2),%rdi
+     3bd:	mov    (%r12),%rdx
+     3c1:	mov    %rax,0x10(%rsp)
+     3c6:	mov    %r14,0x88(%rsp)
+     3ce:	lea    (%rdx,%rdi,8),%rdx
+     3d2:	mov    (%rdx),%rdi
+     3d5:	mov    %rdx,0x20(%rsp)
+     3da:	lea    0x20(%rsp),%rdx
+     3df:	mov    %rdi,0x28(%rsp)
+     3e4:	lea    0x30(%rsp),%rdi
+     3e9:	call   1a0 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]>
+     3ee:	mov    0x40(%rsp),%rsi
+     3f3:	cmpb   $0x0,0x48(%rsp)
+     3f8:	je     689 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x349>
+     3fe:	xchg   %ax,%ax
+     400:	add    $0x18,%r12
+     404:	mov    (%r12),%rax
+     408:	cmp    %r12,%rbx
+     40b:	je     546 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x206>
+     411:	mov    0x8(%r12),%rdx
+     416:	mov    0x8(%rax),%rdi
+     41a:	lea    -0x3(%rdx,%rdx,2),%rdx
+     41f:	shl    $0x2,%rdi
+     423:	lea    (%rax,%rdx,8),%r13
+     427:	mov    0x0(%r13),%r14
+     42b:	mov    %r13,0x20(%rsp)
+     430:	mov    %r14,0x28(%rsp)
+     435:	jne    451 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x111>
+     437:	lea    0x18(%rax),%rdx
+     43b:	nopl   0x0(%rax,%rax,1)
+     440:	mov    %rdx,%rax
+     443:	lea    0x18(%rdx),%rdx
+     447:	mov    0x8(%rax),%rcx
+     44b:	shl    $0x2,%rcx
+     44f:	je     440 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x100>
+     451:	mov    (%rax),%rdx
+     454:	mov    %rsi,%rcx
+     457:	lea    0x30(%rsp),%rdi
+     45c:	lea    0x10(%rsp),%rsi
+     461:	mov    %rax,0x10(%rsp)
+     466:	mov    %rdx,0x18(%rsp)
+     46b:	lea    0x20(%rsp),%rdx
+     470:	call   1a0 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]>
+     475:	mov    0x40(%rsp),%rsi
+     47a:	cmpb   $0x0,0x48(%rsp)
+     47f:	jne    400 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0xc0>
+     485:	mov    0x30(%rsp),%rax
+     48a:	mov    0x38(%rsp),%rdx
+     48f:	cmp    %rax,%r13
+     492:	je     53b <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x1fb>
+     498:	mov    %r12,0x0(%rbp)
+     49c:	mov    0x80(%rsp),%r13
+     4a4:	mov    %rax,0x8(%rbp)
+     4a8:	mov    0x88(%rsp),%r14
+     4b0:	mov    %rdx,0x10(%rbp)
+     4b4:	mov    %rsi,0x18(%rbp)
+     4b8:	movb   $0x0,0x20(%rbp)
+     4bc:	mov    0x58(%rsp),%rax
+     4c1:	sub    %fs:0x28,%rax
+     4ca:	jne    69e <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x35e>
+     4d0:	mov    %rbp,%rax
+     4d3:	mov    0x68(%rsp),%rbx
+     4d8:	mov    0x70(%rsp),%rbp
+     4dd:	mov    0x78(%rsp),%r12
+     4e2:	mov    0x90(%rsp),%r15
+     4ea:	add    $0x98,%rsp
+     4f1:	ret
+     4f2:	mov    0x18(%r12),%rdi
+     4f7:	add    $0x18,%r12
+     4fb:	mov    0x8(%rdi),%rax
+     4ff:	lea    0x18(%rdi),%rdx
+     503:	shl    $0x2,%rax
+     507:	jne    676 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x336>
+     50d:	mov    %rdx,%rax
+     510:	lea    0x18(%rdx),%rdx
+     514:	mov    0x8(%rax),%rbx
+     518:	shl    $0x2,%rbx
+     51c:	je     50d <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x1cd>
+     51e:	mov    (%rax),%rdx
+     521:	mov    0x8(%r12),%rcx
+     526:	lea    -0x3(%rcx,%rcx,2),%rcx
+     52b:	lea    (%rdi,%rcx,8),%rcx
+     52f:	mov    (%rcx),%r14
+     532:	cmp    %rax,%rcx
+     535:	jne    498 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x158>
+     53b:	cmp    %r14,%rdx
+     53e:	jne    498 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x158>
+     544:	jmp    4f2 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x1b2>
+     546:	mov    0x8(%rax),%rdi
+     54a:	shl    $0x2,%rdi
+     54e:	jne    571 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x231>
+     550:	lea    0x18(%rax),%rdx
+     554:	nop
+     555:	data16 cs nopw 0x0(%rax,%rax,1)
+     560:	mov    %rdx,%rax
+     563:	lea    0x18(%rdx),%rdx
+     567:	mov    0x8(%rax),%rdi
+     56b:	shl    $0x2,%rdi
+     56f:	je     560 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x220>
+     571:	mov    (%rax),%rcx
+     574:	mov    0x80(%rsp),%r13
+     57c:	mov    0x88(%rsp),%r14
+     584:	cmp    %r12,%rbx
+     587:	jne    39e <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x5e>
+     58d:	mov    %rcx,0x18(%rsp)
+     592:	lea    0x20(%rsp),%rdx
+     597:	mov    %rsi,%rcx
+     59a:	lea    0x30(%rsp),%rdi
+     59f:	lea    0x10(%rsp),%rsi
+     5a4:	mov    %rax,0x10(%rsp)
+     5a9:	movaps %xmm0,0x20(%rsp)
+     5ae:	call   1a0 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]>
+     5b3:	mov    0x40(%rsp),%rsi
+     5b8:	cmpb   $0x0,0x48(%rsp)
+     5bd:	jne    5f9 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x2b9>
+     5bf:	mov    0x8(%r12),%rcx
+     5c4:	mov    0x30(%rsp),%rax
+     5c9:	mov    0x38(%rsp),%rdx
+     5ce:	lea    -0x3(%rcx,%rcx,2),%rdi
+     5d3:	mov    (%r12),%rcx
+     5d7:	lea    (%rcx,%rdi,8),%rcx
+     5db:	cmp    %rcx,%rax
+     5de:	je     627 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x2e7>
+     5e0:	mov    %r12,0x0(%rbp)
+     5e4:	mov    %rax,0x8(%rbp)
+     5e8:	mov    %rdx,0x10(%rbp)
+     5ec:	mov    %rsi,0x18(%rbp)
+     5f0:	movb   $0x0,0x20(%rbp)
+     5f4:	jmp    4bc <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x17c>
+     5f9:	movq   %rbx,%xmm0
+     5fe:	movq   %r15,%xmm2
+     603:	movq   %rsi,%xmm1
+     608:	movb   $0x1,0x20(%rbp)
+     60c:	punpcklqdq %xmm2,%xmm0
+     610:	movups %xmm0,0x0(%rbp)
+     614:	movq   0x8(%rsp),%xmm0
+     61a:	punpcklqdq %xmm1,%xmm0
+     61e:	movups %xmm0,0x10(%rbp)
+     622:	jmp    4bc <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x17c>
+     627:	mov    (%rax),%rcx
+     62a:	cmp    %rcx,%rdx
+     62d:	jne    5e0 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x2a0>
+     62f:	mov    0x18(%r12),%rcx
+     634:	add    $0x18,%r12
+     638:	mov    0x8(%rcx),%rax
+     63c:	lea    0x18(%rcx),%rdx
+     640:	shl    $0x2,%rax
+     644:	jne    681 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x341>
+     646:	mov    %rdx,%rax
+     649:	lea    0x18(%rdx),%rdx
+     64d:	mov    0x8(%rax),%rbx
+     651:	shl    $0x2,%rbx
+     655:	je     646 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x306>
+     657:	mov    (%rax),%rdx
+     65a:	mov    0x8(%r12),%rdi
+     65f:	lea    -0x3(%rdi,%rdi,2),%rdi
+     664:	lea    (%rcx,%rdi,8),%rdi
+     668:	mov    (%rdi),%rcx
+     66b:	cmp    %rax,%rdi
+     66e:	jne    5e0 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x2a0>
+     674:	jmp    62a <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x2ea>
+     676:	mov    (%rdi),%rdx
+     679:	mov    %rdi,%rax
+     67c:	jmp    521 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x1e1>
+     681:	mov    (%rcx),%rdx
+     684:	mov    %rcx,%rax
+     687:	jmp    65a <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x31a>
+     689:	mov    0x80(%rsp),%r13
+     691:	mov    0x88(%rsp),%r14
+     699:	jmp    5bf <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x27f>
+     69e:	mov    %r13,0x80(%rsp)
+     6a6:	mov    %r14,0x88(%rsp)
+     6ae:	call   6b3 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]+0x373>
+     6b3:	xchg   %ax,%ax
+     6b5:	data16 cs nopw 0x0(%rax,%rax,1)
+
+00000000000006c0 <verify_leaf>:
+     6c0:	endbr64
+     6c4:	cmp    %rsi,%rdi
+     6c7:	jne    6e3 <verify_leaf+0x23>
+     6c9:	jmp    700 <verify_leaf+0x40>
+     6cb:	nopl   0x0(%rax,%rax,1)
+     6d0:	mov    (%rdx),%eax
+     6d2:	cmp    %eax,(%rdi)
+     6d4:	jne    6e8 <verify_leaf+0x28>
+     6d6:	add    $0x4,%rdi
+     6da:	add    $0x4,%rdx
+     6de:	cmp    %rdi,%rsi
+     6e1:	je     700 <verify_leaf+0x40>
+     6e3:	cmp    %rdx,%rcx
+     6e6:	jne    6d0 <verify_leaf+0x10>
+     6e8:	mov    0x8(%rsp),%rax
+     6ed:	xor    %ecx,%ecx
+     6ef:	mov    %rdi,(%r8)
+     6f2:	mov    %rdx,(%r9)
+     6f5:	mov    %cl,(%rax)
+     6f7:	ret
+     6f8:	nopl   0x0(%rax,%rax,1)
+     700:	mov    0x8(%rsp),%rax
+     705:	cmp    %rdx,%rcx
+     708:	mov    %rdi,(%r8)
+     70b:	setne  %cl
+     70e:	mov    %rdx,(%r9)
+     711:	mov    %cl,(%rax)
+     713:	ret
+     714:	nop
+     715:	data16 cs nopw 0x0(%rax,%rax,1)
+
+0000000000000720 <verify_walk1>:
+     720:	endbr64
+     724:	push   %rbp
+     725:	mov    %rdx,%rax
+     728:	mov    %r8,%rbp
+     72b:	mov    %rcx,%r8
+     72e:	push   %rbx
+     72f:	mov    %rax,%rcx
+     732:	sub    $0x58,%rsp
+     736:	movdqu (%rsi),%xmm0
+     73a:	mov    %fs:0x28,%rbx
+     743:	mov    %rbx,0x48(%rsp)
+     748:	mov    %r9,%rbx
+     74b:	lea    0x10(%rsp),%rdx
+     750:	mov    %rsp,%rsi
+     753:	movaps %xmm0,0x10(%rsp)
+     758:	movdqu (%rdi),%xmm0
+     75c:	lea    0x20(%rsp),%rdi
+     761:	movaps %xmm0,(%rsp)
+     765:	call   1a0 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]>
+     76a:	mov    0x30(%rsp),%rax
+     76f:	mov    %rax,0x0(%rbp)
+     773:	movzbl 0x38(%rsp),%eax
+     778:	mov    %al,(%rbx)
+     77a:	mov    0x48(%rsp),%rax
+     77f:	sub    %fs:0x28,%rax
+     788:	jne    791 <verify_walk1+0x71>
+     78a:	add    $0x58,%rsp
+     78e:	pop    %rbx
+     78f:	pop    %rbp
+     790:	ret
+     791:	call   796 <verify_walk1+0x76>
+     796:	cs nopw 0x0(%rax,%rax,1)
+
+00000000000007a0 <verify_walk2>:
+     7a0:	endbr64
+     7a4:	push   %rbp
+     7a5:	mov    %rdx,%rax
+     7a8:	mov    %r8,%rbp
+     7ab:	mov    %rcx,%r8
+     7ae:	push   %rbx
+     7af:	mov    %rax,%rcx
+     7b2:	sub    $0x78,%rsp
+     7b6:	mov    0x10(%rsi),%rdx
+     7ba:	movdqu (%rsi),%xmm0
+     7be:	mov    %fs:0x28,%rbx
+     7c7:	mov    %rbx,0x68(%rsp)
+     7cc:	mov    %r9,%rbx
+     7cf:	mov    %rsp,%rsi
+     7d2:	mov    %rdx,0x30(%rsp)
+     7d7:	mov    0x10(%rdi),%rdx
+     7db:	movaps %xmm0,0x20(%rsp)
+     7e0:	movdqu (%rdi),%xmm0
+     7e4:	lea    0x40(%rsp),%rdi
+     7e9:	mov    %rdx,0x10(%rsp)
+     7ee:	lea    0x20(%rsp),%rdx
+     7f3:	movaps %xmm0,(%rsp)
+     7f7:	call   340 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]>
+     7fc:	mov    0x58(%rsp),%rax
+     801:	mov    %rax,0x0(%rbp)
+     805:	movzbl 0x60(%rsp),%eax
+     80a:	mov    %al,(%rbx)
+     80c:	mov    0x68(%rsp),%rax
+     811:	sub    %fs:0x28,%rax
+     81a:	jne    823 <verify_walk2+0x83>
+     81c:	add    $0x78,%rsp
+     820:	pop    %rbx
+     821:	pop    %rbp
+     822:	ret
+     823:	call   828 <verify_walk2+0x88>
+     828:	nopl   0x0(%rax,%rax,1)
+
+0000000000000830 <fe_bwd_seg>:
+     830:	endbr64
+     834:	sub    $0xb8,%rsp
+     83b:	mov    %rdx,0x10(%rsp)
+     840:	mov    %fs:0x28,%rax
+     849:	mov    %rax,0x78(%rsp)
+     84e:	xor    %eax,%eax
+     850:	cmp    %rcx,%rdx
+     853:	je     a98 <fe_bwd_seg+0x268>
+     859:	mov    %r14,0xa8(%rsp)
+     861:	mov    0x8(%rsi),%r10
+     865:	mov    (%rsi),%r14
+     868:	mov    %r12,0x98(%rsp)
+     870:	lea    0x4(%rdx),%r12
+     874:	mov    %rbx,0x88(%rsp)
+     87c:	mov    (%rdi),%rbx
+     87f:	mov    %rbp,0x90(%rsp)
+     887:	mov    0x8(%rdi),%rbp
+     88b:	mov    %r13,0xa0(%rsp)
+     893:	mov    %rcx,%r13
+     896:	mov    %r14,0x8(%rsp)
+     89b:	mov    %r10,0x18(%rsp)
+     8a0:	cmp    %r12,%rcx
+     8a3:	je     902 <fe_bwd_seg+0xd2>
+     8a5:	mov    %r12,%rcx
+     8a8:	nopl   0x0(%rax,%rax,1)
+     8b0:	cmp    %r14,%rbx
+     8b3:	sete   %al
+     8b6:	cmp    %r10,%rbp
+     8b9:	sete   %dl
+     8bc:	and    %dl,%al
+     8be:	jne    9f0 <fe_bwd_seg+0x1c0>
+     8c4:	cmp    %r10,(%r14)
+     8c7:	jne    8f5 <fe_bwd_seg+0xc5>
+     8c9:	nop
+     8ca:	data16 cs nopw 0x0(%rax,%rax,1)
+     8d5:	data16 cs nopw 0x0(%rax,%rax,1)
+     8e0:	mov    -0x18(%r14),%rax
+     8e4:	mov    -0x10(%r14),%rdx
+     8e8:	sub    $0x18,%r14
+     8ec:	lea    (%rax,%rdx,4),%r10
+     8f0:	cmp    %r10,%rax
+     8f3:	je     8e0 <fe_bwd_seg+0xb0>
+     8f5:	add    $0x4,%rcx
+     8f9:	sub    $0x4,%r10
+     8fd:	cmp    %rcx,%r13
+     900:	jne    8b0 <fe_bwd_seg+0x80>
+     902:	mov    %r15,0xb0(%rsp)
+     90a:	nopw   0x0(%rax,%rax,1)
+     910:	mov    0x10(%rsp),%rcx
+     915:	lea    0x50(%rsp),%rdx
+     91a:	lea    0x40(%rsp),%rsi
+     91f:	mov    %r14,0x50(%rsp)
+     924:	lea    0x20(%rsp),%rdi
+     929:	mov    %r10,0x58(%rsp)
+     92e:	mov    %r10,(%rsp)
+     932:	mov    %rbx,0x40(%rsp)
+     937:	mov    %rbp,0x48(%rsp)
+     93c:	call   0 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]>
+     941:	mov    0x20(%rsp),%rax
+     946:	mov    0x28(%rsp),%r15
+     94b:	cmp    %rax,%r14
+     94e:	je     a70 <fe_bwd_seg+0x240>
+     954:	cmp    %r12,%r13
+     957:	je     a30 <fe_bwd_seg+0x200>
+     95d:	mov    0x8(%rax),%rsi
+     961:	mov    (%rax),%rdx
+     964:	lea    0x4(%r15),%rcx
+     968:	lea    (%rdx,%rsi,4),%rdx
+     96c:	cmp    %rdx,%rcx
+     96f:	jne    a90 <fe_bwd_seg+0x260>
+     975:	lea    0x18(%rax),%rcx
+     979:	nopl   0x0(%rax)
+     980:	mov    %rcx,%rdx
+     983:	lea    0x18(%rcx),%rcx
+     987:	mov    0x8(%rdx),%rdi
+     98b:	shl    $0x2,%rdi
+     98f:	je     980 <fe_bwd_seg+0x150>
+     991:	mov    (%rdx),%rcx
+     994:	mov    %rax,(%rsp)
+     998:	mov    0x8(%rsp),%rax
+     99d:	mov    %r13,%r8
+     9a0:	lea    0x40(%rsp),%rsi
+     9a5:	mov    %rdx,0x40(%rsp)
+     9aa:	lea    0x50(%rsp),%rdi
+     9af:	lea    0x30(%rsp),%rdx
+     9b4:	mov    %rax,0x30(%rsp)
+     9b9:	mov    0x18(%rsp),%rax
+     9be:	mov    %rcx,0x48(%rsp)
+     9c3:	mov    %r12,%rcx
+     9c6:	mov    %rax,0x38(%rsp)
+     9cb:	call   1a0 <boost::container::segtrio<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]>
+     9d0:	cmp    0x60(%rsp),%r13
+     9d5:	mov    (%rsp),%rax
+     9d9:	je     a30 <fe_bwd_seg+0x200>
+     9db:	mov    %r15,%r10
+     9de:	mov    %rax,%r14
+     9e1:	jmp    910 <fe_bwd_seg+0xe0>
+     9e6:	cs nopw 0x0(%rax,%rax,1)
+     9f0:	mov    0x88(%rsp),%rbx
+     9f8:	mov    0x90(%rsp),%rbp
+     a00:	mov    0x98(%rsp),%r12
+     a08:	mov    0xa0(%rsp),%r13
+     a10:	mov    0xa8(%rsp),%r14
+     a18:	mov    0x78(%rsp),%rdx
+     a1d:	sub    %fs:0x28,%rdx
+     a26:	jne    aa2 <fe_bwd_seg+0x272>
+     a28:	add    $0xb8,%rsp
+     a2f:	ret
+     a30:	cmp    %rax,0x8(%rsp)
+     a35:	je     a7f <fe_bwd_seg+0x24f>
+     a37:	xor    %eax,%eax
+     a39:	mov    0x88(%rsp),%rbx
+     a41:	mov    0x90(%rsp),%rbp
+     a49:	mov    0x98(%rsp),%r12
+     a51:	mov    0xa0(%rsp),%r13
+     a59:	mov    0xa8(%rsp),%r14
+     a61:	mov    0xb0(%rsp),%r15
+     a69:	jmp    a18 <fe_bwd_seg+0x1e8>
+     a6b:	nopl   0x0(%rax,%rax,1)
+     a70:	cmp    %r15,(%rsp)
+     a74:	jne    954 <fe_bwd_seg+0x124>
+     a7a:	mov    0x18(%rsp),%r15
+     a7f:	cmp    %r15,0x18(%rsp)
+     a84:	sete   %al
+     a87:	jmp    a39 <fe_bwd_seg+0x209>
+     a89:	nopl   0x0(%rax)
+     a90:	mov    %rax,%rdx
+     a93:	jmp    994 <fe_bwd_seg+0x164>
+     a98:	mov    $0x1,%eax
+     a9d:	jmp    a18 <fe_bwd_seg+0x1e8>
+     aa2:	mov    %rbx,0x88(%rsp)
+     aaa:	mov    %rbp,0x90(%rsp)
+     ab2:	mov    %r12,0x98(%rsp)
+     aba:	mov    %r13,0xa0(%rsp)
+     ac2:	mov    %r14,0xa8(%rsp)
+     aca:	mov    %r15,0xb0(%rsp)
+     ad2:	call   ad7 <fe_bwd_seg+0x2a7>
+     ad7:	nopw   0x0(%rax,%rax,1)
+
+0000000000000ae0 <fe_fwd_seg>:
+     ae0:	endbr64
+     ae4:	sub    $0x30,%rsp
+     ae8:	mov    %rcx,%r9
+     aeb:	mov    (%rsi),%rcx
+     aee:	mov    0x8(%rsi),%rsi
+     af2:	mov    %rbx,(%rsp)
+     af6:	mov    %rdx,%rbx
+     af9:	mov    (%rdi),%rdx
+     afc:	mov    %r12,0x10(%rsp)
+     b01:	mov    0x8(%rdi),%r12
+     b05:	cmp    %rcx,%rdx
+     b08:	sete   %r8b
+     b0c:	cmp    %rbx,%r9
+     b0f:	je     1053 <fe_fwd_seg+0x573>
+     b15:	mov    %r15,0x28(%rsp)
+     b1a:	lea    0x4(%rbx),%r15
+     b1e:	mov    %rbp,0x8(%rsp)
+     b23:	mov    %r14,0x20(%rsp)
+     b28:	cmp    %r15,%r9
+     b2b:	je     10bb <fe_fwd_seg+0x5db>
+     b31:	mov    %r15,%r10
+     b34:	mov    %r12,%rbp
+     b37:	mov    %rdx,%rdi
+     b3a:	nopw   0x0(%rax,%rax,1)
+     b40:	cmp    %rdi,%rcx
+     b43:	sete   %r8b
+     b47:	cmp    %rbp,%rsi
+     b4a:	sete   %al
+     b4d:	and    %r8b,%al
+     b50:	jne    dfd <fe_fwd_seg+0x31d>
+     b56:	mov    0x8(%rdi),%r11
+     b5a:	mov    (%rdi),%rax
+     b5d:	add    $0x4,%rbp
+     b61:	lea    (%rax,%r11,4),%rax
+     b65:	cmp    %rax,%rbp
+     b68:	jne    b9b <fe_fwd_seg+0xbb>
+     b6a:	lea    0x18(%rdi),%rax
+     b6e:	nopl   0x0(%rax)
+     b75:	data16 cs nopw 0x0(%rax,%rax,1)
+     b80:	mov    %rax,%rdi
+     b83:	lea    0x18(%rax),%rax
+     b87:	mov    0x8(%rdi),%r14
+     b8b:	shl    $0x2,%r14
+     b8f:	je     b80 <fe_fwd_seg+0xa0>
+     b91:	cmp    %rdi,%rcx
+     b94:	mov    (%rdi),%rbp
+     b97:	sete   %r8b
+     b9b:	add    $0x4,%r10
+     b9f:	cmp    %r10,%r9
+     ba2:	jne    b40 <fe_fwd_seg+0x60>
+     ba4:	mov    %r13,0x18(%rsp)
+     ba9:	cmp    %rbp,%rsi
+     bac:	jne    bb7 <fe_fwd_seg+0xd7>
+     bae:	test   %r8b,%r8b
+     bb1:	jne    10b0 <fe_fwd_seg+0x5d0>
+     bb7:	mov    %rdx,%r8
+     bba:	mov    %r12,%r13
+     bbd:	mov    (%rdi),%rax
+     bc0:	mov    0x8(%rdi),%r10
+     bc4:	add    $0x4,%rbp
+     bc8:	lea    (%rax,%r10,4),%r10
+     bcc:	lea    0x18(%rdi),%rax
+     bd0:	cmp    %r10,%rbp
+     bd3:	jne    bf4 <fe_fwd_seg+0x114>
+     bd5:	data16 cs nopw 0x0(%rax,%rax,1)
+     be0:	mov    %rax,%rdi
+     be3:	lea    0x18(%rax),%rax
+     be7:	mov    0x8(%rdi),%r14
+     beb:	shl    $0x2,%r14
+     bef:	je     be0 <fe_fwd_seg+0x100>
+     bf1:	mov    (%rdi),%rbp
+     bf4:	mov    0x8(%r8),%r10
+     bf8:	mov    (%r8),%rax
+     bfb:	add    $0x4,%r13
+     bff:	lea    (%rax,%r10,4),%rax
+     c03:	cmp    %rax,%r13
+     c06:	jne    c34 <fe_fwd_seg+0x154>
+     c08:	lea    0x18(%r8),%rax
+     c0c:	nopw   0x0(%rax,%rax,1)
+     c15:	data16 cs nopw 0x0(%rax,%rax,1)
+     c20:	mov    %rax,%r8
+     c23:	lea    0x18(%rax),%rax
+     c27:	mov    0x8(%r8),%r14
+     c2b:	shl    $0x2,%r14
+     c2f:	je     c20 <fe_fwd_seg+0x140>
+     c31:	mov    (%r8),%r13
+     c34:	cmp    %rdi,%rcx
+     c37:	jne    bbd <fe_fwd_seg+0xdd>
+     c39:	cmp    %rbp,%rsi
+     c3c:	jne    bbd <fe_fwd_seg+0xdd>
+     c42:	mov    %rdi,-0x10(%rsp)
+     c47:	mov    %rbp,%r14
+     c4a:	mov    %rcx,-0x8(%rsp)
+     c4f:	mov    %rbp,-0x18(%rsp)
+     c54:	mov    %rsi,%rbp
+     c57:	cmp    %r8,%rdx
+     c5a:	je     dec <fe_fwd_seg+0x30c>
+     c60:	mov    0x8(%rdx),%rcx
+     c64:	mov    (%rdx),%rax
+     c67:	lea    (%rax,%rcx,4),%r10
+     c6b:	cmp    %r12,%r10
+     c6e:	je     d20 <fe_fwd_seg+0x240>
+     c74:	mov    %r10,%rax
+     c77:	mov    (%rbx),%esi
+     c79:	mov    %r12,%rcx
+     c7c:	sub    %r12,%rax
+     c7f:	sub    $0x4,%rax
+     c83:	shr    $0x2,%rax
+     c87:	add    $0x1,%rax
+     c8b:	and    $0x3,%eax
+     c8e:	je     cd0 <fe_fwd_seg+0x1f0>
+     c90:	cmp    $0x1,%rax
+     c94:	je     cbc <fe_fwd_seg+0x1dc>
+     c96:	cmp    $0x2,%rax
+     c9a:	je     cad <fe_fwd_seg+0x1cd>
+     c9c:	mov    %r12,%rax
+     c9f:	cmp    %esi,(%r12)
+     ca3:	je     e7e <fe_fwd_seg+0x39e>
+     ca9:	add    $0x4,%rcx
+     cad:	mov    %rcx,%rax
+     cb0:	cmp    %esi,(%rcx)
+     cb2:	je     e7e <fe_fwd_seg+0x39e>
+     cb8:	add    $0x4,%rcx
+     cbc:	mov    %rcx,%rax
+     cbf:	cmp    %esi,(%rcx)
+     cc1:	je     e7e <fe_fwd_seg+0x39e>
+     cc7:	add    $0x4,%rcx
+     ccb:	cmp    %rcx,%r10
+     cce:	je     d17 <fe_fwd_seg+0x237>
+     cd0:	mov    %rcx,%rax
+     cd3:	cmp    %esi,(%rcx)
+     cd5:	je     e7e <fe_fwd_seg+0x39e>
+     cdb:	lea    0x4(%rcx),%r11
+     cdf:	mov    %r11,%rcx
+     ce2:	mov    %r11,%rax
+     ce5:	cmp    %esi,(%r11)
+     ce8:	je     e7e <fe_fwd_seg+0x39e>
+     cee:	add    $0x4,%rcx
+     cf2:	mov    %rcx,%rax
+     cf5:	cmp    %esi,(%rcx)
+     cf7:	je     e7e <fe_fwd_seg+0x39e>
+     cfd:	lea    0x8(%r11),%rcx
+     d01:	mov    %rcx,%rax
+     d04:	cmp    %esi,0x8(%r11)
+     d08:	je     e7e <fe_fwd_seg+0x39e>
+     d0e:	lea    0xc(%r11),%rcx
+     d12:	cmp    %rcx,%r10
+     d15:	jne    cd0 <fe_fwd_seg+0x1f0>
+     d17:	cmp    %r8,%rdx
+     d1a:	je     1011 <fe_fwd_seg+0x531>
+     d20:	lea    0x18(%rdx),%r11
+     d24:	cmp    %r11,%r8
+     d27:	je     ddd <fe_fwd_seg+0x2fd>
+     d2d:	nopl   (%rax)
+     d30:	mov    (%r11),%rax
+     d33:	mov    0x8(%r11),%rcx
+     d37:	mov    %r11,%rdx
+     d3a:	lea    (%rax,%rcx,4),%rsi
+     d3e:	cmp    %rsi,%rax
+     d41:	je     dd0 <fe_fwd_seg+0x2f0>
+     d47:	mov    %rsi,%rcx
+     d4a:	mov    (%rbx),%r10d
+     d4d:	sub    %rax,%rcx
+     d50:	sub    $0x4,%rcx
+     d54:	shr    $0x2,%rcx
+     d58:	add    $0x1,%rcx
+     d5c:	and    $0x3,%ecx
+     d5f:	je     d99 <fe_fwd_seg+0x2b9>
+     d61:	cmp    $0x1,%rcx
+     d65:	je     d87 <fe_fwd_seg+0x2a7>
+     d67:	cmp    $0x2,%rcx
+     d6b:	je     d7a <fe_fwd_seg+0x29a>
+     d6d:	cmp    %r10d,(%rax)
+     d70:	je     e20 <fe_fwd_seg+0x340>
+     d76:	add    $0x4,%rax
+     d7a:	cmp    %r10d,(%rax)
+     d7d:	je     e20 <fe_fwd_seg+0x340>
+     d83:	add    $0x4,%rax
+     d87:	cmp    %r10d,(%rax)
+     d8a:	je     e20 <fe_fwd_seg+0x340>
+     d90:	add    $0x4,%rax
+     d94:	cmp    %rax,%rsi
+     d97:	je     dd0 <fe_fwd_seg+0x2f0>
+     d99:	cmp    %r10d,(%rax)
+     d9c:	je     e20 <fe_fwd_seg+0x340>
+     da2:	lea    0x4(%rax),%rcx
+     da6:	mov    %rcx,%rax
+     da9:	cmp    %r10d,(%rcx)
+     dac:	je     e20 <fe_fwd_seg+0x340>
+     dae:	add    $0x4,%rax
+     db2:	cmp    %r10d,(%rax)
+     db5:	je     e20 <fe_fwd_seg+0x340>
+     db7:	lea    0x8(%rcx),%rax
+     dbb:	cmp    %r10d,0x8(%rcx)
+     dbf:	je     e20 <fe_fwd_seg+0x340>
+     dc1:	lea    0xc(%rcx),%rax
+     dc5:	cmp    %rax,%rsi
+     dc8:	jne    d99 <fe_fwd_seg+0x2b9>
+     dca:	nopw   0x0(%rax,%rax,1)
+     dd0:	add    $0x18,%r11
+     dd4:	cmp    %r11,%r8
+     dd7:	jne    d30 <fe_fwd_seg+0x250>
+     ddd:	mov    %r8,%rdx
+     de0:	mov    (%r8),%r12
+     de3:	cmp    %r8,%rdx
+     de6:	jne    c60 <fe_fwd_seg+0x180>
+     dec:	cmp    %r13,%r12
+     def:	je     1011 <fe_fwd_seg+0x531>
+     df5:	mov    %r13,%r10
+     df8:	jmp    c74 <fe_fwd_seg+0x194>
+     dfd:	mov    0x8(%rsp),%rbp
+     e02:	mov    0x20(%rsp),%r14
+     e07:	mov    0x28(%rsp),%r15
+     e0c:	mov    (%rsp),%rbx
+     e10:	mov    0x10(%rsp),%r12
+     e15:	add    $0x30,%rsp
+     e19:	ret
+     e1a:	nopw   0x0(%rax,%rax,1)
+     e20:	cmp    %rax,%rsi
+     e23:	je     dd0 <fe_fwd_seg+0x2f0>
+     e25:	cmp    %r8,%rdx
+     e28:	jne    e33 <fe_fwd_seg+0x353>
+     e2a:	cmp    %r13,%rax
+     e2d:	je     1011 <fe_fwd_seg+0x531>
+     e33:	lea    0x4(%rax),%r12
+     e37:	cmp    %r15,%r9
+     e3a:	jne    eb7 <fe_fwd_seg+0x3d7>
+     e3c:	mov    %rdx,-0x10(%rsp)
+     e41:	cmp    %r12,%rsi
+     e44:	jne    e74 <fe_fwd_seg+0x394>
+     e46:	lea    0x18(%rdx),%rcx
+     e4a:	data16 cs nopw 0x0(%rax,%rax,1)
+     e55:	data16 cs nopw 0x0(%rax,%rax,1)
+     e60:	mov    %rcx,%rdx
+     e63:	lea    0x18(%rcx),%rcx
+     e67:	mov    0x8(%rdx),%rsi
+     e6b:	shl    $0x2,%rsi
+     e6f:	je     e60 <fe_fwd_seg+0x380>
+     e71:	mov    (%rdx),%r12
+     e74:	mov    %rax,-0x18(%rsp)
+     e79:	jmp    c57 <fe_fwd_seg+0x177>
+     e7e:	cmp    %r10,%rcx
+     e81:	je     d17 <fe_fwd_seg+0x237>
+     e87:	mov    0x8(%rdx),%r10
+     e8b:	mov    (%rdx),%rsi
+     e8e:	lea    (%rsi,%r10,4),%rsi
+     e92:	cmp    %rcx,%rsi
+     e95:	jne    e25 <fe_fwd_seg+0x345>
+     e97:	lea    0x18(%rdx),%rcx
+     e9b:	mov    (%rcx),%rax
+     e9e:	mov    0x8(%rcx),%rsi
+     ea2:	mov    %rcx,%rdx
+     ea5:	add    $0x18,%rcx
+     ea9:	lea    (%rax,%rsi,4),%rsi
+     ead:	cmp    %rsi,%rax
+     eb0:	je     e9b <fe_fwd_seg+0x3bb>
+     eb2:	jmp    e25 <fe_fwd_seg+0x345>
+     eb7:	cmp    %r12,%rsi
+     eba:	jne    1048 <fe_fwd_seg+0x568>
+     ec0:	lea    0x18(%rdx),%rcx
+     ec4:	nopw   0x0(%rax,%rax,1)
+     eca:	data16 cs nopw 0x0(%rax,%rax,1)
+     ed5:	data16 cs nopw 0x0(%rax,%rax,1)
+     ee0:	mov    %rcx,%r10
+     ee3:	lea    0x18(%rcx),%rcx
+     ee7:	mov    0x8(%r10),%r11
+     eeb:	shl    $0x2,%r11
+     eef:	je     ee0 <fe_fwd_seg+0x400>
+     ef1:	mov    (%r10),%r11
+     ef4:	mov    %rbp,-0x20(%rsp)
+     ef9:	mov    %r10,%rbp
+     efc:	mov    %r15,%rcx
+     eff:	mov    %r11,-0x28(%rsp)
+     f04:	cmp    %rdi,%rbp
+     f07:	je     ffe <fe_fwd_seg+0x51e>
+     f0d:	mov    0x0(%rbp),%r10
+     f11:	mov    0x8(%rbp),%r11
+     f15:	lea    (%r10,%r11,4),%r10
+     f19:	cmp    -0x28(%rsp),%r10
+     f1e:	je     f70 <fe_fwd_seg+0x490>
+     f20:	mov    -0x28(%rsp),%r11
+     f25:	mov    %rbp,-0x28(%rsp)
+     f2a:	jmp    f44 <fe_fwd_seg+0x464>
+     f2c:	nopl   0x0(%rax)
+     f30:	mov    (%rcx),%ebp
+     f32:	cmp    %ebp,(%r11)
+     f35:	jne    f53 <fe_fwd_seg+0x473>
+     f37:	add    $0x4,%r11
+     f3b:	add    $0x4,%rcx
+     f3f:	cmp    %r11,%r10
+     f42:	je     f6b <fe_fwd_seg+0x48b>
+     f44:	cmp    %rcx,%r9
+     f47:	jne    f30 <fe_fwd_seg+0x450>
+     f49:	mov    -0x20(%rsp),%rbp
+     f4e:	jmp    e3c <fe_fwd_seg+0x35c>
+     f53:	mov    -0x20(%rsp),%rbp
+     f58:	cmp    %rcx,%r9
+     f5b:	je     e3c <fe_fwd_seg+0x35c>
+     f61:	mov    -0x18(%rsp),%rax
+     f66:	jmp    e41 <fe_fwd_seg+0x361>
+     f6b:	mov    -0x28(%rsp),%rbp
+     f70:	cmp    %rcx,%r9
+     f73:	je     f49 <fe_fwd_seg+0x469>
+     f75:	cmp    %rdi,%rbp
+     f78:	je     f53 <fe_fwd_seg+0x473>
+     f7a:	add    $0x18,%rbp
+     f7e:	cmp    %rbp,%rdi
+     f81:	je     fea <fe_fwd_seg+0x50a>
+     f83:	xchg   %ax,%ax
+     f85:	data16 cs nopw 0x0(%rax,%rax,1)
+     f90:	mov    0x0(%rbp),%r10
+     f94:	mov    0x8(%rbp),%r11
+     f98:	lea    (%r10,%r11,4),%r11
+     f9c:	cmp    %r11,%r10
+     f9f:	je     fd8 <fe_fwd_seg+0x4f8>
+     fa1:	mov    %rbp,-0x28(%rsp)
+     fa6:	jmp    fc4 <fe_fwd_seg+0x4e4>
+     fa8:	nopl   0x0(%rax,%rax,1)
+     fb0:	mov    (%rcx),%ebp
+     fb2:	cmp    %ebp,(%r10)
+     fb5:	jne    f53 <fe_fwd_seg+0x473>
+     fb7:	add    $0x4,%r10
+     fbb:	add    $0x4,%rcx
+     fbf:	cmp    %r10,%r11
+     fc2:	je     fd3 <fe_fwd_seg+0x4f3>
+     fc4:	cmp    %rcx,%r9
+     fc7:	jne    fb0 <fe_fwd_seg+0x4d0>
+     fc9:	mov    -0x20(%rsp),%rbp
+     fce:	jmp    e3c <fe_fwd_seg+0x35c>
+     fd3:	mov    -0x28(%rsp),%rbp
+     fd8:	cmp    %rcx,%r9
+     fdb:	je     f49 <fe_fwd_seg+0x469>
+     fe1:	add    $0x18,%rbp
+     fe5:	cmp    %rbp,%rdi
+     fe8:	jne    f90 <fe_fwd_seg+0x4b0>
+     fea:	mov    (%rdi),%r11
+     fed:	mov    %rdi,%rbp
+     ff0:	mov    %r11,-0x28(%rsp)
+     ff5:	cmp    %rdi,%rbp
+     ff8:	jne    f0d <fe_fwd_seg+0x42d>
+     ffe:	cmp    %r14,-0x28(%rsp)
+    1003:	je     f53 <fe_fwd_seg+0x473>
+    1009:	mov    %r14,%r10
+    100c:	jmp    f20 <fe_fwd_seg+0x440>
+    1011:	mov    -0x8(%rsp),%rcx
+    1016:	mov    %rbp,%rsi
+    1019:	cmp    -0x10(%rsp),%rcx
+    101e:	je     10cb <fe_fwd_seg+0x5eb>
+    1024:	mov    0x8(%rsp),%rbp
+    1029:	mov    0x18(%rsp),%r13
+    102e:	xor    %eax,%eax
+    1030:	mov    0x20(%rsp),%r14
+    1035:	mov    0x28(%rsp),%r15
+    103a:	mov    (%rsp),%rbx
+    103e:	mov    0x10(%rsp),%r12
+    1043:	add    $0x30,%rsp
+    1047:	ret
+    1048:	mov    %r12,%r11
+    104b:	mov    %rdx,%r10
+    104e:	jmp    ef4 <fe_fwd_seg+0x414>
+    1053:	cmp    %rsi,%r12
+    1056:	jne    105d <fe_fwd_seg+0x57d>
+    1058:	test   %r8b,%r8b
+    105b:	jne    10a1 <fe_fwd_seg+0x5c1>
+    105d:	mov    0x8(%rdx),%rax
+    1061:	mov    (%rdx),%r8
+    1064:	lea    0x0(,%rax,4),%rax
+    106c:	add    $0x4,%r12
+    1070:	lea    (%r8,%rax,1),%r9
+    1074:	lea    0x18(%rdx),%rdi
+    1078:	cmp    %r9,%r12
+    107b:	jne    1097 <fe_fwd_seg+0x5b7>
+    107d:	nopl   (%rax)
+    1080:	mov    0x8(%rdi),%rax
+    1084:	mov    %rdi,%rdx
+    1087:	lea    0x18(%rdi),%rdi
+    108b:	shl    $0x2,%rax
+    108f:	je     1080 <fe_fwd_seg+0x5a0>
+    1091:	mov    (%rdx),%r12
+    1094:	mov    %r12,%r8
+    1097:	cmp    %rdx,%rcx
+    109a:	jne    106c <fe_fwd_seg+0x58c>
+    109c:	cmp    %r12,%rsi
+    109f:	jne    106c <fe_fwd_seg+0x58c>
+    10a1:	cmp    %r12,%rsi
+    10a4:	sete   %al
+    10a7:	jmp    e0c <fe_fwd_seg+0x32c>
+    10ac:	nopl   0x0(%rax)
+    10b0:	mov    %rdx,%r8
+    10b3:	mov    %r12,%r13
+    10b6:	jmp    c42 <fe_fwd_seg+0x162>
+    10bb:	mov    %r13,0x18(%rsp)
+    10c0:	mov    %r12,%rbp
+    10c3:	mov    %rdx,%rdi
+    10c6:	jmp    ba9 <fe_fwd_seg+0xc9>
+    10cb:	mov    -0x18(%rsp),%r12
+    10d0:	mov    0x8(%rsp),%rbp
+    10d5:	mov    0x18(%rsp),%r13
+    10da:	mov    0x20(%rsp),%r14
+    10df:	mov    0x28(%rsp),%r15
+    10e4:	jmp    10a1 <fe_fwd_seg+0x5c1>
+    10e6:	cs nopw 0x0(%rax,%rax,1)
+
+00000000000010f0 <fe_bwd_seg2>:
+    10f0:	endbr64
+    10f4:	sub    $0x118,%rsp
+    10fb:	mov    %rdi,%rax
+    10fe:	mov    %rsi,%rdi
+    1101:	mov    %fs:0x28,%rsi
+    110a:	mov    %rsi,0xd8(%rsp)
+    1112:	mov    %rdx,%rsi
+    1115:	cmp    %rcx,%rsi
+    1118:	je     1464 <fe_bwd_seg2+0x374>
+    111e:	mov    0x8(%rdi),%r11
+    1122:	mov    0x10(%rdi),%r8
+    1126:	mov    %r15,0x110(%rsp)
+    112e:	mov    %rcx,%r15
+    1131:	mov    (%rax),%rdx
+    1134:	mov    (%rdi),%rcx
+    1137:	mov    %rbx,0xe8(%rsp)
+    113f:	mov    0x8(%rax),%rdi
+    1143:	mov    0x10(%rax),%rax
+    1147:	mov    %rbp,0xf0(%rsp)
+    114f:	mov    %r8,%rbx
+    1152:	mov    %r14,0x108(%rsp)
+    115a:	mov    %r11,%rbp
+    115d:	mov    %rcx,%r14
+    1160:	mov    %rax,0x40(%rsp)
+    1165:	lea    0x4(%rsi),%rax
+    1169:	mov    %r12,0xf8(%rsp)
+    1171:	mov    %r13,0x100(%rsp)
+    1179:	mov    %rax,0x10(%rsp)
+    117e:	cmp    %rax,%r15
+    1181:	je     1228 <fe_bwd_seg2+0x138>
+    1187:	nopw   0x0(%rax,%rax,1)
+    1190:	cmp    %r14,%rdx
+    1193:	je     1420 <fe_bwd_seg2+0x330>
+    1199:	mov    %r14,%r13
+    119c:	mov    0x0(%r13),%r9
+    11a0:	mov    %r13,%r14
+    11a3:	mov    0x8(%r9),%r10
+    11a7:	shl    $0x2,%r10
+    11ab:	jne    11d1 <fe_bwd_seg2+0xe1>
+    11ad:	lea    0x18(%r9),%r10
+    11b1:	nopl   0x0(%rax)
+    11b5:	data16 cs nopw 0x0(%rax,%rax,1)
+    11c0:	mov    %r10,%r9
+    11c3:	lea    0x18(%r10),%r10
+    11c7:	mov    0x8(%r9),%r12
+    11cb:	shl    $0x2,%r12
+    11cf:	je     11c0 <fe_bwd_seg2+0xd0>
+    11d1:	mov    (%r9),%r10
+    11d4:	cmp    %r9,%rbp
+    11d7:	je     13f0 <fe_bwd_seg2+0x300>
+    11dd:	lea    -0x18(%rbp),%r9
+    11e1:	cmp    0x0(%rbp),%rbx
+    11e5:	jne    1217 <fe_bwd_seg2+0x127>
+    11e7:	nopl   (%rax)
+    11ea:	data16 cs nopw 0x0(%rax,%rax,1)
+    11f5:	data16 cs nopw 0x0(%rax,%rax,1)
+    1200:	mov    (%r9),%r10
+    1203:	mov    0x8(%r9),%rbx
+    1207:	mov    %r9,%rbp
+    120a:	sub    $0x18,%r9
+    120e:	lea    (%r10,%rbx,4),%rbx
+    1212:	cmp    %rbx,%r10
+    1215:	je     1200 <fe_bwd_seg2+0x110>
+    1217:	add    $0x4,%rax
+    121b:	sub    $0x4,%rbx
+    121f:	cmp    %rax,%r15
+    1222:	jne    1190 <fe_bwd_seg2+0xa0>
+    1228:	mov    %rdx,0x18(%rsp)
+    122d:	mov    %rbp,%rax
+    1230:	mov    %rbx,%r13
+    1233:	mov    %r14,%rbp
+    1236:	mov    %rdi,0x48(%rsp)
+    123b:	mov    %rax,%r14
+    123e:	mov    %rcx,0x38(%rsp)
+    1243:	mov    %r11,0x28(%rsp)
+    1248:	mov    %r8,0x30(%rsp)
+    124d:	mov    %rbx,0x8(%rsp)
+    1252:	mov    %rsi,0x20(%rsp)
+    1257:	nopw   0x0(%rax,%rax,1)
+    1260:	mov    %r14,%r12
+    1263:	mov    %rbp,%rbx
+    1266:	cmp    %rbx,0x18(%rsp)
+    126b:	jne    1470 <fe_bwd_seg2+0x380>
+    1271:	mov    0x40(%rsp),%rdx
+    1276:	mov    0x48(%rsp),%rax
+    127b:	mov    0x20(%rsp),%rcx
+    1280:	mov    %rdx,0xb8(%rsp)
+    1288:	lea    0xb0(%rsp),%rsi
+    1290:	lea    0x90(%rsp),%rdx
+    1298:	lea    0x70(%rsp),%rdi
+    129d:	mov    %rax,0xb0(%rsp)
+    12a5:	mov    %r12,0x90(%rsp)
+    12ad:	mov    %r13,0x98(%rsp)
+    12b5:	call   0 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]>
+    12ba:	mov    0x70(%rsp),%r9
+    12bf:	mov    0x78(%rsp),%rax
+    12c4:	cmp    %r9,%r12
+    12c7:	je     14c0 <fe_bwd_seg2+0x3d0>
+    12cd:	mov    0x8(%rbx),%rsi
+    12d1:	lea    -0x3(%rsi,%rsi,2),%rdi
+    12d6:	mov    (%rbx),%rsi
+    12d9:	lea    (%rsi,%rdi,8),%rsi
+    12dd:	cmp    %r9,%rsi
+    12e0:	je     1630 <fe_bwd_seg2+0x540>
+    12e6:	mov    %r9,0x58(%rsp)
+    12eb:	mov    %r9,%r12
+    12ee:	mov    %rax,%r13
+    12f1:	mov    %rax,0x60(%rsp)
+    12f6:	cmp    %rbx,%rbp
+    12f9:	je     1590 <fe_bwd_seg2+0x4a0>
+    12ff:	cmp    0x10(%rsp),%r15
+    1304:	je     168f <fe_bwd_seg2+0x59f>
+    130a:	mov    0x8(%r12),%rsi
+    130f:	mov    (%r12),%rdx
+    1313:	lea    0x4(%r13),%rcx
+    1317:	lea    (%rdx,%rsi,4),%rdx
+    131b:	cmp    %rdx,%rcx
+    131e:	jne    16f8 <fe_bwd_seg2+0x608>
+    1324:	lea    0x18(%r12),%rcx
+    1329:	nop
+    132a:	data16 cs nopw 0x0(%rax,%rax,1)
+    1335:	data16 cs nopw 0x0(%rax,%rax,1)
+    1340:	mov    %rcx,%rdx
+    1343:	lea    0x18(%rcx),%rcx
+    1347:	mov    0x8(%rdx),%rax
+    134b:	shl    $0x2,%rax
+    134f:	je     1340 <fe_bwd_seg2+0x250>
+    1351:	mov    (%rdx),%rcx
+    1354:	mov    0x8(%rbx),%rsi
+    1358:	lea    -0x3(%rsi,%rsi,2),%rdi
+    135d:	mov    (%rbx),%rsi
+    1360:	lea    (%rsi,%rdi,8),%rdi
+    1364:	mov    %rbx,%rsi
+    1367:	cmp    %rdi,%rdx
+    136a:	je     15d0 <fe_bwd_seg2+0x4e0>
+    1370:	mov    0x38(%rsp),%rax
+    1375:	mov    %rcx,0xa0(%rsp)
+    137d:	mov    %r15,%r8
+    1380:	lea    0xb0(%rsp),%rdi
+    1388:	mov    0x10(%rsp),%rcx
+    138d:	mov    %rsi,0x90(%rsp)
+    1395:	lea    0x90(%rsp),%rsi
+    139d:	mov    %rax,0x70(%rsp)
+    13a2:	mov    0x28(%rsp),%rax
+    13a7:	mov    %rdx,0x98(%rsp)
+    13af:	lea    0x70(%rsp),%rdx
+    13b4:	mov    %rax,0x78(%rsp)
+    13b9:	mov    0x30(%rsp),%rax
+    13be:	mov    %rax,0x80(%rsp)
+    13c6:	call   340 <boost::container::segtrio<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, bool> boost::container::detail_algo::find_end_verify<test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal>(test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg2_vector_iterator<int, std::random_access_iterator_tag>, int const*, int const*, boost::container::detail_algo::find_end_equal, boost::container::segmented_iterator_tag) [clone .isra.0]>
+    13cb:	cmp    0xc8(%rsp),%r15
+    13d3:	je     168f <fe_bwd_seg2+0x59f>
+    13d9:	mov    %r13,0x8(%rsp)
+    13de:	mov    %r12,%r14
+    13e1:	mov    %rbx,%rbp
+    13e4:	jmp    1260 <fe_bwd_seg2+0x170>
+    13e9:	nopl   0x0(%rax)
+    13f0:	cmp    %r10,%rbx
+    13f3:	jne    11dd <fe_bwd_seg2+0xed>
+    13f9:	mov    -0x10(%r13),%r9
+    13fd:	sub    $0x18,%r13
+    1401:	lea    -0x3(%r9,%r9,2),%r10
+    1406:	mov    0x0(%r13),%r9
+    140a:	lea    (%r9,%r10,8),%rbp
+    140e:	mov    0x0(%rbp),%rbx
+    1412:	jmp    119c <fe_bwd_seg2+0xac>
+    1417:	nopw   0x0(%rax,%rax,1)
+    1420:	cmp    %rbp,%rdi
+    1423:	jne    1199 <fe_bwd_seg2+0xa9>
+    1429:	cmp    %rbx,0x40(%rsp)
+    142e:	jne    1199 <fe_bwd_seg2+0xa9>
+    1434:	mov    0xe8(%rsp),%rbx
+    143c:	mov    0xf0(%rsp),%rbp
+    1444:	mov    0xf8(%rsp),%r12
+    144c:	mov    0x100(%rsp),%r13
+    1454:	mov    0x108(%rsp),%r14
+    145c:	mov    0x110(%rsp),%r15
+    1464:	mov    $0x1,%eax
+    1469:	jmp    16d9 <fe_bwd_seg2+0x5e9>
+    146e:	xchg   %ax,%ax
+    1470:	mov    (%rbx),%rax
+    1473:	mov    0x8(%rax),%rdi
+    1477:	lea    0x18(%rax),%rdx
+    147b:	shl    $0x2,%rdi
+    147f:	jne    14b1 <fe_bwd_seg2+0x3c1>
+    1481:	nopw   0x0(%rax,%rax,1)
+    148a:	data16 cs nopw 0x0(%rax,%rax,1)
+    1495:	data16 cs nopw 0x0(%rax,%rax,1)
+    14a0:	mov    %rdx,%rax
+    14a3:	lea    0x18(%rdx),%rdx
+    14a7:	mov    0x8(%rax),%rdi
+    14ab:	shl    $0x2,%rdi
+    14af:	je     14a0 <fe_bwd_seg2+0x3b0>
+    14b1:	mov    (%rax),%rdx
+    14b4:	jmp    127b <fe_bwd_seg2+0x18b>
+    14b9:	nopl   0x0(%rax)
+    14c0:	cmp    %rax,%r13
+    14c3:	jne    12cd <fe_bwd_seg2+0x1dd>
+    14c9:	cmp    %rbx,0x18(%rsp)
+    14ce:	je     1778 <fe_bwd_seg2+0x688>
+    14d4:	sub    $0x18,%rbx
+    14d8:	cmp    %rbx,0x18(%rsp)
+    14dd:	je     1792 <fe_bwd_seg2+0x6a2>
+    14e3:	mov    0x8(%rbx),%rdx
+    14e7:	mov    (%rbx),%rax
+    14ea:	lea    -0x3(%rdx,%rdx,2),%rdx
+    14ef:	mov    0x8(%rax),%rsi
+    14f3:	lea    (%rax,%rdx,8),%r12
+    14f7:	mov    (%r12),%r13
+    14fb:	shl    $0x2,%rsi
+    14ff:	mov    %r12,0x90(%rsp)
+    1507:	mov    %r13,0x98(%rsp)
+    150f:	jne    1531 <fe_bwd_seg2+0x441>
+    1511:	lea    0x18(%rax),%rdx
+    1515:	data16 cs nopw 0x0(%rax,%rax,1)
+    1520:	mov    %rdx,%rax
+    1523:	lea    0x18(%rdx),%rdx
+    1527:	mov    0x8(%rax),%rdi
+    152b:	shl    $0x2,%rdi
+    152f:	je     1520 <fe_bwd_seg2+0x430>
+    1531:	mov    (%rax),%rdx
+    1534:	mov    0x20(%rsp),%rcx
+    1539:	lea    0xb0(%rsp),%rsi
+    1541:	lea    0x70(%rsp),%rdi
+    1546:	mov    %rax,0xb0(%rsp)
+    154e:	mov    %rdx,0xb8(%rsp)
+    1556:	lea    0x90(%rsp),%rdx
+    155e:	call   0 <test_detail::seg_vector_iterator<int, std::random_access_iterator_tag> boost::container::detail_algo::find_last_if_scan<test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal> >(test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, test_detail::seg_vector_iterator<int, std::random_access_iterator_tag>, boost::container::detail_algo::find_end_pred_deref<int const*, boost::container::detail_algo::find_end_equal>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag const&) [clone .isra.0]>
+    1563:	mov    0x70(%rsp),%rax
+    1568:	mov    0x78(%rsp),%rdx
+    156d:	cmp    %rax,%r12
+    1570:	je     1700 <fe_bwd_seg2+0x610>
+    1576:	mov    %rdx,%r13
+    1579:	mov    %rax,%r12
+    157c:	cmp    %rbx,%rbp
+    157f:	jne    12ff <fe_bwd_seg2+0x20f>
+    1585:	data16 cs nopw 0x0(%rax,%rax,1)
+    1590:	cmp    %r12,%r14
+    1593:	jne    12ff <fe_bwd_seg2+0x20f>
+    1599:	cmp    %r13,0x8(%rsp)
+    159e:	jne    12ff <fe_bwd_seg2+0x20f>
+    15a4:	mov    0x28(%rsp),%r11
+    15a9:	mov    0x30(%rsp),%r8
+    15ae:	mov    %r11,%r12
+    15b1:	mov    %r8,%rax
+    15b4:	cmp    %rax,%r8
+    15b7:	sete   %al
+    15ba:	cmp    %r12,%r11
+    15bd:	sete   %dl
+    15c0:	and    %edx,%eax
+    15c2:	jmp    16a9 <fe_bwd_seg2+0x5b9>
+    15c7:	nopw   0x0(%rax,%rax,1)
+    15d0:	mov    (%rdx),%rdi
+    15d3:	cmp    %rdi,%rcx
+    15d6:	jne    1370 <fe_bwd_seg2+0x280>
+    15dc:	mov    0x18(%rsi),%rdi
+    15e0:	add    $0x18,%rsi
+    15e4:	mov    0x8(%rdi),%rcx
+    15e8:	lea    0x18(%rdi),%rax
+    15ec:	shl    $0x2,%rcx
+    15f0:	jne    1762 <fe_bwd_seg2+0x672>
+    15f6:	cs nopw 0x0(%rax,%rax,1)
+    1600:	mov    %rax,%rdx
+    1603:	lea    0x18(%rax),%rax
+    1607:	mov    0x8(%rdx),%rcx
+    160b:	shl    $0x2,%rcx
+    160f:	je     1600 <fe_bwd_seg2+0x510>
+    1611:	mov    (%rdx),%rcx
+    1614:	mov    0x8(%rsi),%rax
+    1618:	lea    -0x3(%rax,%rax,2),%rax
+    161d:	lea    (%rdi,%rax,8),%rax
+    1621:	mov    (%rax),%rdi
+    1624:	cmp    %rdx,%rax
+    1627:	jne    1370 <fe_bwd_seg2+0x280>
+    162d:	jmp    15d3 <fe_bwd_seg2+0x4e3>
+    162f:	nop
+    1630:	mov    (%r9),%rsi
+    1633:	cmp    %rsi,%rax
+    1636:	jne    12e6 <fe_bwd_seg2+0x1f6>
+    163c:	mov    0x18(%rbx),%rcx
+    1640:	add    $0x18,%rbx
+    1644:	mov    0x8(%rcx),%rsi
+    1648:	lea    0x18(%rcx),%rax
+    164c:	shl    $0x2,%rsi
+    1650:	jne    176d <fe_bwd_seg2+0x67d>
+    1656:	cs nopw 0x0(%rax,%rax,1)
+    1660:	mov    %rax,%r9
+    1663:	lea    0x18(%rax),%rax
+    1667:	mov    0x8(%r9),%rsi
+    166b:	shl    $0x2,%rsi
+    166f:	je     1660 <fe_bwd_seg2+0x570>
+    1671:	mov    (%r9),%rax
+    1674:	mov    0x8(%rbx),%rdx
+    1678:	lea    -0x3(%rdx,%rdx,2),%rdx
+    167d:	lea    (%rcx,%rdx,8),%rdx
+    1681:	mov    (%rdx),%rsi
+    1684:	cmp    %r9,%rdx
+    1687:	jne    12e6 <fe_bwd_seg2+0x1f6>
+    168d:	jmp    1633 <fe_bwd_seg2+0x543>
+    168f:	mov    0x28(%rsp),%r11
+    1694:	mov    0x30(%rsp),%r8
+    1699:	mov    %r13,%rax
+    169c:	cmp    %rbx,0x38(%rsp)
+    16a1:	je     15b4 <fe_bwd_seg2+0x4c4>
+    16a7:	xor    %eax,%eax
+    16a9:	mov    0xe8(%rsp),%rbx
+    16b1:	mov    0xf0(%rsp),%rbp
+    16b9:	mov    0xf8(%rsp),%r12
+    16c1:	mov    0x100(%rsp),%r13
+    16c9:	mov    0x108(%rsp),%r14
+    16d1:	mov    0x110(%rsp),%r15
+    16d9:	mov    0xd8(%rsp),%rdx
+    16e1:	sub    %fs:0x28,%rdx
+    16ea:	jne    17b8 <fe_bwd_seg2+0x6c8>
+    16f0:	add    $0x118,%rsp
+    16f7:	ret
+    16f8:	mov    %r12,%rdx
+    16fb:	jmp    1354 <fe_bwd_seg2+0x264>
+    1700:	cmp    %rdx,%r13
+    1703:	je     14d4 <fe_bwd_seg2+0x3e4>
+    1709:	mov    %r13,%r11
+    170c:	mov    %rax,%r12
+    170f:	mov    %rdx,%r13
+    1712:	cmp    %r11,%r13
+    1715:	jne    12f6 <fe_bwd_seg2+0x206>
+    171b:	mov    0x18(%rbx),%rdx
+    171f:	add    $0x18,%rbx
+    1723:	mov    0x8(%rdx),%rsi
+    1727:	lea    0x18(%rdx),%rax
+    172b:	shl    $0x2,%rsi
+    172f:	jne    17b0 <fe_bwd_seg2+0x6c0>
+    1731:	mov    %rax,%r12
+    1734:	lea    0x18(%rax),%rax
+    1738:	mov    0x8(%r12),%rsi
+    173d:	shl    $0x2,%rsi
+    1741:	je     1731 <fe_bwd_seg2+0x641>
+    1743:	mov    (%r12),%r13
+    1747:	mov    0x8(%rbx),%rax
+    174b:	lea    -0x3(%rax,%rax,2),%rax
+    1750:	lea    (%rdx,%rax,8),%rax
+    1754:	mov    (%rax),%r11
+    1757:	cmp    %r12,%rax
+    175a:	jne    12f6 <fe_bwd_seg2+0x206>
+    1760:	jmp    1712 <fe_bwd_seg2+0x622>
+    1762:	mov    (%rdi),%rcx
+    1765:	mov    %rdi,%rdx
+    1768:	jmp    1614 <fe_bwd_seg2+0x524>
+    176d:	mov    (%rcx),%rax
+    1770:	mov    %rcx,%r9
+    1773:	jmp    1674 <fe_bwd_seg2+0x584>
+    1778:	mov    0x8(%rsp),%r13
+    177d:	mov    %r14,0x58(%rsp)
+    1782:	mov    %r14,%r12
+    1785:	mov    %rbp,%rbx
+    1788:	mov    %r13,0x60(%rsp)
+    178d:	jmp    1590 <fe_bwd_seg2+0x4a0>
+    1792:	mov    0x18(%rsp),%rsi
+    1797:	mov    0x8(%rsi),%rax
+    179b:	lea    -0x3(%rax,%rax,2),%rdx
+    17a0:	mov    (%rsi),%rax
+    17a3:	lea    (%rax,%rdx,8),%r12
+    17a7:	mov    (%r12),%r13
+    17ab:	jmp    1266 <fe_bwd_seg2+0x176>
+    17b0:	mov    (%rdx),%r13
+    17b3:	mov    %rdx,%r12
+    17b6:	jmp    1747 <fe_bwd_seg2+0x657>
+    17b8:	mov    %rbx,0xe8(%rsp)
+    17c0:	mov    %rbp,0xf0(%rsp)
+    17c8:	mov    %r12,0xf8(%rsp)
+    17d0:	mov    %r13,0x100(%rsp)
+    17d8:	mov    %r14,0x108(%rsp)
+    17e0:	mov    %r15,0x110(%rsp)
+    17e8:	call   17ed <fe_bwd_seg2+0x6fd>
+    17ed:	nopl   (%rax)
+
+00000000000017f0 <fe_deque>:
+    17f0:	endbr64
+    17f4:	cmp    %rcx,%rdx
+    17f7:	je     1ab0 <fe_deque+0x2c0>
+    17fd:	sub    $0x28,%rsp
+    1801:	mov    %rdi,%r9
+    1804:	mov    0x8(%rsi),%r11
+    1808:	mov    %rdx,%r10
+    180b:	mov    %rbp,0x8(%rsp)
+    1810:	lea    0x4(%rdx),%rbp
+    1814:	mov    %rcx,%rdi
+    1817:	mov    %rbx,(%rsp)
+    181b:	mov    (%r9),%rbx
+    181e:	mov    %r12,0x10(%rsp)
+    1823:	mov    (%rsi),%r12
+    1826:	mov    %r14,0x20(%rsp)
+    182b:	cmp    %rbp,%rcx
+    182e:	je     1ab6 <fe_deque+0x2c6>
+    1834:	mov    %rbp,%rax
+    1837:	mov    %r11,%r8
+    183a:	mov    %r12,%r14
+    183d:	jmp    184d <fe_deque+0x5d>
+    183f:	nop
+    1840:	add    $0x4,%rax
+    1844:	sub    $0x4,%r14
+    1848:	cmp    %rax,%rdi
+    184b:	je     1873 <fe_deque+0x83>
+    184d:	cmp    %r14,%rbx
+    1850:	je     1977 <fe_deque+0x187>
+    1856:	cmp    %r14,(%r8)
+    1859:	jne    1840 <fe_deque+0x50>
+    185b:	mov    -0x8(%r8),%rsi
+    185f:	add    $0x4,%rax
+    1863:	sub    $0x8,%r8
+    1867:	lea    0x3fc(%rsi),%r14
+    186e:	cmp    %rax,%rdi
+    1871:	jne    184d <fe_deque+0x5d>
+    1873:	mov    %r13,0x18(%rsp)
+    1878:	mov    0x8(%r9),%r9
+    187c:	mov    %r14,%rcx
+    187f:	mov    %rbx,%rsi
+    1882:	cmp    %r8,%r9
+    1885:	je     188a <fe_deque+0x9a>
+    1887:	mov    (%r8),%rsi
+    188a:	mov    %rcx,%rdx
+    188d:	mov    %rcx,%rax
+    1890:	sub    %rsi,%rdx
+    1893:	shr    $0x2,%rdx
+    1897:	and    $0x3,%edx
+    189a:	je     18d0 <fe_deque+0xe0>
+    189c:	mov    (%r10),%r13d
+    189f:	lea    -0x4(%rcx),%rax
+    18a3:	cmp    %r13d,-0x4(%rcx)
+    18a7:	je     1901 <fe_deque+0x111>
+    18a9:	cmp    $0x1,%rdx
+    18ad:	je     18d0 <fe_deque+0xe0>
+    18af:	cmp    $0x2,%rdx
+    18b3:	je     18bf <fe_deque+0xcf>
+    18b5:	lea    -0x8(%rcx),%rax
+    18b9:	cmp    %r13d,-0x8(%rcx)
+    18bd:	je     1901 <fe_deque+0x111>
+    18bf:	sub    $0x4,%rax
+    18c3:	mov    (%r10),%edx
+    18c6:	cmp    %edx,(%rax)
+    18c8:	je     1901 <fe_deque+0x111>
+    18ca:	nopw   0x0(%rax,%rax,1)
+    18d0:	cmp    %rsi,%rax
+    18d3:	je     190a <fe_deque+0x11a>
+    18d5:	lea    -0x4(%rax),%rdx
+    18d9:	mov    (%r10),%r13d
+    18dc:	mov    %rdx,%rax
+    18df:	cmp    %r13d,(%rdx)
+    18e2:	je     1901 <fe_deque+0x111>
+    18e4:	sub    $0x4,%rax
+    18e8:	cmp    %r13d,(%rax)
+    18eb:	je     1901 <fe_deque+0x111>
+    18ed:	lea    -0x8(%rdx),%rax
+    18f1:	cmp    %r13d,-0x8(%rdx)
+    18f5:	je     1901 <fe_deque+0x111>
+    18f7:	lea    -0xc(%rdx),%rax
+    18fb:	cmp    %r13d,-0xc(%rdx)
+    18ff:	jne    18d0 <fe_deque+0xe0>
+    1901:	cmp    %rcx,%rax
+    1904:	jne    1a87 <fe_deque+0x297>
+    190a:	cmp    %r8,%r9
+    190d:	je     1972 <fe_deque+0x182>
+    190f:	sub    $0x8,%r8
+    1913:	cmp    %r8,%r9
+    1916:	je     1963 <fe_deque+0x173>
+    1918:	mov    (%r10),%ecx
+    191b:	nopl   0x0(%rax,%rax,1)
+    1920:	mov    (%r8),%rsi
+    1923:	lea    0x400(%rsi),%r13
+    192a:	mov    %r13,%rax
+    192d:	nopl   (%rax)
+    1930:	lea    -0x4(%rax),%rdx
+    1934:	mov    %rdx,%rax
+    1937:	cmp    %ecx,(%rdx)
+    1939:	je     1998 <fe_deque+0x1a8>
+    193b:	sub    $0x4,%rax
+    193f:	cmp    %ecx,(%rax)
+    1941:	je     1998 <fe_deque+0x1a8>
+    1943:	lea    -0x8(%rdx),%rax
+    1947:	cmp    %ecx,-0x8(%rdx)
+    194a:	je     1998 <fe_deque+0x1a8>
+    194c:	lea    -0xc(%rdx),%rax
+    1950:	cmp    %ecx,-0xc(%rdx)
+    1953:	je     1998 <fe_deque+0x1a8>
+    1955:	cmp    %rax,%rsi
+    1958:	jne    1930 <fe_deque+0x140>
+    195a:	sub    $0x8,%r8
+    195e:	cmp    %r8,%r9
+    1961:	jne    1920 <fe_deque+0x130>
+    1963:	mov    (%r9),%rax
+    1966:	lea    0x400(%rax),%rcx
+    196d:	jmp    187f <fe_deque+0x8f>
+    1972:	mov    0x18(%rsp),%r13
+    1977:	mov    $0x1,%eax
+    197c:	mov    (%rsp),%rbx
+    1980:	mov    0x8(%rsp),%rbp
+    1985:	mov    0x10(%rsp),%r12
+    198a:	mov    0x20(%rsp),%r14
+    198f:	add    $0x28,%rsp
+    1993:	ret
+    1994:	nopl   0x0(%rax)
+    1998:	cmp    %rax,%r13
+    199b:	je     195a <fe_deque+0x16a>
+    199d:	cmp    %rax,%r14
+    19a0:	je     1972 <fe_deque+0x182>
+    19a2:	cmp    %rbp,%rdi
+    19a5:	je     1a00 <fe_deque+0x210>
+    19a7:	mov    (%r8),%rsi
+    19aa:	lea    0x4(%rax),%rcx
+    19ae:	mov    %r8,%r13
+    19b1:	lea    0x400(%rsi),%rdx
+    19b8:	cmp    %rdx,%rcx
+    19bb:	je     1a7a <fe_deque+0x28a>
+    19c1:	mov    %rbp,%rdx
+    19c4:	cmp    %r13,%r11
+    19c7:	je     1a6d <fe_deque+0x27d>
+    19cd:	mov    0x0(%r13),%rsi
+    19d1:	add    $0x400,%rsi
+    19d8:	cmp    %rcx,%rsi
+    19db:	jne    19f5 <fe_deque+0x205>
+    19dd:	jmp    1a10 <fe_deque+0x220>
+    19df:	nop
+    19e0:	mov    (%rdx),%r14d
+    19e3:	cmp    %r14d,(%rcx)
+    19e6:	jne    1a60 <fe_deque+0x270>
+    19e8:	add    $0x4,%rcx
+    19ec:	add    $0x4,%rdx
+    19f0:	cmp    %rsi,%rcx
+    19f3:	je     1a4c <fe_deque+0x25c>
+    19f5:	cmp    %rdx,%rdi
+    19f8:	jne    19e0 <fe_deque+0x1f0>
+    19fa:	nopw   0x0(%rax,%rax,1)
+    1a00:	cmp    %rax,%r12
+    1a03:	mov    0x18(%rsp),%r13
+    1a08:	sete   %al
+    1a0b:	jmp    197c <fe_deque+0x18c>
+    1a10:	cmp    %rdx,%rdi
+    1a13:	je     1a00 <fe_deque+0x210>
+    1a15:	add    $0x8,%r13
+    1a19:	mov    0x0(%r13),%rcx
+    1a1d:	cmp    %r13,%r11
+    1a20:	je     19c4 <fe_deque+0x1d4>
+    1a22:	lea    0x400(%rdx),%rsi
+    1a29:	jmp    1a45 <fe_deque+0x255>
+    1a2b:	nopl   0x0(%rax,%rax,1)
+    1a30:	mov    (%rdx),%r14d
+    1a33:	cmp    %r14d,(%rcx)
+    1a36:	jne    1a60 <fe_deque+0x270>
+    1a38:	add    $0x4,%rdx
+    1a3c:	add    $0x4,%rcx
+    1a40:	cmp    %rdx,%rsi
+    1a43:	je     1a10 <fe_deque+0x220>
+    1a45:	cmp    %rdx,%rdi
+    1a48:	jne    1a30 <fe_deque+0x240>
+    1a4a:	jmp    1a00 <fe_deque+0x210>
+    1a4c:	cmp    %rdx,%rdi
+    1a4f:	je     1a00 <fe_deque+0x210>
+    1a51:	cmp    %r13,%r11
+    1a54:	jne    1a15 <fe_deque+0x225>
+    1a56:	cs nopw 0x0(%rax,%rax,1)
+    1a60:	cmp    %rdx,%rdi
+    1a63:	je     1a00 <fe_deque+0x210>
+    1a65:	mov    %rax,%r14
+    1a68:	jmp    187c <fe_deque+0x8c>
+    1a6d:	cmp    %rcx,%r12
+    1a70:	je     1a60 <fe_deque+0x270>
+    1a72:	mov    %r12,%rsi
+    1a75:	jmp    19f5 <fe_deque+0x205>
+    1a7a:	mov    0x8(%r8),%rcx
+    1a7e:	lea    0x8(%r8),%r13
+    1a82:	jmp    19c1 <fe_deque+0x1d1>
+    1a87:	test   %r8,%r8
+    1a8a:	je     199d <fe_deque+0x1ad>
+    1a90:	mov    (%r8),%rsi
+    1a93:	lea    0x400(%rsi),%rdx
+    1a9a:	cmp    %rdx,%rax
+    1a9d:	jne    199d <fe_deque+0x1ad>
+    1aa3:	mov    0x8(%r8),%rax
+    1aa7:	add    $0x8,%r8
+    1aab:	jmp    199d <fe_deque+0x1ad>
+    1ab0:	mov    $0x1,%eax
+    1ab5:	ret
+    1ab6:	mov    %r13,0x18(%rsp)
+    1abb:	mov    %r11,%r8
+    1abe:	mov    %r12,%r14
+    1ac1:	jmp    1878 <fe_deque+0x88>

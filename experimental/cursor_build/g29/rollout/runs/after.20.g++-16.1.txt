@@ -1,0 +1,102 @@
+nice: warning: setpriority: Permission denied (os error 13)
+=== Segmented algorithm benchmark [5MyInt] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<5MyInt> ---
+
+===== Group 20: 2-range input-only algorithms [5MyInt] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+equal(1S hit)                       2.41        2.36        0.98      0.167      0.394      0.401
+equal(2S hit)                       1.09        1.46        1.35      0.233      0.341      0.253
+equal(1+2S hit)                     3.06        2.76        0.90      0.174      0.481      0.533
+equal(1S miss)                      2.37        2.23        0.94      0.082      0.183      0.196
+equal(2S miss)                      1.10        1.34        1.22      0.116      0.155      0.127
+equal(1+2S miss)                    2.95        2.50        0.85      0.087      0.218      0.257
+mismatch(1S hit)                    1.76        1.57        0.89      0.116      0.181      0.204
+mismatch(2S hit)                    1.16        1.65        1.43      0.116      0.191      0.134
+mismatch(1+2S hit)                  3.09        2.75        0.89      0.087      0.240      0.270
+mismatch(1S miss)                   1.86        1.67        0.90      0.231      0.386      0.429
+mismatch(2S miss)                   1.14        1.65        1.45      0.234      0.386      0.267
+mismatch(1+2S miss)                 2.87        2.82        0.98      0.174      0.490      0.499
+mismatch_2r(1S hit)                 1.56        2.34        1.50      0.082      0.192      0.128
+mismatch_2r(2S hit)                 1.65        2.54        1.54      0.082      0.209      0.136
+mismatch_2r(1+2S hit)               1.97        3.72        1.89      0.089      0.331      0.176
+mismatch_2r(1S miss)                1.56        2.81        1.80      0.164      0.461      0.255
+mismatch_2r(2S miss)                1.62        2.69        1.66      0.165      0.445      0.268
+mismatch_2r(1+2S miss)              1.99        3.04        1.53      0.178      0.540      0.353
+search(hit)                         2.12        2.10        0.99      0.060      0.126      0.128
+search(miss)                        2.60        2.08        0.80      0.120      0.250      0.312
+-------------------------------------------------------------------------------------------------
+group geomean                       1.89        2.22        1.18
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        1.89        2.22        1.18
+
+
+=== Segmented algorithm benchmark [8MyFatIntILm4EE] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<8MyFatIntILm4EE> ---
+
+===== Group 20: 2-range input-only algorithms [8MyFatIntILm4EE] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+equal(1S hit)                       1.52        1.46        0.96      0.295      0.431      0.449
+equal(2S hit)                       1.05        1.47        1.41      0.299      0.440      0.313
+equal(1+2S hit)                     1.70        1.92        1.13      0.295      0.567      0.501
+equal(1S miss)                      1.56        1.42        0.91      0.137      0.194      0.215
+equal(2S miss)                      1.11        1.59        1.43      0.136      0.217      0.152
+equal(1+2S miss)                    1.80        1.88        1.05      0.139      0.261      0.250
+mismatch(1S hit)                    1.43        1.45        1.02      0.138      0.200      0.197
+mismatch(2S hit)                    1.12        1.58        1.41      0.137      0.215      0.152
+mismatch(1+2S hit)                  2.05        2.08        1.02      0.140      0.291      0.286
+mismatch(1S miss)                   1.50        1.43        0.95      0.294      0.421      0.441
+mismatch(2S miss)                   1.05        1.72        1.63      0.290      0.498      0.305
+mismatch(1+2S miss)                 1.75        1.98        1.13      0.295      0.585      0.517
+mismatch_2r(1S hit)                 1.13        1.57        1.39      0.137      0.215      0.155
+mismatch_2r(2S hit)                 1.14        1.36        1.20      0.138      0.188      0.157
+mismatch_2r(1+2S hit)               1.34        2.11        1.57      0.141      0.298      0.190
+mismatch_2r(1S miss)                1.04        1.75        1.68      0.301      0.526      0.313
+mismatch_2r(2S miss)                1.05        1.36        1.30      0.302      0.411      0.317
+mismatch_2r(1+2S miss)              1.28        1.92        1.49      0.304      0.581      0.389
+search(hit)                         1.73        1.79        1.03      0.072      0.129      0.124
+search(miss)                        2.05        1.82        0.89      0.155      0.281      0.318
+-------------------------------------------------------------------------------------------------
+group geomean                       1.38        1.67        1.20
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        1.38        1.67        1.20
+
+
+=== Segmented algorithm benchmark [8MyFatIntILm8EE] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<8MyFatIntILm8EE> ---
+
+===== Group 20: 2-range input-only algorithms [8MyFatIntILm8EE] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+equal(1S hit)                       1.03        1.03        1.00      0.608      0.629      0.629
+equal(2S hit)                       0.99        1.00        1.01      0.613      0.615      0.610
+equal(1+2S hit)                     1.03        1.08        1.05      0.616      0.665      0.636
+equal(1S miss)                      1.03        1.02        0.99      0.284      0.290      0.294
+equal(2S miss)                      1.01        1.02        1.02      0.284      0.291      0.286
+equal(1+2S miss)                    1.06        1.10        1.04      0.285      0.315      0.303
+mismatch(1S hit)                    1.03        1.03        1.00      0.284      0.292      0.292
+mismatch(2S hit)                    1.01        1.03        1.02      0.284      0.292      0.286
+mismatch(1+2S hit)                  1.15        1.15        0.99      0.292      0.335      0.338
+mismatch(1S miss)                   1.02        1.03        1.00      0.608      0.624      0.622
+mismatch(2S miss)                   0.99        1.07        1.09      0.619      0.663      0.610
+mismatch(1+2S miss)                 1.06        1.09        1.03      0.615      0.673      0.654
+mismatch_2r(1S hit)                 1.01        1.04        1.03      0.284      0.297      0.287
+mismatch_2r(2S hit)                 1.01        1.01        1.00      0.284      0.288      0.288
+mismatch_2r(1+2S hit)               1.03        1.25        1.21      0.285      0.357      0.295
+mismatch_2r(1S miss)                1.00        1.09        1.09      0.613      0.670      0.613
+mismatch_2r(2S miss)                1.01        1.04        1.02      0.611      0.633      0.619
+mismatch_2r(1+2S miss)              1.01        1.11        1.10      0.615      0.682      0.622
+search(hit)                         1.16        1.16        1.00      0.131      0.152      0.152
+search(miss)                        1.19        1.07        0.90      0.287      0.308      0.342
+-------------------------------------------------------------------------------------------------
+group geomean                       1.04        1.07        1.03
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        1.04        1.07        1.03
+

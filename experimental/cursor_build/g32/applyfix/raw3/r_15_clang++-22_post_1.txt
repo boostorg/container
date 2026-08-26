@@ -1,0 +1,25 @@
+
+=== Segmented algorithm benchmark [5MyInt] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<5MyInt> ---
+
+===== Group 15: single range, non-sequential access pattern [5MyInt] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+is_sorted(hit)                      2.78        2.78        1.00      0.098      0.272      0.272
+is_sorted(miss)                     3.80        3.66        0.96      0.049      0.179      0.186
+is_sorted_until(hit)                2.78        2.78        1.00      0.098      0.272      0.272
+is_sorted_until(miss)               3.64        3.64        1.00      0.049      0.179      0.179
+remove(hit)                         2.21        2.19        0.99      0.207      0.452      0.458
+remove(miss)                        2.48        2.46        1.00      0.098      0.243      0.244
+remove_if(hit)                      1.79        1.67        0.93      0.334      0.556      0.599
+remove_if(miss)                     1.36        1.49        1.10      0.176      0.262      0.238
+search_n(1hit)                      4.23        2.49        0.59      0.049      0.123      0.208
+search_n(miss)                      2.54        6.25        2.46      0.085      0.531      0.215
+search_n(8mid)                      2.49        5.53        2.22      0.018      0.100      0.045
+-------------------------------------------------------------------------------------------------
+group geomean                       2.61        2.89        1.11       [5MyInt]
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        2.61        2.89        1.11       [5MyInt]
+

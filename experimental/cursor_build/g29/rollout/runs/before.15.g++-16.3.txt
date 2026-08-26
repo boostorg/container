@@ -1,0 +1,75 @@
+nice: warning: setpriority: Permission denied (os error 13)
+=== Segmented algorithm benchmark [5MyInt] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<5MyInt> ---
+
+===== Group 15: single range, non-sequential access pattern [5MyInt] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+is_sorted(hit)                      1.88        1.92        1.02      0.175      0.337      0.330
+is_sorted(miss)                     1.37        1.53        1.12      0.094      0.144      0.129
+is_sorted_until(hit)                1.92        2.32        1.21      0.175      0.407      0.337
+is_sorted_until(miss)               1.36        1.88        1.38      0.094      0.177      0.128
+remove(hit)                         2.99        3.13        1.05      0.172      0.539      0.515
+remove(miss)                        4.42        2.80        0.63      0.121      0.339      0.535
+remove_if(hit)                      2.53        2.62        1.04      0.263      0.688      0.664
+remove_if(miss)                     1.98        3.00        1.51      0.123      0.369      0.244
+search_n(1hit)                      2.58        2.07        0.80      0.061      0.126      0.156
+search_n(miss)                      1.84        4.18        2.27      0.134      0.560      0.247
+search_n(8mid)                      1.49        3.43        2.30      0.029      0.099      0.043
+-------------------------------------------------------------------------------------------------
+group geomean                       2.08        2.52        1.21
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        2.08        2.52        1.21
+
+
+=== Segmented algorithm benchmark [8MyFatIntILm4EE] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<8MyFatIntILm4EE> ---
+
+===== Group 15: single range, non-sequential access pattern [8MyFatIntILm4EE] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+is_sorted(hit)                      1.98        2.20        1.11      0.184      0.405      0.364
+is_sorted(miss)                     1.52        1.75        1.15      0.094      0.165      0.143
+is_sorted_until(hit)                1.87        2.35        1.25      0.184      0.431      0.344
+is_sorted_until(miss)               1.42        1.78        1.25      0.094      0.167      0.134
+remove(hit)                         1.42        1.64        1.15      0.341      0.560      0.486
+remove(miss)                        3.17        2.10        0.66      0.165      0.348      0.524
+remove_if(hit)                      1.60        1.78        1.11      0.420      0.747      0.674
+remove_if(miss)                     1.55        2.26        1.45      0.165      0.373      0.256
+search_n(1hit)                      1.72        1.72        1.00      0.072      0.124      0.124
+search_n(miss)                      1.51        4.35        2.89      0.156      0.678      0.235
+search_n(8mid)                      1.35        3.78        2.80      0.031      0.118      0.042
+-------------------------------------------------------------------------------------------------
+group geomean                       1.69        2.21        1.31
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        1.69        2.21        1.31
+
+
+=== Segmented algorithm benchmark [8MyFatIntILm8EE] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<8MyFatIntILm8EE> ---
+
+===== Group 15: single range, non-sequential access pattern [8MyFatIntILm8EE] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+is_sorted(hit)                      1.26        1.43        1.13      0.301      0.430      0.379
+is_sorted(miss)                     1.37        1.37        1.01      0.134      0.184      0.183
+is_sorted_until(hit)                1.24        1.52        1.22      0.294      0.446      0.365
+is_sorted_until(miss)               1.25        1.46        1.16      0.133      0.194      0.167
+remove(hit)                         1.10        1.22        1.11      0.571      0.698      0.630
+remove(miss)                        1.76        1.28        0.73      0.351      0.449      0.619
+remove_if(hit)                      1.24        1.38        1.12      0.597      0.826      0.738
+remove_if(miss)                     1.19        1.32        1.11      0.356      0.468      0.423
+search_n(1hit)                      1.15        1.11        0.96      0.135      0.149      0.156
+search_n(miss)                      1.07        2.72        2.54      0.251      0.683      0.269
+search_n(8mid)                      1.38        3.88        2.81      0.030      0.118      0.042
+-------------------------------------------------------------------------------------------------
+group geomean                       1.26        1.57        1.24
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        1.26        1.57        1.24
+

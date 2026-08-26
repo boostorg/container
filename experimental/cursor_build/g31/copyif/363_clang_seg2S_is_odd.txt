@@ -1,0 +1,341 @@
+
+a_clang++-22.elf:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000019cc0 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)>:
+   19cc0:	mov    %rdi,%rax
+   19cc3:	mov    (%rsi),%r8
+   19cc6:	mov    (%rdx),%r11
+   19cc9:	cmp    %r11,%r8
+   19ccc:	je     1a280 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x5c0>
+   19cd2:	push   %rbp
+   19cd3:	push   %r14
+   19cd5:	push   %rbx
+   19cd6:	mov    0x8(%rcx),%rbx
+   19cda:	mov    $0x200,%r10d
+   19ce0:	jmp    19d16 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x56>
+   19ce2:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   19cf1:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   19d00:	mov    %r8,(%rsi)
+   19d03:	mov    (%rdx),%r11
+   19d06:	lea    0x8(%rdi),%rbx
+   19d0a:	mov    %rbx,%rcx
+   19d0d:	cmp    %r11,%r8
+   19d10:	je     1a267 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x5a7>
+   19d16:	mov    %rbx,%rdi
+   19d19:	mov    (%rcx),%r9
+   19d1c:	mov    (%rbx),%rcx
+   19d1f:	add    %r10,%rcx
+   19d22:	mov    %r11,%rbx
+   19d25:	sub    %r8,%rbx
+   19d28:	sar    $0x2,%rbx
+   19d2c:	cmp    $0x20,%rbx
+   19d30:	jl     1a244 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x584>
+   19d36:	mov    %rcx,%r14
+   19d39:	sub    %r9,%r14
+   19d3c:	cmp    $0x7d,%r14
+   19d40:	jl     1a244 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x584>
+   19d46:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   19d55:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   19d64:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   19d73:	data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   19d80:	mov    (%r8),%ebp
+   19d83:	test   $0x1,%bpl
+   19d87:	jne    19f80 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x2c0>
+   19d8d:	mov    0x4(%r8),%ebp
+   19d91:	test   $0x1,%bpl
+   19d95:	jne    19f95 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x2d5>
+   19d9b:	mov    0x8(%r8),%ebp
+   19d9f:	test   $0x1,%bpl
+   19da3:	jne    19faa <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x2ea>
+   19da9:	mov    0xc(%r8),%ebp
+   19dad:	test   $0x1,%bpl
+   19db1:	jne    19fbf <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x2ff>
+   19db7:	mov    0x10(%r8),%ebp
+   19dbb:	test   $0x1,%bpl
+   19dbf:	jne    19fd4 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x314>
+   19dc5:	mov    0x14(%r8),%ebp
+   19dc9:	test   $0x1,%bpl
+   19dcd:	jne    19fe9 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x329>
+   19dd3:	mov    0x18(%r8),%ebp
+   19dd7:	test   $0x1,%bpl
+   19ddb:	jne    19ffe <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x33e>
+   19de1:	mov    0x1c(%r8),%ebp
+   19de5:	test   $0x1,%bpl
+   19de9:	jne    1a013 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x353>
+   19def:	mov    0x20(%r8),%ebp
+   19df3:	test   $0x1,%bpl
+   19df7:	jne    1a028 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x368>
+   19dfd:	mov    0x24(%r8),%ebp
+   19e01:	test   $0x1,%bpl
+   19e05:	jne    1a03d <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x37d>
+   19e0b:	mov    0x28(%r8),%ebp
+   19e0f:	test   $0x1,%bpl
+   19e13:	jne    1a052 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x392>
+   19e19:	mov    0x2c(%r8),%ebp
+   19e1d:	test   $0x1,%bpl
+   19e21:	jne    1a067 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x3a7>
+   19e27:	mov    0x30(%r8),%ebp
+   19e2b:	test   $0x1,%bpl
+   19e2f:	jne    1a07c <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x3bc>
+   19e35:	mov    0x34(%r8),%ebp
+   19e39:	test   $0x1,%bpl
+   19e3d:	jne    1a091 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x3d1>
+   19e43:	mov    0x38(%r8),%ebp
+   19e47:	test   $0x1,%bpl
+   19e4b:	jne    1a0a6 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x3e6>
+   19e51:	mov    0x3c(%r8),%ebp
+   19e55:	test   $0x1,%bpl
+   19e59:	jne    1a0bb <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x3fb>
+   19e5f:	mov    0x40(%r8),%ebp
+   19e63:	test   $0x1,%bpl
+   19e67:	jne    1a0d0 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x410>
+   19e6d:	mov    0x44(%r8),%ebp
+   19e71:	test   $0x1,%bpl
+   19e75:	jne    1a0e5 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x425>
+   19e7b:	mov    0x48(%r8),%ebp
+   19e7f:	test   $0x1,%bpl
+   19e83:	jne    1a0fa <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x43a>
+   19e89:	mov    0x4c(%r8),%ebp
+   19e8d:	test   $0x1,%bpl
+   19e91:	jne    1a10f <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x44f>
+   19e97:	mov    0x50(%r8),%ebp
+   19e9b:	test   $0x1,%bpl
+   19e9f:	jne    1a124 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x464>
+   19ea5:	mov    0x54(%r8),%ebp
+   19ea9:	test   $0x1,%bpl
+   19ead:	jne    1a139 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x479>
+   19eb3:	mov    0x58(%r8),%ebp
+   19eb7:	test   $0x1,%bpl
+   19ebb:	jne    1a14e <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x48e>
+   19ec1:	mov    0x5c(%r8),%ebp
+   19ec5:	test   $0x1,%bpl
+   19ec9:	jne    1a163 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x4a3>
+   19ecf:	mov    0x60(%r8),%ebp
+   19ed3:	test   $0x1,%bpl
+   19ed7:	jne    1a178 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x4b8>
+   19edd:	mov    0x64(%r8),%ebp
+   19ee1:	test   $0x1,%bpl
+   19ee5:	jne    1a18d <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x4cd>
+   19eeb:	mov    0x68(%r8),%ebp
+   19eef:	test   $0x1,%bpl
+   19ef3:	jne    1a1a2 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x4e2>
+   19ef9:	mov    0x6c(%r8),%ebp
+   19efd:	test   $0x1,%bpl
+   19f01:	jne    1a1b7 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x4f7>
+   19f07:	mov    0x70(%r8),%ebp
+   19f0b:	test   $0x1,%bpl
+   19f0f:	jne    1a1cc <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x50c>
+   19f15:	mov    0x74(%r8),%ebp
+   19f19:	test   $0x1,%bpl
+   19f1d:	jne    1a1e1 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x521>
+   19f23:	mov    0x78(%r8),%ebp
+   19f27:	test   $0x1,%bpl
+   19f2b:	jne    1a1f6 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x536>
+   19f31:	mov    0x7c(%r8),%ebp
+   19f35:	test   $0x1,%bpl
+   19f39:	jne    1a20b <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x54b>
+   19f3f:	sub    $0xffffffffffffff80,%r8
+   19f43:	cmp    $0x40,%rbx
+   19f47:	jge    1a21c <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x55c>
+   19f4d:	jmp    1a244 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x584>
+   19f52:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   19f61:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   19f70:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   19f7f:	nop
+   19f80:	mov    %ebp,(%r9)
+   19f83:	add    $0x4,%r9
+   19f87:	mov    0x4(%r8),%ebp
+   19f8b:	test   $0x1,%bpl
+   19f8f:	je     19d9b <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0xdb>
+   19f95:	mov    %ebp,(%r9)
+   19f98:	add    $0x4,%r9
+   19f9c:	mov    0x8(%r8),%ebp
+   19fa0:	test   $0x1,%bpl
+   19fa4:	je     19da9 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0xe9>
+   19faa:	mov    %ebp,(%r9)
+   19fad:	add    $0x4,%r9
+   19fb1:	mov    0xc(%r8),%ebp
+   19fb5:	test   $0x1,%bpl
+   19fb9:	je     19db7 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0xf7>
+   19fbf:	mov    %ebp,(%r9)
+   19fc2:	add    $0x4,%r9
+   19fc6:	mov    0x10(%r8),%ebp
+   19fca:	test   $0x1,%bpl
+   19fce:	je     19dc5 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x105>
+   19fd4:	mov    %ebp,(%r9)
+   19fd7:	add    $0x4,%r9
+   19fdb:	mov    0x14(%r8),%ebp
+   19fdf:	test   $0x1,%bpl
+   19fe3:	je     19dd3 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x113>
+   19fe9:	mov    %ebp,(%r9)
+   19fec:	add    $0x4,%r9
+   19ff0:	mov    0x18(%r8),%ebp
+   19ff4:	test   $0x1,%bpl
+   19ff8:	je     19de1 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x121>
+   19ffe:	mov    %ebp,(%r9)
+   1a001:	add    $0x4,%r9
+   1a005:	mov    0x1c(%r8),%ebp
+   1a009:	test   $0x1,%bpl
+   1a00d:	je     19def <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x12f>
+   1a013:	mov    %ebp,(%r9)
+   1a016:	add    $0x4,%r9
+   1a01a:	mov    0x20(%r8),%ebp
+   1a01e:	test   $0x1,%bpl
+   1a022:	je     19dfd <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x13d>
+   1a028:	mov    %ebp,(%r9)
+   1a02b:	add    $0x4,%r9
+   1a02f:	mov    0x24(%r8),%ebp
+   1a033:	test   $0x1,%bpl
+   1a037:	je     19e0b <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x14b>
+   1a03d:	mov    %ebp,(%r9)
+   1a040:	add    $0x4,%r9
+   1a044:	mov    0x28(%r8),%ebp
+   1a048:	test   $0x1,%bpl
+   1a04c:	je     19e19 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x159>
+   1a052:	mov    %ebp,(%r9)
+   1a055:	add    $0x4,%r9
+   1a059:	mov    0x2c(%r8),%ebp
+   1a05d:	test   $0x1,%bpl
+   1a061:	je     19e27 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x167>
+   1a067:	mov    %ebp,(%r9)
+   1a06a:	add    $0x4,%r9
+   1a06e:	mov    0x30(%r8),%ebp
+   1a072:	test   $0x1,%bpl
+   1a076:	je     19e35 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x175>
+   1a07c:	mov    %ebp,(%r9)
+   1a07f:	add    $0x4,%r9
+   1a083:	mov    0x34(%r8),%ebp
+   1a087:	test   $0x1,%bpl
+   1a08b:	je     19e43 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x183>
+   1a091:	mov    %ebp,(%r9)
+   1a094:	add    $0x4,%r9
+   1a098:	mov    0x38(%r8),%ebp
+   1a09c:	test   $0x1,%bpl
+   1a0a0:	je     19e51 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x191>
+   1a0a6:	mov    %ebp,(%r9)
+   1a0a9:	add    $0x4,%r9
+   1a0ad:	mov    0x3c(%r8),%ebp
+   1a0b1:	test   $0x1,%bpl
+   1a0b5:	je     19e5f <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x19f>
+   1a0bb:	mov    %ebp,(%r9)
+   1a0be:	add    $0x4,%r9
+   1a0c2:	mov    0x40(%r8),%ebp
+   1a0c6:	test   $0x1,%bpl
+   1a0ca:	je     19e6d <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x1ad>
+   1a0d0:	mov    %ebp,(%r9)
+   1a0d3:	add    $0x4,%r9
+   1a0d7:	mov    0x44(%r8),%ebp
+   1a0db:	test   $0x1,%bpl
+   1a0df:	je     19e7b <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x1bb>
+   1a0e5:	mov    %ebp,(%r9)
+   1a0e8:	add    $0x4,%r9
+   1a0ec:	mov    0x48(%r8),%ebp
+   1a0f0:	test   $0x1,%bpl
+   1a0f4:	je     19e89 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x1c9>
+   1a0fa:	mov    %ebp,(%r9)
+   1a0fd:	add    $0x4,%r9
+   1a101:	mov    0x4c(%r8),%ebp
+   1a105:	test   $0x1,%bpl
+   1a109:	je     19e97 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x1d7>
+   1a10f:	mov    %ebp,(%r9)
+   1a112:	add    $0x4,%r9
+   1a116:	mov    0x50(%r8),%ebp
+   1a11a:	test   $0x1,%bpl
+   1a11e:	je     19ea5 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x1e5>
+   1a124:	mov    %ebp,(%r9)
+   1a127:	add    $0x4,%r9
+   1a12b:	mov    0x54(%r8),%ebp
+   1a12f:	test   $0x1,%bpl
+   1a133:	je     19eb3 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x1f3>
+   1a139:	mov    %ebp,(%r9)
+   1a13c:	add    $0x4,%r9
+   1a140:	mov    0x58(%r8),%ebp
+   1a144:	test   $0x1,%bpl
+   1a148:	je     19ec1 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x201>
+   1a14e:	mov    %ebp,(%r9)
+   1a151:	add    $0x4,%r9
+   1a155:	mov    0x5c(%r8),%ebp
+   1a159:	test   $0x1,%bpl
+   1a15d:	je     19ecf <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x20f>
+   1a163:	mov    %ebp,(%r9)
+   1a166:	add    $0x4,%r9
+   1a16a:	mov    0x60(%r8),%ebp
+   1a16e:	test   $0x1,%bpl
+   1a172:	je     19edd <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x21d>
+   1a178:	mov    %ebp,(%r9)
+   1a17b:	add    $0x4,%r9
+   1a17f:	mov    0x64(%r8),%ebp
+   1a183:	test   $0x1,%bpl
+   1a187:	je     19eeb <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x22b>
+   1a18d:	mov    %ebp,(%r9)
+   1a190:	add    $0x4,%r9
+   1a194:	mov    0x68(%r8),%ebp
+   1a198:	test   $0x1,%bpl
+   1a19c:	je     19ef9 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x239>
+   1a1a2:	mov    %ebp,(%r9)
+   1a1a5:	add    $0x4,%r9
+   1a1a9:	mov    0x6c(%r8),%ebp
+   1a1ad:	test   $0x1,%bpl
+   1a1b1:	je     19f07 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x247>
+   1a1b7:	mov    %ebp,(%r9)
+   1a1ba:	add    $0x4,%r9
+   1a1be:	mov    0x70(%r8),%ebp
+   1a1c2:	test   $0x1,%bpl
+   1a1c6:	je     19f15 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x255>
+   1a1cc:	mov    %ebp,(%r9)
+   1a1cf:	add    $0x4,%r9
+   1a1d3:	mov    0x74(%r8),%ebp
+   1a1d7:	test   $0x1,%bpl
+   1a1db:	je     19f23 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x263>
+   1a1e1:	mov    %ebp,(%r9)
+   1a1e4:	add    $0x4,%r9
+   1a1e8:	mov    0x78(%r8),%ebp
+   1a1ec:	test   $0x1,%bpl
+   1a1f0:	je     19f31 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x271>
+   1a1f6:	mov    %ebp,(%r9)
+   1a1f9:	add    $0x4,%r9
+   1a1fd:	mov    0x7c(%r8),%ebp
+   1a201:	test   $0x1,%bpl
+   1a205:	je     19f3f <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x27f>
+   1a20b:	mov    %ebp,(%r9)
+   1a20e:	add    $0x4,%r9
+   1a212:	sub    $0xffffffffffffff80,%r8
+   1a216:	cmp    $0x40,%rbx
+   1a21a:	jl     1a244 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x584>
+   1a21c:	add    $0xffffffffffffffe0,%rbx
+   1a220:	mov    %rcx,%r14
+   1a223:	sub    %r9,%r14
+   1a226:	cmp    $0x7c,%r14
+   1a22a:	jg     19d80 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0xc0>
+   1a230:	jmp    1a244 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x584>
+   1a232:	data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+   1a240:	add    $0x4,%r8
+   1a244:	cmp    %r11,%r8
+   1a247:	je     19d00 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x40>
+   1a24d:	mov    (%r8),%ebx
+   1a250:	test   $0x1,%bl
+   1a253:	je     1a240 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x580>
+   1a255:	cmp    %rcx,%r9
+   1a258:	je     19d00 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x40>
+   1a25e:	mov    %ebx,(%r9)
+   1a261:	add    $0x4,%r9
+   1a265:	jmp    1a240 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x580>
+   1a267:	mov    $0x200,%ecx
+   1a26c:	add    (%rdi),%rcx
+   1a26f:	cmp    %rcx,%r9
+   1a272:	je     1a287 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x5c7>
+   1a274:	mov    %r9,(%rax)
+   1a277:	mov    %rdi,0x8(%rax)
+   1a27b:	pop    %rbx
+   1a27c:	pop    %r14
+   1a27e:	pop    %rbp
+   1a27f:	ret
+   1a280:	movups (%rcx),%xmm0
+   1a283:	movups %xmm0,(%rax)
+   1a286:	ret
+   1a287:	mov    (%rbx),%r9
+   1a28a:	mov    %rbx,%rdi
+   1a28d:	jmp    1a274 <boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long> boost::container::detail_algo::segmented_copy_if_dst_dispatch<boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, std::random_access_iterator_tag>(boost::container::vec_iterator<MyInt*, true>, boost::container::vec_iterator<MyInt*, true>, boost::container::deque_iterator<MyInt*, false, 0u, 128u, unsigned long>, is_odd<MyInt>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)+0x5b4>

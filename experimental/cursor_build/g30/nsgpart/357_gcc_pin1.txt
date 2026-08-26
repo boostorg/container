@@ -1,0 +1,23 @@
+nice: warning: setpriority: Permission denied (os error 13)
+=== Segmented algorithm benchmark [5MyInt] ===
+Elements: 100000   Iterations: 5000
+
+--- bc::deque<5MyInt> ---
+
+===== Group 17: single range, bidirectional iterator optimizations [5MyInt] =====
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+find_last(hit)                      2.32        2.38        1.03      0.085      0.201      0.196
+find_last(miss)                     2.24        2.27        1.01      0.172      0.391      0.385
+find_last_if(hit)                   2.36        2.37        1.01      0.062      0.147      0.146
+find_last_if(miss)                  2.17        2.18        1.01      0.128      0.279      0.277
+find_last_if_not(hit)               2.37        2.32        0.98      0.062      0.143      0.147
+find_last_if_not(miss)              2.18        2.15        0.98      0.128      0.275      0.279
+partition(hit)                      0.73        1.03        1.41      0.367      0.377      0.268
+partition(miss)                     1.11        1.08        0.98      0.219      0.237      0.242
+reverse                             3.84        5.84        1.52      0.053      0.311      0.204
+-------------------------------------------------------------------------------------------------
+group geomean                       1.96        2.13        1.09       [5MyInt]
+
+< algo >                     < nsg/seg > < std/seg > < std/nsg > < seg ns > < std ns > < nsg ns >
+algo geomean                        1.96        2.13        1.09       [5MyInt]
+

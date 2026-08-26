@@ -1,0 +1,408 @@
+﻿
+==================== g++-16  variant=base  -O2 ====================
+  .text bytes = 7866
+  bytes=80     probe_fill_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=82     probe_count_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=86     probe_find_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=166    probe_copy_deq_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>)
+  bytes=263    boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long> boost::container::detail_algo::segmented_copy_dst_dispatch<int*, int*, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, std::random_access_iterator_tag>(int*, int*, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag) [clone .isra.0]
+  bytes=298    probe_copy_d1_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>)
+  bytes=331    probe_copy_d2_flat(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int*)
+  bytes=336    probe_fill_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=336    test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_copy_dst_dispatch<boost::container::vec_iterator<int*, false>, boost::container::vec_iterator<int*, false>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, std::random_access_iterator_tag>(boost::container::vec_iterator<int*, false>, boost::container::vec_iterator<int*, false>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag) [clone .isra.0]
+  bytes=347    probe_fill_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=372    probe_count_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=390    void boost::container::detail_algo::segmented_fill_range<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag) [clone .isra.0]
+  bytes=484    int* boost::container::detail_algo::segmented_copy_dispatch<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int*, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int*, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag) [clone .isra.0]
+  bytes=491    probe_find_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=491    probe_count_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=541    std::iterator_traits<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> >::difference_type boost::container::detail_algo::segmented_count_dispatch<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag) [clone .isra.0]
+  bytes=574    test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_find_dispatch<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag) [clone .isra.0]
+  bytes=954    probe_find_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=1122   probe_copy_flat_d2(int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>)
+   copy_dst_dispatch [seg] <deque>                      insns=81    cmp=9    jcc=9    call=0   jmp=2   
+   copy_dispatch [seg] <seg_vector>                     insns=144   cmp=18   jcc=21   call=0   jmp=2   
+   count_dispatch [seg] <seg_vector>                    insns=180   cmp=39   jcc=21   call=0   jmp=1   
+   fill_range [seg] <seg_vector>                        insns=130   cmp=18   jcc=21   call=0   jmp=0   
+   copy_dst_dispatch [seg] <seg_vector>                 insns=98    cmp=9    jcc=10   call=0   jmp=1   
+   find_dispatch [seg] <seg_vector>                     insns=173   cmp=43   jcc=47   call=0   jmp=3   
+   probe_fill_deq                                       insns=105   cmp=14   jcc=16   call=0   jmp=0   
+   probe_fill_d1                                        insns=18    cmp=0    jcc=1    call=2   jmp=0   
+   probe_fill_d2                                        insns=91    cmp=2    jcc=7    call=3   jmp=2   
+   probe_count_deq                                      insns=148   cmp=28   jcc=16   call=0   jmp=1   
+   probe_count_d1                                       insns=21    cmp=0    jcc=1    call=2   jmp=0   
+   probe_count_d2                                       insns=102   cmp=3    jcc=8    call=4   jmp=1   
+   probe_find_deq                                       insns=145   cmp=38   jcc=40   call=0   jmp=4   
+   probe_find_d1                                        insns=21    cmp=0    jcc=1    call=2   jmp=0   
+   probe_find_d2                                        insns=218   cmp=14   jcc=22   call=4   jmp=9   
+   probe_copy_deq_deq                                   insns=48    cmp=2    jcc=3    call=3   jmp=1   
+   probe_copy_d2_flat                                   insns=89    cmp=2    jcc=7    call=3   jmp=2   
+   probe_copy_flat_d2                                   insns=301   cmp=32   jcc=40   call=0   jmp=7   
+   probe_copy_d1_d1                                     insns=79    cmp=3    jcc=4    call=4   jmp=0   
+   TOTAL(matched)                                       insns=2192  cmp=274  jcc=295  call=27  jmp=36 
+
+==================== g++-16  variant=E  -O2 ====================
+  .text bytes = 7866
+  bytes=80     probe_fill_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=82     probe_count_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=86     probe_find_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=166    probe_copy_deq_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>)
+  bytes=263    boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long> boost::container::detail_algo::segmented_copy_dst_dispatch<int*, int*, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, std::random_access_iterator_tag>(int*, int*, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag) [clone .isra.0]
+  bytes=298    probe_copy_d1_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>)
+  bytes=331    probe_copy_d2_flat(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int*)
+  bytes=336    probe_fill_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=336    test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_copy_dst_dispatch<boost::container::vec_iterator<int*, false>, boost::container::vec_iterator<int*, false>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, std::random_access_iterator_tag>(boost::container::vec_iterator<int*, false>, boost::container::vec_iterator<int*, false>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag) [clone .isra.0]
+  bytes=347    probe_fill_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=372    probe_count_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=390    void boost::container::detail_algo::segmented_fill_range<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag) [clone .isra.0]
+  bytes=484    int* boost::container::detail_algo::segmented_copy_dispatch<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int*, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int*, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag) [clone .isra.0]
+  bytes=491    probe_find_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=491    probe_count_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=541    std::iterator_traits<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> >::difference_type boost::container::detail_algo::segmented_count_dispatch<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag) [clone .isra.0]
+  bytes=574    test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_find_dispatch<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag) [clone .isra.0]
+  bytes=954    probe_find_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=1122   probe_copy_flat_d2(int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>)
+   copy_dst_dispatch [seg] <deque>                      insns=81    cmp=9    jcc=9    call=0   jmp=2   
+   copy_dispatch [seg] <seg_vector>                     insns=144   cmp=18   jcc=21   call=0   jmp=2   
+   count_dispatch [seg] <seg_vector>                    insns=180   cmp=39   jcc=21   call=0   jmp=1   
+   fill_range [seg] <seg_vector>                        insns=130   cmp=18   jcc=21   call=0   jmp=0   
+   copy_dst_dispatch [seg] <seg_vector>                 insns=98    cmp=9    jcc=10   call=0   jmp=1   
+   find_dispatch [seg] <seg_vector>                     insns=173   cmp=43   jcc=47   call=0   jmp=3   
+   probe_fill_deq                                       insns=105   cmp=14   jcc=16   call=0   jmp=0   
+   probe_fill_d1                                        insns=18    cmp=0    jcc=1    call=2   jmp=0   
+   probe_fill_d2                                        insns=91    cmp=2    jcc=7    call=3   jmp=2   
+   probe_count_deq                                      insns=148   cmp=28   jcc=16   call=0   jmp=1   
+   probe_count_d1                                       insns=21    cmp=0    jcc=1    call=2   jmp=0   
+   probe_count_d2                                       insns=102   cmp=3    jcc=8    call=4   jmp=1   
+   probe_find_deq                                       insns=145   cmp=38   jcc=40   call=0   jmp=4   
+   probe_find_d1                                        insns=21    cmp=0    jcc=1    call=2   jmp=0   
+   probe_find_d2                                        insns=218   cmp=14   jcc=22   call=4   jmp=9   
+   probe_copy_deq_deq                                   insns=48    cmp=2    jcc=3    call=3   jmp=1   
+   probe_copy_d2_flat                                   insns=89    cmp=2    jcc=7    call=3   jmp=2   
+   probe_copy_flat_d2                                   insns=301   cmp=32   jcc=40   call=0   jmp=7   
+   probe_copy_d1_d1                                     insns=79    cmp=3    jcc=4    call=4   jmp=0   
+   TOTAL(matched)                                       insns=2192  cmp=274  jcc=295  call=27  jmp=36 
+
+==================== g++-16  variant=T  -O2 ====================
+  .text bytes = 6538
+  bytes=82     probe_count_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=86     probe_find_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=149    probe_copy_deq_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>)
+  bytes=218    probe_copy_d1_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>)
+  bytes=249    probe_count_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=258    probe_fill_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=261    probe_fill_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=263    boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long> boost::container::detail_algo::segmented_copy_dst_dispatch<int*, int*, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, std::random_access_iterator_tag>(int*, int*, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag) [clone .isra.0]
+  bytes=336    test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_copy_dst_dispatch<boost::container::vec_iterator<int*, false>, boost::container::vec_iterator<int*, false>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, std::random_access_iterator_tag>(boost::container::vec_iterator<int*, false>, boost::container::vec_iterator<int*, false>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag) [clone .isra.0]
+  bytes=352    probe_count_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=381    std::iterator_traits<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> >::difference_type boost::container::detail_algo::segmented_count_dispatch<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag) [clone .isra.0]
+  bytes=413    probe_find_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=416    test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_find_dispatch<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag) [clone .isra.0]
+  bytes=640    probe_fill_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=753    probe_find_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=756    probe_copy_d2_flat(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int*)
+  bytes=802    probe_copy_flat_d2(int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>)
+   copy_dst_dispatch [seg] <deque>                      insns=81    cmp=9    jcc=9    call=0   jmp=2   
+   count_dispatch [seg] <seg_vector>                    insns=125   cmp=26   jcc=14   call=0   jmp=0   
+   copy_dst_dispatch [seg] <seg_vector>                 insns=98    cmp=9    jcc=10   call=0   jmp=1   
+   find_dispatch [seg] <seg_vector>                     insns=122   cmp=29   jcc=32   call=0   jmp=2   tail-jmp
+   probe_fill_deq                                       insns=89    cmp=12   jcc=14   call=0   jmp=0   
+   probe_fill_d1                                        insns=90    cmp=12   jcc=14   call=0   jmp=0   
+   probe_fill_d2                                        insns=202   cmp=26   jcc=32   call=0   jmp=0   
+   probe_count_deq                                      insns=117   cmp=26   jcc=14   call=0   jmp=0   
+   probe_count_d1                                       insns=21    cmp=0    jcc=1    call=2   jmp=0   
+   probe_count_d2                                       insns=70    cmp=2    jcc=5    call=3   jmp=0   
+   probe_find_deq                                       insns=120   cmp=30   jcc=32   call=0   jmp=2   
+   probe_find_d1                                        insns=21    cmp=0    jcc=1    call=2   jmp=0   
+   probe_find_d2                                        insns=176   cmp=11   jcc=18   call=3   jmp=6   
+   probe_copy_deq_deq                                   insns=45    cmp=2    jcc=3    call=3   jmp=0   
+   probe_copy_d2_flat                                   insns=221   cmp=26   jcc=32   call=0   jmp=0   
+   probe_copy_flat_d2                                   insns=222   cmp=22   jcc=28   call=0   jmp=3   
+   probe_copy_d1_d1                                     insns=60    cmp=2    jcc=3    call=3   jmp=0   
+   TOTAL(matched)                                       insns=1880  cmp=244  jcc=262  call=16  jmp=16 
+
+==================== g++-16  variant=F  -O2 ====================
+  .text bytes = 4508
+  bytes=88     probe_find_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=172    probe_fill_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=183    probe_fill_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=228    probe_count_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=253    probe_count_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=260    probe_find_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=298    probe_fill_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=332    test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_find_dispatch<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag) [clone .isra.0]
+  bytes=368    probe_copy_d2_flat(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int*)
+  bytes=371    probe_count_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=388    probe_copy_deq_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>)
+  bytes=412    probe_copy_d1_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>)
+  bytes=452    probe_find_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=601    probe_copy_flat_d2(int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>)
+   find_dispatch [seg] <seg_vector>                     insns=99    cmp=18   jcc=20   call=0   jmp=1   
+   probe_fill_deq                                       insns=59    cmp=9    jcc=10   call=0   jmp=1   
+   probe_fill_d1                                        insns=61    cmp=9    jcc=10   call=0   jmp=1   
+   probe_fill_d2                                        insns=95    cmp=12   jcc=15   call=0   jmp=2   
+   probe_count_deq                                      insns=76    cmp=16   jcc=10   call=0   jmp=1   
+   probe_count_d1                                       insns=82    cmp=16   jcc=10   call=0   jmp=1   
+   probe_count_d2                                       insns=120   cmp=19   jcc=15   call=0   jmp=2   
+   probe_find_deq                                       insns=84    cmp=19   jcc=20   call=0   jmp=2   
+   probe_find_d1                                        insns=23    cmp=0    jcc=1    call=2   jmp=0   
+   probe_find_d2                                        insns=119   cmp=7    jcc=12   call=2   jmp=5   
+   probe_copy_deq_deq                                   insns=108   cmp=13   jcc=13   call=0   jmp=3   
+   probe_copy_d2_flat                                   insns=102   cmp=12   jcc=15   call=0   jmp=2   
+   probe_copy_flat_d2                                   insns=167   cmp=18   jcc=23   call=0   jmp=4   
+   probe_copy_d1_d1                                     insns=113   cmp=13   jcc=14   call=0   jmp=2   
+   TOTAL(matched)                                       insns=1308  cmp=181  jcc=188  call=4   jmp=27 
+
+==================== g++-16  variant=W  -O2 ====================
+  .text bytes = 8154
+  bytes=80     probe_fill_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=104    probe_count_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=130    probe_find_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=166    probe_copy_deq_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>)
+  bytes=263    boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long> boost::container::detail_algo::segmented_copy_dst_dispatch<int*, int*, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, std::random_access_iterator_tag>(int*, int*, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag) [clone .isra.0]
+  bytes=298    probe_copy_d1_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>)
+  bytes=331    probe_copy_d2_flat(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int*)
+  bytes=336    probe_fill_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=336    test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_copy_dst_dispatch<boost::container::vec_iterator<int*, false>, boost::container::vec_iterator<int*, false>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, std::random_access_iterator_tag>(boost::container::vec_iterator<int*, false>, boost::container::vec_iterator<int*, false>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag) [clone .isra.0]
+  bytes=366    probe_fill_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=390    void boost::container::detail_algo::segmented_walk<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::detail_algo::fill_walk_fn<int>, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::detail_algo::fill_walk_fn<int>&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag) [clone .isra.0]
+  bytes=402    probe_count_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=484    int* boost::container::detail_algo::segmented_copy_dispatch<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int*, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int*, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag) [clone .isra.0]
+  bytes=485    probe_count_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=523    probe_find_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=574    bool boost::container::detail_algo::segmented_walk_until<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::detail_algo::find_walk_fn<int>, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::detail_algo::find_walk_fn<int>&, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag) [clone .isra.0]
+  bytes=604    void boost::container::detail_algo::segmented_walk<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::detail_algo::count_walk_fn<int, long>, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::detail_algo::count_walk_fn<int, long>&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag) [clone .isra.0]
+  bytes=1032   probe_find_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=1122   probe_copy_flat_d2(int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>)
+   copy_dst_dispatch [seg] <deque>                      insns=81    cmp=9    jcc=9    call=0   jmp=2   
+   copy_dispatch [seg] <seg_vector>                     insns=144   cmp=18   jcc=21   call=0   jmp=2   
+   segmented_walk [seg] <seg_vector>                    insns=193   cmp=39   jcc=21   call=0   jmp=2   
+   segmented_walk [seg] <seg_vector>                    insns=130   cmp=18   jcc=21   call=0   jmp=0   
+   copy_dst_dispatch [seg] <seg_vector>                 insns=98    cmp=9    jcc=10   call=0   jmp=1   
+   segmented_walk_until [seg] <seg_vector>              insns=175   cmp=43   jcc=47   call=0   jmp=0   
+   probe_fill_deq                                       insns=105   cmp=14   jcc=16   call=0   jmp=0   
+   probe_fill_d1                                        insns=18    cmp=0    jcc=1    call=2   jmp=0   
+   probe_fill_d2                                        insns=93    cmp=2    jcc=7    call=3   jmp=2   
+   probe_count_deq                                      insns=150   cmp=28   jcc=16   call=0   jmp=2   
+   probe_count_d1                                       insns=23    cmp=0    jcc=1    call=2   jmp=0   
+   probe_count_d2                                       insns=103   cmp=2    jcc=7    call=3   jmp=2   
+   probe_find_deq                                       insns=153   cmp=38   jcc=40   call=0   jmp=3   
+   probe_find_d1                                        insns=35    cmp=1    jcc=2    call=2   jmp=1   
+   probe_find_d2                                        insns=236   cmp=14   jcc=25   call=4   jmp=8   
+   probe_copy_deq_deq                                   insns=48    cmp=2    jcc=3    call=3   jmp=1   
+   probe_copy_d2_flat                                   insns=89    cmp=2    jcc=7    call=3   jmp=2   
+   probe_copy_flat_d2                                   insns=301   cmp=32   jcc=40   call=0   jmp=7   
+   probe_copy_d1_d1                                     insns=79    cmp=3    jcc=4    call=4   jmp=0   
+   TOTAL(matched)                                       insns=2254  cmp=274  jcc=298  call=26  jmp=35 
+
+==================== clang++-22  variant=base  -O2 ====================
+  .text bytes = 3098
+  bytes=49     probe_copy_flat_d2(int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>)
+  bytes=55     probe_fill_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=55     probe_count_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=55     probe_copy_d2_flat(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int*)
+  bytes=58     probe_copy_d1_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>)
+  bytes=58     probe_copy_deq_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>)
+  bytes=66     probe_find_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=214    probe_find_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=240    probe_find_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=367    probe_fill_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=405    test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_copy_dst_dispatch<int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, std::random_access_iterator_tag>(int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)
+  bytes=417    probe_fill_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=651    probe_count_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=719    probe_count_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=740    boost::container::segduo<int const*, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> > boost::container::detail_algo::segmented_copy_dst_bounded<int const*, int const*, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, std::random_access_iterator_tag>(int const*, int const*, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::segmented_iterator_tag, std::random_access_iterator_tag)
+  bytes=987    test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_copy_dispatch<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+  bytes=987    boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long> boost::container::detail_algo::segmented_copy_dispatch<boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, std::random_access_iterator_tag>(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::segmented_iterator_tag, std::random_access_iterator_tag)
+  bytes=1268   test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_find_dispatch<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+  bytes=1398   void boost::container::detail_algo::segmented_fill_range<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+  bytes=1822   int* boost::container::detail_algo::segmented_copy_dispatch<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int*, std::bidirectional_iterator_tag>(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int*, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+  bytes=2293   std::iterator_traits<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag> >::difference_type boost::container::detail_algo::segmented_count_dispatch<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+   probe_fill_deq                                       insns=97    cmp=13   jcc=13   call=0   jmp=3   
+   probe_fill_d1                                        insns=118   cmp=17   jcc=17   call=0   jmp=3   
+   probe_fill_d2                                        insns=15    cmp=0    jcc=0    call=1   jmp=0   
+   probe_count_deq                                      insns=165   cmp=17   jcc=15   call=0   jmp=4   
+   probe_count_d1                                       insns=193   cmp=22   jcc=19   call=0   jmp=7   
+   probe_count_d2                                       insns=15    cmp=0    jcc=0    call=1   jmp=0   
+   probe_find_deq                                       insns=72    cmp=16   jcc=16   call=0   jmp=5   tail-jmp
+   probe_find_d1                                        insns=68    cmp=13   jcc=14   call=0   jmp=3   
+   probe_find_d2                                        insns=20    cmp=0    jcc=0    call=1   jmp=0   
+   probe_copy_deq_deq                                   insns=18    cmp=0    jcc=0    call=1   jmp=0   
+   probe_copy_d2_flat                                   insns=15    cmp=0    jcc=0    call=1   jmp=0   
+   probe_copy_flat_d2                                   insns=15    cmp=0    jcc=0    call=1   jmp=0   
+   probe_copy_d1_d1                                     insns=17    cmp=0    jcc=0    call=1   jmp=0   
+   fill_range [seg] <seg2_vector>                       insns=377   cmp=55   jcc=55   call=0   jmp=11  
+   count_dispatch [seg] <seg2_vector>                   insns=588   cmp=68   jcc=59   call=0   jmp=22  
+   find_dispatch [seg] <seg2_vector>                    insns=353   cmp=66   jcc=70   call=0   jmp=20  tail-jmp
+   copy_dispatch [seg] <deque>                          insns=268   cmp=32   jcc=29   call=0   jmp=16  tail-jmp
+   copy_dispatch [seg] <seg2_vector>                    insns=482   cmp=67   jcc=65   call=0   jmp=20  tail-jmp
+   copy_dst_dispatch [seg] <seg2_vector>                insns=104   cmp=10   jcc=10   call=1   jmp=4   tail-jmp
+   copy_dst_bounded [seg] <seg_vector>                  insns=208   cmp=32   jcc=28   call=0   jmp=6   
+   copy_dispatch [seg] <seg_vector>                     insns=272   cmp=36   jcc=33   call=0   jmp=14  tail-jmp
+   TOTAL(matched)                                       insns=3480  cmp=464  jcc=443  call=8   jmp=138
+
+==================== clang++-22  variant=E  -O2 ====================
+  .text bytes = 3098
+  bytes=49     probe_copy_flat_d2(int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>)
+  bytes=55     probe_fill_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=55     probe_count_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=55     probe_copy_d2_flat(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int*)
+  bytes=58     probe_copy_d1_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>)
+  bytes=58     probe_copy_deq_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>)
+  bytes=66     probe_find_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=214    probe_find_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=240    probe_find_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=367    probe_fill_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=405    test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_copy_dst_dispatch<int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, std::random_access_iterator_tag>(int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)
+  bytes=417    probe_fill_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=651    probe_count_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=719    probe_count_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=740    boost::container::segduo<int const*, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> > boost::container::detail_algo::segmented_copy_dst_bounded<int const*, int const*, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, std::random_access_iterator_tag>(int const*, int const*, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::segmented_iterator_tag, std::random_access_iterator_tag)
+  bytes=987    test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_copy_dispatch<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+  bytes=987    boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long> boost::container::detail_algo::segmented_copy_dispatch<boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, std::random_access_iterator_tag>(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::segmented_iterator_tag, std::random_access_iterator_tag)
+  bytes=1268   test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_find_dispatch<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+  bytes=1398   void boost::container::detail_algo::segmented_fill_range<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+  bytes=1822   int* boost::container::detail_algo::segmented_copy_dispatch<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int*, std::bidirectional_iterator_tag>(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int*, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+  bytes=2293   std::iterator_traits<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag> >::difference_type boost::container::detail_algo::segmented_count_dispatch<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+   probe_fill_deq                                       insns=97    cmp=13   jcc=13   call=0   jmp=3   
+   probe_fill_d1                                        insns=118   cmp=17   jcc=17   call=0   jmp=3   
+   probe_fill_d2                                        insns=15    cmp=0    jcc=0    call=1   jmp=0   
+   probe_count_deq                                      insns=165   cmp=17   jcc=15   call=0   jmp=4   
+   probe_count_d1                                       insns=193   cmp=22   jcc=19   call=0   jmp=7   
+   probe_count_d2                                       insns=15    cmp=0    jcc=0    call=1   jmp=0   
+   probe_find_deq                                       insns=72    cmp=16   jcc=16   call=0   jmp=5   tail-jmp
+   probe_find_d1                                        insns=68    cmp=13   jcc=14   call=0   jmp=3   
+   probe_find_d2                                        insns=20    cmp=0    jcc=0    call=1   jmp=0   
+   probe_copy_deq_deq                                   insns=18    cmp=0    jcc=0    call=1   jmp=0   
+   probe_copy_d2_flat                                   insns=15    cmp=0    jcc=0    call=1   jmp=0   
+   probe_copy_flat_d2                                   insns=15    cmp=0    jcc=0    call=1   jmp=0   
+   probe_copy_d1_d1                                     insns=17    cmp=0    jcc=0    call=1   jmp=0   
+   fill_range [seg] <seg2_vector>                       insns=377   cmp=55   jcc=55   call=0   jmp=11  
+   count_dispatch [seg] <seg2_vector>                   insns=588   cmp=68   jcc=59   call=0   jmp=22  
+   find_dispatch [seg] <seg2_vector>                    insns=353   cmp=66   jcc=70   call=0   jmp=20  tail-jmp
+   copy_dispatch [seg] <deque>                          insns=268   cmp=32   jcc=29   call=0   jmp=16  tail-jmp
+   copy_dispatch [seg] <seg2_vector>                    insns=482   cmp=67   jcc=65   call=0   jmp=20  tail-jmp
+   copy_dst_dispatch [seg] <seg2_vector>                insns=104   cmp=10   jcc=10   call=1   jmp=4   tail-jmp
+   copy_dst_bounded [seg] <seg_vector>                  insns=208   cmp=32   jcc=28   call=0   jmp=6   
+   copy_dispatch [seg] <seg_vector>                     insns=272   cmp=36   jcc=33   call=0   jmp=14  tail-jmp
+   TOTAL(matched)                                       insns=3480  cmp=464  jcc=443  call=8   jmp=138
+
+==================== clang++-22  variant=T  -O2 ====================
+  .text bytes = 4538
+  bytes=49     probe_copy_flat_d2(int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>)
+  bytes=55     probe_count_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=58     probe_copy_d1_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>)
+  bytes=66     probe_find_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=154    probe_find_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=155    probe_find_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=156    test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_find_dispatch<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+  bytes=305    probe_fill_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=305    probe_fill_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=512    probe_count_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=528    probe_count_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=633    test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_find_dispatch<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+  bytes=672    probe_copy_deq_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>)
+  bytes=682    test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_copy_dispatch<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+  bytes=710    probe_fill_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=856    test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_copy_dst_dispatch<int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, std::random_access_iterator_tag>(int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)
+  bytes=876    probe_copy_d2_flat(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int*)
+  bytes=1158   std::iterator_traits<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag> >::difference_type boost::container::detail_algo::segmented_count_dispatch<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+   probe_fill_deq                                       insns=87    cmp=12   jcc=12   call=0   jmp=4   
+   probe_fill_d1                                        insns=89    cmp=12   jcc=12   call=0   jmp=4   
+   probe_fill_d2                                        insns=197   cmp=27   jcc=27   call=0   jmp=8   
+   probe_count_deq                                      insns=132   cmp=14   jcc=12   call=0   jmp=5   
+   probe_count_d1                                       insns=135   cmp=14   jcc=12   call=0   jmp=5   
+   probe_count_d2                                       insns=15    cmp=0    jcc=0    call=1   jmp=0   
+   probe_find_deq                                       insns=54    cmp=10   jcc=10   call=0   jmp=5   
+   probe_find_d1                                        insns=54    cmp=10   jcc=10   call=0   jmp=4   
+   probe_find_d2                                        insns=20    cmp=0    jcc=0    call=1   jmp=0   
+   probe_copy_deq_deq                                   insns=184   cmp=22   jcc=20   call=0   jmp=11  tail-jmp
+   probe_copy_d2_flat                                   insns=236   cmp=31   jcc=31   call=0   jmp=10  
+   probe_copy_flat_d2                                   insns=15    cmp=0    jcc=0    call=1   jmp=0   
+   probe_copy_d1_d1                                     insns=17    cmp=0    jcc=0    call=1   jmp=0   
+   count_dispatch [seg] <seg2_vector>                   insns=292   cmp=31   jcc=27   call=0   jmp=11  
+   find_dispatch [seg] <seg_vector>                     insns=50    cmp=10   jcc=10   call=0   jmp=3   
+   find_dispatch [seg] <seg2_vector>                    insns=175   cmp=19   jcc=21   call=2   jmp=8   tail-jmp
+   copy_dst_dispatch [seg] <seg2_vector>                insns=226   cmp=32   jcc=30   call=0   jmp=8   
+   copy_dispatch [seg] <seg_vector>                     insns=193   cmp=24   jcc=22   call=0   jmp=11  tail-jmp
+   TOTAL(matched)                                       insns=2171  cmp=268  jcc=256  call=6   jmp=97 
+
+==================== clang++-22  variant=F  -O2 ====================
+  .text bytes = 3368
+  bytes=49     probe_copy_flat_d2(int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>)
+  bytes=66     probe_find_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=124    probe_find_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=126    probe_find_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=197    probe_fill_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=199    probe_fill_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=303    probe_count_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=305    probe_count_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=318    probe_fill_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=350    probe_copy_d2_flat(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int*)
+  bytes=388    test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_find_dispatch<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int, std::bidirectional_iterator_tag>(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+  bytes=390    probe_copy_deq_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>)
+  bytes=408    probe_copy_d1_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>)
+  bytes=446    probe_count_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=605    test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_copy_dst_dispatch<int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, std::random_access_iterator_tag>(int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)
+   probe_fill_deq                                       insns=60    cmp=7    jcc=7    call=0   jmp=3   
+   probe_fill_d1                                        insns=58    cmp=7    jcc=7    call=0   jmp=3   
+   probe_fill_d2                                        insns=90    cmp=10   jcc=10   call=0   jmp=4   
+   probe_count_deq                                      insns=82    cmp=8    jcc=7    call=0   jmp=3   
+   probe_count_d1                                       insns=80    cmp=8    jcc=7    call=0   jmp=3   
+   probe_count_d2                                       insns=117   cmp=11   jcc=10   call=0   jmp=4   
+   probe_find_deq                                       insns=43    cmp=7    jcc=7    call=0   jmp=4   
+   probe_find_d1                                        insns=43    cmp=7    jcc=7    call=0   jmp=2   
+   probe_find_d2                                        insns=20    cmp=0    jcc=0    call=1   jmp=0   
+   probe_copy_deq_deq                                   insns=110   cmp=12   jcc=11   call=0   jmp=5   
+   probe_copy_d2_flat                                   insns=100   cmp=11   jcc=11   call=0   jmp=4   
+   probe_copy_flat_d2                                   insns=15    cmp=0    jcc=0    call=1   jmp=0   
+   probe_copy_d1_d1                                     insns=112   cmp=13   jcc=12   call=0   jmp=3   
+   find_dispatch [seg] <seg2_vector>                    insns=113   cmp=19   jcc=19   call=0   jmp=5   tail-jmp
+   copy_dst_dispatch [seg] <seg2_vector>                insns=170   cmp=23   jcc=22   call=0   jmp=5   
+   TOTAL(matched)                                       insns=1213  cmp=143  jcc=137  call=2   jmp=48 
+
+==================== clang++-22  variant=W  -O2 ====================
+  .text bytes = 3226
+  bytes=49     probe_copy_flat_d2(int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>)
+  bytes=55     probe_copy_d2_flat(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int*)
+  bytes=58     probe_copy_d1_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>)
+  bytes=58     probe_copy_deq_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>)
+  bytes=68     probe_fill_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=79     probe_count_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=145    probe_find_d2(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=214    probe_find_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=247    probe_find_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=367    probe_fill_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=405    test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_copy_dst_dispatch<int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, std::random_access_iterator_tag>(int const*, int const*, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::segmented_iterator_tag const&, std::random_access_iterator_tag)
+  bytes=417    probe_fill_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=651    probe_count_deq(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, int const&)
+  bytes=719    probe_count_d1(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, int const&)
+  bytes=740    boost::container::segduo<int const*, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> > boost::container::detail_algo::segmented_copy_dst_bounded<int const*, int const*, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, std::random_access_iterator_tag>(int const*, int const*, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::segmented_iterator_tag, std::random_access_iterator_tag)
+  bytes=987    test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag> boost::container::detail_algo::segmented_copy_dispatch<test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, std::bidirectional_iterator_tag>(test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+  bytes=987    boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long> boost::container::detail_algo::segmented_copy_dispatch<boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, std::random_access_iterator_tag>(boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::deque_iterator<int*, false, 0u, 0u, unsigned long>, boost::container::segmented_iterator_tag, std::random_access_iterator_tag)
+  bytes=1095   bool boost::container::detail_algo::segmented_walk_until<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::detail_algo::find_walk_fn<int>, std::bidirectional_iterator_tag>(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::detail_algo::find_walk_fn<int>&, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+  bytes=1414   void boost::container::detail_algo::segmented_walk<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::detail_algo::fill_walk_fn<int>, std::bidirectional_iterator_tag>(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::detail_algo::fill_walk_fn<int>&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+  bytes=1822   int* boost::container::detail_algo::segmented_copy_dispatch<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int*, std::bidirectional_iterator_tag>(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, int*, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+  bytes=2405   void boost::container::detail_algo::segmented_walk<test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::detail_algo::count_walk_fn<int, long>, std::bidirectional_iterator_tag>(test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, test_detail::seg2_vector_iterator<int, std::bidirectional_iterator_tag>, boost::container::detail_algo::count_walk_fn<int, long>&, boost::container::segmented_iterator_tag, std::bidirectional_iterator_tag)
+   probe_fill_deq                                       insns=97    cmp=13   jcc=13   call=0   jmp=3   
+   probe_fill_d1                                        insns=118   cmp=17   jcc=17   call=0   jmp=3   
+   probe_fill_d2                                        insns=17    cmp=0    jcc=0    call=1   jmp=0   
+   probe_count_deq                                      insns=165   cmp=17   jcc=15   call=0   jmp=4   
+   probe_count_d1                                       insns=193   cmp=22   jcc=19   call=0   jmp=7   
+   probe_count_d2                                       insns=19    cmp=0    jcc=0    call=1   jmp=0   
+   probe_find_deq                                       insns=75    cmp=17   jcc=17   call=0   jmp=4   
+   probe_find_d1                                        insns=68    cmp=13   jcc=14   call=0   jmp=3   
+   probe_find_d2                                        insns=41    cmp=1    jcc=1    call=1   jmp=0   
+   probe_copy_deq_deq                                   insns=18    cmp=0    jcc=0    call=1   jmp=0   
+   probe_copy_d2_flat                                   insns=15    cmp=0    jcc=0    call=1   jmp=0   
+   probe_copy_flat_d2                                   insns=15    cmp=0    jcc=0    call=1   jmp=0   
+   probe_copy_d1_d1                                     insns=17    cmp=0    jcc=0    call=1   jmp=0   
+   segmented_walk [seg] <seg2_vector>                   insns=378   cmp=55   jcc=55   call=0   jmp=11  
+   segmented_walk [seg] <seg2_vector>                   insns=608   cmp=67   jcc=58   call=0   jmp=23  tail-jmp
+   segmented_walk_until [seg] <seg2_vector>             insns=299   cmp=55   jcc=58   call=0   jmp=13  
+   copy_dispatch [seg] <deque>                          insns=268   cmp=32   jcc=29   call=0   jmp=16  tail-jmp
+   copy_dispatch [seg] <seg2_vector>                    insns=482   cmp=67   jcc=65   call=0   jmp=20  tail-jmp
+   copy_dst_dispatch [seg] <seg2_vector>                insns=104   cmp=10   jcc=10   call=1   jmp=4   tail-jmp
+   copy_dst_bounded [seg] <seg_vector>                  insns=208   cmp=32   jcc=28   call=0   jmp=6   
+   copy_dispatch [seg] <seg_vector>                     insns=272   cmp=36   jcc=33   call=0   jmp=14  tail-jmp
+   TOTAL(matched)                                       insns=3477  cmp=454  jcc=432  call=8   jmp=131
