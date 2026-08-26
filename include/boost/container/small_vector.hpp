@@ -1063,6 +1063,13 @@ class small_vector
    inline void swap(small_vector &other)
    {  return this->base_type::prot_swap(other, static_capacity);  }
 
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Complexity</b>: Linear to the number of elements stored in the small buffers.
+   inline friend void swap(small_vector &x, small_vector &y)
+      BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
+   {  x.swap(y);  }
+
    //! <b>Effects</b>: Tries to reduce capacity() to the current size(). Once the capacity
    //!   changes, the container permanently switches to dynamically allocated storage even if
    //!   the resulting size would fit in the internal buffer.
