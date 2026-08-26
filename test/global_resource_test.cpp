@@ -36,8 +36,14 @@ using namespace boost::container::pmr;
 #pragma GCC diagnostic ignored "-Wsized-deallocation"
 #endif
 
-//ASAN does not support operator new overloading
-#ifndef BOOST_CONTAINER_ASAN
+//Replacing global operator new/delete is not possible under every sanitizer:
+//ASAN does not support overloading it, and TSAN's runtime defines its own
+//(a multiple-definition link error on clang)
+#if defined(BOOST_CONTAINER_ASAN) || defined(BOOST_CONTAINER_TSAN)
+#define BOOST_CONTAINER_TEST_NO_NEW_REPLACEMENT
+#endif
+
+#ifndef BOOST_CONTAINER_TEST_NO_NEW_REPLACEMENT
 
 std::size_t allocation_count = 0;
 
@@ -128,13 +134,13 @@ void operator delete(void *p, std::size_t, std::align_val_t) BOOST_CONTAINER_DEL
 
 #endif
 #endif   //__cpp_sized_deallocation
-#endif   //BOOST_CONTAINER_ASAN
+#endif   //BOOST_CONTAINER_TEST_NO_NEW_REPLACEMENT
 
 #ifdef BOOST_MSVC
 #pragma warning (pop)
 #endif
 
-#ifndef BOOST_CONTAINER_ASAN
+#ifndef BOOST_CONTAINER_TEST_NO_NEW_REPLACEMENT
 
 void test_new_delete_resource()
 {
@@ -157,7 +163,7 @@ void test_new_delete_resource()
    BOOST_TEST(memcount == allocation_count);
 }
 
-#endif   //BOOST_CONTAINER_ASAN
+#endif   //BOOST_CONTAINER_TEST_NO_NEW_REPLACEMENT
 
 void test_null_memory_resource()
 {
@@ -301,7 +307,7 @@ void test_concurrent_set_default_resource()
 
 int main()
 {
-   #ifndef BOOST_CONTAINER_ASAN
+   #ifndef BOOST_CONTAINER_TEST_NO_NEW_REPLACEMENT
    test_new_delete_resource();
    #endif
    test_null_memory_resource();

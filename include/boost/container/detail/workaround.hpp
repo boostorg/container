@@ -109,6 +109,11 @@
 #define BOOST_CONTAINER_ASAN
 #endif
 
+//Detect thread sanitizer
+#if defined(__SANITIZE_THREAD__) || BOOST_CONTAINER_HAS_FEATURE(thread_sanitizer)
+#define BOOST_CONTAINER_TSAN
+#endif
+
 
 #if (BOOST_CXX_VERSION < 201703L) || !defined(__cpp_deduction_guides)
    #define BOOST_CONTAINER_NO_CXX17_CTAD
