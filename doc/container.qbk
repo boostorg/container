@@ -2894,6 +2894,7 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
 
 * Fixed bugs/issues/enhancements:
    * [@https://github.com/boostorg/container/pull/339 GitHub #339: ['"optimized range insertion for boost::container::hub"]].
+   * [@https://github.com/boostorg/container/issues/342 GitHub #342: ['"Using unqualified swap() on two small_vectors calls an incorrect swap function"]].
 
 [endsect]
 
