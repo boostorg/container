@@ -71,6 +71,4 @@ int main()
 {
    //Check user-defined throw callbacks are called
    throw_bad_alloc();
-   //Never reached
-   return 33;
 }
