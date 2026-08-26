@@ -43,17 +43,30 @@ rule test_all
    all_rules += [ run dlmalloc_multi_tu/dlmalloc_multi_tu_test.cpp dlmalloc_multi_tu/dlmalloc_multi_tu_test_other.cpp
                       /boost/container//boost_container ] ;
 
-   # Intermodule test: an executable plus two shared libraries, each inlining
-   # its own copy of Boost.Container, must share the process-wide globals
-   # (PMR default resource, resource singletons, and the dlmalloc heap)
+   # Two-translation-unit test for the polymorphic resources: the singletons
+   # and the default-resource slot must be shared between both units
+   all_rules += [ run pmr_multi_tu/pmr_multi_tu_test.cpp pmr_multi_tu/pmr_multi_tu_test_other.cpp
+                      /boost/container//boost_container ] ;
+
+   # Intermodule tests: an executable plus two shared libraries, each inlining
+   # its own copy of Boost.Container. One per kind of process-wide state:
+   # intermodule_globals<> itself, the dlmalloc heap, and the PMR singletons
    all_rules += [ run intermodule_multi_tu/intermodule_test.cpp
                       bc_intermodule_lib_a bc_intermodule_lib_b
+                      /boost/container//boost_container ] ;
+
+   all_rules += [ run dlmalloc_multi_tu/dlmalloc_intermodule_test.cpp
+                      bc_dlmalloc_lib_a bc_dlmalloc_lib_b
+                      /boost/container//boost_container ] ;
+
+   all_rules += [ run pmr_multi_tu/pmr_intermodule_test.cpp
+                      bc_pmr_lib_a bc_pmr_lib_b
                       /boost/container//boost_container ] ;
 
    return $(all_rules) ;
 }
 
-# Shared libraries for the intermodule test (always shared, even in
+# Shared libraries for the intermodule tests (always shared, even in
 # link=static runs: the whole point is crossing module boundaries)
 lib bc_intermodule_lib_a
    : intermodule_multi_tu/intermodule_lib_a.cpp /boost/container//boost_container
@@ -62,6 +75,26 @@ lib bc_intermodule_lib_a
 
 lib bc_intermodule_lib_b
    : intermodule_multi_tu/intermodule_lib_b.cpp /boost/container//boost_container
+   : <link>shared
+   ;
+
+lib bc_dlmalloc_lib_a
+   : dlmalloc_multi_tu/dlmalloc_intermodule_lib_a.cpp /boost/container//boost_container
+   : <link>shared
+   ;
+
+lib bc_dlmalloc_lib_b
+   : dlmalloc_multi_tu/dlmalloc_intermodule_lib_b.cpp /boost/container//boost_container
+   : <link>shared
+   ;
+
+lib bc_pmr_lib_a
+   : pmr_multi_tu/pmr_intermodule_lib_a.cpp /boost/container//boost_container
+   : <link>shared
+   ;
+
+lib bc_pmr_lib_b
+   : pmr_multi_tu/pmr_intermodule_lib_b.cpp /boost/container//boost_container
    : <link>shared
    ;
 

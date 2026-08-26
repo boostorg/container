@@ -7,133 +7,134 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-//The point of the header-only conversion: this executable and two shared
-//libraries each inline their own copy of Boost.Container, yet all globals
-//must behave as a single process-wide instance:
-//  - new_delete_resource()/null_memory_resource() return the SAME address
-//    from every module.
-//  - set_default_resource() in one module is visible in all the others.
-//  - dlmalloc memory allocated in one module can be freed in another, and
-//    the allocation statistics are process-global.
-#include <boost/container/pmr/global_resource.hpp>
-#include <boost/container/pmr/memory_resource.hpp>
-#include <boost/container/detail/dlmalloc.hpp>
+//intermodule_globals<> across module boundaries: this executable and two
+//shared libraries each inline their own copy of the utility, and each one
+//instantiates it over the same test types, so every T/Options pair must
+//resolve to a single process-wide object.
+//
+//Only the utility's own test types are used here. The library singletons
+//built on top of it are tested where they belong: the dlmalloc heap in
+//dlmalloc_multi_tu, the polymorphic resources in pmr_multi_tu.
+#include "intermodule_test_types.hpp"
 #include "../lightweight_test.hpp"
-#include <cstddef>
-#include <cstdlib>
 
-namespace bc = boost::container;
-using bc::pmr::memory_resource;
+namespace dtl = boost::container::dtl;
 
 //Exported by intermodule_lib_a.cpp / intermodule_lib_b.cpp
-memory_resource *lib_a_new_delete_resource();
-memory_resource *lib_a_null_memory_resource();
-memory_resource *lib_a_get_default_resource();
-memory_resource *lib_a_set_default_resource(memory_resource *r);
-void *lib_a_malloc(std::size_t n);
-void lib_a_free(void *p);
-std::size_t lib_a_in_use_memory();
-int lib_a_all_deallocated();
+BOOST_CONTAINER_TEST_INTERMODULE_LIB_DECL(lib_a)
+BOOST_CONTAINER_TEST_INTERMODULE_LIB_DECL(lib_b)
 
-memory_resource *lib_b_new_delete_resource();
-memory_resource *lib_b_null_memory_resource();
-memory_resource *lib_b_get_default_resource();
-memory_resource *lib_b_set_default_resource(memory_resource *r);
-void *lib_b_malloc(std::size_t n);
-void lib_b_free(void *p);
-std::size_t lib_b_in_use_memory();
-int lib_b_all_deallocated();
-
+//This module's own accessors, so the executable reads through its own
+//instantiation exactly as the libraries read through theirs.
 namespace {
 
-//A user-provided resource living in the executable
-class exe_resource
-   : public memory_resource
-{
-   public:
-   virtual ~exe_resource() BOOST_OVERRIDE
-   {}
+bc_test::shared_globals &exe_alpha()
+{  return dtl::intermodule_globals<bc_test::shared_globals, bc_test::options_alpha>();  }
 
-   virtual void* do_allocate(std::size_t bytes, std::size_t) BOOST_OVERRIDE
-   {  return std::malloc(bytes);  }
+bc_test::shared_globals &exe_beta()
+{  return dtl::intermodule_globals<bc_test::shared_globals, bc_test::options_beta>();  }
 
-   virtual void do_deallocate(void* p, std::size_t, std::size_t) BOOST_OVERRIDE
-   {  std::free(p);  }
-
-   virtual bool do_is_equal(const memory_resource& other) const BOOST_NOEXCEPT BOOST_OVERRIDE
-   {  return &other == this;   }
-};
+bc_test::shared_globals &exe_immortal()
+{  return dtl::intermodule_globals<bc_test::shared_globals, bc_test::options_immortal>();  }
 
 }  //namespace
 
-void test_global_resources_identity()
+//Every module must reach the same object for a given T/Options pair.
+void test_same_object_in_every_module()
 {
-   //The singletons must have one process-wide address
-   memory_resource *const exe_ndr = bc::pmr::new_delete_resource();
-   BOOST_TEST(exe_ndr != 0);
-   BOOST_TEST(lib_a_new_delete_resource() == exe_ndr);
-   BOOST_TEST(lib_b_new_delete_resource() == exe_ndr);
-
-   memory_resource *const exe_null = bc::pmr::null_memory_resource();
-   BOOST_TEST(exe_null != 0);
-   BOOST_TEST(lib_a_null_memory_resource() == exe_null);
-   BOOST_TEST(lib_b_null_memory_resource() == exe_null);
+   BOOST_TEST(&exe_alpha()    == lib_a_alpha()    && &exe_alpha()    == lib_b_alpha());
+   BOOST_TEST(&exe_beta()     == lib_a_beta()     && &exe_beta()     == lib_b_beta());
+   BOOST_TEST(&exe_immortal() == lib_a_immortal() && &exe_immortal() == lib_b_immortal());
 }
 
-void test_default_resource_visibility()
+//Identity follows the T/Options pair, so the same T under three different
+//keys must give three different objects.
+void test_options_select_distinct_objects()
 {
-   //Initial default is the (process-wide) new_delete_resource in all modules
-   memory_resource *const exe_ndr = bc::pmr::new_delete_resource();
-   BOOST_TEST(bc::pmr::get_default_resource() == exe_ndr);
-   BOOST_TEST(lib_a_get_default_resource() == exe_ndr);
-   BOOST_TEST(lib_b_get_default_resource() == exe_ndr);
-
-   //A change made by library A must be observed by the exe and library B
-   static exe_resource user_res;
-   memory_resource *prev = lib_a_set_default_resource(&user_res);
-   BOOST_TEST(prev == exe_ndr);
-   BOOST_TEST(bc::pmr::get_default_resource() == &user_res);
-   BOOST_TEST(lib_a_get_default_resource() == &user_res);
-   BOOST_TEST(lib_b_get_default_resource() == &user_res);
-
-   //A change made by the exe must be observed by both libraries;
-   //null restores the default
-   prev = bc::pmr::set_default_resource(0);
-   BOOST_TEST(prev == &user_res);
-   BOOST_TEST(lib_a_get_default_resource() == exe_ndr);
-   BOOST_TEST(lib_b_get_default_resource() == exe_ndr);
+   BOOST_TEST(&exe_alpha() != &exe_beta());
+   BOOST_TEST(&exe_alpha() != &exe_immortal());
+   BOOST_TEST(&exe_beta()  != &exe_immortal());
 }
 
-void test_shared_dlmalloc_heap()
+//Each object was fully constructed before any module could observe it, and
+//constructed in place rather than copied in.
+void test_constructed_in_place()
 {
-   //Allocate in A, free in B; allocate in B, free in the exe; allocate in
-   //the exe, free in A. Any of these corrupts or crashes with per-module
-   //heaps.
-   void *pa = lib_a_malloc(1000);
-   BOOST_TEST(pa != 0);
-   //All modules see the same in-use counter
-   BOOST_TEST(lib_a_in_use_memory() == lib_b_in_use_memory());
-   BOOST_TEST(lib_a_in_use_memory() == bc::dlmalloc_in_use_memory());
-   lib_b_free(pa);
+   BOOST_TEST(exe_alpha().magic    == int(bc_test::shared_globals::magic_value));
+   BOOST_TEST(exe_beta().magic     == int(bc_test::shared_globals::magic_value));
+   BOOST_TEST(exe_immortal().magic == int(bc_test::shared_globals::magic_value));
 
-   void *pb = lib_b_malloc(2000);
-   BOOST_TEST(pb != 0);
-   bc::dlmalloc_free(pb);
-
-   void *pe = bc::dlmalloc_malloc(3000);
-   BOOST_TEST(pe != 0);
-   lib_a_free(pe);
-
-   //Global statistics agree everywhere: everything was deallocated
-   BOOST_TEST(bc::dlmalloc_all_deallocated() != 0);
-   BOOST_TEST(lib_a_all_deallocated() != 0);
-   BOOST_TEST(lib_b_all_deallocated() != 0);
+   //The constructor recorded the address it ran on; a module holding a copy
+   //would see self pointing somewhere else.
+   BOOST_TEST(exe_alpha().self    == static_cast<void *>(&exe_alpha()));
+   BOOST_TEST(exe_beta().self     == static_cast<void *>(&exe_beta()));
+   BOOST_TEST(exe_immortal().self == static_cast<void *>(&exe_immortal()));
 }
+
+//Three objects exist, so exactly three constructor calls happened in the
+//whole process however they are distributed over the modules. More would mean
+//a module built its own copy instead of attaching to the shared one.
+void test_constructed_exactly_once_each()
+{
+   const unsigned total = bc_test::module_ctor_calls
+                        + lib_a_ctor_calls() + lib_b_ctor_calls();
+   BOOST_TEST_EQ(total, 3u);
+
+   //Nothing has been destroyed yet: the two destructible objects go at static
+   //destruction time and the immortal one never does.
+   const unsigned destroyed = bc_test::module_dtor_calls
+                            + lib_a_dtor_calls() + lib_b_dtor_calls();
+   BOOST_TEST_EQ(destroyed, 0u);
+}
+
+//The object is shared state, not a per-module copy: a write in one module is
+//read back through another module's own instantiation.
+void test_writes_cross_module()
+{
+   exe_alpha().value = 4242;
+   BOOST_TEST_EQ(lib_a_alpha_value(), 4242);
+   BOOST_TEST_EQ(lib_b_alpha_value(), 4242);
+
+   lib_a_set_alpha_value(-7);
+   BOOST_TEST_EQ(exe_alpha().value, -7);
+   BOOST_TEST_EQ(lib_b_alpha_value(), -7);
+
+   lib_b_set_alpha_value(0);
+   BOOST_TEST_EQ(exe_alpha().value, 0);
+   BOOST_TEST_EQ(lib_a_alpha_value(), 0);
+
+   //The other keys are untouched by all of that
+   BOOST_TEST_EQ(exe_beta().value, 0);
+   BOOST_TEST_EQ(exe_immortal().value, 0);
+}
+
+#if !defined(BOOST_NO_ALIGNMENT)
+
+//An over-aligned object lands on an aligned address, and every module agrees
+//which address that is.
+void test_overaligned_object()
+{
+   bc_test::overaligned_globals &g =
+      dtl::intermodule_globals<bc_test::overaligned_globals, bc_test::options_overaligned>();
+   BOOST_TEST(static_cast<void *>(&g) == lib_a_overaligned());
+   BOOST_TEST(static_cast<void *>(&g) == lib_b_overaligned());
+   BOOST_TEST(g.magic == int(bc_test::overaligned_globals::magic_value));
+
+   const std::size_t align = std::size_t(bc_test::overaligned_globals::alignment);
+   BOOST_TEST((reinterpret_cast<std::size_t>(&g) % align) == 0u);
+}
+
+#endif   //!defined(BOOST_NO_ALIGNMENT)
 
 int main()
 {
-   test_global_resources_identity();
-   test_default_resource_visibility();
-   test_shared_dlmalloc_heap();
+   test_same_object_in_every_module();
+   test_options_select_distinct_objects();
+   test_constructed_in_place();
+   test_constructed_exactly_once_each();
+   test_writes_cross_module();
+   #if !defined(BOOST_NO_ALIGNMENT)
+   test_overaligned_object();
+   #endif
    return boost::report_errors();
 }

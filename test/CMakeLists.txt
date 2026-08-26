@@ -136,18 +136,31 @@ if(TARGET Threads::Threads)
   target_link_libraries(${PREFIX}hub_api_test Threads::Threads)
 endif()
 
-#Intermodule test: an executable plus two shared libraries, each inlining its
-#own copy of Boost.Container, must share the process-wide globals (PMR default
-#resource, resource singletons and the dlmalloc heap). The libraries are SHARED
-#unconditionally, whatever BUILD_SHARED_LIBS says: crossing a module boundary
-#is the whole point. They export with BOOST_SYMBOL_EXPORT, so no symbol
-#auto-export is needed, and default visibility must not be turned off here.
-foreach(lib a b)
-  add_library(${PREFIX}intermodule_lib_${lib} SHARED
-              intermodule_multi_tu/intermodule_lib_${lib}.cpp)
-  target_link_libraries(${PREFIX}intermodule_lib_${lib} ${LINK_LIBRARIES})
-endforeach()
+#Two-translation-unit test for the polymorphic resources, the counterpart of
+#dlmalloc_multi_tu_test above.
+boost_container_add_test(pmr_multi_tu_test pmr_multi_tu/pmr_multi_tu_test.cpp
+                                          pmr_multi_tu/pmr_multi_tu_test_other.cpp)
 
-boost_container_add_test(intermodule_test intermodule_multi_tu/intermodule_test.cpp)
-target_link_libraries(${PREFIX}intermodule_test
-                      ${PREFIX}intermodule_lib_a ${PREFIX}intermodule_lib_b)
+#Intermodule tests: an executable plus two shared libraries, each inlining its
+#own copy of Boost.Container. One per kind of process-wide state:
+#intermodule_globals<> itself, the dlmalloc heap and the PMR singletons.
+#The libraries are SHARED unconditionally, whatever BUILD_SHARED_LIBS says:
+#crossing a module boundary is the whole point. They export with
+#BOOST_SYMBOL_EXPORT, so no symbol auto-export is needed, and default
+#visibility must not be turned off here.
+function(boost_container_add_intermodule_test name dir stem)
+  foreach(lib a b)
+    add_library(${PREFIX}${name}_lib_${lib} SHARED ${dir}/${stem}_lib_${lib}.cpp)
+    target_link_libraries(${PREFIX}${name}_lib_${lib} ${LINK_LIBRARIES})
+  endforeach()
+  boost_container_add_test(${name} ${dir}/${stem}_test.cpp)
+  target_link_libraries(${PREFIX}${name}
+                        ${PREFIX}${name}_lib_a ${PREFIX}${name}_lib_b)
+endfunction()
+
+boost_container_add_intermodule_test(intermodule_test
+                                    intermodule_multi_tu intermodule)
+boost_container_add_intermodule_test(dlmalloc_intermodule_test
+                                    dlmalloc_multi_tu dlmalloc_intermodule)
+boost_container_add_intermodule_test(pmr_intermodule_test
+                                    pmr_multi_tu pmr_intermodule)
