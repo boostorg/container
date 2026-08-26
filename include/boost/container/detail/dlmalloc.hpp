@@ -1242,6 +1242,31 @@ static int calculate_lcm_and_needs_backwards_lcmed
    }
 }
 
+/* Largest chunk size p could reach by absorbing only the free space that
+   follows it, without moving. It mirrors the cases
+   try_realloc_chunk_with_min() can actually satisfy, so asking that function
+   for exactly this size always succeeds. Returns chunksize(p) when there is
+   nothing to take. */
+static size_t internal_max_fwd_chunk_size(mstate m, mchunkptr p)
+{
+   const size_t oldsize = chunksize(p);
+   mchunkptr next;
+   if(is_mmapped(p))
+      return oldsize;   /* those grow through mmap_resize instead */
+   next = chunk_plus_offset(p, oldsize);
+   if(!RTCHECK(ok_next(p, next) && ok_pinuse(next)))
+      return oldsize;
+   if(next == m->top)
+      /* top keeps MALLOC_ALIGNMENT, exactly as try_realloc_chunk_with_min
+         reserves when it cannot honour the desired size */
+      return (m->topsize > MALLOC_ALIGNMENT) ? (oldsize + m->topsize - MALLOC_ALIGNMENT) : oldsize;
+   else if(next == m->dv)
+      return oldsize + m->dvsize;
+   else if(!cinuse(next))
+      return oldsize + chunksize(next);
+   return oldsize;
+}
+
 static void *internal_grow_both_sides
                          (mstate m
                          ,allocation_type command
@@ -1298,12 +1323,26 @@ static void *internal_grow_both_sides
             size_t dsize = oldsize + prevsize;
             size_t needs_backwards_lcmed;
             size_t lcm;
+            /* Forward expansion could not reach minbytes on its own, but the
+               space that *is* free in front still counts towards the total, so
+               the previous chunk only has to cover the remainder. Measure that
+               space without taking it: should the two sides together still fall
+               short, the block has to be left exactly as it was. */
+            size_t fwd_chunk = oldsize;
+            size_t fwd_size  = *received_size;
+            if(command & BOOST_CONTAINER_EXPAND_FWD){
+               const size_t max_fwd = internal_max_fwd_chunk_size(m, oldp);
+               if(max_fwd > oldsize){
+                  fwd_chunk = max_fwd;
+                  fwd_size  = max_fwd - overhead_for(oldp);
+               }
+            }
 
             /* Let's calculate the number of extra bytes of data before the current
             block's begin. The value is a multiple of backwards_multiple
             and the alignment*/
             if(!calculate_lcm_and_needs_backwards_lcmed
-               ( backwards_multiple, *received_size
+               ( backwards_multiple, fwd_size
                , only_preferred_backwards ? maxbytes : minbytes
                , &lcm, &needs_backwards_lcmed)
                || !RTCHECK(ok_address(m, prev))){
@@ -1315,9 +1354,10 @@ static void *internal_grow_both_sides
                /* preferred size? */
                return 0;
             }
-            /* Now take all next space. This must succeed, as we've previously calculated the correct size */
-            if(command & BOOST_CONTAINER_EXPAND_FWD){
-               if(!try_realloc_chunk_with_min(m, oldp, request2size(*received_size), request2size(*received_size), 0)){
+            /* Both halves are available, so now take the forward space. Sized
+               from internal_max_fwd_chunk_size(), so this cannot fail. */
+            if(fwd_chunk > oldsize){
+               if(!try_realloc_chunk_with_min(m, oldp, fwd_chunk, fwd_chunk, 0)){
                   DL_ASSERT(0);
                }
                check_inuse_chunk(m, oldp);

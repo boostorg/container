@@ -406,6 +406,161 @@ bool test_allocation_with_reuse()
 }
 
 
+//Expansion that neither side can satisfy on its own but both can together.
+//Free space is created before AND after a block, and the block is then asked
+//for a size that needs part of each: a combined forward+backward expansion.
+bool test_allocation_expand_both()
+{
+   dlmalloc_malloc_check();
+   bool exercised = false;
+   //Several backwards_multiple values, powers of two and not, so the
+   //lcm/alignment branches that size the backward part all get used
+   for(std::size_t sizeof_object = 1; sizeof_object != 9; ++sizeof_object){
+      if(!dlmalloc_all_deallocated())
+         return false;
+
+      const std::size_t BlockSize = 256;
+      void *a = dlmalloc_malloc(BlockSize);
+      void *b = dlmalloc_malloc(BlockSize);
+      void *c = dlmalloc_malloc(BlockSize);
+      //d pins c: without it, freeing c would merge it into top and the forward
+      //side would become effectively unbounded, defeating the test
+      void *d = dlmalloc_malloc(BlockSize);
+      if(!a || !b || !c || !d)
+         return false;
+
+      const std::size_t chunk_a = dlmalloc_chunksize(a);
+      const std::size_t chunk_b = dlmalloc_chunksize(b);
+      const std::size_t chunk_c = dlmalloc_chunksize(c);
+      const bool adjacent = ((char*)b == (char*)a + chunk_a)
+                         && ((char*)c == (char*)b + chunk_b)
+                         && ((char*)d == (char*)c + chunk_c);
+      if(!adjacent){   //not the layout this test needs, try the next size
+         dlmalloc_free(a);  dlmalloc_free(b);
+         dlmalloc_free(c);  dlmalloc_free(d);
+         continue;
+      }
+
+      std::memset(b, 'B', BlockSize);
+      const std::size_t b_user = dlmalloc_size(b);
+      dlmalloc_free(a);          //free space before b
+      dlmalloc_free(c);          //free space after  b
+
+      //More than the forward side alone can give, less than the two together,
+      //rounded up to a multiple of sizeof_object as the backward sizing needs
+      std::size_t need = b_user + chunk_c + sizeof_object;
+      need = ((need + sizeof_object - 1u)/sizeof_object)*sizeof_object;
+      if(need <= (b_user + chunk_c) || need > (b_user + chunk_c + chunk_a)){
+         dlmalloc_free(b);  dlmalloc_free(d);
+         continue;
+      }
+
+      //Neither direction alone can do it, and a failed attempt has to leave
+      //the block exactly as it was
+      std::size_t received = 0;
+      if(dlmalloc_allocation_command
+            ( BOOST_CONTAINER_EXPAND_FWD, sizeof_object, 1u, need
+            , need, &received, b).first)
+         return false;
+      if(dlmalloc_size(b) != b_user)
+         return false;
+      if(dlmalloc_allocation_command
+            ( BOOST_CONTAINER_EXPAND_BWD, sizeof_object, 1u, need
+            , need, &received, b).first)
+         return false;
+      if(dlmalloc_size(b) != b_user)
+         return false;
+
+      //Both together must succeed, and must do it by reusing the block
+      received = 0;
+      dlmalloc_command_ret_t ret = dlmalloc_allocation_command
+         ( BOOST_CONTAINER_EXPAND_BOTH, sizeof_object, 1u, need
+         , need, &received, b);
+      if(!ret.first || !ret.second || received < need)
+         return false;
+
+      //Backward expansion moves the block start, so the old contents now sit
+      //at an offset inside the returned block. They must be intact: moving
+      //them is the caller's job.
+      const char *const newmem = (const char *)ret.first;
+      if(newmem > (const char *)b)
+         return false;
+      const std::size_t offset = std::size_t((const char *)b - newmem);
+      if((offset + BlockSize) > received)
+         return false;
+      for(std::size_t i = 0; i != BlockSize; ++i){
+         if(newmem[offset + i] != 'B')
+            return false;
+      }
+
+      dlmalloc_free(ret.first);
+      dlmalloc_free(d);
+      dlmalloc_malloc_check();
+      if(!dlmalloc_all_deallocated())
+         return false;
+      exercised = true;
+   }
+   //A heap layout this test could never set up would make it silently vacuous
+   return exercised;
+}
+
+//Repeated growth through EXPAND_BOTH over a fragmented heap: broad coverage of
+//the combined path, where every reported size must be honoured.
+bool test_allocation_expand_both_repeated()
+{
+   dlmalloc_malloc_check();
+   for(std::size_t sizeof_object = 1; sizeof_object < 20; ++sizeof_object){
+      if(!dlmalloc_all_deallocated())
+         return false;
+      std::vector<void*> buffers;
+      for(std::size_t i = 0; i != NumIt; ++i){
+         void *ptr = dlmalloc_malloc(i*sizeof_object);
+         if(!ptr)
+            break;
+         buffers.push_back(ptr);
+      }
+      //Free every other buffer, so survivors have free space on both sides
+      for(std::size_t i = 0; i < buffers.size(); i += 2u){
+         dlmalloc_free(buffers[i]);
+         buffers[i] = 0;
+      }
+      buffers.erase( std::remove(buffers.begin(), buffers.end(), (void*)0)
+                   , buffers.end());
+
+      for(std::size_t b = 0; b != buffers.size(); ++b){
+         void *ptr = buffers[b];
+         std::size_t received_size = dlmalloc_size(ptr);
+         for(std::size_t i = 0; i != 4u; ++i){
+            const std::size_t min_size =
+               ((received_size + sizeof_object)/sizeof_object)*sizeof_object;
+            const std::size_t prf_size =
+               ((received_size + (i+1u)*8u*sizeof_object)/sizeof_object)*sizeof_object;
+            dlmalloc_command_ret_t ret = dlmalloc_allocation_command
+               ( BOOST_CONTAINER_EXPAND_BOTH, sizeof_object, 1u, min_size
+               , prf_size, &received_size, ptr);
+            if(!ret.first)
+               break;            //no room left on either side, that is fine
+            if(!ret.second)       //an expansion must never report a fresh block
+               return false;
+            if(received_size < min_size)
+               return false;
+            if(dlmalloc_size(ret.first) != received_size)
+               return false;
+            ptr = ret.first;
+         }
+         buffers[b] = ptr;
+      }
+
+      for(std::size_t i = 0; i != buffers.size(); ++i)
+         dlmalloc_free(buffers[i]);
+      dlmalloc_malloc_check();
+      if(!dlmalloc_all_deallocated())
+         return false;
+   }
+   return true;
+}
+
+
 //This test allocates memory with different alignments
 //and checks returned memory is aligned.
 
@@ -808,6 +963,24 @@ bool test_all_allocation()
 
    if(!test_allocation_with_reuse()){
       std::cout << "test_allocation_with_reuse failed"
+                << std::endl;
+      return false;
+   }
+
+   std::cout << "Starting test_allocation_expand_both"
+             << std::endl;
+
+   if(!test_allocation_expand_both()){
+      std::cout << "test_allocation_expand_both failed"
+                << std::endl;
+      return false;
+   }
+
+   std::cout << "Starting test_allocation_expand_both_repeated"
+             << std::endl;
+
+   if(!test_allocation_expand_both_repeated()){
+      std::cout << "test_allocation_expand_both_repeated failed"
                 << std::endl;
       return false;
    }
