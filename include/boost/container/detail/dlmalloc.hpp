@@ -816,7 +816,7 @@ static void mspace_free_lockless(mspace msp, void* mem)
     mchunkptr p  = mem2chunk(mem);
 #if FOOTERS
     mstate fm = get_mstate_for(p);
-    msp = msp; /* placate people compiling -Wunused */
+    (void)msp; /* placate people compiling -Wunused */
 #else /* FOOTERS */
     mstate fm = (mstate)msp;
 #endif /* FOOTERS */
@@ -1182,7 +1182,6 @@ static int calculate_lcm_and_needs_backwards_lcmed
    /*Check if it's power of two*/
    if((backwards_multiple & (backwards_multiple-1)) == 0){
       if(0 != (size_to_achieve & ((backwards_multiple-1)))){
-         ABORT;   /* Boost.Container: fixed use of undeclared m/oldp */
          return 0;
       }
 
