@@ -21,14 +21,6 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 
-//This header carries three things that used to live in separate files and
-//were never usable apart: the C interface types and memory-chain macros
-//(formerly detail/alloc_lib.h), Boost.Container's extensions to dlmalloc
-//plus the dlmalloc implementation itself (formerly
-//detail/dlmalloc_ext_2_8_6.hpp), and the thin C++ wrappers at the bottom.
-//Only the imported upstream core still has its own file,
-//detail/dlmalloc_2_8_6.hpp, so it stays diffable against Doug Lea's
-//original.
 
 /* ===================== C interface types and macros ===================== */
 
@@ -261,13 +253,6 @@ typedef struct boost_cont_command_ret_impl
    int   second;
 }boost_cont_command_ret_t;
 
-/* Note (header-only Boost.Container): the boost_cont_* functions are no
-   longer declared here. They are defined inline inside the C++ namespace
-   boost::container::dl_detail (see below in this header)
-   and surfaced through the boost::container::dlmalloc_* wrappers declared
-   in <boost/container/detail/dlmalloc.hpp>. Global-namespace prototypes
-   here would be selected by argument-dependent lookup (these struct types
-   live in the global namespace) and make every internal call ambiguous. */
 
 #ifdef __cplusplus
 }  //extern "C" {
@@ -1923,9 +1908,20 @@ void* boost_cont_memalign(size_t bytes, size_t alignment)
 {
    void *addr;
    ensure_initialization();
-   addr = mspace_memalign(gm, alignment, bytes);
+   /* Small alignments take the non-overaligned path,
+      larger ones reach internal_memalign directly 
+      to avoid internal magic check that can fail in the first allocation. */
+   if(alignment <= MALLOC_ALIGNMENT)
+      return boost_cont_malloc(bytes);   /* accounts for itself */
+   addr = internal_memalign(gm, alignment, bytes);
    if(addr){
-      s_allocated_memory += chunksize(mem2chunk(addr));
+      /* internal_memalign released the lock; retake it for the accounting,
+         which races other allocations otherwise */
+      mstate ms = (mstate)gm;
+      if (!PREACTION(ms)) {
+         s_allocated_memory += chunksize(mem2chunk(addr));
+         POSTACTION(ms);
+      }
    }
    return addr;
 }
@@ -2035,12 +2031,14 @@ int boost_cont_grow
       mchunkptr p = mem2chunk(oldmem);
       size_t oldsize = chunksize(p);
       p = try_realloc_chunk_with_min(ms, p, request2size(minbytes), request2size(maxbytes), 0);
-      POSTACTION(ms);
+      /* Accounting and the debug check must happen before the lock is
+         released or they race other threads' allocations */
       if(p){
          check_inuse_chunk(ms, p);
          *received = DL_SIZE_IMPL(oldmem);
          s_allocated_memory += chunksize(p) - oldsize;
       }
+      POSTACTION(ms);
       return 0 != p;
    }
    return 0;
@@ -2147,7 +2145,7 @@ boost_cont_command_ret_t boost_cont_allocation_command
             /* The lock is held here, so the nested allocation must not take
                it again. The lockless variant handles the common case; there
                is no lockless memalign, so an over-aligned request instead
-               RELEASES the lock around mspace_memalign (which locks
+               RELEASES the lock around internal_memalign (which locks
                internally) and reacquires it for the bookkeeping and for the
                branches that follow. Never disable_lock(ms): that clears the
                use-lock flag of the whole mspace, so every OTHER thread's
@@ -2160,8 +2158,9 @@ boost_cont_command_ret_t boost_cont_allocation_command
             }
             else{
                POSTACTION(ms);
-               addr = mspace_memalign(ms, alignof_object, preferred_size);
-               if(!addr)   addr = mspace_memalign(ms, alignof_object, limit_size);
+               addr = internal_memalign(ms, alignof_object, preferred_size);
+               if(!addr && limit_size != preferred_size)
+                  addr = internal_memalign(ms, alignof_object, limit_size);
                if (PREACTION(ms)) {
                   /* Relocking failed: report failure without the chunk
                      bookkeeping rather than touch shared state unlocked */
