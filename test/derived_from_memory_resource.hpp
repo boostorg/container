@@ -13,24 +13,6 @@
 
 #include <boost/container/pmr/memory_resource.hpp>
 
-//-Wsuggest-override asks for a keyword C++03 does not have
-#if defined(__GNUC__) && (BOOST_CXX_VERSION < 201103L)
-#  if defined(__clang__)
-#     if defined(__has_warning)
-#        if __has_warning("-Wsuggest-override")
-#           define BOOST_CONTAINER_TEST_NO_SUGGEST_OVERRIDE
-#        endif
-#     endif
-#  elif (__GNUC__ * 100 + __GNUC_MINOR__) >= 501
-#     define BOOST_CONTAINER_TEST_NO_SUGGEST_OVERRIDE
-#  endif
-#endif
-
-#ifdef BOOST_CONTAINER_TEST_NO_SUGGEST_OVERRIDE
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsuggest-override"
-#endif
-
 class derived_from_memory_resource
    : public boost::container::pmr::memory_resource
 {
@@ -101,10 +83,5 @@ class derived_from_memory_resource
 };
 
 bool derived_from_memory_resource::destructor_called = false;
-
-#ifdef BOOST_CONTAINER_TEST_NO_SUGGEST_OVERRIDE
-#pragma GCC diagnostic pop
-#undef BOOST_CONTAINER_TEST_NO_SUGGEST_OVERRIDE
-#endif
 
 #endif   //#ifndef BOOST_CONTAINER_TEST_DERIVED_FROM_MEMORY_RESOURCE_HPP
