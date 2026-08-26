@@ -1509,6 +1509,37 @@ static int internal_shrink(mstate m, void* oldmem, size_t minbytes, size_t maxby
 #define INTERNAL_MULTIALLOC_DEFAULT_CONTIGUOUS_MEM 4096
 #define SQRT_MAX_SIZE_T           (((size_t)-1)>>(sizeof(size_t)*CHAR_BIT/2))
 
+/* Failure unwind shared by the two multialloc functions below.
+
+   Two things have to be true afterwards: only the blocks *this call* linked
+   in are returned to the heap (the chain may already carry blocks belonging
+   to the caller), and the chain is left exactly as it was on entry - it must
+   not keep pointing at blocks that are back in the heap, or the caller's
+   next deallocate_many() double-frees them.
+
+   Each memchain node lives inside the block it describes, so a node's 'next'
+   is read before that block is freed. Freeing block k cannot disturb block
+   k+1's node either: k+1 is still in use, and dlmalloc only coalesces with
+   free neighbours. */
+static void internal_multialloc_rollback
+   (mstate m, boost_cont_memchain *pchain,
+    boost_cont_memchain_it entry_last_it, size_t entry_num_mem)
+{
+   boost_cont_memchain_it it = entry_last_it;
+   BOOST_CONTAINER_MEMIT_NEXT(it);
+   while(!BOOST_CONTAINER_MEMCHAIN_IS_END_IT(pchain, it)){
+      void *addr = BOOST_CONTAINER_MEMIT_ADDR(it);
+      BOOST_CONTAINER_MEMIT_NEXT(it);
+      s_allocated_memory -= chunksize(mem2chunk(addr));
+      mspace_free_lockless(m, addr);
+   }
+   /* Re-terminate at the entry tail. When the chain arrived empty this is the
+      root node, which restores the pristine MEMCHAIN_INIT state. */
+   entry_last_it.node_ptr->next_node_ptr = 0;
+   pchain->last_node_ptr = entry_last_it.node_ptr;
+   pchain->num_mem       = entry_num_mem;
+}
+
 static int internal_node_multialloc
 (mstate m, size_t n_elements, size_t element_size, size_t contiguous_elements, boost_cont_memchain *pchain) {
 	void*     mem;            /* malloced aggregate space */
@@ -1518,6 +1549,7 @@ static int internal_node_multialloc
 	size_t    elements_per_segment = 0;
 	size_t    element_req_size = request2size(element_size);
 	boost_cont_memchain_it prev_last_it = BOOST_CONTAINER_MEMCHAIN_LAST_IT(pchain);
+	size_t prev_num_mem = BOOST_CONTAINER_MEMCHAIN_SIZE(pchain);
 
 	/*Error if wrong element_size parameter */
 	if (!element_size ||
@@ -1564,14 +1596,7 @@ static int internal_node_multialloc
 
 			mem = mspace_malloc_lockless(m, accum_size - CHUNK_OVERHEAD);
 			if (mem == 0) {
-				BOOST_CONTAINER_MEMIT_NEXT(prev_last_it);
-				while (i) {
-					void *addr = BOOST_CONTAINER_MEMIT_ADDR(prev_last_it);
-					--i;
-					BOOST_CONTAINER_MEMIT_NEXT(prev_last_it);
-               s_allocated_memory -= chunksize(mem2chunk(addr));
-					mspace_free_lockless(m, addr);
-				}
+				internal_multialloc_rollback(m, pchain, prev_last_it, prev_num_mem);
 				if (was_enabled)
 					enable_mmap(m);
 				return 0;
@@ -1753,6 +1778,10 @@ static int internal_multialloc_arrays
    {
       size_t    i;
       size_t next_i;
+      /* Where this call's own blocks start, so the unwind below cannot
+         touch blocks the chain already carried. */
+      boost_cont_memchain_it entry_last_it = BOOST_CONTAINER_MEMCHAIN_LAST_IT(pchain);
+      size_t entry_num_mem = BOOST_CONTAINER_MEMCHAIN_SIZE(pchain);
       /*
          Allocate the aggregate chunk.  First disable direct-mmapping so
          malloc won't use it, since we would not be able to later
@@ -1785,13 +1814,7 @@ static int internal_multialloc_arrays
 
          mem = error ? 0 : mspace_malloc_lockless(m, accum_size - CHUNK_OVERHEAD);
          if (mem == 0){
-            boost_cont_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(pchain);
-            while(i--){
-               void *addr = BOOST_CONTAINER_MEMIT_ADDR(it);
-               BOOST_CONTAINER_MEMIT_NEXT(it);
-               s_allocated_memory -= chunksize(mem2chunk(addr));
-               mspace_free_lockless(m, addr);
-            }
+            internal_multialloc_rollback(m, pchain, entry_last_it, entry_num_mem);
             if (was_enabled)
                enable_mmap(m);
             return 0;
