@@ -406,6 +406,95 @@ bool test_allocation_with_reuse()
 }
 
 
+//Every contiguous_elements mode of the two multialloc entry points must work,
+//including the ALL_CONTIGUOUS sentinel: it is (size_t)-1, so a range check that
+//treats it as a literal element count rejects it outright and the call never
+//allocates at all.
+bool test_multialloc_contiguous_modes()
+{
+   dlmalloc_malloc_check();
+   const std::size_t counts[]  = { 1u, 2u, 37u, 500u };
+   const std::size_t esizes[]  = { 1u, 8u, 24u };
+   const std::size_t contig[]  = { BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS
+                                 , BOOST_CONTAINER_DL_MULTIALLOC_ALL_CONTIGUOUS
+                                 , 1u, 4u, 16u };
+
+   for(std::size_t c = 0; c != sizeof(contig)/sizeof(contig[0]); ++c){
+      for(std::size_t e = 0; e != sizeof(esizes)/sizeof(esizes[0]); ++e){
+         for(std::size_t n = 0; n != sizeof(counts)/sizeof(counts[0]); ++n){
+            const std::size_t num = counts[n];
+            //An explicit count larger than num is a documented error, skip it
+            if(contig[c] != BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS &&
+               contig[c] != BOOST_CONTAINER_DL_MULTIALLOC_ALL_CONTIGUOUS &&
+               contig[c] > num){
+               continue;
+            }
+
+            if(!dlmalloc_all_deallocated())
+               return false;
+
+            //---- nodes variant ----
+            {
+               dlmalloc_memchain ch;
+               BOOST_CONTAINER_MEMCHAIN_INIT(&ch);
+               if(!dlmalloc_multialloc_nodes(num, esizes[e], contig[c], &ch))
+                  return false;
+               if(BOOST_CONTAINER_MEMCHAIN_SIZE(&ch) != num)
+                  return false;
+               //walk it: the link count must agree, and the ends must be right
+               std::size_t walked = 0;
+               void *last = 0;
+               boost_cont_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&ch);
+               while(!BOOST_CONTAINER_MEMCHAIN_IS_END_IT(&ch, it)){
+                  void *a = BOOST_CONTAINER_MEMIT_ADDR(it);
+                  if(!a)
+                     return false;
+                  last = a;
+                  if(++walked > num)      //cycle guard
+                     return false;
+                  BOOST_CONTAINER_MEMIT_NEXT(it);
+               }
+               if(walked != num)
+                  return false;
+               if(BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch) != last)
+                  return false;
+               dlmalloc_multidealloc(&ch);
+               if(!dlmalloc_all_deallocated())
+                  return false;
+            }
+
+            //---- arrays variant, same modes ----
+            {
+               std::vector<std::size_t> sizes(num, esizes[e]);
+               dlmalloc_memchain ch;
+               BOOST_CONTAINER_MEMCHAIN_INIT(&ch);
+               if(!dlmalloc_multialloc_arrays(num, &sizes[0], 1u, contig[c], &ch))
+                  return false;
+               if(BOOST_CONTAINER_MEMCHAIN_SIZE(&ch) != num)
+                  return false;
+               std::size_t walked = 0;
+               boost_cont_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&ch);
+               while(!BOOST_CONTAINER_MEMCHAIN_IS_END_IT(&ch, it)){
+                  if(!BOOST_CONTAINER_MEMIT_ADDR(it))
+                     return false;
+                  if(++walked > num)
+                     return false;
+                  BOOST_CONTAINER_MEMIT_NEXT(it);
+               }
+               if(walked != num)
+                  return false;
+               dlmalloc_multidealloc(&ch);
+               if(!dlmalloc_all_deallocated())
+                  return false;
+            }
+         }
+      }
+   }
+   dlmalloc_malloc_check();
+   return true;
+}
+
+
 //Expansion that neither side can satisfy on its own but both can together.
 //Free space is created before AND after a block, and the block is then asked
 //for a size that needs part of each: a combined forward+backward expansion.
@@ -963,6 +1052,15 @@ bool test_all_allocation()
 
    if(!test_allocation_with_reuse()){
       std::cout << "test_allocation_with_reuse failed"
+                << std::endl;
+      return false;
+   }
+
+   std::cout << "Starting test_multialloc_contiguous_modes"
+             << std::endl;
+
+   if(!test_multialloc_contiguous_modes()){
+      std::cout << "test_multialloc_contiguous_modes failed"
                 << std::endl;
       return false;
    }
