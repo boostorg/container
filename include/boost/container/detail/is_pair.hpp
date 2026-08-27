@@ -50,6 +50,36 @@ class tuple;
 
 namespace boost {
 namespace container {
+namespace pair_impl {
+
+//Using "typename boost_tuple_null<BoostTuple>::type" as the padding type instead of plain
+//null_type makes the substitution fail in the immediate context (SFINAE) for any template
+//other than boost::tuples::tuple, so those overloads are cleanly discarded.
+template< template<class, class, class, class, class, class, class, class, class, class> class Tuple>
+struct boost_tuple_null
+{};
+
+template<>
+struct boost_tuple_null< ::boost::tuples::tuple >
+{
+   typedef ::boost::tuples::null_type type;
+};
+
+//Detects the null_type padding of a deduced boost::tuple so that overloads taking
+//more explicit tuple arguments than the argument's arity can be discarded (SFINAE)
+template<class T>
+struct is_tuple_null
+{
+   BOOST_STATIC_CONSTEXPR bool value = false;
+};
+
+template<>
+struct is_tuple_null< ::boost::tuples::null_type >
+{
+   BOOST_STATIC_CONSTEXPR bool value = true;
+};
+
+}  //namespace pair_impl {
 
 struct try_emplace_t{};
 
