@@ -2667,7 +2667,13 @@ struct BOOST_SYMBOL_VISIBLE dlmalloc_globals_t {
 #endif
    size_t               allocated_memory;   /* was: static s_allocated_memory (ext) */
    int                  corruption_error_count; /* was: int malloc_corruption_error_count */
+#if HAVE_MMAP && !defined(DL_WIN32) && !defined(MAP_ANONYMOUS)
+   /* Only the /dev/zero fallback keeps a cached descriptor. With
+      MAP_ANONYMOUS (or MAP_ANON, aliased to it above) MMAP_DEFAULT passes -1,
+      and DL_WIN32 maps through VirtualAlloc, so in either of those cases the
+      member would never be read. */
    int                  dev_zero_fd_v;      /* was: static dev_zero_fd */
+#endif
 
    /* Used like a global variable: the storage always arrives zeroed, which
       is dlmalloc's natural initial state (init_mparams() still performs the
@@ -2678,7 +2684,10 @@ struct BOOST_SYMBOL_VISIBLE dlmalloc_globals_t {
 #if !ONLY_MSPACES
         gm_state(),
 #endif
-        allocated_memory(0), corruption_error_count(0), dev_zero_fd_v(-1)
+        allocated_memory(0), corruption_error_count(0)
+#if HAVE_MMAP && !defined(DL_WIN32) && !defined(MAP_ANONYMOUS)
+      , dev_zero_fd_v(-1)
+#endif
    {
 #if USE_LOCKS
       (void)INITIAL_LOCK(&global_mutex);
