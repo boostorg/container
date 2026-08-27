@@ -2893,8 +2893,10 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
   can share them across DLLs.
 
 * Fixed bugs/issues/enhancements:
+   * [@https://github.com/boostorg/container/issues/335 GitHub #335: ['"Error on instantiating an incomplete type"]].
    * [@https://github.com/boostorg/container/pull/339 GitHub #339: ['"optimized range insertion for boost::container::hub"]].
    * [@https://github.com/boostorg/container/issues/342 GitHub #342: ['"Using unqualified swap() on two small_vectors calls an incorrect swap function"]].
+   * [@https://github.com/boostorg/container/issues/344 GitHub #344: ['"Build break on Windows ARM64EC near the definition of the BOOST_CONTAINER_PREFETCH macro"]].
 
 [endsect]
 
