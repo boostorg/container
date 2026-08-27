@@ -70,7 +70,8 @@
 #if !defined(BOOST_CONTAINER_NEST_DISABLE_SSE2)
 #if defined(BOOST_CONTAINER_NEST_ENABLE_SSE2)|| \
     defined(__SSE2__) || \
-    defined(_M_X64) || (defined(_M_IX86_FP)&&_M_IX86_FP>=2)
+    (defined(_M_X64) && !defined(_M_ARM64EC)) || \
+    (defined(_M_IX86_FP)&&_M_IX86_FP>=2)
 #define BOOST_CONTAINER_NEST_SSE2
 #endif
 #endif
