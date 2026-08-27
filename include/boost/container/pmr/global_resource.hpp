@@ -81,40 +81,30 @@ struct null_memory_resource_imp BOOST_FINAL
 namespace pmr_globals_dtl {
 
 //Process-wide PMR state, shared across modules (see intermodule_globals.hpp):
-//the default-resource slot plus in-place storage for the two standard
-//resource singletons, so new_delete_resource()/null_memory_resource() return
-//the same address from every module of the process. POD, zero-initialized.
+//the default-resource slot plus the two standard resource singletons.
 struct BOOST_SYMBOL_VISIBLE pmr_globals_t
 {
-   //Replaced with a lock-free atomic exchange, so no lock is needed here:
-   //set_default_resource() is a single pointer-sized read-modify-write and
-   //get_default_resource() a single load.
-   void *default_resource;          //memory_resource*; 0 = new_delete_resource()
-   void *new_delete_ptr;            //upcast memory_resource* of ndr_storage
-   void *null_ptr;                  //upcast memory_resource* of null_storage
-   dtl::aligned_storage
-      < sizeof(new_delete_resource_imp)
-      , dtl::alignment_of<new_delete_resource_imp>::value>::type ndr_storage;
-   dtl::aligned_storage
-      < sizeof(null_memory_resource_imp)
-      , dtl::alignment_of<null_memory_resource_imp>::value>::type null_storage;
+   //Ordinary members: both are stateless and publicly destructible, so there is
+   //nothing manual storage would buy. Their vtables still live in the image of
+   //whichever module constructs them, which is what pin_constructing_module
+   //below is for.
+   new_delete_resource_imp  ndr;
+   null_memory_resource_imp null_r;
 
-   //Constructed before main() and destroyed after it, like a global object.
-   //The storage always arrives zero-initialized, so default_resource starts
-   //as "never set" and get_default_resource() falls back to new_delete.
+   //Declared after ndr on purpose: members are initialized in declaration order,
+   //so ndr is already alive when its address is stored here. Seeding the slot
+   //means it is never null, which is what lets both accessors below be a plain
+   //atomic load or exchange with no fallback branch. Accessed only through the
+   //lock-free atomic_ptr_* primitives, so no lock is needed either.
+   memory_resource *default_resource;
+
+   //Constructed before main() and destroyed after it, like a global object. The
+   //default starts out as new_delete_resource(), which is what the standard
+   //requires, so no separate "never set" state has to be represented. The
+   //destructor is the implicitly generated one.
    pmr_globals_t()
-   {
-      new_delete_ptr = static_cast<memory_resource *>
-         (::new((void *)&ndr_storage, boost_container_new_t()) new_delete_resource_imp);
-      null_ptr = static_cast<memory_resource *>
-         (::new((void *)&null_storage, boost_container_new_t()) null_memory_resource_imp);
-   }
-
-   ~pmr_globals_t()
-   {
-      static_cast<memory_resource *>(new_delete_ptr)->~memory_resource();
-      static_cast<memory_resource *>(null_ptr)->~memory_resource();
-   }
+      : default_resource(&ndr)
+   {}
 };
 
 struct BOOST_SYMBOL_VISIBLE pmr_globals_options
@@ -142,7 +132,7 @@ BOOST_CONTAINER_FORCEINLINE pmr_globals_t &pmr_globals()
 //!   is called. For return value p and memory resource r, p->is_equal(r) returns &r == p.
 BOOST_CONTAINER_NODISCARD BOOST_CONTAINER_FORCEINLINE memory_resource* new_delete_resource() BOOST_NOEXCEPT
 {
-   return static_cast<memory_resource *>(pmr_globals_dtl::pmr_globals().new_delete_ptr);
+   return &pmr_globals_dtl::pmr_globals().ndr;
 }
 
 //! <b>Returns</b>: A pointer to a static-duration object of a type derived from
@@ -151,7 +141,7 @@ BOOST_CONTAINER_NODISCARD BOOST_CONTAINER_FORCEINLINE memory_resource* new_delet
 //!   is called. For return value p and memory resource r, p->is_equal(r) returns &r == p.
 BOOST_CONTAINER_NODISCARD BOOST_CONTAINER_FORCEINLINE memory_resource* null_memory_resource() BOOST_NOEXCEPT
 {
-   return static_cast<memory_resource *>(pmr_globals_dtl::pmr_globals().null_ptr);
+   return &pmr_globals_dtl::pmr_globals().null_r;
 }
 
 //! <b>Effects</b>: If r is non-null, sets the value of the default memory resource
@@ -171,13 +161,9 @@ inline memory_resource* set_default_resource(memory_resource* r) BOOST_NOEXCEPT
    //everything the caller did before it visible to whoever reads the new
    //pointer - the synchronizes-with this function is required to provide.
    pmr_globals_dtl::pmr_globals_t &g = pmr_globals_dtl::pmr_globals();
-   memory_resource *const res = r ? r : new_delete_resource();
-   memory_resource *previous = static_cast<memory_resource *>
-      (dtl::atomic_ptr_exchange_acq_rel(&g.default_resource, static_cast<void *>(res)));
-   if(!previous){   //slot still zero-initialized: the default was never changed
-      previous = new_delete_resource();
-   }
-   return previous;
+   //A null argument means new_delete_resource(), which is g.ndr itself
+   memory_resource *const res = r ? r : &g.ndr;
+   return dtl::atomic_ptr_exchange_acq_rel(&g.default_resource, res);
 }
 
 //! <b>Returns</b>: The current value of the default
@@ -189,12 +175,9 @@ BOOST_CONTAINER_NODISCARD inline memory_resource* get_default_resource() BOOST_N
    //resource object itself but not whatever else the setter published
    //beforehand, and this function's contract covers that too.
    pmr_globals_dtl::pmr_globals_t &g = pmr_globals_dtl::pmr_globals();
-   memory_resource *current = static_cast<memory_resource *>
-      (dtl::atomic_ptr_read_acq(&g.default_resource));
-   if(!current){   //slot still zero-initialized: the default was never changed
-      current = new_delete_resource();
-   }
-   return current;
+   //Never null: the constructor seeds the slot with &ndr and every write goes
+   //through set_default_resource(), which substitutes &ndr for a null argument
+   return dtl::atomic_ptr_read_acq(&g.default_resource);
 }
 
 }  //namespace pmr {
