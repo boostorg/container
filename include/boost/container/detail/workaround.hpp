@@ -104,6 +104,7 @@
 #define BOOST_CONTAINER_HAS_FEATURE(feature) __has_feature(feature)
 #endif
 
+
 //Detect address sanitizer
 #if defined(__SANITIZE_ADDRESS__) || BOOST_CONTAINER_HAS_FEATURE(address_sanitizer)
 #define BOOST_CONTAINER_ASAN
@@ -267,6 +268,9 @@ namespace boost {
 #endif
 
 #if !defined(NDEBUG)
+//The debug form is a real check, so the assertion machinery has to be here:
+//this header is often the only one a low-level detail header includes.
+#include <boost/assert.hpp>
 #define BOOST_CONTAINER_ASSUME(cond) BOOST_ASSERT(cond)
 #elif BOOST_CONTAINER_HAS_BUILTIN(__builtin_assume)
 #define BOOST_CONTAINER_ASSUME(cond) __builtin_assume(cond)
