@@ -326,15 +326,18 @@ namespace boost {
 #if defined(__GNUC__) || defined(__clang__)
 #  define BOOST_CONTAINER_PREFETCH(p) \
       __builtin_prefetch(static_cast<const char*>(static_cast<const void*>(p)))
-#elif defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
+#elif defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64)) && !defined(_M_ARM64EC)
 //_mm_prefetch / _MM_HINT_T0 live in the lightweight SSE header <xmmintrin.h>
 //(shipped with MSVC since VC++ 7.0 / Visual Studio .NET 2002), so there is no
 //need to pull in the heavy <intrin.h> umbrella.
+//ARM64EC is excluded here on purpose: it defines _M_X64 for source
+//compatibility while compiling to ARM64 code, and <xmmintrin.h> refuses to be
+//included. It belongs to the ARM64 branch below, see GitHub #344.
 #  include <xmmintrin.h>
 #  define BOOST_CONTAINER_PREFETCH(p) \
       _mm_prefetch(static_cast<const char*>(static_cast<const void*>(p)), _MM_HINT_T0)
-#elif defined(_MSC_VER) && (defined(_M_ARM) || defined(_M_ARM64))
-//ARM/ARM64 MSVC: __prefetch (PLD on ARM, PRFM PLDL1KEEP on ARM64)
+#elif defined(_MSC_VER) && (defined(_M_ARM) || defined(_M_ARM64) || defined(_M_ARM64EC))
+//ARM/ARM64/ARM64EC MSVC: __prefetch (PLD on ARM, PRFM PLDL1KEEP on ARM64)
 #  define BOOST_CONTAINER_PREFETCH(p) __prefetch(static_cast<const void*>(p))
 #else
 #  define BOOST_CONTAINER_PREFETCH(p) ((void)(p))
