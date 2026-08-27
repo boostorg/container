@@ -1591,14 +1591,26 @@ static int internal_node_multialloc
 	size_t    element_req_size = request2size(element_size);
 	boost_cont_memchain_it prev_last_it = BOOST_CONTAINER_MEMCHAIN_LAST_IT(pchain);
 	size_t prev_num_mem = BOOST_CONTAINER_MEMCHAIN_SIZE(pchain);
+	/* The count that actually gets multiplied by element_req_size is the
+	   per-segment one, and that is what the overflow test below has to use.
+	   For ALL_CONTIGUOUS one segment holds everything, so it is n_elements;
+	   DEFAULT_CONTIGUOUS derives its count from a fixed byte budget and can
+	   never overflow, so nothing needs checking. Testing
+	   contiguous_elements itself would reject ALL_CONTIGUOUS outright,
+	   the sentinel being (size_t)-1. */
+	size_t max_seg_elements =
+		(contiguous_elements == BOOST_CONTAINER_DL_MULTIALLOC_ALL_CONTIGUOUS)     ? n_elements :
+		(contiguous_elements == BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS) ? 0u        :
+														  contiguous_elements;
 
 	/*Error if wrong element_size parameter */
 	if (!element_size ||
 		/*OR Error if n_elements less than contiguous_elements */
 		((contiguous_elements + 1) > (BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS + 1) && n_elements < contiguous_elements) ||
 		/* OR Error if integer overflow */
-		(SQRT_MAX_SIZE_T < (element_req_size | contiguous_elements) &&
-		(MAX_SIZE_T / element_req_size) < contiguous_elements)) {
+		(max_seg_elements &&
+		 SQRT_MAX_SIZE_T < (element_req_size | max_seg_elements) &&
+		 (MAX_SIZE_T / element_req_size) < max_seg_elements)) {
 		return 0;
 	}
 	switch (contiguous_elements) {
@@ -1648,24 +1660,28 @@ static int internal_node_multialloc
 
 			DL_ASSERT(!is_mmapped(p));
 			{  /* split out elements */
-			   //void *mem_orig = mem;
-			   //boost_cont_memchain_it last_it = BOOST_CONTAINER_MEMCHAIN_LAST_IT(pchain);
+				/* Each element's first word IS its memchain node, so the run is
+				   linked in place with one store per element and spliced onto the
+				   chain with a single INCORPORATE_AFTER, instead of a PUSH_BACK
+				   per element (which also rewrites last_node_ptr and num_mem
+				   every time). The arrays variant below does the same. */
+				void *mem_orig = mem;
+				boost_cont_memchain_it last_it = BOOST_CONTAINER_MEMCHAIN_LAST_IT(pchain);
 				size_t num_elements = next_i - i;
 
 				size_t num_loops = num_elements - 1;
 				remainder_size -= element_req_size * num_loops;
 				while (num_loops) {
+					void **mem_prev = ((void**)mem);
 					--num_loops;
-					//void **mem_prev = ((void**)mem);
 					set_size_and_pinuse_of_inuse_chunk(m, p, element_req_size);
-					BOOST_CONTAINER_MEMCHAIN_PUSH_BACK(pchain, mem);
 					p = chunk_plus_offset(p, element_req_size);
 					mem = chunk2mem(p);
-					//*mem_prev = mem;
+					*mem_prev = mem;
 				}
 				set_size_and_pinuse_of_inuse_chunk(m, p, remainder_size);
-				BOOST_CONTAINER_MEMCHAIN_PUSH_BACK(pchain, mem);
-				//BOOST_CONTAINER_MEMCHAIN_INCORPORATE_AFTER(pchain, last_it, mem_orig, mem, num_elements);
+				/* mem is the last element; INCORPORATE_AFTER terminates it */
+				BOOST_CONTAINER_MEMCHAIN_INCORPORATE_AFTER(pchain, last_it, mem_orig, mem, num_elements);
 			}
 		}
 		if (was_enabled)
