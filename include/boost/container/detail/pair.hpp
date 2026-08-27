@@ -64,17 +64,7 @@ struct disable_if_boost_tuple
    : boost::container::dtl::disable_if< is_boost_tuple<Tuple> >
 {};
 
-template<class T>
-struct is_tuple_null
-{
-   BOOST_STATIC_CONSTEXPR bool value = false;
-};
-
-template<>
-struct is_tuple_null<boost::tuples::null_type>
-{
-   BOOST_STATIC_CONSTEXPR bool value = true;
-};
+//is_tuple_null and boost_tuple_null are defined in is_pair.hpp
 
 }  //namespace detail {
 
@@ -262,15 +252,18 @@ struct pair
 
    #endif   //BOOST_NO_CXX11_VARIADIC_TEMPLATES
 
-   //piecewise construction from boost::tuple
+   //piecewise construction from boost::tuple. The null_type padding is written as the
+   //dependent "typename pair_impl::boost_tuple_null<BoostTuple>::type" so that deduction
+   //fails (SFINAE) instead of hard-erroring when std::tuple binds to BoostTuple in C++17,
+   //see boost_tuple_null in is_pair.hpp and https://github.com/boostorg/container/issues/335
    #define BOOST_PAIR_PIECEWISE_CONSTRUCT_BOOST_TUPLE_CODE(N,M)\
    template< template<class, class, class, class, class, class, class, class, class, class> class BoostTuple \
             BOOST_MOVE_I_IF(BOOST_MOVE_OR(N,M)) BOOST_MOVE_CLASS##N BOOST_MOVE_I_IF(BOOST_MOVE_AND(N,M)) BOOST_MOVE_CLASSQ##M > \
    pair( piecewise_construct_t\
-       , BoostTuple<BOOST_MOVE_TARG##N  BOOST_MOVE_I##N BOOST_MOVE_REPEAT(BOOST_MOVE_SUB(10,N),::boost::tuples::null_type)> p\
-       , BoostTuple<BOOST_MOVE_TARGQ##M BOOST_MOVE_I##M BOOST_MOVE_REPEAT(BOOST_MOVE_SUB(10,M),::boost::tuples::null_type)> q\
+       , BoostTuple<BOOST_MOVE_TARG##N  BOOST_MOVE_I##N BOOST_MOVE_REPEAT(BOOST_MOVE_SUB(10,N),typename pair_impl::boost_tuple_null<BoostTuple>::type)> p\
+       , BoostTuple<BOOST_MOVE_TARGQ##M BOOST_MOVE_I##M BOOST_MOVE_REPEAT(BOOST_MOVE_SUB(10,M),typename pair_impl::boost_tuple_null<BoostTuple>::type)> q\
        , typename dtl::enable_if_c\
-         < pair_impl::is_boost_tuple< BoostTuple<BOOST_MOVE_TARG##N  BOOST_MOVE_I##N BOOST_MOVE_REPEAT(BOOST_MOVE_SUB(10,N),::boost::tuples::null_type)> >::value &&\
+         < pair_impl::is_boost_tuple< BoostTuple<BOOST_MOVE_TARG##N  BOOST_MOVE_I##N BOOST_MOVE_REPEAT(BOOST_MOVE_SUB(10,N),typename pair_impl::boost_tuple_null<BoostTuple>::type)> >::value &&\
            !(pair_impl::is_tuple_null<BOOST_MOVE_LAST_TARG##N>::value || pair_impl::is_tuple_null<BOOST_MOVE_LAST_TARGQ##M>::value) \
          >::type* = 0\
        )\

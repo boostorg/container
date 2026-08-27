@@ -336,15 +336,21 @@ typename dtl::enable_if_and
 {  dispatch_uses_allocator(construct_alloc, arg_alloc, p, ::boost::move(x.first), ::boost::move(x.second));  }
 
 
-//piecewise construction from boost::tuple
+//piecewise construction from boost::tuple. The null_type padding is written as the
+//dependent "typename pair_impl::boost_tuple_null<BoostTuple>::type" so that deduction
+//fails (SFINAE) instead of a hard error when std::tuple binds to BoostTuple in C++17,
+//(since C++17 (P0522), a variadic template like std::tuple is also a valid argument for
+//fixed paramter template-template parameter)
 #define BOOST_DISPATCH_USES_ALLOCATOR_PIECEWISE_CONSTRUCT_BOOST_TUPLE_CODE(N,M)\
 template< typename ConstructAlloc, typename AllocArg, class Pair \
         , template<class, class, class, class, class, class, class, class, class, class> class BoostTuple \
          BOOST_MOVE_I_IF(BOOST_MOVE_OR(N,M)) BOOST_MOVE_CLASS##N BOOST_MOVE_I_IF(BOOST_MOVE_AND(N,M)) BOOST_MOVE_CLASSQ##M > \
-typename dtl::enable_if< dtl::is_pair<Pair> BOOST_MOVE_I void>::type\
+typename dtl::enable_if_c< dtl::is_pair<Pair>::value &&\
+      !(pair_impl::is_tuple_null<BOOST_MOVE_LAST_TARG##N>::value || pair_impl::is_tuple_null<BOOST_MOVE_LAST_TARGQ##M>::value)\
+   BOOST_MOVE_I void>::type\
    dispatch_uses_allocator( ConstructAlloc & construct_alloc, BOOST_FWD_REF(AllocArg) arg_alloc, Pair* pair, piecewise_construct_t\
-      , BoostTuple<BOOST_MOVE_TARG##N  BOOST_MOVE_I##N BOOST_MOVE_REPEAT(BOOST_MOVE_SUB(10,N),::boost::tuples::null_type)> p\
-      , BoostTuple<BOOST_MOVE_TARGQ##M BOOST_MOVE_I##M BOOST_MOVE_REPEAT(BOOST_MOVE_SUB(10,M),::boost::tuples::null_type)> q)\
+      , BoostTuple<BOOST_MOVE_TARG##N  BOOST_MOVE_I##N BOOST_MOVE_REPEAT(BOOST_MOVE_SUB(10,N),typename pair_impl::boost_tuple_null<BoostTuple>::type)> p\
+      , BoostTuple<BOOST_MOVE_TARGQ##M BOOST_MOVE_I##M BOOST_MOVE_REPEAT(BOOST_MOVE_SUB(10,M),typename pair_impl::boost_tuple_null<BoostTuple>::type)> q)\
 {\
    (void)p; (void)q;\
    dispatch_uses_allocator\
