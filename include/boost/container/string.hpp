@@ -3303,7 +3303,14 @@ class basic_string
    inline void priv_terminate_string()
    {  this->priv_construct_null(this->priv_end_addr());  }
 
+   //nvc++ (NVIDIA HPC SDK, at least up to 26.5) miscompiles the loop below when
+   //it is inlined at -O2/-fast. See:
+   //https://forums.developer.nvidia.com/t/nvc-26-5-o2-miscompilation-wrong-final-value-for-a-loop-counter-when-a-copy-loop-is-inlined/381529
+   #if defined(__NVCOMPILER)
+   template<class InpIt, class FwdIt> BOOST_NOINLINE
+   #else
    template<class InpIt, class FwdIt> inline
+   #endif
    size_type priv_uninitialized_copy(InpIt first, InpIt last, FwdIt dest)
    {
       //Save initial destination position
