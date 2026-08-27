@@ -2666,7 +2666,11 @@ struct BOOST_SYMBOL_VISIBLE dlmalloc_globals_t {
    MLOCK_T              global_mutex;       /* was: static malloc_global_mutex */
 #endif
    size_t               allocated_memory;   /* was: static s_allocated_memory (ext) */
+#if PROCEED_ON_ERROR
+   /* Only reset_on_error() touches this, and that exists solely under
+      PROCEED_ON_ERROR (see the option's own documentation above). */
    int                  corruption_error_count; /* was: int malloc_corruption_error_count */
+#endif
 #if HAVE_MMAP && !defined(DL_WIN32) && !defined(MAP_ANONYMOUS)
    /* Only the /dev/zero fallback keeps a cached descriptor. With
       MAP_ANONYMOUS (or MAP_ANON, aliased to it above) MMAP_DEFAULT passes -1,
@@ -2684,7 +2688,10 @@ struct BOOST_SYMBOL_VISIBLE dlmalloc_globals_t {
 #if !ONLY_MSPACES
         gm_state(),
 #endif
-        allocated_memory(0), corruption_error_count(0)
+        allocated_memory(0)
+#if PROCEED_ON_ERROR
+      , corruption_error_count(0)
+#endif
 #if HAVE_MMAP && !defined(DL_WIN32) && !defined(MAP_ANONYMOUS)
       , dev_zero_fd_v(-1)
 #endif
@@ -2723,7 +2730,9 @@ inline struct dlmalloc_globals_t *dl_globals(void) {
 #if USE_LOCKS
 #define malloc_global_mutex (dl_globals()->global_mutex)
 #endif
+#if PROCEED_ON_ERROR
 #define malloc_corruption_error_count (dl_globals()->corruption_error_count)
+#endif
 
 #define mparams (dl_globals()->params)
 

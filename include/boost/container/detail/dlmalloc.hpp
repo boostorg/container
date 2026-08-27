@@ -703,6 +703,7 @@ struct dl_win_system_info
 #pragma warning (disable : 4390) /*empty controlled statement found; is this the intent?*/
 #pragma warning (disable : 4251 4231 4660) /*dll warnings*/
 #pragma warning (disable : 4057) /*differs in indirection to slightly different base types from*/
+#pragma warning (disable : 4018) /*signed/unsigned mismatch in the bin arithmetic*/
 #elif defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic push
 //dlmalloc's internal helpers are static: unused ones are expected in TUs
@@ -724,7 +725,7 @@ struct dl_win_system_info
 //    -Wcast-qual); the allocator is what establishes that alignment in the
 //    first place, so it knows the casts are good
 //  - mixing size_t, bindex_t, binmap_t and int in the bin arithmetic
-//    (-Wconversion, -Wsign-conversion, -Warith-conversion)
+//    (-Wconversion, -Wsign-conversion, -Warith-conversion, -Wsign-compare)
 //Silenced here rather than at the build level so a strict -Werror build of
 //user code including this header still works, and so the rest of
 //Boost.Container stays under the full warning set.
@@ -732,6 +733,7 @@ struct dl_win_system_info
 #pragma GCC diagnostic ignored "-Wcast-qual"
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #endif
 
 namespace boost {
