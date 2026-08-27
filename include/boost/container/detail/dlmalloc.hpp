@@ -656,7 +656,6 @@ struct dl_win_system_info
 #pragma push_macro("CALCULATE_LCM")
 #pragma push_macro("INTERNAL_MULTIALLOC_DEFAULT_CONTIGUOUS_MEM")
 #pragma push_macro("SQRT_MAX_SIZE_T")
-#pragma push_macro("BOOST_CONTAINER_DLMALLOC_SIMPLE_MULTIDEALLOC")
 #pragma push_macro("BOOST_ALLOC_PLUS_MEMCHAIN_MEM_JUMP_NEXT")
 
 #ifdef _WIN32
@@ -1673,9 +1672,6 @@ static int internal_node_multialloc
 	return 1;
 }
 
-#define BOOST_CONTAINER_DLMALLOC_SIMPLE_MULTIDEALLOC
-#ifndef BOOST_CONTAINER_DLMALLOC_SIMPLE_MULTIDEALLOC
-
 #define BOOST_ALLOC_PLUS_MEMCHAIN_MEM_JUMP_NEXT(THISMEM, NEXTMEM) \
    *((void**)(THISMEM)) = *((void**)((NEXTMEM)))
 
@@ -1758,28 +1754,6 @@ static void internal_multialloc_free(mstate m, boost_cont_memchain *pchain)
 	}
 #endif
 }
-
-#else	//BOOST_CONTAINER_DLMALLOC_SIMPLE_MULTIDEALLOC
-
-//This function is based on internal_bulk_free
-//replacing iteration over array[] with boost_cont_memchain.
-//Instead of returning the unallocated nodes, returns a chain of non-deallocated nodes.
-//After forward merging, backwards merging is also tried
-static void internal_multialloc_free(mstate m, boost_cont_memchain *pchain)
-{
-	if (!PREACTION(m)) {
-		boost_cont_memchain_it a_it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(pchain);
-		while (!BOOST_CONTAINER_MEMCHAIN_IS_END_IT(pchain, a_it)) { /* Iterate though all memory holded by the chain */
-			void* a_mem = BOOST_CONTAINER_MEMIT_ADDR(a_it);
-			BOOST_CONTAINER_MEMIT_NEXT(a_it);
-         s_allocated_memory -= chunksize(mem2chunk(a_mem));
-			mspace_free_lockless(m, a_mem);
-		}
-		POSTACTION(m);
-	}
-}
-
-#endif	//BOOST_CONTAINER_DLMALLOC_SIMPLE_MULTIDEALLOC
 
 static int internal_multialloc_arrays
    (mstate m, size_t n_elements, const size_t* sizes, size_t element_size, size_t contiguous_elements, boost_cont_memchain *pchain) {
@@ -2563,7 +2537,6 @@ int boost_cont_mallopt(int param_number, int value)
 #pragma pop_macro("CALCULATE_LCM")
 #pragma pop_macro("INTERNAL_MULTIALLOC_DEFAULT_CONTIGUOUS_MEM")
 #pragma pop_macro("SQRT_MAX_SIZE_T")
-#pragma pop_macro("BOOST_CONTAINER_DLMALLOC_SIMPLE_MULTIDEALLOC")
 #pragma pop_macro("BOOST_ALLOC_PLUS_MEMCHAIN_MEM_JUMP_NEXT")
 
 namespace boost{
