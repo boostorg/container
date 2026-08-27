@@ -84,24 +84,18 @@ namespace pmr_globals_dtl {
 //the default-resource slot plus the two standard resource singletons.
 struct BOOST_SYMBOL_VISIBLE pmr_globals_t
 {
-   //Ordinary members: both are stateless and publicly destructible, so there is
-   //nothing manual storage would buy. Their vtables still live in the image of
-   //whichever module constructs them, which is what pin_constructing_module
-   //below is for.
+   //Ordinary members: both stateless and publicly destructible
+   //Their vtables still live in the image of whichever module constructs
+   //them, which is what pin_constructing_module below is for.
    new_delete_resource_imp  ndr;
    null_memory_resource_imp null_r;
 
-   //Declared after ndr on purpose: members are initialized in declaration order,
-   //so ndr is already alive when its address is stored here. Seeding the slot
-   //means it is never null, which is what lets both accessors below be a plain
-   //atomic load or exchange with no fallback branch. Accessed only through the
-   //lock-free atomic_ptr_* primitives, so no lock is needed either.
+   //Declared after ndr and initialized with &hdr: it is never null
+   //Accessed only through lock-free atomic_ptr_* , no lock is needed.
    memory_resource *default_resource;
 
    //Constructed before main() and destroyed after it, like a global object. The
-   //default starts out as new_delete_resource(), which is what the standard
-   //requires, so no separate "never set" state has to be represented. The
-   //destructor is the implicitly generated one.
+   //default starts out as new_delete_resource().
    pmr_globals_t()
       : default_resource(&ndr)
    {}
@@ -163,7 +157,11 @@ inline memory_resource* set_default_resource(memory_resource* r) BOOST_NOEXCEPT
    pmr_globals_dtl::pmr_globals_t &g = pmr_globals_dtl::pmr_globals();
    //A null argument means new_delete_resource(), which is g.ndr itself
    memory_resource *const res = r ? r : &g.ndr;
-   return dtl::atomic_ptr_exchange_acq_rel(&g.default_resource, res);
+   //The displaced value is subject to the same invariant as the slot itself
+   memory_resource *const previous =
+      dtl::atomic_ptr_exchange_acq_rel(&g.default_resource, res);
+   BOOST_CONTAINER_ASSUME(previous != 0);
+   return previous;
 }
 
 //! <b>Returns</b>: The current value of the default
@@ -171,13 +169,14 @@ inline memory_resource* set_default_resource(memory_resource* r) BOOST_NOEXCEPT
 BOOST_CONTAINER_NODISCARD inline memory_resource* get_default_resource() BOOST_NOEXCEPT
 {
    //Acquire load, pairing with the release side of the exchange in
-   //set_default_resource(). A consume/dependent load would order the
-   //resource object itself but not whatever else the setter published
-   //beforehand, and this function's contract covers that too.
+   //set_default_resource()
    pmr_globals_dtl::pmr_globals_t &g = pmr_globals_dtl::pmr_globals();
-   //Never null: the constructor seeds the slot with &ndr and every write goes
-   //through set_default_resource(), which substitutes &ndr for a null argument
-   return dtl::atomic_ptr_read_acq(&g.default_resource);
+   //Never null: seeded at construction, and set_default_resource() puts &ndr
+   //in the slot for a null argument. Stated so callers need not re-check, and
+   //so a broken invariant is caught in a debug build instead of miscompiled.
+   memory_resource *const current = dtl::atomic_ptr_read_acq(&g.default_resource);
+   BOOST_CONTAINER_ASSUME(current != 0);
+   return current;
 }
 
 }  //namespace pmr {

@@ -18,6 +18,7 @@
 #include <boost/config.hpp>
 #include <boost/move/detail/type_traits.hpp>
 #include <boost/move/utility_core.hpp>
+#include <boost/container/detail/workaround.hpp>   //BOOST_CONTAINER_ASSUME
 #include <boost/container/detail/dispatch_uses_allocator.hpp>
 #include <boost/container/new_allocator.hpp>
 #include <boost/container/pmr/memory_resource.hpp>
@@ -79,7 +80,12 @@ class polymorphic_allocator
    //! <b>Returns</b>: Equivalent to
    //!   `static_cast<T*>(m_resource->allocate(n * sizeof(T), alignof(T)))`.
    BOOST_CONTAINER_NODISCARD T* allocate(size_t n)
-   {  return static_cast<T*>(m_resource->allocate(n*sizeof(T), ::boost::move_detail::alignment_of<T>::value));  }
+   {
+      //Class invariant: every constructor either takes it from
+      //get_default_resource() or requires a non-null argument
+      BOOST_CONTAINER_ASSUME(m_resource != 0);
+      return static_cast<T*>(m_resource->allocate(n*sizeof(T), ::boost::move_detail::alignment_of<T>::value));
+   }
 
    //! <b>Requires</b>: p was allocated from a memory resource, x, equal to *m_resource,
    //! using `x.allocate(n * sizeof(T), alignof(T))`.
@@ -88,7 +94,10 @@ class polymorphic_allocator
    //!
    //! <b>Throws</b>: Nothing.
    void deallocate(T* p, size_t n) BOOST_NOEXCEPT
-   {  m_resource->deallocate(p, n*sizeof(T), ::boost::move_detail::alignment_of<T>::value);  }
+   {
+      BOOST_CONTAINER_ASSUME(m_resource != 0);   //class invariant, as above
+      m_resource->deallocate(p, n*sizeof(T), ::boost::move_detail::alignment_of<T>::value);
+   }
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //! <b>Requires</b>: Uses-allocator construction of T with allocator
