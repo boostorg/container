@@ -182,9 +182,10 @@ partition_copy_leaf
       goto out_ret;
    }
 
-   //Remaining elements
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-   while(n) {
+   //Use "> 0" instead of "!= 0" to void a false GCC
+   //-Waggressive-loop-optimizations warning that asummes negative n
+   while(n > 0) {
       if(pred(*first)) {
          *t_first = *first;
          ++t_first;
