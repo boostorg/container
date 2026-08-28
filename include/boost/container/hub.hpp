@@ -111,13 +111,14 @@ template<typename ValuePointer> class iterator;
 }
 
 template<typename T, typename Allocator, typename F>
-F for_each(hub<T, Allocator>&, F);
+BOOST_CONTAINER_FORCEINLINE F for_each(hub<T, Allocator>&, F);
 
 template<typename T, typename Allocator, typename F>
 std::pair<typename hub<T, Allocator>::iterator, F> for_each_while(
    hub<T, Allocator>&, F);
 
 template<typename T, typename Allocator, typename F>
+BOOST_CONTAINER_FORCEINLINE
 std::pair<typename hub<T, Allocator>::const_iterator, F> for_each_while(
    const hub<T, Allocator>&, F);
 
@@ -2325,7 +2326,7 @@ BOOST_CONTAINER_FORCEINLINE F for_each
 //! <b>Note</b>: Potentially faster than range iteration thanks to internal
 //!   unrolling and prefetching.
 template<typename T, typename Allocator, typename F>
-BOOST_CONTAINER_FORCEINLINE F for_each(hub<T, Allocator>& x, F f)
+F for_each(hub<T, Allocator>& x, F f)
 {
    container::for_each_while(
       x, hub_detail::inline_return_true_ref_caller<F>{f});
@@ -2450,7 +2451,7 @@ for_each_while(hub<T, Allocator>& x, F f)
 //!   unrolling and prefetching.
 template<typename T, typename Allocator, typename F>
 std::pair<typename hub<T, Allocator>::const_iterator, F>
-BOOST_CONTAINER_FORCEINLINE for_each_while(const hub<T, Allocator>& x, F f)
+for_each_while(const hub<T, Allocator>& x, F f)
 {
    return {
       container::for_each_while(
