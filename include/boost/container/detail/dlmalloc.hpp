@@ -2290,7 +2290,12 @@ boost_cont_command_ret_t boost_cont_allocation_command
             void* addr;
             if(alignof_object <= MALLOC_ALIGNMENT){
                addr = mspace_malloc_lockless(ms, preferred_size);
-               if(!addr)   addr = mspace_malloc_lockless(ms, limit_size);
+               /* Only worth a second try with the smaller size: when the two
+                  are equal (boost_cont_malloc passes bytes for both) nothing
+                  has changed under the still-held lock, so the retry repeats
+                  the same bin walk and the same failing sys_alloc. */
+               if(!addr && limit_size != preferred_size)
+                  addr = mspace_malloc_lockless(ms, limit_size);
             }
             else{
                addr = mspace_memalign_lockless(ms, alignof_object, preferred_size);
