@@ -61,7 +61,7 @@
 
 //for C++03 compilers, were type-puning is the only option for std::pair
 //disable strict aliasing to reduce problems.
-#if defined(BOOST_GCC) && (BOOST_GCC >= 100000) && !defined(BOOST_CONTAINER_STD_PAIR_IS_MOVABLE)
+#if defined(BOOST_CONTAINER_GCC_PRAGMAS) && (BOOST_GCC >= 100000) && !defined(BOOST_CONTAINER_STD_PAIR_IS_MOVABLE)
 #pragma GCC push_options
 #pragma GCC optimize("no-strict-aliasing")
 #endif
@@ -3280,7 +3280,7 @@ class flat_multimap
    {  x.swap(y);  }
 };
 
-#if defined(BOOST_GCC) && (BOOST_GCC >= 100000) && !defined(BOOST_CONTAINER_STD_PAIR_IS_MOVABLE)
+#if defined(BOOST_CONTAINER_GCC_PRAGMAS) && (BOOST_GCC >= 100000) && !defined(BOOST_CONTAINER_STD_PAIR_IS_MOVABLE)
 #pragma GCC pop_options
 #endif
 
