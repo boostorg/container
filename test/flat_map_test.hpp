@@ -26,6 +26,17 @@ namespace boost{
 namespace container {
 namespace test {
 
+//nvc++ (and other EDG front ends) correctly reject casting a prvalue to a
+//reference type, which is what "(BOOST_RV_REF(C))f()" does under Boost.Move's
+//C++03 emulation, where BOOST_RV_REF(C) expands to "boost::rv<C>&". Binding
+//the temporary to a function parameter instead is well-formed both in that
+//emulation and in real C++11, and still selects the move constructor. The
+//template argument must be supplied explicitly: in C++03 "boost::rv<C>&"
+//cannot be deduced from an argument of type C.
+template<class C>
+inline BOOST_RV_REF(C) rv_cast(BOOST_RV_REF(C) c)
+{  return boost::move(c);  }
+
 template< class RandomIt >
 void random_shuffle( RandomIt first, RandomIt last )
 {
@@ -57,7 +68,7 @@ bool flat_tree_extract_adopt_test()
          fmap_copy.emplace(static_cast<int>(i), -static_cast<int>(i));
       }
 
-      seq_t seq((BOOST_RV_REF(seq_t))fmap.extract_sequence());
+      seq_t seq(test::rv_cast<seq_t>(fmap.extract_sequence()));
       if(!fmap.empty())
          return false;
       if(!CheckEqualContainers(seq, fmap_copy))
@@ -88,7 +99,7 @@ bool flat_tree_extract_adopt_test()
          fmap_copy.emplace(static_cast<int>(i), -static_cast<int>(i));
       }
 
-      seq_t seq((BOOST_RV_REF(seq_t))fmap.extract_sequence());
+      seq_t seq(test::rv_cast<seq_t>(fmap.extract_sequence()));
 
       if(!fmap.empty())
          return false;
@@ -114,7 +125,7 @@ bool flat_tree_extract_adopt_test()
          fmmap_copy.emplace(static_cast<int>(i), -static_cast<int>(i));
       }
 
-      seq_t seq((BOOST_RV_REF(seq_t))fmmap.extract_sequence());
+      seq_t seq(test::rv_cast<seq_t>(fmmap.extract_sequence()));
       if(!fmmap.empty())
          return false;
       if(!CheckEqualContainers(seq, fmmap_copy))
@@ -143,7 +154,7 @@ bool flat_tree_extract_adopt_test()
          fmmap_copy.emplace(static_cast<int>(i), -static_cast<int>(i));
       }
 
-      seq_t seq((BOOST_RV_REF(seq_t))fmmap.extract_sequence());
+      seq_t seq(test::rv_cast<seq_t>(fmmap.extract_sequence()));
       if(!fmmap.empty())
          return false;
       if(!CheckEqualContainers(seq, fmmap_copy))
