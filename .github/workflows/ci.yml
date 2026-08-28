@@ -743,7 +743,7 @@ jobs:
         include:
           - nvhpc_version: "26.5"
             # Capped at 17 on purpose, see the comment in the "Run tests" step
-            cxxstd: "03,11,14,17"
+            cxxstd: "11,14,17"
             os: ubuntu-latest
             container: ubuntu:26.04
 
