@@ -1015,6 +1015,90 @@ static void* mspace_malloc_lockless(mspace msp, size_t bytes)
   return 0;
 }
 
+//This function is equal to internal_memalign, but the caller must already
+//hold the mspace lock: the oversized allocation goes through
+//mspace_malloc_lockless and the PREACTION/POSTACTION pair that internal_memalign
+//wraps around the realign/trim is dropped. Keeping the whole operation inside
+//the caller's critical section saves three lock round-trips per over-aligned
+//request, and removes the window where a failed relock had to report the
+//allocation without ever running the chunk bookkeeping.
+//
+//The leak-repair path internal_memalign needs (freeing the block when its own
+//PREACTION fails) is unnecessary here for the same reason: there is no relock
+//that can fail.
+static void* mspace_memalign_lockless(mstate m, size_t alignment, size_t bytes)
+{
+  void* mem = 0;
+  if (alignment <  MIN_CHUNK_SIZE) /* must be at least a minimum chunk size */
+    alignment = MIN_CHUNK_SIZE;
+  if ((alignment & (alignment-SIZE_T_ONE)) != 0) {/* Ensure a power of 2 */
+    size_t a = MALLOC_ALIGNMENT << 1;
+    while (a < alignment) a <<= 1;
+    alignment = a;
+  }
+  if (bytes >= MAX_REQUEST - alignment) {
+    if (m != 0)  { /* Test isn't needed but avoids compiler warning */
+      MALLOC_FAILURE_ACTION;
+    }
+  }
+  else {
+    size_t nb = request2size(bytes);
+    size_t req = nb + alignment + MIN_CHUNK_SIZE - CHUNK_OVERHEAD;
+    mem = mspace_malloc_lockless(m, req);
+    if (mem != 0) {
+      mchunkptr p = mem2chunk(mem);
+      if ((((size_t)(mem)) & (alignment - 1)) != 0) { /* misaligned */
+        /*
+          Find an aligned spot inside chunk.  Since we need to give
+          back leading space in a chunk of at least MIN_CHUNK_SIZE, if
+          the first calculation places us at a spot with less than
+          MIN_CHUNK_SIZE leader, we can move to the next aligned spot.
+          We've allocated enough total room so that this is always
+          possible.
+        */
+        char* br = (char*)mem2chunk((size_t)(((size_t)((char*)mem + alignment -
+                                                       SIZE_T_ONE)) &
+                                             (0 - alignment)));
+        char* pos = ((size_t)(br - (char*)(p)) >= MIN_CHUNK_SIZE)?
+          br : br+alignment;
+        mchunkptr newp = (mchunkptr)pos;
+        size_t leadsize = pos - (char*)(p);
+        size_t newsize = chunksize(p) - leadsize;
+
+        if (is_mmapped(p)) { /* For mmapped chunks, just adjust offset */
+          newp->prev_foot = p->prev_foot + leadsize;
+          newp->head = newsize;
+        }
+        else { /* Otherwise, give back leader, use the rest */
+          set_inuse(m, newp, newsize);
+          set_inuse(m, p, leadsize);
+          dispose_chunk(m, p, leadsize);
+        }
+        p = newp;
+      }
+
+      /* Give back spare room at the end */
+      if (!is_mmapped(p)) {
+        size_t size = chunksize(p);
+        if (size > nb + MIN_CHUNK_SIZE) {
+          size_t remainder_size = size - nb;
+          mchunkptr remainder = chunk_plus_offset(p, nb);
+          set_inuse(m, p, nb);
+          set_inuse(m, remainder, remainder_size);
+          dispose_chunk(m, remainder, remainder_size);
+        }
+      }
+
+      mem = chunk2mem(p);
+      DL_ASSERT (chunksize(p) >= nb);
+      DL_ASSERT(((size_t)mem & (alignment - 1)) == 0);
+      check_inuse_chunk(m, p);
+      /*No POSTACTION: the caller keeps the lock it already held.*/
+    }
+  }
+  return mem;
+}
+
 //This function is equal to try_realloc_chunk but handling
 //minimum and desired bytes
 static mchunkptr try_realloc_chunk_with_min(mstate m, mchunkptr p, size_t min_nb, size_t des_nb, int can_move)
@@ -2197,31 +2281,21 @@ boost_cont_command_ret_t boost_cont_allocation_command
 
          if(command & BOOST_CONTAINER_ALLOCATE_NEW){
             /* The lock is held here, so the nested allocation must not take
-               it again. The lockless variant handles the common case; there
-               is no lockless memalign, so an over-aligned request instead
-               RELEASES the lock around internal_memalign (which locks
-               internally) and reacquires it for the bookkeeping and for the
-               branches that follow. Never disable_lock(ms): that clears the
-               use-lock flag of the whole mspace, so every OTHER thread's
-               malloc/free skips locking for the duration - a data race that
-               corrupts the heap under any real concurrency. */
+               it again: both variants below are lockless and run inside this
+               one critical section, bookkeeping included. Never
+               disable_lock(ms): that clears the use-lock flag of the whole
+               mspace, so every OTHER thread's malloc/free skips locking for
+               the duration - a data race that corrupts the heap under any
+               real concurrency. */
             void* addr;
             if(alignof_object <= MALLOC_ALIGNMENT){
                addr = mspace_malloc_lockless(ms, preferred_size);
                if(!addr)   addr = mspace_malloc_lockless(ms, limit_size);
             }
             else{
-               POSTACTION(ms);
-               addr = internal_memalign(ms, alignof_object, preferred_size);
+               addr = mspace_memalign_lockless(ms, alignof_object, preferred_size);
                if(!addr && limit_size != preferred_size)
-                  addr = internal_memalign(ms, alignof_object, limit_size);
-               if (PREACTION(ms)) {
-                  /* Relocking failed: report failure without the chunk
-                     bookkeeping rather than touch shared state unlocked */
-                  ret.first  = addr;
-                  ret.second = 0;
-                  return ret;
-               }
+                  addr = mspace_memalign_lockless(ms, alignof_object, limit_size);
             }
             if(addr){
                s_allocated_memory += chunksize(mem2chunk(addr));
