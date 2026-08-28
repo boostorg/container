@@ -66,8 +66,8 @@ void test_release()
    char *bufs[AllocCount];
    for(unsigned i = 0; i != unsigned(AllocCount); ++i){
       bufs[i]                    = (char*)bc.allocate(i+1);
+      BOOST_TEST(bufs[i] != 0);
    }
-   (void)bufs;
    //Should have allocated a new entry
    BOOST_TEST(mrl.m_info.size() == AllocCount);
 
@@ -97,8 +97,8 @@ void test_destructor()
       char *bufs[AllocCount];
       for(unsigned i = 0; i != unsigned(AllocCount); ++i){
          bufs[i] = (char*)bc.allocate(i+1);
+         BOOST_TEST(bufs[i] != 0);
       }
-      (void)bufs;
       //Should have allocated a new entry
       BOOST_TEST(mrl.m_info.size() == AllocCount);
 
