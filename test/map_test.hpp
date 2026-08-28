@@ -1455,8 +1455,9 @@ bool test_map_support_for_initialization_list_for()
          return false;
    }
    return true;
-#endif
+#else
    return true;
+#endif
 }
 
 template<typename MapType, typename MultimapType>

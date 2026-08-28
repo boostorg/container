@@ -126,8 +126,9 @@ bool test_support_for_initializer_list()
           return false;
    }
    return true;
-#endif
+#else
    return true;
+#endif
 }
 
 bool test_for_splice()

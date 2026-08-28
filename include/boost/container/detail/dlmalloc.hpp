@@ -1424,7 +1424,6 @@ static void *internal_grow_both_sides
       USAGE_ERROR_ACTION(m, oldmem);
       return 0;
    }
-   return 0;
 }
 
 /* This is similar to mmap_resize but:

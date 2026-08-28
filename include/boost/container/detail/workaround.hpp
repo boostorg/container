@@ -19,6 +19,15 @@
 #  pragma once
 #endif
 
+//nvc++/pgc++ and other EDG-based front ends predefine __GNUC__ and are
+//therefore reported as GCC by Boost.Config (BOOST_GCC ends up holding the
+//version of the host GCC whose headers they use). They do not implement
+//GCC's optimization pragmas though, and emit a diagnostic for every one they
+//parse. Guard "#pragma GCC ..." with this macro rather than with BOOST_GCC.
+#if defined(BOOST_GCC) && !defined(__EDG__)
+   #define BOOST_CONTAINER_GCC_PRAGMAS
+#endif
+
 #if    !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)\
     && !defined(BOOST_INTERPROCESS_DISABLE_VARIADIC_TMPL)
    #define BOOST_CONTAINER_PERFECT_FORWARDING
@@ -243,7 +252,7 @@ namespace boost {
   // Enable unrolling but let the compiler's cost model choose the factor.
   #define BOOST_CONTAINER_AUTO_UNROLL BOOST_CONTAINER_UNROLL_PRAGMA(clang loop unroll(enable))
 
-#elif defined(BOOST_GCC) && defined(BOOST_GCC_VERSION) && (BOOST_GCC_VERSION >= 150000)
+#elif defined(BOOST_CONTAINER_GCC_PRAGMAS) && defined(BOOST_GCC_VERSION) && (BOOST_GCC_VERSION >= 150000)
   // GCC < 15 emits an unsuppressible "ignoring loop annotation" warning
   // when the optimizer decides it cannot unroll a loop (complex iterators,
   // unknown trip count, etc.). This was fixed in GCC 15.

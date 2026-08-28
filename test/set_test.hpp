@@ -917,8 +917,9 @@ bool test_set_methods_with_initializer_list_as_argument_for()
          return false;
    }
    return true;
-#endif
+#else
    return true;
+#endif
 }
 
 template<typename SetType, typename MultisetType>
