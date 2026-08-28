@@ -60,17 +60,14 @@ struct BOOST_SYMBOL_VISIBLE shared_globals
 
 //Three keys over the same T: the object identity follows the T/Options pair,
 //not T alone, so these must be three distinct objects.
-struct BOOST_SYMBOL_VISIBLE options_alpha
-{  static const char *name() { return "bctim_alpha"; }  };
+struct BOOST_SYMBOL_VISIBLE options_alpha {};
 
-struct BOOST_SYMBOL_VISIBLE options_beta
-{  static const char *name() { return "bctim_beta"; }  };
+struct BOOST_SYMBOL_VISIBLE options_beta {};
 
 //An intentionally immortal instance: its destructor is never run, the OS
 //reclaims it at process exit.
 struct BOOST_SYMBOL_VISIBLE options_immortal
 {
-   static const char *name() { return "bctim_imm"; }
    static const bool destroy_at_exit = false;
 };
 
@@ -89,8 +86,7 @@ struct BOOST_SYMBOL_VISIBLE overaligned_globals
    char pad[64];
 };
 
-struct BOOST_SYMBOL_VISIBLE options_overaligned
-{  static const char *name() { return "bctim_ovr"; }  };
+struct BOOST_SYMBOL_VISIBLE options_overaligned {};
 
 #endif   //!defined(BOOST_NO_ALIGNMENT)
 

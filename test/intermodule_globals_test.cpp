@@ -11,9 +11,6 @@
 #include "lightweight_test.hpp"
 #include <cstdio>
 #include <cstring>
-#if defined(BOOST_CONTAINER_INTERMODULE_BACKEND_WINAPI) && !defined(BOOST_NO_TYPEID)
-#include <typeinfo>
-#endif
 
 #if !defined(BOOST_NO_CXX11_HDR_THREAD)
 #include <thread>
@@ -43,15 +40,11 @@ struct BOOST_SYMBOL_VISIBLE test_globals
    void       *self;
 };
 
-struct BOOST_SYMBOL_VISIBLE options_a
-{
-   static const char *name() { return "testa"; }
-};
+struct BOOST_SYMBOL_VISIBLE options_a {};
 
 //An immortal instance (dlmalloc-style lifetime policy)
 struct BOOST_SYMBOL_VISIBLE options_b
 {
-   static const char *name() { return "testb"; }
    static const bool destroy_at_exit = false;
 };
 
@@ -73,10 +66,7 @@ struct BOOST_SYMBOL_VISIBLE overaligned_globals
    char pad[64];
 };
 
-struct BOOST_SYMBOL_VISIBLE options_overaligned
-{
-   static const char *name() { return "testovr"; }
-};
+struct BOOST_SYMBOL_VISIBLE options_overaligned {};
 
 #endif   //!defined(BOOST_NO_ALIGNMENT)
 
@@ -119,17 +109,39 @@ namespace {
 //of each detector
 struct BOOST_SYMBOL_VISIBLE options_all_set
 {
-   static const char *name() { return "testall"; }
    static const bool destroy_at_exit = false;
    static const bool pin_constructing_module = true;
 };
 
 }  //namespace
 
+//void is the empty option set: every option takes its default
+BOOST_CONTAINER_STATIC_ASSERT
+   ((dtl::intermodule_opt_destroy_at_exit<void>::value == true));
+BOOST_CONTAINER_STATIC_ASSERT
+   ((dtl::intermodule_opt_pin_constructing_module<void>::value == false));
+
 BOOST_CONTAINER_STATIC_ASSERT
    ((dtl::intermodule_opt_destroy_at_exit<options_all_set>::value == false));
 BOOST_CONTAINER_STATIC_ASSERT
    ((dtl::intermodule_opt_pin_constructing_module<options_all_set>::value == true));
+
+//Options defaults to void, so these two spellings are the same object - and
+//a different one from any named Options over the same T
+static void test_default_options()
+{
+   test_globals &v1 = dtl::intermodule_globals<test_globals>();
+   test_globals &v2 = dtl::intermodule_globals<test_globals, void>();
+   BOOST_TEST(&v1 == &v2);
+   BOOST_TEST(v1.magic == 0xB005);
+   BOOST_TEST(v1.self == (void *)&v1);
+   BOOST_TEST((&v1 != &dtl::intermodule_globals<test_globals, options_a>()));
+
+   //Still one object on a later call, and mutations survive
+   v1.magic = 0x0DDu;
+   BOOST_TEST(dtl::intermodule_globals<test_globals>().magic == 0x0DDu);
+   v1.magic = 0xB005;
+}
 
 static void test_basic()
 {
@@ -166,10 +178,7 @@ static void test_basic()
 
 namespace {
 
-struct BOOST_SYMBOL_VISIBLE options_mt
-{
-   static const char *name() { return "testmt"; }
-};
+struct BOOST_SYMBOL_VISIBLE options_mt {};
 
 }  //namespace
 
@@ -200,42 +209,44 @@ static void test_threaded_access()
 
 #endif   //!defined(BOOST_NO_CXX11_HDR_THREAD)
 
-#if defined(BOOST_CONTAINER_INTERMODULE_BACKEND_WINAPI) && !defined(BOOST_NO_TYPEID)
+#if defined(BOOST_CONTAINER_INTERMODULE_BACKEND_WINAPI)
 
 namespace {
 
-//No name(): the registry keys this instance on typeid(T).name()
-struct BOOST_SYMBOL_VISIBLE unnamed_globals
+//A second payload type, so the key can be checked to depend on T as well as
+//on Options
+struct BOOST_SYMBOL_VISIBLE other_globals
 {
-   unnamed_globals() : magic(0xC0DE) {}
+   other_globals() : magic(0xC0DE) {}
    int magic;
-};
-
-struct BOOST_SYMBOL_VISIBLE options_no_name
-{
-   static const bool destroy_at_exit = true;
 };
 
 }  //namespace
 
-BOOST_CONTAINER_STATIC_ASSERT
-   ((dtl::intermodule_opt_has_name<options_no_name>::value == false));
-BOOST_CONTAINER_STATIC_ASSERT
-   ((dtl::intermodule_opt_has_name<options_a>::value == true));
-
-static void test_typeid_key()
+static void test_rendezvous_key()
 {
-   unnamed_globals &g =
-      dtl::intermodule_globals<unnamed_globals, options_no_name>();
+   //The key is the signature of a template instantiated on the T/Options
+   //pair, so it is non-empty and stable...
+   //(the extra parentheses keep the commas of the template argument lists
+   //from splitting BOOST_TEST's argument)
+   const char *const k = dtl::intermodule_rendezvous_key<test_globals, options_a>();
+   BOOST_TEST(k != 0 && k[0] != 0);
+   BOOST_TEST((0 == std::strcmp
+      (k, dtl::intermodule_rendezvous_key<test_globals, options_a>())));
+
+   //...and it tells apart a different Options over the same T...
+   BOOST_TEST((0 != std::strcmp
+      (k, dtl::intermodule_rendezvous_key<test_globals, options_b>())));
+   //...as well as the same Options over a different T
+   BOOST_TEST((0 != std::strcmp
+      (k, dtl::intermodule_rendezvous_key<other_globals, options_a>())));
+
+   //Which is what keeps the two pairs on two separate records
+   other_globals &g = dtl::intermodule_globals<other_globals, options_a>();
    BOOST_TEST(g.magic == 0xC0DE);
-   //Same instance on every call, i.e. the typeid key is stable
-   unnamed_globals &g2 =
-      dtl::intermodule_globals<unnamed_globals, options_no_name>();
-   BOOST_TEST(&g == &g2);
-   //And it really is the type's name, stored whole
-   BOOST_TEST(0 == std::strcmp
-      ( (dtl::intermodule_rendezvous_key<unnamed_globals, options_no_name>())
-      , typeid(unnamed_globals).name()));
+   BOOST_TEST((&g == &dtl::intermodule_globals<other_globals, options_a>()));
+   BOOST_TEST(((void *)&g !=
+      (void *)&dtl::intermodule_globals<test_globals, options_a>()));
 }
 
 #endif   //BOOST_CONTAINER_INTERMODULE_BACKEND_WINAPI
@@ -260,11 +271,12 @@ static void test_overaligned()
 int main()
 {
    test_basic();
+   test_default_options();
    #if !defined(BOOST_NO_CXX11_HDR_THREAD)
    test_threaded_access();
    #endif
-   #if defined(BOOST_CONTAINER_INTERMODULE_BACKEND_WINAPI) && !defined(BOOST_NO_TYPEID)
-   test_typeid_key();
+   #if defined(BOOST_CONTAINER_INTERMODULE_BACKEND_WINAPI)
+   test_rendezvous_key();
    #endif
    #if !defined(BOOST_NO_ALIGNMENT)
    test_overaligned();

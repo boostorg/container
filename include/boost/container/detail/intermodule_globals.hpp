@@ -26,22 +26,21 @@
 // after destruction phoenix-reconstructs the object.
 //
 // T requirements: default-constructible with a constructor that does not
-// throw, and destructible. On ELF, both T and Options must be declared
-// BOOST_SYMBOL_VISIBLE (see note below). Over-aligned types are supported:
-// the Windows backend requests extra bytes and places the object at the
-// first suitably aligned address inside the block.
+// throw, and destructible. On ELF, T must be declared BOOST_SYMBOL_VISIBLE,
+// and so must Options unless it is void (see note below). Over-aligned types are supported.:
 //
-// Options requirements. Every member is optional and falls back to the
-// value in intermodule_options_defaults:
-//    static const char *name();          // Rendezvous key. Defaults to
-//                                        // typeid(T).name() - convenient,
-//                                        // but only agrees across modules
-//                                        // built by the same compiler, and
-//                                        // needs typeid to be available
-//                                        // (it is under MSVC /GR-, it is
-//                                        // not under GCC -fno-rtti), so
-//                                        // spelling it out is preferable
-//                                        // for anything shared widely
+// Identity: the instance is keyed on the T/Options *pair*, so two Options
+// types over the same T name two different objects, and the same pair names
+// the same object in every module. The key is derived from the two type
+// names, which means it agrees between modules built by the same compiler
+// regardless of whether each of them was built with RTTI enabled. Types
+// that must rendezvous across modules therefore have to be the very same
+// types, i.e. come from a shared header, and never from an anonymous
+// namespace.
+//
+// Options requirements. Options defaults to void, which is the empty option
+// set: every member below then takes its default. Every member is optional
+// and falls back to the value in intermodule_options_defaults:
 //    static const bool destroy_at_exit;  // default true. When false the
 //                                        // object is intentionally
 //                                        // immortal and its destructor is
@@ -61,7 +60,6 @@
 //
 //    struct my_options
 //    {
-//       static const char *name() { return "my_state"; }
 //       static const bool destroy_at_exit = false;   //other options default
 //    };
 //
@@ -71,21 +69,6 @@
 //
 // Locking: the hot get() path is lock-free; only attach/detach lock, twice
 // per module lifetime.
-//
-// On Windows we have to be careful with data races:
-//   * The EXE's static constructors run in the CRT startup, after loader
-//     initialization has completed and released the lock. An EXE registrar
-//     attaching there can call LoadLibrary on any pre-main thread (created
-//     by an implicitly loaded DLL's DllMain, an injected DLL, a thread
-//     pool): both can find no registry entry and each create one, one
-//     silently overwriting the other - two heaps, and memory allocated
-//     against one freed against the other.
-//   * Static destruction is CRT atexit processing, not a loader callback.
-//     An EXE detach() decrementing the refcount races a FreeLibrary-driven
-//     detach() on another thread; the non-atomic decrement can lose an update
-//     and the object is never destroyed.
-//   * A lazy attach() from get() (the static-init-order safety net, and the
-//     phoenix path after destruction) can run on any thread at any time.
 //
 // The availability of the object is signalled through the cached object pointer
 // so the fast path needs no acquire fence, only "consume" semantics after a
@@ -107,6 +90,21 @@
 //    Each module may map the section at a different address, which is why
 //    the first one publishes its view as "canonical" and the others adopt it.
 // 
+//    On Windows we have to be careful with data races:
+//   * The EXE's static constructors run in the CRT startup, after loader
+//     initialization has completed and released the lock. An EXE registrar
+//     attaching there can call LoadLibrary on any pre-main thread (created
+//     by an implicitly loaded DLL's DllMain, an injected DLL, a thread
+//     pool): both can find no registry entry and each create one, one
+//     silently overwriting the other - two heaps, and memory allocated
+//     against one freed against the other.
+//   * Static destruction is CRT atexit processing, not a loader callback.
+//     An EXE detach() decrementing the refcount races a FreeLibrary-driven
+//     detach() on another thread; the non-atomic decrement can lose an update
+//     and the object is never destroyed.
+//   * A lazy attach() from get() (the static-init-order safety net, and the
+//     phoenix path after destruction) can run on any thread at any time.
+
 // ------------
 //  ELF/Mach-O
 // ------------
@@ -171,18 +169,6 @@
 
 #if !defined(BOOST_CONTAINER_CAS_LOCK) && defined(BOOST_HAS_PTHREADS)
 #  include <pthread.h>
-#endif
-
-#if defined(BOOST_CONTAINER_INTERMODULE_BACKEND_WINAPI) && !defined(BOOST_NO_TYPEID)
-   //An instance whose Options omit name() is keyed on typeid(T).name(): the
-   //registry stores the key inline and in full, with no length limit.
-   //
-   //The guard is BOOST_NO_TYPEID, not BOOST_NO_RTTI: applying typeid to a
-   //*type* is answered at compile time and needs no runtime type data, so
-   //MSVC still accepts it under /GR- (where Boost.Config defines
-   //BOOST_NO_RTTI but leaves BOOST_NO_TYPEID undefined). GCC's -fno-rtti
-   //rejects typeid outright and defines both.
-#  include <typeinfo>
 #endif
 
 namespace boost {
@@ -283,6 +269,15 @@ struct intermodule_opt_##NAME                                                  \
                                                                                \
    static const bool has = sizeof(test<probe>(0)) == sizeof(two_type);         \
    static const bool value = intermodule_optval_##NAME<Options, has>::value;   \
+};                                                                             \
+                                                                               \
+/*void is the empty option set: it can't be inherited from, and it defines*/   \
+/*nothing, so answer straight from the defaults*/                              \
+template<>                                                                     \
+struct intermodule_opt_##NAME<void>                                            \
+{                                                                              \
+   static const bool has = false;                                              \
+   static const bool value = intermodule_options_defaults::NAME;               \
 };                                                                             \
 /**/
 
@@ -562,53 +557,53 @@ BOOST_CONTAINER_STATIC_ASSERT(sizeof(intermodule_u32) == 4u);
 //
 //////////////////////////////////////////////////////////////////////////////
 //
-// Options::name() is optional with this storage: when it is missing the key
-// is typeid(T).name(), used verbatim. Records carry their key inline and
-// sized, so a long decorated name costs a few bytes of arena and nothing
-// else - no truncation, and no hashing of the name into the identity (the
-// 32-bit hash below only picks a bucket; identity is always the full
-// string). Spelling out a name() is still worth it when modules may be
-// built by different compilers, since typeid names are not portable
-// between them.
+// The key is the signature of a function template instantiated on the
+// T/Options pair, as the compiler itself spells it. It therefore names both
+// types, so the identity of an instance is the T/Options pair - the very
+// same identity the other backend gets for free, where the shared storage
+// is a static member of intermodule_globals_impl<T, Options> and the linker
+// unifies it under a name that mangles both arguments.
+//
+// The front end produces the signature while parsing: unlike
+// typeid(T).name() it needs no runtime type information, so a module built
+// with RTTI disabled and one built with RTTI enabled compute the very same
+// key and do rendezvous together.
+//
+// Records carry their key inline and sized, so a long signature costs a few
+// bytes of arena and nothing else - no truncation, and no hashing of the
+// name into the identity (the 32-bit hash below only picks a bucket;
+// identity is always the full string). Like typeid names, a signature is
+// only guaranteed to agree between modules built by the same compiler,
+// which is all this backend needs.
 
-template<class Options>
-struct intermodule_opt_has_name
-{
-   typedef char one_type;
-   struct two_type { char dummy[2]; };
-
-   //Viable only when Options::name() is a valid expression
-   template<class U> static one_type test(char (*)[sizeof(U::name(), 1)]);
-   template<class U> static two_type test(...);
-
-   static const bool value = sizeof(test<Options>(0)) == sizeof(one_type);
-};
-
-template<class T, class Options, bool HasName>
-struct intermodule_key;
-
-template<class T, class Options>
-struct intermodule_key<T, Options, true>
-{  static const char *get() {  return Options::name();  }  };
-
-template<class T, class Options>
-struct intermodule_key<T, Options, false>
-{
-   #if defined(BOOST_NO_TYPEID)
-   //Dependent, so this only fires if such an Options is actually used
-   BOOST_CONTAINER_STATIC_ASSERT_MSG(sizeof(T) == 0
-      , "Boost.Container: Options::name() is required when typeid is unavailable");
-   static const char *get() {  return 0;  }
-   #else
-   static const char *get() {  return typeid(T).name();  }
-   #endif
-};
+//The intrinsic has to name the template arguments, which __func__ and
+//__FUNCTION__ do not: they name the function alone, and every instantiation
+//would then share a single key. Take the two that do, directly rather than
+//through BOOST_CURRENT_FUNCTION, whose remaining fallbacks are exactly
+//those unusable spellings. Between them they cover every compiler that
+//targets the platforms this backend is compiled for: __PRETTY_FUNCTION__ on
+//the GCC-compatible front ends (GCC, Clang, clang-cl, MinGW, Intel and the
+//EDG-based ones, which all define __GNUC__ or __clang__) and __FUNCSIG__ on
+//MSVC and the front ends that emulate it.
+#if defined(__GNUC__) || defined(__clang__)
+#  define BOOST_CONTAINER_INTERMODULE_KEY_SIGNATURE __PRETTY_FUNCTION__
+#elif defined(_MSC_VER)
+#  define BOOST_CONTAINER_INTERMODULE_KEY_SIGNATURE __FUNCSIG__
+#endif
 
 template<class T, class Options>
 inline const char *intermodule_rendezvous_key()
 {
-   return intermodule_key
-      <T, Options, intermodule_opt_has_name<Options>::value>::get();
+   #if defined(BOOST_CONTAINER_INTERMODULE_KEY_SIGNATURE)
+   return BOOST_CONTAINER_INTERMODULE_KEY_SIGNATURE;
+   #else
+   //Dependent, so this only fires if a key is actually needed
+   BOOST_CONTAINER_STATIC_ASSERT_MSG(sizeof(T) == 0
+      , "Boost.Container: no intrinsic naming the template arguments of the "
+        "current function is known for this compiler, so intermodule globals "
+        "cannot be keyed");
+   return 0;
+   #endif
 }
 
 struct intermodule_registry_header
@@ -1119,13 +1114,24 @@ namespace dtl {
 //destructor runs during static destruction when the last attached module
 //detaches. See the file header for the T/Options requirements.
 //
-//Note: modules compiled with configurations yielding a different sizeof(T)
-//or a different Options::name() rendezvous to *different* instances by
-//design (their layouts would be incompatible anyway).
+//Note: the instance is keyed on the T/Options pair, so a configuration that
+//changes the layout of the shared state has to change one of those two
+//types (and modules yielding a different sizeof(T) for the same pair are an
+//ODR violation the backend asserts on).
 template<class T, class Options>
 inline T &intermodule_globals()
 {
    return intermodule_globals_impl<T, Options>::get();
+}
+
+//Options defaults to void, the empty option set, so intermodule_globals<T>()
+//and intermodule_globals<T, void>() name one and the same object. Spelt as
+//an overload and not as a default template argument, which C++03 allows on
+//class templates only.
+template<class T>
+inline T &intermodule_globals()
+{
+   return intermodule_globals_impl<T, void>::get();
 }
 
 }  //namespace dtl {
