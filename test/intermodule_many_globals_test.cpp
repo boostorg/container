@@ -31,8 +31,7 @@ struct BOOST_SYMBOL_VISIBLE counted_global
 
 //One Options type (and so one rendezvous key) per index
 #define BOOST_CONTAINER_TEST_OPT(N)                                            \
-   struct BOOST_SYMBOL_VISIBLE opt_##N                                         \
-   {  static const char *name() { return "many" #N; }  };                      \
+   struct BOOST_SYMBOL_VISIBLE opt_##N {};                                     \
    /**/
 
 #define BOOST_CONTAINER_TEST_OPT8(B)                                           \

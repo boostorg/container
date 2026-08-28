@@ -2702,15 +2702,11 @@ struct BOOST_SYMBOL_VISIBLE dlmalloc_globals_t {
    }
 };
 
-struct BOOST_SYMBOL_VISIBLE dlmalloc_globals_options {
-   static const char *name() {
-#if FOOTERS
-      return "dlmalloc286f";  /* FOOTERS changes the chunk layout: never mix */
-#else
-      return "dlmalloc286";
-#endif
-   }
-
+/* The rendezvous key is derived from this type's name, and FOOTERS changes
+   the chunk layout, so the two configurations must never meet: parameterize
+   the options type on it instead of keying two layouts the same. */
+template<bool Footers>
+struct BOOST_SYMBOL_VISIBLE dlmalloc_globals_options_t {
    /* The heap is deliberately immortal: destructors of user global objects
       and atexit callbacks may still free memory obtained from the extended
       allocators after Boost.Container's own static objects are gone. The
@@ -2721,6 +2717,8 @@ struct BOOST_SYMBOL_VISIBLE dlmalloc_globals_options {
       tuning params, counters, lock) with no vtable nor any function pointer
       into the constructing module's image. */
 };
+
+typedef dlmalloc_globals_options_t<(FOOTERS != 0)> dlmalloc_globals_options;
 
 inline struct dlmalloc_globals_t *dl_globals(void) {
    return &::boost::container::dtl::intermodule_globals

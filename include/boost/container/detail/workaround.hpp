@@ -277,10 +277,7 @@ namespace boost {
 #endif
 
 #if !defined(NDEBUG)
-//The debug form is a real check, so the assertion machinery has to be here:
-//this header is often the only one a low-level detail header includes.
-#include <boost/assert.hpp>
-#define BOOST_CONTAINER_ASSUME(cond) BOOST_ASSERT(cond)
+#define BOOST_CONTAINER_ASSUME(cond) 
 #elif BOOST_CONTAINER_HAS_BUILTIN(__builtin_assume)
 #define BOOST_CONTAINER_ASSUME(cond) __builtin_assume(cond)
 #elif defined(__GNUC__) || \
