@@ -280,9 +280,19 @@ BOOST_CONTAINER_FORCEINLINE boost::uint32_t atomic_xchg32_acquire
 }
 
 //Plain read, used only to re-check a taken lock while spinning: the value is
-//confirmed by the compare-and-swap that follows, so no ordering is needed.
+//confirmed by the exchange that follows, so no ordering is needed. On the
+//__atomic tier it is spelled as a relaxed atomic load: the generated code is
+//the same plain MOV/LDR, but a volatile read would formally be a data race
+//with the locked exchange, and ThreadSanitizer reports every contended spin
+//(seen in CI on dlmalloc_memalign_test's threaded hammer).
 BOOST_CONTAINER_FORCEINLINE boost::uint32_t atomic_read32_relaxed(const volatile boost::uint32_t *mem)
-{  return *mem;  }
+{
+   #if defined(BOOST_CONTAINER_SPIN_MUTEX_GNU)
+   return __atomic_load_n(mem, __ATOMIC_RELAXED);
+   #else
+   return *mem;
+   #endif
+}
 
 //////////////////////////////////////////////////////////////////////////////
 //
