@@ -162,7 +162,7 @@ namespace dtl {
 //Reads a pointer published with atomic_ptr_write_rel, with consume ordering
 //("csm"): only accesses that reach through the pointer are ordered
 template<class T>
-inline T *atomic_ptr_read_csm(T *const *pp)
+BOOST_CONTAINER_FORCEINLINE T *atomic_ptr_read_csm(T *const *pp)
 {
    #if defined(BOOST_CONTAINER_ATOMIC_PTR_TSAN)
    return __atomic_load_n(const_cast<T *const *>(pp), __ATOMIC_ACQUIRE);
@@ -207,7 +207,7 @@ inline T *atomic_ptr_read_csm(T *const *pp)
 
 //Publishes a pointer, ordering every preceding write before it
 template<class T>
-inline void atomic_ptr_write_rel(T **pp, T *value)
+BOOST_CONTAINER_FORCEINLINE void atomic_ptr_write_rel(T **pp, T *value)
 {
    #if defined(BOOST_CONTAINER_ATOMIC_PTR_GNU)
    __atomic_store_n(pp, value, __ATOMIC_RELEASE);
@@ -244,7 +244,7 @@ inline void atomic_ptr_write_rel(T **pp, T *value)
 //there, so only the compiler must be pinned); on ARM64 this costs a real
 //ldar where the consume form gets away with a plain ldr.
 template<class T>
-inline T *atomic_ptr_read_acq(T *const *pp)
+BOOST_CONTAINER_FORCEINLINE T *atomic_ptr_read_acq(T *const *pp)
 {
    #if defined(BOOST_CONTAINER_ATOMIC_PTR_GNU)
    return __atomic_load_n(pp, __ATOMIC_ACQUIRE);
@@ -275,7 +275,7 @@ inline T *atomic_ptr_read_acq(T *const *pp)
 //written before the store). Lets a slot be replaced without a lock while
 //concurrent replacers still each get a distinct, coherent previous value.
 template<class T>
-inline T *atomic_ptr_exchange_acq_rel(T **pp, T *value)
+BOOST_CONTAINER_FORCEINLINE T *atomic_ptr_exchange_acq_rel(T **pp, T *value)
 {
    #if defined(BOOST_CONTAINER_ATOMIC_PTR_GNU)
    return __atomic_exchange_n(pp, value, __ATOMIC_ACQ_REL);
