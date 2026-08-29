@@ -346,7 +346,7 @@ static const dword_type file_map_read_write_c   = 0x02 | 0x04;   //FILE_MAP_WRIT
 static const dword_type module_handle_pin_c     = 0x01;  //GET_MODULE_HANDLE_EX_FLAG_PIN
 static const dword_type module_from_address_c   = 0x04;  //GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS
 
-inline void *invalid_handle()
+BOOST_CONTAINER_FORCEINLINE void *invalid_handle()
 {  return (void *)(~uintptr_type(0));  }   //INVALID_HANDLE_VALUE
 
 }  //namespace container_intermodule_winapi {
@@ -539,7 +539,7 @@ BOOST_CONTAINER_STATIC_ASSERT(sizeof(intermodule_u32) == 4u);
 #endif
 
 template<class T, class Options>
-inline const char *intermodule_rendezvous_key()
+BOOST_CONTAINER_FORCEINLINE const char *intermodule_rendezvous_key()
 {
    #if defined(BOOST_CONTAINER_INTERMODULE_KEY_SIGNATURE)
    return BOOST_CONTAINER_INTERMODULE_KEY_SIGNATURE;
@@ -582,14 +582,14 @@ struct intermodule_registry_record
 
 BOOST_CONTAINER_CONSTANT_VAR intermodule_u32 intermodule_registry_magic = 0xB005C048u;
 
-inline intermodule_u32 *intermodule_reg_buckets(intermodule_registry_header *h)
+BOOST_CONTAINER_FORCEINLINE intermodule_u32 *intermodule_reg_buckets(intermodule_registry_header *h)
 {  return (intermodule_u32 *)(void *)((char *)h + sizeof(intermodule_registry_header));  }
 
-inline intermodule_registry_record *intermodule_reg_record
+BOOST_CONTAINER_FORCEINLINE intermodule_registry_record *intermodule_reg_record
    (intermodule_registry_header *h, intermodule_u32 off)
 {  return (intermodule_registry_record *)(void *)((char *)h + off);  }
 
-inline char *intermodule_reg_key(intermodule_registry_record *r)
+BOOST_CONTAINER_FORCEINLINE char *intermodule_reg_key(intermodule_registry_record *r)
 {  return (char *)(void *)(r + 1);  }
 
 //FNV-1a over the key
@@ -749,11 +749,11 @@ inline void intermodule_build_registry_name(char (&dst)[96])
 template<class T, class Options>
 struct intermodule_globals_impl
 {
-   static T &get()
+   BOOST_CONTAINER_FORCEINLINE static T &get()
    {
       (void)&ms_registrar;
       T *ptr = atomic_ptr_read_csm(&ms_cached);
-      if(!ptr){
+      if(BOOST_UNLIKELY(!ptr)){
          ptr = attach();
       }
       return *ptr;
@@ -1069,7 +1069,7 @@ namespace dtl {
 //types (and modules yielding a different sizeof(T) for the same pair are an
 //ODR violation the backend asserts on).
 template<class T, class Options>
-inline T &intermodule_globals()
+BOOST_CONTAINER_FORCEINLINE T &intermodule_globals()
 {
    return intermodule_globals_impl<T, Options>::get();
 }
@@ -1079,7 +1079,7 @@ inline T &intermodule_globals()
 //an overload and not as a default template argument, which C++03 allows on
 //class templates only.
 template<class T>
-inline T &intermodule_globals()
+BOOST_CONTAINER_FORCEINLINE T &intermodule_globals()
 {
    return intermodule_globals_impl<T, void>::get();
 }
