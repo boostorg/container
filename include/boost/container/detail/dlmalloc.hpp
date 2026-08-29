@@ -265,6 +265,7 @@ typedef struct boost_cont_command_ret_impl
 
 /* ============ dlmalloc implementation and extensions ============ */
 #include <boost/container/detail/intermodule_globals.hpp>
+#include <boost/container/detail/spin_mutex.hpp>
 
 //dlmalloc bug: EINVAL is used in posix_memalign without checking LACKS_ERRNO_H
 #include <errno.h>
@@ -671,7 +672,20 @@ struct dl_win_system_info
 #ifdef BOOST_CONTAINER_DLMALLOC_FOOTERS
 #define FOOTERS      1
 #endif
-#define USE_LOCKS    1
+//Locking. USE_LOCKS == 2 is dlmalloc's documented hook for a user-supplied
+//lock: it bypasses every lock routine dlmalloc defines and takes MLOCK_T plus
+//INITIAL_LOCK/DESTROY_LOCK/ACQUIRE_LOCK/RELEASE_LOCK/TRY_LOCK from here, so
+//not a line of dlmalloc has to change.
+#define USE_LOCKS 2
+#define MLOCK_T          ::boost::container::dtl::spin_mutex_t
+#define INITIAL_LOCK(lk) (::boost::container::dtl::spin_mutex_init(lk), 0)
+#define DESTROY_LOCK(lk) (0)
+//ACQUIRE_LOCK must evaluate to 0 on success: PREACTION tests it
+#define ACQUIRE_LOCK(lk) (::boost::container::dtl::spin_mutex_lock(lk), 0)
+#define RELEASE_LOCK(lk) ::boost::container::dtl::spin_mutex_unlock(lk)
+//TRY_LOCK is non-zero when the lock was taken
+#define TRY_LOCK(lk)     (::boost::container::dtl::spin_mutex_try_lock(lk) ? 1 : 0)
+
 #define MSPACES      1
 #define NO_MALLINFO  1
 #define NO_MALLOC_STATS 1

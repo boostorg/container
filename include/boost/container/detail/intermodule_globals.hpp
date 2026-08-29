@@ -139,7 +139,7 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
-#include <boost/container/detail/mutex.hpp>   //BOOST_CONTAINER_CAS_LOCK & friends (spin builds)
+#include <boost/container/detail/spin_mutex.hpp>   //dtl::spin_mutex
 #include <boost/container/detail/type_traits.hpp>   //alignment_of, aligned_storage
 #include <boost/container/detail/placement_new.hpp>
 #include <boost/container/detail/atomic_ptr.hpp>   //atomic_ptr_read_csm & friends
@@ -157,7 +157,7 @@
       //silently degrades to per-module globals there. The Win32 rendezvous
       //(named kernel objects + process heap) is available and is the only
       //mechanism that actually works, so Cygwin takes the Windows path.
-#  if defined(_WIN32_WCE) || defined(BOOST_PLAT_WINDOWS_UWP) || !defined(BOOST_CONTAINER_CAS_LOCK)
+#  if defined(_WIN32_WCE) || defined(BOOST_PLAT_WINDOWS_UWP)
       //No classic named file mappings (or no atomic primitives): degrade to per-module
 #     define BOOST_CONTAINER_INTERMODULE_BACKEND_LOCAL
 #  else
@@ -167,63 +167,10 @@
 #  define BOOST_CONTAINER_INTERMODULE_BACKEND_VISIBLE
 #endif
 
-#if !defined(BOOST_CONTAINER_CAS_LOCK) && defined(BOOST_HAS_PTHREADS)
-#  include <pthread.h>
-#endif
-
 namespace boost {
 namespace container {
 namespace dtl {
 
-
-//////////////////////////////////////////////////////////////////////////////
-//
-//    Lock primitive (all usable in C++03)
-//
-//////////////////////////////////////////////////////////////////////////////
-
-#if defined(BOOST_CONTAINER_CAS_LOCK)
-
-//Zero-initialized int spinlock (BOOST_CONTAINER_*_LOCK from detail/mutex.hpp).
-//Also valid inside memory shared by several modules of the same process.
-typedef int intermodule_lock_t;
-#define BOOST_CONTAINER_INTERMODULE_LOCK_INIT 0
-
-inline void intermodule_lock(intermodule_lock_t *l)
-{  (void)BOOST_CONTAINER_ACQUIRE_LOCK(l);  }
-
-inline void intermodule_unlock(intermodule_lock_t *l)
-{  BOOST_CONTAINER_RELEASE_LOCK(l); (void)l;  }
-
-//Runtime initialization for locks embedded in zero-initialized shared blocks
-inline void intermodule_lock_init(intermodule_lock_t *l)
-{  *l = 0;  }
-
-#elif defined(BOOST_HAS_PTHREADS)
-
-typedef pthread_mutex_t intermodule_lock_t;
-#define BOOST_CONTAINER_INTERMODULE_LOCK_INIT PTHREAD_MUTEX_INITIALIZER
-
-inline void intermodule_lock(intermodule_lock_t *l)
-{  pthread_mutex_lock(l);  }
-
-inline void intermodule_unlock(intermodule_lock_t *l)
-{  pthread_mutex_unlock(l);  }
-
-inline void intermodule_lock_init(intermodule_lock_t *l)
-{  pthread_mutex_init(l, 0);  }
-
-#else
-
-//Single-threaded platform: locking is a no-op
-typedef int intermodule_lock_t;
-#define BOOST_CONTAINER_INTERMODULE_LOCK_INIT 0
-
-inline void intermodule_lock(intermodule_lock_t *)   {}
-inline void intermodule_unlock(intermodule_lock_t *) {}
-inline void intermodule_lock_init(intermodule_lock_t *) {}
-
-#endif
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -608,7 +555,7 @@ inline const char *intermodule_rendezvous_key()
 
 struct intermodule_registry_header
 {
-   intermodule_lock_t lock;         //guards every field below
+   spin_mutex lock;                 //guards every field below
    intermodule_u32    magic;
    //Linear hashing state, in the two-variable form Boost.Intrusive uses:
    //bucket_cnt is the capacity of the round (always a power of two) and
@@ -852,7 +799,7 @@ struct intermodule_globals_impl
 
       //A fresh section is zero-filled, so the lock starts unlocked and the
       //magic tells the first module to lay the registry out
-      intermodule_lock(&view->lock);
+      view->lock.lock();
 
       intermodule_registry_header *hdr;
       if(view->magic != intermodule_registry_magic){
@@ -893,7 +840,7 @@ struct intermodule_globals_impl
 
       //Unlock through the bootstrap view, which is still mapped; it is the
       //same physical word as hdr->lock
-      intermodule_unlock(&view->lock);
+      view->lock.unlock();
 
       if(hdr != view){
          (void)UnmapViewOfFile(view);
@@ -919,14 +866,14 @@ struct intermodule_globals_impl
          return;
       }
       intermodule_registry_header *const hdr = ms_header;
-      intermodule_lock(&hdr->lock);
+      hdr->lock.lock();
       intermodule_registry_record *const r = ms_record;
       if(r && 0 == --r->refcount){
          ((T *)(void *)((char *)hdr + r->obj_offset))->~T();
          //The record and its storage stay in place, now with refcount 0: a
          //module loaded again later reconstructs T in the very same slot
       }
-      intermodule_unlock(&hdr->lock);
+      hdr->lock.unlock();
 
       //The canonical view is deliberately never unmapped, see the note above
       (void)CloseHandle(ms_section);
@@ -1031,12 +978,12 @@ struct BOOST_CONTAINER_INTERMODULE_VISIBILITY intermodule_globals_impl
 
    static T *ms_cached;                                //zero-initialized
    static intermodule_globals_storage<T> ms_storage;   //zero-initialized
-   static intermodule_lock_t ms_lock;
+   static spin_mutex ms_lock;
    static module_registrar ms_registrar;
 
    BOOST_NOINLINE static T *attach()
    {
-      intermodule_lock(&ms_lock);
+      ms_lock.lock();
       if(!ms_cached){
          //Exactly like the constructor of a global variable of type T
          //(T's constructor must not throw).
@@ -1056,7 +1003,7 @@ struct BOOST_CONTAINER_INTERMODULE_VISIBILITY intermodule_globals_impl
          //orders threads that acquire it.
          atomic_ptr_write_rel(&ms_cached, p);
       }
-      intermodule_unlock(&ms_lock);
+      ms_lock.unlock();
       return ms_cached;
    }
 
@@ -1065,7 +1012,7 @@ struct BOOST_CONTAINER_INTERMODULE_VISIBILITY intermodule_globals_impl
       if(!intermodule_opt_destroy_at_exit<Options>::value){
          return;
       }
-      intermodule_lock(&ms_lock);
+      ms_lock.lock();
       T *const obj = ms_cached;
       if(obj){
          obj->~T();
@@ -1075,7 +1022,7 @@ struct BOOST_CONTAINER_INTERMODULE_VISIBILITY intermodule_globals_impl
          std::memset((void *)&ms_storage, 0, sizeof(ms_storage));
          ms_cached = 0;
       }
-      intermodule_unlock(&ms_lock);
+      ms_lock.unlock();
    }
 };
 
@@ -1086,7 +1033,10 @@ template<class T, class Options>
 intermodule_globals_storage<T> intermodule_globals_impl<T, Options>::ms_storage;
 
 template<class T, class Options>
-intermodule_lock_t intermodule_globals_impl<T, Options>::ms_lock = BOOST_CONTAINER_INTERMODULE_LOCK_INIT;
+//No initializer: a spin_mutex is unlocked when its word is zero, so static
+//zero initialization already leaves it usable, before any dynamic
+//initialization of this translation unit could run
+spin_mutex intermodule_globals_impl<T, Options>::ms_lock;
 
 template<class T, class Options>
 typename intermodule_globals_impl<T, Options>::module_registrar
