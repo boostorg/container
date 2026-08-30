@@ -272,6 +272,30 @@ typedef struct boost_cont_command_ret_impl
 #include <limits.h>  //CHAR_BIT
 #include <stddef.h>
 #include <stdlib.h>  //abort
+
+/* Single-threaded lock elision. glibc 2.32+ maintains __libc_single_threaded,
+   a plain char that is nonzero only while the process provably has a single
+   thread: pthread_create clears it before the new thread runs a single
+   instruction, and the creating thread observes the cleared value before
+   pthread_create returns. That gives the elision its safety argument: the
+   flag can only change inside pthread_create (or fork), and the one live
+   thread cannot be inside this allocator and inside pthread_create at the
+   same time, so the flag is stable across any single critical section and
+   the ACQUIRE/RELEASE decisions always pair up. This is the same reasoning
+   libstdc++ uses to elide shared_ptr's atomic reference counts.
+   Uncontended, the elision replaces a locked exchange plus a release store -
+   the single largest cost of a malloc/free pair - with one byte load.
+   Included here, at global scope, so the declaration cannot land inside the
+   dl_detail namespace (the core includes system headers mid-namespace). */
+#pragma push_macro("BOOST_CONTAINER_DL_SINGLE_THREADED")
+#if !defined(BOOST_CONTAINER_DLMALLOC_NO_SINGLE_THREAD_OPT) && \
+    defined(__GLIBC__) && defined(__GLIBC_MINOR__) && \
+    (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 32))
+#  include <sys/single_threaded.h>
+#  define BOOST_CONTAINER_DL_SINGLE_THREADED (::__libc_single_threaded != 0)
+#else
+#  define BOOST_CONTAINER_DL_SINGLE_THREADED 0
+#endif
 #include <string.h>  //memset/memcpy
 
 //System headers original dlmalloc included mid-file: included here, outside the
@@ -680,11 +704,14 @@ struct dl_win_system_info
 #define MLOCK_T          ::boost::container::dtl::spin_mutex_t
 #define INITIAL_LOCK(lk) (::boost::container::dtl::spin_mutex_init(lk), 0)
 #define DESTROY_LOCK(lk) (0)
-//ACQUIRE_LOCK must evaluate to 0 on success: PREACTION tests it
-#define ACQUIRE_LOCK(lk) (::boost::container::dtl::spin_mutex_lock(lk), 0)
-#define RELEASE_LOCK(lk) ::boost::container::dtl::spin_mutex_unlock(lk)
+//ACQUIRE_LOCK must evaluate to 0 on success: PREACTION tests it.
+//Every routine is elided while the process is single-threaded (see
+//BOOST_CONTAINER_DL_SINGLE_THREADED above): the flag cannot change while an
+//elided critical section runs, so acquire and release always agree.
+#define ACQUIRE_LOCK(lk) (BOOST_CONTAINER_DL_SINGLE_THREADED ? 0 : (::boost::container::dtl::spin_mutex_lock(lk), 0))
+#define RELEASE_LOCK(lk) (BOOST_CONTAINER_DL_SINGLE_THREADED ? (void)0 : ::boost::container::dtl::spin_mutex_unlock(lk))
 //TRY_LOCK is non-zero when the lock was taken
-#define TRY_LOCK(lk)     (::boost::container::dtl::spin_mutex_try_lock(lk) ? 1 : 0)
+#define TRY_LOCK(lk)     (BOOST_CONTAINER_DL_SINGLE_THREADED ? 1 : (::boost::container::dtl::spin_mutex_try_lock(lk) ? 1 : 0))
 
 #define MSPACES      1
 #define NO_MALLINFO  1
@@ -2384,6 +2411,7 @@ int boost_cont_mallopt(int param_number, int value)
 #pragma pop_macro("MALLOC_ALIGNMENT")
 #pragma pop_macro("MAX_SIZE_T")
 #pragma pop_macro("USE_LOCKS")
+#pragma pop_macro("BOOST_CONTAINER_DL_SINGLE_THREADED")
 #pragma pop_macro("USE_SPIN_LOCKS")
 #pragma pop_macro("ONLY_MSPACES")
 #pragma pop_macro("MSPACES")
