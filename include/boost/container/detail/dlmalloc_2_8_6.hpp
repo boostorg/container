@@ -3313,6 +3313,12 @@ static int init_mparams(void) {
 #endif
       magic |= (size_t)8U;    /* ensure nonzero */
       magic &= ~(size_t)7U;   /* improve chances of fault for bad values */
+#if !ONLY_MSPACES
+      /* Boost.Container: stamp the global mspace with the magic here,
+         where mparams' own magic is born, instead of leaving it to
+         sys_alloc's first-time initialization. */
+      gm->magic = magic;
+#endif /* !ONLY_MSPACES */
       /* Until memory modes commonly available, use volatile-write */
       (*(volatile size_t *)(&(mparams.magic))) = magic;
     }

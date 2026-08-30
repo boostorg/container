@@ -674,7 +674,6 @@ struct dl_win_system_info
 #pragma push_macro("s_allocated_memory")
 #pragma push_macro("BOOST_CONTAINER_DL_WIDE_SMALLBINS")
 #pragma push_macro("BOOST_CONTAINER_DL_REBASED_SMALLBINS")
-#pragma push_macro("BOOST_CONTAINER_OK_GM_MAGIC")
 #pragma push_macro("GET_TRUNCATED_SIZE")
 #pragma push_macro("GET_ROUNDED_SIZE")
 #pragma push_macro("GET_TRUNCATED_PO2_SIZE")
@@ -918,17 +917,6 @@ typedef int boost_container_dl_rebased_boundary_in_first_treebin
 
 #define s_allocated_memory (dl_globals()->allocated_memory)
 
-/* Upstream validates an mspace's magic only in the mspace_* entry points,
-   whose mspace comes from the user. The dl* entry points never check gm:
-   gm->magic is assigned by sys_alloc()'s first-time initialization, so before
-   the very first allocation a healthy gm still holds magic == 0. That is why
-   dlmalloc has no ok_magic call on gm, and why dlmemalign reaches
-   internal_memalign directly. This layer drives gm through mspace-style
-   code, so it needs the same criteria: an uninitialized global
-   mspace is fine, an initialized one must carry the right magic. Never
-   relax this for a user-supplied mspace. */
-#define BOOST_CONTAINER_OK_GM_MAGIC(M) (!is_initialized(M) || ok_magic(M))
-
 ///////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////
@@ -1048,7 +1036,7 @@ static void mspace_free_lockless(mspace msp, void* mem)
 static void* mspace_malloc_lockless(mspace msp, size_t bytes)
 {
   mstate ms = (mstate)msp;
-  if (!BOOST_CONTAINER_OK_GM_MAGIC(ms)) {
+  if (!ok_magic(ms)) {
     USAGE_ERROR_ACTION(ms,ms);
     return 0;
   }
@@ -2115,7 +2103,7 @@ int boost_cont_multialloc_arrays
    int ret = 0;
    mstate ms = (mstate)gm;
    ensure_initialization();
-   if (!BOOST_CONTAINER_OK_GM_MAGIC(ms)) {
+   if (!ok_magic(ms)) {
       USAGE_ERROR_ACTION(ms,ms);
    }
    else if (!PREACTION(ms)) {
@@ -2176,7 +2164,7 @@ void* boost_cont_malloc(size_t bytes)
 void boost_cont_free(void* mem)
 {
    mstate ms = (mstate)gm;
-   if (!BOOST_CONTAINER_OK_GM_MAGIC(ms)) {
+   if (!ok_magic(ms)) {
       USAGE_ERROR_ACTION(ms,ms);
    }
    else if (!PREACTION(ms)) {
@@ -2215,7 +2203,7 @@ int boost_cont_multialloc_nodes
    int ret = 0;
    mstate ms = (mstate)gm;
    ensure_initialization();
-   if (!BOOST_CONTAINER_OK_GM_MAGIC(ms)) {
+   if (!ok_magic(ms)) {
       USAGE_ERROR_ACTION(ms,ms);
    }
    else if (!PREACTION(ms)) {
@@ -2235,7 +2223,7 @@ size_t boost_cont_allocated_memory(void)
    size_t alloc_mem = 0;
    mstate m = (mstate)gm;
    ensure_initialization();
-   if (!BOOST_CONTAINER_OK_GM_MAGIC(m)) {
+   if (!ok_magic(m)) {
       USAGE_ERROR_ACTION(m,m);
    }
 
@@ -2305,7 +2293,7 @@ int boost_cont_grow
    (void* oldmem, size_t minbytes, size_t maxbytes, size_t *received)
 {
    mstate ms = (mstate)gm;
-   if (!BOOST_CONTAINER_OK_GM_MAGIC(ms)) {
+   if (!ok_magic(ms)) {
       USAGE_ERROR_ACTION(ms,ms);
       return 0;
    }
@@ -2331,7 +2319,7 @@ int boost_cont_shrink
    (void* oldmem, size_t minbytes, size_t maxbytes, size_t *received, int do_commit)
 {
    mstate ms = (mstate)gm;
-   if (!BOOST_CONTAINER_OK_GM_MAGIC(ms)) {
+   if (!ok_magic(ms)) {
       USAGE_ERROR_ACTION(ms,ms);
       return 0;
    }
@@ -2356,7 +2344,7 @@ void* boost_cont_alloc
 void boost_cont_multidealloc(boost_cont_memchain *pchain)
 {
    mstate ms = (mstate)gm;
-   if (!BOOST_CONTAINER_OK_GM_MAGIC(ms)) {
+   if (!ok_magic(ms)) {
       (void)ms;
       USAGE_ERROR_ACTION(ms,ms);
    }
@@ -2368,7 +2356,7 @@ int boost_cont_malloc_check(void)
 #ifdef DL_DEBUG
    mstate ms = (mstate)gm;
    ensure_initialization();
-   if (!BOOST_CONTAINER_OK_GM_MAGIC(ms)) {
+   if (!ok_magic(ms)) {
       (void)ms;
       USAGE_ERROR_ACTION(ms,ms);
       return 0;
@@ -2771,7 +2759,6 @@ int boost_cont_mallopt(int param_number, int value)
 #pragma pop_macro("DL_SIZE_IMPL")
 #pragma pop_macro("BOOST_CONTAINER_DL_WIDE_SMALLBINS")
 #pragma pop_macro("BOOST_CONTAINER_DL_REBASED_SMALLBINS")
-#pragma pop_macro("BOOST_CONTAINER_OK_GM_MAGIC")
 #pragma pop_macro("s_allocated_memory")
 #pragma pop_macro("GET_TRUNCATED_SIZE")
 #pragma pop_macro("GET_ROUNDED_SIZE")
