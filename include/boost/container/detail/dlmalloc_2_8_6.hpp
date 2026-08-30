@@ -2604,7 +2604,12 @@ typedef struct malloc_segment* msegmentptr;
 #ifndef TREEBIN_SHIFT
 #define TREEBIN_SHIFT     (8U)
 #endif
+/* Boost.Container: overridable together with the small-bin index macros
+   further below - re-basing the index moves the small/large boundary off
+   the power of two that TREEBIN_SHIFT alone implies */
+#ifndef MIN_LARGE_SIZE
 #define MIN_LARGE_SIZE    (SIZE_T_ONE << TREEBIN_SHIFT)
+#endif
 #define MAX_SMALL_SIZE    (MIN_LARGE_SIZE - SIZE_T_ONE)
 #define MAX_SMALL_REQUEST (MAX_SMALL_SIZE - CHUNK_ALIGN_MASK - CHUNK_OVERHEAD)
 
@@ -2940,9 +2945,22 @@ static size_t traverse_and_check(mstate m);
 
 /* ---------------------------- Indexing Bins ---------------------------- */
 
+/* Boost.Container: overridable so the including layer can re-base the bin
+   index at MIN_CHUNK_SIZE, recovering the low bins that no chunk can ever
+   occupy (see BOOST_CONTAINER_DLMALLOC_REBASED_SMALLBINS in dlmalloc.hpp).
+   The three must stay mutually consistent: small_index2size is the inverse
+   of small_index, and is_small(s) must be true exactly when small_index(s)
+   is a valid bin index. MIN_LARGE_SIZE (above) is the boundary they
+   imply. */
+#ifndef is_small
 #define is_small(s)         (((s) >> SMALLBIN_SHIFT) < NSMALLBINS)
+#endif
+#ifndef small_index
 #define small_index(s)      (bindex_t)((s)  >> SMALLBIN_SHIFT)
+#endif
+#ifndef small_index2size
 #define small_index2size(i) ((i)  << SMALLBIN_SHIFT)
+#endif
 #define MIN_SMALL_INDEX     (small_index(MIN_CHUNK_SIZE))
 
 /* addressing by index. See above about smallbin repositioning */
@@ -3749,7 +3767,12 @@ static void internal_malloc_stats(mstate m) {
 /* Used only when dvsize known to be small */
 #define replace_dv(M, P, S) {\
   size_t DVS = M->dvsize;\
-  DL_ASSERT(is_small(DVS));\
+  /* Boost.Container: "no dv" is spelled dvsize == 0, which is not a chunk
+     size at all. The original assert relied on is_small(0) being true,
+     which only holds while bin 0 stands for size 0; it does not when the
+     index is re-based at MIN_CHUNK_SIZE. Spelling the intent out keeps
+     the check meaningful in both layouts. */\
+  DL_ASSERT(DVS == 0 || is_small(DVS));\
   if (DVS != 0) {\
     mchunkptr DV = M->dv;\
     insert_small_chunk(M, DV, DVS);\

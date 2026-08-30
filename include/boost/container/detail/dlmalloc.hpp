@@ -673,6 +673,7 @@ struct dl_win_system_info
 #pragma push_macro("DL_SIZE_IMPL")
 #pragma push_macro("s_allocated_memory")
 #pragma push_macro("BOOST_CONTAINER_DL_WIDE_SMALLBINS")
+#pragma push_macro("BOOST_CONTAINER_DL_REBASED_SMALLBINS")
 #pragma push_macro("BOOST_CONTAINER_OK_GM_MAGIC")
 #pragma push_macro("GET_TRUNCATED_SIZE")
 #pragma push_macro("GET_ROUNDED_SIZE")
@@ -728,6 +729,47 @@ struct dl_win_system_info
 #define BOOST_CONTAINER_DL_WIDE_SMALLBINS 1
 #else
 #define BOOST_CONTAINER_DL_WIDE_SMALLBINS 0
+#endif
+
+/* --------------------- re-based small bin index --------------------------
+   dlmalloc indexes the small bins as size >> SMALLBIN_SHIFT, so bin i
+   stands for size i * SMALLBIN_WIDTH and the bins below MIN_CHUNK_SIZE
+   stand for sizes no chunk can have: bins 0-1 are dead on 32-bit
+   (MIN_CHUNK_SIZE 16, width 8), and 0-3 on 64-bit at the default width
+   (0-1 with WIDE_SMALLBINS). They are initialized, they occupy their two
+   pointers each in malloc_state, and the bitmap logic shifts across them,
+   but nothing can ever be linked there.
+
+   BOOST_CONTAINER_DLMALLOC_REBASED_SMALLBINS re-bases the index at
+   MIN_CHUNK_SIZE, so bin 0 means MIN_CHUNK_SIZE and bin i means
+   MIN_CHUNK_SIZE + i * SMALLBIN_WIDTH. Every bin becomes reachable and
+   the exact-fit range grows by exactly the bins that were dead - two size
+   classes on 32-bit and with WIDE_SMALLBINS, four at the 64-bit default
+   width (of which two are the usable even ones).
+
+   The small/large boundary moves with it, to
+   MIN_CHUNK_SIZE + (NSMALLBINS << SMALLBIN_SHIFT), which is no longer the
+   power of two that TREEBIN_SHIFT alone implies. That is sound because the
+   tree bins are size *ranges*, not exact sizes: the first tree bin covers
+   [1 << TREEBIN_SHIFT, 1.5 * (1 << TREEBIN_SHIFT)) and simply never
+   receives the few sizes at its bottom that the small bins now keep. The
+   static assertions after the core include verify that the boundary stays
+   inside that first tree bin, which is what keeps every large chunk
+   mappable to a tree bin.
+
+   Like WIDE_SMALLBINS this changes what a bin index means, so every module
+   (EXE/DLL) of a process must be built with the same setting, since they
+   share one heap. */
+#if defined(BOOST_CONTAINER_DLMALLOC_REBASED_SMALLBINS)
+#define BOOST_CONTAINER_DL_REBASED_SMALLBINS 1
+/* MIN_CHUNK_SIZE, SMALLBIN_SHIFT and NSMALLBINS are defined by the core;
+   these macros are expanded at their use sites, which all follow it */
+#define is_small(s)         ((((s) - MIN_CHUNK_SIZE) >> SMALLBIN_SHIFT) < NSMALLBINS)
+#define small_index(s)      (bindex_t)(((s) - MIN_CHUNK_SIZE) >> SMALLBIN_SHIFT)
+#define small_index2size(i) (((size_t)(i) << SMALLBIN_SHIFT) + MIN_CHUNK_SIZE)
+#define MIN_LARGE_SIZE      (MIN_CHUNK_SIZE + ((size_t)NSMALLBINS << SMALLBIN_SHIFT))
+#else
+#define BOOST_CONTAINER_DL_REBASED_SMALLBINS 0
 #endif
 //Locking. USE_LOCKS == 2 is dlmalloc's documented hook for a user-supplied
 //lock: it bypasses every lock routine dlmalloc defines and takes MLOCK_T plus
@@ -848,9 +890,27 @@ inline boost_cont_command_ret_t boost_cont_allocation_command
    user-overridden MALLOC_ALIGNMENT, which the preprocessor cannot see) */
 typedef int boost_container_dl_wide_smallbins_need_16_byte_granularity
    [SMALLBIN_WIDTH == MALLOC_ALIGNMENT ? 1 : -1];
+#if !BOOST_CONTAINER_DL_REBASED_SMALLBINS
 /* Every chunk must be either small or large, with no gap nor overlap */
 typedef int boost_container_dl_small_and_large_ranges_must_meet
    [MIN_LARGE_SIZE == ((size_t)NSMALLBINS << SMALLBIN_SHIFT) ? 1 : -1];
+#endif
+#endif
+
+#if BOOST_CONTAINER_DL_REBASED_SMALLBINS
+/* The re-based small range runs from MIN_CHUNK_SIZE and must hand over to
+   the tree exactly where MIN_LARGE_SIZE says (no gap, no overlap) */
+typedef int boost_container_dl_rebased_ranges_must_meet
+   [MIN_LARGE_SIZE == (MIN_CHUNK_SIZE + ((size_t)NSMALLBINS << SMALLBIN_SHIFT)) ? 1 : -1];
+/* ...and that boundary must fall inside the FIRST tree bin, i.e. in
+   [1 << TREEBIN_SHIFT, minsize_for_tree_index(1)). Below it, large chunks
+   would compute a tree index of 0 while being smaller than the bin's
+   nominal minimum; at or above the second bin's minimum, tree bin 0 could
+   never be filled and compute_tree_index's X == 0 shortcut would be
+   reachable for real chunk sizes. */
+typedef int boost_container_dl_rebased_boundary_in_first_treebin
+   [(MIN_LARGE_SIZE >= (SIZE_T_ONE << TREEBIN_SHIFT) &&
+     MIN_LARGE_SIZE <  minsize_for_tree_index(1)) ? 1 : -1];
 #endif
 
 #define DL_SIZE_IMPL(p) (chunksize(mem2chunk(p)) - overhead_for(mem2chunk(p)))
@@ -2710,6 +2770,7 @@ int boost_cont_mallopt(int param_number, int value)
 #pragma pop_macro("USE_DL_PREFIX")
 #pragma pop_macro("DL_SIZE_IMPL")
 #pragma pop_macro("BOOST_CONTAINER_DL_WIDE_SMALLBINS")
+#pragma pop_macro("BOOST_CONTAINER_DL_REBASED_SMALLBINS")
 #pragma pop_macro("BOOST_CONTAINER_OK_GM_MAGIC")
 #pragma pop_macro("s_allocated_memory")
 #pragma pop_macro("GET_TRUNCATED_SIZE")
