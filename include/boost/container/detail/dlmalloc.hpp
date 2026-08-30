@@ -714,8 +714,8 @@ struct dl_win_system_info
    revives the "remainderless fit to the next bin" fast path, which on
    64-bit never fired because the adjacent bin was always one of the dead
    ones. malloc_state's size and layout do not change - only the meaning of
-   the bin indexes does - but every module (EXE/DLL) of a process must be
-   built with the same setting, since they share one heap.
+   the bin indexes does - so the option is baked into the intermodule
+   rendezvous key below and every module of a process must agree on it.
 
    64-bit only: with 8-byte granularity a 16-byte spacing would make bins
    hold two different sizes, breaking the exact-fit invariant, so the
@@ -756,9 +756,8 @@ struct dl_win_system_info
    inside that first tree bin, which is what keeps every large chunk
    mappable to a tree bin.
 
-   Like WIDE_SMALLBINS this changes what a bin index means, so every module
-   (EXE/DLL) of a process must be built with the same setting, since they
-   share one heap. */
+   Like the other layout options this changes what a bin index means, so it
+   is part of the intermodule rendezvous key. */
 #if defined(BOOST_CONTAINER_DLMALLOC_REBASED_SMALLBINS)
 #define BOOST_CONTAINER_DL_REBASED_SMALLBINS 1
 /* MIN_CHUNK_SIZE, SMALLBIN_SHIFT and NSMALLBINS are defined by the core;
@@ -865,7 +864,6 @@ inline int    boost_cont_multialloc_nodes
 inline int    boost_cont_multialloc_arrays
    (size_t n_elements, const size_t *sizes, size_t sizeof_element, size_t contiguous_elements, boost_cont_memchain *pchain);
 inline void   boost_cont_multidealloc(boost_cont_memchain *pchain);
-inline size_t boost_cont_footprint(void);
 inline size_t boost_cont_allocated_memory(void);
 inline size_t boost_cont_chunksize(const void *p);
 inline int    boost_cont_all_deallocated(void);
@@ -2155,22 +2153,34 @@ size_t boost_cont_size(const void *p)
 
 void* boost_cont_malloc(size_t bytes)
 {
-   size_t received_bytes;
-   ensure_initialization();
-   return boost_cont_allocation_command
-      (BOOST_CONTAINER_ALLOCATE_NEW, 1, 1, bytes, bytes, &received_bytes, 0).first;
+   void* mem = 0;
+   dlmalloc_globals_t *const dlg = dl_globals();
+   mstate const ms = &dlg->gm_state;
+   /* ensure_initialization(), through the hoisted globals pointer. Needed
+      before PREACTION: init_mparams is what turns gm's lock on. */
+   (void)(dlg->params.magic != 0 || init_mparams());
+   if (!PREACTION(ms)) {
+      mem = mspace_malloc_lockless(ms, bytes);
+      if(mem)
+         dlg->allocated_memory += chunksize(mem2chunk(mem));
+      POSTACTION(ms);
+   }
+   return mem;
 }
 
 void boost_cont_free(void* mem)
 {
-   mstate ms = (mstate)gm;
+   dlmalloc_globals_t *const dlg = dl_globals();
+   mstate const ms = &dlg->gm_state;
    if (!ok_magic(ms)) {
       USAGE_ERROR_ACTION(ms,ms);
    }
    else if (!PREACTION(ms)) {
-      if(mem)
-         s_allocated_memory -= chunksize(mem2chunk(mem));
-      mspace_free_lockless(ms, mem);
+      if(mem){
+         mchunkptr const p = mem2chunk(mem);
+         dlg->allocated_memory -= chunksize(p);
+         mspace_free_lockless(ms, mem);
+      }
       POSTACTION(ms);
    }
 }
@@ -2213,11 +2223,6 @@ int boost_cont_multialloc_nodes
    return ret;
 }
 
-size_t boost_cont_footprint(void)
-{
-   return ((mstate)gm)->footprint;
-}
-
 size_t boost_cont_allocated_memory(void)
 {
    size_t alloc_mem = 0;
@@ -2226,7 +2231,6 @@ size_t boost_cont_allocated_memory(void)
    if (!ok_magic(m)) {
       USAGE_ERROR_ACTION(m,m);
    }
-
 
    if (!PREACTION(m)) {
       check_malloc_state(m);
@@ -2361,7 +2365,12 @@ int boost_cont_malloc_check(void)
       USAGE_ERROR_ACTION(ms,ms);
       return 0;
    }
-   check_malloc_state(ms);
+   /* Unlike the sanity check above, this walks every chunk of the heap, so
+      it has to run with the lock held */
+   if (!PREACTION(ms)) {
+      check_malloc_state(ms);
+      POSTACTION(ms);
+   }
    return 1;
 #else
    return 1;
@@ -2374,7 +2383,9 @@ boost_cont_command_ret_t boost_cont_allocation_command
    , size_t preferred_size, size_t *received_size, void *reuse_ptr)
 {
    boost_cont_command_ret_t ret = { 0, 0 };
-   ensure_initialization();
+   /* One globals lookup for the whole command (see boost_cont_malloc) */
+   dlmalloc_globals_t *const dlg = dl_globals();
+   (void)(dlg->params.magic != 0 || init_mparams());
    if(command & (BOOST_CONTAINER_SHRINK_IN_PLACE | BOOST_CONTAINER_TRY_SHRINK_IN_PLACE)){
       int success = boost_cont_shrink( reuse_ptr, preferred_size, limit_size
                              , received_size, (command & BOOST_CONTAINER_SHRINK_IN_PLACE));
@@ -2388,7 +2399,7 @@ boost_cont_command_ret_t boost_cont_allocation_command
       return ret;
 
    {
-      mstate ms = (mstate)gm;
+      mstate ms = &dlg->gm_state;
 
       /*Expand in place*/
       if (!PREACTION(ms)) {
@@ -2436,7 +2447,7 @@ boost_cont_command_ret_t boost_cont_allocation_command
                   addr = mspace_memalign_lockless(ms, alignof_object, limit_size);
             }
             if(addr){
-               s_allocated_memory += chunksize(mem2chunk(addr));
+               dlg->allocated_memory += chunksize(mem2chunk(addr));
                *received_size = DL_SIZE_IMPL(addr);
             }
 
@@ -2503,7 +2514,6 @@ int boost_cont_mallopt(int param_number, int value)
 #pragma pop_macro("MALLOC_ALIGNMENT")
 #pragma pop_macro("MAX_SIZE_T")
 #pragma pop_macro("USE_LOCKS")
-#pragma pop_macro("BOOST_CONTAINER_DL_SINGLE_THREADED")
 #pragma pop_macro("USE_SPIN_LOCKS")
 #pragma pop_macro("ONLY_MSPACES")
 #pragma pop_macro("MSPACES")
@@ -2759,6 +2769,7 @@ int boost_cont_mallopt(int param_number, int value)
 #pragma pop_macro("DL_SIZE_IMPL")
 #pragma pop_macro("BOOST_CONTAINER_DL_WIDE_SMALLBINS")
 #pragma pop_macro("BOOST_CONTAINER_DL_REBASED_SMALLBINS")
+#pragma pop_macro("BOOST_CONTAINER_DL_SINGLE_THREADED")
 #pragma pop_macro("s_allocated_memory")
 #pragma pop_macro("GET_TRUNCATED_SIZE")
 #pragma pop_macro("GET_ROUNDED_SIZE")
@@ -2800,9 +2811,6 @@ inline int dlmalloc_multialloc_arrays
 
 inline void dlmalloc_multidealloc(boost_cont_memchain *pchain)
 {  return dl_detail::boost_cont_multidealloc(pchain); }
-
-inline size_t dlmalloc_footprint()
-{  return dl_detail::boost_cont_footprint(); }
 
 inline size_t dlmalloc_allocated_memory()
 {  return dl_detail::boost_cont_allocated_memory(); }
