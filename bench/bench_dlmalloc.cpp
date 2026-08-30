@@ -80,8 +80,8 @@ typedef boost::move_detail::nanosecond_type nsec_t;
 struct bench_defaults
 {
 #if defined(LONG_BENCH)
-   static const std::size_t num_trials        = 7;
-   static const std::size_t num_sizes         = 7;
+   static const std::size_t num_trials        = 5;
+   static const std::size_t num_sizes         = 11;
    //60 ms per trial
    static const nsec_t      min_time_per_trial = nsec_t(60) * 1000000;
    static const std::size_t batch_elements     = 4096;
@@ -89,7 +89,7 @@ struct bench_defaults
    static const std::size_t working_set_bytes  = 1u << 20;   //1 MiB
 #else
    static const std::size_t num_trials        = 1;
-   static const std::size_t num_sizes         = 3;
+   static const std::size_t num_sizes         = 4;
    static const nsec_t      min_time_per_trial = 0;
    static const std::size_t batch_elements     = 256;
    static const std::size_t churn_reps         = 256;
@@ -97,13 +97,41 @@ struct bench_defaults
 #endif
 };
 
-//Block sizes swept by every operation. Kept as a plain array so the sweep is
-//also valid in C++03.
+//Block sizes swept by every operation, ascending. Kept as a plain array so the
+//sweep is also valid in C++03.
+//
+//The steps double, so the sweep straddles every boundary these allocators
+//change behaviour at rather than jumping over it: dlmalloc's smallbin/treebin
+//split (256 bytes, or 512 with BOOST_CONTAINER_DLMALLOC_WIDE_SMALLBINS),
+//glibc's tcache limit (1032), and the mmap thresholds of both (128 KiB and
+//256 KiB, above this range). A size on each side of a boundary is what makes
+//a row attributable to one mechanism.
 inline std::size_t bench_size(std::size_t i)
 {
    static const std::size_t sizes[] =
-      { 16u, 64u, 256u, 1024u, 4096u, 16384u, 65536u };
+      { 16u, 32u, 64u, 128u, 256u, 512u, 1024u, 2048u, 4096u, 8192u, 16384u };
+   //A table entry must exist for every size the sweep asks for; a second,
+   //hand-written index list would silently go stale whenever this table is
+   //edited, so both the check and the short run's sampling are derived from
+   //the table itself.
+   const std::size_t entries = sizeof(sizes)/sizeof(sizes[0]);
+   typedef int bench_size_table_must_cover_the_sweep
+      [(bench_defaults::num_sizes <= sizeof(sizes)/sizeof(sizes[0])) ? 1 : -1];
+   //referenced so the check is not an unused local typedef
+   (void)sizeof(bench_size_table_must_cover_the_sweep);
+#if defined(LONG_BENCH)
+   (void)entries;
    return sizes[i];
+#else
+   //The short run spreads its few points across the whole table instead of
+   //truncating it, so it still spans the entire range.
+   {
+      const std::size_t last = entries - 1u;
+      const std::size_t span = bench_defaults::num_sizes > 1u
+                             ? bench_defaults::num_sizes - 1u : 1u;
+      return sizes[(i * last) / span];
+   }
+#endif
 }
 
 //Length of the x1.5 growth chain for a starting size. dlmalloc serves anything
