@@ -672,6 +672,7 @@ struct dl_win_system_info
 #pragma push_macro("USE_DL_PREFIX")
 #pragma push_macro("DL_SIZE_IMPL")
 #pragma push_macro("s_allocated_memory")
+#pragma push_macro("BOOST_CONTAINER_DL_WIDE_SMALLBINS")
 #pragma push_macro("BOOST_CONTAINER_OK_GM_MAGIC")
 #pragma push_macro("GET_TRUNCATED_SIZE")
 #pragma push_macro("GET_ROUNDED_SIZE")
@@ -695,6 +696,38 @@ struct dl_win_system_info
 /* ------------------------- dlmalloc configuration ------------------------ */
 #ifdef BOOST_CONTAINER_DLMALLOC_FOOTERS
 #define FOOTERS      1
+#endif
+
+/* ----------------------- wide small bins (64-bit) ------------------------
+   dlmalloc spaces its 32 small bins SMALLBIN_WIDTH = 8 bytes apart, which
+   matches the chunk-size granularity of 32-bit targets (MALLOC_ALIGNMENT =
+   2 * sizeof(void*) = 8). On 64-bit targets chunk sizes step by 16, so
+   every bin at an odd multiple of 8 can never hold a chunk: half the bins
+   are dead, exact-fit service ends at 240-byte chunks, and everything from
+   256 bytes up pays the best-fit tree walk on both malloc and free.
+
+   Defining BOOST_CONTAINER_DLMALLOC_WIDE_SMALLBINS re-spaces the bins to
+   the 64-bit granularity (SMALLBIN_SHIFT 3 -> 4) and moves the small/large
+   boundary in lockstep (TREEBIN_SHIFT 8 -> 9, so that 1 << TREEBIN_SHIFT ==
+   NSMALLBINS << SMALLBIN_SHIFT still holds): all 32 bins become usable and
+   chunks up to 496 bytes get exact O(1) bins instead of the tree. It also
+   revives the "remainderless fit to the next bin" fast path, which on
+   64-bit never fired because the adjacent bin was always one of the dead
+   ones. malloc_state's size and layout do not change - only the meaning of
+   the bin indexes does - but every module (EXE/DLL) of a process must be
+   built with the same setting, since they share one heap.
+
+   64-bit only: with 8-byte granularity a 16-byte spacing would make bins
+   hold two different sizes, breaking the exact-fit invariant, so the
+   option is ignored on 32-bit targets. */
+#if defined(BOOST_CONTAINER_DLMALLOC_WIDE_SMALLBINS) && \
+   (defined(_WIN64) || defined(__LP64__) || defined(_LP64) || \
+    (defined(__SIZEOF_POINTER__) && __SIZEOF_POINTER__ == 8))
+#define SMALLBIN_SHIFT (4U)
+#define TREEBIN_SHIFT  (9U)
+#define BOOST_CONTAINER_DL_WIDE_SMALLBINS 1
+#else
+#define BOOST_CONTAINER_DL_WIDE_SMALLBINS 0
 #endif
 //Locking. USE_LOCKS == 2 is dlmalloc's documented hook for a user-supplied
 //lock: it bypasses every lock routine dlmalloc defines and takes MLOCK_T plus
@@ -808,6 +841,17 @@ inline boost_cont_command_ret_t boost_cont_allocation_command
    , size_t limit_size, size_t preferred_size, size_t *received_size, void *reuse_ptr);
 
 #include <boost/container/detail/dlmalloc_2_8_6.hpp>
+
+#if BOOST_CONTAINER_DL_WIDE_SMALLBINS
+/* The exact-fit invariant: a bin holds one chunk size only, so the bin
+   spacing must equal the chunk-size granularity (guards against a
+   user-overridden MALLOC_ALIGNMENT, which the preprocessor cannot see) */
+typedef int boost_container_dl_wide_smallbins_need_16_byte_granularity
+   [SMALLBIN_WIDTH == MALLOC_ALIGNMENT ? 1 : -1];
+/* Every chunk must be either small or large, with no gap nor overlap */
+typedef int boost_container_dl_small_and_large_ranges_must_meet
+   [MIN_LARGE_SIZE == ((size_t)NSMALLBINS << SMALLBIN_SHIFT) ? 1 : -1];
+#endif
 
 #define DL_SIZE_IMPL(p) (chunksize(mem2chunk(p)) - overhead_for(mem2chunk(p)))
 
@@ -2665,6 +2709,7 @@ int boost_cont_mallopt(int param_number, int value)
 #pragma pop_macro("DL_DEBUG_DEFINED")
 #pragma pop_macro("USE_DL_PREFIX")
 #pragma pop_macro("DL_SIZE_IMPL")
+#pragma pop_macro("BOOST_CONTAINER_DL_WIDE_SMALLBINS")
 #pragma pop_macro("BOOST_CONTAINER_OK_GM_MAGIC")
 #pragma pop_macro("s_allocated_memory")
 #pragma pop_macro("GET_TRUNCATED_SIZE")

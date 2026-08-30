@@ -2592,9 +2592,18 @@ typedef struct malloc_segment* msegmentptr;
 /* Bin types, widths and sizes */
 #define NSMALLBINS        (32U)
 #define NTREEBINS         (32U)
+/* Boost.Container: overridable so the including layer can re-space the
+   small bins to the 64-bit chunk granularity (see
+   BOOST_CONTAINER_DLMALLOC_WIDE_SMALLBINS in dlmalloc.hpp). The two shifts
+   must move in lockstep: (1 << TREEBIN_SHIFT) has to equal
+   (NSMALLBINS << SMALLBIN_SHIFT) so every chunk is either small or large. */
+#ifndef SMALLBIN_SHIFT
 #define SMALLBIN_SHIFT    (3U)
+#endif
 #define SMALLBIN_WIDTH    (SIZE_T_ONE << SMALLBIN_SHIFT)
+#ifndef TREEBIN_SHIFT
 #define TREEBIN_SHIFT     (8U)
+#endif
 #define MIN_LARGE_SIZE    (SIZE_T_ONE << TREEBIN_SHIFT)
 #define MAX_SMALL_SIZE    (MIN_LARGE_SIZE - SIZE_T_ONE)
 #define MAX_SMALL_REQUEST (MAX_SMALL_SIZE - CHUNK_ALIGN_MASK - CHUNK_OVERHEAD)
