@@ -82,6 +82,17 @@
 #define BOOST_CONTAINER_DOCIGN(T) T
 #define BOOST_CONTAINER_DOCONLY(T)
 
+/*
+   Until Boost 1.93 this library needed separate compilation, and this macro
+   marked the symbols that the built library exported or imported. Everything
+   is inline now, so it expands to nothing; it is retained, along with
+   BOOST_CONTAINER_DYN_LINK, BOOST_CONTAINER_STATIC_LINK,
+   BOOST_CONTAINER_SOURCE and BOOST_CONTAINER_NO_LIB, only so that code and
+   build systems written against that era keep compiling. Defining any of them
+   now has no effect.
+*/
+#define BOOST_CONTAINER_DECL
+
 //#define BOOST_CONTAINER_DISABLE_FORCEINLINE
 
 #if defined(BOOST_CONTAINER_DISABLE_FORCEINLINE)
