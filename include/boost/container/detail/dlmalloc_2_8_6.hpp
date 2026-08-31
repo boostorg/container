@@ -2593,8 +2593,8 @@ typedef struct malloc_segment* msegmentptr;
 #define NSMALLBINS        (32U)
 #define NTREEBINS         (32U)
 /* Boost.Container: overridable so the including layer can re-space the
-   small bins to the 64-bit chunk granularity (see
-   BOOST_CONTAINER_DLMALLOC_WIDE_SMALLBINS in dlmalloc.hpp). The two shifts
+   small bins to the 64-bit chunk granularity (see the wide small bins
+   section of dlmalloc.hpp). The two shifts
    must move in lockstep: (1 << TREEBIN_SHIFT) has to equal
    (NSMALLBINS << SMALLBIN_SHIFT) so every chunk is either small or large. */
 #ifndef SMALLBIN_SHIFT
@@ -2942,7 +2942,7 @@ static size_t traverse_and_check(mstate m);
 
 /* Boost.Container: overridable so the including layer can re-base the bin
    index at MIN_CHUNK_SIZE, recovering the low bins that no chunk can ever
-   occupy (see BOOST_CONTAINER_DLMALLOC_REBASED_SMALLBINS in dlmalloc.hpp).
+   occupy (see the re-based small bin index section of dlmalloc.hpp).
    The three must stay mutually consistent: small_index2size is the inverse
    of small_index, and is_small(s) must be true exactly when small_index(s)
    is a valid bin index. MIN_LARGE_SIZE (above) is the boundary they

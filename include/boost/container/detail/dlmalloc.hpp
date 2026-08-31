@@ -706,23 +706,17 @@ struct dl_win_system_info
    are dead, exact-fit service ends at 240-byte chunks, and everything from
    256 bytes up pays the best-fit tree walk on both malloc and free.
 
-   Defining BOOST_CONTAINER_DLMALLOC_WIDE_SMALLBINS re-spaces the bins to
-   the 64-bit granularity (SMALLBIN_SHIFT 3 -> 4) and moves the small/large
-   boundary in lockstep (TREEBIN_SHIFT 8 -> 9, so that 1 << TREEBIN_SHIFT ==
+   So on 64-bit the bins are re-spaced to the 64-bit granularity
+   (SMALLBIN_SHIFT 3 -> 4), moving the small/large boundary in lockstep
+   (TREEBIN_SHIFT 8 -> 9, so that 1 << TREEBIN_SHIFT ==
    NSMALLBINS << SMALLBIN_SHIFT still holds): all 32 bins become usable and
-   chunks up to 496 bytes get exact O(1) bins instead of the tree. It also
-   revives the "remainderless fit to the next bin" fast path, which on
-   64-bit never fired because the adjacent bin was always one of the dead
-   ones. malloc_state's size and layout do not change - only the meaning of
-   the bin indexes does - so the option is baked into the intermodule
-   rendezvous key below and every module of a process must agree on it.
+   chunks up to 496 bytes get exact O(1) bins instead of the tree.
 
    64-bit only: with 8-byte granularity a 16-byte spacing would make bins
-   hold two different sizes, breaking the exact-fit invariant, so the
-   option is ignored on 32-bit targets. */
-#if defined(BOOST_CONTAINER_DLMALLOC_WIDE_SMALLBINS) && \
-   (defined(_WIN64) || defined(__LP64__) || defined(_LP64) || \
-    (defined(__SIZEOF_POINTER__) && __SIZEOF_POINTER__ == 8))
+   hold two different sizes, breaking the exact-fit invariant, so 32-bit
+   targets keep dlmalloc's original spacing. */
+#if defined(_WIN64) || defined(__LP64__) || defined(_LP64) || \
+    (defined(__SIZEOF_POINTER__) && __SIZEOF_POINTER__ == 8)
 #define SMALLBIN_SHIFT (4U)
 #define TREEBIN_SHIFT  (9U)
 #define BOOST_CONTAINER_DL_WIDE_SMALLBINS 1
@@ -739,26 +733,15 @@ struct dl_win_system_info
    pointers each in malloc_state, and the bitmap logic shifts across them,
    but nothing can ever be linked there.
 
-   BOOST_CONTAINER_DLMALLOC_REBASED_SMALLBINS re-bases the index at
-   MIN_CHUNK_SIZE, so bin 0 means MIN_CHUNK_SIZE and bin i means
-   MIN_CHUNK_SIZE + i * SMALLBIN_WIDTH. Every bin becomes reachable and
-   the exact-fit range grows by exactly the bins that were dead - two size
-   classes on 32-bit and with WIDE_SMALLBINS, four at the 64-bit default
-   width (of which two are the usable even ones).
+   The index is therefore re-based at MIN_CHUNK_SIZE, so bin 0 means
+   MIN_CHUNK_SIZE and bin i means MIN_CHUNK_SIZE + i * SMALLBIN_WIDTH. Every
+   bin becomes reachable and the exact-fit range grows by exactly the bins
+   that were dead - two size classes on 32-bit and with the wide spacing
+   above, four at dlmalloc's original 64-bit width (of which two are the
+   usable even ones).
 
    The small/large boundary moves with it, to
-   MIN_CHUNK_SIZE + (NSMALLBINS << SMALLBIN_SHIFT), which is no longer the
-   power of two that TREEBIN_SHIFT alone implies. That is sound because the
-   tree bins are size *ranges*, not exact sizes: the first tree bin covers
-   [1 << TREEBIN_SHIFT, 1.5 * (1 << TREEBIN_SHIFT)) and simply never
-   receives the few sizes at its bottom that the small bins now keep. The
-   static assertions after the core include verify that the boundary stays
-   inside that first tree bin, which is what keeps every large chunk
-   mappable to a tree bin.
-
-   Like the other layout options this changes what a bin index means, so it
-   is part of the intermodule rendezvous key. */
-#if defined(BOOST_CONTAINER_DLMALLOC_REBASED_SMALLBINS)
+   MIN_CHUNK_SIZE + (NSMALLBINS << SMALLBIN_SHIFT). */
 #define BOOST_CONTAINER_DL_REBASED_SMALLBINS 1
 /* MIN_CHUNK_SIZE, SMALLBIN_SHIFT and NSMALLBINS are defined by the core;
    these macros are expanded at their use sites, which all follow it */
@@ -766,9 +749,6 @@ struct dl_win_system_info
 #define small_index(s)      (bindex_t)(((s) - MIN_CHUNK_SIZE) >> SMALLBIN_SHIFT)
 #define small_index2size(i) (((size_t)(i) << SMALLBIN_SHIFT) + MIN_CHUNK_SIZE)
 #define MIN_LARGE_SIZE      (MIN_CHUNK_SIZE + ((size_t)NSMALLBINS << SMALLBIN_SHIFT))
-#else
-#define BOOST_CONTAINER_DL_REBASED_SMALLBINS 0
-#endif
 //Locking. USE_LOCKS == 2 is dlmalloc's documented hook for a user-supplied
 //lock: it bypasses every lock routine dlmalloc defines and takes MLOCK_T plus
 //INITIAL_LOCK/DESTROY_LOCK/ACQUIRE_LOCK/RELEASE_LOCK/TRY_LOCK from here, so
@@ -887,11 +867,6 @@ inline boost_cont_command_ret_t boost_cont_allocation_command
    user-overridden MALLOC_ALIGNMENT, which the preprocessor cannot see) */
 typedef int boost_container_dl_wide_smallbins_need_16_byte_granularity
    [SMALLBIN_WIDTH == MALLOC_ALIGNMENT ? 1 : -1];
-#if !BOOST_CONTAINER_DL_REBASED_SMALLBINS
-/* Every chunk must be either small or large, with no gap nor overlap */
-typedef int boost_container_dl_small_and_large_ranges_must_meet
-   [MIN_LARGE_SIZE == ((size_t)NSMALLBINS << SMALLBIN_SHIFT) ? 1 : -1];
-#endif
 #endif
 
 #if BOOST_CONTAINER_DL_REBASED_SMALLBINS
