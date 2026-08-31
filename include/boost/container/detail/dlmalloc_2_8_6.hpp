@@ -2729,6 +2729,15 @@ struct BOOST_SYMBOL_VISIBLE dlmalloc_globals_options {
       into the constructing module's image. */
 };
 
+/* Both arguments must be default-visible or every module gets its own heap;
+   see BOOST_CONTAINER_INTERMODULE_ASSERT_VISIBLE in intermodule_globals.hpp. */
+BOOST_CONTAINER_INTERMODULE_ASSERT_VISIBLE(dlmalloc_globals_t,
+   "boost::container::dl_detail::dlmalloc_globals_t must be declared BOOST_SYMBOL_VISIBLE"
+);
+BOOST_CONTAINER_INTERMODULE_ASSERT_VISIBLE(dlmalloc_globals_options,
+   "boost::container::dl_detail::dlmalloc_globals_options must be declared "
+   "BOOST_SYMBOL_VISIBLE");
+
 BOOST_CONTAINER_FORCEINLINE struct dlmalloc_globals_t *dl_globals(void) {
    return &::boost::container::dtl::intermodule_globals
       <dlmalloc_globals_t, dlmalloc_globals_options>();
