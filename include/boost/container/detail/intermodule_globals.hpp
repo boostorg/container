@@ -167,6 +167,37 @@
 #  define BOOST_CONTAINER_INTERMODULE_BACKEND_VISIBLE
 #endif
 
+/* Detecting Minimal Visibility Rule.
+
+   Since the visibility of the storage instantiation is the minimum over the
+   template and both of its arguments, a T or an Options that is not
+   default-visible gives every module a private copy: it compiles/links/runs
+   without error, and no warning exists so the mistake cannot be diagnosed.
+
+   GCC can at least be asked whether a type carries the attribute with limitations:
+
+     * It must be applied once per concrete instantiation.
+     * it reports the *explicit* attribute only, so it cannot observe
+       -fvisibility=hidden acting on an unmarked type.
+     * evaluating it emits -Wattributes even when the answer is yes, so that
+       diagnostic is suppressed for the length of the check.
+
+   Clang has no equivalent builtin. */
+#if defined(BOOST_CONTAINER_INTERMODULE_BACKEND_VISIBLE) && \
+    defined(BOOST_CONTAINER_GCC_PRAGMAS) && \
+    BOOST_CONTAINER_HAS_BUILTIN(__builtin_has_attribute)
+#  define BOOST_CONTAINER_INTERMODULE_ASSERT_VISIBLE(T, MSG)                   \
+      _Pragma("GCC diagnostic push")                                           \
+      _Pragma("GCC diagnostic ignored \"-Wattributes\"")                       \
+      BOOST_CONTAINER_STATIC_ASSERT_MSG                                        \
+         (__builtin_has_attribute(T, visibility("default")), MSG);             \
+      _Pragma("GCC diagnostic pop")                                            \
+      typedef int boost_container_intermodule_visibility_checked_t
+#else
+#  define BOOST_CONTAINER_INTERMODULE_ASSERT_VISIBLE(T, MSG)                   \
+      typedef int boost_container_intermodule_visibility_checked_t
+#endif
+
 namespace boost {
 namespace container {
 namespace dtl {

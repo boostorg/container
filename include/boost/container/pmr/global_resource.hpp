@@ -111,6 +111,16 @@ struct BOOST_SYMBOL_VISIBLE pmr_globals_options
    //destroy_at_exit defaults to true
 };
 
+//Both arguments must be default-visible or every module gets its own
+//singletons; see BOOST_CONTAINER_INTERMODULE_ASSERT_VISIBLE in
+//intermodule_globals.hpp.
+BOOST_CONTAINER_INTERMODULE_ASSERT_VISIBLE(pmr_globals_t,
+   "boost::container::pmr::pmr_globals_dtl::pmr_globals_t must be declared BOOST_SYMBOL_VISIBLE"
+);
+BOOST_CONTAINER_INTERMODULE_ASSERT_VISIBLE(pmr_globals_options,
+   "boost::container::pmr::pmr_globals_dtl::pmr_globals_options must be "
+   "declared BOOST_SYMBOL_VISIBLE.");
+
 BOOST_CONTAINER_FORCEINLINE pmr_globals_t &pmr_globals()
 {
    return dtl::intermodule_globals<pmr_globals_t, pmr_globals_options>();
