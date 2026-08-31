@@ -97,15 +97,7 @@ struct bench_defaults
 #endif
 };
 
-//Block sizes swept by every operation, ascending. Kept as a plain array so the
-//sweep is also valid in C++03.
-//
-//The steps double, so the sweep straddles every boundary these allocators
-//change behaviour at rather than jumping over it: dlmalloc's smallbin/treebin
-//split (256 bytes, or 512 with BOOST_CONTAINER_DLMALLOC_WIDE_SMALLBINS),
-//glibc's tcache limit (1032), and the mmap thresholds of both (128 KiB and
-//256 KiB, above this range). A size on each side of a boundary is what makes
-//a row attributable to one mechanism.
+//Block sizes swept by every operation, ascending.
 inline std::size_t bench_size(std::size_t i)
 {
    static const std::size_t sizes[] =

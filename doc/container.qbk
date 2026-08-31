@@ -2892,6 +2892,9 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
   moved to the separately compiled library now live in a intermodule utility that
   can share them across DLLs.
 
+* Dlmalloc's heap now always uses an improved, spin lock and small allocation layout,
+  with faster allocation for small requests (240-512 bytes are ~15-25% faster on 64-bit).
+
 * Fixed bugs/issues/enhancements:
    * [@https://github.com/boostorg/container/issues/335 GitHub #335: ['"Error on instantiating an incomplete type"]].
    * [@https://github.com/boostorg/container/pull/339 GitHub #339: ['"optimized range insertion for boost::container::hub"]].
