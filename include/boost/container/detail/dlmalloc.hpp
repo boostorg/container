@@ -2133,7 +2133,7 @@ void* boost_cont_malloc(size_t bytes)
    mstate const ms = &dlg->gm_state;
    /* ensure_initialization(), through the hoisted globals pointer. Needed
       before PREACTION: init_mparams is what turns gm's lock on. */
-   (void)(dlg->params.magic != 0 || init_mparams());
+   (void)(dl_magic_read_acq(&dlg->params.magic) != 0 || init_mparams());
    if (!PREACTION(ms)) {
       mem = mspace_malloc_lockless(ms, bytes);
       if(mem)
@@ -2360,7 +2360,7 @@ boost_cont_command_ret_t boost_cont_allocation_command
    boost_cont_command_ret_t ret = { 0, 0 };
    /* One globals lookup for the whole command (see boost_cont_malloc) */
    dlmalloc_globals_t *const dlg = dl_globals();
-   (void)(dlg->params.magic != 0 || init_mparams());
+   (void)(dl_magic_read_acq(&dlg->params.magic) != 0 || init_mparams());
    if(command & (BOOST_CONTAINER_SHRINK_IN_PLACE | BOOST_CONTAINER_TRY_SHRINK_IN_PLACE)){
       int success = boost_cont_shrink( reuse_ptr, preferred_size, limit_size
                              , received_size, (command & BOOST_CONTAINER_SHRINK_IN_PLACE));
