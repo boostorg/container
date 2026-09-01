@@ -802,12 +802,26 @@ struct intermodule_globals_impl
    static void *ms_section;                              //kept while attached
    static intermodule_registry_header *ms_header;        //canonical view
    static intermodule_registry_record *ms_record;
+   //Guards the four members above, which are per module, exactly as the
+   //other backend does. The registry lock cannot do that job: it lives in
+   //the section header, so it is reachable only after MapViewOfFile, and
+   //two threads of one module would already have mapped the section twice
+   //by then. Order is always this lock first, then the registry lock.
+   static spin_mutex ms_lock;
    static module_registrar ms_registrar;
 
    BOOST_NOINLINE static T *attach()
    {
       if(atomic_ptr_read_csm(&ms_cached)){
          return ms_cached;
+      }
+      //The test above is lock-free, so two threads of this module can both
+      //arrive here. Only one of them may map the section and take the
+      //refcount, because detach() releases both exactly once per module.
+      ms_lock.lock();
+      if(T *const done = atomic_ptr_read_csm(&ms_cached)){
+         ms_lock.unlock();
+         return done;
       }
       char reg_name[96];
       intermodule_build_registry_name(reg_name);
@@ -860,12 +874,12 @@ struct intermodule_globals_impl
          , "Boost.Container: intermodule globals size mismatch for this key");
 
       T *const obj = (T *)(void *)((char *)hdr + r->obj_offset);
-      bool constructed_here = false;
-      if(0 == r->refcount){
+
+      const bool constructed_here = 0 == r->refcount;
+      if(constructed_here){
          //Exactly like the constructor of a global variable of type T
          //(T's constructor must not throw)
          ::new((void *)obj, boost_container_new_t()) T();
-         constructed_here = true;
       }
       ++r->refcount;
 
@@ -879,7 +893,11 @@ struct intermodule_globals_impl
       ms_section = section;   //keeps the section alive while this module lives
       ms_header  = hdr;
       ms_record  = r;
+      //Published last, and with a release, because get() reads this pointer
+      //without taking any lock. ms_lock orders the other three for the
+      //threads that go through attach(), but not for those readers.
       atomic_ptr_write_rel(&ms_cached, obj);
+      ms_lock.unlock();
 
       //Outside the critical section: see the note in the other backend
       if(constructed_here && intermodule_opt_pin_constructing_module<Options>::value){
@@ -893,7 +911,11 @@ struct intermodule_globals_impl
       if(!intermodule_opt_destroy_at_exit<Options>::value){
          return;   //immortal: keep the handle, and with it the section
       }
+      //Same order as attach(): this lock first, then the registry lock.
+      //Taking them the other way round here would let the two deadlock.
+      ms_lock.lock();
       if(!atomic_ptr_read_csm(&ms_cached)){
+         ms_lock.unlock();
          return;
       }
       intermodule_registry_header *const hdr = ms_header;
@@ -914,11 +936,15 @@ struct intermodule_globals_impl
       //A get() running even later (static destruction is unordered across
       //translation units) phoenix-reconstructs through attach()
       atomic_ptr_write_rel(&ms_cached, (T *)0);
+      ms_lock.unlock();
    }
 };
 
 template<class T, class Options>
 T *intermodule_globals_impl<T, Options>::ms_cached = 0;
+
+template<class T, class Options>
+spin_mutex intermodule_globals_impl<T, Options>::ms_lock;
 
 template<class T, class Options>
 void *intermodule_globals_impl<T, Options>::ms_section = 0;
