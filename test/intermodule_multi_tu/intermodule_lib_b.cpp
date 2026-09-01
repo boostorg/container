@@ -10,5 +10,8 @@
 //Shared library "B" of the intermodule test: instantiates its own inline copy
 //of intermodule_globals<> over the shared test types.
 #include "intermodule_test_types.hpp"
+#include "intermodule_chain_types.hpp"
 
 BOOST_CONTAINER_TEST_INTERMODULE_LIB(lib_b)
+
+BOOST_CONTAINER_TEST_CHAIN_LIB(lib_b, owner_b, 0x20u)

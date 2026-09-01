@@ -55,6 +55,13 @@ rule test_all
                       bc_intermodule_lib_a bc_intermodule_lib_b
                       /boost/container//boost_container ] ;
 
+   # One intermodule global whose constructor needs another, so attach()
+   # re-enters itself: within a module and across the module boundary. It
+   # reuses the two libraries above, which carry these globals as well
+   all_rules += [ run intermodule_multi_tu/intermodule_chain_test.cpp
+                      bc_intermodule_lib_a bc_intermodule_lib_b
+                      /boost/container//boost_container ] ;
+
    all_rules += [ run dlmalloc_multi_tu/dlmalloc_intermodule_test.cpp
                       bc_dlmalloc_lib_a bc_dlmalloc_lib_b
                       /boost/container//boost_container ] ;

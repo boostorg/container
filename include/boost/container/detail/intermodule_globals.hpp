@@ -431,8 +431,7 @@ inline char *intermodule_append_str(char *dst, const char *s)
    return dst;
 }
 
-//Bump when the rendezvous protocol or block layout changes
-#define BOOST_CONTAINER_INTERMODULE_ABI_VERSION 3
+#define BOOST_CONTAINER_INTERMODULE_ABI_VERSION 1
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -586,7 +585,12 @@ BOOST_CONTAINER_FORCEINLINE const char *intermodule_rendezvous_key()
 
 struct intermodule_registry_header
 {
-   spin_mutex lock;                 //guards every field below
+   //Guards the table itself: the magic, the linear-hashing state, the arena
+   //bump pointer and the bucket array, that is every field below. It does
+   //NOT guard a record's refcount or its object; each record carries its own
+   //lock for that, so that a T constructor may use another intermodule
+   //global. Order is always this lock first, then a record lock.
+   spin_mutex lock;
    intermodule_u32    magic;
    //Linear hashing state, in the two-variable form Boost.Intrusive uses:
    //bucket_cnt is the capacity of the round (always a power of two) and
@@ -607,7 +611,17 @@ struct intermodule_registry_record
    intermodule_u32 obj_offset;
    intermodule_u32 obj_size;
    intermodule_u32 key_len;
-   long            refcount;
+   long            refcount;    //guarded by the lock below, not by the header
+   //Guards this entry alone: its refcount and the lifetime of its object.
+   //attach() takes it while it still holds the header lock, then drops the
+   //header lock before running T's constructor, so a constructor that needs
+   //another intermodule global blocks only on that other entry. One lock for
+   //the whole registry would deadlock there, because the nested attach()
+   //would ask for the very same word. A true cycle, T needing U and U
+   //needing T, still deadlocks, which is correct: it has no valid order.
+   //Zero means unlocked, and records are carved out of the zero-filled
+   //section, so no explicit initialization is needed.
+   spin_mutex      lock;
    //char key[key_len+1] follows
 };
 
@@ -875,6 +889,17 @@ struct intermodule_globals_impl
 
       T *const obj = (T *)(void *)((char *)hdr + r->obj_offset);
 
+      //Hand over from the table lock to this entry's own lock, taking the
+      //second while still holding the first so no one can slip in between.
+      //T's constructor then runs holding only the entry lock, which is what
+      //lets it use another intermodule global: that nested attach() needs
+      //the table lock and a different entry lock, and gets both.
+      r->lock.lock();
+
+      //Unlock through the bootstrap view, which is still mapped; it is the
+      //same physical word as hdr->lock
+      view->lock.unlock();
+
       const bool constructed_here = 0 == r->refcount;
       if(constructed_here){
          //Exactly like the constructor of a global variable of type T
@@ -882,14 +907,17 @@ struct intermodule_globals_impl
          ::new((void *)obj, boost_container_new_t()) T();
       }
       ++r->refcount;
+      r->lock.unlock();
 
-      //Unlock through the bootstrap view, which is still mapped; it is the
-      //same physical word as hdr->lock
-      view->lock.unlock();
-
+      //Nothing reads the bootstrap view once its lock is released, and the
+      //canonical one is never unmapped, so this can wait until both shared
+      //locks are gone. A syscall must not hold up another module that wants
+      //this entry; only ms_lock is still held, and just this module's own
+      //threads can ever want that one.
       if(hdr != view){
          (void)UnmapViewOfFile(view);
       }
+
       ms_section = section;   //keeps the section alive while this module lives
       ms_header  = hdr;
       ms_record  = r;
@@ -919,14 +947,19 @@ struct intermodule_globals_impl
          return;
       }
       intermodule_registry_header *const hdr = ms_header;
-      hdr->lock.lock();
+      //Only this entry's lock is needed: the table is not touched, and
+      //records never move nor are they removed, so ms_record stays valid.
+      //Taking just this one also keeps the header-then-record order intact.
       intermodule_registry_record *const r = ms_record;
-      if(r && 0 == --r->refcount){
-         ((T *)(void *)((char *)hdr + r->obj_offset))->~T();
-         //The record and its storage stay in place, now with refcount 0: a
-         //module loaded again later reconstructs T in the very same slot
+      if(r){
+         r->lock.lock();
+         if(0 == --r->refcount){
+            ((T *)(void *)((char *)hdr + r->obj_offset))->~T();
+            //The record and its storage stay in place, now with refcount 0:
+            //a module loaded later reconstructs T in the very same slot
+         }
+         r->lock.unlock();
       }
-      hdr->lock.unlock();
 
       //The canonical view is deliberately never unmapped, see the note above
       (void)CloseHandle(ms_section);

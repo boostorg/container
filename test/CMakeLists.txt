@@ -160,6 +160,11 @@ endfunction()
 
 boost_container_add_intermodule_test(intermodule_test
                                     intermodule_multi_tu intermodule)
+boost_container_add_test(intermodule_chain_test
+                         intermodule_multi_tu/intermodule_chain_test.cpp)
+target_link_libraries(${PREFIX}intermodule_chain_test
+                      ${PREFIX}intermodule_test_lib_a
+                      ${PREFIX}intermodule_test_lib_b)
 boost_container_add_intermodule_test(dlmalloc_intermodule_test
                                     dlmalloc_multi_tu dlmalloc_intermodule)
 boost_container_add_intermodule_test(pmr_intermodule_test
