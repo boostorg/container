@@ -2753,7 +2753,33 @@ BOOST_CONTAINER_FORCEINLINE struct dlmalloc_globals_t *dl_globals(void) {
 #define mparams (dl_globals()->params)
 
 /* Ensure mparams initialized */
-#define ensure_initialization() (void)(mparams.magic != 0 || init_mparams())
+/* Boost.Container: mparams.magic doubles as the "initialized" flag, and every
+   entry point tests it OUTSIDE the global lock, before PREACTION. A plain
+   read against init_mparams' store is a data race, and a volatile store
+   promises no ordering at all, so the test has to be a real acquire and the
+   publication a real release. Two things then hold for a thread that sees a
+   non-zero magic: every other field of mparams is visible, and gm's mutex has
+   already been INITIAL_LOCKed. Without the second one, that thread could run
+   PREACTION's atomic exchange on the very word init_mparams is still plain-
+   storing zero into, which is the second race ThreadSanitizer reports.
+
+   size_t and void* have the same width here - init_mparams asserts it below -
+   so the pointer-width primitives, which already carry the portability
+   matrix, fit without adding a second one. */
+BOOST_CONTAINER_FORCEINLINE size_t dl_magic_read_acq(const size_t *p)
+{
+   return (size_t)::boost::container::dtl::atomic_ptr_read_acq
+      ((void *const *)(const void *)p);
+}
+
+BOOST_CONTAINER_FORCEINLINE void dl_magic_write_rel(size_t *p, size_t v)
+{
+   ::boost::container::dtl::atomic_ptr_write_rel
+      ((void **)(void *)p, (void *)v);
+}
+
+#define ensure_initialization() \
+   (void)(dl_magic_read_acq(&mparams.magic) != 0 || init_mparams())
 
 #if !ONLY_MSPACES
 
@@ -3324,7 +3350,9 @@ static int init_mparams(void) {
       gm->magic = magic;
 #endif /* !ONLY_MSPACES */
       /* Until memory modes commonly available, use volatile-write */
-      (*(volatile size_t *)(&(mparams.magic))) = magic;
+      /* Release: publishes every field written above, and gm's freshly
+         initialized mutex, to whoever reads the magic without the lock */
+      dl_magic_write_rel(&mparams.magic, magic);
     }
   }
 
