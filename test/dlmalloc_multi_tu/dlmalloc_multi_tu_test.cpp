@@ -25,15 +25,15 @@ int main()
    //Allocate in the other TU, free here
    void *p = other_tu_malloc(1000);
    BOOST_TEST(p != 0);
-   dlmalloc_free(p);
+   dl_free(p);
 
    //Allocate here, free in the other TU
-   void *q = dlmalloc_malloc(500);
+   void *q = dl_malloc(500);
    BOOST_TEST(q != 0);
    //Both TUs must observe the same allocation counter
-   BOOST_TEST(other_tu_in_use_memory() == dlmalloc_in_use_memory());
+   BOOST_TEST(other_tu_in_use_memory() == dl_in_use_memory());
    other_tu_free(q);
 
-   BOOST_TEST(dlmalloc_all_deallocated() != 0);
+   BOOST_TEST(dl_all_deallocated() != 0);
    return boost::report_errors();
 }

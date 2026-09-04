@@ -90,9 +90,9 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements, 
       v.reset_alloc_stats();
       void *first_mem = 0;
       BOOST_CONTAINER_TRY{
-         first_mem = bc::dlmalloc_malloc(sizeof(MyInt)*num_elements*3/2);
+         first_mem = bc::dl_malloc(sizeof(MyInt)*num_elements*3/2);
          v.push_back(MyInt(0));
-         bc::dlmalloc_free(first_mem);
+         bc::dl_free(first_mem);
 
          for(std::size_t e = 0; e != num_elements; ++e){
             v.push_back(MyInt((int)e));
@@ -102,13 +102,13 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements, 
          capacity = static_cast<std::size_t>(v.capacity());
       }
       BOOST_CONTAINER_CATCH(...){
-         bc::dlmalloc_free(first_mem);
+         bc::dl_free(first_mem);
          BOOST_CONTAINER_RETHROW;
       }
       BOOST_CONTAINER_CATCH_END
    }
 
-   assert(bc::dlmalloc_allocated_memory() == 0);
+   assert(bc::dl_allocated_memory() == 0);
 
    timer.stop();
    nanosecond_type nseconds = timer.elapsed().wall;
@@ -147,7 +147,7 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements, 
                   << "    -----------------------------------    "
                   << std::endl;
    }
-   bc::dlmalloc_trim(0);
+   bc::dl_trim(0);
 }
 
 int main(int argc, const char *argv[])

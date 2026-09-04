@@ -36,8 +36,8 @@ std::size_t lib_b_size(void *p);
 //Every module reports the same in-use figure, because there is one heap.
 void test_statistics_agree()
 {
-   BOOST_TEST(bc::dlmalloc_in_use_memory() == lib_a_in_use_memory());
-   BOOST_TEST(bc::dlmalloc_in_use_memory() == lib_b_in_use_memory());
+   BOOST_TEST(bc::dl_in_use_memory() == lib_a_in_use_memory());
+   BOOST_TEST(bc::dl_in_use_memory() == lib_b_in_use_memory());
 }
 
 //Allocate in one module, free in another, in every direction. With
@@ -51,9 +51,9 @@ void test_cross_module_free()
 
    void *pb = lib_b_malloc(2000);
    BOOST_TEST(pb != 0);
-   bc::dlmalloc_free(pb);
+   bc::dl_free(pb);
 
-   void *pe = bc::dlmalloc_malloc(3000);
+   void *pe = bc::dl_malloc(3000);
    BOOST_TEST(pe != 0);
    lib_a_free(pe);
 }
@@ -66,7 +66,7 @@ void test_block_size_visible_everywhere()
    void *p = lib_a_malloc(requested);
    BOOST_TEST(p != 0);
 
-   const std::size_t from_exe = bc::dlmalloc_size(p);
+   const std::size_t from_exe = bc::dl_size(p);
    BOOST_TEST(from_exe >= requested);
    BOOST_TEST(lib_a_size(p) == from_exe);
    BOOST_TEST(lib_b_size(p) == from_exe);
@@ -77,7 +77,7 @@ void test_block_size_visible_everywhere()
 //After everything is returned, all three modules agree the heap is empty.
 void test_all_deallocated_agrees()
 {
-   BOOST_TEST(bc::dlmalloc_all_deallocated() != 0);
+   BOOST_TEST(bc::dl_all_deallocated() != 0);
    BOOST_TEST(lib_a_all_deallocated() != 0);
    BOOST_TEST(lib_b_all_deallocated() != 0);
 }

@@ -9,7 +9,7 @@
 //////////////////////////////////////////////////////////////////////////////
 //
 // Over-aligned BOOST_CONTAINER_ALLOCATE_NEW, i.e. the mspace_memalign_lockless
-// path of boost_cont_allocation_command. The other alloc_* tests always pass
+// path of dl_allocation_command. The other alloc_* tests always pass
 // alignof_object == 1 and so never take that branch at all.
 //
 //////////////////////////////////////////////////////////////////////////////
@@ -34,7 +34,7 @@ namespace {
 void *aligned_new(std::size_t align, std::size_t bytes, std::size_t &received)
 {
    received = 0;
-   boost_cont_command_ret_t r = dlmalloc_allocation_command
+   dl_command_ret_t r = dl_allocation_command
       (BOOST_CONTAINER_ALLOCATE_NEW, 1u, align, bytes, bytes, &received, 0);
    BOOST_TEST(r.second == 0);    //a fresh block is never reported as reused
    return r.first;
@@ -54,9 +54,9 @@ void test_alignment_and_size()
          //The bookkeeping really ran: this is what the old code skipped when
          //it failed to reacquire the lock after internal_memalign
          BOOST_TEST(received >= bytes);
-         BOOST_TEST(received == dlmalloc_size(p));
+         BOOST_TEST(received == dl_size(p));
          std::memset(p, 0xA5, received);
-         dlmalloc_free(p);
+         dl_free(p);
       }
    }
 }
@@ -65,8 +65,8 @@ void test_alignment_and_size()
 //started from, which only holds if every block was accounted for
 void test_accounting_round_trip()
 {
-   BOOST_TEST(dlmalloc_all_deallocated() != 0);
-   const std::size_t before = dlmalloc_allocated_memory();
+   BOOST_TEST(dl_all_deallocated() != 0);
+   const std::size_t before = dl_allocated_memory();
 
    vector<void *> blocks;
    for(std::size_t i = 0; i != 200; ++i){
@@ -80,11 +80,11 @@ void test_accounting_round_trip()
          blocks.push_back(p);
       }
    }
-   BOOST_TEST(dlmalloc_allocated_memory() > before);
+   BOOST_TEST(dl_allocated_memory() > before);
    for(std::size_t i = 0; i != blocks.size(); ++i)
-      dlmalloc_free(blocks[i]);
-   BOOST_TEST(dlmalloc_allocated_memory() == before);
-   BOOST_TEST(dlmalloc_malloc_check() != 0);
+      dl_free(blocks[i]);
+   BOOST_TEST(dl_allocated_memory() == before);
+   BOOST_TEST(dl_malloc_check() != 0);
 }
 
 //Interleave the over-aligned path with the plain one, so that a lock left in
@@ -106,10 +106,10 @@ void test_interleaved_with_plain()
       BOOST_TEST(received >= 40+i);
       if(p)  blocks.push_back(p);
    }
-   BOOST_TEST(dlmalloc_malloc_check() != 0);
+   BOOST_TEST(dl_malloc_check() != 0);
    for(std::size_t i = 0; i != blocks.size(); ++i)
-      dlmalloc_free(blocks[i]);
-   BOOST_TEST(dlmalloc_malloc_check() != 0);
+      dl_free(blocks[i]);
+   BOOST_TEST(dl_malloc_check() != 0);
 }
 
 #if !defined(BOOST_NO_CXX11_HDR_THREAD)
@@ -122,7 +122,7 @@ void hammer(unsigned seed)
    for(unsigned i = 0; i != 4000; ++i){
       std::size_t received = 0;
       const std::size_t align = std::size_t(64) << ((i + seed) % 4);
-      boost_cont_command_ret_t r = dlmalloc_allocation_command
+      dl_command_ret_t r = dl_allocation_command
          ( BOOST_CONTAINER_ALLOCATE_NEW, 1u, align
          , 8 + ((i*37u + seed) % 900), 8 + ((i*37u + seed) % 900), &received, 0);
       if(r.first){
@@ -135,12 +135,12 @@ void hammer(unsigned seed)
          blocks.push_back(r.first);
       }
       if(blocks.size() > 64){
-         dlmalloc_free(blocks.back());
+         dl_free(blocks.back());
          blocks.pop_back();
       }
    }
    for(std::size_t i = 0; i != blocks.size(); ++i)
-      dlmalloc_free(blocks[i]);
+      dl_free(blocks[i]);
 }
 
 //The whole operation now runs inside a single critical section; getting the
@@ -154,7 +154,7 @@ void test_threaded()
    for(unsigned i = 0; i != num_threads; ++i)
       threads[i].join();
    BOOST_TEST(thread_errors == 0);
-   BOOST_TEST(dlmalloc_malloc_check() != 0);
+   BOOST_TEST(dl_malloc_check() != 0);
 }
 
 #endif   //!defined(BOOST_NO_CXX11_HDR_THREAD)

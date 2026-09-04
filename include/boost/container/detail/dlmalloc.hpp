@@ -40,23 +40,23 @@ extern "C" {
 typedef struct multialloc_node_impl
 {
    struct multialloc_node_impl *next_node_ptr;
-} boost_cont_memchain_node;
+} dl_memchain_node;
 
 
 /*!An forward iterator to traverse the elements of a memory chain container.*/
 typedef struct multialloc_it_impl
 {
-   boost_cont_memchain_node *node_ptr;
-} boost_cont_memchain_it;
+   dl_memchain_node *node_ptr;
+} dl_memchain_it;
 
-/*!Memory chain: A container holding memory portions allocated by boost_cont_multialloc_nodes
-   and boost_cont_multialloc_arrays functions.*/
-typedef struct boost_cont_memchain_impl
+/*!Memory chain: A container holding memory portions allocated by dl_multialloc_nodes
+   and dl_multialloc_arrays functions.*/
+typedef struct dl_memchain_impl
 {
    size_t                   num_mem;
-   boost_cont_memchain_node  root_node;
-   boost_cont_memchain_node *last_node_ptr;
-} boost_cont_memchain;
+   dl_memchain_node  root_node;
+   dl_memchain_node *last_node_ptr;
+} dl_memchain;
 
 /*!Advances the iterator one position so that it points to the next element in the memory chain*/
 #define BOOST_CONTAINER_MEMIT_NEXT(IT)         (IT.node_ptr = IT.node_ptr->next_node_ptr)
@@ -74,7 +74,7 @@ typedef struct boost_cont_memchain_impl
 #define BOOST_CONTAINER_MEMCHAIN_LAST_IT(PMEMCHAIN)    {(PMEMCHAIN)->last_node_ptr }
 
 /*!Initializer for an iterator pointing to one past the last element (end iterator)*/
-#define BOOST_CONTAINER_MEMCHAIN_END_IT(PMEMCHAIN)     {(boost_cont_memchain_node *)0 }
+#define BOOST_CONTAINER_MEMCHAIN_END_IT(PMEMCHAIN)     {(dl_memchain_node *)0 }
 
 /*!True if IT is the end iterator, false otherwise*/
 #define BOOST_CONTAINER_MEMCHAIN_IS_END_IT(PMEMCHAIN, IT) (!(IT).node_ptr)
@@ -91,8 +91,8 @@ typedef struct boost_cont_memchain_impl
 /*!Initializes the memory chain from the first memory portion, the last memory
    portion and number of portions obtained from another memory chain*/
 #define BOOST_CONTAINER_MEMCHAIN_INIT_FROM(PMEMCHAIN, FIRST, LAST, NUM)\
-   (PMEMCHAIN)->last_node_ptr = (boost_cont_memchain_node *)(LAST), \
-   (PMEMCHAIN)->root_node.next_node_ptr  = (boost_cont_memchain_node *)(FIRST), \
+   (PMEMCHAIN)->last_node_ptr = (dl_memchain_node *)(LAST), \
+   (PMEMCHAIN)->root_node.next_node_ptr  = (dl_memchain_node *)(FIRST), \
    (PMEMCHAIN)->num_mem  = (NUM);\
 /**/
 
@@ -110,8 +110,8 @@ typedef struct boost_cont_memchain_impl
 /*!Inserts a new memory portions in the front of the chain*/
 #define BOOST_CONTAINER_MEMCHAIN_PUSH_BACK(PMEMCHAIN, MEM)\
    do{\
-      boost_cont_memchain *____chain____ = (PMEMCHAIN);\
-      boost_cont_memchain_node *____tmp_mem____ = (boost_cont_memchain_node *)(MEM);\
+      dl_memchain *____chain____ = (PMEMCHAIN);\
+      dl_memchain_node *____tmp_mem____ = (dl_memchain_node *)(MEM);\
       ____chain____->last_node_ptr->next_node_ptr = ____tmp_mem____;\
       ____tmp_mem____->next_node_ptr = 0;\
       ____chain____->last_node_ptr = ____tmp_mem____;\
@@ -122,13 +122,13 @@ typedef struct boost_cont_memchain_impl
 /*!Inserts a new memory portions in the back of the chain*/
 #define BOOST_CONTAINER_MEMCHAIN_PUSH_FRONT(PMEMCHAIN, MEM)\
    do{\
-      boost_cont_memchain *____chain____ = (PMEMCHAIN);\
-      boost_cont_memchain_node *____tmp_mem____   = (boost_cont_memchain_node *)(MEM);\
-      boost_cont_memchain_node *____root____  = &((PMEMCHAIN)->root_node);\
+      dl_memchain *____chain____ = (PMEMCHAIN);\
+      dl_memchain_node *____tmp_mem____   = (dl_memchain_node *)(MEM);\
+      dl_memchain_node *____root____  = &((PMEMCHAIN)->root_node);\
       if(!____chain____->root_node.next_node_ptr){\
          ____chain____->last_node_ptr = ____tmp_mem____;\
       }\
-      boost_cont_memchain_node *____old_first____ = ____root____->next_node_ptr;\
+      dl_memchain_node *____old_first____ = ____root____->next_node_ptr;\
       ____tmp_mem____->next_node_ptr = ____old_first____;\
       ____root____->next_node_ptr = ____tmp_mem____;\
       ++____chain____->num_mem;\
@@ -139,9 +139,9 @@ typedef struct boost_cont_memchain_impl
 /*!Precondition: BEFORE_IT must be a valid iterator of the memory chain and it can't be the end iterator*/
 #define BOOST_CONTAINER_MEMCHAIN_ERASE_AFTER(PMEMCHAIN, BEFORE_IT)\
    do{\
-      boost_cont_memchain *____chain____ = (PMEMCHAIN);\
-      boost_cont_memchain_node *____prev_node____  = (BEFORE_IT).node_ptr;\
-      boost_cont_memchain_node *____erase_node____ = ____prev_node____->next_node_ptr;\
+      dl_memchain *____chain____ = (PMEMCHAIN);\
+      dl_memchain_node *____prev_node____  = (BEFORE_IT).node_ptr;\
+      dl_memchain_node *____erase_node____ = ____prev_node____->next_node_ptr;\
       if(____chain____->last_node_ptr == ____erase_node____){\
          ____chain____->last_node_ptr = &____chain____->root_node;\
       }\
@@ -154,9 +154,9 @@ typedef struct boost_cont_memchain_impl
    Precondition: the memory chain must not be empty*/
 #define BOOST_CONTAINER_MEMCHAIN_POP_FRONT(PMEMCHAIN)\
    do{\
-      boost_cont_memchain *____chain____ = (PMEMCHAIN);\
-      boost_cont_memchain_node *____prev_node____  = &____chain____->root_node;\
-      boost_cont_memchain_node *____erase_node____ = ____prev_node____->next_node_ptr;\
+      dl_memchain *____chain____ = (PMEMCHAIN);\
+      dl_memchain_node *____prev_node____  = &____chain____->root_node;\
+      dl_memchain_node *____erase_node____ = ____prev_node____->next_node_ptr;\
       if(____chain____->last_node_ptr == ____erase_node____){\
          ____chain____->last_node_ptr = &____chain____->root_node;\
       }\
@@ -169,8 +169,8 @@ typedef struct boost_cont_memchain_impl
 /*
 #define BOOST_CONTAINER_MEMCHAIN_SPLICE_BACK(PMEMCHAIN, PMEMCHAIN2)\
    do{\
-      boost_cont_memchain *____chain____  = (PMEMCHAIN);\
-      boost_cont_memchain *____chain2____ = (PMEMCHAIN2);\
+      dl_memchain *____chain____  = (PMEMCHAIN);\
+      dl_memchain *____chain2____ = (PMEMCHAIN2);\
       if(!____chain2____->root_node.next_node_ptr){\
          break;\
       }\
@@ -191,11 +191,11 @@ typedef struct boost_cont_memchain_impl
 /*!Joins two memory chains inserting the portions of the second chain at the back of the first chain*/
 #define BOOST_CONTAINER_MEMCHAIN_INCORPORATE_AFTER(PMEMCHAIN, BEFORE_IT, FIRST, BEFORELAST, NUM)\
    do{\
-      boost_cont_memchain *____chain____  = (PMEMCHAIN);\
-      boost_cont_memchain_node *____pnode____  = (BEFORE_IT).node_ptr;\
-      boost_cont_memchain_node *____next____   = ____pnode____->next_node_ptr;\
-      boost_cont_memchain_node *____first____  = (boost_cont_memchain_node *)(FIRST);\
-      boost_cont_memchain_node *____blast____  = (boost_cont_memchain_node *)(BEFORELAST);\
+      dl_memchain *____chain____  = (PMEMCHAIN);\
+      dl_memchain_node *____pnode____  = (BEFORE_IT).node_ptr;\
+      dl_memchain_node *____next____   = ____pnode____->next_node_ptr;\
+      dl_memchain_node *____first____  = (dl_memchain_node *)(FIRST);\
+      dl_memchain_node *____blast____  = (dl_memchain_node *)(BEFORELAST);\
       size_t ____num____ = (NUM);\
       if(!____num____){\
          break;\
@@ -209,20 +209,20 @@ typedef struct boost_cont_memchain_impl
    }while(0)\
 /**/
 
-/*!Indicates the all elements allocated by boost_cont_multialloc_nodes or boost_cont_multialloc_arrays
+/*!Indicates the all elements allocated by dl_multialloc_nodes or dl_multialloc_arrays
    must be contiguous.*/
 #define BOOST_CONTAINER_DL_MULTIALLOC_ALL_CONTIGUOUS        ((size_t)(-1))
 
-/*!Indicates the number of contiguous elements allocated by boost_cont_multialloc_nodes or boost_cont_multialloc_arrays
+/*!Indicates the number of contiguous elements allocated by dl_multialloc_nodes or dl_multialloc_arrays
    should be selected by those functions.*/
 #define BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS    ((size_t)(0))
 
-typedef struct boost_cont_malloc_stats_impl
+typedef struct dl_malloc_stats_impl
 {
    size_t max_system_bytes;
    size_t system_bytes;
    size_t in_use_bytes;
-} boost_cont_malloc_stats_t;
+} dl_malloc_stats_t;
 
 typedef unsigned int allocation_type;
 
@@ -247,11 +247,11 @@ enum {   BOOST_CONTAINER_ALLOCATION_PAYLOAD = sizeof(size_t)   };
 enum {   BOOST_CONTAINER_ALLOCATION_PAYLOAD = sizeof(size_t)*2   };
 #endif
 
-typedef struct boost_cont_command_ret_impl
+typedef struct dl_command_ret_impl
 {
    void *first;
    int   second;
-}boost_cont_command_ret_t;
+}dl_command_ret_t;
 
 
 #ifdef __cplusplus
@@ -458,7 +458,7 @@ struct dl_win_system_info
 #pragma push_macro("dlpvalloc")
 #pragma push_macro("dlmallinfo")
 #pragma push_macro("dlmallopt")
-#pragma push_macro("dlmalloc_trim")
+#pragma push_macro("dl_trim")
 #pragma push_macro("dlmalloc_stats")
 #pragma push_macro("dlmalloc_usable_size")
 #pragma push_macro("dlmalloc_footprint")
@@ -835,27 +835,27 @@ namespace container {
 namespace dl_detail {
 
 /* ------------- boost_cont_* API (inline: definitions follow) ------------- */
-inline size_t boost_cont_size(const void *p);
-inline void*  boost_cont_malloc(size_t bytes);
-inline void   boost_cont_free(void* mem);
-inline void*  boost_cont_memalign(size_t bytes, size_t alignment);
-inline int    boost_cont_multialloc_nodes
-   (size_t n_elements, size_t elem_size, size_t contiguous_elements, boost_cont_memchain *pchain);
-inline int    boost_cont_multialloc_arrays
-   (size_t n_elements, const size_t *sizes, size_t sizeof_element, size_t contiguous_elements, boost_cont_memchain *pchain);
-inline void   boost_cont_multidealloc(boost_cont_memchain *pchain);
-inline size_t boost_cont_allocated_memory(void);
-inline size_t boost_cont_chunksize(const void *p);
-inline int    boost_cont_all_deallocated(void);
-inline boost_cont_malloc_stats_t boost_cont_malloc_stats(void);
-inline size_t boost_cont_in_use_memory(void);
-inline int    boost_cont_trim(size_t pad);
-inline int    boost_cont_mallopt(int parameter_number, int parameter_value);
-inline int    boost_cont_grow(void* oldmem, size_t minbytes, size_t maxbytes, size_t *received);
-inline int    boost_cont_shrink(void* oldmem, size_t minbytes, size_t maxbytes, size_t *received, int do_commit);
-inline void*  boost_cont_alloc(size_t minbytes, size_t preferred_bytes, size_t *received_bytes);
-inline int    boost_cont_malloc_check(void);
-inline boost_cont_command_ret_t boost_cont_allocation_command
+inline size_t dl_size(const void *p);
+inline void*  dl_malloc(size_t bytes);
+inline void   dl_free(void* mem);
+inline void*  dl_memalign(size_t bytes, size_t alignment);
+inline int    dl_multialloc_nodes
+   (size_t n_elements, size_t elem_size, size_t contiguous_elements, dl_memchain *pchain);
+inline int    dl_multialloc_arrays
+   (size_t n_elements, const size_t *sizes, size_t sizeof_element, size_t contiguous_elements, dl_memchain *pchain);
+inline void   dl_multidealloc(dl_memchain *pchain);
+inline size_t dl_allocated_memory(void);
+inline size_t dl_chunksize(const void *p);
+inline int    dl_all_deallocated(void);
+inline dl_malloc_stats_t dl_malloc_stats(void);
+inline size_t dl_in_use_memory(void);
+inline int    dl_trim(size_t pad);
+inline int    dl_mallopt(int parameter_number, int parameter_value);
+inline int    dl_grow(void* oldmem, size_t minbytes, size_t maxbytes, size_t *received);
+inline int    dl_shrink(void* oldmem, size_t minbytes, size_t maxbytes, size_t *received, int do_commit);
+inline void*  dl_alloc(size_t minbytes, size_t preferred_bytes, size_t *received_bytes);
+inline int    dl_malloc_check(void);
+inline dl_command_ret_t dl_allocation_command
    ( allocation_type command, size_t sizeof_object, size_t alignof_object
    , size_t limit_size, size_t preferred_size, size_t *received_size, void *reuse_ptr);
 
@@ -1752,10 +1752,10 @@ static int internal_shrink(mstate m, void* oldmem, size_t minbytes, size_t maxby
    k+1's node either: k+1 is still in use, and dlmalloc only coalesces with
    free neighbours. */
 static void internal_multialloc_rollback
-   (mstate m, boost_cont_memchain *pchain,
-    boost_cont_memchain_it entry_last_it, size_t entry_num_mem)
+   (mstate m, dl_memchain *pchain,
+    dl_memchain_it entry_last_it, size_t entry_num_mem)
 {
-   boost_cont_memchain_it it = entry_last_it;
+   dl_memchain_it it = entry_last_it;
    BOOST_CONTAINER_MEMIT_NEXT(it);
    while(!BOOST_CONTAINER_MEMCHAIN_IS_END_IT(pchain, it)){
       void *addr = BOOST_CONTAINER_MEMIT_ADDR(it);
@@ -1771,14 +1771,14 @@ static void internal_multialloc_rollback
 }
 
 static int internal_node_multialloc
-(mstate m, size_t n_elements, size_t element_size, size_t contiguous_elements, boost_cont_memchain *pchain) {
+(mstate m, size_t n_elements, size_t element_size, size_t contiguous_elements, dl_memchain *pchain) {
 	void*     mem;            /* malloced aggregate space */
 	mchunkptr p;              /* corresponding chunk */
 	size_t    remainder_size; /* remaining bytes while splitting */
 	flag_t    was_enabled;    /* to disable mmap */
 	size_t    elements_per_segment = 0;
 	size_t    element_req_size = request2size(element_size);
-	boost_cont_memchain_it prev_last_it = BOOST_CONTAINER_MEMCHAIN_LAST_IT(pchain);
+	dl_memchain_it prev_last_it = BOOST_CONTAINER_MEMCHAIN_LAST_IT(pchain);
 	size_t prev_num_mem = BOOST_CONTAINER_MEMCHAIN_SIZE(pchain);
 	/* The count that actually gets multiplied by element_req_size is the
 	   per-segment one, and that is what the overflow test below has to use.
@@ -1855,7 +1855,7 @@ static int internal_node_multialloc
 				   per element (which also rewrites last_node_ptr and num_mem
 				   every time). The arrays variant below does the same. */
 				void *mem_orig = mem;
-				boost_cont_memchain_it last_it = BOOST_CONTAINER_MEMCHAIN_LAST_IT(pchain);
+				dl_memchain_it last_it = BOOST_CONTAINER_MEMCHAIN_LAST_IT(pchain);
 				size_t num_elements = next_i - i;
 
 				size_t num_loops = num_elements - 1;
@@ -1883,17 +1883,17 @@ static int internal_node_multialloc
    *((void**)(THISMEM)) = *((void**)((NEXTMEM)))
 
 //This function is based on internal_bulk_free
-//replacing iteration over array[] with boost_cont_memchain.
+//replacing iteration over array[] with dl_memchain.
 //Instead of returning the unallocated nodes, returns a chain of non-deallocated nodes.
 //After forward merging, backwards merging is also tried
-static void internal_multialloc_free(mstate m, boost_cont_memchain *pchain)
+static void internal_multialloc_free(mstate m, dl_memchain *pchain)
 {
 #if FOOTERS
-	boost_cont_memchain ret_chain;
+	dl_memchain ret_chain;
 	BOOST_CONTAINER_MEMCHAIN_INIT(&ret_chain);
 #endif
 	if (!PREACTION(m)) {
-		boost_cont_memchain_it a_it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(pchain);
+		dl_memchain_it a_it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(pchain);
 		while (!BOOST_CONTAINER_MEMCHAIN_IS_END_IT(pchain, a_it)) { /* Iterate though all memory holded by the chain */
 			void* a_mem = BOOST_CONTAINER_MEMIT_ADDR(a_it);
 			mchunkptr a_p = mem2chunk(a_mem);
@@ -1908,7 +1908,7 @@ static void internal_multialloc_free(mstate m, boost_cont_memchain *pchain)
 			check_inuse_chunk(m, a_p);
 			if (RTCHECK(ok_address(m, a_p) && ok_inuse(a_p))) {
 				while (1) { /* Internal loop to speed up forward and backward merging (avoids some redundant checks) */
-					boost_cont_memchain_it b_it = a_it;
+					dl_memchain_it b_it = a_it;
 					BOOST_CONTAINER_MEMIT_NEXT(b_it);
 					if (!BOOST_CONTAINER_MEMCHAIN_IS_END_IT(pchain, b_it)) {
 						void *b_mem = BOOST_CONTAINER_MEMIT_ADDR(b_it);
@@ -1949,7 +1949,7 @@ static void internal_multialloc_free(mstate m, boost_cont_memchain *pchain)
 	}
 #if FOOTERS
 	{
-		boost_cont_memchain_it last_pchain = BOOST_CONTAINER_MEMCHAIN_LAST_IT(pchain);
+		dl_memchain_it last_pchain = BOOST_CONTAINER_MEMCHAIN_LAST_IT(pchain);
 		BOOST_CONTAINER_MEMCHAIN_INIT(pchain);
 		BOOST_CONTAINER_MEMCHAIN_INCORPORATE_AFTER
 		(pchain
@@ -1963,13 +1963,13 @@ static void internal_multialloc_free(mstate m, boost_cont_memchain *pchain)
 }
 
 static int internal_multialloc_arrays
-   (mstate m, size_t n_elements, const size_t* sizes, size_t element_size, size_t contiguous_elements, boost_cont_memchain *pchain) {
+   (mstate m, size_t n_elements, const size_t* sizes, size_t element_size, size_t contiguous_elements, dl_memchain *pchain) {
    void*     mem;            /* malloced aggregate space */
    mchunkptr p;              /* corresponding chunk */
    size_t    remainder_size; /* remaining bytes while splitting */
    flag_t    was_enabled;    /* to disable mmap */
    size_t    size;
-   size_t boost_cont_multialloc_segmented_malloc_size;
+   size_t dl_multialloc_segmented_malloc_size;
    size_t max_size;
 
    /* Check overflow */
@@ -1981,10 +1981,10 @@ static int internal_multialloc_arrays
    switch(contiguous_elements){
       case BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS:
          /* Use default contiguous mem */
-         boost_cont_multialloc_segmented_malloc_size = INTERNAL_MULTIALLOC_DEFAULT_CONTIGUOUS_MEM;
+         dl_multialloc_segmented_malloc_size = INTERNAL_MULTIALLOC_DEFAULT_CONTIGUOUS_MEM;
       break;
       case BOOST_CONTAINER_DL_MULTIALLOC_ALL_CONTIGUOUS:
-         boost_cont_multialloc_segmented_malloc_size = MAX_REQUEST + CHUNK_OVERHEAD;
+         dl_multialloc_segmented_malloc_size = MAX_REQUEST + CHUNK_OVERHEAD;
       break;
       default:
          if(max_size < contiguous_elements){
@@ -1992,7 +1992,7 @@ static int internal_multialloc_arrays
          }
          else{
             /* The suggested buffer is just the the element count by the size */
-            boost_cont_multialloc_segmented_malloc_size = element_size*contiguous_elements;
+            dl_multialloc_segmented_malloc_size = element_size*contiguous_elements;
          }
    }
 
@@ -2001,7 +2001,7 @@ static int internal_multialloc_arrays
       size_t next_i;
       /* Where this call's own blocks start, so the unwind below cannot
          touch blocks the chain already carried. */
-      boost_cont_memchain_it entry_last_it = BOOST_CONTAINER_MEMCHAIN_LAST_IT(pchain);
+      dl_memchain_it entry_last_it = BOOST_CONTAINER_MEMCHAIN_LAST_IT(pchain);
       size_t entry_num_mem = BOOST_CONTAINER_MEMCHAIN_SIZE(pchain);
       /*
          Allocate the aggregate chunk.  First disable direct-mmapping so
@@ -2022,7 +2022,7 @@ static int internal_multialloc_arrays
             }
             else{
                size_t reqsize = request2size(cur_array_size*element_size);
-               if(((boost_cont_multialloc_segmented_malloc_size - CHUNK_OVERHEAD) - accum_size) < reqsize){
+               if(((dl_multialloc_segmented_malloc_size - CHUNK_OVERHEAD) - accum_size) < reqsize){
                   if(!accum_size){
                      accum_size += reqsize;
                      ++next_i;
@@ -2048,7 +2048,7 @@ static int internal_multialloc_arrays
 
          {  /* split out elements */
             void *mem_orig = mem;
-            boost_cont_memchain_it last_it = BOOST_CONTAINER_MEMCHAIN_LAST_IT(pchain);
+            dl_memchain_it last_it = BOOST_CONTAINER_MEMCHAIN_LAST_IT(pchain);
             size_t num_elements = next_i-i;
 
             for(++i; i != next_i; ++i) {
@@ -2070,8 +2070,8 @@ static int internal_multialloc_arrays
    return 1;
 }
 
-int boost_cont_multialloc_arrays
-   (size_t n_elements, const size_t *sizes, size_t element_size, size_t contiguous_elements, boost_cont_memchain *pchain)
+int dl_multialloc_arrays
+   (size_t n_elements, const size_t *sizes, size_t element_size, size_t contiguous_elements, dl_memchain *pchain)
 {
    int ret = 0;
    mstate ms = (mstate)gm;
@@ -2088,9 +2088,9 @@ int boost_cont_multialloc_arrays
 
 
 /*Doug Lea malloc extensions*/
-static boost_cont_malloc_stats_t get_malloc_stats(mstate m)
+static dl_malloc_stats_t get_malloc_stats(mstate m)
 {
-   boost_cont_malloc_stats_t ret = { 0, 0, 0 };
+   dl_malloc_stats_t ret = { 0, 0, 0 };
    ensure_initialization();
    if (!PREACTION(m)) {
       size_t maxfp = 0;
@@ -2123,10 +2123,10 @@ static boost_cont_malloc_stats_t get_malloc_stats(mstate m)
    return ret;
 }
 
-size_t boost_cont_size(const void *p)
+size_t dl_size(const void *p)
 {  return DL_SIZE_IMPL(p);  }
 
-void* boost_cont_malloc(size_t bytes)
+void* dl_malloc(size_t bytes)
 {
    void* mem = 0;
    dlmalloc_globals_t *const dlg = dl_globals();
@@ -2143,7 +2143,7 @@ void* boost_cont_malloc(size_t bytes)
    return mem;
 }
 
-void boost_cont_free(void* mem)
+void dl_free(void* mem)
 {
    dlmalloc_globals_t *const dlg = dl_globals();
    mstate const ms = &dlg->gm_state;
@@ -2160,7 +2160,7 @@ void boost_cont_free(void* mem)
    }
 }
 
-void* boost_cont_memalign(size_t bytes, size_t alignment)
+void* dl_memalign(size_t bytes, size_t alignment)
 {
    void *addr;
    ensure_initialization();
@@ -2168,7 +2168,7 @@ void* boost_cont_memalign(size_t bytes, size_t alignment)
       larger ones reach internal_memalign directly 
       to avoid internal magic check that can fail in the first allocation. */
    if(alignment <= MALLOC_ALIGNMENT)
-      return boost_cont_malloc(bytes);   /* accounts for itself */
+      return dl_malloc(bytes);   /* accounts for itself */
    addr = internal_memalign(gm, alignment, bytes);
    if(addr){
       /* internal_memalign released the lock; retake it for the accounting,
@@ -2182,8 +2182,8 @@ void* boost_cont_memalign(size_t bytes, size_t alignment)
    return addr;
 }
 
-int boost_cont_multialloc_nodes
-   (size_t n_elements, size_t elem_size, size_t contiguous_elements, boost_cont_memchain *pchain)
+int dl_multialloc_nodes
+   (size_t n_elements, size_t elem_size, size_t contiguous_elements, dl_memchain *pchain)
 {
    int ret = 0;
    mstate ms = (mstate)gm;
@@ -2198,7 +2198,7 @@ int boost_cont_multialloc_nodes
    return ret;
 }
 
-size_t boost_cont_allocated_memory(void)
+size_t dl_allocated_memory(void)
 {
    size_t alloc_mem = 0;
    mstate m = (mstate)gm;
@@ -2240,35 +2240,35 @@ size_t boost_cont_allocated_memory(void)
    return alloc_mem;
 }
 
-size_t boost_cont_chunksize(const void *p)
+size_t dl_chunksize(const void *p)
 {  return chunksize(mem2chunk(p));   }
 
-int boost_cont_all_deallocated(void)
+int dl_all_deallocated(void)
 {  return !s_allocated_memory;  }
 
-boost_cont_malloc_stats_t boost_cont_malloc_stats(void)
+dl_malloc_stats_t dl_malloc_stats(void)
 {
   mstate ms = (mstate)gm;
   if (ok_magic(ms)) {
     return get_malloc_stats(ms);
   }
   else {
-    boost_cont_malloc_stats_t r = { 0, 0, 0 };
+    dl_malloc_stats_t r = { 0, 0, 0 };
     USAGE_ERROR_ACTION(ms,ms);
     return r;
   }
 }
 
-size_t boost_cont_in_use_memory(void)
+size_t dl_in_use_memory(void)
 {  return s_allocated_memory;   }
 
-int boost_cont_trim(size_t pad)
+int dl_trim(size_t pad)
 {
    ensure_initialization();
-   return dlmalloc_trim(pad);
+   return dl_trim(pad);
 }
 
-int boost_cont_grow
+int dl_grow
    (void* oldmem, size_t minbytes, size_t maxbytes, size_t *received)
 {
    mstate ms = (mstate)gm;
@@ -2294,7 +2294,7 @@ int boost_cont_grow
    return 0;
 }
 
-int boost_cont_shrink
+int dl_shrink
    (void* oldmem, size_t minbytes, size_t maxbytes, size_t *received, int do_commit)
 {
    mstate ms = (mstate)gm;
@@ -2312,15 +2312,15 @@ int boost_cont_shrink
 }
 
 
-void* boost_cont_alloc
+void* dl_alloc
    (size_t minbytes, size_t preferred_bytes, size_t *received_bytes)
 {
-   //ensure_initialization provided by boost_cont_allocation_command
-   return boost_cont_allocation_command
+   //ensure_initialization provided by dl_allocation_command
+   return dl_allocation_command
       (BOOST_CONTAINER_ALLOCATE_NEW, 1, 1,  minbytes, preferred_bytes, received_bytes, 0).first;
 }
 
-void boost_cont_multidealloc(boost_cont_memchain *pchain)
+void dl_multidealloc(dl_memchain *pchain)
 {
    mstate ms = (mstate)gm;
    if (!ok_magic(ms)) {
@@ -2330,7 +2330,7 @@ void boost_cont_multidealloc(boost_cont_memchain *pchain)
    internal_multialloc_free(ms, pchain);
 }
 
-int boost_cont_malloc_check(void)
+int dl_malloc_check(void)
 {
 #ifdef DL_DEBUG
    mstate ms = (mstate)gm;
@@ -2353,16 +2353,16 @@ int boost_cont_malloc_check(void)
 }
 
 
-boost_cont_command_ret_t boost_cont_allocation_command
+dl_command_ret_t dl_allocation_command
    (allocation_type command, size_t sizeof_object, size_t alignof_object, size_t limit_size
    , size_t preferred_size, size_t *received_size, void *reuse_ptr)
 {
-   boost_cont_command_ret_t ret = { 0, 0 };
-   /* One globals lookup for the whole command (see boost_cont_malloc) */
+   dl_command_ret_t ret = { 0, 0 };
+   /* One globals lookup for the whole command (see dl_malloc) */
    dlmalloc_globals_t *const dlg = dl_globals();
    (void)(dl_magic_read_acq(&dlg->params.magic) != 0 || init_mparams());
    if(command & (BOOST_CONTAINER_SHRINK_IN_PLACE | BOOST_CONTAINER_TRY_SHRINK_IN_PLACE)){
-      int success = boost_cont_shrink( reuse_ptr, preferred_size, limit_size
+      int success = dl_shrink( reuse_ptr, preferred_size, limit_size
                              , received_size, (command & BOOST_CONTAINER_SHRINK_IN_PLACE));
       ret.first = success ? reuse_ptr : 0;
       return ret;
@@ -2410,7 +2410,7 @@ boost_cont_command_ret_t boost_cont_allocation_command
             if(alignof_object <= MALLOC_ALIGNMENT){
                addr = mspace_malloc_lockless(ms, preferred_size);
                /* Only worth a second try with the smaller size: when the two
-                  are equal (boost_cont_malloc passes bytes for both) nothing
+                  are equal (dl_malloc passes bytes for both) nothing
                   has changed under the still-held lock, so the retry repeats
                   the same bin walk and the same failing sys_alloc. */
                if(!addr && limit_size != preferred_size)
@@ -2451,7 +2451,7 @@ boost_cont_command_ret_t boost_cont_allocation_command
    return ret;
 }
 
-int boost_cont_mallopt(int param_number, int value)
+int dl_mallopt(int param_number, int value)
 {
   return change_mparam(param_number, value);
 }
@@ -2529,7 +2529,7 @@ int boost_cont_mallopt(int param_number, int value)
 #pragma pop_macro("dlpvalloc")
 #pragma pop_macro("dlmallinfo")
 #pragma pop_macro("dlmallopt")
-#pragma pop_macro("dlmalloc_trim")
+#pragma pop_macro("dl_trim")
 #pragma pop_macro("dlmalloc_stats")
 #pragma pop_macro("dlmalloc_usable_size")
 #pragma pop_macro("dlmalloc_footprint")
@@ -2759,71 +2759,74 @@ int boost_cont_mallopt(int param_number, int value)
 namespace boost{
 namespace container{
 
-typedef boost_cont_command_ret_t dlmalloc_command_ret_t;
-typedef boost_cont_memchain dlmalloc_memchain;
-typedef boost_cont_memchain_it dlmalloc_memchain_it;
-typedef boost_cont_malloc_stats_t dlmalloc_malloc_stats_t;
+//The types themselves are declared at global scope, beside the MEMCHAIN
+//macros that name them. These bring them into this namespace too, so a
+//caller may spell either.
+typedef ::dl_command_ret_t   dl_command_ret_t;
+typedef ::dl_memchain        dl_memchain;
+typedef ::dl_memchain_it     dl_memchain_it;
+typedef ::dl_malloc_stats_t  dl_malloc_stats_t;
 
-inline size_t dlmalloc_size(const void *p)
-{  return dl_detail::boost_cont_size(p);  }
+inline size_t dl_size(const void *p)
+{  return dl_detail::dl_size(p);  }
 
-inline void* dlmalloc_malloc(size_t bytes)
-{  return dl_detail::boost_cont_malloc(bytes);  }
+inline void* dl_malloc(size_t bytes)
+{  return dl_detail::dl_malloc(bytes);  }
 
-inline void  dlmalloc_free(void* mem)
-{  return dl_detail::boost_cont_free(mem);  }
+inline void  dl_free(void* mem)
+{  return dl_detail::dl_free(mem);  }
 
-inline void* dlmalloc_memalign(size_t bytes, size_t alignment)
-{  return dl_detail::boost_cont_memalign(bytes, alignment);  }
+inline void* dl_memalign(size_t bytes, size_t alignment)
+{  return dl_detail::dl_memalign(bytes, alignment);  }
 
-inline int dlmalloc_multialloc_nodes
-   (size_t n_elements, size_t elem_size, size_t contiguous_elements, boost_cont_memchain *pchain)
-{  return dl_detail::boost_cont_multialloc_nodes(n_elements, elem_size, contiguous_elements, pchain);  }
+inline int dl_multialloc_nodes
+   (size_t n_elements, size_t elem_size, size_t contiguous_elements, dl_memchain *pchain)
+{  return dl_detail::dl_multialloc_nodes(n_elements, elem_size, contiguous_elements, pchain);  }
 
-inline int dlmalloc_multialloc_arrays
-   (size_t n_elements, const size_t *sizes, size_t sizeof_element, size_t contiguous_elements, boost_cont_memchain *pchain)
-{  return dl_detail::boost_cont_multialloc_arrays(n_elements, sizes, sizeof_element, contiguous_elements, pchain); }
+inline int dl_multialloc_arrays
+   (size_t n_elements, const size_t *sizes, size_t sizeof_element, size_t contiguous_elements, dl_memchain *pchain)
+{  return dl_detail::dl_multialloc_arrays(n_elements, sizes, sizeof_element, contiguous_elements, pchain); }
 
-inline void dlmalloc_multidealloc(boost_cont_memchain *pchain)
-{  return dl_detail::boost_cont_multidealloc(pchain); }
+inline void dl_multidealloc(dl_memchain *pchain)
+{  return dl_detail::dl_multidealloc(pchain); }
 
-inline size_t dlmalloc_allocated_memory()
-{  return dl_detail::boost_cont_allocated_memory(); }
+inline size_t dl_allocated_memory()
+{  return dl_detail::dl_allocated_memory(); }
 
-inline size_t dlmalloc_chunksize(const void *p)
-{  return dl_detail::boost_cont_chunksize(p); }
+inline size_t dl_chunksize(const void *p)
+{  return dl_detail::dl_chunksize(p); }
 
-inline int dlmalloc_all_deallocated()
-{  return dl_detail::boost_cont_all_deallocated(); }
+inline int dl_all_deallocated()
+{  return dl_detail::dl_all_deallocated(); }
 
-inline boost_cont_malloc_stats_t dlmalloc_malloc_stats()
-{  return dl_detail::boost_cont_malloc_stats(); }
+inline dl_malloc_stats_t dl_malloc_stats()
+{  return dl_detail::dl_malloc_stats(); }
 
-inline size_t dlmalloc_in_use_memory()
-{  return dl_detail::boost_cont_in_use_memory(); }
+inline size_t dl_in_use_memory()
+{  return dl_detail::dl_in_use_memory(); }
 
-inline int dlmalloc_trim(size_t pad)
-{  return dl_detail::boost_cont_trim(pad); }
+inline int dl_trim(size_t pad)
+{  return dl_detail::dl_trim(pad); }
 
-inline int dlmalloc_mallopt(int parameter_number, int parameter_value)
-{  return dl_detail::boost_cont_mallopt(parameter_number, parameter_value); }
+inline int dl_mallopt(int parameter_number, int parameter_value)
+{  return dl_detail::dl_mallopt(parameter_number, parameter_value); }
 
-inline int dlmalloc_grow
+inline int dl_grow
    (void* oldmem, size_t minbytes, size_t maxbytes, size_t *received)
-{  return dl_detail::boost_cont_grow(oldmem, minbytes, maxbytes, received); }
+{  return dl_detail::dl_grow(oldmem, minbytes, maxbytes, received); }
 
-inline int dlmalloc_shrink
+inline int dl_shrink
    (void* oldmem, size_t minbytes, size_t maxbytes, size_t *received, int do_commit)
-{  return dl_detail::boost_cont_shrink(oldmem, minbytes, maxbytes, received, do_commit); }
+{  return dl_detail::dl_shrink(oldmem, minbytes, maxbytes, received, do_commit); }
 
-inline void* dlmalloc_alloc
+inline void* dl_alloc
    (size_t minbytes, size_t preferred_bytes, size_t *received_bytes)
-{  return dl_detail::boost_cont_alloc(minbytes, preferred_bytes, received_bytes); }
+{  return dl_detail::dl_alloc(minbytes, preferred_bytes, received_bytes); }
 
-inline int dlmalloc_malloc_check()
-{  return dl_detail::boost_cont_malloc_check(); }
+inline int dl_malloc_check()
+{  return dl_detail::dl_malloc_check(); }
 
-inline boost_cont_command_ret_t dlmalloc_allocation_command
+inline dl_command_ret_t dl_allocation_command
    ( allocation_type command
    , size_t sizeof_object
    , size_t alignof_object
@@ -2832,7 +2835,7 @@ inline boost_cont_command_ret_t dlmalloc_allocation_command
    , size_t *received_bytes
    , void *reuse_ptr
    )
-{  return dl_detail::boost_cont_allocation_command(command, sizeof_object, alignof_object, limit_bytes, preferred_bytes, received_bytes, reuse_ptr); }
+{  return dl_detail::dl_allocation_command(command, sizeof_object, alignof_object, limit_bytes, preferred_bytes, received_bytes, reuse_ptr); }
 
 }  //namespace container{
 }  //namespace boost{

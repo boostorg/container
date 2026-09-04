@@ -157,7 +157,7 @@ class node_allocator
          typedef dtl::singleton_default<shared_pool_t> singleton_t;
          return pointer(static_cast<T*>(singleton_t::instance().allocate_node()));
       }
-      void *ret = dlmalloc_memalign(count*sizeof(T), dtl::alignment_of<T>::value);
+      void *ret = dl_memalign(count*sizeof(T), dtl::alignment_of<T>::value);
       if(BOOST_UNLIKELY(!ret))
          boost::container::throw_bad_alloc();
       return static_cast<pointer>(ret);
@@ -176,7 +176,7 @@ class node_allocator
          singleton_t::instance().deallocate_node(ptr);
          return;
       }
-      dlmalloc_free(ptr);
+      dl_free(ptr);
    }
 
    //!Deallocates all free blocks of the pool
@@ -205,7 +205,7 @@ class node_allocator
    size_type size(pointer p) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
-      return dlmalloc_size(p);
+      return dl_size(p);
    }
 
    //!Allocates just one object. Memory allocated with this function
@@ -267,9 +267,9 @@ class node_allocator
    void allocate_many(size_type elem_size, std::size_t n_elements, multiallocation_chain &chain)
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
-      dlmalloc_memchain ch;
+      dl_memchain ch;
       BOOST_CONTAINER_MEMCHAIN_INIT(&ch);
-      if(BOOST_UNLIKELY(!dlmalloc_multialloc_nodes(n_elements, elem_size*sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch))){
+      if(BOOST_UNLIKELY(!dl_multialloc_nodes(n_elements, elem_size*sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch))){
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after( chain.before_begin()
@@ -283,9 +283,9 @@ class node_allocator
    void allocate_many(const size_type *elem_sizes, size_type n_elements, multiallocation_chain &chain)
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
-      dlmalloc_memchain ch;
+      dl_memchain ch;
       BOOST_CONTAINER_MEMCHAIN_INIT(&ch);
-      dlmalloc_multialloc_arrays(n_elements, elem_sizes, sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch);
+      dl_multialloc_arrays(n_elements, elem_sizes, sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch);
       if(BOOST_UNLIKELY(BOOST_CONTAINER_MEMCHAIN_EMPTY(&ch))){
          boost::container::throw_bad_alloc();
       }
@@ -301,9 +301,9 @@ class node_allocator
       void *first = boost::movelib::iterator_to_raw_pointer(chain.begin());
       void *last  = boost::movelib::iterator_to_raw_pointer(chain.last());
       size_t num  = chain.size();
-      dlmalloc_memchain ch;
+      dl_memchain ch;
       BOOST_CONTAINER_MEMCHAIN_INIT_FROM(&ch, first, last, num);
-      dlmalloc_multidealloc(&ch);
+      dl_multidealloc(&ch);
    }
 
    //!Swaps allocators. Does not throw. If each allocator is placed in a
@@ -329,7 +329,7 @@ class node_allocator
       ,size_type &prefer_in_recvd_out_size, pointer &reuse_ptr)
    {
       std::size_t const preferred_size = prefer_in_recvd_out_size;
-      dlmalloc_command_ret_t ret = {0 , 0};
+      dl_command_ret_t ret = {0 , 0};
       if(BOOST_UNLIKELY(limit_size > this->max_size() || preferred_size > this->max_size())){
          return pointer();
       }
@@ -338,7 +338,7 @@ class node_allocator
       std::size_t r_size;
       {
          void* reuse_ptr_void = reuse_ptr;
-         ret = dlmalloc_allocation_command( command, sizeof(T), dtl::alignment_of<T>::value
+         ret = dl_allocation_command( command, sizeof(T), dtl::alignment_of<T>::value
                                           , l_size, p_size, &r_size, reuse_ptr_void);
          reuse_ptr = ret.second ? static_cast<T*>(reuse_ptr_void) : 0;
       }

@@ -31,9 +31,9 @@ enum deallocation_type { DirectDeallocation, InverseDeallocation, MixedDeallocat
 
 bool test_allocation()
 {
-   if(!dlmalloc_all_deallocated())
+   if(!dl_all_deallocated())
       return false;
-   dlmalloc_malloc_check();
+   dl_malloc_check();
    for( deallocation_type t = DirectDeallocation
       ; t != EndDeallocationType
       ; t = (deallocation_type)((int)t + 1)){
@@ -41,7 +41,7 @@ bool test_allocation()
       //std::size_t free_memory = a.get_free_memory();
 
       for(std::size_t i = 0; i != NumIt; ++i){
-         void *ptr = dlmalloc_malloc(i);
+         void *ptr = dl_malloc(i);
          if(!ptr)
             break;
          buffers.push_back(ptr);
@@ -53,7 +53,7 @@ bool test_allocation()
             for(std::size_t j = 0, max = buffers.size()
                ;j < max
                ;++j){
-               dlmalloc_free(buffers[j]);
+               dl_free(buffers[j]);
             }
          }
          break;
@@ -62,7 +62,7 @@ bool test_allocation()
             for(std::size_t j = buffers.size()
                ;j--
                ;){
-               dlmalloc_free(buffers[j]);
+               dl_free(buffers[j]);
             }
          }
          break;
@@ -72,7 +72,7 @@ bool test_allocation()
                ;j < max
                ;++j){
                std::size_t pos = (j%4)*(buffers.size())/4;
-               dlmalloc_free(buffers[pos]);
+               dl_free(buffers[pos]);
                buffers.erase(buffers.begin()+(std::ptrdiff_t)pos);
             }
          }
@@ -80,14 +80,14 @@ bool test_allocation()
          default:
          break;
       }
-      if(!dlmalloc_all_deallocated())
+      if(!dl_all_deallocated())
          return false;
       //bool ok = free_memory == a.get_free_memory() &&
                //a.all_memory_deallocated() && a.check_sanity();
       //if(!ok)  return ok;
    }
-   dlmalloc_malloc_check();
-   return 0 != dlmalloc_all_deallocated();
+   dl_malloc_check();
+   return 0 != dl_all_deallocated();
 }
 
 //This test allocates until there is no more memory
@@ -96,12 +96,12 @@ bool test_allocation()
 
 bool test_allocation_shrink()
 {
-   dlmalloc_malloc_check();
+   dl_malloc_check();
    std::vector<void*> buffers;
 
    //Allocate buffers with extra memory
    for(std::size_t i = 0; i != NumIt; ++i){
-      void *ptr = dlmalloc_malloc(i*2u);
+      void *ptr = dl_malloc(i*2u);
       if(!ptr)
          break;
       buffers.push_back(ptr);
@@ -112,12 +112,12 @@ bool test_allocation_shrink()
       ;i < max
       ; ++i){
       std::size_t try_received_size = 0;
-      void* try_result = dlmalloc_allocation_command
+      void* try_result = dl_allocation_command
                ( BOOST_CONTAINER_TRY_SHRINK_IN_PLACE, 1, 1, i*2
                , i, &try_received_size, (char*)buffers[i]).first;
 
       std::size_t received_size = 0;
-      void* result = dlmalloc_allocation_command
+      void* result = dl_allocation_command
          ( BOOST_CONTAINER_SHRINK_IN_PLACE, 1, 1, i*2
          , i, &received_size, (char*)buffers[i]).first;
 
@@ -142,11 +142,11 @@ bool test_allocation_shrink()
       ;j < max
       ;++j){
       std::size_t pos = (j%4u)*(buffers.size())/4u;
-      dlmalloc_free(buffers[pos]);
+      dl_free(buffers[pos]);
       buffers.erase(buffers.begin()+(std::ptrdiff_t)pos);
    }
-   dlmalloc_malloc_check();
-   return 0 != dlmalloc_all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
+   dl_malloc_check();
+   return 0 != dl_all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
 }
 
 //This test allocates until there is no more memory
@@ -155,12 +155,12 @@ bool test_allocation_shrink()
 
 bool test_allocation_expand()
 {
-   dlmalloc_malloc_check();
+   dl_malloc_check();
    std::vector<void*> buffers;
 
    //Allocate buffers with extra memory
    for(std::size_t i = 0; i != NumIt; ++i){
-      void *ptr = dlmalloc_malloc(i);
+      void *ptr = dl_malloc(i);
       if(!ptr)
          break;
       buffers.push_back(ptr);
@@ -174,7 +174,7 @@ bool test_allocation_expand()
       std::size_t min_size = i+1;
       std::size_t preferred_size = i*2;
       preferred_size = min_size > preferred_size ? min_size : preferred_size;
-      while(dlmalloc_allocation_command
+      while(dl_allocation_command
          ( BOOST_CONTAINER_EXPAND_FWD, 1, 1, min_size
          , preferred_size, &received_size, (char*)buffers[i]).first){
          //Check received size is bigger than minimum
@@ -192,11 +192,11 @@ bool test_allocation_expand()
       ;j < max
       ;++j){
       std::size_t pos = (j%4u)*(buffers.size())/4u;
-      dlmalloc_free(buffers[pos]);
+      dl_free(buffers[pos]);
       buffers.erase(buffers.begin()+(std::ptrdiff_t)pos);
    }
-   dlmalloc_malloc_check();
-   return 0 != dlmalloc_all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
+   dl_malloc_check();
+   return 0 != dl_all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
 }
 
 //This test allocates until there is no more memory
@@ -211,10 +211,10 @@ bool test_allocation_shrink_and_expand()
    //Allocate buffers wand store received sizes
    for(std::size_t i = 0; i != NumIt; ++i){
       std::size_t received_size = 0;
-      void *ptr = dlmalloc_allocation_command
+      void *ptr = dl_allocation_command
          (BOOST_CONTAINER_ALLOCATE_NEW, 1u, 1u, i, i*2u, &received_size, 0).first;
       if(!ptr){
-         ptr = dlmalloc_allocation_command
+         ptr = dl_allocation_command
             ( BOOST_CONTAINER_ALLOCATE_NEW, 1u, 1u, 1u, i*2, &received_size, 0).first;
          if(!ptr)
             break;
@@ -230,7 +230,7 @@ bool test_allocation_shrink_and_expand()
       std::size_t received_size = 0;
       bool size_reduced_flag;
       if(true == (size_reduced_flag = !!
-         dlmalloc_allocation_command
+         dl_allocation_command
          ( BOOST_CONTAINER_SHRINK_IN_PLACE, 1, 1, received_sizes[i]
          , i, &received_size, (char*)buffers[i]).first)){
          if(received_size > std::size_t(received_sizes[i])){
@@ -250,7 +250,7 @@ bool test_allocation_shrink_and_expand()
       if(!size_reduced[i])  continue;
       std::size_t received_size = 0;
       std::size_t request_size =  received_sizes[i];
-      if(dlmalloc_allocation_command
+      if(dl_allocation_command
          ( BOOST_CONTAINER_EXPAND_FWD, 1, 1, request_size
          , request_size, &received_size, (char*)buffers[i]).first){
          if(received_size != request_size){
@@ -267,11 +267,11 @@ bool test_allocation_shrink_and_expand()
       ;j < max
       ;++j){
       std::size_t pos = (j%4u)*(buffers.size())/4u;
-      dlmalloc_free(buffers[pos]);
+      dl_free(buffers[pos]);
       buffers.erase(buffers.begin()+(std::ptrdiff_t)pos);
    }
 
-   return 0 != dlmalloc_all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
+   return 0 != dl_all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
 }
 
 //This test allocates until there is no more memory
@@ -281,12 +281,12 @@ bool test_allocation_shrink_and_expand()
 
 bool test_allocation_deallocation_expand()
 {
-   dlmalloc_malloc_check();
+   dl_malloc_check();
    std::vector<void*> buffers;
 
    //Allocate buffers with extra memory
    for(std::size_t i = 0; i != NumIt; ++i){
-      void *ptr = dlmalloc_malloc(i);
+      void *ptr = dl_malloc(i);
       if(!ptr)
          break;
       buffers.push_back(ptr);
@@ -298,7 +298,7 @@ bool test_allocation_deallocation_expand()
       ;i < max
       ;++i){
       if(i%2){
-         dlmalloc_free(buffers[i]);
+         dl_free(buffers[i]);
          buffers[i] = 0;
       }
    }
@@ -314,7 +314,7 @@ bool test_allocation_deallocation_expand()
          std::size_t preferred_size = i*2;
          preferred_size = min_size > preferred_size ? min_size : preferred_size;
 
-         while(dlmalloc_allocation_command
+         while(dl_allocation_command
             ( BOOST_CONTAINER_EXPAND_FWD, 1, 1, min_size
             , preferred_size, &received_size, (char*)buffers[i]).first){
             //Check received size is bigger than minimum
@@ -337,11 +337,11 @@ bool test_allocation_deallocation_expand()
       ;j < max
       ;++j){
       std::size_t pos = (j%4u)*(buffers.size())/4u;
-      dlmalloc_free(buffers[pos]);
+      dl_free(buffers[pos]);
       buffers.erase(buffers.begin()+(std::ptrdiff_t)pos);
    }
-   dlmalloc_malloc_check();
-   return 0 != dlmalloc_all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
+   dl_malloc_check();
+   return 0 != dl_all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
 }
 
 //This test allocates until there is no more memory
@@ -353,14 +353,14 @@ bool test_allocation_deallocation_expand()
 
 bool test_allocation_with_reuse()
 {
-   dlmalloc_malloc_check();
+   dl_malloc_check();
    //We will repeat this test for different sized elements
    for(std::size_t sizeof_object = 1; sizeof_object < 20; ++sizeof_object){
       std::vector<void*> buffers;
 
       //Allocate buffers with extra memory
       for(std::size_t i = 0; i != NumIt; ++i){
-         void *ptr = dlmalloc_malloc(i*sizeof_object);
+         void *ptr = dl_malloc(i*sizeof_object);
          if(!ptr)
             break;
          buffers.push_back(ptr);
@@ -371,7 +371,7 @@ bool test_allocation_with_reuse()
       for(std::size_t i = 0, max = buffers.size() - 1
          ;i < max
          ;++i){
-         dlmalloc_free(buffers[i]);
+         dl_free(buffers[i]);
       }
 
       //Save the unique buffer and clear vector
@@ -383,7 +383,7 @@ bool test_allocation_with_reuse()
       for(std::size_t i = 0; i != NumIt; ++i){
          std::size_t min_size = (received_size/sizeof_object + 1u)*sizeof_object;
          std::size_t prf_size = (received_size/sizeof_object + (i+1u)*2u)*sizeof_object;
-         dlmalloc_command_ret_t ret = dlmalloc_allocation_command
+         dl_command_ret_t ret = dl_allocation_command
             ( BOOST_CONTAINER_EXPAND_BWD, sizeof_object, 1u, min_size
             , prf_size, &received_size, (char*)ptr);
          //If we have memory, this must be a buffer reuse
@@ -397,9 +397,9 @@ bool test_allocation_with_reuse()
          ptr = ret.first;
       }
       //There should be only a single block so deallocate it
-      dlmalloc_free(ptr);
-      dlmalloc_malloc_check();
-      if(!dlmalloc_all_deallocated())
+      dl_free(ptr);
+      dl_malloc_check();
+      if(!dl_all_deallocated())
          return false;
    }
    return true;
@@ -412,7 +412,7 @@ bool test_allocation_with_reuse()
 //allocates at all.
 bool test_multialloc_contiguous_modes()
 {
-   dlmalloc_malloc_check();
+   dl_malloc_check();
    const std::size_t counts[]  = { 1u, 2u, 37u, 500u };
    const std::size_t esizes[]  = { 1u, 8u, 24u };
    const std::size_t contig[]  = { BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS
@@ -430,21 +430,21 @@ bool test_multialloc_contiguous_modes()
                continue;
             }
 
-            if(!dlmalloc_all_deallocated())
+            if(!dl_all_deallocated())
                return false;
 
             //---- nodes variant ----
             {
-               dlmalloc_memchain ch;
+               dl_memchain ch;
                BOOST_CONTAINER_MEMCHAIN_INIT(&ch);
-               if(!dlmalloc_multialloc_nodes(num, esizes[e], contig[c], &ch))
+               if(!dl_multialloc_nodes(num, esizes[e], contig[c], &ch))
                   return false;
                if(BOOST_CONTAINER_MEMCHAIN_SIZE(&ch) != num)
                   return false;
                //walk it: the link count must agree, and the ends must be right
                std::size_t walked = 0;
                void *last = 0;
-               boost_cont_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&ch);
+               dl_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&ch);
                while(!BOOST_CONTAINER_MEMCHAIN_IS_END_IT(&ch, it)){
                   void *a = BOOST_CONTAINER_MEMIT_ADDR(it);
                   if(!a)
@@ -458,22 +458,22 @@ bool test_multialloc_contiguous_modes()
                   return false;
                if(BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch) != last)
                   return false;
-               dlmalloc_multidealloc(&ch);
-               if(!dlmalloc_all_deallocated())
+               dl_multidealloc(&ch);
+               if(!dl_all_deallocated())
                   return false;
             }
 
             //---- arrays variant, same modes ----
             {
                std::vector<std::size_t> sizes(num, esizes[e]);
-               dlmalloc_memchain ch;
+               dl_memchain ch;
                BOOST_CONTAINER_MEMCHAIN_INIT(&ch);
-               if(!dlmalloc_multialloc_arrays(num, &sizes[0], 1u, contig[c], &ch))
+               if(!dl_multialloc_arrays(num, &sizes[0], 1u, contig[c], &ch))
                   return false;
                if(BOOST_CONTAINER_MEMCHAIN_SIZE(&ch) != num)
                   return false;
                std::size_t walked = 0;
-               boost_cont_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&ch);
+               dl_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&ch);
                while(!BOOST_CONTAINER_MEMCHAIN_IS_END_IT(&ch, it)){
                   if(!BOOST_CONTAINER_MEMIT_ADDR(it))
                      return false;
@@ -483,14 +483,14 @@ bool test_multialloc_contiguous_modes()
                }
                if(walked != num)
                   return false;
-               dlmalloc_multidealloc(&ch);
-               if(!dlmalloc_all_deallocated())
+               dl_multidealloc(&ch);
+               if(!dl_all_deallocated())
                   return false;
             }
          }
       }
    }
-   dlmalloc_malloc_check();
+   dl_malloc_check();
    return true;
 }
 
@@ -500,69 +500,69 @@ bool test_multialloc_contiguous_modes()
 //for a size that needs part of each: a combined forward+backward expansion.
 bool test_allocation_expand_both()
 {
-   dlmalloc_malloc_check();
+   dl_malloc_check();
    bool exercised = false;
    //Several backwards_multiple values, powers of two and not, so the
    //lcm/alignment branches that size the backward part all get used
    for(std::size_t sizeof_object = 1; sizeof_object != 9; ++sizeof_object){
-      if(!dlmalloc_all_deallocated())
+      if(!dl_all_deallocated())
          return false;
 
       const std::size_t BlockSize = 256;
-      void *a = dlmalloc_malloc(BlockSize);
-      void *b = dlmalloc_malloc(BlockSize);
-      void *c = dlmalloc_malloc(BlockSize);
+      void *a = dl_malloc(BlockSize);
+      void *b = dl_malloc(BlockSize);
+      void *c = dl_malloc(BlockSize);
       //d pins c: without it, freeing c would merge it into top and the forward
       //side would become effectively unbounded, defeating the test
-      void *d = dlmalloc_malloc(BlockSize);
+      void *d = dl_malloc(BlockSize);
       if(!a || !b || !c || !d)
          return false;
 
-      const std::size_t chunk_a = dlmalloc_chunksize(a);
-      const std::size_t chunk_b = dlmalloc_chunksize(b);
-      const std::size_t chunk_c = dlmalloc_chunksize(c);
+      const std::size_t chunk_a = dl_chunksize(a);
+      const std::size_t chunk_b = dl_chunksize(b);
+      const std::size_t chunk_c = dl_chunksize(c);
       const bool adjacent = ((char*)b == (char*)a + chunk_a)
                          && ((char*)c == (char*)b + chunk_b)
                          && ((char*)d == (char*)c + chunk_c);
       if(!adjacent){   //not the layout this test needs, try the next size
-         dlmalloc_free(a);  dlmalloc_free(b);
-         dlmalloc_free(c);  dlmalloc_free(d);
+         dl_free(a);  dl_free(b);
+         dl_free(c);  dl_free(d);
          continue;
       }
 
       std::memset(b, 'B', BlockSize);
-      const std::size_t b_user = dlmalloc_size(b);
-      dlmalloc_free(a);          //free space before b
-      dlmalloc_free(c);          //free space after  b
+      const std::size_t b_user = dl_size(b);
+      dl_free(a);          //free space before b
+      dl_free(c);          //free space after  b
 
       //More than the forward side alone can give, less than the two together,
       //rounded up to a multiple of sizeof_object as the backward sizing needs
       std::size_t need = b_user + chunk_c + sizeof_object;
       need = ((need + sizeof_object - 1u)/sizeof_object)*sizeof_object;
       if(need <= (b_user + chunk_c) || need > (b_user + chunk_c + chunk_a)){
-         dlmalloc_free(b);  dlmalloc_free(d);
+         dl_free(b);  dl_free(d);
          continue;
       }
 
       //Neither direction alone can do it, and a failed attempt has to leave
       //the block exactly as it was
       std::size_t received = 0;
-      if(dlmalloc_allocation_command
+      if(dl_allocation_command
             ( BOOST_CONTAINER_EXPAND_FWD, sizeof_object, 1u, need
             , need, &received, b).first)
          return false;
-      if(dlmalloc_size(b) != b_user)
+      if(dl_size(b) != b_user)
          return false;
-      if(dlmalloc_allocation_command
+      if(dl_allocation_command
             ( BOOST_CONTAINER_EXPAND_BWD, sizeof_object, 1u, need
             , need, &received, b).first)
          return false;
-      if(dlmalloc_size(b) != b_user)
+      if(dl_size(b) != b_user)
          return false;
 
       //Both together must succeed, and must do it by reusing the block
       received = 0;
-      dlmalloc_command_ret_t ret = dlmalloc_allocation_command
+      dl_command_ret_t ret = dl_allocation_command
          ( BOOST_CONTAINER_EXPAND_BOTH, sizeof_object, 1u, need
          , need, &received, b);
       if(!ret.first || !ret.second || received < need)
@@ -582,10 +582,10 @@ bool test_allocation_expand_both()
             return false;
       }
 
-      dlmalloc_free(ret.first);
-      dlmalloc_free(d);
-      dlmalloc_malloc_check();
-      if(!dlmalloc_all_deallocated())
+      dl_free(ret.first);
+      dl_free(d);
+      dl_malloc_check();
+      if(!dl_all_deallocated())
          return false;
       exercised = true;
    }
@@ -597,20 +597,20 @@ bool test_allocation_expand_both()
 //the combined path, where every reported size must be honoured.
 bool test_allocation_expand_both_repeated()
 {
-   dlmalloc_malloc_check();
+   dl_malloc_check();
    for(std::size_t sizeof_object = 1; sizeof_object < 20; ++sizeof_object){
-      if(!dlmalloc_all_deallocated())
+      if(!dl_all_deallocated())
          return false;
       std::vector<void*> buffers;
       for(std::size_t i = 0; i != NumIt; ++i){
-         void *ptr = dlmalloc_malloc(i*sizeof_object);
+         void *ptr = dl_malloc(i*sizeof_object);
          if(!ptr)
             break;
          buffers.push_back(ptr);
       }
       //Free every other buffer, so survivors have free space on both sides
       for(std::size_t i = 0; i < buffers.size(); i += 2u){
-         dlmalloc_free(buffers[i]);
+         dl_free(buffers[i]);
          buffers[i] = 0;
       }
       buffers.erase( std::remove(buffers.begin(), buffers.end(), (void*)0)
@@ -618,13 +618,13 @@ bool test_allocation_expand_both_repeated()
 
       for(std::size_t b = 0; b != buffers.size(); ++b){
          void *ptr = buffers[b];
-         std::size_t received_size = dlmalloc_size(ptr);
+         std::size_t received_size = dl_size(ptr);
          for(std::size_t i = 0; i != 4u; ++i){
             const std::size_t min_size =
                ((received_size + sizeof_object)/sizeof_object)*sizeof_object;
             const std::size_t prf_size =
                ((received_size + (i+1u)*8u*sizeof_object)/sizeof_object)*sizeof_object;
-            dlmalloc_command_ret_t ret = dlmalloc_allocation_command
+            dl_command_ret_t ret = dl_allocation_command
                ( BOOST_CONTAINER_EXPAND_BOTH, sizeof_object, 1u, min_size
                , prf_size, &received_size, ptr);
             if(!ret.first)
@@ -633,7 +633,7 @@ bool test_allocation_expand_both_repeated()
                return false;
             if(received_size < min_size)
                return false;
-            if(dlmalloc_size(ret.first) != received_size)
+            if(dl_size(ret.first) != received_size)
                return false;
             ptr = ret.first;
          }
@@ -641,9 +641,9 @@ bool test_allocation_expand_both_repeated()
       }
 
       for(std::size_t i = 0; i != buffers.size(); ++i)
-         dlmalloc_free(buffers[i]);
-      dlmalloc_malloc_check();
-      if(!dlmalloc_all_deallocated())
+         dl_free(buffers[i]);
+      dl_malloc_check();
+      if(!dl_all_deallocated())
          return false;
    }
    return true;
@@ -655,26 +655,26 @@ bool test_allocation_expand_both_repeated()
 
 bool test_aligned_allocation()
 {
-   dlmalloc_malloc_check();
+   dl_malloc_check();
    //Allocate aligned buffers in a loop
    //and then deallocate it
    for(std::size_t i = 1u; i != (1u << (sizeof(int)/2u)); i <<= 1u){
       for(std::size_t j = 1u; j != 512u; j <<= 1){
-         void *ptr = dlmalloc_memalign(i-1, j);
+         void *ptr = dl_memalign(i-1, j);
          if(!ptr){
             return false;
          }
 
          if(((std::size_t)ptr & (j - 1)) != 0)
             return false;
-         dlmalloc_free(ptr);
+         dl_free(ptr);
          //if(!a.all_memory_deallocated() || !a.check_sanity()){
          //   return false;
          //}
       }
    }
-   dlmalloc_malloc_check();
-   return 0 != dlmalloc_all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
+   dl_malloc_check();
+   return 0 != dl_all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
 }
 
 //This test allocates memory with different alignments
@@ -682,7 +682,7 @@ bool test_aligned_allocation()
 
 bool test_continuous_aligned_allocation()
 {
-   dlmalloc_malloc_check();
+   dl_malloc_check();
    std::vector<void*> buffers;
    //Allocate aligned buffers in a loop
    //and then deallocate it
@@ -692,7 +692,7 @@ bool test_continuous_aligned_allocation()
    for(std::size_t i = 1; i < MaxSize; i <<= 1){
       for(std::size_t j = 1; j < MaxAlign; j <<= 1){
          for(std::size_t k = 0; k != NumIt; ++k){
-            void *ptr = dlmalloc_memalign(i-1, j);
+            void *ptr = dl_memalign(i-1, j);
             buffers.push_back(ptr);
             if(!ptr){
                continue_loop = false;
@@ -704,7 +704,7 @@ bool test_continuous_aligned_allocation()
          }
          //Deallocate all
          for(std::size_t k = buffers.size(); k--;){
-            dlmalloc_free(buffers[k]);
+            dl_free(buffers[k]);
          }
          buffers.clear();
          //if(!a.all_memory_deallocated() && a.check_sanity())
@@ -713,15 +713,15 @@ bool test_continuous_aligned_allocation()
             break;
       }
    }
-   dlmalloc_malloc_check();
-   return 0 != dlmalloc_all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
+   dl_malloc_check();
+   return 0 != dl_all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
 }
 
 //This test allocates multiple values until there is no more memory
 //and after that deallocates all in the inverse order
 bool test_many_equal_allocation()
 {
-   dlmalloc_malloc_check();
+   dl_malloc_check();
    for( deallocation_type t = DirectDeallocation
       ; t != EndDeallocationType
       ; t = (deallocation_type)((int)t + 1)){
@@ -731,7 +731,7 @@ bool test_many_equal_allocation()
 
       //Allocate buffers with extra memory
       for(std::size_t i = 0; i != NumIt; ++i){
-         void *ptr = dlmalloc_malloc(i);
+         void *ptr = dl_malloc(i);
          if(!ptr)
             break;
          //if(!a.check_sanity())
@@ -745,7 +745,7 @@ bool test_many_equal_allocation()
          ;i < max
          ;++i){
          if(i%2){
-            dlmalloc_free(buffers2[i]);
+            dl_free(buffers2[i]);
             buffers2[i] = 0;
          }
       }
@@ -755,10 +755,10 @@ bool test_many_equal_allocation()
 
       std::vector<void*> buffers;
       for(std::size_t i = 0; i != NumIt/10; ++i){
-         dlmalloc_memchain chain;
+         dl_memchain chain;
          BOOST_CONTAINER_MEMCHAIN_INIT(&chain);
-         dlmalloc_multialloc_nodes((i+1)*2, i+1, BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain);
-         dlmalloc_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&chain);
+         dl_multialloc_nodes((i+1)*2, i+1, BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain);
+         dl_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&chain);
          if(BOOST_CONTAINER_MEMCHAIN_IS_END_IT(chain, it))
             break;
 
@@ -780,7 +780,7 @@ bool test_many_equal_allocation()
             for(std::size_t j = 0, max = buffers.size()
                ;j < max
                ;++j){
-               dlmalloc_free(buffers[j]);
+               dl_free(buffers[j]);
             }
          }
          break;
@@ -789,7 +789,7 @@ bool test_many_equal_allocation()
             for(std::size_t j = buffers.size()
                ;j--
                ;){
-               dlmalloc_free(buffers[j]);
+               dl_free(buffers[j]);
             }
          }
          break;
@@ -799,7 +799,7 @@ bool test_many_equal_allocation()
                ;j < max
                ;++j){
                std::size_t pos = (j%4u)*(buffers.size())/4u;
-               dlmalloc_free(buffers[pos]);
+               dl_free(buffers[pos]);
                buffers.erase(buffers.begin()+(std::ptrdiff_t)pos);
             }
          }
@@ -815,7 +815,7 @@ bool test_many_equal_allocation()
          ;j < max
          ;++j){
          std::size_t pos = (j%4u)*(buffers2.size())/4u;
-         dlmalloc_free(buffers2[pos]);
+         dl_free(buffers2[pos]);
          buffers2.erase(buffers2.begin()+(std::ptrdiff_t)pos);
       }
 
@@ -823,8 +823,8 @@ bool test_many_equal_allocation()
                //a.all_memory_deallocated() && a.check_sanity();
       //if(!ok)  return ok;
    }
-   dlmalloc_malloc_check();
-   return 0 != dlmalloc_all_deallocated();
+   dl_malloc_check();
+   return 0 != dl_all_deallocated();
 }
 
 //This test allocates multiple values until there is no more memory
@@ -832,7 +832,7 @@ bool test_many_equal_allocation()
 
 bool test_many_different_allocation()
 {
-   dlmalloc_malloc_check();
+   dl_malloc_check();
    const std::size_t ArraySize = 11;
    std::size_t requested_sizes[ArraySize];
    for(std::size_t i = 0; i < ArraySize; ++i){
@@ -848,7 +848,7 @@ bool test_many_different_allocation()
 
       //Allocate buffers with extra memory
       for(std::size_t i = 0; i != NumIt; ++i){
-         void *ptr = dlmalloc_malloc(i);
+         void *ptr = dl_malloc(i);
          if(!ptr)
             break;
          buffers2.push_back(ptr);
@@ -860,17 +860,17 @@ bool test_many_different_allocation()
          ;i < max
          ;++i){
          if(i%2){
-            dlmalloc_free(buffers2[i]);
+            dl_free(buffers2[i]);
             buffers2[i] = 0;
          }
       }
 
       std::vector<void*> buffers;
       for(std::size_t i = 0; i != NumIt; ++i){
-         dlmalloc_memchain chain;
+         dl_memchain chain;
          BOOST_CONTAINER_MEMCHAIN_INIT(&chain);
-         dlmalloc_multialloc_arrays(ArraySize, requested_sizes, 1, BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain);
-         dlmalloc_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&chain);
+         dl_multialloc_arrays(ArraySize, requested_sizes, 1, BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain);
+         dl_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&chain);
          if(BOOST_CONTAINER_MEMCHAIN_IS_END_IT(chain, it))
             break;
          std::size_t n = 0;
@@ -888,7 +888,7 @@ bool test_many_different_allocation()
             for(std::size_t j = 0, max = buffers.size()
                ;j < max
                ;++j){
-               dlmalloc_free(buffers[j]);
+               dl_free(buffers[j]);
             }
          }
          break;
@@ -897,7 +897,7 @@ bool test_many_different_allocation()
             for(std::size_t j = buffers.size()
                ;j--
                ;){
-               dlmalloc_free(buffers[j]);
+               dl_free(buffers[j]);
             }
          }
          break;
@@ -907,7 +907,7 @@ bool test_many_different_allocation()
                ;j < max
                ;++j){
                std::size_t pos = (j%4)*(buffers.size())/4;
-               dlmalloc_free(buffers[pos]);
+               dl_free(buffers[pos]);
                buffers.erase(buffers.begin()+(std::ptrdiff_t)pos);
             }
          }
@@ -923,7 +923,7 @@ bool test_many_different_allocation()
          ;j < max
          ;++j){
          std::size_t pos = (j%4u)*(buffers2.size())/4u;
-         dlmalloc_free(buffers2[pos]);
+         dl_free(buffers2[pos]);
          buffers2.erase(buffers2.begin()+(std::ptrdiff_t)pos);
       }
 
@@ -931,53 +931,53 @@ bool test_many_different_allocation()
                //a.all_memory_deallocated() && a.check_sanity();
       //if(!ok)  return ok;
    }
-   dlmalloc_malloc_check();
-   return 0 != dlmalloc_all_deallocated();
+   dl_malloc_check();
+   return 0 != dl_all_deallocated();
 }
 
 bool test_many_deallocation()
 {
    const std::size_t ArraySize = 11;
-   std::vector<dlmalloc_memchain> buffers;
+   std::vector<dl_memchain> buffers;
    std::size_t requested_sizes[ArraySize];
    for(std::size_t i = 0; i < ArraySize; ++i){
       requested_sizes[i] = 4*i;
    }
 
    for(std::size_t i = 0; i != NumIt; ++i){
-      dlmalloc_memchain chain;
+      dl_memchain chain;
       BOOST_CONTAINER_MEMCHAIN_INIT(&chain);
-      dlmalloc_multialloc_arrays(ArraySize, requested_sizes, 1, BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain);
-      dlmalloc_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&chain);
+      dl_multialloc_arrays(ArraySize, requested_sizes, 1, BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain);
+      dl_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&chain);
       if(BOOST_CONTAINER_MEMCHAIN_IS_END_IT(chain, it))
          return false;
       buffers.push_back(chain);
    }
    for(std::size_t i = 0; i != NumIt; ++i){
-      dlmalloc_multidealloc(&buffers[i]);
+      dl_multidealloc(&buffers[i]);
    }
    buffers.clear();
 
-   dlmalloc_malloc_check();
-   if(!dlmalloc_all_deallocated())
+   dl_malloc_check();
+   if(!dl_all_deallocated())
       return false;
 
    for(std::size_t i = 0; i != NumIt; ++i){
-      dlmalloc_memchain chain;
+      dl_memchain chain;
       BOOST_CONTAINER_MEMCHAIN_INIT(&chain);
-      dlmalloc_multialloc_nodes(ArraySize, i*4+1, BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain);
-      dlmalloc_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&chain);
+      dl_multialloc_nodes(ArraySize, i*4+1, BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain);
+      dl_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&chain);
       if(BOOST_CONTAINER_MEMCHAIN_IS_END_IT(chain, it))
          return false;
       buffers.push_back(chain);
    }
    for(std::size_t i = 0; i != NumIt; ++i){
-      dlmalloc_multidealloc(&buffers[i]);
+      dl_multidealloc(&buffers[i]);
    }
    buffers.clear();
 
-   dlmalloc_malloc_check();
-   if(!dlmalloc_all_deallocated())
+   dl_malloc_check();
+   if(!dl_all_deallocated())
       return false;
 
    return true;
@@ -1107,7 +1107,7 @@ bool test_all_allocation()
       return false;
    }
 
-   return 0 != dlmalloc_all_deallocated();
+   return 0 != dl_all_deallocated();
 }
 
 }}}   //namespace boost { namespace container { namespace test {
