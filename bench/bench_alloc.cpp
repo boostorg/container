@@ -56,23 +56,23 @@ void allocation_timing_test(std::size_t num_iterations, std::size_t num_elements
       for(std::size_t r = 0; r != num_iterations; ++r){
          void *first_mem = 0;
          if(m_mode != BOOST_CONTAINER_EXPAND_FWD)
-            first_mem = dlmalloc_malloc(sizeof(POD)*num_elements*3/2);
-         void *addr = dlmalloc_malloc(1*sizeof(POD));
+            first_mem = dl_malloc(sizeof(POD)*num_elements*3/2);
+         void *addr = dl_malloc(1*sizeof(POD));
          if(m_mode == BOOST_CONTAINER_EXPAND_FWD)
-            first_mem = dlmalloc_malloc(sizeof(POD)*num_elements*3/2);
-         capacity = dlmalloc_size(addr)/sizeof(POD);
-         dlmalloc_free(first_mem);
+            first_mem = dl_malloc(sizeof(POD)*num_elements*3/2);
+         capacity = dl_size(addr)/sizeof(POD);
+         dl_free(first_mem);
          ++numalloc;
 
          BOOST_CONTAINER_TRY{
-            dlmalloc_command_ret_t ret;
+            dl_command_ret_t ret;
             for(size_t e = capacity + 1; e < num_elements; ++e){
                size_t received_size;
                size_t min = (capacity+1)*sizeof(POD);
                size_t max = (capacity*3/2)*sizeof(POD);
                if(min > max)
                   max = min;
-               ret = dlmalloc_allocation_command
+               ret = dl_allocation_command
                (m_mode, sizeof(POD), dtl::alignment_of<POD>::value
                   , min, max, &received_size, addr);
                if(!ret.first){
@@ -84,7 +84,7 @@ void allocation_timing_test(std::size_t num_iterations, std::size_t num_elements
                      std::cout << "m_mode != BOOST_CONTAINER_ALLOCATE_NEW!" << std::endl;
                      return;
                   }
-                  dlmalloc_free(addr);
+                  dl_free(addr);
                   addr = ret.first;
                   ++numalloc;
                }
@@ -100,17 +100,17 @@ void allocation_timing_test(std::size_t num_iterations, std::size_t num_elements
                addr = ret.first;
                e = capacity + 1;
             }
-            dlmalloc_free(addr);
+            dl_free(addr);
          }
          BOOST_CONTAINER_CATCH(...){
-            dlmalloc_free(addr);
+            dl_free(addr);
             BOOST_CONTAINER_RETHROW;
          }
          BOOST_CONTAINER_CATCH_END
       }
 
-      assert( dlmalloc_allocated_memory() == 0);
-      if(dlmalloc_allocated_memory()!= 0){
+      assert( dl_allocated_memory() == 0);
+      if(dl_allocated_memory()!= 0){
          std::cout << "Memory leak!" << std::endl;
          return;
       }
@@ -128,7 +128,7 @@ void allocation_timing_test(std::size_t num_iterations, std::size_t num_elements
                      << (float(numalloc) + float(numexpand))/float(num_iterations)
                      << "(" << float(numalloc)/float(num_iterations) << "/" << float(numexpand)/float(num_iterations) << ")"
                   << std::endl << std::endl;
-      dlmalloc_trim(0);
+      dl_trim(0);
    }
 }
 
@@ -179,7 +179,7 @@ int allocation_loop()
 
 int main()
 {
-   dlmalloc_mallopt( (-3)//M_MMAP_THRESHOLD
+   dl_mallopt( (-3)//M_MMAP_THRESHOLD
              , 100*10000000);
    //allocation_loop<char_holder<4> >();
    //allocation_loop<char_holder<6> >();

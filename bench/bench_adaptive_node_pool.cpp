@@ -121,7 +121,7 @@ void list_test_template(std::size_t num_iterations, std::size_t num_elements, bo
 {
    typedef typename Allocator::template rebind<MyInt>::other IntAllocator;
    nanosecond_type tinsert, terase;
-   bc::dlmalloc_malloc_stats_t insert_stats, erase_stats;
+   bc::dl_malloc_stats_t insert_stats, erase_stats;
    std::size_t insert_inuse, erase_inuse;
    const size_t sizeof_node = 2*sizeof(void*)+sizeof(int);
 
@@ -137,8 +137,8 @@ void list_test_template(std::size_t num_iterations, std::size_t num_elements, bo
       timer.stop();
       tinsert = timer.elapsed().wall;
 
-      insert_inuse = bc::dlmalloc_in_use_memory();
-      insert_stats = bc::dlmalloc_malloc_stats();
+      insert_inuse = bc::dl_in_use_memory();
+      insert_stats = bc::dl_malloc_stats();
 /*
       iterator_t it(l.begin());
       iterator_t last(--l.end());
@@ -167,8 +167,8 @@ void list_test_template(std::size_t num_iterations, std::size_t num_elements, bo
       }
       timer.stop();
       terase = timer.elapsed().wall;
-      erase_inuse = bc::dlmalloc_in_use_memory();
-      erase_stats = bc::dlmalloc_malloc_stats();
+      erase_inuse = bc::dl_in_use_memory();
+      erase_stats = bc::dl_malloc_stats();
    }
 
 
@@ -206,7 +206,7 @@ void list_test_template(std::size_t num_iterations, std::size_t num_elements, bo
                << " / "
                << (float)insert_inuse/(1024*1024) << "(" << (float(insert_inuse)/float(num_iterations*num_elements*sizeof_node)*100.0)-100.0 << "%)"
                << std::endl
-               << "  system MB/inuse bytes after:    " << (float)erase_stats.system_bytes/(1024*1024) << '\t' << bc::dlmalloc_in_use_memory()
+               << "  system MB/inuse bytes after:    " << (float)erase_stats.system_bytes/(1024*1024) << '\t' << bc::dl_in_use_memory()
                << std::endl  << std::endl;
    }
 
@@ -235,7 +235,7 @@ void list_test_template(std::size_t num_iterations, std::size_t num_elements, bo
    boost::container::dtl::singleton_default
       <shared_adaptive_pool_plus_align_only_t>::instance().deallocate_free_blocks();
    //Release dlmalloc memory
-   bc::dlmalloc_trim(0);
+   bc::dl_trim(0);
 }
 
 void print_header()

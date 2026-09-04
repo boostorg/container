@@ -45,15 +45,15 @@ struct fake_segment_manager
    typedef boost::container::dtl::
       basic_multiallocation_chain<void*>              multiallocation_chain;
    static void deallocate(void_pointer p)
-   { dlmalloc_free(p); }
+   { dl_free(p); }
 
    static void deallocate_many(multiallocation_chain &chain)
    {
       std::size_t size = chain.size();
       multiallocation_chain::pointer_pair ptrs = chain.extract_data();
-      dlmalloc_memchain dlchain;
+      dl_memchain dlchain;
       BOOST_CONTAINER_MEMCHAIN_INIT_FROM(&dlchain, ptrs.first, ptrs.second, size);
-      dlmalloc_multidealloc(&dlchain);
+      dl_multidealloc(&dlchain);
    }
 
    typedef std::ptrdiff_t  difference_type;
@@ -61,7 +61,7 @@ struct fake_segment_manager
 
    static void *allocate_aligned(std::size_t nbytes, std::size_t alignment)
    {
-      void *ret = dlmalloc_memalign(nbytes, alignment);
+      void *ret = dl_memalign(nbytes, alignment);
       if(!ret)
          boost::container::throw_bad_alloc();
       return ret;

@@ -161,8 +161,8 @@ void stable_vector_test_template(std::size_t num_iterations, std::size_t num_ele
                      << " (" << (float(top_capacity)/float(num_iterations*num_elements) - 1)*100 << " %)"*/
                      << std::endl << std::endl;
    }
-   assert(bc::dlmalloc_all_deallocated());
-   bc::dlmalloc_trim(0);
+   assert(bc::dl_all_deallocated());
+   bc::dl_trim(0);
 }
 
 void print_header()

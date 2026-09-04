@@ -16,16 +16,16 @@
 namespace bc = boost::container;
 
 BOOST_SYMBOL_EXPORT void *lib_b_malloc(std::size_t n)
-{  return bc::dlmalloc_malloc(n);  }
+{  return bc::dl_malloc(n);  }
 
 BOOST_SYMBOL_EXPORT void lib_b_free(void *p)
-{  bc::dlmalloc_free(p);  }
+{  bc::dl_free(p);  }
 
 BOOST_SYMBOL_EXPORT std::size_t lib_b_in_use_memory()
-{  return bc::dlmalloc_in_use_memory();  }
+{  return bc::dl_in_use_memory();  }
 
 BOOST_SYMBOL_EXPORT int lib_b_all_deallocated()
-{  return bc::dlmalloc_all_deallocated();  }
+{  return bc::dl_all_deallocated();  }
 
 BOOST_SYMBOL_EXPORT std::size_t lib_b_size(void *p)
-{  return bc::dlmalloc_size(p);  }
+{  return bc::dl_size(p);  }
