@@ -9,60 +9,62 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <boost/container/detail/dlmalloc.hpp>
+#include "dlmalloc_walk_utils.hpp"
 #include <boost/container/allocator.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/list.hpp>
 #include "extended_allocator_test.hpp"
 
 using namespace boost::container;
+using boost::container::test::chunk_cost;
 
 bool basic_test()
 {
    size_t received = 0;
-   if(!dl_all_deallocated())
+   if(!dlmalloc_heap().all_deallocated())
       return false;
-   void *ptr = dl_alloc(50, 98, &received);
-   if(dl_size(ptr) != received)
+   void *ptr = dlmalloc_heap().alloc(50, 98, &received);
+   if(dlmalloc::usable_size(ptr) != received)
       return false;
-   if(dl_allocated_memory() != dl_chunksize(ptr))
-      return false;
-
-   if(dl_all_deallocated())
+   if(dlmalloc_heap().allocated_memory() != chunk_cost(dlmalloc_heap(), ptr))
       return false;
 
-   dl_grow(ptr, received + 20, received + 30, &received);
-
-   if(dl_allocated_memory() != dl_chunksize(ptr))
+   if(dlmalloc_heap().all_deallocated())
       return false;
 
-   if(dl_size(ptr) != received)
+   dlmalloc_heap().grow(ptr, received + 20, received + 30, &received);
+
+   if(dlmalloc_heap().allocated_memory() != chunk_cost(dlmalloc_heap(), ptr))
       return false;
 
-   if(!dl_shrink(ptr, 100, 140, &received, 1))
+   if(dlmalloc::usable_size(ptr) != received)
       return false;
 
-   if(dl_allocated_memory() != dl_chunksize(ptr))
+   if(!dlmalloc_heap().shrink(ptr, 100, 140, &received, 1))
       return false;
 
-   if(!dl_shrink(ptr, 0, 140, &received, 1))
+   if(dlmalloc_heap().allocated_memory() != chunk_cost(dlmalloc_heap(), ptr))
       return false;
 
-   if(dl_allocated_memory() != dl_chunksize(ptr))
+   if(!dlmalloc_heap().shrink(ptr, 0, 140, &received, 1))
       return false;
 
-   if(dl_shrink(ptr, 0, received/2, &received, 1))
+   if(dlmalloc_heap().allocated_memory() != chunk_cost(dlmalloc_heap(), ptr))
       return false;
 
-   if(dl_allocated_memory() != dl_chunksize(ptr))
+   if(dlmalloc_heap().shrink(ptr, 0, received/2, &received, 1))
       return false;
 
-   if(dl_size(ptr) != received)
+   if(dlmalloc_heap().allocated_memory() != chunk_cost(dlmalloc_heap(), ptr))
       return false;
 
-   dl_free(ptr);
+   if(dlmalloc::usable_size(ptr) != received)
+      return false;
 
-   dl_malloc_check();
-   if(!dl_all_deallocated())
+   dlmalloc_heap().deallocate(ptr);
+
+   dlmalloc_heap().check();
+   if(!dlmalloc_heap().all_deallocated())
       return false;
    return true;
 }
@@ -70,7 +72,7 @@ bool basic_test()
 bool vector_test()
 {
    typedef boost::container::vector<int, allocator<int> > Vector;
-   if(!dl_all_deallocated())
+   if(!dlmalloc_heap().all_deallocated())
       return false;
    {
       const int NumElem = 1000;
@@ -87,7 +89,7 @@ bool vector_test()
          new_buf = &v[0];
       }
    }
-   if(!dl_all_deallocated())
+   if(!dlmalloc_heap().all_deallocated())
       return false;
    return true;
 }
@@ -95,7 +97,7 @@ bool vector_test()
 bool list_test()
 {
    typedef boost::container::list<int, allocator<int> > List;
-   if(!dl_all_deallocated())
+   if(!dlmalloc_heap().all_deallocated())
       return false;
    {
       const int NumElem = 1000;
@@ -103,7 +105,7 @@ bool list_test()
       int values[NumElem];
       l.insert(l.end(), &values[0], &values[NumElem]);
    }
-   if(!dl_all_deallocated())
+   if(!dlmalloc_heap().all_deallocated())
       return false;
    return true;
 }

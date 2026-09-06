@@ -134,7 +134,7 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements)
                   << (float(numalloc) + float(numexpand))/float(num_iterations)
                   << "(" << float(numalloc)/float(num_iterations) << "/" << float(numexpand)/float(num_iterations) << ")"
                << std::endl << std::endl;
-   bc::dl_trim(0);
+   bc::dlmalloc_heap().trim(0);
 }
 
 void print_header()

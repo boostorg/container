@@ -33,8 +33,8 @@
 //    call boost::container::allocator itself makes, and only copies when the
 //    command reports it could not expand in place.
 //  - "multi_node": obtain (and later release) many equally sized nodes at once.
-//    malloc loops; dlmalloc issues one dl_multialloc_nodes() and one
-//    dl_multidealloc().
+//    malloc loops; dlmalloc issues one dlmalloc_heap().multialloc_nodes() and one
+//    dlmalloc_heap().multidealloc().
 //
 // Reading the large-size rows. From 4 KiB up, most of dlmalloc's advantage over
 // glibc is not faster allocation logic but memory retention: glibc consolidates
@@ -225,10 +225,10 @@ struct dlmalloc_policy
    static const char *name() {  return "dlmalloc";  }
 
    static void *alloc(std::size_t n)
-   {  return bc::dl_malloc(n);  }
+   {  return bc::dlmalloc_heap().allocate(n);  }
 
    static void dealloc(void *p)
-   {  bc::dl_free(p);  }
+   {  bc::dlmalloc_heap().deallocate(p);  }
 
    //dlmalloc has no realloc. The intended way to enlarge a live block is a
    //single allocation_command asking for expansion in place OR a new block,
@@ -239,32 +239,32 @@ struct dlmalloc_policy
    static void *grow(void *p, std::size_t oldsz, std::size_t newsz)
    {
       std::size_t received = 0;
-      bc::dl_command_ret_t r = bc::dl_allocation_command
-         ( allocation_type(BOOST_CONTAINER_ALLOCATE_NEW | BOOST_CONTAINER_EXPAND_FWD)
+      bc::dlmalloc::command_ret_t r = bc::dlmalloc_heap().allocation_command
+         ( bc::allocation_type(bc::allocate_new | bc::expand_fwd)
          , 1u, 1u, newsz, newsz, &received, p);
       if(!r.first)
          return 0;
       if(!r.second){          //a fresh block: move the contents across
          std::memcpy(r.first, p, oldsz);
-         bc::dl_free(p);
+         bc::dlmalloc_heap().deallocate(p);
       }
       return r.first;
    }
 
    static void alloc_many(std::size_t n_elements, std::size_t elem_size, void **out)
    {
-      dl_memchain chain;
-      BOOST_CONTAINER_MEMCHAIN_INIT(&chain);
-      if(!bc::dl_multialloc_nodes
-            (n_elements, elem_size, BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &chain)){
+      bc::dlmalloc::memchain chain;
+
+      if(!bc::dlmalloc_heap().multialloc_nodes
+            (n_elements, elem_size, bc::dlmalloc::default_contiguous, &chain)){
          for(std::size_t i = 0; i != n_elements; ++i)
             out[i] = 0;
          return;
       }
-      dl_memchain_it it = BOOST_CONTAINER_MEMCHAIN_BEGIN_IT(&chain);
+      bc::dlmalloc::memchain_it it = chain.begin();
       for(std::size_t i = 0; i != n_elements; ++i){
-         out[i] = BOOST_CONTAINER_MEMIT_ADDR(it);
-         BOOST_CONTAINER_MEMIT_NEXT(it);
+         out[i] = it.addr();
+         it.next();
       }
    }
 
@@ -273,11 +273,11 @@ struct dlmalloc_policy
       if(!n_elements || !out[0]){
          return;
       }
-      dl_memchain chain;
-      BOOST_CONTAINER_MEMCHAIN_INIT(&chain);
+      bc::dlmalloc::memchain chain;
+
       for(std::size_t i = n_elements; i--;)
-         BOOST_CONTAINER_MEMCHAIN_PUSH_FRONT(&chain, out[i]);
-      bc::dl_multidealloc(&chain);
+         chain.push_front(out[i]);
+      bc::dlmalloc_heap().multidealloc(&chain);
    }
 };
 
@@ -771,9 +771,9 @@ int main()
 
    //A benchmark that leaked would look faster than it is: make sure every
    //dlmalloc block taken above went back to the heap.
-   if(!bc::dl_all_deallocated()){
+   if(!bc::dlmalloc_heap().all_deallocated()){
       std::cout << "\nWARNING: the dlmalloc heap still holds "
-                << bc::dl_in_use_memory()
+                << bc::dlmalloc_heap().allocated_memory()
                 << " bytes; these timings are not comparable." << std::endl;
       return 1;
    }
