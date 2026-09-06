@@ -465,13 +465,8 @@ struct counting_failure_config : baseline_config
 void test_failure_action()
 {
    basic_dlmalloc<counting_failure_config> h;
-   //Big enough that no system will map it, small enough to still be a
-   //representable request, at either width. The shift is a variable so that
-   //the width this build is NOT is never a shift too far for its own type -
-   //both arms of a conditional are compiled, and a compiler is entitled to
-   //complain about the one it will not run.
-   const unsigned sh = (sizeof(size_type) >= 8) ? 46u : 31u;
-   const size_type big = ((size_type)1 << sh) + ((size_type)1 << (sh - 1));
+   //Bigger than the address space, so no system can map it
+   const size_type big = (~(size_type)0) - (size_type)(16u*1024u*1024u);
 
    g_refusals = 0;
    void *const p = h.allocate(big);
