@@ -503,17 +503,34 @@ class basic_dlmalloc
    {
       memchain_node *node_ptr;
 
-      //! Moves to the next block.
+      //! <b>Requires</b>: The iterator must not be the end iterator.
+      //!
+      //! <b>Effects</b>: Moves the iterator to the next block of the chain.
+      //!   An iterator on the last block becomes the end iterator.
+      //!
+      //! <b>Complexity</b>: Constant.
       void next() BOOST_NOEXCEPT
       {  node_ptr = node_ptr->next_node_ptr;  }
 
-      //! The block this iterator points to.
+      //! <b>Requires</b>: The iterator must not be the end iterator.
+      //!
+      //! <b>Returns</b>: The address of the block the iterator points to.
+      //!
+      //! <b>Complexity</b>: Constant.
       void *addr() const BOOST_NOEXCEPT
       {  return (void *)node_ptr;  }
 
+      //! <b>Returns</b>: true if `other` points to the same block as this
+      //!   iterator. Two end iterators of any chain compare equal.
+      //!
+      //! <b>Complexity</b>: Constant.
       bool operator==(const memchain_it &other) const BOOST_NOEXCEPT
       {  return node_ptr == other.node_ptr;  }
 
+      //! <b>Returns</b>: true if `other` points to a different block than
+      //!   this iterator.
+      //!
+      //! <b>Complexity</b>: Constant.
       bool operator!=(const memchain_it &other) const BOOST_NOEXCEPT
       {  return node_ptr != other.node_ptr;  }
    };
@@ -529,10 +546,17 @@ class basic_dlmalloc
       memchain_node   root_node;
       memchain_node  *last_node_ptr;
 
+      //! <b>Effects</b>: Constructs an empty chain.
+      //!
+      //! <b>Complexity</b>: Constant.
       memchain() BOOST_NOEXCEPT
       {  this->init();  }
 
-      //! Leaves the chain empty.
+      //! <b>Effects</b>: Leaves the chain empty. The blocks it held, if any,
+      //!   are forgotten rather than given back, so the caller must own them
+      //!   by other means first.
+      //!
+      //! <b>Complexity</b>: Constant.
       void init() BOOST_NOEXCEPT
       {
          root_node.next_node_ptr = 0;
@@ -540,7 +564,19 @@ class basic_dlmalloc
          num_mem = 0;
       }
 
-      //! Takes over a run of blocks that another chain held.
+      //! <b>Requires</b>: `first` and `last_block` must be the ends of one
+      //!   run of `num` blocks already linked to each other, and `num` must
+      //!   not be zero.
+      //!
+      //! <b>Effects</b>: Takes over that run, and discards whatever the chain
+      //!   held before.
+      //!
+      //! <b>Parameters</b>:
+      //!   - `first`: the first block of the run.
+      //!   - `last_block`: the last block of the run.
+      //!   - `num`: how many blocks the run holds.
+      //!
+      //! <b>Complexity</b>: Constant.
       //last_block, not last: a parameter named last would hide last(), and
       //GCC 4.8's -Wshadow reports a parameter that hides a member function
       //of its own class.
@@ -551,24 +587,74 @@ class basic_dlmalloc
          num_mem = num;
       }
 
-      bool empty() const              {  return num_mem == 0;  }
-      size_type size() const          {  return num_mem;  }
+      //! <b>Returns</b>: true if the chain holds no block.
+      //!
+      //! <b>Complexity</b>: Constant.
+      bool empty() const BOOST_NOEXCEPT      {  return num_mem == 0;  }
 
+      //! <b>Returns</b>: How many blocks the chain holds.
+      //!
+      //! <b>Complexity</b>: Constant.
+      size_type size() const BOOST_NOEXCEPT  {  return num_mem;  }
+
+      //! <b>Returns</b>: An iterator to the position before the first block.
+      //!   It points to no block, so addr() must not be called on it; it is
+      //!   what erase_after() and incorporate_after() take to act on the
+      //!   front of the chain.
+      //!
+      //! <b>Complexity</b>: Constant.
       memchain_it before_begin() BOOST_NOEXCEPT
       {  memchain_it it = { &root_node };            return it;  }
+
+      //! <b>Returns</b>: An iterator to the first block, or the end iterator
+      //!   when the chain is empty.
+      //!
+      //! <b>Complexity</b>: Constant.
       memchain_it begin() BOOST_NOEXCEPT
       {  memchain_it it = { root_node.next_node_ptr }; return it;  }
+
+      //! <b>Returns</b>: An iterator to the last block. On an empty chain it
+      //!   is before_begin(), not the end iterator.
+      //!
+      //! <b>Complexity</b>: Constant.
       memchain_it last() BOOST_NOEXCEPT
       {  memchain_it it = { last_node_ptr };         return it;  }
+
+      //! <b>Returns</b>: The end iterator, which points past the last block.
+      //!
+      //! <b>Complexity</b>: Constant.
       memchain_it end() BOOST_NOEXCEPT
       {  memchain_it it = { (memchain_node *)0 };    return it;  }
 
-      static bool is_end(const memchain_it &it)      {  return !it.node_ptr;  }
+      //! <b>Returns</b>: true if `it` is the end iterator of a chain.
+      //!
+      //! <b>Complexity</b>: Constant.
+      static bool is_end(const memchain_it &it) BOOST_NOEXCEPT
+      {  return !it.node_ptr;  }
 
-      void *first_mem() const   {  return (void *)root_node.next_node_ptr;  }
-      void *last_mem() const    {  return (void *)last_node_ptr;  }
+      //! <b>Returns</b>: The first block of the chain, or null when the chain
+      //!   is empty.
+      //!
+      //! <b>Complexity</b>: Constant.
+      void *first_mem() const BOOST_NOEXCEPT
+      {  return (void *)root_node.next_node_ptr;  }
 
-      //! Puts a block at the end of the chain.
+      //! <b>Returns</b>: The last block of the chain. On an empty chain the
+      //!   value is the address of the chain's own root node, which is not a
+      //!   block; test empty() first.
+      //!
+      //! <b>Complexity</b>: Constant.
+      void *last_mem() const BOOST_NOEXCEPT
+      {  return (void *)last_node_ptr;  }
+
+      //! <b>Requires</b>: `mem` must point to a block of at least
+      //!   sizeof(void*) bytes that no chain already holds.
+      //!
+      //! <b>Effects</b>: Puts `mem` at the end of the chain. The link is
+      //!   written into the first bytes of the block, so the chain costs no
+      //!   memory of its own.
+      //!
+      //! <b>Complexity</b>: Constant.
       void push_back(void *mem) BOOST_NOEXCEPT
       {
          memchain_node *const n = (memchain_node *)mem;
@@ -578,7 +664,12 @@ class basic_dlmalloc
          ++num_mem;
       }
 
-      //! Puts a block at the front of the chain.
+      //! <b>Requires</b>: `mem` must point to a block of at least
+      //!   sizeof(void*) bytes that no chain already holds.
+      //!
+      //! <b>Effects</b>: Puts `mem` at the front of the chain.
+      //!
+      //! <b>Complexity</b>: Constant.
       void push_front(void *mem) BOOST_NOEXCEPT
       {
          memchain_node *const n = (memchain_node *)mem;
@@ -589,8 +680,15 @@ class basic_dlmalloc
          ++num_mem;
       }
 
-      //! Takes out the block after the one the iterator points to.
-      //! The iterator must be valid and must not be the end iterator.
+      //! <b>Requires</b>: `before` must be a valid iterator of this chain,
+      //!   must not be the end iterator, and a block must follow it.
+      //!   before_begin() is what takes out the first block.
+      //!
+      //! <b>Effects</b>: Takes the block after `before` out of the chain. The
+      //!   block itself is not given back to the heap - the caller now owns
+      //!   it and must deallocate it.
+      //!
+      //! <b>Complexity</b>: Constant.
       void erase_after(const memchain_it &before) BOOST_NOEXCEPT
       {
          memchain_node *const prev = before.node_ptr;
@@ -601,12 +699,31 @@ class basic_dlmalloc
          --num_mem;
       }
 
-      //! Takes out the first block. The chain must not be empty.
+      //! <b>Requires</b>: The chain must not be empty.
+      //!
+      //! <b>Effects</b>: Takes the first block out of the chain. As with
+      //!   erase_after(), the caller now owns that block.
+      //!
+      //! <b>Complexity</b>: Constant.
       void pop_front() BOOST_NOEXCEPT
       {  this->erase_after(this->before_begin());  }
 
-      //! Puts a run of num blocks, from first to before_last, after the
-      //! block the iterator points to.
+      //! <b>Requires</b>: `before` must be a valid iterator of this chain
+      //!   and must not be the end iterator. `first` and `before_last` must
+      //!   be the ends of one run of `num` blocks already linked to each
+      //!   other, and no chain may already hold them.
+      //!
+      //! <b>Effects</b>: Puts that run into the chain, right after `before`.
+      //!   Nothing happens when `num` is zero.
+      //!
+      //! <b>Parameters</b>:
+      //!   - `before`: the block the run goes after; before_begin() puts the
+      //!     run at the front.
+      //!   - `first`: the first block of the run.
+      //!   - `before_last`: the last block of the run.
+      //!   - `num`: how many blocks the run holds.
+      //!
+      //! <b>Complexity</b>: Constant.
       void incorporate_after(const memchain_it &before, void *first,
                              void *before_last, size_type num) BOOST_NOEXCEPT
       {
@@ -623,8 +740,13 @@ class basic_dlmalloc
          num_mem += num;
       }
 
-      //! Moves every block of other to the end of this chain, and leaves
-      //! other empty.
+      //! <b>Requires</b>: `other` must not be this chain.
+      //!
+      //! <b>Effects</b>: Moves every block of `other` to the end of this
+      //!   chain, and leaves `other` empty. Nothing happens when `other` is
+      //!   already empty.
+      //!
+      //! <b>Complexity</b>: Constant. The blocks are not walked.
       void splice_back(memchain &other) BOOST_NOEXCEPT
       {
          if(other.empty())
@@ -643,9 +765,7 @@ class basic_dlmalloc
       int   second;
    };
 
-   //! What allocation_command() may be asked to do. The values are those of
-   //! the C-style dl_* interface this class replaced, so a caller that still
-   //! spells them the old way keeps working.
+   //! What allocation_command() may be asked to do
    enum allocation_command_t
    {  allocate_new         = 0x01
    ,  expand_fwd           = 0x02
@@ -670,31 +790,40 @@ class basic_dlmalloc
    //                          The public interface
    //////////////////////////////////////////////////////////////////////////
 
-   //! Builds an empty heap. It holds no memory at all - the first allocation
-   //! asks the system for a segment.
+   //! <b>Effects</b>: Builds an empty heap. It holds no memory at all - the
+   //!   first allocation is what asks the system for a segment. The heap
+   //!   serializes its own operations when the configuration has use_locks
+   //!   on.
+   //!
+   //! <b>Complexity</b>: Constant. The system is not called.
    basic_dlmalloc() BOOST_NOEXCEPT
    {  init_state();  }
 
-   //! Builds a heap that already holds at least `capacity` usable bytes,
-   //! taken from the system.
+   //! <b>Effects</b>: Builds a heap that already holds at least `capacity`
+   //!   usable bytes, taken from the system.
    //!
-   //! The heap object is this object, wherever the caller put it, and it
-   //! stays outside the memory it manages - so all of that memory is heap
-   //! and none of it holds the bookkeeping. That is the difference from
-   //! create(), which puts the object at the front of the memory.
+   //!   The heap object is this object, wherever the caller put it, and it
+   //!   stays outside the memory it manages - so all of that memory is heap
+   //!   and none of it holds the bookkeeping. That is the difference from
+   //!   create(), which puts the object at the front of the memory.
    //!
-   //! Zero capacity asks for one granularity unit, as create() does.
+   //!   A constructor cannot report failure, and it does not have to: memory
+   //!   the system refuses, or a `capacity` too large to describe, simply
+   //!   leaves the heap empty. It is then exactly what the default
+   //!   constructor makes, and every later request asks the system on its
+   //!   own.
    //!
-   //! `locked` chooses whether the heap serializes its own operations; pass
-   //! false only when the instance is reached from one thread.
+   //! <b>Parameters</b>:
+   //!   - `capacity`: the least the heap should hold, in usable bytes.
+   //!     Rounded up to a whole number of granularity units. Zero asks for
+   //!     one such unit, as create() does. There is no default value: zero
+   //!     as a default would make this constructor ambiguous with the
+   //!     default constructor.
+   //!   - `locked`: whether the heap serializes its own operations. Pass
+   //!     false only when the instance is reached from one thread. Ignored
+   //!     when the configuration has use_locks off.
    //!
-   //! A constructor cannot report failure, and it does not have to: memory
-   //! the system refuses, or a `capacity` too large to describe, simply
-   //! leaves the heap empty. It is then exactly what the default constructor
-   //! makes, and every later request asks the system on its own.
-   //!
-   //! `capacity` has no default value. Zero as a default would make this
-   //! constructor ambiguous with the default constructor.
+   //! <b>Complexity</b>: One call to the system to map the memory.
    explicit basic_dlmalloc(size_type capacity, bool locked = true) BOOST_NOEXCEPT
    {
       init_state();
@@ -709,22 +838,31 @@ class basic_dlmalloc
       }
    }
 
-   //! Builds a heap over memory the caller owns and keeps.
+   //! <b>Requires</b>: The buffer must outlive the heap.
    //!
-   //! The heap object stays outside the buffer, so the whole buffer is heap.
-   //! create_with_base() is the other arrangement, with the object at the
-   //! front of the buffer.
+   //! <b>Effects</b>: Builds a heap over memory the caller owns and keeps.
    //!
-   //! The buffer must outlive the heap. The destructor releases only what
-   //! the heap took from the system, and leaves this buffer alone.
+   //!   The heap object stays outside the buffer, so the whole buffer is
+   //!   heap. create_with_base() is the other arrangement, with the object
+   //!   at the front of the buffer.
    //!
-   //! The heap grows the ordinary way when the buffer runs out, unless a
-   //! footprint limit stops it. A null buffer, or one too small to hold a
-   //! heap, leaves the heap empty but usable - every request is then served
-   //! from memory the heap takes for itself.
+   //!   The heap grows the ordinary way when the buffer runs out, unless a
+   //!   footprint limit stops it. A null buffer, or one too small to hold a
+   //!   heap, leaves the heap empty but usable - every request is then
+   //!   served from memory the heap takes for itself.
    //!
-   //! `capacity` counts from `base`. The heap starts at the first correctly
-   //! aligned address at or after `base` and uses the rest.
+   //! <b>Parameters</b>:
+   //!   - `base`: the first byte of the buffer. The heap starts at the first
+   //!     correctly aligned address at or after it and uses the rest.
+   //!   - `capacity`: how many bytes the buffer holds, counted from `base`.
+   //!   - `locked`: whether the heap serializes its own operations. Pass
+   //!     false only when the instance is reached from one thread. Ignored
+   //!     when the configuration has use_locks off.
+   //!
+   //! <b>Complexity</b>: Constant. The system is not called.
+   //!
+   //! <b>Note</b>: The destructor releases only what the heap took from the
+   //!   system, and leaves this buffer alone.
    basic_dlmalloc(void *base, size_type capacity, bool locked = true) BOOST_NOEXCEPT
    {
       init_state();
@@ -739,9 +877,14 @@ class basic_dlmalloc
       }
    }
 
-   //! Releases every segment this heap obtained.
+   //! <b>Effects</b>: Releases every segment this heap obtained from the
+   //!   system. Memory still handed out goes with it, so any pointer this
+   //!   heap returned is dangling afterwards.
    //!
-   //! Memory still handed out goes with it.
+   //!   A buffer given to the base constructor is not released - it is the
+   //!   caller's.
+   //!
+   //! <b>Complexity</b>: One call to the system per segment held.
    ~basic_dlmalloc() BOOST_NOEXCEPT
    {
       msegmentptr sp = &m_state.seg;
@@ -756,15 +899,25 @@ class basic_dlmalloc
       }
    }
 
-   //! Takes memory from the system, puts the heap object at the front of it
-   //! and makes the rest the heap's first segment. Zero capacity asks for
-   //! one granularity unit.
+   //! <b>Effects</b>: Takes memory from the system, puts the heap object at
+   //!   the front of it and makes the rest the heap's first segment.
    //!
-   //! `locked` chooses whether the heap serializes its own operations; pass
-   //! false only when it is reached from one thread.
+   //! <b>Parameters</b>:
+   //!   - `capacity`: the least the heap should hold, in usable bytes.
+   //!     Rounded up to a whole number of granularity units. Zero asks for
+   //!     one such unit.
+   //!   - `locked`: whether the heap serializes its own operations. Pass
+   //!     false only when it is reached from one thread. Ignored when the
+   //!     configuration has use_locks off.
    //!
-   //! Returns null when the system refuses the memory, or when `capacity` is
-   //! too large to describe. destroy() gives it all back, the object with it.
+   //! <b>Returns</b>: The heap, or null when the system refuses the memory
+   //!   or when `capacity` is too large to describe.
+   //!
+   //! <b>Complexity</b>: One call to the system to map the memory.
+   //!
+   //! <b>Note</b>: destroy() is what releases it, and gives the object back
+   //!   with the rest. The destructor must not be called directly, and the
+   //!   result must not be deleted.
    static basic_dlmalloc *create(size_type capacity = 0, bool locked = true) BOOST_NOEXCEPT
    {
       size_type psize, gsize;
@@ -781,16 +934,28 @@ class basic_dlmalloc
       return init_in_place(tbase, tsize, use_mmap_bit, locked);
     }
 
-   //! The same, in memory the caller owns and keeps: the heap object goes at
-   //! the front of the buffer and the rest is the first segment.
+   //! <b>Requires</b>: The buffer must outlive the heap.
    //!
-   //! The buffer has to outlive the heap, and destroy() leaves it alone -
-   //! only the object inside it is destroyed. The heap still grows the
-   //! ordinary way when the buffer runs out, unless a footprint limit stops
-   //! it.
+   //! <b>Effects</b>: The same as create(), in memory the caller owns and
+   //!   keeps: the heap object goes at the front of the buffer and the rest
+   //!   is the first segment. The heap still grows the ordinary way when the
+   //!   buffer runs out, unless a footprint limit stops it.
    //!
-   //! Returns null for a null buffer, or one too small to hold the object
-   //! and a heap.
+   //! <b>Parameters</b>:
+   //!   - `base`: the first byte of the buffer. The object is placed at the
+   //!     first correctly aligned address at or after it.
+   //!   - `capacity`: how many bytes the buffer holds, counted from `base`.
+   //!   - `locked`: whether the heap serializes its own operations. Pass
+   //!     false only when it is reached from one thread. Ignored when the
+   //!     configuration has use_locks off.
+   //!
+   //! <b>Returns</b>: The heap, or null for a null buffer or one too small
+   //!   to hold the object and a heap.
+   //!
+   //! <b>Complexity</b>: Constant. The system is not called.
+   //!
+   //! <b>Note</b>: destroy() leaves the buffer alone - only the object
+   //!   inside it is destroyed.
    static basic_dlmalloc *create_with_base(void *base, size_type capacity,
                                            bool locked = true) BOOST_NOEXCEPT
    {
@@ -806,13 +971,25 @@ class basic_dlmalloc
       return init_in_place(raw, capacity, extern_bit, locked);
    }
 
-   //! Destroys a heap create() or create_with_base() made, and returns how
-   //! many bytes went back to the system. Memory still handed out goes with
-   //! it, and a buffer given to create_with_base() is not released - it is
-   //! the caller's.
+   //! <b>Requires</b>: `p` must be null, or a heap that create() or
+   //!   create_with_base() returned and that was not destroyed already.
    //!
-   //! The pointer must not be used afterwards: for a create()d heap the
-   //! object itself lived in the memory just released.
+   //! <b>Effects</b>: Destroys the heap and releases every segment it
+   //!   obtained from the system. Memory still handed out goes with it, and
+   //!   a buffer given to create_with_base() is not released - it is the
+   //!   caller's. A null pointer is ignored.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `p`: the heap to destroy.
+   //!
+   //! <b>Returns</b>: How many bytes went back to the system, which is zero
+   //!   for a heap built over the caller's own buffer that never grew.
+   //!
+   //! <b>Complexity</b>: Linear in the number of segments held, and one call
+   //!   to the system per segment released.
+   //!
+   //! <b>Note</b>: `p` must not be used afterwards. For a create()d heap the
+   //!   object itself lived in the memory just released.
    static size_type destroy(basic_dlmalloc *p) BOOST_NOEXCEPT
    {
       size_type freed = 0;
@@ -836,44 +1013,172 @@ class basic_dlmalloc
    //                            Allocation
    //////////////////////////////////////////////////////////////////////////
 
-   //! Takes a block of at least `bytes` usable bytes, or null.
+   //! <b>Effects</b>: Takes a block of at least `bytes` usable bytes from
+   //!   the heap, and asks the system for more memory when the heap has none
+   //!   to serve the request.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `bytes`: the least the block must hold. Zero is legal and returns
+   //!     the smallest block the heap can make.
+   //!
+   //! <b>Returns</b>: The block, or null when the request cannot be met. The
+   //!   block may hold more than was asked for - usable_size() says how
+   //!   much.
+   //!
+   //! <b>Complexity</b>: Constant when a free block of the right size is at
+   //!   hand, logarithmic in the number of distinct free sizes when the heap
+   //!   has to search for one, and one call to the system when it has to
+   //!   grow.
    void *allocate(size_type bytes) BOOST_NOEXCEPT
    {  return this->priv_allocate(bytes);  }
 
-   //! Gives a block back. A null pointer is ignored.
+   //! <b>Requires</b>: `mem` must be null, or a block this heap returned
+   //!   and that was not given back already.
+   //!
+   //! <b>Effects</b>: Gives the block back to the heap, merging it with any
+   //!   free neighbour. A null pointer is ignored.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `mem`: the block to give back.
+   //!
+   //! <b>Complexity</b>: Constant. Every so often a free also trims the heap
+   //!   or releases a whole free segment, which is linear in the number of
+   //!   segments - see trim().
    void deallocate(void *mem) BOOST_NOEXCEPT
    {  this->priv_deallocate(mem);  }
 
-   //! Takes a block for n_elements of elem_size bytes, zero filled.
+   //! <b>Effects</b>: Takes one block big enough for `n_elements` items of
+   //!   `elem_size` bytes and fills it with zeros. A product too large to
+   //!   describe is refused rather than wrapped around.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `n_elements`: how many items the block must hold.
+   //!   - `elem_size`: how many bytes one item takes.
+   //!
+   //! <b>Returns</b>: The block, or null when the request cannot be met.
+   //!
+   //! <b>Complexity</b>: That of allocate(), plus linear in the size of the
+   //!   block to zero it. Memory fresh from the system reads as zero
+   //!   already and is not written again.
    void *allocate_zeroed(size_type n_elements, size_type elem_size) BOOST_NOEXCEPT
    {  return this->priv_allocate_zeroed(n_elements, elem_size);  }
 
-   //! Resizes a block, moving and copying it when it cannot grow where it
-   //! stands. The old block is kept when the request cannot be met.
+   //! <b>Requires</b>: `mem` must be null, or a block this heap returned
+   //!   and that was not given back already.
+   //!
+   //! <b>Effects</b>: Resizes the block to at least `newsize` usable bytes,
+   //!   moving it and copying its contents when it cannot be resized where
+   //!   it stands. A null `mem` makes this allocate(). On success the old
+   //!   block is given back, and on failure it is kept unchanged.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `mem`: the block to resize.
+   //!   - `newsize`: the least the block must hold afterwards.
+   //!
+   //! <b>Returns</b>: The block, which may be at a new address, or null when
+   //!   the request cannot be met.
+   //!
+   //! <b>Complexity</b>: Constant when the block can be resized where it
+   //!   stands; otherwise that of allocate() plus linear in the bytes
+   //!   copied.
    void *reallocate(void *mem, size_type newsize) BOOST_NOEXCEPT
    {  return this->priv_reallocate(mem, newsize);  }
 
-   //! Grows or shrinks a block without moving it, or fails. Never copies.
+   //! <b>Requires</b>: `mem` must be null, or a block this heap returned
+   //!   and that was not given back already.
+   //!
+   //! <b>Effects</b>: Grows or shrinks the block to at least `newsize`
+   //!   usable bytes without moving it, or does nothing at all. Never
+   //!   copies, so the address the caller holds stays valid either way.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `mem`: the block to resize.
+   //!   - `newsize`: the least the block must hold afterwards.
+   //!
+   //! <b>Returns</b>: `mem` when the resize was done, null when it was not.
+   //!
+   //! <b>Complexity</b>: Constant.
    void *reallocate_in_place(void *mem, size_type newsize) BOOST_NOEXCEPT
    {  return this->priv_reallocate_in_place(mem, newsize);  }
 
-   //! Takes a block whose address is a multiple of `alignment`, which must
-   //! be a power of two.
+   //! <b>Requires</b>: `alignment` must be a power of two.
+   //!
+   //! <b>Effects</b>: Takes a block of at least `bytes` usable bytes whose
+   //!   address is a multiple of `alignment`. An `alignment` below the
+   //!   heap's own is raised to it, so the result is always at least as
+   //!   aligned as allocate() would give.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `alignment`: the address boundary the block must sit on.
+   //!   - `bytes`: the least the block must hold.
+   //!
+   //! <b>Returns</b>: The block, or null when the request cannot be met.
+   //!
+   //! <b>Complexity</b>: That of allocate() for `bytes` plus `alignment`,
+   //!   plus the constant work of returning the two ends that the alignment
+   //!   left over.
+   //!
+   //! <b>Note</b>: deallocate() takes such a block back like any other.
    void *allocate_aligned(size_type alignment, size_type bytes) BOOST_NOEXCEPT
    {  return this->priv_allocate_aligned(alignment, bytes);  }
 
-   //! Takes n_elements blocks of elem_size bytes, zero filled, out of one
-   //! run, and reports them through an array. `chunks` may name that array;
-   //! null asks the heap for one, which the caller then frees like a block.
+   //! <b>Effects</b>: Takes `n_elements` blocks of `elem_size` bytes each,
+   //!   zero filled, out of one run of memory, and reports them through an
+   //!   array. Each block is given back with deallocate() on its own, but
+   //!   none of the memory returns to the system until every one of them is
+   //!   back.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `n_elements`: how many blocks to take.
+   //!   - `elem_size`: how many bytes one block must hold.
+   //!   - `chunks`: an array of at least `n_elements` pointers to fill in,
+   //!     or null to ask the heap for one. A heap-provided array is given
+   //!     back with deallocate(), like a block.
+   //!
+   //! <b>Returns</b>: The array the blocks were written to, or null when the
+   //!   request cannot be met. The entry after the last block is set to null
+   //!   when the heap provided the array.
+   //!
+   //! <b>Complexity</b>: One allocation of the whole run, plus linear in
+   //!   `n_elements` to cut it up.
    void **independent_calloc(size_type n_elements, size_type elem_size, void *chunks[]) BOOST_NOEXCEPT
    {  return this->priv_independent_calloc(n_elements, elem_size, chunks);  }
 
-   //! The same, with a size of its own for each block and no zero filling.
+   //! <b>Effects</b>: The same as independent_calloc(), with a size of its
+   //!   own for each block and no zero filling.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `n_elements`: how many blocks to take.
+   //!   - `sizes`: an array of `n_elements` sizes; the i-th block holds at
+   //!     least sizes[i] bytes.
+   //!   - `chunks`: an array of at least `n_elements` pointers to fill in,
+   //!     or null to ask the heap for one. A heap-provided array is given
+   //!     back with deallocate(), like a block.
+   //!
+   //! <b>Returns</b>: The array the blocks were written to, or null when the
+   //!   request cannot be met.
+   //!
+   //! <b>Complexity</b>: One allocation of the whole run, plus linear in
+   //!   `n_elements` to cut it up.
    void **independent_comalloc(size_type n_elements, size_type sizes[], void *chunks[]) BOOST_NOEXCEPT
    {  return this->priv_independent_comalloc(n_elements, sizes, chunks);  }
 
-   //! Frees an array of pointers under one lock and nulls the entries it
-   //! consumed. Returns how many it could not free.
+   //! <b>Requires</b>: Every entry of the array must be null, or a block
+   //!   this heap returned and that was not given back already.
+   //!
+   //! <b>Effects</b>: Gives back every block of the array under one lock,
+   //!   and nulls the entries it consumed. Cheaper than a loop of
+   //!   deallocate() calls, because the lock is taken once and neighbouring
+   //!   blocks are merged as they are met.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `array`: the blocks to give back. Entries are nulled in place.
+   //!   - `nelem`: how many entries the array holds.
+   //!
+   //! <b>Returns</b>: How many blocks could not be given back; their entries
+   //!   are left as they were.
+   //!
+   //! <b>Complexity</b>: Linear in `nelem`.
    size_type bulk_free(void *array[], size_type nelem) BOOST_NOEXCEPT
    {  return internal_bulk_free(array, nelem);  }
 
@@ -887,14 +1192,27 @@ class basic_dlmalloc
    static const size_type allocation_payload =
       (config_type::footers ? sizeof(size_type)*2u : sizeof(size_type));
 
-   //! Usable bytes of a block this heap returned, which may exceed what was
-   //! asked for. Needs no instance state, and takes no lock.
+   //! <b>Requires</b>: `mem` must be null, or a block this heap returned
+   //!   and that was not given back already. Nothing else may be operating
+   //!   on the heap at the same time - see the note.
    //!
-   //! Not safe against other operations on the same heap, even for a block
-   //! the caller owns: a block's header also carries the in-use bit of the
-   //! block before it, so allocating or freeing a NEIGHBOUR writes the very
-   //! word this reads. Call it while nothing else is touching the heap, or
-   //! from the thread that owns the heap.
+   //! <b>Effects</b>: Reads the block's own header. Needs no instance state,
+   //!   and takes no lock.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `mem`: the block to measure.
+   //!
+   //! <b>Returns</b>: How many bytes of the block the caller may use, which
+   //!   may exceed what was asked for. Zero for a null pointer, and zero
+   //!   for a block that is not in use.
+   //!
+   //! <b>Complexity</b>: Constant.
+   //!
+   //! <b>Note</b>: Not safe against other operations on the same heap, even
+   //!   for a block the caller owns: a block's header also carries the
+   //!   in-use bit of the block before it, so allocating or freeing a
+   //!   NEIGHBOUR writes the very word this reads. Call it while nothing
+   //!   else is touching the heap, or from the thread that owns the heap.
    static size_type usable_size(const void *mem) BOOST_NOEXCEPT
    {
       if(BOOST_LIKELY(mem != 0)){
@@ -905,22 +1223,43 @@ class basic_dlmalloc
       return 0;
    }
 
-   //! Bytes obtained from the system.
+   //! <b>Returns</b>: How many bytes the heap holds from the system now.
+   //!   This counts memory the heap owns, not memory it has handed out, so
+   //!   it does not fall to zero until the memory goes back.
+   //!
+   //! <b>Complexity</b>: Constant. A counter is read, and no lock is taken.
    size_type footprint() const BOOST_NOEXCEPT
    {  return m_state.footprint;  }
 
-   //! High-water mark of footprint().
+   //! <b>Returns</b>: The largest value footprint() ever had for this heap.
+   //!
+   //! <b>Complexity</b>: Constant. A counter is read, and no lock is taken.
    size_type max_footprint() const BOOST_NOEXCEPT
    {  return m_state.max_footprint;  }
 
-   //! Current cap, or the maximum size_type when there is none.
+   //! <b>Returns</b>: The cap set_footprint_limit() put on footprint(), or
+   //!   the largest size_type when there is no cap.
+   //!
+   //! <b>Complexity</b>: Constant. A counter is read, and no lock is taken.
    size_type footprint_limit() const BOOST_NOEXCEPT
    {
       const size_type maf = m_state.footprint_limit;
       return maf == 0 ? max_size_t : maf;
    }
 
-   //! Caps how much this heap may obtain from the system.
+   //! <b>Effects</b>: Caps how much this heap may hold from the system. A
+   //!   request that would push footprint() over the cap fails instead. The
+   //!   cap does not shrink a heap that is already over it.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `bytes`: the cap, rounded up to a whole number of granularity
+   //!     units. Zero sets the smallest cap there is rather than removing
+   //!     the cap; the largest size_type is what removes it.
+   //!
+   //! <b>Returns</b>: The cap that was really set, which is the rounded up
+   //!   value, or zero when the cap was removed.
+   //!
+   //! <b>Complexity</b>: Constant.
    size_type set_footprint_limit(size_type bytes) BOOST_NOEXCEPT
    {
       size_type result = 0;
@@ -931,7 +1270,29 @@ class basic_dlmalloc
       return m_state.footprint_limit = result;
    }
 
-   //! Releases unused memory back to the system.
+   //! <b>Effects</b>: Gives unused memory back to the system: the free
+   //!   space at the top of the heap above `pad`, and every segment that
+   //!   holds nothing at all.
+   //!
+   //!   The heap does this by itself as blocks come back, once the free
+   //!   space at the top passes the trim threshold - see
+   //!   option_trim_threshold. This asks for it at a moment the caller
+   //!   picks.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `pad`: how many free bytes to leave at the top, so that the next
+   //!     few requests need not call the system again. Zero keeps nothing
+   //!     back and is what also lets the last segment go.
+   //!
+   //! <b>Returns</b>: true if any memory went back to the system.
+   //!
+   //! <b>Complexity</b>: Linear in the number of segments held, plus one
+   //!   call to the system per piece released.
+   //!
+   //! <b>Note</b>: Memory the caller gave to the base constructor or to
+   //!   create_with_base() is never released - it is the caller's. On
+   //!   platforms that cannot unmap part of a mapping the free space at the
+   //!   top cannot be given back either, and only whole free segments are.
    bool trim(size_type pad = 0) BOOST_NOEXCEPT
    {
       int result = 0;
@@ -942,23 +1303,43 @@ class basic_dlmalloc
       return result != 0;
    }
 
-   //! Tunes this heap, and no other. `value` is a size, so the whole range
-   //! of size_type is available; the maximum stands for "no limit", which is
-   //! also what a plain -1 converts to.
+   //! <b>Effects</b>: Tunes this heap, and no other. The new value holds
+   //!   for every later request; it does not revisit memory the heap already
+   //!   holds.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `param_number`: which knob to set. See option_t.
+   //!   - `value`: what to set it to. It is a size, so the whole range of
+   //!     size_type is available, and the largest one stands for "no
+   //!     limit" - which is also what a plain -1 converts to. A granularity
+   //!     is rounded up to a whole number of pages, and refused when it is
+   //!     not a power of two.
+   //!
+   //! <b>Returns</b>: true if the knob was set. false for an unknown knob,
+   //!   or a value the knob will not take.
+   //!
+   //! <b>Complexity</b>: Constant.
    bool mallopt(option_t param_number, size_type value) BOOST_NOEXCEPT
    {  return this->change_mparam(param_number, value) != 0;  }
 
-   //! Keeps large blocks inside the heap's own segments instead of mapping
-   //! each one on its own, so that inspect_all() and mallinfo() can see them.
+   //! <b>Effects</b>: Chooses whether a block at or above the mmap
+   //!   threshold is kept inside one of the heap's own segments rather than
+   //!   mapped on its own. A block inside a segment is one that
+   //!   inspect_all() and mallinfo() can see.
    //!
-   //! Returns what the setting was before this call. Note the sense:
-   //! tracking a large block means NOT mapping it on its own, so enabling
-   //! tracking disables direct mapping, and the value returned is true when
-   //! direct mapping was already off - that is, when they were already
-   //! tracked.
+   //!   Blocks already mapped on their own stay that way; this decides only
+   //!   what happens to later requests.
    //!
-   //! Blocks already mapped on their own stay that way; this decides only
-   //! what happens to later requests.
+   //! <b>Parameters</b>:
+   //!   - `enable`: true to keep such blocks in segments, false to map each
+   //!     one on its own.
+   //!
+   //! <b>Returns</b>: Whether such blocks were already being tracked before
+   //!   this call. Note the sense: tracking a large block means NOT mapping
+   //!   it on its own, so the value returned is true when direct mapping was
+   //!   already off.
+   //!
+   //! <b>Complexity</b>: Constant.
    bool track_large_chunks(bool enable) BOOST_NOEXCEPT
    {
       bool was_tracking = false;
@@ -1004,16 +1385,20 @@ class basic_dlmalloc
       size_type keepcost;  //!< bytes at the top, which trim() could give back
    };
 
-   //! One walk of the whole heap, filling in every field above.
+   //! <b>Effects</b>: Walks every block of every segment once, and fills in
+   //!   every field of mallinfo_t.
    //!
-   //! Walks the heap, because no running total is kept - which is why this
-   //! is meant for tests and diagnostics rather than for a hot path. A heap
-   //! that never allocated anything gives all zeros.
+   //! <b>Returns</b>: The figures. A heap that never allocated anything
+   //!   gives all zeros.
    //!
-   //! Note uordblks counts the record chunk each segment after the first
-   //! carries, which the heap made for itself and never gave to anybody.
-   //! allocated_memory() leaves those out, so the two differ by exactly that
-   //! much - and by nothing else.
+   //! <b>Complexity</b>: Linear in the number of blocks the heap holds. No
+   //!   running total is kept, which is why this is meant for tests and
+   //!   diagnostics rather than for a hot path.
+   //!
+   //! <b>Note</b>: uordblks counts the record chunk each segment after the
+   //!   first carries, which the heap made for itself and never gave to
+   //!   anybody. allocated_memory() leaves those out, so the two differ by
+   //!   exactly that much - and by nothing else.
    mallinfo_t mallinfo() const BOOST_NOEXCEPT
    {
       mallinfo_t nm = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -1065,17 +1450,19 @@ class basic_dlmalloc
       size_type in_use_bytes;      //!< how much of that is handed out
    };
 
-   //! The three figures the classic malloc_stats() prints, returned rather
-   //! than written anywhere: the caller picks the destination, and the
-   //! header stays free of <cstdio>.
+   //! <b>Returns</b>: The three figures the classic malloc_stats() prints,
+   //!   returned rather than written anywhere: the caller picks the
+   //!   destination, and the header stays free of <cstdio>.
    //!
-   //! Every one of them is also a mallinfo() figure - max_system_bytes is
-   //! usmblks, system_bytes is uordblks plus fordblks, and in_use_bytes is
-   //! uordblks - so this asks nothing mallinfo() does not already answer.
-   //! It is here because it is short, because the three names read better
-   //! than the SVID ones, and because the interface it mirrors has it.
+   //! <b>Complexity</b>: Linear in the number of blocks the heap holds,
+   //!   because in_use_bytes needs a walk. The other two are counters.
    //!
-   //! Walks the heap, for in_use_bytes; the other two are counters.
+   //! <b>Note</b>: Every one of them is also a mallinfo() figure -
+   //!   max_system_bytes is usmblks, system_bytes is uordblks plus fordblks,
+   //!   and in_use_bytes is uordblks - so this asks nothing mallinfo() does
+   //!   not already answer. It is here because it is short, because the
+   //!   three names read better than the SVID ones, and because the
+   //!   interface it mirrors has it.
    malloc_stats_t malloc_stats() const BOOST_NOEXCEPT
    {
       malloc_stats_t st;
@@ -1085,27 +1472,40 @@ class basic_dlmalloc
       return st;
    }
 
-   //! Type of the function inspect_all() calls for each block the first byte,
-   //! one past the last, how many bytes of it are in use - zero for a free block
-   //! - and the user provided pointer.
+   //! Type of the function inspect_all() calls once for each block.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `start`: the first byte of the block the caller could use.
+   //!   - `end`: one past the last byte of it.
+   //!   - `used_bytes`: how many of those bytes are in use, and zero for a
+   //!     free block.
+   //!   - `arg`: the pointer the caller gave to inspect_all(), unchanged.
    typedef void (*inspect_handler_t)(void *start, void *end,
                                      size_type used_bytes, void *arg);
 
-   //! Calls the handler once for every block of every segment, in use or
-   //! free, in address order.
+   //! <b>Requires</b>: The handler must not touch this heap - not even to
+   //!   ask its size. It runs while the heap is locked.
    //!
-   //! `start` and `end` bound the memory the block can hold, so for a free
-   //! block they skip the bookkeeping the heap keeps inside it and the range
-   //! can be empty - such a block is passed over rather than reported. A
-   //! block whose bytes are in use is reported with the size the caller can
-   //! rely on, which is the chunk less its overhead.
+   //! <b>Effects</b>: Calls the handler once for every block of every
+   //!   segment, in use or free, in address order.
    //!
-   //! Only segments are walked. A block big enough for the heap to map on
-   //! its own is in no segment and is not reported; track_large_chunks()
-   //! keeps such blocks in segments, where this can see them.
+   //!   The `start` and `end` the handler gets bound the memory the block
+   //!   can hold, so for a free block they skip the bookkeeping the heap
+   //!   keeps inside it and the range can be empty - such a block is passed
+   //!   over rather than reported. A block whose bytes are in use is
+   //!   reported with the size the caller can rely on, which is the chunk
+   //!   less its overhead.
    //!
-   //! The handler runs while the heap is locked, so it must not touch this
-   //! heap - not even to ask its size.
+   //!   Only segments are walked. A block big enough for the heap to map on
+   //!   its own is in no segment and is not reported; track_large_chunks()
+   //!   keeps such blocks in segments, where this can see them.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `handler`: the function to call for each block.
+   //!   - `arg`: passed to the handler unchanged, for whatever the caller
+   //!     needs to carry along.
+   //!
+   //! <b>Complexity</b>: Linear in the number of blocks the heap holds.
    void inspect_all(inspect_handler_t handler, void *arg) const BOOST_NOEXCEPT
    {
       basic_dlmalloc *const self = const_cast<basic_dlmalloc *>(this);
@@ -1144,9 +1544,17 @@ class basic_dlmalloc
       }
    }
 
-   //! Walks the whole heap checking every invariant, when the configuration
-   //! has debug on. A failed check runs the abort action; with debug off this
-   //! does nothing. Always returns true, so it can sit inside a test macro.
+   //! <b>Effects</b>: Walks the whole heap checking every invariant, when
+   //!   the configuration has debug on. A failed check runs the
+   //!   configuration's abort action. With debug off this does nothing at
+   //!   all.
+   //!
+   //! <b>Returns</b>: Always true, so that the call can sit inside a test
+   //!   macro. A heap that fails a check does not return from here - the
+   //!   abort action is what reports it.
+   //!
+   //! <b>Complexity</b>: Linear in the number of blocks the heap holds when
+   //!   debug is on, and constant when it is off.
    bool check() const BOOST_NOEXCEPT
    {
       if(debug){
@@ -1171,8 +1579,26 @@ class basic_dlmalloc
    //walks the heap instead, so the allocation paths stay free of
    //bookkeeping.
 
-   //! Grows a block in place, forwards only, to somewhere between minbytes
-   //! and maxbytes. Returns false and changes nothing when it cannot.
+   //! <b>Requires</b>: `oldmem` must be a block this heap returned and that
+   //!   was not given back already, `received` must not be null, and
+   //!   `minbytes` must not exceed `maxbytes`.
+   //!
+   //! <b>Effects</b>: Grows the block where it stands, forwards only, to
+   //!   somewhere between `minbytes` and `maxbytes` usable bytes. Never
+   //!   moves and never copies, so the address the caller holds stays valid.
+   //!   Changes nothing when the block cannot grow that far.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `oldmem`: the block to grow.
+   //!   - `minbytes`: the least the block must hold for the call to succeed.
+   //!   - `maxbytes`: the most that is wanted; the heap stops there even
+   //!     when more is at hand.
+   //!   - `received`: filled in with the usable bytes of the block on
+   //!     success, and left alone on failure.
+   //!
+   //! <b>Returns</b>: true if the block grew.
+   //!
+   //! <b>Complexity</b>: Constant.
    bool grow(void *oldmem, size_type minbytes, size_type maxbytes,
              size_type *received) BOOST_NOEXCEPT
    {
@@ -1192,9 +1618,30 @@ class basic_dlmalloc
       return false;
    }
 
-   //! Shrinks a block in place to somewhere between minbytes and maxbytes.
-   //! With do_commit false it only reports what a shrink would give, and
-   //! leaves the block as it is.
+   //! <b>Requires</b>: `oldmem` must be a block this heap returned and that
+   //!   was not given back already, `received` must not be null, and
+   //!   `minbytes` must not exceed `maxbytes`.
+   //!
+   //! <b>Effects</b>: Shrinks the block where it stands to somewhere between
+   //!   `minbytes` and `maxbytes` usable bytes, and gives the tail back to
+   //!   the heap. Never moves and never copies. Changes nothing when the
+   //!   block cannot shrink that far - which happens when the tail would be
+   //!   too small to be a block of its own.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `oldmem`: the block to shrink.
+   //!   - `minbytes`: the least the block may become.
+   //!   - `maxbytes`: the largest the block may stay for the call to
+   //!     succeed.
+   //!   - `received`: filled in with the usable bytes the block has, or
+   //!     would have, on success.
+   //!   - `do_commit`: false only asks what a shrink would give and leaves
+   //!     the block as it is; true does the shrink.
+   //!
+   //! <b>Returns</b>: true if the block shrank, or would have shrunk when
+   //!   `do_commit` is false.
+   //!
+   //! <b>Complexity</b>: Constant.
    bool shrink(void *oldmem, size_type minbytes, size_type maxbytes,
                size_type *received, bool do_commit) BOOST_NOEXCEPT
    {
@@ -1208,8 +1655,24 @@ class basic_dlmalloc
       return false;
    }
 
-   //! Takes a block of at least minbytes, and of preferred_bytes when that
-   //! costs nothing more. Reports what it really gave.
+   //! <b>Requires</b>: `received_bytes` must not be null, and `minbytes`
+   //!   must not exceed `preferred_bytes`.
+   //!
+   //! <b>Effects</b>: Takes a block of `preferred_bytes` when the heap can
+   //!   give that much, and falls back to one of at least `minbytes`
+   //!   otherwise.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `minbytes`: the least that will do.
+   //!   - `preferred_bytes`: the most that is wanted.
+   //!   - `received_bytes`: filled in with the usable bytes of the block on
+   //!     success, and set to zero on failure.
+   //!
+   //! <b>Returns</b>: The block, or null when not even `minbytes` could be
+   //!   had.
+   //!
+   //! <b>Complexity</b>: That of allocate(), and at most two searches of the
+   //!   free blocks under one lock.
    void *alloc(size_type minbytes, size_type preferred_bytes,
                size_type *received_bytes) BOOST_NOEXCEPT
    {
@@ -1217,16 +1680,42 @@ class basic_dlmalloc
          (allocate_new, 1, 1, minbytes, preferred_bytes, received_bytes, 0).first;
    }
 
-   //! The one entry point that does the lot: grow a block where it stands,
-   //! hand out a new one, or shrink one in place, as `command` allows.
+   //! <b>Requires</b>: `received_size` must not be null. `reuse_ptr` must
+   //!   be null, or a block this heap returned and that was not given back
+   //!   already, and it must not be null when `command` asks for anything
+   //!   but allocate_new. `alignof_object` must be a power of two. For
+   //!   everything but a shrink, `limit_size` must not exceed
+   //!   `preferred_size`.
    //!
-   //! For a shrink the two sizes change their meaning: `limit_size` is then
-   //! the largest the block may stay and `preferred_size` the smallest it
-   //! may become. For
-   //! everything else `limit_size` is the least that will do and
-   //! `preferred_size` the most that is wanted, and `limit_size` must not be
-   //! the larger of the two.
+   //! <b>Effects</b>: The one entry point that does the lot: grows a block
+   //!   where it stands, hands out a new one, or shrinks one in place, as
+   //!   `command` allows. When `command` allows more than one of these they
+   //!   are tried in this order - grow in place at the preferred size, a new
+   //!   block, then grow in place at the smallest size that serves - so that
+   //!   the caller gets the cheapest outcome that meets the request.
    //!
+   //! <b>Parameters</b>:
+   //!   - `command`: any combination of allocation_command_t values that
+   //!     says what may be done. A shrink is asked for on its own.
+   //!   - `sizeof_object`: the size of one object, so that a size the heap
+   //!     reports back is a whole number of them.
+   //!   - `alignof_object`: the address boundary the block must sit on. A
+   //!     value at or below the heap's own alignment costs nothing extra.
+   //!   - `limit_size`: the least that will do. For a shrink it changes
+   //!     meaning and is the largest the block may stay.
+   //!   - `preferred_size`: the most that is wanted. For a shrink it changes
+   //!     meaning and is the smallest the block may become.
+   //!   - `received_size`: filled in with the usable bytes of the block on
+   //!     success, and set to zero on failure.
+   //!   - `reuse_ptr`: the block to grow or shrink. Ignored when `command`
+   //!     is allocate_new alone.
+   //!
+   //! <b>Returns</b>: A command_ret_t whose `first` is the block, or null
+   //!   when the request could not be met, and whose `second` says whether
+   //!   `reuse_ptr` was reused rather than a new block handed out.
+   //!
+   //! <b>Complexity</b>: That of the operation that succeeded. Everything
+   //!   happens under one lock, however many alternatives are tried.
    command_ret_t allocation_command
       (unsigned command, size_type sizeof_object, size_type alignof_object,
        size_type limit_size, size_type preferred_size, size_type *received_size,
@@ -1310,10 +1799,29 @@ class basic_dlmalloc
       return ret;
    }
 
-   //! Takes n_elements blocks of elem_size bytes each and adds them to the
-   //! chain. contiguous_elements says how many share one run; pass
-   //! default_contiguous to let the heap choose, or all_contiguous to ask
-   //! for one run.
+   //! <b>Requires</b>: `pchain` must not be null.
+   //!
+   //! <b>Effects</b>: Takes `n_elements` blocks of `elem_size` bytes each
+   //!   and adds them to the chain, keeping whatever the chain held already.
+   //!   Cheaper than a loop of allocate() calls, because the lock is taken
+   //!   once and the blocks are cut out of runs. Adds nothing when it cannot
+   //!   provide them all.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `n_elements`: how many blocks to take.
+   //!   - `elem_size`: how many bytes one block must hold.
+   //!   - `contiguous_elements`: how many blocks share one run. Pass
+   //!     default_contiguous to let the heap choose, or all_contiguous to
+   //!     ask for a single run - which then either succeeds whole or fails.
+   //!   - `pchain`: the chain the blocks are added to.
+   //!
+   //! <b>Returns</b>: true if every block was provided.
+   //!
+   //! <b>Complexity</b>: Linear in `n_elements`, plus one allocation per
+   //!   run.
+   //!
+   //! <b>Note</b>: The blocks may be given back one at a time with
+   //!   deallocate(), or all at once with multidealloc().
    bool multialloc_nodes(size_type n_elements, size_type elem_size,
                          size_type contiguous_elements, memchain *pchain) BOOST_NOEXCEPT
    {
@@ -1327,8 +1835,26 @@ class basic_dlmalloc
       return 0 != ret;
    }
 
-   //! Takes n_elements blocks, the i-th of sizes[i]*element_size bytes, and
-   //! adds them to the chain.
+   //! <b>Requires</b>: `pchain` must not be null, and `sizes` must hold at
+   //!   least `n_elements` entries.
+   //!
+   //! <b>Effects</b>: The same as multialloc_nodes(), with a size of its own
+   //!   for each block: the i-th holds sizes[i]*element_size bytes. Adds
+   //!   nothing when it cannot provide them all.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `n_elements`: how many blocks to take.
+   //!   - `sizes`: how many items each block must hold.
+   //!   - `element_size`: how many bytes one item takes.
+   //!   - `contiguous_elements`: how many blocks share one run. Pass
+   //!     default_contiguous to let the heap choose, or all_contiguous to
+   //!     ask for a single run.
+   //!   - `pchain`: the chain the blocks are added to.
+   //!
+   //! <b>Returns</b>: true if every block was provided.
+   //!
+   //! <b>Complexity</b>: Linear in `n_elements`, plus one allocation per
+   //!   run.
    bool multialloc_arrays(size_type n_elements, const size_type *sizes,
                           size_type element_size, size_type contiguous_elements,
                           memchain *pchain) BOOST_NOEXCEPT
@@ -1343,22 +1869,37 @@ class basic_dlmalloc
       return 0 != ret;
    }
 
-   //! Gives back every block of the chain under one lock, merging the ones
-   //! that turn out to be neighbours. Blocks it could not take back stay in
-   //! the chain.
+   //! <b>Requires</b>: `pchain` must not be null, and every block in it
+   //!   must be one this heap returned and that was not given back already.
+   //!
+   //! <b>Effects</b>: Gives back every block of the chain under one lock,
+   //!   merging the ones that turn out to be neighbours. Blocks it could not
+   //!   take back stay in the chain, so an empty chain afterwards means
+   //!   every block went back.
+   //!
+   //! <b>Parameters</b>:
+   //!   - `pchain`: the chain whose blocks go back.
+   //!
+   //! <b>Complexity</b>: Linear in the number of blocks the chain holds.
    void multidealloc(memchain *pchain) BOOST_NOEXCEPT
    {  internal_multialloc_free(pchain);  }
 
-   //! Bytes this heap has allocated, chunk overhead included.
+   //! <b>Effects</b>: Walks every block of every segment once.
    //!
-   //! This walks every chunk of every segment, so it costs O(number of chunks).
+   //! <b>Returns</b>: How many bytes this heap has handed out, the overhead
+   //!   of each block included, and the bookkeeping the heap made for itself
+   //!   left out.
    //!
-   //! For a block small enough to live in a segment the figure is exactly
-   //! the sum of the chunks in use. A block large enough for the heap to map
-   //! it on its own belongs to no segment, so it is counted by what it costs
-   //! the system, which is mmap_foot_pad more than its chunk. The figure
-   //! still falls to zero when every such block comes back, because the
-   //! mapping goes back with it.
+   //!   For a block small enough to live in a segment the figure is exactly
+   //!   the sum of the blocks in use. A block large enough for the heap to
+   //!   map it on its own belongs to no segment, so it is counted by what it
+   //!   costs the system, which is a little more than the block. The figure
+   //!   still falls to zero when every such block comes back, because the
+   //!   mapping goes back with it.
+   //!
+   //! <b>Complexity</b>: Linear in the number of blocks the heap holds. No
+   //!   running total is kept, so that the allocation paths stay free of
+   //!   bookkeeping.
    size_type allocated_memory() const BOOST_NOEXCEPT
    {
       size_type alloc_mem = 0;
@@ -1391,9 +1932,11 @@ class basic_dlmalloc
       return alloc_mem;
    }
 
-   //! True when everything this heap gave out has come back.
+   //! <b>Returns</b>: true when everything this heap gave out has come
+   //!   back, which is allocated_memory() being zero.
    //!
-   //! Walks the heap, because no running total is kept.
+   //! <b>Complexity</b>: Linear in the number of blocks the heap holds - see
+   //!   allocated_memory().
    bool all_deallocated() const BOOST_NOEXCEPT
    {  return 0 == this->allocated_memory();  }
 
