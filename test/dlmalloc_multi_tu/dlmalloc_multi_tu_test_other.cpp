@@ -10,11 +10,14 @@
 //Second translation unit of dlmalloc_multi_tu_test (no main here).
 #include <boost/container/detail/dlmalloc.hpp>
 
-void *other_tu_malloc(std::size_t n)
-{  return boost::container::dl_malloc(n);  }
+void *other_tu_allocate(boost::container::dlmalloc &h, std::size_t n)
+{  return h.allocate(n);  }
 
-void other_tu_free(void *p)
-{  boost::container::dl_free(p);  }
+void other_tu_deallocate(boost::container::dlmalloc &h, void *p)
+{  h.deallocate(p);  }
 
-std::size_t other_tu_in_use_memory()
-{  return boost::container::dl_in_use_memory();  }
+std::size_t other_tu_footprint(const boost::container::dlmalloc &h)
+{  return h.footprint();  }
+
+std::size_t other_tu_usable_size(const void *p)
+{  return boost::container::dlmalloc::usable_size(p);  }

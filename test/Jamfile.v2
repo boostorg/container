@@ -38,9 +38,15 @@ rule test_all
       ] ;
    }
 
-   # Two-translation-unit test: proves the header-only dlmalloc links without
-   # duplicate symbols and shares one heap between translation units
+   # Two-translation-unit test: every member of the heap class is inline, so
+   # two translation units must link, and one instance must behave the same
+   # from both
    all_rules += [ run dlmalloc_multi_tu/dlmalloc_multi_tu_test.cpp dlmalloc_multi_tu/dlmalloc_multi_tu_test_other.cpp
+                      /boost/container//boost_container ] ;
+
+   # dlmalloc and the original dlmalloc_2_8_6.c driving one heap between them:
+   # what one allocates the other frees, reallocates and audits
+   all_rules += [ run dlmalloc_upstream_compat/dlmalloc_upstream_compat_test.cpp
                       /boost/container//boost_container ] ;
 
    # Two-translation-unit test for the polymorphic resources: the singletons
@@ -62,12 +68,14 @@ rule test_all
                       bc_intermodule_lib_a bc_intermodule_lib_b
                       /boost/container//boost_container ] ;
 
-   all_rules += [ run dlmalloc_multi_tu/dlmalloc_intermodule_test.cpp
-                      bc_dlmalloc_lib_a bc_dlmalloc_lib_b
-                      /boost/container//boost_container ] ;
-
    all_rules += [ run pmr_multi_tu/pmr_intermodule_test.cpp
                       bc_pmr_lib_a bc_pmr_lib_b
+                      /boost/container//boost_container ] ;
+
+   # The process-wide dlmalloc instance reached through dl_globals():
+   # one heap however many modules inline the header
+   all_rules += [ run dlmalloc_multi_tu/dlmalloc_intermodule_test.cpp
+                      bc_dlmalloc_lib_a bc_dlmalloc_lib_b
                       /boost/container//boost_container ] ;
 
    return $(all_rules) ;
@@ -85,16 +93,6 @@ lib bc_intermodule_lib_b
    : <link>shared
    ;
 
-lib bc_dlmalloc_lib_a
-   : dlmalloc_multi_tu/dlmalloc_intermodule_lib_a.cpp /boost/container//boost_container
-   : <link>shared
-   ;
-
-lib bc_dlmalloc_lib_b
-   : dlmalloc_multi_tu/dlmalloc_intermodule_lib_b.cpp /boost/container//boost_container
-   : <link>shared
-   ;
-
 lib bc_pmr_lib_a
    : pmr_multi_tu/pmr_intermodule_lib_a.cpp /boost/container//boost_container
    : <link>shared
@@ -102,6 +100,16 @@ lib bc_pmr_lib_a
 
 lib bc_pmr_lib_b
    : pmr_multi_tu/pmr_intermodule_lib_b.cpp /boost/container//boost_container
+   : <link>shared
+   ;
+
+lib bc_dlmalloc_lib_a
+   : dlmalloc_multi_tu/dlmalloc_intermodule_lib_a.cpp /boost/container//boost_container
+   : <link>shared
+   ;
+
+lib bc_dlmalloc_lib_b
+   : dlmalloc_multi_tu/dlmalloc_intermodule_lib_b.cpp /boost/container//boost_container
    : <link>shared
    ;
 

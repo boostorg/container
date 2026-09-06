@@ -1,13 +1,19 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2007-2013. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2007-2026. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-
+//
+// alloc_full_test.cpp for the dlmalloc class: the same cases against one
+// heap instance instead of the process-wide one. The chain macros become
+// member functions of dlmalloc::memchain, and all_deallocated() now walks
+// the heap rather than reading a counter.
+//
+//////////////////////////////////////////////////////////////////////////////
 
 #ifdef _MSC_VER
 #pragma warning (disable:4702)
@@ -23,7 +29,58 @@
 
 namespace boost { namespace container { namespace test {
 
+//The one heap every case below works on. The original test reaches the
+//process-wide heap through the dlmalloc_* functions; here the same calls are
+//member functions of this instance.
+static dlmalloc h;
+
 static const std::size_t NumIt = 200;
+
+//The check the original test wanted here and could not have: that a round
+//which gives every block back leaves the heap holding what it held before.
+//
+//mallinfo().fordblks walks the heap, so it says what is free right now, and
+//once everything is deallocated the only thing standing between it and
+//footprint() is the record chunk each segment after the first carries - an
+//in-use chunk the heap made for itself and never gave to anybody. Records
+//come and go only with segments, so:
+//
+//  - the heap asked the system for nothing: the figure has to be back to
+//    exactly what it was;
+//  - the heap grew: it may hold more free memory now, but never more than it
+//    grew by, since each new segment spends part of itself on its record;
+//  - the heap gave a segment back: it may hold less, by the same reasoning.
+//
+//In every case fordblks cannot exceed footprint(), and what the heap has
+//handed out has to be nothing at all.
+//What holds at any moment, blocks live or not: everything the heap took from
+//the system is either free, or handed out, or spent on a segment record. So
+//the first two can never come to more than the whole. The round-trip check
+//below cannot see this, because it compares two moments that are wrong in the
+//same way whenever fordblks is wrong by a constant.
+static bool heap_accounting_holds()
+{
+   return h.mallinfo().fordblks + h.allocated_memory() <= h.footprint();
+}
+
+static bool free_memory_returned(std::size_t free_before, std::size_t footprint_before)
+{
+   const std::size_t free_now      = h.mallinfo().fordblks;
+   const std::size_t footprint_now = h.footprint();
+
+   if(free_now > footprint_now)
+      return false;
+   if(h.allocated_memory() != 0)
+      return false;
+   if(footprint_now == footprint_before)
+      return free_now == free_before;
+   if(footprint_now > footprint_before)
+      return free_now >= free_before &&
+             (free_now - free_before) <= (footprint_now - footprint_before);
+   return free_now <= free_before &&
+          (free_before - free_now) <= (footprint_before - footprint_now);
+}
+
 
 enum deallocation_type { DirectDeallocation, InverseDeallocation, MixedDeallocation, EndDeallocationType };
 
@@ -32,21 +89,24 @@ enum deallocation_type { DirectDeallocation, InverseDeallocation, MixedDeallocat
 
 bool test_allocation()
 {
-   if(!dlmalloc_heap().all_deallocated())
+   if(!h.all_deallocated())
       return false;
-   dlmalloc_heap().check();
+   h.check();
    for( deallocation_type t = DirectDeallocation
       ; t != EndDeallocationType
       ; t = (deallocation_type)((int)t + 1)){
       std::vector<void*> buffers;
-      //std::size_t free_memory = a.get_free_memory();
+      const std::size_t free_before      = h.mallinfo().fordblks;
+      const std::size_t footprint_before = h.footprint();
 
       for(std::size_t i = 0; i != NumIt; ++i){
-         void *ptr = dlmalloc_heap().allocate(i);
+         void *ptr = h.allocate(i);
          if(!ptr)
             break;
          buffers.push_back(ptr);
       }
+      if(!heap_accounting_holds())
+         return false;
 
       switch(t){
          case DirectDeallocation:
@@ -54,7 +114,7 @@ bool test_allocation()
             for(std::size_t j = 0, max = buffers.size()
                ;j < max
                ;++j){
-               dlmalloc_heap().deallocate(buffers[j]);
+               h.deallocate(buffers[j]);
             }
          }
          break;
@@ -63,7 +123,7 @@ bool test_allocation()
             for(std::size_t j = buffers.size()
                ;j--
                ;){
-               dlmalloc_heap().deallocate(buffers[j]);
+               h.deallocate(buffers[j]);
             }
          }
          break;
@@ -73,7 +133,7 @@ bool test_allocation()
                ;j < max
                ;++j){
                std::size_t pos = (j%4)*(buffers.size())/4;
-               dlmalloc_heap().deallocate(buffers[pos]);
+               h.deallocate(buffers[pos]);
                buffers.erase(buffers.begin()+(std::ptrdiff_t)pos);
             }
          }
@@ -81,14 +141,18 @@ bool test_allocation()
          default:
          break;
       }
-      if(!dlmalloc_heap().all_deallocated())
+      if(!h.all_deallocated())
          return false;
-      //bool ok = free_memory == a.get_free_memory() &&
-               //a.all_memory_deallocated() && a.check_sanity();
-      //if(!ok)  return ok;
+      if(!h.all_deallocated())
+         return false;
+      if(!heap_accounting_holds())
+         return false;
+      if(!free_memory_returned(free_before, footprint_before))
+         return false;
+      h.check();
    }
-   dlmalloc_heap().check();
-   return 0 != dlmalloc_heap().all_deallocated();
+   h.check();
+   return 0 != h.all_deallocated();
 }
 
 //This test allocates until there is no more memory
@@ -97,12 +161,12 @@ bool test_allocation()
 
 bool test_allocation_shrink()
 {
-   dlmalloc_heap().check();
+   h.check();
    std::vector<void*> buffers;
 
    //Allocate buffers with extra memory
    for(std::size_t i = 0; i != NumIt; ++i){
-      void *ptr = dlmalloc_heap().allocate(i*2u);
+      void *ptr = h.allocate(i*2u);
       if(!ptr)
          break;
       buffers.push_back(ptr);
@@ -113,13 +177,13 @@ bool test_allocation_shrink()
       ;i < max
       ; ++i){
       std::size_t try_received_size = 0;
-      void* try_result = dlmalloc_heap().allocation_command
-               ( try_shrink_in_place, 1, 1, i*2
+      void* try_result = h.allocation_command
+               ( dlmalloc::try_shrink_in_place, 1, 1, i*2
                , i, &try_received_size, (char*)buffers[i]).first;
 
       std::size_t received_size = 0;
-      void* result = dlmalloc_heap().allocation_command
-         ( shrink_in_place, 1, 1, i*2
+      void* result = h.allocation_command
+         ( dlmalloc::shrink_in_place, 1, 1, i*2
          , i, &received_size, (char*)buffers[i]).first;
 
       if(result != try_result)
@@ -143,11 +207,11 @@ bool test_allocation_shrink()
       ;j < max
       ;++j){
       std::size_t pos = (j%4u)*(buffers.size())/4u;
-      dlmalloc_heap().deallocate(buffers[pos]);
+      h.deallocate(buffers[pos]);
       buffers.erase(buffers.begin()+(std::ptrdiff_t)pos);
    }
-   dlmalloc_heap().check();
-   return 0 != dlmalloc_heap().all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
+   h.check();
+   return 0 != h.all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
 }
 
 //This test allocates until there is no more memory
@@ -156,12 +220,12 @@ bool test_allocation_shrink()
 
 bool test_allocation_expand()
 {
-   dlmalloc_heap().check();
+   h.check();
    std::vector<void*> buffers;
 
    //Allocate buffers with extra memory
    for(std::size_t i = 0; i != NumIt; ++i){
-      void *ptr = dlmalloc_heap().allocate(i);
+      void *ptr = h.allocate(i);
       if(!ptr)
          break;
       buffers.push_back(ptr);
@@ -175,8 +239,8 @@ bool test_allocation_expand()
       std::size_t min_size = i+1;
       std::size_t preferred_size = i*2;
       preferred_size = min_size > preferred_size ? min_size : preferred_size;
-      while(dlmalloc_heap().allocation_command
-         ( expand_fwd, 1, 1, min_size
+      while(h.allocation_command
+         ( dlmalloc::expand_fwd, 1, 1, min_size
          , preferred_size, &received_size, (char*)buffers[i]).first){
          //Check received size is bigger than minimum
          if(received_size < min_size){
@@ -193,11 +257,11 @@ bool test_allocation_expand()
       ;j < max
       ;++j){
       std::size_t pos = (j%4u)*(buffers.size())/4u;
-      dlmalloc_heap().deallocate(buffers[pos]);
+      h.deallocate(buffers[pos]);
       buffers.erase(buffers.begin()+(std::ptrdiff_t)pos);
    }
-   dlmalloc_heap().check();
-   return 0 != dlmalloc_heap().all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
+   h.check();
+   return 0 != h.all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
 }
 
 //This test allocates until there is no more memory
@@ -212,11 +276,11 @@ bool test_allocation_shrink_and_expand()
    //Allocate buffers wand store received sizes
    for(std::size_t i = 0; i != NumIt; ++i){
       std::size_t received_size = 0;
-      void *ptr = dlmalloc_heap().allocation_command
-         (allocate_new, 1u, 1u, i, i*2u, &received_size, 0).first;
+      void *ptr = h.allocation_command
+         (dlmalloc::allocate_new, 1u, 1u, i, i*2u, &received_size, 0).first;
       if(!ptr){
-         ptr = dlmalloc_heap().allocation_command
-            ( allocate_new, 1u, 1u, 1u, i*2, &received_size, 0).first;
+         ptr = h.allocation_command
+            ( dlmalloc::allocate_new, 1u, 1u, 1u, i*2, &received_size, 0).first;
          if(!ptr)
             break;
       }
@@ -231,8 +295,8 @@ bool test_allocation_shrink_and_expand()
       std::size_t received_size = 0;
       bool size_reduced_flag;
       if(true == (size_reduced_flag = !!
-         dlmalloc_heap().allocation_command
-         ( shrink_in_place, 1, 1, received_sizes[i]
+         h.allocation_command
+         ( dlmalloc::shrink_in_place, 1, 1, received_sizes[i]
          , i, &received_size, (char*)buffers[i]).first)){
          if(received_size > std::size_t(received_sizes[i])){
             return false;
@@ -251,8 +315,8 @@ bool test_allocation_shrink_and_expand()
       if(!size_reduced[i])  continue;
       std::size_t received_size = 0;
       std::size_t request_size =  received_sizes[i];
-      if(dlmalloc_heap().allocation_command
-         ( expand_fwd, 1, 1, request_size
+      if(h.allocation_command
+         ( dlmalloc::expand_fwd, 1, 1, request_size
          , request_size, &received_size, (char*)buffers[i]).first){
          if(received_size != request_size){
             return false;
@@ -268,11 +332,11 @@ bool test_allocation_shrink_and_expand()
       ;j < max
       ;++j){
       std::size_t pos = (j%4u)*(buffers.size())/4u;
-      dlmalloc_heap().deallocate(buffers[pos]);
+      h.deallocate(buffers[pos]);
       buffers.erase(buffers.begin()+(std::ptrdiff_t)pos);
    }
 
-   return 0 != dlmalloc_heap().all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
+   return 0 != h.all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
 }
 
 //This test allocates until there is no more memory
@@ -282,12 +346,12 @@ bool test_allocation_shrink_and_expand()
 
 bool test_allocation_deallocation_expand()
 {
-   dlmalloc_heap().check();
+   h.check();
    std::vector<void*> buffers;
 
    //Allocate buffers with extra memory
    for(std::size_t i = 0; i != NumIt; ++i){
-      void *ptr = dlmalloc_heap().allocate(i);
+      void *ptr = h.allocate(i);
       if(!ptr)
          break;
       buffers.push_back(ptr);
@@ -299,7 +363,7 @@ bool test_allocation_deallocation_expand()
       ;i < max
       ;++i){
       if(i%2){
-         dlmalloc_heap().deallocate(buffers[i]);
+         h.deallocate(buffers[i]);
          buffers[i] = 0;
       }
    }
@@ -315,8 +379,8 @@ bool test_allocation_deallocation_expand()
          std::size_t preferred_size = i*2;
          preferred_size = min_size > preferred_size ? min_size : preferred_size;
 
-         while(dlmalloc_heap().allocation_command
-            ( expand_fwd, 1, 1, min_size
+         while(h.allocation_command
+            ( dlmalloc::expand_fwd, 1, 1, min_size
             , preferred_size, &received_size, (char*)buffers[i]).first){
             //Check received size is bigger than minimum
             if(received_size < min_size){
@@ -338,11 +402,11 @@ bool test_allocation_deallocation_expand()
       ;j < max
       ;++j){
       std::size_t pos = (j%4u)*(buffers.size())/4u;
-      dlmalloc_heap().deallocate(buffers[pos]);
+      h.deallocate(buffers[pos]);
       buffers.erase(buffers.begin()+(std::ptrdiff_t)pos);
    }
-   dlmalloc_heap().check();
-   return 0 != dlmalloc_heap().all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
+   h.check();
+   return 0 != h.all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
 }
 
 //This test allocates until there is no more memory
@@ -354,25 +418,27 @@ bool test_allocation_deallocation_expand()
 
 bool test_allocation_with_reuse()
 {
-   dlmalloc_heap().check();
+   h.check();
    //We will repeat this test for different sized elements
    for(std::size_t sizeof_object = 1; sizeof_object < 20; ++sizeof_object){
       std::vector<void*> buffers;
 
       //Allocate buffers with extra memory
       for(std::size_t i = 0; i != NumIt; ++i){
-         void *ptr = dlmalloc_heap().allocate(i*sizeof_object);
+         void *ptr = h.allocate(i*sizeof_object);
          if(!ptr)
             break;
          buffers.push_back(ptr);
       }
+      if(!heap_accounting_holds())
+         return false;
 
       //Now deallocate all except the latest
       //Now try to expand to the double of the size
       for(std::size_t i = 0, max = buffers.size() - 1
          ;i < max
          ;++i){
-         dlmalloc_heap().deallocate(buffers[i]);
+         h.deallocate(buffers[i]);
       }
 
       //Save the unique buffer and clear vector
@@ -384,8 +450,8 @@ bool test_allocation_with_reuse()
       for(std::size_t i = 0; i != NumIt; ++i){
          std::size_t min_size = (received_size/sizeof_object + 1u)*sizeof_object;
          std::size_t prf_size = (received_size/sizeof_object + (i+1u)*2u)*sizeof_object;
-         dlmalloc::command_ret_t ret = dlmalloc_heap().allocation_command
-            ( expand_bwd, sizeof_object, 1u, min_size
+         dlmalloc::command_ret_t ret = h.allocation_command
+            ( dlmalloc::expand_bwd, sizeof_object, 1u, min_size
             , prf_size, &received_size, (char*)ptr);
          //If we have memory, this must be a buffer reuse
          if(!ret.first)
@@ -398,9 +464,9 @@ bool test_allocation_with_reuse()
          ptr = ret.first;
       }
       //There should be only a single block so deallocate it
-      dlmalloc_heap().deallocate(ptr);
-      dlmalloc_heap().check();
-      if(!dlmalloc_heap().all_deallocated())
+      h.deallocate(ptr);
+      h.check();
+      if(!h.all_deallocated())
          return false;
    }
    return true;
@@ -413,7 +479,7 @@ bool test_allocation_with_reuse()
 //allocates at all.
 bool test_multialloc_contiguous_modes()
 {
-   dlmalloc_heap().check();
+   h.check();
    const std::size_t counts[]  = { 1u, 2u, 37u, 500u };
    const std::size_t esizes[]  = { 1u, 8u, 24u };
    const std::size_t contig[]  = { dlmalloc::default_contiguous
@@ -431,13 +497,14 @@ bool test_multialloc_contiguous_modes()
                continue;
             }
 
-            if(!dlmalloc_heap().all_deallocated())
+            if(!h.all_deallocated())
                return false;
 
             //---- nodes variant ----
             {
                dlmalloc::memchain ch;
-               if(!dlmalloc_heap().multialloc_nodes(num, esizes[e], contig[c], &ch))
+               ch.init();
+               if(!h.multialloc_nodes(num, esizes[e], contig[c], &ch))
                   return false;
                if(ch.size() != num)
                   return false;
@@ -458,8 +525,8 @@ bool test_multialloc_contiguous_modes()
                   return false;
                if(ch.last_mem() != last)
                   return false;
-               dlmalloc_heap().multidealloc(&ch);
-               if(!dlmalloc_heap().all_deallocated())
+               h.multidealloc(&ch);
+               if(!h.all_deallocated())
                   return false;
             }
 
@@ -467,7 +534,8 @@ bool test_multialloc_contiguous_modes()
             {
                std::vector<std::size_t> sizes(num, esizes[e]);
                dlmalloc::memchain ch;
-               if(!dlmalloc_heap().multialloc_arrays(num, &sizes[0], 1u, contig[c], &ch))
+               ch.init();
+               if(!h.multialloc_arrays(num, &sizes[0], 1u, contig[c], &ch))
                   return false;
                if(ch.size() != num)
                   return false;
@@ -482,14 +550,14 @@ bool test_multialloc_contiguous_modes()
                }
                if(walked != num)
                   return false;
-               dlmalloc_heap().multidealloc(&ch);
-               if(!dlmalloc_heap().all_deallocated())
+               h.multidealloc(&ch);
+               if(!h.all_deallocated())
                   return false;
             }
          }
       }
    }
-   dlmalloc_heap().check();
+   h.check();
    return true;
 }
 
@@ -499,33 +567,33 @@ bool test_multialloc_contiguous_modes()
 //for a size that needs part of each: a combined forward+backward expansion.
 bool test_allocation_expand_both()
 {
-   dlmalloc_heap().check();
+   h.check();
    bool exercised = false;
    //Several backwards_multiple values, powers of two and not, so the
    //lcm/alignment branches that size the backward part all get used
    for(std::size_t sizeof_object = 1; sizeof_object != 9; ++sizeof_object){
-      if(!dlmalloc_heap().all_deallocated())
+      if(!h.all_deallocated())
          return false;
 
       const std::size_t BlockSize = 256;
-      void *a = dlmalloc_heap().allocate(BlockSize);
-      void *b = dlmalloc_heap().allocate(BlockSize);
-      void *c = dlmalloc_heap().allocate(BlockSize);
+      void *a = h.allocate(BlockSize);
+      void *b = h.allocate(BlockSize);
+      void *c = h.allocate(BlockSize);
       //d pins c: without it, freeing c would merge it into top and the forward
       //side would become effectively unbounded, defeating the test
-      void *d = dlmalloc_heap().allocate(BlockSize);
+      void *d = h.allocate(BlockSize);
       if(!a || !b || !c || !d)
          return false;
 
       //Are the four blocks neighbours? inspect_all() walks the heap in
       //address order and reports every block, so the question is simply
       //whether it reports these four one after another. It used to be asked
-      //by adding dl_chunksize() to each address, which meant naming an
+      //by adding chunk_size() to each address, which meant naming an
       //internal quantity to learn something the walker already says.
-      const bool adjacent = are_neighbours(dlmalloc_heap(), a, b, c, d);
+      const bool adjacent = are_neighbours(h, a, b, c, d);
       if(!adjacent){   //not the layout this test needs, try the next size
-         dlmalloc_heap().deallocate(a);  dlmalloc_heap().deallocate(b);
-         dlmalloc_heap().deallocate(c);  dlmalloc_heap().deallocate(d);
+         h.deallocate(a);  h.deallocate(b);
+         h.deallocate(c);  h.deallocate(d);
          continue;
       }
 
@@ -537,29 +605,29 @@ bool test_allocation_expand_both()
 
       std::memset(b, 'B', BlockSize);
       const std::size_t b_user = dlmalloc::usable_size(b);
-      dlmalloc_heap().deallocate(a);          //free space before b
-      dlmalloc_heap().deallocate(c);          //free space after  b
+      h.deallocate(a);          //free space before b
+      h.deallocate(c);          //free space after  b
 
       //More than the forward side alone can give, less than the two together,
       //rounded up to a multiple of sizeof_object as the backward sizing needs
       std::size_t need = b_user + chunk_c + sizeof_object;
       need = ((need + sizeof_object - 1u)/sizeof_object)*sizeof_object;
       if(need <= (b_user + chunk_c) || need > (b_user + chunk_c + chunk_a)){
-         dlmalloc_heap().deallocate(b);  dlmalloc_heap().deallocate(d);
+         h.deallocate(b);  h.deallocate(d);
          continue;
       }
 
       //Neither direction alone can do it, and a failed attempt has to leave
       //the block exactly as it was
       std::size_t received = 0;
-      if(dlmalloc_heap().allocation_command
-            ( expand_fwd, sizeof_object, 1u, need
+      if(h.allocation_command
+            ( dlmalloc::expand_fwd, sizeof_object, 1u, need
             , need, &received, b).first)
          return false;
       if(dlmalloc::usable_size(b) != b_user)
          return false;
-      if(dlmalloc_heap().allocation_command
-            ( expand_bwd, sizeof_object, 1u, need
+      if(h.allocation_command
+            ( dlmalloc::expand_bwd, sizeof_object, 1u, need
             , need, &received, b).first)
          return false;
       if(dlmalloc::usable_size(b) != b_user)
@@ -567,8 +635,8 @@ bool test_allocation_expand_both()
 
       //Both together must succeed, and must do it by reusing the block
       received = 0;
-      dlmalloc::command_ret_t ret = dlmalloc_heap().allocation_command
-         ( (expand_fwd | expand_bwd), sizeof_object, 1u, need
+      dlmalloc::command_ret_t ret = h.allocation_command
+         ( dlmalloc::expand_both, sizeof_object, 1u, need
          , need, &received, b);
       if(!ret.first || !ret.second || received < need)
          return false;
@@ -587,10 +655,10 @@ bool test_allocation_expand_both()
             return false;
       }
 
-      dlmalloc_heap().deallocate(ret.first);
-      dlmalloc_heap().deallocate(d);
-      dlmalloc_heap().check();
-      if(!dlmalloc_heap().all_deallocated())
+      h.deallocate(ret.first);
+      h.deallocate(d);
+      h.check();
+      if(!h.all_deallocated())
          return false;
       exercised = true;
    }
@@ -602,20 +670,20 @@ bool test_allocation_expand_both()
 //the combined path, where every reported size must be honoured.
 bool test_allocation_expand_both_repeated()
 {
-   dlmalloc_heap().check();
+   h.check();
    for(std::size_t sizeof_object = 1; sizeof_object < 20; ++sizeof_object){
-      if(!dlmalloc_heap().all_deallocated())
+      if(!h.all_deallocated())
          return false;
       std::vector<void*> buffers;
       for(std::size_t i = 0; i != NumIt; ++i){
-         void *ptr = dlmalloc_heap().allocate(i*sizeof_object);
+         void *ptr = h.allocate(i*sizeof_object);
          if(!ptr)
             break;
          buffers.push_back(ptr);
       }
       //Free every other buffer, so survivors have free space on both sides
       for(std::size_t i = 0; i < buffers.size(); i += 2u){
-         dlmalloc_heap().deallocate(buffers[i]);
+         h.deallocate(buffers[i]);
          buffers[i] = 0;
       }
       buffers.erase( std::remove(buffers.begin(), buffers.end(), (void*)0)
@@ -629,8 +697,8 @@ bool test_allocation_expand_both_repeated()
                ((received_size + sizeof_object)/sizeof_object)*sizeof_object;
             const std::size_t prf_size =
                ((received_size + (i+1u)*8u*sizeof_object)/sizeof_object)*sizeof_object;
-            dlmalloc::command_ret_t ret = dlmalloc_heap().allocation_command
-               ( (expand_fwd | expand_bwd), sizeof_object, 1u, min_size
+            dlmalloc::command_ret_t ret = h.allocation_command
+               ( dlmalloc::expand_both, sizeof_object, 1u, min_size
                , prf_size, &received_size, ptr);
             if(!ret.first)
                break;            //no room left on either side, that is fine
@@ -646,9 +714,9 @@ bool test_allocation_expand_both_repeated()
       }
 
       for(std::size_t i = 0; i != buffers.size(); ++i)
-         dlmalloc_heap().deallocate(buffers[i]);
-      dlmalloc_heap().check();
-      if(!dlmalloc_heap().all_deallocated())
+         h.deallocate(buffers[i]);
+      h.check();
+      if(!h.all_deallocated())
          return false;
    }
    return true;
@@ -660,26 +728,26 @@ bool test_allocation_expand_both_repeated()
 
 bool test_aligned_allocation()
 {
-   dlmalloc_heap().check();
+   h.check();
    //Allocate aligned buffers in a loop
    //and then deallocate it
    for(std::size_t i = 1u; i != (1u << (sizeof(int)/2u)); i <<= 1u){
       for(std::size_t j = 1u; j != 512u; j <<= 1){
-         void *ptr = dlmalloc_heap().allocate_aligned(j, i-1);
+         void *ptr = h.allocate_aligned(j, i-1);
          if(!ptr){
             return false;
          }
 
          if(((std::size_t)ptr & (j - 1)) != 0)
             return false;
-         dlmalloc_heap().deallocate(ptr);
+         h.deallocate(ptr);
          //if(!a.all_memory_deallocated() || !a.check_sanity()){
          //   return false;
          //}
       }
    }
-   dlmalloc_heap().check();
-   return 0 != dlmalloc_heap().all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
+   h.check();
+   return 0 != h.all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
 }
 
 //This test allocates memory with different alignments
@@ -687,7 +755,7 @@ bool test_aligned_allocation()
 
 bool test_continuous_aligned_allocation()
 {
-   dlmalloc_heap().check();
+   h.check();
    std::vector<void*> buffers;
    //Allocate aligned buffers in a loop
    //and then deallocate it
@@ -697,7 +765,7 @@ bool test_continuous_aligned_allocation()
    for(std::size_t i = 1; i < MaxSize; i <<= 1){
       for(std::size_t j = 1; j < MaxAlign; j <<= 1){
          for(std::size_t k = 0; k != NumIt; ++k){
-            void *ptr = dlmalloc_heap().allocate_aligned(j, i-1);
+            void *ptr = h.allocate_aligned(j, i-1);
             buffers.push_back(ptr);
             if(!ptr){
                continue_loop = false;
@@ -709,7 +777,7 @@ bool test_continuous_aligned_allocation()
          }
          //Deallocate all
          for(std::size_t k = buffers.size(); k--;){
-            dlmalloc_heap().deallocate(buffers[k]);
+            h.deallocate(buffers[k]);
          }
          buffers.clear();
          //if(!a.all_memory_deallocated() && a.check_sanity())
@@ -718,31 +786,34 @@ bool test_continuous_aligned_allocation()
             break;
       }
    }
-   dlmalloc_heap().check();
-   return 0 != dlmalloc_heap().all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
+   h.check();
+   return 0 != h.all_deallocated();//a.all_memory_deallocated() && a.check_sanity();
 }
 
 //This test allocates multiple values until there is no more memory
 //and after that deallocates all in the inverse order
 bool test_many_equal_allocation()
 {
-   dlmalloc_heap().check();
+   h.check();
    for( deallocation_type t = DirectDeallocation
       ; t != EndDeallocationType
       ; t = (deallocation_type)((int)t + 1)){
-      //std::size_t free_memory = a.get_free_memory();
+      const std::size_t free_before      = h.mallinfo().fordblks;
+      const std::size_t footprint_before = h.footprint();
 
       std::vector<void*> buffers2;
 
       //Allocate buffers with extra memory
       for(std::size_t i = 0; i != NumIt; ++i){
-         void *ptr = dlmalloc_heap().allocate(i);
+         void *ptr = h.allocate(i);
          if(!ptr)
             break;
          //if(!a.check_sanity())
             //return false;
          buffers2.push_back(ptr);
       }
+      if(!heap_accounting_holds())
+         return false;
 
       //Now deallocate the half of the blocks
       //so expand maybe can merge new free blocks
@@ -750,7 +821,7 @@ bool test_many_equal_allocation()
          ;i < max
          ;++i){
          if(i%2){
-            dlmalloc_heap().deallocate(buffers2[i]);
+            h.deallocate(buffers2[i]);
             buffers2[i] = 0;
          }
       }
@@ -761,7 +832,8 @@ bool test_many_equal_allocation()
       std::vector<void*> buffers;
       for(std::size_t i = 0; i != NumIt/10; ++i){
          dlmalloc::memchain chain;
-         dlmalloc_heap().multialloc_nodes((i+1)*2, i+1, dlmalloc::default_contiguous, &chain);
+         chain.init();
+         h.multialloc_nodes((i+1)*2, i+1, dlmalloc::default_contiguous, &chain);
          dlmalloc::memchain_it it = chain.begin();
          if(dlmalloc::memchain::is_end(it))
             break;
@@ -784,7 +856,7 @@ bool test_many_equal_allocation()
             for(std::size_t j = 0, max = buffers.size()
                ;j < max
                ;++j){
-               dlmalloc_heap().deallocate(buffers[j]);
+               h.deallocate(buffers[j]);
             }
          }
          break;
@@ -793,7 +865,7 @@ bool test_many_equal_allocation()
             for(std::size_t j = buffers.size()
                ;j--
                ;){
-               dlmalloc_heap().deallocate(buffers[j]);
+               h.deallocate(buffers[j]);
             }
          }
          break;
@@ -803,7 +875,7 @@ bool test_many_equal_allocation()
                ;j < max
                ;++j){
                std::size_t pos = (j%4u)*(buffers.size())/4u;
-               dlmalloc_heap().deallocate(buffers[pos]);
+               h.deallocate(buffers[pos]);
                buffers.erase(buffers.begin()+(std::ptrdiff_t)pos);
             }
          }
@@ -819,16 +891,20 @@ bool test_many_equal_allocation()
          ;j < max
          ;++j){
          std::size_t pos = (j%4u)*(buffers2.size())/4u;
-         dlmalloc_heap().deallocate(buffers2[pos]);
+         h.deallocate(buffers2[pos]);
          buffers2.erase(buffers2.begin()+(std::ptrdiff_t)pos);
       }
 
-      //bool ok = free_memory == a.get_free_memory() &&
-               //a.all_memory_deallocated() && a.check_sanity();
-      //if(!ok)  return ok;
+      if(!h.all_deallocated())
+         return false;
+      if(!heap_accounting_holds())
+         return false;
+      if(!free_memory_returned(free_before, footprint_before))
+         return false;
+      h.check();
    }
-   dlmalloc_heap().check();
-   return 0 != dlmalloc_heap().all_deallocated();
+   h.check();
+   return 0 != h.all_deallocated();
 }
 
 //This test allocates multiple values until there is no more memory
@@ -836,7 +912,7 @@ bool test_many_equal_allocation()
 
 bool test_many_different_allocation()
 {
-   dlmalloc_heap().check();
+   h.check();
    const std::size_t ArraySize = 11;
    std::size_t requested_sizes[ArraySize];
    for(std::size_t i = 0; i < ArraySize; ++i){
@@ -846,17 +922,20 @@ bool test_many_different_allocation()
    for( deallocation_type t = DirectDeallocation
       ; t != EndDeallocationType
       ; t = (deallocation_type)((int)t + 1)){
-      //std::size_t free_memory = a.get_free_memory();
+      const std::size_t free_before      = h.mallinfo().fordblks;
+      const std::size_t footprint_before = h.footprint();
 
       std::vector<void*> buffers2;
 
       //Allocate buffers with extra memory
       for(std::size_t i = 0; i != NumIt; ++i){
-         void *ptr = dlmalloc_heap().allocate(i);
+         void *ptr = h.allocate(i);
          if(!ptr)
             break;
          buffers2.push_back(ptr);
       }
+      if(!heap_accounting_holds())
+         return false;
 
       //Now deallocate the half of the blocks
       //so expand maybe can merge new free blocks
@@ -864,7 +943,7 @@ bool test_many_different_allocation()
          ;i < max
          ;++i){
          if(i%2){
-            dlmalloc_heap().deallocate(buffers2[i]);
+            h.deallocate(buffers2[i]);
             buffers2[i] = 0;
          }
       }
@@ -872,7 +951,8 @@ bool test_many_different_allocation()
       std::vector<void*> buffers;
       for(std::size_t i = 0; i != NumIt; ++i){
          dlmalloc::memchain chain;
-         dlmalloc_heap().multialloc_arrays(ArraySize, requested_sizes, 1, dlmalloc::default_contiguous, &chain);
+         chain.init();
+         h.multialloc_arrays(ArraySize, requested_sizes, 1, dlmalloc::default_contiguous, &chain);
          dlmalloc::memchain_it it = chain.begin();
          if(dlmalloc::memchain::is_end(it))
             break;
@@ -891,7 +971,7 @@ bool test_many_different_allocation()
             for(std::size_t j = 0, max = buffers.size()
                ;j < max
                ;++j){
-               dlmalloc_heap().deallocate(buffers[j]);
+               h.deallocate(buffers[j]);
             }
          }
          break;
@@ -900,7 +980,7 @@ bool test_many_different_allocation()
             for(std::size_t j = buffers.size()
                ;j--
                ;){
-               dlmalloc_heap().deallocate(buffers[j]);
+               h.deallocate(buffers[j]);
             }
          }
          break;
@@ -910,7 +990,7 @@ bool test_many_different_allocation()
                ;j < max
                ;++j){
                std::size_t pos = (j%4)*(buffers.size())/4;
-               dlmalloc_heap().deallocate(buffers[pos]);
+               h.deallocate(buffers[pos]);
                buffers.erase(buffers.begin()+(std::ptrdiff_t)pos);
             }
          }
@@ -926,16 +1006,20 @@ bool test_many_different_allocation()
          ;j < max
          ;++j){
          std::size_t pos = (j%4u)*(buffers2.size())/4u;
-         dlmalloc_heap().deallocate(buffers2[pos]);
+         h.deallocate(buffers2[pos]);
          buffers2.erase(buffers2.begin()+(std::ptrdiff_t)pos);
       }
 
-      //bool ok = free_memory == a.get_free_memory() &&
-               //a.all_memory_deallocated() && a.check_sanity();
-      //if(!ok)  return ok;
+      if(!h.all_deallocated())
+         return false;
+      if(!heap_accounting_holds())
+         return false;
+      if(!free_memory_returned(free_before, footprint_before))
+         return false;
+      h.check();
    }
-   dlmalloc_heap().check();
-   return 0 != dlmalloc_heap().all_deallocated();
+   h.check();
+   return 0 != h.all_deallocated();
 }
 
 bool test_many_deallocation()
@@ -949,36 +1033,38 @@ bool test_many_deallocation()
 
    for(std::size_t i = 0; i != NumIt; ++i){
       dlmalloc::memchain chain;
-      dlmalloc_heap().multialloc_arrays(ArraySize, requested_sizes, 1, dlmalloc::default_contiguous, &chain);
+      chain.init();
+      h.multialloc_arrays(ArraySize, requested_sizes, 1, dlmalloc::default_contiguous, &chain);
       dlmalloc::memchain_it it = chain.begin();
       if(dlmalloc::memchain::is_end(it))
          return false;
       buffers.push_back(chain);
    }
    for(std::size_t i = 0; i != NumIt; ++i){
-      dlmalloc_heap().multidealloc(&buffers[i]);
+      h.multidealloc(&buffers[i]);
    }
    buffers.clear();
 
-   dlmalloc_heap().check();
-   if(!dlmalloc_heap().all_deallocated())
+   h.check();
+   if(!h.all_deallocated())
       return false;
 
    for(std::size_t i = 0; i != NumIt; ++i){
       dlmalloc::memchain chain;
-      dlmalloc_heap().multialloc_nodes(ArraySize, i*4+1, dlmalloc::default_contiguous, &chain);
+      chain.init();
+      h.multialloc_nodes(ArraySize, i*4+1, dlmalloc::default_contiguous, &chain);
       dlmalloc::memchain_it it = chain.begin();
       if(dlmalloc::memchain::is_end(it))
          return false;
       buffers.push_back(chain);
    }
    for(std::size_t i = 0; i != NumIt; ++i){
-      dlmalloc_heap().multidealloc(&buffers[i]);
+      h.multidealloc(&buffers[i]);
    }
    buffers.clear();
 
-   dlmalloc_heap().check();
-   if(!dlmalloc_heap().all_deallocated())
+   h.check();
+   if(!h.all_deallocated())
       return false;
 
    return true;
@@ -1108,7 +1194,7 @@ bool test_all_allocation()
       return false;
    }
 
-   return 0 != dlmalloc_heap().all_deallocated();
+   return 0 != h.all_deallocated();
 }
 
 }}}   //namespace boost { namespace container { namespace test {

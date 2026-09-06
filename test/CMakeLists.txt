@@ -32,12 +32,19 @@ endfunction()
 boost_container_add_test(allocator_traits_test allocator_traits_test.cpp)
 boost_container_add_test(alloc_basic_test alloc_basic_test.cpp)
 boost_container_add_test(alloc_full_test alloc_full_test.cpp)
+boost_container_add_test(dlmalloc_alloc_basic_test dlmalloc_alloc_basic_test.cpp)
+boost_container_add_test(dlmalloc_alloc_full_test dlmalloc_alloc_full_test.cpp)
+boost_container_add_test(dlmalloc_basic_test dlmalloc_basic_test.cpp)
+boost_container_add_test(dlmalloc_config_test dlmalloc_config_test.cpp)
+boost_container_add_test(dlmalloc_full_test dlmalloc_full_test.cpp)
+boost_container_add_test(dlmalloc_macro_leak_test dlmalloc_macro_leak_test.cpp)
+boost_container_add_test(dlmalloc_memalign_test dlmalloc_memalign_test.cpp)
+boost_container_add_test(dlmalloc_multi_tu_test dlmalloc_multi_tu/dlmalloc_multi_tu_test.cpp dlmalloc_multi_tu/dlmalloc_multi_tu_test_other.cpp)
+boost_container_add_test(dlmalloc_upstream_compat_test dlmalloc_upstream_compat/dlmalloc_upstream_compat_test.cpp)
 boost_container_add_test(boost_iterator_comp_test boost_iterator_comp_test.cpp)
 boost_container_add_test(common_iterator_test common_iterator_test.cpp)
 boost_container_add_test(copy_move_algo_test copy_move_algo_test.cpp)
 boost_container_add_test(deque_options_test deque_options_test.cpp)
-boost_container_add_test(dlmalloc_macro_leak_test dlmalloc_macro_leak_test.cpp)
-boost_container_add_test(dlmalloc_multi_tu_test dlmalloc_multi_tu/dlmalloc_multi_tu_test.cpp dlmalloc_multi_tu/dlmalloc_multi_tu_test_other.cpp)
 boost_container_add_test(deque_test deque_test.cpp)
 boost_container_add_test(devector_options_test devector_options_test.cpp)
 boost_container_add_test(devector_test devector_test.cpp)
@@ -165,7 +172,9 @@ boost_container_add_test(intermodule_chain_test
 target_link_libraries(${PREFIX}intermodule_chain_test
                       ${PREFIX}intermodule_test_lib_a
                       ${PREFIX}intermodule_test_lib_b)
-boost_container_add_intermodule_test(dlmalloc_intermodule_test
-                                    dlmalloc_multi_tu dlmalloc_intermodule)
 boost_container_add_intermodule_test(pmr_intermodule_test
                                     pmr_multi_tu pmr_intermodule)
+#The same for the process-wide dlmalloc instance, reached through
+#dl_globals(): one heap however many modules inline the header.
+boost_container_add_intermodule_test(dlmalloc_intermodule_test
+                                    dlmalloc_multi_tu dlmalloc_intermodule)

@@ -40,20 +40,20 @@ struct node_slist_helper
 struct fake_segment_manager
 {
    typedef void * void_pointer;
-   BOOST_STATIC_CONSTEXPR std::size_t PayloadPerAllocation = BOOST_CONTAINER_ALLOCATION_PAYLOAD;
+   BOOST_STATIC_CONSTEXPR std::size_t PayloadPerAllocation = dlmalloc::allocation_payload;
 
    typedef boost::container::dtl::
       basic_multiallocation_chain<void*>              multiallocation_chain;
    static void deallocate(void_pointer p)
-   { dl_free(p); }
+   { dlmalloc_heap().deallocate(p); }
 
    static void deallocate_many(multiallocation_chain &chain)
    {
       std::size_t size = chain.size();
       multiallocation_chain::pointer_pair ptrs = chain.extract_data();
-      dl_memchain dlchain;
-      BOOST_CONTAINER_MEMCHAIN_INIT_FROM(&dlchain, ptrs.first, ptrs.second, size);
-      dl_multidealloc(&dlchain);
+      dlmalloc::memchain dlchain;
+      dlchain.init_from(ptrs.first, ptrs.second, size);
+      dlmalloc_heap().multidealloc(&dlchain);
    }
 
    typedef std::ptrdiff_t  difference_type;
@@ -61,7 +61,7 @@ struct fake_segment_manager
 
    static void *allocate_aligned(std::size_t nbytes, std::size_t alignment)
    {
-      void *ret = dl_memalign(nbytes, alignment);
+      void *ret = dlmalloc_heap().allocate_aligned(alignment, nbytes);
       if(!ret)
          boost::container::throw_bad_alloc();
       return ret;

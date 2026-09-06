@@ -116,7 +116,7 @@ void vector_test_template(std::size_t num_iterations, std::size_t num_elements, 
                   << float(nseconds)/float(num_iterations*num_elements)
                   << std::endl << std::endl;
    }
-   bc::dl_trim(0);
+   bc::dlmalloc_heap().trim(0);
 }
 
 int main(int argc, const char *argv[])
