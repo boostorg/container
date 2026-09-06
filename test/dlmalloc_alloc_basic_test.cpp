@@ -18,18 +18,24 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <boost/container/detail/dlmalloc.hpp>
-#include "dlmalloc_walk_utils.hpp"
 #include "lightweight_test.hpp"
 
 #include <cstddef>
 #include <cstring>
 
 using boost::container::dlmalloc;
-using boost::container::test::chunk_cost;
 
 namespace {
 
 typedef dlmalloc::size_type size_type;
+
+//What one block costs the heap: the bytes the caller may use, plus the fixed
+//overhead every block carries. Both are published by the class, so no walk of
+//the heap is needed to ask. Right for a block that lives in a segment, which
+//is every block here; one big enough for the heap to map on its own carries a
+//different overhead.
+inline dlmalloc::size_type block_cost(const void *p)
+{  return dlmalloc::usable_size(p) + dlmalloc::allocation_payload;  }
 
 //The case of alloc_basic_test.cpp, one heap at a time. Every step checks the
 //figure the heap reports against the chunk the block really occupies, which
@@ -47,7 +53,7 @@ bool basic_test()
       return false;
    if(dlmalloc::usable_size(ptr) != received)
       return false;
-   if(h.allocated_memory() != chunk_cost(h, ptr))
+   if(h.allocated_memory() != block_cost(ptr))
       return false;
 
    if(h.all_deallocated())
@@ -56,7 +62,7 @@ bool basic_test()
    //Grow forwards: anything between received+20 and received+30
    h.grow(ptr, received + 20, received + 30, &received);
 
-   if(h.allocated_memory() != chunk_cost(h, ptr))
+   if(h.allocated_memory() != block_cost(ptr))
       return false;
    if(dlmalloc::usable_size(ptr) != received)
       return false;
@@ -64,19 +70,19 @@ bool basic_test()
    //Shrink to somewhere between 100 and 140, and keep the result
    if(!h.shrink(ptr, 100, 140, &received, true))
       return false;
-   if(h.allocated_memory() != chunk_cost(h, ptr))
+   if(h.allocated_memory() != block_cost(ptr))
       return false;
 
    //A minimum of zero means "as small as you can"
    if(!h.shrink(ptr, 0, 140, &received, true))
       return false;
-   if(h.allocated_memory() != chunk_cost(h, ptr))
+   if(h.allocated_memory() != block_cost(ptr))
       return false;
 
    //Asking for less than the block already is must fail, and change nothing
    if(h.shrink(ptr, 0, received/2, &received, true))
       return false;
-   if(h.allocated_memory() != chunk_cost(h, ptr))
+   if(h.allocated_memory() != block_cost(ptr))
       return false;
    if(dlmalloc::usable_size(ptr) != received)
       return false;
@@ -99,7 +105,7 @@ bool try_shrink_test()
    if(!ptr)
       return false;
 
-   const size_type before      = chunk_cost(h, ptr);
+   const size_type before      = block_cost(ptr);
    const size_type before_size = dlmalloc::usable_size(ptr);
    std::memset(ptr, 0x5A, before_size);
 
@@ -111,15 +117,15 @@ bool try_shrink_test()
    BOOST_TEST(r.first == ptr);
    BOOST_TEST(received != 0);
    //Only asked, so nothing moved and nothing was given back
-   BOOST_TEST(chunk_cost(h, ptr) == before);
+   BOOST_TEST(block_cost(ptr) == before);
    BOOST_TEST(h.allocated_memory() == before);
 
    //Now do it, and the heap must report the smaller chunk
    r = h.allocation_command
       (dlmalloc::shrink_in_place, 1, 1, 200, 100, &received, ptr);
    BOOST_TEST(r.first == ptr);
-   BOOST_TEST(chunk_cost(h, ptr) < before);
-   BOOST_TEST(h.allocated_memory() == chunk_cost(h, ptr));
+   BOOST_TEST(block_cost(ptr) < before);
+   BOOST_TEST(h.allocated_memory() == block_cost(ptr));
    //The bytes that are left are the bytes that were there
    const unsigned char *const b = static_cast<const unsigned char *>(ptr);
    for(size_type i = 0; i != received; ++i)
@@ -148,7 +154,7 @@ void test_accounting_matches_the_blocks()
          default: blocks[i] = h.allocate_zeroed(i+1, 16);             break;
       }
       BOOST_TEST(blocks[i] != 0);
-      expected += chunk_cost(h, blocks[i]);
+      expected += block_cost(blocks[i]);
    }
    BOOST_TEST(h.allocated_memory() == expected);
    BOOST_TEST(h.allocated_memory() == expected);
@@ -156,7 +162,7 @@ void test_accounting_matches_the_blocks()
 
    //Give them back one at a time; the figure must fall by exactly the chunk
    for(size_type i = 0; i != 64; ++i){
-      expected -= chunk_cost(h, blocks[i]);
+      expected -= block_cost(blocks[i]);
       h.deallocate(blocks[i]);
       BOOST_TEST(h.allocated_memory() == expected);
    }
@@ -176,7 +182,7 @@ void test_accounting_over_several_segments()
    for(size_type i = 0; i != 200; ++i){
       blocks[i] = h.allocate(100*1024);
       BOOST_TEST(blocks[i] != 0);
-      expected += chunk_cost(h, blocks[i]);
+      expected += block_cost(blocks[i]);
    }
    BOOST_TEST(h.footprint() > initial_footprint);
    BOOST_TEST(h.allocated_memory() == expected);
@@ -214,7 +220,7 @@ void test_accounting_is_per_heap()
    dlmalloc b;
    void *const pa = a.allocate(4096);
    BOOST_TEST(pa != 0);
-   BOOST_TEST(a.allocated_memory() == chunk_cost(a, pa));
+   BOOST_TEST(a.allocated_memory() == block_cost(pa));
    BOOST_TEST(b.allocated_memory() == 0);
    BOOST_TEST(b.all_deallocated());
    BOOST_TEST(!a.all_deallocated());
