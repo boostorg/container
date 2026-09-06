@@ -101,13 +101,13 @@ bool try_shrink_test()
 {
    dlmalloc h;
    void *const ptr = h.allocate(1000);
+   std::memset(ptr, 0x5A, 1000);
    BOOST_TEST(ptr != 0);
    if(!ptr)
       return false;
 
-   const size_type before      = block_cost(ptr);
-   const size_type before_size = dlmalloc::usable_size(ptr);
-   std::memset(ptr, 0x5A, before_size);
+   const size_type before = block_cost(ptr);
+
 
    //For a shrink the two sizes swap roles: limit_size is the largest the
    //block may stay, preferred_size the smallest it may become
