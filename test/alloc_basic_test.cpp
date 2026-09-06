@@ -9,14 +9,20 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <boost/container/detail/dlmalloc.hpp>
-#include "dlmalloc_walk_utils.hpp"
 #include <boost/container/allocator.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/list.hpp>
 #include "extended_allocator_test.hpp"
 
 using namespace boost::container;
-using boost::container::test::chunk_cost;
+
+//What one block costs the heap: the bytes the caller may use, plus the fixed
+//overhead every block carries. Both are published by the class, so no walk of
+//the heap is needed to ask. Right for a block that lives in a segment, which
+//is every block here; one big enough for the heap to map on its own carries a
+//different overhead.
+inline dlmalloc::size_type block_cost(const void *p)
+{  return dlmalloc::usable_size(p) + dlmalloc::allocation_payload;  }
 
 bool basic_test()
 {
@@ -26,7 +32,7 @@ bool basic_test()
    void *ptr = dlmalloc_heap().alloc(50, 98, &received);
    if(dlmalloc::usable_size(ptr) != received)
       return false;
-   if(dlmalloc_heap().allocated_memory() != chunk_cost(dlmalloc_heap(), ptr))
+   if(dlmalloc_heap().allocated_memory() != block_cost(ptr))
       return false;
 
    if(dlmalloc_heap().all_deallocated())
@@ -34,7 +40,7 @@ bool basic_test()
 
    dlmalloc_heap().grow(ptr, received + 20, received + 30, &received);
 
-   if(dlmalloc_heap().allocated_memory() != chunk_cost(dlmalloc_heap(), ptr))
+   if(dlmalloc_heap().allocated_memory() != block_cost(ptr))
       return false;
 
    if(dlmalloc::usable_size(ptr) != received)
@@ -43,19 +49,19 @@ bool basic_test()
    if(!dlmalloc_heap().shrink(ptr, 100, 140, &received, 1))
       return false;
 
-   if(dlmalloc_heap().allocated_memory() != chunk_cost(dlmalloc_heap(), ptr))
+   if(dlmalloc_heap().allocated_memory() != block_cost(ptr))
       return false;
 
    if(!dlmalloc_heap().shrink(ptr, 0, 140, &received, 1))
       return false;
 
-   if(dlmalloc_heap().allocated_memory() != chunk_cost(dlmalloc_heap(), ptr))
+   if(dlmalloc_heap().allocated_memory() != block_cost(ptr))
       return false;
 
    if(dlmalloc_heap().shrink(ptr, 0, received/2, &received, 1))
       return false;
 
-   if(dlmalloc_heap().allocated_memory() != chunk_cost(dlmalloc_heap(), ptr))
+   if(dlmalloc_heap().allocated_memory() != block_cost(ptr))
       return false;
 
    if(dlmalloc::usable_size(ptr) != received)

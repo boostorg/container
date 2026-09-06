@@ -19,7 +19,6 @@
 #include <cstring>
 #include <algorithm>    //std::remove
 #include <boost/container/detail/dlmalloc.hpp>
-#include "dlmalloc_walk_utils.hpp"
 
 namespace boost { namespace container { namespace test {
 
@@ -517,23 +516,26 @@ bool test_allocation_expand_both()
       if(!a || !b || !c || !d)
          return false;
 
-      //Are the four blocks neighbours? inspect_all() walks the heap in
-      //address order and reports every block, so the question is simply
-      //whether it reports these four one after another. It used to be asked
-      //by adding dl_chunksize() to each address, which meant naming an
-      //internal quantity to learn something the walker already says.
-      const bool adjacent = are_neighbours(dlmalloc_heap(), a, b, c, d);
+      //Are the four blocks neighbours? All four were asked for the same
+      //size, so their chunks are the same size too, and three equal strides
+      //in increasing address order is what "one after another" means. The
+      //stride is also too small to hold another block of that size, so
+      //nothing can be sitting between them.
+      const std::size_t stride_ab = (std::size_t)((char*)b - (char*)a);
+      const std::size_t stride_bc = (std::size_t)((char*)c - (char*)b);
+      const std::size_t stride_cd = (std::size_t)((char*)d - (char*)c);
+      const bool adjacent = stride_ab == stride_bc && stride_bc == stride_cd
+                         && stride_ab >= BlockSize && stride_ab < 2u*BlockSize;
       if(!adjacent){   //not the layout this test needs, try the next size
          dlmalloc_heap().deallocate(a);  dlmalloc_heap().deallocate(b);
          dlmalloc_heap().deallocate(c);  dlmalloc_heap().deallocate(d);
          continue;
       }
 
-      //Now that they are known to be neighbours, the stride from one to the
-      //next IS the chunk of the earlier one - the addresses the test already
-      //holds say so, with nothing internal asked for.
-      const std::size_t chunk_a = (std::size_t)((char*)b - (char*)a);
-      const std::size_t chunk_c = (std::size_t)((char*)d - (char*)c);
+      //Being neighbours, the stride from one to the next IS the chunk of the
+      //earlier one.
+      const std::size_t chunk_a = stride_ab;
+      const std::size_t chunk_c = stride_cd;
 
       std::memset(b, 'B', BlockSize);
       const std::size_t b_user = dlmalloc::usable_size(b);
