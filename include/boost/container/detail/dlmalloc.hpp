@@ -975,6 +975,35 @@ class basic_dlmalloc
       return nm;
    }
 
+   //! What malloc_stats() reports: the three figures the classic
+   //! malloc_stats() writes to stderr.
+   struct malloc_stats_t
+   {
+      size_type max_system_bytes;  //!< the most the heap ever held
+      size_type system_bytes;      //!< what it holds from the system now
+      size_type in_use_bytes;      //!< how much of that is handed out
+   };
+
+   //! The three figures the classic malloc_stats() prints, returned rather
+   //! than written anywhere: the caller picks the destination, and the
+   //! header stays free of <cstdio>.
+   //!
+   //! Every one of them is also a mallinfo() figure - max_system_bytes is
+   //! usmblks, system_bytes is uordblks plus fordblks, and in_use_bytes is
+   //! uordblks - so this asks nothing mallinfo() does not already answer.
+   //! It is here because it is short, because the three names read better
+   //! than the SVID ones, and because the interface it mirrors has it.
+   //!
+   //! Walks the heap, for in_use_bytes; the other two are counters.
+   malloc_stats_t malloc_stats() const
+   {
+      malloc_stats_t st;
+      st.max_system_bytes = this->max_footprint();
+      st.system_bytes     = this->footprint();
+      st.in_use_bytes     = this->mallinfo().uordblks;
+      return st;
+   }
+
    //! Type of the function inspect_all() calls for each block the first byte,
    //! one past the last, how many bytes of it are in use - zero for a free block
    //! - and the user provided pointer.

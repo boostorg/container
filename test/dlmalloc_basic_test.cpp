@@ -338,8 +338,43 @@ void test_free_memory()
    BOOST_TEST(h.check());
 }
 
-//mallinfo() is the walk every other figure is built on, so what it reports
-//has to hold together on its own before anything else can be trusted.
+void test_malloc_stats()
+{
+   dlmalloc h;
+
+   //An empty heap: nothing handed out, and what it holds is what it holds
+   {
+      const dlmalloc::malloc_stats_t st = h.malloc_stats();
+      const dlmalloc::mallinfo_t     mi = h.mallinfo();
+      BOOST_TEST(st.system_bytes     == h.footprint());
+      BOOST_TEST(st.max_system_bytes == h.max_footprint());
+      BOOST_TEST(st.in_use_bytes     == mi.uordblks);
+      BOOST_TEST(st.system_bytes     == mi.uordblks + mi.fordblks);
+      BOOST_TEST(st.max_system_bytes == mi.usmblks);
+   }
+
+   //...and with blocks live, including one big enough to be mapped on its own
+   void *const small = h.allocate(1000);
+   void *const big   = h.allocate(400*1024);
+   BOOST_TEST(small != 0 && big != 0);
+   {
+      const dlmalloc::malloc_stats_t st = h.malloc_stats();
+      const dlmalloc::mallinfo_t     mi = h.mallinfo();
+      BOOST_TEST(st.system_bytes     == h.footprint());
+      BOOST_TEST(st.max_system_bytes == h.max_footprint());
+      BOOST_TEST(st.in_use_bytes     == mi.uordblks);
+      BOOST_TEST(st.system_bytes     == mi.uordblks + mi.fordblks);
+      BOOST_TEST(st.max_system_bytes == mi.usmblks);
+      //and what is handed out cannot exceed what the heap has
+      BOOST_TEST(st.in_use_bytes <= st.system_bytes);
+      BOOST_TEST(st.system_bytes <= st.max_system_bytes);
+   }
+   h.deallocate(small);
+   h.deallocate(big);
+   BOOST_TEST(h.all_deallocated());
+   BOOST_TEST(h.check());
+}
+
 void test_mallinfo()
 {
    dlmalloc h;
@@ -709,6 +744,7 @@ int main()
    test_footprint_and_trim();
    test_free_memory();
    test_mallinfo();
+   test_malloc_stats();
    test_inspect_all();
    test_track_large_chunks();
    test_heap_over_user_memory();
