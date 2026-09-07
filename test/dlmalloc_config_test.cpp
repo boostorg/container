@@ -158,33 +158,48 @@ void test_default_is_the_default()
    BOOST_TEST(sizeof(basic_dlmalloc<dlmalloc_default_config>) == sizeof(dlmalloc));
    BOOST_TEST(!(same<basic_dlmalloc<>, basic_dlmalloc<unlocked_config> >::value));
 
-   //A fresh heap maps exactly one granularity unit, so this is where the
-   //shipped default is read back through the class.
+   //A default-constructed heap holds nothing at all, so it has none to read.
    dlmalloc d;
-   BOOST_TEST(d.footprint() == dlmalloc_default_config::default_granularity);
+   BOOST_TEST(d.footprint() == 0u);
 
-   basic_dlmalloc<dlmalloc_default_config> b;
-   BOOST_TEST(d.footprint() == b.footprint());
-   exercise(d);
-   exercise(b);
+   //create() must allocate to hold the heap state
+   dlmalloc *const dc = dlmalloc::create();
+   BOOST_TEST(dc != 0);
+   BOOST_TEST(dc->footprint() == dlmalloc_default_config::default_granularity);
+
+   typedef basic_dlmalloc<dlmalloc_default_config> named_default_heap;
+   named_default_heap *const bc = named_default_heap::create();
+   BOOST_TEST(bc != 0);
+   BOOST_TEST(dc->footprint() == bc->footprint());
+   exercise(*dc);
+   exercise(*bc);
+   (void)dlmalloc::destroy(dc);
+   (void)named_default_heap::destroy(bc);
 
    //Inheriting from the shipped defaults and hiding one member is the
    //documented way to change a knob.
-   basic_dlmalloc<inherits_the_defaults> i;
-   BOOST_TEST(i.footprint() == inherits_the_defaults::default_granularity);
-   exercise(i);
+   typedef basic_dlmalloc<inherits_the_defaults> inheriting_heap;
+   inheriting_heap *const ic = inheriting_heap::create();
+   BOOST_TEST(ic != 0);
+   BOOST_TEST(ic->footprint() == inherits_the_defaults::default_granularity);
+   exercise(*ic);
+   (void)inheriting_heap::destroy(ic);
 }
 
 void test_granularity()
 {
-   //A heap asked for nothing maps exactly one granularity unit.
-   baseline_heap                           b;
-   basic_dlmalloc<big_granularity_config> w;
+   //A heap create() is asked for nothing maps exactly one granularity unit.
+   typedef basic_dlmalloc<big_granularity_config> wide_heap;
+   baseline_heap *const b = baseline_heap::create();
+   wide_heap     *const w = wide_heap::create();
+   BOOST_TEST(b != 0 && w != 0);
 
-   BOOST_TEST(b.footprint() == baseline_config::default_granularity);
-   BOOST_TEST(w.footprint() == big_granularity_config::default_granularity);
-   BOOST_TEST(w.footprint() > b.footprint());
-   exercise(w);
+   BOOST_TEST(b->footprint() == baseline_config::default_granularity);
+   BOOST_TEST(w->footprint() == big_granularity_config::default_granularity);
+   BOOST_TEST(w->footprint() > b->footprint());
+   exercise(*w);
+   (void)baseline_heap::destroy(b);
+   (void)wide_heap::destroy(w);
 }
 
 void test_alignment()
@@ -213,6 +228,13 @@ void test_mmap_threshold()
    const size_type big = (size_type)100 * 1024;   //over 32K, under 256K
 
    basic_dlmalloc<eager_mmap_config> eager;
+   //One small request first: the direct-mmap path is off
+   //until the heap is initialized. Without this, the
+   //big request below would come out of a segment and the test would be
+   //measuring the wrong thing.
+   void *const warm = eager.allocate(64);
+   BOOST_TEST(warm != 0);
+   eager.deallocate(warm);
    const size_type eager_before = eager.footprint();
    void *const pe = eager.allocate(big);
    BOOST_TEST(pe != 0);
@@ -507,8 +529,13 @@ void test_debug_knob()
 
 void test_everything_at_once()
 {
-   basic_dlmalloc<everything_config> h;
-   BOOST_TEST(h.footprint() == everything_config::default_granularity);
+   typedef basic_dlmalloc<everything_config> everything_heap;
+   everything_heap *const hc = everything_heap::create();
+   BOOST_TEST(hc != 0);
+   BOOST_TEST(hc->footprint() == everything_config::default_granularity);
+   (void)everything_heap::destroy(hc);
+
+   everything_heap h;
    BOOST_TEST(h.check());
    exercise(h);
 

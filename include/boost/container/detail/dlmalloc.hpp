@@ -31,6 +31,7 @@
 #include <boost/container/detail/spin_mutex.hpp>
 #include <boost/container/detail/intermodule_globals.hpp>
 #include <boost/container/detail/allocation_type.hpp>
+#include <boost/move/detail/placement_new.hpp>
 
 #include <cstddef>
 #include <cstring>
@@ -653,84 +654,71 @@ class basic_dlmalloc
    //                          The public interface
    //////////////////////////////////////////////////////////////////////////
 
-   //! Builds a heap holding at least `capacity` usable bytes. Zero asks for
-   //! one granularity unit.
+   //! Builds an empty heap. It holds no memory at all - the first allocation
+   //! asks the system for a segment.
+   basic_dlmalloc()
+   {  init_state();  }
+
+   //! Builds a heap that already holds at least `capacity` usable bytes,
+   //! taken from the system.
+   //!
+   //! The heap object is this object, wherever the caller put it, and it
+   //! stays outside the memory it manages - so all of that memory is heap
+   //! and none of it holds the bookkeeping. That is the difference from
+   //! create(), which puts the object at the front of the memory.
+   //!
+   //! Zero capacity asks for one granularity unit, as create() does.
    //!
    //! `locked` chooses whether the heap serializes its own operations; pass
    //! false only when the instance is reached from one thread.
    //!
-   //! Leaves the heap empty but usable if the mapping fails; every later
-   //! allocation then simply returns null.
-   explicit basic_dlmalloc(size_type capacity = 0, bool locked = true)
+   //! A constructor cannot report failure, and it does not have to: memory
+   //! the system refuses, or a `capacity` too large to describe, simply
+   //! leaves the heap empty. It is then exactly what the default constructor
+   //! makes, and every later request asks the system on its own.
+   //!
+   //! `capacity` has no default value. Zero as a default would make this
+   //! constructor ambiguous with the default constructor.
+   explicit basic_dlmalloc(size_type capacity, bool locked = true)
    {
-      ::std::memset(&m_state, 0, sizeof(m_state));
-      init_params();
-      (void)initial_lock(lock_address(&m_state));
-      m_state.mflags = m_params.default_mflags;
-      m_state.release_checks = max_release_check_rate;
-      m_state.magic = m_params.magic;
-      disable_contiguous(&m_state);
-      init_bins();
+      init_state();
       set_lock(&m_state, locked ? 1 : 0);
-
-      //Nothing is carved out of the segment for bookkeeping: the state is a
-      //member of this object, so the whole segment is heap.
       if(capacity < (size_type)(0 - (top_foot_size() + m_params.page_size))){
-         const size_type rs = ((capacity == 0) ? m_params.granularity
-                                            : (capacity + top_foot_size()));
+         const size_type rs = (capacity == 0) ? m_params.granularity
+                                              : (capacity + top_foot_size());
          const size_type tsize = granularity_align(rs);
          char *const tbase = (char *)(call_mmap(tsize));
-         if(tbase != cmfail()){
-            m_state.seg.base   = m_state.least_addr = tbase;
-            m_state.seg.size   = m_state.footprint = m_state.max_footprint = tsize;
-            m_state.seg.sflags = use_mmap_bit;
-            init_top(chunk_at(tbase), tsize - top_foot_size());
-            check_top_chunk(m_state.top);
-         }
+         if(tbase != cmfail())
+            attach_segment(tbase, tsize, use_mmap_bit);
       }
    }
 
-   //! Builds a heap inside memory the caller owns, and never gives that
-   //! memory back.
+   //! Builds a heap over memory the caller owns and keeps.
    //!
-   //! The buffer has to outlive the heap. The destructor releases what the
-   //! heap obtained for itself and leaves this segment alone.
+   //! The heap object stays outside the buffer, so the whole buffer is heap.
+   //! create_with_base() is the other arrangement, with the object at the
+   //! front of the buffer.
    //!
-   //! The heap still grows the ordinary way when the buffer runs out, unless
-   //! a footprint limit stops it. A buffer too small to hold a heap leaves
-   //! the object usable and empty, exactly as a failed mapping does, so every
-   //! later request simply returns null.
+   //! The buffer must outlive the heap. The destructor releases only what
+   //! the heap took from the system, and leaves this buffer alone.
    //!
-   //! `capacity` counts from `base`; the heap starts at the first properly
-   //! aligned address at or after it and uses the rest.
+   //! The heap grows the ordinary way when the buffer runs out, unless a
+   //! footprint limit stops it. A null buffer, or one too small to hold a
+   //! heap, leaves the heap empty but usable - every request is then served
+   //! from memory the heap takes for itself.
+   //!
+   //! `capacity` counts from `base`. The heap starts at the first correctly
+   //! aligned address at or after `base` and uses the rest.
    basic_dlmalloc(void *base, size_type capacity, bool locked = true)
    {
-      ::std::memset(&m_state, 0, sizeof(m_state));
-      init_params();
-      (void)initial_lock(lock_address(&m_state));
-      m_state.mflags = m_params.default_mflags;
-      m_state.release_checks = max_release_check_rate;
-      m_state.magic = m_params.magic;
-      disable_contiguous(&m_state);
-      init_bins();
+      init_state();
       set_lock(&m_state, locked ? 1 : 0);
-
-      //Nothing is carved out of the buffer for bookkeeping: the state is a
-      //member of this object, so all of it is heap.
       char *const raw = (char *)base;
       if(raw != 0){
-         const size_type off = align_offset(chunk2mem(raw));
-         if(capacity > off &&
-            (capacity - off) > (top_foot_size() + min_chunk_size) &&
-            capacity < (size_type)(0 - (top_foot_size() + m_params.page_size))){
-            char *const tbase = raw + off;
-            const size_type tsize = capacity - off;
-            m_state.seg.base   = m_state.least_addr = tbase;
-            m_state.seg.size   = m_state.footprint = m_state.max_footprint = tsize;
-            m_state.seg.sflags = extern_bit;
-            init_top(chunk_at(tbase), tsize - top_foot_size());
-            check_top_chunk(m_state.top);
-         }
+         const size_type off = (size_type)(bytes_at(align_as_chunk(raw)) - raw);
+         if(capacity > (off + top_foot_size() + min_chunk_size) &&
+            capacity < (size_type)(0 - (top_foot_size() + m_params.page_size)))
+            attach_segment(raw, capacity, extern_bit);
       }
    }
 
@@ -749,6 +737,82 @@ class basic_dlmalloc
          if((flag & use_mmap_bit) && !(flag & extern_bit) && base != 0)
             (void)call_munmap(base, size);
       }
+   }
+
+   //! Takes memory from the system, puts the heap object at the front of it
+   //! and makes the rest the heap's first segment. Zero capacity asks for
+   //! one granularity unit.
+   //!
+   //! `locked` chooses whether the heap serializes its own operations; pass
+   //! false only when it is reached from one thread.
+   //!
+   //! Returns null when the system refuses the memory, or when `capacity` is
+   //! too large to describe. destroy() gives it all back, the object with it.
+   static basic_dlmalloc *create(size_type capacity = 0, bool locked = true)
+   {
+      size_type psize, gsize;
+      system_sizes(psize, gsize);
+      const size_type msize = pad_request(sizeof(basic_dlmalloc));
+      if(capacity >= (size_type)(0 - (msize + top_foot_size() + psize)))
+         return 0;
+      const size_type rs = (capacity == 0) ? gsize
+                                           : (capacity + top_foot_size() + msize);
+      const size_type tsize = granularity_align_to(rs, gsize);
+      char *const tbase = (char *)(call_mmap(tsize));
+      if(tbase == cmfail())
+         return 0;
+      return init_in_place(tbase, tsize, use_mmap_bit, locked);
+    }
+
+   //! The same, in memory the caller owns and keeps: the heap object goes at
+   //! the front of the buffer and the rest is the first segment.
+   //!
+   //! The buffer has to outlive the heap, and destroy() leaves it alone -
+   //! only the object inside it is destroyed. The heap still grows the
+   //! ordinary way when the buffer runs out, unless a footprint limit stops
+   //! it.
+   //!
+   //! Returns null for a null buffer, or one too small to hold the object
+   //! and a heap.
+   static basic_dlmalloc *create_with_base(void *base, size_type capacity,
+                                           bool locked = true)
+   {
+      size_type psize, gsize;
+      system_sizes(psize, gsize);
+      (void)gsize;
+      const size_type msize = pad_request(sizeof(basic_dlmalloc));
+      char *const raw = (char *)base;
+      if(raw == 0 ||
+         capacity <= (msize + top_foot_size()) ||
+         capacity >= (size_type)(0 - (msize + top_foot_size() + psize)))
+         return 0;
+      return init_in_place(raw, capacity, extern_bit, locked);
+   }
+
+   //! Destroys a heap create() or create_with_base() made, and returns how
+   //! many bytes went back to the system. Memory still handed out goes with
+   //! it, and a buffer given to create_with_base() is not released - it is
+   //! the caller's.
+   //!
+   //! The pointer must not be used afterwards: for a create()d heap the
+   //! object itself lived in the memory just released.
+   static size_type destroy(basic_dlmalloc *p)
+   {
+      size_type freed = 0;
+      if(p != 0){
+         if(!p->ok_magic(&p->m_state)){
+            usage_error_action(&p->m_state, p);
+            return 0;
+         }
+         //Summed before anything is released: the destructor is what
+         //releases, and the head of the segment list lives in the object,
+         //which the first segment holds.
+         for(const malloc_segment *sp = &p->m_state.seg; sp != 0; sp = sp->next)
+            if((sp->sflags & use_mmap_bit) && !(sp->sflags & extern_bit) && sp->base != 0)
+               freed += sp->size;
+         p->~basic_dlmalloc();
+      }
+      return freed;
    }
 
    //////////////////////////////////////////////////////////////////////////
@@ -855,7 +919,7 @@ class basic_dlmalloc
    {
       int result = 0;
       if(!preaction(&m_state)){
-         result = sys_trim(pad);
+         result = sys_trim(pad, true);
          postaction(&m_state);
       }
       return result != 0;
@@ -1295,7 +1359,7 @@ class basic_dlmalloc
                mchunkptr q = align_as_chunk(s->base);
                while(segment_holds(s, q) &&
                      q != m->top && q->head != fencepost_head){
-                  if(is_inuse(q) && !this->is_segment_record(chunk2mem(q)))
+                  if(is_inuse(q) && !this->is_own_bookkeeping(chunk2mem(q)))
                      inuse += chunksize(q);
                   q = next_chunk(q);
                }
@@ -1359,10 +1423,22 @@ class basic_dlmalloc
    static const int mmap_flags = (MAP_PRIVATE|BOOST_CONTAINER_DL_MAP_ANONYMOUS);
    #endif
 
-   //True when mem is the segment record carved out of an older segment. Those chunks are in use, but the heap never gave them to
-   //anybody, so allocated_memory() must not count them.
-   bool is_segment_record(const void *mem) const
+   //True when mem is memory the heap keeps for itself rather than something
+   //it handed out. Those chunks are in use, but nobody asked for them, so
+   //allocated_memory() must not count them. Two kinds:
+   //
+   //* a segment record carved out of an older segment, and
+   //* the heap object itself, when create() or create_with_base() put it in
+   //  a chunk at the front of the first segment.
+   //
+   //mallinfo() counts both, exactly as the original counts the chunk holding
+   //its malloc_state and its segment records. allocated_memory() is
+   //Boost.Container's own figure and answers a different question - what did
+   //the heap give out - so it leaves both out.
+   bool is_own_bookkeeping(const void *mem) const
    {
+      if(mem == (const void *)this)
+         return true;
       //m_state.seg is the head and lives in this object, not in a chunk.
       //Every record after it sits inside the segment it displaced.
       for(const malloc_segment *s = m_state.seg.next; s != 0; s = s->next)
@@ -1790,10 +1866,15 @@ class basic_dlmalloc
    BOOST_CONTAINER_FORCEINLINE size_type page_align(size_type S)
       {  return ((((S) + (m_params.page_size - size_t_one)) & ~(m_params.page_size - size_t_one)));  }
 
+   // granularity-align a size, to a granularity given rather than this
+   // heap's - create() has to size a mapping before there is a heap
+   BOOST_CONTAINER_FORCEINLINE static size_type granularity_align_to
+      (size_type S, size_type gsize)
+      {  return ((((S) + (gsize - size_t_one)) & ~(gsize - size_t_one)));  }
+
    // granularity-align a size
    BOOST_CONTAINER_FORCEINLINE size_type granularity_align(size_type S)
-      {  return ((((S) + (m_params.granularity - size_t_one))
-         & ~(m_params.granularity - size_t_one)));  }
+      {  return granularity_align_to(S, m_params.granularity);  }
 
    // For mmap, use granularity alignment on windows, else page-align
    #if defined(BOOST_WINDOWS)
@@ -2925,6 +3006,60 @@ class basic_dlmalloc
 
 
 
+   //The state and nothing else: the lock, the tuning, the magic and the
+   //bins. This is init_user_mstate() without the segment, and it is where
+   //every constructor starts.
+   void init_state()
+   {
+      ::std::memset(&m_state, 0, sizeof(m_state));
+      init_params();
+      (void)initial_lock(lock_address(&m_state));
+      m_state.mflags = m_params.default_mflags;
+      m_state.release_checks = max_release_check_rate;
+      m_state.magic = m_params.magic;
+      disable_contiguous(&m_state);
+      init_bins();
+   }
+
+   //Makes the memory given the heap's first segment, with top at its start.
+   //The other half of init_user_mstate(), for the heaps that keep their
+   //object outside the memory they manage.
+   void attach_segment(char *tbase, size_type tsize, flag_t sflags)
+   {
+      mchunkptr const t = align_as_chunk(tbase);
+      m_state.seg.base   = m_state.least_addr = tbase;
+      m_state.seg.size   = m_state.footprint = m_state.max_footprint = tsize;
+      m_state.seg.sflags = sflags;
+      init_top(t, (size_type)((tbase + tsize) - bytes_at(t)) - top_foot_size());
+      check_top_chunk(m_state.top);
+   }
+
+   //From init_user_mstate(). The object goes in a chunk of its own at the
+   //front of the memory given, and everything after it becomes the first
+   //segment. That chunk is marked in use, exactly as the original marks the
+   //one holding its malloc_state, so no allocation can ever be handed out
+   //over the top of the object - and, as in the original, it is in-use
+   //memory as far as mallinfo() and allocated_memory() are concerned.
+   static basic_dlmalloc *init_in_place(char *tbase, size_type tsize,
+                                        flag_t sflags, bool locked)
+   {
+      const size_type msize = pad_request(sizeof(basic_dlmalloc));
+      mchunkptr const msp = align_as_chunk(tbase);
+      //The constructor does to the state what init_user_mstate does: zeroes
+      //it, takes the lock, sets the magic, the flags and the bins.
+      basic_dlmalloc *const m =
+         ::new(chunk2mem(msp), boost_move_new_t()) basic_dlmalloc();
+      msp->head = msize | inuse_bits;
+      m->m_state.seg.base   = m->m_state.least_addr = tbase;
+      m->m_state.seg.size   = m->m_state.footprint = m->m_state.max_footprint = tsize;
+      m->m_state.seg.sflags = sflags;
+      set_lock(&m->m_state, locked ? 1 : 0);
+      mchunkptr const mn = next_chunk(mem2chunk(m));
+      m->init_top(mn, (size_type)((tbase + tsize) - bytes_at(mn)) - top_foot_size());
+      m->check_top_chunk(m->m_state.top);
+      return m;
+   }
+
    // ==== init_top and init_bins ====
    // Initialize top chunk and its size
    void init_top(mchunkptr p, size_type psize)
@@ -3208,7 +3343,57 @@ class basic_dlmalloc
       return released;
    }
 
-   int sys_trim(size_type pad)
+   //Releases the whole of the last segment, which the shrink in sys_trim()
+   //never can: it keeps one granularity unit of top, because the original's
+   //malloc_state lives in its first segment and freeing that unit would
+   //free the heap itself.
+   //
+   //A heap this class default-constructs has its state as a data member,
+   //outside every segment, so there is nothing in the segment that has to
+   //survive and all of it can go - leaving the heap exactly as the
+   //constructor left it, holding nothing. A heap create() built does keep
+   //its object in the first segment, and segment_holds() below is what
+   //refuses that case, so it behaves as the original does.
+   //
+   //Only on an explicit trim(0). The automatic trim on deallocation must
+   //keep its hysteresis, or a program that allocates and frees one block in
+   //a loop would map and unmap a segment every time round.
+   size_type release_last_segment()
+   {
+      mstate m = &m_state;
+      msegmentptr sp = &m->seg;
+      //One segment only, and it must be the one holding top
+      if(sp->next != 0 || m->top == 0 || segment_holding((char *)m->top) != sp)
+         return 0;
+      //Ours to release, and not the caller's buffer
+      if(is_extern_segment(sp) || !is_mmapped_segment(sp))
+         return 0;
+      //Not if this object lives in it
+      if(segment_holds(sp, this))
+         return 0;
+      //Nothing may be left in the heap: top has to be the only chunk, so
+      //the segment begins with it and no bin nor the designated victim
+      //holds anything
+      if(align_as_chunk(sp->base) != m->top ||
+         m->smallmap != 0 || m->treemap != 0 || m->dvsize != 0)
+         return 0;
+
+      char *const base = sp->base;
+      const size_type size = sp->size;
+      if(call_munmap(base, size) != 0)
+         return 0;
+
+      m->footprint -= size;
+      m->seg.base   = 0;
+      m->seg.size   = 0;
+      m->seg.sflags = 0;
+      m->top        = 0;
+      m->topsize    = 0;
+      m->trim_check = m_params.trim_threshold;
+      return size;
+   }
+
+   int sys_trim(size_type pad, bool release_all)
    {
       mstate m = &m_state;
       size_type released = 0;
@@ -3248,6 +3433,12 @@ class basic_dlmalloc
 
          // Unmap any unused mmapped segments
          released += release_unused_segments();
+
+         //...and with nothing asked to be kept, the last one as well. It
+         //goes after the loop above, which is what leaves a single segment
+         //behind for this to find.
+         if (release_all && pad == top_foot_size())
+            released += release_last_segment();
 
          // On failure, disable autotrim to avoid repeated failed future calls
          if (released == 0 && m->topsize > m->trim_check)
@@ -3821,7 +4012,7 @@ class basic_dlmalloc
             }
          }
          if (should_trim(m, m->topsize))
-            sys_trim(0);
+            sys_trim(0, false);
          postaction(m);
       }
       return unfreed;
@@ -4022,7 +4213,7 @@ class basic_dlmalloc
                            fm->dvsize = 0;
                         }
                         if (should_trim(fm, tsize))
-                           sys_trim(0);
+                           sys_trim(0, false);
                         goto postaction;
                      }
                      else if (next == fm->dv) {
@@ -4258,7 +4449,7 @@ class basic_dlmalloc
                            fm->dvsize = 0;
                         }
                         if (should_trim(fm, tsize))
-                           sys_trim(0);
+                           sys_trim(0, false);
                         goto postaction;
                      }
                      else if (next == fm->dv) {
@@ -5248,7 +5439,7 @@ class basic_dlmalloc
             }
          }
          if (should_trim(m, m->topsize))
-            sys_trim(0);
+            sys_trim(0, false);
          postaction(m);
       }
       if (footers) {
@@ -5533,10 +5724,10 @@ class basic_dlmalloc
    //From init_mparams(). No lock and no lazy path: this runs once, in the
    //constructor, before anything can reach the heap. The magic is therefore
    //always set, which is what lets ensure_initialization() be nothing.
-   void init_params()
+   //What the system reports, and the checks that go with it. Static because
+   //create() has to size its mapping before there is an object to ask.
+   static void system_sizes(size_type &psize, size_type &gsize)
    {
-      size_type psize;
-      size_type gsize;
       #if defined(BOOST_WINDOWS)
       {
          //dwPageSize and dwAllocationGranularity, without <windows.h>
@@ -5562,6 +5753,13 @@ class basic_dlmalloc
           ((gsize            & (gsize-size_t_one))            != 0) ||
           ((psize            & (psize-size_t_one))            != 0))
          do_abort();
+   }
+
+   void init_params()
+   {
+      size_type psize;
+      size_type gsize;
+      system_sizes(psize, gsize);
 
       m_params.granularity    = gsize;
       m_params.page_size      = psize;
