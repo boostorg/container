@@ -81,7 +81,7 @@ struct bench_defaults
 {
 #if defined(LONG_BENCH)
    static const std::size_t num_trials        = 5;
-   static const std::size_t num_sizes         = 11;
+   static const std::size_t num_sizes         = 21;
    //60 ms per trial
    static const nsec_t      min_time_per_trial = nsec_t(60) * 1000000;
    static const std::size_t batch_elements     = 4096;
@@ -100,8 +100,12 @@ struct bench_defaults
 //Block sizes swept by every operation, ascending.
 inline std::size_t bench_size(std::size_t i)
 {
+   //Powers of two and the 1.5x points between them, so a size that lands
+   //mid-bin is measured as well as one that lands on a boundary.
    static const std::size_t sizes[] =
-      { 16u, 32u, 64u, 128u, 256u, 512u, 1024u, 2048u, 4096u, 8192u, 16384u };
+      {    16u,    24u,    32u,    48u,    64u,    96u,   128u,   192u
+      ,   256u,   384u,   512u,   768u,  1024u,  1536u,  2048u,  3072u
+      ,  4096u,  6144u,  8192u, 12288u, 16384u };
    //A table entry must exist for every size the sweep asks for; a second,
    //hand-written index list would silently go stale whenever this table is
    //edited, so both the check and the short run's sampling are derived from
