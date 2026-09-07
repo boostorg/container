@@ -172,9 +172,16 @@ struct dlmalloc_default_config
 {
    typedef ::std::size_t size_type;
 
-   //! Store in a footer after each block which heap the block came from, so
-   //! that free() and realloc() can tell a block of one heap from another.
-   //! Costs a word per block.
+   //! Write a footer after each block, marked with the heap the block came
+   //! from, so that a corrupt block can be detected. Costs a word per block.
+   //!
+   //! \warning This does NOT let one heap free a block of another. Upstream
+   //!   dlmalloc allows that: FOOTERS marks each block with its owning
+   //!   mspace, and mspace_free() sends the block to that owner whichever
+   //!   mspace it is handed to. A heap here is an object, and the mark it
+   //!   writes is derived from the object itself, so every heap reads the
+   //!   footer back as its own - the mark cannot name another heap. Each
+   //!   block must go back to the heap that handed it out.
    static const bool footers              = false;
 
    //! Skip the sanity checks on addresses, sizes and inuse bits that the
@@ -452,6 +459,8 @@ class basic_dlmalloc
    //                        Build-time switches
    //////////////////////////////////////////////////////////////////////////
    //Option options from the Config
+   //Note that footers marks blocks for detection only. Unlike upstream
+   //dlmalloc, no heap can free another heap's block - see the option itself.
    static const bool footers              = config_type::footers;
    static const bool insecure             = config_type::insecure;
    static const bool proceed_on_error     = config_type::proceed_on_error;
@@ -1233,12 +1242,12 @@ class basic_dlmalloc
 
       mstate ms = &m_state;
       if(!preaction(ms)){
-         if(footers && reuse_ptr){
-            mstate m = get_mstate_for(mem2chunk(reuse_ptr));
-            if(!ok_magic(m)){
-               usage_error_action(m, reuse_ptr);
-               goto postaction;      //do not leak the lock
-            }
+         //With footers the block carries a mark, but the mark says nothing
+         //about which heap wrote it (see get_mstate_for), so all there is to
+         //check is that this heap is not corrupt
+         if(footers && reuse_ptr && !ok_magic(ms)){
+            usage_error_action(ms, reuse_ptr);
+            goto postaction;      //do not leak the lock
          }
          if(reuse_ptr && (command & (expand_fwd | expand_bwd))){
             void *const r = internal_grow_both_sides
@@ -2336,6 +2345,15 @@ class basic_dlmalloc
       {  (void)p;  return (&m_state);  }
    BOOST_CONTAINER_FORCEINLINE mstate get_mstate_for(const malloc_chunk *p)
       {  return get_mstate_for(p, dtl::bool_<footers>());  }
+
+   //Note what this cannot do. The original marks a chunk with the heap that
+   //handed it out, so mspace_free() can send a block to its owner whichever
+   //mspace it was handed to. Here the magic is derived from the heap object
+   //itself (see init_params()), so the mark a heap writes is the same one
+   //every other heap reads back as its own, and the value returned is always
+   //&m_state - which is what every operation in this class works on anyway.
+   //A block given to the wrong heap object is therefore not detectable, as
+   //it was not before, and stays a usage error the caller must not make.
 
    // Macros for setting head/foot of non-mmapped chunks
 
@@ -4005,16 +4023,17 @@ class basic_dlmalloc
    //Takes the lock, then runs priv_deallocate_nolock(), which holds the whole
    //implementation.
    //
-   //The lock is the one of the heap the chunk came from, which with footers
-   //need not be this heap - so it is read from the chunk, as the original
-   //does, and not from m_state.
+   //The lock is this heap's, as is everything the work touches - which is
+   //why the state comes from m_state and not from the chunk's footer: that
+   //footer names this heap in any case (see get_mstate_for), and reading a
+   //pointer out of it only to dereference it is a wild read on a chunk that
+   //has been overwritten.
    void priv_deallocate(void* mem)
    {
       if (BOOST_LIKELY(mem != 0)) {
-         mchunkptr p = mem2chunk(mem);
-         mstate fm = get_mstate_for(p);
+         mstate fm = &m_state;
          if (!ok_magic(fm)) {
-            usage_error_action(fm, p);
+            usage_error_action(fm, mem2chunk(mem));
             return;
          }
          if (!preaction(fm)) {
@@ -4064,7 +4083,9 @@ class basic_dlmalloc
       else {
          size_type nb = request2size(bytes);
          mchunkptr oldp = mem2chunk(oldmem);
-         mstate m = get_mstate_for(oldp);
+         //try_realloc_chunk() works on m_state, so this is the state to
+         //check and the lock to take
+         mstate m = &m_state;
          if (!ok_magic(m)) {
             usage_error_action(m, oldmem);
             return 0;
@@ -4101,7 +4122,8 @@ class basic_dlmalloc
          else {
             size_type nb = request2size(bytes);
             mchunkptr oldp = mem2chunk(oldmem);
-            mstate m = get_mstate_for(oldp);
+            //As in priv_reallocate(): this heap's state and this heap's lock
+            mstate m = &m_state;
             if (!ok_magic(m)) {
                usage_error_action(m, oldmem);
                return 0;
@@ -4170,7 +4192,7 @@ class basic_dlmalloc
    {
       if (BOOST_LIKELY(mem != 0)) {
          mchunkptr p  = mem2chunk(mem);
-         mstate fm = get_mstate_for(p);
+         mstate fm = &m_state;
          if (!ok_magic(fm)) {
             usage_error_action(fm, p);
             return;
