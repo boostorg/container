@@ -141,7 +141,7 @@ namespace container {
 //! refuse a request: set errno
 struct dlmalloc_errno_action
 {
-   BOOST_CONTAINER_FORCEINLINE void operator()() const
+   BOOST_CONTAINER_FORCEINLINE void operator()() const BOOST_NOEXCEPT
    {  errno = ENOMEM;  }
 };
 
@@ -149,7 +149,7 @@ struct dlmalloc_errno_action
 //! or when a start-up sanity check says the configuration cannot work.
 struct dlmalloc_abort
 {
-   BOOST_CONTAINER_FORCEINLINE void operator()() const
+   BOOST_CONTAINER_FORCEINLINE void operator()() const BOOST_NOEXCEPT
    {  ::std::abort();  }
 };
 
@@ -224,10 +224,17 @@ struct dlmalloc_default_config
    static const bool abort_on_assert_failure = true;
 
    //! Called when a request cannot be met, just before the null comes back.
+   //!
+   //! \warning It must not throw. Every function of the heap is
+   //!   BOOST_NOEXCEPT, and some of the calls to this action are made with
+   //!   the heap lock held - an exception leaving it would leave the heap
+   //!   locked for good, so it terminates instead.
    typedef dlmalloc_errno_action malloc_failure_action;
 
    //! Called when a consistency check fails, and when the constructor finds
    //! a configuration it cannot build a heap from.
+   //!
+   //! \warning It must not throw, for the reason given above.
    typedef dlmalloc_abort abort_action;
 
    //! The alignment every block honours, and the width block-size
@@ -497,17 +504,17 @@ class basic_dlmalloc
       memchain_node *node_ptr;
 
       //! Moves to the next block.
-      void next()
+      void next() BOOST_NOEXCEPT
       {  node_ptr = node_ptr->next_node_ptr;  }
 
       //! The block this iterator points to.
-      void *addr() const
+      void *addr() const BOOST_NOEXCEPT
       {  return (void *)node_ptr;  }
 
-      bool operator==(const memchain_it &other) const
+      bool operator==(const memchain_it &other) const BOOST_NOEXCEPT
       {  return node_ptr == other.node_ptr;  }
 
-      bool operator!=(const memchain_it &other) const
+      bool operator!=(const memchain_it &other) const BOOST_NOEXCEPT
       {  return node_ptr != other.node_ptr;  }
    };
 
@@ -522,11 +529,11 @@ class basic_dlmalloc
       memchain_node   root_node;
       memchain_node  *last_node_ptr;
 
-      memchain()
+      memchain() BOOST_NOEXCEPT
       {  this->init();  }
 
       //! Leaves the chain empty.
-      void init()
+      void init() BOOST_NOEXCEPT
       {
          root_node.next_node_ptr = 0;
          last_node_ptr = &root_node;
@@ -537,7 +544,7 @@ class basic_dlmalloc
       //last_block, not last: a parameter named last would hide last(), and
       //GCC 4.8's -Wshadow reports a parameter that hides a member function
       //of its own class.
-      void init_from(void *first, void *last_block, size_type num)
+      void init_from(void *first, void *last_block, size_type num) BOOST_NOEXCEPT
       {
          last_node_ptr = (memchain_node *)last_block;
          root_node.next_node_ptr = (memchain_node *)first;
@@ -547,13 +554,13 @@ class basic_dlmalloc
       bool empty() const              {  return num_mem == 0;  }
       size_type size() const          {  return num_mem;  }
 
-      memchain_it before_begin()
+      memchain_it before_begin() BOOST_NOEXCEPT
       {  memchain_it it = { &root_node };            return it;  }
-      memchain_it begin()
+      memchain_it begin() BOOST_NOEXCEPT
       {  memchain_it it = { root_node.next_node_ptr }; return it;  }
-      memchain_it last()
+      memchain_it last() BOOST_NOEXCEPT
       {  memchain_it it = { last_node_ptr };         return it;  }
-      memchain_it end()
+      memchain_it end() BOOST_NOEXCEPT
       {  memchain_it it = { (memchain_node *)0 };    return it;  }
 
       static bool is_end(const memchain_it &it)      {  return !it.node_ptr;  }
@@ -562,7 +569,7 @@ class basic_dlmalloc
       void *last_mem() const    {  return (void *)last_node_ptr;  }
 
       //! Puts a block at the end of the chain.
-      void push_back(void *mem)
+      void push_back(void *mem) BOOST_NOEXCEPT
       {
          memchain_node *const n = (memchain_node *)mem;
          last_node_ptr->next_node_ptr = n;
@@ -572,7 +579,7 @@ class basic_dlmalloc
       }
 
       //! Puts a block at the front of the chain.
-      void push_front(void *mem)
+      void push_front(void *mem) BOOST_NOEXCEPT
       {
          memchain_node *const n = (memchain_node *)mem;
          if(!root_node.next_node_ptr)
@@ -584,7 +591,7 @@ class basic_dlmalloc
 
       //! Takes out the block after the one the iterator points to.
       //! The iterator must be valid and must not be the end iterator.
-      void erase_after(const memchain_it &before)
+      void erase_after(const memchain_it &before) BOOST_NOEXCEPT
       {
          memchain_node *const prev = before.node_ptr;
          memchain_node *const dead = prev->next_node_ptr;
@@ -595,13 +602,13 @@ class basic_dlmalloc
       }
 
       //! Takes out the first block. The chain must not be empty.
-      void pop_front()
+      void pop_front() BOOST_NOEXCEPT
       {  this->erase_after(this->before_begin());  }
 
       //! Puts a run of num blocks, from first to before_last, after the
       //! block the iterator points to.
       void incorporate_after(const memchain_it &before, void *first,
-                             void *before_last, size_type num)
+                             void *before_last, size_type num) BOOST_NOEXCEPT
       {
          if(!num)
             return;
@@ -618,7 +625,7 @@ class basic_dlmalloc
 
       //! Moves every block of other to the end of this chain, and leaves
       //! other empty.
-      void splice_back(memchain &other)
+      void splice_back(memchain &other) BOOST_NOEXCEPT
       {
          if(other.empty())
             return;
@@ -665,7 +672,7 @@ class basic_dlmalloc
 
    //! Builds an empty heap. It holds no memory at all - the first allocation
    //! asks the system for a segment.
-   basic_dlmalloc()
+   basic_dlmalloc() BOOST_NOEXCEPT
    {  init_state();  }
 
    //! Builds a heap that already holds at least `capacity` usable bytes,
@@ -688,7 +695,7 @@ class basic_dlmalloc
    //!
    //! `capacity` has no default value. Zero as a default would make this
    //! constructor ambiguous with the default constructor.
-   explicit basic_dlmalloc(size_type capacity, bool locked = true)
+   explicit basic_dlmalloc(size_type capacity, bool locked = true) BOOST_NOEXCEPT
    {
       init_state();
       set_lock(&m_state, locked ? 1 : 0);
@@ -718,7 +725,7 @@ class basic_dlmalloc
    //!
    //! `capacity` counts from `base`. The heap starts at the first correctly
    //! aligned address at or after `base` and uses the rest.
-   basic_dlmalloc(void *base, size_type capacity, bool locked = true)
+   basic_dlmalloc(void *base, size_type capacity, bool locked = true) BOOST_NOEXCEPT
    {
       init_state();
       set_lock(&m_state, locked ? 1 : 0);
@@ -735,7 +742,7 @@ class basic_dlmalloc
    //! Releases every segment this heap obtained.
    //!
    //! Memory still handed out goes with it.
-   ~basic_dlmalloc()
+   ~basic_dlmalloc() BOOST_NOEXCEPT
    {
       msegmentptr sp = &m_state.seg;
       (void)destroy_lock(lock_address(&m_state));   // destroy before unmapped
@@ -758,7 +765,7 @@ class basic_dlmalloc
    //!
    //! Returns null when the system refuses the memory, or when `capacity` is
    //! too large to describe. destroy() gives it all back, the object with it.
-   static basic_dlmalloc *create(size_type capacity = 0, bool locked = true)
+   static basic_dlmalloc *create(size_type capacity = 0, bool locked = true) BOOST_NOEXCEPT
    {
       size_type psize, gsize;
       system_sizes(psize, gsize);
@@ -785,7 +792,7 @@ class basic_dlmalloc
    //! Returns null for a null buffer, or one too small to hold the object
    //! and a heap.
    static basic_dlmalloc *create_with_base(void *base, size_type capacity,
-                                           bool locked = true)
+                                           bool locked = true) BOOST_NOEXCEPT
    {
       size_type psize, gsize;
       system_sizes(psize, gsize);
@@ -806,7 +813,7 @@ class basic_dlmalloc
    //!
    //! The pointer must not be used afterwards: for a create()d heap the
    //! object itself lived in the memory just released.
-   static size_type destroy(basic_dlmalloc *p)
+   static size_type destroy(basic_dlmalloc *p) BOOST_NOEXCEPT
    {
       size_type freed = 0;
       if(p != 0){
@@ -830,44 +837,44 @@ class basic_dlmalloc
    //////////////////////////////////////////////////////////////////////////
 
    //! Takes a block of at least `bytes` usable bytes, or null.
-   void *allocate(size_type bytes)
+   void *allocate(size_type bytes) BOOST_NOEXCEPT
    {  return this->priv_allocate(bytes);  }
 
    //! Gives a block back. A null pointer is ignored.
-   void deallocate(void *mem)
+   void deallocate(void *mem) BOOST_NOEXCEPT
    {  this->priv_deallocate(mem);  }
 
    //! Takes a block for n_elements of elem_size bytes, zero filled.
-   void *allocate_zeroed(size_type n_elements, size_type elem_size)
+   void *allocate_zeroed(size_type n_elements, size_type elem_size) BOOST_NOEXCEPT
    {  return this->priv_allocate_zeroed(n_elements, elem_size);  }
 
    //! Resizes a block, moving and copying it when it cannot grow where it
    //! stands. The old block is kept when the request cannot be met.
-   void *reallocate(void *mem, size_type newsize)
+   void *reallocate(void *mem, size_type newsize) BOOST_NOEXCEPT
    {  return this->priv_reallocate(mem, newsize);  }
 
    //! Grows or shrinks a block without moving it, or fails. Never copies.
-   void *reallocate_in_place(void *mem, size_type newsize)
+   void *reallocate_in_place(void *mem, size_type newsize) BOOST_NOEXCEPT
    {  return this->priv_reallocate_in_place(mem, newsize);  }
 
    //! Takes a block whose address is a multiple of `alignment`, which must
    //! be a power of two.
-   void *allocate_aligned(size_type alignment, size_type bytes)
+   void *allocate_aligned(size_type alignment, size_type bytes) BOOST_NOEXCEPT
    {  return this->priv_allocate_aligned(alignment, bytes);  }
 
    //! Takes n_elements blocks of elem_size bytes, zero filled, out of one
    //! run, and reports them through an array. `chunks` may name that array;
    //! null asks the heap for one, which the caller then frees like a block.
-   void **independent_calloc(size_type n_elements, size_type elem_size, void *chunks[])
+   void **independent_calloc(size_type n_elements, size_type elem_size, void *chunks[]) BOOST_NOEXCEPT
    {  return this->priv_independent_calloc(n_elements, elem_size, chunks);  }
 
    //! The same, with a size of its own for each block and no zero filling.
-   void **independent_comalloc(size_type n_elements, size_type sizes[], void *chunks[])
+   void **independent_comalloc(size_type n_elements, size_type sizes[], void *chunks[]) BOOST_NOEXCEPT
    {  return this->priv_independent_comalloc(n_elements, sizes, chunks);  }
 
    //! Frees an array of pointers under one lock and nulls the entries it
    //! consumed. Returns how many it could not free.
-   size_type bulk_free(void *array[], size_type nelem)
+   size_type bulk_free(void *array[], size_type nelem) BOOST_NOEXCEPT
    {  return internal_bulk_free(array, nelem);  }
 
    //////////////////////////////////////////////////////////////////////////
@@ -888,7 +895,7 @@ class basic_dlmalloc
    //! block before it, so allocating or freeing a NEIGHBOUR writes the very
    //! word this reads. Call it while nothing else is touching the heap, or
    //! from the thread that owns the heap.
-   static size_type usable_size(const void *mem)
+   static size_type usable_size(const void *mem) BOOST_NOEXCEPT
    {
       if(BOOST_LIKELY(mem != 0)){
          mchunkptr p = mem2chunk(mem);
@@ -899,22 +906,22 @@ class basic_dlmalloc
    }
 
    //! Bytes obtained from the system.
-   size_type footprint() const
+   size_type footprint() const BOOST_NOEXCEPT
    {  return m_state.footprint;  }
 
    //! High-water mark of footprint().
-   size_type max_footprint() const
+   size_type max_footprint() const BOOST_NOEXCEPT
    {  return m_state.max_footprint;  }
 
    //! Current cap, or the maximum size_type when there is none.
-   size_type footprint_limit() const
+   size_type footprint_limit() const BOOST_NOEXCEPT
    {
       const size_type maf = m_state.footprint_limit;
       return maf == 0 ? max_size_t : maf;
    }
 
    //! Caps how much this heap may obtain from the system.
-   size_type set_footprint_limit(size_type bytes)
+   size_type set_footprint_limit(size_type bytes) BOOST_NOEXCEPT
    {
       size_type result = 0;
       if(bytes == 0)
@@ -925,7 +932,7 @@ class basic_dlmalloc
    }
 
    //! Releases unused memory back to the system.
-   bool trim(size_type pad = 0)
+   bool trim(size_type pad = 0) BOOST_NOEXCEPT
    {
       int result = 0;
       if(!preaction(&m_state)){
@@ -938,7 +945,7 @@ class basic_dlmalloc
    //! Tunes this heap, and no other. `value` is a size, so the whole range
    //! of size_type is available; the maximum stands for "no limit", which is
    //! also what a plain -1 converts to.
-   bool mallopt(option_t param_number, size_type value)
+   bool mallopt(option_t param_number, size_type value) BOOST_NOEXCEPT
    {  return this->change_mparam(param_number, value) != 0;  }
 
    //! Keeps large blocks inside the heap's own segments instead of mapping
@@ -952,7 +959,7 @@ class basic_dlmalloc
    //!
    //! Blocks already mapped on their own stay that way; this decides only
    //! what happens to later requests.
-   bool track_large_chunks(bool enable)
+   bool track_large_chunks(bool enable) BOOST_NOEXCEPT
    {
       bool was_tracking = false;
       mstate m = &m_state;
@@ -1007,7 +1014,7 @@ class basic_dlmalloc
    //! carries, which the heap made for itself and never gave to anybody.
    //! allocated_memory() leaves those out, so the two differ by exactly that
    //! much - and by nothing else.
-   mallinfo_t mallinfo() const
+   mallinfo_t mallinfo() const BOOST_NOEXCEPT
    {
       mallinfo_t nm = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
       basic_dlmalloc *const self = const_cast<basic_dlmalloc *>(this);
@@ -1069,7 +1076,7 @@ class basic_dlmalloc
    //! than the SVID ones, and because the interface it mirrors has it.
    //!
    //! Walks the heap, for in_use_bytes; the other two are counters.
-   malloc_stats_t malloc_stats() const
+   malloc_stats_t malloc_stats() const BOOST_NOEXCEPT
    {
       malloc_stats_t st;
       st.max_system_bytes = this->max_footprint();
@@ -1099,7 +1106,7 @@ class basic_dlmalloc
    //!
    //! The handler runs while the heap is locked, so it must not touch this
    //! heap - not even to ask its size.
-   void inspect_all(inspect_handler_t handler, void *arg) const
+   void inspect_all(inspect_handler_t handler, void *arg) const BOOST_NOEXCEPT
    {
       basic_dlmalloc *const self = const_cast<basic_dlmalloc *>(this);
       mstate m = &self->m_state;
@@ -1140,7 +1147,7 @@ class basic_dlmalloc
    //! Walks the whole heap checking every invariant, when the configuration
    //! has debug on. A failed check runs the abort action; with debug off this
    //! does nothing. Always returns true, so it can sit inside a test macro.
-   bool check() const
+   bool check() const BOOST_NOEXCEPT
    {
       if(debug){
          basic_dlmalloc *const self = const_cast<basic_dlmalloc *>(this);
@@ -1167,7 +1174,7 @@ class basic_dlmalloc
    //! Grows a block in place, forwards only, to somewhere between minbytes
    //! and maxbytes. Returns false and changes nothing when it cannot.
    bool grow(void *oldmem, size_type minbytes, size_type maxbytes,
-             size_type *received)
+             size_type *received) BOOST_NOEXCEPT
    {
       mstate ms = &m_state;
       if(!preaction(ms)){
@@ -1189,7 +1196,7 @@ class basic_dlmalloc
    //! With do_commit false it only reports what a shrink would give, and
    //! leaves the block as it is.
    bool shrink(void *oldmem, size_type minbytes, size_type maxbytes,
-               size_type *received, bool do_commit)
+               size_type *received, bool do_commit) BOOST_NOEXCEPT
    {
       mstate ms = &m_state;
       if(!preaction(ms)){
@@ -1204,7 +1211,7 @@ class basic_dlmalloc
    //! Takes a block of at least minbytes, and of preferred_bytes when that
    //! costs nothing more. Reports what it really gave.
    void *alloc(size_type minbytes, size_type preferred_bytes,
-               size_type *received_bytes)
+               size_type *received_bytes) BOOST_NOEXCEPT
    {
       return this->allocation_command
          (allocate_new, 1, 1, minbytes, preferred_bytes, received_bytes, 0).first;
@@ -1223,7 +1230,7 @@ class basic_dlmalloc
    command_ret_t allocation_command
       (unsigned command, size_type sizeof_object, size_type alignof_object,
        size_type limit_size, size_type preferred_size, size_type *received_size,
-       void *reuse_ptr)
+       void *reuse_ptr) BOOST_NOEXCEPT
    {
       command_ret_t ret = { 0, 0 };
 
@@ -1308,7 +1315,7 @@ class basic_dlmalloc
    //! default_contiguous to let the heap choose, or all_contiguous to ask
    //! for one run.
    bool multialloc_nodes(size_type n_elements, size_type elem_size,
-                         size_type contiguous_elements, memchain *pchain)
+                         size_type contiguous_elements, memchain *pchain) BOOST_NOEXCEPT
    {
       int ret = 0;
       mstate ms = &m_state;
@@ -1324,7 +1331,7 @@ class basic_dlmalloc
    //! adds them to the chain.
    bool multialloc_arrays(size_type n_elements, const size_type *sizes,
                           size_type element_size, size_type contiguous_elements,
-                          memchain *pchain)
+                          memchain *pchain) BOOST_NOEXCEPT
    {
       int ret = 0;
       mstate ms = &m_state;
@@ -1339,7 +1346,7 @@ class basic_dlmalloc
    //! Gives back every block of the chain under one lock, merging the ones
    //! that turn out to be neighbours. Blocks it could not take back stay in
    //! the chain.
-   void multidealloc(memchain *pchain)
+   void multidealloc(memchain *pchain) BOOST_NOEXCEPT
    {  internal_multialloc_free(pchain);  }
 
    //! Bytes this heap has allocated, chunk overhead included.
@@ -1352,7 +1359,7 @@ class basic_dlmalloc
    //! the system, which is mmap_foot_pad more than its chunk. The figure
    //! still falls to zero when every such block comes back, because the
    //! mapping goes back with it.
-   size_type allocated_memory() const
+   size_type allocated_memory() const BOOST_NOEXCEPT
    {
       size_type alloc_mem = 0;
       basic_dlmalloc *const self = const_cast<basic_dlmalloc *>(this);
@@ -1387,26 +1394,26 @@ class basic_dlmalloc
    //! True when everything this heap gave out has come back.
    //!
    //! Walks the heap, because no running total is kept.
-   bool all_deallocated() const
+   bool all_deallocated() const BOOST_NOEXCEPT
    {  return 0 == this->allocated_memory();  }
 
    private:
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    //Running each of the two, in the one place that knows how.
-   BOOST_CONTAINER_FORCEINLINE static void do_abort()
+   BOOST_CONTAINER_FORCEINLINE static void do_abort() BOOST_NOEXCEPT
       {  abort_action()();  }
-   BOOST_CONTAINER_FORCEINLINE static void malloc_failure()
+   BOOST_CONTAINER_FORCEINLINE static void malloc_failure() BOOST_NOEXCEPT
       {  malloc_failure_action()();  }
 
    //What a failed BOOST_CONTAINER_DL_ASSERT does, which is a question of
    //its own: the
    //checks can be compiled in without being fatal.
-   BOOST_CONTAINER_FORCEINLINE static void assert_failed(dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static void assert_failed(dtl::true_) BOOST_NOEXCEPT
       {  do_abort();  }
-   BOOST_CONTAINER_FORCEINLINE static void assert_failed(dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static void assert_failed(dtl::false_) BOOST_NOEXCEPT
       {  }
-   BOOST_CONTAINER_FORCEINLINE static void assert_failed()
+   BOOST_CONTAINER_FORCEINLINE static void assert_failed() BOOST_NOEXCEPT
       {  assert_failed(dtl::bool_<abort_on_assert_failure>());  }
 
    //The largest value size_type can hold
@@ -1445,7 +1452,7 @@ class basic_dlmalloc
    //its malloc_state and its segment records. allocated_memory() is
    //Boost.Container's own figure and answers a different question - what did
    //the heap give out - so it leaves both out.
-   bool is_own_bookkeeping(const void *mem) const
+   bool is_own_bookkeeping(const void *mem) const BOOST_NOEXCEPT
    {
       if(mem == (const void *)this)
          return true;
@@ -1463,22 +1470,22 @@ class basic_dlmalloc
    //mmap()/VirtualAlloc() return this on failure - not a real address, so
    //nothing else could ever collide with it. Used on every platform, so it
    //sits outside the BOOST_WINDOWS guard below.
-   BOOST_CONTAINER_FORCEINLINE static void *mfail()
+   BOOST_CONTAINER_FORCEINLINE static void *mfail() BOOST_NOEXCEPT
    {  return (void*)(max_size_t);  }
-   BOOST_CONTAINER_FORCEINLINE static char *cmfail()
+   BOOST_CONTAINER_FORCEINLINE static char *cmfail() BOOST_NOEXCEPT
    {  return (char*)(mfail());  }
 
    #if defined(BOOST_WINDOWS)
 
    //win32mmap / win32direct_mmap / win32munmap, unchanged in substance.
-   static void *win32mmap(size_type size)
+   static void *win32mmap(size_type size) BOOST_NOEXCEPT
    {
       void *const ptr = VirtualAlloc(0, size, dl_mem_reserve|dl_mem_commit, dl_page_readwrite);
       return (ptr != 0) ? ptr : mfail();
    }
 
    //MEM_TOP_DOWN for direct maps, to keep them out of the way of the heap
-   static void *win32direct_mmap(size_type size)
+   static void *win32direct_mmap(size_type size) BOOST_NOEXCEPT
    {
       void *const ptr = VirtualAlloc(0, size, dl_mem_reserve|dl_mem_commit|dl_mem_top_down,
                                      dl_page_readwrite);
@@ -1487,7 +1494,7 @@ class basic_dlmalloc
 
    //VirtualFree releases one whole reservation at a time, and the caller
    //may be releasing part of a run the heap coalesced, so walk the regions.
-   static int win32munmap(void *ptr, size_type size)
+   static int win32munmap(void *ptr, size_type size) BOOST_NOEXCEPT
    {
       ::dl_win_memory_basic_information minfo;
       char *cptr = (char *)ptr;
@@ -1507,7 +1514,7 @@ class basic_dlmalloc
    }
 
    //GetSystemInfo without <windows.h>: the caller passes the stand-in above.
-   static void dl_get_system_info(::dl_win_system_info *si)
+   static void dl_get_system_info(::dl_win_system_info *si) BOOST_NOEXCEPT
    {  GetSystemInfo((::_SYSTEM_INFO *)si);  }
 
    #endif   //BOOST_WINDOWS
@@ -1535,14 +1542,14 @@ class basic_dlmalloc
    static const size_type chunk_align_mask = ((malloc_alignment - size_t_one));
 
    // True if address a has acceptable alignment
-   BOOST_CONTAINER_FORCEINLINE static bool is_aligned(const void *A)
+   BOOST_CONTAINER_FORCEINLINE static bool is_aligned(const void *A) BOOST_NOEXCEPT
       {  return ((((size_type)((A)) & (chunk_align_mask)) == 0));  }
 
    // the number of bytes to offset an address to align it
-   BOOST_CONTAINER_FORCEINLINE static size_type align_offset(const void *A)
+   BOOST_CONTAINER_FORCEINLINE static size_type align_offset(const void *A) BOOST_NOEXCEPT
       {  return (((((size_type)(A) & chunk_align_mask) == 0)? 0 :
          ((malloc_alignment - ((size_type)(A) & chunk_align_mask)) & chunk_align_mask)));  }
-   BOOST_CONTAINER_FORCEINLINE static size_type align_offset(size_type A)
+   BOOST_CONTAINER_FORCEINLINE static size_type align_offset(size_type A) BOOST_NOEXCEPT
       {  return (((((size_type)(A) & chunk_align_mask) == 0)? 0 :
          ((malloc_alignment - ((size_type)(A) & chunk_align_mask)) & chunk_align_mask)));  }
 
@@ -1585,20 +1592,20 @@ class basic_dlmalloc
    //chunk_at() reaches a type of stricter alignment, going through void* so
    //that it says so deliberately. Every address it is given is one the heap
    //itself aligned - a segment base, a chunk boundary, or a bin slot.
-   BOOST_CONTAINER_FORCEINLINE static char *bytes_at(const void *p)
+   BOOST_CONTAINER_FORCEINLINE static char *bytes_at(const void *p) BOOST_NOEXCEPT
       {  return static_cast<char *>(const_cast<void *>(p));  }
-   BOOST_CONTAINER_FORCEINLINE static mchunkptr chunk_at(const void *p)
+   BOOST_CONTAINER_FORCEINLINE static mchunkptr chunk_at(const void *p) BOOST_NOEXCEPT
       {  return static_cast<mchunkptr>(const_cast<void *>(p));  }
 
    // conversion from malloc headers to user pointers, and back
-   BOOST_CONTAINER_FORCEINLINE static void * chunk2mem(const void *p)
+   BOOST_CONTAINER_FORCEINLINE static void * chunk2mem(const void *p) BOOST_NOEXCEPT
       {  return bytes_at(p) + two_size_t_sizes;  }
-   BOOST_CONTAINER_FORCEINLINE static mchunkptr mem2chunk(const void *mem)
+   BOOST_CONTAINER_FORCEINLINE static mchunkptr mem2chunk(const void *mem) BOOST_NOEXCEPT
       {  return chunk_at(bytes_at(mem) - two_size_t_sizes);  }
-   BOOST_CONTAINER_FORCEINLINE static mchunkptr mem2chunk(size_type mem)
+   BOOST_CONTAINER_FORCEINLINE static mchunkptr mem2chunk(size_type mem) BOOST_NOEXCEPT
       {  return chunk_at(reinterpret_cast<char *>(mem) - two_size_t_sizes);  }
    // chunk associated with aligned address A
-   BOOST_CONTAINER_FORCEINLINE static mchunkptr align_as_chunk(char *A)
+   BOOST_CONTAINER_FORCEINLINE static mchunkptr align_as_chunk(char *A) BOOST_NOEXCEPT
       {  return chunk_at(A + align_offset(chunk2mem(A)));  }
 
    // Bounds on request (not chunk) sizes.
@@ -1606,11 +1613,11 @@ class basic_dlmalloc
    static const size_type min_request = ((min_chunk_size - chunk_overhead - size_t_one));
 
    // pad request bytes into a usable size
-   BOOST_CONTAINER_FORCEINLINE static size_type pad_request(size_type req)
+   BOOST_CONTAINER_FORCEINLINE static size_type pad_request(size_type req) BOOST_NOEXCEPT
       {  return ((((req) + chunk_overhead + chunk_align_mask) & ~chunk_align_mask));  }
 
    // pad request, checking for minimum (but not maximum)
-   BOOST_CONTAINER_FORCEINLINE static size_type request2size(size_type req)
+   BOOST_CONTAINER_FORCEINLINE static size_type request2size(size_type req) BOOST_NOEXCEPT
       {  return ((((req) < min_request)? min_chunk_size : pad_request(req)));  }
 
 
@@ -1635,83 +1642,83 @@ class basic_dlmalloc
 
    // extraction of fields from head words
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static size_type cinuse(const Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static size_type cinuse(const Chunk *p) BOOST_NOEXCEPT
       {  return (((p)->head & cinuse_bit));  }
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static size_type pinuse(const Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static size_type pinuse(const Chunk *p) BOOST_NOEXCEPT
       {  return (((p)->head & pinuse_bit));  }
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static size_type flag4inuse(const Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static size_type flag4inuse(const Chunk *p) BOOST_NOEXCEPT
       {  return (((p)->head & flag4_bit));  }
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static bool is_inuse(const Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static bool is_inuse(const Chunk *p) BOOST_NOEXCEPT
       {  return ((((p)->head & inuse_bits) != pinuse_bit));  }
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static bool is_mmapped(const Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static bool is_mmapped(const Chunk *p) BOOST_NOEXCEPT
       {  return ((((p)->head & inuse_bits) == 0));  }
 
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static size_type chunksize(const Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static size_type chunksize(const Chunk *p) BOOST_NOEXCEPT
       {  return (((p)->head & ~(flag_bits)));  }
 
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static void clear_pinuse(Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static void clear_pinuse(Chunk *p) BOOST_NOEXCEPT
       {  ((p)->head &= ~pinuse_bit);  }
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static void set_flag4(Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static void set_flag4(Chunk *p) BOOST_NOEXCEPT
       {  ((p)->head |= flag4_bit);  }
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static void clear_flag4(Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static void clear_flag4(Chunk *p) BOOST_NOEXCEPT
       {  ((p)->head &= ~flag4_bit);  }
 
    // Treat space at ptr +/- offset as a chunk
-   BOOST_CONTAINER_FORCEINLINE static mchunkptr chunk_plus_offset(const void *p, size_type s)
+   BOOST_CONTAINER_FORCEINLINE static mchunkptr chunk_plus_offset(const void *p, size_type s) BOOST_NOEXCEPT
       {  return chunk_at(bytes_at(p) + s);  }
-   BOOST_CONTAINER_FORCEINLINE static mchunkptr chunk_minus_offset(const void *p, size_type s)
+   BOOST_CONTAINER_FORCEINLINE static mchunkptr chunk_minus_offset(const void *p, size_type s) BOOST_NOEXCEPT
       {  return chunk_at(bytes_at(p) - s);  }
 
    // Ptr to next or previous physical malloc_chunk.
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static mchunkptr next_chunk(const Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static mchunkptr next_chunk(const Chunk *p) BOOST_NOEXCEPT
       {  return chunk_at(bytes_at(p) + ((p)->head & ~flag_bits));  }
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static mchunkptr prev_chunk(const Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static mchunkptr prev_chunk(const Chunk *p) BOOST_NOEXCEPT
       {  return chunk_at(bytes_at(p) - (p)->prev_foot);  }
 
    // extract next chunk's pinuse bit
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static size_type next_pinuse(const Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static size_type next_pinuse(const Chunk *p) BOOST_NOEXCEPT
       {  return (((next_chunk(p)->head) & pinuse_bit));  }
 
    // Get/set size at footer
-   BOOST_CONTAINER_FORCEINLINE static size_type get_foot(const void *p, size_type s)
+   BOOST_CONTAINER_FORCEINLINE static size_type get_foot(const void *p, size_type s) BOOST_NOEXCEPT
       {  return chunk_at(bytes_at(p) + s)->prev_foot;  }
-   BOOST_CONTAINER_FORCEINLINE static void set_foot(const void *p, size_type s)
+   BOOST_CONTAINER_FORCEINLINE static void set_foot(const void *p, size_type s) BOOST_NOEXCEPT
       {  chunk_at(bytes_at(p) + s)->prev_foot = s;  }
 
    // Set size, pinuse bit, and foot
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static void set_size_and_pinuse_of_free_chunk(Chunk *p, size_type s)
+      BOOST_CONTAINER_FORCEINLINE static void set_size_and_pinuse_of_free_chunk(Chunk *p, size_type s) BOOST_NOEXCEPT
       {  ((p)->head = (s|pinuse_bit), set_foot(p, s));  }
 
    // Set size, pinuse bit, foot, and clear next pinuse
    template<class ChunkP, class ChunkN>
-      BOOST_CONTAINER_FORCEINLINE static void set_free_with_pinuse(ChunkP *p, size_type s, ChunkN *n)
+      BOOST_CONTAINER_FORCEINLINE static void set_free_with_pinuse(ChunkP *p, size_type s, ChunkN *n) BOOST_NOEXCEPT
       {  (clear_pinuse(n), set_size_and_pinuse_of_free_chunk(p, s));  }
 
    // Get the internal overhead associated with chunk p
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static size_type overhead_for(const Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static size_type overhead_for(const Chunk *p) BOOST_NOEXCEPT
       {  return ((is_mmapped(p)? mmap_chunk_overhead : chunk_overhead));  }
 
    // Return true if malloced space is not necessarily cleared
    #if BOOST_CONTAINER_DL_MMAP_CLEARS
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static bool calloc_must_clear(const Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static bool calloc_must_clear(const Chunk *p) BOOST_NOEXCEPT
       {  return ((!is_mmapped(p)));  }
    #else // BOOST_CONTAINER_DL_MMAP_CLEARS
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static bool calloc_must_clear(const Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static bool calloc_must_clear(const Chunk *p) BOOST_NOEXCEPT
       {  (void)p;  return ((1));  }
    #endif // BOOST_CONTAINER_DL_MMAP_CLEARS
 
@@ -1723,15 +1730,15 @@ class basic_dlmalloc
    typedef malloc_tree_chunk* tbinptr; // The type of bins of trees
 
    // A little helper macro for trees
-   BOOST_CONTAINER_FORCEINLINE static tchunkptr leftmost_child(tchunkptr t)
+   BOOST_CONTAINER_FORCEINLINE static tchunkptr leftmost_child(tchunkptr t) BOOST_NOEXCEPT
       {  return (((t)->child[0] != 0? (t)->child[0] : (t)->child[1]));  }
 
    //The struct itself lives in layout_type - see default_dlmalloc_layout.
    typedef typename layout_type::malloc_segment malloc_segment;
 
-   BOOST_CONTAINER_FORCEINLINE static flag_t is_mmapped_segment(const malloc_segment *S)
+   BOOST_CONTAINER_FORCEINLINE static flag_t is_mmapped_segment(const malloc_segment *S) BOOST_NOEXCEPT
       {  return (((S)->sflags & use_mmap_bit));  }
-   BOOST_CONTAINER_FORCEINLINE static flag_t is_extern_segment(const malloc_segment *S)
+   BOOST_CONTAINER_FORCEINLINE static flag_t is_extern_segment(const malloc_segment *S) BOOST_NOEXCEPT
       {  return (((S)->sflags & extern_bit));  }
 
    typedef malloc_segment  msegment;
@@ -1826,11 +1833,11 @@ class basic_dlmalloc
    //The struct itself lives in layout_type - see default_dlmalloc_layout.
    typedef typename layout_type::malloc_params malloc_params;
 
-   BOOST_CONTAINER_FORCEINLINE static mlock_t *lock_address(mstate m, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static mlock_t *lock_address(mstate m, dtl::true_) BOOST_NOEXCEPT
       {  return &m->mutex;  }
-   BOOST_CONTAINER_FORCEINLINE static mlock_t *lock_address(mstate m, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static mlock_t *lock_address(mstate m, dtl::false_) BOOST_NOEXCEPT
       {  (void)m;  return 0;  }
-   BOOST_CONTAINER_FORCEINLINE static mlock_t *lock_address(mstate m)
+   BOOST_CONTAINER_FORCEINLINE static mlock_t *lock_address(mstate m) BOOST_NOEXCEPT
       {  return lock_address(m, dtl::bool_<use_locks>());  }
 
    // ==== system alloc setup, segment helpers ====
@@ -1838,81 +1845,81 @@ class basic_dlmalloc
 
    // Operations on mflags
 
-   BOOST_CONTAINER_FORCEINLINE static flag_t use_lock(mstate M)
+   BOOST_CONTAINER_FORCEINLINE static flag_t use_lock(mstate M) BOOST_NOEXCEPT
       {  return (((M)->mflags &   use_lock_bit));  }
 
-   BOOST_CONTAINER_FORCEINLINE static void enable_lock(mstate M)
+   BOOST_CONTAINER_FORCEINLINE static void enable_lock(mstate M) BOOST_NOEXCEPT
       {  ((M)->mflags |=  use_lock_bit);  }
 
-   BOOST_CONTAINER_FORCEINLINE static void disable_lock(mstate M, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static void disable_lock(mstate M, dtl::true_) BOOST_NOEXCEPT
       {  ((M)->mflags &= ~use_lock_bit);  }
 
-   BOOST_CONTAINER_FORCEINLINE static void disable_lock(mstate M, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static void disable_lock(mstate M, dtl::false_) BOOST_NOEXCEPT
       {  (void)M;  }
 
-   BOOST_CONTAINER_FORCEINLINE static void disable_lock(mstate M)
+   BOOST_CONTAINER_FORCEINLINE static void disable_lock(mstate M) BOOST_NOEXCEPT
       {  disable_lock(M, dtl::bool_<use_locks>());  }
 
-   BOOST_CONTAINER_FORCEINLINE static flag_t use_mmap(mstate M)
+   BOOST_CONTAINER_FORCEINLINE static flag_t use_mmap(mstate M) BOOST_NOEXCEPT
       {  return (((M)->mflags &   use_mmap_bit));  }
 
-   BOOST_CONTAINER_FORCEINLINE static void enable_mmap(mstate M)
+   BOOST_CONTAINER_FORCEINLINE static void enable_mmap(mstate M) BOOST_NOEXCEPT
       {  ((M)->mflags |=  use_mmap_bit);  }
 
-   BOOST_CONTAINER_FORCEINLINE static void disable_mmap(mstate M)
+   BOOST_CONTAINER_FORCEINLINE static void disable_mmap(mstate M) BOOST_NOEXCEPT
       {  (M)->mflags &= (flag_t)~(flag_t)use_mmap_bit;  }
 
-   BOOST_CONTAINER_FORCEINLINE static flag_t use_noncontiguous(mstate M)
+   BOOST_CONTAINER_FORCEINLINE static flag_t use_noncontiguous(mstate M) BOOST_NOEXCEPT
       {  return (((M)->mflags &   use_noncontiguous_bit));  }
 
-   BOOST_CONTAINER_FORCEINLINE static void disable_contiguous(mstate M)
+   BOOST_CONTAINER_FORCEINLINE static void disable_contiguous(mstate M) BOOST_NOEXCEPT
       {  ((M)->mflags |=  use_noncontiguous_bit);  }
 
-   BOOST_CONTAINER_FORCEINLINE static void set_lock(mstate M, int L)
+   BOOST_CONTAINER_FORCEINLINE static void set_lock(mstate M, int L) BOOST_NOEXCEPT
       {  (M)->mflags = (flag_t)((L) ? ((M)->mflags |  (flag_t)use_lock_bit)
                                       : ((M)->mflags & (flag_t)~(flag_t)use_lock_bit));  }
 
    // page-align a size
-   BOOST_CONTAINER_FORCEINLINE size_type page_align(size_type S)
+   BOOST_CONTAINER_FORCEINLINE size_type page_align(size_type S) BOOST_NOEXCEPT
       {  return ((((S) + (m_params.page_size - size_t_one)) & ~(m_params.page_size - size_t_one)));  }
 
    // granularity-align a size, to a granularity given rather than this
    // heap's - create() has to size a mapping before there is a heap
    BOOST_CONTAINER_FORCEINLINE static size_type granularity_align_to
-      (size_type S, size_type gsize)
+      (size_type S, size_type gsize) BOOST_NOEXCEPT
       {  return ((((S) + (gsize - size_t_one)) & ~(gsize - size_t_one)));  }
 
    // granularity-align a size
-   BOOST_CONTAINER_FORCEINLINE size_type granularity_align(size_type S)
+   BOOST_CONTAINER_FORCEINLINE size_type granularity_align(size_type S) BOOST_NOEXCEPT
       {  return granularity_align_to(S, m_params.granularity);  }
 
    // For mmap, use granularity alignment on windows, else page-align
    #if defined(BOOST_WINDOWS)
-   BOOST_CONTAINER_FORCEINLINE size_type mmap_align(size_type S)
+   BOOST_CONTAINER_FORCEINLINE size_type mmap_align(size_type S) BOOST_NOEXCEPT
       {  return (granularity_align(S));  }
    #else
-   BOOST_CONTAINER_FORCEINLINE size_type mmap_align(size_type S)
+   BOOST_CONTAINER_FORCEINLINE size_type mmap_align(size_type S) BOOST_NOEXCEPT
       {  return (page_align(S));  }
    #endif
 
    // For sys_alloc, enough padding to ensure can malloc request on success
-   BOOST_CONTAINER_FORCEINLINE static size_type sys_alloc_padding()
+   BOOST_CONTAINER_FORCEINLINE static size_type sys_alloc_padding() BOOST_NOEXCEPT
       {  return ((top_foot_size() + malloc_alignment));  }
 
-   BOOST_CONTAINER_FORCEINLINE bool is_page_aligned(size_type S)
+   BOOST_CONTAINER_FORCEINLINE bool is_page_aligned(size_type S) BOOST_NOEXCEPT
       {  return ((((size_type)(S) & (m_params.page_size - size_t_one)) == 0));  }
-   BOOST_CONTAINER_FORCEINLINE bool is_granularity_aligned(size_type S)
+   BOOST_CONTAINER_FORCEINLINE bool is_granularity_aligned(size_type S) BOOST_NOEXCEPT
       {  return ((((size_type)(S) & (m_params.granularity - size_t_one)) == 0));  }
 
    //  True if segment S holds address A
-   BOOST_CONTAINER_FORCEINLINE static bool segment_holds(msegmentptr S, const void *A)
+   BOOST_CONTAINER_FORCEINLINE static bool segment_holds(msegmentptr S, const void *A) BOOST_NOEXCEPT
       {
          const char *const a = static_cast<const char *>(A);
          return a >= S->base && a < S->base + S->size;
       }
 
    // Return segment holding given address
-   msegmentptr segment_holding(char* addr)
+   msegmentptr segment_holding(char* addr) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       msegmentptr sp = &m->seg;
@@ -1925,7 +1932,7 @@ class basic_dlmalloc
    }
 
    // Return true if segment contains a segment link
-   int has_segment_link(msegmentptr ss)
+   int has_segment_link(msegmentptr ss) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       msegmentptr sp = &m->seg;
@@ -1937,7 +1944,7 @@ class basic_dlmalloc
       }
    }
 
-   BOOST_CONTAINER_FORCEINLINE static bool should_trim(mstate M, size_type s)
+   BOOST_CONTAINER_FORCEINLINE static bool should_trim(mstate M, size_type s) BOOST_NOEXCEPT
       {  return (((s) > (M)->trim_check));  }
 
    //
@@ -1945,7 +1952,7 @@ class basic_dlmalloc
    //that may be needed to place segment records and fenceposts when new
    //noncontiguous segments are added.
    //
-   BOOST_CONTAINER_FORCEINLINE static size_type top_foot_size()
+   BOOST_CONTAINER_FORCEINLINE static size_type top_foot_size() BOOST_NOEXCEPT
       {  return ((align_offset(two_size_t_sizes)+pad_request(sizeof(malloc_segment))+min_chunk_size));  }
 
 
@@ -1959,18 +1966,18 @@ class basic_dlmalloc
    //anything you like.
    //
 
-   BOOST_CONTAINER_FORCEINLINE static int preaction(mstate M, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static int preaction(mstate M, dtl::true_) BOOST_NOEXCEPT
       {  return (((use_lock(M))? acquire_lock(lock_address(M)) : 0));  }
-   BOOST_CONTAINER_FORCEINLINE static int preaction(mstate M, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static int preaction(mstate M, dtl::false_) BOOST_NOEXCEPT
       {  (void)M;  return ((0));  }
-   BOOST_CONTAINER_FORCEINLINE static int preaction(mstate M)
+   BOOST_CONTAINER_FORCEINLINE static int preaction(mstate M) BOOST_NOEXCEPT
       {  return preaction(M, dtl::bool_<use_locks>());  }
 
-   BOOST_CONTAINER_FORCEINLINE static void postaction(mstate M, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static void postaction(mstate M, dtl::true_) BOOST_NOEXCEPT
       {  { if (use_lock(M)) release_lock(lock_address(M)); };  }
-   BOOST_CONTAINER_FORCEINLINE static void postaction(mstate M, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static void postaction(mstate M, dtl::false_) BOOST_NOEXCEPT
       {  (void)M;  }
-   BOOST_CONTAINER_FORCEINLINE static void postaction(mstate M)
+   BOOST_CONTAINER_FORCEINLINE static void postaction(mstate M) BOOST_NOEXCEPT
       {  postaction(M, dtl::bool_<use_locks>());  }
 
    //
@@ -1984,7 +1991,7 @@ class basic_dlmalloc
    // What proceed_on_error does in place of aborting: forget every block and
    //start again from an empty heap. The second loop is what init_bins()
    //does, applied to the state handed in rather than to this one.
-   static void reset_on_error(mstate m)
+   static void reset_on_error(mstate m) BOOST_NOEXCEPT
    {
       bindex_t i;
       m->smallmap = m->treemap = 0;
@@ -2001,18 +2008,18 @@ class basic_dlmalloc
       }
    }
 
-   BOOST_CONTAINER_FORCEINLINE static void corruption_error_action(mstate m, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static void corruption_error_action(mstate m, dtl::true_) BOOST_NOEXCEPT
       {  reset_on_error(m);  }
-   BOOST_CONTAINER_FORCEINLINE static void corruption_error_action(mstate m, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static void corruption_error_action(mstate m, dtl::false_) BOOST_NOEXCEPT
       {  (void)m;  do_abort();  }
-   BOOST_CONTAINER_FORCEINLINE static void corruption_error_action(mstate m)
+   BOOST_CONTAINER_FORCEINLINE static void corruption_error_action(mstate m) BOOST_NOEXCEPT
       {  corruption_error_action(m, dtl::bool_<proceed_on_error>());  }
 
-   BOOST_CONTAINER_FORCEINLINE static void usage_error_action(mstate m, const void *p, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static void usage_error_action(mstate m, const void *p, dtl::true_) BOOST_NOEXCEPT
       {  (void)m;  (void)p;  }
-   BOOST_CONTAINER_FORCEINLINE static void usage_error_action(mstate m, const void *p, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static void usage_error_action(mstate m, const void *p, dtl::false_) BOOST_NOEXCEPT
       {  (void)m;  (void)p;  do_abort();  }
-   BOOST_CONTAINER_FORCEINLINE static void usage_error_action(mstate m, const void *p)
+   BOOST_CONTAINER_FORCEINLINE static void usage_error_action(mstate m, const void *p) BOOST_NOEXCEPT
       {  usage_error_action(m, p, dtl::bool_<proceed_on_error>());  }
 
 
@@ -2020,90 +2027,90 @@ class basic_dlmalloc
    // ==== debugging setup ====
    // -------------------------- Debugging setup ----------------------------
 
-   BOOST_CONTAINER_FORCEINLINE void check_free_chunk(mchunkptr P, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE void check_free_chunk(mchunkptr P, dtl::true_) BOOST_NOEXCEPT
       {  do_check_free_chunk(P);  }
-   BOOST_CONTAINER_FORCEINLINE void check_free_chunk(mchunkptr P, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE void check_free_chunk(mchunkptr P, dtl::false_) BOOST_NOEXCEPT
       {  (void)P;  }
-   BOOST_CONTAINER_FORCEINLINE void check_free_chunk(mchunkptr P)
+   BOOST_CONTAINER_FORCEINLINE void check_free_chunk(mchunkptr P) BOOST_NOEXCEPT
       {  check_free_chunk(P, dtl::bool_<debug>());  }
 
-   BOOST_CONTAINER_FORCEINLINE void check_inuse_chunk(mchunkptr P, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE void check_inuse_chunk(mchunkptr P, dtl::true_) BOOST_NOEXCEPT
       {  do_check_inuse_chunk(P);  }
-   BOOST_CONTAINER_FORCEINLINE void check_inuse_chunk(mchunkptr P, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE void check_inuse_chunk(mchunkptr P, dtl::false_) BOOST_NOEXCEPT
       {  (void)P;  }
-   BOOST_CONTAINER_FORCEINLINE void check_inuse_chunk(mchunkptr P)
+   BOOST_CONTAINER_FORCEINLINE void check_inuse_chunk(mchunkptr P) BOOST_NOEXCEPT
       {  check_inuse_chunk(P, dtl::bool_<debug>());  }
 
-   BOOST_CONTAINER_FORCEINLINE void check_top_chunk(mchunkptr P, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE void check_top_chunk(mchunkptr P, dtl::true_) BOOST_NOEXCEPT
       {  do_check_top_chunk(P);  }
-   BOOST_CONTAINER_FORCEINLINE void check_top_chunk(mchunkptr P, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE void check_top_chunk(mchunkptr P, dtl::false_) BOOST_NOEXCEPT
       {  (void)P;  }
-   BOOST_CONTAINER_FORCEINLINE void check_top_chunk(mchunkptr P)
+   BOOST_CONTAINER_FORCEINLINE void check_top_chunk(mchunkptr P) BOOST_NOEXCEPT
       {  check_top_chunk(P, dtl::bool_<debug>());  }
 
-   BOOST_CONTAINER_FORCEINLINE void check_malloced_chunk(void *P, size_type N, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE void check_malloced_chunk(void *P, size_type N, dtl::true_) BOOST_NOEXCEPT
       {  do_check_malloced_chunk(P,N);  }
-   BOOST_CONTAINER_FORCEINLINE void check_malloced_chunk(void *P, size_type N, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE void check_malloced_chunk(void *P, size_type N, dtl::false_) BOOST_NOEXCEPT
       {  (void)P;  (void)N;  }
-   BOOST_CONTAINER_FORCEINLINE void check_malloced_chunk(void *P, size_type N)
+   BOOST_CONTAINER_FORCEINLINE void check_malloced_chunk(void *P, size_type N) BOOST_NOEXCEPT
       {  check_malloced_chunk(P, N, dtl::bool_<debug>());  }
 
-   BOOST_CONTAINER_FORCEINLINE void check_mmapped_chunk(mchunkptr P, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE void check_mmapped_chunk(mchunkptr P, dtl::true_) BOOST_NOEXCEPT
       {  do_check_mmapped_chunk(P);  }
-   BOOST_CONTAINER_FORCEINLINE void check_mmapped_chunk(mchunkptr P, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE void check_mmapped_chunk(mchunkptr P, dtl::false_) BOOST_NOEXCEPT
       {  (void)P;  }
-   BOOST_CONTAINER_FORCEINLINE void check_mmapped_chunk(mchunkptr P)
+   BOOST_CONTAINER_FORCEINLINE void check_mmapped_chunk(mchunkptr P) BOOST_NOEXCEPT
       {  check_mmapped_chunk(P, dtl::bool_<debug>());  }
 
-   BOOST_CONTAINER_FORCEINLINE void check_malloc_state(dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE void check_malloc_state(dtl::true_) BOOST_NOEXCEPT
       {  do_check_malloc_state();  }
-   BOOST_CONTAINER_FORCEINLINE void check_malloc_state(dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE void check_malloc_state(dtl::false_) BOOST_NOEXCEPT
       {  }
-   BOOST_CONTAINER_FORCEINLINE void check_malloc_state()
+   BOOST_CONTAINER_FORCEINLINE void check_malloc_state() BOOST_NOEXCEPT
       {  check_malloc_state(dtl::bool_<debug>());  }
 
    // ==== indexing bins and bin maps ====
 
-   BOOST_CONTAINER_FORCEINLINE static bool is_small(size_type s, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static bool is_small(size_type s, dtl::true_) BOOST_NOEXCEPT
       {  return ((s) >= min_chunk_size && (s) < min_large_size);  }
 
-   BOOST_CONTAINER_FORCEINLINE static bool is_small(size_type s, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static bool is_small(size_type s, dtl::false_) BOOST_NOEXCEPT
       {  return ((s) < min_large_size);  }
 
-   BOOST_CONTAINER_FORCEINLINE static bool is_small(size_type s)
+   BOOST_CONTAINER_FORCEINLINE static bool is_small(size_type s) BOOST_NOEXCEPT
       {  return is_small(s, dtl::bool_<rebased_smallbins>());  }
 
-   BOOST_CONTAINER_FORCEINLINE static bindex_t small_index(size_type s, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static bindex_t small_index(size_type s, dtl::true_) BOOST_NOEXCEPT
       {  return ((bindex_t)(((((s) - min_chunk_size) >> smallbin_shift)) & (nsmallbins - 1)));  }
 
-   BOOST_CONTAINER_FORCEINLINE static bindex_t small_index(size_type s, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static bindex_t small_index(size_type s, dtl::false_) BOOST_NOEXCEPT
       {  return ((bindex_t)((((s)  >> smallbin_shift)) & (nsmallbins - 1)));  }
 
-   BOOST_CONTAINER_FORCEINLINE static bindex_t small_index(size_type s)
+   BOOST_CONTAINER_FORCEINLINE static bindex_t small_index(size_type s) BOOST_NOEXCEPT
       {  return small_index(s, dtl::bool_<rebased_smallbins>());  }
 
-   BOOST_CONTAINER_FORCEINLINE static size_type small_index2size(size_type i, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static size_type small_index2size(size_type i, dtl::true_) BOOST_NOEXCEPT
       {  return ((((i) << smallbin_shift) + min_chunk_size));  }
 
-   BOOST_CONTAINER_FORCEINLINE static size_type small_index2size(size_type i, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static size_type small_index2size(size_type i, dtl::false_) BOOST_NOEXCEPT
       {  return (((i)  << smallbin_shift));  }
 
-   BOOST_CONTAINER_FORCEINLINE static size_type small_index2size(size_type i)
+   BOOST_CONTAINER_FORCEINLINE static size_type small_index2size(size_type i) BOOST_NOEXCEPT
       {  return small_index2size(i, dtl::bool_<rebased_smallbins>());  }
 
-   BOOST_CONTAINER_FORCEINLINE static bindex_t min_small_index()
+   BOOST_CONTAINER_FORCEINLINE static bindex_t min_small_index() BOOST_NOEXCEPT
       {  return ((small_index(min_chunk_size)));  }
 
    // addressing by index. See above about smallbin repositioning
-   BOOST_CONTAINER_FORCEINLINE static sbinptr smallbin_at(mstate M, size_type i)
+   BOOST_CONTAINER_FORCEINLINE static sbinptr smallbin_at(mstate M, size_type i) BOOST_NOEXCEPT
       {  return chunk_at(&(M)->smallbins[(i) << 1]);  }
 
-   BOOST_CONTAINER_FORCEINLINE static tbinptr * treebin_at(mstate M, size_type i)
+   BOOST_CONTAINER_FORCEINLINE static tbinptr * treebin_at(mstate M, size_type i) BOOST_NOEXCEPT
       {  return ((&((M)->treebins[i])));  }
 
    // assign tree index for size S to variable I. Use x86 asm if possible
    #if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
-   BOOST_CONTAINER_FORCEINLINE static void compute_tree_index(size_type S, bindex_t &I)
+   BOOST_CONTAINER_FORCEINLINE static void compute_tree_index(size_type S, bindex_t &I) BOOST_NOEXCEPT
    {
       unsigned int X = (unsigned int)(S >> treebin_shift);
       if (X == 0)
@@ -2117,7 +2124,7 @@ class basic_dlmalloc
    }
 
    #elif defined (__INTEL_COMPILER)
-   BOOST_CONTAINER_FORCEINLINE static void compute_tree_index(size_type S, bindex_t &I)
+   BOOST_CONTAINER_FORCEINLINE static void compute_tree_index(size_type S, bindex_t &I) BOOST_NOEXCEPT
    {
       size_type X = S >> treebin_shift;
       if (X == 0)
@@ -2131,7 +2138,7 @@ class basic_dlmalloc
    }
 
    #elif defined(_MSC_VER) && _MSC_VER>=1300
-   BOOST_CONTAINER_FORCEINLINE static void compute_tree_index(size_type S, bindex_t &I)
+   BOOST_CONTAINER_FORCEINLINE static void compute_tree_index(size_type S, bindex_t &I) BOOST_NOEXCEPT
    {
       size_type X = S >> treebin_shift;
       if (X == 0)
@@ -2146,7 +2153,7 @@ class basic_dlmalloc
    }
 
    #else // GNUC
-   BOOST_CONTAINER_FORCEINLINE static void compute_tree_index(size_type S, bindex_t &I)
+   BOOST_CONTAINER_FORCEINLINE static void compute_tree_index(size_type S, bindex_t &I) BOOST_NOEXCEPT
    {
       size_type X = S >> treebin_shift;
       if (X == 0)
@@ -2166,16 +2173,16 @@ class basic_dlmalloc
    #endif // GNUC
 
    // Bit representing maximum resolved size in a treebin at i
-   BOOST_CONTAINER_FORCEINLINE static size_type bit_for_tree_index(size_type i)
+   BOOST_CONTAINER_FORCEINLINE static size_type bit_for_tree_index(size_type i) BOOST_NOEXCEPT
       {  return ((i == ntreebins-1)? (size_t_bitsize-1) : (((i) >> 1) + treebin_shift - 2));  }
 
    // Shift placing maximum resolved bit in a treebin at i as sign bit
-   BOOST_CONTAINER_FORCEINLINE static size_type leftshift_for_tree_index(size_type i)
+   BOOST_CONTAINER_FORCEINLINE static size_type leftshift_for_tree_index(size_type i) BOOST_NOEXCEPT
       {  return (((i == ntreebins-1)? 0 :
          ((size_t_bitsize-size_t_one) - (((i) >> 1) + treebin_shift - 2))));  }
 
    // The size of the smallest chunk held in bin with index i
-   BOOST_CONTAINER_FORCEINLINE static size_type minsize_for_tree_index(size_type i)
+   BOOST_CONTAINER_FORCEINLINE static size_type minsize_for_tree_index(size_type i) BOOST_NOEXCEPT
       {  return (((size_t_one << (((i) >> 1) + treebin_shift)) |
          (((size_type)((i) & size_t_one)) << (((i) >> 1) + treebin_shift - 1))));  }
 
@@ -2183,47 +2190,47 @@ class basic_dlmalloc
    // ------------------------ Operations on bin maps -----------------------
 
    // bit corresponding to given index
-   BOOST_CONTAINER_FORCEINLINE static binmap_t idx2bit(size_type i)
+   BOOST_CONTAINER_FORCEINLINE static binmap_t idx2bit(size_type i) BOOST_NOEXCEPT
       {  return (((binmap_t)(1) << (i)));  }
 
    // Mark/Clear bits with given index
-   BOOST_CONTAINER_FORCEINLINE static void mark_smallmap(mstate M, size_type i)
+   BOOST_CONTAINER_FORCEINLINE static void mark_smallmap(mstate M, size_type i) BOOST_NOEXCEPT
       {  ((M)->smallmap |=  idx2bit(i));  }
-   BOOST_CONTAINER_FORCEINLINE static void clear_smallmap(mstate M, size_type i)
+   BOOST_CONTAINER_FORCEINLINE static void clear_smallmap(mstate M, size_type i) BOOST_NOEXCEPT
       {  ((M)->smallmap &= ~idx2bit(i));  }
-   BOOST_CONTAINER_FORCEINLINE static binmap_t smallmap_is_marked(mstate M, size_type i)
+   BOOST_CONTAINER_FORCEINLINE static binmap_t smallmap_is_marked(mstate M, size_type i) BOOST_NOEXCEPT
       {  return (((M)->smallmap &   idx2bit(i)));  }
 
-   BOOST_CONTAINER_FORCEINLINE static void mark_treemap(mstate M, size_type i)
+   BOOST_CONTAINER_FORCEINLINE static void mark_treemap(mstate M, size_type i) BOOST_NOEXCEPT
       {  ((M)->treemap  |=  idx2bit(i));  }
-   BOOST_CONTAINER_FORCEINLINE static void clear_treemap(mstate M, size_type i)
+   BOOST_CONTAINER_FORCEINLINE static void clear_treemap(mstate M, size_type i) BOOST_NOEXCEPT
       {  ((M)->treemap  &= ~idx2bit(i));  }
-   BOOST_CONTAINER_FORCEINLINE static binmap_t treemap_is_marked(mstate M, size_type i)
+   BOOST_CONTAINER_FORCEINLINE static binmap_t treemap_is_marked(mstate M, size_type i) BOOST_NOEXCEPT
       {  return (((M)->treemap  &   idx2bit(i)));  }
 
    // isolate the least set bit of a bitmap
-   BOOST_CONTAINER_FORCEINLINE static binmap_t least_bit(binmap_t x)
+   BOOST_CONTAINER_FORCEINLINE static binmap_t least_bit(binmap_t x) BOOST_NOEXCEPT
       {  return (((x) & (0 - (x))));  }
 
    // mask with all bits to left of least bit of x on
-   BOOST_CONTAINER_FORCEINLINE static binmap_t left_bits(binmap_t x)
+   BOOST_CONTAINER_FORCEINLINE static binmap_t left_bits(binmap_t x) BOOST_NOEXCEPT
       {  return ((((x)<<1) | (0 - ((x)<<1))));  }
 
    // mask with all bits to left of or equal to least bit of x on
-   BOOST_CONTAINER_FORCEINLINE static binmap_t same_or_left_bits(binmap_t x)
+   BOOST_CONTAINER_FORCEINLINE static binmap_t same_or_left_bits(binmap_t x) BOOST_NOEXCEPT
       {  return (((x) | (0 - (x))));  }
 
    // index corresponding to given bit. Use x86 asm if possible
 
    #if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
-   BOOST_CONTAINER_FORCEINLINE static void compute_bit2idx(binmap_t X, bindex_t &I)
+   BOOST_CONTAINER_FORCEINLINE static void compute_bit2idx(binmap_t X, bindex_t &I) BOOST_NOEXCEPT
    {
       unsigned int J;
       J = (unsigned int)__builtin_ctz(X);
       I = (bindex_t)J;
    }
    #elif defined (__INTEL_COMPILER)
-   BOOST_CONTAINER_FORCEINLINE static void compute_bit2idx(binmap_t X, bindex_t &I)
+   BOOST_CONTAINER_FORCEINLINE static void compute_bit2idx(binmap_t X, bindex_t &I) BOOST_NOEXCEPT
    {
 
       unsigned int J;
@@ -2232,7 +2239,7 @@ class basic_dlmalloc
    }
 
    #elif defined(_MSC_VER) && _MSC_VER>=1300
-   BOOST_CONTAINER_FORCEINLINE static void compute_bit2idx(binmap_t X, bindex_t &I)
+   BOOST_CONTAINER_FORCEINLINE static void compute_bit2idx(binmap_t X, bindex_t &I) BOOST_NOEXCEPT
    {
       unsigned int J;
       _BitScanForward((unsigned long *) &J, X);
@@ -2240,7 +2247,7 @@ class basic_dlmalloc
    }
 
    #else
-   BOOST_CONTAINER_FORCEINLINE static void compute_bit2idx(binmap_t X, bindex_t &I)
+   BOOST_CONTAINER_FORCEINLINE static void compute_bit2idx(binmap_t X, bindex_t &I) BOOST_NOEXCEPT
    {
       unsigned int Y = X - 1;
       unsigned int K = Y >> (16-4) & 16;
@@ -2257,51 +2264,51 @@ class basic_dlmalloc
    // ==== runtime check support ====
 
    //Check that address a is at least as high as any obtained from the system
-   BOOST_CONTAINER_FORCEINLINE static bool ok_address(mstate M, const void *a, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static bool ok_address(mstate M, const void *a, dtl::true_) BOOST_NOEXCEPT
       {  return static_cast<const char *>(a) >= (M)->least_addr;  }
-   BOOST_CONTAINER_FORCEINLINE static bool ok_address(mstate M, const void *a, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static bool ok_address(mstate M, const void *a, dtl::false_) BOOST_NOEXCEPT
       {  (void)M;  (void)a;  return ((1));  }
-   BOOST_CONTAINER_FORCEINLINE static bool ok_address(mstate M, const void *a)
+   BOOST_CONTAINER_FORCEINLINE static bool ok_address(mstate M, const void *a) BOOST_NOEXCEPT
       {  return ok_address(M, a, dtl::bool_<!insecure>());  }
 
    // Check if address of next chunk n is higher than base chunk p
-   BOOST_CONTAINER_FORCEINLINE static bool ok_next(const void *p, const void *n, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static bool ok_next(const void *p, const void *n, dtl::true_) BOOST_NOEXCEPT
       {  return static_cast<const char *>(p) < static_cast<const char *>(n);  }
-   BOOST_CONTAINER_FORCEINLINE static bool ok_next(const void *p, const void *n, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static bool ok_next(const void *p, const void *n, dtl::false_) BOOST_NOEXCEPT
       {  (void)p;  (void)n;  return ((1));  }
-   BOOST_CONTAINER_FORCEINLINE static bool ok_next(const void *p, const void *n)
+   BOOST_CONTAINER_FORCEINLINE static bool ok_next(const void *p, const void *n) BOOST_NOEXCEPT
       {  return ok_next(p, n, dtl::bool_<!insecure>());  }
 
    // Check if p has inuse status
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static bool ok_inuse(const Chunk *p, dtl::true_)
+      BOOST_CONTAINER_FORCEINLINE static bool ok_inuse(const Chunk *p, dtl::true_) BOOST_NOEXCEPT
       {  return (is_inuse(p));  }
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static bool ok_inuse(const Chunk *p, dtl::false_)
+      BOOST_CONTAINER_FORCEINLINE static bool ok_inuse(const Chunk *p, dtl::false_) BOOST_NOEXCEPT
       {  (void)p;  return ((1));  }
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static bool ok_inuse(const Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static bool ok_inuse(const Chunk *p) BOOST_NOEXCEPT
       {  return ok_inuse(p, dtl::bool_<!insecure>());  }
 
    // Check if p has its pinuse bit on
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static bool ok_pinuse(const Chunk *p, dtl::true_)
+      BOOST_CONTAINER_FORCEINLINE static bool ok_pinuse(const Chunk *p, dtl::true_) BOOST_NOEXCEPT
       {  return (pinuse(p));  }
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static bool ok_pinuse(const Chunk *p, dtl::false_)
+      BOOST_CONTAINER_FORCEINLINE static bool ok_pinuse(const Chunk *p, dtl::false_) BOOST_NOEXCEPT
       {  (void)p;  return ((1));  }
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE static bool ok_pinuse(const Chunk *p)
+      BOOST_CONTAINER_FORCEINLINE static bool ok_pinuse(const Chunk *p) BOOST_NOEXCEPT
       {  return ok_pinuse(p, dtl::bool_<!insecure>());  }
 
    // Check if (alleged) mstate m has expected magic field. Only the arm that
    //compares reads m_params, so that arm needs the heap; both are members
    //and the one that always says yes simply ignores it.
-   BOOST_CONTAINER_FORCEINLINE bool ok_magic(mstate M, dtl::true_) const
+   BOOST_CONTAINER_FORCEINLINE bool ok_magic(mstate M, dtl::true_) const BOOST_NOEXCEPT
       {  return (((M)->magic == m_params.magic));  }
-   BOOST_CONTAINER_FORCEINLINE bool ok_magic(mstate M, dtl::false_) const
+   BOOST_CONTAINER_FORCEINLINE bool ok_magic(mstate M, dtl::false_) const BOOST_NOEXCEPT
       {  return (((void)(M), 1));  }
-   BOOST_CONTAINER_FORCEINLINE bool ok_magic(mstate M) const
+   BOOST_CONTAINER_FORCEINLINE bool ok_magic(mstate M) const BOOST_NOEXCEPT
       {  return ok_magic(M, dtl::bool_<footers && !insecure>());  }
 
    // In gcc, use __builtin_expect to minimize impact of checks
@@ -2309,7 +2316,7 @@ class basic_dlmalloc
    //compiler is in use stays a question for the preprocessor - the builtin
    //exists nowhere else - but whether to check at all is a question for
    //insecure, and that one the overloads answer.
-   BOOST_CONTAINER_FORCEINLINE static bool rtcheck(bool e, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static bool rtcheck(bool e, dtl::true_) BOOST_NOEXCEPT
       {
          #if defined(__GNUC__) && __GNUC__ >= 3
          return (__builtin_expect(e, 1));
@@ -2317,9 +2324,9 @@ class basic_dlmalloc
          return ((e));
          #endif // GNUC
       }
-   BOOST_CONTAINER_FORCEINLINE static bool rtcheck(bool e, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static bool rtcheck(bool e, dtl::false_) BOOST_NOEXCEPT
       {  (void)e;  return ((1));  }
-   BOOST_CONTAINER_FORCEINLINE static bool rtcheck(bool e)
+   BOOST_CONTAINER_FORCEINLINE static bool rtcheck(bool e) BOOST_NOEXCEPT
       {  return rtcheck(e, dtl::bool_<!insecure>());  }
 
    // macros to set up inuse chunks with or without footers
@@ -2328,22 +2335,22 @@ class basic_dlmalloc
    //only thing the two arms differed by, and it is only this one write:
    //once the empty overload takes its place, the three setters below have
    //a single body each and always call it.
-   BOOST_CONTAINER_FORCEINLINE void mark_inuse_foot(mstate M, const void *p, size_type s, dtl::true_) const
+   BOOST_CONTAINER_FORCEINLINE void mark_inuse_foot(mstate M, const void *p, size_type s, dtl::true_) const BOOST_NOEXCEPT
       {  chunk_at(bytes_at(p) + s)->prev_foot = (size_type)(M) ^ m_params.magic;  }
-   BOOST_CONTAINER_FORCEINLINE void mark_inuse_foot(mstate M, const void *p, size_type s, dtl::false_) const
+   BOOST_CONTAINER_FORCEINLINE void mark_inuse_foot(mstate M, const void *p, size_type s, dtl::false_) const BOOST_NOEXCEPT
       {  (void)M;  (void)p;  (void)s;  }
-   BOOST_CONTAINER_FORCEINLINE void mark_inuse_foot(mstate M, const void *p, size_type s) const
+   BOOST_CONTAINER_FORCEINLINE void mark_inuse_foot(mstate M, const void *p, size_type s) const BOOST_NOEXCEPT
       {  mark_inuse_foot(M, p, s, dtl::bool_<footers>());  }
 
    // Which heap a chunk belongs to: with footers, read back out of the foot
    //mark_inuse_foot() wrote; without one, a chunk carries no mark and there
    //is no other heap it could have come from.
-   BOOST_CONTAINER_FORCEINLINE mstate get_mstate_for(const malloc_chunk *p, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE mstate get_mstate_for(const malloc_chunk *p, dtl::true_) BOOST_NOEXCEPT
       {  return (mstate)(chunk_at(bytes_at(p) + chunksize(p))->prev_foot
                            ^ m_params.magic);  }
-   BOOST_CONTAINER_FORCEINLINE mstate get_mstate_for(const malloc_chunk *p, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE mstate get_mstate_for(const malloc_chunk *p, dtl::false_) BOOST_NOEXCEPT
       {  (void)p;  return (&m_state);  }
-   BOOST_CONTAINER_FORCEINLINE mstate get_mstate_for(const malloc_chunk *p)
+   BOOST_CONTAINER_FORCEINLINE mstate get_mstate_for(const malloc_chunk *p) BOOST_NOEXCEPT
       {  return get_mstate_for(p, dtl::bool_<footers>());  }
 
    //Note what this cannot do. The original marks a chunk with the heap that
@@ -2359,21 +2366,21 @@ class basic_dlmalloc
 
    // Set cinuse bit and pinuse bit of next chunk
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE void set_inuse(mstate M, Chunk *p, size_type s) const
+      BOOST_CONTAINER_FORCEINLINE void set_inuse(mstate M, Chunk *p, size_type s) const BOOST_NOEXCEPT
       {  ((p)->head = (((p)->head & pinuse_bit)|s|cinuse_bit),
          chunk_at(bytes_at(p) + s)->head |= pinuse_bit,
          mark_inuse_foot(M,p,s));  }
 
    // Set cinuse and pinuse of this chunk and pinuse of next chunk
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE void set_inuse_and_pinuse(mstate M, Chunk *p, size_type s) const
+      BOOST_CONTAINER_FORCEINLINE void set_inuse_and_pinuse(mstate M, Chunk *p, size_type s) const BOOST_NOEXCEPT
       {  ((p)->head = (s|pinuse_bit|cinuse_bit),
          chunk_at(bytes_at(p) + s)->head |= pinuse_bit,
          mark_inuse_foot(M,p,s));  }
 
    // Set size, cinuse and pinuse bit of this chunk
    template<class Chunk>
-      BOOST_CONTAINER_FORCEINLINE void set_size_and_pinuse_of_inuse_chunk(mstate M, Chunk *p, size_type s) const
+      BOOST_CONTAINER_FORCEINLINE void set_size_and_pinuse_of_inuse_chunk(mstate M, Chunk *p, size_type s) const BOOST_NOEXCEPT
       {  ((p)->head = (s|pinuse_bit|cinuse_bit),
          mark_inuse_foot(M, p, s));  }
 
@@ -2381,7 +2388,7 @@ class basic_dlmalloc
    // ==== debugging support bodies ====
 
    // Check properties of any chunk, whether free, inuse, mmapped etc
-   void do_check_any_chunk(mchunkptr p)
+   void do_check_any_chunk(mchunkptr p) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       BOOST_CONTAINER_DL_ASSERT((is_aligned(chunk2mem(p))) || (p->head == fencepost_head));
@@ -2389,7 +2396,7 @@ class basic_dlmalloc
    }
 
    // Check properties of top chunk
-   void do_check_top_chunk(mchunkptr p)
+   void do_check_top_chunk(mchunkptr p) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       msegmentptr sp = segment_holding((char*)p);
@@ -2406,7 +2413,7 @@ class basic_dlmalloc
    }
 
    // Check properties of (inuse) mmapped chunks
-   void do_check_mmapped_chunk(mchunkptr p)
+   void do_check_mmapped_chunk(mchunkptr p) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       size_type  sz = chunksize(p);
@@ -2422,7 +2429,7 @@ class basic_dlmalloc
    }
 
    // Check properties of inuse chunks
-   void do_check_inuse_chunk(mchunkptr p)
+   void do_check_inuse_chunk(mchunkptr p) BOOST_NOEXCEPT
    {
       mstate m = &m_state;  (void)m;
       do_check_any_chunk(p);
@@ -2435,7 +2442,7 @@ class basic_dlmalloc
    }
 
    // Check properties of free chunks
-   void do_check_free_chunk(mchunkptr p)
+   void do_check_free_chunk(mchunkptr p) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       size_type sz = chunksize(p);
@@ -2460,7 +2467,7 @@ class basic_dlmalloc
    }
 
    // Check properties of malloced chunks at the point they are malloced
-   void do_check_malloced_chunk(void* mem, size_type s)
+   void do_check_malloced_chunk(void* mem, size_type s) BOOST_NOEXCEPT
    {
       mstate m = &m_state;  (void)m;
       if (BOOST_LIKELY(mem != 0)) {
@@ -2476,7 +2483,7 @@ class basic_dlmalloc
    }
 
    // Check a tree and its subtrees.
-   void do_check_tree(tchunkptr t)
+   void do_check_tree(tchunkptr t) BOOST_NOEXCEPT
    {
       mstate m = &m_state;  (void)m;
       tchunkptr head = 0;
@@ -2529,7 +2536,7 @@ class basic_dlmalloc
    }
 
    //  Check all the chunks in a treebin.
-   void do_check_treebin(bindex_t i)
+   void do_check_treebin(bindex_t i) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       tbinptr* tb = treebin_at(m, i);
@@ -2542,7 +2549,7 @@ class basic_dlmalloc
    }
 
    //  Check all the chunks in a smallbin.
-   void do_check_smallbin(bindex_t i)
+   void do_check_smallbin(bindex_t i) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       sbinptr b = smallbin_at(m, i);
@@ -2568,7 +2575,7 @@ class basic_dlmalloc
    }
 
    // Find x in a bin. Used in other check functions.
-   int bin_find(mchunkptr x)
+   int bin_find(mchunkptr x) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       size_type size = chunksize(x);
@@ -2606,7 +2613,7 @@ class basic_dlmalloc
    }
 
    // Traverse each chunk and check it; return total
-   size_type traverse_and_check()
+   size_type traverse_and_check() BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       size_type sum = 0;
@@ -2640,7 +2647,7 @@ class basic_dlmalloc
 
 
    // Check all properties of malloc_state.
-   void do_check_malloc_state()
+   void do_check_malloc_state() BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       bindex_t i;
@@ -2674,7 +2681,7 @@ class basic_dlmalloc
    // ----------------------- Operations on smallbins -----------------------
 
    // Link a free chunk into a smallbin
-   BOOST_CONTAINER_FORCEINLINE static void insert_small_chunk(mstate M, mchunkptr P, size_type S)
+   BOOST_CONTAINER_FORCEINLINE static void insert_small_chunk(mstate M, mchunkptr P, size_type S) BOOST_NOEXCEPT
    {
       bindex_t I  = small_index(S);
       mchunkptr B = smallbin_at(M, I);
@@ -2694,7 +2701,7 @@ class basic_dlmalloc
    }
 
    // Unlink a chunk from a smallbin
-   BOOST_CONTAINER_FORCEINLINE static void unlink_small_chunk(mstate M, mchunkptr P, size_type S)
+   BOOST_CONTAINER_FORCEINLINE static void unlink_small_chunk(mstate M, mchunkptr P, size_type S) BOOST_NOEXCEPT
    {
       mchunkptr F = P->fd;
       mchunkptr B = P->bk;
@@ -2721,7 +2728,7 @@ class basic_dlmalloc
    }
 
    // Unlink the first chunk from a smallbin
-   BOOST_CONTAINER_FORCEINLINE static void unlink_first_small_chunk(mstate M, mchunkptr B, mchunkptr P, bindex_t I)
+   BOOST_CONTAINER_FORCEINLINE static void unlink_first_small_chunk(mstate M, mchunkptr B, mchunkptr P, bindex_t I) BOOST_NOEXCEPT
    {
 
       mchunkptr F = P->fd;
@@ -2743,7 +2750,7 @@ class basic_dlmalloc
 
    // Replace dv node, binning the old one
    // Used only when dvsize known to be small
-   BOOST_CONTAINER_FORCEINLINE static void replace_dv(mstate M, mchunkptr P, size_type S)
+   BOOST_CONTAINER_FORCEINLINE static void replace_dv(mstate M, mchunkptr P, size_type S) BOOST_NOEXCEPT
    {
 
       size_type DVS = M->dvsize;
@@ -2764,7 +2771,7 @@ class basic_dlmalloc
    // ------------------------- Operations on trees -------------------------
 
    // Insert chunk into tree
-   BOOST_CONTAINER_FORCEINLINE static void insert_large_chunk(mstate M, tchunkptr X, size_type S)
+   BOOST_CONTAINER_FORCEINLINE static void insert_large_chunk(mstate M, tchunkptr X, size_type S) BOOST_NOEXCEPT
    {
 
       tbinptr* H;
@@ -2835,7 +2842,7 @@ class basic_dlmalloc
    //   x's parent and children to x's replacement (or null if none).
    //
 
-   BOOST_CONTAINER_FORCEINLINE static void unlink_large_chunk(mstate M, tchunkptr X)
+   BOOST_CONTAINER_FORCEINLINE static void unlink_large_chunk(mstate M, tchunkptr X) BOOST_NOEXCEPT
    {
 
       tchunkptr XP = X->parent;
@@ -2911,7 +2918,7 @@ class basic_dlmalloc
 
    // Relays to large vs small bin operations
 
-   BOOST_CONTAINER_FORCEINLINE static void insert_chunk(mstate M, mchunkptr P, size_type S)
+   BOOST_CONTAINER_FORCEINLINE static void insert_chunk(mstate M, mchunkptr P, size_type S) BOOST_NOEXCEPT
    {
       if (is_small(S))
          insert_small_chunk(M, P, S);
@@ -2921,7 +2928,7 @@ class basic_dlmalloc
       }
    }
 
-   BOOST_CONTAINER_FORCEINLINE static void unlink_chunk(mstate M, mchunkptr P, size_type S)
+   BOOST_CONTAINER_FORCEINLINE static void unlink_chunk(mstate M, mchunkptr P, size_type S) BOOST_NOEXCEPT
    {
       if (is_small(S))
          unlink_small_chunk(M, P, S);
@@ -2943,7 +2950,7 @@ class basic_dlmalloc
    //
 
    // Malloc using mmap
-   void* mmap_alloc(size_type nb)
+   void* mmap_alloc(size_type nb) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       size_type mmsize = mmap_align(nb + six_size_t_sizes + chunk_align_mask);
@@ -2977,7 +2984,7 @@ class basic_dlmalloc
    }
 
    // Realloc using mmap
-   mchunkptr mmap_resize(mchunkptr oldp, size_type nb, int flags)
+   mchunkptr mmap_resize(mchunkptr oldp, size_type nb, int flags) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       size_type oldsize = chunksize(oldp);
@@ -3028,7 +3035,7 @@ class basic_dlmalloc
    //The state and nothing else: the lock, the tuning, the magic and the
    //bins. This is init_user_mstate() without the segment, and it is where
    //every constructor starts.
-   void init_state()
+   void init_state() BOOST_NOEXCEPT
    {
       ::std::memset(&m_state, 0, sizeof(m_state));
       init_params();
@@ -3043,7 +3050,7 @@ class basic_dlmalloc
    //Makes the memory given the heap's first segment, with top at its start.
    //The other half of init_user_mstate(), for the heaps that keep their
    //object outside the memory they manage.
-   void attach_segment(char *tbase, size_type tsize, flag_t sflags)
+   void attach_segment(char *tbase, size_type tsize, flag_t sflags) BOOST_NOEXCEPT
    {
       mchunkptr const t = align_as_chunk(tbase);
       m_state.seg.base   = m_state.least_addr = tbase;
@@ -3060,7 +3067,7 @@ class basic_dlmalloc
    //over the top of the object - and, as in the original, it is in-use
    //memory as far as mallinfo() and allocated_memory() are concerned.
    static basic_dlmalloc *init_in_place(char *tbase, size_type tsize,
-                                        flag_t sflags, bool locked)
+                                        flag_t sflags, bool locked) BOOST_NOEXCEPT
    {
       const size_type msize = pad_request(sizeof(basic_dlmalloc));
       mchunkptr const msp = align_as_chunk(tbase);
@@ -3081,7 +3088,7 @@ class basic_dlmalloc
 
    // ==== init_top and init_bins ====
    // Initialize top chunk and its size
-   void init_top(mchunkptr p, size_type psize)
+   void init_top(mchunkptr p, size_type psize) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       // Ensure alignment
@@ -3098,7 +3105,7 @@ class basic_dlmalloc
    }
 
    // Initialize bins for a new mstate that is otherwise zeroed out
-   void init_bins()
+   void init_bins() BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       // Establish circular links for smallbins
@@ -3111,7 +3118,7 @@ class basic_dlmalloc
 
    // ==== prepend_alloc and add_segment ====
    void* prepend_alloc(char* newbase, char* oldbase,
-      size_type nb)
+      size_type nb) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       mchunkptr p = align_as_chunk(newbase);
@@ -3154,7 +3161,7 @@ class basic_dlmalloc
    }
 
    // Add a segment to hold a new noncontiguous region
-   void add_segment(char* tbase, size_type tsize, flag_t mmapped)
+   void add_segment(char* tbase, size_type tsize, flag_t mmapped) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       // Determine locations and sizes of segment, fenceposts, old top
@@ -3211,7 +3218,7 @@ class basic_dlmalloc
 
 
    // ==== sys_alloc ====
-   void* sys_alloc(size_type nb)
+   void* sys_alloc(size_type nb) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       char* tbase = cmfail();
@@ -3313,7 +3320,7 @@ class basic_dlmalloc
 
 
    // ==== release_unused_segments and sys_trim ====
-   size_type release_unused_segments()
+   size_type release_unused_segments() BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       size_type released = 0;
@@ -3377,7 +3384,7 @@ class basic_dlmalloc
    //Only on an explicit trim(0). The automatic trim on deallocation must
    //keep its hysteresis, or a program that allocates and frees one block in
    //a loop would map and unmap a segment every time round.
-   size_type release_last_segment()
+   size_type release_last_segment() BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       msegmentptr sp = &m->seg;
@@ -3412,7 +3419,7 @@ class basic_dlmalloc
       return size;
    }
 
-   int sys_trim(size_type pad, bool release_all)
+   int sys_trim(size_type pad, bool release_all) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       size_type released = 0;
@@ -3472,7 +3479,7 @@ class basic_dlmalloc
    //
 
    // ==== dispose_chunk ====
-   void dispose_chunk(mchunkptr p, size_type psize)
+   void dispose_chunk(mchunkptr p, size_type psize) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       mchunkptr next = chunk_plus_offset(p, psize);
@@ -3546,7 +3553,7 @@ class basic_dlmalloc
    // ==== tmalloc_large and tmalloc_small ====
 
    // allocate a large request from the best fitting chunk in a treebin
-   void* tmalloc_large(size_type nb)
+   void* tmalloc_large(size_type nb) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       tchunkptr v = 0;
@@ -3619,7 +3626,7 @@ class basic_dlmalloc
    }
 
    // allocate a small request from the best fitting chunk in a treebin
-   void* tmalloc_small(size_type nb)
+   void* tmalloc_small(size_type nb) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       tchunkptr t, v;
@@ -3660,7 +3667,7 @@ class basic_dlmalloc
 
    // ==== try_realloc_chunk, internal_memalign, ialloc, internal_bulk_free ====
    mchunkptr try_realloc_chunk(mchunkptr p, size_type nb,
-      int can_move)
+      int can_move) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       mchunkptr newp = 0;
@@ -3747,7 +3754,7 @@ class basic_dlmalloc
    //follows it. This function once took the lock for each of the two, and
    //needed a repair path to give the block back when the second acquisition
    //failed - which is the leak that path repaired.
-   void* internal_memalign(size_type alignment, size_type bytes)
+   void* internal_memalign(size_type alignment, size_type bytes) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       if (!ok_magic(m)) {
@@ -3771,7 +3778,7 @@ class basic_dlmalloc
    void** ialloc(size_type n_elements,
       size_type* sizes,
       int opts,
-      void* chunks[])
+      void* chunks[]) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
 
@@ -3933,7 +3940,7 @@ class basic_dlmalloc
    //chunks before freeing, which will occur often if allocated
    //with ialloc or the array is sorted.
    //
-   size_type internal_bulk_free(void* array[], size_type nelem)
+   size_type internal_bulk_free(void* array[], size_type nelem) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       size_type unfreed = 0;
@@ -3976,7 +3983,7 @@ class basic_dlmalloc
    }
 
    // ==== change_mparam, per instance here ====
-   int change_mparam(option_t param_number, size_type value)
+   int change_mparam(option_t param_number, size_type value) BOOST_NOEXCEPT
    {
       //max_size_t is "no limit". A caller writing -1 for that, the way the
       //parameter codes are written, arrives here as max_size_t already.
@@ -4004,7 +4011,7 @@ class basic_dlmalloc
    //Takes the lock, then runs priv_allocate_nolock(), which holds the whole
    //implementation. The magic is read before the lock: a heap that fails that
    //test must not be locked.
-   void* priv_allocate(size_type bytes)
+   void* priv_allocate(size_type bytes) BOOST_NOEXCEPT
    {
       mstate ms = &m_state;
       if (!ok_magic(ms)) {
@@ -4028,7 +4035,7 @@ class basic_dlmalloc
    //footer names this heap in any case (see get_mstate_for), and reading a
    //pointer out of it only to dereference it is a wild read on a chunk that
    //has been overwritten.
-   void priv_deallocate(void* mem)
+   void priv_deallocate(void* mem) BOOST_NOEXCEPT
    {
       if (BOOST_LIKELY(mem != 0)) {
          mstate fm = &m_state;
@@ -4045,7 +4052,7 @@ class basic_dlmalloc
 
 
    // ==== priv_allocate_zeroed ====
-   void* priv_allocate_zeroed(size_type n_elements, size_type elem_size)
+   void* priv_allocate_zeroed(size_type n_elements, size_type elem_size) BOOST_NOEXCEPT
    {
       void* mem;
       size_type req = 0;
@@ -4068,7 +4075,7 @@ class basic_dlmalloc
 
 
    // ==== priv_reallocate ====
-   void* priv_reallocate(void* oldmem, size_type bytes)
+   void* priv_reallocate(void* oldmem, size_type bytes) BOOST_NOEXCEPT
    {
       void* mem = 0;
       if (oldmem == 0) {
@@ -4112,7 +4119,7 @@ class basic_dlmalloc
 
 
    // ==== priv_reallocate_in_place ====
-   void* priv_reallocate_in_place(void* oldmem, size_type bytes)
+   void* priv_reallocate_in_place(void* oldmem, size_type bytes) BOOST_NOEXCEPT
    {
       void* mem = 0;
       if (BOOST_LIKELY(oldmem != 0)) {
@@ -4143,7 +4150,7 @@ class basic_dlmalloc
 
 
    // ==== priv_allocate_aligned ====
-   void* priv_allocate_aligned(size_type alignment, size_type bytes)
+   void* priv_allocate_aligned(size_type alignment, size_type bytes) BOOST_NOEXCEPT
    {
       mstate ms = &m_state;
       if (!ok_magic(ms)) {
@@ -4158,7 +4165,7 @@ class basic_dlmalloc
 
    // ==== priv_independent_calloc ====
    void** priv_independent_calloc(size_type n_elements,
-      size_type elem_size, void* chunks[])
+      size_type elem_size, void* chunks[]) BOOST_NOEXCEPT
    {
       size_type sz = elem_size; // serves as 1-element array
       mstate ms = &m_state;
@@ -4172,7 +4179,7 @@ class basic_dlmalloc
 
    // ==== priv_independent_comalloc ====
    void** priv_independent_comalloc(size_type n_elements,
-      size_type sizes[], void* chunks[])
+      size_type sizes[], void* chunks[]) BOOST_NOEXCEPT
    {
       mstate ms = &m_state;
       if (!ok_magic(ms)) {
@@ -4188,7 +4195,7 @@ class basic_dlmalloc
    //dead "if (!0)" below is where its preaction() sits - kept in place, and
    //with it the indentation and the postaction label, so that the two stay
    //easy to read against the original mspace_free().
-   void priv_deallocate_nolock(void* mem)
+   void priv_deallocate_nolock(void* mem) BOOST_NOEXCEPT
    {
       if (BOOST_LIKELY(mem != 0)) {
          mchunkptr p  = mem2chunk(mem);
@@ -4290,7 +4297,7 @@ class basic_dlmalloc
    //dead "if (!0)" below is where its preaction() sits - kept in place, and
    //with it the indentation and the postaction label, so that the two stay
    //easy to read against the original mspace_malloc().
-   void* priv_allocate_nolock(size_type bytes)
+   void* priv_allocate_nolock(size_type bytes) BOOST_NOEXCEPT
    {
       mstate ms = &m_state;
       if (!ok_magic(ms)) {
@@ -4412,7 +4419,7 @@ class basic_dlmalloc
    //section covers the allocation and the realign that trims it. That is what
    //makes the operation atomic to another thread, and what leaves nothing for
    //a leak-repair path to repair.
-   void* priv_allocate_aligned_nolock(size_type alignment, size_type bytes)
+   void* priv_allocate_aligned_nolock(size_type alignment, size_type bytes) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       void* mem = 0;
@@ -4488,7 +4495,7 @@ class basic_dlmalloc
 
    //This function is equal to try_realloc_chunk but handling
    //minimum and desired bytes
-   mchunkptr try_realloc_chunk_with_min(mchunkptr p, size_type min_nb, size_type des_nb, int can_move)
+   mchunkptr try_realloc_chunk_with_min(mchunkptr p, size_type min_nb, size_type des_nb, int can_move) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       mchunkptr newp = 0;
@@ -4584,13 +4591,13 @@ class basic_dlmalloc
    ///////////////////////////////////////////////////////////////
    ///////////////////////////////////////////////////////////////
 
-   BOOST_CONTAINER_FORCEINLINE static size_type get_truncated_size(size_type ORIG_SIZE, size_type ROUNDTO)
+   BOOST_CONTAINER_FORCEINLINE static size_type get_truncated_size(size_type ORIG_SIZE, size_type ROUNDTO) BOOST_NOEXCEPT
       {  return (((ORIG_SIZE)/(ROUNDTO)*(ROUNDTO)));  }
-   BOOST_CONTAINER_FORCEINLINE static size_type get_rounded_size(size_type ORIG_SIZE, size_type ROUNDTO)
+   BOOST_CONTAINER_FORCEINLINE static size_type get_rounded_size(size_type ORIG_SIZE, size_type ROUNDTO) BOOST_NOEXCEPT
       {  return (((((ORIG_SIZE)-1)/(ROUNDTO)+1)*(ROUNDTO)));  }
-   BOOST_CONTAINER_FORCEINLINE static size_type get_truncated_po2_size(size_type ORIG_SIZE, size_type ROUNDTO)
+   BOOST_CONTAINER_FORCEINLINE static size_type get_truncated_po2_size(size_type ORIG_SIZE, size_type ROUNDTO) BOOST_NOEXCEPT
       {  return (((ORIG_SIZE) & (~(ROUNDTO-1))));  }
-   BOOST_CONTAINER_FORCEINLINE static size_type get_rounded_po2_size(size_type ORIG_SIZE, size_type ROUNDTO)
+   BOOST_CONTAINER_FORCEINLINE static size_type get_rounded_po2_size(size_type ORIG_SIZE, size_type ROUNDTO) BOOST_NOEXCEPT
       {  return ((((ORIG_SIZE - 1) & (~(ROUNDTO-1))) + ROUNDTO));  }
 
    // Greatest common divisor and least common multiple
@@ -4599,7 +4606,7 @@ class basic_dlmalloc
    //
    //Pre: A > 0 && B > 0
    //Recommended: A > B
-   BOOST_CONTAINER_FORCEINLINE static void calculate_gcd(size_type A, size_type B, size_type &out)
+   BOOST_CONTAINER_FORCEINLINE static void calculate_gcd(size_type A, size_type B, size_type &out) BOOST_NOEXCEPT
    {
       size_type a = A;
       size_type b = B;
@@ -4618,7 +4625,7 @@ class basic_dlmalloc
    //
    //Pre: A > 0 && B > 0
    //Recommended: A > B
-   BOOST_CONTAINER_FORCEINLINE static void calculate_lcm(size_type A, size_type B, size_type &out)
+   BOOST_CONTAINER_FORCEINLINE static void calculate_lcm(size_type A, size_type B, size_type &out) BOOST_NOEXCEPT
    {
       calculate_gcd(A, B, out);
       out = (A / out)*B;
@@ -4626,7 +4633,7 @@ class basic_dlmalloc
 
    static int calculate_lcm_and_needs_backwards_lcmed
       (size_type backwards_multiple, size_type received_size, size_type size_to_achieve,
-      size_type *plcm, size_type *pneeds_backwards_lcmed)
+      size_type *plcm, size_type *pneeds_backwards_lcmed) BOOST_NOEXCEPT
    {
       // Now calculate lcm
       size_type max = backwards_multiple;
@@ -4724,7 +4731,7 @@ class basic_dlmalloc
    //try_realloc_chunk_with_min() can actually satisfy, so asking that function
    //for exactly this size always succeeds. Returns chunksize(p) when there is
    //nothing to take.
-   size_type internal_max_fwd_chunk_size(mchunkptr p)
+   size_type internal_max_fwd_chunk_size(mchunkptr p) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       const size_type oldsize = chunksize(p);
@@ -4752,7 +4759,7 @@ class basic_dlmalloc
       ,size_type maxbytes
       ,size_type *received_size
       ,size_type backwards_multiple
-      ,int only_preferred_backwards)
+      ,int only_preferred_backwards) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       mchunkptr oldp = mem2chunk(oldmem);
@@ -4905,7 +4912,7 @@ class basic_dlmalloc
    //* Takes additional 'do_commit' argument to obtain the final
    //  size before doing the real shrink operation.
    //
-   int internal_mmap_shrink_in_place(mchunkptr oldp, size_type nbmin, size_type nbmax, size_type *received_size, int do_commit)
+   int internal_mmap_shrink_in_place(mchunkptr oldp, size_type nbmin, size_type nbmax, size_type *received_size, int do_commit) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       size_type oldsize = chunksize(oldp);
@@ -4963,7 +4970,7 @@ class basic_dlmalloc
       #endif //#if BOOST_CONTAINER_DL_MREMAP
    }
 
-   int internal_shrink(void* oldmem, size_type minbytes, size_type maxbytes, size_type *received_size, int do_commit)
+   int internal_shrink(void* oldmem, size_type minbytes, size_type maxbytes, size_type *received_size, int do_commit) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       *received_size = chunksize(mem2chunk(oldmem)) - overhead_for(mem2chunk(oldmem));
@@ -5037,7 +5044,7 @@ class basic_dlmalloc
    //ever coalesced.
    void internal_multialloc_rollback
       (memchain *pchain,
-      memchain_it entry_last_it, size_type entry_num_mem)
+      memchain_it entry_last_it, size_type entry_num_mem) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       (void)m;    //every free below is a member
@@ -5056,7 +5063,7 @@ class basic_dlmalloc
    }
 
    int internal_node_multialloc
-      (size_type n_elements, size_type element_size, size_type contiguous_elements, memchain *pchain)
+      (size_type n_elements, size_type element_size, size_type contiguous_elements, memchain *pchain) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       void*     mem;            // malloced aggregate space
@@ -5165,14 +5172,14 @@ class basic_dlmalloc
       return 1;
    }
 
-   BOOST_CONTAINER_FORCEINLINE static void boost_alloc_plus_memchain_mem_jump_next(void *THISMEM, void *NEXTMEM)
+   BOOST_CONTAINER_FORCEINLINE static void boost_alloc_plus_memchain_mem_jump_next(void *THISMEM, void *NEXTMEM) BOOST_NOEXCEPT
       {  *((void**)(THISMEM)) = *((void**)((NEXTMEM)));  }
 
    //This function is based on internal_bulk_free
    //replacing iteration over array[] with memchain.
    //Instead of returning the unallocated nodes, returns a chain of non-deallocated nodes.
    //After forward merging, backwards merging is also tried
-   void internal_multialloc_free(memchain *pchain)
+   void internal_multialloc_free(memchain *pchain) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       //Blocks that turn out to belong to another heap collect here and go
@@ -5244,7 +5251,7 @@ class basic_dlmalloc
    }
 
    int internal_multialloc_arrays
-      (size_type n_elements, const size_type* sizes, size_type element_size, size_type contiguous_elements, memchain *pchain)
+      (size_type n_elements, const size_type* sizes, size_type element_size, size_type contiguous_elements, memchain *pchain) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       void*     mem;            // malloced aggregate space
@@ -5374,7 +5381,7 @@ class basic_dlmalloc
    //by a release that skips the unlock. Two atomic operations per call become
    //one byte load. Nowhere else is there anything to ask, so the answer is no
    //and every lock is really taken.
-   BOOST_CONTAINER_FORCEINLINE static bool single_threaded()
+   BOOST_CONTAINER_FORCEINLINE static bool single_threaded() BOOST_NOEXCEPT
    {
       #if defined(BOOST_CONTAINER_DLMALLOC_GLIBC_IS_SINGLE_THREAD)
       return ::__libc_single_threaded != 0;
@@ -5383,80 +5390,80 @@ class basic_dlmalloc
       #endif
    }
 
-   BOOST_CONTAINER_FORCEINLINE static int initial_lock(mlock_t *lk, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static int initial_lock(mlock_t *lk, dtl::true_) BOOST_NOEXCEPT
    {  return (::boost::container::dtl::spin_mutex_init(lk), 0);  }
 
-   BOOST_CONTAINER_FORCEINLINE static int initial_lock(mlock_t *lk, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static int initial_lock(mlock_t *lk, dtl::false_) BOOST_NOEXCEPT
    {  (void)lk;  return 0;  }
 
-   BOOST_CONTAINER_FORCEINLINE static int initial_lock(mlock_t *lk)
+   BOOST_CONTAINER_FORCEINLINE static int initial_lock(mlock_t *lk) BOOST_NOEXCEPT
    {  return initial_lock(lk, dtl::bool_<use_locks>());  }
 
    //A spin mutex owns nothing, so this has one body: the arm use_locks would
    //select is the same "return 0" the arm without it needs.
-   BOOST_CONTAINER_FORCEINLINE static int destroy_lock(mlock_t *lk)
+   BOOST_CONTAINER_FORCEINLINE static int destroy_lock(mlock_t *lk) BOOST_NOEXCEPT
    {  (void)lk;  return 0;  }
 
-   BOOST_CONTAINER_FORCEINLINE static int acquire_lock(mlock_t *lk, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static int acquire_lock(mlock_t *lk, dtl::true_) BOOST_NOEXCEPT
    {
       return single_threaded()
          ? 0 : (::boost::container::dtl::spin_mutex_lock(lk), 0);
    }
 
-   BOOST_CONTAINER_FORCEINLINE static int acquire_lock(mlock_t *lk, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static int acquire_lock(mlock_t *lk, dtl::false_) BOOST_NOEXCEPT
    {  (void)lk;  return 0;  }
 
-   BOOST_CONTAINER_FORCEINLINE static int acquire_lock(mlock_t *lk)
+   BOOST_CONTAINER_FORCEINLINE static int acquire_lock(mlock_t *lk) BOOST_NOEXCEPT
    {  return acquire_lock(lk, dtl::bool_<use_locks>());  }
 
-   BOOST_CONTAINER_FORCEINLINE static void release_lock(mlock_t *lk, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static void release_lock(mlock_t *lk, dtl::true_) BOOST_NOEXCEPT
    {
       if(!single_threaded())
          ::boost::container::dtl::spin_mutex_unlock(lk);
    }
 
-   BOOST_CONTAINER_FORCEINLINE static void release_lock(mlock_t *lk, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static void release_lock(mlock_t *lk, dtl::false_) BOOST_NOEXCEPT
    {  (void)lk;  }
 
-   BOOST_CONTAINER_FORCEINLINE static void release_lock(mlock_t *lk)
+   BOOST_CONTAINER_FORCEINLINE static void release_lock(mlock_t *lk) BOOST_NOEXCEPT
    {  release_lock(lk, dtl::bool_<use_locks>());  }
 
-   BOOST_CONTAINER_FORCEINLINE static int try_lock(mlock_t *lk, dtl::true_)
+   BOOST_CONTAINER_FORCEINLINE static int try_lock(mlock_t *lk, dtl::true_) BOOST_NOEXCEPT
    {
       return single_threaded()
          ? 1 : (::boost::container::dtl::spin_mutex_try_lock(lk) ? 1 : 0);
    }
 
-   BOOST_CONTAINER_FORCEINLINE static int try_lock(mlock_t *lk, dtl::false_)
+   BOOST_CONTAINER_FORCEINLINE static int try_lock(mlock_t *lk, dtl::false_) BOOST_NOEXCEPT
    {  (void)lk;  return 1;  }
 
-   BOOST_CONTAINER_FORCEINLINE static int try_lock(mlock_t *lk)
+   BOOST_CONTAINER_FORCEINLINE static int try_lock(mlock_t *lk) BOOST_NOEXCEPT
    {  return try_lock(lk, dtl::bool_<use_locks>());  }
 
    //A heap is initialized once it has a top chunk
-   BOOST_CONTAINER_FORCEINLINE static bool is_initialized(mstate M)
+   BOOST_CONTAINER_FORCEINLINE static bool is_initialized(mstate M) BOOST_NOEXCEPT
    {  return M->top != 0;  }
 
    //Memory comes from mmap alone; a growing process break is never used,
    //because it is one pointer for the whole process and a heap that owns
    //its memory must not move it. The name still has to resolve where a
    //constant condition mentions it, so it always fails.
-   BOOST_CONTAINER_FORCEINLINE static void *call_morecore(size_type S)
+   BOOST_CONTAINER_FORCEINLINE static void *call_morecore(size_type S) BOOST_NOEXCEPT
    {  (void)S;  return mfail();  }
 
    #if defined(BOOST_WINDOWS)
 
-   BOOST_CONTAINER_FORCEINLINE static void *call_mmap(size_type s)
+   BOOST_CONTAINER_FORCEINLINE static void *call_mmap(size_type s) BOOST_NOEXCEPT
    {  return win32mmap(s);  }
 
-   BOOST_CONTAINER_FORCEINLINE static void *call_direct_mmap(size_type s)
+   BOOST_CONTAINER_FORCEINLINE static void *call_direct_mmap(size_type s) BOOST_NOEXCEPT
    {  return win32direct_mmap(s);  }
 
-   BOOST_CONTAINER_FORCEINLINE static int call_munmap(void *a, size_type s)
+   BOOST_CONTAINER_FORCEINLINE static int call_munmap(void *a, size_type s) BOOST_NOEXCEPT
    {  return win32munmap(a, s);  }
 
    BOOST_CONTAINER_FORCEINLINE static void *call_mremap
-      (void *addr, size_type osz, size_type nsz, int mv)
+      (void *addr, size_type osz, size_type nsz, int mv) BOOST_NOEXCEPT
    {
       //Windows cannot move a reservation, and every caller treats a failure
       //here as "could not resize in place"
@@ -5466,17 +5473,17 @@ class basic_dlmalloc
 
    #else    //BOOST_WINDOWS
 
-   BOOST_CONTAINER_FORCEINLINE static void *call_mmap(size_type s)
+   BOOST_CONTAINER_FORCEINLINE static void *call_mmap(size_type s) BOOST_NOEXCEPT
    {  return ::mmap(0, s, mmap_prot, mmap_flags, -1, 0);  }
 
-   BOOST_CONTAINER_FORCEINLINE static void *call_direct_mmap(size_type s)
+   BOOST_CONTAINER_FORCEINLINE static void *call_direct_mmap(size_type s) BOOST_NOEXCEPT
    {  return call_mmap(s);  }
 
-   BOOST_CONTAINER_FORCEINLINE static int call_munmap(void *a, size_type s)
+   BOOST_CONTAINER_FORCEINLINE static int call_munmap(void *a, size_type s) BOOST_NOEXCEPT
    {  return ::munmap(a, s);  }
 
    BOOST_CONTAINER_FORCEINLINE static void *call_mremap
-      (void *addr, size_type osz, size_type nsz, int mv)
+      (void *addr, size_type osz, size_type nsz, int mv) BOOST_NOEXCEPT
    {
       #if BOOST_CONTAINER_DL_MREMAP
       return ::mremap(addr, osz, nsz, mv);
@@ -5489,7 +5496,7 @@ class basic_dlmalloc
    #endif   //BOOST_WINDOWS
 
    //Usable bytes of a block, which is the chunk less what the chunk costs
-   BOOST_CONTAINER_FORCEINLINE static size_type dl_size_impl(const void *p)
+   BOOST_CONTAINER_FORCEINLINE static size_type dl_size_impl(const void *p) BOOST_NOEXCEPT
    {  return chunksize(mem2chunk(p)) - overhead_for(mem2chunk(p));  }
 
    //////////////////////////////////////////////////////////////////////////
@@ -5516,7 +5523,7 @@ class basic_dlmalloc
    //always set, which is what lets ensure_initialization() be nothing.
    //What the system reports, and the checks that go with it. Static because
    //create() has to size its mapping before there is an object to ask.
-   static void system_sizes(size_type &psize, size_type &gsize)
+   static void system_sizes(size_type &psize, size_type &gsize) BOOST_NOEXCEPT
    {
       #if defined(BOOST_WINDOWS)
       {
@@ -5545,7 +5552,7 @@ class basic_dlmalloc
          do_abort();
    }
 
-   void init_params()
+   void init_params() BOOST_NOEXCEPT
    {
       size_type psize;
       size_type gsize;
@@ -5613,7 +5620,7 @@ BOOST_CONTAINER_INTERMODULE_ASSERT_VISIBLE(dlmalloc_globals_options,
    "BOOST_SYMBOL_VISIBLE");
 
 //! The process-wide heap itself: what a stateless allocator allocates from.
-BOOST_CONTAINER_FORCEINLINE dlmalloc& dlmalloc_heap()
+BOOST_CONTAINER_FORCEINLINE dlmalloc& dlmalloc_heap() BOOST_NOEXCEPT
 {
    return ::boost::container::dtl::intermodule_globals
       <dlmalloc_globals_t, dlmalloc_globals_options>().heap;
