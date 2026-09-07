@@ -714,10 +714,11 @@ class basic_dlmalloc
       init_state();
       set_lock(&m_state, locked ? 1 : 0);
       char *const raw = (char *)base;
-      if(raw != 0){
+      if(raw != 0 &&
+         capacity > (top_foot_size() + min_chunk_size + chunk_align_mask) &&
+         capacity < (size_type)(0 - (top_foot_size() + m_params.page_size))){
          const size_type off = (size_type)(bytes_at(align_as_chunk(raw)) - raw);
-         if(capacity > (off + top_foot_size() + min_chunk_size) &&
-            capacity < (size_type)(0 - (top_foot_size() + m_params.page_size)))
+         if(capacity > (off + top_foot_size() + min_chunk_size))
             attach_segment(raw, capacity, extern_bit);
       }
    }
