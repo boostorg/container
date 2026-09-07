@@ -3722,86 +3722,24 @@ class basic_dlmalloc
       return newp;
    }
 
+   //Takes the lock, then runs priv_allocate_aligned_nolock(), which holds the
+   //whole implementation.
+   //
+   //One acquisition covers both the oversized allocation and the realign that
+   //follows it. This function once took the lock for each of the two, and
+   //needed a repair path to give the block back when the second acquisition
+   //failed - which is the leak that path repaired.
    void* internal_memalign(size_type alignment, size_type bytes)
    {
       mstate m = &m_state;
-      void* mem = 0;
-      if (alignment <  min_chunk_size) // must be at least a minimum chunk size
-         alignment = min_chunk_size;
-      if ((alignment & (alignment-size_t_one)) != 0) {// Ensure a power of 2
-         size_type a = malloc_alignment << 1;
-         while (a < alignment) a <<= 1;
-         alignment = a;
+      if (!ok_magic(m)) {
+         usage_error_action(m, m);
+         return 0;
       }
-      if (bytes >= max_request - alignment) {
-         if (m != 0)  { // Test isn't needed but avoids compiler warning
-            malloc_failure();
-         }
-      }
-      else {
-         size_type nb = request2size(bytes);
-         size_type req = nb + alignment + min_chunk_size - chunk_overhead;
-         mem = priv_allocate(req);
-         if (BOOST_LIKELY(mem != 0)) {
-            mchunkptr p = mem2chunk(mem);
-            if (preaction(m)) {
-               //The lock could not be taken. The block internal_malloc()
-               //just returned has not been touched yet, so hand it back
-               //through the normal free path, which takes the lock itself:
-               //a transient acquisition failure must not cost a permanent
-               //leak.
-               priv_deallocate(mem);
-               return 0;
-            }
-            if ((((size_type)(mem)) & (alignment - 1)) != 0) { // misaligned
-               //
-               //Find an aligned spot inside chunk.  Since we need to give
-               //back leading space in a chunk of at least min_chunk_size, if
-               //the first calculation places us at a spot with less than
-               //min_chunk_size leader, we can move to the next aligned spot.
-               //We've allocated enough total room so that this is always
-               //possible.
-               //
-               char* br = (char*)mem2chunk((size_type)(((size_type)((char*)mem + alignment -
-                  size_t_one)) &
-                  (0 - alignment)));
-               char* pos = ((size_type)(br - (char*)(p)) >= min_chunk_size)?
-                  br : br+alignment;
-               mchunkptr newp = chunk_at(pos);
-               size_type leadsize = (size_type)(pos - bytes_at(p));
-               size_type newsize = chunksize(p) - leadsize;
-
-               if (is_mmapped(p)) { // For mmapped chunks, just adjust offset
-                  newp->prev_foot = p->prev_foot + leadsize;
-                  newp->head = newsize;
-               }
-               else { // Otherwise, give back leader, use the rest
-                  set_inuse(m, newp, newsize);
-                  set_inuse(m, p, leadsize);
-                  dispose_chunk(p, leadsize);
-               }
-               p = newp;
-            }
-
-            // Give back spare room at the end
-            if (!is_mmapped(p)) {
-               size_type size = chunksize(p);
-               if (size > nb + min_chunk_size) {
-                  size_type remainder_size = size - nb;
-                  mchunkptr remainder = chunk_plus_offset(p, nb);
-                  set_inuse(m, p, nb);
-                  set_inuse(m, remainder, remainder_size);
-                  dispose_chunk(remainder, remainder_size);
-               }
-            }
-
-            mem = chunk2mem(p);
-            BOOST_CONTAINER_DL_ASSERT(chunksize(p) >= nb);
-            BOOST_CONTAINER_DL_ASSERT(((size_type)mem & (alignment - 1)) == 0);
-            check_inuse_chunk(p);
-            postaction(m);
-         }
-      }
+      if (preaction(m))
+         return 0;
+      void *const mem = priv_allocate_aligned_nolock(alignment, bytes);
+      postaction(m);
       return mem;
    }
 
@@ -4045,215 +3983,42 @@ class basic_dlmalloc
    }
 
    // ==== priv_allocate ====
+   //Takes the lock, then runs priv_allocate_nolock(), which holds the whole
+   //implementation. The magic is read before the lock: a heap that fails that
+   //test must not be locked.
    void* priv_allocate(size_type bytes)
    {
       mstate ms = &m_state;
       if (!ok_magic(ms)) {
-         usage_error_action(ms,ms);
+         usage_error_action(ms, ms);
          return 0;
       }
-      if (!preaction(ms)) {
-         void* mem;
-         size_type nb;
-         if (bytes <= max_small_request) {
-            bindex_t idx;
-            binmap_t smallbits;
-            nb = (bytes < min_request)? min_chunk_size : pad_request(bytes);
-            idx = small_index(nb);
-            smallbits = ms->smallmap >> idx;
-
-            if ((smallbits & 0x3U) != 0) { // Remainderless fit to a smallbin.
-               mchunkptr b, p;
-               idx += ~smallbits & 1;       // Uses next bin if idx empty
-               b = smallbin_at(ms, idx);
-               p = b->fd;
-               BOOST_CONTAINER_DL_ASSERT(chunksize(p) == small_index2size(idx));
-               unlink_first_small_chunk(ms, b, p, idx);
-               set_inuse_and_pinuse(ms, p, small_index2size(idx));
-               mem = chunk2mem(p);
-               check_malloced_chunk(mem, nb);
-               goto postaction;
-            }
-
-            else if (nb > ms->dvsize) {
-               if (smallbits != 0) { // Use chunk in next nonempty smallbin
-                  mchunkptr b, p, r;
-                  size_type rsize;
-                  bindex_t i;
-                  binmap_t leftbits = (smallbits << idx) & left_bits(idx2bit(idx));
-                  binmap_t leastbit = least_bit(leftbits);
-                  compute_bit2idx(leastbit, i);
-                  b = smallbin_at(ms, i);
-                  p = b->fd;
-                  BOOST_CONTAINER_DL_ASSERT(chunksize(p) == small_index2size(i));
-                  unlink_first_small_chunk(ms, b, p, i);
-                  rsize = small_index2size(i) - nb;
-                  // Fit here cannot be remainderless if 4byte sizes
-                  if (size_t_size != 4 && rsize < min_chunk_size)
-                     set_inuse_and_pinuse(ms, p, small_index2size(i));
-                  else {
-                     set_size_and_pinuse_of_inuse_chunk(ms, p, nb);
-                     r = chunk_plus_offset(p, nb);
-                     set_size_and_pinuse_of_free_chunk(r, rsize);
-                     replace_dv(ms, r, rsize);
-                  }
-                  mem = chunk2mem(p);
-                  check_malloced_chunk(mem, nb);
-                  goto postaction;
-               }
-
-               else if (ms->treemap != 0 && (mem = tmalloc_small(nb)) != 0) {
-                  check_malloced_chunk(mem, nb);
-                  goto postaction;
-               }
-            }
-         }
-         else if (bytes >= max_request)
-            nb = max_size_t; // Too big to allocate. Force failure (in sys alloc)
-         else {
-            nb = pad_request(bytes);
-            if (ms->treemap != 0 && (mem = tmalloc_large(nb)) != 0) {
-               check_malloced_chunk(mem, nb);
-               goto postaction;
-            }
-         }
-
-         if (nb <= ms->dvsize) {
-            size_type rsize = ms->dvsize - nb;
-            mchunkptr p = ms->dv;
-            if (rsize >= min_chunk_size) { // split dv
-               mchunkptr r = ms->dv = chunk_plus_offset(p, nb);
-               ms->dvsize = rsize;
-               set_size_and_pinuse_of_free_chunk(r, rsize);
-               set_size_and_pinuse_of_inuse_chunk(ms, p, nb);
-            }
-            else { // exhaust dv
-               size_type dvs = ms->dvsize;
-               ms->dvsize = 0;
-               ms->dv = 0;
-               set_inuse_and_pinuse(ms, p, dvs);
-            }
-            mem = chunk2mem(p);
-            check_malloced_chunk(mem, nb);
-            goto postaction;
-         }
-
-         else if (nb < ms->topsize) { // Split top
-            size_type rsize = ms->topsize -= nb;
-            mchunkptr p = ms->top;
-            mchunkptr r = ms->top = chunk_plus_offset(p, nb);
-            r->head = rsize | pinuse_bit;
-            set_size_and_pinuse_of_inuse_chunk(ms, p, nb);
-            mem = chunk2mem(p);
-            check_top_chunk(ms->top);
-            check_malloced_chunk(mem, nb);
-            goto postaction;
-         }
-
-         mem = sys_alloc(nb);
-
-         postaction:
-         postaction(ms);
-         return mem;
-      }
-
-      return 0;
+      if (preaction(ms))
+         return 0;
+      void *const mem = priv_allocate_nolock(bytes);
+      postaction(ms);
+      return mem;
    }
 
 
    // ==== priv_deallocate ====
+   //Takes the lock, then runs priv_deallocate_nolock(), which holds the whole
+   //implementation.
+   //
+   //The lock is the one of the heap the chunk came from, which with footers
+   //need not be this heap - so it is read from the chunk, as the original
+   //does, and not from m_state.
    void priv_deallocate(void* mem)
    {
       if (BOOST_LIKELY(mem != 0)) {
-         mchunkptr p  = mem2chunk(mem);
+         mchunkptr p = mem2chunk(mem);
          mstate fm = get_mstate_for(p);
          if (!ok_magic(fm)) {
             usage_error_action(fm, p);
             return;
          }
          if (!preaction(fm)) {
-            check_inuse_chunk(p);
-            if (rtcheck(ok_address(fm, p) && ok_inuse(p))) {
-               size_type psize = chunksize(p);
-               mchunkptr next = chunk_plus_offset(p, psize);
-               if (!pinuse(p)) {
-                  size_type prevsize = p->prev_foot;
-                  if (is_mmapped(p)) {
-                     psize += prevsize + mmap_foot_pad;
-                     if (call_munmap((char*)p - prevsize, psize) == 0)
-                        fm->footprint -= psize;
-                     goto postaction;
-                  }
-                  else {
-                     mchunkptr prev = chunk_minus_offset(p, prevsize);
-                     psize += prevsize;
-                     p = prev;
-                     if (rtcheck(ok_address(fm, prev))) { // consolidate backward
-                        if (p != fm->dv) {
-                           unlink_chunk(fm, p, prevsize);
-                        }
-                        else if ((next->head & inuse_bits) == inuse_bits) {
-                           fm->dvsize = psize;
-                           set_free_with_pinuse(p, psize, next);
-                           goto postaction;
-                        }
-                     }
-                     else
-                        goto erroraction;
-                  }
-               }
-
-               if (rtcheck(ok_next(p, next) && ok_pinuse(next))) {
-                  if (!cinuse(next)) {  // consolidate forward
-                     if (next == fm->top) {
-                        size_type tsize = fm->topsize += psize;
-                        fm->top = p;
-                        p->head = tsize | pinuse_bit;
-                        if (p == fm->dv) {
-                           fm->dv = 0;
-                           fm->dvsize = 0;
-                        }
-                        if (should_trim(fm, tsize))
-                           sys_trim(0, false);
-                        goto postaction;
-                     }
-                     else if (next == fm->dv) {
-                        size_type dsize = fm->dvsize += psize;
-                        fm->dv = p;
-                        set_size_and_pinuse_of_free_chunk(p, dsize);
-                        goto postaction;
-                     }
-                     else {
-                        size_type nsize = chunksize(next);
-                        psize += nsize;
-                        unlink_chunk(fm, next, nsize);
-                        set_size_and_pinuse_of_free_chunk(p, psize);
-                        if (p == fm->dv) {
-                           fm->dvsize = psize;
-                           goto postaction;
-                        }
-                     }
-                  }
-                  else
-                     set_free_with_pinuse(p, psize, next);
-
-                  if (is_small(psize)) {
-                     insert_small_chunk(fm, p, psize);
-                     check_free_chunk(p);
-                  }
-                  else {
-                     tchunkptr tp = (tchunkptr)p;
-                     insert_large_chunk(fm, tp, psize);
-                     check_free_chunk(p);
-                     if (--fm->release_checks == 0)
-                        release_unused_segments();
-                  }
-                  goto postaction;
-               }
-            }
-            erroraction:
-            usage_error_action(fm, p);
-            postaction:
+            priv_deallocate_nolock(mem);
             postaction(fm);
          }
       }
@@ -4396,8 +4161,11 @@ class basic_dlmalloc
    }
 
 
-   //This function is equal to priv_deallocate
-   //replacing preaction with 0 and postaction with nothing
+   //The whole of deallocation, for a caller that already holds the lock.
+   //priv_deallocate() is this function with the lock taken around it, and the
+   //dead "if (!0)" below is where its preaction() sits - kept in place, and
+   //with it the indentation and the postaction label, so that the two stay
+   //easy to read against the original mspace_free().
    void priv_deallocate_nolock(void* mem)
    {
       if (BOOST_LIKELY(mem != 0)) {
@@ -4495,8 +4263,11 @@ class basic_dlmalloc
       }
    }
 
-   //This function is equal to priv_allocate
-   //replacing preaction with 0 and postaction with nothing
+   //The whole of allocation, for a caller that already holds the lock.
+   //priv_allocate() is this function with the lock taken around it, and the
+   //dead "if (!0)" below is where its preaction() sits - kept in place, and
+   //with it the indentation and the postaction label, so that the two stay
+   //easy to read against the original mspace_malloc().
    void* priv_allocate_nolock(size_type bytes)
    {
       mstate ms = &m_state;
@@ -4612,17 +4383,13 @@ class basic_dlmalloc
       return 0;
    }
 
-   //This function is equal to internal_memalign, but the caller must already
-   //hold the heap lock: the oversized allocation goes through
-   //priv_allocate_nolock and the preaction/postaction pair that internal_memalign
-   //wraps around the realign/trim is dropped. Keeping the whole operation inside
-   //the caller's critical section saves three lock round-trips per over-aligned
-   //request, and removes the window where a failed relock had to report the
-   //allocation without ever running the chunk bookkeeping.
+   //The whole of over-aligned allocation, for a caller that already holds the
+   //lock. internal_memalign() is this function with the lock taken around it.
    //
-   //The leak-repair path internal_memalign needs (freeing the block when its own
-   //preaction fails) is unnecessary here for the same reason: there is no relock
-   //that can fail.
+   //The oversized block comes from priv_allocate_nolock(), so one critical
+   //section covers the allocation and the realign that trims it. That is what
+   //makes the operation atomic to another thread, and what leaves nothing for
+   //a leak-repair path to repair.
    void* priv_allocate_aligned_nolock(size_type alignment, size_type bytes)
    {
       mstate m = &m_state;
@@ -4691,7 +4458,7 @@ class basic_dlmalloc
             BOOST_CONTAINER_DL_ASSERT(chunksize(p) >= nb);
             BOOST_CONTAINER_DL_ASSERT(((size_type)mem & (alignment - 1)) == 0);
             check_inuse_chunk(p);
-            //No postaction: the caller keeps the lock it already held.
+            //No postaction: the lock is the caller's to release.
          }
       }
       return mem;
