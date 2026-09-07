@@ -741,7 +741,15 @@ void run(unsigned seed)
    rng r(seed);
 
    native_layout_matches_c<Api>();
-   typename Api::heap_type h(0u, Api::config_type::use_locks);
+   //create() is the counterpart of create_mspace(): the heap object goes at
+   //the front of the memory it manages, which is how the C side's mspace is
+   //built too, so both are driving a heap of the same shape.
+   typename Api::heap_type *const hp =
+      Api::heap_type::create(0u, Api::config_type::use_locks);
+   BOOST_TEST(hp != 0);
+   if(!hp)
+      return;
+   typename Api::heap_type &h = *hp;
    shape_and_parameters<Api>(h);
    warm_up<Api>(h);
    inspect_sees_live_blocks<Api>(h, r);
@@ -755,6 +763,8 @@ void run(unsigned seed)
 
    //dlmalloc never re-ran its start-up behind the test's back
    BOOST_TEST(Api::params().magic == Api::params_of(h)->magic);
+
+   (void)Api::heap_type::destroy(hp);
 }
 
 }  //namespace

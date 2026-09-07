@@ -40,18 +40,26 @@ void test_construct_and_destroy()
 {
    {
       dlmalloc h;
+      //Nothing is held before the first request
+      BOOST_TEST(h.footprint() == 0u);
+      BOOST_TEST(h.max_footprint() == 0u);
+      void *const p = h.allocate(1000);
+      BOOST_TEST(p != 0);
       BOOST_TEST(h.footprint() != 0);
       BOOST_TEST(h.max_footprint() >= h.footprint());
+      h.deallocate(p);
       BOOST_TEST(h.check());
    }
    //A heap asked for a definite capacity must serve it in one piece
    {
-      dlmalloc h(1024*1024);
-      BOOST_TEST(h.footprint() >= 1024*1024);
-      void *const p = h.allocate(1024*1024 - 1024);
+      dlmalloc *const h = dlmalloc::create(1024*1024);
+      BOOST_TEST(h != 0);
+      BOOST_TEST(h->footprint() >= 1024*1024);
+      void *const p = h->allocate(1024*1024 - 1024);
       BOOST_TEST(p != 0);
-      h.deallocate(p);
-      BOOST_TEST(h.check());
+      h->deallocate(p);
+      BOOST_TEST(h->check());
+      BOOST_TEST(dlmalloc::destroy(h) >= 1024*1024);
    }
 }
 
@@ -240,8 +248,13 @@ void test_bulk_free()
 void test_footprint_and_trim()
 {
    dlmalloc h;
+   BOOST_TEST(h.footprint() == 0u);        //nothing held yet
+   //One small request is what makes the heap take its first segment
+   void *const first = h.allocate(64);
+   BOOST_TEST(first != 0);
    const size_type initial = h.footprint();
    BOOST_TEST(initial != 0);
+   h.deallocate(first);
 
    void *const big = h.allocate(4*1024*1024);
    BOOST_TEST(big != 0);
@@ -251,10 +264,27 @@ void test_footprint_and_trim()
 
    h.deallocate(big);
    h.trim(0);
-   //trim() may or may not find something to give back, but it must never
-   //grow the heap nor lose the high-water mark
-   BOOST_TEST(h.footprint() <= peak);
+   //Nothing is left in the heap and its state is a member, outside every
+   //segment, so trim() gives back everything - and the high-water mark is
+   //a record, so it stays where it was
+   BOOST_TEST(h.footprint() == 0u);
    BOOST_TEST(h.max_footprint() == peak);
+   BOOST_TEST(h.check());
+
+   //Asking to keep some means keeping it
+   void *const again = h.allocate(64);
+   BOOST_TEST(again != 0);
+   h.deallocate(again);
+   h.trim(4096);
+   BOOST_TEST(h.footprint() != 0u);
+   BOOST_TEST(h.check());
+
+   //And the heap works as well after being emptied as before
+   h.trim(0);
+   BOOST_TEST(h.footprint() == 0u);
+   void *const last = h.allocate(1000);
+   BOOST_TEST(last != 0);
+   h.deallocate(last);
    BOOST_TEST(h.check());
 }
 
@@ -264,12 +294,19 @@ void test_footprint_and_trim()
 void test_free_memory()
 {
    dlmalloc h;
+   //A heap that holds nothing has nothing free either
+   BOOST_TEST(h.mallinfo().fordblks == 0u);
+   //One request and a release leaves a segment held and all of it free
+   void *const first = h.allocate(64);
+   BOOST_TEST(first != 0);
+   h.deallocate(first);
+
    const size_type empty = h.mallinfo().fordblks;
    BOOST_TEST(empty != 0);              //top is free, and top is never nothing
-   //Nothing is handed out yet and the state is a member, not a chunk, so the
+   //Nothing is handed out and the state is a member, not a chunk, so the
    //whole of what the heap took from the system is free. That fixes the
    //figure absolutely, not just its direction: the padding at the end of the
-   //segment counts as free, exactly as dlmalloc counts it in fordblks.
+   //segment counts as free, exactly as the original counts it in fordblks.
    BOOST_TEST(empty == h.footprint());
 
    //A block leaves free memory shorter by its chunk, which is the usable
@@ -378,9 +415,20 @@ void test_malloc_stats()
 void test_mallinfo()
 {
    dlmalloc h;
+
+   //A heap that has never allocated holds nothing and reports nothing
+   {
+      const dlmalloc::mallinfo_t none = h.mallinfo();
+      BOOST_TEST(none.arena == 0 && none.ordblks == 0 && none.fordblks == 0);
+   }
+   //One request and a release leaves it holding one segment, all of it free
+   void *const first = h.allocate(64);
+   BOOST_TEST(first != 0);
+   h.deallocate(first);
+
    dlmalloc::mallinfo_t mi = h.mallinfo();
 
-   //The fields dlmalloc keeps only for the shape of the struct
+   //The fields kept only for the shape of the struct
    BOOST_TEST(mi.smblks  == 0);
    BOOST_TEST(mi.hblks   == 0);
    BOOST_TEST(mi.fsmblks == 0);
@@ -476,7 +524,13 @@ void test_inspect_all()
 {
    dlmalloc h;
 
-   //An empty heap is one block: the top chunk, free
+   //A heap that has never allocated has no blocks at all, not even a top
+   BOOST_TEST(inspect(h).blocks == 0);
+   void *const first = h.allocate(64);
+   BOOST_TEST(first != 0);
+   h.deallocate(first);
+
+   //Now it is one block: the top chunk, free
    inspection i = inspect(h);
    BOOST_TEST(i.blocks == 1);
    BOOST_TEST(i.live == 0);
@@ -521,6 +575,12 @@ void test_track_large_chunks()
    dlmalloc h;
    const std::size_t big = 1024u * 1024u;   //well past the mmap threshold
 
+   //A segment first: hblkhd is what the heap holds outside its segments, so
+   //there has to be a segment for the figure to mean anything
+   void *const first = h.allocate(64);
+   BOOST_TEST(first != 0);
+   h.deallocate(first);
+
    //Untracked: the block is mapped on its own, so it is outside every
    //segment - mallinfo puts it in hblkhd and inspect_all cannot see it
    void *const a = h.allocate(big);
@@ -553,13 +613,23 @@ void test_track_large_chunks()
    //where the setting is read. A fresh heap is what shows the setting at
    //work in both positions.
    {
+      //Each of the two heaps is given one small block first, so that it
+      //holds a segment and mallinfo() has something to report. A segment is
+      //one granularity unit - far too small to serve the request below - so
+      //the setting is still what decides where that memory comes from.
       dlmalloc off;
+      void *const warm_off = off.allocate(64);
+      BOOST_TEST(warm_off != 0);
+      off.deallocate(warm_off);
       void *const c = off.allocate(big);
       BOOST_TEST(c != 0);
       BOOST_TEST(off.mallinfo().hblkhd >= big);   //mapped on its own
       off.deallocate(c);
 
       dlmalloc on;
+      void *const warm_on = on.allocate(64);
+      BOOST_TEST(warm_on != 0);
+      on.deallocate(warm_on);
       BOOST_TEST(on.track_large_chunks(true) == false);
       void *const d = on.allocate(big);
       BOOST_TEST(d != 0);
@@ -584,39 +654,166 @@ void test_heap_over_user_memory()
       ((align - (reinterpret_cast<dlmalloc::size_type>(storage) & (align - 1u))) & (align - 1u));
    const dlmalloc::size_type buffer_size = 256u * 1024u;
    {
-      dlmalloc h(buffer, buffer_size);
+      dlmalloc *const h = dlmalloc::create_with_base(buffer, buffer_size);
+      BOOST_TEST(h != 0);
+
+      //The heap object itself lives at the front of the buffer
+      BOOST_TEST((char *)h >= buffer);
+      BOOST_TEST((char *)h < buffer + buffer_size);
 
       //The heap took the buffer and asked the system for nothing
-      BOOST_TEST(h.footprint() <= buffer_size);
-      BOOST_TEST(h.footprint() >= buffer_size - dlmalloc::size_type(64));
-      BOOST_TEST(h.mallinfo().fordblks == h.footprint());
+      BOOST_TEST(h->footprint() <= buffer_size);
+      BOOST_TEST(h->footprint() >= buffer_size - dlmalloc::size_type(64));
 
       //And it hands out memory from inside it
+      void *const p = h->allocate(1000);
+      BOOST_TEST(p != 0);
+      BOOST_TEST(static_cast<char *>(p) >= buffer);
+      BOOST_TEST(static_cast<char *>(p) < buffer + buffer_size);
+      std::memset(p, 0x5A, 1000);
+      BOOST_TEST(h->check());
+      h->deallocate(p);
+
+      //Nothing was taken from the system, so nothing goes back
+      BOOST_TEST(dlmalloc::destroy(h) == 0u);
+   }
+   //destroy() left the buffer alone - it is still ours to write to
+   std::memset(buffer, 0x11, buffer_size);
+   BOOST_TEST(buffer[0] == 0x11);
+   BOOST_TEST(buffer[buffer_size - 1] == 0x11);
+
+   //A buffer too small to hold the heap object and a heap is refused: there
+   //is nowhere to put the object, so there is no heap to return
+   {
+      char tiny[8];
+      BOOST_TEST(dlmalloc::create_with_base(tiny, sizeof(tiny)) == 0);
+      BOOST_TEST(dlmalloc::create_with_base(0, 1024*1024) == 0);
+   }
+}
+
+//The constructor that takes a capacity: the same memory as create(), but
+//with the heap object outside it
+void test_construct_with_capacity()
+{
+   const size_type capacity = 1024*1024;
+   {
+      dlmalloc h(capacity);
+      //The heap already holds what was asked for, before any request
+      BOOST_TEST(h.footprint() >= capacity);
+      BOOST_TEST(h.max_footprint() == h.footprint());
+      const size_type held = h.footprint();
+
+      //The object is not in the memory it manages: every byte of the
+      //segment is free, so none of it holds bookkeeping. create() cannot
+      //say this - its object takes a chunk out of the segment.
+      BOOST_TEST(h.mallinfo().fordblks == h.footprint());
+
+      //One piece of nearly all of it, and the heap does not grow for it
+      void *const p = h.allocate(capacity - 1024);
+      BOOST_TEST(p != 0);
+      BOOST_TEST(h.footprint() == held);
+      std::memset(p, 0x3C, capacity - 1024);
+      BOOST_TEST(is_filled(p, 0x3C, capacity - 1024));
+      h.deallocate(p);
+      BOOST_TEST(h.check());
+
+      //And with the state outside the segment, trim() can give every byte
+      //back - which create() can never do for its own heap
+      h.trim(0);
+      BOOST_TEST(h.footprint() == 0u);
+      BOOST_TEST(h.max_footprint() == held);
+      BOOST_TEST(h.allocate(1000) != 0);
+      BOOST_TEST(h.check());
+   }
+   //Zero capacity asks for one granularity unit, as create(0) does
+   {
+      dlmalloc h(0u);
+      BOOST_TEST(h.footprint() != 0);
+      BOOST_TEST(h.check());
+   }
+   //The unlocked flavour takes the same path without the atomics
+   {
+      dlmalloc h(64*1024, false);
+      BOOST_TEST(h.footprint() >= 64*1024);
+      void *const p = h.allocate(1000);
+      BOOST_TEST(p != 0);
+      h.deallocate(p);
+      BOOST_TEST(h.check());
+   }
+   //A capacity too large to describe leaves the heap empty, not broken: a
+   //constructor has no way to report failure, and does not need one
+   {
+      dlmalloc h(size_type(-1));
+      BOOST_TEST(h.footprint() == 0u);
+      void *const p = h.allocate(1000);
+      BOOST_TEST(p != 0);
+      h.deallocate(p);
+      BOOST_TEST(h.check());
+   }
+}
+
+//The constructor that takes a buffer: create_with_base() with the heap
+//object outside the buffer, so the whole buffer is heap
+void test_construct_over_user_memory()
+{
+   //Aligned on purpose, for the reason given in test_heap_over_user_memory()
+   static char storage[512u * 1024u];
+   const size_type align = 64u * 1024u;
+   char *const buffer = storage +
+      ((align - (reinterpret_cast<size_type>(storage) & (align - 1u))) & (align - 1u));
+   const size_type buffer_size = 256u * 1024u;
+   {
+      dlmalloc h(buffer, buffer_size);
+
+      //The object is ours, outside the buffer
+      BOOST_TEST((char *)&h < buffer || (char *)&h >= buffer + buffer_size);
+
+      //An aligned buffer is taken whole, and nothing is asked of the system
+      BOOST_TEST(h.footprint() == buffer_size);
+
+      //Memory comes from inside the buffer
       void *const p = h.allocate(1000);
       BOOST_TEST(p != 0);
       BOOST_TEST(static_cast<char *>(p) >= buffer);
       BOOST_TEST(static_cast<char *>(p) < buffer + buffer_size);
       std::memset(p, 0x5A, 1000);
+      BOOST_TEST(is_filled(p, 0x5A, 1000));
       BOOST_TEST(h.check());
       h.deallocate(p);
-      BOOST_TEST(h.all_deallocated());
+
+      //The buffer is the caller's, so trim() must never release it, however
+      //empty the heap is
+      h.trim(0);
+      BOOST_TEST(h.footprint() == buffer_size);
+      BOOST_TEST(h.check());
    }
    //The destructor left the buffer alone - it is still ours to write to
    std::memset(buffer, 0x11, buffer_size);
    BOOST_TEST(buffer[0] == 0x11);
    BOOST_TEST(buffer[buffer_size - 1] == 0x11);
 
-   //A buffer too small for a heap leaves the object empty but usable: every
-   //request is simply served from memory it takes for itself
+   //A buffer too small for a heap, and no buffer at all, leave the heap
+   //empty but usable: it then takes what it needs from the system. Note the
+   //cast on the null pointer - without it the call takes the capacity
+   //constructor instead.
    {
       char tiny[8];
-      dlmalloc h(tiny, sizeof(tiny));
-      void *const p = h.allocate(64);
+      dlmalloc small(tiny, sizeof(tiny));
+      BOOST_TEST(small.footprint() == 0u);
+      void *const p = small.allocate(1000);
       BOOST_TEST(p != 0);
+      //The memory did not come from the buffer, which was never a heap
       BOOST_TEST(static_cast<char *>(p) < tiny ||
                  static_cast<char *>(p) >= tiny + sizeof(tiny));
-      h.deallocate(p);
-      BOOST_TEST(h.check());
+      small.deallocate(p);
+      BOOST_TEST(small.check());
+
+      dlmalloc none((void *)0, 1024*1024);
+      BOOST_TEST(none.footprint() == 0u);
+      void *const q = none.allocate(1000);
+      BOOST_TEST(q != 0);
+      none.deallocate(q);
+      BOOST_TEST(none.check());
    }
 }
 
@@ -702,13 +899,15 @@ void test_heaps_are_independent()
 //The unlocked flavour takes the same paths without the atomics
 void test_unlocked_heap()
 {
-   dlmalloc h(0, false);
-   void *const p = h.allocate(1000);
+   dlmalloc *const h = dlmalloc::create(0, false);
+   BOOST_TEST(h != 0);
+   void *const p = h->allocate(1000);
    BOOST_TEST(p != 0);
    std::memset(p, 0x77, 1000);
    BOOST_TEST(is_filled(p, 0x77, 1000));
-   h.deallocate(p);
-   BOOST_TEST(h.check());
+   h->deallocate(p);
+   BOOST_TEST(h->check());
+   BOOST_TEST(dlmalloc::destroy(h) != 0u);
 }
 
 //Blocks still held when the heap dies go away with it
@@ -748,6 +947,8 @@ int main()
    test_inspect_all();
    test_track_large_chunks();
    test_heap_over_user_memory();
+   test_construct_with_capacity();
+   test_construct_over_user_memory();
    test_footprint_limit();
    test_mallopt();
    test_heaps_are_independent();

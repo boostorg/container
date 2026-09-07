@@ -98,6 +98,7 @@ void test_accounting_round_trip()
 {
    dlmalloc h;
    const size_type before = h.footprint();
+   BOOST_TEST(before == 0u);       //a fresh heap holds nothing
 
    vector<void *> blocks;
    for(size_type i = 0; i != 200; ++i){
@@ -116,9 +117,11 @@ void test_accounting_round_trip()
       h.deallocate(blocks[i]);
    BOOST_TEST(h.check());
 
-   //Everything is free again, so trimming must bring the heap back down
+   //Everything is free again, and this heap keeps its state outside the
+   //segments, so trimming must give every byte back - not just come down
    h.trim(0);
-   BOOST_TEST(h.footprint() <= before);
+   BOOST_TEST(h.footprint() == before);
+   BOOST_TEST(h.footprint() == 0u);
 }
 
 //Interleave the over-aligned path with the plain one, so that a free list
@@ -209,10 +212,15 @@ void test_threaded_unlocked_private_heaps()
    for(unsigned i = 0; i != num_threads; ++i){
       unsigned *const slot = &errors[i];
       threads.push_back(std::thread([i, slot]{
-         dlmalloc local(0, false);
-         hammer(&local, i, slot);
-         if(!local.check())
+         dlmalloc *const local = dlmalloc::create(0, false);
+         if(!local){
             ++*slot;
+            return;
+         }
+         hammer(local, i, slot);
+         if(!local->check())
+            ++*slot;
+         (void)dlmalloc::destroy(local);
       }));
    }
    for(unsigned i = 0; i != num_threads; ++i)
