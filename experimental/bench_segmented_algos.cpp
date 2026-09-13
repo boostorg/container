@@ -743,6 +743,43 @@ void fill_test_data(bc::nest<T,A,O>& c, std::size_t n)
       c.insert(T(static_cast<int>(i)));
 }
 
+//Builds two sorted ranges of n elements each whose merge alternates between
+//them following a pseudo random run pattern. shared_pct is the percentage of
+//drawn values placed in both ranges at once, so that the set_xxx algorithms
+//reach their "equal" branch: with 0 the ranges are disjoint and the comparison
+//is strictly binary, which is what a merge wants.
+//
+//The merge loop's cost is dominated by the misprediction of its comparison, so
+//the inputs decide what the benchmark measures. A fixed alternation does not
+//work because the predictor learns any short period. Deriving the choice from a
+//generator instead keeps the benchmark deterministic while leaving the
+//comparison genuinely unpredictable.
+//
+//Both ranges run out within O(sqrt(n)) elements of each other, so the tail that
+//is copied after one of them is exhausted stays negligible.
+template<class C>
+void fill_interleaved_pair(C &lhs, C &rhs, std::size_t n, unsigned shared_pct = 0)
+{
+   typedef typename C::value_type VT;
+   std::size_t nl = 0, nr = 0;
+   int v = 0;
+   unsigned rnd = 12345u;   //fixed seed, so runs are comparable
+   while (nl < n || nr < n) {
+      //0 = left only, 1 = right only, 2 = both
+      unsigned where;
+      if      (nl == n) where = 1u;
+      else if (nr == n) where = 0u;
+      else {
+         rnd = rnd*1664525u + 1013904223u;
+         where = ((rnd >> 20) % 100u) < shared_pct
+               ? 2u : (((rnd >> 16) & 1u) ? 0u : 1u);
+      }
+      if (where != 1u) { lhs.push_back(VT(v)); ++nl; }
+      if (where != 0u) { rhs.push_back(VT(v)); ++nr; }
+      ++v;
+   }
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // Benchmark helpers
 //////////////////////////////////////////////////////////////////////////////
@@ -2915,67 +2952,73 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 
 #if BENCH_IF_ALGO(MERGE)
    {
-      C c2(c);
-      for (typename C::iterator it = c2.begin(); it != c2.end(); ++it)
-         *it = VT(int_value(*it) * 2);
-      vec_t c2v(c2.begin(), c2.end());
+      //Inputs whose merge alternates unpredictably, so that both ranges drain at
+      //the same rate and the comparison inside the merge loop really mispredicts
+      C c1i, c2i;
+      fill_interleaved_pair(c1i, c2i, c.size());
+      vec_t c1iv(c1i.begin(), c1i.end());
+      vec_t c2iv(c2i.begin(), c2i.end());
 
-      bench_merge<C,     vec_t, vec_t>(c,  c2v, iters, cname, "merge(1S)");
-      bench_merge<vec_t, C,     vec_t>(cv, c2,  iters, cname, "merge(2S)");
-      bench_merge<vec_t, vec_t, C    >(cv, c2v, iters, cname, "merge(3S)");
-      bench_merge<C,     C,     vec_t>(c,  c2,  iters, cname, "merge(1+2S)");
-      bench_merge<C,     vec_t, C    >(c,  c2v, iters, cname, "merge(1+3S)");
-      bench_merge<vec_t, C,     C    >(cv, c2,  iters, cname, "merge(2+3S)");
-      bench_merge<C,     C,     C    >(c,  c2,  iters, cname, "merge(1+2+3S)");
+      bench_merge<C,     vec_t, vec_t>(c1i,  c2iv, iters, cname, "merge(1S)");
+      bench_merge<vec_t, C,     vec_t>(c1iv, c2i,  iters, cname, "merge(2S)");
+      bench_merge<vec_t, vec_t, C    >(c1iv, c2iv, iters, cname, "merge(3S)");
+      bench_merge<C,     C,     vec_t>(c1i,  c2i,  iters, cname, "merge(1+2S)");
+      bench_merge<C,     vec_t, C    >(c1i,  c2iv, iters, cname, "merge(1+3S)");
+      bench_merge<vec_t, C,     C    >(c1iv, c2i,  iters, cname, "merge(2+3S)");
+      bench_merge<C,     C,     C    >(c1i,  c2i,  iters, cname, "merge(1+2+3S)");
    }
 #endif
 
 #if BENCH_IF_ALGO(SET_DIFFERENCE) || BENCH_IF_ALGO(SET_INTERSECTION) \
  || BENCH_IF_ALGO(SET_SYMMETRIC_DIFFERENCE) || BENCH_IF_ALGO(SET_UNION)
    {
-      C c2(c);
-      for (typename C::iterator it = c2.begin(); it != c2.end(); ++it)
-         *it = VT(int_value(*it) * 2);
-      vec_t c2v(c2.begin(), c2.end());
+      //A third of the drawn values goes to both ranges, so every branch of the
+      //set_xxx loops runs, and the choice between them is unpredictable. Ranges
+      //built as the first one doubled instead exhaust range 1 at the halfway
+      //point and follow a period the branch predictor learns outright.
+      C c1s, c2s;
+      fill_interleaved_pair(c1s, c2s, c.size(), 33u);
+      vec_t c1sv(c1s.begin(), c1s.end());
+      vec_t c2sv(c2s.begin(), c2s.end());
 
 #if BENCH_IF_ALGO(SET_DIFFERENCE)
-      bench_set_difference<C,     vec_t, vec_t>(c,  c2v, iters, cname, "set_difference(1S)");
-      bench_set_difference<vec_t, C,     vec_t>(cv, c2,  iters, cname, "set_difference(2S)");
-      bench_set_difference<vec_t, vec_t, C    >(cv, c2v, iters, cname, "set_difference(3S)");
-      bench_set_difference<C,     C,     vec_t>(c,  c2,  iters, cname, "set_difference(1+2S)");
-      bench_set_difference<C,     vec_t, C    >(c,  c2v, iters, cname, "set_difference(1+3S)");
-      bench_set_difference<vec_t, C,     C    >(cv, c2,  iters, cname, "set_difference(2+3S)");
-      bench_set_difference<C,     C,     C    >(c,  c2,  iters, cname, "set_difference(1+2+3S)");
+      bench_set_difference<C,     vec_t, vec_t>(c1s,  c2sv, iters, cname, "set_difference(1S)");
+      bench_set_difference<vec_t, C,     vec_t>(c1sv, c2s,  iters, cname, "set_difference(2S)");
+      bench_set_difference<vec_t, vec_t, C    >(c1sv, c2sv, iters, cname, "set_difference(3S)");
+      bench_set_difference<C,     C,     vec_t>(c1s,  c2s,  iters, cname, "set_difference(1+2S)");
+      bench_set_difference<C,     vec_t, C    >(c1s,  c2sv, iters, cname, "set_difference(1+3S)");
+      bench_set_difference<vec_t, C,     C    >(c1sv, c2s,  iters, cname, "set_difference(2+3S)");
+      bench_set_difference<C,     C,     C    >(c1s,  c2s,  iters, cname, "set_difference(1+2+3S)");
 #endif
 
 #if BENCH_IF_ALGO(SET_INTERSECTION)
-      bench_set_intersection<C,     vec_t, vec_t>(c,  c2v, iters, cname, "set_intersection(1S)");
-      bench_set_intersection<vec_t, C,     vec_t>(cv, c2,  iters, cname, "set_intersection(2S)");
-      bench_set_intersection<vec_t, vec_t, C    >(cv, c2v, iters, cname, "set_intersection(3S)");
-      bench_set_intersection<C,     C,     vec_t>(c,  c2,  iters, cname, "set_intersection(1+2S)");
-      bench_set_intersection<C,     vec_t, C    >(c,  c2v, iters, cname, "set_intersection(1+3S)");
-      bench_set_intersection<vec_t, C,     C    >(cv, c2,  iters, cname, "set_intersection(2+3S)");
-      bench_set_intersection<C,     C,     C    >(c,  c2,  iters, cname, "set_intersection(1+2+3S)");
+      bench_set_intersection<C,     vec_t, vec_t>(c1s,  c2sv, iters, cname, "set_intersection(1S)");
+      bench_set_intersection<vec_t, C,     vec_t>(c1sv, c2s,  iters, cname, "set_intersection(2S)");
+      bench_set_intersection<vec_t, vec_t, C    >(c1sv, c2sv, iters, cname, "set_intersection(3S)");
+      bench_set_intersection<C,     C,     vec_t>(c1s,  c2s,  iters, cname, "set_intersection(1+2S)");
+      bench_set_intersection<C,     vec_t, C    >(c1s,  c2sv, iters, cname, "set_intersection(1+3S)");
+      bench_set_intersection<vec_t, C,     C    >(c1sv, c2s,  iters, cname, "set_intersection(2+3S)");
+      bench_set_intersection<C,     C,     C    >(c1s,  c2s,  iters, cname, "set_intersection(1+2+3S)");
 #endif
 
 #if BENCH_IF_ALGO(SET_SYMMETRIC_DIFFERENCE)
-      bench_set_symmetric_difference<C,     vec_t, vec_t>(c,  c2v, iters, cname, "set_sym_diff(1S)");
-      bench_set_symmetric_difference<vec_t, C,     vec_t>(cv, c2,  iters, cname, "set_sym_diff(2S)");
-      bench_set_symmetric_difference<vec_t, vec_t, C    >(cv, c2v, iters, cname, "set_sym_diff(3S)");
-      bench_set_symmetric_difference<C,     C,     vec_t>(c,  c2,  iters, cname, "set_sym_diff(1+2S)");
-      bench_set_symmetric_difference<C,     vec_t, C    >(c,  c2v, iters, cname, "set_sym_diff(1+3S)");
-      bench_set_symmetric_difference<vec_t, C,     C    >(cv, c2,  iters, cname, "set_sym_diff(2+3S)");
-      bench_set_symmetric_difference<C,     C,     C    >(c,  c2,  iters, cname, "set_sym_diff(1+2+3S)");
+      bench_set_symmetric_difference<C,     vec_t, vec_t>(c1s,  c2sv, iters, cname, "set_sym_diff(1S)");
+      bench_set_symmetric_difference<vec_t, C,     vec_t>(c1sv, c2s,  iters, cname, "set_sym_diff(2S)");
+      bench_set_symmetric_difference<vec_t, vec_t, C    >(c1sv, c2sv, iters, cname, "set_sym_diff(3S)");
+      bench_set_symmetric_difference<C,     C,     vec_t>(c1s,  c2s,  iters, cname, "set_sym_diff(1+2S)");
+      bench_set_symmetric_difference<C,     vec_t, C    >(c1s,  c2sv, iters, cname, "set_sym_diff(1+3S)");
+      bench_set_symmetric_difference<vec_t, C,     C    >(c1sv, c2s,  iters, cname, "set_sym_diff(2+3S)");
+      bench_set_symmetric_difference<C,     C,     C    >(c1s,  c2s,  iters, cname, "set_sym_diff(1+2+3S)");
 #endif
 
 #if BENCH_IF_ALGO(SET_UNION)
-      bench_set_union<C,     vec_t, vec_t>(c,  c2v, iters, cname, "set_union(1S)");
-      bench_set_union<vec_t, C,     vec_t>(cv, c2,  iters, cname, "set_union(2S)");
-      bench_set_union<vec_t, vec_t, C    >(cv, c2v, iters, cname, "set_union(3S)");
-      bench_set_union<C,     C,     vec_t>(c,  c2,  iters, cname, "set_union(1+2S)");
-      bench_set_union<C,     vec_t, C    >(c,  c2v, iters, cname, "set_union(1+3S)");
-      bench_set_union<vec_t, C,     C    >(cv, c2,  iters, cname, "set_union(2+3S)");
-      bench_set_union<C,     C,     C    >(c,  c2,  iters, cname, "set_union(1+2+3S)");
+      bench_set_union<C,     vec_t, vec_t>(c1s,  c2sv, iters, cname, "set_union(1S)");
+      bench_set_union<vec_t, C,     vec_t>(c1sv, c2s,  iters, cname, "set_union(2S)");
+      bench_set_union<vec_t, vec_t, C    >(c1sv, c2sv, iters, cname, "set_union(3S)");
+      bench_set_union<C,     C,     vec_t>(c1s,  c2s,  iters, cname, "set_union(1+2S)");
+      bench_set_union<C,     vec_t, C    >(c1s,  c2sv, iters, cname, "set_union(1+3S)");
+      bench_set_union<vec_t, C,     C    >(c1sv, c2s,  iters, cname, "set_union(2+3S)");
+      bench_set_union<C,     C,     C    >(c1s,  c2s,  iters, cname, "set_union(1+2+3S)");
 #endif
    }
 #endif
