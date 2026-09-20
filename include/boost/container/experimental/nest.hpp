@@ -633,20 +633,10 @@ public:
       : pbb(), n(0)
    {}
    
-   BOOST_CONTAINER_FORCEINLINE nest_iterator(const nest_iterator& x) BOOST_NOEXCEPT
-      : pbb(x.pbb), n(x.n)
-   {}
-   
+   //Implicit copy operations: keeps the iterator trivially copyable (passed in registers)
    BOOST_CONTAINER_FORCEINLINE nest_iterator(const maybe_nonconst_iterator& x) BOOST_NOEXCEPT
       : pbb(x.pbb), n(x.n)
    {}
-
-   BOOST_CONTAINER_FORCEINLINE nest_iterator& operator=(const nest_iterator& x) BOOST_NOEXCEPT
-   {
-      pbb = x.pbb;
-      n = x.n;
-      return *this;
-   }
 
    BOOST_CONTAINER_FORCEINLINE nest_iterator& operator=(const maybe_nonconst_iterator& x) BOOST_NOEXCEPT
    {

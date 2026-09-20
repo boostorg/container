@@ -61,9 +61,16 @@ class polymorphic_allocator
 
    //! <b>Effects</b>: Sets m_resource to
    //!   other.resource().
+   //!
+   //! <b>Throws</b>: Nothing.
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   //Defaulted: keeps the allocator trivially copyable (passed in registers)
+   polymorphic_allocator(const polymorphic_allocator& other) = default;
+   #else
    polymorphic_allocator(const polymorphic_allocator& other) BOOST_NOEXCEPT
       : m_resource(other.m_resource)
    {}
+   #endif
 
    //! <b>Effects</b>: Sets m_resource to
    //!   other.resource().
@@ -74,8 +81,15 @@ class polymorphic_allocator
 
    //! <b>Effects</b>: Sets m_resource to
    //!   other.resource().
+   //!
+   //! <b>Throws</b>: Nothing.
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   //Defaulted: keeps the allocator trivially copyable (passed in registers)
+   polymorphic_allocator& operator=(const polymorphic_allocator& other) = default;
+   #else
    polymorphic_allocator& operator=(const polymorphic_allocator& other) BOOST_NOEXCEPT
    {  m_resource = other.m_resource;   return *this;  }
+   #endif
 
    //! <b>Returns</b>: Equivalent to
    //!   `static_cast<T*>(m_resource->allocate(n * sizeof(T), alignof(T)))`.

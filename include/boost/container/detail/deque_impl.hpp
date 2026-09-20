@@ -199,16 +199,10 @@ class deque_iterator
       : m_cur(), m_node()  //Value initialization to achieve "null iterators" (N3644)
    {}
 
-   inline deque_iterator(const deque_iterator& x) BOOST_NOEXCEPT_OR_NOTHROW
-      : m_cur(x.get_cur()), m_node(x.get_node())
-   {}
-
+   //Implicit copy operations: keeps the iterator trivially copyable (passed in registers)
    inline deque_iterator(const nonconst_iterator_arg& x) BOOST_NOEXCEPT_OR_NOTHROW
       : m_cur(x.get_cur()), m_node(x.get_node())
    {}
-
-   inline deque_iterator& operator=(const deque_iterator& x) BOOST_NOEXCEPT_OR_NOTHROW
-   {  m_cur = x.get_cur(); m_node = x.get_node(); return *this; }
 
    inline deque_iterator& operator=(const nonconst_iterator_arg& x) BOOST_NOEXCEPT_OR_NOTHROW
    {  m_cur = x.get_cur(); m_node = x.get_node(); return *this; }

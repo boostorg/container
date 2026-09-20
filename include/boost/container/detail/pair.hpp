@@ -158,19 +158,23 @@ struct pair
       BOOST_CONTAINER_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
    }
 
-   //pair copy assignment
+   //Defaulted: keeps pair trivially copyable (passed in registers)
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+   pair(const pair& x) = default;
+   pair(pair&& p) = default;
+   #else
    pair(const pair& x)
       : first(x.first), second(x.second)
    {
       BOOST_CONTAINER_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
    }
 
-   //pair move constructor
    pair(BOOST_RV_REF(pair) p)
       : first(::boost::move(BOOST_MOVE_TO_LV(p).first)), second(::boost::move(BOOST_MOVE_TO_LV(p).second))
    {
       BOOST_CONTAINER_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
    }
+   #endif
 
    template <class D, class S>
    pair(const pair<D, S> &p)
@@ -353,7 +357,11 @@ struct pair
       #undef BOOST_PAIR_PIECEWISE_CONSTRUCT_MSVC2012_TUPLE_MAX_IT
    #endif
 
-   //pair copy assignment
+   //Defaulted: keeps pair trivially copyable (passed in registers)
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+   pair& operator=(const pair& p) = default;
+   pair& operator=(pair&& p) = default;
+   #else
    pair& operator=(BOOST_COPY_ASSIGN_REF(pair) p)
    {
       first  = p.first;
@@ -361,13 +369,13 @@ struct pair
       return *this;
    }
 
-   //pair move assignment
    pair& operator=(BOOST_RV_REF(pair) p)
    {
       first  = ::boost::move(BOOST_MOVE_TO_LV(p).first);
       second = ::boost::move(BOOST_MOVE_TO_LV(p).second);
       return *this;
    }
+   #endif
 
    template <class D, class S>
    typename ::boost::container::dtl::disable_if_or

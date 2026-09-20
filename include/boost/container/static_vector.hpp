@@ -57,11 +57,7 @@ class static_storage_allocator
    inline static_storage_allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
-   inline static_storage_allocator(const static_storage_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
-   {}
-
-   inline static_storage_allocator & operator=(const static_storage_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
-   {  return *this;  }
+   //Implicit copy operations: keeps the allocator trivially copyable (passed in registers)
 
    //GCC in C++03 regressions fails, due to a bug in strict-aliasing optimizations
    #if defined(BOOST_CONTAINER_GCC_PRAGMAS) && (BOOST_GCC >= 120000) && (BOOST_CXX_VERSION < 201103L)

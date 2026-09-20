@@ -76,10 +76,7 @@ class allocator<void, Version, AllocationDisableMask>
    allocator()
    {}
 
-   //!Constructor from other allocator.
-   //!Never throws
-   allocator(const allocator &)
-   {}
+   //Implicit copy operations: keeps the allocator trivially copyable (passed in registers)
 
    //!Constructor from related allocator.
    //!Never throws
@@ -160,10 +157,12 @@ class allocator
    allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
-   //!Constructor from other allocator.
+   //Implicit copy operations and destructor: keeps the allocator trivially copyable (passed in registers)
+   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   //!Trivial copy constructor from other allocator.
    //!Never throws
-   allocator(const allocator &) BOOST_NOEXCEPT_OR_NOTHROW
-   {}
+   allocator(const allocator &) BOOST_NOEXCEPT_OR_NOTHROW = default;
+   #endif
 
    //!Constructor from related allocator.
    //!Never throws

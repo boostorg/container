@@ -68,17 +68,16 @@ class new_allocator<void>
    new_allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
-   //!Constructor from other new_allocator.
+   //Implicit copy operations and destructor: keeps the allocator trivially copyable (passed in registers)
+   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   //!Trivial copy constructor from other new_allocator.
    //!Never throws
-   new_allocator(const new_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
-   {}
+   new_allocator(const new_allocator &) BOOST_NOEXCEPT_OR_NOTHROW = default;
 
-   //!Copy assignment operator from other new_allocator.
+   //!Trivial copy assignment operator from other new_allocator.
    //!Never throws
-   new_allocator& operator=(const new_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
-   {
-       return *this;
-   }
+   new_allocator& operator=(const new_allocator &) BOOST_NOEXCEPT_OR_NOTHROW = default;
+   #endif
 
    //!Constructor from related new_allocator.
    //!Never throws
@@ -136,15 +135,16 @@ class new_allocator
    inline new_allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
-   //!Constructor from other new_allocator.
+   //Implicit copy operations and destructor: keeps the allocator trivially copyable (passed in registers)
+   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   //!Trivial copy constructor from other new_allocator.
    //!Never throws
-   inline new_allocator(const new_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
-   {}
+   new_allocator(const new_allocator &) BOOST_NOEXCEPT_OR_NOTHROW = default;
 
-   //!Copy assignment operator from other new_allocator.
+   //!Trivial copy assignment operator from other new_allocator.
    //!Never throws
-   inline new_allocator& operator=(const new_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
-   {  return *this;  }
+   new_allocator& operator=(const new_allocator &) BOOST_NOEXCEPT_OR_NOTHROW = default;
+   #endif
 
    //!Constructor from related new_allocator.
    //!Never throws

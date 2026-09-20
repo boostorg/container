@@ -374,7 +374,7 @@ public:
    using iterator_category = std::bidirectional_iterator_tag;
 
    BOOST_CONTAINER_FORCEINLINE iterator() = default;
-   BOOST_CONTAINER_FORCEINLINE iterator(const iterator& x) noexcept: pbb{x.pbb}, n{x.n} {}
+   //Implicit copy operations: keeps the iterator trivially copyable (passed in registers)
 
    template<
       typename Value2Pointer,
@@ -382,13 +382,6 @@ public:
    >
    BOOST_CONTAINER_FORCEINLINE iterator(const iterator<Value2Pointer>& x) noexcept: 
       pbb{x.pbb}, n{x.n} {}
-
-   BOOST_CONTAINER_FORCEINLINE iterator& operator=(const iterator& x) noexcept
-   {
-      pbb = x.pbb;
-      n = x.n;
-      return *this;
-   }
 
    template<
       typename Value2Pointer,

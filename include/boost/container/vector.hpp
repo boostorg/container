@@ -189,16 +189,10 @@ class vec_iterator
       : m_ptr()   //Value initialization to achieve "null iterators" (N3644)
    {}
 
-   BOOST_CONTAINER_FORCEINLINE vec_iterator(const vec_iterator& other) BOOST_NOEXCEPT_OR_NOTHROW
-      :  m_ptr(other.get_ptr())
-   {}
-
+   //Implicit copy operations: keeps the iterator trivially copyable (passed in registers)
    BOOST_CONTAINER_FORCEINLINE vec_iterator(const nonconst_iterator &other) BOOST_NOEXCEPT_OR_NOTHROW
       :  m_ptr(other.get_ptr())
    {}
-
-   BOOST_CONTAINER_FORCEINLINE vec_iterator & operator=(const vec_iterator& other) BOOST_NOEXCEPT_OR_NOTHROW
-   {  m_ptr = other.get_ptr();   return *this;  }
 
    //Pointer like operators
    BOOST_CONTAINER_NODISCARD BOOST_CONTAINER_FORCEINLINE

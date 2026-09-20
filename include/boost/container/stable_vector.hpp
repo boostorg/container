@@ -335,16 +335,10 @@ class stable_vector_iterator
       : m_pn() //Value initialization to achieve "null iterators" (N3644)
    {}
 
-   inline stable_vector_iterator(const stable_vector_iterator& other) BOOST_NOEXCEPT_OR_NOTHROW
-      :  m_pn(other.node_pointer())
-   {}
-
+   //Implicit copy operations: keeps the iterator trivially copyable (passed in registers)
    inline stable_vector_iterator(const nonconst_iterator& other) BOOST_NOEXCEPT_OR_NOTHROW
       :  m_pn(other.node_pointer())
    {}
-
-   inline stable_vector_iterator & operator=(const stable_vector_iterator& other) BOOST_NOEXCEPT_OR_NOTHROW
-   {  m_pn = other.node_pointer(); return *this;   }
 
    BOOST_CONTAINER_NODISCARD inline
       node_ptr node_pointer() const BOOST_NOEXCEPT_OR_NOTHROW

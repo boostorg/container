@@ -118,9 +118,11 @@ class node_allocator
    node_allocator() BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
-   //!Copy constructor from other node_allocator.
-   node_allocator(const node_allocator &) BOOST_NOEXCEPT_OR_NOTHROW
-   {}
+   //Implicit copy operations and destructor: keeps the allocator trivially copyable (passed in registers)
+   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   //!Trivial copy constructor from other node_allocator.
+   node_allocator(const node_allocator &) BOOST_NOEXCEPT_OR_NOTHROW = default;
+   #endif
 
    //!Copy constructor from related node_allocator.
    template<class T2>
@@ -132,9 +134,11 @@ class node_allocator
             > &) BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
-   //!Destructor
-   ~node_allocator() BOOST_NOEXCEPT_OR_NOTHROW
-   {}
+   //Implicit copy operations and destructor: keeps the allocator trivially copyable (passed in registers)
+   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   //!Trivial destructor
+   ~node_allocator() BOOST_NOEXCEPT_OR_NOTHROW = default;
+   #endif
 
    //!Returns the number of elements that could be allocated.
    //!Never throws

@@ -844,16 +844,10 @@ class iterator_from_iiterator
       : m_iit(iit)
    {}
 
-   inline iterator_from_iiterator(const iterator_from_iiterator& other) BOOST_NOEXCEPT_OR_NOTHROW
-      :  m_iit(other.get())
-   {}
-
+   //Implicit copy operations: keeps the iterator trivially copyable (passed in registers)
    inline iterator_from_iiterator(const nonconst_iterator& other) BOOST_NOEXCEPT_OR_NOTHROW
       :  m_iit(other.get())
    {}
-
-   inline iterator_from_iiterator& operator=(const iterator_from_iiterator& other) BOOST_NOEXCEPT_OR_NOTHROW
-   {  m_iit = other.get(); return *this;  }
 
    inline iterator_from_iiterator& operator++() BOOST_NOEXCEPT_OR_NOTHROW
    {  ++this->m_iit;   return *this;  }
