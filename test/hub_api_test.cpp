@@ -32,6 +32,14 @@ int main() { return 0; }
 #define BOOST_CONTAINER_HUB_TEST_API_NO_INTERPROCESS
 #endif
 
+/* MSVC 14.5 (19.51) x86 crashes with an internal compiler error (C1001, compiler file
+ * p2/main.cpp line 262). See:
+ * https://developercommunity.visualstudio.com/t/C1001-in-x86-optimizer-p2maincpp:262/11155106
+ */
+#if defined(_M_IX86) && BOOST_WORKAROUND(BOOST_MSVC, >= 1951)
+#define BOOST_CONTAINER_HUB_TEST_API_NO_INTERPROCESS
+#endif
+
 #if !defined(BOOST_NO_EXCEPTIONS) && !defined(BOOST_CONTAINER_HUB_TEST_API_NO_INTERPROCESS)
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
