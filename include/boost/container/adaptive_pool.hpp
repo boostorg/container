@@ -270,8 +270,7 @@ class adaptive_pool
    void allocate_many(size_type elem_size, std::size_t n_elements, multiallocation_chain &chain)
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));/*
-      dlmalloc::memchain ch;
-      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes(n_elements, elem_size*sizeof(T), dlmalloc::default_contiguous, &ch))){
+      dlmalloc::memchain ch;      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes(n_elements, elem_size*sizeof(T), dlmalloc::default_contiguous, &ch))){
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after(chain.before_begin()
@@ -290,8 +289,7 @@ class adaptive_pool
    void allocate_many(const size_type *elem_sizes, size_type n_elements, multiallocation_chain &chain)
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));/*
-      dlmalloc::memchain ch;
-      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_arrays(n_elements, elem_sizes, sizeof(T), dlmalloc::default_contiguous, &ch))){
+      dlmalloc::memchain ch;      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_arrays(n_elements, elem_sizes, sizeof(T), dlmalloc::default_contiguous, &ch))){
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after(chain.before_begin()
@@ -444,14 +442,12 @@ class private_adaptive_pool
    private_adaptive_pool() BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
-   //Implicit copy operations and destructor: keeps the allocator trivially copyable (passed in registers)
-   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-   //!Trivial copy constructor from other private_adaptive_pool.
-   private_adaptive_pool(const private_adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW = default;
+   //Empty user-provided copy operations: each instance owns a private, non-copyable pool.
+   private_adaptive_pool(const private_adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
+   {}
 
-   //!Trivial copy assignment from other private_adaptive_pool.
-   private_adaptive_pool & operator=(const private_adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW = default;
-   #endif
+   private_adaptive_pool & operator=(const private_adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
+   {  return *this;  }
 
    //!Copy constructor from related private_adaptive_pool.
    template<class T2>
@@ -460,11 +456,9 @@ class private_adaptive_pool
             BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I Version)> &) BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
-   //Implicit copy operations and destructor: keeps the allocator trivially copyable (passed in registers)
-   #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-   //!Trivial destructor
-   ~private_adaptive_pool() BOOST_NOEXCEPT_OR_NOTHROW = default;
-   #endif
+   //!Destructor
+   ~private_adaptive_pool() BOOST_NOEXCEPT_OR_NOTHROW
+   {}
 
    //!Returns the number of elements that could be allocated.
    //!Never throws
