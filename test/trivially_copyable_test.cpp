@@ -72,6 +72,14 @@ BOOST_CONTAINER_STATIC_ASSERT((::boost::move_detail::is_trivially_move_construct
 #endif
 #endif
 
+//Pair assignment assigns through reference members and is deleted for const members, so it is not a memcpy
+BOOST_CONTAINER_STATIC_ASSERT((::boost::move_detail::is_trivially_copy_assignable<bc::dtl::pair<int, int> >::value));
+BOOST_CONTAINER_STATIC_ASSERT((::boost::move_detail::is_trivially_move_assignable<bc::dtl::pair<int, int> >::value));
+BOOST_CONTAINER_STATIC_ASSERT((!::boost::move_detail::is_trivially_copy_assignable<bc::dtl::pair<int&, int> >::value));
+BOOST_CONTAINER_STATIC_ASSERT((!::boost::move_detail::is_trivially_move_assignable<bc::dtl::pair<int, int&> >::value));
+BOOST_CONTAINER_STATIC_ASSERT((!::boost::move_detail::is_trivially_copy_assignable<bc::dtl::pair<const int, int> >::value));
+BOOST_CONTAINER_STATIC_ASSERT((!::boost::move_detail::is_trivially_move_assignable<bc::dtl::pair<int, const int> >::value));
+
 //Allocators that are copied by value all the time
 BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::new_allocator<int> >::value);
 BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::allocator<int> >::value);

@@ -523,74 +523,33 @@ struct is_class< ::boost::container::dtl::pair<T1, T2> >
    BOOST_STATIC_CONSTEXPR bool value = true;
 };
 
-//Triviality of pair
-// std::pair specializations defined in Boost.Move
-
-//
-// is_trivially_copy_assignable
-//
-
-template<class T>
-struct is_trivially_copy_assignable;
+//Triviality of dtl::pair, uses the std::pair specializations
+//defined in Boost.Move.
 
 template<class A, class B>
 struct is_trivially_copy_assignable<boost::container::dtl::pair<A,B> >
-{
-   BOOST_STATIC_CONSTEXPR bool value = boost::move_detail::is_trivially_copy_assignable<A>::value &&
-                                       boost::move_detail::is_trivially_copy_assignable<B>::value;
-};
-
-//
-// is_trivially_move_assignable
-//
-
-template<class T>
-struct is_trivially_move_assignable;
+   : boost::move_detail::is_trivially_copy_assignable<std::pair<A,B> >
+{};
 
 template<class A, class B>
 struct is_trivially_move_assignable<boost::container::dtl::pair<A,B> >
-{
-   BOOST_STATIC_CONSTEXPR bool value = boost::move_detail::is_trivially_move_assignable<A>::value &&
-                                       boost::move_detail::is_trivially_move_assignable<B>::value;
-};
-
-//
-// is_trivially_copy_constructible
-//
-
-template<class T>
-struct is_trivially_copy_constructible;
+   : boost::move_detail::is_trivially_move_assignable<std::pair<A,B> >
+{};
 
 template<class A, class B>
 struct is_trivially_copy_constructible<boost::container::dtl::pair<A,B> >
-{
-   BOOST_STATIC_CONSTEXPR bool value = boost::move_detail::is_trivially_copy_constructible<A>::value &&
-                                       boost::move_detail::is_trivially_copy_constructible<B>::value;
-};
-
-//
-// is_trivially_move_constructible
-//
-
-template<class T>
-struct is_trivially_move_constructible;
+   : boost::move_detail::is_trivially_copy_constructible<std::pair<A,B> >
+{};
 
 template<class A, class B>
 struct is_trivially_move_constructible<boost::container::dtl::pair<A,B> >
-{
-   BOOST_STATIC_CONSTEXPR bool value = boost::move_detail::is_trivially_move_constructible<A>::value &&
-                                       boost::move_detail::is_trivially_move_constructible<B>::value;
-};
-
-template<class T>
-struct is_trivially_destructible;
+   : boost::move_detail::is_trivially_move_constructible<std::pair<A,B> >
+{};
 
 template<class A, class B>
 struct is_trivially_destructible<boost::container::dtl::pair<A,B> >
-{
-   BOOST_STATIC_CONSTEXPR bool value = boost::move_detail::is_trivially_destructible<A>::value &&
-                                       boost::move_detail::is_trivially_destructible<B>::value;
-};
+   : boost::move_detail::is_trivially_destructible<std::pair<A,B> >
+{};
 
 }  //namespace move_detail{
 
