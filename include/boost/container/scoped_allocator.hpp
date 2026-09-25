@@ -168,16 +168,19 @@ class scoped_allocator_adaptor_base
       , m_inner(args...)
       {}
 
-   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
    //Defaulted: keeps the adaptor trivially copyable (passed in registers)
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
    inline scoped_allocator_adaptor_base(const scoped_allocator_adaptor_base& other) = default;
-   inline scoped_allocator_adaptor_base(scoped_allocator_adaptor_base&& other) = default;
    #else
    inline scoped_allocator_adaptor_base(const scoped_allocator_adaptor_base& other)
       : outer_allocator_type(other.outer_allocator())
       , m_inner(other.inner_allocator())
       {}
+   #endif
 
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_MOVES)
+   inline scoped_allocator_adaptor_base(scoped_allocator_adaptor_base&& other) = default;
+   #else
    inline scoped_allocator_adaptor_base(BOOST_RV_REF(scoped_allocator_adaptor_base) other)
       : outer_allocator_type(::boost::move(other.outer_allocator()))
       , m_inner(::boost::move(other.inner_allocator()))
@@ -213,10 +216,9 @@ class scoped_allocator_adaptor_base
 
    public:
 
-   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
    //Defaulted: keeps the adaptor trivially copyable (passed in registers)
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
    inline scoped_allocator_adaptor_base &operator=(const scoped_allocator_adaptor_base& other) = default;
-   inline scoped_allocator_adaptor_base &operator=(scoped_allocator_adaptor_base&& other) = default;
    #else
    inline scoped_allocator_adaptor_base &operator=
       (BOOST_COPY_ASSIGN_REF(scoped_allocator_adaptor_base) other)
@@ -225,7 +227,11 @@ class scoped_allocator_adaptor_base
       m_inner = other.inner_allocator();
       return *this;
    }
+   #endif
 
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_MOVES)
+   inline scoped_allocator_adaptor_base &operator=(scoped_allocator_adaptor_base&& other) = default;
+   #else
    inline scoped_allocator_adaptor_base &operator=(BOOST_RV_REF(scoped_allocator_adaptor_base) other)
    {
       outer_allocator_type::operator=(boost::move(other.outer_allocator()));
@@ -458,15 +464,18 @@ class scoped_allocator_adaptor_base< OuterAlloc BOOST_CONTAINER_SCOPEDALLOC_DUMM
       : outer_allocator_type(::boost::forward<OuterA2>(outerAlloc))
       {}
 
-   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
    //Defaulted: keeps the adaptor trivially copyable (passed in registers)
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
    inline scoped_allocator_adaptor_base(const scoped_allocator_adaptor_base& other) = default;
-   inline scoped_allocator_adaptor_base(scoped_allocator_adaptor_base&& other) = default;
    #else
    inline scoped_allocator_adaptor_base(const scoped_allocator_adaptor_base& other)
       : outer_allocator_type(other.outer_allocator())
       {}
+   #endif
 
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_MOVES)
+   inline scoped_allocator_adaptor_base(scoped_allocator_adaptor_base&& other) = default;
+   #else
    inline scoped_allocator_adaptor_base(BOOST_RV_REF(scoped_allocator_adaptor_base) other)
       : outer_allocator_type(::boost::move(other.outer_allocator()))
       {}
@@ -493,17 +502,20 @@ class scoped_allocator_adaptor_base< OuterAlloc BOOST_CONTAINER_SCOPEDALLOC_DUMM
       {}
 
    public:
-   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
    //Defaulted: keeps the adaptor trivially copyable (passed in registers)
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
    inline scoped_allocator_adaptor_base &operator=(const scoped_allocator_adaptor_base& other) = default;
-   inline scoped_allocator_adaptor_base &operator=(scoped_allocator_adaptor_base&& other) = default;
    #else
    inline scoped_allocator_adaptor_base &operator=(BOOST_COPY_ASSIGN_REF(scoped_allocator_adaptor_base) other)
    {
       outer_allocator_type::operator=(other.outer_allocator());
       return *this;
    }
+   #endif
 
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_MOVES)
+   inline scoped_allocator_adaptor_base &operator=(scoped_allocator_adaptor_base&& other) = default;
+   #else
    inline scoped_allocator_adaptor_base &operator=(BOOST_RV_REF(scoped_allocator_adaptor_base) other)
    {
       outer_allocator_type::operator=(boost::move(other.outer_allocator()));
@@ -687,7 +699,7 @@ class scoped_allocator_adaptor
 
    //! <b>Effects</b>: move constructs each allocator within the adaptor with
    //! the corresponding allocator from other.
-   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_MOVES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //Defaulted: keeps the adaptor trivially copyable (passed in registers)
    inline scoped_allocator_adaptor(scoped_allocator_adaptor&& other) = default;
    #else
@@ -738,14 +750,17 @@ class scoped_allocator_adaptor
       : base_type(::boost::move(other.base()))
       {}
 
-   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //Defaulted: keeps the adaptor trivially copyable (passed in registers)
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    inline scoped_allocator_adaptor &operator=(const scoped_allocator_adaptor& other) = default;
-   inline scoped_allocator_adaptor &operator=(scoped_allocator_adaptor&& other) = default;
    #else
    inline scoped_allocator_adaptor &operator=(BOOST_COPY_ASSIGN_REF(scoped_allocator_adaptor) other)
    {  return static_cast<scoped_allocator_adaptor&>(base_type::operator=(static_cast<const base_type &>(other))); }
+   #endif
 
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_MOVES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   inline scoped_allocator_adaptor &operator=(scoped_allocator_adaptor&& other) = default;
+   #else
    inline scoped_allocator_adaptor &operator=(BOOST_RV_REF(scoped_allocator_adaptor) other)
    {  return static_cast<scoped_allocator_adaptor&>(base_type::operator=(boost::move(other.base()))); }
    #endif

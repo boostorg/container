@@ -15,9 +15,9 @@
 #include <boost/config.hpp>
 #include <boost/move/detail/type_traits.hpp>
 
-//Without compiler intrinsics the Boost.Move traits fall back to is_pod, which is
-//false for any class type, so the checks are only meaningful when intrinsics exist.
-#if defined(BOOST_MOVE_HAS_TRIVIAL_COPY) && defined(BOOST_MOVE_HAS_TRIVIAL_ASSIGN) && defined(BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR)
+//Without compiler intrinsics is_trivially_copyable falls back to is_pod, which is
+//false for any class type, so the checks are only meaningful when it is exact.
+#if defined(BOOST_MOVE_IS_TRIVIALLY_COPYABLE)
 
 #include <boost/container/vector.hpp>
 #include <boost/container/deque.hpp>
@@ -39,34 +39,28 @@
 
 namespace bc = boost::container;
 
-template<class T>
-struct is_tc
-{
-   static const bool value = ::boost::move_detail::is_trivially_copy_constructible<T>::value
-                          && ::boost::move_detail::is_trivially_copy_assignable<T>::value
-                          && ::boost::move_detail::is_trivially_destructible<T>::value;
-};
+namespace bmd = ::boost::move_detail;
 
 //Iterators
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::vector<int>::iterator>::value);
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::vector<int>::const_iterator>::value);
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::deque<int>::iterator>::value);
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::deque<int>::const_iterator>::value);
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::stable_vector<int>::iterator>::value);
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::stable_vector<int>::const_iterator>::value);
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::list<int>::iterator>::value);
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::list<int>::const_iterator>::value);
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::slist<int>::iterator>::value);
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::set<int>::iterator>::value);
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::set<int>::const_iterator>::value);
-BOOST_CONTAINER_STATIC_ASSERT((is_tc<bc::map<int, int>::iterator>::value));
-BOOST_CONTAINER_STATIC_ASSERT((is_tc<bc::flat_map<int, int>::iterator>::value));
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::string::iterator>::value);
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::vector<int>::iterator>::value);
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::vector<int>::const_iterator>::value);
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::deque<int>::iterator>::value);
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::deque<int>::const_iterator>::value);
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::stable_vector<int>::iterator>::value);
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::stable_vector<int>::const_iterator>::value);
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::list<int>::iterator>::value);
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::list<int>::const_iterator>::value);
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::slist<int>::iterator>::value);
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::set<int>::iterator>::value);
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::set<int>::const_iterator>::value);
+BOOST_CONTAINER_STATIC_ASSERT((bmd::is_trivially_copyable<bc::map<int, int>::iterator>::value));
+BOOST_CONTAINER_STATIC_ASSERT((bmd::is_trivially_copyable<bc::flat_map<int, int>::iterator>::value));
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::string::iterator>::value);
 
 //Pair used as map node value: defaulted operations need C++11
-BOOST_CONTAINER_STATIC_ASSERT((!is_tc<bc::dtl::pair<int, bc::string> >::value));
-#if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-BOOST_CONTAINER_STATIC_ASSERT((is_tc<bc::dtl::pair<int, int> >::value));
+BOOST_CONTAINER_STATIC_ASSERT((!bmd::is_trivially_copyable<bc::dtl::pair<int, bc::string> >::value));
+#if !defined(BOOST_NO_CXX11_DEFAULTED_MOVES)
+BOOST_CONTAINER_STATIC_ASSERT((bmd::is_trivially_copyable<bc::dtl::pair<int, int> >::value));
 #if defined(BOOST_MOVE_HAS_TRIVIAL_MOVE_CONSTRUCTOR)
 BOOST_CONTAINER_STATIC_ASSERT((::boost::move_detail::is_trivially_move_constructible<bc::dtl::pair<int, int> >::value));
 #endif
@@ -81,20 +75,20 @@ BOOST_CONTAINER_STATIC_ASSERT((!::boost::move_detail::is_trivially_copy_assignab
 BOOST_CONTAINER_STATIC_ASSERT((!::boost::move_detail::is_trivially_move_assignable<bc::dtl::pair<int, const int> >::value));
 
 //Allocators that are copied by value all the time
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::new_allocator<int> >::value);
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::allocator<int> >::value);
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::node_allocator<int> >::value);
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::adaptive_pool<int> >::value);
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::new_allocator<int> >::value);
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::allocator<int> >::value);
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::node_allocator<int> >::value);
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::adaptive_pool<int> >::value);
 //Defaulted operations need C++11
-#if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::pmr::polymorphic_allocator<int> >::value);
-BOOST_CONTAINER_STATIC_ASSERT(is_tc<bc::scoped_allocator_adaptor<bc::new_allocator<int> > >::value);
+#if !defined(BOOST_NO_CXX11_DEFAULTED_MOVES)
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::pmr::polymorphic_allocator<int> >::value);
+BOOST_CONTAINER_STATIC_ASSERT(bmd::is_trivially_copyable<bc::scoped_allocator_adaptor<bc::new_allocator<int> > >::value);
 #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-BOOST_CONTAINER_STATIC_ASSERT((is_tc<bc::scoped_allocator_adaptor<bc::new_allocator<int>, bc::pmr::polymorphic_allocator<int> > >::value));
+BOOST_CONTAINER_STATIC_ASSERT((bmd::is_trivially_copyable<bc::scoped_allocator_adaptor<bc::new_allocator<int>, bc::pmr::polymorphic_allocator<int> > >::value));
 #endif
 #endif
 
-#endif   //BOOST_MOVE_HAS_TRIVIAL_COPY && BOOST_MOVE_HAS_TRIVIAL_ASSIGN && BOOST_MOVE_HAS_TRIVIAL_DESTRUCTOR
+#endif   //BOOST_MOVE_IS_TRIVIALLY_COPYABLE
 
 int main()
 {

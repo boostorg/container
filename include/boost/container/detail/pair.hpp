@@ -159,16 +159,19 @@ struct pair
    }
 
    //Defaulted: keeps pair trivially copyable (passed in registers)
-   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
    pair(const pair& x) = default;
-   pair(pair&& p) = default;
    #else
    pair(const pair& x)
       : first(x.first), second(x.second)
    {
       BOOST_CONTAINER_STATIC_ASSERT((sizeof(std::pair<T1, T2>) == sizeof(pair<T1, T2>)));
    }
+   #endif
 
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_MOVES)
+   pair(pair&& p) = default;
+   #else
    pair(BOOST_RV_REF(pair) p)
       : first(::boost::move(BOOST_MOVE_TO_LV(p).first)), second(::boost::move(BOOST_MOVE_TO_LV(p).second))
    {
@@ -358,9 +361,8 @@ struct pair
    #endif
 
    //Defaulted: keeps pair trivially copyable (passed in registers)
-   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
    pair& operator=(const pair& p) = default;
-   pair& operator=(pair&& p) = default;
    #else
    pair& operator=(BOOST_COPY_ASSIGN_REF(pair) p)
    {
@@ -368,7 +370,11 @@ struct pair
       second = p.second;
       return *this;
    }
+   #endif
 
+   #if !defined(BOOST_NO_CXX11_DEFAULTED_MOVES)
+   pair& operator=(pair&& p) = default;
+   #else
    pair& operator=(BOOST_RV_REF(pair) p)
    {
       first  = ::boost::move(BOOST_MOVE_TO_LV(p).first);
