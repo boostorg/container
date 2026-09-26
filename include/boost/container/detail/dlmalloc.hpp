@@ -38,6 +38,10 @@
 #include <cerrno>
 #include <cstdlib>
 #include <climits>
+#if defined(_MSC_VER)
+//_BitScanForward, _BitScanReverse
+#  include <intrin.h>
+#endif
 #if !defined(BOOST_WINDOWS)
 #  include <sys/mman.h>
 #  include <unistd.h>
