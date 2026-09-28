@@ -27,6 +27,7 @@
 #include <boost/container/detail/pool_common.hpp>
 #include <boost/move/detail/to_raw_pointer.hpp>
 #include <boost/move/detail/force_ptr.hpp>
+#include <boost/move/adl_move_swap.hpp>
 #include <boost/container/detail/type_traits.hpp>
 
 #include <boost/intrusive/pointer_traits.hpp>
@@ -434,10 +435,10 @@ class private_node_pool_impl
    {
       BOOST_ASSERT(this->get_real_node_size() == other.get_real_node_size());
       BOOST_ASSERT(this->get_real_num_node() == other.get_real_num_node());
-      std::swap(mp_segment_mngr_base, other.mp_segment_mngr_base);
+      ::boost::adl_move_swap(mp_segment_mngr_base, other.mp_segment_mngr_base);
       m_blocklist.swap(other.m_blocklist);
       m_freelist.swap(other.m_freelist);
-      std::swap(m_allocated, other.m_allocated);
+      ::boost::adl_move_swap(m_allocated, other.m_allocated);
    }
 
    private:

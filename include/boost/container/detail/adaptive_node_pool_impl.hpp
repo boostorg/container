@@ -34,6 +34,7 @@
 #include <boost/container/detail/mpl.hpp>
 #include <boost/move/detail/to_raw_pointer.hpp>
 #include <boost/move/detail/force_ptr.hpp>
+#include <boost/move/adl_move_swap.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/node_pool_impl.hpp>
 
@@ -989,8 +990,8 @@ class private_adaptive_node_pool_impl_common
 
    void swap(private_adaptive_node_pool_impl_common &other)
    {
-      std::swap(mp_segment_mngr_base, other.mp_segment_mngr_base);
-      std::swap(m_totally_free_blocks, other.m_totally_free_blocks);
+      ::boost::adl_move_swap(mp_segment_mngr_base, other.mp_segment_mngr_base);
+      ::boost::adl_move_swap(m_totally_free_blocks, other.m_totally_free_blocks);
       m_block_container.swap(other.m_block_container);
    }
 
