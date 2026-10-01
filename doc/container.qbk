@@ -318,6 +318,15 @@ does not internally perform any value_type destruction, copy/move construction/a
 corresponding to the insertion of new elements or deletion of stored elements, which can sometimes compensate in terms of
 performance for the extra burden of doing more pointer manipulation and an additional allocation per element.
 
+[*Splicing]. Since every element lives in its own node, [classref boost::container::stable_vector stable_vector] also offers
+the three `splice` overloads of `std::list`: all the elements of another
+[classref boost::container::stable_vector stable_vector], one of them, or a range of them, are transferred before a given
+position by moving their node pointers from one index to the other, without copying, moving or destroying any element.
+References, pointers and iterators to the transferred elements remain valid and refer to the same elements, so that
+elements that are referred to by address can be passed from one container to another. The two containers must have
+equal allocators, and the cost is linear in the number of transferred elements plus the number of elements that follow
+the insertion point and the transferred range.
+
 [*Exception safety]. (according to [@http://www.boost.org/community/exception_safety.html Abrahams' terminology])
 As [classref boost::container::stable_vector stable_vector] does not internally copy/move elements around, some
 operations provide stronger exception safety guarantees than in vector:
@@ -2882,6 +2891,9 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
 [section:release_notes Release Notes]
 
 [section:release_notes_boost_1_93_00 Boost 1.93 Release]
+
+* [classref boost::container::stable_vector stable_vector] gains the three `splice` overloads of `std::list`,
+  which transfer elements between two stable_vectors with equal allocators without copying, moving or destroying them.
 
 * Containers now accept allocators whose \c value_type is \c void; such allocators
   are rebound to the container's element type via \c real_allocator.
