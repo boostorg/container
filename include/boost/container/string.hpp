@@ -838,7 +838,7 @@ class basic_string
       : base_t()
    {
       this->priv_terminate_string();
-      this->assign(s, n);  // assign checks for s != 0
+      this->assign(s, n);  // assign checks for s != 0 when n != 0
    }
 
    //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
@@ -847,7 +847,7 @@ class basic_string
       : base_t(a)
    {
       this->priv_terminate_string();
-      this->assign(s, n);  // assign checks for s != 0
+      this->assign(s, n);  // assign checks for s != 0 when n != 0
    }
 
    //! <b>Effects</b>: Constructs a basic_string with a default-constructed allocator,
@@ -1652,6 +1652,7 @@ class basic_string
    }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
+   //!   If n is zero, s may be null.
    //!
    //! <b>Effects</b>: Replaces the string controlled by *this with a string of
    //! length n whose elements are a copy of those pointed to by s.
@@ -1661,7 +1662,11 @@ class basic_string
    //! <b>Returns</b>: *this
    basic_string& assign(const CharT* s, size_type n)
    {
-      BOOST_ASSERT(s != 0);
+      BOOST_ASSERT(s != 0 || n == 0);
+      if(n == 0){
+         this->clear();
+         return *this;
+      }
       return this->assign(s, s + difference_type(n));
    }
 
