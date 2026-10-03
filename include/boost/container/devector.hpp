@@ -198,6 +198,11 @@ class devector
    {
       const size_type rounder = devector_min_free_fraction - 2u;
       const size_type divisor = devector_min_free_fraction - 1u;
+      //Check the new internal capacity can be represented by size_type
+      if ( desired_capacity > size_type(size_type(-1) - rounder) ||
+           (desired_capacity + rounder) / divisor > size_type(-1) / devector_min_free_fraction ) {
+         boost::container::throw_length_error("devector: requested capacity greater than max_size()");
+      }
       size_type const nc = ((desired_capacity + rounder) / divisor) * devector_min_free_fraction;
       BOOST_ASSERT(desired_capacity <= (nc - nc / devector_min_free_fraction));
       return nc;
@@ -1176,10 +1181,10 @@ class devector
    inline void reserve(size_type new_capacity)
    {
       if (this->capacity() < new_capacity) {
-         const size_type rounder = devector_min_free_fraction - 2u;
-         const size_type divisor = devector_min_free_fraction - 1u;
-         size_type const nc = ((new_capacity + rounder)/divisor)*devector_min_free_fraction;
-         BOOST_ASSERT(new_capacity <= (nc - nc / devector_min_free_fraction));
+         if (new_capacity > this->max_size()) {
+            boost::container::throw_length_error("devector::reserve max_size() exceeded");
+         }
+         size_type const nc = to_internal_capacity(new_capacity);
          size_type const sz = this->size();
          reallocate_at(nc, (nc-sz)/2u);
       }
@@ -1206,6 +1211,9 @@ class devector
    {
       if (front_capacity() >= new_capacity) { return; }
 
+      if (new_capacity > this->max_size() - back_free_capacity()) {
+         boost::container::throw_length_error("devector::reserve_front max_size() exceeded");
+      }
       reallocate_at(new_capacity + back_free_capacity(), new_capacity - size());
 
       BOOST_ASSERT(invariants_ok());
@@ -1231,6 +1239,9 @@ class devector
    {
       if (back_capacity() >= new_capacity) { return; }
 
+      if (new_capacity > this->max_size() - front_free_capacity()) {
+         boost::container::throw_length_error("devector::reserve_back max_size() exceeded");
+      }
       reallocate_at(new_capacity + front_free_capacity(), m_.front_idx);
 
       BOOST_ASSERT(invariants_ok());
