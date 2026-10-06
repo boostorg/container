@@ -1515,7 +1515,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       typedef typename iter_size<FwdIt>::type it_size_type;
       const it_size_type sz = boost::container::iterator_udistance(first, last);
       if (BOOST_UNLIKELY(sz > size_type(-1))){
-         boost::container::throw_length_error("vector::insert, FwdIt's max length reached");
+         boost::container::throw_length_error("deque::insert, FwdIt's max length reached");
       }
       const size_type n = static_cast<size_type>(sz);
       dtl::insert_range_proxy<ValAllocator, FwdIt> proxy(first);
@@ -1986,7 +1986,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       typedef typename iter_size<FwdIt>::type it_size_type;
       const it_size_type sz = boost::container::iterator_udistance(first, last);
       if (BOOST_UNLIKELY(sz > size_type(-1))){
-         boost::container::throw_length_error("vector::insert, FwdIt's max length reached");
+         boost::container::throw_length_error("deque::insert, FwdIt's max length reached");
       }
       const size_type n = static_cast<size_type>(sz);
 
@@ -2644,7 +2644,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       typedef typename iter_size<FwdIt>::type it_size_type;
       const it_size_type sz = boost::container::iterator_udistance(first, last);
       if (BOOST_UNLIKELY(sz > size_type(-1))){
-         boost::container::throw_length_error("vector::insert, FwdIt's max length reached");
+         boost::container::throw_length_error("deque::insert, FwdIt's max length reached");
       }
       const size_type n = static_cast<size_type>(sz);
       this->prot_initialize_map_and_nodes(n);
