@@ -2874,6 +2874,7 @@ std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>, F >
 
    for(; ;) {
       block_t& pbn = static_cast<block_t&>(*pbb->next);
+      (void)pbn;
       BOOST_IF_CONSTEXPR(Prefetch)
          BOOST_CONTAINER_NEST_PREFETCH(&pbn.mask);
       //Mask the mask for the last block
