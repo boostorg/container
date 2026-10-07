@@ -121,7 +121,7 @@ struct base_node
    }
 
    inline T &get_data()
-   {  return *move_detail::force_ptr<T*>(&this->m_storage);   }
+   {  return *move_detail::launder_cast<T*>(&this->m_storage);   }
 
    inline const T &get_data() const
    {  return *move_detail::launder_cast<const T*>(&this->m_storage);  }
