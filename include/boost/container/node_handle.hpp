@@ -25,6 +25,7 @@
 #include <boost/move/detail/to_raw_pointer.hpp>
 #include <boost/move/detail/launder.hpp>
 #include <boost/container/allocator_traits.hpp>
+#include <boost/container/detail/allocator_version_traits.hpp>
 #include <boost/container/detail/mpl.hpp>
 
 #include <boost/move/utility_core.hpp>
@@ -132,7 +133,8 @@ class node_handle
    void destroy_deallocate_node()
    {
       boost::movelib::to_raw_pointer(m_ptr)->destructor(this->node_alloc());
-      nator_traits::deallocate(this->node_alloc(), m_ptr, 1u);
+      //Use allocator_traits to deallocate with the corresponding operation (like deallocate_one)
+      dtl::allocator_version_traits<nallocator_type>::deallocate_one(this->node_alloc(), m_ptr);
    }
 
    template<class OtherNodeHandle>
