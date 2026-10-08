@@ -375,6 +375,7 @@ class devector
       BOOST_CONTAINER_CATCH(...){
          this->destroy_elements(m_.buffer + m_.front_idx, m_.buffer + m_.back_idx);
          this->deallocate_buffer();
+         BOOST_CONTAINER_RETHROW
       }
       BOOST_CONTAINER_CATCH_END
    }
