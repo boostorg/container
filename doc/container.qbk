@@ -2644,12 +2644,15 @@ while offering only basic safety guarantees. It trades off exception guarantees 
 
 [endsect]
 
-[section:container_const_reference_parameters Parameter taken by const reference that can be changed]
+[section:container_self_reference_parameters Arguments that refer to elements of the same container]
 
-Several container operations use a parameter taken by const reference that can be changed during execution of the function.
+Several container operations take an argument that the operation itself can change or destroy,
+because the argument refers to an element of the container.
 [@http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-closed.html#526 LWG Issue 526
    (['Is it undefined if a function in the standard changes in parameters?])]
-discusses them:
+and [@https://cplusplus.github.io/LWG/issue2164 LWG Issue 2164]
+(['What are the semantics of `vector.emplace(vector.begin(), vector.back())`?])
+discuss them:
 
 [c++]
 
@@ -2661,15 +2664,36 @@ discusses them:
    l.remove(*l.begin())
    //The operation could delete the first element, and then continue trying to access it.
 
-The adopted resolution, NAD (Not A Defect), implies that previous operations must be well-defined. This requires code
-to detect a reference to an inserted element and an additional copy in that case, impacting performance even when
-references to already inserted objects are not used. Note that equivalent functions taking rvalue references or
-iterator ranges require elements not already inserted in the container.
+The resolution of these issues requires that such operations are well-defined. For the standard containers,
+a precondition forbids an argument that refers to an element only in some functions: `assign(n, t)`
+("`t` is not a reference into `a`") and the functions that take an iterator range or a range
+("the iterators are not iterators into `a`"). All other functions must work. This requires code
+that detects a reference to an element and makes an additional copy or move in that case, which
+decreases performance also when no argument refers to an element.
 
-[*Boost.Container] prioritizes performance and has not implemented the NAD resolution:
-in functions that might modify the argument, the library requires references to elements not stored
-in the container. Using references to inserted elements yields to undefined behaviour (although in debug mode, this
-precondition violation could be notified via BOOST_ASSERT).
+[*Boost.Container] prioritizes performance and does not implement this resolution. As a general
+precondition for all containers, unless the documentation of a function says otherwise:
+
+* An argument of a member function that modifies the container must not be an element of the container,
+  and must not refer to an element (directly or indirectly) or to memory that an element owns.
+  This applies to arguments taken by const reference (`insert(p, x)`, `insert(p, n, x)`, `push_back(x)`,
+  `push_front(x)`, `resize(n, x)`, `assign(n, x)`, `remove(x)`...), to arguments taken by rvalue reference,
+  and to the arguments of the emplace functions (`emplace`, `emplace_back`, `emplace_front`, `emplace_hint`,
+  `try_emplace`, `insert_or_assign`...).
+* An iterator range or range argument (`insert(p, first, last)`, `assign(first, last)`, the range
+  constructors...) must not contain iterators into the container.
+* The container passed to `merge` must not be `*this`.
+
+If a program does not respect this precondition, the behavior is undefined. For example, the inserted
+value can be a moved-from object or the value of a different element.
+
+To insert a copy of an element, first copy it to a local object, then insert that object:
+
+[c++]
+
+   //Given boost::container::vector<std::string> v
+   std::string tmp(v[2]);
+   v.insert(v.begin(), boost::move(tmp));
 
 [endsect]
 
