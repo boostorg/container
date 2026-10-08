@@ -2520,8 +2520,10 @@ class basic_string
       size_type find(const CharT* s, size_type pos, size_type n) const
    {
       BOOST_ASSERT(s != 0);
-      if (pos + n > this->size())
+      if (pos > this->size() || n > this->size() - pos)
          return npos;
+      else if (!n)   //An empty string is found at pos
+         return pos;
       else {
          const pointer addr = this->priv_addr();
          pointer finish = addr + difference_type(this->priv_size());
