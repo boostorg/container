@@ -2494,27 +2494,21 @@ int main()
 
    ////////////////////////////////////
    //    has_trivial_destructor_after_move testing
+   //
+   //    With an always-equal allocator a moved-from string does not own memory
    ////////////////////////////////////
    // default allocator
    {
       typedef boost::container::basic_string<char> cont;
-      typedef cont::allocator_type allocator_type;
-      typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
       BOOST_CONTAINER_STATIC_ASSERT_MSG
-      (  (boost::has_trivial_destructor_after_move<cont>::value ==
-          (boost::has_trivial_destructor_after_move<allocator_type>::value &&
-           boost::has_trivial_destructor_after_move<pointer>::value)),
+      (  boost::has_trivial_destructor_after_move<cont>::value,
           "has_trivial_destructor_after_move(default allocator) test failed");
    }
    // std::allocator
    {
       typedef boost::container::basic_string<char, std::char_traits<char>, std::allocator<char> > cont;
-      typedef cont::allocator_type allocator_type;
-      typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
       BOOST_CONTAINER_STATIC_ASSERT_MSG
-      (  (boost::has_trivial_destructor_after_move<cont>::value ==
-          (boost::has_trivial_destructor_after_move<allocator_type>::value &&
-           boost::has_trivial_destructor_after_move<pointer>::value)),
+      (  boost::has_trivial_destructor_after_move<cont>::value,
           "has_trivial_destructor_after_move(std::allocator) test failed");
    }
 
