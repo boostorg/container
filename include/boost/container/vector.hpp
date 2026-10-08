@@ -2313,6 +2313,11 @@ private:
          if(!value_traits::trivial_dctr_after_move || old_end_ptr == last_ptr){
             boost::container::destroy_alloc_n(this->get_stored_allocator(), new_last_ptr, n);
          }
+         else if(new_last_ptr < last_ptr){
+            //[new_last_ptr, last_ptr) holds no overwritten erased elements.
+            boost::container::destroy_alloc_n
+               (this->get_stored_allocator(), new_last_ptr, static_cast<size_type>(last_ptr - new_last_ptr));
+         }
          this->m_holder.dec_stored_size(n);
       }
       return iterator(vector_iterator_get_ptr(first));
