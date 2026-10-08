@@ -2644,9 +2644,10 @@ private:
          if(!n) {
             ::boost::container::uninitialized_move_alloc(this->m_holder.alloc(), pbeg, pend, d_first);
             break;
-         } 
+         }
          else if(pbeg == pend) {
-            ::boost::container::uninitialized_move_alloc_n(this->m_holder.alloc(), first, n, d_first);
+            //Copy, the input range belongs to the caller
+            ::boost::container::uninitialized_copy_alloc_n(this->m_holder.alloc(), first, n, d_first);
             break;
          }
          //maintain stability moving external values only if they are strictly less
