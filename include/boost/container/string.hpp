@@ -768,6 +768,7 @@ class basic_string
    basic_string(BOOST_RV_REF(basic_string) s) BOOST_NOEXCEPT_OR_NOTHROW
       : base_t(boost::move(s.alloc()))
    {
+      this->priv_terminate_string();
       if(s.alloc() == this->alloc()){
          this->swap_data(s);
       }
@@ -3198,7 +3199,10 @@ class basic_string
    private:
    void priv_move_assign(BOOST_RV_REF(basic_string) x, dtl::bool_<true> /*steal_resources*/)
    {
-      //Destroy objects but retain memory in case x reuses it in the future
+      if(!this->is_short()){
+         this->deallocate_block();  //Free the memory with its current allocator
+         this->assure_short();
+      }
       this->clear();
       //Move allocator if needed
       dtl::bool_<allocator_traits_type::
@@ -3927,19 +3931,20 @@ inline typename basic_string<T, Tr, A>::size_type erase_if(basic_string<T, Tr, A
 
 namespace boost {
 
-//!has_trivial_destructor_after_move<> == true_type
-//!specialization for optimizations
-template <class C, class T, class Allocator>
-struct has_trivial_destructor_after_move<boost::container::basic_string<C, T, Allocator> >
+//!has_trivial_destructor_after_move<> specialization.
+template <class C, class T, class Allocator, class Options>
+struct has_trivial_destructor_after_move<boost::container::basic_string<C, T, Allocator, Options> >
 {
-   typedef typename boost::container::basic_string<C, T, Allocator>::allocator_type allocator_type;
-   typedef typename boost::container::allocator_traits<allocator_type>::pointer pointer;
+   typedef typename boost::container::basic_string<C, T, Allocator, Options>::allocator_type allocator_type;
+   typedef boost::container::allocator_traits<allocator_type> allocator_traits_type;
+   typedef typename allocator_traits_type::pointer pointer;
    BOOST_STATIC_CONSTEXPR bool value =
+      allocator_traits_type::is_always_equal::value &&
       ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
       ::boost::has_trivial_destructor_after_move<pointer>::value;
 };
 
-}
+}  //namespace boost {
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
