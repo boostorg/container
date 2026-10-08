@@ -1227,9 +1227,8 @@ class list
       return this->icont().unique_and_dispose(value_to_node_compare_type(binary_pred), Destroyer(this->node_alloc()));
    }
 
-   //! <b>Requires</b>: The lists x and *this must be distinct.
-   //!
-   //! <b>Effects</b>: This function removes all of x's elements and inserts them
+   //! <b>Effects</b>: If x is *this, the function has no effect. Otherwise,
+   //!   this function removes all of x's elements and inserts them
    //!   in order into *this according to std::less<value_type>. The merge is stable;
    //!   that is, if an element from *this is equivalent to one from x, then the element
    //!   from *this will precede the one from x.
@@ -1241,9 +1240,8 @@ class list
    void merge(list &x)
    {  this->merge(x, value_less_t());  }
 
-   //! <b>Requires</b>: The lists x and *this must be distinct.
-   //!
-   //! <b>Effects</b>: This function removes all of x's elements and inserts them
+   //! <b>Effects</b>: If x is *this, the function has no effect. Otherwise,
+   //!   this function removes all of x's elements and inserts them
    //!   in order into *this according to std::less<value_type>. The merge is stable;
    //!   that is, if an element from *this is equivalent to one from x, then the element
    //!   from *this will precede the one from x.
@@ -1257,9 +1255,9 @@ class list
 
    //! <b>Requires</b>: p must be a comparison function that induces a strict weak
    //!   ordering and both *this and x must be sorted according to that ordering
-   //!   The lists x and *this must be distinct.
    //!
-   //! <b>Effects</b>: This function removes all of x's elements and inserts them
+   //! <b>Effects</b>: If x is *this, the function has no effect. Otherwise,
+   //!   this function removes all of x's elements and inserts them
    //!   in order into *this. The merge is stable; that is, if an element from *this is
    //!   equivalent to one from x, then the element from *this will precede the one from x.
    //!
@@ -1272,6 +1270,7 @@ class list
    template <class StrictWeakOrdering>
    void merge(list &x, const StrictWeakOrdering &comp)
    {
+      //Boost.Intrusive merge has no effect if &x == this
       BOOST_ASSERT(this->node_alloc() == x.node_alloc());
       typedef value_to_node_compare<Node, StrictWeakOrdering> value_to_node_compare_type;
       this->icont().merge(x.icont(), value_to_node_compare_type(comp));
@@ -1279,9 +1278,9 @@ class list
 
    //! <b>Requires</b>: p must be a comparison function that induces a strict weak
    //!   ordering and both *this and x must be sorted according to that ordering
-   //!   The lists x and *this must be distinct.
    //!
-   //! <b>Effects</b>: This function removes all of x's elements and inserts them
+   //! <b>Effects</b>: If x is *this, the function has no effect. Otherwise,
+   //!   this function removes all of x's elements and inserts them
    //!   in order into *this. The merge is stable; that is, if an element from *this is
    //!   equivalent to one from x, then the element from *this will precede the one from x.
    //!

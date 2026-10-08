@@ -2682,7 +2682,9 @@ precondition for all containers, unless the documentation of a function says oth
   `try_emplace`, `insert_or_assign`...).
 * An iterator range or range argument (`insert(p, first, last)`, `assign(first, last)`, the range
   constructors...) must not contain iterators into the container.
-* The container passed to `merge` must not be `*this`.
+
+This precondition does not apply to `merge`: as in the standard, merging a container with itself
+(`c.merge(c)`) is valid and has no effect.
 
 If a program does not respect this precondition, the behavior is undefined. For example, the inserted
 value can be a moved-from object or the value of a different element.

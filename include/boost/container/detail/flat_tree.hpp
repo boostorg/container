@@ -1417,6 +1417,8 @@ class flat_tree
 
    inline void merge_unique(flat_tree& source)
    {
+      if (BOOST_UNLIKELY(this == &source))   //A self-merge is a no-op
+         return;
       const bool value = boost::container::dtl::
          has_member_function_callable_with_merge_unique<container_type, iterator, iterator, value_compare>::value;
       (flat_tree_merge_unique)
@@ -1429,6 +1431,9 @@ class flat_tree
 
    inline void merge_equal(flat_tree& source)
    {
+      //Merging a container with itself has no effect
+      if (BOOST_UNLIKELY(this == &source))
+         return;
       const bool value = boost::container::dtl::
          has_member_function_callable_with_merge<container_type, iterator, iterator, value_compare>::value;
       (flat_tree_merge_equal)

@@ -2049,6 +2049,8 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       BOOST_ASSERT(first == last ||
          (first < last && this->priv_in_range(first) && this->priv_in_range_or_end(last)));
       const size_type n = static_cast<size_type>(last - first);
+      if (BOOST_UNLIKELY(!n)) //An empty range is a no-op
+         return last.unconst();
       if (n == this->prot_size()) {
          this->clear();
          return this->end();
@@ -2373,6 +2375,9 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    template<class InsertProxy>
    iterator priv_insert_aux_impl(const_iterator p, size_type n, InsertProxy proxy)
    {
+      //An empty insertion must not move elements onto themselves
+      if (BOOST_UNLIKELY(!n))
+         return p.unconst();
       const size_type elemsbefore = this->prot_it_to_start_off(p);
 
       if (elemsbefore == this->prot_size()) {

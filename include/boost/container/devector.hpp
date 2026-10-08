@@ -2090,6 +2090,8 @@ class devector
    */
    iterator erase(iterator first, iterator last)
    {
+      if (BOOST_UNLIKELY(first == last))  //An empty range is a no-op
+         return first;
       size_type front_distance = pos_to_index(last);
       size_type back_distance  = size_type(end() - first);
       size_type n = boost::container::iterator_udistance(first, last);

@@ -1303,6 +1303,7 @@ class tree
       }
    }
 
+   //Boost.Intrusive merge_unique/merge_equal have no effect if &source == this
    template<class C2>
    inline void merge_unique(tree<T, KeyOfValue, C2, Allocator, Options>& source)
    {  return this->icont().merge_unique(source.icont()); }
