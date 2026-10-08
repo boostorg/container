@@ -2111,8 +2111,8 @@ class stable_vector
             , it);
       }
       BOOST_CONTAINER_CATCH(...) {
+         //Caller's rollback returns the node to the pool
          praw->destroy_header();
-         this->priv_node_alloc().deallocate(p, 1);
          BOOST_CONTAINER_RETHROW
       }
       BOOST_CONTAINER_CATCH_END
@@ -2130,8 +2130,8 @@ class stable_vector
             , ::boost::forward<ValueConvertible>(value_convertible));
       }
       BOOST_CONTAINER_CATCH(...) {
+         //Caller's rollback returns the node to the pool
          praw->destroy_header();
-         this->priv_node_alloc().deallocate(p, 1);
          BOOST_CONTAINER_RETHROW
       }
       BOOST_CONTAINER_CATCH_END
