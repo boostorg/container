@@ -657,7 +657,7 @@ class slist
    {
       const_iterator last_pos;
       if(!priv_try_shrink(new_size, last_pos)){
-         this->insert_after(last_pos, new_size, x);
+         this->insert_after(last_pos, size_type(new_size - this->size()), x);
       }
    }
 
