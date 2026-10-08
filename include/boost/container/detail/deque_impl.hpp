@@ -2157,8 +2157,9 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
 
    void priv_move_assign(BOOST_RV_REF(deque_impl) x, dtl::bool_<true> /*steal_resources*/)
    {
-      //Destroy objects but retain memory in case x reuses it in the future
+      //Destroy objects and free the memory of *this with its current allocator
       this->clear();
+      this->prot_clear_map();
       //Move allocator if needed
       dtl::bool_<allocator_traits_type::propagate_on_container_move_assignment::value> flag;
       dtl::move_alloc(this->alloc(), x.alloc(), flag);
@@ -2728,14 +2729,15 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
 
 namespace boost {
 
-//!has_trivial_destructor_after_move<> == true_type
-//!specialization for optimizations
+//!has_trivial_destructor_after_move<> specialization for optimizations
 template <class T, class Allocator, bool SingleEnded, class Options>
 struct has_trivial_destructor_after_move<boost::container::deque_impl<T, Allocator, SingleEnded, Options> >
 {
    typedef typename boost::container::deque_impl<T, Allocator, SingleEnded, Options>::allocator_type allocator_type;
-   typedef typename boost::container::allocator_traits<allocator_type>::pointer pointer;
-   BOOST_STATIC_CONSTEXPR bool value = ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
+   typedef boost::container::allocator_traits<allocator_type> allocator_traits_type;
+   typedef typename allocator_traits_type::pointer pointer;
+   BOOST_STATIC_CONSTEXPR bool value = allocator_traits_type::is_always_equal::value &&
+                             ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
                              ::boost::has_trivial_destructor_after_move<pointer>::value;
 };
 
