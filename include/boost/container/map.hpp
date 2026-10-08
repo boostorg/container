@@ -1127,7 +1127,9 @@ class map
             !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
             BOOST_MOVE_I size_type>::type)
       erase(BOOST_FWD_REF(K) x)
-      { return this->base_t::erase_unique(x); }
+      //Don't use erase_unique optimization here as transparent comparators with key K might
+      //match several elements (key_type can only match a single element)
+      { return this->base_t::erase(boost::forward<K>(x)); }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -1318,7 +1320,9 @@ class map
    template<typename K>
    BOOST_CONTAINER_NODISCARD inline
       size_type count(const K& x) const
-   {  return static_cast<size_type>(this->find(x) != this->cend());  }
+      //Don't use find() != end optimization here as transparent comparators with key K might
+      //return a different range than key_type (which can only return a single element range)
+   {  return this->base_t::count(x);  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 

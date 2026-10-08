@@ -857,7 +857,9 @@ class set
    template<typename K>
    BOOST_CONTAINER_NODISCARD inline
       size_type count(const K& x) const
-   {  return static_cast<size_type>(this->find(x) != this->cend());  }
+      //Don't use find() != end optimization here as transparent comparators with key K might
+      //return a different range than key_type (which can only return a single element range)
+   {  return this->base_t::count(x);  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -963,7 +965,9 @@ class set
    //! <b>Complexity</b>: Logarithmic
    template<typename K>
    inline std::pair<iterator,iterator> equal_range(const K& x)
-   {  return this->base_t::lower_bound_range(x);  }
+      //Don't use lower_bound_range optimization here as transparent comparators with key K might
+      //return a different range than key_type (which can only return a single element range)
+   {  return this->base_t::equal_range(x);  }
 
    //! <b>Requires</b>: This overload is available only if
    //! key_compare::is_transparent exists.
@@ -973,7 +977,9 @@ class set
    //! <b>Complexity</b>: Logarithmic
    template<typename K>
    inline std::pair<const_iterator,const_iterator> equal_range(const K& x) const
-   {  return this->base_t::lower_bound_range(x);  }
+      //Don't use lower_bound_range optimization here as transparent comparators with key K might
+      //return a different range than key_type (which can only return a single element range)
+   {  return this->base_t::equal_range(x);  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
