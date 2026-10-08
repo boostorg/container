@@ -891,7 +891,7 @@ class flat_tree
       std::pair<iterator,bool> ret;
       insert_commit_data data;
       ret.second = this->priv_insert_unique_prepare(KeyOfValue()(val), data);
-      ret.first = ret.second ? this->priv_insert_commit(data, boost::move(val))
+      ret.first = ret.second ? this->priv_insert_commit(data, boost::forward<Convertible>(val))
                              : this->begin() + (data.position - this->cbegin());
                              //: iterator(vector_iterator_get_ptr(data.position));
       return ret;
@@ -941,7 +941,7 @@ class flat_tree
       BOOST_ASSERT(this->priv_in_range_or_end(hint));
       insert_commit_data data;
       return this->priv_insert_unique_prepare(hint, KeyOfValue()(val), data)
-         ? this->priv_insert_commit(data, boost::move(val))
+         ? this->priv_insert_commit(data, boost::forward<K>(val))
          : this->begin() + (data.position - this->cbegin());
          //: iterator(vector_iterator_get_ptr(data.position));
    }
