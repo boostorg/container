@@ -1690,7 +1690,9 @@ class basic_string
        size_type n = static_cast<size_type>(last - first);
        this->reserve(n);
        CharT* const ptr = boost::movelib::to_raw_pointer(this->priv_addr());
-       Traits::copy(ptr, first, n);
+       //[first, last) can be a part of *this (e.g. assign(s, pos, n)): if so, n <= size(),
+       //reserve() does not reallocate and the ranges can overlap.
+       Traits::move(ptr, first, n);
        this->priv_construct_null(ptr + difference_type(n));
        this->priv_size(n);
        return *this;
@@ -1945,6 +1947,9 @@ class basic_string
 
          //Reuse same buffer
          if(enough_capacity){
+            //Characters in [p, end()) are moved before [first, last) is read
+            BOOST_ASSERT(!priv_range_overlaps( first, last, boost::movelib::to_raw_pointer(p)
+                                             , boost::movelib::to_raw_pointer(old_start) + difference_type(old_size)));
             const size_type elems_after = old_size - size_type(p - old_start);
             const size_type old_length = old_size;
             size_type new_size = 0;
@@ -2003,6 +2008,8 @@ class basic_string
                value_type * const newbuf     = boost::movelib::to_raw_pointer(new_start);
                const value_type *const pos   = boost::movelib::to_raw_pointer(p);
                const size_type before  = size_type(pos - oldbuf);
+               //The old characters are moved before [first, last) is read
+               BOOST_ASSERT(!priv_range_overlaps(first, last, oldbuf, oldbuf + difference_type(old_size)));
 
                //First move old data
                Traits::move(newbuf, oldbuf, before);
@@ -2320,7 +2327,7 @@ class basic_string
       , typename dtl::disable_if_or
          < void
          , dtl::is_convertible<InputIter, size_type>
-         , dtl::is_input_iterator<InputIter>
+         , dtl::is_not_input_iterator<InputIter>
          >::type * = 0
       #endif
       )
@@ -2342,20 +2349,22 @@ class basic_string
       , typename dtl::disable_if_or
          < void
          , dtl::is_convertible<ForwardIter, size_type>
-         , dtl::is_not_input_iterator<ForwardIter>
+         , dtl::is_input_iterator<ForwardIter>
          >::type * = 0
       )
    {
       difference_type n = boost::container::iterator_distance(j1, j2);
       const difference_type len = i2 - i1;
+      //The source can overlap the overwritten characters (e.g. a part of *this),
+      //so the copy must support overlapping ranges.
       if (len >= n) {
-         this->priv_copy(j1, j2, const_cast<CharT*>(boost::movelib::to_raw_pointer(i1)));
+         this->priv_copy_overlapping(j1, j2, const_cast<CharT*>(boost::movelib::to_raw_pointer(i1)));
          this->erase(i1 + difference_type(n), i2);
       }
       else {
          ForwardIter m = j1;
          boost::container::iterator_advance(m, len);
-         this->priv_copy(j1, m, const_cast<CharT*>(boost::movelib::to_raw_pointer(i1)));
+         this->priv_copy_overlapping(j1, m, const_cast<CharT*>(boost::movelib::to_raw_pointer(i1)));
          this->insert(i2, m, j2);
       }
       return *this;
@@ -3331,6 +3340,34 @@ class basic_string
 
    static inline void priv_copy( const CharT* first, const CharT* last, CharT* result)
    {  Traits::copy(result, first, std::size_t(last - first));  }
+
+   //Like priv_copy, but [first, last) and the destination can overlap
+   template <class InputIterator, class OutIterator>
+   static void priv_copy_overlapping(InputIterator first, InputIterator last, OutIterator result)
+   {  priv_copy(first, last, result);  }
+
+   static inline void priv_copy_overlapping( const CharT* first, const CharT* last, CharT* result)
+   {  Traits::move(result, first, std::size_t(last - first));  }
+
+   static inline void priv_copy_overlapping( CharT* first, CharT* last, CharT* result)
+   {  Traits::move(result, first, std::size_t(last - first));  }
+
+   //Debug checks of the precondition "a range must not refer to characters of the
+   //string" (see "Arguments that refer to elements of the same container" in the
+   //documentation). Only ranges of raw pointers are checked.
+   template <class Iterator>
+   static bool priv_range_overlaps(Iterator, Iterator, const CharT*, const CharT*)
+   {  return false;  }
+
+   static bool priv_range_overlaps(const CharT *f, const CharT *l, const CharT *b, const CharT *e)
+   {
+      //Compare addresses as integers: the pointers can point to different objects
+      return reinterpret_cast<std::size_t>(f) < reinterpret_cast<std::size_t>(e)
+          && reinterpret_cast<std::size_t>(b) < reinterpret_cast<std::size_t>(l);
+   }
+
+   static bool priv_range_overlaps(CharT *f, CharT *l, const CharT *b, const CharT *e)
+   {  return priv_range_overlaps(const_cast<const CharT*>(f), const_cast<const CharT*>(l), b, e);  }
 
    template <class Integer>
    inline basic_string& priv_replace_dispatch(const_iterator first, const_iterator last,
