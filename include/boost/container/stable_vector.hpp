@@ -679,7 +679,7 @@ class stable_vector
    //!
    //! <b>Complexity</b>: Linear to n.
    explicit stable_vector(size_type n, const allocator_type &a)
-      : internal_data(), index(a)
+      : internal_data(a), index(a)
    {
       stable_vector_detail::clear_on_destroy<stable_vector> cod(*this);
       this->resize(n);
@@ -697,7 +697,7 @@ class stable_vector
    //!
    //! <b>Note</b>: Non-standard extension
    stable_vector(size_type n, default_init_t, const allocator_type &a)
-      : internal_data(), index(a)
+      : internal_data(a), index(a)
    {
       stable_vector_detail::clear_on_destroy<stable_vector> cod(*this);
       this->resize(n, default_init);
