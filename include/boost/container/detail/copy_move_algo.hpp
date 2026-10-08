@@ -744,7 +744,7 @@ inline void uninitialized_fill_alloc(Allocator &a, F f, F l, const T &t)
       }
    }
    BOOST_CONTAINER_CATCH(...){
-      for (; back != l; ++back){
+      for (; back != f; ++back){
          allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
       }
       BOOST_CONTAINER_RETHROW;
@@ -1477,6 +1477,7 @@ typename dtl::disable_if_c<dtl::is_single_value_proxy<InsertionProxy>::value, vo
       array_destructor_t on_exception(first -n, aux, a);
       //Copy to the beginning of the unallocated zone the last new elements (the gap is closed).
       insertion_proxy.uninitialized_copy_n_and_update(a, aux, std::size_t(n - elems_before));
+      on_exception.set_end(first);
       insertion_proxy.copy_n_and_update(a, first, elems_before);
       on_exception.release();
    }
@@ -2009,7 +2010,7 @@ inline void expand_backward_forward_and_insert_alloc_move_forward
          insertion_proxy.copy_n_and_update(a, new_rng_start, rest_new);
          insertion_proxy.uninitialized_copy_n_and_update(a, old_finish, mid_n);
          new_values_destroyer.release();
-         old_values_destroyer.increment_size_backwards(raw_after);
+         old_values_destroyer.increment_size(raw_after);
          //Displace old_end, but make sure data has to be moved
          p = ::boost::container::move_backward_overlapping(old_start, pos, new_rng_start);
 
@@ -2033,7 +2034,7 @@ inline void expand_backward_forward_and_insert_alloc_move_forward
          const B old_end_pivot = old_finish - raw_after;
          ::boost::container::uninitialized_move_alloc_n(a, old_end_pivot, raw_after, old_finish);
          //The buffer is all constructed
-         old_values_destroyer.increment_size_backwards(raw_after);
+         old_values_destroyer.increment_size(raw_after);
 
          //Now copy the first part of old_end overwriting itself
          B const new_end_pos = ::boost::container::move_backward_overlapping(pos, old_end_pivot, old_finish);
