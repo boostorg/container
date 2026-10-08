@@ -433,7 +433,7 @@ struct node_alloc_holder
       }
       BOOST_CONTAINER_CATCH(...) {
          p->destroy_header();
-         this->node_alloc().deallocate(p, 1);
+         this->deallocate_one(p);
          BOOST_CONTAINER_RETHROW
       }
       BOOST_CONTAINER_CATCH_END
