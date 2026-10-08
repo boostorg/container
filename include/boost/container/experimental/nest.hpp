@@ -569,20 +569,24 @@ private:
    BOOST_MOVABLE_BUT_NOT_COPYABLE(block)
 };
 
+//Swaps the elements of two blocks without moving them, if the storage allows it.
+//Returns false (and does nothing) if the elements are stored inside the blocks.
 template<class ValuePointer, bool StoreDataInBlock>
-void swap_payload(block<ValuePointer, StoreDataInBlock>& x, block<ValuePointer, StoreDataInBlock>& y) BOOST_NOEXCEPT;
+bool try_swap_payload(block<ValuePointer, StoreDataInBlock>& x, block<ValuePointer, StoreDataInBlock>& y) BOOST_NOEXCEPT;
 
 template<class ValuePointer>
-BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, true>& x, block<ValuePointer, true>& y) BOOST_NOEXCEPT
+BOOST_CONTAINER_FORCEINLINE bool try_swap_payload(block<ValuePointer, true>&, block<ValuePointer, true>&) BOOST_NOEXCEPT
 {
-   boost::adl_move_swap(x.mask, y.mask);
+   //The elements are inside the blocks
+   return false;
 }
 
 template<class ValuePointer>
-BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, false>& x, block<ValuePointer, false>& y) BOOST_NOEXCEPT
+BOOST_CONTAINER_FORCEINLINE bool try_swap_payload(block<ValuePointer, false>& x, block<ValuePointer, false>& y) BOOST_NOEXCEPT
 {
    boost::adl_move_swap(x.mask, y.mask);
    boost::adl_move_swap(x.data_, y.data_);
+   return true;
 }
 
 BOOST_CONTAINER_FORCEINLINE int first_in_mask(boost::uint64_t m)
@@ -2731,9 +2735,9 @@ class nest
    {
       std::size_t cx = static_cast<std::size_t>(dtl::popcount(pbx->mask));
       std::size_t cy = static_cast<std::size_t>(dtl::popcount(pby->mask));
-      if(cx < cy) {
+      //Move the elements of the block with fewer elements
+      if(cx < cy && nest_detail::try_swap_payload(*pbx, *pby)) {
          boost::adl_move_swap(cx, cy);
-         nest_detail::swap_payload(*pbx, *pby);
       }
       std::size_t c = (std::min)(N - cx, cy);
       while(c--) {
