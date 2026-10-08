@@ -333,7 +333,7 @@ class flat_map
    template <class InputIterator>
    inline
    flat_map(ordered_unique_range_t, InputIterator first, InputIterator last)
-      : m_flat_tree(ordered_range, first, last)
+      : m_flat_tree(ordered_unique_range, first, last)
    {}
 
    //! <b>Effects</b>: Constructs an empty flat_map using the specified comparison object and
@@ -348,7 +348,7 @@ class flat_map
    template <class InputIterator>
    inline
    flat_map(ordered_unique_range_t, InputIterator first, InputIterator last, const Compare& comp)
-      : m_flat_tree(ordered_range, first, last, comp)
+      : m_flat_tree(ordered_unique_range, first, last, comp)
    {}
 
    //! <b>Effects</b>: Constructs an empty flat_map using the specified comparison object and
@@ -363,7 +363,7 @@ class flat_map
    template <class InputIterator>
    inline
    flat_map(ordered_unique_range_t, InputIterator first, InputIterator last, const Compare& comp, const allocator_type& a)
-      : m_flat_tree(ordered_range, first, last, comp, BOOST_CONTAINER_FORCE(const impl_allocator_type, a))
+      : m_flat_tree(ordered_unique_range, first, last, comp, BOOST_CONTAINER_FORCE(const impl_allocator_type, a))
    {}
 
    //! <b>Effects</b>: Constructs an empty flat_map using the specified allocator and
@@ -378,7 +378,7 @@ class flat_map
    template <class InputIterator>
    inline
       flat_map(ordered_unique_range_t, InputIterator first, InputIterator last, const allocator_type& a)
-      : m_flat_tree(ordered_range, first, last, Compare(), a)
+      : m_flat_tree(ordered_unique_range, first, last, Compare(), a)
    {}
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
