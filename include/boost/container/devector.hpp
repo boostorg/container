@@ -42,6 +42,7 @@
 #include <boost/container/detail/next_capacity.hpp>
 #include <boost/container/detail/alloc_helpers.hpp>
 #include <boost/container/detail/advanced_insert_int.hpp>
+#include <boost/container/detail/addressof.hpp>
 
 // move
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
@@ -714,6 +715,7 @@ class devector
     */
    inline void assign(size_type n, const T& u)
    {
+      BOOST_ASSERT(!this->priv_is_element_address(dtl::addressof(u)));
       cvalue_iterator first(u, n);
       cvalue_iterator last;
       this->assign(first, last);
@@ -1925,6 +1927,7 @@ class devector
    */
    inline iterator insert(const_iterator position, size_type n, const T& x)
    {
+      BOOST_ASSERT(!(this->priv_insertion_moves_elements(position, n) && this->priv_is_element_address(dtl::addressof(x))));
       cvalue_iterator first(x, n);
       cvalue_iterator last = first + n;
       return this->insert_range(position, first, last);
@@ -2297,19 +2300,41 @@ class devector
    template <class U>
    inline void priv_push_front(BOOST_FWD_REF(U) u)
    {
+      BOOST_ASSERT(!(!this->front_free_capacity() && this->priv_is_element_address(dtl::addressof(u))));
       this->emplace_front(boost::forward<U>(u));
    }
 
    template <class U>
    inline void priv_push_back(BOOST_FWD_REF(U) u)
    {
+      BOOST_ASSERT(!(!this->back_free_capacity() && this->priv_is_element_address(dtl::addressof(u))));
       this->emplace_back(boost::forward<U>(u));
    }
 
    template <class U>
    inline iterator priv_insert(const_iterator pos, BOOST_FWD_REF(U) u)
    {
+      BOOST_ASSERT(!(this->priv_insertion_moves_elements(pos, 1u) && this->priv_is_element_address(dtl::addressof(u))));
       return this->emplace(pos, boost::forward<U>(u));
+   }
+
+   //Debug checks of the precondition "an argument must not refer to an element of
+   //the container" (see "Arguments that refer to elements of the same container" in
+   //the documentation). The checks are done only when the operation moves elements
+   //before the argument is read: then the inserted value would be wrong.
+   bool priv_is_element_address(const void *p) const
+   {
+      const T *const b = boost::movelib::to_raw_pointer(this->data());
+      const std::size_t a = reinterpret_cast<std::size_t>(p);
+      return reinterpret_cast<std::size_t>(b) <= a
+          && a < reinterpret_cast<std::size_t>(b + this->size());
+   }
+
+   bool priv_insertion_moves_elements(const_iterator pos, size_type n) const
+   {
+      return n != 0u
+         && !(pos == this->cend()   && n <= this->back_free_capacity())
+         && !(pos == this->cbegin() && n <= this->front_free_capacity());
    }
 
    // allocator_type wrappers

@@ -29,6 +29,7 @@
 #include <boost/container/throw_exception.hpp>
 #include <boost/container/options.hpp>
 // container detail
+#include <boost/container/detail/addressof.hpp>
 #include <boost/container/detail/advanced_insert_int.hpp>
 #include <boost/container/detail/algorithm.hpp> //equal()
 #include <boost/container/detail/alloc_helpers.hpp>
@@ -1463,7 +1464,10 @@ private:
    //!
    //! <b>Complexity</b>: Linear to n.
    inline void assign(size_type n, const value_type& val)
-   {  this->assign(cvalue_iterator(val, n), cvalue_iterator());   }
+   {
+      BOOST_ASSERT(!this->priv_is_element_address(dtl::addressof(val)));
+      this->assign(cvalue_iterator(val, n), cvalue_iterator());
+   }
 
    //! <b>Effects</b>: Returns a copy of the internal allocator.
    //!
@@ -1668,7 +1672,11 @@ private:
    //!
    //! <b>Complexity</b>: Linear to the difference between size() and new_size.
    inline void resize(size_type new_size, const T& x)
-   {  this->priv_resize(new_size, x, alloc_version());  }
+   {
+      //Reallocation moves the elements before x is copied
+      BOOST_ASSERT(!(new_size > this->capacity() && this->priv_is_element_address(dtl::addressof(x))));
+      this->priv_resize(new_size, x, alloc_version());
+   }
 
    //! <b>Effects</b>: Number of elements for which memory has been allocated.
    //!   capacity() is always greater than or equal to size().
@@ -2150,6 +2158,7 @@ private:
    inline iterator insert(const_iterator p, size_type n, const T& x)
    {
       BOOST_ASSERT(this->priv_in_range_or_end(p));
+      BOOST_ASSERT(!(this->priv_insertion_moves_elements(p, n) && this->priv_is_element_address(dtl::addressof(x))));
       dtl::insert_n_copies_proxy<allocator_type> proxy(x);
       return this->priv_insert_forward_range(vector_iterator_get_ptr(p), n, proxy);
    }
@@ -2991,13 +3000,31 @@ private:
    template<class U>
    BOOST_CONTAINER_FORCEINLINE iterator priv_insert(const const_iterator &p, BOOST_FWD_REF(U) u)
    {
+      BOOST_ASSERT(!(this->priv_insertion_moves_elements(p, 1u) && this->priv_is_element_address(dtl::addressof(u))));
       return this->emplace(p, ::boost::forward<U>(u));
    }
 
    template <class U>
    BOOST_CONTAINER_FORCEINLINE void priv_push_back(BOOST_FWD_REF(U) u)
    {
+      BOOST_ASSERT(!(!this->room_enough() && this->priv_is_element_address(dtl::addressof(u))));
       this->emplace_back(::boost::forward<U>(u));
+   }
+
+   //Debug checks of the precondition "an argument must not refer to an element of
+   //the container" (see "Arguments that refer to elements of the same container" in
+   //the documentation). The checks are done only when the operation moves elements
+   //before the argument is read: then the inserted value would be wrong.
+   bool priv_is_element_address(const void *p) const
+   {
+      const std::size_t a = reinterpret_cast<std::size_t>(p);
+      return reinterpret_cast<std::size_t>(this->priv_raw_begin()) <= a
+          && a < reinterpret_cast<std::size_t>(this->priv_raw_end());
+   }
+
+   bool priv_insertion_moves_elements(const const_iterator &p, size_type n) const
+   {
+      return n != 0u && (p != this->cend() || n > size_type(this->m_holder.capacity() - this->m_holder.m_size));
    }
 
    template <class U>
