@@ -1458,7 +1458,7 @@ class flat_map
    //!
    //! <b>Throws</b>: If memory allocation, or the move or the comparison of elements throws.
    //!   Then source is left empty and its elements are lost. If memory allocation throws, *this
-   //!   keeps its elements. If the move or the comparison of elements throws, *this can be left unsorted.
+   //!   keeps its elements. If the move or the comparison of elements throws, *this can be left empty.
    //!
    //! <b>Note</b>: Invalidates all iterators and references.
    //!
@@ -2893,8 +2893,8 @@ class flat_multimap
    //!   sorted first: N*log(N), where N is source.size(), plus the linear merge.
    //!
    //! <b>Throws</b>: If memory allocation, or the move or the comparison of elements throws.
-   //!   Then source is left empty, and some of its elements can be lost. If the move or the
-   //!   comparison of elements throws, *this can be left unsorted.
+   //!   Then source is left empty, and some of its elements can be lost. If memory allocation throws,
+   //!   *this keeps its elements. If the move or the comparison of elements throws, *this can be left empty.
    //!
    //! <b>Note</b>: Invalidates all iterators and references.
    //!

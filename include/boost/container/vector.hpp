@@ -2482,11 +2482,16 @@ private:
       merge_unique(InputIt first, InputIt last, Compare comp)
    {
       size_type const old_size = this->size();
-      this->priv_set_difference_back(first, last, comp);
-      T *const raw_beg = this->priv_raw_begin();
-      T *const raw_end = this->priv_raw_end();
-      T *raw_pos = raw_beg + old_size;
-      boost::movelib::adaptive_merge(raw_beg, raw_pos, raw_end, comp, raw_end, this->capacity() - this->size());
+      BOOST_CONTAINER_TRY{
+         this->priv_set_difference_back(first, last, comp);
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //The new elements at the end are not merged: erase them
+         this->priv_destroy_last_n(size_type(this->size() - old_size));
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      this->priv_merge_ending(old_size, comp);
    }
 
    template<class InputIt, class Compare>
@@ -2497,11 +2502,19 @@ private:
          , void>::type
       merge_unique(InputIt first, InputIt last, Compare comp)
    {
-      iterator pos = this->insert(this->end(), first, last);
-      const iterator e = boost::movelib::inplace_set_unique_difference(pos, this->end(), this->begin(), pos, comp);
-      this->erase(e, this->end());
-      boost::movelib::adaptive_merge( this->begin(), pos, e, comp
-                                    , this->priv_raw_end(), this->capacity() - this->size());
+      size_type const old_size = this->size();
+      BOOST_CONTAINER_TRY{
+         iterator pos = this->insert(this->end(), first, last);
+         const iterator e = boost::movelib::inplace_set_unique_difference(pos, this->end(), this->begin(), pos, comp);
+         this->erase(e, this->end());
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //The new elements at the end are not merged: erase them
+         this->priv_destroy_last_n(size_type(this->size() - old_size));
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      this->priv_merge_ending(old_size, comp);
    }
 
    //Function for optimizations, not for users
@@ -2518,11 +2531,36 @@ private:
    inline void priv_merge_generic(InputIt first, InputIt last, Compare comp)
    {
       size_type const old_s = this->size();
-      this->insert(this->cend(), first, last);
-      T* const raw_beg = this->priv_raw_begin();
-      T* const raw_end = this->priv_raw_end();
-      T* const raw_pos = raw_beg + old_s;
-      boost::movelib::adaptive_merge(raw_beg, raw_pos, raw_end, comp, raw_end, this->capacity() - this->size());
+      BOOST_CONTAINER_TRY{
+         this->insert(this->cend(), first, last);
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //Input iterators can leave some new elements at the end: erase them
+         this->priv_destroy_last_n(size_type(this->size() - old_s));
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      this->priv_merge_ending(old_s, comp);
+   }
+
+   //Merges the sorted range [old_size, size()) with the sorted range [0, old_size).
+   //If an exception is thrown, the vector can be unsorted: clear it.
+   template<class Compare>
+   void priv_merge_ending(const size_type old_size, Compare comp)
+   {
+      if(this->size() != old_size){
+         T* const raw_beg = this->priv_raw_begin();
+         T* const raw_end = this->priv_raw_end();
+         BOOST_CONTAINER_TRY{
+            boost::movelib::adaptive_merge
+               (raw_beg, raw_beg + old_size, raw_end, comp, raw_end, this->capacity() - this->size());
+         }
+         BOOST_CONTAINER_CATCH(...){
+            this->clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
+      }
    }
 
    template<class PositionValue>
@@ -2640,31 +2678,40 @@ private:
       T* d_first = boost::movelib::to_raw_pointer(new_storage);
       size_type added = n;
       //Merge in new buffer loop
-      while(1){
-         if(!n) {
-            ::boost::container::uninitialized_move_alloc(this->m_holder.alloc(), pbeg, pend, d_first);
-            break;
-         }
-         else if(pbeg == pend) {
-            //Copy, the input range belongs to the caller
-            ::boost::container::uninitialized_copy_alloc_n(this->m_holder.alloc(), first, n, d_first);
-            break;
-         }
-         //maintain stability moving external values only if they are strictly less
-         else if(comp(*first, *pbeg)) {
-            allocator_traits_type::construct( this->m_holder.alloc(), d_first, *first );
-            new_values_destroyer.increment_size(1u);
-            ++first;
-            --n;
-            ++d_first;
-         }
-         else{
-            allocator_traits_type::construct( this->m_holder.alloc(), d_first, boost::move(*pbeg) );
-            new_values_destroyer.increment_size(1u);
-            ++pbeg;
-            ++d_first;
+      BOOST_CONTAINER_TRY{
+         while(1){
+            if(!n) {
+               ::boost::container::uninitialized_move_alloc(this->m_holder.alloc(), pbeg, pend, d_first);
+               break;
+            }
+            else if(pbeg == pend) {
+               //Copy, the input range belongs to the caller
+               ::boost::container::uninitialized_copy_alloc_n(this->m_holder.alloc(), first, n, d_first);
+               break;
+            }
+            //maintain stability moving external values only if they are strictly less
+            else if(comp(*first, *pbeg)) {
+               allocator_traits_type::construct( this->m_holder.alloc(), d_first, *first );
+               new_values_destroyer.increment_size(1u);
+               ++first;
+               --n;
+               ++d_first;
+            }
+            else{
+               allocator_traits_type::construct( this->m_holder.alloc(), d_first, boost::move(*pbeg) );
+               new_values_destroyer.increment_size(1u);
+               ++pbeg;
+               ++d_first;
+            }
          }
       }
+      BOOST_CONTAINER_CATCH(...){
+         //Some old elements can be moved-from: clear the vector
+         //(the guards destroy the new elements and free the new buffer)
+         this->clear();
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
 
       //Nothrow operations
       pointer const old_p     = this->m_holder.start();

@@ -164,6 +164,46 @@ inline void flat_tree_container_inplace_merge //is_contiguous_container == false
 
 ///////////////////////////////////////
 //
+//  flat_tree_container_merge_ending
+//
+///////////////////////////////////////
+//Merges the sorted range [old_sz, size()) with the sorted range [0, old_sz).
+//If an exception is thrown, the sequence can be unsorted: clear it.
+template<class SequenceContainer, class Compare>
+void flat_tree_container_merge_ending
+   (SequenceContainer& dest, typename SequenceContainer::size_type old_sz, Compare comp)
+{
+   typedef typename SequenceContainer::difference_type difference_type;
+   if(dest.size() != old_sz){
+      BOOST_CONTAINER_TRY{
+         (flat_tree_container_inplace_merge)
+            ( dest, dest.begin() + difference_type(old_sz), comp
+            , dtl::bool_<is_contiguous_container<SequenceContainer>::value>());
+      }
+      BOOST_CONTAINER_CATCH(...){
+         dest.clear();
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+   }
+}
+
+///////////////////////////////////////
+//
+//  flat_tree_container_erase_ending
+//
+///////////////////////////////////////
+//Erases the range [old_sz, size()): the new elements that are not merged yet
+template<class SequenceContainer>
+inline void flat_tree_container_erase_ending
+   (SequenceContainer& dest, typename SequenceContainer::size_type old_sz)
+{
+   typedef typename SequenceContainer::difference_type difference_type;
+   dest.erase(dest.begin() + difference_type(old_sz), dest.end());
+}
+
+///////////////////////////////////////
+//
 //  flat_tree_container_inplace_sort_ending
 //
 ///////////////////////////////////////
@@ -210,11 +250,19 @@ inline void flat_tree_merge_equal   //has_merge_unique == false
    (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, dtl::false_)
 {
    if(first != last) {
-      typedef typename SequenceContainer::iterator    iterator;
-      iterator const it = dest.insert( dest.end(), first, last);
-      BOOST_ASSERT((is_sorted)(it, dest.end(), comp));
-      dtl::bool_<is_contiguous_container<SequenceContainer>::value> contiguous_tag;
-      (flat_tree_container_inplace_merge)(dest, it, comp, contiguous_tag);
+      typedef typename SequenceContainer::size_type         size_type;
+      size_type const old_sz = dest.size();
+      BOOST_CONTAINER_TRY{
+         dest.insert( dest.end(), first, last);
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //Input iterators can leave some new elements at the end: erase them
+         (flat_tree_container_erase_ending)(dest, old_sz);
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      BOOST_ASSERT((is_sorted)(dest.begin() + typename SequenceContainer::difference_type(old_sz), dest.end(), comp));
+      (flat_tree_container_merge_ending)(dest, old_sz, comp);
    }
 }
 
@@ -240,13 +288,21 @@ inline void flat_tree_merge_unique  //has_merge_unique == false
       typedef typename SequenceContainer::difference_type   difference_type;
 
       size_type const old_sz = dest.size();
-      iterator const first_new = dest.insert(dest.cend(), first, last);
-      //We can't assert "is_sorted_and_unique" because the sequence can come from a multiset
-      BOOST_ASSERT((is_sorted)(first_new, dest.end(), comp));
-      iterator e = boost::movelib::inplace_set_unique_difference(first_new, dest.end(), dest.begin(), first_new, comp);
-      dest.erase(e, dest.end());
-      dtl::bool_<is_contiguous_container<SequenceContainer>::value> contiguous_tag;
-      (flat_tree_container_inplace_merge)(dest, dest.begin() + difference_type(old_sz), comp, contiguous_tag);
+      BOOST_CONTAINER_TRY{
+         dest.insert(dest.cend(), first, last);
+         iterator const first_new = dest.begin() + difference_type(old_sz);
+         //We can't assert "is_sorted_and_unique" because the sequence can come from a multiset
+         BOOST_ASSERT((is_sorted)(first_new, dest.end(), comp));
+         iterator e = boost::movelib::inplace_set_unique_difference(first_new, dest.end(), dest.begin(), first_new, comp);
+         dest.erase(e, dest.end());
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //The new elements are not merged yet: erase them
+         (flat_tree_container_erase_ending)(dest, old_sz);
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      (flat_tree_container_merge_ending)(dest, old_sz, comp);
    }
 }
 
@@ -966,28 +1022,30 @@ class flat_tree
    template <class InIt>
    void insert_unique_range(InIt first, InIt last)
    {
-      dtl::bool_<is_contiguous_container<container_type>::value> contiguous_tag;
       container_type &seq = this->m_data.m_seq;
       value_compare &val_cmp = this->priv_value_comp();
+      const size_type old_sz = seq.size();
+      BOOST_CONTAINER_TRY{
+         //Step 1: put new elements in the back
+         seq.insert(seq.cend(), first, last);
+         typename container_type::iterator const it = seq.begin() + difference_type(old_sz);
 
-      //Step 1: put new elements in the back
-      typename container_type::iterator const it = seq.insert(seq.cend(), first, last);
+         //Step 2: sort them
+         boost::movelib::pdqsort(it, seq.end(), val_cmp);
 
-      //Step 2: sort them
-      boost::movelib::pdqsort(it, seq.end(), val_cmp);
-
-      //Step 3: only left unique values from the back not already present in the original range
-      typename container_type::iterator const e = boost::movelib::inplace_set_unique_difference
-         (it, seq.end(), seq.begin(), it, val_cmp);
-
-      //it might be invalidated by erasing [e, seq.end) if e == it, so check it before
-      const bool remaining = e != it;
-      seq.erase(e, seq.cend());
-      if (remaining)
-      {
-         //Step 4: merge both ranges
-         (flat_tree_container_inplace_merge)(seq, it, this->priv_value_comp(), contiguous_tag);
+         //Step 3: only left unique values from the back not already present in the original range
+         typename container_type::iterator const e = boost::movelib::inplace_set_unique_difference
+            (it, seq.end(), seq.begin(), it, val_cmp);
+         seq.erase(e, seq.cend());
       }
+      BOOST_CONTAINER_CATCH(...){
+         //The new elements are not merged yet: erase them
+         (flat_tree_container_erase_ending)(seq, old_sz);
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      //Step 4: merge both ranges
+      (flat_tree_container_merge_ending)(seq, old_sz, val_cmp);
    }
 
    template <class InIt>
@@ -996,9 +1054,19 @@ class flat_tree
       if (first != last) {
          dtl::bool_<is_contiguous_container<container_type>::value> contiguous_tag;
          container_type &seq = this->m_data.m_seq;
-         typename container_type::iterator const it = seq.insert(seq.cend(), first, last);
-         (flat_tree_container_inplace_sort_ending)(seq, it, this->priv_value_comp(), contiguous_tag);
-         (flat_tree_container_inplace_merge)      (seq, it, this->priv_value_comp(), contiguous_tag);
+         const size_type old_sz = seq.size();
+         BOOST_CONTAINER_TRY{
+            seq.insert(seq.cend(), first, last);
+            (flat_tree_container_inplace_sort_ending)
+               (seq, seq.begin() + difference_type(old_sz), this->priv_value_comp(), contiguous_tag);
+         }
+         BOOST_CONTAINER_CATCH(...){
+            //The new elements are not merged yet: erase them
+            (flat_tree_container_erase_ending)(seq, old_sz);
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
+         (flat_tree_container_merge_ending)(seq, old_sz, this->priv_value_comp());
       }
    }
 
@@ -1446,7 +1514,7 @@ class flat_tree
       }
       BOOST_CONTAINER_CATCH_END
       //Step 4: merge the moved elements
-      this->priv_merge_ending(old_sz);
+      (flat_tree_container_merge_ending)(dseq, old_sz, comp);
    }
 
    //Moves all the elements of source to *this.
@@ -1767,25 +1835,6 @@ class flat_tree
       return this->m_data.m_seq.emplace
          ( commit_data.position
          , boost::forward<Convertible>(convertible));
-   }
-
-   //Merges the sorted range [old_sz, size()) with the sorted range [0, old_sz) of the sequence.
-   //If an exception is thrown, the sequence can be unsorted: clear it.
-   void priv_merge_ending(const size_type old_sz)
-   {
-      container_type &seq = this->m_data.m_seq;
-      if(seq.size() != old_sz){
-         BOOST_CONTAINER_TRY{
-            (flat_tree_container_inplace_merge)
-               ( seq, seq.begin() + difference_type(old_sz), this->priv_value_comp()
-               , dtl::bool_<is_contiguous_container<container_type>::value>());
-         }
-         BOOST_CONTAINER_CATCH(...){
-            seq.clear();
-            BOOST_CONTAINER_RETHROW
-         }
-         BOOST_CONTAINER_CATCH_END
-      }
    }
 
    template <class RanIt, class K>
