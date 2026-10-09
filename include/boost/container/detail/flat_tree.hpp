@@ -1484,7 +1484,6 @@ class flat_tree
          return;
       container_type &dseq = this->m_data.m_seq;
       const value_compare &comp = this->priv_value_comp();
-      dtl::bool_<is_contiguous_container<container_type>::value> contiguous_tag;
       const size_type old_sz = dseq.size();
       BOOST_CONTAINER_TRY{
          //Step 1: move all the elements of source to the end of *this and sort them if
@@ -1492,7 +1491,8 @@ class flat_tree
          dseq.insert(dseq.end(), boost::make_move_iterator(sseq.begin()), boost::make_move_iterator(sseq.end()));
          const iterator tail = dseq.begin() + difference_type(old_sz);
          BOOST_IF_CONSTEXPR(!same_order){
-            (flat_tree_container_inplace_sort_ending)(dseq, tail, comp, contiguous_tag);
+            (flat_tree_container_inplace_sort_ending)
+               (dseq, tail, comp, dtl::bool_<is_contiguous_container<container_type>::value>());
          }
          //Step 2: the elements whose key is not in *this (the first of equivalent elements) stay
          //at the end of *this, the other elements go back to source (to its moved-from elements)
@@ -1503,7 +1503,8 @@ class flat_tree
          dseq.erase(r.first, dseq.end());
          //Step 3: sort source with its comparator if necessary (stable sort)
          BOOST_IF_CONSTEXPR(!same_order){
-            (flat_tree_container_inplace_sort_ending)(sseq, sseq.begin(), source.value_comp(), contiguous_tag);
+            (flat_tree_container_inplace_sort_ending)
+               (sseq, sseq.begin(), source.value_comp(), dtl::bool_<is_contiguous_container<container_type>::value>());
          }
       }
       BOOST_CONTAINER_CATCH(...){
