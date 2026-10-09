@@ -50,6 +50,7 @@
 #include <boost/move/detail/launder.hpp>
 #include <boost/move/algo/adaptive_sort.hpp>
 #include <boost/move/algo/detail/pdqsort.hpp>
+#include <boost/move/algo/detail/set_difference.hpp>
 
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #include <boost/move/detail/fwd_macros.hpp>
@@ -1401,61 +1402,78 @@ class flat_tree
          contains(const K& x) const
    {  return this->find(x) != this->cend();  }
 
+   //Moves to *this the elements of source whose key is not in *this. Of several elements of source
+   //with equivalent keys (for the comparator of *this), only the first one in the order of source
+   //is moved. The other elements stay in source.
+   //If C2 is Compare, source is sorted with the comparator of *this: no sort is necessary.
    template<class C2>
-   inline void merge_unique(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
+   void merge_unique(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
    {
-      this->insert_unique_range( boost::make_move_iterator(source.begin())
-                               , boost::make_move_iterator(source.end()));
-   }
-
-   template<class C2>
-   void merge_equal(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
-   {
+      const bool same_order = dtl::is_same<C2, Compare>::value;
       container_type &sseq = source.get_sequence_ref();
+      //A self-merge (only possible with the same type) is a no-op
+      if (BOOST_UNLIKELY(static_cast<const void*>(&source) == static_cast<const void*>(this)) || sseq.empty())
+         return;
+      container_type &dseq = this->m_data.m_seq;
+      const value_compare &comp = this->priv_value_comp();
+      dtl::bool_<is_contiguous_container<container_type>::value> contiguous_tag;
+      const size_type old_sz = dseq.size();
       BOOST_CONTAINER_TRY{
-         this->insert_equal_range( boost::make_move_iterator(sseq.begin())
-                                 , boost::make_move_iterator(sseq.end()));
+         //Step 1: move all the elements of source to the end of *this and sort them if
+         //necessary (stable sort)
+         dseq.insert(dseq.end(), boost::make_move_iterator(sseq.begin()), boost::make_move_iterator(sseq.end()));
+         const iterator tail = dseq.begin() + difference_type(old_sz);
+         BOOST_IF_CONSTEXPR(!same_order){
+            (flat_tree_container_inplace_sort_ending)(dseq, tail, comp, contiguous_tag);
+         }
+         //Step 2: the elements whose key is not in *this (the first of equivalent elements) stay
+         //at the end of *this, the other elements go back to source (to its moved-from elements)
+         const ::boost::move_detail::duo<iterator, iterator> r =
+            boost::movelib::inplace_set_unique_difference_partition
+               (tail, dseq.end(), dseq.begin(), tail, sseq.begin(), comp);
+         sseq.erase(r.second, sseq.end());
+         dseq.erase(r.first, dseq.end());
+         //Step 3: sort source with its comparator if necessary (stable sort)
+         BOOST_IF_CONSTEXPR(!same_order){
+            (flat_tree_container_inplace_sort_ending)(sseq, sseq.begin(), source.value_comp(), contiguous_tag);
+         }
       }
       BOOST_CONTAINER_CATCH(...){
-         //Some elements of source are moved-from: source is no longer sorted
+         //source has moved-from elements and the end of *this is not merged
          sseq.clear();
+         dseq.erase(dseq.begin() + difference_type(old_sz), dseq.end());
          BOOST_CONTAINER_RETHROW
       }
       BOOST_CONTAINER_CATCH_END
-      //All elements are transferred
-      sseq.clear();
+      //Step 4: merge the moved elements
+      this->priv_merge_ending(old_sz);
    }
 
-   inline void merge_unique(flat_tree& source)
+   //Moves all the elements of source to *this.
+   //If C2 is Compare, source is sorted with the comparator of *this: linear merge.
+   template<class C2>
+   void merge_equal(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
    {
-      if (BOOST_UNLIKELY(this == &source))   //A self-merge is a no-op
+      const bool same_order = dtl::is_same<C2, Compare>::value;
+      container_type &sseq = source.get_sequence_ref();
+      //A self-merge (only possible with the same type) is a no-op
+      if (BOOST_UNLIKELY(static_cast<const void*>(&source) == static_cast<const void*>(this)))
          return;
-      const bool value = boost::container::dtl::
-         has_member_function_callable_with_merge_unique<container_type, iterator, iterator, value_compare>::value;
-      (flat_tree_merge_unique)
-         ( this->m_data.m_seq
-         , boost::make_move_iterator(source.m_data.m_seq.begin())
-         , boost::make_move_iterator(source.m_data.m_seq.end())
-         , this->priv_value_comp()
-         , dtl::bool_<value>());
-   }
-
-   //source is sorted with the same comparator type: linear merge
-   void merge_equal(flat_tree& source)
-   {
-      //Merging a container with itself has no effect
-      if (BOOST_UNLIKELY(this == &source))
-         return;
-      container_type &sseq = source.m_data.m_seq;
-      const bool value = boost::container::dtl::
-         has_member_function_callable_with_merge<container_type, iterator, iterator, value_compare>::value;
       BOOST_CONTAINER_TRY{
-         (flat_tree_merge_equal)
-            ( this->m_data.m_seq
-            , boost::make_move_iterator(sseq.begin())
-            , boost::make_move_iterator(sseq.end())
-            , this->priv_value_comp()
-            , dtl::bool_<value>());
+         BOOST_IF_CONSTEXPR(same_order){
+            const bool value = boost::container::dtl::
+               has_member_function_callable_with_merge<container_type, iterator, iterator, value_compare>::value;
+            (flat_tree_merge_equal)
+               ( this->m_data.m_seq
+               , boost::make_move_iterator(sseq.begin())
+               , boost::make_move_iterator(sseq.end())
+               , this->priv_value_comp()
+               , dtl::bool_<value>());
+         }
+         else{
+            this->insert_equal_range( boost::make_move_iterator(sseq.begin())
+                                    , boost::make_move_iterator(sseq.end()));
+         }
       }
       BOOST_CONTAINER_CATCH(...){
          //Some elements of source are moved-from: source is no longer sorted
@@ -1749,6 +1767,25 @@ class flat_tree
       return this->m_data.m_seq.emplace
          ( commit_data.position
          , boost::forward<Convertible>(convertible));
+   }
+
+   //Merges the sorted range [old_sz, size()) with the sorted range [0, old_sz) of the sequence.
+   //If an exception is thrown, the sequence can be unsorted: clear it.
+   void priv_merge_ending(const size_type old_sz)
+   {
+      container_type &seq = this->m_data.m_seq;
+      if(seq.size() != old_sz){
+         BOOST_CONTAINER_TRY{
+            (flat_tree_container_inplace_merge)
+               ( seq, seq.begin() + difference_type(old_sz), this->priv_value_comp()
+               , dtl::bool_<is_contiguous_container<container_type>::value>());
+         }
+         BOOST_CONTAINER_CATCH(...){
+            seq.clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
+      }
    }
 
    template <class RanIt, class K>
