@@ -2404,23 +2404,28 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
          BOOST_CONSTEXPR_OR_CONST size_type block_size = get_block_size();
 
          index_pointer current_node = first.get_node();
+         //Number of elements constructed in the complete chunks (the proxy destroys
+         //the elements of a chunk that throws)
+         size_type constructed = 0u;
 
          BOOST_CONTAINER_TRY{
             const pointer cur = first.get_cur();
             const size_type block = size_type(block_size - size_type(cur - *current_node));
             size_type cnt = n < block ? n: block;
             proxy.uninitialized_copy_n_and_update(this->alloc(), boost::movelib::to_raw_pointer(cur), cnt);
+            constructed = cnt;
             n = size_type(n - cnt);
 
             while (n) {
                ++current_node;
                cnt = n < block_size ? n: block_size;
                proxy.uninitialized_copy_n_and_update(this->alloc(), boost::movelib::to_raw_pointer(*current_node), cnt);
+               constructed = size_type(constructed + cnt);
                n = size_type(n - cnt);
             }
          }
          BOOST_CONTAINER_CATCH(...) {
-            this->prot_destroy_range(first, iterator(*current_node, current_node));
+            this->prot_destroy_range(first, first + difference_type(constructed));
             BOOST_CONTAINER_RETHROW
          }
          BOOST_CONTAINER_CATCH_END
@@ -2499,6 +2504,9 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
          BOOST_CONSTEXPR_OR_CONST size_type block_size = get_block_size();
 
          index_pointer current_node = first.get_node();
+         //[dest_first, dest) holds the elements constructed in the complete chunks
+         //(uninitialized_move_alloc_n destroys the elements of a chunk that throws)
+         const iterator dest_first = dest;
 
          BOOST_CONTAINER_TRY{
             const pointer cur = first.get_cur();
@@ -2515,7 +2523,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
             }
          }
          BOOST_CONTAINER_CATCH(...) {
-            this->prot_destroy_range(first, iterator(*current_node, current_node));
+            this->prot_destroy_range(dest_first, dest);
             BOOST_CONTAINER_RETHROW
          }
          BOOST_CONTAINER_CATCH_END
@@ -2533,6 +2541,9 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
          BOOST_CONSTEXPR_OR_CONST size_type block_size = get_block_size();
 
          index_pointer current_node = first.get_node();
+         //[dest_first, dest) holds the elements constructed in the complete chunks
+         //(uninitialized_copy_alloc_n destroys the elements of a chunk that throws)
+         const iterator dest_first = dest;
 
          BOOST_CONTAINER_TRY{
             const pointer cur = first.get_cur();
@@ -2549,7 +2560,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
             }
          }
          BOOST_CONTAINER_CATCH(...) {
-            this->prot_destroy_range(first.unconst(), iterator(*current_node, current_node));
+            this->prot_destroy_range(dest_first, dest);
             BOOST_CONTAINER_RETHROW
          }
          BOOST_CONTAINER_CATCH_END
