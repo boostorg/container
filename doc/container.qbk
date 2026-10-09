@@ -452,6 +452,16 @@ C++03 onwards):
   [classref boost::container::static_vector static_vector]) through a template parameter and offer additional
   ordered-range insertion overloads.
 
+* [*Operations not available in the standard flat containers]:
+  * `merge()`, from another flat container of the same kind or of the other uniqueness kind (for example
+    `flat_map::merge(flat_multimap&)`), with an equal allocator. If the source uses the same comparator
+    type, both sorted sequences are merged in linear time; with a different comparator type the elements
+    of the source must be sorted first. Unique containers move only the elements whose key is not
+    already in `*this`, the other elements stay in the source.
+  * `reserve()`, `capacity()` and `shrink_to_fit()`, to control the memory of the underlying sequence.
+  * `nth()` and `index_of()`, to convert between iterators and positions.
+  * `get_allocator()` and `get_stored_allocator()`.
+
 The following example shows the most common operations, the single-sequence storage and the
 `extract_sequence`/`adopt_sequence` idiom:
 
