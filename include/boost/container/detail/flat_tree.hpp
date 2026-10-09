@@ -1409,10 +1409,21 @@ class flat_tree
    }
 
    template<class C2>
-   inline void merge_equal(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
+   void merge_equal(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
    {
-      this->insert_equal_range( boost::make_move_iterator(source.begin())
-                              , boost::make_move_iterator(source.end()));
+      container_type &sseq = source.get_sequence_ref();
+      BOOST_CONTAINER_TRY{
+         this->insert_equal_range( boost::make_move_iterator(sseq.begin())
+                                 , boost::make_move_iterator(sseq.end()));
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //Some elements of source are moved-from: source is no longer sorted
+         sseq.clear();
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      //All elements are transferred
+      sseq.clear();
    }
 
    inline void merge_unique(flat_tree& source)
@@ -1429,19 +1440,31 @@ class flat_tree
          , dtl::bool_<value>());
    }
 
-   inline void merge_equal(flat_tree& source)
+   //source is sorted with the same comparator type: linear merge
+   void merge_equal(flat_tree& source)
    {
       //Merging a container with itself has no effect
       if (BOOST_UNLIKELY(this == &source))
          return;
+      container_type &sseq = source.m_data.m_seq;
       const bool value = boost::container::dtl::
          has_member_function_callable_with_merge<container_type, iterator, iterator, value_compare>::value;
-      (flat_tree_merge_equal)
-         ( this->m_data.m_seq
-         , boost::make_move_iterator(source.m_data.m_seq.begin())
-         , boost::make_move_iterator(source.m_data.m_seq.end())
-         , this->priv_value_comp()
-         , dtl::bool_<value>());
+      BOOST_CONTAINER_TRY{
+         (flat_tree_merge_equal)
+            ( this->m_data.m_seq
+            , boost::make_move_iterator(sseq.begin())
+            , boost::make_move_iterator(sseq.end())
+            , this->priv_value_comp()
+            , dtl::bool_<value>());
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //Some elements of source are moved-from: source is no longer sorted
+         sseq.clear();
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      //All elements are transferred
+      sseq.clear();
    }
 
    BOOST_CONTAINER_NODISCARD inline
