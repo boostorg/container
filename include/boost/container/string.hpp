@@ -2354,6 +2354,11 @@ class basic_string
          >::type * = 0
       )
    {
+      //An empty source (e.g. an empty initializer_list) can be a null pointer range
+      if (j1 == j2) {
+         this->erase(i1, i2);
+         return *this;
+      }
       difference_type n = boost::container::iterator_distance(j1, j2);
       const difference_type len = i2 - i1;
       //The source can overlap the overwritten characters (e.g. a part of *this),
