@@ -44,6 +44,7 @@
 
 #ifndef BOOST_NO_EXCEPTIONS
 #include <stdexcept>
+#include <algorithm> //std::fill_n
 #endif // BOOST_NO_EXCEPTIONS
 
 
