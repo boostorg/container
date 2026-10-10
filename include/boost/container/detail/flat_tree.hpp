@@ -617,7 +617,7 @@ class flat_tree
       Data& operator=(BOOST_COPY_ASSIGN_REF(Data) d)
       {
          BOOST_CONTAINER_TRY{
-            this->value_compare::operator=(d);
+            this->get_comp() = d.get_comp();
             m_seq = d.m_seq;
          }
          BOOST_CONTAINER_CATCH(...){

@@ -100,6 +100,38 @@ class allocator_traits_dummy
    void deallocate(T *, std::size_t){}
 };
 
+//Destroys *p with its destructor at the end of the scope, unless it is released.
+//If T is trivially destructible, it does nothing, so no exception handling code is generated.
+template<class T, bool = is_trivially_destructible<T>::value>
+class scoped_object_destructor
+{
+   T *mp;
+   scoped_object_destructor(const scoped_object_destructor &);
+   scoped_object_destructor &operator=(const scoped_object_destructor &);
+
+   public:
+   BOOST_CONTAINER_FORCEINLINE explicit scoped_object_destructor(T *p)
+      : mp(p)
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE ~scoped_object_destructor()
+   {  if(mp) mp->~T();  }
+
+   BOOST_CONTAINER_FORCEINLINE void release()
+   {  mp = 0;  }
+};
+
+template<class T>
+class scoped_object_destructor<T, true>
+{
+   public:
+   BOOST_CONTAINER_FORCEINLINE explicit scoped_object_destructor(T *)
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE void release()
+   {}
+};
+
 #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 template<class T, class ...Args>
@@ -132,15 +164,9 @@ typename dtl::enable_if<dtl::is_pair<T>, void >::type
    construct_type(T* p)
 {
    dtl::construct_type(dtl::addressof(p->first));
-   BOOST_CONTAINER_TRY{
-      dtl::construct_type(dtl::addressof(p->second));
-   }
-   BOOST_CONTAINER_CATCH(...) {
-      typedef typename T::first_type first_type;
-      dtl::addressof(p->first)->~first_type();
-      BOOST_CONTAINER_RETHROW
-   }
-   BOOST_CONTAINER_CATCH_END
+   dtl::scoped_object_destructor<typename T::first_type> guard_first(dtl::addressof(p->first));
+   dtl::construct_type(dtl::addressof(p->second));
+   guard_first.release();
 }
 
 template<class T, class U>
@@ -151,15 +177,9 @@ typename dtl::enable_if_c
 construct_type(T* p, U &u)
 {
    dtl::construct_type(dtl::addressof(p->first), u.first);
-   BOOST_CONTAINER_TRY{
-      dtl::construct_type(dtl::addressof(p->second), u.second);
-   }
-   BOOST_CONTAINER_CATCH(...) {
-      typedef typename T::first_type first_type;
-      dtl::addressof(p->first)->~first_type();
-      BOOST_CONTAINER_RETHROW
-   }
-   BOOST_CONTAINER_CATCH_END
+   dtl::scoped_object_destructor<typename T::first_type> guard_first(dtl::addressof(p->first));
+   dtl::construct_type(dtl::addressof(p->second), u.second);
+   guard_first.release();
 }
 
 template<class T, class U>
@@ -171,15 +191,9 @@ typename dtl::enable_if_c
 construct_type(T* p, BOOST_RV_REF(U) u)
 {
    dtl::construct_type(dtl::addressof(p->first), ::boost::move(u.first));
-   BOOST_CONTAINER_TRY{
-      dtl::construct_type(dtl::addressof(p->second), ::boost::move(u.second));
-   }
-   BOOST_CONTAINER_CATCH(...) {
-      typedef typename T::first_type first_type;
-      dtl::addressof(p->first)->~first_type();
-      BOOST_CONTAINER_RETHROW
-   }
-   BOOST_CONTAINER_CATCH_END
+   dtl::scoped_object_destructor<typename T::first_type> guard_first(dtl::addressof(p->first));
+   dtl::construct_type(dtl::addressof(p->second), ::boost::move(u.second));
+   guard_first.release();
 }
 
 template<class T, class U, class V>
@@ -188,15 +202,9 @@ typename dtl::enable_if<dtl::is_pair<T>, void >::type
 construct_type(T* p, BOOST_FWD_REF(U) x, BOOST_FWD_REF(V) y)
 {
    dtl::construct_type(dtl::addressof(p->first), ::boost::forward<U>(x));
-   BOOST_CONTAINER_TRY{
-      dtl::construct_type(dtl::addressof(p->second), ::boost::forward<V>(y));
-   }
-   BOOST_CONTAINER_CATCH(...) {
-      typedef typename T::first_type first_type;
-      dtl::addressof(p->first)->~first_type();
-      BOOST_CONTAINER_RETHROW
-   }
-   BOOST_CONTAINER_CATCH_END
+   dtl::scoped_object_destructor<typename T::first_type> guard_first(dtl::addressof(p->first));
+   dtl::construct_type(dtl::addressof(p->second), ::boost::forward<V>(y));
+   guard_first.release();
 }
 
 }  //namespace dtl
@@ -263,6 +271,50 @@ BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(is_partially_propagable)
 #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
 #pragma GCC diagnostic pop
 #endif
+
+}  //namespace dtl {
+
+template <typename Allocator>
+struct allocator_traits;
+
+namespace dtl {
+
+//Destroys *p with allocator_traits<Allocator>::destroy at the end of the scope, unless it is released.
+//If T is trivially destructible and destroy only calls the destructor (the allocator has no destroy
+//member, or it is std::allocator), it does nothing, so no exception handling code is generated.
+template< class Allocator, class T
+        , bool = is_trivially_destructible<T>::value &&
+                  ( !is_not_std_allocator<Allocator>::value ||
+                    !has_member_function_callable_with_destroy<Allocator, T* const>::value ) >
+class scoped_alloc_object_destructor
+{
+   Allocator &ma;
+   T *mp;
+   scoped_alloc_object_destructor(const scoped_alloc_object_destructor &);
+   scoped_alloc_object_destructor &operator=(const scoped_alloc_object_destructor &);
+
+   public:
+   BOOST_CONTAINER_FORCEINLINE scoped_alloc_object_destructor(Allocator &a, T *p)
+      : ma(a), mp(p)
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE ~scoped_alloc_object_destructor()
+   {  if(mp) allocator_traits<Allocator>::destroy(ma, mp);  }
+
+   BOOST_CONTAINER_FORCEINLINE void release()
+   {  mp = 0;  }
+};
+
+template<class Allocator, class T>
+class scoped_alloc_object_destructor<Allocator, T, true>
+{
+   public:
+   BOOST_CONTAINER_FORCEINLINE scoped_alloc_object_destructor(Allocator &, T *)
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE void release()
+   {}
+};
 
 }  //namespace dtl {
 
@@ -534,15 +586,9 @@ struct allocator_traits
          (Allocator & a, Pair* p, try_emplace_t, BOOST_FWD_REF(KeyType) k, BOOST_FWD_REF(Args) ...args)
       {
          allocator_traits::construct(a, dtl::addressof(p->first), ::boost::forward<KeyType>(k));
-         BOOST_CONTAINER_TRY{
-            allocator_traits::construct(a, dtl::addressof(p->second), ::boost::forward<Args>(args)...);
-         }
-         BOOST_CONTAINER_CATCH(...) {
-            typedef typename Pair::first_type first_type;
-            dtl::addressof(p->first)->~first_type();
-            BOOST_CONTAINER_RETHROW
-         }
-         BOOST_CONTAINER_CATCH_END
+         dtl::scoped_alloc_object_destructor<Allocator, typename Pair::first_type> guard_first(a, dtl::addressof(p->first));
+         allocator_traits::construct(a, dtl::addressof(p->second), ::boost::forward<Args>(args)...);
+         guard_first.release();
       }
    #endif
 
@@ -634,15 +680,9 @@ struct allocator_traits
          priv_construct(dtl::true_type, Allocator &a, T *p, try_emplace_t, BOOST_FWD_REF(KeyType) k, BOOST_FWD_REF(Args) ...args)
       {
          a.construct(dtl::addressof(p->first), ::boost::forward<KeyType>(k));
-         BOOST_CONTAINER_TRY{
-            a.construct(dtl::addressof(p->second), ::boost::forward<Args>(args)...);
-         }
-         BOOST_CONTAINER_CATCH(...) {
-            typedef typename T::first_type first_type;
-            dtl::addressof(p->first)->~first_type();
-            BOOST_CONTAINER_RETHROW
-         }
-         BOOST_CONTAINER_CATCH_END
+         dtl::scoped_alloc_object_destructor<Allocator, typename T::first_type> guard_first(a, dtl::addressof(p->first));
+         a.construct(dtl::addressof(p->second), ::boost::forward<Args>(args)...);
+         guard_first.release();
       }
 
       template<class T, class ...Args>
@@ -674,15 +714,9 @@ struct allocator_traits
          construct(Allocator &a, T *p, try_emplace_t, BOOST_FWD_REF(KeyType) k BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
       {\
          allocator_traits::construct(a, dtl::addressof(p->first), ::boost::forward<KeyType>(k));\
-         BOOST_CONTAINER_TRY{\
-            allocator_traits::construct(a, dtl::addressof(p->second) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
-         }\
-         BOOST_CONTAINER_CATCH(...) {\
-            typedef typename T::first_type first_type;\
-            dtl::addressof(p->first)->~first_type();\
-            BOOST_CONTAINER_RETHROW\
-         }\
-         BOOST_CONTAINER_CATCH_END\
+         dtl::scoped_alloc_object_destructor<Allocator, typename T::first_type> guard_first(a, dtl::addressof(p->first));\
+         allocator_traits::construct(a, dtl::addressof(p->second) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+         guard_first.release();\
       }\
       \
       //

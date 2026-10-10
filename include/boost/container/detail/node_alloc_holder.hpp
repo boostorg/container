@@ -423,14 +423,10 @@ struct node_alloc_holder
          NodeAlloc &na = this->node_alloc();
          node_allocator_traits_type::construct
             (na, dtl::addressof(p->get_real_data().first), boost::forward<KeyConvertible>(key));
-         BOOST_CONTAINER_TRY{
-            node_allocator_traits_type::construct(na, dtl::addressof(p->get_real_data().second));
-         }
-         BOOST_CONTAINER_CATCH(...){
-            node_allocator_traits_type::destroy(na, dtl::addressof(p->get_real_data().first));
-            BOOST_CONTAINER_RETHROW;
-         }
-         BOOST_CONTAINER_CATCH_END
+         dtl::scoped_alloc_object_destructor<NodeAlloc, typename Node::internal_type::first_type>
+            guard_first(na, dtl::addressof(p->get_real_data().first));
+         node_allocator_traits_type::construct(na, dtl::addressof(p->get_real_data().second));
+         guard_first.release();
       }
       BOOST_CONTAINER_CATCH(...) {
          p->destroy_header();
