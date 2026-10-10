@@ -254,6 +254,8 @@ inline void flat_tree_merge_equal   //has_merge_unique == false
       size_type const old_sz = dest.size();
       BOOST_CONTAINER_TRY{
          dest.insert( dest.end(), first, last);
+         //The comparator can throw also in the assertion
+         BOOST_ASSERT((is_sorted)(dest.begin() + typename SequenceContainer::difference_type(old_sz), dest.end(), comp));
       }
       BOOST_CONTAINER_CATCH(...){
          //Input iterators can leave some new elements at the end: erase them
@@ -261,7 +263,6 @@ inline void flat_tree_merge_equal   //has_merge_unique == false
          BOOST_CONTAINER_RETHROW
       }
       BOOST_CONTAINER_CATCH_END
-      BOOST_ASSERT((is_sorted)(dest.begin() + typename SequenceContainer::difference_type(old_sz), dest.end(), comp));
       (flat_tree_container_merge_ending)(dest, old_sz, comp);
    }
 }
