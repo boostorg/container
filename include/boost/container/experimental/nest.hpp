@@ -1097,6 +1097,24 @@ class nest
    BOOST_STATIC_CONSTEXPR mask_type full = block_base::full;
 
    BOOST_COPYABLE_AND_MOVABLE(nest)
+
+   //This guard calls  priv_reset() to destroy the elements and free the blocks
+   //Used in constructors to ensure that if an exception is thrown during isnertion
+   class priv_construction_guard
+   {
+      nest *m_p;
+
+      public:
+      explicit priv_construction_guard(nest &n) : m_p(&n) {}
+
+      void release()
+      {  m_p = 0;  }
+
+      ~priv_construction_guard()
+      {  if(m_p) m_p->priv_reset();  }
+
+   };
+   friend class priv_construction_guard;
    #endif // BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -1161,7 +1179,9 @@ class nest
       , num_blocks(0)
       , size_(0)
    {
+      priv_construction_guard guard(*this);
       priv_insert_n_default(n);
+      guard.release();
    }
 
    //! <b>Effects</b>: Constructs a nest and inserts n copies of x.
@@ -1176,7 +1196,9 @@ class nest
       , num_blocks(0)
       , size_(0)
    {
+      priv_construction_guard guard(*this);
       insert(n, x);
+      guard.release();
    }
 
    //! <b>Effects</b>: Constructs a nest and inserts a copy of [first, last).
@@ -1197,7 +1219,9 @@ class nest
       , num_blocks(0)
       , size_(0)
    {
+      priv_construction_guard guard(*this);
       insert(first, last);
+      guard.release();
    }
 
    //! <b>Effects</b>: Copy constructs a nest.
@@ -1214,7 +1238,9 @@ class nest
       , num_blocks(0)
       , size_(0)
    {
+      priv_construction_guard guard(*this);
       insert(x.begin(), x.end());
+      guard.release();
    }
 
    //! <b>Effects</b>: Move constructor. Moves x's resources to *this.
@@ -1245,7 +1271,9 @@ class nest
       , num_blocks(0)
       , size_(0)
    {
+      priv_construction_guard guard(*this);
       insert(x.begin(), x.end());
+      guard.release();
    }
 
    //! <b>Effects</b>: Move constructor using the specified allocator.
@@ -1268,7 +1296,9 @@ class nest
          x.size_ = 0;
       }
       else{
+         priv_construction_guard guard(*this);
          priv_insert_range_move(x.begin(), x.end());
+         guard.release();
          x.priv_reset();
       }
    }
@@ -1283,7 +1313,9 @@ class nest
       , num_blocks(0)
       , size_(0)
    {
+      priv_construction_guard guard(*this);
       insert(il.begin(), il.end());
+      guard.release();
    }
    #endif
 
