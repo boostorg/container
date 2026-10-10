@@ -1310,8 +1310,10 @@ class tree
          return this->end();
       }
       else{
-         NodePtr const p(nh.release());
-         return iterator(this->icont().insert_equal(*p));
+         //The comparator can throw: nh owns the node until it is inserted
+         const iterator it(this->icont().insert_equal(*nh.get()));
+         nh.release();
+         return it;
       }
    }
 
@@ -1321,8 +1323,10 @@ class tree
          return this->end();
       }
       else{
-         NodePtr const p(nh.release());
-         return iterator(this->icont().insert_equal(hint.get(), *p));
+         //The comparator can throw: nh owns the node until it is inserted
+         const iterator it(this->icont().insert_equal(hint.get(), *nh.get()));
+         nh.release();
+         return it;
       }
    }
 
