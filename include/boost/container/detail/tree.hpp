@@ -962,13 +962,14 @@ class tree
       BOOST_ASSERT((priv_is_linked)(hint));
       value_type &v = p->get_data();
       insert_commit_data data;
+      //Destroys and deallocates the node if the comparator throws or key is already there
+      scoped_node_destroy_deallocator<NodeAlloc> destroy_deallocator(p, this->node_alloc());
       std::pair<iterator,bool> ret =
          this->insert_unique_check(hint, key_of_value_t()(v), data);
       if(!ret.second){
-         //Destroy unneeded node
-         Destroyer(this->node_alloc())(p);
          return ret.first;
       }
+      destroy_deallocator.release();
       return iterator(this->icont().insert_unique_commit(*p, data));
    }
 
