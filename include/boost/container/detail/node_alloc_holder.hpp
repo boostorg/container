@@ -42,6 +42,7 @@
 // intrusive
 #include <boost/intrusive/detail/mpl.hpp>
 #include <boost/intrusive/options.hpp>
+#include <boost/intrusive/pointer_traits.hpp>
 // move
 #include <boost/move/utility_core.hpp>
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
@@ -469,30 +470,28 @@ struct node_alloc_holder
          multialloc_iterator_t itlast = chain.last();
          chain.clear();
 
-         Node *p = 0;
-            BOOST_CONTAINER_TRY{
-            Deallocator node_deallocator(NodePtr(), nalloc);
-            dtl::scoped_node_destructor<NodeAlloc> sdestructor(nalloc, 0);
+         BOOST_CONTAINER_TRY{
             while(n){
                --n;
-               p = boost::movelib::iterator_to_raw_pointer(itbeg);
+               //The node is removed from the chain: node_deallocator owns it until it is inserted
+               Deallocator node_deallocator(boost::intrusive::pointer_traits<NodePtr>::pointer_to(*itbeg), nalloc);
+               Node * const p = boost::movelib::to_raw_pointer(node_deallocator.get());
                ++itbeg; //Increment iterator before overwriting pointed memory
-               //This does not throw
-               ::new(boost::movelib::iterator_to_raw_pointer(p), boost_container_new_t())
-                  Node(iterator_arg_t(), nalloc, beg);
-               sdestructor.set(p);
+               //The value constructor can throw
+               ::new(p, boost_container_new_t()) Node(iterator_arg_t(), nalloc, beg);
+               dtl::scoped_node_destructor<NodeAlloc> sdestructor(nalloc, p);
                ++beg;
                //This can throw in some containers (predicate might throw).
-               //(sdestructor will destruct the node and node_deallocator will deallocate it in case of exception)
                inserter(*p);
                sdestructor.release();
+               node_deallocator.release();
             }
-            sdestructor.release();
-            node_deallocator.release();
          }
          BOOST_CONTAINER_CATCH(...){
-            chain.incorporate_after(chain.last(), &*itbeg, &*itlast, n);
-            node_allocator_version_traits_type::deallocate_individual(this->node_alloc(), chain);
+            if(n){
+               chain.incorporate_after(chain.last(), &*itbeg, &*itlast, n);
+               node_allocator_version_traits_type::deallocate_individual(this->node_alloc(), chain);
+            }
             BOOST_CONTAINER_RETHROW
          }
          BOOST_CONTAINER_CATCH_END
