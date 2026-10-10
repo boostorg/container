@@ -1392,20 +1392,18 @@ void uninitialized_move_and_insert_alloc
 {
    typedef typename array_destructor<Allocator>::type array_destructor_t;
 
-   //Anti-exception rollbacks
-   array_destructor_t new_values_destroyer(d_first, d_first, a);
-
-   //Initialize with [begin(), pos) old buffer
-   //the start of the new buffer
-   O d_last = ::boost::container::uninitialized_move_alloc(a, first, pos, d_first);
-   new_values_destroyer.set_end(d_last);
-   //Initialize new objects, starting from previous point
-   insertion_proxy.uninitialized_copy_n_and_update(a, d_last, n);
-   d_last += n;
-   new_values_destroyer.set_end(d_last);
-   //Initialize from the rest of the old buffer,
-   //starting from previous point
-   (void) ::boost::container::uninitialized_move_alloc(a, pos, last, d_last);
+   //Construct the new objects first: if this throws, the old buffer is not changed.
+   //The new objects can also refer to old elements that are not yet moved.
+   O const d_new = d_first + iterator_udistance(first, pos);
+   array_destructor_t new_values_destroyer(d_new, d_new, a);
+   insertion_proxy.uninitialized_copy_n_and_update(a, d_new, n);
+   O const d_new_end = d_new + n;
+   new_values_destroyer.set_end(d_new_end);
+   //Move [first, pos) of the old buffer before the new objects
+   (void) ::boost::container::uninitialized_move_alloc(a, first, pos, d_first);
+   new_values_destroyer.set_begin(d_first);
+   //Move [pos, last) of the old buffer after the new objects
+   (void) ::boost::container::uninitialized_move_alloc(a, pos, last, d_new_end);
    //All construction successful, disable rollbacks
    new_values_destroyer.release();
 }
