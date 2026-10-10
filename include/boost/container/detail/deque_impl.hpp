@@ -2308,15 +2308,23 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
 
             BOOST_CONTAINER_TRY {
                this->priv_segmented_proxy_uninitialized_copy_n_and_update(mid_start, mid_count, proxy);
-               this->members_.dec_start(mid_count);
-               this->priv_segmented_uninitialized_move_alloc_n(old_start, elemsbefore, new_start);
+               BOOST_CONTAINER_TRY {
+                  this->priv_segmented_uninitialized_move_alloc_n(old_start, elemsbefore, new_start);
+               }
+               BOOST_CONTAINER_CATCH(...) {
+                  //Destroy the new elements before their nodes are freed
+                  this->prot_destroy_range(mid_start, old_start);
+                  BOOST_CONTAINER_RETHROW
+               }
+               BOOST_CONTAINER_CATCH_END
             }
             BOOST_CONTAINER_CATCH(...) {
                this->prot_deallocate_nodes_if_not_reservable(new_start.m_node, old_start.get_node());
                BOOST_CONTAINER_RETHROW
             }
             BOOST_CONTAINER_CATCH_END
-            this->members_.dec_start(size_type(n - mid_count));
+            //The start changes only when all the new elements are constructed
+            this->members_.dec_start(n);
             this->priv_segmented_proxy_copy_n_and_update(old_start, elemsbefore, proxy);
             return mid_start;
          }
