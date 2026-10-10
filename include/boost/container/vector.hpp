@@ -1098,7 +1098,7 @@ private:
          BOOST_MOVE_I dtl::nat >::type * = 0)
       )
       :  m_holder()
-   {  this->assign(first, last); }
+   {  this->priv_range_initialize(first, last); }
 
    //! <b>Effects</b>: Constructs a vector that will use a copy of allocator a
    //!   and inserts a copy of the range [first, last) in the vector.
@@ -1114,7 +1114,7 @@ private:
          BOOST_MOVE_I dtl::nat >::type * = 0)
       )
       :  m_holder(a)
-   {  this->assign(first, last); }
+   {  this->priv_range_initialize(first, last); }
 
    //! <b>Effects</b>: Copy constructs a vector.
    //!
@@ -2527,6 +2527,19 @@ private:
    #endif
 
    private:
+   template <class InIt>
+   void priv_range_initialize(InIt first, InIt last)
+   {
+      BOOST_CONTAINER_TRY{
+         this->assign(first, last);
+      }
+      BOOST_CONTAINER_CATCH(...){
+         this->clear();
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+   }
+
    template<class InputIt, class Compare>
    inline void priv_merge_generic(InputIt first, InputIt last, Compare comp)
    {
