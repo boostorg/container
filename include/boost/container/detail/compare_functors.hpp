@@ -120,10 +120,10 @@ struct key_node_pred
    {  return t;  }
 
    inline const key_predicate &key_pred() const
-   {  return static_cast<const key_predicate &>(*this);  }
+   {  return this->base_t::get();  }
 
    inline key_predicate &key_pred()
-   {  return static_cast<key_predicate &>(*this);  }
+   {  return this->base_t::get();  }
 
    inline Ret operator()(const key_type &key) const
    {  return this->key_pred()(key);  }
