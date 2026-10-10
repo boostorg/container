@@ -491,11 +491,11 @@ class tree
    {}
 
    inline explicit tree(const key_compare& comp)
-      : AllocHolder(ValComp(comp))
+      : AllocHolder(comp)
    {}
 
    inline explicit tree(const key_compare& comp, const allocator_type& a)
-      : AllocHolder(ValComp(comp), a)
+      : AllocHolder(comp, a)
    {}
 
    inline explicit tree(const allocator_type& a)
@@ -504,7 +504,7 @@ class tree
 
    template <class InputIterator>
    tree(bool unique_insertion, InputIterator first, InputIterator last)
-      : AllocHolder(value_compare(key_compare()))
+      : AllocHolder(key_compare())
    {
       this->tree_construct(unique_insertion, first, last);
       //AllocHolder clears in case of exception
@@ -512,7 +512,7 @@ class tree
 
    template <class InputIterator>
    tree(bool unique_insertion, InputIterator first, InputIterator last, const key_compare& comp)
-      : AllocHolder(value_compare(comp))
+      : AllocHolder(comp)
    {
       this->tree_construct(unique_insertion, first, last);
       //AllocHolder clears in case of exception
@@ -520,7 +520,7 @@ class tree
 
    template <class InputIterator>
    tree(bool unique_insertion, InputIterator first, InputIterator last, const key_compare& comp, const allocator_type& a)
-      : AllocHolder(value_compare(comp), a)
+      : AllocHolder(comp, a)
    {
       this->tree_construct(unique_insertion, first, last);
       //AllocHolder clears in case of exception
@@ -529,14 +529,14 @@ class tree
    //construct with ordered range
    template <class InputIterator>
    tree( ordered_range_t, InputIterator first, InputIterator last)
-      : AllocHolder(value_compare(key_compare()))
+      : AllocHolder(key_compare())
    {
       this->tree_construct(ordered_range_t(), first, last);
    }
 
    template <class InputIterator>
    tree( ordered_range_t, InputIterator first, InputIterator last, const key_compare& comp)
-      : AllocHolder(value_compare(comp))
+      : AllocHolder(comp)
    {
       this->tree_construct(ordered_range_t(), first, last);
    }
@@ -544,7 +544,7 @@ class tree
    template <class InputIterator>
    tree( ordered_range_t, InputIterator first, InputIterator last
          , const key_compare& comp, const allocator_type& a)
-      : AllocHolder(value_compare(comp), a)
+      : AllocHolder(comp, a)
    {
       this->tree_construct(ordered_range_t(), first, last);
    }
@@ -642,7 +642,7 @@ class tree
    public:
 
    inline tree(const tree& x)
-      :  AllocHolder(x, x.value_comp())
+      :  AllocHolder(x, x.key_comp())
    {
       this->icont().clone_from
          (x.icont(), typename AllocHolder::cloner(*this), Destroyer(this->node_alloc()));
@@ -650,11 +650,11 @@ class tree
 
    inline tree(BOOST_RV_REF(tree) x)
       BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_constructible<Compare>::value)
-      :  AllocHolder(BOOST_MOVE_BASE(AllocHolder, x), x.value_comp())
+      :  AllocHolder(BOOST_MOVE_BASE(AllocHolder, x), x.key_comp())
    {}
 
    inline tree(const tree& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
-      :  AllocHolder(x.value_comp(), a)
+      :  AllocHolder(x.key_comp(), a)
    {
       this->icont().clone_from
          (x.icont(), typename AllocHolder::cloner(*this), Destroyer(this->node_alloc()));
@@ -662,7 +662,7 @@ class tree
    }
 
    tree(BOOST_RV_REF(tree) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
-      :  AllocHolder(x.value_comp(), a)
+      :  AllocHolder(x.key_comp(), a)
    {
       if(this->node_alloc() == x.node_alloc()){
          this->icont().swap(x.icont());
