@@ -1443,15 +1443,15 @@ class flat_map
    }
 #endif
 
-   //! <b>Requires</b>: this->get_allocator() == source.get_allocator(). If C2 is the same type as
-   //!   key_compare, source.key_comp() must order the elements in the same way as this->key_comp().
+   //! <b>Requires</b>: this->get_allocator() == source.get_allocator().
    //!
    //! <b>Effects</b>: Moves into *this each element of source whose key is not equivalent to the key
    //!   of an element of *this, using the comparison object of *this. If several elements of source
    //!   have equivalent keys, only the first one is moved. The elements that are not moved stay
    //!   in source.
    //!
-   //! <b>Complexity</b>: If C2 is the same type as key_compare, linear in this->size() + source.size():
+   //! <b>Complexity</b>: If C2 is the same type as key_compare and it is an empty class (a comparator
+   //!   without state, e.g. std::less), linear in this->size() + source.size():
    //!   both sequences are sorted and are merged in place. Otherwise the elements of source are
    //!   sorted with the comparison object of *this, and the elements that stay in source are sorted
    //!   again with the comparison object of source: N*log(N), where N is source.size(), plus the linear merge.
@@ -1463,7 +1463,8 @@ class flat_map
    //! <b>Note</b>: Invalidates all iterators and references.
    //!
    //! <b>Note</b>: Non-standard extension (the standard flat containers have no merge). Merging from a container with
-   //!   the same key_compare type is more efficient, as the elements of source do not need to be sorted.
+   //!   the same key_compare type, if it is an empty class, is more efficient, as the elements of source
+   //!   do not need to be sorted.
    template<class C2>
    inline void merge(flat_map<Key, T, C2, AllocatorOrContainer>& source)
    {  m_flat_tree.merge_unique(source.tree());   }
@@ -2875,14 +2876,14 @@ class flat_multimap
    }
 #endif
 
-   //! <b>Requires</b>: this->get_allocator() == source.get_allocator(). If C2 is the same type as
-   //!   key_compare, source.key_comp() must order the elements in the same way as this->key_comp().
+   //! <b>Requires</b>: this->get_allocator() == source.get_allocator().
    //!
    //! <b>Effects</b>: Moves all the elements of source into *this, ordered with the comparison
    //!   object of *this. Equivalent elements keep their relative order, and the elements from
    //!   source go after the equivalent elements of *this. source is empty after the call.
    //!
-   //! <b>Complexity</b>: If C2 is the same type as key_compare, linear in this->size() + source.size():
+   //! <b>Complexity</b>: If C2 is the same type as key_compare and it is an empty class (a comparator
+   //!   without state, e.g. std::less), linear in this->size() + source.size():
    //!   both sequences are sorted and are merged in place. Otherwise the elements of source are
    //!   sorted first: N*log(N), where N is source.size(), plus the linear merge.
    //!
@@ -2893,7 +2894,8 @@ class flat_multimap
    //! <b>Note</b>: Invalidates all iterators and references.
    //!
    //! <b>Note</b>: Non-standard extension (the standard flat containers have no merge). Merging from a container with
-   //!   the same key_compare type is more efficient, as the elements of source do not need to be sorted.
+   //!   the same key_compare type, if it is an empty class, is more efficient, as the elements of source
+   //!   do not need to be sorted.
    template<class C2>
    inline void merge(flat_multimap<Key, T, C2, AllocatorOrContainer>& source)
    {  m_flat_tree.merge_equal(source.tree());   }

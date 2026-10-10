@@ -637,6 +637,15 @@ class flat_tree
    Data m_data;
    BOOST_COPYABLE_AND_MOVABLE(flat_tree)
 
+   //Two objects of the same empty comparator type have no state, so they order the elements
+   //in the same way. Objects of other comparator types (function pointers, comparators with
+   //state) can order the elements in a different way.
+   template<class C2>
+   struct flat_tree_same_order
+   {
+      static const bool value = dtl::is_same<C2, Compare>::value && dtl::is_empty<Compare>::value;
+   };
+
    public:
 
    typedef typename container_type::value_type              value_type;
@@ -1474,11 +1483,11 @@ class flat_tree
    //Moves to *this the elements of source whose key is not in *this. Of several elements of source
    //with equivalent keys (for the comparator of *this), only the first one in the order of source
    //is moved. The other elements stay in source.
-   //If C2 is Compare, source is sorted with the comparator of *this: no sort is necessary.
+   //If flat_tree_same_order<C2>, source is sorted with the comparator of *this: no sort is necessary.
    template<class C2>
    void merge_unique(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
    {
-      const bool same_order = dtl::is_same<C2, Compare>::value;
+      const bool same_order = flat_tree_same_order<C2>::value;
       container_type &sseq = source.get_sequence_ref();
       //A self-merge (only possible with the same type) is a no-op
       if (BOOST_UNLIKELY(static_cast<const void*>(&source) == static_cast<const void*>(this)) || sseq.empty())
@@ -1520,11 +1529,11 @@ class flat_tree
    }
 
    //Moves all the elements of source to *this.
-   //If C2 is Compare, source is sorted with the comparator of *this: linear merge.
+   //If flat_tree_same_order<C2>, source is sorted with the comparator of *this: linear merge.
    template<class C2>
    void merge_equal(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
    {
-      const bool same_order = dtl::is_same<C2, Compare>::value;
+      const bool same_order = flat_tree_same_order<C2>::value;
       container_type &sseq = source.get_sequence_ref();
       //A self-merge (only possible with the same type) is a no-op
       if (BOOST_UNLIKELY(static_cast<const void*>(&source) == static_cast<const void*>(this)))

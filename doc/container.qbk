@@ -454,10 +454,7 @@ C++03 onwards):
 
 * [*Operations not available in the standard flat containers]:
   * `merge()`, from another flat container of the same kind or of the other uniqueness kind (for example
-    `flat_map::merge(flat_multimap&)`), with an equal allocator. If the source uses the same comparator
-    type, both sorted sequences are merged in linear time; with a different comparator type the elements
-    of the source must be sorted first. Unique containers move only the elements whose key is not
-    already in `*this`, the other elements stay in the source.
+    `flat_map::merge(flat_multimap&)`), with an equal allocator.
   * `reserve()`, `capacity()` and `shrink_to_fit()`, to control the memory of the underlying sequence.
   * `nth()` and `index_of()`, to convert between iterators and positions.
   * `get_allocator()` and `get_stored_allocator()`.
