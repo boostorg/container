@@ -1946,15 +1946,28 @@ class stable_vector
    {
       index_traits_type::initialize_end_node(this->index, this->internal_data.end_node, num_new);
 
-      //Now try to fill the pool with new data
-      if(this->internal_data.pool_size < num_new){
-         this->priv_increase_pool(num_new - this->internal_data.pool_size);
-      }
-
-      //Now try to make room in the vector
+      //First make room in the index
       const node_base_ptr_ptr old_buffer = this->index.data();
       this->index.insert(this->index.begin() + (difference_type)idx, num_new, node_ptr());
-      bool new_buffer = this->index.data() != old_buffer;
+      const bool new_buffer = this->index.data() != old_buffer;
+
+      //Now try to fill the pool with new data
+      if(this->internal_data.pool_size < num_new){
+         BOOST_CONTAINER_TRY{
+            this->priv_increase_pool(num_new - this->internal_data.pool_size);
+         }
+         BOOST_CONTAINER_CATCH(...){
+            //Remove the new null pointers. If the index was reallocated, all the nodes point
+            //to the old buffer; otherwise the nodes after idx are back in their old position.
+            this->index.erase( this->index.begin() + (difference_type)idx
+                             , this->index.begin() + difference_type(idx + num_new));
+            if(new_buffer){
+               index_traits_type::fix_up_pointers_from(this->index, this->index.begin());
+            }
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
+      }
 
       //Fix the pointers for the newly allocated buffer
       const index_iterator index_beg = this->index.begin();
