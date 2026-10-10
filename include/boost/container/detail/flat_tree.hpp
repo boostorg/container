@@ -41,6 +41,7 @@
 #include <boost/container/detail/is_container.hpp>
 
 #include <boost/intrusive/detail/minimal_pair_header.hpp>      //pair
+#include <boost/intrusive/detail/ebo_functor_holder.hpp>      //ebo_functor_holder
 
 #include <boost/move/iterator.hpp>
 #include <boost/move/adl_move_swap.hpp>
@@ -501,31 +502,32 @@ inline typename SequenceContainer::size_type
 
 template<class Compare, class Value, class KeyOfValue>
 class flat_tree_value_compare
-   : private Compare
+   : private boost::intrusive::detail::ebo_functor_holder<Compare>
 {
+   typedef boost::intrusive::detail::ebo_functor_holder<Compare> base_t;
    typedef Value              first_argument_type;
    typedef Value              second_argument_type;
    typedef bool               return_type;
    public:
    inline flat_tree_value_compare()
-      : Compare()
+      : base_t()
    {}
 
    inline flat_tree_value_compare(const Compare &pred)
-      : Compare(pred)
+      : base_t(pred)
    {}
 
    inline bool operator()(const Value& lhs, const Value& rhs) const
    {
       KeyOfValue key_extract;
-      return Compare::operator()(key_extract(lhs), key_extract(rhs));
+      return this->base_t::get()(key_extract(lhs), key_extract(rhs));
    }
 
    inline const Compare &get_comp() const
-      {  return *this;  }
+      {  return this->base_t::get();  }
 
    inline Compare &get_comp()
-      {  return *this;  }
+      {  return this->base_t::get();  }
 };
 
 
