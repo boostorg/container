@@ -693,6 +693,12 @@ int main()
    if (!boost::container::test::instantiate_constructors<flat_set<int>, flat_multiset<int> >())
       return 1;
 
+   if (!test::test_function_pointer_comparator
+         < flat_set<int, bool(*)(int, int)>
+         , flat_multiset<int, bool(*)(int, int)>
+         >())
+      return 1;
+
    if (!test::test_heterogeneous_lookup
          < flat_set<int, less_transparent>
          , flat_multiset<int, less_transparent>

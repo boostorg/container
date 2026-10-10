@@ -387,6 +387,12 @@ int main()
    if (!test_heterogeneous_lookup_by_partial_key())
       return 1;
 
+   if (!test::test_function_pointer_comparator
+         < flat_map<int, int, bool(*)(int, int)>
+         , flat_multimap<int, int, bool(*)(int, int)>
+         >())
+      return 1;
+
    ////////////////////////////////////
    //    Void value_type allocator
    ////////////////////////////////////
