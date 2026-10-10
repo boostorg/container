@@ -31,7 +31,6 @@
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/value_init.hpp>
 #include <boost/container/detail/pair.hpp>
-#include <boost/container/detail/pair_key_mapped_of_value.hpp>
 #include <boost/container/detail/algorithm.hpp>
 
 // move
@@ -122,10 +121,7 @@ class map
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)                const_reverse_iterator;
    //typedef std::pair<key_type, mapped_type>                                               nonconst_value_type;
    typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                                movable_value_type;
-   typedef BOOST_CONTAINER_IMPDEF(node_handle<
-      typename base_t::stored_allocator_type
-      BOOST_MOVE_I pair_key_mapped_of_value
-         <key_type BOOST_MOVE_I mapped_type> >)                                     node_type;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::node_type)                             node_type;
    typedef BOOST_CONTAINER_IMPDEF
       (insert_return_type_base<iterator BOOST_MOVE_I node_type>)                    insert_return_type;
 
@@ -897,11 +893,7 @@ class map
    //!
    //! <b>Complexity</b>: Logarithmic
    insert_return_type insert(BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
-   {
-      typename base_t::node_type  n(boost::move(nh));
-      typename base_t::insert_return_type base_ret(this->base_t::insert_unique_node(boost::move(n)));
-      return insert_return_type (base_ret.inserted, base_ret.position, boost::move(base_ret.node));
-   }
+   {  return this->base_t::insert_unique_node(boost::move(nh));  }
 
    //! <b>Effects</b>: Same as `insert(node_type && nh)` but the element is inserted as close as possible
    //!   to the position just prior to "hint".
@@ -909,11 +901,7 @@ class map
    //! <b>Complexity</b>: logarithmic in general, but amortized constant if the element is inserted
    //!   right before "hint".
    insert_return_type insert(const_iterator hint, BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
-   {
-      typename base_t::node_type  n(boost::move(nh));
-      typename base_t::insert_return_type base_ret(this->base_t::insert_unique_node(hint, boost::move(n)));
-      return insert_return_type (base_ret.inserted, base_ret.position, boost::move(base_ret.node));
-   }
+   {  return this->base_t::insert_unique_node(hint, boost::move(nh));  }
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -1159,11 +1147,7 @@ class map
    //!
    //! <b>Complexity</b>: log(size()).
    node_type extract(const key_type& k)
-   {
-      typename base_t::node_type base_nh(this->base_t::extract(k));
-      node_type nh(boost::move(base_nh));
-      return BOOST_MOVE_RET(node_type, nh);
-   }
+   {  return this->base_t::extract(k);  }
 
    //! <b>Requires</b>: This overload is available only if
    //! key_compare::is_transparent exists.
@@ -1182,11 +1166,7 @@ class map
             !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
             BOOST_MOVE_I node_type>::type)
       extract(BOOST_FWD_REF(K) k)
-   {
-      typename base_t::node_type base_nh(this->base_t::extract(k));
-      node_type nh(boost::move(base_nh));
-      return BOOST_MOVE_RET(node_type, nh);
-   }
+   {  return this->base_t::extract(k);  }
 
    //! <b>Effects</b>: Removes the element pointed to by "position".
    //!
@@ -1194,11 +1174,7 @@ class map
    //!
    //! <b>Complexity</b>: Amortized constant.
    node_type extract(const_iterator position)
-   {
-      typename base_t::node_type base_nh(this->base_t::extract(position));
-      node_type nh(boost::move(base_nh));
-      return BOOST_MOVE_RET(node_type, nh);
-   }
+   {  return this->base_t::extract(position);  }
 
    //! <b>Requires</b>: this->get_allocator() == source.get_allocator().
    //!
@@ -1670,10 +1646,7 @@ class multimap
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)                const_reverse_iterator;
    //typedef std::pair<key_type, mapped_type>                                               nonconst_value_type;
    typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                                movable_value_type;
-   typedef BOOST_CONTAINER_IMPDEF(node_handle<
-      typename base_t::stored_allocator_type
-      BOOST_MOVE_I pair_key_mapped_of_value
-         <key_type BOOST_MOVE_I mapped_type> >)                                     node_type;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::node_type)                             node_type;
 
    //allocator_type::value_type type must be std::pair<CONST Key, T>
    BOOST_CONTAINER_STATIC_ASSERT((dtl::is_same<typename allocator_type::value_type, std::pair<const Key, T> >::value));
@@ -2147,10 +2120,7 @@ class multimap
    //!
    //! <b>Complexity</b>: Logarithmic
    iterator insert(BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
-   {
-      typename base_t::node_type n(boost::move(nh));
-      return this->base_t::insert_equal_node(boost::move(n));
-   }
+   {  return this->base_t::insert_equal_node(boost::move(nh));  }
 
    //! <b>Effects</b>: Same as `insert(node_type && nh)` but the element is inserted as close as possible
    //!   to the position just prior to "hint".
@@ -2158,10 +2128,7 @@ class multimap
    //! <b>Complexity</b>: logarithmic in general, but amortized constant if the element is inserted
    //!   right before "hint".
    iterator insert(const_iterator hint, BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
-   {
-      typename base_t::node_type n(boost::move(nh));
-      return this->base_t::insert_equal_node(hint, boost::move(n));
-   }
+   {  return this->base_t::insert_equal_node(hint, boost::move(nh));  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -2181,10 +2148,7 @@ class multimap
 
    //! @copydoc ::boost::container::map::extract(const key_type&)
    node_type extract(const key_type& k)
-   {
-      typename base_t::node_type base_nh(this->base_t::extract(k));
-      return node_type(boost::move(base_nh));
-   }
+   {  return this->base_t::extract(k);  }
 
    //! @copydoc ::boost::container::map::extract(K&&)
    template<class K>
@@ -2196,18 +2160,11 @@ class multimap
             !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
             BOOST_MOVE_I node_type>::type)
       extract(BOOST_FWD_REF(K) k)
-   {
-      typename base_t::node_type base_nh(this->base_t::extract(k));
-      node_type nh(boost::move(base_nh));
-      return BOOST_MOVE_RET(node_type, nh);
-   }
+   {  return this->base_t::extract(k);  }
 
    //! @copydoc ::boost::container::map::extract(const_iterator)
    node_type extract(const_iterator position)
-   {
-      typename base_t::node_type base_nh(this->base_t::extract(position));
-      return node_type (boost::move(base_nh));
-   }
+   {  return this->base_t::extract(position);  }
 
    //! <b>Requires</b>: this->get_allocator() == source.get_allocator().
    //!

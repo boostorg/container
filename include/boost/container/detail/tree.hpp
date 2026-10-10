@@ -35,6 +35,7 @@
 #include <boost/container/detail/iterators.hpp>
 #include <boost/container/detail/node_alloc_holder.hpp>
 #include <boost/container/detail/pair.hpp>
+#include <boost/container/detail/pair_key_mapped_of_value.hpp>
 #include <boost/container/detail/type_traits.hpp>
 // intrusive
 #include <boost/intrusive/pointer_traits.hpp>
@@ -369,6 +370,25 @@ struct tree_key_of_value<boost::container::dtl::pair<T1, T2>, int>
 };
 
 
+//KeyMapped argument of the node handle: void for sets, key() and mapped() for maps
+template<class T, class KeyOfValue>
+struct tree_node_handle_key_mapped
+{
+   typedef void type;
+};
+
+template<class T1, class T2>
+struct tree_node_handle_key_mapped<std::pair<T1, T2>, int>
+{
+   typedef pair_key_mapped_of_value<typename dtl::remove_const<T1>::type, T2> type;
+};
+
+template<class T1, class T2>
+struct tree_node_handle_key_mapped<boost::container::dtl::pair<T1, T2>, int>
+{
+   typedef pair_key_mapped_of_value<typename dtl::remove_const<T1>::type, T2> type;
+};
+
 template <class T, class KeyOfValue, class Compare, class Allocator, class Options>
 struct make_intrusive_tree_type
    : dtl::intrusive_tree_type
@@ -448,7 +468,9 @@ class tree
    typedef boost::container::reverse_iterator
       <const_iterator>                                      const_reverse_iterator;
    typedef node_handle
-      < NodeAlloc, void>                                    node_type;
+      < NodeAlloc
+      , typename tree_node_handle_key_mapped
+         <T, KeyOfValue>::type>                             node_type;
    typedef insert_return_type_base
       <iterator, node_type>                                 insert_return_type;
 
@@ -1265,7 +1287,7 @@ class tree
       if(!nh.empty()){
          insert_commit_data data;
          std::pair<iterator,bool> ret =
-            this->insert_unique_check(hint, key_of_value_t()(nh.value()), data);
+            this->insert_unique_check(hint, key_of_value_t()(nh.get()->get_data()), data);
          if(ret.second){
             irt.inserted = true;
             irt.position = iterator(this->icont().insert_unique_commit(*nh.get(), data));
