@@ -1679,9 +1679,11 @@ class stable_vector
                *it_past_newly_constructed = n;
                //Constructs and fixes up pointers This can throw
                this->priv_build_node_from_it(n, it_past_newly_constructed, first);
-               ++first;
+               //The node holds a constructed element: advance before ++first, which can throw
                ++it_past_newly_constructed;
+               ++first;
             }
+            rollback.release();
             //rollback.~insert_rollback() called in case of exception
          }
          //Fix up pointers for past-new nodes (new nodes were fixed during construction) and
@@ -1889,14 +1891,24 @@ class stable_vector
       public:
 
       insert_rollback(stable_vector &sv, index_iterator &it_past_constructed, const index_iterator &it_past_new)
-         : m_sv(sv), m_it_past_constructed(it_past_constructed), m_it_past_new(it_past_new)
+         : m_sv(sv), m_it_past_constructed(it_past_constructed), m_it_past_new(it_past_new), m_active(true)
       {}
+
+      void release()
+      {  m_active = false;  }
 
       ~insert_rollback()
       {
-         if(m_it_past_constructed != m_it_past_new){
-            m_sv.priv_put_in_pool(node_ptr_traits::static_cast_from(*m_it_past_constructed));
-            index_iterator e = m_sv.index.erase(m_it_past_constructed, m_it_past_new);
+         if(m_active){
+            index_iterator e = m_it_past_constructed;
+            if(m_it_past_constructed != m_it_past_new){
+               //The node in *m_it_past_constructed (null if not taken from the pool yet)
+               //has no constructed element: return it to the pool
+               if(!!*m_it_past_constructed)
+                  m_sv.priv_put_in_pool(node_ptr_traits::static_cast_from(*m_it_past_constructed));
+               e = m_sv.index.erase(m_it_past_constructed, m_it_past_new);
+            }
+            //Fix up the pointers of the nodes after the inserted ones
             index_traits_type::fix_up_pointers_from(m_sv.index, e);
          }
       }
@@ -1905,6 +1917,7 @@ class stable_vector
       stable_vector &m_sv;
       index_iterator &m_it_past_constructed;
       const index_iterator &m_it_past_new;
+      bool m_active;
    };
 
    class push_back_rollback
