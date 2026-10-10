@@ -833,7 +833,23 @@ class tree
    inline void swap(ThisType& x)
       BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::dtl::is_nothrow_swappable<Compare>::value )
-   {  AllocHolder::swap(x);   }
+   {
+      BOOST_IF_CONSTEXPR(boost::container::dtl::is_nothrow_swappable<Compare>::value){
+         AllocHolder::swap(x);
+      }
+      else{
+         BOOST_CONTAINER_TRY{
+            AllocHolder::swap(x);
+         }
+         BOOST_CONTAINER_CATCH(...){
+            //Only the comparator swap can throw: a tree can have the comparator of the other tree
+            this->clear();
+            x.clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
+      }
+   }
 
    protected:
 
@@ -904,7 +920,21 @@ class tree
       //Move allocator if needed
       this->AllocHolder::move_assign_alloc(x);
       //Obtain resources
-      this->icont() = boost::move(x.icont());
+      BOOST_IF_CONSTEXPR(boost::container::dtl::is_nothrow_swappable<Compare>::value){
+         this->icont() = boost::move(x.icont());
+      }
+      else{
+         BOOST_CONTAINER_TRY{
+            this->icont() = boost::move(x.icont());
+         }
+         BOOST_CONTAINER_CATCH(...){
+            //Only the comparator swap can throw: a tree can have the comparator of the other tree
+            this->clear();
+            x.clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
+      }
    }
 
    void priv_move_assign(BOOST_RV_REF(tree) x, dtl::bool_<false> /*steal_resources*/)
@@ -915,22 +945,32 @@ class tree
          this->priv_move_assign(boost::move(x), dtl::true_());
       }
       else {
-         //Transfer all the nodes to a temporary tree
-         //If anything goes wrong, all the nodes will be destroyed
-         //automatically
-         Icont other_tree(::boost::move(this->icont()));
+         BOOST_CONTAINER_TRY{
+            //Transfer all the nodes to a temporary tree
+            //If anything goes wrong, all the nodes will be destroyed
+            //automatically
+            Icont other_tree(::boost::move(this->icont()));
 
-         //Now recreate the source tree reusing nodes stored by other_tree
-         this->icont().clone_from
-         (::boost::move(x.icont())
-            , RecyclingCloner<AllocHolder, true>(*this, other_tree)
-            , Destroyer(this->node_alloc()));
+            //Now recreate the source tree reusing nodes stored by other_tree
+            this->icont().clone_from
+            (::boost::move(x.icont())
+               , RecyclingCloner<AllocHolder, true>(*this, other_tree)
+               , Destroyer(this->node_alloc()));
 
-         //If there are remaining nodes, destroy them
-         NodePtr p;
-         while ((p = other_tree.unlink_leftmost_without_rebalance())) {
-            AllocHolder::destroy_node(p);
+            //If there are remaining nodes, destroy them
+            NodePtr p;
+            while ((p = other_tree.unlink_leftmost_without_rebalance())) {
+               AllocHolder::destroy_node(p);
+            }
          }
+         BOOST_CONTAINER_CATCH(...){
+            //Some elements of x can be moved-from: x is no longer sorted
+            x.clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
+         //The elements of x are moved-from: x is no longer sorted
+         x.clear();
       }
    }
 
