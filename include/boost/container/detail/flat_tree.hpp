@@ -610,25 +610,51 @@ class flat_tree
          : value_compare(boost::move(static_cast<value_compare&>(d))), m_seq(boost::move(d.m_seq), a)
       {}
 
+      //If an exception is thrown, the elements can be unsorted for the comparator
+      //(partial copy or a different comparator): clear them to keep the invariants.
       Data& operator=(BOOST_COPY_ASSIGN_REF(Data) d)
       {
-         this->value_compare::operator=(d);
-         m_seq = d.m_seq;
+         BOOST_CONTAINER_TRY{
+            this->value_compare::operator=(d);
+            m_seq = d.m_seq;
+         }
+         BOOST_CONTAINER_CATCH(...){
+            m_seq.clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
          return *this;
       }
 
       Data& operator=(BOOST_RV_REF(Data) d)
       {
-         this->value_compare::operator=(boost::move(static_cast<value_compare &>(d)));
-         m_seq = boost::move(d.m_seq);
+         BOOST_CONTAINER_TRY{
+            this->value_compare::operator=(boost::move(static_cast<value_compare &>(d)));
+            m_seq = boost::move(d.m_seq);
+         }
+         BOOST_CONTAINER_CATCH(...){
+            //Elements can be moved one by one: d can also hold moved-from elements
+            m_seq.clear();
+            d.m_seq.clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
          return *this;
       }
 
       void swap(Data &d)
       {
-         value_compare& mycomp    = *this, & othercomp = d;
-         boost::adl_move_swap(mycomp, othercomp);
-         this->m_seq.swap(d.m_seq);
+         BOOST_CONTAINER_TRY{
+            value_compare& mycomp    = *this, & othercomp = d;
+            boost::adl_move_swap(mycomp, othercomp);
+            this->m_seq.swap(d.m_seq);
+         }
+         BOOST_CONTAINER_CATCH(...){
+            m_seq.clear();
+            d.m_seq.clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
       }
 
       container_type m_seq;
