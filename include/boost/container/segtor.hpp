@@ -718,23 +718,25 @@ class segtor : public deque_impl<T, Allocator, true, Options>
 
    //! <b>Effects</b>: Erases the element at p.
    //!
-   //! <b>Throws</b>: Nothing.
+   //! <b>Throws</b>: Nothing unless the move assignment of T throws.
    //!
    //! <b>Complexity</b>: Linear to the elements between pos and the
    //!   last element (if pos is near the end) or the first element
    //!   if (pos is near the beginning).
    //!   Constant if pos is the first or the last element.
-   iterator erase(const_iterator p) BOOST_NOEXCEPT_OR_NOTHROW;
+   iterator erase(const_iterator p)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<value_type>::value);
 
    //! <b>Effects</b>: Erases the elements pointed by [first, last).
    //!
-   //! <b>Throws</b>: Nothing.
+   //! <b>Throws</b>: Nothing unless the move assignment of T throws.
    //!
    //! <b>Complexity</b>: Linear to the distance between first and
    //!   last plus the elements between pos and the
    //!   last element (if pos is near the end) or the first element
    //!   if (pos is near the beginning).
-   iterator erase(const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW;
+   iterator erase(const_iterator first, const_iterator last)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<value_type>::value);
 
    //! <b>Effects</b>: Inserts a copy of x at the end of the container.
    //!

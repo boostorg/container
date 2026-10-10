@@ -2024,7 +2024,8 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
          this->priv_pop_back_aux();
    }
 
-   iterator erase(const_iterator pos) BOOST_NOEXCEPT_OR_NOTHROW
+   iterator erase(const_iterator pos)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<value_type>::value)
    {
       BOOST_ASSERT(this->priv_in_range(pos));
       iterator next = pos.unconst();
@@ -2044,7 +2045,8 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       return pos.unconst();
    }
 
-   iterator erase(const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW
+   iterator erase(const_iterator first, const_iterator last)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<value_type>::value)
    {
       BOOST_ASSERT(first == last ||
          (first < last && this->priv_in_range(first) && this->priv_in_range_or_end(last)));
