@@ -1887,15 +1887,9 @@ class flat_map
       iterator i = this->lower_bound(k);
 
       if (i == end() || key_comp()(k, (*i).first)) {
-         typename dtl::aligned_storage<sizeof(impl_value_type), dtl::alignment_of<impl_value_type>::value>::type v;
-         impl_value_type *vp = move_detail::launder_cast<impl_value_type *>(&v);
-
-         impl_get_stored_allocator_noconst_return_t r = m_flat_tree.get_stored_allocator();
-         boost::container::allocator_traits<impl_stored_allocator_type>::construct
-            (r, vp, try_emplace_t(), ::boost::forward<K>(key));
-         i = BOOST_CONTAINER_FORCECOPY(iterator, this->m_flat_tree.insert_equal
-               (BOOST_CONTAINER_FORCECOPY(impl_iterator, i), ::boost::move(*vp)));
-         vp->~impl_value_type();
+         //i is the insertion position: construct the new element in place
+         i = BOOST_CONTAINER_FORCECOPY(iterator, this->m_flat_tree.get_sequence_ref().emplace
+               (BOOST_CONTAINER_FORCECOPY(impl_iterator, i), try_emplace_t(), ::boost::forward<K>(key)));
       }
       return (*i).second;
    }
