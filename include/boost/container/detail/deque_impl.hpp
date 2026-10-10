@@ -2358,7 +2358,9 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
                this->priv_segmented_proxy_uninitialized_copy_n_and_update(old_finish, raw_gap, proxy);
             }
             BOOST_CONTAINER_CATCH(...) {
-               this->prot_destroy_range(old_finish, old_finish + difference_type(elemsafter));
+               //Destroy the moved elements (the new elements constructed in
+               //[old_finish, old_finish + raw_gap) are destroyed by the failed copy)
+               this->prot_destroy_range(old_finish + difference_type(raw_gap), old_finish + difference_type(n));
                BOOST_CONTAINER_RETHROW
             }
             BOOST_CONTAINER_CATCH_END
