@@ -834,21 +834,27 @@ class tree
       BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::dtl::is_nothrow_swappable<Compare>::value )
    {
-      BOOST_IF_CONSTEXPR(boost::container::dtl::is_nothrow_swappable<Compare>::value){
+      //Tag dispatch instead of BOOST_IF_CONSTEXPR: a rethrow in the body of
+      //a noexcept function triggers -Wterminate even if it is never executed
+      this->priv_swap(x, dtl::bool_<boost::container::dtl::is_nothrow_swappable<Compare>::value>());
+   }
+
+   private:
+   inline void priv_swap(ThisType& x, dtl::true_ /*nothrow_swappable_compare*/)
+   {  AllocHolder::swap(x);  }
+
+   void priv_swap(ThisType& x, dtl::false_ /*nothrow_swappable_compare*/)
+   {
+      BOOST_CONTAINER_TRY{
          AllocHolder::swap(x);
       }
-      else{
-         BOOST_CONTAINER_TRY{
-            AllocHolder::swap(x);
-         }
-         BOOST_CONTAINER_CATCH(...){
-            //Only the comparator swap can throw: a tree can have the comparator of the other tree
-            this->clear();
-            x.clear();
-            BOOST_CONTAINER_RETHROW
-         }
-         BOOST_CONTAINER_CATCH_END
+      BOOST_CONTAINER_CATCH(...){
+         //Only the comparator swap can throw: a tree can have the comparator of the other tree
+         this->clear();
+         x.clear();
+         BOOST_CONTAINER_RETHROW
       }
+      BOOST_CONTAINER_CATCH_END
    }
 
    protected:
