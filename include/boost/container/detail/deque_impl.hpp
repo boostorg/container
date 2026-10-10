@@ -2460,14 +2460,17 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       }
    }
 
+   //Constructs n elements at first. If an exception is thrown, frees the nodes
+   //[new_nodes_first, new_nodes_last), allocated for the new elements.
    template <class InsertProxy>
-   void priv_insert_segmented_uninitialized_copy_n_and_update(const iterator first, size_type n, InsertProxy proxy)
+   void priv_insert_segmented_uninitialized_copy_n_and_update
+      (const iterator first, size_type n, InsertProxy proxy, index_pointer new_nodes_first, index_pointer new_nodes_last)
    {
       BOOST_CONTAINER_TRY{
          this->priv_segmented_proxy_uninitialized_copy_n_and_update(first, n, proxy);
       }
       BOOST_CONTAINER_CATCH(...) {
-         this->prot_deallocate_nodes_if_not_reservable(first.get_node() + 1, (first+difference_type(n)).get_node() + 1);
+         this->prot_deallocate_nodes_if_not_reservable(new_nodes_first, new_nodes_last);
          BOOST_CONTAINER_RETHROW
       }
       BOOST_CONTAINER_CATCH_END
@@ -2616,7 +2619,9 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    {
       this->priv_reserve_elements_at_back(n);
       const iterator old_finish = this->prot_finish();
-      this->priv_insert_segmented_uninitialized_copy_n_and_update(old_finish, n, proxy);
+      //New nodes: after the node of old_finish, up to the node of the new finish
+      this->priv_insert_segmented_uninitialized_copy_n_and_update
+         (old_finish, n, proxy, old_finish.get_node() + 1, (old_finish + difference_type(n)).get_node() + 1);
       this->prot_inc_finish(n);
       return old_finish;
    }
@@ -2628,7 +2633,9 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       this->priv_reserve_elements_at_front(n);
       const iterator old_start = this->prot_start();
       const iterator new_start = old_start - difference_type(n);
-      this->priv_insert_segmented_uninitialized_copy_n_and_update(new_start, n, proxy);
+      //New nodes: from the node of new_start, up to the node of old_start (it holds elements)
+      this->priv_insert_segmented_uninitialized_copy_n_and_update
+         (new_start, n, proxy, new_start.get_node(), old_start.get_node());
       this->members_.dec_start(n);
       return new_start;
    }
