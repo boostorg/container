@@ -544,8 +544,11 @@ class devector
             // new allocator cannot free existing storage
             this->clear();
             this->deallocate_buffer();
+            //Leave a valid empty devector in case the copy below throws
             m_.capacity = 0u;
             m_.buffer = pointer();
+            m_.front_idx = 0u;
+            m_.set_back_idx(0u);
          }
          dtl::bool_<do_propagate> flag;
          dtl::assign_alloc(this_alloc, other_alloc, flag);
