@@ -915,18 +915,17 @@ class list
       BOOST_ASSERT((priv_is_linked)(position));
       //Optimized allocation and construction
       insertion_functor func(this->icont(), position.get());
-      iterator before_p(position.get());
-      --before_p;
+      typename Icont::iterator ret;
       BOOST_CONTAINER_TRY{
-         this->allocate_many_and_construct(first, boost::container::iterator_udistance(first, last), func);
+         ret = this->allocate_many_and_construct(first, boost::container::iterator_udistance(first, last), func);
       }
       BOOST_CONTAINER_CATCH(...){
-         //No effects: erase the inserted elements
-         this->erase(++before_p, position);
+         //No effects: erase the inserted elements (func.result() is the first one)
+         this->erase(iterator(func.result()), position);
          BOOST_CONTAINER_RETHROW
       }
       BOOST_CONTAINER_CATCH_END
-      return ++before_p;
+      return iterator(ret);
    }
    #endif
 
@@ -1503,15 +1502,29 @@ class list
       Icont &icont_;
       typedef typename Icont::const_iterator iconst_iterator;
       const iconst_iterator pos_;
+      //The element before pos_: the elements are inserted after it
+      const iconst_iterator before_pos_;
+
+      static iconst_iterator prior(iconst_iterator it)
+      {  return --it;  }
 
       public:
-      insertion_functor(Icont &icont, typename Icont::const_iterator pos)
-         :  icont_(icont), pos_(pos)
+      typedef typename Icont::iterator result_type;
+
+      insertion_functor(Icont &icont, iconst_iterator pos)
+         :  icont_(icont), pos_(pos), before_pos_(prior(pos))
       {}
 
       void operator()(Node &n)
       {
          this->icont_.insert(pos_, n);
+      }
+
+      //The first inserted element, or pos_ if no element was inserted
+      result_type result() const
+      {
+         iconst_iterator it(before_pos_);
+         return (++it).unconst();
       }
    };
 

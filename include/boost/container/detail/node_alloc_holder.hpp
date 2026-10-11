@@ -188,6 +188,15 @@ struct base_node
 
 namespace dtl {
 
+//Base of the inserters of allocate_many_and_construct that have no result
+struct void_result_inserter
+{
+   typedef void result_type;
+
+   BOOST_CONTAINER_FORCEINLINE void result() const
+   {}
+};
+
 BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(key_compare)
 BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(key_equal)
 BOOST_INTRUSIVE_INSTANTIATE_DEFAULT_TYPE_TMPLT(hasher)
@@ -450,12 +459,13 @@ struct node_alloc_holder
       dtl::swap_alloc(this->node_alloc(), x.node_alloc(), flag);
    }
 
-   //Returns the last constructed node or a null pointer if n is 0
+   //Constructs n nodes from beg and passes each node to inserter(Node &).
+   //Returns inserter.result() (of type Inserter::result_type, it can be void),
+   //called on the copy of inserter that received the nodes.
    template<class FwdIterator, class Inserter>
-   NodePtr allocate_many_and_construct
+   typename Inserter::result_type allocate_many_and_construct
       (FwdIterator beg, size_type n, Inserter inserter)
    {
-      NodePtr last = NodePtr();
       if(n){
          typedef typename node_allocator_version_traits_type::multiallocation_chain multiallocation_chain_t;
 
@@ -482,7 +492,6 @@ struct node_alloc_holder
                //This can throw in some containers (predicate might throw).
                inserter(*p);
                sdestructor.release();
-               last = node_deallocator.get();
                node_deallocator.release();
             }
          }
@@ -495,7 +504,7 @@ struct node_alloc_holder
          }
          BOOST_CONTAINER_CATCH_END
       }
-      return last;
+      return inserter.result();
    }
 
    inline void clear(version_1)

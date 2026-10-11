@@ -127,6 +127,7 @@ struct iiterator_node_value_type< base_node<T, intrusive_tree_hook<VoidPointer, 
 
 template<class Node, class Icont>
 class insert_equal_end_hint_functor
+   : public void_result_inserter
 {
    Icont &icont_;
 
@@ -141,6 +142,7 @@ class insert_equal_end_hint_functor
 
 template<class Node, class Icont>
 class push_back_functor
+   : public void_result_inserter
 {
    Icont &icont_;
 
