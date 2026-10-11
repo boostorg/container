@@ -279,15 +279,24 @@ struct allocator_traits;
 
 namespace dtl {
 
+//True if allocator_traits<Allocator>::destroy(a, p) only calls the destructor of a T object: the
+//allocator has no destroy member, or it is std::allocator. Allocators whose destroy member only
+//calls the destructor (e.g. scoped_allocator_adaptor) specialize it.
+template<class Allocator, class T>
+struct allocator_destroy_is_destructor
+{
+   BOOST_STATIC_CONSTEXPR bool value =
+      !is_not_std_allocator<Allocator>::value ||
+      !has_member_function_callable_with_destroy<Allocator, T* const>::value;
+};
+
 //True if allocator_traits<Allocator>::destroy(a, p) does nothing for a T object: T is trivially
-//destructible and destroy only calls the destructor (the allocator has no destroy member, or it is
-//std::allocator).
+//destructible and destroy only calls the destructor.
 template<class Allocator, class T>
 struct is_trivially_alloc_destructible
 {
    BOOST_STATIC_CONSTEXPR bool value = is_trivially_destructible<T>::value &&
-      ( !is_not_std_allocator<Allocator>::value ||
-        !has_member_function_callable_with_destroy<Allocator, T* const>::value );
+      allocator_destroy_is_destructor<Allocator, T>::value;
 };
 
 //Destroys *p with allocator_traits<Allocator>::destroy at the end of the scope, unless it is released.
