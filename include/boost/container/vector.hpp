@@ -63,6 +63,7 @@
 #include <boost/move/algo/unique.hpp>
 #include <boost/move/algo/predicate.hpp>
 #include <boost/move/algo/detail/set_difference.hpp>
+#include <boost/move/algo/detail/rotate.hpp>
 // other
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>
@@ -2172,7 +2173,9 @@ private:
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InpIt throws or T's copy/move constructor/assignment throws.
    //!
-   //! <b>Complexity</b>: Linear to boost::container::iterator_distance [first, last).
+   //! <b>Complexity</b>: If reallocation happens, linear in the number of elements of the
+   //!   resulting vector; otherwise, linear in the number of elements inserted plus the
+   //!   distance to the end of the vector.
    template <class InIt>
    iterator insert(const_iterator pos, InIt first, InIt last
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -2186,11 +2189,20 @@ private:
    {
       BOOST_ASSERT(this->priv_in_range_or_end(pos));
       const size_type n_pos = size_type(pos - this->cbegin());
-      iterator it(vector_iterator_get_ptr(pos));
-      for(;first != last; ++first){
-         it = this->emplace(it, *first);
-         ++it;
+      const size_type old_size = this->size();
+      //Append the new elements and rotate them
+      BOOST_CONTAINER_TRY{
+         for(;first != last; ++first){
+            this->emplace_back(*first);
+         }
       }
+      BOOST_CONTAINER_CATCH(...){
+         this->priv_destroy_last_n(size_type(this->size() - old_size));
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      T * const raw_beg = this->priv_raw_begin();
+      boost::movelib::rotate_gcd(raw_beg + n_pos, raw_beg + old_size, this->priv_raw_end());
       return iterator(this->m_holder.start() + difference_type(n_pos));
    }
 
