@@ -604,6 +604,13 @@ class stable_vector
    class insert_rollback;
    friend class insert_rollback;
 
+   //Erases the size() - old_size elements inserted at position pos_n
+   void priv_erase_inserted(difference_type pos_n, size_type old_size) BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      const const_iterator b(this->cbegin() + pos_n);
+      this->erase(b, b + difference_type(this->size() - old_size));
+   }
+
    class push_back_rollback;
    friend class push_back_rollback;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -1644,9 +1651,18 @@ class stable_vector
       BOOST_ASSERT(this->priv_in_range_or_end(p));
       BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT;
       const difference_type pos_n = p - this->cbegin();
-      for(; first != last; ++first){
-         this->emplace(p, *first);
+      const size_type old_size = this->size();
+      BOOST_CONTAINER_TRY{
+         for(; first != last; ++first){
+            this->emplace(p, *first);
+         }
       }
+      BOOST_CONTAINER_CATCH(...){
+         //No effects: erase the inserted elements
+         this->priv_erase_inserted(pos_n, old_size);
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
       return this->begin() + difference_type(pos_n);
    }
 
@@ -1663,14 +1679,15 @@ class stable_vector
       const size_type num_new = boost::container::iterator_udistance(first, last);
       const size_type idx     = static_cast<size_type>(p - this->cbegin());
       if(num_new){
+         const size_type old_size = this->size();
          //Fills the node pool and inserts num_new null pointers in idx.
          //If a new buffer was needed fixes up pointers up to idx so
          //past-new nodes are not aligned until the end of this function
          //or in a rollback in case of exception
          index_iterator it_past_newly_constructed(this->priv_insert_forward_non_templated(idx, num_new));
          const index_iterator it_past_new(it_past_newly_constructed + difference_type(num_new));
-         {
-            //Prepare rollback
+         BOOST_CONTAINER_TRY{
+            //Prepare rollback: removes the slots of the elements that are not constructed
             insert_rollback rollback(*this, it_past_newly_constructed, it_past_new);
             while(first != last){
                const node_ptr n = this->priv_get_from_pool();
@@ -1686,6 +1703,12 @@ class stable_vector
             rollback.release();
             //rollback.~insert_rollback() called in case of exception
          }
+         BOOST_CONTAINER_CATCH(...){
+            //No effects: erase the constructed elements (the rollback removed the other slots)
+            this->priv_erase_inserted(difference_type(idx), old_size);
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
          //Fix up pointers for past-new nodes (new nodes were fixed during construction) and
          //nodes before insertion p in priv_insert_forward_non_templated(...)
          index_traits_type::fix_up_pointers_from(this->index, it_past_newly_constructed);
