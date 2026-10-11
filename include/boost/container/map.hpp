@@ -558,6 +558,9 @@ class map
    //!
    //! <b>Returns</b>: A reference to the mapped_type corresponding to k in *this.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    mapped_type& operator[](const key_type& k)
    {  return this->priv_subscript(k);  }
@@ -566,6 +569,9 @@ class map
    //! value_type(boost::move(k), T()) into the map (the key is move-constructed)
    //!
    //! <b>Returns</b>: A reference to the mapped_type corresponding to k in *this.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic.
    mapped_type& operator[](key_type&& k)
@@ -577,6 +583,9 @@ class map
    //! value_type(boost::forward<K>(k), T()) into the map
    //!
    //! <b>Returns</b>: A reference to the mapped_type corresponding to k in *this.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic.
    template <class K>
@@ -792,6 +801,9 @@ class map
    //!   if the insertion takes place, and the iterator component of the pair
    //!   points to the element with key equivalent to the key of x.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    inline std::pair<iterator,bool> insert(const value_type& x)
    { return this->base_t::insert_unique_convertible(x); }
@@ -803,6 +815,9 @@ class map
    //!   if the insertion takes place, and the iterator component of the pair
    //!   points to the element with key equivalent to the key of x.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    inline std::pair<iterator,bool> insert(BOOST_RV_REF(value_type) x)
    { return this->base_t::insert_unique_convertible(boost::move(x)); }
@@ -813,6 +828,9 @@ class map
    //! <b>Returns</b>: The bool component of the returned pair is true if and only
    //!   if the insertion takes place, and the iterator component of the pair
    //!   points to the element with key equivalent to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic.
    template <class Pair>
@@ -835,6 +853,9 @@ class map
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    inline iterator insert(const_iterator p, BOOST_RV_REF(value_type) x)
@@ -846,6 +867,9 @@ class map
    //!
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
@@ -891,12 +915,18 @@ class map
    //!   false, insert_return_type.node has the previous value of nh, and insert_return_type.position
    //!   points to an element with a key equivalent to nh.key().
    //!
+   //! <b>Throws</b>: If the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic
    insert_return_type insert(BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
    {  return this->base_t::insert_unique_node(boost::move(nh));  }
 
    //! <b>Effects</b>: Same as `insert(node_type && nh)` but the element is inserted as close as possible
    //!   to the position just prior to "hint".
+   //!
+   //! <b>Throws</b>: If the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: logarithmic in general, but amortized constant if the element is inserted
    //!   right before "hint".
@@ -914,6 +944,9 @@ class map
    //!   if the insertion takes place, and the iterator component of the pair
    //!   points to the element with key equivalent to the key of x.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    template <class... Args>
@@ -927,6 +960,9 @@ class map
    //!
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
@@ -944,6 +980,9 @@ class map
    //! <b>Returns</b>: The bool component of the returned pair is true if and only if the
    //! insertion took place. The returned iterator points to the map element whose key is equivalent to k.
    //! 
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    template <class... Args>
    inline std::pair<iterator, bool> try_emplace(const key_type& k, BOOST_FWD_REF(Args)... args)
@@ -958,6 +997,9 @@ class map
    //! 
    //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
    //! 
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if value
    //!   is inserted right before p.
    template <class... Args>
@@ -974,6 +1016,9 @@ class map
    //! <b>Returns</b>: The bool component of the returned pair is true if and only if the
    //! insertion took place. The returned iterator points to the map element whose key is equivalent to k.
    //! 
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    template <class... Args>
    inline std::pair<iterator, bool> try_emplace(BOOST_RV_REF(key_type) k, BOOST_FWD_REF(Args)... args)
@@ -988,6 +1033,9 @@ class map
    //! 
    //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
    //! 
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if value
    //!   is inserted right before p.
    template <class... Args>
@@ -1006,6 +1054,9 @@ class map
    //! <b>Returns</b>: The bool component of the returned pair is true if and only if the
    //! insertion took place. The returned iterator points to the map element whose key is equivalent to k.
    //! 
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic search time plus linear insertion time in case the key is not present.
    template <class K, class... Args>
    inline BOOST_CONTAINER_DOC1ST
@@ -1030,6 +1081,9 @@ class map
    //! 
    //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
    //! 
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if value
    //!   is inserted right before p. Linear insertion time in case no equivalent key is present.
    template <class K, class... Args>
@@ -1991,6 +2045,9 @@ class multimap
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    template <class... Args>
@@ -2003,6 +2060,9 @@ class multimap
    //!
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
@@ -2029,6 +2089,9 @@ class multimap
    //! <b>Effects</b>: Inserts x and returns the iterator pointing to the
    //!   newly inserted element.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    inline iterator insert(const value_type& x)
    { return this->base_t::insert_equal_convertible(x); }
@@ -2036,12 +2099,18 @@ class multimap
    //! <b>Effects</b>: Inserts a new value move-constructed from x and returns
    //!   the iterator pointing to the newly inserted element.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    inline iterator insert(BOOST_RV_REF(value_type) x)
    { return this->base_t::insert_equal_convertible(boost::move(x)); }
 
    //! <b>Effects</b>: Inserts a new value constructed from x and returns
    //!   the iterator pointing to the newly inserted element.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic.
    template<class Pair>
@@ -2060,6 +2129,9 @@ class multimap
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    inline iterator insert(const_iterator p, const value_type& x)
@@ -2071,6 +2143,9 @@ class multimap
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    inline iterator insert(const_iterator p, BOOST_RV_REF(movable_value_type) x)
@@ -2081,6 +2156,9 @@ class multimap
    //!
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
@@ -2118,12 +2196,18 @@ class multimap
    //!   If a range containing elements with keys equivalent to nh.key() exists, 
    //!   the element is inserted at the end of that range. nh is always emptied.
    //!
+   //! <b>Throws</b>: If the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic
    iterator insert(BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
    {  return this->base_t::insert_equal_node(boost::move(nh));  }
 
    //! <b>Effects</b>: Same as `insert(node_type && nh)` but the element is inserted as close as possible
    //!   to the position just prior to "hint".
+   //!
+   //! <b>Throws</b>: If the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: logarithmic in general, but amortized constant if the element is inserted
    //!   right before "hint".

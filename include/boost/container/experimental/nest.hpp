@@ -1549,6 +1549,7 @@ class nest
    //! <b>Throws</b>: Nothing unless the element's constructor throws. If it does,
    //!   the container is left in its original state (strong exception guarantee):
    //!   any block speculatively allocated for the new element is freed.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant (amortized).
    template<class ...Args>
@@ -1580,6 +1581,9 @@ class nest
    //! <b>Effects</b>: Inserts an element constructed in-place with args (hint ignored).
    //!
    //! <b>Returns</b>: An iterator to the inserted element.
+   //!
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant (amortized).
    template<class ...Args>
@@ -1710,21 +1714,33 @@ class nest
    //!
    //! <b>Returns</b>: An iterator to the inserted element.
    //!
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Constant (amortized).
    BOOST_CONTAINER_FORCEINLINE iterator insert(const T& x)
    { return emplace(x); }
 
    //! <b>Effects</b>: Inserts a copy of x (hint ignored).
+   //!
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If an exception is thrown, there are no effects.
    BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator, const T& x)
    { return emplace(x); }
 
    //! <b>Effects</b>: Inserts x by moving.
    //!
    //! <b>Returns</b>: An iterator to the inserted element.
+   //!
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If an exception is thrown, there are no effects.
    BOOST_CONTAINER_FORCEINLINE iterator insert(BOOST_RV_REF(value_type) x)
    { return emplace(boost::move(x)); }
 
    //! <b>Effects</b>: Inserts x by moving (hint ignored).
+   //!
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If an exception is thrown, there are no effects.
    BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator, BOOST_RV_REF(value_type) x)
    { return emplace(boost::move(x)); }
 

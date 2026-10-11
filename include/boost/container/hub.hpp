@@ -1316,13 +1316,15 @@ public:
    }
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
-   //!   std::forward<Args>(args)... at a position chosen by the container. If an
-   //!   exception is thrown there are no effects. args may directly or indirectly
-   //!   refer to a value in *this.
+   //!   std::forward<Args>(args)... at a position chosen by the container. args
+   //!   may directly or indirectly refer to a value in *this.
    //!
    //! <b>Requires</b>: T is EmplaceConstructible into the hub from args.
    //!
    //! <b>Returns</b>: An iterator pointing to the new element.
+   //!
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant. Exactly one object of type T is constructed.
    template<typename... Args>
@@ -1351,6 +1353,9 @@ public:
    //!
    //! <b>Returns</b>: An iterator pointing to the new element.
    //!
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Constant.
    template<typename... Args>
    BOOST_CONTAINER_FORCEINLINE iterator emplace_hint(const_iterator, Args&&... args)
@@ -1363,6 +1368,9 @@ public:
    //!   emplace(std::forward<decltype(x)>(x)).
    //!
    //! <b>Returns</b>: An iterator pointing to the new element.
+   //!
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_FORCEINLINE iterator insert(const T& x) { return emplace(x); }

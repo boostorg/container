@@ -1480,6 +1480,7 @@ class stable_vector
    //! <b>Returns</b>: A reference to the created object.
    //!
    //! <b>Throws</b>: If memory allocation throws or the in-place constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    template<class ...Args>
@@ -1497,6 +1498,7 @@ class stable_vector
    //!   std::forward<Args>(args)... before p
    //!
    //! <b>Throws</b>: If memory allocation throws or the in-place constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
@@ -1548,6 +1550,7 @@ class stable_vector
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    void push_back(const T &x);
@@ -1556,6 +1559,7 @@ class stable_vector
    //!   and moves the resources of x to this new element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    void push_back(T &&x);
@@ -1571,6 +1575,7 @@ class stable_vector
    //! <b>Returns</b>: An iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws or x's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
@@ -1583,6 +1588,7 @@ class stable_vector
    //! <b>Returns</b>: an iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
@@ -1598,6 +1604,7 @@ class stable_vector
    //! <b>Returns</b>: an iterator to the first inserted element or p if n is 0.
    //!
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to n.
    iterator insert(const_iterator p, size_type n, const T& t)
@@ -1616,6 +1623,9 @@ class stable_vector
    //!
    //! <b>Returns</b>: an iterator to the first inserted element or p if first == last.
    //!
+   //! <b>Throws</b>: If memory allocation or the construction of an element throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Linear to distance [il.begin(), il.end()).
    inline iterator insert(const_iterator p, std::initializer_list<value_type> il)
    {
@@ -1633,6 +1643,7 @@ class stable_vector
    //!
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InpIt throws or T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to distance [first, last).
    template <class InputIterator>

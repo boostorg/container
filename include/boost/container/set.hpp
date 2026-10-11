@@ -540,6 +540,7 @@ class set
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   Key's in-place constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic.
    template <class... Args>
@@ -553,6 +554,9 @@ class set
    //!   should start to search.
    //!
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic.
    template <class... Args>
@@ -583,6 +587,9 @@ class set
    //!   if the insertion takes place, and the iterator component of the pair
    //!   points to the element with key equivalent to the key of x.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    std::pair<iterator, bool> insert(const value_type &x)
    {  return this->base_t::insert_unique_convertible(x); }
@@ -593,6 +600,9 @@ class set
    //! <b>Returns</b>: The bool component of the returned pair is true if and only
    //!   if the insertion takes place, and the iterator component of the pair
    //!   points to the element with key equivalent to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic.
    std::pair<iterator, bool> insert(value_type &&x)
@@ -607,6 +617,9 @@ class set
    //! <b>Returns</b>: The bool component of the returned pair is true if and only
    //!   if the insertion takes place, and the iterator component of the pair
    //!   points to the element with key equivalent to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic.
    template <class K>
@@ -628,6 +641,9 @@ class set
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    iterator insert(const_iterator p, const value_type &x)
@@ -637,6 +653,9 @@ class set
    //!   p is a hint pointing to where the insert should start to search.
    //!
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic.
    iterator insert(const_iterator p, value_type &&x)
@@ -652,6 +671,9 @@ class set
    //!   p is a hint pointing to where the insert should start to search.
    //!
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic.
    template <class K>
@@ -697,10 +719,16 @@ class set
 #endif
 
    //! @copydoc ::boost::container::map::insert(node_type&&)
+   //!
+   //! <b>Throws</b>: If the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    inline insert_return_type insert(BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
    {  return this->base_t::insert_unique_node(boost::move(nh));  }
 
    //! @copydoc ::boost::container::map::insert(const_iterator, node_type&&)
+   //!
+   //! <b>Throws</b>: If the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    inline insert_return_type insert(const_iterator hint, BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
    {  return this->base_t::insert_unique_node(hint, boost::move(nh));  }
 
@@ -1442,6 +1470,9 @@ class multiset
    //!   std::forward<Args>(args)... and returns the iterator pointing to the
    //!   newly inserted element.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    template <class... Args>
    inline iterator emplace(BOOST_FWD_REF(Args)... args)
@@ -1452,6 +1483,9 @@ class multiset
    //!
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
@@ -1479,6 +1513,9 @@ class multiset
    //! <b>Effects</b>: Inserts x and returns the iterator pointing to the
    //!   newly inserted element.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    iterator insert(const value_type &x);
 
@@ -1486,6 +1523,9 @@ class multiset
    //!
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
@@ -1501,6 +1541,9 @@ class multiset
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    iterator insert(const_iterator p, const value_type &x);
@@ -1510,6 +1553,9 @@ class multiset
    //!
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
@@ -1535,10 +1581,16 @@ class multiset
 #endif
 
    //! @copydoc ::boost::container::multimap::insert(node_type&&)
+   //!
+   //! <b>Throws</b>: If the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    inline iterator insert(BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
    {  return this->base_t::insert_equal_node(boost::move(nh));  }
 
    //! @copydoc ::boost::container::multimap::insert(const_iterator, node_type&&)
+   //!
+   //! <b>Throws</b>: If the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    inline iterator insert(const_iterator hint, BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
    {  return this->base_t::insert_equal_node(hint, boost::move(nh));  }
 
