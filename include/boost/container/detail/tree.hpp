@@ -333,6 +333,32 @@ class RecyclingCloner
    intrusive_container &m_icont;
 };
 
+//Destroys the nodes that remain in an intrusive tree at the end of the scope.
+//Used with RecyclingCloner: the nodes that are not reused are destroyed after
+//success and also if an exception is thrown before all of them are reused.
+template<class AllocHolder>
+class remaining_nodes_destroyer
+{
+   typedef typename AllocHolder::intrusive_container  intrusive_container;
+   typedef typename AllocHolder::NodePtr              node_ptr_type;
+
+   AllocHolder &m_holder;
+   intrusive_container &m_icont;
+
+   public:
+   remaining_nodes_destroyer(AllocHolder &holder, intrusive_container &itree)
+      :  m_holder(holder), m_icont(itree)
+   {}
+
+   ~remaining_nodes_destroyer()
+   {
+      node_ptr_type p;
+      while((p = m_icont.unlink_leftmost_without_rebalance())){
+         m_holder.destroy_node(p);
+      }
+   }
+};
+
 template<class Options>
 struct get_tree_opt
 {
@@ -692,18 +718,15 @@ class tree
          //If anything goes wrong, all the nodes will be destroyed
          //automatically
          Icont other_tree(::boost::move(this->icont()));
+         //Destroys the nodes that are not reused, also if the comparator
+         //assignment or a node assignment throws
+         remaining_nodes_destroyer<AllocHolder> rest_destroyer(*this, other_tree);
 
          //Now recreate the source tree reusing nodes stored by other_tree
          this->icont().clone_from
             (x.icont()
             , RecyclingCloner<AllocHolder, false>(*this, other_tree)
             , Destroyer(this->node_alloc()));
-
-         //If there are remaining nodes, destroy them
-         NodePtr p;
-         while((p = other_tree.unlink_leftmost_without_rebalance())){
-            AllocHolder::destroy_node(p);
-         }
       }
       return *this;
    }
@@ -956,18 +979,15 @@ class tree
             //If anything goes wrong, all the nodes will be destroyed
             //automatically
             Icont other_tree(::boost::move(this->icont()));
+            //Destroys the nodes that are not reused, also if the comparator
+            //assignment or a node assignment throws
+            remaining_nodes_destroyer<AllocHolder> rest_destroyer(*this, other_tree);
 
             //Now recreate the source tree reusing nodes stored by other_tree
             this->icont().clone_from
             (::boost::move(x.icont())
                , RecyclingCloner<AllocHolder, true>(*this, other_tree)
                , Destroyer(this->node_alloc()));
-
-            //If there are remaining nodes, destroy them
-            NodePtr p;
-            while ((p = other_tree.unlink_leftmost_without_rebalance())) {
-               AllocHolder::destroy_node(p);
-            }
          }
          BOOST_CONTAINER_CATCH(...){
             //Some elements of x can be moved-from: x is no longer sorted
