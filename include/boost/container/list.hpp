@@ -710,6 +710,7 @@ class list
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's in-place constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant
    template <class... Args>
@@ -723,6 +724,7 @@ class list
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's in-place constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant
    template <class... Args>
@@ -734,6 +736,7 @@ class list
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's in-place constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant
    template <class... Args>
@@ -773,6 +776,7 @@ class list
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    void push_front(const T &x);
@@ -781,6 +785,7 @@ class list
    //!   and moves the resources of x to this new element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    void push_front(T &&x);
@@ -793,6 +798,7 @@ class list
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    void push_back(const T &x);
@@ -801,6 +807,7 @@ class list
    //!   and moves the resources of x to this new element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    void push_back(T &&x);
@@ -816,6 +823,7 @@ class list
    //! <b>Returns</b>: an iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws or x's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    iterator insert(const_iterator p, const T &x);
@@ -827,6 +835,7 @@ class list
    //! <b>Returns</b>: an iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    iterator insert(const_iterator p, T &&x);
@@ -841,6 +850,7 @@ class list
    //! <b>Returns</b>: an iterator to the first inserted element or p if n is 0.
    //!
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to n.
    iterator insert(const_iterator position, size_type n, const T& x)
@@ -858,6 +868,7 @@ class list
    //!
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InpIt throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to distance [first, last).
    template <class InpIt>
@@ -874,15 +885,20 @@ class list
    {
       BOOST_ASSERT((priv_is_linked)(p));
       const typename Icont::iterator ipos(p.get());
-      iterator ret_it(ipos);
-      if(first != last){
-         ret_it = iterator(this->icont().insert(ipos, *this->create_node_from_it(first)));
-         ++first;
+      iterator before_p(ipos);
+      --before_p;
+      BOOST_CONTAINER_TRY{
+         for (; first != last; ++first){
+            this->icont().insert(ipos, *this->create_node_from_it(first));
+         }
       }
-      for (; first != last; ++first){
-         this->icont().insert(ipos, *this->create_node_from_it(first));
+      BOOST_CONTAINER_CATCH(...){
+         //No effects: erase the inserted elements
+         this->erase(++before_p, p);
+         BOOST_CONTAINER_RETHROW
       }
-      return ret_it;
+      BOOST_CONTAINER_CATCH_END
+      return ++before_p;
    }
 
    #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -901,7 +917,15 @@ class list
       insertion_functor func(this->icont(), position.get());
       iterator before_p(position.get());
       --before_p;
-      this->allocate_many_and_construct(first, boost::container::iterator_udistance(first, last), func);
+      BOOST_CONTAINER_TRY{
+         this->allocate_many_and_construct(first, boost::container::iterator_udistance(first, last), func);
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //No effects: erase the inserted elements
+         this->erase(++before_p, position);
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
       return ++before_p;
    }
    #endif
@@ -915,6 +939,7 @@ class list
    //!
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced std::initializer_list iterator throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to distance [il.begin(), il.end()).
    iterator insert(const_iterator p, std::initializer_list<value_type> il)

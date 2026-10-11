@@ -712,6 +712,7 @@ class slist
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    template <class... Args>
@@ -723,6 +724,7 @@ class slist
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's in-place constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant
    template <class... Args>
@@ -756,6 +758,7 @@ class slist
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    void push_front(const T &x);
@@ -764,6 +767,7 @@ class slist
    //!   and moves the resources of x to this new element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    void push_front(T &&x);
@@ -780,6 +784,7 @@ class slist
    //! <b>Returns</b>: An iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    //!
@@ -795,6 +800,7 @@ class slist
    //! <b>Returns</b>: An iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    //!
@@ -812,6 +818,7 @@ class slist
    //! <b>Returns</b>: an iterator to the last inserted element or prev_p if n is 0.
    //!
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //!
    //! <b>Complexity</b>: Linear to n.
@@ -832,6 +839,7 @@ class slist
    //!
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InpIt throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to the number of elements inserted.
    //!
@@ -850,9 +858,19 @@ class slist
       )
    {
       iterator ret_it(prev_p.get());
-      for (; first != last; ++first){
-         ret_it = iterator(this->icont().insert_after(ret_it.get(), *this->create_node_from_it(first)));
+      const_iterator old_next(prev_p);
+      ++old_next;
+      BOOST_CONTAINER_TRY{
+         for (; first != last; ++first){
+            ret_it = iterator(this->icont().insert_after(ret_it.get(), *this->create_node_from_it(first)));
+         }
       }
+      BOOST_CONTAINER_CATCH(...){
+         //No effects: erase the inserted elements
+         this->erase_after(prev_p, old_next);
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
       return ret_it;
    }
 
@@ -865,6 +883,7 @@ class slist
    //!
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced std::initializer_list iterator throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to the number of elements inserted.
    //!
@@ -888,7 +907,17 @@ class slist
    {
       //Optimized allocation and construction
       insertion_functor func(this->icont(), prev.get());
-      this->allocate_many_and_construct(first, boost::container::iterator_udistance(first, last), func);
+      const_iterator old_next(prev);
+      ++old_next;
+      BOOST_CONTAINER_TRY{
+         this->allocate_many_and_construct(first, boost::container::iterator_udistance(first, last), func);
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //No effects: erase the inserted elements
+         this->erase_after(prev, old_next);
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
       return iterator(func.inserted_first());
    }
    #endif
@@ -1306,6 +1335,7 @@ class slist
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's in-place constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to the elements before p
    template <class... Args>
@@ -1334,6 +1364,7 @@ class slist
    //! <b>Returns</b>: an iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws or x's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to the elements before p.
    iterator insert(const_iterator p, const T &x);
@@ -1345,6 +1376,7 @@ class slist
    //! <b>Returns</b>: an iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to the elements before p.
    iterator insert(const_iterator prev_p, T &&x);
@@ -1359,6 +1391,7 @@ class slist
    //! <b>Returns</b>: an iterator to the first inserted element or p if n == 0.
    //!
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to n plus linear to the elements before p.
    iterator insert(const_iterator p, size_type n, const value_type& x)
@@ -1376,6 +1409,7 @@ class slist
    //!
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InpIt throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to distance [first, last) plus
    //!    linear to the elements before p.
@@ -1396,6 +1430,7 @@ class slist
    //!
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced std::initializer_list iterator throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()) plus
    //!    linear to the elements before p.
