@@ -54,7 +54,7 @@
 #include <boost/move/traits.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/move/detail/to_raw_pointer.hpp>
-#include <boost/move/algo/detail/merge.hpp>
+#include <boost/move/algo/detail/rotate.hpp>
 
 //std
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)

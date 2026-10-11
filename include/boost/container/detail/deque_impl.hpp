@@ -42,18 +42,11 @@
 
 // move
 #include <boost/move/adl_move_swap.hpp>
-#include <boost/move/algo/detail/merge.hpp>
+#include <boost/move/algo/detail/rotate.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/traits.hpp>
 #include <boost/move/utility_core.hpp>
 
-
-// move
-#include <boost/move/adl_move_swap.hpp>
-#include <boost/move/algo/detail/merge.hpp>
-#include <boost/move/iterator.hpp>
-#include <boost/move/traits.hpp>
-#include <boost/move/utility_core.hpp>
 // move/detail
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #  include <boost/move/detail/fwd_macros.hpp>
