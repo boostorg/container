@@ -450,10 +450,12 @@ struct node_alloc_holder
       dtl::swap_alloc(this->node_alloc(), x.node_alloc(), flag);
    }
 
+   //Returns the last constructed node or a null pointer if n is 0
    template<class FwdIterator, class Inserter>
-   void allocate_many_and_construct
+   NodePtr allocate_many_and_construct
       (FwdIterator beg, size_type n, Inserter inserter)
    {
+      NodePtr last = NodePtr();
       if(n){
          typedef typename node_allocator_version_traits_type::multiallocation_chain multiallocation_chain_t;
 
@@ -480,6 +482,7 @@ struct node_alloc_holder
                //This can throw in some containers (predicate might throw).
                inserter(*p);
                sdestructor.release();
+               last = node_deallocator.get();
                node_deallocator.release();
             }
          }
@@ -492,6 +495,7 @@ struct node_alloc_holder
          }
          BOOST_CONTAINER_CATCH_END
       }
+      return last;
    }
 
    inline void clear(version_1)

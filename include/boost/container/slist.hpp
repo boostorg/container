@@ -909,8 +909,9 @@ class slist
       insertion_functor func(this->icont(), prev.get());
       const_iterator old_next(prev);
       ++old_next;
+      NodePtr last_node = NodePtr();
       BOOST_CONTAINER_TRY{
-         this->allocate_many_and_construct(first, boost::container::iterator_udistance(first, last), func);
+         last_node = this->allocate_many_and_construct(first, boost::container::iterator_udistance(first, last), func);
       }
       BOOST_CONTAINER_CATCH(...){
          //No effects: erase the inserted elements
@@ -918,7 +919,8 @@ class slist
          BOOST_CONTAINER_RETHROW
       }
       BOOST_CONTAINER_CATCH_END
-      return iterator(func.inserted_first());
+      //The last inserted element, or prev if no element was inserted
+      return last_node ? iterator(this->icont().iterator_to(*last_node)) : iterator(prev.get());
    }
    #endif
 
@@ -1671,28 +1673,16 @@ class slist
    class insertion_functor
    {
       Icont &icont_;
-      typedef typename Icont::iterator       iiterator;
       typedef typename Icont::const_iterator iconst_iterator;
       iconst_iterator prev_;
-      iiterator ret_;
 
       public:
-      insertion_functor(Icont &icont, typename Icont::const_iterator prev)
-         :  icont_(icont), prev_(prev), ret_(prev.unconst())
+      insertion_functor(Icont &icont, iconst_iterator prev)
+         :  icont_(icont), prev_(prev)
       {}
 
       void operator()(Node &n)
-      {
-         prev_ = this->icont_.insert_after(prev_, n);
-         if(!ret_)
-            ret_ = prev_.unconst();
-      }
-
-      iiterator inserted_first() const
-      {
-         iiterator f(ret_);
-         return ++f;
-      }
+      {  prev_ = this->icont_.insert_after(prev_, n);  }
    };
 
    //Functors for member algorithm defaults
