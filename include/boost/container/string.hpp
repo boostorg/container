@@ -49,6 +49,7 @@
 #include <boost/move/utility_core.hpp>
 #include <boost/move/adl_move_swap.hpp>
 #include <boost/move/traits.hpp>
+#include <boost/move/algo/detail/rotate.hpp>
 
 #include <iosfwd> 
 #include <istream>   //
@@ -1569,6 +1570,10 @@ class basic_string
    //!
    //! <b>Effects</b>: Equivalent to append(basic_string(first, last)).
    //!
+   //! <b>Throws</b>: If memory allocation throws, length_error if the new size is greater than
+   //!   max_size(), or if an operation on the iterators throws.
+   //!   If an exception is thrown, there are no effects (strong exception guarantee).
+   //!
    //! <b>Returns</b>: *this
    template <class InputIter>
    basic_string& append(InputIter first, InputIter last)
@@ -1577,6 +1582,8 @@ class basic_string
    #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: Returns append(il.begin(), il.end()).
    //!
+   //! <b>Throws</b>: If memory allocation throws or length_error if the new size is greater than
+   //!   max_size(). If an exception is thrown, there are no effects (strong exception guarantee).
    basic_string& append(std::initializer_list<CharT> il)
    {
       return this->append(il.begin(), il.end());
@@ -1701,34 +1708,59 @@ class basic_string
 
    //! <b>Effects</b>: Equivalent to assign(basic_string(first, last)).
    //!
+   //! <b>Throws</b>: If memory allocation throws, length_error if the new size is greater than
+   //!   max_size(), or if an operation on the iterators throws.
+   //!   If an exception is thrown, there are no effects (strong exception guarantee).
+   //!
    //! <b>Returns</b>: *this
    template <class InputIter>
    basic_string& assign(InputIter first, InputIter last
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-      , typename dtl::disable_if_convertible<InputIter, size_type>::type * = 0
+      , typename dtl::disable_if_or
+         < void
+         , dtl::is_convertible<InputIter, size_type>
+         , dtl::is_not_input_iterator<InputIter>
+         >::type * = 0
       #endif
       )
    {
-      size_type cur = 0;
-      const pointer addr = this->priv_addr();
-      CharT *ptr = boost::movelib::to_raw_pointer(addr);
-      const size_type old_size = this->priv_size();
-      while (first != last && cur != old_size) {
-         Traits::assign(*ptr, *first);
-         ++first;
-         ++cur;
-         ++ptr;
+      const size_type old_size = this->size();
+      //Append the new characters after the old ones, then erase the old ones
+      BOOST_CONTAINER_TRY{
+         for ( ; first != last; ++first) {
+            this->push_back(*first);
+         }
       }
-      if (first == last)
-         this->erase(addr + difference_type(cur), addr + difference_type(old_size));
-      else
-         this->append(first, last);
+      BOOST_CONTAINER_CATCH(...){
+         //No effects: erase the new characters
+         this->erase(this->begin() + difference_type(old_size), this->end());
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      this->erase(this->begin(), this->begin() + difference_type(old_size));
       return *this;
    }
+
+   #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+   template <class ForwardIter>
+   basic_string& assign(ForwardIter first, ForwardIter last
+      , typename dtl::disable_if_or
+         < void
+         , dtl::is_convertible<ForwardIter, size_type>
+         , dtl::is_input_iterator<ForwardIter>
+         >::type * = 0
+      )
+   {
+      this->priv_replace_range(0u, this->size(), first, last, boost::container::iterator_udistance(first, last));
+      return *this;
+   }
+   #endif
 
    #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: Returns assign(il.begin(), il.end()).
    //!
+   //! <b>Throws</b>: If memory allocation throws or length_error if the new size is greater than
+   //!   max_size(). If an exception is thrown, there are no effects (strong exception guarantee).
    basic_string& assign(std::initializer_list<CharT> il)
    {
       return this->assign(il.begin(), il.end());
@@ -1889,6 +1921,10 @@ class basic_string
    //!
    //! <b>Effects</b>: Equivalent to insert(p - begin(), basic_string(first, last)).
    //!
+   //! <b>Throws</b>: If memory allocation throws, length_error if the new size is greater than
+   //!   max_size(), or if an operation on the iterators throws.
+   //!   If an exception is thrown, there are no effects (strong exception guarantee).
+   //!
    //! <b>Returns</b>: an iterator to the first inserted element or p if first == last.
    template <class InputIter>
    iterator insert(const_iterator p, InputIter first, InputIter last
@@ -1901,10 +1937,21 @@ class basic_string
       #endif
       )
    {
-      const size_type n_pos = p - this->cbegin();
-      for ( ; first != last; ++first, ++p) {
-         p = this->insert(p, *first);
+      const size_type n_pos = size_type(p - this->cbegin());
+      const size_type old_size = this->size();
+      //Append the new characters and rotate them
+      BOOST_CONTAINER_TRY{
+         for ( ; first != last; ++first) {
+            this->push_back(*first);
+         }
       }
+      BOOST_CONTAINER_CATCH(...){
+         this->erase(this->begin() + difference_type(old_size), this->end());
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      boost::movelib::rotate_gcd
+         (this->begin() + difference_type(n_pos), this->begin() + difference_type(old_size), this->end());
       return this->begin() + difference_type(n_pos);
    }
 
@@ -1920,110 +1967,7 @@ class basic_string
    {
       const size_type n_pos = size_type(p - this->cbegin());
       if (first != last) {
-         const size_type n = boost::container::iterator_udistance(first, last);
-         const size_type old_size = this->priv_size();
-         const size_type old_cap  = this->capacity();
-         const size_type remaining = old_cap - old_size;
-         const pointer old_start = this->priv_addr();
-         size_type new_storage = 0;
-
-         //Check if we have enough capacity
-         pointer hint = pointer();
-         pointer allocation_ret = pointer();
-         bool enough_capacity = remaining >= n;
-
-         if (!enough_capacity) {
-            //Otherwise expand current buffer or allocate new storage
-            new_storage  = this->next_storage(n, old_cap+1u);
-            hint = old_start;
-            allocation_ret = this->allocation_command
-                  (allocate_new | expand_fwd | expand_bwd, old_size + n + 1u, new_storage, hint);
-
-            //Check forward expansion
-            enough_capacity = old_start == allocation_ret;
-            if(enough_capacity){
-               this->priv_long_storage(new_storage);
-            }
-         }
-
-         //Reuse same buffer
-         if(enough_capacity){
-            //Characters in [p, end()) are moved before [first, last) is read
-            BOOST_ASSERT(!priv_range_overlaps( first, last, boost::movelib::to_raw_pointer(p)
-                                             , boost::movelib::to_raw_pointer(old_start) + difference_type(old_size)));
-            const size_type elems_after = old_size - size_type(p - old_start);
-            const size_type old_length = old_size;
-            size_type new_size = 0;
-            if (elems_after >= n) {
-               const pointer pointer_past_last = old_start + difference_type(old_size + 1u);
-               priv_uninitialized_copy(old_start + difference_type(old_size - n + 1u),
-                                       pointer_past_last, pointer_past_last);
-
-               Traits::move(const_cast<CharT*>(boost::movelib::to_raw_pointer(p + difference_type(n))),
-                           boost::movelib::to_raw_pointer(p),
-                           (elems_after - n) + 1u);
-               (priv_copy)(first, last, const_cast<CharT*>(boost::movelib::to_raw_pointer(p)));
-               new_size = old_size + n;
-            }
-            else {
-               ForwardIter mid = first;
-               boost::container::iterator_uadvance(mid, elems_after + 1u);
-
-               priv_uninitialized_copy(mid, last, old_start + difference_type(old_size + 1u));
-               const size_type newer_size = old_size + (n - elems_after);
-               this->priv_size(newer_size);
-               priv_uninitialized_copy
-                  (p, const_iterator(old_start + difference_type(old_length + 1u)),
-                  old_start + difference_type(newer_size));
-               (priv_copy)(first, mid, const_cast<CharT*>(boost::movelib::to_raw_pointer(p)));
-               new_size = newer_size + elems_after;
-            }
-            this->priv_size(new_size);
-            this->priv_construct_null(old_start + difference_type(new_size));
-         }
-         else{
-            pointer new_start = allocation_ret;
-            if(!hint){
-               //Copy data to new buffer
-               size_type new_length = 0;
-               //This can't throw, since characters are POD
-               new_length += priv_uninitialized_copy
-                              (const_iterator(old_start), p, new_start);
-               new_length += priv_uninitialized_copy
-                              (first, last, new_start + difference_type(new_length));
-               new_length += priv_uninitialized_copy
-                              (p, const_iterator(old_start + difference_type(old_size)),
-                              new_start + difference_type(new_length));
-               this->priv_construct_null(new_start + difference_type(new_length));
-
-               this->deallocate_block();
-               this->assure_long();
-               this->priv_long_addr(new_start);
-               this->priv_long_size(new_length);
-               this->priv_long_storage(new_storage);
-            }
-            else{
-               //value_type is POD, so backwards expansion is much easier
-               //than with vector<T>
-               value_type * const oldbuf     = boost::movelib::to_raw_pointer(old_start);
-               value_type * const newbuf     = boost::movelib::to_raw_pointer(new_start);
-               const value_type *const pos   = boost::movelib::to_raw_pointer(p);
-               const size_type before  = size_type(pos - oldbuf);
-               //The old characters are moved before [first, last) is read
-               BOOST_ASSERT(!priv_range_overlaps(first, last, oldbuf, oldbuf + difference_type(old_size)));
-
-               //First move old data
-               Traits::move(newbuf, oldbuf, before);
-               Traits::move(newbuf + difference_type(before + n), pos, old_size - before);
-               //Now initialize the new data
-               priv_uninitialized_copy(first, last, new_start + difference_type(before));
-               this->priv_construct_null(new_start + difference_type(old_size + n));
-               this->assure_long();
-               this->priv_long_addr(new_start);
-               this->priv_long_size(old_size + n);
-               this->priv_long_storage(new_storage);
-            }
-         }
+         this->priv_replace_range(n_pos, 0u, first, last, boost::container::iterator_udistance(first, last));
       }
       return this->begin() + difference_type(n_pos);
    }
@@ -2031,6 +1975,9 @@ class basic_string
 
    #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: As if by insert(p, il.begin(), il.end()).
+   //!
+   //! <b>Throws</b>: If memory allocation throws or length_error if the new size is greater than
+   //!   max_size(). If an exception is thrown, there are no effects (strong exception guarantee).
    //!
    //! <b>Returns</b>: An iterator which refers to the copy of the first inserted
    //!   character, or p if i1 is empty.
@@ -2319,7 +2266,9 @@ class basic_string
    //!
    //! <b>Effects</b>: Calls replace(i1 - begin(), i2 - i1, basic_string(j1, j2)).
    //!
-   //! <b>Throws</b>: if memory allocation throws
+   //! <b>Throws</b>: If memory allocation throws, length_error if the new size is greater than
+   //!   max_size(), or if an operation on the iterators throws.
+   //!   If an exception is thrown, there are no effects (strong exception guarantee).
    //!
    //! <b>Returns</b>: *this
    template <class InputIter>
@@ -2333,14 +2282,12 @@ class basic_string
       #endif
       )
    {
-      for ( ; i1 != i2 && j1 != j2; ++i1, ++j1){
-         Traits::assign(*const_cast<CharT*>(boost::movelib::to_raw_pointer(i1)), *j1);
-      }
-
-      if (j1 == j2)
-         this->erase(i1, i2);
-      else
-         this->insert(i2, j1, j2);
+      //Insert the new characters after [i1, i2) (linear and with no effects if an
+      //exception is thrown), then erase [i1, i2), which can't throw
+      const difference_type pos = i1 - this->cbegin();
+      const difference_type n1  = i2 - i1;
+      this->insert(i2, j1, j2);
+      this->erase(this->begin() + pos, this->begin() + (pos + n1));
       return *this;
    }
 
@@ -2354,25 +2301,9 @@ class basic_string
          >::type * = 0
       )
    {
-      //An empty source (e.g. an empty initializer_list) can be a null pointer range
-      if (j1 == j2) {
-         this->erase(i1, i2);
-         return *this;
-      }
-      difference_type n = boost::container::iterator_distance(j1, j2);
-      const difference_type len = i2 - i1;
-      //The source can overlap the overwritten characters (e.g. a part of *this),
-      //so the copy must support overlapping ranges.
-      if (len >= n) {
-         this->priv_copy_overlapping(j1, j2, const_cast<CharT*>(boost::movelib::to_raw_pointer(i1)));
-         this->erase(i1 + difference_type(n), i2);
-      }
-      else {
-         ForwardIter m = j1;
-         boost::container::iterator_advance(m, len);
-         this->priv_copy_overlapping(j1, m, const_cast<CharT*>(boost::movelib::to_raw_pointer(i1)));
-         this->insert(i2, m, j2);
-      }
+      this->priv_replace_range
+         ( size_type(i1 - this->cbegin()), size_type(i2 - i1)
+         , j1, j2, boost::container::iterator_udistance(j1, j2));
       return *this;
    }
    #endif
@@ -2393,6 +2324,9 @@ class basic_string
    //! <b>Requires</b>: [begin(), i1) and [i1, i2) are valid ranges.
    //!
    //! <b>Effects</b>: Calls replace(i1, i2, il.begin(), il.end()).
+   //!
+   //! <b>Throws</b>: If memory allocation throws or length_error if the new size is greater than
+   //!   max_size(). If an exception is thrown, there are no effects (strong exception guarantee).
    //!
    //! <b>Returns</b>: *this.
    inline basic_string& replace(const_iterator i1, const_iterator i2, std::initializer_list<CharT> il)
@@ -3351,6 +3285,134 @@ class basic_string
 
    static inline void priv_copy( const CharT* first, const CharT* last, CharT* result)
    {  Traits::copy(result, first, std::size_t(last - first));  }
+
+   //True if reading [first, last) can throw or [first, last) is a part of *this.
+   //Then the characters must be read before the old characters move.
+   template<class ForwardIter>
+   static typename dtl::disable_if_or
+      < bool
+      , dtl::is_same<ForwardIter, CharT*>
+      , dtl::is_same<ForwardIter, const CharT*>
+      >::type
+      priv_is_throwing_or_aliased_source(ForwardIter, size_type, const CharT *, size_type)
+   {  return true;  }
+
+   static bool priv_is_throwing_or_aliased_source(const cvalue_iterator &, size_type, const CharT *, size_type)
+   {  return false;  }
+
+   static bool priv_is_throwing_or_aliased_source(const CharT *first, size_type n, const CharT *buf, size_type buf_size)
+   {  return n && first < buf + difference_type(buf_size + 1u) && buf < first + difference_type(n);  }
+
+   //Replaces the n1 characters at pos with the n characters of [first, last).
+   //Strong exception guarantee: *this is changed only after all characters are read and the
+   //memory is allocated. [first, last) can be a part of *this.
+   //This function has only the in-place code, so that it can be inlined.
+   template<class ForwardIter>
+   BOOST_CONTAINER_FORCEINLINE void priv_replace_range(size_type pos, size_type n1, ForwardIter first, ForwardIter last, size_type n)
+   {
+      const size_type old_size = this->priv_size();
+      BOOST_ASSERT(pos <= old_size && n1 <= old_size - pos);
+      const size_type max_sz = this->max_size();
+      if (n > max_sz || (old_size - n1) > (max_sz - n))
+         throw_length_error("basic_string: max_size() exceeded");
+      const size_type new_size = old_size - n1 + n;
+      CharT * const old_buf    = boost::movelib::to_raw_pointer(this->priv_addr());
+      const bool throwing_or_aliased = priv_is_throwing_or_aliased_source(first, n, old_buf, old_size);
+      //Position of the temporary copy of [first, last): after both null terminators (old and new)
+      const size_type tmp_copy_pos = (new_size > old_size ? new_size : old_size) + 1u;
+      //A throwing or aliased source needs space for the temporary copy of the n characters at
+      //tmp_copy_pos. Other sources need space only for new_size characters and the null terminator
+      const size_type min_storage = throwing_or_aliased ? size_type(tmp_copy_pos + n) : size_type(new_size + 1u);
+      const bool fits_in_place = min_storage <= this->priv_storage();
+
+      if (!fits_in_place && this->priv_replace_range_grow(pos, n1, first, last, n, min_storage, throwing_or_aliased)) {
+         return;
+      }
+
+      //In place (maybe after a forward expansion: the characters did not move)
+      const size_type tail = old_size - pos - n1;
+      if (throwing_or_aliased) {
+         //Make the temporary copy in the free capacity: if this throws, *this is not changed
+         priv_uninitialized_copy(first, last, old_buf + difference_type(tmp_copy_pos));
+      }
+      //Nothing below can throw
+      if (n != n1) {
+         Traits::move(old_buf + difference_type(pos + n), old_buf + difference_type(pos + n1), tail);
+      }
+      if (throwing_or_aliased) {
+         Traits::copy(old_buf + difference_type(pos), old_buf + difference_type(tmp_copy_pos), n);
+      }
+      else {
+         priv_copy(first, last, old_buf + difference_type(pos));
+      }
+      this->priv_size(new_size);
+      this->priv_construct_null(this->priv_addr() + difference_type(new_size));
+   }
+
+   //Part of priv_replace_range when the free capacity is too small: the buffer has less than
+   //min_storage characters. Expands the buffer or allocates a new buffer. Returns false if the
+   //buffer was expanded forward (the characters did not move and the replacement must be done in
+   //place), else does the replacement and returns true.
+   template<class ForwardIter>
+   BOOST_CONTAINER_NOINLINE bool priv_replace_range_grow
+      ( size_type pos, size_type n1, ForwardIter first, ForwardIter last, size_type n
+      , size_type min_storage, bool throwing_or_aliased)
+   {
+      const size_type old_size = this->priv_size();
+      const size_type new_size = old_size - n1 + n;
+      const size_type tail     = old_size - pos - n1;
+      const pointer old_start  = this->priv_addr();
+      CharT * const old_buf    = boost::movelib::to_raw_pointer(old_start);
+      //Grow from min_storage, so that the next operations also have free capacity
+      size_type new_storage = this->next_storage(size_type(min_storage - 1u - old_size), this->priv_storage());
+      if (new_storage <= InternalBufferChars)
+         new_storage = InternalBufferChars + 1u;
+      //Backward expansion moves the old characters before [first, last) is read, so it is
+      //not used if reading [first, last) can throw or [first, last) is a part of *this
+      const allocation_type command = throwing_or_aliased
+         ? (allocate_new | expand_fwd) : (allocate_new | expand_fwd | expand_bwd);
+      pointer reuse = old_start;
+      const pointer new_start = this->allocation_command(command, min_storage, new_storage, reuse);
+      BOOST_IF_CONSTEXPR(alloc_version::value != 1){
+         if (reuse) {
+            if (new_start == old_start) {
+               //Expanded forward: the buffer has at least min_storage characters
+               this->priv_long_storage(new_storage);
+               return false;
+            }
+            //Expanded backward (and maybe forward): nothing can throw.
+            //Move the prefix first: the new place of the tail can overlap the old prefix
+            CharT * const new_buf = boost::movelib::to_raw_pointer(new_start);
+            Traits::move(new_buf, old_buf, pos);
+            Traits::move(new_buf + difference_type(pos + n), old_buf + difference_type(pos + n1), tail);
+            priv_copy(first, last, new_buf + difference_type(pos));
+            this->priv_construct_null(new_start + difference_type(new_size));
+            this->priv_long_addr(new_start);
+            this->priv_long_size(new_size);
+            this->priv_long_storage(new_storage);
+            return true;
+         }
+      }
+      //New buffer: [first, last) is read before the old buffer is freed
+      CharT * const new_buf = boost::movelib::to_raw_pointer(new_start);
+      BOOST_CONTAINER_TRY{
+         priv_uninitialized_copy(first, last, new_buf + difference_type(pos));
+      }
+      BOOST_CONTAINER_CATCH(...){
+         this->deallocate(new_start, new_storage);
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      Traits::copy(new_buf, old_buf, pos);
+      Traits::copy(new_buf + difference_type(pos + n), old_buf + difference_type(pos + n1), tail);
+      this->priv_construct_null(new_start + difference_type(new_size));
+      this->deallocate_block();
+      this->assure_long();
+      this->priv_long_addr(new_start);
+      this->priv_long_size(new_size);
+      this->priv_long_storage(new_storage);
+      return true;
+   }
 
    //Like priv_copy, but [first, last) and the destination can overlap
    template <class InputIterator, class OutIterator>
