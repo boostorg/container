@@ -2040,14 +2040,22 @@ private:
          hub_detail::buffer<T,allocator_type> buf(size_, al());
          if(!buf.data) return false;
 
-         container::for_each(*this, [&] (value_type& x) {
-            buf.emplace_back(std::move(x));
-         });
-         std::sort(buf.begin(), buf.end(), comp);
-         container::for_each(*this, [&] (value_type& x) { 
-            x = std::move(*buf.begin());
-            buf.erase_front();
-         });
+         BOOST_CONTAINER_TRY {
+            container::for_each(*this, [&] (value_type& x) {
+               buf.emplace_back(std::move(x));
+            });
+            std::sort(buf.begin(), buf.end(), comp);
+            container::for_each(*this, [&] (value_type& x) {
+               x = std::move(*buf.begin());
+               buf.erase_front();
+            });
+         }
+         BOOST_CONTAINER_CATCH(...) {
+            //The values are in the buffer: the elements are moved-from
+            clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
       }
       return true;
    }

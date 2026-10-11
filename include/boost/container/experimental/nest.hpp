@@ -2568,11 +2568,19 @@ class nest
          nest_detail::buffer<T, block_allocator> buf(size_, al());
          if(!buf.data) return false;
 
-         // Move all elements to buffer
-         priv_visit_all_move_to_buffer(buf);
-         std::sort(buf.begin(), buf.end(), comp);
-         // Move sorted elements back
-         priv_visit_all_move_from_buffer(buf);
+         BOOST_CONTAINER_TRY{
+            // Move all elements to buffer
+            priv_visit_all_move_to_buffer(buf);
+            std::sort(buf.begin(), buf.end(), comp);
+            // Move sorted elements back
+            priv_visit_all_move_from_buffer(buf);
+         }
+         BOOST_CONTAINER_CATCH(...){
+            //The values are in the buffer: the elements are moved-from
+            this->clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
       }
       return true;
    }
