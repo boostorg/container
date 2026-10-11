@@ -109,8 +109,10 @@ bool test_insert_with_expand_bwd()
          VectorWithExpandBwdAllocator vector(alloc);
          vector.insert( vector.begin()
                      , initial_data.begin(), initial_data.end());
+         //Insert from raw pointers: some containers (e.g. basic_string) expand backwards
+         //only if the source is a raw pointer, as other iterators can throw
          vector.insert( vector.begin() + Position[pos]
-                     , data_to_insert.begin(), data_to_insert.end());
+                     , &data_to_insert[0], &data_to_insert[0] + data_to_insert.size());
 
          if(!life_count<value_type>::check(InitialSize[iteration]*2+InsertSize[iteration]*2))
             return false;
@@ -172,7 +174,9 @@ bool test_assign_with_expand_bwd()
                   , initial_data.begin(), initial_data.end());
 
       //Assign data
-      vector.insert(vector.cbegin(), data_to_insert.begin(), data_to_insert.end());
+      //Insert from raw pointers: some containers (e.g. basic_string) expand backwards
+      //only if the source is a raw pointer, as other iterators can throw
+      vector.insert(vector.cbegin(), &data_to_insert[0], &data_to_insert[0] + data_to_insert.size());
       initial_data.insert(initial_data.begin(), data_to_insert.begin(), data_to_insert.end());
 
       //Now check that values are equal
