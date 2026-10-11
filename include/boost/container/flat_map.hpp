@@ -1889,8 +1889,8 @@ class flat_map
 
       if (i == end() || key_comp()(k, (*i).first)) {
          //i is the insertion position: construct the new element in place
-         i = BOOST_CONTAINER_FORCECOPY(iterator, this->m_flat_tree.get_sequence_ref().emplace
-               (BOOST_CONTAINER_FORCECOPY(impl_iterator, i), try_emplace_t(), ::boost::forward<K>(key)));
+         i = BOOST_CONTAINER_FORCECOPY(iterator, this->m_flat_tree.emplace_key_at
+               (BOOST_CONTAINER_FORCECOPY(impl_iterator, i), ::boost::forward<K>(key)));
       }
       return (*i).second;
    }

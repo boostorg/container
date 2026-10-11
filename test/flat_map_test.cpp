@@ -312,6 +312,41 @@ bool test_heterogeneous_lookup_by_partial_key()
    return true;
 }
 
+//try_emplace and operator[] with a sequence whose allocator does not understand
+//Boost.Container construction tags (try_emplace_t)
+bool test_try_emplace_std_sequence()
+{
+   //Old GCCs have problems (compiler bugs) with std::vector and flat_xxx
+   #if defined(BOOST_CONTAINER_STD_PAIR_IS_MOVABLE) && (!defined(BOOST_GCC) || (BOOST_GCC >= 50000))
+   typedef flat_map<int, int, std::less<int>, std::vector<std::pair<int, int> > > map_t;
+   map_t m;
+   m[3] = 30;
+   if(m[1] != 0)
+      return false;
+   std::pair<map_t::iterator, bool> r = m.try_emplace(2, 20);
+   if(!r.second || r.first->second != 20)
+      return false;
+   r = m.try_emplace(2, 200);
+   if(r.second || r.first->second != 20)
+      return false;
+   map_t::iterator it = m.try_emplace(m.end(), 4, 40);
+   if(it->first != 4 || it->second != 40)
+      return false;
+   it = m.try_emplace(m.begin(), 0);
+   if(it->first != 0 || it->second != 0)
+      return false;
+   const int expected_keys[]   = { 0, 1, 2, 3, 4 };
+   const int expected_values[] = { 0, 0, 20, 30, 40 };
+   if(m.size() != 5u)
+      return false;
+   for(std::size_t i = 0; i != 5u; ++i){
+      if(m.nth(i)->first != expected_keys[i] || m.nth(i)->second != expected_values[i])
+         return false;
+   }
+   #endif
+   return true;
+}
+
 }}}   //namespace boost::container::test
 
 bool test_unqualified_swap()
@@ -385,6 +420,9 @@ int main()
       return 1;
 
    if (!test_heterogeneous_lookup_by_partial_key())
+      return 1;
+
+   if (!test_try_emplace_std_sequence())
       return 1;
 
    if (!test::test_function_pointer_comparator

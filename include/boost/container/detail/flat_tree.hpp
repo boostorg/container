@@ -1187,7 +1187,7 @@ class flat_tree
          ret.first  = this->nth(size_type(data.position - this->cbegin()));
       }
       else{
-         ret.first = this->m_data.m_seq.emplace(data.position, try_emplace_t(), ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
+         ret.first = this->emplace_key_at(data.position, ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
       }
       return ret;
    }
@@ -1205,10 +1205,47 @@ class flat_tree
          ret.first  = this->nth(size_type(data.position - this->cbegin()));
       }
       else{
-         ret.first = this->m_data.m_seq.emplace(data.position, try_emplace_t(), ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
+         ret.first = this->emplace_key_at(data.position, ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
       }
       return ret;
    }
+
+   //Constructs a value with key "key" and a mapped value constructed from "args" at "position",
+   //which must be the insertion position of "key". Duplicates are not checked. Only Boost.Container
+   //sequences construct elements with Boost.Container's allocator_traits, which understands
+   //try_emplace_t. For other sequences (e.g. std::vector) the value is constructed outside the
+   //sequence and moved.
+   template <class KeyType, class... Args>
+   inline iterator emplace_key_at(const_iterator position, BOOST_FWD_REF(KeyType) key, BOOST_FWD_REF(Args)... args)
+   {
+      return this->priv_emplace_key_at
+         ( dtl::bool_<has_stored_allocator_type>(), position
+         , ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
+   }
+
+   private:
+   template <class KeyType, class... Args>
+   inline iterator priv_emplace_key_at
+      (dtl::true_, const_iterator position, BOOST_FWD_REF(KeyType) key, BOOST_FWD_REF(Args)... args)
+   {
+      return this->m_data.m_seq.emplace
+         (position, try_emplace_t(), ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
+   }
+
+   template <class KeyType, class... Args>
+   iterator priv_emplace_key_at
+      (dtl::false_, const_iterator position, BOOST_FWD_REF(KeyType) key, BOOST_FWD_REF(Args)... args)
+   {
+      typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;
+      get_stored_allocator_noconst_return_t a = this->get_stored_allocator();
+      stored_allocator_traits::construct
+         (a, (value_type *)(&v), try_emplace_t(), ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
+      value_type *pval = move_detail::launder_cast<value_type *>(&v);
+      value_destructor<stored_allocator_type, value_type> d(a, *pval);
+      return this->m_data.m_seq.emplace(position, ::boost::move(*pval));
+   }
+
+   public:
 
    #else // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
@@ -1269,7 +1306,7 @@ class flat_tree
          ret.first  = this->nth(size_type(data.position - this->cbegin()));\
       }\
       else{\
-         ret.first = this->m_data.m_seq.emplace(data.position, try_emplace_t(), ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+         ret.first = this->emplace_key_at(data.position, ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
       }\
       return ret;\
    }\
@@ -1286,10 +1323,42 @@ class flat_tree
          ret.first  = this->nth(size_type(data.position - this->cbegin()));\
       }\
       else{\
-         ret.first = this->m_data.m_seq.emplace(data.position, try_emplace_t(), ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+         ret.first = this->emplace_key_at(data.position, ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
       }\
       return ret;\
    }\
+   \
+   template <class KeyType BOOST_MOVE_I##N BOOST_MOVE_CLASS##N>\
+   inline iterator emplace_key_at(const_iterator position, BOOST_FWD_REF(KeyType) key BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {\
+      return this->priv_emplace_key_at\
+         ( dtl::bool_<has_stored_allocator_type>(), position\
+         , ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+   }\
+   \
+   private:\
+   template <class KeyType BOOST_MOVE_I##N BOOST_MOVE_CLASS##N>\
+   inline iterator priv_emplace_key_at\
+      (dtl::true_, const_iterator position, BOOST_FWD_REF(KeyType) key BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {\
+      return this->m_data.m_seq.emplace\
+         (position, try_emplace_t(), ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+   }\
+   \
+   template <class KeyType BOOST_MOVE_I##N BOOST_MOVE_CLASS##N>\
+   iterator priv_emplace_key_at\
+      (dtl::false_, const_iterator position, BOOST_FWD_REF(KeyType) key BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {\
+      typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;\
+      get_stored_allocator_noconst_return_t a = this->get_stored_allocator();\
+      stored_allocator_traits::construct\
+         (a, (value_type *)(&v), try_emplace_t(), ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+      value_type *pval = move_detail::launder_cast<value_type *>(&v);\
+      value_destructor<stored_allocator_type, value_type> d(a, *pval);\
+      return this->m_data.m_seq.emplace(position, ::boost::move(*pval));\
+   }\
+   \
+   public:\
    //
    BOOST_MOVE_ITERATE_0TO7(BOOST_CONTAINER_FLAT_TREE_EMPLACE_CODE)
    #undef BOOST_CONTAINER_FLAT_TREE_EMPLACE_CODE
