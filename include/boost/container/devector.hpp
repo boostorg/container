@@ -1975,29 +1975,26 @@ class devector
             >::type * = 0)
       )
    {
-      if (position == end())
-      {
-         size_type insert_index = size();
+      const size_type insert_index = static_cast<size_type>(position - this->cbegin());
+      const size_type old_size = static_cast<size_type>(this->size());
 
-         for (; first != last; ++first)
-         {
-            this->emplace_back(*first);
-         }
-
-         return begin() + insert_index;
-      }
-      else
-      {
-         const size_type insert_index = static_cast<size_type>(position - this->cbegin());
-         const size_type old_size = static_cast<size_type>(this->size());
-
+      //Append the new elements, then rotate them to the position
+      BOOST_CONTAINER_TRY{
          for (; first != last; ++first) {
             this->emplace_back(*first);
          }
-         iterator rit (this->begin() + insert_index);
-         boost::movelib::rotate_gcd(rit, this->begin() + old_size, this->begin() + this->size());
-         return rit;
       }
+      BOOST_CONTAINER_CATCH(...){
+         //No effects: destroy the new elements at the back
+         while (this->size() > old_size) {
+            this->pop_back();
+         }
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      iterator rit (this->begin() + difference_type(insert_index));
+      boost::movelib::rotate_gcd(rit, this->begin() + difference_type(old_size), this->end());
+      return rit;
    }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
