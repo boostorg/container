@@ -423,29 +423,6 @@ struct node_alloc_holder
       return (p);
    }
 
-   template<class KeyConvertible>
-   NodePtr create_node_from_key(BOOST_FWD_REF(KeyConvertible) key)
-   {
-      NodePtr p = this->allocate_one();
-      BOOST_CONTAINER_TRY{
-         ::new(boost::movelib::iterator_to_raw_pointer(p), boost_container_new_t()) Node;
-         NodeAlloc &na = this->node_alloc();
-         node_allocator_traits_type::construct
-            (na, dtl::addressof(p->get_real_data().first), boost::forward<KeyConvertible>(key));
-         dtl::scoped_alloc_object_destructor<NodeAlloc, typename Node::internal_type::first_type>
-            guard_first(na, dtl::addressof(p->get_real_data().first));
-         node_allocator_traits_type::construct(na, dtl::addressof(p->get_real_data().second));
-         guard_first.release();
-      }
-      BOOST_CONTAINER_CATCH(...) {
-         p->destroy_header();
-         this->deallocate_one(p);
-         BOOST_CONTAINER_RETHROW
-      }
-      BOOST_CONTAINER_CATCH_END
-      return (p);
-   }
-
    void destroy_node(const NodePtr &nodep)
    {
       boost::movelib::to_raw_pointer(nodep)->destructor(this->node_alloc());
