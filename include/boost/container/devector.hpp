@@ -1508,7 +1508,10 @@ class devector
    *
    * **Requires**: `T` shall be [EmplaceConstructible] from `args` and [MoveInsertable] into `*this`.
    *
-   * **Exceptions**: Strong exception guarantee.
+   * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
+   * buffer (`front_free_capacity() == 0` and there is free capacity at the other end) and the
+   * construction of the new element throws, the devector can lose its elements.
+   * Strong exception guarantee if `front_free_capacity() > 0`.
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `front_free_capacity() > 0`)
@@ -1570,7 +1573,10 @@ class devector
    *
    * **Requires**: `T` shall be [CopyInsertable] into `*this`.
    *
-   * **Exceptions**: Strong exception guarantee.
+   * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
+   * buffer (`front_free_capacity() == 0` and there is free capacity at the other end) and the
+   * construction of the new element throws, the devector can lose its elements.
+   * Strong exception guarantee if `front_free_capacity() > 0`.
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `front_free_capacity() > 0`)
@@ -1586,7 +1592,10 @@ class devector
    *
    * **Requires**: `T` shall be [MoveInsertable] into `*this`.
    *
-   * **Exceptions**: Strong exception guarantee, not regarding the state of `x`.
+   * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
+   * buffer (`front_free_capacity() == 0` and there is free capacity at the other end) and the
+   * construction of the new element throws, the devector can lose its elements.
+   * If `front_free_capacity() > 0`, strong exception guarantee, not regarding the state of `x`.
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `front_free_capacity() > 0`)
@@ -1623,7 +1632,10 @@ class devector
    * **Requires**: `T` shall be [EmplaceConstructible] from `args` and [MoveInsertable] into `*this`,
    * and [MoveAssignable].
    *
-   * **Exceptions**: Strong exception guarantee.
+   * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
+   * buffer (`back_free_capacity() == 0` and there is free capacity at the other end) and the
+   * construction of the new element throws, the devector can lose its elements.
+   * Strong exception guarantee if `back_free_capacity() > 0`.
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `back_free_capacity() > 0`)
@@ -1683,7 +1695,10 @@ class devector
    *
    * **Requires**: `T` shall be [CopyInsertable] into `*this`.
    *
-   * **Exceptions**: Strong exception guarantee.
+   * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
+   * buffer (`back_free_capacity() == 0` and there is free capacity at the other end) and the
+   * construction of the new element throws, the devector can lose its elements.
+   * Strong exception guarantee if `back_free_capacity() > 0`.
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `back_free_capacity() > 0`)
@@ -1699,7 +1714,10 @@ class devector
    *
    * **Requires**: `T` shall be [MoveInsertable] into `*this`.
    *
-   * **Exceptions**: Strong exception guarantee, not regarding the state of `x`.
+   * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
+   * buffer (`back_free_capacity() == 0` and there is free capacity at the other end) and the
+   * construction of the new element throws, the devector can lose its elements.
+   * If `back_free_capacity() > 0`, strong exception guarantee, not regarding the state of `x`.
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `back_free_capacity() > 0`)
