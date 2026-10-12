@@ -270,7 +270,8 @@ class adaptive_pool
    void allocate_many(size_type elem_size, std::size_t n_elements, multiallocation_chain &chain)
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));/*
-      dlmalloc::memchain ch;      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes(n_elements, elem_size*sizeof(T), dlmalloc::default_contiguous, &ch))){
+      dlmalloc::memchain ch;
+      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes(n_elements, elem_size*sizeof(T), dlmalloc::default_contiguous, &ch))){
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after(chain.before_begin()
@@ -289,7 +290,8 @@ class adaptive_pool
    void allocate_many(const size_type *elem_sizes, size_type n_elements, multiallocation_chain &chain)
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));/*
-      dlmalloc::memchain ch;      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_arrays(n_elements, elem_sizes, sizeof(T), dlmalloc::default_contiguous, &ch))){
+      dlmalloc::memchain ch;
+      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_arrays(n_elements, elem_sizes, sizeof(T), dlmalloc::default_contiguous, &ch))){
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after(chain.before_begin()
@@ -363,6 +365,18 @@ class adaptive_pool
    }
 };
 
+//! An adaptive_pool-like allocator whose node pool is owned by the allocator object, not
+//! shared with other instances.
+//!
+//! - A copy (copy constructor, conversion from a rebound allocator, select_on_container_copy_construction)
+//!   has a new, empty pool, so a copy does not compare equal to the original.
+//! - Moving or swapping an allocator transfers its pool. Containers propagate the allocator
+//!   on move assignment and swap (propagate_on_container_move_assignment and
+//!   propagate_on_container_swap are true), so the nodes stay with the pool that allocated them.
+//! - Two allocators compare equal only if they are the same object.
+//!
+//! Arrays (allocate with count > 1, or any allocation for Version 2) are allocated from the
+//! shared dlmalloc heap, so they do not depend on the pool.
 template < class T
          , std::size_t NodesPerBlock   = ADP_nodes_per_block
          , std::size_t MaxFreeBlocks   = ADP_max_free_blocks
@@ -371,6 +385,10 @@ template < class T
          >
 class private_adaptive_pool
 {
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+   BOOST_COPYABLE_AND_MOVABLE(private_adaptive_pool)
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
    //!If Version is 1, the allocator is a STL conforming allocator. If Version is 2,
    //!the allocator offers advanced expand in place and burst allocation capabilities.
    public:
@@ -407,6 +425,13 @@ class private_adaptive_pool
    typedef boost::container::dtl::
       version_type<self_t, Version>             version;
 
+   //!The pool moves with the allocator, so the containers must propagate the allocator when
+   //!they move or swap their nodes
+   typedef dtl::false_type                      propagate_on_container_copy_assignment;
+   typedef dtl::true_type                       propagate_on_container_move_assignment;
+   typedef dtl::true_type                       propagate_on_container_swap;
+   typedef dtl::false_type                      is_always_equal;
+
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    typedef boost::container::dtl::
       basic_multiallocation_chain<void*>              multiallocation_chain_void;
@@ -429,27 +454,32 @@ class private_adaptive_pool
          >       other;
    };
 
-   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-   private:
-   //!Not assignable from related private_adaptive_pool
-   template<class T2, std::size_t N2, std::size_t F2, std::size_t O2, unsigned Version2>
-   private_adaptive_pool& operator=
-      (const private_adaptive_pool<T2, N2, F2, O2, Version2>&);
-   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
-
    public:
    //!Default constructor
    private_adaptive_pool() BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
-   //Empty user-provided copy operations: each instance owns a private, non-copyable pool.
+   //!Copy constructor: the new allocator has a new, empty pool
    private_adaptive_pool(const private_adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
    {}
 
-   private_adaptive_pool & operator=(const private_adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
+   //!Move constructor: the new allocator takes the pool of x, and x gets a new, empty pool
+   private_adaptive_pool(BOOST_RV_REF(private_adaptive_pool) x) BOOST_NOEXCEPT_OR_NOTHROW
+   {  m_pool.swap(x.m_pool);  }
+
+   //!Copy assignment: *this keeps its pool
+   private_adaptive_pool & operator=(BOOST_COPY_ASSIGN_REF(private_adaptive_pool)) BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this;  }
 
-   //!Copy constructor from related private_adaptive_pool.
+   //!Move assignment: the pools are swapped. The nodes of the old pool of *this must have been
+   //!deallocated before (containers do it before they propagate the allocator)
+   private_adaptive_pool & operator=(BOOST_RV_REF(private_adaptive_pool) x) BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      m_pool.swap(x.m_pool);
+      return *this;
+   }
+
+   //!Copy constructor from related private_adaptive_pool: the new allocator has a new, empty pool
    template<class T2>
    private_adaptive_pool
       (const private_adaptive_pool<T2, NodesPerBlock, MaxFreeBlocks, OverheadPercent
@@ -575,22 +605,20 @@ class private_adaptive_pool
       m_pool.deallocate_free_blocks();
    }
 
-   //!Swaps allocators. Does not throw. If each allocator is placed in a
-   //!different memory segment, the result is undefined.
-   friend void swap(private_adaptive_pool &, private_adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
-   {}
+   //!Swaps the pools of the allocators. Does not throw.
+   friend void swap(private_adaptive_pool &l, private_adaptive_pool &r) BOOST_NOEXCEPT_OR_NOTHROW
+   {  l.m_pool.swap(r.m_pool);  }
 
-   //!An allocator always compares to true, as memory allocated with one
-   //!instance can be deallocated by another instance
+   //!Two allocators compare equal only if they are the same object: memory allocated by one
+   //!pool can't be deallocated by another pool
    BOOST_CONTAINER_NODISCARD
-   friend bool operator==(const private_adaptive_pool &, const private_adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
-   {  return true;   }
+   friend bool operator==(const private_adaptive_pool &l, const private_adaptive_pool &r) BOOST_NOEXCEPT_OR_NOTHROW
+   {  return &l == &r;   }
 
-   //!An allocator always compares to false, as memory allocated with one
-   //!instance can be deallocated by another instance
+   //!Returns !(l == r)
    BOOST_CONTAINER_NODISCARD
-   friend bool operator!=(const private_adaptive_pool &, const private_adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
-   {  return false;   }
+   friend bool operator!=(const private_adaptive_pool &l, const private_adaptive_pool &r) BOOST_NOEXCEPT_OR_NOTHROW
+   {  return &l != &r;   }
 
    private:
    pointer priv_allocation_command
