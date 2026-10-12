@@ -29,7 +29,6 @@
 #include <boost/container/options.hpp>
 // container/detail
 #include <boost/container/detail/alloc_helpers.hpp>
-#include <boost/container/detail/allocator_version_traits.hpp>
 #include <boost/container/detail/allocation_type.hpp>
 #include <boost/container/detail/iterator.hpp>
 #include <boost/container/detail/iterators.hpp>
@@ -390,8 +389,28 @@ class basic_string_base
          reuse = 0;
          command &= ~(expand_fwd | expand_bwd);
       }
-      return dtl::allocator_version_traits<allocator_type>::allocation_command
-         (this->alloc(), command, limit_size, prefer_in_recvd_out_size, reuse);
+      return this->priv_allocation_command(alloc_version(), command, limit_size, prefer_in_recvd_out_size, reuse);
+   }
+
+   pointer priv_allocation_command(version_1, allocation_type command,
+                         size_type,
+                         size_type &prefer_in_recvd_out_size,
+                         pointer &reuse)
+   {
+      (void)command;
+      BOOST_ASSERT( (command & allocate_new));
+      BOOST_ASSERT(!(command & nothrow_allocation));
+      pointer const p = this->alloc().allocate(prefer_in_recvd_out_size);
+      reuse = pointer();
+      return p;
+   }
+
+   pointer priv_allocation_command(version_2, allocation_type command,
+                         size_type limit_size,
+                         size_type &prefer_in_recvd_out_size,
+                         pointer &reuse)
+   {
+      return this->alloc().allocation_command(command, limit_size, prefer_in_recvd_out_size, reuse);
    }
 
    size_type priv_max_storage() const

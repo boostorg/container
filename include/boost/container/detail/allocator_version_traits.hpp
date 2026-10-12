@@ -23,10 +23,8 @@
 #include <boost/container/detail/workaround.hpp>
 
 #include <boost/container/allocator_traits.hpp>             //allocator_traits
-#include <boost/container/throw_exception.hpp>
 #include <boost/container/detail/multiallocation_chain.hpp> //multiallocation_chain
 #include <boost/container/detail/version_type.hpp>          //version_type
-#include <boost/container/detail/allocation_type.hpp>       //allocation_type
 #include <boost/container/detail/mpl.hpp>                   //integral_constant
 #include <boost/intrusive/pointer_traits.hpp>               //pointer_traits
 
@@ -57,10 +55,6 @@ struct allocator_version_traits
 
    inline static void deallocate_individual(Allocator &a, multiallocation_chain &holder)
    {  a.deallocate_individual(holder);   }
-
-   inline static pointer allocation_command(Allocator &a, allocation_type command,
-                         size_type limit_size, size_type &prefer_in_recvd_out_size, pointer &reuse)
-   {  return a.allocation_command(command, limit_size, prefer_in_recvd_out_size, reuse);  }
 };
 
 template<class Allocator>
@@ -128,28 +122,6 @@ struct allocator_version_traits<Allocator, 1>
          m.push_front(a.allocate(1));
       }
       rollback.release();
-   }
-
-   static pointer allocation_command(Allocator &a, allocation_type command,
-                         size_type, size_type &prefer_in_recvd_out_size, pointer &reuse)
-   {
-      pointer ret = pointer();
-      if(BOOST_UNLIKELY(!(command & allocate_new) && !(command & nothrow_allocation))){
-         throw_logic_error("version 1 allocator without allocate_new flag");
-      }
-      else{
-         BOOST_CONTAINER_TRY{
-            ret = a.allocate(prefer_in_recvd_out_size);
-         }
-         BOOST_CONTAINER_CATCH(...){
-            if(!(command & nothrow_allocation)){
-               BOOST_CONTAINER_RETHROW
-            }
-         }
-         BOOST_CONTAINER_CATCH_END
-         reuse = pointer();
-      }
-      return ret;
    }
 };
 
