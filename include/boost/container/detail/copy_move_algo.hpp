@@ -112,20 +112,12 @@ class scoped_alloc_range_destructor<Allocator, F, true>
    {}
 };
 
+//Raw pointers and iterators that use boost::movelib::contiguous_iterator_tag
+//(e.g. vec_iterator) or std::contiguous_iterator_tag as iterator_concept
 template<class I>
 struct are_elements_contiguous
 {
-   BOOST_STATIC_CONSTEXPR bool value = false;
-};
-
-/////////////////////////
-//    raw pointers
-/////////////////////////
-
-template<class T>
-struct are_elements_contiguous<T*>
-{
-   BOOST_STATIC_CONSTEXPR bool value = true;
+   BOOST_STATIC_CONSTEXPR bool value = boost::movelib::is_contiguous_iterator<I>::value;
 };
 
 /////////////////////////
@@ -138,14 +130,6 @@ struct are_elements_contiguous< ::boost::move_iterator<It> >
 {};
 
 }  //namespace dtl {
-
-/////////////////////////
-//    predeclarations
-/////////////////////////
-
-template <class Pointer, bool IsConst>
-class vec_iterator;
-
 }  //namespace container {
 
 namespace interprocess {
@@ -158,17 +142,6 @@ class offset_ptr;
 namespace container {
 
 namespace dtl {
-
-/////////////////////////
-//vector_[const_]iterator
-/////////////////////////
-
-template <class Pointer, bool IsConst>
-struct are_elements_contiguous<boost::container::vec_iterator<Pointer, IsConst> >
-{
-   BOOST_STATIC_CONSTEXPR bool value = true;
-};
-
 
 /////////////////////////
 //    offset_ptr
@@ -274,12 +247,13 @@ inline F memmove(I f, I l, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {
    typedef typename boost::container::iter_value<I>::type      value_type;
    typedef typename boost::container::iterator_traits<F>::difference_type r_difference_type;
-   value_type *const dest_raw = boost::movelib::iterator_to_raw_pointer(r);
-   const value_type *const beg_raw = boost::movelib::iterator_to_raw_pointer(f);
-   const value_type *const end_raw = boost::movelib::iterator_to_raw_pointer(l);
-   if(BOOST_LIKELY(beg_raw != end_raw)){
+   //Don't convert past-the-end iterators to raw pointers: iterators with
+   //debug checks (e.g. std::vector's) assert in operator->
+   if(BOOST_LIKELY(f != l)){
+      value_type *const dest_raw = boost::movelib::iterator_to_raw_pointer(r);
+      const value_type *const beg_raw = boost::movelib::iterator_to_raw_pointer(f);
       BOOST_ASSERT(dest_raw && beg_raw);
-      const std::size_t n = std::size_t(end_raw - beg_raw)   ;
+      const std::size_t n = boost::container::iterator_udistance(f, l);
       std::memmove(reinterpret_cast<void *>(dest_raw), beg_raw, sizeof(value_type)*n);
       r += static_cast<r_difference_type>(n);
    }
@@ -987,8 +961,9 @@ inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, F>::type
    typedef typename boost::container::iter_value<I>::type value_type;
    if (BOOST_LIKELY(n != 0)){
       r -= n;
+      l -= n;  //l can be a past-the-end iterator, don't convert it to a raw pointer
       void *const dst = (boost::movelib::iterator_to_raw_pointer)(r);
-      const void *const src = (boost::movelib::iterator_to_raw_pointer)(l) - n;
+      const void *const src = (boost::movelib::iterator_to_raw_pointer)(l);
       BOOST_ASSERT(dst && src);
       std::memmove(dst, src, sizeof(value_type)*n);
    }
