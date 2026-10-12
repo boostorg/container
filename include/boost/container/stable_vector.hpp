@@ -190,6 +190,29 @@ struct node
    {  static_cast<hook_type*>(this)->~hook_type();  }
 };
 
+//Destroys the header of a node if the construction of its value throws.
+//A guard instead of try/catch lets compilers like MSVC inline the caller.
+template<class Node>
+class node_header_guard
+{
+   public:
+   inline explicit node_header_guard(Node *p)
+      : m_p(p)
+   {}
+
+   inline ~node_header_guard()
+   {
+      if(m_p)
+         m_p->destroy_header();
+   }
+
+   inline void release()
+   {  m_p = 0;  }
+
+   private:
+   Node *m_p;
+};
+
 template<class VoidPtr, class VoidAllocator>
 struct index_traits
 {
@@ -2173,38 +2196,28 @@ class stable_vector
    {
       node_type *praw = ::new(boost::movelib::iterator_to_raw_pointer(p), boost_container_new_t())
          node_type(index_traits_type::ptr_to_node_base_ptr(*up_index));
-      BOOST_CONTAINER_TRY{
-         //This can throw
-         boost::container::construct_in_place
-            ( this->priv_node_alloc()
-            , praw->get_data_ptr()
-            , it);
-      }
-      BOOST_CONTAINER_CATCH(...) {
-         //Caller's rollback returns the node to the pool
-         praw->destroy_header();
-         BOOST_CONTAINER_RETHROW
-      }
-      BOOST_CONTAINER_CATCH_END
+      //On exception the caller's rollback returns the node to the pool
+      stable_vector_detail::node_header_guard<node_type> guard(praw);
+      //This can throw
+      boost::container::construct_in_place
+         ( this->priv_node_alloc()
+         , praw->get_data_ptr()
+         , it);
+      guard.release();
    }
 
    template<class ValueConvertible>
    void priv_build_node_from_convertible(const node_ptr &p, BOOST_FWD_REF(ValueConvertible) value_convertible)
    {
       node_type *praw = ::new(boost::movelib::iterator_to_raw_pointer(p), boost_container_new_t()) node_type;
-      BOOST_CONTAINER_TRY{
-         //This can throw
-         boost::container::allocator_traits<node_allocator_type>::construct
-            ( this->priv_node_alloc()
-            , p->get_data_ptr()
-            , ::boost::forward<ValueConvertible>(value_convertible));
-      }
-      BOOST_CONTAINER_CATCH(...) {
-         //Caller's rollback returns the node to the pool
-         praw->destroy_header();
-         BOOST_CONTAINER_RETHROW
-      }
-      BOOST_CONTAINER_CATCH_END
+      //On exception the caller's rollback returns the node to the pool
+      stable_vector_detail::node_header_guard<node_type> guard(praw);
+      //This can throw
+      boost::container::allocator_traits<node_allocator_type>::construct
+         ( this->priv_node_alloc()
+         , p->get_data_ptr()
+         , ::boost::forward<ValueConvertible>(value_convertible));
+      guard.release();
    }
 
    void priv_swap_members(stable_vector &x)
