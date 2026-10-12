@@ -336,13 +336,13 @@ class basic_string_base
       this->members_.pshort_repr()->~short_t();
    }
 
-   short_t * assure_short()
+   //Precondition: !is_short(). Frees the dynamic buffer and changes to the short representation.
+   //The size and the characters of the short representation are not initialized.
+   void priv_long_to_short()
    {
-      if (!this->is_short()){
-         this->destroy_long();
-         return construct_short();
-      }
-      return this->members_.pshort_repr();
+      this->deallocate(this->priv_long_addr(), this->priv_long_storage());
+      this->destroy_long();
+      this->construct_short();
    }
 
    inline long_t * construct_long()
@@ -969,9 +969,8 @@ class basic_string
             propagate_on_container_copy_assignment::value> flag;
          if(flag && this_alloc != x_alloc){
             if(!this->is_short()){
-               this->deallocate_block();
-               this->assure_short();
-               Traits::assign(*this->priv_addr(), CharT(0));
+               this->priv_long_to_short();
+               Traits::assign(*this->priv_short_addr(), CharT(0));
                this->priv_short_size(0);
             }
          }
@@ -3140,10 +3139,10 @@ class basic_string
    void priv_move_assign(BOOST_RV_REF(basic_string) x, dtl::bool_<true> /*steal_resources*/)
    {
       if(!this->is_short()){
-         this->deallocate_block();  //Free the memory with its current allocator
-         this->assure_short();
+         this->priv_long_to_short();  //Free the memory with its current allocator
       }
-      this->clear();
+      Traits::assign(*this->priv_short_addr(), CharT(0));
+      this->priv_short_size(0);
       //Move allocator if needed
       dtl::bool_<allocator_traits_type::
          propagate_on_container_move_assignment::value> flag;
