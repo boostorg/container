@@ -54,6 +54,7 @@
 #include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/adl_move_swap.hpp>
+#include <boost/move/algo/detail/rotate.hpp>
 #include <boost/move/detail/launder.hpp>
 // move/detail
 #include <boost/move/detail/move_helpers.hpp>
@@ -1663,17 +1664,25 @@ class stable_vector
       BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT;
       const difference_type pos_n = p - this->cbegin();
       const size_type old_size = this->size();
+      //Inserting each element at p would move the index pointers after p once for
+      //each new element: insert the new elements at the end and rotate them to p
       BOOST_CONTAINER_TRY{
          for(; first != last; ++first){
-            this->emplace(p, *first);
+            this->emplace_back(*first);
          }
       }
       BOOST_CONTAINER_CATCH(...){
          //No effects: erase the inserted elements
-         this->priv_erase_inserted(pos_n, old_size);
+         this->priv_erase_inserted(difference_type(old_size), old_size);
          BOOST_CONTAINER_RETHROW
       }
       BOOST_CONTAINER_CATCH_END
+      if (this->size() != old_size) {
+         const index_iterator ib(this->index.begin());
+         const index_iterator ie(ib + difference_type(this->size()));
+         boost::movelib::rotate_gcd(ib + pos_n, ib + difference_type(old_size), ie);
+         index_traits_type::fix_up_pointers(ib + pos_n, ie);
+      }
       return this->begin() + difference_type(pos_n);
    }
 
