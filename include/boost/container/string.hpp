@@ -521,14 +521,6 @@ class basic_string_base
    inline size_type priv_long_size() const
    {  return this->members_.plong_repr()->length;  }
 
-   inline void priv_size(size_type sz)
-   {
-      if(this->is_short())
-         this->priv_short_size(sz);
-      else
-         this->priv_long_size(sz);
-   }
-
    //Sets the size when the caller knows the representation
    inline void priv_size(bool short_repr, size_type sz)
    {
@@ -936,8 +928,7 @@ class basic_string
    basic_string(size_type n, default_init_t)
       : base_t(n + 1)
    {
-      this->priv_size(n);
-      this->priv_terminate_string();
+      this->priv_size_and_terminate(n);
    }
 
    //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
@@ -945,8 +936,7 @@ class basic_string
    basic_string(size_type n, default_init_t, const allocator_type& a)
       : base_t(a, n + 1)
    {
-      this->priv_size(n);
-      this->priv_terminate_string();
+      this->priv_size_and_terminate(n);
    }
 
    //! <b>Effects</b>: Constructs a basic_string with a default-constructed allocator,
@@ -1300,8 +1290,7 @@ class basic_string
          this->erase(this->begin() + difference_type(n), this->end());
       else{
          this->priv_reserve_no_null_end(n);
-         this->priv_size(n);
-         this->priv_terminate_string();
+         this->priv_size_and_terminate(n);
       }
    }
 
@@ -1633,12 +1622,13 @@ class basic_string
    //!
    void push_back(CharT c)
    {
-      const size_type old_size = this->priv_size();
-      if (old_size < this->capacity()){
-         const pointer addr = this->priv_addr();
+      pointer   addr;
+      size_type old_size, storage;
+      const bool short_repr = this->priv_repr_data(addr, old_size, storage);
+      if (old_size < size_type(storage - 1u)){
          this->priv_construct_null(addr + difference_type(old_size + 1u));
          Traits::assign(addr[difference_type(old_size)], c);
-         this->priv_size(old_size+1u);
+         this->priv_size(short_repr, old_size+1u);
       }
       else{
          //No enough memory, insert a new object at the end
@@ -1736,12 +1726,15 @@ class basic_string
     {
        size_type n = static_cast<size_type>(last - first);
        this->reserve(n);
-       CharT* const ptr = boost::movelib::to_raw_pointer(this->priv_addr());
+       pointer   addr;
+       size_type old_size, storage;
+       const bool short_repr = this->priv_repr_data(addr, old_size, storage);
+       CharT* const ptr = boost::movelib::to_raw_pointer(addr);
        //[first, last) can be a part of *this (e.g. assign(s, pos, n)): if so, n <= size(),
        //reserve() does not reallocate and the ranges can overlap.
        Traits::move(ptr, first, n);
        this->priv_construct_null(ptr + difference_type(n));
-       this->priv_size(n);
+       this->priv_size(short_repr, n);
        return *this;
     }
 
@@ -2068,11 +2061,13 @@ class basic_string
    {
       // The move includes the terminating null.
       CharT * const ptr = const_cast<CharT*>(boost::movelib::to_raw_pointer(p));
-      const size_type old_size = this->priv_size();
+      pointer   addr;
+      size_type old_size, storage;
+      const bool short_repr = this->priv_repr_data(addr, old_size, storage);
       Traits::move(ptr,
                    boost::movelib::to_raw_pointer(p + 1),
-                   old_size - size_type(p - this->priv_addr()));
-      this->priv_size(old_size-1u);
+                   old_size - size_type(p - addr));
+      this->priv_size(short_repr, old_size-1u);
       return iterator(ptr);
    }
 
@@ -2089,12 +2084,14 @@ class basic_string
       CharT * f = const_cast<CharT*>(boost::movelib::to_raw_pointer(first));
       if (first != last) { // The move includes the terminating null.
          const size_type num_erased = size_type(last - first);
-         const size_type old_size = this->priv_size();
+         pointer   addr;
+         size_type old_size, storage;
+         const bool short_repr = this->priv_repr_data(addr, old_size, storage);
          Traits::move(f,
                       boost::movelib::to_raw_pointer(last),
-                      old_size + 1u - size_type(last - this->priv_addr()));
+                      old_size + 1u - size_type(last - addr));
          const size_type new_length = old_size - num_erased;
-         this->priv_size(new_length);
+         this->priv_size(short_repr, new_length);
       }
       return iterator(f);
    }
@@ -3293,6 +3290,18 @@ class basic_string
    // any of them to be called anywhere except from within constructors.
    inline void priv_terminate_string()
    {  this->priv_construct_null(this->priv_end_addr());  }
+
+   //Sets the size to n and writes the null terminator with only one is_short() test.
+   //Precondition: n <= capacity()
+   inline void priv_size_and_terminate(size_type n)
+   {
+      pointer   addr;
+      size_type old_size, storage;
+      const bool short_repr = this->priv_repr_data(addr, old_size, storage);
+      BOOST_ASSERT(n < storage);
+      this->priv_size(short_repr, n);
+      this->priv_construct_null(addr + difference_type(n));
+   }
 
    //nvc++ (NVIDIA HPC SDK, at least up to 26.5) miscompiles the loop below when
    //it is inlined at -O2/-fast. See:
