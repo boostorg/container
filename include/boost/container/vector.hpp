@@ -2792,10 +2792,13 @@ private:
    template<class OtherA>
    void priv_move_assign_steal_or_assign(BOOST_RV_REF_BEG vector<T, OtherA, Options> BOOST_RV_REF_END x, dtl::true_type /*data_can_be_always_stolen*/)
    {
+      const bool propagate_alloc = allocator_traits_type::propagate_on_container_move_assignment::value;
       this->clear();
       if (BOOST_LIKELY(!!this->m_holder.m_start))
          this->m_holder.deallocate(this->m_holder.m_start, this->m_holder.m_capacity);
       this->m_holder.steal_resources(x.m_holder);
+      //Move allocator if needed
+      dtl::move_alloc(this->m_holder.alloc(), x.m_holder.alloc(), dtl::bool_<propagate_alloc>());
    }
 
    template<class OtherA>
@@ -2815,6 +2818,13 @@ private:
       //Else do a one by one move. Also, clear the source as users find confusing
       //elements are still alive in the source container.
       else {
+         //If the allocator is propagated and is not equal, free memory
+         //with the current allocator and then replace the allocator
+         if (propagate_alloc && !(this_alloc == x_alloc)) {
+            this->clear();
+            this->shrink_to_fit();
+         }
+         dtl::move_alloc(this_alloc, x_alloc, dtl::bool_<propagate_alloc>());
          this->assign( boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(x.begin()))
                      , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(x.end()))   );
          x.clear();
@@ -2838,11 +2848,6 @@ private:
       const bool data_can_be_always_be_stolen = alloc_is_always_equal || (propagate_alloc && !partially_propagable_alloc);
 
       this->priv_move_assign_steal_or_assign(boost::move(x), dtl::bool_<data_can_be_always_be_stolen>());
-
-      //Move allocator if needed
-      allocator_type& this_alloc = this->m_holder.alloc();
-      allocator_type& x_alloc    = x.m_holder.alloc();
-      dtl::move_alloc(this_alloc, x_alloc, dtl::bool_<propagate_alloc>());
    }
 
    template<class OtherA>
