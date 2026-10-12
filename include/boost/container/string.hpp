@@ -760,7 +760,7 @@ class basic_string
    //! <b>Throws</b>: If allocator_type's default constructor throws.
    basic_string() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<allocator_type>::value)
       : base_t()
-   { this->priv_terminate_string(); }
+   { this->priv_short_terminate(); }
 
 
    //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter.
@@ -768,7 +768,7 @@ class basic_string
    //! <b>Throws</b>: Nothing
    explicit basic_string(const allocator_type& a) BOOST_NOEXCEPT_OR_NOTHROW
       : base_t(a)
-   { this->priv_terminate_string(); }
+   { this->priv_short_terminate(); }
 
    //! <b>Effects</b>: Copy constructs a basic_string.
    //!
@@ -778,7 +778,7 @@ class basic_string
    basic_string(const basic_string& s)
       :  base_t(allocator_traits_type::select_on_container_copy_construction(s.alloc()))
    {
-      this->priv_terminate_string();
+      this->priv_short_terminate();
       this->assign(s.begin(), s.end());
    }
 
@@ -789,7 +789,7 @@ class basic_string
    explicit basic_string(BasicStringView<CharT, Traits> sv, const allocator_type& a = allocator_type())
       :  base_t(allocator_traits_type::select_on_container_copy_construction(a))
    {
-      this->priv_terminate_string();
+      this->priv_short_terminate();
       this->assign(sv);
    }
 
@@ -801,7 +801,7 @@ class basic_string
    basic_string(BOOST_RV_REF(basic_string) s) BOOST_NOEXCEPT_OR_NOTHROW
       : base_t(boost::move(s.alloc()))
    {
-      this->priv_terminate_string();
+      this->priv_short_terminate();
       if(s.alloc() == this->alloc()){
          this->swap_data(s);
       }
@@ -818,7 +818,7 @@ class basic_string
    basic_string(const basic_string& s, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       :  base_t(a)
    {
-      this->priv_terminate_string();
+      this->priv_short_terminate();
       this->assign(s.begin(), s.end());
    }
 
@@ -831,7 +831,7 @@ class basic_string
    basic_string(BOOST_RV_REF(basic_string) s, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       : base_t(a)
    {
-      this->priv_terminate_string();
+      this->priv_short_terminate();
       if(s.alloc() == this->alloc()){
          this->swap_data(s);
       }
@@ -845,7 +845,7 @@ class basic_string
    basic_string(const basic_string& s, size_type pos, size_type n = npos)
       : base_t()
    {
-      this->priv_terminate_string();
+      this->priv_short_terminate();
       if (pos > s.size())
          throw_out_of_range("basic_string::basic_string out of range position");
       else
@@ -858,7 +858,7 @@ class basic_string
    basic_string(const basic_string& s, size_type pos, size_type n, const allocator_type& a)
       : base_t(a)
    {
-      this->priv_terminate_string();
+      this->priv_short_terminate();
       if (pos > s.size())
          throw_out_of_range("basic_string::basic_string out of range position");
       else
@@ -871,7 +871,7 @@ class basic_string
    basic_string(const CharT* s, size_type n)
       : base_t()
    {
-      this->priv_terminate_string();
+      this->priv_short_terminate();
       this->assign(s, n);  // assign checks for s != 0
    }
 
@@ -880,7 +880,7 @@ class basic_string
    basic_string(const CharT* s, size_type n, const allocator_type& a)
       : base_t(a)
    {
-      this->priv_terminate_string();
+      this->priv_short_terminate();
       this->assign(s, n);  // assign checks for s != 0
    }
 
@@ -890,7 +890,7 @@ class basic_string
       : base_t()
    {
       BOOST_ASSERT(s != 0);
-      this->priv_terminate_string();
+      this->priv_short_terminate();
       this->assign(s, s + Traits::length(s));
    }
 
@@ -900,7 +900,7 @@ class basic_string
       : base_t(a)
    {
       BOOST_ASSERT(s != 0);
-      this->priv_terminate_string();
+      this->priv_short_terminate();
       this->assign(s, s + Traits::length(s));
    }
 
@@ -910,7 +910,7 @@ class basic_string
    basic_string(size_type n, CharT c)
       : base_t()
    {
-      this->priv_terminate_string();
+      this->priv_short_terminate();
       this->assign(n, c);
    }
 
@@ -919,7 +919,7 @@ class basic_string
    basic_string(size_type n, CharT c, const allocator_type& a)
       : base_t(a)
    {
-      this->priv_terminate_string();
+      this->priv_short_terminate();
       this->assign(n, c);
    }
 
@@ -948,7 +948,7 @@ class basic_string
          BOOST_MOVE_I dtl::nat >::type * = 0))
       : base_t()
    {
-      this->priv_terminate_string();
+      this->priv_short_terminate();
       this->assign(f, l);
    }
 
@@ -961,7 +961,7 @@ class basic_string
          BOOST_MOVE_I dtl::nat >::type * = 0))
       : base_t(a)
    {
-      this->priv_terminate_string();
+      this->priv_short_terminate();
       this->assign(f, l);
    }
 
@@ -971,7 +971,7 @@ class basic_string
    basic_string(std::initializer_list<value_type> il, const allocator_type& a = allocator_type())
       : base_t(a)
    {
-      this->priv_terminate_string();
+      this->priv_short_terminate();
       this->assign(il.begin(), il.end());
    }
    #endif
@@ -3290,6 +3290,12 @@ class basic_string
    // any of them to be called anywhere except from within constructors.
    inline void priv_terminate_string()
    {  this->priv_construct_null(this->priv_end_addr());  }
+
+   inline void priv_short_terminate()
+   {
+      BOOST_ASSERT(this->is_short());
+      this->priv_construct_null(this->priv_short_addr() + difference_type(this->priv_short_size()));
+   }
 
    //Sets the size to n and writes the null terminator with only one is_short() test.
    //Precondition: n <= capacity()
