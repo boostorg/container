@@ -1293,15 +1293,15 @@ class basic_string
    //! <b>Complexity</b>: Linear to size().
    void shrink_to_fit()
    {
-      //Check if shrinking is possible
-      if(this->priv_storage() > InternalBufferChars){
+      //Check if shrinking is possible: only a dynamically allocated buffer can be shrunk
+      if(!this->is_short()){
+         //Dynamically allocated buffer attributes
+         const size_type long_size = this->priv_long_size();
          //Check if we should pass from dynamically allocated buffer
          //to the internal storage
-         if(this->priv_size() < InternalBufferChars){
-            //Dynamically allocated buffer attributes
+         if(long_size < InternalBufferChars){
             pointer   long_addr    = this->priv_long_addr();
             size_type long_storage = this->priv_long_storage();
-            size_type long_size    = this->priv_long_size();
             //Shrink from allocated buffer to the internal one, including trailing null
             Traits::copy( boost::movelib::to_raw_pointer(this->priv_short_addr())
                         , boost::movelib::to_raw_pointer(long_addr)
@@ -3223,7 +3223,7 @@ class basic_string
          const pointer ret = this->allocation_command(allocate_new, long_size+1, real_cap, reuse);
          //Copy and update
          Traits::copy( boost::movelib::to_raw_pointer(ret)
-                     , boost::movelib::to_raw_pointer(this->priv_long_addr())
+                     , boost::movelib::to_raw_pointer(long_addr)
                      , long_size+1);
          this->priv_long_addr(ret);
          this->priv_long_storage(real_cap);
