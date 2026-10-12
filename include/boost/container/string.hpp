@@ -37,6 +37,7 @@
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/next_capacity.hpp>
 #include <boost/move/detail/to_raw_pointer.hpp>
+#include <boost/move/detail/iterator_to_raw_pointer.hpp>
 #include <boost/container/detail/version_type.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/algorithm.hpp>
@@ -3289,12 +3290,7 @@ class basic_string
    //True if reading [first, last) can throw or [first, last) is a part of *this.
    //Then the characters must be read before the old characters move.
    template<class ForwardIter>
-   static typename dtl::disable_if_or
-      < bool
-      , dtl::is_same<ForwardIter, CharT*>
-      , dtl::is_same<ForwardIter, const CharT*>
-      >::type
-      priv_is_throwing_or_aliased_source(ForwardIter, size_type, const CharT *, size_type)
+   static bool priv_is_throwing_or_aliased_source(ForwardIter, size_type, const CharT *, size_type)
    {  return true;  }
 
    static bool priv_is_throwing_or_aliased_source(const cvalue_iterator &, size_type, const CharT *, size_type)
@@ -3303,12 +3299,45 @@ class basic_string
    static bool priv_is_throwing_or_aliased_source(const CharT *first, size_type n, const CharT *buf, size_type buf_size)
    {  return n && first < buf + difference_type(buf_size + 1u) && buf < first + difference_type(n);  }
 
+   //True if [first, last) can be read through a const CharT pointer: contiguous iterators
+   //(including the allocator's pointer types) whose value type is CharT
+   template<class ForwardIter>
+   struct is_char_contiguous_iterator
+   {
+      BOOST_STATIC_CONSTEXPR bool value =
+         ( boost::movelib::is_contiguous_iterator<ForwardIter>::value
+         || dtl::is_same<ForwardIter, pointer>::value
+         || dtl::is_same<ForwardIter, const_pointer>::value )
+         && dtl::is_same<typename boost::container::iterator_traits<ForwardIter>::value_type, CharT>::value;
+   };
+
    //Replaces the n1 characters at pos with the n characters of [first, last).
    //Strong exception guarantee: *this is changed only after all characters are read and the
    //memory is allocated. [first, last) can be a part of *this.
-   //This function has only the in-place code, so that it can be inlined.
    template<class ForwardIter>
    BOOST_CONTAINER_FORCEINLINE void priv_replace_range(size_type pos, size_type n1, ForwardIter first, ForwardIter last, size_type n)
+   {
+      this->priv_replace_range(pos, n1, first, last, n, dtl::bool_<is_char_contiguous_iterator<ForwardIter>::value>());
+   }
+
+   //Contiguous iterators: read the characters through a pointer, which can't throw and
+   //can be checked for aliasing. Only an element (not an end iterator) is converted
+   template<class ForwardIter>
+   BOOST_CONTAINER_FORCEINLINE void priv_replace_range(size_type pos, size_type n1, ForwardIter first, ForwardIter, size_type n, dtl::true_)
+   {
+      const CharT * const f = n ? boost::movelib::iterator_to_raw_pointer(first) : static_cast<const CharT *>(0);
+      this->priv_replace_range_core(pos, n1, f, f + difference_type(n), n);
+   }
+
+   template<class ForwardIter>
+   BOOST_CONTAINER_FORCEINLINE void priv_replace_range(size_type pos, size_type n1, ForwardIter first, ForwardIter last, size_type n, dtl::false_)
+   {
+      this->priv_replace_range_core(pos, n1, first, last, n);
+   }
+
+   //This function has only the in-place code, so that it can be inlined.
+   template<class ForwardIter>
+   BOOST_CONTAINER_FORCEINLINE void priv_replace_range_core(size_type pos, size_type n1, ForwardIter first, ForwardIter last, size_type n)
    {
       const size_type old_size = this->priv_size();
       BOOST_ASSERT(pos <= old_size && n1 <= old_size - pos);
