@@ -367,6 +367,23 @@ class basic_string_base
       return this->members_.plong_repr();
    }
 
+   //Stores a new dynamic buffer. If was_short (the value of is_short() read by the caller), changes
+   //to the long representation, else frees the old dynamic buffer.
+   void priv_set_long_buffer(bool was_short, pointer addr, size_type sz, size_type storage)
+   {
+      BOOST_ASSERT(was_short == this->is_short());
+      if (was_short){
+         this->destroy_short();
+         this->construct_long();
+      }
+      else{
+         this->deallocate(this->priv_long_addr(), this->priv_long_storage());
+      }
+      this->priv_long_addr(addr);
+      this->priv_long_size(sz);
+      this->priv_long_storage(storage);
+   }
+
    protected:
 
    typedef dtl::integral_constant<unsigned,
@@ -377,7 +394,8 @@ class basic_string_base
                          size_type &prefer_in_recvd_out_size,
                          pointer &reuse)
    {
-      if(this->is_short() && (command & (expand_fwd | expand_bwd)) ){
+      //Test the command first: if it has no expansion bits (often a constant), is_short() is not read
+      if((command & (expand_fwd | expand_bwd)) && this->is_short()){
          reuse = 0;
          command &= ~(expand_fwd | expand_bwd);
       }
@@ -385,14 +403,20 @@ class basic_string_base
          (this->alloc(), command, limit_size, prefer_in_recvd_out_size, reuse);
    }
 
-   size_type next_storage(size_type additional_objects, size_type current_storage) const
+   size_type priv_max_storage() const
    {
-      const size_type cur_cap = this->priv_capacity();
-      const size_type spare_cap = size_type(cur_cap - this->priv_size());
-      BOOST_ASSERT(additional_objects > spare_cap);
       size_type max_storage = allocator_traits_type::max_size(this->alloc());
       //We need a bit to store the short/ong bit so we can only use half of the stored_size_type capacity
       (clamp_by_half_stored_size_type<size_type>)(max_storage, stored_size_type());
+      return max_storage;
+   }
+
+   static size_type next_storage
+      (size_type additional_objects, size_type current_size, size_type current_storage, size_type max_storage)
+   {
+      const size_type cur_cap = size_type(current_storage - 1u);
+      const size_type spare_cap = size_type(cur_cap - current_size);
+      BOOST_ASSERT(additional_objects > spare_cap);
       const size_type max_cap = max_storage - 1u;  //we need to save space for null terminator
       const size_type achievable_additional_obj = size_type(max_cap - size_type(cur_cap));
       const size_type min_additional_obj = size_type(additional_objects - spare_cap);
@@ -515,6 +539,24 @@ class basic_string_base
          this->priv_short_size(sz);
       else
          this->priv_long_size(sz);
+   }
+
+   //Reads the address, size and storage of the buffer with only one is_short() test.
+   //Returns is_short().
+   BOOST_CONTAINER_FORCEINLINE bool priv_repr_data(pointer &addr, size_type &sz, size_type &storage) const
+   {
+      if(this->is_short()){
+         addr    = this->priv_short_addr();
+         sz      = this->priv_short_size();
+         storage = this->priv_short_storage();
+         return true;
+      }
+      else{
+         addr    = this->priv_long_addr();
+         sz      = this->priv_long_size();
+         storage = this->priv_long_storage();
+         return false;
+      }
    }
 
    inline void priv_short_size(size_type sz)
@@ -3169,22 +3211,20 @@ class basic_string
          throw_length_error("basic_string::reserve max_size() exceeded");
       }
 
-      const bool do_alloc = this->capacity() < res_arg;
+      pointer   addr;
+      size_type old_size, old_storage;
+      const bool was_short = this->priv_repr_data(addr, old_size, old_storage);
+      const bool do_alloc = size_type(old_storage - 1u) < res_arg;
       if (do_alloc){
          //size_type n = dtl::max_value(res_arg, this->size()) + 1;
          size_type n = res_arg + 1;
-         size_type new_storage = this->next_storage(n, this->priv_storage());
+         size_type new_storage = this->next_storage(n, old_size, old_storage, this->priv_max_storage());
          pointer reuse = 0;
          pointer new_start = this->allocation_command(allocate_new, n, new_storage, reuse);
 
-         const pointer addr = this->priv_addr();
          size_type new_length = priv_uninitialized_copy
-            (addr, addr + difference_type(this->priv_size()), new_start);
-         this->deallocate_block();
-         this->assure_long();
-         this->priv_long_addr(new_start);
-         this->priv_long_size(new_length);
-         this->priv_long_storage(new_storage);
+            (addr, addr + difference_type(old_size), new_start);
+         this->priv_set_long_buffer(was_short, new_start, new_length, new_storage);
       }
       return do_alloc;
    }
@@ -3392,7 +3432,7 @@ class basic_string
       const pointer old_start  = this->priv_addr();
       CharT * const old_buf    = boost::movelib::to_raw_pointer(old_start);
       //Grow from min_storage, so that the next operations also have free capacity
-      size_type new_storage = this->next_storage(size_type(min_storage - 1u - old_size), this->priv_storage());
+      size_type new_storage = this->next_storage(size_type(min_storage - 1u - old_size), old_size, this->priv_storage(), this->priv_max_storage());
       if (new_storage <= InternalBufferChars)
          new_storage = InternalBufferChars + 1u;
       //Backward expansion moves the old characters before [first, last) is read, so it is
