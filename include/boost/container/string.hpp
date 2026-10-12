@@ -3225,8 +3225,9 @@ class basic_string
 
    void priv_reserve(size_type res_arg)
    {
+      //After a reallocation the buffer is always dynamic
       if(this->priv_reserve_no_null_end(res_arg))
-         this->priv_terminate_string();
+         this->priv_construct_null(this->priv_long_addr() + difference_type(this->priv_long_size()));
    }
 
    template<class It1, class It2>
