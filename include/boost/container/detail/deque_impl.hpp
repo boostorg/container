@@ -1408,6 +1408,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
    }
 
    deque_impl(BOOST_RV_REF(deque_impl) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
+      BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value)
       :  Base(a)
    {
       if(x.alloc() == a){

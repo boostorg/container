@@ -261,10 +261,12 @@ class deque : public deque_impl<T, Allocator, false, Options>
    //!                 Moves x's resources to *this if a == allocator_type().
    //!                 Otherwise copies values from x to *this.
    //!
-   //! <b>Throws</b>: If allocation or T's copy constructor throws.
+   //! <b>Throws</b>: Nothing if allocator_traits_type::is_always_equal::value is true.
+   //!   Otherwise, if allocation or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    deque(BOOST_RV_REF(deque) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
+      BOOST_NOEXCEPT_IF(boost::container::allocator_traits<allocator_type>::is_always_equal::value)
       : base_type(boost::move(static_cast<base_type&>(x)), a)
    {}
 

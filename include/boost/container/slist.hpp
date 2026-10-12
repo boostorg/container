@@ -307,10 +307,12 @@ class slist
    //! <b>Effects</b>: Move constructor using the specified allocator.
    //!                 Moves x's resources to *this.
    //!
-   //! <b>Throws</b>: If allocation or value_type's copy constructor throws.
+   //! <b>Throws</b>: Nothing if allocator_traits_type::is_always_equal::value is true.
+   //!   Otherwise, if allocation or value_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    slist(BOOST_RV_REF(slist) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
+      BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value)
       : AllocHolder(a)
    {
       slist & sr = x;

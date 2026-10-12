@@ -1061,10 +1061,14 @@ public:
    //!
    //! <b>Postcondition</b>: x.empty() is true.
    //!
+   //! <b>Throws</b>: Nothing if allocator_traits<allocator_type>::is_always_equal::value is true.
+   //!   Otherwise, if allocation or T's move constructor throws.
+   //!
    //! <b>Complexity</b>: Constant, or linear in x.size() if elements are moved
    //!   one by one.
    hub( hub&& x
-      , const BOOST_CONTAINER_DOC1ST(allocator_type, dtl::type_identity_t<allocator_type>) &al_):
+      , const BOOST_CONTAINER_DOC1ST(allocator_type, dtl::type_identity_t<allocator_type>) &al_)
+      noexcept(hub_detail::is_always_equal_t<allocator_type>::value):
       hub(std::move(x), al_, hub_detail::is_always_equal_t<allocator_type>{}) {}
 
    //! <b>Effects</b>: Constructs a hub equal to il, using the specified allocator.

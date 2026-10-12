@@ -2932,6 +2932,16 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
   [classref boost::container::scoped_allocator_adaptor scoped_allocator_adaptor] and internal utilities
   are trivially copyable when their members are. This allows some compilers to pass and return them in registers.
 
+* Allocator-extended move constructors are now `noexcept` when `allocator_traits<Allocator>::is_always_equal`
+  is true (as an extension to the standard[classref boost::container::vector vector],
+  [classref boost::container::devector devector], [classref boost::container::deque deque],
+  [classref boost::container::segtor segtor], [classref boost::container::list list],
+  [classref boost::container::slist slist], [classref boost::container::stable_vector stable_vector],
+  [classref boost::container::basic_string basic_string], [classref boost::container::hub hub].
+  [classref boost::container::map map],
+  [classref boost::container::multimap multimap], [classref boost::container::set set] and
+  [classref boost::container::multiset multiset] also need a comparator with a non-throwing copy constructor and swap.
+
 * Fixed bugs/issues/enhancements:
    * [@https://github.com/boostorg/container/issues/335 GitHub #335: ['"Error on instantiating an incomplete type"]].
    * [@https://github.com/boostorg/container/pull/339 GitHub #339: ['"optimized range insertion for boost::container::hub"]].

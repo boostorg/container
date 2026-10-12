@@ -1212,10 +1212,12 @@ private:
    //!                 Moves x's resources to *this if a == allocator_type().
    //!                 Otherwise copies values from x to *this.
    //!
-   //! <b>Throws</b>: If allocation or T's copy constructor throws.
+   //! <b>Throws</b>: Nothing if allocator_traits_type::is_always_equal::value is true.
+   //!   Otherwise, if allocation or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    vector(BOOST_RV_REF(vector) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
+      BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value && !allocator_traits_type::is_partially_propagable::value)
       :  m_holder( vector_uninitialized_size, a
                  //In this allocator move constructor the allocator won't be propagated --v
                  , is_propagable_from<false>(x.get_stored_allocator(), x.m_holder.start(), a) ? 0 : x.size()

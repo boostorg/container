@@ -461,7 +461,8 @@ class devector
    /**
    * **Effects**: Moves `rhs`'s resources to `*this`, using the specified allocator.
    *
-   * **Throws**: If allocation or T's move constructor throws.
+   * **Throws**: Nothing if `allocator_traits_type::is_always_equal::value` is true.
+   *   Otherwise, if allocation or T's move constructor throws.
    *
    * **Postcondition**: *this has the same value `rhs` had before the operation.
    *                    `rhs` is left in an unspecified but valid state.
@@ -471,6 +472,7 @@ class devector
    * **Complexity**: Linear if allocator != rhs.get_allocator(), otherwise constant.
    */
    devector(BOOST_RV_REF(devector) rhs, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type)& allocator)
+      BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value)
       : m_(allocator)
    {
       if (allocator_traits_type::is_always_equal::value || this->get_allocator_ref() == rhs.get_allocator_ref()) {

@@ -825,10 +825,12 @@ class basic_string
    //! <b>Effects</b>: Move constructor using the specified allocator.
    //!                 Moves s's resources to *this.
    //!
-   //! <b>Throws</b>: If allocation throws.
+   //! <b>Throws</b>: Nothing if allocator_traits_type::is_always_equal::value is true.
+   //!   Otherwise, if allocation throws.
    //!
    //! <b>Complexity</b>: Constant if a == s.get_allocator(), linear otherwise.
    basic_string(BOOST_RV_REF(basic_string) s, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
+      BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value)
       : base_t(a)
    {
       this->priv_short_terminate();

@@ -375,10 +375,17 @@ class map
    //! <b>Effects</b>: Move constructs a map using the specified allocator.
    //!                 Constructs *this using x's resources.
    //!
+   //! <b>Throws</b>: Nothing if allocator_traits_type::is_always_equal::value is true and the
+   //!   copy constructor and swap of Compare do not throw. Otherwise, if allocation or
+   //!   value_type's move constructor throws.
+   //!
    //! <b>Complexity</b>: Constant if x == x.get_allocator(), linear otherwise.
    //!
    //! <b>Postcondition</b>: x is emptied.
    inline map(BOOST_RV_REF(map) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
+      BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value &&
+                       dtl::is_nothrow_copy_constructible<Compare>::value &&
+                       dtl::is_nothrow_swappable<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {}
 
@@ -1945,10 +1952,17 @@ class multimap
 
    //! <b>Effects</b>: Move constructs a multimap using the specified allocator.
    //!                 Constructs *this using x's resources.
+   //! <b>Throws</b>: Nothing if allocator_traits_type::is_always_equal::value is true and the
+   //!   copy constructor and swap of Compare do not throw. Otherwise, if allocation or
+   //!   value_type's move constructor throws.
+   //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    //!
    //! <b>Postcondition</b>: x is emptied.
    inline multimap(BOOST_RV_REF(multimap) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
+      BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value &&
+                       dtl::is_nothrow_copy_constructible<Compare>::value &&
+                       dtl::is_nothrow_swappable<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {}
 
