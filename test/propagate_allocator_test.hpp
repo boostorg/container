@@ -15,6 +15,7 @@
 #include "dummy_test_allocator.hpp"
 
 #include <iostream>
+#include <utility>
 
 namespace boost{
 namespace container {
@@ -105,6 +106,111 @@ struct get_real_stored_allocator
 
 template<class Container>
 void test_propagate_allocator_allocator_arg();
+
+//Values for the non-empty tests: value i of a sequence or set, or the pair (i, i) of a map
+template<class V>
+struct propagate_test_value
+{
+   static V make(int i) {  return V(char('A' + i));  }
+};
+
+template<class K, class M>
+struct propagate_test_value< std::pair<K, M> >
+{
+   static std::pair<K, M> make(int i) {  return std::pair<K, M>(K(char('A' + i)), M(char('A' + i)));  }
+};
+
+//Inserts values [first, first + n) in key order
+template<class Container>
+void propagate_test_fill(Container &c, std::size_t n, int first)
+{
+   typedef typename Container::value_type value_type;
+   for (std::size_t i = 0; i != n; ++i) {
+      c.insert(c.end(), propagate_test_value<value_type>::make(first + int(i)));
+   }
+}
+
+template<class Container>
+bool propagate_test_check(const Container &c, std::size_t n, int first)
+{
+   typedef typename Container::value_type value_type;
+   if (c.size() != n)
+      return false;
+   int i = first;
+   for (typename Container::const_iterator it = c.begin(); it != c.end(); ++it, ++i) {
+      if (!(*it == propagate_test_value<value_type>::make(i)))
+         return false;
+   }
+   return true;
+}
+
+//Copy and move construction with an allocator, copy and move assignment and swap of
+//non-empty containers whose allocators can compare unequal. The values and the allocator of
+//each result are checked. propagation_test_allocator also checks that each memory block is
+//freed by the allocator that allocated it.
+template<class Container>
+void test_propagate_allocator_nonempty()
+{
+   typedef typename Container::allocator_type            allocator_type;
+   typedef allocator_traits<allocator_type>               alloc_traits;
+   const bool pocca = alloc_traits::propagate_on_container_copy_assignment::value;
+   const bool pocma = alloc_traits::propagate_on_container_move_assignment::value;
+   const bool pocs  = alloc_traits::propagate_on_container_swap::value;
+   const std::size_t sizes[] = { 0u, 2u, 30u };
+   const std::size_t num_sizes = sizeof(sizes)/sizeof(sizes[0]);
+   for (std::size_t i1 = 0; i1 != num_sizes; ++i1)
+   for (std::size_t i2 = 0; i2 != num_sizes; ++i2) {
+      const std::size_t n1 = sizes[i1], n2 = sizes[i2];
+      const allocator_type a1;   //new id
+      const allocator_type a2;   //new id: a2 != a1 if the allocator compares the ids
+      {  //copy constructor with allocator
+         Container c(a1);
+         propagate_test_fill(c, n1, 0);
+         Container c2(c, a2);
+         BOOST_TEST (propagate_test_check(c2, n1, 0));
+         BOOST_TEST (propagate_test_check(c, n1, 0));
+         BOOST_TEST (c2.get_stored_allocator().id_ == a2.id_);
+      }
+      {  //move constructor with allocator
+         Container c(a1);
+         propagate_test_fill(c, n1, 0);
+         Container c2(boost::move(c), a2);
+         BOOST_TEST (propagate_test_check(c2, n1, 0));
+         BOOST_TEST (c2.get_stored_allocator().id_ == a2.id_);
+      }
+      {  //copy assignment
+         Container c(a1);
+         propagate_test_fill(c, n1, 0);
+         Container c2(a2);
+         propagate_test_fill(c2, n2, 31);
+         c2 = c;
+         BOOST_TEST (propagate_test_check(c2, n1, 0));
+         BOOST_TEST (propagate_test_check(c, n1, 0));
+         BOOST_TEST (c2.get_stored_allocator().id_ == (pocca ? a1.id_ : a2.id_));
+      }
+      {  //move assignment
+         Container c(a1);
+         propagate_test_fill(c, n1, 0);
+         Container c2(a2);
+         propagate_test_fill(c2, n2, 31);
+         c2 = boost::move(c);
+         BOOST_TEST (propagate_test_check(c2, n1, 0));
+         BOOST_TEST (c2.get_stored_allocator().id_ == (pocma ? a1.id_ : a2.id_));
+      }
+      //swap: unequal allocators that are not propagated are a precondition violation
+      if (pocs || a1 == a2) {
+         Container c(a1);
+         propagate_test_fill(c, n1, 0);
+         Container c2(a2);
+         propagate_test_fill(c2, n2, 31);
+         c.swap(c2);
+         BOOST_TEST (propagate_test_check(c, n2, 31));
+         BOOST_TEST (propagate_test_check(c2, n1, 0));
+         BOOST_TEST (c.get_stored_allocator().id_  == (pocs ? a2.id_ : a1.id_));
+         BOOST_TEST (c2.get_stored_allocator().id_ == (pocs ? a1.id_ : a2.id_));
+      }
+   }
+}
 
 template<class Selector>
 bool test_propagate_allocator()
@@ -206,6 +312,7 @@ bool test_propagate_allocator()
       }
       //And now allocator argument constructors
       test_propagate_allocator_allocator_arg<PropagateCont>();
+      test_propagate_allocator_nonempty<PropagateCont>();
    }
 
    //////////////////////////////////////////
@@ -278,6 +385,7 @@ bool test_propagate_allocator()
       }
       //And now allocator argument constructors
       test_propagate_allocator_allocator_arg<NoPropagateCont>();
+      test_propagate_allocator_nonempty<NoPropagateCont>();
    }
    {
       //Don't use unequal ids as unequal allocators -------------------------|,
@@ -306,6 +414,7 @@ bool test_propagate_allocator()
          BOOST_TEST (c.get_stored_allocator().assign_moves_ == 0);
          BOOST_TEST (c.get_stored_allocator().swaps_ == 0);
       }
+      test_propagate_allocator_nonempty<NoPropagateCont>();
    }
 
    return report_errors() == 0;
@@ -359,47 +468,6 @@ void test_propagate_allocator_allocator_arg()
       BOOST_TEST (c2.get_stored_allocator().assign_moves_ == 0);
       BOOST_TEST (c2.get_stored_allocator().swaps_ == 0);
    }
-}
-
-//Sequence containers: moves non-empty containers with an allocator that compares unequal.
-//The elements must be moved, and each memory block must be freed by the allocator that
-//allocated it (propagation_test_allocator checks it).
-template<class Container>
-void test_move_with_unequal_allocator_impl()
-{
-   typedef typename Container::allocator_type   allocator_type;
-   typedef typename Container::value_type       value_type;
-   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 40u };
-   value_type values[40];
-   for (std::size_t i = 0; i != 40u; ++i) {
-      values[i] = value_type('a' + int(i % 26u));
-   }
-   for (std::size_t si = 0; si != sizeof(sizes)/sizeof(sizes[0]); ++si) {
-      const std::size_t n = sizes[si];
-      const allocator_type a1;   //new id
-      Container c(values, values + n, a1);
-      const allocator_type a2;   //new id: a2 != a1
-      Container c2(boost::move(c), a2);
-      BOOST_TEST (c2.get_stored_allocator().id_ == a2.id_);
-      BOOST_TEST (c2.size() == n);
-      std::size_t i = 0;
-      for (typename Container::const_iterator it = c2.begin(); it != c2.end(); ++it, ++i) {
-         BOOST_TEST (*it == values[i]);
-      }
-      //Equal allocators: the resources can be moved
-      Container c3(boost::move(c2), a2);
-      BOOST_TEST (c3.size() == n);
-   }
-}
-
-template<class Selector>
-bool test_move_with_unequal_allocator()
-{
-   typedef propagation_test_allocator<char, true, true, true, true, true>     AlwaysPropagate;
-   typedef propagation_test_allocator<char, false, false, false, false, true> NeverPropagate;
-   test_move_with_unequal_allocator_impl< alloc_propagate_wrapper<char, AlwaysPropagate, Selector> >();
-   test_move_with_unequal_allocator_impl< alloc_propagate_wrapper<char, NeverPropagate, Selector> >();
-   return report_errors() == 0;
 }
 
 }  //namespace test{

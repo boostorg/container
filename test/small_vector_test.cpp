@@ -627,8 +627,6 @@ int main()
    if(!boost::container::test::test_propagate_allocator<boost_container_small_vector>()){
       return 1;
    }
-   if(!boost::container::test::test_move_with_unequal_allocator<boost_container_small_vector>())
-      return 1;
 
    ////////////////////////////////////
    //    Initializer lists testing
