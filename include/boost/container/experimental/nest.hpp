@@ -34,6 +34,7 @@
 #include <boost/container/detail/aligned_allocation.hpp> //portable (over)aligned nothrow alloc
 #include <boost/container/detail/bit_utilities.hpp>
 #include <boost/container/detail/compare_functors.hpp>
+#include <boost/container/detail/destroyers.hpp>
 #include <boost/container/detail/iterator.hpp>
 #include <boost/container/detail/iterators.hpp>
 #include <boost/container/detail/mpl.hpp>
@@ -1115,6 +1116,27 @@ class nest
 
    };
    friend class priv_construction_guard;
+
+   //This guard calls priv_restore_capacity_on_throw() if the construction of an
+   //element throws. A guard instead of try/catch lets compilers like MSVC inline
+   //emplace into the caller's insert loop.
+   class priv_restore_capacity_guard
+   {
+      nest *m_p;
+      block_base_pointer m_pbb_prev;
+
+      public:
+      priv_restore_capacity_guard(nest &n, block_base_pointer pbb_prev)
+         : m_p(&n), m_pbb_prev(pbb_prev)
+      {}
+
+      void release()
+      {  m_p = 0;  }
+
+      ~priv_restore_capacity_guard()
+      {  if(m_p) m_p->priv_restore_capacity_on_throw(m_pbb_prev);  }
+   };
+   friend class priv_restore_capacity_guard;
    #endif // BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -2082,15 +2104,10 @@ class nest
 
    void priv_allocate_block_data(block_pointer pb, dtl::bool_<false>)
    {
-      BOOST_CONTAINER_TRY {
-         allocator_type val_al(al());
-         pb->data_ = allocator_traits_type::allocate(val_al, N);
-      }
-      BOOST_CONTAINER_CATCH(...) {
-         block_alloc_traits::deallocate(al(), pb, 1);
-         BOOST_CONTAINER_RETHROW;
-      }
-      BOOST_CONTAINER_CATCH_END
+      dtl::scoped_array_deallocator<block_allocator> guard(pb, al(), 1u);
+      allocator_type val_al(al());
+      pb->data_ = allocator_traits_type::allocate(val_al, N);
+      guard.release();
    }
 
    BOOST_CONTAINER_FORCEINLINE void priv_allocate_block_data(block_pointer, dtl::bool_<true>) BOOST_NOEXCEPT {}
@@ -2145,23 +2162,17 @@ class nest
       }
    }
 
-   // The try/catch lives here (not inline in emplace) on purpose: MSVC will not
-   // inline a function that contains its own EH scope, so keeping emplace
-   // EH-clean lets it be inlined into the caller's insert loop. This is a plain
-   // (non-FORCEINLINE) helper so the EH scope stays out of emplace.
+   // A guard (not try/catch) on purpose: MSVC will not inline a function that
+   // contains its own EH scope, so this helper and emplace stay inlinable into
+   // the caller's insert loop.
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
    template<class ...Args>
    inline void priv_construct_or_restore_capacity
       (T* p, block_base_pointer pbb_prev, BOOST_FWD_REF(Args)... args)
    {
-      BOOST_CONTAINER_TRY{
-         block_alloc_traits::construct(al(), p, boost::forward<Args>(args)...);
-      }
-      BOOST_CONTAINER_CATCH(...){
-         this->priv_restore_capacity_on_throw(pbb_prev);
-         BOOST_CONTAINER_RETHROW;
-      }
-      BOOST_CONTAINER_CATCH_END
+      priv_restore_capacity_guard guard(*this, pbb_prev);
+      block_alloc_traits::construct(al(), p, boost::forward<Args>(args)...);
+      guard.release();
    }
    #else
    #define BOOST_CONTAINER_NEST_CONSTRUCT_OR_RESTORE_CODE(N) \
@@ -2169,14 +2180,9 @@ class nest
    inline void priv_construct_or_restore_capacity                     \
       (T* p, block_base_pointer pbb_prev BOOST_MOVE_I##N BOOST_MOVE_UREF##N) \
    {                                                                  \
-      BOOST_CONTAINER_TRY{                                                      \
-         block_alloc_traits::construct(al(), p BOOST_MOVE_I##N BOOST_MOVE_FWD##N); \
-      }                                                               \
-      BOOST_CONTAINER_CATCH(...){                                               \
-         this->priv_restore_capacity_on_throw(pbb_prev);              \
-         BOOST_CONTAINER_RETHROW;                                               \
-      }                                                               \
-      BOOST_CONTAINER_CATCH_END                                                 \
+      priv_restore_capacity_guard guard(*this, pbb_prev);             \
+      block_alloc_traits::construct(al(), p BOOST_MOVE_I##N BOOST_MOVE_FWD##N); \
+      guard.release();                                                \
    }                                                                  \
    //
    BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_NEST_CONSTRUCT_OR_RESTORE_CODE)

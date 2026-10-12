@@ -36,6 +36,7 @@
 #include <boost/container/new_allocator.hpp>        //default allocator when Allocator = void
 #include <boost/container/throw_exception.hpp>
 #include <boost/container/detail/addressof.hpp>     //dtl::addressof (avoids <memory>)
+#include <boost/container/detail/destroyers.hpp>    //dtl::scoped_array_deallocator
 #include <boost/container/detail/aligned_allocation.hpp> //portable (over)aligned nothrow alloc
 #include <boost/container/detail/std_fwd.hpp>       //forward declares std::allocator
 #include <boost/intrusive/pointer_traits.hpp>
@@ -1791,15 +1792,12 @@ private:
    {
       auto pb = block_alloc_traits::allocate(al(), 1);
       pb->mask = 0;
-      BOOST_CONTAINER_TRY {
+      {
+         dtl::scoped_array_deallocator<block_allocator> guard(pb, al(), 1u);
          value_allocator val(al());
          pb->data_ = value_alloc_traits::allocate(val, N);
+         guard.release();
       }
-      BOOST_CONTAINER_CATCH(...) {
-         block_alloc_traits::deallocate(al(), pb, 1);
-         BOOST_CONTAINER_RETHROW;
-      }
-      BOOST_CONTAINER_CATCH_END
       blist.link_available_at_back(pb);
       ++num_blocks;
       return pb;
@@ -1899,18 +1897,24 @@ private:
       size_ = 0;
    }
 
+   //Calls restore_capacity_on_throw if the construction throws. A guard
+   //instead of try/catch lets compilers like MSVC inline the callers.
+   struct restore_capacity_guard
+   {
+      ~restore_capacity_guard()
+      {  if(x) x->restore_capacity_on_throw(pbb);  }
+
+      hub* x;
+      block_base_pointer pbb;
+   };
+
    template<typename... Args>
    inline void construct_or_restore_capacity(
       value_type* p, block_base_pointer pbb, Args&&... args)
    {
-      BOOST_CONTAINER_TRY {
-         block_alloc_traits::construct(al(), p, std::forward<Args>(args)...);
-      }
-      BOOST_CONTAINER_CATCH(...) {
-         restore_capacity_on_throw(pbb);
-         BOOST_CONTAINER_RETHROW
-      }
-      BOOST_CONTAINER_CATCH_END
+      restore_capacity_guard guard{this, pbb};
+      block_alloc_traits::construct(al(), p, std::forward<Args>(args)...);
+      guard.x = nullptr;
    }
 
    BOOST_NOINLINE void restore_capacity_on_throw(
