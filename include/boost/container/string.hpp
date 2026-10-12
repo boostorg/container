@@ -529,6 +529,15 @@ class basic_string_base
          this->priv_long_size(sz);
    }
 
+   //Sets the size when the caller knows the representation
+   inline void priv_size(bool short_repr, size_type sz)
+   {
+      if(short_repr)
+         this->priv_short_size(sz);
+      else
+         this->priv_long_size(sz);
+   }
+
    //Reads the address, size and storage of the buffer with only one is_short() test.
    //Returns is_short().
    BOOST_CONTAINER_FORCEINLINE bool priv_repr_data(pointer &addr, size_type &sz, size_type &storage) const
@@ -3366,20 +3375,22 @@ class basic_string
    template<class ForwardIter>
    BOOST_CONTAINER_FORCEINLINE void priv_replace_range_core(size_type pos, size_type n1, ForwardIter first, ForwardIter last, size_type n)
    {
-      const size_type old_size = this->priv_size();
+      pointer   old_start;
+      size_type old_size, old_storage;
+      const bool was_short = this->priv_repr_data(old_start, old_size, old_storage);
       BOOST_ASSERT(pos <= old_size && n1 <= old_size - pos);
       const size_type max_sz = this->max_size();
       if (n > max_sz || (old_size - n1) > (max_sz - n))
          throw_length_error("basic_string: max_size() exceeded");
       const size_type new_size = old_size - n1 + n;
-      CharT * const old_buf    = boost::movelib::to_raw_pointer(this->priv_addr());
+      CharT * const old_buf    = boost::movelib::to_raw_pointer(old_start);
       const bool throwing_or_aliased = priv_is_throwing_or_aliased_source(first, n, old_buf, old_size);
       //Position of the temporary copy of [first, last): after both null terminators (old and new)
       const size_type tmp_copy_pos = (new_size > old_size ? new_size : old_size) + 1u;
       //A throwing or aliased source needs space for the temporary copy of the n characters at
       //tmp_copy_pos. Other sources need space only for new_size characters and the null terminator
       const size_type min_storage = throwing_or_aliased ? size_type(tmp_copy_pos + n) : size_type(new_size + 1u);
-      const bool fits_in_place = min_storage <= this->priv_storage();
+      const bool fits_in_place = min_storage <= old_storage;
 
       if (!fits_in_place && this->priv_replace_range_grow(pos, n1, first, last, n, min_storage, throwing_or_aliased)) {
          return;
@@ -3401,8 +3412,9 @@ class basic_string
       else {
          priv_copy(first, last, old_buf + difference_type(pos));
       }
-      this->priv_size(new_size);
-      this->priv_construct_null(this->priv_addr() + difference_type(new_size));
+      //A forward expansion is done only on a dynamic buffer, so the representation did not change
+      this->priv_size(was_short, new_size);
+      this->priv_construct_null(old_start + difference_type(new_size));
    }
 
    //Part of priv_replace_range when the free capacity is too small: the buffer has less than
