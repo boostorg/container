@@ -87,7 +87,6 @@ struct get_devector_opt<void, AllocatorSizeType>
 
 struct reserve_only_tag_t {};
 struct reserve_uninitialized_t {};
-struct review_implementation_t {};
 
 //struct unsafe_uninitialized_tag_t {};
 
@@ -472,14 +471,26 @@ class devector
    * **Complexity**: Linear if allocator != rhs.get_allocator(), otherwise constant.
    */
    devector(BOOST_RV_REF(devector) rhs, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type)& allocator)
-      : m_(review_implementation_t(), allocator, rhs.m_.buffer, rhs.m_.front_idx, rhs.m_.back_idx, rhs.m_.capacity)
+      : m_(allocator)
    {
-      // TODO should move elems-by-elems if the two allocators differ
-      // buffer is already acquired, reset rhs
-      rhs.m_.capacity = 0u;
-      rhs.m_.buffer = pointer();
-      rhs.m_.front_idx = 0;
-      rhs.m_.back_idx = 0;
+      if (allocator_traits_type::is_always_equal::value || this->get_allocator_ref() == rhs.get_allocator_ref()) {
+         //Equal allocators: take the buffer of rhs
+         m_.buffer = rhs.m_.buffer;
+         m_.set_front_idx(rhs.m_.front_idx);
+         m_.set_back_idx(rhs.m_.back_idx);
+         m_.set_capacity(rhs.m_.capacity);
+         rhs.m_.capacity = 0u;
+         rhs.m_.buffer = pointer();
+         rhs.m_.front_idx = 0;
+         rhs.m_.back_idx = 0;
+      }
+      else if (const size_type n = rhs.size()) {
+         //Unequal allocators, we can take rhs's so we need to allocate
+         m_.buffer = this->allocate(n);
+         m_.set_capacity(n);
+         m_.set_back_idx(n);
+         this->construct_from_range(boost::make_move_iterator(rhs.begin()), boost::make_move_iterator(rhs.end()));
+      }
       BOOST_ASSERT(      invariants_ok());
       BOOST_ASSERT(rhs.invariants_ok());
    }
@@ -3031,17 +3042,6 @@ class devector
          , capacity(static_cast<stored_size_type>(c))
          #ifdef BOOST_CONTAINER_DEVECTOR_ALLOC_STATS
          , capacity_alloc_count(size_type(buffer != pointer()))
-         #endif
-      {}
-
-      impl(review_implementation_t, const allocator_type &a, pointer p, size_type fi, size_type bi, size_type c)
-         : allocator_type(a), buffer(p)
-         //static cast sizes, as the allocation function will take care of overflows
-         , front_idx(static_cast<stored_size_type>(fi))
-         , back_idx(static_cast<stored_size_type>(bi))
-         , capacity(static_cast<stored_size_type>(c))
-         #ifdef BOOST_CONTAINER_DEVECTOR_ALLOC_STATS
-         , capacity_alloc_count(0)
          #endif
       {}
 
