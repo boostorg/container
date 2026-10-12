@@ -361,6 +361,47 @@ void test_propagate_allocator_allocator_arg()
    }
 }
 
+//Sequence containers: moves non-empty containers with an allocator that compares unequal.
+//The elements must be moved, and each memory block must be freed by the allocator that
+//allocated it (propagation_test_allocator checks it).
+template<class Container>
+void test_move_with_unequal_allocator_impl()
+{
+   typedef typename Container::allocator_type   allocator_type;
+   typedef typename Container::value_type       value_type;
+   const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 40u };
+   value_type values[40];
+   for (std::size_t i = 0; i != 40u; ++i) {
+      values[i] = value_type('a' + int(i % 26u));
+   }
+   for (std::size_t si = 0; si != sizeof(sizes)/sizeof(sizes[0]); ++si) {
+      const std::size_t n = sizes[si];
+      const allocator_type a1;   //new id
+      Container c(values, values + n, a1);
+      const allocator_type a2;   //new id: a2 != a1
+      Container c2(boost::move(c), a2);
+      BOOST_TEST (c2.get_stored_allocator().id_ == a2.id_);
+      BOOST_TEST (c2.size() == n);
+      std::size_t i = 0;
+      for (typename Container::const_iterator it = c2.begin(); it != c2.end(); ++it, ++i) {
+         BOOST_TEST (*it == values[i]);
+      }
+      //Equal allocators: the resources can be moved
+      Container c3(boost::move(c2), a2);
+      BOOST_TEST (c3.size() == n);
+   }
+}
+
+template<class Selector>
+bool test_move_with_unequal_allocator()
+{
+   typedef propagation_test_allocator<char, true, true, true, true, true>     AlwaysPropagate;
+   typedef propagation_test_allocator<char, false, false, false, false, true> NeverPropagate;
+   test_move_with_unequal_allocator_impl< alloc_propagate_wrapper<char, AlwaysPropagate, Selector> >();
+   test_move_with_unequal_allocator_impl< alloc_propagate_wrapper<char, NeverPropagate, Selector> >();
+   return report_errors() == 0;
+}
+
 }  //namespace test{
 }  //namespace container {
 }  //namespace boost{

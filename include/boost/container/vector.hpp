@@ -902,16 +902,22 @@ private:
       : m_holder(initial_capacity_t(), initial_memory, cap, ::boost::forward<AllocFwd>(a))
    {}
 
-   template<class AllocFwd>
-   inline vector(initial_capacity_t, pointer initial_memory, size_type cap, BOOST_FWD_REF(AllocFwd) a, vector &x)
+   //Move constructor with initial memory (small_vector). PropagateAllocator is true if "a" was
+   //moved from x's allocator, and false for an allocator-extended move constructor: then the
+   //buffer of x is stolen only if the allocators compare equal.
+   template<class AllocFwd, bool PropagateAllocator>
+   inline vector(initial_capacity_t, pointer initial_memory, size_type cap, BOOST_FWD_REF(AllocFwd) a, vector &x, dtl::bool_<PropagateAllocator>)
       : m_holder(initial_capacity_t(), initial_memory, cap, ::boost::forward<AllocFwd>(a))
    {
       allocator_type &this_al = this->get_stored_allocator();
-      if (this->template is_propagable_from<true>(x.get_stored_allocator(), x.data(), this_al)) {
+      if (this->template is_propagable_from<PropagateAllocator>(x.get_stored_allocator(), x.data(), this_al)) {
          this->steal_resources(x);
       }
       else {
          const size_type sz = x.size();
+         //The initial memory can be smaller than x (x can be on the heap, or have another
+         //internal capacity)
+         this->reserve(sz);
          ::boost::container::uninitialized_move_alloc_n_source
             ( this_al, x.priv_raw_begin(), sz
             //Use launder to stop false positives from -Warray-bounds

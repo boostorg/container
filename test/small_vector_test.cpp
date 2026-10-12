@@ -550,9 +550,37 @@ bool test_unqualified_swap()
    return true;
 }
 
+//Move constructs a small_vector from a small_vector_base with another internal capacity
+template<std::size_t SrcN, std::size_t DstN>
+bool test_move_from_base_with_other_capacity()
+{
+   typedef boost::container::small_vector_base<int> base_t;
+   const std::size_t sizes[] = { 0u, 1u, DstN, DstN + 1u, SrcN, SrcN + 1u, 3u*(SrcN + DstN) + 5u };
+   for (std::size_t si = 0; si != sizeof(sizes)/sizeof(sizes[0]); ++si) {
+      const std::size_t n = sizes[si];
+      small_vector<int, SrcN> src;
+      for (std::size_t i = 0; i != n; ++i) {
+         src.push_back(int(i));
+      }
+      small_vector<int, DstN> dst(boost::move(static_cast<base_t&>(src)));
+      if (dst.size() != n || dst.capacity() < n)
+         return false;
+      for (std::size_t i = 0; i != n; ++i) {
+         if (dst[i] != int(i))
+            return false;
+      }
+      dst.push_back(-1);
+   }
+   return true;
+}
+
 int main()
 {
    if(!test_unqualified_swap())
+      return 1;
+
+   if(!test_move_from_base_with_other_capacity<16, 2>() || !test_move_from_base_with_other_capacity<2, 16>() ||
+      !test_move_from_base_with_other_capacity<4, 0>()  || !test_move_from_base_with_other_capacity<0, 4>())
       return 1;
 
    if(!test_swap())
@@ -599,6 +627,8 @@ int main()
    if(!boost::container::test::test_propagate_allocator<boost_container_small_vector>()){
       return 1;
    }
+   if(!boost::container::test::test_move_with_unequal_allocator<boost_container_small_vector>())
+      return 1;
 
    ////////////////////////////////////
    //    Initializer lists testing

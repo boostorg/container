@@ -403,9 +403,9 @@ class small_vector_base
       : base_type(initial_capacity_t(), this->internal_storage(), initial_capacity, ::boost::forward<AllocFwd>(a))
    {}
 
-   template<class AllocFwd>
-   inline explicit small_vector_base(initial_capacity_t, size_type initial_capacity, BOOST_FWD_REF(AllocFwd) a, small_vector_base &x)
-      : base_type(initial_capacity_t(), this->internal_storage(), initial_capacity, ::boost::forward<AllocFwd>(a), x)
+   template<class AllocFwd, bool PropagateAllocator>
+   inline explicit small_vector_base(initial_capacity_t, size_type initial_capacity, BOOST_FWD_REF(AllocFwd) a, small_vector_base &x, dtl::bool_<PropagateAllocator> p)
+      : base_type(initial_capacity_t(), this->internal_storage(), initial_capacity, ::boost::forward<AllocFwd>(a), x, p)
    {}
 
    inline explicit small_vector_base(maybe_initial_capacity_t, size_type initial_capacity, size_type initial_size)
@@ -991,7 +991,7 @@ class small_vector
    //!
    //! <b>Complexity</b>: Constant if other holds dynamic storage, linear to other.size() otherwise.
    inline explicit small_vector(BOOST_RV_REF(base_type) other)
-      : base_type(initial_capacity_t(), internal_capacity(), ::boost::move(other.get_stored_allocator()), other)
+      : base_type(initial_capacity_t(), internal_capacity(), ::boost::move(other.get_stored_allocator()), other, dtl::true_())
    {}
 
    //! <b>Effects</b>: Move constructs a small_vector. If other holds dynamically allocated storage
@@ -1002,7 +1002,7 @@ class small_vector
    //! <b>Complexity</b>: Constant if other holds dynamic storage, linear to other.size() otherwise.
    inline small_vector(BOOST_RV_REF(small_vector) other)
       BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_constructible<value_type>::value)
-      : base_type(initial_capacity_t(), internal_capacity(), ::boost::move(other.get_stored_allocator()), other)
+      : base_type(initial_capacity_t(), internal_capacity(), ::boost::move(other.get_stored_allocator()), other, dtl::true_())
    {}
 
    //! <b>Effects</b>: Move constructs a small_vector using the specified allocator. If the
@@ -1012,7 +1012,7 @@ class small_vector
    //!
    //! <b>Complexity</b>: Constant if the storage can be transferred, linear to other.size() otherwise.
    inline small_vector(BOOST_RV_REF(small_vector) other, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
-      : base_type(initial_capacity_t(), internal_capacity(), a, other)
+      : base_type(initial_capacity_t(), internal_capacity(), a, other, dtl::false_())
    {}
 
    #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
