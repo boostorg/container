@@ -3246,7 +3246,7 @@ class basic_string
       pointer hint = this->priv_long_addr();
       if(this->alloc().allocation_command
          ( shrink_in_place | nothrow_allocation, this->priv_long_storage(), received_size, hint)){
-         this->priv_storage(received_size);
+         this->priv_long_storage(received_size);
       }
    }
 
