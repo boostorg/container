@@ -390,6 +390,14 @@ struct vector_alloc_holder
 
    public:
 
+   //Returns true if the buffer p, allocated by from_alloc, can be transferred to a vector whose
+   //allocator after the operation is to_alloc (that vector will free it). Both must be true:
+   //- p is not a storage that can't be transferred: the allocator is not partially propagable
+   //  (allocator_traits::is_partially_propagable), or p is not one of its unpropagable storages
+   //  (allocator_traits::storage_is_unpropagable, e.g. the internal buffer of small_vector).
+   //- to_alloc can free memory of from_alloc: PropagateAllocator is true (from_alloc is
+   //  propagated to the target, e.g. POCMA or POCS), or allocator_traits::is_always_equal
+   //  is true, or from_alloc == to_alloc.
    template <bool PropagateAllocator>
    inline static bool is_propagable_from(const allocator_type &from_alloc, pointer p, const allocator_type &to_alloc)
    {
@@ -400,6 +408,15 @@ struct vector_alloc_holder
          (PropagateAllocator || allocator_traits_type::is_always_equal::value || allocator_traits_type::equal(from_alloc, to_alloc));
    }
 
+   //Returns true if two vectors can swap their buffers l_p (allocated by l_a) and r_p (allocated
+   //by r_a). Both must be true:
+   //- No buffer is a storage that can't be transferred: the allocator is not partially
+   //  propagable (allocator_traits::is_partially_propagable), or neither l_p nor r_p is one of
+   //  its unpropagable storages (allocator_traits::storage_is_unpropagable, e.g. the internal
+   //  buffer of small_vector).
+   //- Each allocator can free the memory of the other one: PropagateAllocator is true (the
+   //  allocators are swapped too, POCS), or allocator_traits::is_always_equal is true, or
+   //  l_a == r_a.
    template <bool PropagateAllocator>
    inline static bool are_swap_propagable(const allocator_type &l_a, pointer l_p, const allocator_type &r_a, pointer r_p)
    {
@@ -871,17 +888,6 @@ private:
    template <class U, class UA, class UOptions>
    friend class vector;
 
-
-   protected:
-   template <bool PropagateAllocator>
-   inline static bool is_propagable_from(const allocator_type &from_alloc, pointer p, const allocator_type &to_alloc)
-   {  return alloc_holder_t::template is_propagable_from<PropagateAllocator>(from_alloc, p, to_alloc);  }
-
-   template <bool PropagateAllocator>
-   inline static bool are_swap_propagable( const allocator_type &l_a, pointer l_p
-                                         , const allocator_type &r_a, pointer r_p)
-   {  return alloc_holder_t::template are_swap_propagable<PropagateAllocator>(l_a, l_p, r_a, r_p);  }
-
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
@@ -910,7 +916,7 @@ private:
       : m_holder(initial_capacity_t(), initial_memory, cap, ::boost::forward<AllocFwd>(a))
    {
       allocator_type &this_al = this->get_stored_allocator();
-      if (this->template is_propagable_from<PropagateAllocator>(x.get_stored_allocator(), x.data(), this_al)) {
+      if (alloc_holder_t::template is_propagable_from<PropagateAllocator>(x.get_stored_allocator(), x.data(), this_al)) {
          this->steal_resources(x);
       }
       else {
@@ -1220,11 +1226,11 @@ private:
       BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value && !allocator_traits_type::is_partially_propagable::value)
       :  m_holder( vector_uninitialized_size, a
                  //In this allocator move constructor the allocator won't be propagated --v
-                 , is_propagable_from<false>(x.get_stored_allocator(), x.m_holder.start(), a) ? 0 : x.size()
+                 , alloc_holder_t::template is_propagable_from<false>(x.get_stored_allocator(), x.m_holder.start(), a) ? 0 : x.size()
                  )
    {
       //In this allocator move constructor the allocator won't be propagated ---v
-      if(is_propagable_from<false>(x.get_stored_allocator(), x.m_holder.start(), a)){
+      if(alloc_holder_t::template is_propagable_from<false>(x.get_stored_allocator(), x.m_holder.start(), a)){
          this->m_holder.steal_resources(x.m_holder);
       }
       else{
@@ -2812,7 +2818,7 @@ private:
 
       //In this allocator move constructor the allocator might will be propagated, but to support small_vector-like
       //types, we need to check the currently owned buffers to know if they are propagable.
-      const bool is_buffer_propagable_from_x = is_propagable_from<propagate_alloc>(x_alloc, x.m_holder.start(), this_alloc);
+      const bool is_buffer_propagable_from_x = alloc_holder_t::template is_propagable_from<propagate_alloc>(x_alloc, x.m_holder.start(), this_alloc);
 
       if (is_buffer_propagable_from_x) {
          this->priv_move_assign_steal_or_assign(boost::move(x), dtl::true_type());
@@ -2934,7 +2940,7 @@ private:
 
       //Strategy 1: Both buffers can be transferred: swap buffers and the allocators. Done.
       const bool propagate_alloc = allocator_traits_type::propagate_on_container_swap::value;
-      if(are_swap_propagable<propagate_alloc>
+      if(alloc_holder_t::template are_swap_propagable<propagate_alloc>
          ( this->get_stored_allocator(), this->m_holder.start(), x.get_stored_allocator(), x.m_holder.start())){
          this->priv_swap(x, dtl::false_());
          return;
@@ -2943,8 +2949,8 @@ private:
       allocator_type &th_al = this->get_stored_allocator();
       allocator_type &ot_al = x.get_stored_allocator();
 
-      const bool is_this_data_propagable = is_propagable_from<propagate_alloc>(th_al, this->data(), ot_al);
-      const bool is_that_data_propagable = is_propagable_from<propagate_alloc>(ot_al, x.data(), th_al);
+      const bool is_this_data_propagable = alloc_holder_t::template is_propagable_from<propagate_alloc>(th_al, this->data(), ot_al);
+      const bool is_that_data_propagable = alloc_holder_t::template is_propagable_from<propagate_alloc>(ot_al, x.data(), th_al);
 
       if(is_this_data_propagable || is_that_data_propagable) {
          //One vector uses a dynamic buffer ("extmem"), the other one an internal buffer ("intmem")
