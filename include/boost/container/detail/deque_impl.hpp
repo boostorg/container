@@ -42,6 +42,7 @@
 
 // move
 #include <boost/move/adl_move_swap.hpp>
+#include <boost/move/algo/detail/reverse.hpp>
 #include <boost/move/algo/detail/rotate.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/traits.hpp>
@@ -1944,14 +1945,46 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       )
    {
       BOOST_ASSERT(this->priv_in_range_or_end(pos));
-      size_type n = 0;
-      iterator it(pos.unconst());
-      for(;first != last; ++first, ++n){
-         it = this->emplace(it, *first);
-         ++it;
+      const size_type old_size = this->size();
+      const size_type n_pos = size_type(pos - this->cbegin());
+      //Insert the new elements at the nearest end and rotate them to pos
+      BOOST_IF_CONSTEXPR(!is_single_ended){
+         if (n_pos < size_type(old_size - n_pos)) {
+            BOOST_CONTAINER_TRY{
+               for ( ; first != last; ++first) {
+                  this->emplace_front(*first);
+               }
+            }
+            BOOST_CONTAINER_CATCH(...){
+               //No effects: erase the new elements
+               while (this->size() > old_size) {
+                  this->pop_front();
+               }
+               BOOST_CONTAINER_RETHROW
+            }
+            BOOST_CONTAINER_CATCH_END
+            //The new elements are at the front, in reverse order
+            const difference_type n = difference_type(this->size() - old_size);
+            boost::movelib::reverse(this->begin(), this->begin() + n);
+            boost::movelib::rotate_gcd(this->begin(), this->begin() + n, this->begin() + (n + difference_type(n_pos)));
+            return this->begin() + difference_type(n_pos);
+         }
       }
-      it -= difference_type(n);
-      return it;
+      BOOST_CONTAINER_TRY{
+         for ( ; first != last; ++first) {
+            this->emplace_back(*first);
+         }
+      }
+      BOOST_CONTAINER_CATCH(...){
+         while (this->size() > old_size) {
+            this->pop_back();
+         }
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      boost::movelib::rotate_gcd
+         (this->begin() + difference_type(n_pos), this->begin() + difference_type(old_size), this->end());
+      return this->begin() + difference_type(n_pos);
    }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
