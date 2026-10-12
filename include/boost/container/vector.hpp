@@ -2912,6 +2912,19 @@ private:
    }
 
    protected:
+   //Swap for small_vectors, whose internal buffer can't be transferred (not "propagable").
+   //"internal_capacity" is the capacity of the internal buffer of both vectors if known,
+   //(including 0) or 0 if unknown (small_vector_base)
+   //
+   //The buffer of a vector is "propagable" to the other vector (is_propagable_from) if the
+   //other vector can take it and later free it with the allocator it has after the swap.
+   //Both conditions must be true:
+   //- The buffer is not a storage that the allocator can't transfer: it is not the internal
+   //  buffer (allocator_traits::storage_is_unpropagable, only for partially propagable
+   //  allocators like the small_vector allocator).
+   //- The allocator that will free the buffer can free memory of the allocator that allocated
+   //  it: the allocators are swapped (propagate_on_container_swap), or they are always equal,
+   //  or they compare equal.
    template<class Vector>  //Template it to avoid it in explicit instantiations
    void prot_swap_small(Vector &x, std::size_t internal_capacity)  //version_N
    {
@@ -2919,6 +2932,7 @@ private:
          return;
       }
 
+      //Strategy 1: Both buffers can be transferred: swap buffers and the allocators. Done.
       const bool propagate_alloc = allocator_traits_type::propagate_on_container_swap::value;
       if(are_swap_propagable<propagate_alloc>
          ( this->get_stored_allocator(), this->m_holder.start(), x.get_stored_allocator(), x.m_holder.start())){
@@ -2932,78 +2946,142 @@ private:
       const bool is_this_data_propagable = is_propagable_from<propagate_alloc>(th_al, this->data(), ot_al);
       const bool is_that_data_propagable = is_propagable_from<propagate_alloc>(ot_al, x.data(), th_al);
 
-      if(internal_capacity && (is_this_data_propagable || is_that_data_propagable)) {
-         //steal memory from src to dst, but move elements from dst to src
+      if(is_this_data_propagable || is_that_data_propagable) {
+         //One vector uses a dynamic buffer ("extmem"), the other one an internal buffer ("intmem")
          vector& extmem = is_this_data_propagable ? *this : x;
          vector& intmem = is_this_data_propagable ? x : *this;
-
-         //Reset extmem to the internal storage and backup data
-         pointer const orig_extdata = extmem.data();
-         const size_type orig_extmem_size = extmem.size();
-         const size_type orig_extmem_cap = extmem.capacity();
-
-         //New safe state for extmem -> empty, internal storage
-         extmem.m_holder.m_start = extmem.get_stored_allocator().internal_storage();
-         extmem.m_holder.set_stored_size(0u);
-         extmem.m_holder.set_stored_capacity(internal_capacity);
-
-         {
-            //Deallocate on exception
-            typename value_traits::ArrayDeallocator new_buffer_deallocator(orig_extdata, extmem.get_stored_allocator(), orig_extmem_cap);
-            typename value_traits::ArrayDestructor  new_values_destroyer(orig_extdata, extmem.get_stored_allocator(), orig_extmem_size);
-
-            //Move internal memory data to the internal memory data of the target, this can throw
-            BOOST_ASSERT(extmem.capacity() >= intmem.size());
-            ::boost::container::uninitialized_move_alloc_n
-               (intmem.get_stored_allocator(), intmem.priv_raw_begin(), intmem.size(), extmem.priv_raw_begin());
-
-            //Exception not thrown, commit new state
-            extmem.m_holder.set_stored_size(intmem.size());
-            //Throwing part passed, disable rollback
-            new_buffer_deallocator.release();
-            new_values_destroyer.release();
+         //2. Only one buffer can be given and the internal capacity is known: see priv_swap_small_dynamic_with_internal.
+         if (internal_capacity) {
+            priv_swap_small_dynamic_with_internal(extmem, intmem, internal_capacity);
+            return;
          }
-
-         //Destroy moved elements from intmem
-         boost::container::destroy_alloc_n
-            ( intmem.get_stored_allocator(), intmem.priv_raw_begin()
-            , intmem.size());
-
-         //Adopt dynamic buffer
-         intmem.m_holder.m_start = orig_extdata;
-         intmem.m_holder.set_stored_size(orig_extmem_size);
-         intmem.m_holder.set_stored_capacity(orig_extmem_cap);
-
-         //And now swap the allocator
-         dtl::swap_alloc(this->m_holder.alloc(), x.m_holder.alloc(), dtl::bool_<propagate_alloc>());
-      }
-      else {   //swap element by element and insert rest
-         bool const t_smaller = this->size() < x.size();
-         vector &sml = t_smaller ? *this : x;
-         vector &big = t_smaller ? x : *this;
-
-         //swap element by element until common size
-         size_type const common_elements = sml.size();
-         for(size_type i = 0; i != common_elements; ++i){
-            boost::adl_move_swap(sml[i], big[i]);
+         //3. Only one buffer can be given and the allocators are swapped (POCS): see priv_swap_small_dynamic_to_new_buffer.
+         else if (propagate_alloc) {
+            priv_swap_small_dynamic_to_new_buffer(extmem, intmem);
+            return;
          }
-
-         //And now swap the allocator to be able to construct new elements in sml with the proper allocator
-         dtl::swap_alloc(this->m_holder.alloc(), x.m_holder.alloc(), dtl::bool_<propagate_alloc>());
-
-         //move-insert the remaining range
-         T *const raw_big_nth = boost::movelib::iterator_to_raw_pointer(big.nth(common_elements));
-         sml.insert(sml.cend()
-            , boost::make_move_iterator(raw_big_nth)
-            , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(big.end())));
-
-         //Destroy remaining, moved, elements with their original allocator
-         boost::container::destroy_alloc_n
-            ( sml.get_stored_allocator(), raw_big_nth
-            , std::size_t(big.m_holder.m_size - common_elements));
-         big.m_holder.set_stored_size(common_elements);
       }
+      //4. Otherwise: see priv_swap_small_element_wise.
+      vector &xv = x;
+      this->priv_swap_small_element_wise(xv);
    }
+
+   private:
+   //extmem uses a dynamic buffer that can be given to intmem, which uses its internal buffer.
+   //Both internal buffers have internal_capacity elements. intmem takes the dynamic buffer of
+   //extmem, and the elements of intmem are moved to the internal buffer of extmem. Then the
+   //allocators are swapped (if they propagate): the dynamic buffer stays with its allocator.
+   //If a move constructor throws, the elements of extmem are destroyed and its dynamic buffer
+   //is freed: extmem is empty and uses its internal buffer, intmem is not changed.
+   template<class Vec>  //Template it to avoid it in explicit instantiations
+   void priv_swap_small_dynamic_with_internal(Vec &extmem, Vec &intmem, std::size_t internal_capacity)
+   {
+      const bool propagate_alloc = allocator_traits_type::propagate_on_container_swap::value;
+      //Reset extmem to the internal storage and backup data
+      pointer const orig_extdata = extmem.data();
+      const size_type orig_extmem_size = extmem.size();
+      const size_type orig_extmem_cap = extmem.capacity();
+
+      //New safe state for extmem -> empty, internal storage
+      extmem.m_holder.m_start = extmem.get_stored_allocator().internal_storage();
+      extmem.m_holder.set_stored_size(0u);
+      extmem.m_holder.set_stored_capacity(internal_capacity);
+
+      {
+         //Deallocate on exception
+         typename value_traits::ArrayDeallocator new_buffer_deallocator(orig_extdata, extmem.get_stored_allocator(), orig_extmem_cap);
+         typename value_traits::ArrayDestructor  new_values_destroyer(orig_extdata, extmem.get_stored_allocator(), orig_extmem_size);
+
+         //Move internal memory data to the internal memory data of the target, this can throw
+         BOOST_ASSERT(extmem.capacity() >= intmem.size());
+         ::boost::container::uninitialized_move_alloc_n
+            (intmem.get_stored_allocator(), intmem.priv_raw_begin(), intmem.size(), extmem.priv_raw_begin());
+
+         //Exception not thrown, commit new state
+         extmem.m_holder.set_stored_size(intmem.size());
+         //Throwing part passed, disable rollback
+         new_buffer_deallocator.release();
+         new_values_destroyer.release();
+      }
+
+      //Destroy moved elements from intmem
+      boost::container::destroy_alloc_n
+         ( intmem.get_stored_allocator(), intmem.priv_raw_begin()
+         , intmem.size());
+
+      //Adopt dynamic buffer
+      intmem.m_holder.m_start = orig_extdata;
+      intmem.m_holder.set_stored_size(orig_extmem_size);
+      intmem.m_holder.set_stored_capacity(orig_extmem_cap);
+
+      //And now swap the allocator
+      dtl::swap_alloc(extmem.m_holder.alloc(), intmem.m_holder.alloc(), dtl::bool_<propagate_alloc>());
+   }
+
+   //extmem uses a dynamic buffer, intmem uses its internal buffer, the allocators are swapped
+   //(POCS) and the internal capacity is not known. The dynamic buffer can't stay in extmem, as
+   //it would be freed by the allocator of intmem: it goes with its elements and allocator to
+   //intmem. The elements of intmem are moved to a new dynamic buffer, allocated with the
+   //allocator of intmem, which goes to extmem with that allocator.
+   //If the allocation or a move constructor throws, there are no effects.
+   template<class Vec>  //Template it to avoid it in explicit instantiations
+   void priv_swap_small_dynamic_to_new_buffer(Vec &extmem, Vec &intmem)
+   {
+      const size_type int_size = intmem.size();
+      pointer new_buf = pointer();
+      if (int_size) {
+         new_buf = intmem.m_holder.allocate(int_size);
+         //Deallocate on exception
+         typename value_traits::ArrayDeallocator new_buffer_deallocator(new_buf, intmem.get_stored_allocator(), int_size);
+         //This can throw
+         ::boost::container::uninitialized_move_alloc_n
+            (intmem.get_stored_allocator(), intmem.priv_raw_begin(), int_size, boost::movelib::to_raw_pointer(new_buf));
+         new_buffer_deallocator.release();
+      }
+      //Nothing below can throw
+      boost::container::destroy_alloc_n(intmem.get_stored_allocator(), intmem.priv_raw_begin(), int_size);
+      intmem.m_holder.m_start = extmem.m_holder.m_start;
+      intmem.m_holder.set_stored_size(extmem.size());
+      intmem.m_holder.set_stored_capacity(extmem.capacity());
+      extmem.m_holder.m_start = new_buf;
+      extmem.m_holder.set_stored_size(int_size);
+      extmem.m_holder.set_stored_capacity(int_size);
+      dtl::swap_alloc(extmem.m_holder.alloc(), intmem.m_holder.alloc(), dtl::true_());
+   }
+
+   //No buffer can be given to the other vector (or the internal capacity is not known and the
+   //allocators are equal): swap the common elements one by one, swap the allocators, then
+   //move-insert the remaining elements of the bigger vector at the end of the smaller one.
+   template<class Vec>  //Template it to avoid it in explicit instantiations
+   void priv_swap_small_element_wise(Vec &x)
+   {
+      const bool propagate_alloc = allocator_traits_type::propagate_on_container_swap::value;
+      bool const t_smaller = this->size() < x.size();
+      vector &sml = t_smaller ? *this : x;
+      vector &big = t_smaller ? x : *this;
+
+      //swap element by element until common size
+      size_type const common_elements = sml.size();
+      for(size_type i = 0; i != common_elements; ++i){
+         boost::adl_move_swap(sml[i], big[i]);
+      }
+
+      //And now swap the allocator to be able to construct new elements in sml with the proper allocator
+      dtl::swap_alloc(this->m_holder.alloc(), x.m_holder.alloc(), dtl::bool_<propagate_alloc>());
+
+      //move-insert the remaining range
+      T *const raw_big_nth = boost::movelib::iterator_to_raw_pointer(big.nth(common_elements));
+      sml.insert(sml.cend()
+         , boost::make_move_iterator(raw_big_nth)
+         , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(big.end())));
+
+      //Destroy remaining, moved, elements with their original allocator
+      boost::container::destroy_alloc_n
+         ( sml.get_stored_allocator(), raw_big_nth
+         , std::size_t(big.m_holder.m_size - common_elements));
+      big.m_holder.set_stored_size(common_elements);
+   }
+
    private:
    inline void priv_move_to_new_buffer(size_type, version_0)
    {  alloc_holder_t::on_capacity_overflow();  }

@@ -574,9 +574,45 @@ bool test_move_from_base_with_other_capacity()
    return true;
 }
 
+//Swaps through small_vector_base (different internal capacities) and small_vector<T, 0>
+//with a propagating (POCS) allocator that compares unequal. propagation_test_allocator checks
+//that each block is freed by the allocator that allocated it.
+template<std::size_t N1, std::size_t N2>
+bool test_swap_with_propagated_unequal_allocators()
+{
+   typedef test::propagation_test_allocator<int, true, true, true, true, true> alloc_t;
+   typedef small_vector<int, N1, alloc_t>       sv1_t;
+   typedef small_vector<int, N2, alloc_t>       sv2_t;
+   typedef small_vector_base<int, alloc_t>      base_t;
+   const std::size_t sizes[] = { 0u, 1u, 3u, 9u, 30u };
+   const std::size_t num_sizes = sizeof(sizes)/sizeof(sizes[0]);
+   for (std::size_t i1 = 0; i1 != num_sizes; ++i1)
+   for (std::size_t i2 = 0; i2 != num_sizes; ++i2) {
+      const alloc_t a1, a2;   //different ids: unequal
+      sv1_t v1(a1);
+      sv2_t v2(a2);
+      for (std::size_t i = 0; i != sizes[i1]; ++i) v1.push_back(int(i));
+      for (std::size_t i = 0; i != sizes[i2]; ++i) v2.push_back(int(100 + i));
+      static_cast<base_t&>(v1).swap(static_cast<base_t&>(v2));
+      if (v1.size() != sizes[i2] || v2.size() != sizes[i1])
+         return false;
+      if (v1.get_stored_allocator().id_ != a2.id_ || v2.get_stored_allocator().id_ != a1.id_)
+         return false;
+      for (std::size_t i = 0; i != v1.size(); ++i) if (v1[i] != int(100 + i)) return false;
+      for (std::size_t i = 0; i != v2.size(); ++i) if (v2[i] != int(i)) return false;
+      v1.push_back(-1);   //may reallocate: frees with v1's allocator
+      v2.push_back(-1);
+   }
+   return true;
+}
+
 int main()
 {
    if(!test_unqualified_swap())
+      return 1;
+
+   if(!test_swap_with_propagated_unequal_allocators<4, 4>() || !test_swap_with_propagated_unequal_allocators<2, 16>() ||
+      !test_swap_with_propagated_unequal_allocators<0, 0>() || !test_swap_with_propagated_unequal_allocators<0, 5>())
       return 1;
 
    if(!test_move_from_base_with_other_capacity<16, 2>() || !test_move_from_base_with_other_capacity<2, 16>() ||
