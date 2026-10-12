@@ -358,15 +358,6 @@ class basic_string_base
       this->members_.plong_repr()->~long_t();
    }
 
-   long_t * assure_long()
-   {
-      if (this->is_short()){
-         this->destroy_short();
-         return this->construct_long();
-      }
-      return this->members_.plong_repr();
-   }
-
    //Stores a new dynamic buffer. If was_short (the value of is_short() read by the caller), changes
    //to the long representation, else frees the old dynamic buffer.
    void priv_set_long_buffer(bool was_short, pointer addr, size_type sz, size_type storage)
@@ -468,9 +459,6 @@ class basic_string_base
          throw_length_error("basic_string::allocate_initial_block max_size() exceeded");
       }
    }
-
-   inline void deallocate_block()
-   {  this->deallocate(this->priv_addr(), this->priv_storage());  }
 
    inline size_type max_size() const
    {  return allocator_traits_type::max_size(this->alloc()) - 1; }
@@ -3426,20 +3414,23 @@ class basic_string
       ( size_type pos, size_type n1, ForwardIter first, ForwardIter last, size_type n
       , size_type min_storage, bool throwing_or_aliased)
    {
-      const size_type old_size = this->priv_size();
+      pointer   old_start;
+      size_type old_size, old_storage;
+      const bool was_short = this->priv_repr_data(old_start, old_size, old_storage);
       const size_type new_size = old_size - n1 + n;
       const size_type tail     = old_size - pos - n1;
-      const pointer old_start  = this->priv_addr();
       CharT * const old_buf    = boost::movelib::to_raw_pointer(old_start);
       //Grow from min_storage, so that the next operations also have free capacity
-      size_type new_storage = this->next_storage(size_type(min_storage - 1u - old_size), old_size, this->priv_storage(), this->priv_max_storage());
+      size_type new_storage = this->next_storage
+         (size_type(min_storage - 1u - old_size), old_size, old_storage, this->priv_max_storage());
       if (new_storage <= InternalBufferChars)
          new_storage = InternalBufferChars + 1u;
+      //The internal buffer can not be expanded.
       //Backward expansion moves the old characters before [first, last) is read, so it is
       //not used if reading [first, last) can throw or [first, last) is a part of *this
-      const allocation_type command = throwing_or_aliased
-         ? (allocate_new | expand_fwd) : (allocate_new | expand_fwd | expand_bwd);
-      pointer reuse = old_start;
+      const allocation_type command = was_short ? allocate_new
+         : throwing_or_aliased ? (allocate_new | expand_fwd) : (allocate_new | expand_fwd | expand_bwd);
+      pointer reuse = was_short ? pointer() : old_start;
       const pointer new_start = this->allocation_command(command, min_storage, new_storage, reuse);
       BOOST_IF_CONSTEXPR(alloc_version::value != 1){
          if (reuse) {
@@ -3474,11 +3465,7 @@ class basic_string
       Traits::copy(new_buf, old_buf, pos);
       Traits::copy(new_buf + difference_type(pos + n), old_buf + difference_type(pos + n1), tail);
       this->priv_construct_null(new_start + difference_type(new_size));
-      this->deallocate_block();
-      this->assure_long();
-      this->priv_long_addr(new_start);
-      this->priv_long_size(new_size);
-      this->priv_long_storage(new_storage);
+      this->priv_set_long_buffer(was_short, new_start, new_size, new_storage);
       return true;
    }
 
