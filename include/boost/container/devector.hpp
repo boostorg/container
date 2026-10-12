@@ -110,9 +110,10 @@ struct review_implementation_t {};
  *
  * **Exceptions**: The exception specifications assume `T` is nothrow [Destructible].
  *
- * Most methods providing the strong exception guarantee assume `T` either has a move
- * constructor marked noexcept or is [CopyInsertable] into the devector. If it isn't true,
- * and the move constructor throws, the guarantee is waived and the effects are unspecified.
+ * Most methods providing the strong exception guarantee assume that the move constructor of `T`
+ * does not throw. Like `vector`, `devector` moves the elements when it reallocates or relocates
+ * them (it does not use `move_if_noexcept`), also when `T` is [CopyInsertable]. If the move
+ * constructor throws, only the basic exception guarantee is given.
  *
  * In addition to the exceptions specified in the **Throws** clause, the following operations
  * of `T` can throw when any of the specified concept is required:
