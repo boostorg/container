@@ -34,6 +34,7 @@
 #include <boost/container/detail/aligned_allocation.hpp> //portable (over)aligned nothrow alloc
 #include <boost/container/detail/bit_utilities.hpp>
 #include <boost/container/detail/compare_functors.hpp>
+#include <boost/container/detail/destroyers.hpp>
 #include <boost/container/detail/iterator.hpp>
 #include <boost/container/detail/iterators.hpp>
 #include <boost/container/detail/mpl.hpp>
@@ -569,20 +570,24 @@ private:
    BOOST_MOVABLE_BUT_NOT_COPYABLE(block)
 };
 
+//Swaps the elements of two blocks without moving them, if the storage allows it.
+//Returns false (and does nothing) if the elements are stored inside the blocks.
 template<class ValuePointer, bool StoreDataInBlock>
-void swap_payload(block<ValuePointer, StoreDataInBlock>& x, block<ValuePointer, StoreDataInBlock>& y) BOOST_NOEXCEPT;
+bool try_swap_payload(block<ValuePointer, StoreDataInBlock>& x, block<ValuePointer, StoreDataInBlock>& y) BOOST_NOEXCEPT;
 
 template<class ValuePointer>
-BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, true>& x, block<ValuePointer, true>& y) BOOST_NOEXCEPT
+BOOST_CONTAINER_FORCEINLINE bool try_swap_payload(block<ValuePointer, true>&, block<ValuePointer, true>&) BOOST_NOEXCEPT
 {
-   boost::adl_move_swap(x.mask, y.mask);
+   //The elements are inside the blocks
+   return false;
 }
 
 template<class ValuePointer>
-BOOST_CONTAINER_FORCEINLINE void swap_payload(block<ValuePointer, false>& x, block<ValuePointer, false>& y) BOOST_NOEXCEPT
+BOOST_CONTAINER_FORCEINLINE bool try_swap_payload(block<ValuePointer, false>& x, block<ValuePointer, false>& y) BOOST_NOEXCEPT
 {
    boost::adl_move_swap(x.mask, y.mask);
    boost::adl_move_swap(x.data_, y.data_);
+   return true;
 }
 
 BOOST_CONTAINER_FORCEINLINE int first_in_mask(boost::uint64_t m)
@@ -1093,6 +1098,45 @@ class nest
    BOOST_STATIC_CONSTEXPR mask_type full = block_base::full;
 
    BOOST_COPYABLE_AND_MOVABLE(nest)
+
+   //This guard calls  priv_reset() to destroy the elements and free the blocks
+   //Used in constructors to ensure that if an exception is thrown during isnertion
+   class priv_construction_guard
+   {
+      nest *m_p;
+
+      public:
+      explicit priv_construction_guard(nest &n) : m_p(&n) {}
+
+      void release()
+      {  m_p = 0;  }
+
+      ~priv_construction_guard()
+      {  if(m_p) m_p->priv_reset();  }
+
+   };
+   friend class priv_construction_guard;
+
+   //This guard calls priv_restore_capacity_on_throw() if the construction of an
+   //element throws. A guard instead of try/catch lets compilers like MSVC inline
+   //emplace into the caller's insert loop.
+   class priv_restore_capacity_guard
+   {
+      nest *m_p;
+      block_base_pointer m_pbb_prev;
+
+      public:
+      priv_restore_capacity_guard(nest &n, block_base_pointer pbb_prev)
+         : m_p(&n), m_pbb_prev(pbb_prev)
+      {}
+
+      void release()
+      {  m_p = 0;  }
+
+      ~priv_restore_capacity_guard()
+      {  if(m_p) m_p->priv_restore_capacity_on_throw(m_pbb_prev);  }
+   };
+   friend class priv_restore_capacity_guard;
    #endif // BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -1157,7 +1201,9 @@ class nest
       , num_blocks(0)
       , size_(0)
    {
+      priv_construction_guard guard(*this);
       priv_insert_n_default(n);
+      guard.release();
    }
 
    //! <b>Effects</b>: Constructs a nest and inserts n copies of x.
@@ -1172,7 +1218,9 @@ class nest
       , num_blocks(0)
       , size_(0)
    {
+      priv_construction_guard guard(*this);
       insert(n, x);
+      guard.release();
    }
 
    //! <b>Effects</b>: Constructs a nest and inserts a copy of [first, last).
@@ -1193,7 +1241,9 @@ class nest
       , num_blocks(0)
       , size_(0)
    {
+      priv_construction_guard guard(*this);
       insert(first, last);
+      guard.release();
    }
 
    //! <b>Effects</b>: Copy constructs a nest.
@@ -1210,7 +1260,9 @@ class nest
       , num_blocks(0)
       , size_(0)
    {
+      priv_construction_guard guard(*this);
       insert(x.begin(), x.end());
+      guard.release();
    }
 
    //! <b>Effects</b>: Move constructor. Moves x's resources to *this.
@@ -1241,16 +1293,20 @@ class nest
       , num_blocks(0)
       , size_(0)
    {
+      priv_construction_guard guard(*this);
       insert(x.begin(), x.end());
+      guard.release();
    }
 
    //! <b>Effects</b>: Move constructor using the specified allocator.
    //!                 Moves x's resources to *this.
    //!
-   //! <b>Throws</b>: If allocation or value_type's copy constructor throws.
+   //! <b>Throws</b>: Nothing if allocator_traits_type::is_always_equal::value is true.
+   //!   Otherwise, if allocation or value_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    nest(BOOST_RV_REF(nest) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type)& a)
+      BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value)
       : allocator_base(block_allocator(a))
       , blist()
       , num_blocks(0)
@@ -1264,7 +1320,9 @@ class nest
          x.size_ = 0;
       }
       else{
+         priv_construction_guard guard(*this);
          priv_insert_range_move(x.begin(), x.end());
+         guard.release();
          x.priv_reset();
       }
    }
@@ -1279,7 +1337,9 @@ class nest
       , num_blocks(0)
       , size_(0)
    {
+      priv_construction_guard guard(*this);
       insert(il.begin(), il.end());
+      guard.release();
    }
    #endif
 
@@ -1513,6 +1573,7 @@ class nest
    //! <b>Throws</b>: Nothing unless the element's constructor throws. If it does,
    //!   the container is left in its original state (strong exception guarantee):
    //!   any block speculatively allocated for the new element is freed.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant (amortized).
    template<class ...Args>
@@ -1544,6 +1605,9 @@ class nest
    //! <b>Effects</b>: Inserts an element constructed in-place with args (hint ignored).
    //!
    //! <b>Returns</b>: An iterator to the inserted element.
+   //!
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant (amortized).
    template<class ...Args>
@@ -1674,21 +1738,33 @@ class nest
    //!
    //! <b>Returns</b>: An iterator to the inserted element.
    //!
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Constant (amortized).
    BOOST_CONTAINER_FORCEINLINE iterator insert(const T& x)
    { return emplace(x); }
 
    //! <b>Effects</b>: Inserts a copy of x (hint ignored).
+   //!
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If an exception is thrown, there are no effects.
    BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator, const T& x)
    { return emplace(x); }
 
    //! <b>Effects</b>: Inserts x by moving.
    //!
    //! <b>Returns</b>: An iterator to the inserted element.
+   //!
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If an exception is thrown, there are no effects.
    BOOST_CONTAINER_FORCEINLINE iterator insert(BOOST_RV_REF(value_type) x)
    { return emplace(boost::move(x)); }
 
    //! <b>Effects</b>: Inserts x by moving (hint ignored).
+   //!
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If an exception is thrown, there are no effects.
    BOOST_CONTAINER_FORCEINLINE iterator insert(const_iterator, BOOST_RV_REF(value_type) x)
    { return emplace(boost::move(x)); }
 
@@ -2028,15 +2104,10 @@ class nest
 
    void priv_allocate_block_data(block_pointer pb, dtl::bool_<false>)
    {
-      BOOST_CONTAINER_TRY {
-         allocator_type val_al(al());
-         pb->data_ = allocator_traits_type::allocate(val_al, N);
-      }
-      BOOST_CONTAINER_CATCH(...) {
-         block_alloc_traits::deallocate(al(), pb, 1);
-         BOOST_CONTAINER_RETHROW;
-      }
-      BOOST_CONTAINER_CATCH_END
+      dtl::scoped_array_deallocator<block_allocator> guard(pb, al(), 1u);
+      allocator_type val_al(al());
+      pb->data_ = allocator_traits_type::allocate(val_al, N);
+      guard.release();
    }
 
    BOOST_CONTAINER_FORCEINLINE void priv_allocate_block_data(block_pointer, dtl::bool_<true>) BOOST_NOEXCEPT {}
@@ -2091,23 +2162,17 @@ class nest
       }
    }
 
-   // The try/catch lives here (not inline in emplace) on purpose: MSVC will not
-   // inline a function that contains its own EH scope, so keeping emplace
-   // EH-clean lets it be inlined into the caller's insert loop. This is a plain
-   // (non-FORCEINLINE) helper so the EH scope stays out of emplace.
+   // A guard (not try/catch) on purpose: MSVC will not inline a function that
+   // contains its own EH scope, so this helper and emplace stay inlinable into
+   // the caller's insert loop.
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
    template<class ...Args>
    inline void priv_construct_or_restore_capacity
       (T* p, block_base_pointer pbb_prev, BOOST_FWD_REF(Args)... args)
    {
-      BOOST_CONTAINER_TRY{
-         block_alloc_traits::construct(al(), p, boost::forward<Args>(args)...);
-      }
-      BOOST_CONTAINER_CATCH(...){
-         this->priv_restore_capacity_on_throw(pbb_prev);
-         BOOST_CONTAINER_RETHROW;
-      }
-      BOOST_CONTAINER_CATCH_END
+      priv_restore_capacity_guard guard(*this, pbb_prev);
+      block_alloc_traits::construct(al(), p, boost::forward<Args>(args)...);
+      guard.release();
    }
    #else
    #define BOOST_CONTAINER_NEST_CONSTRUCT_OR_RESTORE_CODE(N) \
@@ -2115,14 +2180,9 @@ class nest
    inline void priv_construct_or_restore_capacity                     \
       (T* p, block_base_pointer pbb_prev BOOST_MOVE_I##N BOOST_MOVE_UREF##N) \
    {                                                                  \
-      BOOST_CONTAINER_TRY{                                                      \
-         block_alloc_traits::construct(al(), p BOOST_MOVE_I##N BOOST_MOVE_FWD##N); \
-      }                                                               \
-      BOOST_CONTAINER_CATCH(...){                                               \
-         this->priv_restore_capacity_on_throw(pbb_prev);              \
-         BOOST_CONTAINER_RETHROW;                                               \
-      }                                                               \
-      BOOST_CONTAINER_CATCH_END                                                 \
+      priv_restore_capacity_guard guard(*this, pbb_prev);             \
+      block_alloc_traits::construct(al(), p BOOST_MOVE_I##N BOOST_MOVE_FWD##N); \
+      guard.release();                                                \
    }                                                                  \
    //
    BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_NEST_CONSTRUCT_OR_RESTORE_CODE)
@@ -2532,11 +2592,19 @@ class nest
          nest_detail::buffer<T, block_allocator> buf(size_, al());
          if(!buf.data) return false;
 
-         // Move all elements to buffer
-         priv_visit_all_move_to_buffer(buf);
-         std::sort(buf.begin(), buf.end(), comp);
-         // Move sorted elements back
-         priv_visit_all_move_from_buffer(buf);
+         BOOST_CONTAINER_TRY{
+            // Move all elements to buffer
+            priv_visit_all_move_to_buffer(buf);
+            std::sort(buf.begin(), buf.end(), comp);
+            // Move sorted elements back
+            priv_visit_all_move_from_buffer(buf);
+         }
+         BOOST_CONTAINER_CATCH(...){
+            //The values are in the buffer: the elements are moved-from
+            this->clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
       }
       return true;
    }
@@ -2731,9 +2799,9 @@ class nest
    {
       std::size_t cx = static_cast<std::size_t>(dtl::popcount(pbx->mask));
       std::size_t cy = static_cast<std::size_t>(dtl::popcount(pby->mask));
-      if(cx < cy) {
+      //Move the elements of the block with fewer elements
+      if(cx < cy && nest_detail::try_swap_payload(*pbx, *pby)) {
          boost::adl_move_swap(cx, cy);
-         nest_detail::swap_payload(*pbx, *pby);
       }
       std::size_t c = (std::min)(N - cx, cy);
       while(c--) {
@@ -2874,6 +2942,7 @@ std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>, F >
 
    for(; ;) {
       block_t& pbn = static_cast<block_t&>(*pbb->next);
+      (void)pbn;
       BOOST_IF_CONSTEXPR(Prefetch)
          BOOST_CONTAINER_NEST_PREFETCH(&pbn.mask);
       //Mask the mask for the last block

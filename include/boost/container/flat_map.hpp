@@ -333,7 +333,7 @@ class flat_map
    template <class InputIterator>
    inline
    flat_map(ordered_unique_range_t, InputIterator first, InputIterator last)
-      : m_flat_tree(ordered_range, first, last)
+      : m_flat_tree(ordered_unique_range, first, last)
    {}
 
    //! <b>Effects</b>: Constructs an empty flat_map using the specified comparison object and
@@ -348,7 +348,7 @@ class flat_map
    template <class InputIterator>
    inline
    flat_map(ordered_unique_range_t, InputIterator first, InputIterator last, const Compare& comp)
-      : m_flat_tree(ordered_range, first, last, comp)
+      : m_flat_tree(ordered_unique_range, first, last, comp)
    {}
 
    //! <b>Effects</b>: Constructs an empty flat_map using the specified comparison object and
@@ -363,7 +363,7 @@ class flat_map
    template <class InputIterator>
    inline
    flat_map(ordered_unique_range_t, InputIterator first, InputIterator last, const Compare& comp, const allocator_type& a)
-      : m_flat_tree(ordered_range, first, last, comp, BOOST_CONTAINER_FORCE(const impl_allocator_type, a))
+      : m_flat_tree(ordered_unique_range, first, last, comp, BOOST_CONTAINER_FORCE(const impl_allocator_type, a))
    {}
 
    //! <b>Effects</b>: Constructs an empty flat_map using the specified allocator and
@@ -378,7 +378,7 @@ class flat_map
    template <class InputIterator>
    inline
       flat_map(ordered_unique_range_t, InputIterator first, InputIterator last, const allocator_type& a)
-      : m_flat_tree(ordered_range, first, last, Compare(), a)
+      : m_flat_tree(ordered_unique_range, first, last, Compare(), a)
    {}
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -1445,13 +1445,26 @@ class flat_map
 
    //! <b>Requires</b>: this->get_allocator() == source.get_allocator().
    //!
-   //! <b>Effects</b>: Move-inserts each element from source into *this a using
-   //!   the comparison object of *this. If there is an element in a with key equivalent to the
-   //!   key of an element from source, then that element is not moved from source.
+   //! <b>Effects</b>: Moves into *this each element of source whose key is not equivalent to the key
+   //!   of an element of *this, using the comparison object of *this. If several elements of source
+   //!   have equivalent keys, only the first one is moved. The elements that are not moved stay
+   //!   in source.
    //!
-   //! <b>Complexity</b>: Linear in this->size() + source.size().
+   //! <b>Complexity</b>: If C2 is the same type as key_compare and it is an empty class (a comparator
+   //!   without state, e.g. std::less), linear in this->size() + source.size():
+   //!   both sequences are sorted and are merged in place. Otherwise the elements of source are
+   //!   sorted with the comparison object of *this, and the elements that stay in source are sorted
+   //!   again with the comparison object of source: N*log(N), where N is source.size(), plus the linear merge.
+   //!
+   //! <b>Throws</b>: If memory allocation, or the move or the comparison of elements throws.
+   //!   Then source is left empty and its elements are lost. If memory allocation throws, *this
+   //!   keeps its elements. If the move or the comparison of elements throws, *this can be left empty.
    //!
    //! <b>Note</b>: Invalidates all iterators and references.
+   //!
+   //! <b>Note</b>: Non-standard extension (the standard flat containers have no merge). Merging from a container with
+   //!   the same key_compare type, if it is an empty class, is more efficient, as the elements of source
+   //!   do not need to be sorted.
    template<class C2>
    inline void merge(flat_map<Key, T, C2, AllocatorOrContainer>& source)
    {  m_flat_tree.merge_unique(source.tree());   }
@@ -1511,7 +1524,9 @@ class flat_map
          !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
          BOOST_MOVE_I size_type>::type)
       erase(BOOST_FWD_REF(K) x)
-   {  return m_flat_tree.erase_unique(x); }
+      //Don't use erase_unique optimization here as transparent comparators with key K might
+      //match several elements (key_type can only match a single element)
+   {  return m_flat_tree.erase(boost::forward<K>(x)); }
 
    //! <b>Effects</b>: Erases all the elements in the range [first, last).
    //!
@@ -1873,15 +1888,9 @@ class flat_map
       iterator i = this->lower_bound(k);
 
       if (i == end() || key_comp()(k, (*i).first)) {
-         typename dtl::aligned_storage<sizeof(impl_value_type), dtl::alignment_of<impl_value_type>::value>::type v;
-         impl_value_type *vp = move_detail::launder_cast<impl_value_type *>(&v);
-
-         impl_get_stored_allocator_noconst_return_t r = m_flat_tree.get_stored_allocator();
-         boost::container::allocator_traits<impl_stored_allocator_type>::construct
-            (r, vp, try_emplace_t(), ::boost::forward<K>(key));
-         i = BOOST_CONTAINER_FORCECOPY(iterator, this->m_flat_tree.insert_equal
-               (BOOST_CONTAINER_FORCECOPY(impl_iterator, i), ::boost::move(*vp)));
-         vp->~impl_value_type();
+         //i is the insertion position: construct the new element in place
+         i = BOOST_CONTAINER_FORCECOPY(iterator, this->m_flat_tree.emplace_key_at
+               (BOOST_CONTAINER_FORCECOPY(impl_iterator, i), ::boost::forward<K>(key)));
       }
       return (*i).second;
    }
@@ -2869,12 +2878,24 @@ class flat_multimap
 
    //! <b>Requires</b>: this->get_allocator() == source.get_allocator().
    //!
-   //! <b>Effects</b>: Move-inserts each element from source into *this a using
-   //!   the comparison object of *this.
+   //! <b>Effects</b>: Moves all the elements of source into *this, ordered with the comparison
+   //!   object of *this. Equivalent elements keep their relative order, and the elements from
+   //!   source go after the equivalent elements of *this. source is empty after the call.
    //!
-   //! <b>Complexity</b>: Linear in this->size() + source.size().
+   //! <b>Complexity</b>: If C2 is the same type as key_compare and it is an empty class (a comparator
+   //!   without state, e.g. std::less), linear in this->size() + source.size():
+   //!   both sequences are sorted and are merged in place. Otherwise the elements of source are
+   //!   sorted first: N*log(N), where N is source.size(), plus the linear merge.
+   //!
+   //! <b>Throws</b>: If memory allocation, or the move or the comparison of elements throws.
+   //!   Then source is left empty, and some of its elements can be lost. If memory allocation throws,
+   //!   *this keeps its elements. If the move or the comparison of elements throws, *this can be left empty.
    //!
    //! <b>Note</b>: Invalidates all iterators and references.
+   //!
+   //! <b>Note</b>: Non-standard extension (the standard flat containers have no merge). Merging from a container with
+   //!   the same key_compare type, if it is an empty class, is more efficient, as the elements of source
+   //!   do not need to be sorted.
    template<class C2>
    inline void merge(flat_multimap<Key, T, C2, AllocatorOrContainer>& source)
    {  m_flat_tree.merge_equal(source.tree());   }

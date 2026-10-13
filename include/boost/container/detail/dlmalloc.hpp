@@ -5899,7 +5899,7 @@ class basic_dlmalloc
                //(-Waggressive-loop-optimizations, naming a trip count of
                //2^61). A pointer that advances in step with i says the same
                //thing and invites no such inference.
-               const size_type *psize_i = sizes + i + 1;
+               const size_type *psize_i = sizes + i;
                for(++i; i != next_i; ++i, ++psize_i) {
                   void **mem_prev = ((void**)mem);
                   size = request2size(*psize_i * element_size);

@@ -39,8 +39,11 @@
 
 #include <memory>
 #include <algorithm>
+#include <map>
 #include <cstddef>
 #include <cassert>
+#include <cstdio>
+#include <cstdlib>
 
 namespace boost {
 namespace container {
@@ -72,6 +75,13 @@ class simple_allocator
    friend bool operator!=(const simple_allocator &, const simple_allocator &)
    {  return false;  }
 };
+
+//Id of the allocator that allocated each memory block of a propagation_test_allocator
+inline std::map<const void*, unsigned> &propagation_test_allocator_owners()
+{
+   static std::map<const void*, unsigned> owners;
+   return owners;
+}
 
 template< class T
         , bool PropagateOnContCopyAssign
@@ -176,10 +186,32 @@ class propagation_test_allocator
    {  unique_id_ = id;  }
 
    value_type* allocate(std::size_t count)
-   {  return boost::container::dtl::operator_new_allocate<value_type>(count);  }
+   {
+      value_type *const p = boost::container::dtl::operator_new_allocate<value_type>(count);
+      //Allocators with different ids are unequal: record the owner of each block
+      if (EqualIfEqualIds) {
+         propagation_test_allocator_owners()[p] = id_;
+      }
+      return p;
+   }
 
    void deallocate(value_type *ptr, std::size_t n)
-   {  return boost::container::dtl::operator_delete_deallocate<T>(ptr, n);  }
+   {
+      //A block must be freed by an allocator equal to the one that allocated it
+      if (EqualIfEqualIds) {
+         std::map<const void*, unsigned> &owners = propagation_test_allocator_owners();
+         const std::map<const void*, unsigned>::iterator it = owners.find(ptr);
+         if (it == owners.end() || it->second != id_) {
+            std::fprintf(stderr, "propagation_test_allocator: block freed by the allocator with id %u, "
+                                 "allocated by %s %u\n", id_
+                        , it == owners.end() ? "an unknown allocator" : "the allocator with id"
+                        , it == owners.end() ? 0u : it->second);
+            std::abort();
+         }
+         owners.erase(it);
+      }
+      return boost::container::dtl::operator_delete_deallocate<T>(ptr, n);
+   }
 
    friend bool operator==(const propagation_test_allocator &a, const propagation_test_allocator &b)
    {  return EqualIfEqualIds ? a.id_ == b.id_ : true;  }

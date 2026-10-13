@@ -252,10 +252,12 @@ class segtor : public deque_impl<T, Allocator, true, Options>
    //!                 Moves x's resources to *this if a == allocator_type().
    //!                 Otherwise copies values from x to *this.
    //!
-   //! <b>Throws</b>: If allocation or T's copy constructor throws.
+   //! <b>Throws</b>: Nothing if allocator_traits_type::is_always_equal::value is true.
+   //!   Otherwise, if allocation or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    segtor(BOOST_RV_REF(segtor) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type)& a)
+      BOOST_NOEXCEPT_IF(boost::container::allocator_traits<allocator_type>::is_always_equal::value)
       : base_type(boost::move(static_cast<base_type&>(x)), a)
    {}
 
@@ -718,23 +720,25 @@ class segtor : public deque_impl<T, Allocator, true, Options>
 
    //! <b>Effects</b>: Erases the element at p.
    //!
-   //! <b>Throws</b>: Nothing.
+   //! <b>Throws</b>: Nothing unless the move assignment of T throws.
    //!
    //! <b>Complexity</b>: Linear to the elements between pos and the
    //!   last element (if pos is near the end) or the first element
    //!   if (pos is near the beginning).
    //!   Constant if pos is the first or the last element.
-   iterator erase(const_iterator p) BOOST_NOEXCEPT_OR_NOTHROW;
+   iterator erase(const_iterator p)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<value_type>::value);
 
    //! <b>Effects</b>: Erases the elements pointed by [first, last).
    //!
-   //! <b>Throws</b>: Nothing.
+   //! <b>Throws</b>: Nothing unless the move assignment of T throws.
    //!
    //! <b>Complexity</b>: Linear to the distance between first and
    //!   last plus the elements between pos and the
    //!   last element (if pos is near the end) or the first element
    //!   if (pos is near the beginning).
-   iterator erase(const_iterator first, const_iterator last) BOOST_NOEXCEPT_OR_NOTHROW;
+   iterator erase(const_iterator first, const_iterator last)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<value_type>::value);
 
    //! <b>Effects</b>: Inserts a copy of x at the end of the container.
    //!

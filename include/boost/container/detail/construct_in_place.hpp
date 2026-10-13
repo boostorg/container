@@ -78,22 +78,10 @@ BOOST_CONTAINER_FORCEINLINE
       <  dtl::is_pair<typename dtl::remove_reference<T>::type>::value
       && dtl::is_pair<typename dtl::remove_reference<U>::type>::value
       , void>::type
-assign_in_place_ref(T &t, const U &u)
+assign_in_place_ref(T &t, BOOST_FWD_REF(U) u)
 {
-   assign_in_place_ref(t.first, u.first);
-   assign_in_place_ref(t.second, u.second);
-}
-
-template<class T, class U>
-BOOST_CONTAINER_FORCEINLINE
-   typename dtl::enable_if_c
-      <  dtl::is_pair<typename dtl::remove_reference<T>::type>::value
-      && dtl::is_pair<typename dtl::remove_reference<U>::type>::value
-      , void>::type
-assign_in_place_ref(T &t, BOOST_RV_REF(U) u)
-{
-   assign_in_place_ref(t.first,  ::boost::move(u.first));
-   assign_in_place_ref(t.second, ::boost::move(u.second));
+   assign_in_place_ref(t.first,  ::boost::forward_like<U>(u.first));
+   assign_in_place_ref(t.second, ::boost::forward_like<U>(u.second));
 }
 
 template<class DstIt, class InpIt>

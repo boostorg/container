@@ -159,7 +159,8 @@ void test_destroy()
    char_holder ch;
    polymorphic_allocator<int> p;
    BOOST_TEST(char_holder::destructor_called == false);
-   p.destroy(&ch);
+   //polymorphic_allocator has no destroy member (LWG 3036): allocator_traits calls the destructor
+   allocator_traits< polymorphic_allocator<int> >::destroy(p, &ch);
    BOOST_TEST(char_holder::destructor_called == true);
 }
 

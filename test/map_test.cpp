@@ -594,6 +594,12 @@ int main ()
    if (!boost::container::test::instantiate_constructors<map<int, int>, multimap<int, int> >())
       return 1;
 
+   if (!boost::container::test::test_function_pointer_comparator
+         < map<int, int, bool(*)(int, int)>
+         , multimap<int, int, bool(*)(int, int)>
+         >())
+      return 1;
+
    test::test_merge_from_different_comparison();
 
    if (!test::test_heterogeneous_lookup

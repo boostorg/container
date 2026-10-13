@@ -54,6 +54,7 @@
 #include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/adl_move_swap.hpp>
+#include <boost/move/algo/detail/rotate.hpp>
 #include <boost/move/detail/launder.hpp>
 // move/detail
 #include <boost/move/detail/move_helpers.hpp>
@@ -187,6 +188,29 @@ struct node
 
    inline void destroy_header()
    {  static_cast<hook_type*>(this)->~hook_type();  }
+};
+
+//Destroys the header of a node if the construction of its value throws.
+//A guard instead of try/catch lets compilers like MSVC inline the caller.
+template<class Node>
+class node_header_guard
+{
+   public:
+   inline explicit node_header_guard(Node *p)
+      : m_p(p)
+   {}
+
+   inline ~node_header_guard()
+   {
+      if(m_p)
+         m_p->destroy_header();
+   }
+
+   inline void release()
+   {  m_p = 0;  }
+
+   private:
+   Node *m_p;
 };
 
 template<class VoidPtr, class VoidAllocator>
@@ -604,6 +628,13 @@ class stable_vector
    class insert_rollback;
    friend class insert_rollback;
 
+   //Erases the size() - old_size elements inserted at position pos_n
+   void priv_erase_inserted(difference_type pos_n, size_type old_size) BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      const const_iterator b(this->cbegin() + pos_n);
+      this->erase(b, b + difference_type(this->size() - old_size));
+   }
+
    class push_back_rollback;
    friend class push_back_rollback;
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -679,7 +710,7 @@ class stable_vector
    //!
    //! <b>Complexity</b>: Linear to n.
    explicit stable_vector(size_type n, const allocator_type &a)
-      : internal_data(), index(a)
+      : internal_data(a), index(a)
    {
       stable_vector_detail::clear_on_destroy<stable_vector> cod(*this);
       this->resize(n);
@@ -697,7 +728,7 @@ class stable_vector
    //!
    //! <b>Note</b>: Non-standard extension
    stable_vector(size_type n, default_init_t, const allocator_type &a)
-      : internal_data(), index(a)
+      : internal_data(a), index(a)
    {
       stable_vector_detail::clear_on_destroy<stable_vector> cod(*this);
       this->resize(n, default_init);
@@ -801,10 +832,12 @@ class stable_vector
    //! <b>Effects</b>: Move constructor using the specified allocator.
    //!                 Moves x's resources to *this.
    //!
-   //! <b>Throws</b>: If allocator_type's copy constructor throws.
+   //! <b>Throws</b>: Nothing if allocator_traits_type::is_always_equal::value is true.
+   //!   Otherwise, if allocator_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise
    stable_vector(BOOST_RV_REF(stable_vector) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
+      BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value)
       : internal_data(a), index(a)
    {
       if(this->priv_node_alloc() == x.priv_node_alloc()){
@@ -1473,6 +1506,7 @@ class stable_vector
    //! <b>Returns</b>: A reference to the created object.
    //!
    //! <b>Throws</b>: If memory allocation throws or the in-place constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    template<class ...Args>
@@ -1490,6 +1524,7 @@ class stable_vector
    //!   std::forward<Args>(args)... before p
    //!
    //! <b>Throws</b>: If memory allocation throws or the in-place constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
@@ -1541,6 +1576,7 @@ class stable_vector
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    void push_back(const T &x);
@@ -1549,6 +1585,7 @@ class stable_vector
    //!   and moves the resources of x to this new element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    void push_back(T &&x);
@@ -1564,6 +1601,7 @@ class stable_vector
    //! <b>Returns</b>: An iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws or x's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
@@ -1576,6 +1614,7 @@ class stable_vector
    //! <b>Returns</b>: an iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: If p is end(), amortized constant time
    //!   Linear time otherwise.
@@ -1591,6 +1630,7 @@ class stable_vector
    //! <b>Returns</b>: an iterator to the first inserted element or p if n is 0.
    //!
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to n.
    iterator insert(const_iterator p, size_type n, const T& t)
@@ -1609,6 +1649,9 @@ class stable_vector
    //!
    //! <b>Returns</b>: an iterator to the first inserted element or p if first == last.
    //!
+   //! <b>Throws</b>: If memory allocation or the construction of an element throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Linear to distance [il.begin(), il.end()).
    inline iterator insert(const_iterator p, std::initializer_list<value_type> il)
    {
@@ -1626,6 +1669,7 @@ class stable_vector
    //!
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InpIt throws or T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to distance [first, last).
    template <class InputIterator>
@@ -1644,8 +1688,25 @@ class stable_vector
       BOOST_ASSERT(this->priv_in_range_or_end(p));
       BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT;
       const difference_type pos_n = p - this->cbegin();
-      for(; first != last; ++first){
-         this->emplace(p, *first);
+      const size_type old_size = this->size();
+      //Inserting each element at p would move the index pointers after p once for
+      //each new element: insert the new elements at the end and rotate them to p
+      BOOST_CONTAINER_TRY{
+         for(; first != last; ++first){
+            this->emplace_back(*first);
+         }
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //No effects: erase the inserted elements
+         this->priv_erase_inserted(difference_type(old_size), old_size);
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      if (this->size() != old_size) {
+         const index_iterator ib(this->index.begin());
+         const index_iterator ie(ib + difference_type(this->size()));
+         boost::movelib::rotate_gcd(ib + pos_n, ib + difference_type(old_size), ie);
+         index_traits_type::fix_up_pointers(ib + pos_n, ie);
       }
       return this->begin() + difference_type(pos_n);
    }
@@ -1663,14 +1724,15 @@ class stable_vector
       const size_type num_new = boost::container::iterator_udistance(first, last);
       const size_type idx     = static_cast<size_type>(p - this->cbegin());
       if(num_new){
+         const size_type old_size = this->size();
          //Fills the node pool and inserts num_new null pointers in idx.
          //If a new buffer was needed fixes up pointers up to idx so
          //past-new nodes are not aligned until the end of this function
          //or in a rollback in case of exception
          index_iterator it_past_newly_constructed(this->priv_insert_forward_non_templated(idx, num_new));
          const index_iterator it_past_new(it_past_newly_constructed + difference_type(num_new));
-         {
-            //Prepare rollback
+         BOOST_CONTAINER_TRY{
+            //Prepare rollback: removes the slots of the elements that are not constructed
             insert_rollback rollback(*this, it_past_newly_constructed, it_past_new);
             while(first != last){
                const node_ptr n = this->priv_get_from_pool();
@@ -1679,11 +1741,19 @@ class stable_vector
                *it_past_newly_constructed = n;
                //Constructs and fixes up pointers This can throw
                this->priv_build_node_from_it(n, it_past_newly_constructed, first);
-               ++first;
+               //The node holds a constructed element: advance before ++first, which can throw
                ++it_past_newly_constructed;
+               ++first;
             }
+            rollback.release();
             //rollback.~insert_rollback() called in case of exception
          }
+         BOOST_CONTAINER_CATCH(...){
+            //No effects: erase the constructed elements (the rollback removed the other slots)
+            this->priv_erase_inserted(difference_type(idx), old_size);
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
          //Fix up pointers for past-new nodes (new nodes were fixed during construction) and
          //nodes before insertion p in priv_insert_forward_non_templated(...)
          index_traits_type::fix_up_pointers_from(this->index, it_past_newly_constructed);
@@ -1841,8 +1911,9 @@ class stable_vector
       //Resources can be transferred if both allocators are
       //going to be equal after this function (either propagated or already equal)
       BOOST_CONTAINER_STABLE_VECTOR_CHECK_INVARIANT
-      //Destroy objects but retain memory in case x reuses it in the future
+      //Destroy objects and free the node pool of *this with its current allocator
       this->clear();
+      this->priv_clear_pool();
       //Move allocator if needed
       dtl::bool_<allocator_traits_type::
                  propagate_on_container_move_assignment::value> flag;
@@ -1888,14 +1959,24 @@ class stable_vector
       public:
 
       insert_rollback(stable_vector &sv, index_iterator &it_past_constructed, const index_iterator &it_past_new)
-         : m_sv(sv), m_it_past_constructed(it_past_constructed), m_it_past_new(it_past_new)
+         : m_sv(sv), m_it_past_constructed(it_past_constructed), m_it_past_new(it_past_new), m_active(true)
       {}
+
+      void release()
+      {  m_active = false;  }
 
       ~insert_rollback()
       {
-         if(m_it_past_constructed != m_it_past_new){
-            m_sv.priv_put_in_pool(node_ptr_traits::static_cast_from(*m_it_past_constructed));
-            index_iterator e = m_sv.index.erase(m_it_past_constructed, m_it_past_new);
+         if(m_active){
+            index_iterator e = m_it_past_constructed;
+            if(m_it_past_constructed != m_it_past_new){
+               //The node in *m_it_past_constructed (null if not taken from the pool yet)
+               //has no constructed element: return it to the pool
+               if(!!*m_it_past_constructed)
+                  m_sv.priv_put_in_pool(node_ptr_traits::static_cast_from(*m_it_past_constructed));
+               e = m_sv.index.erase(m_it_past_constructed, m_it_past_new);
+            }
+            //Fix up the pointers of the nodes after the inserted ones
             index_traits_type::fix_up_pointers_from(m_sv.index, e);
          }
       }
@@ -1904,6 +1985,7 @@ class stable_vector
       stable_vector &m_sv;
       index_iterator &m_it_past_constructed;
       const index_iterator &m_it_past_new;
+      bool m_active;
    };
 
    class push_back_rollback
@@ -1932,15 +2014,28 @@ class stable_vector
    {
       index_traits_type::initialize_end_node(this->index, this->internal_data.end_node, num_new);
 
-      //Now try to fill the pool with new data
-      if(this->internal_data.pool_size < num_new){
-         this->priv_increase_pool(num_new - this->internal_data.pool_size);
-      }
-
-      //Now try to make room in the vector
+      //First make room in the index
       const node_base_ptr_ptr old_buffer = this->index.data();
       this->index.insert(this->index.begin() + (difference_type)idx, num_new, node_ptr());
-      bool new_buffer = this->index.data() != old_buffer;
+      const bool new_buffer = this->index.data() != old_buffer;
+
+      //Now try to fill the pool with new data
+      if(this->internal_data.pool_size < num_new){
+         BOOST_CONTAINER_TRY{
+            this->priv_increase_pool(num_new - this->internal_data.pool_size);
+         }
+         BOOST_CONTAINER_CATCH(...){
+            //Remove the new null pointers. If the index was reallocated, all the nodes point
+            //to the old buffer; otherwise the nodes after idx are back in their old position.
+            this->index.erase( this->index.begin() + (difference_type)idx
+                             , this->index.begin() + difference_type(idx + num_new));
+            if(new_buffer){
+               index_traits_type::fix_up_pointers_from(this->index, this->index.begin());
+            }
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
+      }
 
       //Fix the pointers for the newly allocated buffer
       const index_iterator index_beg = this->index.begin();
@@ -2103,38 +2198,28 @@ class stable_vector
    {
       node_type *praw = ::new(boost::movelib::iterator_to_raw_pointer(p), boost_container_new_t())
          node_type(index_traits_type::ptr_to_node_base_ptr(*up_index));
-      BOOST_CONTAINER_TRY{
-         //This can throw
-         boost::container::construct_in_place
-            ( this->priv_node_alloc()
-            , praw->get_data_ptr()
-            , it);
-      }
-      BOOST_CONTAINER_CATCH(...) {
-         praw->destroy_header();
-         this->priv_node_alloc().deallocate(p, 1);
-         BOOST_CONTAINER_RETHROW
-      }
-      BOOST_CONTAINER_CATCH_END
+      //On exception the caller's rollback returns the node to the pool
+      stable_vector_detail::node_header_guard<node_type> guard(praw);
+      //This can throw
+      boost::container::construct_in_place
+         ( this->priv_node_alloc()
+         , praw->get_data_ptr()
+         , it);
+      guard.release();
    }
 
    template<class ValueConvertible>
    void priv_build_node_from_convertible(const node_ptr &p, BOOST_FWD_REF(ValueConvertible) value_convertible)
    {
       node_type *praw = ::new(boost::movelib::iterator_to_raw_pointer(p), boost_container_new_t()) node_type;
-      BOOST_CONTAINER_TRY{
-         //This can throw
-         boost::container::allocator_traits<node_allocator_type>::construct
-            ( this->priv_node_alloc()
-            , p->get_data_ptr()
-            , ::boost::forward<ValueConvertible>(value_convertible));
-      }
-      BOOST_CONTAINER_CATCH(...) {
-         praw->destroy_header();
-         this->priv_node_alloc().deallocate(p, 1);
-         BOOST_CONTAINER_RETHROW
-      }
-      BOOST_CONTAINER_CATCH_END
+      //On exception the caller's rollback returns the node to the pool
+      stable_vector_detail::node_header_guard<node_type> guard(praw);
+      //This can throw
+      boost::container::allocator_traits<node_allocator_type>::construct
+         ( this->priv_node_alloc()
+         , p->get_data_ptr()
+         , ::boost::forward<ValueConvertible>(value_convertible));
+      guard.release();
    }
 
    void priv_swap_members(stable_vector &x)
@@ -2277,14 +2362,15 @@ inline typename stable_vector<T, A>::size_type erase_if(stable_vector<T, A>& c, 
 
 }  //namespace container {
 
-//!has_trivial_destructor_after_move<> == true_type
-//!specialization for optimizations
+//!has_trivial_destructor_after_move<> specialization for optimizations
 template <class T, class Allocator>
 struct has_trivial_destructor_after_move<boost::container::stable_vector<T, Allocator> >
 {
    typedef typename boost::container::stable_vector<T, Allocator>::allocator_type allocator_type;
-   typedef typename boost::container::allocator_traits<allocator_type>::pointer pointer;
-   BOOST_STATIC_CONSTEXPR bool value = ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
+   typedef boost::container::allocator_traits<allocator_type> allocator_traits_type;
+   typedef typename allocator_traits_type::pointer pointer;
+   BOOST_STATIC_CONSTEXPR bool value = allocator_traits_type::is_always_equal::value &&
+                             ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
                              ::boost::has_trivial_destructor_after_move<pointer>::value;
 };
 

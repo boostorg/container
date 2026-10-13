@@ -71,20 +71,53 @@ namespace boost {
 namespace container {
 namespace dtl {
 
+//Destroys the objects in [b, e) with allocator_traits<Allocator>::destroy at the end of the scope,
+//unless it is released. e is a reference: the guard follows the end of a range under construction.
+//If is_trivially_alloc_destructible, it does nothing, so no exception handling code is generated.
+template< class Allocator, class F
+        , bool = is_trivially_alloc_destructible
+            <Allocator, typename iterator_traits<F>::value_type>::value >
+class scoped_alloc_range_destructor
+{
+   Allocator &ma;
+   F mb;
+   const F &me;
+   scoped_alloc_range_destructor(const scoped_alloc_range_destructor &);
+   scoped_alloc_range_destructor &operator=(const scoped_alloc_range_destructor &);
+
+   public:
+   BOOST_CONTAINER_FORCEINLINE scoped_alloc_range_destructor(Allocator &a, F b, const F &e)
+      : ma(a), mb(b), me(e)
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE ~scoped_alloc_range_destructor()
+   {
+      for (; mb != me; ++mb){
+         allocator_traits<Allocator>::destroy(ma, boost::movelib::iterator_to_raw_pointer(mb));
+      }
+   }
+
+   BOOST_CONTAINER_FORCEINLINE void release()
+   {  mb = me;  }
+};
+
+template<class Allocator, class F>
+class scoped_alloc_range_destructor<Allocator, F, true>
+{
+   public:
+   BOOST_CONTAINER_FORCEINLINE scoped_alloc_range_destructor(Allocator &, F, const F &)
+   {}
+
+   BOOST_CONTAINER_FORCEINLINE void release()
+   {}
+};
+
+//Raw pointers and iterators that use boost::movelib::contiguous_iterator_tag
+//(e.g. vec_iterator) or std::contiguous_iterator_tag as iterator_concept
 template<class I>
 struct are_elements_contiguous
 {
-   BOOST_STATIC_CONSTEXPR bool value = false;
-};
-
-/////////////////////////
-//    raw pointers
-/////////////////////////
-
-template<class T>
-struct are_elements_contiguous<T*>
-{
-   BOOST_STATIC_CONSTEXPR bool value = true;
+   BOOST_STATIC_CONSTEXPR bool value = boost::movelib::is_contiguous_iterator<I>::value;
 };
 
 /////////////////////////
@@ -97,14 +130,6 @@ struct are_elements_contiguous< ::boost::move_iterator<It> >
 {};
 
 }  //namespace dtl {
-
-/////////////////////////
-//    predeclarations
-/////////////////////////
-
-template <class Pointer, bool IsConst>
-class vec_iterator;
-
 }  //namespace container {
 
 namespace interprocess {
@@ -117,17 +142,6 @@ class offset_ptr;
 namespace container {
 
 namespace dtl {
-
-/////////////////////////
-//vector_[const_]iterator
-/////////////////////////
-
-template <class Pointer, bool IsConst>
-struct are_elements_contiguous<boost::container::vec_iterator<Pointer, IsConst> >
-{
-   BOOST_STATIC_CONSTEXPR bool value = true;
-};
-
 
 /////////////////////////
 //    offset_ptr
@@ -233,12 +247,13 @@ inline F memmove(I f, I l, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {
    typedef typename boost::container::iter_value<I>::type      value_type;
    typedef typename boost::container::iterator_traits<F>::difference_type r_difference_type;
-   value_type *const dest_raw = boost::movelib::iterator_to_raw_pointer(r);
-   const value_type *const beg_raw = boost::movelib::iterator_to_raw_pointer(f);
-   const value_type *const end_raw = boost::movelib::iterator_to_raw_pointer(l);
-   if(BOOST_LIKELY(beg_raw != end_raw)){
+   //Don't convert past-the-end iterators to raw pointers: iterators with
+   //debug checks (e.g. std::vector's) assert in operator->
+   if(BOOST_LIKELY(f != l)){
+      value_type *const dest_raw = boost::movelib::iterator_to_raw_pointer(r);
+      const value_type *const beg_raw = boost::movelib::iterator_to_raw_pointer(f);
       BOOST_ASSERT(dest_raw && beg_raw);
-      const std::size_t n = std::size_t(end_raw - beg_raw)   ;
+      const std::size_t n = boost::container::iterator_udistance(f, l);
       std::memmove(reinterpret_cast<void *>(dest_raw), beg_raw, sizeof(value_type)*n);
       r += static_cast<r_difference_type>(n);
    }
@@ -362,20 +377,13 @@ template
 inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, F>::type
    uninitialized_move_alloc(Allocator &a, I f, I l, F r)
 {
-   F back = r;
-   BOOST_CONTAINER_TRY{
-      while (f != l) {
-         allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), boost::move(*f));
-         ++f; ++r;
-      }
+   //Destroys the constructed objects if a construction throws
+   dtl::scoped_alloc_range_destructor<Allocator, F> rollback(a, r, r);
+   while (f != l) {
+      allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), boost::move(*f));
+      ++f; ++r;
    }
-   BOOST_CONTAINER_CATCH(...){
-      for (; back != r; ++back){
-         allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
-      }
-      BOOST_CONTAINER_RETHROW;
-   }
-   BOOST_CONTAINER_CATCH_END
+   rollback.release();
    return r;
 }
 
@@ -407,21 +415,14 @@ template
 inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, F>::type
    uninitialized_move_alloc_n(Allocator &a, I f, std::size_t n, F r)
 {
-   F back = r;
-   BOOST_CONTAINER_TRY{
-      while (n) {
-         --n;
-         allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), boost::move(*f));
-         ++f; ++r;
-      }
+   //Destroys the constructed objects if a construction throws
+   dtl::scoped_alloc_range_destructor<Allocator, F> rollback(a, r, r);
+   while (n) {
+      --n;
+      allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), boost::move(*f));
+      ++f; ++r;
    }
-   BOOST_CONTAINER_CATCH(...){
-      for (; back != r; ++back){
-         allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
-      }
-      BOOST_CONTAINER_RETHROW;
-   }
-   BOOST_CONTAINER_CATCH_END
+   rollback.release();
    return r;
 }
 
@@ -453,21 +454,14 @@ template
 inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, I>::type
    uninitialized_move_alloc_n_source(Allocator &a, I f, std::size_t n, F r)
 {
-   F back = r;
-   BOOST_CONTAINER_TRY{
-      while (n) {
-         --n;
-         allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), boost::move(*f));
-         ++f; ++r;
-      }
+   //Destroys the constructed objects if a construction throws
+   dtl::scoped_alloc_range_destructor<Allocator, F> rollback(a, r, r);
+   while (n) {
+      --n;
+      allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), boost::move(*f));
+      ++f; ++r;
    }
-   BOOST_CONTAINER_CATCH(...){
-      for (; back != r; ++back){
-         allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
-      }
-      BOOST_CONTAINER_RETHROW;
-   }
-   BOOST_CONTAINER_CATCH_END
+   rollback.release();
    return f;
 }
 
@@ -499,20 +493,13 @@ template
 inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, F>::type
    uninitialized_copy_alloc(Allocator &a, I f, I l, F r)
 {
-   F back = r;
-   BOOST_CONTAINER_TRY{
-      while (f != l) {
-         allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), *f);
-         ++f; ++r;
-      }
+   //Destroys the constructed objects if a construction throws
+   dtl::scoped_alloc_range_destructor<Allocator, F> rollback(a, r, r);
+   while (f != l) {
+      allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), *f);
+      ++f; ++r;
    }
-   BOOST_CONTAINER_CATCH(...){
-      for (; back != r; ++back){
-         allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
-      }
-      BOOST_CONTAINER_RETHROW;
-   }
-   BOOST_CONTAINER_CATCH_END
+   rollback.release();
    return r;
 }
 
@@ -544,32 +531,25 @@ template
 inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, F>::type
    uninitialized_copy_alloc_n(Allocator &a, I f, std::size_t n, F r)
 {
-   F back = r;
-   BOOST_CONTAINER_TRY{
-      //GCC's value-range analysis issues a spurious -Wmaybe-uninitialized here
-      //when this copy-construct loop is inlined into a fixed-capacity container's
-      //(e.g. static_vector) copy constructor after a near-end single-element
-      //insert: it cannot prove the just-built trailing slot is initialized.
+   //Destroys the constructed objects if a construction throws
+   dtl::scoped_alloc_range_destructor<Allocator, F> rollback(a, r, r);
+   //GCC's value-range analysis issues a spurious -Wmaybe-uninitialized here
+   //when this copy-construct loop is inlined into a fixed-capacity container's
+   //(e.g. static_vector) copy constructor after a near-end single-element
+   //insert: it cannot prove the just-built trailing slot is initialized.
 #if defined(BOOST_GCC) && (BOOST_GCC >= 40700)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
-      while (n) {
-         --n;
-         allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), *f);
-         ++f; ++r;
-      }
+   while (n) {
+      --n;
+      allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), *f);
+      ++f; ++r;
+   }
 #if defined(BOOST_GCC) && (BOOST_GCC >= 40700)
 #pragma GCC diagnostic pop
 #endif
-   }
-   BOOST_CONTAINER_CATCH(...){
-      for (; back != r; ++back){
-         allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
-      }
-      BOOST_CONTAINER_RETHROW;
-   }
-   BOOST_CONTAINER_CATCH_END
+   rollback.release();
    return r;
 }
 
@@ -601,20 +581,13 @@ template
 inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, I>::type
    uninitialized_copy_alloc_n_source(Allocator &a, I f, std::size_t n, F r)
 {
-   F back = r;
-   BOOST_CONTAINER_TRY{
-      while (n) {
-         boost::container::construct_in_place(a, boost::movelib::iterator_to_raw_pointer(r), f);
-         ++f; ++r; --n;
-      }
+   //Destroys the constructed objects if a construction throws
+   dtl::scoped_alloc_range_destructor<Allocator, F> rollback(a, r, r);
+   while (n) {
+      boost::container::construct_in_place(a, boost::movelib::iterator_to_raw_pointer(r), f);
+      ++f; ++r; --n;
    }
-   BOOST_CONTAINER_CATCH(...){
-      for (; back != r; ++back){
-         allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
-      }
-      BOOST_CONTAINER_RETHROW;
-   }
-   BOOST_CONTAINER_CATCH_END
+   rollback.release();
    return f;
 }
 
@@ -645,21 +618,14 @@ template
 inline typename dtl::disable_if_memzero_initializable<F, F>::type
    uninitialized_value_init_alloc_n(Allocator &a, std::size_t n, F r)
 {
-   F back = r;
-   BOOST_CONTAINER_TRY{
-      while (n) {
-         --n;
-         allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r));
-         ++r;
-      }
+   //Destroys the constructed objects if a construction throws
+   dtl::scoped_alloc_range_destructor<Allocator, F> rollback(a, r, r);
+   while (n) {
+      --n;
+      allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r));
+      ++r;
    }
-   BOOST_CONTAINER_CATCH(...){
-      for (; back != r; ++back){
-         allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
-      }
-      BOOST_CONTAINER_RETHROW;
-   }
-   BOOST_CONTAINER_CATCH_END
+   rollback.release();
    return r;
 }
 
@@ -699,21 +665,14 @@ template
     typename F> // F models ForwardIterator
 inline F uninitialized_default_init_alloc_n(Allocator &a, std::size_t n, F r)
 {
-   F back = r;
-   BOOST_CONTAINER_TRY{
-      while (n) {
-         --n;
-         allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), default_init);
-         ++r;
-      }
+   //Destroys the constructed objects if a construction throws
+   dtl::scoped_alloc_range_destructor<Allocator, F> rollback(a, r, r);
+   while (n) {
+      --n;
+      allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), default_init);
+      ++r;
    }
-   BOOST_CONTAINER_CATCH(...){
-      for (; back != r; ++back){
-         allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
-      }
-      BOOST_CONTAINER_RETHROW;
-   }
-   BOOST_CONTAINER_CATCH_END
+   rollback.release();
    return r;
 }
 
@@ -736,20 +695,13 @@ template
     typename T>
 inline void uninitialized_fill_alloc(Allocator &a, F f, F l, const T &t)
 {
-   F back = f;
-   BOOST_CONTAINER_TRY{
-      while (f != l) {
-         allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(f), t);
-         ++f;
-      }
+   //Destroys the constructed objects if a construction throws
+   dtl::scoped_alloc_range_destructor<Allocator, F> rollback(a, f, f);
+   while (f != l) {
+      allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(f), t);
+      ++f;
    }
-   BOOST_CONTAINER_CATCH(...){
-      for (; back != l; ++back){
-         allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
-      }
-      BOOST_CONTAINER_RETHROW;
-   }
-   BOOST_CONTAINER_CATCH_END
+   rollback.release();
 }
 
 
@@ -772,21 +724,14 @@ template
     typename F> // F models ForwardIterator
 inline F uninitialized_fill_alloc_n(Allocator &a, const T &v, std::size_t n, F r)
 {
-   F back = r;
-   BOOST_CONTAINER_TRY{
-      while (n) {
-         --n;
-         allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), v);
-         ++r;
-      }
+   //Destroys the constructed objects if a construction throws
+   dtl::scoped_alloc_range_destructor<Allocator, F> rollback(a, r, r);
+   while (n) {
+      --n;
+      allocator_traits<Allocator>::construct(a, boost::movelib::iterator_to_raw_pointer(r), v);
+      ++r;
    }
-   BOOST_CONTAINER_CATCH(...){
-      for (; back != r; ++back){
-         allocator_traits<Allocator>::destroy(a, boost::movelib::iterator_to_raw_pointer(back));
-      }
-      BOOST_CONTAINER_RETHROW;
-   }
-   BOOST_CONTAINER_CATCH_END
+   rollback.release();
    return r;
 }
 
@@ -1016,8 +961,9 @@ inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, F>::type
    typedef typename boost::container::iter_value<I>::type value_type;
    if (BOOST_LIKELY(n != 0)){
       r -= n;
+      l -= n;  //l can be a past-the-end iterator, don't convert it to a raw pointer
       void *const dst = (boost::movelib::iterator_to_raw_pointer)(r);
-      const void *const src = (boost::movelib::iterator_to_raw_pointer)(l) - n;
+      const void *const src = (boost::movelib::iterator_to_raw_pointer)(l);
       BOOST_ASSERT(dst && src);
       std::memmove(dst, src, sizeof(value_type)*n);
    }
@@ -1392,20 +1338,18 @@ void uninitialized_move_and_insert_alloc
 {
    typedef typename array_destructor<Allocator>::type array_destructor_t;
 
-   //Anti-exception rollbacks
-   array_destructor_t new_values_destroyer(d_first, d_first, a);
-
-   //Initialize with [begin(), pos) old buffer
-   //the start of the new buffer
-   O d_last = ::boost::container::uninitialized_move_alloc(a, first, pos, d_first);
-   new_values_destroyer.set_end(d_last);
-   //Initialize new objects, starting from previous point
-   insertion_proxy.uninitialized_copy_n_and_update(a, d_last, n);
-   d_last += n;
-   new_values_destroyer.set_end(d_last);
-   //Initialize from the rest of the old buffer,
-   //starting from previous point
-   (void) ::boost::container::uninitialized_move_alloc(a, pos, last, d_last);
+   //Construct the new objects first: if this throws, the old buffer is not changed.
+   //The new objects can also refer to old elements that are not yet moved.
+   O const d_new = d_first + iterator_udistance(first, pos);
+   array_destructor_t new_values_destroyer(d_new, d_new, a);
+   insertion_proxy.uninitialized_copy_n_and_update(a, d_new, n);
+   O const d_new_end = d_new + n;
+   new_values_destroyer.set_end(d_new_end);
+   //Move [first, pos) of the old buffer before the new objects
+   (void) ::boost::container::uninitialized_move_alloc(a, first, pos, d_first);
+   new_values_destroyer.set_begin(d_first);
+   //Move [pos, last) of the old buffer after the new objects
+   (void) ::boost::container::uninitialized_move_alloc(a, pos, last, d_new_end);
    //All construction successful, disable rollbacks
    new_values_destroyer.release();
 }
@@ -1477,6 +1421,7 @@ typename dtl::disable_if_c<dtl::is_single_value_proxy<InsertionProxy>::value, vo
       array_destructor_t on_exception(first -n, aux, a);
       //Copy to the beginning of the unallocated zone the last new elements (the gap is closed).
       insertion_proxy.uninitialized_copy_n_and_update(a, aux, std::size_t(n - elems_before));
+      on_exception.set_end(first);
       insertion_proxy.copy_n_and_update(a, first, elems_before);
       on_exception.release();
    }
@@ -2009,7 +1954,7 @@ inline void expand_backward_forward_and_insert_alloc_move_forward
          insertion_proxy.copy_n_and_update(a, new_rng_start, rest_new);
          insertion_proxy.uninitialized_copy_n_and_update(a, old_finish, mid_n);
          new_values_destroyer.release();
-         old_values_destroyer.increment_size_backwards(raw_after);
+         old_values_destroyer.increment_size(raw_after);
          //Displace old_end, but make sure data has to be moved
          p = ::boost::container::move_backward_overlapping(old_start, pos, new_rng_start);
 
@@ -2033,7 +1978,7 @@ inline void expand_backward_forward_and_insert_alloc_move_forward
          const B old_end_pivot = old_finish - raw_after;
          ::boost::container::uninitialized_move_alloc_n(a, old_end_pivot, raw_after, old_finish);
          //The buffer is all constructed
-         old_values_destroyer.increment_size_backwards(raw_after);
+         old_values_destroyer.increment_size(raw_after);
 
          //Now copy the first part of old_end overwriting itself
          B const new_end_pos = ::boost::container::move_backward_overlapping(pos, old_end_pivot, old_finish);

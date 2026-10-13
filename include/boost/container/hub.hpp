@@ -36,6 +36,7 @@
 #include <boost/container/new_allocator.hpp>        //default allocator when Allocator = void
 #include <boost/container/throw_exception.hpp>
 #include <boost/container/detail/addressof.hpp>     //dtl::addressof (avoids <memory>)
+#include <boost/container/detail/destroyers.hpp>    //dtl::scoped_array_deallocator
 #include <boost/container/detail/aligned_allocation.hpp> //portable (over)aligned nothrow alloc
 #include <boost/container/detail/std_fwd.hpp>       //forward declares std::allocator
 #include <boost/intrusive/pointer_traits.hpp>
@@ -1061,10 +1062,14 @@ public:
    //!
    //! <b>Postcondition</b>: x.empty() is true.
    //!
+   //! <b>Throws</b>: Nothing if allocator_traits<allocator_type>::is_always_equal::value is true.
+   //!   Otherwise, if allocation or T's move constructor throws.
+   //!
    //! <b>Complexity</b>: Constant, or linear in x.size() if elements are moved
    //!   one by one.
    hub( hub&& x
-      , const BOOST_CONTAINER_DOC1ST(allocator_type, dtl::type_identity_t<allocator_type>) &al_):
+      , const BOOST_CONTAINER_DOC1ST(allocator_type, dtl::type_identity_t<allocator_type>) &al_)
+      noexcept(hub_detail::is_always_equal_t<allocator_type>::value):
       hub(std::move(x), al_, hub_detail::is_always_equal_t<allocator_type>{}) {}
 
    //! <b>Effects</b>: Constructs a hub equal to il, using the specified allocator.
@@ -1316,13 +1321,15 @@ public:
    }
 
    //! <b>Effects</b>: Inserts an object of type T constructed with
-   //!   std::forward<Args>(args)... at a position chosen by the container. If an
-   //!   exception is thrown there are no effects. args may directly or indirectly
-   //!   refer to a value in *this.
+   //!   std::forward<Args>(args)... at a position chosen by the container. args
+   //!   may directly or indirectly refer to a value in *this.
    //!
    //! <b>Requires</b>: T is EmplaceConstructible into the hub from args.
    //!
    //! <b>Returns</b>: An iterator pointing to the new element.
+   //!
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant. Exactly one object of type T is constructed.
    template<typename... Args>
@@ -1351,6 +1358,9 @@ public:
    //!
    //! <b>Returns</b>: An iterator pointing to the new element.
    //!
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Constant.
    template<typename... Args>
    BOOST_CONTAINER_FORCEINLINE iterator emplace_hint(const_iterator, Args&&... args)
@@ -1363,6 +1373,9 @@ public:
    //!   emplace(std::forward<decltype(x)>(x)).
    //!
    //! <b>Returns</b>: An iterator pointing to the new element.
+   //!
+   //! <b>Throws</b>: If memory allocation or the construction of the element throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_FORCEINLINE iterator insert(const T& x) { return emplace(x); }
@@ -1779,15 +1792,12 @@ private:
    {
       auto pb = block_alloc_traits::allocate(al(), 1);
       pb->mask = 0;
-      BOOST_CONTAINER_TRY {
+      {
+         dtl::scoped_array_deallocator<block_allocator> guard(pb, al(), 1u);
          value_allocator val(al());
          pb->data_ = value_alloc_traits::allocate(val, N);
+         guard.release();
       }
-      BOOST_CONTAINER_CATCH(...) {
-         block_alloc_traits::deallocate(al(), pb, 1);
-         BOOST_CONTAINER_RETHROW;
-      }
-      BOOST_CONTAINER_CATCH_END
       blist.link_available_at_back(pb);
       ++num_blocks;
       return pb;
@@ -1887,18 +1897,24 @@ private:
       size_ = 0;
    }
 
+   //Calls restore_capacity_on_throw if the construction throws. A guard
+   //instead of try/catch lets compilers like MSVC inline the callers.
+   struct restore_capacity_guard
+   {
+      ~restore_capacity_guard()
+      {  if(x) x->restore_capacity_on_throw(pbb);  }
+
+      hub* x;
+      block_base_pointer pbb;
+   };
+
    template<typename... Args>
    inline void construct_or_restore_capacity(
       value_type* p, block_base_pointer pbb, Args&&... args)
    {
-      BOOST_CONTAINER_TRY {
-         block_alloc_traits::construct(al(), p, std::forward<Args>(args)...);
-      }
-      BOOST_CONTAINER_CATCH(...) {
-         restore_capacity_on_throw(pbb);
-         BOOST_CONTAINER_RETHROW
-      }
-      BOOST_CONTAINER_CATCH_END
+      restore_capacity_guard guard{this, pbb};
+      block_alloc_traits::construct(al(), p, std::forward<Args>(args)...);
+      guard.x = nullptr;
    }
 
    BOOST_NOINLINE void restore_capacity_on_throw(
@@ -2040,14 +2056,22 @@ private:
          hub_detail::buffer<T,allocator_type> buf(size_, al());
          if(!buf.data) return false;
 
-         container::for_each(*this, [&] (value_type& x) {
-            buf.emplace_back(std::move(x));
-         });
-         std::sort(buf.begin(), buf.end(), comp);
-         container::for_each(*this, [&] (value_type& x) { 
-            x = std::move(*buf.begin());
-            buf.erase_front();
-         });
+         BOOST_CONTAINER_TRY {
+            container::for_each(*this, [&] (value_type& x) {
+               buf.emplace_back(std::move(x));
+            });
+            std::sort(buf.begin(), buf.end(), comp);
+            container::for_each(*this, [&] (value_type& x) {
+               x = std::move(*buf.begin());
+               buf.erase_front();
+            });
+         }
+         BOOST_CONTAINER_CATCH(...) {
+            //The values are in the buffer: the elements are moved-from
+            clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
       }
       return true;
    }

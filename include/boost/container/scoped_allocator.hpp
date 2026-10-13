@@ -121,6 +121,21 @@ inline const typename outermost_allocator<Allocator>::type &
 
 namespace dtl {
 
+//scoped_allocator_adaptor::destroy calls OUTERMOST_ALLOC_TRAITS(*this)::destroy
+#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+template <typename OuterAlloc, typename ...InnerAllocs, class T>
+struct allocator_destroy_is_destructor<scoped_allocator_adaptor<OuterAlloc, InnerAllocs...>, T>
+#else
+template <typename OuterAlloc, BOOST_MOVE_CLASS9, class T>
+struct allocator_destroy_is_destructor<scoped_allocator_adaptor<OuterAlloc, BOOST_MOVE_TARG9>, T>
+#endif
+   : allocator_destroy_is_destructor<typename outermost_allocator<OuterAlloc>::type, T>
+{};
+
+}  //namespace dtl {
+
+namespace dtl {
+
 #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 template <typename OuterAlloc, class ...InnerAllocs>

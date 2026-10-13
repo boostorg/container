@@ -29,6 +29,7 @@
 #include <boost/container/throw_exception.hpp>
 #include <boost/container/options.hpp>
 // container detail
+#include <boost/container/detail/addressof.hpp>
 #include <boost/container/detail/advanced_insert_int.hpp>
 #include <boost/container/detail/algorithm.hpp> //equal()
 #include <boost/container/detail/alloc_helpers.hpp>
@@ -62,6 +63,7 @@
 #include <boost/move/algo/unique.hpp>
 #include <boost/move/algo/predicate.hpp>
 #include <boost/move/algo/detail/set_difference.hpp>
+#include <boost/move/algo/detail/rotate.hpp>
 // other
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>
@@ -130,9 +132,7 @@ class vec_iterator
 {
    public:
    typedef std::random_access_iterator_tag                                          iterator_category;
-   #ifdef BOOST_MOVE_CONTIGUOUS_ITERATOR_TAG
-   typedef std::contiguous_iterator_tag                                             iterator_concept;
-   #endif
+   typedef boost::movelib::contiguous_iterator_tag                                  iterator_concept;
    typedef typename boost::intrusive::pointer_traits<Pointer>::element_type         value_type;
 
    //Defining element_type to make libstdc++'s std::pointer_traits well-formed leads to ambiguity
@@ -390,6 +390,14 @@ struct vector_alloc_holder
 
    public:
 
+   //Returns true if the buffer p, allocated by from_alloc, can be transferred to a vector whose
+   //allocator after the operation is to_alloc (that vector will free it). Both must be true:
+   //- p is not a storage that can't be transferred: the allocator is not partially propagable
+   //  (allocator_traits::is_partially_propagable), or p is not one of its unpropagable storages
+   //  (allocator_traits::storage_is_unpropagable, e.g. the internal buffer of small_vector).
+   //- to_alloc can free memory of from_alloc: PropagateAllocator is true (from_alloc is
+   //  propagated to the target, e.g. POCMA or POCS), or allocator_traits::is_always_equal
+   //  is true, or from_alloc == to_alloc.
    template <bool PropagateAllocator>
    inline static bool is_propagable_from(const allocator_type &from_alloc, pointer p, const allocator_type &to_alloc)
    {
@@ -400,6 +408,15 @@ struct vector_alloc_holder
          (PropagateAllocator || allocator_traits_type::is_always_equal::value || allocator_traits_type::equal(from_alloc, to_alloc));
    }
 
+   //Returns true if two vectors can swap their buffers l_p (allocated by l_a) and r_p (allocated
+   //by r_a). Both must be true:
+   //- No buffer is a storage that can't be transferred: the allocator is not partially
+   //  propagable (allocator_traits::is_partially_propagable), or neither l_p nor r_p is one of
+   //  its unpropagable storages (allocator_traits::storage_is_unpropagable, e.g. the internal
+   //  buffer of small_vector).
+   //- Each allocator can free the memory of the other one: PropagateAllocator is true (the
+   //  allocators are swapped too, POCS), or allocator_traits::is_always_equal is true, or
+   //  l_a == r_a.
    template <bool PropagateAllocator>
    inline static bool are_swap_propagable(const allocator_type &l_a, pointer l_p, const allocator_type &r_a, pointer r_p)
    {
@@ -871,17 +888,6 @@ private:
    template <class U, class UA, class UOptions>
    friend class vector;
 
-
-   protected:
-   template <bool PropagateAllocator>
-   inline static bool is_propagable_from(const allocator_type &from_alloc, pointer p, const allocator_type &to_alloc)
-   {  return alloc_holder_t::template is_propagable_from<PropagateAllocator>(from_alloc, p, to_alloc);  }
-
-   template <bool PropagateAllocator>
-   inline static bool are_swap_propagable( const allocator_type &l_a, pointer l_p
-                                         , const allocator_type &r_a, pointer r_p)
-   {  return alloc_holder_t::template are_swap_propagable<PropagateAllocator>(l_a, l_p, r_a, r_p);  }
-
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
@@ -902,16 +908,22 @@ private:
       : m_holder(initial_capacity_t(), initial_memory, cap, ::boost::forward<AllocFwd>(a))
    {}
 
-   template<class AllocFwd>
-   inline vector(initial_capacity_t, pointer initial_memory, size_type cap, BOOST_FWD_REF(AllocFwd) a, vector &x)
+   //Move constructor with initial memory (small_vector). PropagateAllocator is true if "a" was
+   //moved from x's allocator, and false for an allocator-extended move constructor: then the
+   //buffer of x is stolen only if the allocators compare equal.
+   template<class AllocFwd, bool PropagateAllocator>
+   inline vector(initial_capacity_t, pointer initial_memory, size_type cap, BOOST_FWD_REF(AllocFwd) a, vector &x, dtl::bool_<PropagateAllocator>)
       : m_holder(initial_capacity_t(), initial_memory, cap, ::boost::forward<AllocFwd>(a))
    {
       allocator_type &this_al = this->get_stored_allocator();
-      if (this->template is_propagable_from<true>(x.get_stored_allocator(), x.data(), this_al)) {
+      if (alloc_holder_t::template is_propagable_from<PropagateAllocator>(x.get_stored_allocator(), x.data(), this_al)) {
          this->steal_resources(x);
       }
       else {
          const size_type sz = x.size();
+         //The initial memory can be smaller than x (x can be on the heap, or have another
+         //internal capacity)
+         this->reserve(sz);
          ::boost::container::uninitialized_move_alloc_n_source
             ( this_al, x.priv_raw_begin(), sz
             //Use launder to stop false positives from -Warray-bounds
@@ -1097,7 +1109,7 @@ private:
          BOOST_MOVE_I dtl::nat >::type * = 0)
       )
       :  m_holder()
-   {  this->assign(first, last); }
+   {  this->priv_range_initialize(first, last); }
 
    //! <b>Effects</b>: Constructs a vector that will use a copy of allocator a
    //!   and inserts a copy of the range [first, last) in the vector.
@@ -1113,7 +1125,7 @@ private:
          BOOST_MOVE_I dtl::nat >::type * = 0)
       )
       :  m_holder(a)
-   {  this->assign(first, last); }
+   {  this->priv_range_initialize(first, last); }
 
    //! <b>Effects</b>: Copy constructs a vector.
    //!
@@ -1206,17 +1218,19 @@ private:
    //!                 Moves x's resources to *this if a == allocator_type().
    //!                 Otherwise copies values from x to *this.
    //!
-   //! <b>Throws</b>: If allocation or T's copy constructor throws.
+   //! <b>Throws</b>: Nothing if allocator_traits_type::is_always_equal::value is true.
+   //!   Otherwise, if allocation or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    vector(BOOST_RV_REF(vector) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
+      BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value && !allocator_traits_type::is_partially_propagable::value)
       :  m_holder( vector_uninitialized_size, a
                  //In this allocator move constructor the allocator won't be propagated --v
-                 , is_propagable_from<false>(x.get_stored_allocator(), x.m_holder.start(), a) ? 0 : x.size()
+                 , alloc_holder_t::template is_propagable_from<false>(x.get_stored_allocator(), x.m_holder.start(), a) ? 0 : x.size()
                  )
    {
       //In this allocator move constructor the allocator won't be propagated ---v
-      if(is_propagable_from<false>(x.get_stored_allocator(), x.m_holder.start(), a)){
+      if(alloc_holder_t::template is_propagable_from<false>(x.get_stored_allocator(), x.m_holder.start(), a)){
          this->m_holder.steal_resources(x.m_holder);
       }
       else{
@@ -1463,7 +1477,10 @@ private:
    //!
    //! <b>Complexity</b>: Linear to n.
    inline void assign(size_type n, const value_type& val)
-   {  this->assign(cvalue_iterator(val, n), cvalue_iterator());   }
+   {
+      BOOST_ASSERT(!this->priv_is_element_address(dtl::addressof(val)));
+      this->assign(cvalue_iterator(val, n), cvalue_iterator());
+   }
 
    //! <b>Effects</b>: Returns a copy of the internal allocator.
    //!
@@ -1668,7 +1685,11 @@ private:
    //!
    //! <b>Complexity</b>: Linear to the difference between size() and new_size.
    inline void resize(size_type new_size, const T& x)
-   {  this->priv_resize(new_size, x, alloc_version());  }
+   {
+      //Reallocation moves the elements before x is copied
+      BOOST_ASSERT(!(new_size > this->capacity() && this->priv_is_element_address(dtl::addressof(x))));
+      this->priv_resize(new_size, x, alloc_version());
+   }
 
    //! <b>Effects</b>: Number of elements for which memory has been allocated.
    //!   capacity() is always greater than or equal to size().
@@ -2150,6 +2171,7 @@ private:
    inline iterator insert(const_iterator p, size_type n, const T& x)
    {
       BOOST_ASSERT(this->priv_in_range_or_end(p));
+      BOOST_ASSERT(!(this->priv_insertion_moves_elements(p, n) && this->priv_is_element_address(dtl::addressof(x))));
       dtl::insert_n_copies_proxy<allocator_type> proxy(x);
       return this->priv_insert_forward_range(vector_iterator_get_ptr(p), n, proxy);
    }
@@ -2163,7 +2185,9 @@ private:
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InpIt throws or T's copy/move constructor/assignment throws.
    //!
-   //! <b>Complexity</b>: Linear to boost::container::iterator_distance [first, last).
+   //! <b>Complexity</b>: If reallocation happens, linear in the number of elements of the
+   //!   resulting vector; otherwise, linear in the number of elements inserted plus the
+   //!   distance to the end of the vector.
    template <class InIt>
    iterator insert(const_iterator pos, InIt first, InIt last
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -2177,11 +2201,20 @@ private:
    {
       BOOST_ASSERT(this->priv_in_range_or_end(pos));
       const size_type n_pos = size_type(pos - this->cbegin());
-      iterator it(vector_iterator_get_ptr(pos));
-      for(;first != last; ++first){
-         it = this->emplace(it, *first);
-         ++it;
+      const size_type old_size = this->size();
+      //Append the new elements and rotate them
+      BOOST_CONTAINER_TRY{
+         for(;first != last; ++first){
+            this->emplace_back(*first);
+         }
       }
+      BOOST_CONTAINER_CATCH(...){
+         this->priv_destroy_last_n(size_type(this->size() - old_size));
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      T * const raw_beg = this->priv_raw_begin();
+      boost::movelib::rotate_gcd(raw_beg + n_pos, raw_beg + old_size, this->priv_raw_end());
       return iterator(this->m_holder.start() + difference_type(n_pos));
    }
 
@@ -2303,6 +2336,11 @@ private:
          const size_type n = static_cast<size_type>(old_end_ptr - new_last_ptr);
          if(!value_traits::trivial_dctr_after_move || old_end_ptr == last_ptr){
             boost::container::destroy_alloc_n(this->get_stored_allocator(), new_last_ptr, n);
+         }
+         else if(new_last_ptr < last_ptr){
+            //[new_last_ptr, last_ptr) holds no overwritten erased elements.
+            boost::container::destroy_alloc_n
+               (this->get_stored_allocator(), new_last_ptr, static_cast<size_type>(last_ptr - new_last_ptr));
          }
          this->m_holder.dec_stored_size(n);
       }
@@ -2468,11 +2506,16 @@ private:
       merge_unique(InputIt first, InputIt last, Compare comp)
    {
       size_type const old_size = this->size();
-      this->priv_set_difference_back(first, last, comp);
-      T *const raw_beg = this->priv_raw_begin();
-      T *const raw_end = this->priv_raw_end();
-      T *raw_pos = raw_beg + old_size;
-      boost::movelib::adaptive_merge(raw_beg, raw_pos, raw_end, comp, raw_end, this->capacity() - this->size());
+      BOOST_CONTAINER_TRY{
+         this->priv_set_difference_back(first, last, comp);
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //The new elements at the end are not merged: erase them
+         this->priv_destroy_last_n(size_type(this->size() - old_size));
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      this->priv_merge_ending(old_size, comp);
    }
 
    template<class InputIt, class Compare>
@@ -2483,11 +2526,19 @@ private:
          , void>::type
       merge_unique(InputIt first, InputIt last, Compare comp)
    {
-      iterator pos = this->insert(this->end(), first, last);
-      const iterator e = boost::movelib::inplace_set_unique_difference(pos, this->end(), this->begin(), pos, comp);
-      this->erase(e, this->end());
-      boost::movelib::adaptive_merge( this->begin(), pos, e, comp
-                                    , this->priv_raw_end(), this->capacity() - this->size());
+      size_type const old_size = this->size();
+      BOOST_CONTAINER_TRY{
+         iterator pos = this->insert(this->end(), first, last);
+         const iterator e = boost::movelib::inplace_set_unique_difference(pos, this->end(), this->begin(), pos, comp);
+         this->erase(e, this->end());
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //The new elements at the end are not merged: erase them
+         this->priv_destroy_last_n(size_type(this->size() - old_size));
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      this->priv_merge_ending(old_size, comp);
    }
 
    //Function for optimizations, not for users
@@ -2500,15 +2551,53 @@ private:
    #endif
 
    private:
+   template <class InIt>
+   void priv_range_initialize(InIt first, InIt last)
+   {
+      BOOST_CONTAINER_TRY{
+         this->assign(first, last);
+      }
+      BOOST_CONTAINER_CATCH(...){
+         this->clear();
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+   }
+
    template<class InputIt, class Compare>
    inline void priv_merge_generic(InputIt first, InputIt last, Compare comp)
    {
       size_type const old_s = this->size();
-      this->insert(this->cend(), first, last);
-      T* const raw_beg = this->priv_raw_begin();
-      T* const raw_end = this->priv_raw_end();
-      T* const raw_pos = raw_beg + old_s;
-      boost::movelib::adaptive_merge(raw_beg, raw_pos, raw_end, comp, raw_end, this->capacity() - this->size());
+      BOOST_CONTAINER_TRY{
+         this->insert(this->cend(), first, last);
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //Input iterators can leave some new elements at the end: erase them
+         this->priv_destroy_last_n(size_type(this->size() - old_s));
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      this->priv_merge_ending(old_s, comp);
+   }
+
+   //Merges the sorted range [old_size, size()) with the sorted range [0, old_size).
+   //If an exception is thrown, the vector can be unsorted: clear it.
+   template<class Compare>
+   void priv_merge_ending(const size_type old_size, Compare comp)
+   {
+      if(this->size() != old_size){
+         T* const raw_beg = this->priv_raw_begin();
+         T* const raw_end = this->priv_raw_end();
+         BOOST_CONTAINER_TRY{
+            boost::movelib::adaptive_merge
+               (raw_beg, raw_beg + old_size, raw_end, comp, raw_end, this->capacity() - this->size());
+         }
+         BOOST_CONTAINER_CATCH(...){
+            this->clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
+      }
    }
 
    template<class PositionValue>
@@ -2626,30 +2715,40 @@ private:
       T* d_first = boost::movelib::to_raw_pointer(new_storage);
       size_type added = n;
       //Merge in new buffer loop
-      while(1){
-         if(!n) {
-            ::boost::container::uninitialized_move_alloc(this->m_holder.alloc(), pbeg, pend, d_first);
-            break;
-         } 
-         else if(pbeg == pend) {
-            ::boost::container::uninitialized_move_alloc_n(this->m_holder.alloc(), first, n, d_first);
-            break;
-         }
-         //maintain stability moving external values only if they are strictly less
-         else if(comp(*first, *pbeg)) {
-            allocator_traits_type::construct( this->m_holder.alloc(), d_first, *first );
-            new_values_destroyer.increment_size(1u);
-            ++first;
-            --n;
-            ++d_first;
-         }
-         else{
-            allocator_traits_type::construct( this->m_holder.alloc(), d_first, boost::move(*pbeg) );
-            new_values_destroyer.increment_size(1u);
-            ++pbeg;
-            ++d_first;
+      BOOST_CONTAINER_TRY{
+         while(1){
+            if(!n) {
+               ::boost::container::uninitialized_move_alloc(this->m_holder.alloc(), pbeg, pend, d_first);
+               break;
+            }
+            else if(pbeg == pend) {
+               //Copy, the input range belongs to the caller
+               ::boost::container::uninitialized_copy_alloc_n(this->m_holder.alloc(), first, n, d_first);
+               break;
+            }
+            //maintain stability moving external values only if they are strictly less
+            else if(comp(*first, *pbeg)) {
+               allocator_traits_type::construct( this->m_holder.alloc(), d_first, *first );
+               new_values_destroyer.increment_size(1u);
+               ++first;
+               --n;
+               ++d_first;
+            }
+            else{
+               allocator_traits_type::construct( this->m_holder.alloc(), d_first, boost::move(*pbeg) );
+               new_values_destroyer.increment_size(1u);
+               ++pbeg;
+               ++d_first;
+            }
          }
       }
+      BOOST_CONTAINER_CATCH(...){
+         //Some old elements can be moved-from: clear the vector
+         //(the guards destroy the new elements and free the new buffer)
+         this->clear();
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
 
       //Nothrow operations
       pointer const old_p     = this->m_holder.start();
@@ -2701,10 +2800,13 @@ private:
    template<class OtherA>
    void priv_move_assign_steal_or_assign(BOOST_RV_REF_BEG vector<T, OtherA, Options> BOOST_RV_REF_END x, dtl::true_type /*data_can_be_always_stolen*/)
    {
+      const bool propagate_alloc = allocator_traits_type::propagate_on_container_move_assignment::value;
       this->clear();
       if (BOOST_LIKELY(!!this->m_holder.m_start))
          this->m_holder.deallocate(this->m_holder.m_start, this->m_holder.m_capacity);
       this->m_holder.steal_resources(x.m_holder);
+      //Move allocator if needed
+      dtl::move_alloc(this->m_holder.alloc(), x.m_holder.alloc(), dtl::bool_<propagate_alloc>());
    }
 
    template<class OtherA>
@@ -2716,7 +2818,7 @@ private:
 
       //In this allocator move constructor the allocator might will be propagated, but to support small_vector-like
       //types, we need to check the currently owned buffers to know if they are propagable.
-      const bool is_buffer_propagable_from_x = is_propagable_from<propagate_alloc>(x_alloc, x.m_holder.start(), this_alloc);
+      const bool is_buffer_propagable_from_x = alloc_holder_t::template is_propagable_from<propagate_alloc>(x_alloc, x.m_holder.start(), this_alloc);
 
       if (is_buffer_propagable_from_x) {
          this->priv_move_assign_steal_or_assign(boost::move(x), dtl::true_type());
@@ -2724,6 +2826,13 @@ private:
       //Else do a one by one move. Also, clear the source as users find confusing
       //elements are still alive in the source container.
       else {
+         //If the allocator is propagated and is not equal, free memory
+         //with the current allocator and then replace the allocator
+         if (propagate_alloc && !(this_alloc == x_alloc)) {
+            this->clear();
+            this->shrink_to_fit();
+         }
+         dtl::move_alloc(this_alloc, x_alloc, dtl::bool_<propagate_alloc>());
          this->assign( boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(x.begin()))
                      , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(x.end()))   );
          x.clear();
@@ -2747,11 +2856,6 @@ private:
       const bool data_can_be_always_be_stolen = alloc_is_always_equal || (propagate_alloc && !partially_propagable_alloc);
 
       this->priv_move_assign_steal_or_assign(boost::move(x), dtl::bool_<data_can_be_always_be_stolen>());
-
-      //Move allocator if needed
-      allocator_type& this_alloc = this->m_holder.alloc();
-      allocator_type& x_alloc    = x.m_holder.alloc();
-      dtl::move_alloc(this_alloc, x_alloc, dtl::bool_<propagate_alloc>());
    }
 
    template<class OtherA>
@@ -2814,6 +2918,19 @@ private:
    }
 
    protected:
+   //Swap for small_vectors, whose internal buffer can't be transferred (not "propagable").
+   //"internal_capacity" is the capacity of the internal buffer of both vectors if known,
+   //(including 0) or 0 if unknown (small_vector_base)
+   //
+   //The buffer of a vector is "propagable" to the other vector (is_propagable_from) if the
+   //other vector can take it and later free it with the allocator it has after the swap.
+   //Both conditions must be true:
+   //- The buffer is not a storage that the allocator can't transfer: it is not the internal
+   //  buffer (allocator_traits::storage_is_unpropagable, only for partially propagable
+   //  allocators like the small_vector allocator).
+   //- The allocator that will free the buffer can free memory of the allocator that allocated
+   //  it: the allocators are swapped (propagate_on_container_swap), or they are always equal,
+   //  or they compare equal.
    template<class Vector>  //Template it to avoid it in explicit instantiations
    void prot_swap_small(Vector &x, std::size_t internal_capacity)  //version_N
    {
@@ -2821,8 +2938,9 @@ private:
          return;
       }
 
+      //Strategy 1: Both buffers can be transferred: swap buffers and the allocators. Done.
       const bool propagate_alloc = allocator_traits_type::propagate_on_container_swap::value;
-      if(are_swap_propagable<propagate_alloc>
+      if(alloc_holder_t::template are_swap_propagable<propagate_alloc>
          ( this->get_stored_allocator(), this->m_holder.start(), x.get_stored_allocator(), x.m_holder.start())){
          this->priv_swap(x, dtl::false_());
          return;
@@ -2831,81 +2949,145 @@ private:
       allocator_type &th_al = this->get_stored_allocator();
       allocator_type &ot_al = x.get_stored_allocator();
 
-      const bool is_this_data_propagable = is_propagable_from<propagate_alloc>(th_al, this->data(), ot_al);
-      const bool is_that_data_propagable = is_propagable_from<propagate_alloc>(ot_al, x.data(), th_al);
+      const bool is_this_data_propagable = alloc_holder_t::template is_propagable_from<propagate_alloc>(th_al, this->data(), ot_al);
+      const bool is_that_data_propagable = alloc_holder_t::template is_propagable_from<propagate_alloc>(ot_al, x.data(), th_al);
 
-      if(internal_capacity && (is_this_data_propagable || is_that_data_propagable)) {
-         //steal memory from src to dst, but move elements from dst to src
+      if(is_this_data_propagable || is_that_data_propagable) {
+         //One vector uses a dynamic buffer ("extmem"), the other one an internal buffer ("intmem")
          vector& extmem = is_this_data_propagable ? *this : x;
          vector& intmem = is_this_data_propagable ? x : *this;
-
-         //Reset extmem to the internal storage and backup data
-         pointer const orig_extdata = extmem.data();
-         const size_type orig_extmem_size = extmem.size();
-         const size_type orig_extmem_cap = extmem.capacity();
-
-         //New safe state for extmem -> empty, internal storage
-         extmem.m_holder.m_start = extmem.get_stored_allocator().internal_storage();
-         extmem.m_holder.set_stored_size(0u);
-         extmem.m_holder.set_stored_capacity(internal_capacity);
-
-         {
-            //Deallocate on exception
-            typename value_traits::ArrayDeallocator new_buffer_deallocator(orig_extdata, extmem.get_stored_allocator(), orig_extmem_cap);
-            typename value_traits::ArrayDestructor  new_values_destroyer(orig_extdata, extmem.get_stored_allocator(), orig_extmem_size);
-
-            //Move internal memory data to the internal memory data of the target, this can throw
-            BOOST_ASSERT(extmem.capacity() >= intmem.size());
-            ::boost::container::uninitialized_move_alloc_n
-               (intmem.get_stored_allocator(), intmem.priv_raw_begin(), intmem.size(), extmem.priv_raw_begin());
-
-            //Exception not thrown, commit new state
-            extmem.m_holder.set_stored_size(intmem.size());
-            //Throwing part passed, disable rollback
-            new_buffer_deallocator.release();
-            new_values_destroyer.release();
+         //2. Only one buffer can be given and the internal capacity is known: see priv_swap_small_dynamic_with_internal.
+         if (internal_capacity) {
+            priv_swap_small_dynamic_with_internal(extmem, intmem, internal_capacity);
+            return;
          }
-
-         //Destroy moved elements from intmem
-         boost::container::destroy_alloc_n
-            ( intmem.get_stored_allocator(), intmem.priv_raw_begin()
-            , intmem.size());
-
-         //Adopt dynamic buffer
-         intmem.m_holder.m_start = orig_extdata;
-         intmem.m_holder.set_stored_size(orig_extmem_size);
-         intmem.m_holder.set_stored_capacity(orig_extmem_cap);
-
-         //And now swap the allocator
-         dtl::swap_alloc(this->m_holder.alloc(), x.m_holder.alloc(), dtl::bool_<propagate_alloc>());
-      }
-      else {   //swap element by element and insert rest
-         bool const t_smaller = this->size() < x.size();
-         vector &sml = t_smaller ? *this : x;
-         vector &big = t_smaller ? x : *this;
-
-         //swap element by element until common size
-         size_type const common_elements = sml.size();
-         for(size_type i = 0; i != common_elements; ++i){
-            boost::adl_move_swap(sml[i], big[i]);
+         //3. Only one buffer can be given and the allocators are swapped (POCS): see priv_swap_small_dynamic_to_new_buffer.
+         else if (propagate_alloc) {
+            priv_swap_small_dynamic_to_new_buffer(extmem, intmem);
+            return;
          }
-
-         //And now swap the allocator to be able to construct new elements in sml with the proper allocator
-         dtl::swap_alloc(this->m_holder.alloc(), x.m_holder.alloc(), dtl::bool_<propagate_alloc>());
-
-         //move-insert the remaining range
-         T *const raw_big_nth = boost::movelib::iterator_to_raw_pointer(big.nth(common_elements));
-         sml.insert(sml.cend()
-            , boost::make_move_iterator(raw_big_nth)
-            , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(big.end())));
-
-         //Destroy remaining, moved, elements with their original allocator
-         boost::container::destroy_alloc_n
-            ( sml.get_stored_allocator(), raw_big_nth
-            , std::size_t(big.m_holder.m_size - common_elements));
-         big.m_holder.set_stored_size(common_elements);
       }
+      //4. Otherwise: see priv_swap_small_element_wise.
+      vector &xv = x;
+      this->priv_swap_small_element_wise(xv);
    }
+
+   private:
+   //extmem uses a dynamic buffer that can be given to intmem, which uses its internal buffer.
+   //Both internal buffers have internal_capacity elements. intmem takes the dynamic buffer of
+   //extmem, and the elements of intmem are moved to the internal buffer of extmem. Then the
+   //allocators are swapped (if they propagate): the dynamic buffer stays with its allocator.
+   //If a move constructor throws, the elements of extmem are destroyed and its dynamic buffer
+   //is freed: extmem is empty and uses its internal buffer, intmem is not changed.
+   template<class Vec>  //Template it to avoid it in explicit instantiations
+   void priv_swap_small_dynamic_with_internal(Vec &extmem, Vec &intmem, std::size_t internal_capacity)
+   {
+      const bool propagate_alloc = allocator_traits_type::propagate_on_container_swap::value;
+      //Reset extmem to the internal storage and backup data
+      pointer const orig_extdata = extmem.data();
+      const size_type orig_extmem_size = extmem.size();
+      const size_type orig_extmem_cap = extmem.capacity();
+
+      //New safe state for extmem -> empty, internal storage
+      extmem.m_holder.m_start = extmem.get_stored_allocator().internal_storage();
+      extmem.m_holder.set_stored_size(0u);
+      extmem.m_holder.set_stored_capacity(internal_capacity);
+
+      {
+         //Deallocate on exception
+         typename value_traits::ArrayDeallocator new_buffer_deallocator(orig_extdata, extmem.get_stored_allocator(), orig_extmem_cap);
+         typename value_traits::ArrayDestructor  new_values_destroyer(orig_extdata, extmem.get_stored_allocator(), orig_extmem_size);
+
+         //Move internal memory data to the internal memory data of the target, this can throw
+         BOOST_ASSERT(extmem.capacity() >= intmem.size());
+         ::boost::container::uninitialized_move_alloc_n
+            (intmem.get_stored_allocator(), intmem.priv_raw_begin(), intmem.size(), extmem.priv_raw_begin());
+
+         //Exception not thrown, commit new state
+         extmem.m_holder.set_stored_size(intmem.size());
+         //Throwing part passed, disable rollback
+         new_buffer_deallocator.release();
+         new_values_destroyer.release();
+      }
+
+      //Destroy moved elements from intmem
+      boost::container::destroy_alloc_n
+         ( intmem.get_stored_allocator(), intmem.priv_raw_begin()
+         , intmem.size());
+
+      //Adopt dynamic buffer
+      intmem.m_holder.m_start = orig_extdata;
+      intmem.m_holder.set_stored_size(orig_extmem_size);
+      intmem.m_holder.set_stored_capacity(orig_extmem_cap);
+
+      //And now swap the allocator
+      dtl::swap_alloc(extmem.m_holder.alloc(), intmem.m_holder.alloc(), dtl::bool_<propagate_alloc>());
+   }
+
+   //extmem uses a dynamic buffer, intmem uses its internal buffer, the allocators are swapped
+   //(POCS) and the internal capacity is not known. The dynamic buffer can't stay in extmem, as
+   //it would be freed by the allocator of intmem: it goes with its elements and allocator to
+   //intmem. The elements of intmem are moved to a new dynamic buffer, allocated with the
+   //allocator of intmem, which goes to extmem with that allocator.
+   //If the allocation or a move constructor throws, there are no effects.
+   template<class Vec>  //Template it to avoid it in explicit instantiations
+   void priv_swap_small_dynamic_to_new_buffer(Vec &extmem, Vec &intmem)
+   {
+      const size_type int_size = intmem.size();
+      pointer new_buf = pointer();
+      if (int_size) {
+         new_buf = intmem.m_holder.allocate(int_size);
+         //Deallocate on exception
+         typename value_traits::ArrayDeallocator new_buffer_deallocator(new_buf, intmem.get_stored_allocator(), int_size);
+         //This can throw
+         ::boost::container::uninitialized_move_alloc_n
+            (intmem.get_stored_allocator(), intmem.priv_raw_begin(), int_size, boost::movelib::to_raw_pointer(new_buf));
+         new_buffer_deallocator.release();
+      }
+      //Nothing below can throw
+      boost::container::destroy_alloc_n(intmem.get_stored_allocator(), intmem.priv_raw_begin(), int_size);
+      intmem.m_holder.m_start = extmem.m_holder.m_start;
+      intmem.m_holder.set_stored_size(extmem.size());
+      intmem.m_holder.set_stored_capacity(extmem.capacity());
+      extmem.m_holder.m_start = new_buf;
+      extmem.m_holder.set_stored_size(int_size);
+      extmem.m_holder.set_stored_capacity(int_size);
+      dtl::swap_alloc(extmem.m_holder.alloc(), intmem.m_holder.alloc(), dtl::true_());
+   }
+
+   //No buffer can be given to the other vector (or the internal capacity is not known and the
+   //allocators are equal): swap the common elements one by one, swap the allocators, then
+   //move-insert the remaining elements of the bigger vector at the end of the smaller one.
+   template<class Vec>  //Template it to avoid it in explicit instantiations
+   void priv_swap_small_element_wise(Vec &x)
+   {
+      const bool propagate_alloc = allocator_traits_type::propagate_on_container_swap::value;
+      bool const t_smaller = this->size() < x.size();
+      vector &sml = t_smaller ? *this : x;
+      vector &big = t_smaller ? x : *this;
+
+      //swap element by element until common size
+      size_type const common_elements = sml.size();
+      for(size_type i = 0; i != common_elements; ++i){
+         boost::adl_move_swap(sml[i], big[i]);
+      }
+
+      //And now swap the allocator to be able to construct new elements in sml with the proper allocator
+      dtl::swap_alloc(this->m_holder.alloc(), x.m_holder.alloc(), dtl::bool_<propagate_alloc>());
+
+      //move-insert the remaining range
+      T *const raw_big_nth = boost::movelib::iterator_to_raw_pointer(big.nth(common_elements));
+      sml.insert(sml.cend()
+         , boost::make_move_iterator(raw_big_nth)
+         , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(big.end())));
+
+      //Destroy remaining, moved, elements with their original allocator
+      boost::container::destroy_alloc_n
+         ( sml.get_stored_allocator(), raw_big_nth
+         , std::size_t(big.m_holder.m_size - common_elements));
+      big.m_holder.set_stored_size(common_elements);
+   }
+
    private:
    inline void priv_move_to_new_buffer(size_type, version_0)
    {  alloc_holder_t::on_capacity_overflow();  }
@@ -2991,13 +3173,31 @@ private:
    template<class U>
    BOOST_CONTAINER_FORCEINLINE iterator priv_insert(const const_iterator &p, BOOST_FWD_REF(U) u)
    {
+      BOOST_ASSERT(!(this->priv_insertion_moves_elements(p, 1u) && this->priv_is_element_address(dtl::addressof(u))));
       return this->emplace(p, ::boost::forward<U>(u));
    }
 
    template <class U>
    BOOST_CONTAINER_FORCEINLINE void priv_push_back(BOOST_FWD_REF(U) u)
    {
+      BOOST_ASSERT(!(!this->room_enough() && this->priv_is_element_address(dtl::addressof(u))));
       this->emplace_back(::boost::forward<U>(u));
+   }
+
+   //Debug checks of the precondition "an argument must not refer to an element of
+   //the container" (see "Arguments that refer to elements of the same container" in
+   //the documentation). The checks are done only when the operation moves elements
+   //before the argument is read: then the inserted value would be wrong.
+   bool priv_is_element_address(const void *p) const
+   {
+      const std::size_t a = reinterpret_cast<std::size_t>(p);
+      return reinterpret_cast<std::size_t>(this->priv_raw_begin()) <= a
+          && a < reinterpret_cast<std::size_t>(this->priv_raw_end());
+   }
+
+   bool priv_insertion_moves_elements(const const_iterator &p, size_type n) const
+   {
+      return n != 0u && (p != this->cend() || n > size_type(this->m_holder.capacity() - this->m_holder.m_size));
    }
 
    template <class U>
@@ -3491,15 +3691,16 @@ inline typename vector<T, A, O>::size_type erase_if(vector<T, A, O>& c, Pred pre
 
 namespace boost {
 
-//!has_trivial_destructor_after_move<> == true_type
-//!specialization for optimizations
+//!has_trivial_destructor_after_move<> specialization for optimizations
 template <class T, class Allocator, class Options>
 struct has_trivial_destructor_after_move<boost::container::vector<T, Allocator, Options> >
 {
    typedef typename boost::container::vector<T, Allocator, Options>::allocator_type allocator_type;
-   typedef typename boost::container::allocator_traits<allocator_type>::pointer pointer;
-   BOOST_STATIC_CONSTEXPR bool value = ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
-                                                ::boost::has_trivial_destructor_after_move<pointer>::value;
+   typedef boost::container::allocator_traits<allocator_type> allocator_traits_type;
+   typedef typename allocator_traits_type::pointer pointer;
+   BOOST_STATIC_CONSTEXPR bool value = allocator_traits_type::is_always_equal::value &&
+                                       ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
+                                       ::boost::has_trivial_destructor_after_move<pointer>::value;
 };
 
 }

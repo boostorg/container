@@ -15,6 +15,7 @@ volatile ::boost::container::basic_string<char> dummy;
 
 #include <boost/container/vector.hpp>
 #include "dummy_test_allocator.hpp"
+#include "expand_bwd_test_allocator.hpp"
 
 namespace boost {
 namespace container {
@@ -31,6 +32,10 @@ template class basic_string<char,    std::char_traits<char>, SimpleCharAllocator
 template class basic_string<wchar_t, std::char_traits<wchar_t>, SimpleWCharAllocator>;
 template class basic_string<char,    std::char_traits<char>, std::allocator<char> >;
 template class basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> >;
+//Version 2 allocator
+typedef basic_string<char, std::char_traits<char>, test::expand_bwd_test_allocator<char> > ExpandBwdString;
+template void ExpandBwdString::shrink_to_fit();
+template void ExpandBwdString::reserve(ExpandBwdString::size_type);
 
 //Explicit instantiation of container::vectors of container::strings
 template class vector<SimpleString, SimpleStringAllocator>;

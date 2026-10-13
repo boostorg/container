@@ -261,10 +261,12 @@ class deque : public deque_impl<T, Allocator, false, Options>
    //!                 Moves x's resources to *this if a == allocator_type().
    //!                 Otherwise copies values from x to *this.
    //!
-   //! <b>Throws</b>: If allocation or T's copy constructor throws.
+   //! <b>Throws</b>: Nothing if allocator_traits_type::is_always_equal::value is true.
+   //!   Otherwise, if allocation or T's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    deque(BOOST_RV_REF(deque) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
+      BOOST_NOEXCEPT_IF(boost::container::allocator_traits<allocator_type>::is_always_equal::value)
       : base_type(boost::move(static_cast<base_type&>(x)), a)
    {}
 
@@ -865,7 +867,7 @@ class deque : public deque_impl<T, Allocator, false, Options>
 
    //! <b>Effects</b>: Erases the element at p.
    //!
-   //! <b>Throws</b>: Nothing.
+   //! <b>Throws</b>: Nothing unless the move assignment of T throws.
    //!
    //! <b>Complexity</b>: Linear to the elements between pos and the
    //!   last element (if pos is near the end) or the first element
@@ -873,7 +875,7 @@ class deque : public deque_impl<T, Allocator, false, Options>
    //!   Constant if pos is the first or the last element.
    //! <b>Effects</b>: Erases the elements pointed by [first, last).
    //!
-   //! <b>Throws</b>: Nothing.
+   //! <b>Throws</b>: Nothing unless the move assignment of T throws.
    //!
    //! <b>Complexity</b>: Linear to the distance between first and
    //!   last plus the elements between pos and the

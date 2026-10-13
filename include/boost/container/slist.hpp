@@ -307,10 +307,12 @@ class slist
    //! <b>Effects</b>: Move constructor using the specified allocator.
    //!                 Moves x's resources to *this.
    //!
-   //! <b>Throws</b>: If allocation or value_type's copy constructor throws.
+   //! <b>Throws</b>: Nothing if allocator_traits_type::is_always_equal::value is true.
+   //!   Otherwise, if allocation or value_type's copy constructor throws.
    //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    slist(BOOST_RV_REF(slist) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
+      BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value)
       : AllocHolder(a)
    {
       slist & sr = x;
@@ -657,7 +659,7 @@ class slist
    {
       const_iterator last_pos;
       if(!priv_try_shrink(new_size, last_pos)){
-         this->insert_after(last_pos, new_size, x);
+         this->insert_after(last_pos, size_type(new_size - this->size()), x);
       }
    }
 
@@ -712,6 +714,7 @@ class slist
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    template <class... Args>
@@ -723,6 +726,7 @@ class slist
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's in-place constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Constant
    template <class... Args>
@@ -756,6 +760,7 @@ class slist
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    void push_front(const T &x);
@@ -764,6 +769,7 @@ class slist
    //!   and moves the resources of x to this new element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    void push_front(T &&x);
@@ -780,6 +786,7 @@ class slist
    //! <b>Returns</b>: An iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    //!
@@ -795,6 +802,7 @@ class slist
    //! <b>Returns</b>: An iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Amortized constant time.
    //!
@@ -812,6 +820,7 @@ class slist
    //! <b>Returns</b>: an iterator to the last inserted element or prev_p if n is 0.
    //!
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //!
    //! <b>Complexity</b>: Linear to n.
@@ -832,6 +841,7 @@ class slist
    //!
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InpIt throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to the number of elements inserted.
    //!
@@ -850,9 +860,19 @@ class slist
       )
    {
       iterator ret_it(prev_p.get());
-      for (; first != last; ++first){
-         ret_it = iterator(this->icont().insert_after(ret_it.get(), *this->create_node_from_it(first)));
+      const_iterator old_next(prev_p);
+      ++old_next;
+      BOOST_CONTAINER_TRY{
+         for (; first != last; ++first){
+            ret_it = iterator(this->icont().insert_after(ret_it.get(), *this->create_node_from_it(first)));
+         }
       }
+      BOOST_CONTAINER_CATCH(...){
+         //No effects: erase the inserted elements
+         this->erase_after(prev_p, old_next);
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
       return ret_it;
    }
 
@@ -865,6 +885,7 @@ class slist
    //!
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced std::initializer_list iterator throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to the number of elements inserted.
    //!
@@ -888,8 +909,19 @@ class slist
    {
       //Optimized allocation and construction
       insertion_functor func(this->icont(), prev.get());
-      this->allocate_many_and_construct(first, boost::container::iterator_udistance(first, last), func);
-      return iterator(func.inserted_first());
+      const_iterator old_next(prev);
+      ++old_next;
+      typename Icont::iterator ret;
+      BOOST_CONTAINER_TRY{
+         ret = this->allocate_many_and_construct(first, boost::container::iterator_udistance(first, last), func);
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //No effects: erase the inserted elements
+         this->erase_after(prev, old_next);
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      return iterator(ret);
    }
    #endif
 
@@ -1185,9 +1217,8 @@ class slist
       return this->icont().unique_and_dispose(value_to_node_compare_type(pred), Destroyer(this->node_alloc()));
    }
 
-   //! <b>Requires</b>: The lists x and *this must be distinct.
-   //!
-   //! <b>Effects</b>: This function removes all of x's elements and inserts them
+   //! <b>Effects</b>: If x is *this, the function has no effect. Otherwise,
+   //!   this function removes all of x's elements and inserts them
    //!   in order into *this according to std::less<value_type>. The merge is stable;
    //!   that is, if an element from *this is equivalent to one from x, then the element
    //!   from *this will precede the one from x.
@@ -1199,9 +1230,8 @@ class slist
    void merge(slist & x)
    {  this->merge(x, value_less_t()); }
 
-   //! <b>Requires</b>: The lists x and *this must be distinct.
-   //!
-   //! <b>Effects</b>: This function removes all of x's elements and inserts them
+   //! <b>Effects</b>: If x is *this, the function has no effect. Otherwise,
+   //!   this function removes all of x's elements and inserts them
    //!   in order into *this according to std::less<value_type>. The merge is stable;
    //!   that is, if an element from *this is equivalent to one from x, then the element
    //!   from *this will precede the one from x.
@@ -1215,9 +1245,9 @@ class slist
 
    //! <b>Requires</b>: p must be a comparison function that induces a strict weak
    //!   ordering and both *this and x must be sorted according to that ordering
-   //!   The lists x and *this must be distinct.
    //!
-   //! <b>Effects</b>: This function removes all of x's elements and inserts them
+   //! <b>Effects</b>: If x is *this, the function has no effect. Otherwise,
+   //!   this function removes all of x's elements and inserts them
    //!   in order into *this. The merge is stable; that is, if an element from *this is
    //!   equivalent to one from x, then the element from *this will precede the one from x.
    //!
@@ -1230,6 +1260,7 @@ class slist
    template <class StrictWeakOrdering>
    void merge(slist& x, StrictWeakOrdering comp)
    {
+      //Boost.Intrusive merge has no effect if &x == this
       typedef value_to_node_compare<Node, StrictWeakOrdering> value_to_node_compare_type;
       BOOST_ASSERT(this->node_alloc() == x.node_alloc());
       this->icont().merge(x.icont(), value_to_node_compare_type(comp));
@@ -1237,9 +1268,9 @@ class slist
 
    //! <b>Requires</b>: p must be a comparison function that induces a strict weak
    //!   ordering and both *this and x must be sorted according to that ordering
-   //!   The lists x and *this must be distinct.
    //!
-   //! <b>Effects</b>: This function removes all of x's elements and inserts them
+   //! <b>Effects</b>: If x is *this, the function has no effect. Otherwise,
+   //!   this function removes all of x's elements and inserts them
    //!   in order into *this. The merge is stable; that is, if an element from *this is
    //!   equivalent to one from x, then the element from *this will precede the one from x.
    //!
@@ -1307,6 +1338,7 @@ class slist
    //!
    //! <b>Throws</b>: If memory allocation throws or
    //!   T's in-place constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to the elements before p
    template <class... Args>
@@ -1335,6 +1367,7 @@ class slist
    //! <b>Returns</b>: an iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws or x's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to the elements before p.
    iterator insert(const_iterator p, const T &x);
@@ -1346,6 +1379,7 @@ class slist
    //! <b>Returns</b>: an iterator to the inserted element.
    //!
    //! <b>Throws</b>: If memory allocation throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to the elements before p.
    iterator insert(const_iterator prev_p, T &&x);
@@ -1360,6 +1394,7 @@ class slist
    //! <b>Returns</b>: an iterator to the first inserted element or p if n == 0.
    //!
    //! <b>Throws</b>: If memory allocation throws or T's copy constructor throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to n plus linear to the elements before p.
    iterator insert(const_iterator p, size_type n, const value_type& x)
@@ -1377,6 +1412,7 @@ class slist
    //!
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced InpIt throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to distance [first, last) plus
    //!    linear to the elements before p.
@@ -1397,6 +1433,7 @@ class slist
    //!
    //! <b>Throws</b>: If memory allocation throws, T's constructor from a
    //!   dereferenced std::initializer_list iterator throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Linear to the range [il.begin(), il.end()) plus
    //!    linear to the elements before p.
@@ -1637,28 +1674,22 @@ class slist
    class insertion_functor
    {
       Icont &icont_;
-      typedef typename Icont::iterator       iiterator;
       typedef typename Icont::const_iterator iconst_iterator;
+      //The last inserted element, or the initial position if no element was inserted
       iconst_iterator prev_;
-      iiterator ret_;
 
       public:
-      insertion_functor(Icont &icont, typename Icont::const_iterator prev)
-         :  icont_(icont), prev_(prev), ret_(prev.unconst())
+      typedef typename Icont::iterator result_type;
+
+      insertion_functor(Icont &icont, iconst_iterator prev)
+         :  icont_(icont), prev_(prev)
       {}
 
       void operator()(Node &n)
-      {
-         prev_ = this->icont_.insert_after(prev_, n);
-         if(!ret_)
-            ret_ = prev_.unconst();
-      }
+      {  prev_ = this->icont_.insert_after(prev_, n);  }
 
-      iiterator inserted_first() const
-      {
-         iiterator f(ret_);
-         return ++f;
-      }
+      result_type result() const
+      {  return prev_.unconst();  }
    };
 
    //Functors for member algorithm defaults
@@ -1706,14 +1737,15 @@ slist(InpIt, InpIt, Allocator const&) ->
 
 namespace boost {
 
-//!has_trivial_destructor_after_move<> == true_type
-//!specialization for optimizations
+//!has_trivial_destructor_after_move<> specialization for optimizations
 template <class T, class Allocator>
 struct has_trivial_destructor_after_move<boost::container::slist<T, Allocator> >
 {
    typedef typename boost::container::slist<T, Allocator>::allocator_type allocator_type;
-   typedef typename boost::container::allocator_traits<allocator_type>::pointer pointer;
-   BOOST_STATIC_CONSTEXPR bool value = ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
+   typedef boost::container::allocator_traits<allocator_type> allocator_traits_type;
+   typedef typename allocator_traits_type::pointer pointer;
+   BOOST_STATIC_CONSTEXPR bool value = allocator_traits_type::is_always_equal::value &&
+                             ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
                              ::boost::has_trivial_destructor_after_move<pointer>::value;
 };
 

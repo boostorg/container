@@ -35,6 +35,7 @@
 #include <boost/container/detail/iterators.hpp>
 #include <boost/container/detail/node_alloc_holder.hpp>
 #include <boost/container/detail/pair.hpp>
+#include <boost/container/detail/pair_key_mapped_of_value.hpp>
 #include <boost/container/detail/type_traits.hpp>
 // intrusive
 #include <boost/intrusive/pointer_traits.hpp>
@@ -126,6 +127,7 @@ struct iiterator_node_value_type< base_node<T, intrusive_tree_hook<VoidPointer, 
 
 template<class Node, class Icont>
 class insert_equal_end_hint_functor
+   : public void_result_inserter
 {
    Icont &icont_;
 
@@ -140,6 +142,7 @@ class insert_equal_end_hint_functor
 
 template<class Node, class Icont>
 class push_back_functor
+   : public void_result_inserter
 {
    Icont &icont_;
 
@@ -332,6 +335,32 @@ class RecyclingCloner
    intrusive_container &m_icont;
 };
 
+//Destroys the nodes that remain in an intrusive tree at the end of the scope.
+//Used with RecyclingCloner: the nodes that are not reused are destroyed after
+//success and also if an exception is thrown before all of them are reused.
+template<class AllocHolder>
+class remaining_nodes_destroyer
+{
+   typedef typename AllocHolder::intrusive_container  intrusive_container;
+   typedef typename AllocHolder::NodePtr              node_ptr_type;
+
+   AllocHolder &m_holder;
+   intrusive_container &m_icont;
+
+   public:
+   remaining_nodes_destroyer(AllocHolder &holder, intrusive_container &itree)
+      :  m_holder(holder), m_icont(itree)
+   {}
+
+   ~remaining_nodes_destroyer()
+   {
+      node_ptr_type p;
+      while((p = m_icont.unlink_leftmost_without_rebalance())){
+         m_holder.destroy_node(p);
+      }
+   }
+};
+
 template<class Options>
 struct get_tree_opt
 {
@@ -368,6 +397,25 @@ struct tree_key_of_value<boost::container::dtl::pair<T1, T2>, int>
    typedef dtl::select1st<T1> type;
 };
 
+
+//KeyMapped argument of the node handle: void for sets, key() and mapped() for maps
+template<class T, class KeyOfValue>
+struct tree_node_handle_key_mapped
+{
+   typedef void type;
+};
+
+template<class T1, class T2>
+struct tree_node_handle_key_mapped<std::pair<T1, T2>, int>
+{
+   typedef pair_key_mapped_of_value<typename dtl::remove_const<T1>::type, T2> type;
+};
+
+template<class T1, class T2>
+struct tree_node_handle_key_mapped<boost::container::dtl::pair<T1, T2>, int>
+{
+   typedef pair_key_mapped_of_value<typename dtl::remove_const<T1>::type, T2> type;
+};
 
 template <class T, class KeyOfValue, class Compare, class Allocator, class Options>
 struct make_intrusive_tree_type
@@ -448,7 +496,9 @@ class tree
    typedef boost::container::reverse_iterator
       <const_iterator>                                      const_reverse_iterator;
    typedef node_handle
-      < NodeAlloc, void>                                    node_type;
+      < NodeAlloc
+      , typename tree_node_handle_key_mapped
+         <T, KeyOfValue>::type>                             node_type;
    typedef insert_return_type_base
       <iterator, node_type>                                 insert_return_type;
 
@@ -469,11 +519,11 @@ class tree
    {}
 
    inline explicit tree(const key_compare& comp)
-      : AllocHolder(ValComp(comp))
+      : AllocHolder(comp)
    {}
 
    inline explicit tree(const key_compare& comp, const allocator_type& a)
-      : AllocHolder(ValComp(comp), a)
+      : AllocHolder(comp, a)
    {}
 
    inline explicit tree(const allocator_type& a)
@@ -482,7 +532,7 @@ class tree
 
    template <class InputIterator>
    tree(bool unique_insertion, InputIterator first, InputIterator last)
-      : AllocHolder(value_compare(key_compare()))
+      : AllocHolder(key_compare())
    {
       this->tree_construct(unique_insertion, first, last);
       //AllocHolder clears in case of exception
@@ -490,7 +540,7 @@ class tree
 
    template <class InputIterator>
    tree(bool unique_insertion, InputIterator first, InputIterator last, const key_compare& comp)
-      : AllocHolder(value_compare(comp))
+      : AllocHolder(comp)
    {
       this->tree_construct(unique_insertion, first, last);
       //AllocHolder clears in case of exception
@@ -498,7 +548,7 @@ class tree
 
    template <class InputIterator>
    tree(bool unique_insertion, InputIterator first, InputIterator last, const key_compare& comp, const allocator_type& a)
-      : AllocHolder(value_compare(comp), a)
+      : AllocHolder(comp, a)
    {
       this->tree_construct(unique_insertion, first, last);
       //AllocHolder clears in case of exception
@@ -507,14 +557,14 @@ class tree
    //construct with ordered range
    template <class InputIterator>
    tree( ordered_range_t, InputIterator first, InputIterator last)
-      : AllocHolder(value_compare(key_compare()))
+      : AllocHolder(key_compare())
    {
       this->tree_construct(ordered_range_t(), first, last);
    }
 
    template <class InputIterator>
    tree( ordered_range_t, InputIterator first, InputIterator last, const key_compare& comp)
-      : AllocHolder(value_compare(comp))
+      : AllocHolder(comp)
    {
       this->tree_construct(ordered_range_t(), first, last);
    }
@@ -522,7 +572,7 @@ class tree
    template <class InputIterator>
    tree( ordered_range_t, InputIterator first, InputIterator last
          , const key_compare& comp, const allocator_type& a)
-      : AllocHolder(value_compare(comp), a)
+      : AllocHolder(comp, a)
    {
       this->tree_construct(ordered_range_t(), first, last);
    }
@@ -620,7 +670,7 @@ class tree
    public:
 
    inline tree(const tree& x)
-      :  AllocHolder(x, x.value_comp())
+      :  AllocHolder(x, x.key_comp())
    {
       this->icont().clone_from
          (x.icont(), typename AllocHolder::cloner(*this), Destroyer(this->node_alloc()));
@@ -628,11 +678,11 @@ class tree
 
    inline tree(BOOST_RV_REF(tree) x)
       BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_constructible<Compare>::value)
-      :  AllocHolder(BOOST_MOVE_BASE(AllocHolder, x), x.value_comp())
+      :  AllocHolder(BOOST_MOVE_BASE(AllocHolder, x), x.key_comp())
    {}
 
    inline tree(const tree& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
-      :  AllocHolder(x.value_comp(), a)
+      :  AllocHolder(x.key_comp(), a)
    {
       this->icont().clone_from
          (x.icont(), typename AllocHolder::cloner(*this), Destroyer(this->node_alloc()));
@@ -640,7 +690,10 @@ class tree
    }
 
    tree(BOOST_RV_REF(tree) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
-      :  AllocHolder(x.value_comp(), a)
+      BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value &&
+                       dtl::is_nothrow_copy_constructible<key_compare>::value &&
+                       dtl::is_nothrow_swappable<key_compare>::value)
+      :  AllocHolder(x.key_comp(), a)
    {
       if(this->node_alloc() == x.node_alloc()){
          this->icont().swap(x.icont());
@@ -670,18 +723,15 @@ class tree
          //If anything goes wrong, all the nodes will be destroyed
          //automatically
          Icont other_tree(::boost::move(this->icont()));
+         //Destroys the nodes that are not reused, also if the comparator
+         //assignment or a node assignment throws
+         remaining_nodes_destroyer<AllocHolder> rest_destroyer(*this, other_tree);
 
          //Now recreate the source tree reusing nodes stored by other_tree
          this->icont().clone_from
             (x.icont()
             , RecyclingCloner<AllocHolder, false>(*this, other_tree)
             , Destroyer(this->node_alloc()));
-
-         //If there are remaining nodes, destroy them
-         NodePtr p;
-         while((p = other_tree.unlink_leftmost_without_rebalance())){
-            AllocHolder::destroy_node(p);
-         }
       }
       return *this;
    }
@@ -811,7 +861,29 @@ class tree
    inline void swap(ThisType& x)
       BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::dtl::is_nothrow_swappable<Compare>::value )
-   {  AllocHolder::swap(x);   }
+   {
+      //Tag dispatch instead of BOOST_IF_CONSTEXPR: a rethrow in the body of
+      //a noexcept function triggers -Wterminate even if it is never executed
+      this->priv_swap(x, dtl::bool_<boost::container::dtl::is_nothrow_swappable<Compare>::value>());
+   }
+
+   private:
+   inline void priv_swap(ThisType& x, dtl::true_ /*nothrow_swappable_compare*/)
+   {  AllocHolder::swap(x);  }
+
+   void priv_swap(ThisType& x, dtl::false_ /*nothrow_swappable_compare*/)
+   {
+      BOOST_CONTAINER_TRY{
+         AllocHolder::swap(x);
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //Only the comparator swap can throw: a tree can have the comparator of the other tree
+         this->clear();
+         x.clear();
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+   }
 
    protected:
 
@@ -882,7 +954,21 @@ class tree
       //Move allocator if needed
       this->AllocHolder::move_assign_alloc(x);
       //Obtain resources
-      this->icont() = boost::move(x.icont());
+      BOOST_IF_CONSTEXPR(boost::container::dtl::is_nothrow_swappable<Compare>::value){
+         this->icont() = boost::move(x.icont());
+      }
+      else{
+         BOOST_CONTAINER_TRY{
+            this->icont() = boost::move(x.icont());
+         }
+         BOOST_CONTAINER_CATCH(...){
+            //Only the comparator swap can throw: a tree can have the comparator of the other tree
+            this->clear();
+            x.clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
+      }
    }
 
    void priv_move_assign(BOOST_RV_REF(tree) x, dtl::bool_<false> /*steal_resources*/)
@@ -893,22 +979,29 @@ class tree
          this->priv_move_assign(boost::move(x), dtl::true_());
       }
       else {
-         //Transfer all the nodes to a temporary tree
-         //If anything goes wrong, all the nodes will be destroyed
-         //automatically
-         Icont other_tree(::boost::move(this->icont()));
+         BOOST_CONTAINER_TRY{
+            //Transfer all the nodes to a temporary tree
+            //If anything goes wrong, all the nodes will be destroyed
+            //automatically
+            Icont other_tree(::boost::move(this->icont()));
+            //Destroys the nodes that are not reused, also if the comparator
+            //assignment or a node assignment throws
+            remaining_nodes_destroyer<AllocHolder> rest_destroyer(*this, other_tree);
 
-         //Now recreate the source tree reusing nodes stored by other_tree
-         this->icont().clone_from
-         (::boost::move(x.icont())
-            , RecyclingCloner<AllocHolder, true>(*this, other_tree)
-            , Destroyer(this->node_alloc()));
-
-         //If there are remaining nodes, destroy them
-         NodePtr p;
-         while ((p = other_tree.unlink_leftmost_without_rebalance())) {
-            AllocHolder::destroy_node(p);
+            //Now recreate the source tree reusing nodes stored by other_tree
+            this->icont().clone_from
+            (::boost::move(x.icont())
+               , RecyclingCloner<AllocHolder, true>(*this, other_tree)
+               , Destroyer(this->node_alloc()));
          }
+         BOOST_CONTAINER_CATCH(...){
+            //Some elements of x can be moved-from: x is no longer sorted
+            x.clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
+         //The elements of x are moved-from: x is no longer sorted
+         x.clear();
       }
    }
 
@@ -962,13 +1055,14 @@ class tree
       BOOST_ASSERT((priv_is_linked)(hint));
       value_type &v = p->get_data();
       insert_commit_data data;
+      //Destroys and deallocates the node if the comparator throws or key is already there
+      scoped_node_destroy_deallocator<NodeAlloc> destroy_deallocator(p, this->node_alloc());
       std::pair<iterator,bool> ret =
          this->insert_unique_check(hint, key_of_value_t()(v), data);
       if(!ret.second){
-         //Destroy unneeded node
-         Destroyer(this->node_alloc())(p);
          return ret.first;
       }
+      destroy_deallocator.release();
       return iterator(this->icont().insert_unique_commit(*p, data));
    }
 
@@ -1264,7 +1358,7 @@ class tree
       if(!nh.empty()){
          insert_commit_data data;
          std::pair<iterator,bool> ret =
-            this->insert_unique_check(hint, key_of_value_t()(nh.value()), data);
+            this->insert_unique_check(hint, key_of_value_t()(nh.get()->get_data()), data);
          if(ret.second){
             irt.inserted = true;
             irt.position = iterator(this->icont().insert_unique_commit(*nh.get(), data));
@@ -1287,8 +1381,10 @@ class tree
          return this->end();
       }
       else{
-         NodePtr const p(nh.release());
-         return iterator(this->icont().insert_equal(*p));
+         //The comparator can throw: nh owns the node until it is inserted
+         const iterator it(this->icont().insert_equal(*nh.get()));
+         nh.release();
+         return it;
       }
    }
 
@@ -1298,11 +1394,14 @@ class tree
          return this->end();
       }
       else{
-         NodePtr const p(nh.release());
-         return iterator(this->icont().insert_equal(hint.get(), *p));
+         //The comparator can throw: nh owns the node until it is inserted
+         const iterator it(this->icont().insert_equal(hint.get(), *nh.get()));
+         nh.release();
+         return it;
       }
    }
 
+   //Boost.Intrusive merge_unique/merge_equal have no effect if &source == this
    template<class C2>
    inline void merge_unique(tree<T, KeyOfValue, C2, Allocator, Options>& source)
    {  return this->icont().merge_unique(source.icont()); }
@@ -1509,18 +1608,19 @@ class tree
 template <class T>
 struct has_trivial_destructor_after_move;
 
-//!has_trivial_destructor_after_move<> == true_type
-//!specialization for optimizations
+//!has_trivial_destructor_after_move<> specialization for optimizations
 template <class T, class KeyOfValue, class Compare, class Allocator, class Options>
 struct has_trivial_destructor_after_move
-   < 
+   <
       ::boost::container::dtl::tree
          <T, KeyOfValue, Compare, Allocator, Options>
    >
 {
    typedef typename ::boost::container::dtl::tree<T, KeyOfValue, Compare, Allocator, Options>::allocator_type allocator_type;
-   typedef typename ::boost::container::allocator_traits<allocator_type>::pointer pointer;
+   typedef ::boost::container::allocator_traits<allocator_type> allocator_traits_type;
+   typedef typename allocator_traits_type::pointer pointer;
    BOOST_STATIC_CONSTEXPR bool value =
+      allocator_traits_type::is_always_equal::value &&
       ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
       ::boost::has_trivial_destructor_after_move<pointer>::value &&
       ::boost::has_trivial_destructor_after_move<Compare>::value;

@@ -1143,6 +1143,94 @@ bool test_heterogeneous_insert()
 
 
 
+inline bool set_function_pointer_less(int a, int b)
+{  return a < b;  }
+
+inline bool set_function_pointer_greater(int a, int b)
+{  return b < a;  }
+
+//Tests a set or multiset whose key_compare is bool(*)(int, int)
+template<typename SetType>
+bool test_function_pointer_comparator_for()
+{
+   typedef SetType set_t;
+   set_t s(&set_function_pointer_less);
+   if(s.key_comp() != &set_function_pointer_less)
+      return false;
+   s.insert(3);
+   s.insert(1);
+   s.insert(2);
+   if(*s.begin() != 1 || s.find(2) == s.end() || s.count(2) != 1u)
+      return false;
+   if(!s.value_comp()(1, 2) || s.value_comp()(2, 1))
+      return false;
+
+   set_t g(&set_function_pointer_greater);
+   g.insert(5);
+   g.insert(7);
+   if(*g.begin() != 7)
+      return false;
+
+   //Copy and move construction and assignment
+   {
+      set_t c(s);
+      if(c.key_comp() != &set_function_pointer_less || c.size() != 3u || *c.begin() != 1)
+         return false;
+      c = g;
+      if(c.key_comp() != &set_function_pointer_greater || c.size() != 2u || *c.begin() != 7)
+         return false;
+      set_t m(boost::move(c));
+      if(m.key_comp() != &set_function_pointer_greater || *m.begin() != 7)
+         return false;
+      c = boost::move(m);
+      if(c.key_comp() != &set_function_pointer_greater || *c.begin() != 7)
+         return false;
+      //Inserted elements are ordered with the propagated comparator
+      c.insert(6);
+      c.insert(8);
+      if(*c.begin() != 8 || *(--c.end()) != 5)
+         return false;
+      set_t ca(g, g.get_allocator());
+      if(ca.key_comp() != &set_function_pointer_greater || *ca.begin() != 7)
+         return false;
+      set_t ma(boost::move(ca), g.get_allocator());
+      if(ma.key_comp() != &set_function_pointer_greater || *ma.begin() != 7)
+         return false;
+      const int values[] = { 2, 9, 4 };
+      set_t r(&values[0], &values[0] + 3, &set_function_pointer_greater);
+      if(r.key_comp() != &set_function_pointer_greater || *r.begin() != 9)
+         return false;
+   }
+
+   //Swap
+   s.swap(g);
+   if(s.key_comp() != &set_function_pointer_greater || *s.begin() != 7)
+      return false;
+   if(g.key_comp() != &set_function_pointer_less || *g.begin() != 1)
+      return false;
+
+   //Merge from a container with the same comparator type but a different ordering
+   g.merge(s);
+   if(g.size() != 5u || !s.empty())
+      return false;
+   if(g.key_comp() != &set_function_pointer_less || s.key_comp() != &set_function_pointer_greater)
+      return false;
+   int prev = 0;
+   for(typename set_t::iterator it = g.begin(), itend = g.end(); it != itend; ++it){
+      if(*it <= prev)
+         return false;
+      prev = *it;
+   }
+   return true;
+}
+
+template<typename SetType, typename MultisetType>
+bool test_function_pointer_comparator()
+{
+   return test_function_pointer_comparator_for<SetType>()
+       && test_function_pointer_comparator_for<MultisetType>();
+}
+
 }  //namespace test{
 }  //namespace container {
 }  //namespace boost{

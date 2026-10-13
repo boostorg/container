@@ -31,7 +31,6 @@
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/value_init.hpp>
 #include <boost/container/detail/pair.hpp>
-#include <boost/container/detail/pair_key_mapped_of_value.hpp>
 #include <boost/container/detail/algorithm.hpp>
 
 // move
@@ -122,10 +121,7 @@ class map
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)                const_reverse_iterator;
    //typedef std::pair<key_type, mapped_type>                                               nonconst_value_type;
    typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                                movable_value_type;
-   typedef BOOST_CONTAINER_IMPDEF(node_handle<
-      typename base_t::stored_allocator_type
-      BOOST_MOVE_I pair_key_mapped_of_value
-         <key_type BOOST_MOVE_I mapped_type> >)                                     node_type;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::node_type)                             node_type;
    typedef BOOST_CONTAINER_IMPDEF
       (insert_return_type_base<iterator BOOST_MOVE_I node_type>)                    insert_return_type;
 
@@ -379,10 +375,17 @@ class map
    //! <b>Effects</b>: Move constructs a map using the specified allocator.
    //!                 Constructs *this using x's resources.
    //!
+   //! <b>Throws</b>: Nothing if allocator_traits_type::is_always_equal::value is true and the
+   //!   copy constructor and swap of Compare do not throw. Otherwise, if allocation or
+   //!   value_type's move constructor throws.
+   //!
    //! <b>Complexity</b>: Constant if x == x.get_allocator(), linear otherwise.
    //!
    //! <b>Postcondition</b>: x is emptied.
    inline map(BOOST_RV_REF(map) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
+      BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value &&
+                       dtl::is_nothrow_copy_constructible<Compare>::value &&
+                       dtl::is_nothrow_swappable<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {}
 
@@ -562,6 +565,9 @@ class map
    //!
    //! <b>Returns</b>: A reference to the mapped_type corresponding to k in *this.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    mapped_type& operator[](const key_type& k)
    {  return this->priv_subscript(k);  }
@@ -570,6 +576,9 @@ class map
    //! value_type(boost::move(k), T()) into the map (the key is move-constructed)
    //!
    //! <b>Returns</b>: A reference to the mapped_type corresponding to k in *this.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic.
    mapped_type& operator[](key_type&& k)
@@ -581,6 +590,9 @@ class map
    //! value_type(boost::forward<K>(k), T()) into the map
    //!
    //! <b>Returns</b>: A reference to the mapped_type corresponding to k in *this.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic.
    template <class K>
@@ -796,6 +808,9 @@ class map
    //!   if the insertion takes place, and the iterator component of the pair
    //!   points to the element with key equivalent to the key of x.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    inline std::pair<iterator,bool> insert(const value_type& x)
    { return this->base_t::insert_unique_convertible(x); }
@@ -807,6 +822,9 @@ class map
    //!   if the insertion takes place, and the iterator component of the pair
    //!   points to the element with key equivalent to the key of x.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    inline std::pair<iterator,bool> insert(BOOST_RV_REF(value_type) x)
    { return this->base_t::insert_unique_convertible(boost::move(x)); }
@@ -817,6 +835,9 @@ class map
    //! <b>Returns</b>: The bool component of the returned pair is true if and only
    //!   if the insertion takes place, and the iterator component of the pair
    //!   points to the element with key equivalent to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic.
    template <class Pair>
@@ -839,6 +860,9 @@ class map
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    inline iterator insert(const_iterator p, BOOST_RV_REF(value_type) x)
@@ -850,6 +874,9 @@ class map
    //!
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
@@ -895,25 +922,23 @@ class map
    //!   false, insert_return_type.node has the previous value of nh, and insert_return_type.position
    //!   points to an element with a key equivalent to nh.key().
    //!
+   //! <b>Throws</b>: If the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic
    insert_return_type insert(BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
-   {
-      typename base_t::node_type  n(boost::move(nh));
-      typename base_t::insert_return_type base_ret(this->base_t::insert_unique_node(boost::move(n)));
-      return insert_return_type (base_ret.inserted, base_ret.position, boost::move(base_ret.node));
-   }
+   {  return this->base_t::insert_unique_node(boost::move(nh));  }
 
    //! <b>Effects</b>: Same as `insert(node_type && nh)` but the element is inserted as close as possible
    //!   to the position just prior to "hint".
    //!
+   //! <b>Throws</b>: If the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: logarithmic in general, but amortized constant if the element is inserted
    //!   right before "hint".
    insert_return_type insert(const_iterator hint, BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
-   {
-      typename base_t::node_type  n(boost::move(nh));
-      typename base_t::insert_return_type base_ret(this->base_t::insert_unique_node(hint, boost::move(n)));
-      return insert_return_type (base_ret.inserted, base_ret.position, boost::move(base_ret.node));
-   }
+   {  return this->base_t::insert_unique_node(hint, boost::move(nh));  }
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -925,6 +950,9 @@ class map
    //! <b>Returns</b>: The bool component of the returned pair is true if and only
    //!   if the insertion takes place, and the iterator component of the pair
    //!   points to the element with key equivalent to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
@@ -939,6 +967,9 @@ class map
    //!
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
@@ -956,6 +987,9 @@ class map
    //! <b>Returns</b>: The bool component of the returned pair is true if and only if the
    //! insertion took place. The returned iterator points to the map element whose key is equivalent to k.
    //! 
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    template <class... Args>
    inline std::pair<iterator, bool> try_emplace(const key_type& k, BOOST_FWD_REF(Args)... args)
@@ -970,6 +1004,9 @@ class map
    //! 
    //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
    //! 
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if value
    //!   is inserted right before p.
    template <class... Args>
@@ -986,6 +1023,9 @@ class map
    //! <b>Returns</b>: The bool component of the returned pair is true if and only if the
    //! insertion took place. The returned iterator points to the map element whose key is equivalent to k.
    //! 
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    template <class... Args>
    inline std::pair<iterator, bool> try_emplace(BOOST_RV_REF(key_type) k, BOOST_FWD_REF(Args)... args)
@@ -1000,6 +1040,9 @@ class map
    //! 
    //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
    //! 
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if value
    //!   is inserted right before p.
    template <class... Args>
@@ -1018,6 +1061,9 @@ class map
    //! <b>Returns</b>: The bool component of the returned pair is true if and only if the
    //! insertion took place. The returned iterator points to the map element whose key is equivalent to k.
    //! 
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic search time plus linear insertion time in case the key is not present.
    template <class K, class... Args>
    inline BOOST_CONTAINER_DOC1ST
@@ -1042,6 +1088,9 @@ class map
    //! 
    //! <b>Returns</b>: The returned iterator points to the map element whose key is equivalent to k.
    //! 
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if value
    //!   is inserted right before p. Linear insertion time in case no equivalent key is present.
    template <class K, class... Args>
@@ -1127,7 +1176,9 @@ class map
             !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
             BOOST_MOVE_I size_type>::type)
       erase(BOOST_FWD_REF(K) x)
-      { return this->base_t::erase_unique(x); }
+      //Don't use erase_unique optimization here as transparent comparators with key K might
+      //match several elements (key_type can only match a single element)
+      { return this->base_t::erase(boost::forward<K>(x)); }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -1157,11 +1208,7 @@ class map
    //!
    //! <b>Complexity</b>: log(size()).
    node_type extract(const key_type& k)
-   {
-      typename base_t::node_type base_nh(this->base_t::extract(k));
-      node_type nh(boost::move(base_nh));
-      return BOOST_MOVE_RET(node_type, nh);
-   }
+   {  return this->base_t::extract(k);  }
 
    //! <b>Requires</b>: This overload is available only if
    //! key_compare::is_transparent exists.
@@ -1180,11 +1227,7 @@ class map
             !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
             BOOST_MOVE_I node_type>::type)
       extract(BOOST_FWD_REF(K) k)
-   {
-      typename base_t::node_type base_nh(this->base_t::extract(k));
-      node_type nh(boost::move(base_nh));
-      return BOOST_MOVE_RET(node_type, nh);
-   }
+   {  return this->base_t::extract(k);  }
 
    //! <b>Effects</b>: Removes the element pointed to by "position".
    //!
@@ -1192,11 +1235,7 @@ class map
    //!
    //! <b>Complexity</b>: Amortized constant.
    node_type extract(const_iterator position)
-   {
-      typename base_t::node_type base_nh(this->base_t::extract(position));
-      node_type nh(boost::move(base_nh));
-      return BOOST_MOVE_RET(node_type, nh);
-   }
+   {  return this->base_t::extract(position);  }
 
    //! <b>Requires</b>: this->get_allocator() == source.get_allocator().
    //!
@@ -1318,7 +1357,9 @@ class map
    template<typename K>
    BOOST_CONTAINER_NODISCARD inline
       size_type count(const K& x) const
-   {  return static_cast<size_type>(this->find(x) != this->cend());  }
+      //Don't use find() != end optimization here as transparent comparators with key K might
+      //return a different range than key_type (which can only return a single element range)
+   {  return this->base_t::count(x);  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -1666,10 +1707,7 @@ class multimap
    typedef typename BOOST_CONTAINER_IMPDEF(base_t::const_reverse_iterator)                const_reverse_iterator;
    //typedef std::pair<key_type, mapped_type>                                               nonconst_value_type;
    typedef BOOST_CONTAINER_IMPDEF(movable_value_type_impl)                                movable_value_type;
-   typedef BOOST_CONTAINER_IMPDEF(node_handle<
-      typename base_t::stored_allocator_type
-      BOOST_MOVE_I pair_key_mapped_of_value
-         <key_type BOOST_MOVE_I mapped_type> >)                                     node_type;
+   typedef typename BOOST_CONTAINER_IMPDEF(base_t::node_type)                             node_type;
 
    //allocator_type::value_type type must be std::pair<CONST Key, T>
    BOOST_CONTAINER_STATIC_ASSERT((dtl::is_same<typename allocator_type::value_type, std::pair<const Key, T> >::value));
@@ -1914,10 +1952,17 @@ class multimap
 
    //! <b>Effects</b>: Move constructs a multimap using the specified allocator.
    //!                 Constructs *this using x's resources.
+   //! <b>Throws</b>: Nothing if allocator_traits_type::is_always_equal::value is true and the
+   //!   copy constructor and swap of Compare do not throw. Otherwise, if allocation or
+   //!   value_type's move constructor throws.
+   //!
    //! <b>Complexity</b>: Constant if a == x.get_allocator(), linear otherwise.
    //!
    //! <b>Postcondition</b>: x is emptied.
    inline multimap(BOOST_RV_REF(multimap) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
+      BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value &&
+                       dtl::is_nothrow_copy_constructible<Compare>::value &&
+                       dtl::is_nothrow_swappable<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x), a)
    {}
 
@@ -2014,6 +2059,9 @@ class multimap
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    template <class... Args>
@@ -2026,6 +2074,9 @@ class multimap
    //!
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
@@ -2052,6 +2103,9 @@ class multimap
    //! <b>Effects</b>: Inserts x and returns the iterator pointing to the
    //!   newly inserted element.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    inline iterator insert(const value_type& x)
    { return this->base_t::insert_equal_convertible(x); }
@@ -2059,12 +2113,18 @@ class multimap
    //! <b>Effects</b>: Inserts a new value move-constructed from x and returns
    //!   the iterator pointing to the newly inserted element.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic.
    inline iterator insert(BOOST_RV_REF(value_type) x)
    { return this->base_t::insert_equal_convertible(boost::move(x)); }
 
    //! <b>Effects</b>: Inserts a new value constructed from x and returns
    //!   the iterator pointing to the newly inserted element.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic.
    template<class Pair>
@@ -2083,6 +2143,9 @@ class multimap
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    inline iterator insert(const_iterator p, const value_type& x)
@@ -2094,6 +2157,9 @@ class multimap
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
    //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
    inline iterator insert(const_iterator p, BOOST_RV_REF(movable_value_type) x)
@@ -2104,6 +2170,9 @@ class multimap
    //!
    //! <b>Returns</b>: An iterator pointing to the element with key equivalent
    //!   to the key of x.
+   //!
+   //! <b>Throws</b>: If memory allocation, the construction of the element or the comparison throws.
+   //!   If an exception is thrown, there are no effects.
    //!
    //! <b>Complexity</b>: Logarithmic in general, but amortized constant if t
    //!   is inserted right before p.
@@ -2141,23 +2210,23 @@ class multimap
    //!   If a range containing elements with keys equivalent to nh.key() exists, 
    //!   the element is inserted at the end of that range. nh is always emptied.
    //!
+   //! <b>Throws</b>: If the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: Logarithmic
    iterator insert(BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
-   {
-      typename base_t::node_type n(boost::move(nh));
-      return this->base_t::insert_equal_node(boost::move(n));
-   }
+   {  return this->base_t::insert_equal_node(boost::move(nh));  }
 
    //! <b>Effects</b>: Same as `insert(node_type && nh)` but the element is inserted as close as possible
    //!   to the position just prior to "hint".
    //!
+   //! <b>Throws</b>: If the comparison throws.
+   //!   If an exception is thrown, there are no effects.
+   //!
    //! <b>Complexity</b>: logarithmic in general, but amortized constant if the element is inserted
    //!   right before "hint".
    iterator insert(const_iterator hint, BOOST_RV_REF_BEG_IF_CXX11 node_type BOOST_RV_REF_END_IF_CXX11 nh)
-   {
-      typename base_t::node_type n(boost::move(nh));
-      return this->base_t::insert_equal_node(hint, boost::move(n));
-   }
+   {  return this->base_t::insert_equal_node(hint, boost::move(nh));  }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -2177,10 +2246,7 @@ class multimap
 
    //! @copydoc ::boost::container::map::extract(const key_type&)
    node_type extract(const key_type& k)
-   {
-      typename base_t::node_type base_nh(this->base_t::extract(k));
-      return node_type(boost::move(base_nh));
-   }
+   {  return this->base_t::extract(k);  }
 
    //! @copydoc ::boost::container::map::extract(K&&)
    template<class K>
@@ -2192,18 +2258,11 @@ class multimap
             !dtl::is_convertible<K BOOST_MOVE_I const_iterator>::value  //not convertible to const_iterator
             BOOST_MOVE_I node_type>::type)
       extract(BOOST_FWD_REF(K) k)
-   {
-      typename base_t::node_type base_nh(this->base_t::extract(k));
-      node_type nh(boost::move(base_nh));
-      return BOOST_MOVE_RET(node_type, nh);
-   }
+   {  return this->base_t::extract(k);  }
 
    //! @copydoc ::boost::container::map::extract(const_iterator)
    node_type extract(const_iterator position)
-   {
-      typename base_t::node_type base_nh(this->base_t::extract(position));
-      return node_type (boost::move(base_nh));
-   }
+   {  return this->base_t::extract(position);  }
 
    //! <b>Requires</b>: this->get_allocator() == source.get_allocator().
    //!

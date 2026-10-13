@@ -1756,6 +1756,95 @@ bool test_heterogeneous_insert()
    return true;
 }
 
+inline bool map_function_pointer_less(int a, int b)
+{  return a < b;  }
+
+inline bool map_function_pointer_greater(int a, int b)
+{  return b < a;  }
+
+//Tests a map or multimap whose key_compare is bool(*)(int, int)
+template<typename MapType>
+bool test_function_pointer_comparator_for()
+{
+   typedef MapType map_t;
+   typedef typename map_t::value_type value_type;
+   map_t m(&map_function_pointer_less);
+   if(m.key_comp() != &map_function_pointer_less)
+      return false;
+   m.insert(value_type(3, 3));
+   m.insert(value_type(1, 1));
+   m.insert(value_type(2, 2));
+   if(m.begin()->first != 1 || m.find(2) == m.end() || m.count(2) != 1u)
+      return false;
+   if(!m.value_comp()(value_type(1, 0), value_type(2, 0)) || m.value_comp()(value_type(2, 0), value_type(1, 0)))
+      return false;
+
+   map_t g(&map_function_pointer_greater);
+   g.insert(value_type(5, 5));
+   g.insert(value_type(7, 7));
+   if(g.begin()->first != 7)
+      return false;
+
+   //Copy and move construction and assignment
+   {
+      map_t c(m);
+      if(c.key_comp() != &map_function_pointer_less || c.size() != 3u || c.begin()->first != 1)
+         return false;
+      c = g;
+      if(c.key_comp() != &map_function_pointer_greater || c.size() != 2u || c.begin()->first != 7)
+         return false;
+      map_t mv(boost::move(c));
+      if(mv.key_comp() != &map_function_pointer_greater || mv.begin()->first != 7)
+         return false;
+      c = boost::move(mv);
+      if(c.key_comp() != &map_function_pointer_greater || c.begin()->first != 7)
+         return false;
+      //Inserted elements are ordered with the propagated comparator
+      c.insert(value_type(6, 6));
+      c.insert(value_type(8, 8));
+      if(c.begin()->first != 8 || (--c.end())->first != 5)
+         return false;
+      map_t ca(g, g.get_allocator());
+      if(ca.key_comp() != &map_function_pointer_greater || ca.begin()->first != 7)
+         return false;
+      map_t ma(boost::move(ca), g.get_allocator());
+      if(ma.key_comp() != &map_function_pointer_greater || ma.begin()->first != 7)
+         return false;
+      const value_type values[] = { value_type(2, 2), value_type(9, 9), value_type(4, 4) };
+      map_t r(&values[0], &values[0] + 3, &map_function_pointer_greater);
+      if(r.key_comp() != &map_function_pointer_greater || r.begin()->first != 9)
+         return false;
+   }
+
+   //Swap
+   m.swap(g);
+   if(m.key_comp() != &map_function_pointer_greater || m.begin()->first != 7)
+      return false;
+   if(g.key_comp() != &map_function_pointer_less || g.begin()->first != 1)
+      return false;
+
+   //Merge from a container with the same comparator type but a different ordering
+   g.merge(m);
+   if(g.size() != 5u || !m.empty())
+      return false;
+   if(g.key_comp() != &map_function_pointer_less || m.key_comp() != &map_function_pointer_greater)
+      return false;
+   int prev = 0;
+   for(typename map_t::iterator it = g.begin(), itend = g.end(); it != itend; ++it){
+      if(it->first <= prev || it->second != it->first)
+         return false;
+      prev = it->first;
+   }
+   return true;
+}
+
+template<typename MapType, typename MultimapType>
+bool test_function_pointer_comparator()
+{
+   return test_function_pointer_comparator_for<MapType>()
+       && test_function_pointer_comparator_for<MultimapType>();
+}
+
 }  //namespace test{
 }  //namespace container {
 }  //namespace boost{

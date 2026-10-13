@@ -27,6 +27,8 @@ int main()
       BOOST_CONTAINER_STATIC_ASSERT(( is_same<string_t, pmr::string >::value ));
       BOOST_CONTAINER_STATIC_ASSERT(( is_same<wstring_t, pmr::wstring >::value ));
    #endif
+   //polymorphic_allocator can compare unequal so a moved-from string can hold memory
+   BOOST_CONTAINER_STATIC_ASSERT(( !boost::has_trivial_destructor_after_move<string_t>::value ));
    ////////////////////////////////////
    //    Void value_type allocator
    ////////////////////////////////////

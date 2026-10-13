@@ -41,6 +41,7 @@
 #include <boost/container/detail/is_container.hpp>
 
 #include <boost/intrusive/detail/minimal_pair_header.hpp>      //pair
+#include <boost/intrusive/detail/ebo_functor_holder.hpp>      //ebo_functor_holder
 
 #include <boost/move/iterator.hpp>
 #include <boost/move/adl_move_swap.hpp>
@@ -50,6 +51,7 @@
 #include <boost/move/detail/launder.hpp>
 #include <boost/move/algo/adaptive_sort.hpp>
 #include <boost/move/algo/detail/pdqsort.hpp>
+#include <boost/move/algo/detail/set_difference.hpp>
 
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #include <boost/move/detail/fwd_macros.hpp>
@@ -163,6 +165,46 @@ inline void flat_tree_container_inplace_merge //is_contiguous_container == false
 
 ///////////////////////////////////////
 //
+//  flat_tree_container_merge_ending
+//
+///////////////////////////////////////
+//Merges the sorted range [old_sz, size()) with the sorted range [0, old_sz).
+//If an exception is thrown, the sequence can be unsorted: clear it.
+template<class SequenceContainer, class Compare>
+void flat_tree_container_merge_ending
+   (SequenceContainer& dest, typename SequenceContainer::size_type old_sz, Compare comp)
+{
+   typedef typename SequenceContainer::difference_type difference_type;
+   if(dest.size() != old_sz){
+      BOOST_CONTAINER_TRY{
+         (flat_tree_container_inplace_merge)
+            ( dest, dest.begin() + difference_type(old_sz), comp
+            , dtl::bool_<is_contiguous_container<SequenceContainer>::value>());
+      }
+      BOOST_CONTAINER_CATCH(...){
+         dest.clear();
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+   }
+}
+
+///////////////////////////////////////
+//
+//  flat_tree_container_erase_ending
+//
+///////////////////////////////////////
+//Erases the range [old_sz, size()): the new elements that are not merged yet
+template<class SequenceContainer>
+inline void flat_tree_container_erase_ending
+   (SequenceContainer& dest, typename SequenceContainer::size_type old_sz)
+{
+   typedef typename SequenceContainer::difference_type difference_type;
+   dest.erase(dest.begin() + difference_type(old_sz), dest.end());
+}
+
+///////////////////////////////////////
+//
 //  flat_tree_container_inplace_sort_ending
 //
 ///////////////////////////////////////
@@ -209,11 +251,20 @@ inline void flat_tree_merge_equal   //has_merge_unique == false
    (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, dtl::false_)
 {
    if(first != last) {
-      typedef typename SequenceContainer::iterator    iterator;
-      iterator const it = dest.insert( dest.end(), first, last);
-      BOOST_ASSERT((is_sorted)(it, dest.end(), comp));
-      dtl::bool_<is_contiguous_container<SequenceContainer>::value> contiguous_tag;
-      (flat_tree_container_inplace_merge)(dest, it, comp, contiguous_tag);
+      typedef typename SequenceContainer::size_type         size_type;
+      size_type const old_sz = dest.size();
+      BOOST_CONTAINER_TRY{
+         dest.insert( dest.end(), first, last);
+         //The comparator can throw also in the assertion
+         BOOST_ASSERT((is_sorted)(dest.begin() + typename SequenceContainer::difference_type(old_sz), dest.end(), comp));
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //Input iterators can leave some new elements at the end: erase them
+         (flat_tree_container_erase_ending)(dest, old_sz);
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      (flat_tree_container_merge_ending)(dest, old_sz, comp);
    }
 }
 
@@ -239,13 +290,21 @@ inline void flat_tree_merge_unique  //has_merge_unique == false
       typedef typename SequenceContainer::difference_type   difference_type;
 
       size_type const old_sz = dest.size();
-      iterator const first_new = dest.insert(dest.cend(), first, last);
-      //We can't assert "is_sorted_and_unique" because the sequence can come from a multiset
-      BOOST_ASSERT((is_sorted)(first_new, dest.end(), comp));
-      iterator e = boost::movelib::inplace_set_unique_difference(first_new, dest.end(), dest.begin(), first_new, comp);
-      dest.erase(e, dest.end());
-      dtl::bool_<is_contiguous_container<SequenceContainer>::value> contiguous_tag;
-      (flat_tree_container_inplace_merge)(dest, dest.begin() + difference_type(old_sz), comp, contiguous_tag);
+      BOOST_CONTAINER_TRY{
+         dest.insert(dest.cend(), first, last);
+         iterator const first_new = dest.begin() + difference_type(old_sz);
+         //We can't assert "is_sorted_and_unique" because the sequence can come from a multiset
+         BOOST_ASSERT((is_sorted)(first_new, dest.end(), comp));
+         iterator e = boost::movelib::inplace_set_unique_difference(first_new, dest.end(), dest.begin(), first_new, comp);
+         dest.erase(e, dest.end());
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //The new elements are not merged yet: erase them
+         (flat_tree_container_erase_ending)(dest, old_sz);
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      (flat_tree_container_merge_ending)(dest, old_sz, comp);
    }
 }
 
@@ -443,31 +502,32 @@ inline typename SequenceContainer::size_type
 
 template<class Compare, class Value, class KeyOfValue>
 class flat_tree_value_compare
-   : private Compare
+   : private boost::intrusive::detail::ebo_functor_holder<Compare>
 {
+   typedef boost::intrusive::detail::ebo_functor_holder<Compare> base_t;
    typedef Value              first_argument_type;
    typedef Value              second_argument_type;
    typedef bool               return_type;
    public:
    inline flat_tree_value_compare()
-      : Compare()
+      : base_t()
    {}
 
    inline flat_tree_value_compare(const Compare &pred)
-      : Compare(pred)
+      : base_t(pred)
    {}
 
    inline bool operator()(const Value& lhs, const Value& rhs) const
    {
       KeyOfValue key_extract;
-      return Compare::operator()(key_extract(lhs), key_extract(rhs));
+      return this->base_t::get()(key_extract(lhs), key_extract(rhs));
    }
 
    inline const Compare &get_comp() const
-      {  return *this;  }
+      {  return this->base_t::get();  }
 
    inline Compare &get_comp()
-      {  return *this;  }
+      {  return this->base_t::get();  }
 };
 
 
@@ -552,25 +612,51 @@ class flat_tree
          : value_compare(boost::move(static_cast<value_compare&>(d))), m_seq(boost::move(d.m_seq), a)
       {}
 
+      //If an exception is thrown, the elements can be unsorted for the comparator
+      //(partial copy or a different comparator): clear them to keep the invariants.
       Data& operator=(BOOST_COPY_ASSIGN_REF(Data) d)
       {
-         this->value_compare::operator=(d);
-         m_seq = d.m_seq;
+         BOOST_CONTAINER_TRY{
+            this->get_comp() = d.get_comp();
+            m_seq = d.m_seq;
+         }
+         BOOST_CONTAINER_CATCH(...){
+            m_seq.clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
          return *this;
       }
 
       Data& operator=(BOOST_RV_REF(Data) d)
       {
-         this->value_compare::operator=(boost::move(static_cast<value_compare &>(d)));
-         m_seq = boost::move(d.m_seq);
+         BOOST_CONTAINER_TRY{
+            this->value_compare::operator=(boost::move(static_cast<value_compare &>(d)));
+            m_seq = boost::move(d.m_seq);
+         }
+         BOOST_CONTAINER_CATCH(...){
+            //Elements can be moved one by one: d can also hold moved-from elements
+            m_seq.clear();
+            d.m_seq.clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
          return *this;
       }
 
       void swap(Data &d)
       {
-         value_compare& mycomp    = *this, & othercomp = d;
-         boost::adl_move_swap(mycomp, othercomp);
-         this->m_seq.swap(d.m_seq);
+         BOOST_CONTAINER_TRY{
+            value_compare& mycomp    = *this, & othercomp = d;
+            boost::adl_move_swap(mycomp, othercomp);
+            this->m_seq.swap(d.m_seq);
+         }
+         BOOST_CONTAINER_CATCH(...){
+            m_seq.clear();
+            d.m_seq.clear();
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
       }
 
       container_type m_seq;
@@ -578,6 +664,15 @@ class flat_tree
 
    Data m_data;
    BOOST_COPYABLE_AND_MOVABLE(flat_tree)
+
+   //Two objects of the same empty comparator type have no state, so they order the elements
+   //in the same way. Objects of other comparator types (function pointers, comparators with
+   //state) can order the elements in a different way.
+   template<class C2>
+   struct flat_tree_same_order
+   {
+      static const bool value = dtl::is_same<C2, Compare>::value && dtl::is_empty<Compare>::value;
+   };
 
    public:
 
@@ -891,7 +986,7 @@ class flat_tree
       std::pair<iterator,bool> ret;
       insert_commit_data data;
       ret.second = this->priv_insert_unique_prepare(KeyOfValue()(val), data);
-      ret.first = ret.second ? this->priv_insert_commit(data, boost::move(val))
+      ret.first = ret.second ? this->priv_insert_commit(data, boost::forward<Convertible>(val))
                              : this->begin() + (data.position - this->cbegin());
                              //: iterator(vector_iterator_get_ptr(data.position));
       return ret;
@@ -941,7 +1036,7 @@ class flat_tree
       BOOST_ASSERT(this->priv_in_range_or_end(hint));
       insert_commit_data data;
       return this->priv_insert_unique_prepare(hint, KeyOfValue()(val), data)
-         ? this->priv_insert_commit(data, boost::move(val))
+         ? this->priv_insert_commit(data, boost::forward<K>(val))
          : this->begin() + (data.position - this->cbegin());
          //: iterator(vector_iterator_get_ptr(data.position));
    }
@@ -965,28 +1060,30 @@ class flat_tree
    template <class InIt>
    void insert_unique_range(InIt first, InIt last)
    {
-      dtl::bool_<is_contiguous_container<container_type>::value> contiguous_tag;
       container_type &seq = this->m_data.m_seq;
       value_compare &val_cmp = this->priv_value_comp();
+      const size_type old_sz = seq.size();
+      BOOST_CONTAINER_TRY{
+         //Step 1: put new elements in the back
+         seq.insert(seq.cend(), first, last);
+         typename container_type::iterator const it = seq.begin() + difference_type(old_sz);
 
-      //Step 1: put new elements in the back
-      typename container_type::iterator const it = seq.insert(seq.cend(), first, last);
+         //Step 2: sort them
+         boost::movelib::pdqsort(it, seq.end(), val_cmp);
 
-      //Step 2: sort them
-      boost::movelib::pdqsort(it, seq.end(), val_cmp);
-
-      //Step 3: only left unique values from the back not already present in the original range
-      typename container_type::iterator const e = boost::movelib::inplace_set_unique_difference
-         (it, seq.end(), seq.begin(), it, val_cmp);
-
-      //it might be invalidated by erasing [e, seq.end) if e == it, so check it before
-      const bool remaining = e != it;
-      seq.erase(e, seq.cend());
-      if (remaining)
-      {
-         //Step 4: merge both ranges
-         (flat_tree_container_inplace_merge)(seq, it, this->priv_value_comp(), contiguous_tag);
+         //Step 3: only left unique values from the back not already present in the original range
+         typename container_type::iterator const e = boost::movelib::inplace_set_unique_difference
+            (it, seq.end(), seq.begin(), it, val_cmp);
+         seq.erase(e, seq.cend());
       }
+      BOOST_CONTAINER_CATCH(...){
+         //The new elements are not merged yet: erase them
+         (flat_tree_container_erase_ending)(seq, old_sz);
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      //Step 4: merge both ranges
+      (flat_tree_container_merge_ending)(seq, old_sz, val_cmp);
    }
 
    template <class InIt>
@@ -995,9 +1092,19 @@ class flat_tree
       if (first != last) {
          dtl::bool_<is_contiguous_container<container_type>::value> contiguous_tag;
          container_type &seq = this->m_data.m_seq;
-         typename container_type::iterator const it = seq.insert(seq.cend(), first, last);
-         (flat_tree_container_inplace_sort_ending)(seq, it, this->priv_value_comp(), contiguous_tag);
-         (flat_tree_container_inplace_merge)      (seq, it, this->priv_value_comp(), contiguous_tag);
+         const size_type old_sz = seq.size();
+         BOOST_CONTAINER_TRY{
+            seq.insert(seq.cend(), first, last);
+            (flat_tree_container_inplace_sort_ending)
+               (seq, seq.begin() + difference_type(old_sz), this->priv_value_comp(), contiguous_tag);
+         }
+         BOOST_CONTAINER_CATCH(...){
+            //The new elements are not merged yet: erase them
+            (flat_tree_container_erase_ending)(seq, old_sz);
+            BOOST_CONTAINER_RETHROW
+         }
+         BOOST_CONTAINER_CATCH_END
+         (flat_tree_container_merge_ending)(seq, old_sz, this->priv_value_comp());
       }
    }
 
@@ -1080,7 +1187,7 @@ class flat_tree
          ret.first  = this->nth(size_type(data.position - this->cbegin()));
       }
       else{
-         ret.first = this->m_data.m_seq.emplace(data.position, try_emplace_t(), ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
+         ret.first = this->emplace_key_at(data.position, ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
       }
       return ret;
    }
@@ -1098,10 +1205,47 @@ class flat_tree
          ret.first  = this->nth(size_type(data.position - this->cbegin()));
       }
       else{
-         ret.first = this->m_data.m_seq.emplace(data.position, try_emplace_t(), ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
+         ret.first = this->emplace_key_at(data.position, ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
       }
       return ret;
    }
+
+   //Constructs a value with key "key" and a mapped value constructed from "args" at "position",
+   //which must be the insertion position of "key". Duplicates are not checked. Only Boost.Container
+   //sequences construct elements with Boost.Container's allocator_traits, which understands
+   //try_emplace_t. For other sequences (e.g. std::vector) the value is constructed outside the
+   //sequence and moved.
+   template <class KeyType, class... Args>
+   inline iterator emplace_key_at(const_iterator position, BOOST_FWD_REF(KeyType) key, BOOST_FWD_REF(Args)... args)
+   {
+      return this->priv_emplace_key_at
+         ( dtl::bool_<has_stored_allocator_type>(), position
+         , ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
+   }
+
+   private:
+   template <class KeyType, class... Args>
+   inline iterator priv_emplace_key_at
+      (dtl::true_, const_iterator position, BOOST_FWD_REF(KeyType) key, BOOST_FWD_REF(Args)... args)
+   {
+      return this->m_data.m_seq.emplace
+         (position, try_emplace_t(), ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
+   }
+
+   template <class KeyType, class... Args>
+   iterator priv_emplace_key_at
+      (dtl::false_, const_iterator position, BOOST_FWD_REF(KeyType) key, BOOST_FWD_REF(Args)... args)
+   {
+      typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;
+      get_stored_allocator_noconst_return_t a = this->get_stored_allocator();
+      stored_allocator_traits::construct
+         (a, (value_type *)(&v), try_emplace_t(), ::boost::forward<KeyType>(key), ::boost::forward<Args>(args)...);
+      value_type *pval = move_detail::launder_cast<value_type *>(&v);
+      value_destructor<stored_allocator_type, value_type> d(a, *pval);
+      return this->m_data.m_seq.emplace(position, ::boost::move(*pval));
+   }
+
+   public:
 
    #else // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
@@ -1162,7 +1306,7 @@ class flat_tree
          ret.first  = this->nth(size_type(data.position - this->cbegin()));\
       }\
       else{\
-         ret.first = this->m_data.m_seq.emplace(data.position, try_emplace_t(), ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+         ret.first = this->emplace_key_at(data.position, ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
       }\
       return ret;\
    }\
@@ -1179,10 +1323,42 @@ class flat_tree
          ret.first  = this->nth(size_type(data.position - this->cbegin()));\
       }\
       else{\
-         ret.first = this->m_data.m_seq.emplace(data.position, try_emplace_t(), ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+         ret.first = this->emplace_key_at(data.position, ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
       }\
       return ret;\
    }\
+   \
+   template <class KeyType BOOST_MOVE_I##N BOOST_MOVE_CLASS##N>\
+   inline iterator emplace_key_at(const_iterator position, BOOST_FWD_REF(KeyType) key BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {\
+      return this->priv_emplace_key_at\
+         ( dtl::bool_<has_stored_allocator_type>(), position\
+         , ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+   }\
+   \
+   private:\
+   template <class KeyType BOOST_MOVE_I##N BOOST_MOVE_CLASS##N>\
+   inline iterator priv_emplace_key_at\
+      (dtl::true_, const_iterator position, BOOST_FWD_REF(KeyType) key BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {\
+      return this->m_data.m_seq.emplace\
+         (position, try_emplace_t(), ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+   }\
+   \
+   template <class KeyType BOOST_MOVE_I##N BOOST_MOVE_CLASS##N>\
+   iterator priv_emplace_key_at\
+      (dtl::false_, const_iterator position, BOOST_FWD_REF(KeyType) key BOOST_MOVE_I##N BOOST_MOVE_UREF##N)\
+   {\
+      typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;\
+      get_stored_allocator_noconst_return_t a = this->get_stored_allocator();\
+      stored_allocator_traits::construct\
+         (a, (value_type *)(&v), try_emplace_t(), ::boost::forward<KeyType>(key) BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
+      value_type *pval = move_detail::launder_cast<value_type *>(&v);\
+      value_destructor<stored_allocator_type, value_type> d(a, *pval);\
+      return this->m_data.m_seq.emplace(position, ::boost::move(*pval));\
+   }\
+   \
+   public:\
    //
    BOOST_MOVE_ITERATE_0TO7(BOOST_CONTAINER_FLAT_TREE_EMPLACE_CODE)
    #undef BOOST_CONTAINER_FLAT_TREE_EMPLACE_CODE
@@ -1401,42 +1577,88 @@ class flat_tree
          contains(const K& x) const
    {  return this->find(x) != this->cend();  }
 
+   //Moves to *this the elements of source whose key is not in *this. Of several elements of source
+   //with equivalent keys (for the comparator of *this), only the first one in the order of source
+   //is moved. The other elements stay in source.
+   //If flat_tree_same_order<C2>, source is sorted with the comparator of *this: no sort is necessary.
    template<class C2>
-   inline void merge_unique(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
+   void merge_unique(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
    {
-      this->insert_unique_range( boost::make_move_iterator(source.begin())
-                               , boost::make_move_iterator(source.end()));
+      const bool same_order = flat_tree_same_order<C2>::value;
+      container_type &sseq = source.get_sequence_ref();
+      //A self-merge (only possible with the same type) is a no-op
+      if (BOOST_UNLIKELY(static_cast<const void*>(&source) == static_cast<const void*>(this)) || sseq.empty())
+         return;
+      container_type &dseq = this->m_data.m_seq;
+      const value_compare &comp = this->priv_value_comp();
+      const size_type old_sz = dseq.size();
+      BOOST_CONTAINER_TRY{
+         //Step 1: move all the elements of source to the end of *this and sort them if
+         //necessary (stable sort)
+         dseq.insert(dseq.end(), boost::make_move_iterator(sseq.begin()), boost::make_move_iterator(sseq.end()));
+         const iterator tail = dseq.begin() + difference_type(old_sz);
+         BOOST_IF_CONSTEXPR(!same_order){
+            (flat_tree_container_inplace_sort_ending)
+               (dseq, tail, comp, dtl::bool_<is_contiguous_container<container_type>::value>());
+         }
+         //Step 2: the elements whose key is not in *this (the first of equivalent elements) stay
+         //at the end of *this, the other elements go back to source (to its moved-from elements)
+         const ::boost::move_detail::duo<iterator, iterator> r =
+            boost::movelib::inplace_set_unique_difference_partition
+               (tail, dseq.end(), dseq.begin(), tail, sseq.begin(), comp);
+         sseq.erase(r.second, sseq.end());
+         dseq.erase(r.first, dseq.end());
+         //Step 3: sort source with its comparator if necessary (stable sort)
+         BOOST_IF_CONSTEXPR(!same_order){
+            (flat_tree_container_inplace_sort_ending)
+               (sseq, sseq.begin(), source.value_comp(), dtl::bool_<is_contiguous_container<container_type>::value>());
+         }
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //source has moved-from elements and the end of *this is not merged
+         sseq.clear();
+         dseq.erase(dseq.begin() + difference_type(old_sz), dseq.end());
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      //Step 4: merge the moved elements
+      (flat_tree_container_merge_ending)(dseq, old_sz, comp);
    }
 
+   //Moves all the elements of source to *this.
+   //If flat_tree_same_order<C2>, source is sorted with the comparator of *this: linear merge.
    template<class C2>
-   inline void merge_equal(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
+   void merge_equal(flat_tree<Value, KeyOfValue, C2, AllocatorOrContainer>& source)
    {
-      this->insert_equal_range( boost::make_move_iterator(source.begin())
-                              , boost::make_move_iterator(source.end()));
-   }
-
-   inline void merge_unique(flat_tree& source)
-   {
-      const bool value = boost::container::dtl::
-         has_member_function_callable_with_merge_unique<container_type, iterator, iterator, value_compare>::value;
-      (flat_tree_merge_unique)
-         ( this->m_data.m_seq
-         , boost::make_move_iterator(source.m_data.m_seq.begin())
-         , boost::make_move_iterator(source.m_data.m_seq.end())
-         , this->priv_value_comp()
-         , dtl::bool_<value>());
-   }
-
-   inline void merge_equal(flat_tree& source)
-   {
-      const bool value = boost::container::dtl::
-         has_member_function_callable_with_merge<container_type, iterator, iterator, value_compare>::value;
-      (flat_tree_merge_equal)
-         ( this->m_data.m_seq
-         , boost::make_move_iterator(source.m_data.m_seq.begin())
-         , boost::make_move_iterator(source.m_data.m_seq.end())
-         , this->priv_value_comp()
-         , dtl::bool_<value>());
+      const bool same_order = flat_tree_same_order<C2>::value;
+      container_type &sseq = source.get_sequence_ref();
+      //A self-merge (only possible with the same type) is a no-op
+      if (BOOST_UNLIKELY(static_cast<const void*>(&source) == static_cast<const void*>(this)))
+         return;
+      BOOST_CONTAINER_TRY{
+         BOOST_IF_CONSTEXPR(same_order){
+            const bool value = boost::container::dtl::
+               has_member_function_callable_with_merge<container_type, iterator, iterator, value_compare>::value;
+            (flat_tree_merge_equal)
+               ( this->m_data.m_seq
+               , boost::make_move_iterator(sseq.begin())
+               , boost::make_move_iterator(sseq.end())
+               , this->priv_value_comp()
+               , dtl::bool_<value>());
+         }
+         else{
+            this->insert_equal_range( boost::make_move_iterator(sseq.begin())
+                                    , boost::make_move_iterator(sseq.end()));
+         }
+      }
+      BOOST_CONTAINER_CATCH(...){
+         //Some elements of source are moved-from: source is no longer sorted
+         sseq.clear();
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      //All elements are transferred
+      sseq.clear();
    }
 
    BOOST_CONTAINER_NODISCARD inline

@@ -42,6 +42,7 @@
 #include <boost/container/detail/next_capacity.hpp>
 #include <boost/container/detail/alloc_helpers.hpp>
 #include <boost/container/detail/advanced_insert_int.hpp>
+#include <boost/container/detail/addressof.hpp>
 
 // move
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
@@ -53,7 +54,7 @@
 #include <boost/move/traits.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/move/detail/to_raw_pointer.hpp>
-#include <boost/move/algo/detail/merge.hpp>
+#include <boost/move/algo/detail/rotate.hpp>
 
 //std
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -86,7 +87,6 @@ struct get_devector_opt<void, AllocatorSizeType>
 
 struct reserve_only_tag_t {};
 struct reserve_uninitialized_t {};
-struct review_implementation_t {};
 
 //struct unsafe_uninitialized_tag_t {};
 
@@ -109,9 +109,10 @@ struct review_implementation_t {};
  *
  * **Exceptions**: The exception specifications assume `T` is nothrow [Destructible].
  *
- * Most methods providing the strong exception guarantee assume `T` either has a move
- * constructor marked noexcept or is [CopyInsertable] into the devector. If it isn't true,
- * and the move constructor throws, the guarantee is waived and the effects are unspecified.
+ * Most methods providing the strong exception guarantee assume that the move constructor of `T`
+ * does not throw. Like `vector`, `devector` moves the elements when it reallocates or relocates
+ * them (it does not use `move_if_noexcept`), also when `T` is [CopyInsertable]. If the move
+ * constructor throws, only the basic exception guarantee is given.
  *
  * In addition to the exceptions specified in the **Throws** clause, the following operations
  * of `T` can throw when any of the specified concept is required:
@@ -198,6 +199,11 @@ class devector
    {
       const size_type rounder = devector_min_free_fraction - 2u;
       const size_type divisor = devector_min_free_fraction - 1u;
+      //Check the new internal capacity can be represented by size_type
+      if ( desired_capacity > size_type(size_type(-1) - rounder) ||
+           (desired_capacity + rounder) / divisor > size_type(-1) / devector_min_free_fraction ) {
+         boost::container::throw_length_error("devector: requested capacity greater than max_size()");
+      }
       size_type const nc = ((desired_capacity + rounder) / divisor) * devector_min_free_fraction;
       BOOST_ASSERT(desired_capacity <= (nc - nc / devector_min_free_fraction));
       return nc;
@@ -369,6 +375,7 @@ class devector
       BOOST_CONTAINER_CATCH(...){
          this->destroy_elements(m_.buffer + m_.front_idx, m_.buffer + m_.back_idx);
          this->deallocate_buffer();
+         BOOST_CONTAINER_RETHROW
       }
       BOOST_CONTAINER_CATCH_END
    }
@@ -454,7 +461,8 @@ class devector
    /**
    * **Effects**: Moves `rhs`'s resources to `*this`, using the specified allocator.
    *
-   * **Throws**: If allocation or T's move constructor throws.
+   * **Throws**: Nothing if `allocator_traits_type::is_always_equal::value` is true.
+   *   Otherwise, if allocation or T's move constructor throws.
    *
    * **Postcondition**: *this has the same value `rhs` had before the operation.
    *                    `rhs` is left in an unspecified but valid state.
@@ -464,14 +472,27 @@ class devector
    * **Complexity**: Linear if allocator != rhs.get_allocator(), otherwise constant.
    */
    devector(BOOST_RV_REF(devector) rhs, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type)& allocator)
-      : m_(review_implementation_t(), allocator, rhs.m_.buffer, rhs.m_.front_idx, rhs.m_.back_idx, rhs.m_.capacity)
+      BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value)
+      : m_(allocator)
    {
-      // TODO should move elems-by-elems if the two allocators differ
-      // buffer is already acquired, reset rhs
-      rhs.m_.capacity = 0u;
-      rhs.m_.buffer = pointer();
-      rhs.m_.front_idx = 0;
-      rhs.m_.back_idx = 0;
+      if (allocator_traits_type::is_always_equal::value || this->get_allocator_ref() == rhs.get_allocator_ref()) {
+         //Equal allocators: take the buffer of rhs
+         m_.buffer = rhs.m_.buffer;
+         m_.set_front_idx(rhs.m_.front_idx);
+         m_.set_back_idx(rhs.m_.back_idx);
+         m_.set_capacity(rhs.m_.capacity);
+         rhs.m_.capacity = 0u;
+         rhs.m_.buffer = pointer();
+         rhs.m_.front_idx = 0;
+         rhs.m_.back_idx = 0;
+      }
+      else if (const size_type n = rhs.size()) {
+         //Unequal allocators, we can take rhs's so we need to allocate
+         m_.buffer = this->allocate(n);
+         m_.set_capacity(n);
+         m_.set_back_idx(n);
+         this->construct_from_range(boost::make_move_iterator(rhs.begin()), boost::make_move_iterator(rhs.end()));
+      }
       BOOST_ASSERT(      invariants_ok());
       BOOST_ASSERT(rhs.invariants_ok());
    }
@@ -537,8 +558,11 @@ class devector
             // new allocator cannot free existing storage
             this->clear();
             this->deallocate_buffer();
+            //Leave a valid empty devector in case the copy below throws
             m_.capacity = 0u;
             m_.buffer = pointer();
+            m_.front_idx = 0u;
+            m_.set_back_idx(0u);
          }
          dtl::bool_<do_propagate> flag;
          dtl::assign_alloc(this_alloc, other_alloc, flag);
@@ -709,6 +733,7 @@ class devector
     */
    inline void assign(size_type n, const T& u)
    {
+      BOOST_ASSERT(!this->priv_is_element_address(dtl::addressof(u)));
       cvalue_iterator first(u, n);
       cvalue_iterator last;
       this->assign(first, last);
@@ -1176,10 +1201,10 @@ class devector
    inline void reserve(size_type new_capacity)
    {
       if (this->capacity() < new_capacity) {
-         const size_type rounder = devector_min_free_fraction - 2u;
-         const size_type divisor = devector_min_free_fraction - 1u;
-         size_type const nc = ((new_capacity + rounder)/divisor)*devector_min_free_fraction;
-         BOOST_ASSERT(new_capacity <= (nc - nc / devector_min_free_fraction));
+         if (new_capacity > this->max_size()) {
+            boost::container::throw_length_error("devector::reserve max_size() exceeded");
+         }
+         size_type const nc = to_internal_capacity(new_capacity);
          size_type const sz = this->size();
          reallocate_at(nc, (nc-sz)/2u);
       }
@@ -1206,6 +1231,9 @@ class devector
    {
       if (front_capacity() >= new_capacity) { return; }
 
+      if (new_capacity > this->max_size() - back_free_capacity()) {
+         boost::container::throw_length_error("devector::reserve_front max_size() exceeded");
+      }
       reallocate_at(new_capacity + back_free_capacity(), new_capacity - size());
 
       BOOST_ASSERT(invariants_ok());
@@ -1231,6 +1259,9 @@ class devector
    {
       if (back_capacity() >= new_capacity) { return; }
 
+      if (new_capacity > this->max_size() - front_free_capacity()) {
+         boost::container::throw_length_error("devector::reserve_back max_size() exceeded");
+      }
       reallocate_at(new_capacity + front_free_capacity(), m_.front_idx);
 
       BOOST_ASSERT(invariants_ok());
@@ -1491,7 +1522,10 @@ class devector
    *
    * **Requires**: `T` shall be [EmplaceConstructible] from `args` and [MoveInsertable] into `*this`.
    *
-   * **Exceptions**: Strong exception guarantee.
+   * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
+   * buffer (`front_free_capacity() == 0` and there is free capacity at the other end) and the
+   * construction of the new element throws, the devector can lose its elements.
+   * Strong exception guarantee if `front_free_capacity() > 0`.
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `front_free_capacity() > 0`)
@@ -1553,7 +1587,10 @@ class devector
    *
    * **Requires**: `T` shall be [CopyInsertable] into `*this`.
    *
-   * **Exceptions**: Strong exception guarantee.
+   * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
+   * buffer (`front_free_capacity() == 0` and there is free capacity at the other end) and the
+   * construction of the new element throws, the devector can lose its elements.
+   * Strong exception guarantee if `front_free_capacity() > 0`.
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `front_free_capacity() > 0`)
@@ -1569,7 +1606,10 @@ class devector
    *
    * **Requires**: `T` shall be [MoveInsertable] into `*this`.
    *
-   * **Exceptions**: Strong exception guarantee, not regarding the state of `x`.
+   * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
+   * buffer (`front_free_capacity() == 0` and there is free capacity at the other end) and the
+   * construction of the new element throws, the devector can lose its elements.
+   * If `front_free_capacity() > 0`, strong exception guarantee, not regarding the state of `x`.
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `front_free_capacity() > 0`)
@@ -1606,7 +1646,10 @@ class devector
    * **Requires**: `T` shall be [EmplaceConstructible] from `args` and [MoveInsertable] into `*this`,
    * and [MoveAssignable].
    *
-   * **Exceptions**: Strong exception guarantee.
+   * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
+   * buffer (`back_free_capacity() == 0` and there is free capacity at the other end) and the
+   * construction of the new element throws, the devector can lose its elements.
+   * Strong exception guarantee if `back_free_capacity() > 0`.
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `back_free_capacity() > 0`)
@@ -1666,7 +1709,10 @@ class devector
    *
    * **Requires**: `T` shall be [CopyInsertable] into `*this`.
    *
-   * **Exceptions**: Strong exception guarantee.
+   * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
+   * buffer (`back_free_capacity() == 0` and there is free capacity at the other end) and the
+   * construction of the new element throws, the devector can lose its elements.
+   * Strong exception guarantee if `back_free_capacity() > 0`.
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `back_free_capacity() > 0`)
@@ -1682,7 +1728,10 @@ class devector
    *
    * **Requires**: `T` shall be [MoveInsertable] into `*this`.
    *
-   * **Exceptions**: Strong exception guarantee, not regarding the state of `x`.
+   * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
+   * buffer (`back_free_capacity() == 0` and there is free capacity at the other end) and the
+   * construction of the new element throws, the devector can lose its elements.
+   * If `back_free_capacity() > 0`, strong exception guarantee, not regarding the state of `x`.
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `back_free_capacity() > 0`)
@@ -1914,6 +1963,7 @@ class devector
    */
    inline iterator insert(const_iterator position, size_type n, const T& x)
    {
+      BOOST_ASSERT(!(this->priv_insertion_moves_elements(position, n) && this->priv_is_element_address(dtl::addressof(x))));
       cvalue_iterator first(x, n);
       cvalue_iterator last = first + n;
       return this->insert_range(position, first, last);
@@ -1957,29 +2007,26 @@ class devector
             >::type * = 0)
       )
    {
-      if (position == end())
-      {
-         size_type insert_index = size();
+      const size_type insert_index = static_cast<size_type>(position - this->cbegin());
+      const size_type old_size = static_cast<size_type>(this->size());
 
-         for (; first != last; ++first)
-         {
-            this->emplace_back(*first);
-         }
-
-         return begin() + insert_index;
-      }
-      else
-      {
-         const size_type insert_index = static_cast<size_type>(position - this->cbegin());
-         const size_type old_size = static_cast<size_type>(this->size());
-
+      //Append the new elements, then rotate them to the position
+      BOOST_CONTAINER_TRY{
          for (; first != last; ++first) {
             this->emplace_back(*first);
          }
-         iterator rit (this->begin() + insert_index);
-         boost::movelib::rotate_gcd(rit, this->begin() + old_size, this->begin() + this->size());
-         return rit;
       }
+      BOOST_CONTAINER_CATCH(...){
+         //No effects: destroy the new elements at the back
+         while (this->size() > old_size) {
+            this->pop_back();
+         }
+         BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
+      iterator rit (this->begin() + difference_type(insert_index));
+      boost::movelib::rotate_gcd(rit, this->begin() + difference_type(old_size), this->end());
+      return rit;
    }
 
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -2076,6 +2123,8 @@ class devector
    */
    iterator erase(iterator first, iterator last)
    {
+      if (BOOST_UNLIKELY(first == last))  //An empty range is a no-op
+         return first;
       size_type front_distance = pos_to_index(last);
       size_type back_distance  = size_type(end() - first);
       size_type n = boost::container::iterator_udistance(first, last);
@@ -2286,19 +2335,41 @@ class devector
    template <class U>
    inline void priv_push_front(BOOST_FWD_REF(U) u)
    {
+      BOOST_ASSERT(!(!this->front_free_capacity() && this->priv_is_element_address(dtl::addressof(u))));
       this->emplace_front(boost::forward<U>(u));
    }
 
    template <class U>
    inline void priv_push_back(BOOST_FWD_REF(U) u)
    {
+      BOOST_ASSERT(!(!this->back_free_capacity() && this->priv_is_element_address(dtl::addressof(u))));
       this->emplace_back(boost::forward<U>(u));
    }
 
    template <class U>
    inline iterator priv_insert(const_iterator pos, BOOST_FWD_REF(U) u)
    {
+      BOOST_ASSERT(!(this->priv_insertion_moves_elements(pos, 1u) && this->priv_is_element_address(dtl::addressof(u))));
       return this->emplace(pos, boost::forward<U>(u));
+   }
+
+   //Debug checks of the precondition "an argument must not refer to an element of
+   //the container" (see "Arguments that refer to elements of the same container" in
+   //the documentation). The checks are done only when the operation moves elements
+   //before the argument is read: then the inserted value would be wrong.
+   bool priv_is_element_address(const void *p) const
+   {
+      const T *const b = boost::movelib::to_raw_pointer(this->data());
+      const std::size_t a = reinterpret_cast<std::size_t>(p);
+      return reinterpret_cast<std::size_t>(b) <= a
+          && a < reinterpret_cast<std::size_t>(b + this->size());
+   }
+
+   bool priv_insertion_moves_elements(const_iterator pos, size_type n) const
+   {
+      return n != 0u
+         && !(pos == this->cend()   && n <= this->back_free_capacity())
+         && !(pos == this->cbegin() && n <= this->front_free_capacity());
    }
 
    // allocator_type wrappers
@@ -2976,17 +3047,6 @@ class devector
          #endif
       {}
 
-      impl(review_implementation_t, const allocator_type &a, pointer p, size_type fi, size_type bi, size_type c)
-         : allocator_type(a), buffer(p)
-         //static cast sizes, as the allocation function will take care of overflows
-         , front_idx(static_cast<stored_size_type>(fi))
-         , back_idx(static_cast<stored_size_type>(bi))
-         , capacity(static_cast<stored_size_type>(c))
-         #ifdef BOOST_CONTAINER_DEVECTOR_ALLOC_STATS
-         , capacity_alloc_count(0)
-         #endif
-      {}
-
       impl(BOOST_RV_REF(impl) m)
          : allocator_type(BOOST_MOVE_BASE(allocator_type, m))
          , buffer(static_cast<impl&>(m).buffer)
@@ -3074,14 +3134,15 @@ inline typename devector<T, A, O>::size_type erase_if(devector<T, A, O>& c, Pred
 
 namespace boost {
 
-//!has_trivial_destructor_after_move<> == true_type
-//!specialization for optimizations
+//!has_trivial_destructor_after_move<> specialization for optimizations
 template <class T, class Allocator, class Options>
 struct has_trivial_destructor_after_move<boost::container::devector<T, Allocator, Options> >
 {
     typedef typename boost::container::devector<T, Allocator, Options>::allocator_type allocator_type;
-    typedef typename boost::container::allocator_traits<allocator_type>::pointer pointer;
+    typedef boost::container::allocator_traits<allocator_type> allocator_traits_type;
+    typedef typename allocator_traits_type::pointer pointer;
     BOOST_STATIC_CONSTEXPR bool value =
+      allocator_traits_type::is_always_equal::value &&
       ::boost::has_trivial_destructor_after_move<allocator_type>::value &&
       ::boost::has_trivial_destructor_after_move<pointer>::value;
 };

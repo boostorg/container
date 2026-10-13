@@ -22,6 +22,8 @@ int main()
    #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
       BOOST_CONTAINER_STATIC_ASSERT(( is_same<intcontainer_t, pmr::vector<int> >::value ));
    #endif
+   //polymorphic_allocator can compare unequal so a moved-from container can hold memory
+   BOOST_CONTAINER_STATIC_ASSERT(( !boost::has_trivial_destructor_after_move<intcontainer_t>::value ));
    ////////////////////////////////////
    //    Void value_type allocator
    ////////////////////////////////////

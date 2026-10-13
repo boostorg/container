@@ -149,12 +149,6 @@ class polymorphic_allocator
 
    #endif   //#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
-   //! <b>Effects</b>:
-   //!   p->~U().
-   template <class U>
-   void destroy(U* p)
-   {  (void)p; p->~U(); }
-
    //! <b>Returns</b>: Equivalent to
    //!   `polymorphic_allocator()`.
    polymorphic_allocator select_on_container_copy_construction() const BOOST_NOEXCEPT

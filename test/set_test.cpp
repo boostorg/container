@@ -438,6 +438,12 @@ int main ()
    if (!boost::container::test::instantiate_constructors<set<int>, multiset<int> >())
       return 1;
 
+   if (!boost::container::test::test_function_pointer_comparator
+         < set<int, bool(*)(int, int)>
+         , multiset<int, bool(*)(int, int)>
+         >())
+      return 1;
+
    test_merge_from_different_comparison();
 
    ////////////////////////////////////

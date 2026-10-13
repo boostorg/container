@@ -315,15 +315,9 @@ struct insert_emplace_proxy
       typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;
       alloc_traits::construct(a, (value_type*)&v, ::boost::forward<Args>(get<IdxPack>(this->args_))...);
       value_type *vp = move_detail::launder_cast<value_type *>(&v);
-      BOOST_CONTAINER_TRY{
-         *p = ::boost::move(*vp);
-      }
-      BOOST_CONTAINER_CATCH(...){
-         alloc_traits::destroy(a, vp);
-         BOOST_CONTAINER_RETHROW
-      }
-      BOOST_CONTAINER_CATCH_END
-      alloc_traits::destroy(a, vp);
+      //Destroys the temporary also if the assignment throws
+      dtl::scoped_alloc_object_destructor<Allocator, value_type> d(a, vp);
+      *p = ::boost::move(*vp);
    }
 };
 
@@ -439,15 +433,9 @@ struct insert_emplace_proxy_arg##N\
       typename dtl::aligned_storage<sizeof(value_type), dtl::alignment_of<value_type>::value>::type v;\
       alloc_traits::construct(a, (value_type*)&v BOOST_MOVE_I##N BOOST_MOVE_MFWD##N);\
       value_type *vp = move_detail::launder_cast<value_type *>(&v);\
-      BOOST_CONTAINER_TRY{\
-         *p = ::boost::move(*vp);\
-      }\
-      BOOST_CONTAINER_CATCH(...){\
-         alloc_traits::destroy(a, vp);\
-         BOOST_CONTAINER_RETHROW\
-      }\
-      BOOST_CONTAINER_CATCH_END\
-      alloc_traits::destroy(a, vp);\
+      /*Destroys the temporary also if the assignment throws*/\
+      dtl::scoped_alloc_object_destructor<Allocator, value_type> d(a, vp);\
+      *p = ::boost::move(*vp);\
    }\
 };\
 //
