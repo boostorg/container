@@ -460,10 +460,11 @@ class basic_string_base
          );
    }
 
+   //n is the number of characters, without the null terminator
    void allocate_initial_block(size_type n)
    {
       if (n <= this->max_size()) {
-         if(n > InternalBufferChars){
+         if(n >= InternalBufferChars){
             size_type new_storage = n + 1u;
             pointer reuse = 0;
             pointer p = this->allocation_command(allocate_new, n, new_storage, reuse);
@@ -764,7 +765,7 @@ class basic_string
       //Select allocator as in copy constructor as reserve_t-based constructors
       //are two step copies optimized for capacity
       : base_t( allocator_traits_type::select_on_container_copy_construction(a)
-              , n + 1)
+              , n)
    { this->priv_terminate_string(); }
 
    #if !defined( BOOST_NO_CXX11_NULLPTR )
@@ -947,7 +948,7 @@ class basic_string
    //! <b>Effects</b>: Constructs a basic_string with a default-constructed allocator,
    //!   and is initialized by n default-initialized characters.
    basic_string(size_type n, default_init_t)
-      : base_t(n + 1)
+      : base_t(n)
    {
       this->priv_size_and_terminate(n);
    }
@@ -955,7 +956,7 @@ class basic_string
    //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
    //!   and is initialized by n default-initialized characters.
    basic_string(size_type n, default_init_t, const allocator_type& a)
-      : base_t(a, n + 1)
+      : base_t(a, n)
    {
       this->priv_size_and_terminate(n);
    }
