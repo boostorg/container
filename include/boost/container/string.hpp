@@ -2163,7 +2163,7 @@ class basic_string
       if (pos1 > this->size())
          throw_out_of_range("basic_string::replace out of range position");
       const size_type len = dtl::min_value(n1, this->size() - pos1);
-      if (this->size() - len >= this->max_size() - str.size())
+      if (this->size() - len > this->max_size() - str.size())
          throw_length_error("basic_string::replace max_size() exceeded");
       const pointer addr = this->priv_addr();
       return this->replace( const_iterator(addr + difference_type(pos1))
@@ -2214,7 +2214,7 @@ class basic_string
    //! <b>Requires</b>: pos1 <= size() and s points to an array of at least n2 elements of CharT.
    //!
    //! <b>Effects</b>: Determines the effective length xlen of the string to be removed as the
-   //!   smaller of n1 and size() - pos1. If size() - xlen >= max_size() - n2 throws length_error.
+   //!   smaller of n1 and size() - pos1. If size() - xlen > max_size() - n2 throws length_error.
    //!   Otherwise, the function replaces the string controlled by *this with a string of
    //!   length size() - xlen + n2 whose first pos1 elements are a copy of the initial elements
    //!   of the original string controlled by *this, whose next n2 elements are a copy of the
@@ -2232,7 +2232,7 @@ class basic_string
          throw_out_of_range("basic_string::replace out of range position");
       const size_type len = dtl::min_value(n1, this->size() - pos1);
       const size_type max_sz = this->max_size();
-      if (n2 > max_sz || (this->size() - len) >= (max_sz - n2))
+      if (n2 > max_sz || (this->size() - len) > (max_sz - n2))
          throw_length_error("basic_string::replace max_size() exceeded");
       const pointer addr = this->priv_addr() + pos1;
       return this->replace(addr, addr + difference_type(len), s, s + difference_type(n2));
@@ -2241,7 +2241,7 @@ class basic_string
    //! <b>Requires</b>: pos1 <= size() and s points to an array of at least n2 elements of CharT.
    //!
    //! <b>Effects</b>: Determines the effective length xlen of the string to be removed as the smaller
-   //! of n1 and size() - pos1. If size() - xlen >= max_size() - n2 throws length_error. Otherwise,
+   //! of n1 and size() - pos1. If size() - xlen > max_size() - n2 throws length_error. Otherwise,
    //! the function replaces the string controlled by *this with a string of length size() - xlen + n2
    //! whose first pos1 elements are a copy of the initial elements of the original string controlled
    //! by *this, whose next n2 elements are a copy of the initial n2 elements of s, and whose
@@ -2271,7 +2271,7 @@ class basic_string
       if (pos1 > this->size())
          throw_out_of_range("basic_string::replace out of range position");
       const size_type len = dtl::min_value(n1, this->size() - pos1);
-      if (n2 > this->max_size() || this->size() - len >= this->max_size() - n2)
+      if (n2 > this->max_size() || this->size() - len > this->max_size() - n2)
          throw_length_error("basic_string::replace max_size() exceeded");
       const pointer addr    = this->priv_addr();
       return this->replace(addr + difference_type(pos1), addr + difference_type(pos1 + len), n2, c);

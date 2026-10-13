@@ -234,6 +234,38 @@ void test_allocator_max_size_smaller_than_internal_buffer()
    #endif
 }
 
+//replace can make the size exactly max_size(), but not bigger
+void test_replace_up_to_max_size()
+{
+   typedef basic_string<char, std::char_traits<char>, small_max_size_allocator<char> > string_t;
+   const std::size_t max = string_t().max_size();
+   const string_t two(2u, 'b');
+   {
+      string_t s(max - 1u, 'a');
+      s.replace(0u, 1u, two);
+      BOOST_TEST(s.size() == max);
+   }
+   {
+      string_t s(max - 1u, 'a');
+      s.replace(0u, 1u, "bb", 2u);
+      BOOST_TEST(s.size() == max);
+   }
+   {
+      string_t s(max - 1u, 'a');
+      s.replace(0u, 1u, 2u, 'b');
+      BOOST_TEST(s.size() == max);
+   }
+   #ifndef BOOST_NO_EXCEPTIONS
+   {
+      string_t s(max, 'a');
+      BOOST_TEST_THROWS(s.replace(0u, 1u, two), length_error_t);
+      BOOST_TEST_THROWS(s.replace(0u, 1u, "bb", 2u), length_error_t);
+      BOOST_TEST_THROWS(s.replace(0u, 1u, 2u, 'b'), length_error_t);
+      BOOST_TEST(s == string_t(max, 'a'));
+   }
+   #endif
+}
+
 //n default-initialized characters, just above the internal buffer capacity
 void test_default_init_above_internal_capacity()
 {
@@ -250,6 +282,7 @@ int main()
 {
    test_allocator_max_size_smaller_than_internal_buffer();
    test_default_init_above_internal_capacity();
+   test_replace_up_to_max_size();
    test_inline_chars_at_stored_size_limit();
    test_npos_length();
    test_growth_factor_50();
