@@ -644,6 +644,103 @@ class private_adaptive_pool
    }
 };
 
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
+//adaptive_pool<void>: a type-erased allocator.
+//It does not allocate, so it has no pool
+template<std::size_t NodesPerBlock, std::size_t MaxFreeBlocks, std::size_t OverheadPercent, unsigned Version>
+class adaptive_pool<void, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version>
+{
+   typedef adaptive_pool<void, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version> self_t;
+   public:
+   typedef void                                 value_type;
+   typedef void *                               pointer;
+   typedef const void *                         const_pointer;
+   typedef std::size_t                          size_type;
+   typedef std::ptrdiff_t                       difference_type;
+   typedef boost::container::dtl::
+      version_type<self_t, Version>             version;
+
+   BOOST_STATIC_CONSTEXPR std::size_t nodes_per_block        = NodesPerBlock;
+   BOOST_STATIC_CONSTEXPR std::size_t max_free_blocks        = MaxFreeBlocks;
+   BOOST_STATIC_CONSTEXPR std::size_t overhead_percent       = OverheadPercent;
+   BOOST_STATIC_CONSTEXPR std::size_t real_nodes_per_block   = NodesPerBlock;
+
+   template<class T2>
+   struct rebind
+   {  typedef adaptive_pool<T2, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version> other;  };
+
+   adaptive_pool() BOOST_NOEXCEPT_OR_NOTHROW
+   {}
+
+   template<class T2>
+   adaptive_pool(const adaptive_pool<T2, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version> &) BOOST_NOEXCEPT_OR_NOTHROW
+   {}
+
+   //All instances share the pools, so they are equal
+   friend void swap(self_t &, self_t &) BOOST_NOEXCEPT_OR_NOTHROW
+   {}
+
+   BOOST_CONTAINER_NODISCARD
+   friend bool operator==(const adaptive_pool &, const adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
+   {  return true;   }
+
+   BOOST_CONTAINER_NODISCARD
+   friend bool operator!=(const adaptive_pool &, const adaptive_pool &) BOOST_NOEXCEPT_OR_NOTHROW
+   {  return false;   }
+};
+
+//private_adaptive_pool<void>: a type-erased allocator.
+//It does not allocate
+template<std::size_t NodesPerBlock, std::size_t MaxFreeBlocks, std::size_t OverheadPercent, unsigned Version>
+class private_adaptive_pool<void, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version>
+{
+   typedef private_adaptive_pool<void, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version> self_t;
+   public:
+   typedef void                                 value_type;
+   typedef void *                               pointer;
+   typedef const void *                         const_pointer;
+   typedef std::size_t                          size_type;
+   typedef std::ptrdiff_t                       difference_type;
+   typedef boost::container::dtl::
+      version_type<self_t, Version>             version;
+
+   typedef dtl::false_type                      propagate_on_container_copy_assignment;
+   typedef dtl::true_type                       propagate_on_container_move_assignment;
+   typedef dtl::true_type                       propagate_on_container_swap;
+   typedef dtl::false_type                      is_always_equal;
+
+   BOOST_STATIC_CONSTEXPR std::size_t nodes_per_block        = NodesPerBlock;
+   BOOST_STATIC_CONSTEXPR std::size_t max_free_blocks        = MaxFreeBlocks;
+   BOOST_STATIC_CONSTEXPR std::size_t overhead_percent       = OverheadPercent;
+   BOOST_STATIC_CONSTEXPR std::size_t real_nodes_per_block   = NodesPerBlock;
+
+   template<class T2>
+   struct rebind
+   {  typedef private_adaptive_pool<T2, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version> other;  };
+
+   private_adaptive_pool() BOOST_NOEXCEPT_OR_NOTHROW
+   {}
+
+   template<class T2>
+   private_adaptive_pool(const private_adaptive_pool<T2, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version> &) BOOST_NOEXCEPT_OR_NOTHROW
+   {}
+
+   friend void swap(self_t &, self_t &) BOOST_NOEXCEPT_OR_NOTHROW
+   {}
+
+   //Same rule as the other types: equal only if they are the same object
+   BOOST_CONTAINER_NODISCARD
+   friend bool operator==(const private_adaptive_pool &l, const private_adaptive_pool &r) BOOST_NOEXCEPT_OR_NOTHROW
+   {  return &l == &r;   }
+
+   BOOST_CONTAINER_NODISCARD
+   friend bool operator!=(const private_adaptive_pool &l, const private_adaptive_pool &r) BOOST_NOEXCEPT_OR_NOTHROW
+   {  return &l != &r;   }
+};
+
+#endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 }  //namespace container {
 }  //namespace boost {
 

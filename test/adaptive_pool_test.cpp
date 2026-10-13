@@ -12,6 +12,7 @@
 #include <boost/container/vector.hpp>
 #include <boost/container/adaptive_pool.hpp>
 #include "movable_int.hpp"
+#include "void_allocator_test.hpp"
 #include "list_test.hpp"
 #include "vector_test.hpp"
 #include "extended_allocator_test.hpp"
@@ -34,6 +35,8 @@ namespace container {
 template class adaptive_pool<int>;
 template class adaptive_pool<oint_t>;
 template class private_adaptive_pool<int>;
+template class adaptive_pool<void>;
+template class private_adaptive_pool<void>;
 
 }} //boost::container
 
@@ -50,6 +53,15 @@ typedef boost::container::vector<oint_t, adapt_onode_allocator_t> MyOVector;
 
 typedef boost::container::vector<int, adapt_node_allocator_v1_t>     MyVectorV1;
 typedef boost::container::vector<oint_t, adapt_onode_allocator_v1_t> MyOVectorV1;
+
+//private_adaptive_pool: copies have another pool, so they don't compare equal (also void)
+template<class Alloc>
+bool test_private_pool_comparison()
+{
+   const Alloc a;
+   const Alloc b(a);
+   return (a == a) && !(a != a) && !(a == b) && (a != b);
+}
 
 //Propagation traits seen by the containers
 template<class Alloc, bool POCCA, bool POCMA, bool POCS, bool AlwaysEqual>
@@ -106,6 +118,15 @@ bool test_private_pool_transfer()
 
 int main ()
 {
+   if(!test::test_void_allocator_conversions< adaptive_pool<void> >() ||
+      !test::test_void_allocator_conversions< adaptive_pool<void, 256, 2, 1, 1> >() ||
+      !test::test_void_allocator_conversions< private_adaptive_pool<void> >() ||
+      !test::test_void_allocator_conversions< private_adaptive_pool<void, 256, 2, 1, 1> >())
+      return 1;
+   if(!test_private_pool_comparison< private_adaptive_pool<void> >() ||
+      !test_private_pool_comparison< private_adaptive_pool<int> >())
+      return 1;
+
    //adaptive_pool shares a pool for each type: all instances are equal and nothing propagates
    test_propagation_traits<adaptive_pool<int>, false, false, false, true>();
    test_propagation_traits<adaptive_pool<int, 256, 2, 1, 1>, false, false, false, true>();
