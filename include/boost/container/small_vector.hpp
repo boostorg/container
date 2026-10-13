@@ -840,6 +840,16 @@ class small_vector
    //! @brief The capacity/max size of the container
    BOOST_STATIC_CONSTEXPR size_type static_capacity = small_vector_storage_definer<T, N, Options>::type::sms_size;
 
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+   private:
+   //The internal capacity must be representable by the stored_size option
+   typedef typename default_if_void
+      <typename dtl::get_small_vector_opt<Options>::type::stored_size_type, std::size_t>::type opt_stored_size_t;
+   BOOST_CONTAINER_STATIC_ASSERT_MSG
+      ( (small_vector_storage_definer<T, N, Options>::type::sms_size <= std::size_t(opt_stored_size_t(-1)))
+      , "N is too big for the stored_size option");
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
    public:
    //! <b>Effects</b>: Constructs an empty small_vector using its internal storage; no dynamic
    //!   memory allocation is performed.

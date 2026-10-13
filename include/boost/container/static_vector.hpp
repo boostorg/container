@@ -187,6 +187,13 @@ class static_vector
 
    BOOST_COPYABLE_AND_MOVABLE(static_vector)
 
+   //Capacity must be representable by the stored_size option
+   typedef typename default_if_void
+      <typename dtl::get_static_vector_opt<Options>::type::stored_size_type, std::size_t>::type opt_stored_size_t;
+   BOOST_CONTAINER_STATIC_ASSERT_MSG
+      ( (Capacity <= std::size_t(opt_stored_size_t(-1)))
+      , "Capacity is too big for the stored_size option");
+
    template<class U, std::size_t OtherCapacity, class OtherOptions>
    friend class static_vector;
 

@@ -334,6 +334,9 @@ BOOST_INTRUSIVE_OPTION_TYPE(growth_factor, GrowthFactor, GrowthFactor, growth_fa
 //!If a user tries to insert more elements than representable by \c stored_size, the container
 //!will throw a length_error.
 //!
+//!The internal capacity of \c static_vector and \c small_vector must be representable by
+//!\c stored_size, else compilation fails.
+//!
 //!If this option is not specified, `allocator_traits<A>::size_type` (usually std::size_t) will
 //!be used to store size-related information inside the container.
 BOOST_INTRUSIVE_OPTION_TYPE(stored_size, StoredSizeType, StoredSizeType, stored_size_type)
