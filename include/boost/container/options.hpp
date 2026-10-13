@@ -753,8 +753,13 @@ using segtor_options_t = typename boost::container::segtor_options<Options...>::
 //! A value zero represents the default value
 //! (typically 10 chars in 32-bit systems and 22 chars in 64-bit systems).
 //!
+//! The internal buffer holds the inline characters plus the null terminator, and it can be
+//! bigger than requested to use the padding bytes. If the \c stored_size option is also
+//! specified, the internal buffer must be representable by \c stored_size
+//! For example, \c stored_size<unsigned char> supports up to 126 inline characters.
+//!
 //!\tparam InlineChars An unsigned integer value. Values greater than 127 are not supported
-//!                    duet to the internal data structure design.
+//!                    due to the internal data structure design.
 BOOST_INTRUSIVE_OPTION_CONSTANT(inline_chars, std::size_t, InlineChars, inline_chars)
 
 //! Helper metafunction to combine options into a single type to be used

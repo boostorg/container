@@ -307,6 +307,12 @@ class basic_string_base
 
    BOOST_STATIC_CONSTEXPR size_type InternalBufferChars = FinalInternalStorage;
 
+   //The internal buffer (inline_chars) must not be bigger than the biggest dynamic buffer that
+   //stored_size can represent (one bit of stored_size is used for the short/long flag)
+   BOOST_CONTAINER_STATIC_ASSERT_MSG
+      ( (InternalBufferChars <= (size_type(stored_size_type(-1)) >> 1u))
+      , "inline_chars is too big for the stored_size option");
+
    private:
 
    BOOST_STATIC_CONSTEXPR size_type MinAllocation = InternalBufferChars*2;
@@ -410,7 +416,12 @@ class basic_string_base
                          size_type &prefer_in_recvd_out_size,
                          pointer &reuse)
    {
-      return this->alloc().allocation_command(command, limit_size, prefer_in_recvd_out_size, reuse);
+      pointer const p = this->alloc().allocation_command(command, limit_size, prefer_in_recvd_out_size, reuse);
+      //The received size can be bigger than requested: never store a storage bigger than the maximum stored_size
+      const size_type max_storage = this->priv_max_storage();
+      if (prefer_in_recvd_out_size > max_storage)
+         prefer_in_recvd_out_size = max_storage;
+      return p;
    }
 
    size_type priv_max_storage() const
@@ -428,10 +439,10 @@ class basic_string_base
       const size_type spare_cap = size_type(cur_cap - current_size);
       BOOST_ASSERT(additional_objects > spare_cap);
       const size_type max_cap = max_storage - 1u;  //we need to save space for null terminator
-      const size_type achievable_additional_obj = size_type(max_cap - size_type(cur_cap));
       const size_type min_additional_obj = size_type(additional_objects - spare_cap);
 
-      if ( achievable_additional_obj < min_additional_obj )
+      //cur_cap is bigger than max_cap only if the allocator max_size is smaller than the current buffer
+      if ( BOOST_UNLIKELY(cur_cap > max_cap || size_type(max_cap - cur_cap) < min_additional_obj) )
          boost::container::throw_length_error("get_next_capacity, allocator or storage_size_type's max size reached");
 
       return growth_factor_type()
@@ -480,8 +491,13 @@ class basic_string_base
       }
    }
 
+   //The allocator and the stored_size limits, minus the null terminator. The internal
+   //buffer does not use the allocator, so it is always available.
    inline size_type max_size() const
-   {  return allocator_traits_type::max_size(this->alloc()) - 1; }
+   {
+      const size_type max_storage = this->priv_max_storage();
+      return size_type((max_storage > InternalBufferChars ? max_storage : InternalBufferChars) - 1u);
+   }
 
    protected:
    inline size_type priv_capacity() const
@@ -3232,9 +3248,9 @@ class basic_string
       const bool was_short = this->priv_repr_data(addr, old_size, old_storage);
       const bool do_alloc = size_type(old_storage - 1u) < res_arg;
       if (do_alloc){
-         //size_type n = dtl::max_value(res_arg, this->size()) + 1;
          size_type n = res_arg + 1;
-         size_type new_storage = this->next_storage(n, old_size, old_storage, this->priv_max_storage());
+         //next_storage takes the number of characters to add to the current size
+         size_type new_storage = this->next_storage(size_type(res_arg - old_size), old_size, old_storage, this->priv_max_storage());
          pointer reuse = 0;
          pointer new_start = this->allocation_command(allocate_new, n, new_storage, reuse);
 
