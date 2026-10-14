@@ -23,6 +23,7 @@
 #include <boost/container/new_allocator.hpp>
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/container/pmr/global_resource.hpp>
+#include <boost/container/throw_exception.hpp>
 #include <boost/assert.hpp>
 
 #include <cstddef>
@@ -93,11 +94,16 @@ class polymorphic_allocator
 
    //! <b>Returns</b>: Equivalent to
    //!   `static_cast<T*>(m_resource->allocate(n * sizeof(T), alignof(T)))`.
+   //!
+   //! <b>Throws</b>: bad_alloc if `n * sizeof(T)` overflows (see boost::container::throw_bad_alloc),
+   //!   or what the memory resource throws.
    BOOST_CONTAINER_NODISCARD T* allocate(size_t n)
    {
       //Class invariant: every constructor either takes it from
       //get_default_resource() or requires a non-null argument
       BOOST_CONTAINER_ASSUME(m_resource != 0);
+      if (BOOST_UNLIKELY(n > size_t(-1)/sizeof(T)))
+         throw_bad_alloc();
       return static_cast<T*>(m_resource->allocate(n*sizeof(T), ::boost::move_detail::alignment_of<T>::value));
    }
 

@@ -222,6 +222,20 @@ void test_do_allocate_deallocate()
    }
 }
 
+//The size plus the over-alignment space overflows: throw bad_alloc and do not call the allocator
+void test_do_allocate_overaligned_overflow()
+{
+   #ifndef BOOST_NO_EXCEPTIONS
+   derived_from_resource_adaptor_stateful dra;
+   dra.get_allocator().allocate_size = 0u;
+   dra.get_allocator().allocate_return = 0;
+   const std::size_t alignment = max_alignment_value*4u;
+   BOOST_TEST_THROWS(dra.do_allocate(std::size_t(-1) - 10u, alignment), boost::container::bad_alloc_t);
+   BOOST_TEST_THROWS(dra.do_allocate(std::size_t(-1), alignment), boost::container::bad_alloc_t);
+   BOOST_TEST(dra.get_allocator().allocate_size == 0u);
+   #endif
+}
+
 void test_do_is_equal()
 {
    derived_from_resource_adaptor_stateful dra;
@@ -249,6 +263,7 @@ int main()
    test_move_assign();
    test_get_allocator();
    test_do_allocate_deallocate();
+   test_do_allocate_overaligned_overflow();
    test_do_is_equal();
    return ::boost::report_errors();
 }

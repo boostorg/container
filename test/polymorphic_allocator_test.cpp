@@ -64,6 +64,27 @@ void test_allocate()
    p.deallocate(ptr, 2);   //To make [[nodiscard]] happy
 }
 
+//n * sizeof(T) overflows: throw bad_alloc and do not call the resource
+void test_allocate_overflow()
+{
+   #ifndef BOOST_NO_EXCEPTIONS
+   derived_from_memory_resource d;
+   polymorphic_allocator<long long> p(&d);
+   d.reset();
+   const std::size_t max_n = std::size_t(-1)/sizeof(long long);
+   BOOST_TEST_THROWS((void)p.allocate(max_n + 1u), boost::container::bad_alloc_t);
+   BOOST_TEST_THROWS((void)p.allocate(std::size_t(-1)), boost::container::bad_alloc_t);
+   BOOST_TEST(d.do_allocate_called == false);
+   //The biggest n that does not overflow is passed to the resource
+   long long dummy;
+   d.do_allocate_return = &dummy;
+   long long *const ptr = p.allocate(max_n);
+   BOOST_TEST(d.do_allocate_called == true);
+   BOOST_TEST(d.do_allocate_bytes == max_n*sizeof(long long));
+   p.deallocate(ptr, max_n);
+   #endif
+}
+
 void test_deallocate()
 {
    int dummy;
@@ -188,6 +209,7 @@ int main()
    test_copy_constructor();
    test_copy_assignment();
    test_allocate();
+   test_allocate_overflow();
    test_deallocate();
    test_construct();
    test_destroy();

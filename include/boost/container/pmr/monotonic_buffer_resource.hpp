@@ -20,6 +20,7 @@
 #include <boost/container/container_fwd.hpp>
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/container/detail/block_slist.hpp>
+#include <boost/container/throw_exception.hpp>
 
 //Inline implementation
 #include <boost/container/pmr/global_resource.hpp>
@@ -82,6 +83,7 @@ class monotonic_buffer_resource
    /// @cond
    void increase_next_buffer();
    void increase_next_buffer_at_least_to(std::size_t minimum_size);
+   static std::size_t next_buffer_size_at_least(std::size_t next_buffer_size, std::size_t minimum_size);
    void *allocate_from_current(std::size_t aligner, std::size_t bytes);
    /// @endcond
 
@@ -209,19 +211,23 @@ inline void monotonic_buffer_resource::increase_next_buffer()
    m_next_buffer_size = (std::size_t(-1)/2 < m_next_buffer_size) ? std::size_t(-1) : m_next_buffer_size*2;
 }
 
-inline void monotonic_buffer_resource::increase_next_buffer_at_least_to(std::size_t minimum_size)
+inline std::size_t monotonic_buffer_resource::next_buffer_size_at_least
+   (std::size_t next_buffer_size, std::size_t minimum_size)
 {
-   if(m_next_buffer_size < minimum_size){
-      if(bi::detail::is_pow2(minimum_size)){
-         m_next_buffer_size = minimum_size;
-      }
-      else if(std::size_t(-1)/2 < minimum_size){
-         m_next_buffer_size = minimum_size;
+   if(next_buffer_size < minimum_size){
+      if(bi::detail::is_pow2(minimum_size) || std::size_t(-1)/2 < minimum_size){
+         return minimum_size;
       }
       else{
-         m_next_buffer_size = bi::detail::ceil_pow2(minimum_size);
+         return bi::detail::ceil_pow2(minimum_size);
       }
    }
+   return next_buffer_size;
+}
+
+inline void monotonic_buffer_resource::increase_next_buffer_at_least_to(std::size_t minimum_size)
+{
+   m_next_buffer_size = next_buffer_size_at_least(m_next_buffer_size, minimum_size);
 }
 
 inline monotonic_buffer_resource::monotonic_buffer_resource(memory_resource* upstream) BOOST_NOEXCEPT
@@ -315,11 +321,14 @@ inline void* monotonic_buffer_resource::do_allocate(std::size_t bytes, std::size
       //max_align-aligned, so for an over-aligned request reserve enough extra
       //space to be able to realign the returned block inside the new buffer.
       const std::size_t extra_for_alignment = (alignment > memory_resource::max_align) ? (alignment - 1u) : 0u;
-      //Update next_buffer_size to at least bytes plus the realignment slack
-      this->increase_next_buffer_at_least_to(bytes + extra_for_alignment);
-      //Now allocate and update internal data
-      m_current_buffer = (char*)m_memory_blocks.allocate(m_next_buffer_size);
-      m_current_buffer_size = m_next_buffer_size;
+      if(BOOST_UNLIKELY(bytes > std::size_t(-1) - extra_for_alignment))
+         throw_bad_alloc();
+      //The new buffer holds at least bytes plus the realignment slack. Change the internal
+      //data only after the upstream allocation, so that an exception has no effects.
+      const std::size_t buffer_size = next_buffer_size_at_least(m_next_buffer_size, bytes + extra_for_alignment);
+      m_current_buffer = (char*)m_memory_blocks.allocate(buffer_size);
+      m_current_buffer_size = buffer_size;
+      m_next_buffer_size = buffer_size;
       this->increase_next_buffer();
       //Recompute the alignment padding for the freshly obtained buffer (which is
       //only max_align-aligned). This is zero unless the request is over-aligned,

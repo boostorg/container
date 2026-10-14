@@ -92,7 +92,7 @@ class block_slist_base
 
    void *allocate(std::size_t size, memory_resource &mr)
    {
-      if((size_t(-1) - header_size) < size)
+      if(BOOST_UNLIKELY((size_t(-1) - header_size) < size))
          throw_bad_alloc();
       void *p = mr.allocate(size+header_size);
       block_slist_header &mb  = *::new((void*)p, boost_container_new_t()) DerivedFromBlockSlistHeader;

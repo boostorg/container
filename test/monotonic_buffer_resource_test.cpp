@@ -601,6 +601,53 @@ void test_do_allocate_overaligned()
    BOOST_TEST(mrl.m_info.size() == 0u);
 }
 
+//Upstream resource that throws bad_alloc for requests bigger than max_bytes
+class limited_memory_resource
+   : public memory_resource_logger
+{
+   public:
+   explicit limited_memory_resource(std::size_t max)
+      : max_bytes(max)
+   {}
+
+   virtual void* do_allocate(std::size_t bytes, std::size_t alignment) BOOST_OVERRIDE
+   {
+      if(bytes > max_bytes)
+         boost::container::throw_bad_alloc();
+      return this->memory_resource_logger::do_allocate(bytes, alignment);
+   }
+
+   std::size_t max_bytes;
+};
+
+void test_do_allocate_overflow_and_upstream_failure()
+{
+   #ifndef BOOST_NO_EXCEPTIONS
+   limited_memory_resource lmr(1024u*1024u);
+   {
+      derived_from_monotonic_buffer_resource dmbr(&lmr);
+      const std::size_t next_size = dmbr.next_buffer_size();
+      //The size plus the realignment space overflows
+      BOOST_TEST_THROWS(dmbr.do_allocate(std::size_t(-1) - 10u, memory_resource::max_align*4u), boost::container::bad_alloc_t);
+      BOOST_TEST_THROWS(dmbr.do_allocate(std::size_t(-1), memory_resource::max_align*2u), boost::container::bad_alloc_t);
+      BOOST_TEST(lmr.m_info.empty());
+      BOOST_TEST(dmbr.next_buffer_size() == next_size);
+      //The upstream resource throws: no effects
+      BOOST_TEST_THROWS(dmbr.do_allocate(std::size_t(1) << 30u, 1u), boost::container::bad_alloc_t);
+      BOOST_TEST(lmr.m_info.empty());
+      BOOST_TEST(dmbr.next_buffer_size() == next_size);
+      BOOST_TEST(dmbr.current_buffer() == 0);
+      //Later small allocations use the normal buffer size
+      void *const p = dmbr.do_allocate(1u, 1u);
+      BOOST_TEST(p != 0);
+      BOOST_TEST(lmr.m_info.size() == 1u);
+      BOOST_TEST(lmr.m_info[0].bytes == next_size + block_slist::header_size);
+   }
+   BOOST_TEST(lmr.m_mismatches == 0u);
+   BOOST_TEST(lmr.m_info.empty());
+   #endif
+}
+
 void test_do_deallocate()
 {
    memory_resource_logger mrl;
@@ -720,6 +767,7 @@ int main()
    test_do_allocate();
    test_do_allocate_zero();
    test_do_allocate_overaligned();
+   test_do_allocate_overflow_and_upstream_failure();
    test_do_deallocate();
    test_do_is_equal();
    test_release();

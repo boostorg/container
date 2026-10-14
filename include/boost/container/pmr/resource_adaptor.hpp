@@ -20,6 +20,7 @@
 #include <boost/container/container_fwd.hpp>
 
 #include <boost/container/pmr/memory_resource.hpp>
+#include <boost/container/throw_exception.hpp>
 #include <boost/container/allocator_traits.hpp>
 #include <boost/intrusive/detail/ebo_functor_holder.hpp>
 #include <boost/move/utility_core.hpp>
@@ -181,7 +182,10 @@ class resource_adaptor_imp
    void * priv_aligned_alloc(std::size_t bytes, std::size_t alignment)
    {
       //Allocate space for requested bytes, plus alignment, plus bookeeping data
-      void *const p = this->ebo_alloc_t::get().allocate(bytes + priv_extra_bytes_for_overalignment(alignment));
+      const std::size_t extra = priv_extra_bytes_for_overalignment(alignment);
+      if (BOOST_UNLIKELY(bytes > std::size_t(-1) - extra))
+         throw_bad_alloc();
+      void *const p = this->ebo_alloc_t::get().allocate(bytes + extra);
 
       if (0 != p) {
          //Obtain the aligned address after the bookeeping data
