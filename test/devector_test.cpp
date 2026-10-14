@@ -140,6 +140,17 @@ template <class Devector> void test_constructor_reserve_only_front_back()
     Devector b(0, 0, reserve_only_tag_t());
     BOOST_TEST(b.get_alloc_count() == 0u);
   }
+
+  #ifndef BOOST_NO_EXCEPTIONS
+  //front_free_cap + back_free_cap overflows
+  {
+    typedef typename Devector::size_type size_type;
+    const size_type max = size_type(-1);
+    BOOST_TEST_THROWS(Devector(max, 2u, reserve_only_tag_t()), length_error_t);
+    BOOST_TEST_THROWS(Devector(2u, max, reserve_only_tag_t()), length_error_t);
+    BOOST_TEST_THROWS(Devector(max/2u + 1u, max/2u + 1u, reserve_only_tag_t()), length_error_t);
+  }
+  #endif   //#ifndef BOOST_NO_EXCEPTIONS
 }
 
 template <class Devector> void test_constructor_n()

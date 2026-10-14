@@ -3025,8 +3025,17 @@ class devector
          #endif
       {}
 
+      //Returns ffc + bfc, or throws length_error if the sum overflows
+      static size_type checked_capacity_sum(size_type const ffc, size_type const bfc)
+      {
+         if (BOOST_UNLIKELY(ffc > size_type(size_type(-1) - bfc))) {
+            boost::container::throw_length_error("devector: requested capacity greater than max_size()");
+         }
+         return size_type(ffc + bfc);
+      }
+
       impl(reserve_only_tag_t, const allocator_type &a, size_type const ffc, size_type const bfc)
-         : allocator_type(a), buffer(do_allocate(get_al(), ffc+bfc) )
+         : allocator_type(a), buffer(do_allocate(get_al(), checked_capacity_sum(ffc, bfc)) )
          //static cast sizes, as the allocation function will take care of overflows
          , front_idx(static_cast<stored_size_type>(ffc))
          , back_idx(static_cast<stored_size_type>(ffc))
