@@ -173,6 +173,49 @@ void assign_test()
 }
 
 template<class StringViewType>
+void empty_assign_test()
+{
+   typedef typename StringViewType::value_type char_type;
+   typedef boost::container::basic_string<char_type> string_type;
+   const char_type empty[] = { char_type(0) };
+   const char_type value = char_type('y');
+   const StringViewType views[] = { StringViewType(), StringViewType(empty) };
+   const std::size_t sizes[] = { 0u, 7u, 128u };
+   for(std::size_t i = 0; i != sizeof(views)/sizeof(views[0]); ++i){
+      const StringViewType sv = views[i];
+      string_type constructed(sv);
+      BOOST_TEST(constructed.empty());
+      BOOST_TEST(constructed.c_str()[0] == char_type(0));
+      string_type constructed_with_allocator(sv, constructed.get_allocator());
+      BOOST_TEST(constructed_with_allocator.empty());
+      BOOST_TEST(constructed_with_allocator.c_str()[0] == char_type(0));
+
+      for(std::size_t j = 0; j != sizeof(sizes)/sizeof(sizes[0]); ++j){
+         string_type s(sizes[j], char_type('x'));
+         const std::size_t capacity = s.capacity();
+         BOOST_TEST(&s.assign(sv) == &s);
+         BOOST_TEST(s.empty());
+         BOOST_TEST(s.c_str()[0] == char_type(0));
+         BOOST_TEST(s.capacity() == capacity);
+
+         s.assign(sizes[j], char_type('x'));
+         BOOST_TEST(&(s = sv) == &s);
+         BOOST_TEST(s.empty());
+         BOOST_TEST(s.c_str()[0] == char_type(0));
+
+         s.assign(sizes[j], char_type('x'));
+         BOOST_TEST(&s.assign(sv.data(), sv.size()) == &s);
+         BOOST_TEST(s.empty());
+         BOOST_TEST(s.c_str()[0] == char_type(0));
+
+         s.assign(StringViewType(&value, 1u));
+         BOOST_TEST(s.size() == 1u);
+         BOOST_TEST(s[0] == value);
+      }
+   }
+}
+
+template<class StringViewType>
 void plus_equal_test()
 {
    StringViewType sv  = "23459";
@@ -310,6 +353,7 @@ void test_all()
    constructor_test<StringViewType>();
    assignment_test<StringViewType>();
    assign_test<StringViewType>();
+   empty_assign_test<StringViewType>();
    plus_equal_test<StringViewType>();
    append_test<StringViewType>();
    insert_test<StringViewType>();
@@ -327,10 +371,11 @@ void test_all()
 int main()
 {
    test_all<boost::string_view>();
+   empty_assign_test<boost::wstring_view>();
    #ifdef BOOST_CONTAINER_TEST_HAS_STD_STRING_VIEW
    test_all<std::string_view>();
+   empty_assign_test<std::wstring_view>();
    #endif
 
    return boost::report_errors();
 }
-
