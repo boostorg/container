@@ -92,6 +92,46 @@ struct get_string_opt<void, AllocatorSizeType>
 };
 
 namespace dtl {
+
+//Traits::copy, move and compare usually call memcpy, memmove and memcmp, which
+//require non-null pointers even if the count is zero. A string or a view can
+//have a null pointer if its size is zero, so these helpers do not call Traits
+//for a zero count. GCC 12 still reports -Wnonnull for constant null pointers on
+//paths where the count is zero and the call can not run: a false positive.
+#if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnonnull"
+#endif
+
+template<class Traits, class CharT>
+BOOST_CONTAINER_FORCEINLINE void string_traits_copy(CharT* dst, const CharT* src, std::size_t n)
+{
+   BOOST_ASSERT((dst && src) || !n);
+   if (BOOST_LIKELY(n != 0))
+      Traits::copy(dst, src, n);
+}
+
+template<class Traits, class CharT>
+BOOST_CONTAINER_FORCEINLINE void string_traits_move(CharT* dst, const CharT* src, std::size_t n)
+{
+   BOOST_ASSERT((dst && src) || !n);
+   if (BOOST_LIKELY(n != 0))
+      Traits::move(dst, src, n);
+}
+
+template<class Traits, class CharT>
+BOOST_CONTAINER_FORCEINLINE int string_traits_compare(const CharT* a, const CharT* b, std::size_t n)
+{
+   BOOST_ASSERT((a && b) || !n);
+   if (BOOST_LIKELY(n != 0))
+      return Traits::compare(a, b, n);
+   return 0;
+}
+
+#if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
+#pragma GCC diagnostic pop
+#endif
+
 // ------------------------------------------------------------
 // Class basic_string_base.
 
@@ -1788,7 +1828,7 @@ class basic_string
        CharT* const ptr = boost::movelib::to_raw_pointer(addr);
        //[first, last) can be a part of *this (e.g. assign(s, pos, n)): if so, n <= size(),
        //reserve() does not reallocate and the ranges can overlap.
-       Traits::move(ptr, first, n);
+       dtl::string_traits_move<Traits>(ptr, first, n);
        this->priv_construct_null(ptr + difference_type(n));
        this->priv_size(short_repr, n);
        return *this;
@@ -2446,7 +2486,7 @@ class basic_string
       if (pos > this->size())
          throw_out_of_range("basic_string::copy out of range position");
       const size_type len = dtl::min_value(n, this->size() - pos);
-      Traits::copy(s, boost::movelib::to_raw_pointer(this->priv_addr() + pos), len);
+      dtl::string_traits_copy<Traits>(s, boost::movelib::to_raw_pointer(this->priv_addr() + pos), len);
       return len;
    }
 
@@ -3171,7 +3211,7 @@ class basic_string
    {
       const std::size_t s_sz = sv.size();
       const std::size_t t_sz = this->size();
-      return t_sz >= s_sz && Traits::compare(this->data(), sv.data(), s_sz) == 0;
+      return t_sz >= s_sz && dtl::string_traits_compare<Traits>(this->data(), sv.data(), s_sz) == 0;
    }
 
    //! <b>Effects</b>: Checks if the string begins with the given prefix
@@ -3208,7 +3248,7 @@ class basic_string
    {
       const std::size_t s_sz = sv.size();
       const std::size_t t_sz = this->size();
-      return t_sz >= s_sz && Traits::compare(this->data() + std::ptrdiff_t(t_sz - s_sz), sv.data(), s_sz) == 0;
+      return t_sz >= s_sz && dtl::string_traits_compare<Traits>(this->data() + std::ptrdiff_t(t_sz - s_sz), sv.data(), s_sz) == 0;
    }
 
    //! <b>Effects</b>: Checks if the string begins with the given suffix
@@ -3299,9 +3339,8 @@ class basic_string
    {
       const std::size_t n1 = std::size_t(l1 - f1);
       const std::size_t n2 = std::size_t(l2 - f2);
-      const int cmp = Traits::compare(boost::movelib::to_raw_pointer(f1),
-                                      boost::movelib::to_raw_pointer(f2),
-                                      dtl::min_value(n1, n2));
+      const int cmp = dtl::string_traits_compare<Traits>
+         (boost::movelib::to_raw_pointer(f1), boost::movelib::to_raw_pointer(f2), dtl::min_value(n1, n2));
       return cmp != 0 ? cmp : (n1 < n2 ? -1 : (n1 > n2 ? 1 : 0));
    }
 
@@ -3401,7 +3440,7 @@ class basic_string
    }
 
    static inline void priv_copy( const CharT* first, const CharT* last, CharT* result)
-   {  Traits::copy(result, first, std::size_t(last - first));  }
+   {  dtl::string_traits_copy<Traits>(result, first, std::size_t(last - first));  }
 
    //True if reading [first, last) can throw or [first, last) is a part of *this.
    //Then the characters must be read before the old characters move.
@@ -3567,10 +3606,10 @@ class basic_string
    {  priv_copy(first, last, result);  }
 
    static inline void priv_copy_overlapping( const CharT* first, const CharT* last, CharT* result)
-   {  Traits::move(result, first, std::size_t(last - first));  }
+   {  dtl::string_traits_move<Traits>(result, first, std::size_t(last - first));  }
 
    static inline void priv_copy_overlapping( CharT* first, CharT* last, CharT* result)
-   {  Traits::move(result, first, std::size_t(last - first));  }
+   {  dtl::string_traits_move<Traits>(result, first, std::size_t(last - first));  }
 
    //Debug checks of the precondition "a range must not refer to characters of the
    //string" (see "Arguments that refer to elements of the same container" in the
@@ -3778,7 +3817,7 @@ inline
       operator==( BasicStringView<CharT,Traits> x, const basic_string<CharT,Traits,Allocator,Options>& y)
 {
    return x.size() == y.size() &&
-          Traits::compare(x.data(), y.data(), x.size()) == 0;
+          dtl::string_traits_compare<Traits>(x.data(), y.data(), x.size()) == 0;
 }
 
 template <class CharT, class Traits, class Allocator, class Options, template <class, class> class BasicStringView>
@@ -3789,7 +3828,7 @@ inline
       operator==( const basic_string<CharT,Traits,Allocator,Options>& x, BasicStringView<CharT,Traits> y)
 {
    return x.size() == y.size() &&
-          Traits::compare(x.data(), y.data(), x.size()) == 0;
+          dtl::string_traits_compare<Traits>(x.data(), y.data(), x.size()) == 0;
 }
 
 template <class CharT, class Traits, class Allocator, class Options>
