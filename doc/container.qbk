@@ -1994,6 +1994,20 @@ shortly after new elements are added to the container.
 `container::resize(size_type n, default_init_t)`, where new elements are constructed
 using [@http://en.cppreference.com/w/cpp/language/default_initialization default initialization].
 
+[note In C++26, reading an uninitialized automatic variable is erroneous behavior
+([@https://wg21.link/P2795 P2795]), and some compilers (e.g. GCC 16 with `-std=c++26`)
+zero-initialize the whole object before the constructor runs. For containers with
+in-place storage (`static_vector`, `small_vector`) declared as local variables, this
+can remove the benefit of `default_init`. The container cannot avoid this, because
+`[[indeterminate]]` cannot be applied to data members. Mark the variable `[[indeterminate]]`:
+
+``
+boost::container::small_vector<float, 100> buf [[indeterminate]] (100, boost::container::default_init);
+``
+
+or use a compiler option such as GCC's `-ftrivial-auto-var-init=uninitialized`.
+Containers that allocate their elements dynamically are not affected.]
+
 [endsect]
 
 [section:ordered_range_insertion Ordered range insertion for associative containers (['ordered_unique_range], ['ordered_range]) ]
@@ -2949,6 +2963,7 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
    * [@https://github.com/boostorg/container/issues/335 GitHub #335: ['"Error on instantiating an incomplete type"]].
    * [@https://github.com/boostorg/container/pull/339 GitHub #339: ['"optimized range insertion for boost::container::hub"]].
    * [@https://github.com/boostorg/container/issues/342 GitHub #342: ['"Using unqualified swap() on two small_vectors calls an incorrect swap function"]].
+   * [@https://github.com/boostorg/container/issues/333 GitHub #333: ['"Default_init results in a memset with GCC16"]] (documented, see the note in [link container.extended_functionality.default_initialialization Default initialization]).
    * [@https://github.com/boostorg/container/issues/344 GitHub #344: ['"Build break on Windows ARM64EC near the definition of the BOOST_CONTAINER_PREFETCH macro"]].
    * [@https://github.com/boostorg/container/issues/346 GitHub #346: ['"Regression: Invalid assertion in string assign (and probably other functions)"]].
 
