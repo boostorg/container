@@ -19,6 +19,7 @@ using namespace boost::container;
 template<class Unsigned, class VectorType>
 void test_stored_size_type_impl()
 {
+   BOOST_TEST(VectorType().max_size() == typename VectorType::size_type(Unsigned(-1)));
    #ifndef BOOST_NO_EXCEPTIONS
    VectorType v;
    typedef typename VectorType::size_type    size_type;

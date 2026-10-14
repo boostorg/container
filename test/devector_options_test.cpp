@@ -17,6 +17,7 @@ using namespace boost::container;
 template<class Unsigned, class DevectorType>
 void test_stored_size_type_impl()
 {
+   BOOST_TEST(DevectorType().max_size() == typename DevectorType::size_type(Unsigned(-1)));
    #ifndef BOOST_NO_EXCEPTIONS
    DevectorType v;
    typedef typename DevectorType::size_type    size_type;

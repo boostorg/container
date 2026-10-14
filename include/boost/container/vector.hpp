@@ -528,10 +528,16 @@ struct vector_alloc_holder
       return this->priv_allocation_command(alloc_version(), command, limit_size, prefer_in_recvd_out_size, reuse);
    }
 
+   //The allocator limit, clamped to the biggest value of stored_size_type
+   inline size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      return dtl::limit_by_stored_size_type<size_type, stored_size_type>::clamp
+         (allocator_traits_type::max_size(this->alloc()));
+   }
+
    inline pointer allocate(size_type n)
    {
-      const size_type max_alloc = allocator_traits_type::max_size(this->alloc());
-      const size_type max = dtl::limit_by_stored_size_type<size_type, stored_size_type>::clamp(max_alloc);;
+      const size_type max = this->max_size();
       if (BOOST_UNLIKELY(max < n) )
          boost::container::throw_length_error("get_next_capacity, allocator's max size reached");
 
@@ -564,8 +570,7 @@ struct vector_alloc_holder
    size_type next_capacity(size_type additional_objects) const
    {
       BOOST_ASSERT(additional_objects > size_type(this->m_capacity - this->m_size));
-      size_type max = allocator_traits_type::max_size(this->alloc());
-      (clamp_by_stored_size_type<size_type>)(max, stored_size_type());
+      const size_type max = this->max_size();
       const size_type remaining_cap = size_type(max - size_type(this->m_capacity));
       const size_type min_additional_cap = size_type(additional_objects - size_type(this->m_capacity - this->m_size));
 
@@ -780,6 +785,10 @@ struct vector_alloc_holder<Allocator, StoredSizeType, version_0>
    inline const allocator_type &alloc() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return *this;  }
 
+   //The static capacity is checked to fit in stored_size_type at compile time
+   inline size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
+   {  return allocator_traits_type::max_size(this->alloc());  }
+
    BOOST_CONTAINER_FORCEINLINE bool try_expand_fwd(size_type at_least)
    {  return !at_least;  }
 
@@ -877,6 +886,8 @@ private:
    //If provided the stored_size option must specify a type that is equal or a type that is smaller.
    BOOST_CONTAINER_STATIC_ASSERT( (sizeof(stored_size_type) < sizeof(alloc_size_type) ||
                         dtl::is_same<stored_size_type, alloc_size_type>::value) );
+   BOOST_CONTAINER_STATIC_ASSERT_MSG( (stored_size_type(-1) > stored_size_type(0))
+                                    , "stored_size must be an unsigned integer type");
 
    typedef typename dtl::version<allocator_type>::type alloc_version;
    typedef boost::container::vector_alloc_holder
@@ -1650,13 +1661,14 @@ private:
    BOOST_CONTAINER_NODISCARD inline size_type size() const BOOST_NOEXCEPT_OR_NOTHROW
    { return this->m_holder.m_size; }
 
-   //! <b>Effects</b>: Returns the largest possible size of the vector.
+   //! <b>Effects</b>: Returns the largest possible size of the vector: the
+   //!   allocator's limit, or the biggest value of the stored_size type if smaller.
    //!
    //! <b>Throws</b>: Nothing.
    //!
    //! <b>Complexity</b>: Constant.
    BOOST_CONTAINER_NODISCARD inline size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
-   { return allocator_traits_type::max_size(this->m_holder.alloc()); }
+   { return this->m_holder.max_size(); }
 
    //! <b>Effects</b>: Inserts or erases elements at the end such that
    //!   the size becomes n. New elements are value initialized.

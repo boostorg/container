@@ -948,9 +948,9 @@ class devector
    BOOST_CONTAINER_NODISCARD inline
     size_type max_size() const BOOST_NOEXCEPT
    {
-      size_type alloc_max = allocator_traits_type::max_size(get_allocator_ref());
-      size_type size_type_max = (size_type)-1;
-      return (alloc_max <= size_type_max) ? size_type(alloc_max) : size_type_max;
+      //The allocator limit, clamped to the biggest value of stored_size_type
+      return dtl::limit_by_stored_size_type<size_type, stored_size_type>::clamp
+         (allocator_traits_type::max_size(get_allocator_ref()));
    }
 
    /**

@@ -665,10 +665,16 @@ class deque_base
       this->members_.swap(x.members_);
    }
 
+   //The allocator limit, clamped to the biggest value of stored_size_type
+   size_type prot_max_size() const BOOST_NOEXCEPT_OR_NOTHROW
+   {
+      return dtl::limit_by_stored_size_type<size_type, stored_size_type>::clamp
+         (val_alloc_traits_type::max_size(this->alloc()));
+   }
+
    void test_size_against_max(size_type n)
    {
-      const size_type max_alloc = val_alloc_traits_type::max_size(this->alloc());
-      const size_type max = dtl::limit_by_stored_size_type<size_type, stored_size_type>::clamp(max_alloc);;
+      const size_type max = this->prot_max_size();
       if (BOOST_UNLIKELY(max < n) )
          boost::container::throw_length_error("get_next_capacity, allocator's max size reached");
    }
@@ -1636,7 +1642,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
 
    BOOST_CONTAINER_NODISCARD inline
       size_type max_size() const BOOST_NOEXCEPT_OR_NOTHROW
-      { return allocator_traits_type::max_size(this->alloc()); }
+      { return this->prot_max_size(); }
 
    void resize(size_type new_size)
    {
