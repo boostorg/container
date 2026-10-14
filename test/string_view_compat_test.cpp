@@ -215,6 +215,71 @@ void empty_assign_test()
    }
 }
 
+//A default-constructed view has a null data() and a zero size()
+template<class StringViewType>
+void empty_view_operations_test()
+{
+   typedef typename StringViewType::value_type char_type;
+   typedef boost::container::basic_string<char_type> string_type;
+   typedef typename string_type::size_type size_type;
+   const char_type abc[] = { char_type('a'), char_type('b'), char_type('c'), char_type(0) };
+   const StringViewType sv;
+   const char_type *const null_ptr = sv.data();
+   const size_type npos = string_type::npos;
+   const string_type orig(abc);
+
+   //Modifiers: no effects
+   {
+      string_type s(orig);
+      s += sv;
+      s.append(sv);
+      s.append(null_ptr, 0u);
+      s.insert(1u, sv);
+      s.insert(1u, null_ptr, 0u);
+      BOOST_TEST(s == orig);
+      s.replace(1u, 1u, null_ptr, 0u);
+      BOOST_TEST(s == string_type(abc).erase(1u, 1u));
+      s = orig;
+      s.replace(1u, 1u, sv);
+      BOOST_TEST(s == string_type(abc).erase(1u, 1u));
+      s = orig;
+      s.replace(s.begin(), s.begin() + 1, sv);
+      BOOST_TEST(s == string_type(abc).erase(0u, 1u));
+      s = orig;
+      s.replace(s.begin(), s.begin() + 1, null_ptr, 0u);
+      BOOST_TEST(s == string_type(abc).erase(0u, 1u));
+   }
+   //Searches
+   {
+      const string_type s(orig);
+      BOOST_TEST(s.find(sv) == 0u);
+      BOOST_TEST(s.find(sv, 2u) == 2u);
+      BOOST_TEST(s.find(null_ptr, 1u, 0u) == 1u);
+      BOOST_TEST(s.rfind(sv) == s.size());
+      BOOST_TEST(s.rfind(null_ptr, 1u, 0u) == 1u);
+      BOOST_TEST(s.find_first_of(sv) == npos);
+      BOOST_TEST(s.find_first_of(null_ptr, 0u, 0u) == npos);
+      BOOST_TEST(s.find_last_of(sv) == npos);
+      BOOST_TEST(s.find_last_of(null_ptr, npos, 0u) == npos);
+      BOOST_TEST(s.find_first_not_of(sv) == 0u);
+      BOOST_TEST(s.find_first_not_of(null_ptr, 1u, 0u) == 1u);
+      BOOST_TEST(s.find_last_not_of(sv) == s.size() - 1u);
+      BOOST_TEST(s.find_last_not_of(null_ptr, 1u, 0u) == 1u);
+      BOOST_TEST(s.contains(sv));
+      BOOST_TEST(s.starts_with(sv));
+      BOOST_TEST(s.ends_with(sv));
+   }
+   //Comparisons and copy
+   {
+      const string_type s(orig);
+      BOOST_TEST(s.compare(sv) > 0);
+      BOOST_TEST(s.compare(0u, 3u, null_ptr, 0u) > 0);
+      BOOST_TEST(s.compare(0u, 0u, null_ptr, 0u) == 0);
+      BOOST_TEST(string_type().compare(sv) == 0);
+      BOOST_TEST(s.copy(static_cast<char_type*>(0), 0u) == 0u);
+   }
+}
+
 template<class StringViewType>
 void plus_equal_test()
 {
@@ -354,6 +419,7 @@ void test_all()
    assignment_test<StringViewType>();
    assign_test<StringViewType>();
    empty_assign_test<StringViewType>();
+   empty_view_operations_test<StringViewType>();
    plus_equal_test<StringViewType>();
    append_test<StringViewType>();
    insert_test<StringViewType>();
@@ -372,9 +438,11 @@ int main()
 {
    test_all<boost::string_view>();
    empty_assign_test<boost::wstring_view>();
+   empty_view_operations_test<boost::wstring_view>();
    #ifdef BOOST_CONTAINER_TEST_HAS_STD_STRING_VIEW
    test_all<std::string_view>();
    empty_assign_test<std::wstring_view>();
+   empty_view_operations_test<std::wstring_view>();
    #endif
 
    return boost::report_errors();

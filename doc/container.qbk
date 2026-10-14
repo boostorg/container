@@ -2919,7 +2919,7 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
 * Containers now accept allocators whose \c value_type is \c void; such allocators
   are rebound to the container's element type via \c real_allocator.
 
-* Added overaligned support for [classref boost::container::pmr::monotonic_buffer_resource monotonic_buffer_resource]. 
+* Added overaligned support for [classref boost::container::pmr::monotonic_buffer_resource monotonic_buffer_resource].
 
 * The library is again fully header-only. Global variables and functions that were
   moved to the separately compiled library now live in a intermodule utility that
@@ -2927,6 +2927,9 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
 
 * Dlmalloc's heap now always uses an improved, spin lock and small allocation layout,
   with faster allocation for small requests (240-512 bytes are ~15-25% faster on 64-bit).
+
+* Counted basic_string constructors and member functions accept a null pointer when the count
+  is zero (LWG 2235 and the C++20 “valid range” wording).
 
 * Iterators, stateless allocators, [classref boost::container::pmr::polymorphic_allocator polymorphic_allocator],
   [classref boost::container::scoped_allocator_adaptor scoped_allocator_adaptor] and internal utilities
@@ -2947,6 +2950,7 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
    * [@https://github.com/boostorg/container/pull/339 GitHub #339: ['"optimized range insertion for boost::container::hub"]].
    * [@https://github.com/boostorg/container/issues/342 GitHub #342: ['"Using unqualified swap() on two small_vectors calls an incorrect swap function"]].
    * [@https://github.com/boostorg/container/issues/344 GitHub #344: ['"Build break on Windows ARM64EC near the definition of the BOOST_CONTAINER_PREFETCH macro"]].
+   * [@https://github.com/boostorg/container/issues/346 GitHub #346: ['"Regression: Invalid assertion in string assign (and probably other functions)"]].
 
 [endsect]
 

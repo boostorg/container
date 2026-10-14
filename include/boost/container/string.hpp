@@ -904,8 +904,11 @@ class basic_string
             (s.begin() + pos, s.begin() + pos + dtl::min_value(n, s.size() - pos));
    }
 
+   //! <b>Requires</b>: s points to an array of at least n elements of CharT.
+   //!   If n is zero, s may be null.
+   //!
    //! <b>Effects</b>: Constructs a basic_string taking a default-constructed allocator,
-   //!   and is initialized by a specific number of characters of the s c-string.
+   //!   and is initialized by the first n characters of the array pointed to by s.
    basic_string(const CharT* s, size_type n)
       : base_t()
    {
@@ -913,8 +916,11 @@ class basic_string
       this->assign(s, n);  // assign checks for s != 0 when n != 0
    }
 
+   //! <b>Requires</b>: s points to an array of at least n elements of CharT.
+   //!   If n is zero, s may be null.
+   //!
    //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
-   //!   and is initialized by a specific number of characters of the s c-string.
+   //!   and is initialized by the first n characters of the array pointed to by s.
    basic_string(const CharT* s, size_type n, const allocator_type& a)
       : base_t(a)
    {
@@ -922,6 +928,8 @@ class basic_string
       this->assign(s, n);  // assign checks for s != 0 when n != 0
    }
 
+   //! <b>Requires</b>: s points to an array of at least traits::length(s) + 1 elements of CharT.
+   //!
    //! <b>Effects</b>: Constructs a basic_string with a default-constructed allocator,
    //!   and is initialized by the null-terminated s c-string.
    basic_string(const CharT* s)
@@ -932,6 +940,8 @@ class basic_string
       this->assign(s, s + Traits::length(s));
    }
 
+   //! <b>Requires</b>: s points to an array of at least traits::length(s) + 1 elements of CharT.
+   //!
    //! <b>Effects</b>: Constructs a basic_string taking the allocator as parameter,
    //!   and is initialized by the null-terminated s c-string.
    basic_string(const CharT* s, const allocator_type& a)
@@ -1600,6 +1610,7 @@ class basic_string
    }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
+   //!   If n is zero, s may be null.
    //!
    //! <b>Effects</b>: The function replaces the string controlled by *this with
    //!   a string of length size() + n whose irst size() elements are a copy of the
@@ -1611,7 +1622,7 @@ class basic_string
    //! <b>Returns</b>: *this
    basic_string& append(const CharT* s, size_type n)
    {
-      BOOST_ASSERT(s != 0);
+      BOOST_ASSERT(s != 0 || n == 0);
       return this->append(s, s + difference_type(n));
    }
 
@@ -1884,6 +1895,7 @@ class basic_string
    }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT and pos <= size().
+   //!   If n is zero, s may be null.
    //!
    //! <b>Effects</b>: Replaces the string controlled by *this with a string of length size() + n
    //!   whose first pos elements are a copy of the initial elements of the original string
@@ -1896,7 +1908,7 @@ class basic_string
    //! <b>Returns</b>: *this
    basic_string& insert(size_type pos, const CharT* s, size_type n)
    {
-      BOOST_ASSERT(s != 0);
+      BOOST_ASSERT(s != 0 || n == 0);
       if (pos > this->size())
          throw_out_of_range("basic_string::insert out of range position");
       if (this->size() > this->max_size() - n)
@@ -2217,6 +2229,7 @@ class basic_string
    }
 
    //! <b>Requires</b>: pos1 <= size() and s points to an array of at least n2 elements of CharT.
+   //!   If n2 is zero, s may be null.
    //!
    //! <b>Effects</b>: Determines the effective length xlen of the string to be removed as the
    //!   smaller of n1 and size() - pos1. If size() - xlen > max_size() - n2 throws length_error.
@@ -2232,7 +2245,7 @@ class basic_string
    //! <b>Returns</b>: *this
    basic_string& replace(size_type pos1, size_type n1, const CharT* s, size_type n2)
    {
-      BOOST_ASSERT(s != 0);
+      BOOST_ASSERT(s != 0 || n2 == 0);
       if (pos1 > this->size())
          throw_out_of_range("basic_string::replace out of range position");
       const size_type len = dtl::min_value(n1, this->size() - pos1);
@@ -2302,7 +2315,7 @@ class basic_string
    //! <b>Returns</b>: *this
    inline basic_string& replace(const_iterator i1, const_iterator i2, const CharT* s, size_type n)
    {
-      BOOST_ASSERT(s != 0);
+      BOOST_ASSERT(s != 0 || n == 0);
       return this->replace(i1, i2, s, s + difference_type(n));
    }
 
@@ -2427,7 +2440,7 @@ class basic_string
    //! <b>Returns</b>: rlen
    size_type copy(CharT* s, size_type n, size_type pos = 0) const
    {
-      BOOST_ASSERT(s != 0);
+      BOOST_ASSERT(s != 0 || n == 0);
       if (pos > this->size())
          throw_out_of_range("basic_string::copy out of range position");
       const size_type len = dtl::min_value(n, this->size() - pos);
@@ -2531,6 +2544,7 @@ class basic_string
    { return this->find(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
+   //!   If n is zero, s may be null.
    //!
    //! <b>Throws</b>: Nothing
    //!
@@ -2538,7 +2552,7 @@ class basic_string
    BOOST_CONTAINER_NODISCARD inline
       size_type find(const CharT* s, size_type pos, size_type n) const
    {
-      BOOST_ASSERT(s != 0);
+      BOOST_ASSERT(s != 0 || n == 0);
       if (pos > this->size() || n > this->size() - pos)
          return npos;
       else if (!n)   //An empty string is found at pos
@@ -2611,6 +2625,7 @@ class basic_string
       { return this->rfind(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
+   //!   If n is zero, s may be null.
    //!
    //! <b>Throws</b>: Nothing
    //!
@@ -2618,7 +2633,7 @@ class basic_string
    BOOST_CONTAINER_NODISCARD inline
       size_type rfind(const CharT* s, size_type pos, size_type n) const
    {
-      BOOST_ASSERT(s != 0);
+      BOOST_ASSERT(s != 0 || n == 0);
       const size_type len = this->size();
 
       if (n > len)
@@ -2689,6 +2704,7 @@ class basic_string
       { return this->find_first_of(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
+   //!   If n is zero, s may be null.
    //!
    //! <b>Throws</b>: Nothing
    //!
@@ -2696,7 +2712,7 @@ class basic_string
    BOOST_CONTAINER_NODISCARD inline
       size_type find_first_of(const CharT* s, size_type pos, size_type n) const
    {
-      BOOST_ASSERT(s != 0);
+      BOOST_ASSERT(s != 0 || n == 0);
       const size_type sz = this->size();
       if (pos >= sz)
          return npos;
@@ -2754,6 +2770,7 @@ class basic_string
       { return this->find_last_of(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
+   //!   If n is zero, s may be null.
    //!
    //! <b>Throws</b>: Nothing
    //!
@@ -2761,7 +2778,7 @@ class basic_string
    BOOST_CONTAINER_NODISCARD inline
       size_type find_last_of(const CharT* s, size_type pos, size_type n) const
    {
-      BOOST_ASSERT(s != 0);
+      BOOST_ASSERT(s != 0 || n == 0);
       const size_type len = this->size();
 
       if (len < 1)
@@ -2828,7 +2845,7 @@ class basic_string
    BOOST_CONTAINER_NODISCARD inline
       size_type find_first_not_of(const CharT* s, size_type pos, size_type n) const
    {
-      BOOST_ASSERT(s != 0);
+      BOOST_ASSERT(s != 0 || n == 0);
       if (pos > this->size())
          return npos;
       else {
@@ -2894,6 +2911,7 @@ class basic_string
       { return this->find_last_not_of(sv.data(), pos, sv.size()); }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
+   //!   If n is zero, s may be null.
    //!
    //! <b>Throws</b>: Nothing
    //!
@@ -2901,7 +2919,7 @@ class basic_string
    BOOST_CONTAINER_NODISCARD inline
       size_type find_last_not_of(const CharT* s, size_type pos, size_type n) const
    {
-      BOOST_ASSERT(s != 0);
+      BOOST_ASSERT(s != 0 || n == 0);
       const size_type len = this->size();
 
       if (len < 1)
@@ -3080,7 +3098,8 @@ class basic_string
       return this->s_compare(addr, addr + difference_type(this->priv_size()), s, s + Traits::length(s));
    }
 
-   //! <b>Requires</b>: pos1 > size() and s points to an array of at least n2 elements of CharT.
+   //! <b>Requires</b>: pos1 <= size() and s points to an array of at least n2 elements of CharT.
+   //!   If n2 is zero, s may be null.
    //!
    //! <b>Throws</b>: out_of_range if pos1 > size()
    //!
@@ -3088,7 +3107,7 @@ class basic_string
    BOOST_CONTAINER_NODISCARD inline
       int compare(size_type pos1, size_type n1, const CharT* s, size_type n2) const
    {
-      BOOST_ASSERT(s != 0);
+      BOOST_ASSERT(s != 0 || n2 == 0);
       if (pos1 > this->size())
          throw_out_of_range("basic_string::compare out of range position");
       const pointer addr = this->priv_addr();
