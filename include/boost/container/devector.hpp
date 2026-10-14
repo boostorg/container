@@ -197,16 +197,28 @@ class devector
    // Random access pseudo iterator always yielding to the same result
    typedef constant_iterator<T> cvalue_iterator;
 
-   static size_type to_internal_capacity(size_type desired_capacity)
+   //The allocator limit, clamped to the biggest value of stored_size_type
+   static size_type max_size_for(const allocator_type &a) BOOST_NOEXCEPT
    {
-      const size_type rounder = devector_min_free_fraction - 2u;
-      const size_type divisor = devector_min_free_fraction - 1u;
-      //Check the new internal capacity can be represented by size_type
-      if ( desired_capacity > size_type(size_type(-1) - rounder) ||
-           (desired_capacity + rounder) / divisor > size_type(-1) / devector_min_free_fraction ) {
+      return dtl::limit_by_stored_size_type<size_type, stored_size_type>::clamp
+         (allocator_traits_type::max_size(a));
+   }
+
+   //Internal capacity that leaves the minimum free fraction after desired_capacity
+   //elements. If that is bigger than max, returns max: a buffer of max_size()
+   //elements can not be reallocated, so all of it can be used.
+   static size_type to_internal_capacity(size_type desired_capacity, size_type max)
+   {
+      if (BOOST_UNLIKELY(desired_capacity > max)) {
          boost::container::throw_length_error("devector: requested capacity greater than max_size()");
       }
-      size_type const nc = ((desired_capacity + rounder) / divisor) * devector_min_free_fraction;
+      const size_type divisor = devector_min_free_fraction - 1u;
+      //ceil(desired_capacity/divisor), without overflow
+      const size_type q = size_type(desired_capacity / divisor + size_type(desired_capacity % divisor != 0u));
+      if (q > max / devector_min_free_fraction) {
+         return max;
+      }
+      size_type const nc = size_type(q * devector_min_free_fraction);
       BOOST_ASSERT(desired_capacity <= (nc - nc / devector_min_free_fraction));
       return nc;
    }
@@ -252,7 +264,7 @@ class devector
    * **Complexity**: Constant.
    */
    devector(size_type n, reserve_only_tag_t, const allocator_type& allocator = allocator_type())
-      : m_(reserve_only_tag_t(), allocator, to_internal_capacity(n))
+      : m_(reserve_only_tag_t(), allocator, to_internal_capacity(n, max_size_for(allocator)))
    {}
 
    /**
@@ -948,9 +960,7 @@ class devector
    BOOST_CONTAINER_NODISCARD inline
     size_type max_size() const BOOST_NOEXCEPT
    {
-      //The allocator limit, clamped to the biggest value of stored_size_type
-      return dtl::limit_by_stored_size_type<size_type, stored_size_type>::clamp
-         (allocator_traits_type::max_size(get_allocator_ref()));
+      return max_size_for(get_allocator_ref());
    }
 
    /**
@@ -965,6 +975,9 @@ class devector
    BOOST_CONTAINER_NODISCARD inline
    size_type capacity() const BOOST_NOEXCEPT
    {
+      //A buffer of max_size() elements can not be reallocated, so all of it can be used
+      if (BOOST_UNLIKELY(m_.capacity >= this->max_size()))
+         return m_.capacity;
       size_type const cap_reserve = m_.capacity/devector_min_free_fraction;
       return m_.capacity > cap_reserve ? (m_.capacity - cap_reserve) : 0u;
    }
@@ -1206,7 +1219,7 @@ class devector
          if (new_capacity > this->max_size()) {
             boost::container::throw_length_error("devector::reserve max_size() exceeded");
          }
-         size_type const nc = to_internal_capacity(new_capacity);
+         size_type const nc = to_internal_capacity(new_capacity, this->max_size());
          size_type const sz = this->size();
          reallocate_at(nc, (nc-sz)/2u);
       }
@@ -2836,8 +2849,9 @@ class devector
       size_type const cap = m_.capacity;
       allocator_type &al = this->get_allocator_ref();
 
-      //Test if enough free memory would be left
-      if (free_cap >= n && (free_cap - n) >= cap/devector_min_free_fraction) {
+      //Test if enough free memory would be left. A buffer of max_size() elements
+      //can not be reallocated, so then all the free memory can be used.
+      if (free_cap >= n && ((free_cap - n) >= cap/devector_min_free_fraction || cap >= this->max_size())) {
          size_type const old_size = this->size();
          T* const raw_pos = const_cast<T*>(boost::movelib::to_raw_pointer(p));
          size_type const new_size = old_size + n;

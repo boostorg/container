@@ -34,6 +34,50 @@ void test_stored_size_type_impl()
    #endif
 }
 
+//All max_size() elements can be inserted: at max_size() the buffer can not be
+//reallocated, so the free fraction that devector keeps is used too
+template<class Unsigned, class DevectorType>
+void test_stored_size_type_fill_to_max()
+{
+   typedef typename DevectorType::size_type    size_type;
+   typedef typename DevectorType::value_type   value_type;
+   const size_type max = Unsigned(-1);
+   {
+      DevectorType v;
+      while(v.size() != max)
+         v.push_back(value_type(1));
+      BOOST_TEST(v.capacity() == max);
+      #ifndef BOOST_NO_EXCEPTIONS
+      BOOST_TEST_THROWS(v.push_back(value_type(1)), std::exception);
+      BOOST_TEST(v.size() == max);
+      #endif
+   }
+   {
+      DevectorType v;
+      while(v.size() != max)
+         v.push_front(value_type(1));
+      BOOST_TEST(v.capacity() == max);
+   }
+   {
+      //Insertions in the middle near the limit (inserting all elements in the middle is quadratic)
+      DevectorType v;
+      v.resize(max - max/16u);
+      while(v.size() != max)
+         v.insert(v.begin() + static_cast<typename DevectorType::difference_type>(v.size()/2u), value_type(1));
+      BOOST_TEST(v.size() == max);
+   }
+   {
+      DevectorType v;
+      v.reserve(max);
+      BOOST_TEST(v.capacity() >= max);
+      DevectorType w(max, reserve_only_tag_t());
+      BOOST_TEST(w.capacity() >= max);
+      while(w.size() != max)
+         w.push_back(value_type(1));
+      BOOST_TEST(w.capacity() == max);
+   }
+}
+
 template<class Unsigned>
 void test_stored_size_type()
 {
@@ -48,11 +92,13 @@ void test_stored_size_type()
    {
       typedef devector<unsigned char, new_allocator<unsigned char>, options_t> devector_t;
       test_stored_size_type_impl<Unsigned, devector_t>();
+      test_stored_size_type_fill_to_max<Unsigned, devector_t>();
    }
    //Test with a V2 allocator
    {
       typedef devector<unsigned char, allocator<unsigned char>, options_t> devector_t;
       test_stored_size_type_impl<Unsigned, devector_t>();
+      test_stored_size_type_fill_to_max<Unsigned, devector_t>();
    }
    //Test size reduction
    {
