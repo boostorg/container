@@ -582,6 +582,8 @@ class deque_base
 
    protected:
    typedef typename options_type::stored_size_type                stored_size_type;
+   BOOST_CONTAINER_STATIC_ASSERT_MSG( (stored_size_type(-1) > stored_size_type(0))
+                                    , "stored_size must be an unsigned integer type");
    typedef deque_iterator< val_alloc_ptr, false
                          , options_type::block_bytes
                          , options_type::block_size

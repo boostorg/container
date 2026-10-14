@@ -313,7 +313,7 @@ BOOST_INTRUSIVE_OPTION_TYPE(growth_factor, GrowthFactor, GrowthFactor, growth_fa
 //!This option specifies the unsigned integer type that a user wants the container
 //!to use to hold size-related information inside a container (e.g. current size, current capacity).
 //!
-//!\tparam StoredSizeType An unsigned integer type. It shall be smaller than than the size
+//!\tparam StoredSizeType An unsigned integer type. It shall be smaller than the size
 //! of the size_type deduced from `allocator_traits<A>::size_type` or the same type.
 //!
 //!If the maximum capacity() to be used is limited, a user can try to use 8-bit, 16-bit 
