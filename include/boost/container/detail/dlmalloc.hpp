@@ -1607,6 +1607,8 @@ class basic_dlmalloc
              size_type *received) BOOST_NOEXCEPT
    {
       mstate ms = &m_state;
+      if(!limit_expansion_request(minbytes, maxbytes))
+         return false;
       if(!preaction(ms)){
          mchunkptr p = mem2chunk(oldmem);
          p = try_realloc_chunk_with_min
@@ -2166,6 +2168,18 @@ class basic_dlmalloc
    // pad request, checking for minimum (but not maximum)
    BOOST_CONTAINER_FORCEINLINE static size_type request2size(size_type req) BOOST_NOEXCEPT
       {  return ((((req) < min_request)? min_chunk_size : pad_request(req)));  }
+
+   // request2size wraps for requests of max_request bytes or more. For the expansion
+   //functions, returns false if minbytes is too big. A too big maxbytes is only a
+   //preference, so it is limited to the biggest valid request.
+   BOOST_CONTAINER_FORCEINLINE static bool limit_expansion_request(size_type &minbytes, size_type &maxbytes) BOOST_NOEXCEPT
+   {
+      if (BOOST_UNLIKELY(minbytes >= max_request))
+         return false;
+      if (BOOST_UNLIKELY(maxbytes >= max_request))
+         maxbytes = max_request - 1u;
+      return true;
+   }
 
 
    // ------------------ Operations on head and foot fields -----------------
@@ -5314,6 +5328,8 @@ class basic_dlmalloc
       *received_size = oldsize - overhead_for(oldp);
       if(minbytes <= *received_size)
          return oldmem;
+      if(!limit_expansion_request(minbytes, maxbytes))
+         return 0;
 
       if (rtcheck(ok_address(m, oldp) && ok_inuse(oldp))) {
          if(command & expand_fwd){
@@ -5633,8 +5649,8 @@ class basic_dlmalloc
       (contiguous_elements == default_contiguous) ? 0u        :
       contiguous_elements;
 
-      //Error if wrong element_size parameter
-      if (!element_size ||
+      //Error if wrong element_size parameter (request2size wraps for max_request or more)
+      if (!element_size || element_size >= max_request ||
          //OR Error if n_elements less than contiguous_elements
          ((contiguous_elements + 1) > (default_contiguous + 1) && n_elements < contiguous_elements) ||
          // OR Error if integer overflow

@@ -1074,6 +1074,84 @@ bool test_many_deallocation()
 
 //This function calls all tests
 
+//True if the blocks [a, a + a_size) and [b, b + b_size) overlap. The blocks
+//can belong to different arrays, so the addresses are compared as integers.
+static bool blocks_overlap(const void *a, std::size_t a_size, const void *b, std::size_t b_size)
+{
+   const std::size_t ua = reinterpret_cast<std::size_t>(a);
+   const std::size_t ub = reinterpret_cast<std::size_t>(b);
+   return ua < ub + b_size && ub < ua + a_size;
+}
+
+//Requests of SIZE_MAX or near it in the expansion functions and in
+//multialloc_nodes must fail, or grow the block correctly. Before the fix the
+//requested size wrapped to a few bytes: the block was cut to 16 bytes and
+//the call reported success.
+bool test_huge_expansion_requests()
+{
+   h.check();
+   const std::size_t max_bytes       = std::size_t(-1);
+   const std::size_t default_request = 100u;
+   const std::size_t small_request   = default_request/2u;
+   const std::size_t near_max_bytes  = max_bytes - default_request;
+   const std::size_t num_nodes       = 3u;
+   const char        fill_value      = 1;
+
+   char *const p = static_cast<char*>(h.allocate(default_request));
+   if(!p)
+      return false;
+   std::memset(p, fill_value, default_request);
+   const std::size_t old_usable = dlmalloc::usable_size(p);
+
+   //A minimum that cannot be satisfied fails and leaves the block alone
+   std::size_t received = 0;
+   if(h.grow(p, max_bytes, max_bytes, &received) || h.grow(p, near_max_bytes, near_max_bytes, &received))
+      return false;
+   if(h.allocation_command(dlmalloc::expand_fwd, 1, 1, max_bytes, max_bytes, &received, p).first)
+      return false;
+   if(h.allocation_command(dlmalloc::expand_fwd | dlmalloc::expand_bwd, 1, 1, near_max_bytes, max_bytes, &received, p).first)
+      return false;
+   if(dlmalloc::usable_size(p) != old_usable)
+      return false;
+
+   //A huge maximum is only a preference: the block can grow, but never shrinks
+   received = 0;
+   if(h.grow(p, old_usable + 1u, max_bytes, &received) && received <= old_usable)
+      return false;
+   received = 0;
+   if(h.allocation_command(dlmalloc::expand_fwd, 1, 1, old_usable + 1u, max_bytes, &received, p).first &&
+      received <= old_usable)
+      return false;
+   if(dlmalloc::usable_size(p) < old_usable)
+      return false;
+
+   //The old bytes are kept, and a new block does not overlap the old one
+   for(std::size_t i = 0; i != default_request; ++i){
+      if(p[i] != fill_value)
+         return false;
+   }
+   void *const q = h.allocate(small_request);
+   if(q && blocks_overlap(p, dlmalloc::usable_size(p), q, small_request))
+      return false;
+   if(q)
+      h.deallocate(q);
+   h.deallocate(p);
+
+   //multialloc_nodes with a huge element size fails
+   {
+      dlmalloc::memchain ch;
+      ch.init();
+      if(h.multialloc_nodes(num_nodes, near_max_bytes, dlmalloc::default_contiguous, &ch))
+         return false;
+      if(h.multialloc_nodes(num_nodes, near_max_bytes, dlmalloc::all_contiguous, &ch))
+         return false;
+      if(ch.size() != 0)
+         return false;
+   }
+   h.check();
+   return 0 != h.all_deallocated();
+}
+
 bool test_all_allocation()
 {
    std::cout << "Starting test_allocation"
@@ -1141,6 +1219,15 @@ bool test_all_allocation()
 
    if(!test_allocation_with_reuse()){
       std::cout << "test_allocation_with_reuse failed"
+                << std::endl;
+      return false;
+   }
+
+   std::cout << "Starting test_huge_expansion_requests"
+             << std::endl;
+
+   if(!test_huge_expansion_requests()){
+      std::cout << "test_huge_expansion_requests failed"
                 << std::endl;
       return false;
    }

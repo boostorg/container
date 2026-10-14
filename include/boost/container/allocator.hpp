@@ -288,6 +288,9 @@ class allocator
    void allocate_many(size_type elem_size, std::size_t n_elements, multiallocation_chain &chain)
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
+      if(BOOST_UNLIKELY(elem_size > size_type(-1)/sizeof(T))){
+         boost::container::throw_bad_alloc();
+      }
       dlmalloc::memchain ch;
       if(!dlmalloc_heap().multialloc_nodes(n_elements, elem_size*sizeof(T), dlmalloc::default_contiguous, &ch)){
          boost::container::throw_bad_alloc();
