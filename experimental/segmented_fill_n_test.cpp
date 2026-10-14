@@ -170,6 +170,40 @@ void test_fill_n_assignment_count()
    }
 }
 
+//A count that is not positive does nothing. An unsigned char count with
+//segments longer than 255 elements: the segment length is not truncated to
+//the count type.
+void test_fill_n_negative_and_narrow_count()
+{
+   {
+      test_detail::seg_vector<int> sv;
+      sv.add_segment(3, 1);
+      sv.add_segment(4, 1);
+      BOOST_TEST(segmented_fill_n(sv.begin(), -1, 7) == sv.begin());
+      BOOST_TEST(segmented_fill_n(sv.begin(), 0, 7) == sv.begin());
+      for(test_detail::seg_vector<int>::iterator it = sv.begin(); it != sv.end(); ++it)
+         BOOST_TEST(*it == 1);
+      vector<int> v(4u, 1);
+      BOOST_TEST(segmented_fill_n(v.begin(), -1, 7) == v.begin());
+      BOOST_TEST(v == vector<int>(4u, 1));
+   }
+   {
+      test_detail::seg_vector<int> sv;
+      sv.add_segment(300, 0);
+      sv.add_segment(300, 0);
+      test_detail::seg_vector<int>::iterator r = segmented_fill_n(sv.begin(), static_cast<unsigned char>(100), 7);
+      test_detail::seg_vector<int>::iterator expected_r = sv.begin();
+      for(int i = 0; i != 100; ++i) ++expected_r;
+      BOOST_TEST(r == expected_r);
+   {
+      std::size_t i = 0;
+      for(test_detail::seg_vector<int>::iterator it = sv.begin(); it != sv.end(); ++it, ++i)
+         BOOST_TEST(*it == (i < 100u ? 7 : 0));
+      BOOST_TEST(i == 600u);
+   }
+   }
+}
+
 int main()
 {
    test_fill_n_shape_matrix();
@@ -177,5 +211,6 @@ int main()
    test_fill_n_single_segment();
    test_fill_n_non_segmented();
    test_fill_n_assignment_count();
+   test_fill_n_negative_and_narrow_count();
    return boost::report_errors();
 }

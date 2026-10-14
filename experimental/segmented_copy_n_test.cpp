@@ -465,6 +465,59 @@ void test_copy_n_shape_matrix()
    }
 }
 
+//A count that is not positive does nothing. An unsigned char count with
+//segments longer than 255 elements: the segment length is not truncated to
+//the count type.
+void test_copy_n_negative_and_narrow_count()
+{
+   {
+      test_detail::seg_vector<int> src;
+      src.add_segment(3, 1);
+      src.add_segment(4, 1);
+      test_detail::seg_vector<int> dst;
+      dst.add_segment(3, 0);
+      dst.add_segment(4, 0);
+      vector<int> v(7u, 0);
+      BOOST_TEST(segmented_copy_n(src.begin(), -1, dst.begin()) == dst.begin());
+      BOOST_TEST(segmented_copy_n(src.begin(), 0, dst.begin()) == dst.begin());
+      BOOST_TEST(segmented_copy_n(src.begin(), -1, v.begin()) == v.begin());
+      BOOST_TEST(segmented_copy_n(v.begin(), -1, dst.begin()) == dst.begin());
+      vector<int> s(7u, 1);
+      BOOST_TEST(segmented_copy_n(s.begin(), -1, v.begin()) == v.begin());
+      for(test_detail::seg_vector<int>::iterator it = dst.begin(); it != dst.end(); ++it)
+         BOOST_TEST(*it == 0);
+      BOOST_TEST(v == vector<int>(7u, 0));
+   }
+   {
+      //Segmented source, non-segmented destination
+      test_detail::seg_vector<int> src;
+      src.add_segment(300, 0);
+      src.add_segment(300, 0);
+      int k = 0;
+      for(test_detail::seg_vector<int>::iterator it = src.begin(); it != src.end(); ++it)
+         *it = ++k;
+      vector<int> out(600u, 0);
+      const vector<int>::iterator r = segmented_copy_n(src.begin(), static_cast<unsigned char>(100), out.begin());
+      BOOST_TEST(r == out.begin() + 100);
+      for(std::size_t i = 0; i != out.size(); ++i)
+         BOOST_TEST(out[i] == (i < 100u ? int(i + 1u) : 0));
+      //Non-segmented source, segmented destination
+      test_detail::seg_vector<int> sv;
+      sv.add_segment(300, 0);
+      sv.add_segment(300, 0);
+      test_detail::seg_vector<int>::iterator dr = segmented_copy_n(out.begin(), static_cast<unsigned char>(100), sv.begin());
+      test_detail::seg_vector<int>::iterator expected_r = sv.begin();
+      for(int i = 0; i != 100; ++i) ++expected_r;
+      BOOST_TEST(dr == expected_r);
+   {
+      std::size_t i = 0;
+      for(test_detail::seg_vector<int>::iterator it = sv.begin(); it != sv.end(); ++it, ++i)
+         BOOST_TEST(*it == (i < 100u ? int(i + 1u) : 0));
+      BOOST_TEST(i == 600u);
+   }
+   }
+}
+
 int main()
 {
    test_copy_n_full();
@@ -486,7 +539,7 @@ int main()
    test_copy_n_single_segment_src_multi_dst();
    test_copy_n_single_segment_src_and_dst();
    test_copy_n_single_segment_dst_from_flat();
-
    test_copy_n_shape_matrix();
+   test_copy_n_negative_and_narrow_count();
    return boost::report_errors();
 }
