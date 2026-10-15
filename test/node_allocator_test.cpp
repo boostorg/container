@@ -75,6 +75,9 @@ int main ()
       return 1;
    if(test::extended_pool_allocator_test< node_allocator<double> >("node_allocator<double>"))
       return 1;
+   //Over-aligned type (bigger than the dlmalloc alignment)
+   if(test::extended_pool_allocator_test<onode_allocator_t>("node_allocator<overaligned>"))
+      return 1;
 
    return 0;
 }

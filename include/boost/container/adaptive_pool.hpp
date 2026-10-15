@@ -271,15 +271,15 @@ class adaptive_pool
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));/*
       dlmalloc::memchain ch;
-      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes(n_elements, elem_size*sizeof(T), dlmalloc::default_contiguous, &ch))){
+      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes_aligned(n_elements, elem_size*sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous, &ch))){
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after(chain.before_begin()
                              ,(T*)ch.first_mem()
                              ,(T*)ch.last_mem()
                              ,ch.size() );*/
-      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes
-            ( n_elements, elem_size*sizeof(T), dlmalloc::default_contiguous
+      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes_aligned
+            ( n_elements, elem_size*sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous
             , move_detail::force_ptr<dlmalloc::memchain *>(&chain)))){
          boost::container::throw_bad_alloc();
       }
@@ -291,15 +291,15 @@ class adaptive_pool
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));/*
       dlmalloc::memchain ch;
-      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_arrays(n_elements, elem_sizes, sizeof(T), dlmalloc::default_contiguous, &ch))){
+      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_arrays_aligned(n_elements, elem_sizes, sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous, &ch))){
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after(chain.before_begin()
                              ,(T*)ch.first_mem()
                              ,(T*)ch.last_mem()
                              ,ch.size() );*/
-      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_arrays
-         ( n_elements, elem_sizes, sizeof(T), dlmalloc::default_contiguous
+      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_arrays_aligned
+         ( n_elements, elem_sizes, sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous
          , move_detail::force_ptr<dlmalloc::memchain *>(&chain)))){
          boost::container::throw_bad_alloc();
       }
@@ -575,8 +575,8 @@ class private_adaptive_pool
    void allocate_many(size_type elem_size, std::size_t n_elements, multiallocation_chain &chain)
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
-      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes
-            ( n_elements, elem_size*sizeof(T), dlmalloc::default_contiguous
+      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes_aligned
+            ( n_elements, elem_size*sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous
             , move_detail::force_ptr<dlmalloc::memchain *>(&chain)))){
          boost::container::throw_bad_alloc();
       }
@@ -587,8 +587,8 @@ class private_adaptive_pool
    void allocate_many(const size_type *elem_sizes, size_type n_elements, multiallocation_chain &chain)
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
-      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_arrays
-         (n_elements, elem_sizes, sizeof(T), dlmalloc::default_contiguous
+      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_arrays_aligned
+         (n_elements, elem_sizes, sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous
          , move_detail::force_ptr<dlmalloc::memchain *>(&chain)))){
          boost::container::throw_bad_alloc();
       }

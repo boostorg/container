@@ -162,6 +162,11 @@ int main ()
       return 1;
    if(test::extended_pool_allocator_test< adaptive_pool<double> >("adaptive_pool<double>"))
       return 1;
+   //Over-aligned type (bigger than the dlmalloc alignment)
+   if(test::extended_pool_allocator_test<adapt_onode_allocator_t>("adaptive_pool<overaligned>"))
+      return 1;
+   if(test::extended_allocator_test< private_adaptive_pool<oint_t> >("private_adaptive_pool<overaligned>"))
+      return 1;
 
    return 0;
 }

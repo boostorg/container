@@ -292,7 +292,7 @@ class allocator
          boost::container::throw_bad_alloc();
       }
       dlmalloc::memchain ch;
-      if(!dlmalloc_heap().multialloc_nodes(n_elements, elem_size*sizeof(T), dlmalloc::default_contiguous, &ch)){
+      if(!dlmalloc_heap().multialloc_nodes_aligned(n_elements, elem_size*sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous, &ch)){
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after(chain.before_begin()
@@ -300,7 +300,7 @@ class allocator
                              ,(T*)ch.last_mem()
                              ,ch.size() );
 /*
-      if(!dlmalloc_heap().multialloc_nodes( n_elements, elem_size*sizeof(T), dlmalloc::default_contiguous
+      if(!dlmalloc_heap().multialloc_nodes_aligned( n_elements, elem_size*sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous
                                    , move_detail::force_ptr<dlmalloc::memchain *>(&chain))){
          boost::container::throw_bad_alloc();
       }*/
@@ -313,7 +313,7 @@ class allocator
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       dlmalloc::memchain ch;
-      if(!dlmalloc_heap().multialloc_arrays(n_elements, elem_sizes, sizeof(T), dlmalloc::default_contiguous, &ch)){
+      if(!dlmalloc_heap().multialloc_arrays_aligned(n_elements, elem_sizes, sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous, &ch)){
          boost::container::throw_bad_alloc();
       }
       chain.incorporate_after(chain.before_begin()
@@ -321,7 +321,7 @@ class allocator
                              ,(T*)ch.last_mem()
                              ,ch.size() );
       /*
-      if(!dlmalloc_heap().multialloc_arrays( n_elements, elem_sizes, sizeof(T), dlmalloc::default_contiguous
+      if(!dlmalloc_heap().multialloc_arrays_aligned( n_elements, elem_sizes, sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous
                                     , move_detail::force_ptr<dlmalloc::memchain *>(&chain))){
          boost::container::throw_bad_alloc();
       }*/

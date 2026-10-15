@@ -1835,7 +1835,7 @@ class basic_dlmalloc
       mstate ms = &m_state;
       if(!preaction(ms)){
          ret = internal_node_multialloc
-            (n_elements, elem_size, contiguous_elements, pchain);
+            (n_elements, elem_size, malloc_alignment, contiguous_elements, pchain);
          postaction(ms);
       }
       return 0 != ret;
@@ -1869,7 +1869,51 @@ class basic_dlmalloc
       mstate ms = &m_state;
       if(!preaction(ms)){
          ret = internal_multialloc_arrays
-            (n_elements, sizes, element_size, contiguous_elements, pchain);
+            (n_elements, sizes, element_size, malloc_alignment, contiguous_elements, pchain);
+         postaction(ms);
+      }
+      return 0 != ret;
+   }
+
+   //! <b>Requires</b>: `pchain` must not be null, and `alignment` must be a
+   //!   power of two.
+   //!
+   //! <b>Effects</b>: The same as multialloc_nodes(), but every block is aligned
+   //!   to `alignment`. If `alignment` is bigger than malloc_alignment, each run
+   //!   is allocated aligned to `alignment` and each block takes a multiple of
+   //!   `alignment` bytes, so all the blocks of the run stay aligned.
+   //!
+   //! <b>Returns</b>: true if every block was provided. Adds nothing otherwise.
+   bool multialloc_nodes_aligned(size_type n_elements, size_type elem_size, size_type alignment,
+                                 size_type contiguous_elements, memchain *pchain) BOOST_NOEXCEPT
+   {
+      int ret = 0;
+      mstate ms = &m_state;
+      if(!preaction(ms)){
+         ret = internal_node_multialloc
+            (n_elements, elem_size, alignment, contiguous_elements, pchain);
+         postaction(ms);
+      }
+      return 0 != ret;
+   }
+
+   //! <b>Requires</b>: `pchain` must not be null, `sizes` must hold at least
+   //!   `n_elements` entries and `alignment` must be a power of two.
+   //!
+   //! <b>Effects</b>: The same as multialloc_arrays(), but every block is aligned
+   //!   to `alignment`. If `alignment` is bigger than malloc_alignment, each run
+   //!   is allocated aligned to `alignment` and each block takes a multiple of
+   //!   `alignment` bytes, so all the blocks of the run stay aligned.
+   //!
+   //! <b>Returns</b>: true if every block was provided. Adds nothing otherwise.
+   bool multialloc_arrays_aligned(size_type n_elements, const size_type *sizes, size_type element_size,
+                                  size_type alignment, size_type contiguous_elements, memchain *pchain) BOOST_NOEXCEPT
+   {
+      int ret = 0;
+      mstate ms = &m_state;
+      if(!preaction(ms)){
+         ret = internal_multialloc_arrays
+            (n_elements, sizes, element_size, alignment, contiguous_elements, pchain);
          postaction(ms);
       }
       return 0 != ret;
@@ -5625,8 +5669,32 @@ class basic_dlmalloc
       pchain->num_mem       = entry_num_mem;
    }
 
+   //Chunk size of a block of "bytes" bytes in a multialloc run. For an alignment
+   //bigger than malloc_alignment, the size is rounded up to a multiple of the
+   //alignment: the run starts aligned, so every block of the run stays aligned.
+   //Returns 0 if the size can not be represented.
+   BOOST_CONTAINER_FORCEINLINE static size_type multialloc_chunk_size(size_type bytes, size_type alignment) BOOST_NOEXCEPT
+   {
+      const size_type nb = request2size(bytes);
+      if(alignment <= malloc_alignment)
+         return nb;
+      if(BOOST_UNLIKELY(nb > max_size_t - (alignment - 1u)))
+         return 0;
+      return (nb + (alignment - 1u)) & ~(alignment - 1u);
+   }
+
+   //Allocates a multialloc run of run_size bytes (a sum of multialloc_chunk_size
+   //values) whose first block is aligned to alignment
+   BOOST_CONTAINER_FORCEINLINE void *multialloc_run_allocate(size_type run_size, size_type alignment) BOOST_NOEXCEPT
+   {
+      return alignment <= malloc_alignment
+         ? priv_allocate_nolock(run_size - chunk_overhead)
+         : priv_allocate_aligned_nolock(alignment, run_size - chunk_overhead);
+   }
+
    int internal_node_multialloc
-      (size_type n_elements, size_type element_size, size_type contiguous_elements, memchain *pchain) BOOST_NOEXCEPT
+      ( size_type n_elements, size_type element_size, size_type alignment
+      , size_type contiguous_elements, memchain *pchain) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       void*     mem;            // malloced aggregate space
@@ -5634,7 +5702,12 @@ class basic_dlmalloc
       size_type    remainder_size; // remaining bytes while splitting
       flag_t    was_enabled;    // to disable mmap
       size_type    elements_per_segment = 0;
-      size_type    element_req_size = request2size(element_size);
+      BOOST_CONTAINER_DL_ASSERT((alignment & (alignment - 1u)) == 0u);
+      //Error if wrong element_size or alignment (request2size wraps for max_request or more)
+      if (!element_size || element_size >= max_request || alignment >= max_request) {
+         return 0;
+      }
+      size_type    element_req_size = multialloc_chunk_size(element_size, alignment);
       memchain_it prev_last_it = pchain->last();
       size_type prev_num_mem = pchain->size();
       // The count that actually gets multiplied by element_req_size is the
@@ -5649,8 +5722,8 @@ class basic_dlmalloc
       (contiguous_elements == default_contiguous) ? 0u        :
       contiguous_elements;
 
-      //Error if wrong element_size parameter (request2size wraps for max_request or more)
-      if (!element_size || element_size >= max_request ||
+      //Error if the chunk size can not be represented
+      if (!element_req_size ||
          //OR Error if n_elements less than contiguous_elements
          ((contiguous_elements + 1) > (default_contiguous + 1) && n_elements < contiguous_elements) ||
          // OR Error if integer overflow
@@ -5693,7 +5766,7 @@ class basic_dlmalloc
             next_i = i + ((n_elements_left < elements_per_segment) ? n_elements_left : elements_per_segment);
             accum_size = element_req_size * (next_i - i);
 
-            mem = priv_allocate_nolock(accum_size - chunk_overhead);
+            mem = multialloc_run_allocate(accum_size, alignment);
             if (mem == 0) {
                internal_multialloc_rollback(pchain, prev_last_it, prev_num_mem);
                if (was_enabled)
@@ -5702,6 +5775,12 @@ class basic_dlmalloc
             }
             p = mem2chunk(mem);
             remainder_size = chunksize(p);
+            //An aligned run can follow a free chunk (the space that alignment
+            //skipped), so the "previous chunk in use" bit of the run must be kept
+            //because set_size_and_pinuse_of_inuse_chunk for the first element will
+            //clear it unconditionally.
+            const mchunkptr run_first = p;
+            const bool run_first_pinuse = 0 != pinuse(run_first);
 
             BOOST_CONTAINER_DL_ASSERT(!is_mmapped(p));
             {  // split out elements
@@ -5727,6 +5806,8 @@ class basic_dlmalloc
                set_size_and_pinuse_of_inuse_chunk(m, p, remainder_size);
                // mem is the last element; INCORPORATE_AFTER terminates it
                pchain->incorporate_after(last_it, mem_orig, mem, num_elements);
+               if(!run_first_pinuse)
+                  clear_pinuse(run_first);
             }
          }
          if (was_enabled)
@@ -5814,7 +5895,8 @@ class basic_dlmalloc
    }
 
    int internal_multialloc_arrays
-      (size_type n_elements, const size_type* sizes, size_type element_size, size_type contiguous_elements, memchain *pchain) BOOST_NOEXCEPT
+      ( size_type n_elements, const size_type* sizes, size_type element_size, size_type alignment
+      , size_type contiguous_elements, memchain *pchain) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       void*     mem;            // malloced aggregate space
@@ -5825,8 +5907,9 @@ class basic_dlmalloc
       size_type dl_multialloc_segmented_malloc_size;
       size_type max_size;
 
+      BOOST_CONTAINER_DL_ASSERT((alignment & (alignment - 1u)) == 0u);
       // Check overflow
-      if(!element_size){
+      if(!element_size || alignment >= max_request){
          return 0;
       }
       max_size = max_request/element_size;
@@ -5874,7 +5957,11 @@ class basic_dlmalloc
                   break;
                }
                else{
-                  size_type reqsize = request2size(cur_array_size*element_size);
+                  size_type reqsize = multialloc_chunk_size(cur_array_size*element_size, alignment);
+                  if(BOOST_UNLIKELY(!reqsize)){
+                     error = 1;
+                     break;
+                  }
                   if(((dl_multialloc_segmented_malloc_size - chunk_overhead) - accum_size) < reqsize){
                      if(!accum_size){
                         accum_size += reqsize;
@@ -5891,7 +5978,7 @@ class basic_dlmalloc
             //when there was another element to take.
             BOOST_CONTAINER_DL_ASSERT(next_i <= n_elements);
 
-            mem = error ? 0 : priv_allocate_nolock(accum_size - chunk_overhead);
+            mem = error ? 0 : multialloc_run_allocate(accum_size, alignment);
             if (mem == 0){
                internal_multialloc_rollback(pchain, entry_last_it, entry_num_mem);
                if (was_enabled)
@@ -5900,6 +5987,12 @@ class basic_dlmalloc
             }
             p = mem2chunk(mem);
             remainder_size = chunksize(p);
+            //An aligned run can follow a free chunk (the space that alignment
+            //skipped), so the "previous chunk in use" bit of the run must be kept
+            //as set_size_and_pinuse_of_inuse_chunk will clear it unconditionally
+            //for the first element.
+            const mchunkptr run_first = p;
+            const bool run_first_pinuse = 0 != pinuse(run_first);
 
             BOOST_CONTAINER_DL_ASSERT(!is_mmapped(p));
 
@@ -5918,7 +6011,7 @@ class basic_dlmalloc
                const size_type *psize_i = sizes + i;
                for(++i; i != next_i; ++i, ++psize_i) {
                   void **mem_prev = ((void**)mem);
-                  size = request2size(*psize_i * element_size);
+                  size = multialloc_chunk_size(*psize_i * element_size, alignment);
                   remainder_size -= size;
                   set_size_and_pinuse_of_inuse_chunk(m, p, size);
                   p = chunk_plus_offset(p, size);
@@ -5927,6 +6020,8 @@ class basic_dlmalloc
                }
                set_size_and_pinuse_of_inuse_chunk(m, p, remainder_size);
                pchain->incorporate_after(last_it, mem_orig, mem, num_elements);
+               if(!run_first_pinuse)
+                  clear_pinuse(run_first);
             }
          }
          if (was_enabled)

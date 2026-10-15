@@ -1152,6 +1152,65 @@ bool test_huge_expansion_requests()
    return 0 != h.all_deallocated();
 }
 
+//multialloc_nodes_aligned and multialloc_arrays_aligned return blocks aligned to
+//the requested alignment, also for alignments bigger than malloc_alignment
+bool test_multialloc_aligned()
+{
+   h.check();
+   const std::size_t alignments[] = { 1u, dlmalloc::malloc_alignment, 32u, 64u, 256u, 4096u };
+   const std::size_t contig[]     = { dlmalloc::default_contiguous, dlmalloc::all_contiguous, 4u };
+   const std::size_t num          = 37u;
+   const std::size_t elem_size    = 24u;
+   std::size_t sizes[num];
+   for(std::size_t i = 0; i != num; ++i)
+      sizes[i] = 1u + (i % 5u);
+
+   for(std::size_t a = 0; a != sizeof(alignments)/sizeof(alignments[0]); ++a){
+      const std::size_t alignment = alignments[a];
+      for(std::size_t c = 0; c != sizeof(contig)/sizeof(contig[0]); ++c){
+         for(std::size_t variant = 0; variant != 2u; ++variant){
+            dlmalloc::memchain ch;
+            ch.init();
+            //Blocks already in the chain are kept
+            void *const first = h.allocate(8u);
+            if(!first)
+               return false;
+            ch.push_back(first);
+            const bool ok = variant == 0u
+               ? h.multialloc_nodes_aligned(num, elem_size, alignment, contig[c], &ch)
+               : h.multialloc_arrays_aligned(num, sizes, elem_size, alignment, contig[c], &ch);
+            if(!ok || ch.size() != num + 1u)
+               return false;
+            dlmalloc::memchain_it it = ch.begin();
+            if(it.addr() != first)
+               return false;
+            it.next();
+            for(std::size_t i = 0; i != num; ++i, it.next()){
+               void *const mem = it.addr();
+               if(reinterpret_cast<std::size_t>(mem) % alignment)
+                  return false;
+               const std::size_t bytes = variant == 0u ? elem_size : sizes[i]*elem_size;
+               if(dlmalloc::usable_size(mem) < bytes)
+                  return false;
+            }
+            if(!dlmalloc::memchain::is_end(it))
+               return false;
+            //Write every block after the chain was read: the links are in the blocks
+            void *ptrs[num + 1u];
+            std::size_t n = 0;
+            for(it = ch.begin(); !dlmalloc::memchain::is_end(it); it.next())
+               ptrs[n++] = it.addr();
+            for(std::size_t i = 1; i != n; ++i)
+               std::memset(ptrs[i], int(i), dlmalloc::usable_size(ptrs[i]));
+            for(std::size_t i = 0; i != n; ++i)
+               h.deallocate(ptrs[i]);
+            h.check();
+         }
+      }
+   }
+   return 0 != h.all_deallocated();
+}
+
 bool test_all_allocation()
 {
    std::cout << "Starting test_allocation"
@@ -1228,6 +1287,15 @@ bool test_all_allocation()
 
    if(!test_huge_expansion_requests()){
       std::cout << "test_huge_expansion_requests failed"
+                << std::endl;
+      return false;
+   }
+
+   std::cout << "Starting test_multialloc_aligned"
+             << std::endl;
+
+   if(!test_multialloc_aligned()){
+      std::cout << "test_multialloc_aligned failed"
                 << std::endl;
       return false;
    }
