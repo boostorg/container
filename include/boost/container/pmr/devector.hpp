@@ -8,8 +8,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef BOOST_CONTAINER_PMR_VECTOR_HPP
-#define BOOST_CONTAINER_PMR_VECTOR_HPP
+#ifndef BOOST_CONTAINER_PMR_DEVECTOR_HPP
+#define BOOST_CONTAINER_PMR_DEVECTOR_HPP
 
 #if defined (_MSC_VER)
 #  pragma once 
@@ -50,4 +50,4 @@ struct devector_of
 }  //namespace container {
 }  //namespace boost {
 
-#endif   //BOOST_CONTAINER_PMR_VECTOR_HPP
+#endif   //BOOST_CONTAINER_PMR_DEVECTOR_HPP
