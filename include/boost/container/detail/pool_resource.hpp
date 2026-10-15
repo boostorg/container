@@ -18,12 +18,12 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/pmr/memory_resource.hpp>
-#include <boost/container/detail/block_list.hpp>
 #include <boost/container/pmr/pool_options.hpp>
 
 //Inline implementation
 #include <boost/container/pmr/global_resource.hpp>
 #include <boost/container/detail/block_slist.hpp>
+#include <boost/container/detail/block_list.hpp>
 #include <boost/container/detail/min_max.hpp>
 #include <boost/container/detail/placement_new.hpp>
 #include <boost/intrusive/linear_slist_algorithms.hpp>
@@ -49,6 +49,42 @@ BOOST_CONTAINER_CONSTANT_VAR std::size_t pool_options_default_largest_required_p
 
 #endif   //BOOST_CONTAINER_DOXYGEN_INVOKED
 
+//pool_resource obtains memory from the upstream resource through two block list
+//utilities:
+//
+//  pool_resource
+//  |
+//  +-- m_oversized_list: block_list_base<> (block_list.hpp, circular doubly linked list)
+//  |     One upstream allocation for each request that is bigger than
+//  |     largest_required_pool_block or has alignment > max_align. Each allocation
+//  |     has a block_list_header just before the returned memory.
+//  |
+//  +-- m_pool_data: array of m_pool_count pool_data_t, allocated from upstream on
+//        the first allocation. Pool i has blocks of priv_pool_block(i) bytes:
+//        pool_options_minimum_largest_required_pool_block << i.
+//
+//        pool_data_t: derives from block_slist_base<> (block_slist.hpp, singly linked list)
+//        |
+//        +-- chunk list (the block_slist_base<> part): one upstream allocation per chunk
+//        |
+//        |     +-------------------+---------+---------+-----+---------+
+//        |     | block_slist_header| block 0 | block 1 | ... | block n |
+//        |     +-------------------+---------+---------+-----+---------+
+//        |     <--- header_size --> <-- n+1 = blocks_per_chunk blocks of -->
+//        |                              priv_pool_block(i) bytes each
+//        |
+//        +-- free_slist: the free blocks of all the chunks of the pool. A free block
+//              holds only an slist_node (the link); a block in use has no header.
+//
+//  do_allocate(bytes, alignment):
+//     bytes > largest_required_pool_block or alignment > max_align:
+//        m_oversized_list.allocate(bytes, upstream, alignment)
+//     otherwise, pool i = priv_pool_index(bytes):
+//        take a block from free_slist; if it is empty, first allocate a new chunk
+//        from upstream (pool_data_t::replenish)
+//
+//  release():   returns the oversized blocks and all the chunks to upstream
+//  destructor:  release(), then returns the m_pool_data array to upstream
 class pool_resource
 {
    typedef block_list_base<> block_list_base_t;
@@ -373,9 +409,10 @@ inline void* pool_resource::do_allocate(std::size_t bytes, std::size_t alignment
    if(!m_pool_data){
       this->priv_init_pools();
    }
-   (void)alignment;  //alignment ignored here, max_align is used by pools
-   if(bytes > m_options.largest_required_pool_block){
-      return m_oversized_list.allocate(bytes, m_upstream);
+   //Pool blocks are aligned to max_align. Over-aligned and oversized requests
+   //are allocated from the upstream resource.
+   if(bytes > m_options.largest_required_pool_block || alignment > memory_resource::max_align){
+      return m_oversized_list.allocate(bytes, m_upstream, alignment);
    }
    else{
       const std::size_t pool_idx = priv_pool_index(bytes);
@@ -391,8 +428,7 @@ inline void* pool_resource::do_allocate(std::size_t bytes, std::size_t alignment
 
 inline void pool_resource::do_deallocate(void* p, std::size_t bytes, std::size_t alignment)
 {
-   (void)alignment;  //alignment ignored here, max_align is used by pools
-   if(bytes > m_options.largest_required_pool_block){
+   if(bytes > m_options.largest_required_pool_block || alignment > memory_resource::max_align){
       //Just cached
       return m_oversized_list.deallocate(p, m_upstream);
    }

@@ -15,8 +15,24 @@
 
 #include "derived_from_memory_resource.hpp"
 #include "memory_resource_logger.hpp"
+#include <cstring>
 
 using namespace boost::container::pmr;
+
+//Sets the default resource and restores the previous one at the end of the scope,
+//so that later tests do not use a destroyed resource
+struct default_resource_guard
+{
+   explicit default_resource_guard(memory_resource *r)
+      : m_old(set_default_resource(r))
+   {}
+
+   ~default_resource_guard()
+   {  set_default_resource(m_old);  }
+
+   private:
+   memory_resource *m_old;
+};
 
 template<class PoolResource>
 struct derived_from_pool_resource
@@ -84,7 +100,7 @@ void test_options_constructor()
    {
       memory_resource_logger mrl;
       BOOST_TEST(mrl.m_info.size() == 0u);
-      set_default_resource(&mrl);
+      default_resource_guard guard(&mrl);
       pool_options opts;
       PoolResource m(opts);
       //test postconditions
@@ -98,7 +114,7 @@ void test_options_constructor()
    {
       memory_resource_logger mrl;
       BOOST_TEST(mrl.m_info.size() == 0u);
-      set_default_resource(&mrl);
+      default_resource_guard guard(&mrl);
       pool_options opts;
       opts.max_blocks_per_chunk = pool_options_default_max_blocks_per_chunk+1;
       opts.largest_required_pool_block = pool_options_default_largest_required_pool_block+1;
@@ -114,7 +130,7 @@ void test_options_constructor()
    {
       memory_resource_logger mrl;
       BOOST_TEST(mrl.m_info.size() == 0u);
-      set_default_resource(&mrl);
+      default_resource_guard guard(&mrl);
       pool_options opts;
       opts.largest_required_pool_block = pool_options_minimum_largest_required_pool_block-1u;
       PoolResource m(opts);
@@ -129,7 +145,7 @@ void test_options_constructor()
    {
       memory_resource_logger mrl;
       BOOST_TEST(mrl.m_info.size() == 0u);
-      set_default_resource(&mrl);
+      default_resource_guard guard(&mrl);
       pool_options opts;
       opts.max_blocks_per_chunk = pool_options_default_max_blocks_per_chunk;
       opts.largest_required_pool_block = pool_options_minimum_largest_required_pool_block;
@@ -514,6 +530,46 @@ void test_destructor()
 }
 
 
+//Allocations honor the requested alignment, also over-aligned ones (bigger than
+//memory_resource::max_align). new_delete_resource honors the alignment.
+template<class PoolResource>
+void test_do_allocate_overaligned()
+{
+   derived_from_pool_resource<PoolResource> dpr(new_delete_resource());
+   const std::size_t largest = dpr.options().largest_required_pool_block;
+   const std::size_t sizes[] = { 1u, 8u, 64u, 1000u, largest, largest + 1u };
+   const std::size_t num_sizes = sizeof(sizes)/sizeof(sizes[0]);
+   for(std::size_t alignment = 1u; alignment <= 4096u; alignment *= 2u){
+      void *ptrs[num_sizes];
+      for(std::size_t i = 0; i != num_sizes; ++i){
+         ptrs[i] = dpr.do_allocate(sizes[i], alignment);
+         BOOST_TEST(ptrs[i] != 0);
+         BOOST_TEST(reinterpret_cast<std::size_t>(ptrs[i]) % alignment == 0u);
+         std::memset(ptrs[i], 0xA5, sizes[i]);
+      }
+      for(std::size_t i = 0; i != num_sizes; ++i)
+         dpr.do_deallocate(ptrs[i], sizes[i], alignment);
+   }
+   //Over-aligned blocks are returned to the upstream resource with the size and
+   //alignment of the upstream allocation, both by do_deallocate and by release
+   memory_resource_logger mrl;
+   {
+      derived_from_pool_resource<PoolResource> dmbr(&mrl);
+      const std::size_t overaligned = memory_resource::max_align*4u;
+      void *const p = dmbr.do_allocate(16u, overaligned);
+      const std::size_t allocs = mrl.m_info.size();
+      BOOST_TEST(mrl.m_info.back().alignment == overaligned);
+      dmbr.do_deallocate(p, 16u, overaligned);
+      BOOST_TEST(mrl.m_info.size() == allocs - 1u);
+      BOOST_TEST(mrl.m_mismatches == 0u);
+      dmbr.do_allocate(16u, overaligned);
+      dmbr.do_allocate(largest + 1u, overaligned);
+      dmbr.release();
+   }
+   BOOST_TEST(mrl.m_mismatches == 0u);
+   BOOST_TEST(mrl.m_info.size() == 0u);
+}
+
 template<class PoolResource>
 void test_pool_resource()
 {
@@ -524,6 +580,7 @@ void test_pool_resource()
    test_options<PoolResource>();
    test_do_allocate_deallocate<PoolResource>();
    test_do_allocate_zero<PoolResource>();
+   test_do_allocate_overaligned<PoolResource>();
    test_do_is_equal<PoolResource>();
    test_release<PoolResource>();
    test_destructor<PoolResource>();

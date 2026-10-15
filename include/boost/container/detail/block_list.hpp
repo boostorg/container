@@ -63,12 +63,45 @@ struct list_node_traits
 struct block_list_header
    : public list_node
 {
-   std::size_t size;
+   std::size_t size;       //bytes allocated from the upstream resource
+   std::size_t alignment;  //alignment passed to the upstream resource
 };
 
 typedef bi::circular_list_algorithms<list_node_traits> list_algo;
 
 
+//block_list_base allocates blocks from an upstream memory_resource and links them in
+//a circular doubly linked list. A block can be unlinked in constant time (deallocate)
+//and all blocks can be returned to the upstream resource at once (release).
+//
+//Layout of each upstream allocation:
+//
+//  base: returned by upstream.allocate(header.size, header.alignment)
+//  |
+//  v
+//  +-------------+------------------------------+------------------------------+
+//  | padding     | DerivedFromBlockListHeader   | block                        |
+//  | (only if    | (derives from                | ("size" bytes, aligned to    |
+//  |  alignment  |  block_list_header:          |  "alignment")                |
+//  |  >          |  next, previous,             |                              |
+//  |  max_align) |  size, alignment)            |                              |
+//  +-------------+------------------------------+------------------------------+
+//  <------------------- offset ----------------> ^
+//                <-------- header_size --------> |
+//                                                returned by allocate()
+//
+//  header_size      = sizeof(DerivedFromBlockListHeader) rounded up to max_align
+//  offset           = header_size rounded up to "alignment"
+//  header.size      = offset + size   (passed to upstream.deallocate)
+//  header.alignment = alignment       (passed to upstream.deallocate)
+//
+//The headers are the nodes of the list. m_list is the sentinel node:
+//
+//  m_list <-> header(block 1) <-> header(block 2) <-> ... <-> header(block N) <-> m_list
+//    ^                                                                             |
+//    +-----------------------------------------------------------------------------+
+//
+//DerivedFromBlockListHeader must derive from block_list_header, and can add members.
 template<class DerivedFromBlockListHeader = block_list_header>
 class block_list_base
 {
@@ -96,15 +129,23 @@ class block_list_base
    ~block_list_base()
    {}
 
-   void *allocate(std::size_t size, memory_resource &mr)
+   //Returns a block of size bytes aligned to alignment (at least max_align). The header
+   //is placed just before the block. The upstream allocation starts "offset" bytes
+   //before the block, so that the block keeps the alignment of the upstream allocation.
+   void *allocate(std::size_t size, memory_resource &mr, std::size_t alignment = memory_resource::max_align)
    {
-      if((size_t(-1) - header_size) < size)
+      if(alignment < memory_resource::max_align)
+         alignment = memory_resource::max_align;
+      const std::size_t offset = priv_offset(alignment);
+      if(BOOST_UNLIKELY((size_t(-1) - offset) < size))
          throw_bad_alloc();
-      void *p = mr.allocate(size+header_size);
-      block_list_header &mb  = *::new((void*)p, boost_container_new_t()) DerivedFromBlockListHeader;
-      mb.size = size+header_size;
+      char *const base = static_cast<char*>(mr.allocate(size + offset, alignment));
+      char *const block = base + offset;
+      block_list_header &mb  = *::new((void*)(block - header_size), boost_container_new_t()) DerivedFromBlockListHeader;
+      mb.size = size + offset;
+      mb.alignment = alignment;
       list_algo::link_after(&m_list, &mb);
-      return (char *)p + header_size;
+      return block;
    }
 
    void deallocate(void *p, memory_resource &mr) BOOST_NOEXCEPT
@@ -112,9 +153,7 @@ class block_list_base
       DerivedFromBlockListHeader *pheader = static_cast<DerivedFromBlockListHeader*>
          (static_cast<void*>((char*)p - header_size));
       list_algo::unlink(pheader);
-      const std::size_t size = pheader->size;
-      static_cast<DerivedFromBlockListHeader*>(pheader)->~DerivedFromBlockListHeader();
-      mr.deallocate(pheader, size, memory_resource::max_align);
+      priv_deallocate(*pheader, mr);
    }
 
    void release(memory_resource &mr) BOOST_NOEXCEPT
@@ -123,11 +162,23 @@ class block_list_base
       while(n != &m_list){
          DerivedFromBlockListHeader &d = static_cast<DerivedFromBlockListHeader&>(*n);
          n = list_algo::node_traits::get_next(n);
-         std::size_t size = d.size;
-         d.~DerivedFromBlockListHeader();
-         mr.deallocate(reinterpret_cast<char*>(&d), size, memory_resource::max_align);         
+         priv_deallocate(d, mr);
       }
       list_algo::init_header(&m_list);
+   }
+
+   private:
+   //Bytes from the start of the upstream allocation to the block: header_size rounded to the alignment
+   static std::size_t priv_offset(std::size_t alignment) BOOST_NOEXCEPT
+   {  return (header_size + alignment - 1u) & ~(alignment - 1u);  }
+
+   static void priv_deallocate(DerivedFromBlockListHeader &header, memory_resource &mr) BOOST_NOEXCEPT
+   {
+      const std::size_t size      = header.size;
+      const std::size_t alignment = header.alignment;
+      char *const base = reinterpret_cast<char*>(&header) + header_size - priv_offset(alignment);
+      header.~DerivedFromBlockListHeader();
+      mr.deallocate(base, size, alignment);
    }
 };
 
