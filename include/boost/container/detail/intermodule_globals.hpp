@@ -296,33 +296,29 @@ struct HINSTANCE__;
 namespace boost {
 namespace container_intermodule_winapi {
 
-//SIZE_T/ULONG_PTR. The exact SPELLING matters here, not just the width:
-//these are extern "C" declarations of entry points Boost.WinAPI also
-//declares (boost/winapi/basic_types.hpp), and one translation unit can see
-//both, so a mismatch is a conflicting declaration of the same function - not
-//merely a different-but-compatible type. On 32-bit Windows SIZE_T is
-//"unsigned long" while std::size_t is "unsigned int": same width, different
-//type. Follow the rule Boost.WinAPI uses, which is also the SDK's.
-#if defined(_WIN64)
+//Exact re-declarations in Cygwin to avoid warnings
+#if defined(__CYGWIN__)
+#  if defined(__x86_64__)   //w32api/_cygwin.h: _WIN64, so ULONG_PTR is unsigned __int64
+typedef unsigned long long uintptr_type;
+#  else
+typedef unsigned long      uintptr_type;
+#  endif
+#  if defined(__LP64__)     //w32api/_mingw.h: __LONG32 is int, so DWORD is unsigned int
+typedef unsigned int       dword_type;
+#  else
+typedef unsigned long      dword_type;
+#  endif
+#elif defined(_WIN64)
 #  if defined(BOOST_HAS_MS_INT64)
 typedef unsigned __int64   uintptr_type;
 #  else
 typedef unsigned long long uintptr_type;
 #  endif
+typedef unsigned long      dword_type;
 #else
-   //ILP32 Windows and LP64 Cygwin alike: ULONG_PTR is "unsigned long" on
-   //both, since Cygwin does not define _WIN64
+   //ILP32 Windows: ULONG_PTR is "unsigned long"
 typedef unsigned long      uintptr_type;
-#endif
-
-//DWORD is always 32 bits. The Windows headers spell it "unsigned long"
-//because "long" is 32 bits on LLP64 (MSVC, MinGW), but Cygwin targets LP64,
-//where "long" is 64 bits and the correct spelling is "unsigned int". This is
-//the same distinction Cygwin's own w32api draws with its __LONG32 macro.
-#if defined(__LP64__) && !defined(_WIN64)
-typedef unsigned int   dword_type;
-#else
-typedef unsigned long  dword_type;
+typedef unsigned long      dword_type;
 #endif
 typedef void *         handle_type;
 typedef int            bool_type;
