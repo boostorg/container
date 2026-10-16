@@ -274,6 +274,15 @@ BOOST_CONTAINER_INTERMODULE_BOOL_OPTION(pin_constructing_module)
 
 #if defined(BOOST_CONTAINER_INTERMODULE_BACKEND_WINAPI)
 
+#if defined(__CYGWIN__)
+   //Cygwin fork() copies .data, .bss and the memory that Cygwin maps, but not Win32 sections.
+   //So we allocate the registry with mmap() (copied at fork) and the named section is an index
+   //for DLL and EXEs to find the address of this mmap-ed section.
+#  include <sys/mman.h>   //mmap
+#  include <pthread.h>    //pthread_atfork
+#  define BOOST_CONTAINER_INTERMODULE_REGISTRY_IN_MMAP
+#endif
+
 #ifdef BOOST_USE_WINDOWS_H
 #  include <windows.h>
 #else
@@ -791,6 +800,145 @@ inline void intermodule_build_registry_name(char (&dst)[96])
    BOOST_ASSERT(std::size_t(p - dst) < sizeof(dst));
 }
 
+//Creates (or opens) the named registry section of this process and maps it
+inline intermodule_registry_header *intermodule_map_registry_section(void *&section)
+{
+   char reg_name[96];
+   intermodule_build_registry_name(reg_name);
+   //Create-or-open is atomic, so the section itself is the rendezvous
+   section = CreateFileMappingA
+      ( container_intermodule_winapi::invalid_handle(), 0
+      , container_intermodule_winapi::page_readwrite_c
+      , 0, (container_intermodule_winapi::dword_type)
+           BOOST_CONTAINER_INTERMODULE_REGISTRY_BYTES
+      , reg_name);
+   BOOST_ASSERT_MSG(section != 0, "Boost.Container: CreateFileMappingA failed "
+      "(processes that cannot create named sections are not supported)");
+   intermodule_registry_header *const view = (intermodule_registry_header *)
+      MapViewOfFile(section, container_intermodule_winapi::file_map_read_write_c, 0, 0, 0);
+   BOOST_ASSERT_MSG(view != 0, "Boost.Container: MapViewOfFile failed");
+   return view;
+}
+
+#if defined(BOOST_CONTAINER_INTERMODULE_REGISTRY_IN_MMAP)
+
+//Cygwin layout:
+//
+//  named section "Local\boost_container_greg_<abi>_<windows pid>" (bootstrap only)
+//  +------+-------+-----------+
+//  | lock | magic | canonical |---+
+//  +------+-------+-----------+   |
+//                                 v
+//  registry: mmap(MAP_PRIVATE|MAP_ANONYMOUS), copied by fork() at the same address
+//  +--------------------------------------------------------------------+
+//  | intermodule_registry_header (table lock, buckets) | records | T... |
+//  +--------------------------------------------------------------------+
+//
+//The bootstrap lock guards the bootstrap fields; the registry's own lock
+//guards the table. Order: bootstrap lock, table lock, record lock.
+//
+//The module that creates the registry keeps one handle to the section for
+//the life of the process (the other modules close theirs at once), and
+//registers intermodule_registry_atfork_child(). After fork() the child has a
+//new Windows pid and none of the parent's Win32 handles, so the handler
+//publishes the inherited registry again under the child's section name. The
+//handler can not be unregistered, so the creating module is pinned.
+
+//The handle that keeps the section alive. Used only in the creating module.
+inline void *&intermodule_registry_creator_section()
+{
+   static void *section = 0;
+   return section;
+}
+
+//The registry. Used only in the creating module.
+inline intermodule_registry_header *&intermodule_registry_creator_registry()
+{
+   static intermodule_registry_header *registry = 0;
+   return registry;
+}
+
+inline void intermodule_registry_atfork_child()
+{
+   //The child has one thread, and its section does not exist yet
+   void *section = 0;
+   intermodule_registry_header *const view = intermodule_map_registry_section(section);
+   view->canonical = intermodule_registry_creator_registry();
+   view->magic     = intermodule_registry_magic;
+   (void)UnmapViewOfFile(view);
+   //The parent's handle is not valid in the child
+   intermodule_registry_creator_section() = section;
+}
+
+//Called by the first module, with the bootstrap lock held: allocates the
+//registry and publishes it in the bootstrap view
+inline intermodule_registry_header *intermodule_registry_create
+   (intermodule_registry_header *view, void *section)
+{
+   void *const mem = ::mmap( 0, BOOST_CONTAINER_INTERMODULE_REGISTRY_BYTES
+                           , PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+   BOOST_ASSERT_MSG(mem != MAP_FAILED, "Boost.Container: mmap of the intermodule registry failed");
+   intermodule_registry_header *const hdr = static_cast<intermodule_registry_header *>(mem);
+   intermodule_reg_init(hdr);
+   view->canonical = hdr;
+   view->magic     = intermodule_registry_magic;
+   intermodule_registry_creator_registry() = hdr;
+   intermodule_registry_creator_section()  = section;
+   intermodule_pin_this_module();
+   (void)::pthread_atfork(0, 0, &intermodule_registry_atfork_child);
+   return hdr;
+}
+
+//The registry is not in the section, so its own lock guards the table.
+//Called with the bootstrap lock held: takes the table lock, releases the
+//bootstrap lock and returns the table lock.
+inline spin_mutex &intermodule_registry_lock_table
+   (intermodule_registry_header *view, intermodule_registry_header *hdr)
+{
+   hdr->lock.lock();
+   view->lock.unlock();
+   return hdr->lock;
+}
+
+//Returns the handle the module must keep: none. The creating module keeps the
+//section alive (see intermodule_registry_create), and a handle kept by a
+//module would not be valid in a fork() child.
+inline void *intermodule_registry_module_section(void *section)
+{
+   if(section != intermodule_registry_creator_section()){
+      (void)CloseHandle(section);
+   }
+   return 0;
+}
+
+#else    //BOOST_CONTAINER_INTERMODULE_REGISTRY_IN_MMAP
+
+//Called by the first module, with the bootstrap lock held: the registry is
+//the section itself
+inline intermodule_registry_header *intermodule_registry_create
+   (intermodule_registry_header *view, void *)
+{
+   intermodule_reg_init(view);
+   return view;
+}
+
+//The registry is the section, so the bootstrap lock is the same physical word
+//as hdr->lock and already guards the table. Returns it, still held.
+inline spin_mutex &intermodule_registry_lock_table
+   (intermodule_registry_header *view, intermodule_registry_header *)
+{
+   return view->lock;
+}
+
+//Returns the handle the module must keep: the section stays alive while a
+//module holds a handle to it
+inline void *intermodule_registry_module_section(void *section)
+{
+   return section;
+}
+
+#endif   //BOOST_CONTAINER_INTERMODULE_REGISTRY_IN_MMAP
+
 template<class T, class Options>
 struct intermodule_globals_impl
 {
@@ -837,24 +985,10 @@ struct intermodule_globals_impl
          ms_lock.unlock();
          return done;
       }
-      char reg_name[96];
-      intermodule_build_registry_name(reg_name);
-
-      //Create-or-open is atomic, so the section itself is the rendezvous:
-      //this backend needs no separate named mutex, the lock lives in the
+      //This backend needs no separate named mutex: the lock lives in the
       //header and is the same physical word in every module's view
-      void *const section = CreateFileMappingA
-         ( container_intermodule_winapi::invalid_handle(), 0
-         , container_intermodule_winapi::page_readwrite_c
-         , 0, (container_intermodule_winapi::dword_type)
-              BOOST_CONTAINER_INTERMODULE_REGISTRY_BYTES
-         , reg_name);
-      BOOST_ASSERT_MSG(section != 0, "Boost.Container: CreateFileMappingA failed "
-         "(processes that cannot create named sections are not supported)");
-
-      intermodule_registry_header *const view = (intermodule_registry_header *)
-         MapViewOfFile(section, container_intermodule_winapi::file_map_read_write_c, 0, 0, 0);
-      BOOST_ASSERT_MSG(view != 0, "Boost.Container: MapViewOfFile failed");
+      void *section = 0;
+      intermodule_registry_header *const view = intermodule_map_registry_section(section);
 
       //A fresh section is zero-filled, so the lock starts unlocked and the
       //magic tells the first module to lay the registry out
@@ -862,14 +996,16 @@ struct intermodule_globals_impl
 
       intermodule_registry_header *hdr;
       if(view->magic != intermodule_registry_magic){
-         intermodule_reg_init(view);
-         hdr = view;
+         hdr = intermodule_registry_create(view, section);
       }
       else{
          //Adopt the base the first module published: object addresses are
          //absolute and must be identical in every module
          hdr = (intermodule_registry_header *)view->canonical;
       }
+
+      //From here on, the table lock guards the registry table
+      spin_mutex &table_lock = intermodule_registry_lock_table(view, hdr);
 
       const char *const key = intermodule_rendezvous_key<T, Options>();
       const std::size_t key_len = std::strlen(key);
@@ -895,10 +1031,7 @@ struct intermodule_globals_impl
       //lets it use another intermodule global: that nested attach() needs
       //the table lock and a different entry lock, and gets both.
       r->lock.lock();
-
-      //Unlock through the bootstrap view, which is still mapped; it is the
-      //same physical word as hdr->lock
-      view->lock.unlock();
+      table_lock.unlock();
 
       const bool constructed_here = 0 == r->refcount;
       if(constructed_here){
@@ -918,7 +1051,7 @@ struct intermodule_globals_impl
          (void)UnmapViewOfFile(view);
       }
 
-      ms_section = section;   //keeps the section alive while this module lives
+      ms_section = intermodule_registry_module_section(section);
       ms_header  = hdr;
       ms_record  = r;
       //Published last, and with a release, because get() reads this pointer
@@ -962,7 +1095,9 @@ struct intermodule_globals_impl
       }
 
       //The canonical view is deliberately never unmapped, see the note above
-      (void)CloseHandle(ms_section);
+      if(ms_section){
+         (void)CloseHandle(ms_section);
+      }
       ms_section = 0;
       ms_header  = 0;
       ms_record  = 0;

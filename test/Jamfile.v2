@@ -68,6 +68,12 @@ rule test_all
                       bc_intermodule_lib_a bc_intermodule_lib_b
                       /boost/container//boost_container ] ;
 
+   # The shared globals and the heap in the child of fork(). The test does
+   # nothing where fork() is not supported
+   all_rules += [ run intermodule_multi_tu/intermodule_fork_test.cpp
+                      bc_intermodule_lib_a bc_intermodule_lib_b
+                      /boost/container//boost_container ] ;
+
    all_rules += [ run pmr_multi_tu/pmr_intermodule_test.cpp
                       bc_pmr_lib_a bc_pmr_lib_b
                       /boost/container//boost_container ] ;

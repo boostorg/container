@@ -173,6 +173,12 @@ boost_container_add_test(intermodule_chain_test
 target_link_libraries(${PREFIX}intermodule_chain_test
                       ${PREFIX}intermodule_test_lib_a
                       ${PREFIX}intermodule_test_lib_b)
+#The shared globals and the heap in the child of fork() (only where fork() works)
+boost_container_add_test(intermodule_fork_test
+                         intermodule_multi_tu/intermodule_fork_test.cpp)
+target_link_libraries(${PREFIX}intermodule_fork_test
+                      ${PREFIX}intermodule_test_lib_a
+                      ${PREFIX}intermodule_test_lib_b)
 boost_container_add_intermodule_test(pmr_intermodule_test
                                     pmr_multi_tu pmr_intermodule)
 #The same for the process-wide dlmalloc instance, reached through
