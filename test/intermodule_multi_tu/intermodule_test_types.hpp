@@ -71,6 +71,13 @@ struct BOOST_SYMBOL_VISIBLE options_immortal
    static const bool destroy_at_exit = false;
 };
 
+//Options with its own rendezvous key, the same for every compiler
+struct BOOST_SYMBOL_VISIBLE options_keyed
+{
+   static const char *key()
+   {  return "bc_test.shared_globals.keyed";  }
+};
+
 #if !defined(BOOST_NO_ALIGNMENT)
 
 //Alignment beyond what the platform allocator guarantees, so the backend has
@@ -110,6 +117,10 @@ BOOST_SYMBOL_EXPORT ::bc_test::shared_globals *prefix##_immortal()              
 {  return &::boost::container::dtl::intermodule_globals                          \
             < ::bc_test::shared_globals, ::bc_test::options_immortal>();  }       \
                                                                                  \
+BOOST_SYMBOL_EXPORT ::bc_test::shared_globals *prefix##_keyed()                  \
+{  return &::boost::container::dtl::intermodule_globals                          \
+            < ::bc_test::shared_globals, ::bc_test::options_keyed>();  }          \
+                                                                                 \
 BOOST_SYMBOL_EXPORT int prefix##_alpha_value()                                   \
 {  return ::boost::container::dtl::intermodule_globals                           \
             < ::bc_test::shared_globals, ::bc_test::options_alpha>().value;  }    \
@@ -140,6 +151,7 @@ BOOST_SYMBOL_EXPORT void *prefix##_overaligned()                                
    ::bc_test::shared_globals *prefix##_alpha();                                  \
    ::bc_test::shared_globals *prefix##_beta();                                   \
    ::bc_test::shared_globals *prefix##_immortal();                               \
+   ::bc_test::shared_globals *prefix##_keyed();                                  \
    int      prefix##_alpha_value();                                              \
    void     prefix##_set_alpha_value(int v);                                     \
    unsigned prefix##_ctor_calls();                                               \

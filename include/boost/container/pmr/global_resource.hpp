@@ -103,6 +103,11 @@ struct BOOST_SYMBOL_VISIBLE pmr_globals_t
 
 struct BOOST_SYMBOL_VISIBLE pmr_globals_options
 {
+   //rendezvous key, same for every compiler, so that modules built
+   //by different but ABI-compatible compilers share the pmr globals
+   static const char *key()
+   {  return "boost.container.pmr_globals";  }
+
    //The resources are polymorphic: their vtables and virtual functions live
    //in the image of whichever module constructs them, so that module must
    //stay loaded while any other one can still reach them.

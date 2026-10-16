@@ -37,6 +37,9 @@ bc_test::shared_globals &exe_beta()
 bc_test::shared_globals &exe_immortal()
 {  return dtl::intermodule_globals<bc_test::shared_globals, bc_test::options_immortal>();  }
 
+bc_test::shared_globals &exe_keyed()
+{  return dtl::intermodule_globals<bc_test::shared_globals, bc_test::options_keyed>();  }
+
 }  //namespace
 
 //Every module must reach the same object for a given T/Options pair.
@@ -71,16 +74,17 @@ void test_constructed_in_place()
    BOOST_TEST(exe_immortal().self == static_cast<void *>(&exe_immortal()));
 }
 
-//Three objects exist, so exactly three constructor calls happened in the
-//whole process however they are distributed over the modules. More would mean
-//a module built its own copy instead of attaching to the shared one.
+//Four objects exist (alpha, beta, immortal and keyed), so exactly four
+//constructor calls happened in the whole process however they are distributed
+//over the modules. More would mean a module built its own copy instead of
+//attaching to the shared one.
 void test_constructed_exactly_once_each()
 {
    const unsigned total = bc_test::module_ctor_calls
                         + lib_a_ctor_calls() + lib_b_ctor_calls();
-   BOOST_TEST_EQ(total, 3u);
+   BOOST_TEST_EQ(total, 4u);
 
-   //Nothing has been destroyed yet: the two destructible objects go at static
+   //Nothing has been destroyed yet: the destructible objects go at static
    //destruction time and the immortal one never does.
    const unsigned destroyed = bc_test::module_dtor_calls
                             + lib_a_dtor_calls() + lib_b_dtor_calls();
@@ -126,8 +130,19 @@ void test_overaligned_object()
 
 #endif   //!defined(BOOST_NO_ALIGNMENT)
 
+//Options with its own key: the object is shared, and not another T/Options pair
+void test_options_key()
+{
+   BOOST_TEST(&exe_keyed() == lib_a_keyed() && &exe_keyed() == lib_b_keyed());
+   BOOST_TEST(&exe_keyed() != &exe_alpha());
+   BOOST_TEST(&exe_keyed() != &exe_immortal());
+   BOOST_TEST(exe_keyed().magic == bc_test::shared_globals::magic_value);
+   BOOST_TEST(exe_keyed().self  == &exe_keyed());
+}
+
 int main()
 {
+   test_options_key();
    test_same_object_in_every_module();
    test_options_select_distinct_objects();
    test_constructed_in_place();

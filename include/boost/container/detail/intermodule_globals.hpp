@@ -540,41 +540,69 @@ BOOST_CONTAINER_STATIC_ASSERT(sizeof(intermodule_u32) == 4u);
 //////////////////////////////////////////////////////////////////////////////
 //
 // The key is the signature of a function template instantiated on the
-// T/Options pair, as the compiler itself spells it. It therefore names both
-// types, so the identity of an instance is the T/Options pair - the very
-// same identity the other backend gets for free, where the shared storage
-// is a static member of intermodule_globals_impl<T, Options> and the linker
-// unifies it under a name that mangles both arguments.
+// T/Options pair.
+//
+// The shared storage is a static member of intermodule_globals_impl<T, Options>.
 //
 // The front end produces the signature while parsing: unlike
 // typeid(T).name() it needs no runtime type information, so a module built
 // with RTTI disabled and one built with RTTI enabled compute the very same
 // key and do rendezvous together.
 //
-// Records carry their key inline and sized, so a long signature costs a few
-// bytes of arena and nothing else - no truncation, and no hashing of the
-// name into the identity (the 32-bit hash below only picks a bucket;
-// identity is always the full string). Like typeid names, a signature is
-// only guaranteed to agree between modules built by the same compiler,
-// which is all this backend needs.
+// Records store their key inline and sized the 32-bit hash below only picks
+// bucket; identity is always the full string.
+//
+// Is possible, modules built by different compilers must compute the same
+// key when the compilers are ABI compatible .
+//
+// Options can provide its own key, the same for every compiler:
+//
+//   struct my_options
+//   {  static const char *key() {  return "my_library.my_globals";  }  };
+//
+// The key must identify the T/Options pair: two pairs must not use the same
+// key.
 
-//The intrinsic has to name the template arguments, which __func__ and
-//__FUNCTION__ do not: they name the function alone, and every instantiation
-//would then share a single key. Take the two that do, directly rather than
-//through BOOST_CURRENT_FUNCTION, whose remaining fallbacks are exactly
-//those unusable spellings. Between them they cover every compiler that
-//targets the platforms this backend is compiled for: __PRETTY_FUNCTION__ on
-//the GCC-compatible front ends (GCC, Clang, clang-cl, MinGW, Intel and the
-//EDG-based ones, which all define __GNUC__ or __clang__) and __FUNCSIG__ on
-//MSVC and the front ends that emulate it.
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(_MSC_VER)
+#  define BOOST_CONTAINER_INTERMODULE_KEY_SIGNATURE __FUNCDNAME__
+#elif defined(__GNUC__) || defined(__clang__)
 #  define BOOST_CONTAINER_INTERMODULE_KEY_SIGNATURE __PRETTY_FUNCTION__
-#elif defined(_MSC_VER)
-#  define BOOST_CONTAINER_INTERMODULE_KEY_SIGNATURE __FUNCSIG__
 #endif
 
+//True if Options value a static member function "const char *key()"
+template<class Options>
+struct intermodule_opt_key
+{
+   typedef char one_type;
+   struct two_type { char dummy[2]; };
+   template<const char *(*)()> struct fn_arg {};
+
+   template<class U> static one_type test(fn_arg<&U::key> *);
+   template<class U> static two_type test(...);
+
+   static const bool value = sizeof(test<Options>(0)) == sizeof(one_type);
+};
+
+//void is the empty option set
+template<>
+struct intermodule_opt_key<void>
+{
+   static const bool value = false;
+};
+
+template<bool HasKey>
+struct intermodule_key_tag {};
+
+//The key that Options provides
 template<class T, class Options>
-BOOST_CONTAINER_FORCEINLINE const char *intermodule_rendezvous_key()
+BOOST_CONTAINER_FORCEINLINE const char *intermodule_rendezvous_key(intermodule_key_tag<true>)
+{
+   return Options::key();
+}
+
+//The signature of this function, as the compiler spells it
+template<class T, class Options>
+BOOST_CONTAINER_FORCEINLINE const char *intermodule_rendezvous_key(intermodule_key_tag<false>)
 {
    #if defined(BOOST_CONTAINER_INTERMODULE_KEY_SIGNATURE)
    return BOOST_CONTAINER_INTERMODULE_KEY_SIGNATURE;
@@ -583,9 +611,16 @@ BOOST_CONTAINER_FORCEINLINE const char *intermodule_rendezvous_key()
    BOOST_CONTAINER_STATIC_ASSERT_MSG(sizeof(T) == 0
       , "Boost.Container: no intrinsic naming the template arguments of the "
         "current function is known for this compiler, so intermodule globals "
-        "cannot be keyed");
+        "cannot be keyed. Provide a key in the options (see above)");
    return 0;
    #endif
+}
+
+template<class T, class Options>
+BOOST_CONTAINER_FORCEINLINE const char *intermodule_rendezvous_key()
+{
+   return (intermodule_rendezvous_key<T, Options>)
+      (intermodule_key_tag<intermodule_opt_key<Options>::value>());
 }
 
 struct intermodule_registry_header

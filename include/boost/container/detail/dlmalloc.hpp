@@ -6252,9 +6252,13 @@ struct BOOST_SYMBOL_VISIBLE dlmalloc_globals_t
    dlmalloc heap;
 };
 
-//The rendezvous key is derived from this type's name
 struct BOOST_SYMBOL_VISIBLE dlmalloc_globals_options
 {
+   //The rendezvous key, the same for every compiler, so that modules built
+   //by different but ABI-compatible compilers share the heap
+   static const char *key()
+   {  return "boost.container.dlmalloc_globals";  }
+
    //The heap is deliberately immortal: destructors of user global objects
    //and atexit callbacks may still release memory obtained from it after
    //Boost.Container's own static objects are gone, and ~basic_dlmalloc()
