@@ -1800,6 +1800,9 @@ class basic_dlmalloc
             }
          }
          postaction:
+         //The documentation guarantees that received_size will get 0 on failure
+         if(!ret.first)
+            *received_size = 0;
          postaction(ms);
       }
       return ret;
@@ -5437,9 +5440,11 @@ class basic_dlmalloc
                   usage_error_action(m, oldp);
                   return 0;
                }
-               // Check if previous block has enough size
-               else if(prevsize < needs_backwards_lcmed){
-                  // preferred size?
+               //Calculate if we can take the previous chunk. Two options:
+               //a) The previous chunk is split if there is room
+               //b) It is merged whole if its size is a multiple of lcm
+               const bool split_prev = prevsize >= (needs_backwards_lcmed + min_chunk_size);
+               if(!split_prev && (prevsize < needs_backwards_lcmed || (prevsize % lcm) != 0)){
                   return 0;
                }
                // Both halves are available, so now take the forward space. Sized
@@ -5454,7 +5459,7 @@ class basic_dlmalloc
                   dsize = oldsize + prevsize;
                }
                // We need a minimum size to split the previous one
-               if(prevsize >= (needs_backwards_lcmed + min_chunk_size)){
+               if(split_prev){
                   mchunkptr r  = chunk_minus_offset(oldp, needs_backwards_lcmed);
                   size_type rsize = oldsize + needs_backwards_lcmed;
                   size_type newprevsize = dsize - rsize;
@@ -5477,9 +5482,7 @@ class basic_dlmalloc
                   *received_size = chunksize(r) - overhead_for(r);
                   return chunk2mem(r);
                }
-               // Check if there is no place to create a new block and
-               //the whole new block is multiple of the backwards expansion multiple
-               else if(prevsize >= needs_backwards_lcmed && !(prevsize % lcm)) {
+               else{
                   // Just merge the whole previous block
                   // prevsize is multiple of lcm (and backwards_multiple)
                   *received_size  += prevsize;
@@ -5494,12 +5497,6 @@ class basic_dlmalloc
                   set_inuse(m, prev, dsize);
                   check_malloced_chunk(chunk2mem(prev), dsize);
                   return chunk2mem(prev);
-               }
-               else{
-                  // Previous block was big enough but there is no room
-                  //to create an empty block and taking the whole block does
-                  //not fulfill alignment requirements
-                  return 0;
                }
             }
          }
