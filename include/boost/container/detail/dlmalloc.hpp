@@ -5523,7 +5523,7 @@ class basic_dlmalloc
    {
       mstate m = &m_state;
       size_type oldsize = chunksize(oldp);
-      *received_size = oldsize;
+      //On failure *received_size keeps the usable size that the caller set
       #if BOOST_CONTAINER_DL_MREMAP
       if (is_small(nbmax)) // Can't shrink mmap regions below small size
          return 0;
@@ -5537,20 +5537,21 @@ class basic_dlmalloc
          {
             size_type offset = oldp->prev_foot;
             size_type oldmmsize = oldsize + offset + mmap_foot_pad;
-            size_type newmmsize = mmap_align(effective_min + six_size_t_sizes + chunk_align_mask);
-            *received_size = newmmsize;
-            if(!do_commit){
+            size_type newmmsize = mmap_align(effective_min + offset + six_size_t_sizes + chunk_align_mask);
+            size_type psize = newmmsize - offset - mmap_foot_pad;
+            *received_size = psize - overhead_for(oldp);
+            if(do_commit){
                const int flags = 0; // placate people compiling -Wunused
                char* cp = (char*)call_mremap((char*)oldp - offset,
                   oldmmsize, newmmsize, flags);
-               //This must always succeed
-               if(!cp){
-                  usage_error_action(m, m);
+               //The block does not move, but unmapping the tail can split a
+               //VMA, which might fail with ENOMEM. The mapping is then unchanged
+               if(BOOST_UNLIKELY(cp == cmfail())){
+                  *received_size = oldsize - overhead_for(oldp);
                   return 0;
                }
                {
                   mchunkptr newp = chunk_at(cp + offset);
-                  size_type psize = newmmsize - offset - mmap_foot_pad;
                   newp->head = psize;
                   mark_inuse_foot(m, newp, psize);
                   chunk_plus_offset(newp, psize)->head = fencepost_head;
