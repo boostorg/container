@@ -1200,8 +1200,13 @@ bool test_multialloc_aligned()
             std::size_t n = 0;
             for(it = ch.begin(); !dlmalloc::memchain::is_end(it); it.next())
                ptrs[n++] = it.addr();
-            for(std::size_t i = 1; i != n; ++i)
-               std::memset(ptrs[i], int(i), dlmalloc::usable_size(ptrs[i]));
+            for(std::size_t i = 1; i != n; ++i){
+               //Old GCC + glibc fortify sees a constant zero length in the
+               //inlined usable_size null path: skip it explicitly
+               const std::size_t usable = dlmalloc::usable_size(ptrs[i]);
+               if(usable)
+                  std::memset(ptrs[i], int(i), usable);
+            }
             for(std::size_t i = 0; i != n; ++i)
                h.deallocate(ptrs[i]);
             h.check();
