@@ -1209,6 +1209,44 @@ bool test_mmapped_shrink()
    return 0 != h.all_deallocated();
 }
 
+//expand_bwd fails for a block above the mmap threshold
+bool test_mmapped_expand_bwd()
+{
+   h.check();
+   const std::size_t block_size     = 1024u*1024u;
+   const std::size_t alignments[]   = { 0u, 4096u, 65536u };
+   const std::size_t sizeof_object  = 16u;
+   const std::size_t extra          = 64u;
+   const char        fill_value     = 3;
+
+   for(std::size_t a = 0; a != sizeof(alignments)/sizeof(alignments[0]); ++a){
+      const std::size_t alignment = alignments[a];
+      char *const p = static_cast<char*>
+         (alignment ? h.allocate_aligned(alignment, block_size) : h.allocate(block_size));
+      if(!p)
+         return false;
+      const std::size_t old_usable = dlmalloc::usable_size(p);
+      std::memset(p, fill_value, old_usable);
+
+      std::size_t received = 0;
+      const dlmalloc::command_ret_t ret = h.allocation_command
+         ( dlmalloc::expand_bwd, sizeof_object, sizeof_object
+         , old_usable + extra, old_usable + extra, &received, p);
+      if(ret.first)
+         return false;
+      if(dlmalloc::usable_size(p) != old_usable)
+         return false;
+      for(std::size_t i = 0; i != old_usable; ++i){
+         if(p[i] != fill_value)
+            return false;
+      }
+      h.check();
+      h.deallocate(p);
+   }
+   h.check();
+   return 0 != h.all_deallocated();
+}
+
 //multialloc_nodes_aligned and multialloc_arrays_aligned return blocks aligned to
 //the requested alignment, also for alignments bigger than malloc_alignment
 bool test_multialloc_aligned()
@@ -1358,6 +1396,15 @@ bool test_all_allocation()
 
    if(!test_mmapped_shrink()){
       std::cout << "test_mmapped_shrink failed"
+                << std::endl;
+      return false;
+   }
+
+   std::cout << "Starting test_mmapped_expand_bwd"
+             << std::endl;
+
+   if(!test_mmapped_expand_bwd()){
+      std::cout << "test_mmapped_expand_bwd failed"
                 << std::endl;
       return false;
    }

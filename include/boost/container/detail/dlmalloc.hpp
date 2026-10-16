@@ -5397,19 +5397,16 @@ class basic_dlmalloc
          //   return 0;
          //}
          //
-         // We reach here only if forward expansion fails
-         if(!(command & expand_bwd) || pinuse(oldp)){
+         // We reach here only if forward expansion fails.
+         //A mmapped chunk has no neighbours: its head has no in-use bits, so
+         //pinuse() is 0, and prev_foot is the offset from the start of the
+         //mapping (the alignment slack), not the size of a free chunk.
+         if(!(command & expand_bwd) || is_mmapped(oldp) || pinuse(oldp)){
             return 0;
          }
          {
             size_type prevsize = oldp->prev_foot;
-            if ((prevsize & use_mmap_bit) != 0){
-               //Return failure the previous chunk was mmapped.
-               //mremap does not allow expanding to a fixed address (MREMAP_MAYMOVE) without
-               //copying (MREMAP_MAYMOVE must be also set).
-               return 0;
-            }
-            else {
+            {
                mchunkptr prev = chunk_minus_offset(oldp, prevsize);
                size_type dsize = oldsize + prevsize;
                size_type needs_backwards_lcmed;
