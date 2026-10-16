@@ -595,10 +595,9 @@ BOOST_CONTAINER_FORCEINLINE const char *intermodule_rendezvous_key()
 struct intermodule_registry_header
 {
    //Guards the table itself: the magic, the linear-hashing state, the arena
-   //bump pointer and the bucket array, that is every field below. It does
-   //NOT guard a record's refcount or its object; each record carries its own
-   //lock for that, so that a T constructor may use another intermodule
-   //global. Order is always this lock first, then a record lock.
+   //bump pointer and the bucket array. It does NOT guard a record's refcount
+   // r object; each record has its own lock for that, so that a T constructor
+   //can use another intermodule global.
    spin_mutex lock;
    intermodule_u32    magic;
    //Linear hashing state, in the two-variable form Boost.Intrusive uses:
@@ -835,7 +834,8 @@ inline intermodule_registry_header *intermodule_map_registry_section(void *&sect
 //  +--------------------------------------------------------------------+
 //
 //The bootstrap lock guards the bootstrap fields; the registry's own lock
-//guards the table. Order: bootstrap lock, table lock, record lock.
+//guards the table. The table lock is taken with the bootstrap lock held, and
+//both are released before a record lock is taken.
 //
 //The module that creates the registry keeps one handle to the section for
 //the life of the process (the other modules close theirs at once), and
@@ -1025,13 +1025,11 @@ struct intermodule_globals_impl
 
       T *const obj = (T *)(void *)((char *)hdr + r->obj_offset);
 
-      //Hand over from the table lock to this entry's own lock, taking the
-      //second while still holding the first so no one can slip in between.
-      //T's constructor then runs holding only the entry lock, which is what
-      //lets it use another intermodule global: that nested attach() needs
-      //the table lock and a different entry lock, and gets both.
-      r->lock.lock();
+      //Release the table lock before taking entry's lock to avoid deadlocks.
+      //Releasing is safe because records never move,  r remains valid.
+      //The refcount, under the entry lock, decides which thread constructs T.
       table_lock.unlock();
+      r->lock.lock();
 
       const bool constructed_here = 0 == r->refcount;
       if(constructed_here){
