@@ -45,6 +45,7 @@
 //token-for-token compatible with it
 struct _SECURITY_ATTRIBUTES;
 struct HINSTANCE__;
+struct _FILETIME;
 #if !defined(__CYGWIN__)
 struct _MEMORY_BASIC_INFORMATION;
 struct _SYSTEM_INFO;
@@ -105,6 +106,17 @@ static const dword_type module_from_address_c   = 0x04;          //GET_MODULE_HA
 
 BOOST_CONTAINER_FORCEINLINE void *invalid_handle()
 {  return (void *)(~uintptr_type(0));  }   //INVALID_HANDLE_VALUE
+
+//Layout-compatible with FILETIME (GetProcessTimes)
+struct filetime
+{
+   dword_type     dwLowDateTime;
+   dword_type     dwHighDateTime;
+};
+
+#if defined(BOOST_USE_WINDOWS_H)
+BOOST_CONTAINER_STATIC_ASSERT(sizeof(filetime) == sizeof(::FILETIME));
+#endif
 
 #if !defined(__CYGWIN__)
 
@@ -204,6 +216,17 @@ __declspec(dllimport) boost::container::winapi::bool_type __stdcall
       ( boost::container::winapi::dword_type dwFlags
       , const char *lpModuleName
       , ::HINSTANCE__ **phModule);
+
+__declspec(dllimport) void * __stdcall
+   GetCurrentProcess(void);
+
+__declspec(dllimport) boost::container::winapi::bool_type __stdcall
+   GetProcessTimes
+      ( void *hProcess
+      , ::_FILETIME *lpCreationTime
+      , ::_FILETIME *lpExitTime
+      , ::_FILETIME *lpKernelTime
+      , ::_FILETIME *lpUserTime);
 
 #if !defined(__CYGWIN__)
 

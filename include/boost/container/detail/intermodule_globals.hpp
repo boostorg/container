@@ -79,14 +79,12 @@
 // ---------
 //  Windows 
 // ---------
-//    One pagefile-backed section, named after the ABI tag and the
-//    current pid, holds every singleton of the process together with the
+//    One pagefile-backed section, named after the ABI tag, the
+//    current and timestamp, holds every singleton of the process together with the
 //    linear-hashed index used to find them. The bootstrap lock lives in the
 //    sectionheader, so no named mutex (nor any other shared object) is needed.
-// 
-//    Named kernel objects are refcounted, associated to the pid, and disappear with
-//    the process, so never collide with a dead process.
-// 
+//
+//
 //    Each module may map the section at a different address, which is why
 //    the first one publishes its view as "canonical" and the others adopt it.
 // 
@@ -286,6 +284,7 @@ BOOST_CONTAINER_INTERMODULE_BOOL_OPTION(pin_constructing_module)
 //CreateFileMappingA, MapViewOfFile, UnmapViewOfFile, CloseHandle,
 //GetCurrentProcessId, GetModuleHandleExA and their types and constants
 #include <boost/container/detail/winapi.hpp>
+#include <cstdio>    //std::sprintf (registry name)
 
 namespace boost {
 namespace container {
@@ -310,29 +309,6 @@ inline void intermodule_pin_this_module()
          , &h);
       pinned = 1;
    }
-}
-
-//Decimal/hex formatting without any CRT dependency
-inline char *intermodule_append_dec(char *dst, unsigned long value)
-{
-   char tmp[24];
-   unsigned n = 0;
-   do{
-      tmp[n++] = (char)('0' + (value % 10u));
-      value /= 10u;
-   }  while(value);
-   while(n){
-      *dst++ = tmp[--n];
-   }
-   return dst;
-}
-
-inline char *intermodule_append_str(char *dst, const char *s)
-{
-   while(*s){
-      *dst++ = *s++;
-   }
-   return dst;
 }
 
 #define BOOST_CONTAINER_INTERMODULE_ABI_VERSION 1
@@ -718,29 +694,69 @@ inline intermodule_registry_record *intermodule_reg_insert
    return r;
 }
 
-//"Local\boost_container_greg_<abi>_<pid>": one section for every singleton
-inline void intermodule_build_registry_name(char (&dst)[96])
+#define BOOST_CONTAINER_INTERMODULE_REGISTRY_NAME_PREFIX "Local\\boost_container_intermodule_"
+
+//"Local\boost_container_intermodule_<abi>_<pid>_<creation time>": the name of
+//the section that holds every singleton of the process. The creation time
+//makes the name unique: a new process can get the pid of a dead one, whose
+//section can still exist.
+struct intermodule_registry_name
 {
-   char *p = intermodule_append_str(dst, "Local\\boost_container_greg_");
-   p = intermodule_append_dec(p, (unsigned long)BOOST_CONTAINER_INTERMODULE_ABI_VERSION);
-   *p++ = '_';
-   p = intermodule_append_dec(p, (unsigned long)GetCurrentProcessId());
-   *p = 0;
-   BOOST_ASSERT(std::size_t(p - dst) < sizeof(dst));
+   //The ABI version and the pid are 32-bit values (at most 10 decimal digits),
+   //the creation time is 64 bits (16 hexadecimal digits)
+   static const std::size_t max_u32_dec_digits = 10u;
+   static const std::size_t time_hex_digits    = 16u;
+   static const std::size_t max_size =
+      sizeof(BOOST_CONTAINER_INTERMODULE_REGISTRY_NAME_PREFIX)    //with the null terminator
+      + max_u32_dec_digits + 1u + max_u32_dec_digits + 1u + time_hex_digits;
+
+   char str[max_size];
+};
+
+inline intermodule_registry_name intermodule_build_registry_name
+   (unsigned long pid, const winapi::filetime &creation_time)
+{
+   intermodule_registry_name name;
+   #if defined(BOOST_MSVC)
+   #pragma warning (push)
+   #pragma warning (disable : 4996) //sprintf may be unsafe: max_size is enough
+   #endif
+   const int len = std::sprintf
+      ( name.str, BOOST_CONTAINER_INTERMODULE_REGISTRY_NAME_PREFIX "%lu_%lu_%08lx%08lx"
+      , (unsigned long)BOOST_CONTAINER_INTERMODULE_ABI_VERSION, pid
+      , (unsigned long)creation_time.dwHighDateTime, (unsigned long)creation_time.dwLowDateTime);
+   #if defined(BOOST_MSVC)
+   #pragma warning (pop)
+   #endif
+   BOOST_ASSERT(len > 0 && std::size_t(len) < intermodule_registry_name::max_size);
+   (void)len;
+   return name;
+}
+
+//The name for the current process
+inline intermodule_registry_name intermodule_build_registry_name()
+{
+   winapi::filetime creation_time, exit_time, kernel_time, user_time;
+   const winapi::bool_type ok = GetProcessTimes
+      ( GetCurrentProcess()
+      , (::_FILETIME *)&creation_time, (::_FILETIME *)&exit_time
+      , (::_FILETIME *)&kernel_time, (::_FILETIME *)&user_time);
+   BOOST_ASSERT_MSG(ok != 0, "Boost.Container: GetProcessTimes failed");
+   (void)ok;
+   return intermodule_build_registry_name((unsigned long)GetCurrentProcessId(), creation_time);
 }
 
 //Creates (or opens) the named registry section of this process and maps it
 inline intermodule_registry_header *intermodule_map_registry_section(void *&section)
 {
-   char reg_name[96];
-   intermodule_build_registry_name(reg_name);
+   const intermodule_registry_name reg_name = intermodule_build_registry_name();
    //Create-or-open is atomic, so the section itself is the rendezvous
    section = CreateFileMappingA
       ( winapi::invalid_handle(), 0
       , winapi::page_readwrite_c
       , 0, (winapi::dword_type)
            BOOST_CONTAINER_INTERMODULE_REGISTRY_BYTES
-      , reg_name);
+      , reg_name.str);
    BOOST_ASSERT_MSG(section != 0, "Boost.Container: CreateFileMappingA failed "
       "(processes that cannot create named sections are not supported)");
    intermodule_registry_header *const view = (intermodule_registry_header *)
@@ -753,7 +769,7 @@ inline intermodule_registry_header *intermodule_map_registry_section(void *&sect
 
 //Cygwin layout:
 //
-//  named section "Local\boost_container_greg_<abi>_<windows pid>" (bootstrap only)
+//  named section "Local\boost_container_intermodule_<abi>_<windows pid>_<creation time>" (bootstrap only)
 //  +------+-------+-----------+
 //  | lock | magic | canonical |---+
 //  +------+-------+-----------+   |
