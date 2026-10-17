@@ -67,6 +67,7 @@ using ::boost::move_detail::nat3;
 using ::boost::move_detail::natN;
 using ::boost::move_detail::max_align_t;
 using ::boost::move_detail::is_convertible;
+using ::boost::move_detail::is_constructible;
 
 }  //namespace dtl {
 }  //namespace container {

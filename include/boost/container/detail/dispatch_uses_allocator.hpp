@@ -32,7 +32,6 @@
 #include <boost/container/detail/variadic_templates_tools.hpp>
 #endif
 #include <boost/move/utility_core.hpp>
-#include <boost/container/detail/is_constructible.hpp>
 
 namespace boost { namespace container {
 
@@ -50,12 +49,12 @@ namespace dtl {
 
    template <class T, class InnerAlloc, class ...Args>
    struct is_constructible_with_allocator_prefix
-      : boost::container::is_constructible<T, allocator_arg_t, InnerAlloc, Args...>
+      : dtl::is_constructible<T, allocator_arg_t, InnerAlloc, Args...>
    {};
 
    template <class T, class InnerAlloc, class ...Args>
    struct is_constructible_with_allocator_suffix
-      : boost::container::is_constructible<T, Args..., InnerAlloc>
+      : dtl::is_constructible<T, Args..., InnerAlloc>
    {};
 
 #else    // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
@@ -70,13 +69,13 @@ namespace dtl {
       template <typename T, class InnerAlloc BOOST_MOVE_I##N BOOST_MOVE_CLASS##N>\
       struct is_constructible_with_allocator_prefix\
          <T, InnerAlloc BOOST_MOVE_I##N BOOST_MOVE_TARG##N>\
-         : boost::container::is_constructible<T, allocator_arg_t, InnerAlloc BOOST_MOVE_I##N BOOST_MOVE_TARG##N>\
+         : dtl::is_constructible<T, allocator_arg_t, InnerAlloc BOOST_MOVE_I##N BOOST_MOVE_TARG##N>\
       {};\
       \
       template <typename T, class InnerAlloc BOOST_MOVE_I##N BOOST_MOVE_CLASS##N>\
       struct is_constructible_with_allocator_suffix\
          <T, InnerAlloc BOOST_MOVE_I##N BOOST_MOVE_TARG##N>\
-         : boost::container::is_constructible<T BOOST_MOVE_I##N BOOST_MOVE_TARG##N, InnerAlloc>\
+         : dtl::is_constructible<T BOOST_MOVE_I##N BOOST_MOVE_TARG##N, InnerAlloc>\
       {};\
       //
    BOOST_MOVE_ITERATE_0TO8(BOOST_INTRUSIVE_IS_CONSTRUCTIBLE_WITH_ALLOCATOR)
