@@ -212,7 +212,7 @@ class adaptive_pool
    size_type size(pointer p) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
-      return dlmalloc::usable_size(p);
+      return size_type(dlmalloc::usable_size(p) / sizeof(T));
    }
 
    //!Allocates just one object. Memory allocated with this function
@@ -269,7 +269,10 @@ class adaptive_pool
    //!Elements must be individually deallocated with deallocate()
    void allocate_many(size_type elem_size, std::size_t n_elements, multiallocation_chain &chain)
    {
-      BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));/*
+      BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
+      if(BOOST_UNLIKELY(elem_size > size_type(-1)/sizeof(T))){
+         boost::container::throw_bad_alloc();
+      }/*
       dlmalloc::memchain ch;
       if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes_aligned(n_elements, elem_size*sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous, &ch))){
          boost::container::throw_bad_alloc();
@@ -539,7 +542,7 @@ class private_adaptive_pool
    //!Returns maximum the number of objects the previously allocated memory
    //!pointed by p can hold.
    size_type size(pointer p) const BOOST_NOEXCEPT_OR_NOTHROW
-   {  return dlmalloc::usable_size(p);  }
+   {  return size_type(dlmalloc::usable_size(p) / sizeof(T));  }
 
    //!Allocates just one object. Memory allocated with this function
    //!must be deallocated only with deallocate_one().
@@ -575,6 +578,9 @@ class private_adaptive_pool
    void allocate_many(size_type elem_size, std::size_t n_elements, multiallocation_chain &chain)
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
+      if(BOOST_UNLIKELY(elem_size > size_type(-1)/sizeof(T))){
+         boost::container::throw_bad_alloc();
+      }
       if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes_aligned
             ( n_elements, elem_size*sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous
             , move_detail::force_ptr<dlmalloc::memchain *>(&chain)))){

@@ -241,7 +241,7 @@ class allocator
    BOOST_CONTAINER_NODISCARD size_type size(pointer p) const BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
-      return dlmalloc::usable_size(p);
+      return size_type(dlmalloc::usable_size(p) / sizeof(T));
    }
 
    //!Allocates just one object. Memory allocated with this function
