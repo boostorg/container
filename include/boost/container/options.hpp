@@ -808,8 +808,10 @@ using string_options_t = typename boost::container::string_options<Options...>::
 #endif
 
 //!This option specifies the maximum size of a block in bytes: this delimites the number of contiguous elements
-//!that will be allocated by some segmented containers as min(1u, BlockBytes/sizeof(value_type))
+//!that will be allocated by some segmented containers as something similar to (BlockBytes/sizeof(value_type))
 //!A value zero represents the default value.
+//!
+//!If the resulting number of elements is very small, the implementation might use a bigger block.
 //!
 //!\tparam BlockBytes An unsigned integer value.
 BOOST_INTRUSIVE_OPTION_CONSTANT(block_bytes, std::size_t, BlockBytes, block_bytes)
@@ -824,7 +826,9 @@ BOOST_INTRUSIVE_OPTION_CONSTANT(segment_bytes, std::size_t, SegmentBytes, block_
 //!For some containers (like deque/segtor), a power of two value can improve performance.
 //!A value zero represents the default value.
 //!
-//!\tparam BlockBytes An unsigned integer value.
+//!If BlockSize is very small, the implementation might use a bigger block.
+//!
+//!\tparam BlockSize An unsigned integer value.
 BOOST_INTRUSIVE_OPTION_CONSTANT(block_size, std::size_t, BlockSize, block_size)
 
 //!An alias for `block_size`

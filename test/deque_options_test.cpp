@@ -77,6 +77,30 @@ void test_block_elements()
    BOOST_TEST(deque_t::get_block_size() == 64U);
 }
 
+//A block holds at least 2 elements: a smaller block_size or block_bytes is increased
+template<class Options>
+void test_min_block_size_impl()
+{
+   typedef deque<int, void, Options> deque_t;
+   BOOST_TEST(deque_t::get_block_size() == 2u);
+   deque_t d;
+   for (int i = 0; i != 100; ++i) {
+      d.push_back(i);
+      d.push_front(-i);
+   }
+   BOOST_TEST(d.size() == 200u);
+   d.erase(d.begin() + 50, d.begin() + 150);
+   BOOST_TEST(d.size() == 100u);
+   BOOST_TEST(d.front() == -99 && d.back() == 99);
+}
+
+void test_min_block_size()
+{
+   test_min_block_size_impl< deque_options< block_size<1u> >::type >();
+   test_min_block_size_impl< deque_options< block_bytes<1u> >::type >();
+   test_min_block_size_impl< deque_options< block_size<1u>, reservable<true> >::type >();
+}
+
 void test_reservable()
 {
    {
@@ -103,6 +127,7 @@ int main()
 {
    test_block_bytes();
    test_block_elements();
+   test_min_block_size();
    test_stored_size_type<unsigned char>();
    test_stored_size_type<unsigned short>();
    test_reservable();

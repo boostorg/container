@@ -98,11 +98,14 @@ struct deque_block_traits
                                                                                        ? max_stored_size_block_size
                                                                                        : default_block_size_initial;
    //Now select between the default or the specified by the user
-   BOOST_STATIC_CONSTEXPR std::size_t value  = BlockSize  ? BlockSize
-                                             : BlockBytes ? (BlockBytes-1u)/sizeof(T) + 1u : default_block_size
-                                             ;
+   BOOST_STATIC_CONSTEXPR std::size_t user_or_default_value = BlockSize  ? BlockSize
+                                                            : BlockBytes ? (BlockBytes-1u)/sizeof(T) + 1u : default_block_size
+                                                            ;
+   //A block holds at least two elements (the default is at least default_min_block_size):
+   //Some internal functions relay on it to simplify the code and avoid corner cases
+   BOOST_STATIC_CONSTEXPR std::size_t min_block_size = 2u;
+   BOOST_STATIC_CONSTEXPR std::size_t value = user_or_default_value < min_block_size ? min_block_size : user_or_default_value;
    BOOST_CONTAINER_STATIC_ASSERT_MSG(value <= max_stored_size_block_size, "BlockSize or BlockBytes is too big for the stored_size_type");
-   BOOST_CONTAINER_STATIC_ASSERT_MSG(value >= 2u, "BlockSize or BlockBytes must give at least 2 elements per block");
 };
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
