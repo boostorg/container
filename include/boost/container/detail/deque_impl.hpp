@@ -65,6 +65,8 @@
 namespace boost {
 namespace container {
 
+#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
 template <class T>
 struct deque_value_traits
 {
@@ -246,6 +248,7 @@ class deque_iterator
 
    //Some GCC versions issue bogus warnings about array bounds here
    #if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
+   #  pragma GCC diagnostic push
    #  pragma GCC diagnostic ignored "-Warray-bounds"
    #endif
 
@@ -2786,6 +2789,7 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
          }
       }
    }
+   #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 };
 
 }} //boost::container
@@ -2809,5 +2813,7 @@ struct has_trivial_destructor_after_move<boost::container::deque_impl<T, Allocat
 }  //boost
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+
+#include <boost/container/detail/config_end.hpp>
 
 #endif   //BOOST_CONTAINER_DETAIL_DEQUE_IMPL_HPP
