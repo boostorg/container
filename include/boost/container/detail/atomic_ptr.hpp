@@ -18,6 +18,7 @@
 #  pragma once
 #endif
 
+#include <boost/container/detail/workaround.hpp>   //BOOST_CONTAINER_FORCEINLINE
 #include <cstddef>   //std::size_t
 
 //////////////////////////////////////////////////////////////////////////////

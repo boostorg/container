@@ -52,6 +52,7 @@
 #else
    #include <stdlib.h> //for malloc
 #endif
+#include <cstddef>   //std::size_t
 
 namespace boost {
 namespace container {
