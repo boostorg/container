@@ -182,26 +182,29 @@ partition_copy_leaf
       goto out_ret;
    }
 
-   BOOST_CONTAINER_SEGMENTED_UNROLL(4)
-   //Use "> 0" instead of "!= 0" to void a false GCC
-   //-Waggressive-loop-optimizations warning that asummes negative n
-   while(n > 0) {
-      if(pred(*first)) {
-         *t_first = *first;
-         ++t_first;
-         ++first;
-         --n;
-         if(BOOST_UNLIKELY(t_first == t_last))
-            break;
-      }
-      else {
-         *f_first = *first;
-         ++f_first;
-         ++first;
-         --n;
-         if(BOOST_UNLIKELY(f_first == f_last)) {
-            false_output_full = first != last;
-            break;
+   //n >= 0 here. An unsigned counter avoids a false GCC
+   //-Waggressive-loop-optimizations warning
+   {
+      std::size_t rem = static_cast<std::size_t>(n);
+      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
+      while(rem) {
+         if(pred(*first)) {
+            *t_first = *first;
+            ++t_first;
+            ++first;
+            --rem;
+            if(BOOST_UNLIKELY(t_first == t_last))
+               break;
+         }
+         else {
+            *f_first = *first;
+            ++f_first;
+            ++first;
+            --rem;
+            if(BOOST_UNLIKELY(f_first == f_last)) {
+               false_output_full = first != last;
+               break;
+            }
          }
       }
    }
