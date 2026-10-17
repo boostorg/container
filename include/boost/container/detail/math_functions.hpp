@@ -26,8 +26,10 @@
 
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
+#include <boost/assert.hpp>
 
 #include <climits>
+#include <cstddef>
 
 namespace boost {
 namespace container {
@@ -70,14 +72,24 @@ inline Integer lcm(const Integer & A, const Integer & B)
 }
 
 template <typename Integer>
+struct max_power_of_2
+{
+   BOOST_CONTAINER_STATIC_ASSERT((Integer(~Integer(0)) > Integer(0)));   //unsigned
+   BOOST_STATIC_CONSTEXPR Integer value = Integer((Integer(~Integer(0)) >> 1u) + 1u);
+};
+
+template <typename Integer>
 inline Integer log2_ceil(const Integer & A)
 {
    Integer i = 0;
    Integer power_of_2 = 1;
 
    while(power_of_2 < A){
-      power_of_2 <<= 1;
       ++i;
+      //2^i would not fit in Integer, but it is still >= A
+      if(power_of_2 == max_power_of_2<Integer>::value)
+         break;
+      power_of_2 = Integer(power_of_2 << 1u);
    }
    return i;
 }
@@ -85,10 +97,13 @@ inline Integer log2_ceil(const Integer & A)
 template <typename Integer>
 inline Integer upper_power_of_2(const Integer & A)
 {
-   Integer power_of_2 = 1;
+   BOOST_ASSERT(A <= max_power_of_2<Integer>::value);
+   if(BOOST_UNLIKELY(A > max_power_of_2<Integer>::value))
+      return 0;
 
+   Integer power_of_2 = 1;
    while(power_of_2 < A){
-      power_of_2 <<= 1;
+      power_of_2 = Integer(power_of_2 << 1u);
    }
    return power_of_2;
 }
@@ -101,7 +116,7 @@ struct upper_power_of_2_loop_ct
    struct apply
    {
       BOOST_STATIC_CONSTEXPR Integer value =
-         upper_power_of_2_loop_ct<Integer, (I > P*2)>::template apply<I, P*2>::value;
+         upper_power_of_2_loop_ct<Integer, (I > Integer(P*2u))>::template apply<I, Integer(P*2u)>::value;
    };
 };
 
@@ -118,7 +133,8 @@ struct upper_power_of_2_loop_ct<Integer, false>
 template <typename Integer, Integer I>
 struct upper_power_of_2_ct
 {
-   BOOST_STATIC_CONSTEXPR Integer value = upper_power_of_2_loop_ct<Integer, (I > 1)>::template apply<I, 2>::value;
+   BOOST_CONTAINER_STATIC_ASSERT((I <= max_power_of_2<Integer>::value));
+   BOOST_STATIC_CONSTEXPR Integer value = upper_power_of_2_loop_ct<Integer, (I > 1u)>::template apply<I, 1u>::value;
 };
 
 //This function uses binary search to discover the
