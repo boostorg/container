@@ -117,8 +117,29 @@ void test_growth_factor_100()
    BOOST_TEST(new_capacity == 2*old_capacity);
 }
 
+//Growth near the maximum of a 32-bit size_type WHEN cur_cap*Numerator overflows
+void test_growth_factor_overflow()
+{
+   typedef unsigned int u32;
+   const u32 max = u32(-1);
+   //1.6 * 600000000, 1.5 * 2000000000: the new capacity fits in 32 bits
+   BOOST_TEST_EQ(growth_factor_60()(u32(600000000u), u32(1u), max), u32(960000000u));
+   BOOST_TEST_EQ(growth_factor_50()(u32(2000000000u), u32(1u), max), u32(3000000000u));
+   //With a remainder: 600000003*8/5 = 960000004.8, 2000000001*3/2 = 3000000001.5
+   BOOST_TEST_EQ(growth_factor_60()(u32(600000003u), u32(1u), max), u32(960000004u));
+   BOOST_TEST_EQ(growth_factor_50()(u32(2000000001u), u32(1u), max), u32(3000000001u));
+   //2863311531*3/2 = 4294967296.5: one above the maximum, only because of the remainder
+   BOOST_TEST_EQ(growth_factor_50()(u32(2863311531u), u32(1u), max), max);
+   //The new capacity does not fit: the maximum
+   BOOST_TEST_EQ(growth_factor_60()(u32(3000000000u), u32(1u), max), max);
+   BOOST_TEST_EQ(growth_factor_100()(u32(3000000000u), u32(1u), max), max);
+   //Limited by max_cap
+   BOOST_TEST_EQ(growth_factor_60()(u32(600000000u), u32(1u), u32(700000000u)), u32(700000000u));
+}
+
 int main()
 {
+   test_growth_factor_overflow();
    test_growth_factor_50();
    test_growth_factor_60();
    test_growth_factor_100();

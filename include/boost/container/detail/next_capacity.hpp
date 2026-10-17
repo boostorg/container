@@ -45,14 +45,17 @@ struct grow_factor_ratio
 
       SizeType new_cap = 0;
 
-      if(cur_cap <= overflow_limit){
+      if(BOOST_LIKELY(cur_cap <= overflow_limit)){
          new_cap = SizeType(cur_cap * Numerator / Denominator);
       }
-      else if(Denominator == 1 || (SizeType(new_cap = cur_cap) / Denominator) > overflow_limit){
+      else if(Denominator == 1 || SizeType(cur_cap / Denominator) > overflow_limit){
          new_cap = (SizeType)-1;
       }
       else{
-         new_cap = SizeType(new_cap*Numerator);
+         //cur_cap*Numerator would overflow
+         const SizeType q_part = SizeType(SizeType(cur_cap / Denominator) * Numerator);
+         const SizeType r_part = SizeType(SizeType(cur_cap % Denominator) * Numerator / Denominator);
+         new_cap = q_part > SizeType((SizeType)-1 - r_part) ? (SizeType)-1 : SizeType(q_part + r_part);
       }
       return max_value<SizeType>
                ( SizeType(Minimum)
