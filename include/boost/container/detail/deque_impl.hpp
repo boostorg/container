@@ -102,7 +102,7 @@ struct deque_block_traits
                                              : BlockBytes ? (BlockBytes-1u)/sizeof(T) + 1u : default_block_size
                                              ;
    BOOST_CONTAINER_STATIC_ASSERT_MSG(value <= max_stored_size_block_size, "BlockSize or BlockBytes is too big for the stored_size_type");
-
+   BOOST_CONTAINER_STATIC_ASSERT_MSG(value >= 2u, "BlockSize or BlockBytes must give at least 2 elements per block");
 };
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -675,16 +675,22 @@ class deque_base
          (val_alloc_traits_type::max_size(this->alloc()));
    }
 
-   void test_size_against_max(size_type n)
+   size_type prot_max_map_size() const BOOST_NOEXCEPT_OR_NOTHROW
    {
+      BOOST_CONSTEXPR_OR_CONST size_type block_size = get_block_size();
       const size_type max = this->prot_max_size();
-      if (BOOST_UNLIKELY(max < n) )
-         boost::container::throw_length_error("get_next_capacity, allocator's max size reached");
+      if (BOOST_UNLIKELY(max < size_type(block_size - 1u))) {
+         return 0u;
+      }
+      //block_size >= 2 guaranteed, so +1 can not overflow
+      return size_type((max - size_type(block_size - 1u)) / block_size + 1u);
    }
 
    BOOST_CONTAINER_FORCEINLINE void test_size_against_n_nodes(size_type n_nodes)
    {
-      test_size_against_max(size_type(size_type(n_nodes * get_block_size()) - 1u));
+      if (BOOST_UNLIKELY(n_nodes > this->prot_max_map_size())) {
+         boost::container::throw_length_error("get_next_capacity, allocator's max size reached");
+      }
    }
 
    void prot_initialize_map_and_nodes(size_type num_elements)

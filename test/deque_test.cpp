@@ -440,8 +440,36 @@ bool test_unqualified_swap()
    return true;
 }
 
+//A size whose number of blocks times the block size overflows size_type must throw
+template<bool Reservable>
+bool test_huge_size_length_error()
+{
+   #ifndef BOOST_NO_EXCEPTIONS
+   typedef typename boost::container::deque_options<boost::container::reservable<Reservable> >::type options_t;
+   boost::container::deque<char, void, options_t> d(10u, 'a');
+   const std::size_t sizes[] = { std::size_t(-1), std::size_t(-1) - 1u, std::size_t(-1) / 2u };
+   for(std::size_t i = 0; i != sizeof(sizes)/sizeof(sizes[0]); ++i){
+      bool length_error_thrown = false;
+      try{
+         d.resize(sizes[i]);
+      }
+      catch(const boost::container::length_error_t &){
+         length_error_thrown = true;
+      }
+      catch(...){
+      }
+      if(!length_error_thrown || d.size() != 10u)
+         return false;
+   }
+   #endif   //BOOST_NO_EXCEPTIONS
+   return true;
+}
+
 int main ()
 {
+   if(!test_huge_size_length_error<false>() || !test_huge_size_length_error<true>())
+      return 1;
+
    if(!test_unqualified_swap())
       return 1;
 
