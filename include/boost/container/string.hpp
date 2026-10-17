@@ -38,6 +38,7 @@
 #include <boost/move/detail/to_raw_pointer.hpp>
 #include <boost/move/detail/iterator_to_raw_pointer.hpp>
 #include <boost/container/detail/version_type.hpp>
+#include <boost/container/detail/placement_new.hpp>
 #include <boost/container/detail/type_traits.hpp>
 #include <boost/container/detail/algorithm.hpp>
 #include <boost/container/detail/minimal_char_traits_header.hpp>  // for char_traits
@@ -312,7 +313,7 @@ class basic_string_base
    {
       inline void init()
       {
-         short_t &s = *::new(&this->m_repr) short_t;
+         short_t &s = *::new(&this->m_repr, boost_container_new_t()) short_t;
          s.h.is_short = 1;
          s.h.length = 0;
       }
@@ -372,7 +373,7 @@ class basic_string_base
 
    inline short_t * construct_short()
    {
-      short_t *ps = ::new(&this->members_.m_repr) short_t;
+      short_t *ps = ::new(&this->members_.m_repr, boost_container_new_t()) short_t;
       ps->h.is_short = 1;
       return ps;
    }
@@ -394,7 +395,7 @@ class basic_string_base
 
    inline long_t * construct_long()
    {
-      long_t *pl = ::new(&this->members_.m_repr) long_t;
+      long_t *pl = ::new(&this->members_.m_repr, boost_container_new_t()) long_t;
       //is_short flag is written in the constructor
       return pl;
    }
@@ -658,18 +659,18 @@ class basic_string_base
          else{
             short_t short_backup(*this->members_.pshort_repr());
             this->members_.pshort_repr()->~short_t();
-            ::new(this->members_.plong_repr()) long_t(*other.members_.plong_repr());
+            ::new(this->members_.plong_repr(), boost_container_new_t()) long_t(*other.members_.plong_repr());
             other.members_.plong_repr()->~long_t();
-            ::new(other.members_.pshort_repr()) short_t(short_backup);
+            ::new(other.members_.pshort_repr(), boost_container_new_t()) short_t(short_backup);
          }
       }
       else{
          if(other.is_short()){
             short_t short_backup(*other.members_.pshort_repr());
             other.members_.pshort_repr()->~short_t();
-            ::new(other.members_.plong_repr()) long_t(*this->members_.plong_repr());
+            ::new(other.members_.plong_repr(), boost_container_new_t()) long_t(*this->members_.plong_repr());
             this->members_.plong_repr()->~long_t();
-            ::new(this->members_.pshort_repr()) short_t(short_backup);
+            ::new(this->members_.pshort_repr(), boost_container_new_t()) short_t(short_backup);
          }
          else{
             boost::adl_move_swap(*this->members_.plong_repr(), *other.members_.plong_repr());

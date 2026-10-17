@@ -7,9 +7,11 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
+//First, to check that it compiles when it is included first (node_pool_impl.hpp
+//must not need <new> from another header)
+#include <boost/container/node_allocator.hpp>
 #include <boost/container/list.hpp>
 #include <boost/container/vector.hpp>
-#include <boost/container/node_allocator.hpp>
 #include "movable_int.hpp"
 #include "list_test.hpp"
 #include "vector_test.hpp"

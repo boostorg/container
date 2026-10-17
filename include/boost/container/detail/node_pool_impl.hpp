@@ -25,6 +25,7 @@
 #include <boost/container/detail/math_functions.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/pool_common.hpp>
+#include <boost/container/detail/placement_new.hpp>
 #include <boost/move/detail/to_raw_pointer.hpp>
 #include <boost/move/detail/force_ptr.hpp>
 #include <boost/move/adl_move_swap.hpp>
@@ -513,7 +514,7 @@ class private_node_pool_impl
             //We initialize all Nodes in Node Block to insert
             //them in the free Node list
             for(size_type j = 0; j < nodes_per_block; ++j, pNode += real_node_size){
-               m_freelist.push_front(*new (pNode) list_node_t);
+               m_freelist.push_front(*::new(pNode, boost_container_new_t()) list_node_t);
             }
          }
       }
