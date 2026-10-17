@@ -2307,7 +2307,9 @@ the last template parameter and defined using the utility class
 
 *  [classref boost::container::relocate_on_66 relocate_on_XX]: load factor limit that will determine if
    new memory should be allocated or elements should relocated inside existing memory, when the free space
-   is exhausted at one end of the container.
+   is exhausted at one end of the container. With [classref boost::container::relocate_never relocate_never]
+   the elements are never relocated: new memory is always allocated, and all the memory is usable
+   (`capacity()` is the size of the buffer).
 
 See the following example to see how [classref boost::container::devector_options devector_options] can be
 used to customize `devector`:
@@ -2958,6 +2960,11 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
   [classref boost::container::map map],
   [classref boost::container::multimap multimap], [classref boost::container::set set] and
   [classref boost::container::multiset multiset] also need a comparator with a non-throwing copy constructor and swap.
+
+* [classref boost::container::devector devector]: the [classref boost::container::relocate_never relocate_never]
+  option, documented in previous releases, is now implemented. The elements are never relocated inside the buffer:
+  an insertion at a full end always allocates a new buffer. With this option
+  `push_back`, `push_front`, `emplace_back` and `emplace_front` give the strong exception guarantee.
 
 * Fixed bugs/issues/enhancements:
    * [@https://github.com/boostorg/container/issues/335 GitHub #335: ['"Error on instantiating an incomplete type"]].

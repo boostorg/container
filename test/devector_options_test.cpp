@@ -11,6 +11,7 @@
 #include <boost/container/allocator.hpp>
 #include <boost/container/detail/next_capacity.hpp>
 #include "lightweight_test.hpp"
+#include <stdexcept>
 
 using namespace boost::container;
 
@@ -250,6 +251,138 @@ void  test_stored_reloc_on_90()
    BOOST_TEST(v.capacity() > old_cp);
 }
 
+#ifndef BOOST_NO_EXCEPTIONS
+
+//The constructor from int throws when throw_on_construction is true
+struct throwing_int
+{
+   static bool throw_on_construction;
+   int value;
+
+   throwing_int(int v)
+      : value(v)
+   {
+      if (throw_on_construction)
+         throw std::runtime_error("throwing_int");
+   }
+};
+
+bool throwing_int::throw_on_construction = false;
+
+//With relocate_never an insertion at a full end reallocates, and the reallocation constructs
+//the new element before it moves the old ones: if the construction throws, nothing changes
+template<class Devector, bool Back>
+void test_reloc_never_strong_guarantee()
+{
+   const std::size_t side = 8u;
+   Devector v(side, side, reserve_only_tag_t());
+   for (int i = 0; i != (int)side; ++i) {
+      if (Back) v.emplace_back(i);
+      else      v.emplace_front(i);
+   }
+   BOOST_TEST((Back ? v.back_free_capacity() : v.front_free_capacity()) == 0u);
+   BOOST_TEST((Back ? v.front_free_capacity() : v.back_free_capacity()) == side);
+   const throwing_int *const old_data = v.data();
+   const std::size_t old_capacity = v.capacity();
+
+   throwing_int::throw_on_construction = true;
+   BOOST_TEST_THROWS(Back ? (void)v.emplace_back(-1) : (void)v.emplace_front(-1), std::runtime_error);
+   throwing_int::throw_on_construction = false;
+
+   BOOST_TEST(v.size() == side);
+   BOOST_TEST(v.data() == old_data);
+   BOOST_TEST(v.capacity() == old_capacity);
+   for (std::size_t i = 0; i != side; ++i) {
+      BOOST_TEST(v[i].value == (Back ? int(i) : int(side - 1u - i)));
+   }
+}
+
+#endif   //BOOST_NO_EXCEPTIONS
+
+void  test_stored_reloc_never()
+{
+   #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+   using options_t = devector_options_t< relocate_never >;
+   #else
+   typedef devector_options< relocate_never >::type options_t;
+   #endif
+   typedef devector<int, new_allocator<int>, options_t> devector_t;
+
+   const std::size_t buffer_size = 32u;
+   const std::size_t initial_side = buffer_size/2u;
+
+   //All the buffer is usable
+   devector_t v(initial_side, initial_side, reserve_only_tag_t());
+   BOOST_TEST(v.capacity() == buffer_size);
+   BOOST_TEST(v.front_free_capacity() == initial_side);
+   BOOST_TEST(v.back_free_capacity() == initial_side);
+   {
+      devector_t r;
+      r.reserve(10u);
+      BOOST_TEST(r.capacity() == 10u);
+   }
+
+   //The back is full: the next insertion reallocates although the front is free
+   const std::size_t old_cp = v.capacity();
+   for (int i = 0; i != (int)initial_side; ++i) {
+      v.push_back(i);
+   }
+   BOOST_TEST(v.back_free_capacity() == 0u);
+   BOOST_TEST(v.front_free_capacity() == initial_side);
+   v.push_back(-1);
+   BOOST_TEST(v.capacity() > old_cp);
+   BOOST_TEST(v.size() == initial_side + 1u);
+   for (int i = 0; i != (int)initial_side; ++i) {
+      BOOST_TEST(v[std::size_t(i)] == i);
+   }
+   BOOST_TEST(v.back() == -1);
+
+   //The same at the front
+   {
+      devector_t f(initial_side, initial_side, reserve_only_tag_t());
+      for (int i = 0; i != (int)initial_side; ++i) {
+         f.push_front(i);
+      }
+      BOOST_TEST(f.front_free_capacity() == 0u);
+      f.push_front(-1);
+      BOOST_TEST(f.capacity() > buffer_size);
+      BOOST_TEST(f.size() == initial_side + 1u);
+      BOOST_TEST(f.front() == -1);
+   }
+
+   //Never relocate, also when a buffer of max_size() elements can not be reallocated
+   #ifndef BOOST_NO_EXCEPTIONS
+   {
+      #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+      using small_options_t = devector_options_t< relocate_never, stored_size<unsigned char> >;
+      #else
+      typedef devector_options< relocate_never, stored_size<unsigned char> >::type small_options_t;
+      #endif
+      devector<int, new_allocator<int>, small_options_t> s;
+      s.reserve(s.max_size());
+      BOOST_TEST(s.capacity() == s.max_size());
+      const int* const s_buffer = s.data() - s.front_free_capacity();
+      while (s.back_free_capacity() != 0u) {
+         s.push_back(1);
+      }
+      const std::size_t s_size = s.size();
+      const std::size_t s_front_free = s.front_free_capacity();
+      BOOST_TEST(s_front_free != 0u);
+      BOOST_TEST_THROWS(s.push_back(2), std::exception);
+      BOOST_TEST(s.capacity() == s.max_size());
+      BOOST_TEST(s.size() == s_size);
+      BOOST_TEST(s.front_free_capacity() == s_front_free);
+      BOOST_TEST(s.data() - s.front_free_capacity() == s_buffer);
+   }
+   #endif   //BOOST_NO_EXCEPTIONS
+
+   //Strong exception guarantee at both ends
+   #ifndef BOOST_NO_EXCEPTIONS
+   test_reloc_never_strong_guarantee<devector<throwing_int, new_allocator<throwing_int>, options_t>, true>();
+   test_reloc_never_strong_guarantee<devector<throwing_int, new_allocator<throwing_int>, options_t>, false>();
+   #endif
+}
+
 int main()
 {
    test_growth_factor_50();
@@ -259,5 +392,6 @@ int main()
    test_stored_size_type<unsigned short>();
    test_stored_reloc_on_66();
    test_stored_reloc_on_90();
+   test_stored_reloc_never();
    return ::boost::report_errors();
 }

@@ -160,6 +160,10 @@ class devector
                                     , "stored_size must be an unsigned integer type");
    BOOST_STATIC_CONSTEXPR std::size_t devector_min_free_fraction =
       options_type::free_fraction;
+   BOOST_STATIC_CONSTEXPR bool devector_never_relocates =
+      devector_min_free_fraction == std::size_t(-1);
+   BOOST_CONTAINER_STATIC_ASSERT_MSG( devector_min_free_fraction >= 2u
+                                    , "relocate_on<Fraction> needs Fraction >= 2");
 
    #endif // ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -212,15 +216,21 @@ class devector
       if (BOOST_UNLIKELY(desired_capacity > max)) {
          boost::container::throw_length_error("devector: requested capacity greater than max_size()");
       }
-      const size_type divisor = devector_min_free_fraction - 1u;
-      //ceil(desired_capacity/divisor), without overflow
-      const size_type q = size_type(desired_capacity / divisor + size_type(desired_capacity % divisor != 0u));
-      if (q > max / devector_min_free_fraction) {
-         return max;
+
+      BOOST_IF_CONSTEXPR (devector_never_relocates) {
+         return desired_capacity;
       }
-      size_type const nc = size_type(q * devector_min_free_fraction);
-      BOOST_ASSERT(desired_capacity <= (nc - nc / devector_min_free_fraction));
-      return nc;
+      else {
+         const size_type divisor = devector_min_free_fraction - 1u;
+         //ceil(desired_capacity/divisor), without overflow
+         const size_type q = size_type(desired_capacity / divisor + size_type(desired_capacity % divisor != 0u));
+         if (q > max / devector_min_free_fraction) {
+            return max;
+         }
+         size_type const nc = size_type(q * devector_min_free_fraction);
+         BOOST_ASSERT(desired_capacity <= (nc - nc / devector_min_free_fraction));
+         return nc;
+      }
    }
 
    #endif // ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -978,7 +988,7 @@ class devector
       //A buffer of max_size() elements can not be reallocated, so all of it can be used
       if (BOOST_UNLIKELY(m_.capacity >= this->max_size()))
          return m_.capacity;
-      size_type const cap_reserve = m_.capacity/devector_min_free_fraction;
+      size_type const cap_reserve = devector_never_relocates ? 0u : m_.capacity/devector_min_free_fraction;
       return m_.capacity > cap_reserve ? (m_.capacity - cap_reserve) : 0u;
    }
 
@@ -1540,7 +1550,8 @@ class devector
    * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
    * buffer (`front_free_capacity() == 0` and there is free capacity at the other end) and the
    * construction of the new element throws, the devector can lose its elements.
-   * Strong exception guarantee if `front_free_capacity() > 0`.
+   * Strong exception guarantee if `front_free_capacity() > 0` or if the `relocate_never`
+   * option is used (the elements are never relocated).
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `front_free_capacity() > 0`)
@@ -1605,7 +1616,8 @@ class devector
    * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
    * buffer (`front_free_capacity() == 0` and there is free capacity at the other end) and the
    * construction of the new element throws, the devector can lose its elements.
-   * Strong exception guarantee if `front_free_capacity() > 0`.
+   * Strong exception guarantee if `front_free_capacity() > 0` or if the `relocate_never`
+   * option is used (the elements are never relocated).
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `front_free_capacity() > 0`)
@@ -1624,7 +1636,8 @@ class devector
    * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
    * buffer (`front_free_capacity() == 0` and there is free capacity at the other end) and the
    * construction of the new element throws, the devector can lose its elements.
-   * If `front_free_capacity() > 0`, strong exception guarantee, not regarding the state of `x`.
+   * If `front_free_capacity() > 0` or if the `relocate_never` option is used, strong exception
+   * guarantee, not regarding the state of `x`.
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `front_free_capacity() > 0`)
@@ -1664,7 +1677,8 @@ class devector
    * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
    * buffer (`back_free_capacity() == 0` and there is free capacity at the other end) and the
    * construction of the new element throws, the devector can lose its elements.
-   * Strong exception guarantee if `back_free_capacity() > 0`.
+   * Strong exception guarantee if `back_free_capacity() > 0` or if the `relocate_never`
+   * option is used (the elements are never relocated).
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `back_free_capacity() > 0`)
@@ -1727,7 +1741,8 @@ class devector
    * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
    * buffer (`back_free_capacity() == 0` and there is free capacity at the other end) and the
    * construction of the new element throws, the devector can lose its elements.
-   * Strong exception guarantee if `back_free_capacity() > 0`.
+   * Strong exception guarantee if `back_free_capacity() > 0` or if the `relocate_never`
+   * option is used (the elements are never relocated).
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `back_free_capacity() > 0`)
@@ -1746,7 +1761,8 @@ class devector
    * **Exceptions**: Basic exception guarantee: if the elements are relocated inside the
    * buffer (`back_free_capacity() == 0` and there is free capacity at the other end) and the
    * construction of the new element throws, the devector can lose its elements.
-   * If `back_free_capacity() > 0`, strong exception guarantee, not regarding the state of `x`.
+   * If `back_free_capacity() > 0` or if the `relocate_never` option is used, strong exception
+   * guarantee, not regarding the state of `x`.
    *
    * **Complexity**: Amortized constant in the size of `*this`.
    * (Constant, if `back_free_capacity() > 0`)
@@ -2851,7 +2867,9 @@ class devector
 
       //Test if enough free memory would be left. A buffer of max_size() elements
       //can not be reallocated, so then all the free memory can be used.
-      if (free_cap >= n && ((free_cap - n) >= cap/devector_min_free_fraction || cap >= this->max_size())) {
+      //relocate_never never relocates: then reallocation throws length_error.
+      if (!devector_never_relocates && free_cap >= n &&
+          ((free_cap - n) >= cap/devector_min_free_fraction || cap >= this->max_size())) {
          size_type const old_size = this->size();
          T* const raw_pos = const_cast<T*>(boost::movelib::to_raw_pointer(p));
          size_type const new_size = old_size + n;

@@ -521,7 +521,8 @@ using static_vector_options_t = typename boost::container::static_vector_options
 //
 ////////////////////////////////////////////////////////////////
 
-//!These options specify the relocation strategy of devector.
+//!This option specifies the relocation strategy of devector: what an insertion does
+//!when there is no free space at the end of the buffer where the insertion takes place.
 //!
 //!Predefined relocation limits that can be passed as arguments to this option are:
 //!\c boost::container::relocate_on_66
@@ -529,6 +530,7 @@ using static_vector_options_t = typename boost::container::static_vector_options
 //!\c boost::container::relocate_on_80
 //!\c boost::container::relocate_on_85
 //!\c boost::container::relocate_on_90
+//!\c boost::container::relocate_never
 //!
 //!If this option is not specified, a default will be used by the container.
 //!
@@ -538,6 +540,9 @@ using static_vector_options_t = typename boost::container::static_vector_options
 BOOST_INTRUSIVE_OPTION_CONSTANT(relocate_on, std::size_t, Fraction, free_fraction)
 
 #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+
+//The largest std::size_t value is not a fraction: devector never relocates
+struct relocate_never : public relocate_on<std::size_t(-1)>{};
 
 struct relocate_on_66 : public relocate_on<3U>{};
 
@@ -562,7 +567,8 @@ typedef devector_opt<void, void, 0u> devector_null_opt;
 
 //!This relocation condition option specifies that the container will never relocate
 //!elements when there is no space at the side the insertion should
-//!take place
+//!take place: it always allocates a bigger buffer, even if the other end of the buffer
+//!has free space. The elements are only moved when the buffer is reallocated.
 struct relocate_never{};
 
 //!This relocation condition option specifies that the container will relocate
