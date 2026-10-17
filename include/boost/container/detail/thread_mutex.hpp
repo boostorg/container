@@ -80,57 +80,8 @@ class thread_mutex
 
 #else //!BOOST_HAS_PTHREADS (Windows implementation)
 
-#ifdef BOOST_USE_WINDOWS_H
-
-#include <windows.h>
-
-namespace boost{
-namespace container {
-namespace dtl {
-
-typedef ::CRITICAL_SECTION win_critical_section;
-
-} // namespace dtl {
-} // namespace container {
-} // namespace boost {
-
-#else //! BOOST_USE_WINDOWS_H
-
-struct _RTL_CRITICAL_SECTION_DEBUG;
-struct _RTL_CRITICAL_SECTION;
-   
-namespace boost{
-namespace container {
-namespace dtl {
-
-#ifdef BOOST_PLAT_WINDOWS_UWP
-extern "C" __declspec(dllimport) int __stdcall InitializeCriticalSectionEx(::_RTL_CRITICAL_SECTION *, unsigned long, unsigned long);
-#else
-extern "C" __declspec(dllimport) void __stdcall InitializeCriticalSection(::_RTL_CRITICAL_SECTION *);
-#endif
-extern "C" __declspec(dllimport) void __stdcall EnterCriticalSection(::_RTL_CRITICAL_SECTION *);
-extern "C" __declspec(dllimport) void __stdcall LeaveCriticalSection(::_RTL_CRITICAL_SECTION *);
-extern "C" __declspec(dllimport) void __stdcall DeleteCriticalSection(::_RTL_CRITICAL_SECTION *);
-
-struct win_critical_section
-{
-   struct _RTL_CRITICAL_SECTION_DEBUG * DebugInfo;
-   long LockCount;
-   long RecursionCount;
-   void * OwningThread;
-   void * LockSemaphore;
-   #if defined(_WIN64)
-   unsigned __int64 SpinCount;
-   #else
-   unsigned long SpinCount;
-   #endif
-};
-
-} // namespace dtl {
-} // namespace container {
-} // namespace boost {
-
-#endif   //BOOST_USE_WINDOWS_H
+//The critical section functions and the CRITICAL_SECTION layout
+#include <boost/container/detail/winapi.hpp>
 
 namespace boost{
 namespace container {
@@ -167,7 +118,7 @@ class thread_mutex
    thread_mutex(thread_mutex const &);
    thread_mutex & operator=(thread_mutex const &);
    
-   win_critical_section m_crit_sect;
+   winapi::critical_section m_crit_sect;
 };
 
 } // namespace dtl {

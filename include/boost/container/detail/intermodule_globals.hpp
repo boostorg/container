@@ -283,110 +283,9 @@ BOOST_CONTAINER_INTERMODULE_BOOL_OPTION(pin_constructing_module)
 #  define BOOST_CONTAINER_INTERMODULE_REGISTRY_IN_MMAP
 #endif
 
-#ifdef BOOST_USE_WINDOWS_H
-#  include <windows.h>
-#else
-
-//Forward declarations of Windows struct tags so that our hand-written
-//prototypes are token-for-token compatible with <windows.h> if some other
-//header includes it in the same translation unit.
-struct _SECURITY_ATTRIBUTES;
-struct HINSTANCE__;
-
-namespace boost {
-namespace container_intermodule_winapi {
-
-//Exact re-declarations in Cygwin to avoid warnings
-#if defined(__CYGWIN__)
-#  if defined(__x86_64__)   //w32api/_cygwin.h: _WIN64, so ULONG_PTR is unsigned __int64
-typedef unsigned long long uintptr_type;
-#  else
-typedef unsigned long      uintptr_type;
-#  endif
-#  if defined(__LP64__)     //w32api/_mingw.h: __LONG32 is int, so DWORD is unsigned int
-typedef unsigned int       dword_type;
-#  else
-typedef unsigned long      dword_type;
-#  endif
-#elif defined(_WIN64)
-#  if defined(BOOST_HAS_MS_INT64)
-typedef unsigned __int64   uintptr_type;
-#  else
-typedef unsigned long long uintptr_type;
-#  endif
-typedef unsigned long      dword_type;
-#else
-   //ILP32 Windows: ULONG_PTR is "unsigned long"
-typedef unsigned long      uintptr_type;
-typedef unsigned long      dword_type;
-#endif
-typedef void *         handle_type;
-typedef int            bool_type;
-
-}  //namespace container_intermodule_winapi {
-}  //namespace boost {
-
-extern "C" {
-
-__declspec(dllimport) boost::container_intermodule_winapi::bool_type __stdcall
-   CloseHandle(void *hObject);
-
-__declspec(dllimport) void * __stdcall
-   CreateFileMappingA
-      ( void *hFile
-      , ::_SECURITY_ATTRIBUTES *lpAttributes
-      , boost::container_intermodule_winapi::dword_type flProtect
-      , boost::container_intermodule_winapi::dword_type dwMaximumSizeHigh
-      , boost::container_intermodule_winapi::dword_type dwMaximumSizeLow
-      , const char *lpName);
-
-__declspec(dllimport) void * __stdcall
-   MapViewOfFile
-      ( void *hFileMappingObject
-      , boost::container_intermodule_winapi::dword_type dwDesiredAccess
-      , boost::container_intermodule_winapi::dword_type dwFileOffsetHigh
-      , boost::container_intermodule_winapi::dword_type dwFileOffsetLow
-      , boost::container_intermodule_winapi::uintptr_type dwNumberOfBytesToMap);
-
-__declspec(dllimport) boost::container_intermodule_winapi::bool_type __stdcall
-   UnmapViewOfFile(const void *lpBaseAddress);
-
-__declspec(dllimport) boost::container_intermodule_winapi::dword_type __stdcall
-   GetCurrentProcessId(void);
-
-__declspec(dllimport) boost::container_intermodule_winapi::bool_type __stdcall
-   GetModuleHandleExA
-      ( boost::container_intermodule_winapi::dword_type dwFlags
-      , const char *lpModuleName
-      , ::HINSTANCE__ **phModule);
-
-}  //extern "C"
-
-#endif   //BOOST_USE_WINDOWS_H
-
-namespace boost {
-namespace container_intermodule_winapi {
-
-#ifdef BOOST_USE_WINDOWS_H
-typedef ::HANDLE       handle_type;
-typedef ::DWORD        dword_type;
-typedef ::SIZE_T       uintptr_type;
-typedef ::BOOL         bool_type;
-typedef ::HMODULE      module_handle_type;
-#else
-typedef ::HINSTANCE__ *module_handle_type;
-#endif
-
-static const dword_type page_readwrite_c        = 0x04;
-static const dword_type file_map_read_write_c   = 0x02 | 0x04;   //FILE_MAP_WRITE|READ
-static const dword_type module_handle_pin_c     = 0x01;  //GET_MODULE_HANDLE_EX_FLAG_PIN
-static const dword_type module_from_address_c   = 0x04;  //GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS
-
-BOOST_CONTAINER_FORCEINLINE void *invalid_handle()
-{  return (void *)(~uintptr_type(0));  }   //INVALID_HANDLE_VALUE
-
-}  //namespace container_intermodule_winapi {
-}  //namespace boost {
+//CreateFileMappingA, MapViewOfFile, UnmapViewOfFile, CloseHandle,
+//GetCurrentProcessId, GetModuleHandleExA and their types and constants
+#include <boost/container/detail/winapi.hpp>
 
 namespace boost {
 namespace container {
@@ -403,10 +302,10 @@ inline void intermodule_pin_this_module()
    static int this_module_anchor = 0;
    static volatile int pinned = 0;
    if(!pinned){   //benign race: pinning is idempotent
-      container_intermodule_winapi::module_handle_type h = 0;
+      winapi::module_handle_type h = 0;
       (void)GetModuleHandleExA
-         ( container_intermodule_winapi::module_handle_pin_c
-         | container_intermodule_winapi::module_from_address_c
+         ( winapi::module_handle_pin_c
+         | winapi::module_from_address_c
          , (const char *)(const void *)&this_module_anchor
          , &h);
       pinned = 1;
@@ -837,15 +736,15 @@ inline intermodule_registry_header *intermodule_map_registry_section(void *&sect
    intermodule_build_registry_name(reg_name);
    //Create-or-open is atomic, so the section itself is the rendezvous
    section = CreateFileMappingA
-      ( container_intermodule_winapi::invalid_handle(), 0
-      , container_intermodule_winapi::page_readwrite_c
-      , 0, (container_intermodule_winapi::dword_type)
+      ( winapi::invalid_handle(), 0
+      , winapi::page_readwrite_c
+      , 0, (winapi::dword_type)
            BOOST_CONTAINER_INTERMODULE_REGISTRY_BYTES
       , reg_name);
    BOOST_ASSERT_MSG(section != 0, "Boost.Container: CreateFileMappingA failed "
       "(processes that cannot create named sections are not supported)");
    intermodule_registry_header *const view = (intermodule_registry_header *)
-      MapViewOfFile(section, container_intermodule_winapi::file_map_read_write_c, 0, 0, 0);
+      MapViewOfFile(section, winapi::file_map_read_write_c, 0, 0, 0);
    BOOST_ASSERT_MSG(view != 0, "Boost.Container: MapViewOfFile failed");
    return view;
 }

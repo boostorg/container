@@ -97,12 +97,10 @@
 #  define BOOST_CONTAINER_ATOMIC_PTR_GNU
 #elif defined(_MSC_VER)
    //_ReadWriteBarrier is MSVC's compiler-only fence, the counterpart of
-   //__atomic_signal_fence. It is declared here rather than pulled from
-   //<intrin.h> so that header is not dragged in on x86/x64; it is marked
-   //deprecated there, so every use is wrapped to keep C4996 quiet in case
-   //some other header already declared it.
-extern "C" void _ReadWriteBarrier(void);
-#  pragma intrinsic(_ReadWriteBarrier)
+   //__atomic_signal_fence. <intrin.h> marks it deprecated, so every use is
+   //wrapped to keep C4996 quiet. <intrin.h> also declares the interlocked
+   //and the ARM intrinsics used below.
+#  include <intrin.h>
 #  define BOOST_CONTAINER_ATOMIC_PTR_DISABLE_DEPRECATED \
              __pragma(warning(push)) __pragma(warning(disable:4996))
 #  define BOOST_CONTAINER_ATOMIC_PTR_RESTORE_WARNING __pragma(warning(pop))
@@ -111,12 +109,10 @@ extern "C" void _ReadWriteBarrier(void);
       //load (__iso_volatile_load64, which unlike a volatile access is never
       //given acquire semantics by /volatile:ms) plus the compiler fence.
       //The store does need the hardware: stlr.
-#     include <intrin.h>
 #     define BOOST_CONTAINER_ATOMIC_PTR_MSVC_ARM64
 #  elif defined(_M_ARM)
       //ARMv7 is weakly ordered and has no store-release instruction, so a
       //real hardware barrier is required on the store
-#     include <intrin.h>
 #     define BOOST_CONTAINER_ATOMIC_PTR_MSVC_ARM
 #  else
       //x86/x64 never reorders a store with the stores that precede it, nor a
@@ -137,22 +133,6 @@ extern "C" void _ReadWriteBarrier(void);
 #if !defined(BOOST_CONTAINER_ATOMIC_PTR_DISABLE_DEPRECATED)
 #  define BOOST_CONTAINER_ATOMIC_PTR_DISABLE_DEPRECATED
 #  define BOOST_CONTAINER_ATOMIC_PTR_RESTORE_WARNING
-#endif
-
-#if defined(BOOST_CONTAINER_ATOMIC_PTR_MSVC_X86)
-   //The ARM tiers above already pulled <intrin.h> in; x86/x64 avoids it, so
-   //the one interlocked intrinsic needed there is declared by hand, exactly
-   //as _ReadWriteBarrier is. Both are full barriers on this architecture,
-   //which is all atomic_ptr_exchange_acq_rel promises.
-extern "C" {
-#  if defined(_WIN64)
-__int64 _InterlockedExchange64(__int64 volatile *, __int64);
-#     pragma intrinsic(_InterlockedExchange64)
-#  else
-long _InterlockedExchange(long volatile *, long);
-#     pragma intrinsic(_InterlockedExchange)
-#  endif
-}  //extern "C"
 #endif
 
 namespace boost {

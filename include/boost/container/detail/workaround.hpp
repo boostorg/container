@@ -359,6 +359,7 @@ namespace boost {
       _mm_prefetch(static_cast<const char*>(static_cast<const void*>(p)), _MM_HINT_T0)
 #elif defined(_MSC_VER) && (defined(_M_ARM) || defined(_M_ARM64) || defined(_M_ARM64EC))
 //ARM/ARM64/ARM64EC MSVC: __prefetch (PLD on ARM, PRFM PLDL1KEEP on ARM64)
+#  include <intrin.h>
 #  define BOOST_CONTAINER_PREFETCH(p) __prefetch(static_cast<const void*>(p))
 #else
 #  define BOOST_CONTAINER_PREFETCH(p) ((void)(p))

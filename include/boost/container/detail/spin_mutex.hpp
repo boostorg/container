@@ -85,20 +85,10 @@
 #  endif
 #endif
 
-//Forward declaration of MSVC intrinsics
-//Note: ARM64EC also defines _M_AMD64/_M_X64, so it must be tested first
+//MSVC intrinsics: __yield or _mm_pause, _InterlockedCompareExchange and
+//_InterlockedExchange
 #if defined(_MSC_VER)
-#if defined(_M_ARM64EC) || defined(_M_ARM64) || defined(_M_ARM)
-extern "C" void __yield(void);
-#if defined(BOOST_MSVC)
-#pragma intrinsic(__yield)
-#endif
-#elif defined(_M_AMD64) || defined(_M_IX86) || defined(_M_X64)
-extern "C" void _mm_pause(void);
-#if defined(BOOST_MSVC)
-#pragma intrinsic(_mm_pause)
-#endif
-#endif
+#  include <intrin.h>
 #endif
 
 #if defined(BOOST_CONTAINER_HAS_BUILTIN_IA32_PAUSE)
@@ -180,32 +170,10 @@ extern "C" void _mm_pause(void);
 #  error "Boost.Container: no atomic backend is known for this compiler"
 #endif
 
-#if defined(BOOST_CONTAINER_SPIN_MUTEX_MSVC)
-extern "C" long __cdecl _InterlockedCompareExchange(long volatile *, long, long);
-extern "C" long __cdecl _InterlockedExchange(long volatile *, long);
-#  if defined(BOOST_MSVC)
-#     pragma intrinsic(_InterlockedCompareExchange)
-#     pragma intrinsic(_InterlockedExchange)
-#  endif
-#endif
-
-//Yield/sleep primitives, declared rather than pulled from <windows.h>, in the
-//same style detail/mutex.hpp and detail/intermodule_globals.hpp already use.
+//Yield/sleep primitives: SwitchToThread and Sleep on Windows
 #if !defined(__CYGWIN__) && (defined(_WIN32) || defined(__WIN32__) || defined(WIN32))
 #  define BOOST_CONTAINER_SPIN_MUTEX_WINDOWS
-#  if defined(BOOST_USE_WINDOWS_H)
-#     include <windows.h>
-#  else
-#     if defined(_M_IX86) || defined(__i386__)
-#        define BOOST_CONTAINER_SPIN_STDCALL __stdcall
-#     else
-#        define BOOST_CONTAINER_SPIN_STDCALL
-#     endif
-extern "C" {
-__declspec(dllimport) int BOOST_CONTAINER_SPIN_STDCALL SwitchToThread(void);
-__declspec(dllimport) void BOOST_CONTAINER_SPIN_STDCALL Sleep(unsigned long dwMilliseconds);
-}  //extern "C"
-#  endif
+#  include <boost/container/detail/winapi.hpp>
 #else
 #  define BOOST_CONTAINER_SPIN_MUTEX_POSIX
 #  include <sched.h>     //sched_yield
