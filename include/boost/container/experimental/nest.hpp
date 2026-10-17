@@ -1500,10 +1500,19 @@ class nest
    //! <b>Complexity</b>: Constant.
    size_type max_size() const BOOST_NOEXCEPT
    {
-      std::size_t bs = (std::size_t)block_alloc_traits::max_size(al()) * sizeof(block_type);
+      //Saturated, so that nothing wraps or is truncated: the byte counts at
+      //SIZE_MAX and the result at the maximum of size_type, which can be
+      //narrower than std::size_t
       allocator_type val_al(al());
-      std::size_t vs = (std::size_t)allocator_traits_type::max_size(val_al) * sizeof(T);
-      return (size_type)((std::min)(bs, vs) / (sizeof(block_type) + sizeof(T) * N) * N);
+      const std::size_t
+         smax  = (std::size_t)-1,
+         bm    = (std::size_t)block_alloc_traits::max_size(al()),
+         vm    = (std::size_t)allocator_traits_type::max_size(val_al),
+         bs    = bm > smax / sizeof(block_type) ? smax : bm * sizeof(block_type),
+         vs    = vm > smax / sizeof(T)          ? smax : vm * sizeof(T),
+         elems = (std::min)(bs, vs) / (sizeof(block_type) + sizeof(T) * N) * N,
+         szmax = (std::size_t)(size_type)-1;
+      return (size_type)(elems > szmax ? szmax : elems);
    }
 
    //! <b>Effects</b>: Returns the total number of slots (used and unused).
