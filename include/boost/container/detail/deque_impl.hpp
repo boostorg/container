@@ -686,7 +686,8 @@ class deque_base
          return 0u;
       }
       //block_size >= 2 guaranteed, so +1 can not overflow
-      return size_type((max - size_type(block_size - 1u)) / block_size + 1u);
+      const size_type q = size_type(size_type(max - size_type(block_size - 1u)) / block_size);
+      return size_type(q + 1u);
    }
 
    BOOST_CONTAINER_FORCEINLINE void test_size_against_n_nodes(size_type n_nodes)
