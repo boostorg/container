@@ -32,6 +32,7 @@
 #include <boost/container/detail/intermodule_globals.hpp>
 #include <boost/container/detail/allocation_type.hpp>
 #include <boost/move/detail/placement_new.hpp>
+#include <boost/intrusive/detail/slist_node.hpp>   //memchain_node
 
 #include <cstddef>
 #include <cstring>
@@ -401,10 +402,7 @@ class basic_dlmalloc
 
    //! One link of a memory chain. The link lives in the first bytes of the
    //! block it describes, so a chain costs no memory of its own.
-   struct memchain_node
-   {
-      memchain_node *next_node_ptr;
-   };
+   typedef boost::intrusive::slist_node<void*> memchain_node;
 
    public:
    typedef ::std::size_t size_type;
@@ -461,7 +459,7 @@ class basic_dlmalloc
       //!
       //! <b>Complexity</b>: Constant.
       void next() BOOST_NOEXCEPT
-      {  node_ptr = node_ptr->next_node_ptr;  }
+      {  node_ptr = node_ptr->next_;  }
 
       //! <b>Requires</b>: The iterator must not be the end iterator.
       //!
@@ -510,7 +508,7 @@ class basic_dlmalloc
       //! <b>Complexity</b>: Constant.
       void init() BOOST_NOEXCEPT
       {
-         root_node.next_node_ptr = 0;
+         root_node.next_ = 0;
          last_node_ptr = &root_node;
          num_mem = 0;
       }
@@ -528,13 +526,10 @@ class basic_dlmalloc
       //!   - `num`: how many blocks the run holds.
       //!
       //! <b>Complexity</b>: Constant.
-      //last_block, not last: a parameter named last would hide last(), and
-      //GCC 4.8's -Wshadow reports a parameter that hides a member function
-      //of its own class.
       void init_from(void *first, void *last_block, size_type num) BOOST_NOEXCEPT
       {
          last_node_ptr = (memchain_node *)last_block;
-         root_node.next_node_ptr = (memchain_node *)first;
+         root_node.next_ = (memchain_node *)first;
          num_mem = num;
       }
 
@@ -562,7 +557,7 @@ class basic_dlmalloc
       //!
       //! <b>Complexity</b>: Constant.
       memchain_it begin() BOOST_NOEXCEPT
-      {  memchain_it it = { root_node.next_node_ptr }; return it;  }
+      {  memchain_it it = { root_node.next_ }; return it;  }
 
       //! <b>Returns</b>: An iterator to the last block. On an empty chain it
       //!   is before_begin(), not the end iterator.
@@ -588,7 +583,7 @@ class basic_dlmalloc
       //!
       //! <b>Complexity</b>: Constant.
       void *first_mem() const BOOST_NOEXCEPT
-      {  return (void *)root_node.next_node_ptr;  }
+      {  return (void *)root_node.next_;  }
 
       //! <b>Returns</b>: The last block of the chain. On an empty chain the
       //!   value is the address of the chain's own root node, which is not a
@@ -609,8 +604,8 @@ class basic_dlmalloc
       void push_back(void *mem) BOOST_NOEXCEPT
       {
          memchain_node *const n = (memchain_node *)mem;
-         last_node_ptr->next_node_ptr = n;
-         n->next_node_ptr = 0;
+         last_node_ptr->next_ = n;
+         n->next_ = 0;
          last_node_ptr = n;
          ++num_mem;
       }
@@ -624,10 +619,10 @@ class basic_dlmalloc
       void push_front(void *mem) BOOST_NOEXCEPT
       {
          memchain_node *const n = (memchain_node *)mem;
-         if(!root_node.next_node_ptr)
+         if(!root_node.next_)
             last_node_ptr = n;
-         n->next_node_ptr = root_node.next_node_ptr;
-         root_node.next_node_ptr = n;
+         n->next_ = root_node.next_;
+         root_node.next_ = n;
          ++num_mem;
       }
 
@@ -643,10 +638,10 @@ class basic_dlmalloc
       void erase_after(const memchain_it &before) BOOST_NOEXCEPT
       {
          memchain_node *const prev = before.node_ptr;
-         memchain_node *const dead = prev->next_node_ptr;
+         memchain_node *const dead = prev->next_;
          if(last_node_ptr == dead)
             last_node_ptr = &root_node;
-         prev->next_node_ptr = dead->next_node_ptr;
+         prev->next_ = dead->next_;
          --num_mem;
       }
 
@@ -681,13 +676,13 @@ class basic_dlmalloc
          if(!num)
             return;
          memchain_node *const pnode  = before.node_ptr;
-         memchain_node *const next   = pnode->next_node_ptr;
+         memchain_node *const next   = pnode->next_;
          memchain_node *const pfirst = (memchain_node *)first;
          memchain_node *const blast  = (memchain_node *)before_last;
          if(pnode == last_node_ptr)
             last_node_ptr = blast;
-         pnode->next_node_ptr = pfirst;
-         blast->next_node_ptr = next;
+         pnode->next_ = pfirst;
+         blast->next_ = next;
          num_mem += num;
       }
 
@@ -5601,7 +5596,7 @@ class basic_dlmalloc
       }
       // Re-terminate at the entry tail. When the chain arrived empty this is the
       //root node, which restores the pristine MEMCHAIN_INIT state.
-      entry_last_it.node_ptr->next_node_ptr = 0;
+      entry_last_it.node_ptr->next_ = 0;
       pchain->last_node_ptr = entry_last_it.node_ptr;
       pchain->num_mem       = entry_num_mem;
    }
@@ -5733,12 +5728,12 @@ class basic_dlmalloc
                size_type num_loops = num_elements - 1;
                remainder_size -= element_req_size * num_loops;
                while (num_loops) {
-                  void **mem_prev = ((void**)mem);
+                  memchain_node *const mem_prev = (memchain_node *)mem;
                   --num_loops;
                   set_size_and_pinuse_of_inuse_chunk(m, p, element_req_size);
                   p = chunk_plus_offset(p, element_req_size);
                   mem = chunk2mem(p);
-                  *mem_prev = mem;
+                  mem_prev->next_ = (memchain_node *)mem;
                }
                set_size_and_pinuse_of_inuse_chunk(m, p, remainder_size);
                // mem is the last element; INCORPORATE_AFTER terminates it
@@ -5754,7 +5749,7 @@ class basic_dlmalloc
    }
 
    BOOST_CONTAINER_FORCEINLINE static void boost_alloc_plus_memchain_mem_jump_next(void *THISMEM, void *NEXTMEM) BOOST_NOEXCEPT
-      {  *((void**)(THISMEM)) = *((void**)((NEXTMEM)));  }
+      {  ((memchain_node *)THISMEM)->next_ = ((memchain_node *)NEXTMEM)->next_;  }
 
    //This function is based on internal_bulk_free
    //replacing iteration over array[] with memchain.
@@ -5947,13 +5942,13 @@ class basic_dlmalloc
                //thing and invites no such inference.
                const size_type *psize_i = sizes + i;
                for(++i; i != next_i; ++i, ++psize_i) {
-                  void **mem_prev = ((void**)mem);
+                  memchain_node *const mem_prev = (memchain_node *)mem;
                   size = multialloc_chunk_size(*psize_i * element_size, alignment);
                   remainder_size -= size;
                   set_size_and_pinuse_of_inuse_chunk(m, p, size);
                   p = chunk_plus_offset(p, size);
                   mem = chunk2mem(p);
-                  *mem_prev = mem;
+                  mem_prev->next_ = (memchain_node *)mem;
                }
                set_size_and_pinuse_of_inuse_chunk(m, p, remainder_size);
                pchain->incorporate_after(last_it, mem_orig, mem, num_elements);
