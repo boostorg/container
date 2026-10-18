@@ -335,7 +335,7 @@ class private_node_pool_impl
       typedef typename multiallocation_chain::iterator iterator;
       iterator it(chain.begin()), itend(chain.end());
       while(it != itend){
-         void *pElem = &*it;
+         void *pElem = boost::movelib::to_raw_pointer(*it);
          ++it;
          this->priv_dealloc_node(pElem);
       }

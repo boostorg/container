@@ -98,7 +98,7 @@ void test_allocate_deallocate_nodes(std::size_t alignment)
       BOOST_TEST(chain.size() == n);
       std::size_t i = 0;
       for(typename chain_t::iterator it = chain.begin(); it != chain.end(); ++it)
-         v[i++] = &*it;
+         v[i++] = *it;
       BOOST_TEST(i == n);
       const std::size_t free_before = p.num_free_nodes();
       p.deallocate_nodes(chain);

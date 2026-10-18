@@ -267,7 +267,7 @@ struct dlmalloc_policy
       }
       bc::dlmalloc::multiallocation_chain::iterator it = chain.begin();
       for(std::size_t i = 0; i != n_elements; ++i){
-         out[i] = &*it;
+         out[i] = *it;
          ++it;
       }
    }

@@ -446,7 +446,7 @@ bool test_multialloc_contiguous_modes()
                void *last = 0;
                dlmalloc::multiallocation_chain::iterator it = ch.begin();
                while(it != ch.end()){
-                  void *a = &*it;
+                  void *a = *it;
                   if(!a)
                      return false;
                   last = a;
@@ -456,7 +456,7 @@ bool test_multialloc_contiguous_modes()
                }
                if(walked != num)
                   return false;
-               if(&*ch.last() != last)
+               if(*ch.last() != last)
                   return false;
                dlmalloc_heap().multidealloc(ch);
                if(!dlmalloc_heap().all_deallocated())
@@ -474,7 +474,7 @@ bool test_multialloc_contiguous_modes()
                std::size_t walked = 0;
                dlmalloc::multiallocation_chain::iterator it = ch.begin();
                while(it != ch.end()){
-                  if(!it.pointed_node())
+                  if(!*it)
                      return false;
                   if(++walked > num)
                      return false;
@@ -771,7 +771,7 @@ bool test_many_equal_allocation()
 
          std::size_t n = 0;
          for(; it != chain.end(); ++n){
-            buffers.push_back(&*it);
+            buffers.push_back(*it);
             ++it;
          }
          if(n != std::size_t((i+1)*2))
@@ -881,7 +881,7 @@ bool test_many_different_allocation()
             break;
          std::size_t n = 0;
          for(; it != chain.end(); ++n){
-            buffers.push_back(&*it);
+            buffers.push_back(*it);
             ++it;
          }
          if(n != ArraySize)

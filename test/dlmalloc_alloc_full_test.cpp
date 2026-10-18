@@ -512,7 +512,7 @@ bool test_multialloc_contiguous_modes()
                void *last = 0;
                dlmalloc::multiallocation_chain::iterator it = ch.begin();
                while(it != ch.end()){
-                  void *a = &*it;
+                  void *a = *it;
                   if(!a)
                      return false;
                   last = a;
@@ -522,7 +522,7 @@ bool test_multialloc_contiguous_modes()
                }
                if(walked != num)
                   return false;
-               if(&*ch.last() != last)
+               if(*ch.last() != last)
                   return false;
                h.multidealloc(ch);
                if(!h.all_deallocated())
@@ -540,7 +540,7 @@ bool test_multialloc_contiguous_modes()
                std::size_t walked = 0;
                dlmalloc::multiallocation_chain::iterator it = ch.begin();
                while(it != ch.end()){
-                  if(!it.pointed_node())
+                  if(!*it)
                      return false;
                   if(++walked > num)
                      return false;
@@ -907,7 +907,7 @@ bool test_many_equal_allocation()
 
          std::size_t n = 0;
          for(; it != chain.end(); ++n){
-            buffers.push_back(&*it);
+            buffers.push_back(*it);
             ++it;
          }
          if(n != std::size_t((i+1)*2))
@@ -1024,7 +1024,7 @@ bool test_many_different_allocation()
             break;
          std::size_t n = 0;
          for(; it != chain.end(); ++n){
-            buffers.push_back(&*it);
+            buffers.push_back(*it);
             ++it;
          }
          if(n != ArraySize)
@@ -1344,11 +1344,11 @@ bool test_multialloc_aligned()
             if(!ok || ch.size() != num + 1u)
                return false;
             dlmalloc::multiallocation_chain::iterator it = ch.begin();
-            if(&*it != first)
+            if(*it != first)
                return false;
             ++it;
             for(std::size_t i = 0; i != num; ++i, ++it){
-               void *const mem = &*it;
+               void *const mem = *it;
                if(reinterpret_cast<std::size_t>(mem) % alignment)
                   return false;
                const std::size_t bytes = variant == 0u ? elem_size : sizes[i]*elem_size;
@@ -1361,7 +1361,7 @@ bool test_multialloc_aligned()
             void *ptrs[num + 1u];
             std::size_t n = 0;
             for(it = ch.begin(); it != ch.end(); ++it)
-               ptrs[n++] = &*it;
+               ptrs[n++] = *it;
             for(std::size_t i = 1; i != n; ++i){
                //Old GCC + glibc fortify sees a constant zero length in the
                //inlined usable_size null path: skip it explicitly

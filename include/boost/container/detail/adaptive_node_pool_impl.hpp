@@ -813,14 +813,14 @@ class private_adaptive_node_pool_impl_common
                free_nodes_iterator it_end = it_bend; ++it_end;
                free_nodes_iterator it_beg = it_bbeg; ++it_beg;
                free_nodes.erase_after(it_bbeg, it_end, num_elems);
-               chain.incorporate_after(chain.last(), &*it_beg, &*it_bend, num_elems);
+               chain.incorporate_after(chain.last(), *it_beg, *it_bend, num_elems);
                //chain.splice_after(chain.last(), free_nodes, it_bbeg, it_bend, num_elems);
                BOOST_ASSERT(!free_nodes.empty());
             }
             else{
                const free_nodes_iterator it_beg(free_nodes.begin()), it_bend(free_nodes.last());
                free_nodes.clear();
-               chain.incorporate_after(chain.last(), &*it_beg, &*it_bend, num_elems);
+               chain.incorporate_after(chain.last(), *it_beg, *it_bend, num_elems);
                block_container_traits_t::erase_first(m_block_container);
             }
             i += num_elems;
@@ -886,7 +886,7 @@ class private_adaptive_node_pool_impl_common
                if(prev_block_info){ //Make sure we skip the initial "dummy" cache
                   free_nodes_iterator it(itbb); ++it;
                   nodes.erase_after(itbb, itf, splice_node_count);
-                  prev_block_info->free_nodes.incorporate_after(prev_block_info->free_nodes.last(), &*it, &*itbf, splice_node_count);
+                  prev_block_info->free_nodes.incorporate_after(prev_block_info->free_nodes.last(), *it, *itbf, splice_node_count);
                   this->priv_reinsert_block(*prev_block_info, prev_block_was_empty, real_num_node);
                   splice_node_count = 0;
                }
@@ -903,7 +903,7 @@ class private_adaptive_node_pool_impl_common
          const free_nodes_iterator itfirst(nodes.begin()), itlast(nodes.last());
          const size_type splice_node_count = nodes.size();
          nodes.clear();
-         prev_block_info->free_nodes.incorporate_after(prev_block_info->free_nodes.last(), &*itfirst, &*itlast, splice_node_count);
+         prev_block_info->free_nodes.incorporate_after(prev_block_info->free_nodes.last(), *itfirst, *itlast, splice_node_count);
          this->priv_reinsert_block(*prev_block_info, prev_block_was_empty, real_num_node);
          this->priv_deallocate_free_blocks(max_free_blocks, real_num_node, num_subblocks, real_block_alignment);
       }

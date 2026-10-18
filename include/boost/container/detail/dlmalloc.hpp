@@ -5337,7 +5337,7 @@ class basic_dlmalloc
       memchain_it it = entry_last_it;
       ++it;
       while(it != chain.end()){
-         void *addr = &*it;
+         void *addr = *it;
          ++it;
          priv_deallocate_nolock(addr);
       }
@@ -5510,7 +5510,7 @@ class basic_dlmalloc
       if (!preaction(m)) {
          memchain_it a_it = chain.begin();
          while (a_it != chain.end()) { // Iterate though all memory holded by the chain
-            void* a_mem = &*a_it;
+            void* a_mem = *a_it;
             mchunkptr a_p = mem2chunk(a_mem);
             size_type psize = chunksize(a_p);
             if (footers && get_mstate_for(a_p) != m) {
@@ -5524,7 +5524,7 @@ class basic_dlmalloc
                   memchain_it b_it = a_it;
                   ++b_it;
                   if (b_it != chain.end()) {
-                     void *b_mem = &*b_it;
+                     void *b_mem = *b_it;
                      mchunkptr b_p = mem2chunk(b_mem);
                      if (b_p == next_chunk(a_p)) { // b chunk is contiguous and next so b's size can be added to a
                         psize += chunksize(b_p);

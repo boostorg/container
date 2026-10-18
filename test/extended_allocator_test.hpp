@@ -16,9 +16,11 @@
 #include <boost/move/detail/iterator_to_raw_pointer.hpp>
 #include <boost/move/detail/to_raw_pointer.hpp>
 #include <boost/container/throw_exception.hpp>      //bad_alloc_t
+#include <boost/container/detail/multiallocation_chain.hpp>
 
 #include <cstddef>
 #include <cstdio>
+#include <iterator>
 
 //Exercises the "extended" (Version == 2) allocator interface: the node and
 //chain operations containers use for bulk allocation. Containers reach these
@@ -140,6 +142,38 @@ int check_blocks_are_usable(Allocator &a, std::size_t n, const char *alloc)
    return err;
 }
 
+//The iterator of the type-erased chain: its values are the addresses of the
+//blocks, returned by value. That makes it a C++17 input iterator and a
+//C++20 forward iterator. The typed chain of an allocator returns T&, so it
+//is a forward iterator in both.
+template<class Allocator>
+void check_chain_iterator_types()
+{
+   typedef typename Allocator::value_type                      value_type;
+   typedef typename Allocator::multiallocation_chain::iterator typed_it;
+   typedef boost::container::dtl::basic_multiallocation_chain<void*> void_chain_t;
+   typedef typename void_chain_t::iterator                     void_it;
+   using boost::container::dtl::is_same;
+
+   BOOST_CONTAINER_STATIC_ASSERT((is_same<typename void_it::value_type, void*>::value));
+   BOOST_CONTAINER_STATIC_ASSERT((is_same<typename void_it::reference,  void*>::value));
+   BOOST_CONTAINER_STATIC_ASSERT((is_same<typename void_it::pointer,    void*>::value));
+   BOOST_CONTAINER_STATIC_ASSERT((is_same<typename void_it::iterator_category, std::input_iterator_tag>::value));
+   BOOST_CONTAINER_STATIC_ASSERT((is_same<typename void_it::iterator_concept, std::forward_iterator_tag>::value));
+
+   BOOST_CONTAINER_STATIC_ASSERT((is_same<typename typed_it::value_type, value_type>::value));
+   BOOST_CONTAINER_STATIC_ASSERT((is_same<typename typed_it::reference,  value_type&>::value));
+   BOOST_CONTAINER_STATIC_ASSERT((is_same<typename typed_it::iterator_category, std::forward_iterator_tag>::value));
+   BOOST_CONTAINER_STATIC_ASSERT((is_same<typename typed_it::iterator_concept, std::forward_iterator_tag>::value));
+
+   #if defined(__cpp_lib_ranges)
+   static_assert(std::forward_iterator<void_it>, "void chain iterator is a C++20 forward iterator");
+   static_assert(!std::sized_sentinel_for<void_it, void_it>, "distance is not constant time");
+   static_assert(std::forward_iterator<typed_it>, "typed chain iterator is a C++20 forward iterator");
+   static_assert(!std::sized_sentinel_for<typed_it, typed_it>, "distance is not constant time");
+   #endif
+}
+
 //!Test allocate_one/deallocate_one, allocate_individual/deallocate_individual,
 //!both allocate_many overloads with deallocate_many, and size().
 template<class Allocator>
@@ -149,6 +183,8 @@ int extended_allocator_test(const char *alloc_name)
    typedef typename Allocator::pointer               pointer;
    typedef typename Allocator::size_type             size_type;
    typedef typename Allocator::multiallocation_chain chain_t;
+
+   check_chain_iterator_types<Allocator>();
 
    Allocator a;
 
