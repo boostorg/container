@@ -257,18 +257,18 @@ struct dlmalloc_policy
 
    static void alloc_many(std::size_t n_elements, std::size_t elem_size, void **out)
    {
-      bc::dlmalloc::memchain chain;
+      bc::dlmalloc::multiallocation_chain chain;
 
       if(!bc::dlmalloc_heap().multialloc_nodes
-            (n_elements, elem_size, bc::dlmalloc::default_contiguous, &chain)){
+            (n_elements, elem_size, bc::dlmalloc::default_contiguous, chain)){
          for(std::size_t i = 0; i != n_elements; ++i)
             out[i] = 0;
          return;
       }
-      bc::dlmalloc::memchain_it it = chain.begin();
+      bc::dlmalloc::multiallocation_chain::iterator it = chain.begin();
       for(std::size_t i = 0; i != n_elements; ++i){
-         out[i] = it.addr();
-         it.next();
+         out[i] = &*it;
+         ++it;
       }
    }
 
@@ -277,11 +277,11 @@ struct dlmalloc_policy
       if(!n_elements || !out[0]){
          return;
       }
-      bc::dlmalloc::memchain chain;
+      bc::dlmalloc::multiallocation_chain chain;
 
       for(std::size_t i = n_elements; i--;)
          chain.push_front(out[i]);
-      bc::dlmalloc_heap().multidealloc(&chain);
+      bc::dlmalloc_heap().multidealloc(chain);
    }
 };
 

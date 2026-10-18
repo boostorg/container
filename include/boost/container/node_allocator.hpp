@@ -27,7 +27,6 @@
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/multiallocation_chain.hpp>
 #include <boost/container/detail/version_type.hpp>
-#include <boost/move/detail/iterator_to_raw_pointer.hpp>
 #include <boost/container/detail/dlmalloc.hpp>
 #include <boost/container/detail/singleton.hpp>
 
@@ -233,12 +232,7 @@ class node_allocator
       typedef dtl::shared_node_pool
          <sizeof(T), NodesPerBlock, dtl::alignment_of<T>::value> shared_pool_t;
       typedef dtl::singleton_default<shared_pool_t> singleton_t;
-      typename shared_pool_t::multiallocation_chain ch;
-      singleton_t::instance().allocate_nodes(num_elements, ch);
-      chain.incorporate_after(chain.before_begin()
-                             , (T*)static_cast<void*>(boost::movelib::iterator_to_raw_pointer(ch.begin()))
-                             , (T*)static_cast<void*>(boost::movelib::iterator_to_raw_pointer(ch.last()))
-                             , ch.size());
+      singleton_t::instance().allocate_nodes(num_elements, chain);
    }
 
    //!Deallocates memory previously allocated with allocate_one().
@@ -259,11 +253,7 @@ class node_allocator
       typedef dtl::shared_node_pool
          <sizeof(T), NodesPerBlock, dtl::alignment_of<T>::value> shared_pool_t;
       typedef dtl::singleton_default<shared_pool_t> singleton_t;
-      typename shared_pool_t::multiallocation_chain ch
-         ( boost::movelib::iterator_to_raw_pointer(chain.begin())
-         , boost::movelib::iterator_to_raw_pointer(chain.last())
-         , chain.size());
-      singleton_t::instance().deallocate_nodes(ch);
+      singleton_t::instance().deallocate_nodes(chain);
    }
 
    //!Allocates many elements of size elem_size.
@@ -274,14 +264,9 @@ class node_allocator
       if(BOOST_UNLIKELY(elem_size > size_type(-1)/sizeof(T))){
          boost::container::throw_bad_alloc();
       }
-      dlmalloc::memchain ch;
-      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes_aligned(n_elements, elem_size*sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous, &ch))){
+      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes_aligned(n_elements, elem_size*sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous, chain))){
          boost::container::throw_bad_alloc();
       }
-      chain.incorporate_after( chain.before_begin()
-                             , (T*)static_cast<void*>(ch.first_mem())
-                             , (T*)static_cast<void*>(ch.last_mem())
-                             , ch.size());
    }
 
    //!Allocates n_elements elements, each one of size elem_sizes[i]
@@ -289,26 +274,15 @@ class node_allocator
    void allocate_many(const size_type *elem_sizes, size_type n_elements, multiallocation_chain &chain)
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
-      dlmalloc::memchain ch;
-      dlmalloc_heap().multialloc_arrays_aligned(n_elements, elem_sizes, sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous, &ch);
-      if(BOOST_UNLIKELY(ch.empty())){
+      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_arrays_aligned(n_elements, elem_sizes, sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous, chain))){
          boost::container::throw_bad_alloc();
       }
-      chain.incorporate_after( chain.before_begin()
-                             , (T*)static_cast<void*>(ch.first_mem())
-                             , (T*)static_cast<void*>(ch.last_mem())
-                             , ch.size());
    }
 
    void deallocate_many(multiallocation_chain &chain) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
-      void *first = boost::movelib::iterator_to_raw_pointer(chain.begin());
-      void *last  = boost::movelib::iterator_to_raw_pointer(chain.last());
-      size_t num  = chain.size();
-      dlmalloc::memchain ch;
-      ch.init_from(first, last, num);
-      dlmalloc_heap().multidealloc(&ch);
+      dlmalloc_heap().multidealloc(chain);
    }
 
    //!Swaps allocators. Does not throw. If each allocator is placed in a

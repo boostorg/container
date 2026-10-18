@@ -273,18 +273,11 @@ class adaptive_pool
       if(BOOST_UNLIKELY(elem_size > size_type(-1)/sizeof(T))){
          boost::container::throw_bad_alloc();
       }
-      //The chain object is not a dlmalloc::memchain: allocate into one and
-      //incorporate its blocks (the links in the blocks have the same type)
-      dlmalloc::memchain ch;
       if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes_aligned
             ( n_elements, elem_size*sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous
-            , &ch))){
+            , chain))){
          boost::container::throw_bad_alloc();
       }
-      chain.incorporate_after(chain.before_begin()
-                             ,(T*)ch.first_mem()
-                             ,(T*)ch.last_mem()
-                             ,ch.size() );
    }
 
    //!Allocates n_elements elements, each one of size elem_sizes[i]
@@ -292,29 +285,16 @@ class adaptive_pool
    void allocate_many(const size_type *elem_sizes, size_type n_elements, multiallocation_chain &chain)
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
-      //The chain object is not a dlmalloc::memchain: allocate into one and
-      //incorporate its blocks (the links in the blocks have the same type)
-      dlmalloc::memchain ch;
       if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_arrays_aligned
             ( n_elements, elem_sizes, sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous
-            , &ch))){
+            , chain))){
          boost::container::throw_bad_alloc();
       }
-      chain.incorporate_after(chain.before_begin()
-                             ,(T*)ch.first_mem()
-                             ,(T*)ch.last_mem()
-                             ,ch.size() );
    }
 
    void deallocate_many(multiallocation_chain &chain) BOOST_NOEXCEPT_OR_NOTHROW
    {
-      //The chain object is not a dlmalloc::memchain: pass its first and last
-      //blocks (the links in the blocks have the same type)
-      dlmalloc::memchain ch;
-      void *beg(&*chain.begin()), *last(&*chain.last());
-      size_t sz(chain.size());
-      ch.init_from(beg, last, sz);
-      dlmalloc_heap().multidealloc(&ch);
+      dlmalloc_heap().multidealloc(chain);
    }
 
    //!Deallocates all free blocks of the pool
@@ -580,18 +560,11 @@ class private_adaptive_pool
       if(BOOST_UNLIKELY(elem_size > size_type(-1)/sizeof(T))){
          boost::container::throw_bad_alloc();
       }
-      //The chain object is not a dlmalloc::memchain: allocate into one and
-      //incorporate its blocks (the links in the blocks have the same type)
-      dlmalloc::memchain ch;
       if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes_aligned
             ( n_elements, elem_size*sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous
-            , &ch))){
+            , chain))){
          boost::container::throw_bad_alloc();
       }
-      chain.incorporate_after(chain.before_begin()
-                             ,(T*)ch.first_mem()
-                             ,(T*)ch.last_mem()
-                             ,ch.size() );
    }
 
    //!Allocates n_elements elements, each one of size elem_sizes[i]
@@ -599,29 +572,16 @@ class private_adaptive_pool
    void allocate_many(const size_type *elem_sizes, size_type n_elements, multiallocation_chain &chain)
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
-      //The chain object is not a dlmalloc::memchain: allocate into one and
-      //incorporate its blocks (the links in the blocks have the same type)
-      dlmalloc::memchain ch;
       if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_arrays_aligned
             ( n_elements, elem_sizes, sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous
-            , &ch))){
+            , chain))){
          boost::container::throw_bad_alloc();
       }
-      chain.incorporate_after(chain.before_begin()
-                             ,(T*)ch.first_mem()
-                             ,(T*)ch.last_mem()
-                             ,ch.size() );
    }
 
    void deallocate_many(multiallocation_chain &chain) BOOST_NOEXCEPT_OR_NOTHROW
    {
-      //The chain object is not a dlmalloc::memchain: pass its first and last
-      //blocks (the links in the blocks have the same type)
-      dlmalloc::memchain ch;
-      void *beg(&*chain.begin()), *last(&*chain.last());
-      size_t sz(chain.size());
-      ch.init_from(beg, last, sz);
-      dlmalloc_heap().multidealloc(&ch);
+      dlmalloc_heap().multidealloc(chain);
    }
 
    //!Deallocates all free blocks of the pool

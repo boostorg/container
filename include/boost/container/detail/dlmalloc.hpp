@@ -32,7 +32,7 @@
 #include <boost/container/detail/intermodule_globals.hpp>
 #include <boost/container/detail/allocation_type.hpp>
 #include <boost/move/detail/placement_new.hpp>
-#include <boost/intrusive/detail/slist_node.hpp>   //memchain_node
+#include <boost/container/detail/multiallocation_chain.hpp>
 
 #include <cstddef>
 #include <cstring>
@@ -400,10 +400,6 @@ class basic_dlmalloc
    basic_dlmalloc(const basic_dlmalloc &);
    basic_dlmalloc &operator=(const basic_dlmalloc &);
 
-   //! One link of a memory chain. The link lives in the first bytes of the
-   //! block it describes, so a chain costs no memory of its own.
-   typedef boost::intrusive::slist_node<void*> memchain_node;
-
    public:
    typedef ::std::size_t size_type;
 
@@ -447,262 +443,17 @@ class basic_dlmalloc
    //          Types of the Boost.Container extension interface
    //////////////////////////////////////////////////////////////////////////
 
-   //! Forward iterator over a memory chain.
-   struct memchain_it
-   {
-      memchain_node *node_ptr;
-
-      //! <b>Requires</b>: The iterator must not be the end iterator.
-      //!
-      //! <b>Effects</b>: Moves the iterator to the next block of the chain.
-      //!   An iterator on the last block becomes the end iterator.
-      //!
-      //! <b>Complexity</b>: Constant.
-      void next() BOOST_NOEXCEPT
-      {  node_ptr = node_ptr->next_;  }
-
-      //! <b>Requires</b>: The iterator must not be the end iterator.
-      //!
-      //! <b>Returns</b>: The address of the block the iterator points to.
-      //!
-      //! <b>Complexity</b>: Constant.
-      void *addr() const BOOST_NOEXCEPT
-      {  return (void *)node_ptr;  }
-
-      //! <b>Returns</b>: true if `other` points to the same block as this
-      //!   iterator. Two end iterators of any chain compare equal.
-      //!
-      //! <b>Complexity</b>: Constant.
-      bool operator==(const memchain_it &other) const BOOST_NOEXCEPT
-      {  return node_ptr == other.node_ptr;  }
-
-      //! <b>Returns</b>: true if `other` points to a different block than
-      //!   this iterator.
-      //!
-      //! <b>Complexity</b>: Constant.
-      bool operator!=(const memchain_it &other) const BOOST_NOEXCEPT
-      {  return node_ptr != other.node_ptr;  }
-   };
-
    //! A singly linked list of blocks that multialloc_nodes() and
    //! multialloc_arrays() fill and multidealloc() gives back.
-   //!
-   //! The data members are the layout the algorithm works on. Use the
-   //! member functions.
-   struct memchain
-   {
-      size_type       num_mem;
-      memchain_node   root_node;
-      memchain_node  *last_node_ptr;
+   //! Use multiallocation_chain::iterator to walk the blocks of a chain.
+   typedef dtl::basic_multiallocation_chain<void*> multiallocation_chain;
 
-      //! <b>Effects</b>: Constructs an empty chain.
-      //!
-      //! <b>Complexity</b>: Constant.
-      memchain() BOOST_NOEXCEPT
-      {  this->init();  }
+   private:
+   typedef multiallocation_chain::iterator         memchain_it;
+   //The link type of a chain, to write the links of a new run in place
+   typedef boost::intrusive::slist_node<void*>     memchain_node;
 
-      //! <b>Effects</b>: Leaves the chain empty. The blocks it held, if any,
-      //!   are forgotten rather than given back, so the caller must own them
-      //!   by other means first.
-      //!
-      //! <b>Complexity</b>: Constant.
-      void init() BOOST_NOEXCEPT
-      {
-         root_node.next_ = 0;
-         last_node_ptr = &root_node;
-         num_mem = 0;
-      }
-
-      //! <b>Requires</b>: `first` and `last_block` must be the ends of one
-      //!   run of `num` blocks already linked to each other, and `num` must
-      //!   not be zero.
-      //!
-      //! <b>Effects</b>: Takes over that run, and discards whatever the chain
-      //!   held before.
-      //!
-      //! <b>Parameters</b>:
-      //!   - `first`: the first block of the run.
-      //!   - `last_block`: the last block of the run.
-      //!   - `num`: how many blocks the run holds.
-      //!
-      //! <b>Complexity</b>: Constant.
-      void init_from(void *first, void *last_block, size_type num) BOOST_NOEXCEPT
-      {
-         last_node_ptr = (memchain_node *)last_block;
-         root_node.next_ = (memchain_node *)first;
-         num_mem = num;
-      }
-
-      //! <b>Returns</b>: true if the chain holds no block.
-      //!
-      //! <b>Complexity</b>: Constant.
-      bool empty() const BOOST_NOEXCEPT      {  return num_mem == 0;  }
-
-      //! <b>Returns</b>: How many blocks the chain holds.
-      //!
-      //! <b>Complexity</b>: Constant.
-      size_type size() const BOOST_NOEXCEPT  {  return num_mem;  }
-
-      //! <b>Returns</b>: An iterator to the position before the first block.
-      //!   It points to no block, so addr() must not be called on it; it is
-      //!   what erase_after() and incorporate_after() take to act on the
-      //!   front of the chain.
-      //!
-      //! <b>Complexity</b>: Constant.
-      memchain_it before_begin() BOOST_NOEXCEPT
-      {  memchain_it it = { &root_node };            return it;  }
-
-      //! <b>Returns</b>: An iterator to the first block, or the end iterator
-      //!   when the chain is empty.
-      //!
-      //! <b>Complexity</b>: Constant.
-      memchain_it begin() BOOST_NOEXCEPT
-      {  memchain_it it = { root_node.next_ }; return it;  }
-
-      //! <b>Returns</b>: An iterator to the last block. On an empty chain it
-      //!   is before_begin(), not the end iterator.
-      //!
-      //! <b>Complexity</b>: Constant.
-      memchain_it last() BOOST_NOEXCEPT
-      {  memchain_it it = { last_node_ptr };         return it;  }
-
-      //! <b>Returns</b>: The end iterator, which points past the last block.
-      //!
-      //! <b>Complexity</b>: Constant.
-      memchain_it end() BOOST_NOEXCEPT
-      {  memchain_it it = { (memchain_node *)0 };    return it;  }
-
-      //! <b>Returns</b>: true if `it` is the end iterator of a chain.
-      //!
-      //! <b>Complexity</b>: Constant.
-      static bool is_end(const memchain_it &it) BOOST_NOEXCEPT
-      {  return !it.node_ptr;  }
-
-      //! <b>Returns</b>: The first block of the chain, or null when the chain
-      //!   is empty.
-      //!
-      //! <b>Complexity</b>: Constant.
-      void *first_mem() const BOOST_NOEXCEPT
-      {  return (void *)root_node.next_;  }
-
-      //! <b>Returns</b>: The last block of the chain. On an empty chain the
-      //!   value is the address of the chain's own root node, which is not a
-      //!   block; test empty() first.
-      //!
-      //! <b>Complexity</b>: Constant.
-      void *last_mem() const BOOST_NOEXCEPT
-      {  return (void *)last_node_ptr;  }
-
-      //! <b>Requires</b>: `mem` must point to a block of at least
-      //!   sizeof(void*) bytes that no chain already holds.
-      //!
-      //! <b>Effects</b>: Puts `mem` at the end of the chain. The link is
-      //!   written into the first bytes of the block, so the chain costs no
-      //!   memory of its own.
-      //!
-      //! <b>Complexity</b>: Constant.
-      void push_back(void *mem) BOOST_NOEXCEPT
-      {
-         memchain_node *const n = (memchain_node *)mem;
-         last_node_ptr->next_ = n;
-         n->next_ = 0;
-         last_node_ptr = n;
-         ++num_mem;
-      }
-
-      //! <b>Requires</b>: `mem` must point to a block of at least
-      //!   sizeof(void*) bytes that no chain already holds.
-      //!
-      //! <b>Effects</b>: Puts `mem` at the front of the chain.
-      //!
-      //! <b>Complexity</b>: Constant.
-      void push_front(void *mem) BOOST_NOEXCEPT
-      {
-         memchain_node *const n = (memchain_node *)mem;
-         if(!root_node.next_)
-            last_node_ptr = n;
-         n->next_ = root_node.next_;
-         root_node.next_ = n;
-         ++num_mem;
-      }
-
-      //! <b>Requires</b>: `before` must be a valid iterator of this chain,
-      //!   must not be the end iterator, and a block must follow it.
-      //!   before_begin() is what takes out the first block.
-      //!
-      //! <b>Effects</b>: Takes the block after `before` out of the chain. The
-      //!   block itself is not given back to the heap - the caller now owns
-      //!   it and must deallocate it.
-      //!
-      //! <b>Complexity</b>: Constant.
-      void erase_after(const memchain_it &before) BOOST_NOEXCEPT
-      {
-         memchain_node *const prev = before.node_ptr;
-         memchain_node *const dead = prev->next_;
-         if(last_node_ptr == dead)
-            last_node_ptr = &root_node;
-         prev->next_ = dead->next_;
-         --num_mem;
-      }
-
-      //! <b>Requires</b>: The chain must not be empty.
-      //!
-      //! <b>Effects</b>: Takes the first block out of the chain. As with
-      //!   erase_after(), the caller now owns that block.
-      //!
-      //! <b>Complexity</b>: Constant.
-      void pop_front() BOOST_NOEXCEPT
-      {  this->erase_after(this->before_begin());  }
-
-      //! <b>Requires</b>: `before` must be a valid iterator of this chain
-      //!   and must not be the end iterator. `first` and `before_last` must
-      //!   be the ends of one run of `num` blocks already linked to each
-      //!   other, and no chain may already hold them.
-      //!
-      //! <b>Effects</b>: Puts that run into the chain, right after `before`.
-      //!   Nothing happens when `num` is zero.
-      //!
-      //! <b>Parameters</b>:
-      //!   - `before`: the block the run goes after; before_begin() puts the
-      //!     run at the front.
-      //!   - `first`: the first block of the run.
-      //!   - `before_last`: the last block of the run.
-      //!   - `num`: how many blocks the run holds.
-      //!
-      //! <b>Complexity</b>: Constant.
-      void incorporate_after(const memchain_it &before, void *first,
-                             void *before_last, size_type num) BOOST_NOEXCEPT
-      {
-         if(!num)
-            return;
-         memchain_node *const pnode  = before.node_ptr;
-         memchain_node *const next   = pnode->next_;
-         memchain_node *const pfirst = (memchain_node *)first;
-         memchain_node *const blast  = (memchain_node *)before_last;
-         if(pnode == last_node_ptr)
-            last_node_ptr = blast;
-         pnode->next_ = pfirst;
-         blast->next_ = next;
-         num_mem += num;
-      }
-
-      //! <b>Requires</b>: `other` must not be this chain.
-      //!
-      //! <b>Effects</b>: Moves every block of `other` to the end of this
-      //!   chain, and leaves `other` empty. Nothing happens when `other` is
-      //!   already empty.
-      //!
-      //! <b>Complexity</b>: Constant. The blocks are not walked.
-      void splice_back(memchain &other) BOOST_NOEXCEPT
-      {
-         if(other.empty())
-            return;
-         this->incorporate_after(this->last(), other.first_mem(),
-                                 other.last_mem(), other.size());
-         other.init();
-      }
-   };
-
+   public:
    //! What allocation_command() returns: the block, and whether the block
    //! the caller passed in was reused rather than a new one handed out.
    struct command_ret_t
@@ -1750,8 +1501,6 @@ class basic_dlmalloc
       return ret;
    }
 
-   //! <b>Requires</b>: `pchain` must not be null.
-   //!
    //! <b>Effects</b>: Takes `n_elements` blocks of `elem_size` bytes each
    //!   and adds them to the chain, keeping whatever the chain held already.
    //!   Cheaper than a loop of allocate() calls, because the lock is taken
@@ -1764,7 +1513,7 @@ class basic_dlmalloc
    //!   - `contiguous_elements`: how many blocks share one run. Pass
    //!     default_contiguous to let the heap choose, or all_contiguous to
    //!     ask for a single run - which then either succeeds whole or fails.
-   //!   - `pchain`: the chain the blocks are added to.
+   //!   - `chain`: the chain the blocks are added to.
    //!
    //! <b>Returns</b>: true if every block was provided.
    //!
@@ -1774,20 +1523,19 @@ class basic_dlmalloc
    //! <b>Note</b>: The blocks may be given back one at a time with
    //!   deallocate(), or all at once with multidealloc().
    bool multialloc_nodes(size_type n_elements, size_type elem_size,
-                         size_type contiguous_elements, memchain *pchain) BOOST_NOEXCEPT
+                         size_type contiguous_elements, multiallocation_chain &chain) BOOST_NOEXCEPT
    {
       int ret = 0;
       mstate ms = &m_state;
       if(!preaction(ms)){
          ret = internal_node_multialloc
-            (n_elements, elem_size, malloc_alignment, contiguous_elements, pchain);
+            (n_elements, elem_size, malloc_alignment, contiguous_elements, chain);
          postaction(ms);
       }
       return 0 != ret;
    }
 
-   //! <b>Requires</b>: `pchain` must not be null, and `sizes` must hold at
-   //!   least `n_elements` entries.
+   //! <b>Requires</b>: `sizes` must hold at least `n_elements` entries.
    //!
    //! <b>Effects</b>: The same as multialloc_nodes(), with a size of its own
    //!   for each block: the i-th holds sizes[i]*element_size bytes. Adds
@@ -1800,7 +1548,7 @@ class basic_dlmalloc
    //!   - `contiguous_elements`: how many blocks share one run. Pass
    //!     default_contiguous to let the heap choose, or all_contiguous to
    //!     ask for a single run.
-   //!   - `pchain`: the chain the blocks are added to.
+   //!   - `chain`: the chain the blocks are added to.
    //!
    //! <b>Returns</b>: true if every block was provided.
    //!
@@ -1808,20 +1556,19 @@ class basic_dlmalloc
    //!   run.
    bool multialloc_arrays(size_type n_elements, const size_type *sizes,
                           size_type element_size, size_type contiguous_elements,
-                          memchain *pchain) BOOST_NOEXCEPT
+                          multiallocation_chain &chain) BOOST_NOEXCEPT
    {
       int ret = 0;
       mstate ms = &m_state;
       if(!preaction(ms)){
          ret = internal_multialloc_arrays
-            (n_elements, sizes, element_size, malloc_alignment, contiguous_elements, pchain);
+            (n_elements, sizes, element_size, malloc_alignment, contiguous_elements, chain);
          postaction(ms);
       }
       return 0 != ret;
    }
 
-   //! <b>Requires</b>: `pchain` must not be null, and `alignment` must be a
-   //!   power of two.
+   //! <b>Requires</b>: `alignment` must be a power of two.
    //!
    //! <b>Effects</b>: The same as multialloc_nodes(), but every block is aligned
    //!   to `alignment`. If `alignment` is bigger than malloc_alignment, each run
@@ -1830,20 +1577,20 @@ class basic_dlmalloc
    //!
    //! <b>Returns</b>: true if every block was provided. Adds nothing otherwise.
    bool multialloc_nodes_aligned(size_type n_elements, size_type elem_size, size_type alignment,
-                                 size_type contiguous_elements, memchain *pchain) BOOST_NOEXCEPT
+                                 size_type contiguous_elements, multiallocation_chain &chain) BOOST_NOEXCEPT
    {
       int ret = 0;
       mstate ms = &m_state;
       if(!preaction(ms)){
          ret = internal_node_multialloc
-            (n_elements, elem_size, alignment, contiguous_elements, pchain);
+            (n_elements, elem_size, alignment, contiguous_elements, chain);
          postaction(ms);
       }
       return 0 != ret;
    }
 
-   //! <b>Requires</b>: `pchain` must not be null, `sizes` must hold at least
-   //!   `n_elements` entries and `alignment` must be a power of two.
+   //! <b>Requires</b>: `sizes` must hold at least `n_elements` entries and
+   //!   `alignment` must be a power of two.
    //!
    //! <b>Effects</b>: The same as multialloc_arrays(), but every block is aligned
    //!   to `alignment`. If `alignment` is bigger than malloc_alignment, each run
@@ -1852,20 +1599,20 @@ class basic_dlmalloc
    //!
    //! <b>Returns</b>: true if every block was provided. Adds nothing otherwise.
    bool multialloc_arrays_aligned(size_type n_elements, const size_type *sizes, size_type element_size,
-                                  size_type alignment, size_type contiguous_elements, memchain *pchain) BOOST_NOEXCEPT
+                                  size_type alignment, size_type contiguous_elements, multiallocation_chain &chain) BOOST_NOEXCEPT
    {
       int ret = 0;
       mstate ms = &m_state;
       if(!preaction(ms)){
          ret = internal_multialloc_arrays
-            (n_elements, sizes, element_size, alignment, contiguous_elements, pchain);
+            (n_elements, sizes, element_size, alignment, contiguous_elements, chain);
          postaction(ms);
       }
       return 0 != ret;
    }
 
-   //! <b>Requires</b>: `pchain` must not be null, and every block in it
-   //!   must be one this heap returned and that was not given back already.
+   //! <b>Requires</b>: Every block in `chain` must be one this heap returned
+   //!   and that was not given back already.
    //!
    //! <b>Effects</b>: Gives back every block of the chain under one lock,
    //!   merging the ones that turn out to be neighbours. Blocks it could not
@@ -1873,11 +1620,11 @@ class basic_dlmalloc
    //!   every block went back.
    //!
    //! <b>Parameters</b>:
-   //!   - `pchain`: the chain whose blocks go back.
+   //!   - `chain`: the chain whose blocks go back.
    //!
    //! <b>Complexity</b>: Linear in the number of blocks the chain holds.
-   void multidealloc(memchain *pchain) BOOST_NOEXCEPT
-   {  internal_multialloc_free(pchain);  }
+   void multidealloc(multiallocation_chain &chain) BOOST_NOEXCEPT
+   {  internal_multialloc_free(chain);  }
 
    //! <b>Effects</b>: Walks every block of every segment once.
    //!
@@ -5577,28 +5324,26 @@ class basic_dlmalloc
    //not keep pointing at blocks that are back in the heap, or the caller's
    //next deallocate_many() double-frees them.
    //
-   //Each memchain node lives inside the block it describes, so a node's 'next'
+   //Each chain node lives inside the block it describes, so a node's 'next'
    //is read before that block is freed. Freeing block k cannot disturb block
    //k+1's node either: k+1 is still in use, and only free neighbours are
    //ever coalesced.
    void internal_multialloc_rollback
-      (memchain *pchain,
+      (multiallocation_chain &chain,
       memchain_it entry_last_it, size_type entry_num_mem) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       (void)m;    //every free below is a member
       memchain_it it = entry_last_it;
-      it.next();
-      while(!memchain::is_end(it)){
-         void *addr = it.addr();
-         it.next();
+      ++it;
+      while(it != chain.end()){
+         void *addr = &*it;
+         ++it;
          priv_deallocate_nolock(addr);
       }
       // Re-terminate at the entry tail. When the chain arrived empty this is the
-      //root node, which restores the pristine MEMCHAIN_INIT state.
-      entry_last_it.node_ptr->next_ = 0;
-      pchain->last_node_ptr = entry_last_it.node_ptr;
-      pchain->num_mem       = entry_num_mem;
+      //chain's header, which leaves the chain empty again.
+      chain.erase_after(entry_last_it, chain.end(), chain.size() - entry_num_mem);
    }
 
    //Chunk size of a block of "bytes" bytes in a multialloc run. For an alignment
@@ -5626,7 +5371,7 @@ class basic_dlmalloc
 
    int internal_node_multialloc
       ( size_type n_elements, size_type element_size, size_type alignment
-      , size_type contiguous_elements, memchain *pchain) BOOST_NOEXCEPT
+      , size_type contiguous_elements, multiallocation_chain &chain) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       void*     mem;            // malloced aggregate space
@@ -5640,8 +5385,8 @@ class basic_dlmalloc
          return 0;
       }
       size_type    element_req_size = multialloc_chunk_size(element_size, alignment);
-      memchain_it prev_last_it = pchain->last();
-      size_type prev_num_mem = pchain->size();
+      memchain_it prev_last_it = chain.last();
+      size_type prev_num_mem = chain.size();
       // The count that actually gets multiplied by element_req_size is the
       //per-segment one, and that is what the overflow test below has to use.
       //For ALL_CONTIGUOUS one segment holds everything, so it is n_elements;
@@ -5700,7 +5445,7 @@ class basic_dlmalloc
 
             mem = multialloc_run_allocate(accum_size, alignment);
             if (mem == 0) {
-               internal_multialloc_rollback(pchain, prev_last_it, prev_num_mem);
+               internal_multialloc_rollback(chain, prev_last_it, prev_num_mem);
                if (was_enabled)
                   enable_mmap(m);
                return 0;
@@ -5716,13 +5461,13 @@ class basic_dlmalloc
 
             BOOST_CONTAINER_DL_ASSERT(!is_mmapped(p));
             {  // split out elements
-               // Each element's first word IS its memchain node, so the run is
+               // Each element's first word IS its chain node, so the run is
                //linked in place with one store per element and spliced onto the
-               //chain with a single INCORPORATE_AFTER, instead of a PUSH_BACK
-               //per element (which also rewrites last_node_ptr and num_mem
+               //chain with a single incorporate_after, instead of a push_back
+               //per element (which also rewrites the last node and the size
                //every time). The arrays variant below does the same.
                void *mem_orig = mem;
-               memchain_it last_it = pchain->last();
+               memchain_it last_it = chain.last();
                size_type num_elements = next_i - i;
 
                size_type num_loops = num_elements - 1;
@@ -5736,8 +5481,8 @@ class basic_dlmalloc
                   mem_prev->next_ = (memchain_node *)mem;
                }
                set_size_and_pinuse_of_inuse_chunk(m, p, remainder_size);
-               // mem is the last element; INCORPORATE_AFTER terminates it
-               pchain->incorporate_after(last_it, mem_orig, mem, num_elements);
+               // mem is the last element; incorporate_after terminates it
+               chain.incorporate_after(last_it, mem_orig, mem, num_elements);
                if(!run_first_pinuse)
                   clear_pinuse(run_first);
             }
@@ -5752,25 +5497,24 @@ class basic_dlmalloc
       {  ((memchain_node *)THISMEM)->next_ = ((memchain_node *)NEXTMEM)->next_;  }
 
    //This function is based on internal_bulk_free
-   //replacing iteration over array[] with memchain.
+   //replacing iteration over array[] with multiallocation_chain.
    //Instead of returning the unallocated nodes, returns a chain of non-deallocated nodes.
    //After forward merging, backwards merging is also tried
-   void internal_multialloc_free(memchain *pchain) BOOST_NOEXCEPT
+   void internal_multialloc_free(multiallocation_chain &chain) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       //Blocks that turn out to belong to another heap collect here and go
       //back to the caller. Without footers a block carries no heap mark,
       //there is no other heap to find, and this stays empty.
-      memchain ret_chain;
-      ret_chain.init();
+      multiallocation_chain ret_chain;
       if (!preaction(m)) {
-         memchain_it a_it = pchain->begin();
-         while (!memchain::is_end(a_it)) { // Iterate though all memory holded by the chain
-            void* a_mem = a_it.addr();
+         memchain_it a_it = chain.begin();
+         while (a_it != chain.end()) { // Iterate though all memory holded by the chain
+            void* a_mem = &*a_it;
             mchunkptr a_p = mem2chunk(a_mem);
             size_type psize = chunksize(a_p);
             if (footers && get_mstate_for(a_p) != m) {
-               a_it.next();
+               ++a_it;
                ret_chain.push_back(a_mem);
                continue;
             }
@@ -5778,9 +5522,9 @@ class basic_dlmalloc
             if (rtcheck(ok_address(m, a_p) && ok_inuse(a_p))) {
                while (1) { // Internal loop to speed up forward and backward merging (avoids some redundant checks)
                   memchain_it b_it = a_it;
-                  b_it.next();
-                  if (!memchain::is_end(b_it)) {
-                     void *b_mem = b_it.addr();
+                  ++b_it;
+                  if (b_it != chain.end()) {
+                     void *b_mem = &*b_it;
                      mchunkptr b_p = mem2chunk(b_mem);
                      if (b_p == next_chunk(a_p)) { // b chunk is contiguous and next so b's size can be added to a
                         psize += chunksize(b_p);
@@ -5815,20 +5559,14 @@ class basic_dlmalloc
             sys_trim(0, false);
          postaction(m);
       }
-      if (footers) {
-         memchain_it last_pchain = pchain->last();
-         pchain->init();
-         pchain->incorporate_after(last_pchain
-            , ret_chain.first_mem()
-            , ret_chain.last_mem()
-            , ret_chain.size()
-         );
-      }
+      //The chain keeps only the blocks that were not given back
+      chain.clear();
+      chain.swap(ret_chain);
    }
 
    int internal_multialloc_arrays
       ( size_type n_elements, const size_type* sizes, size_type element_size, size_type alignment
-      , size_type contiguous_elements, memchain *pchain) BOOST_NOEXCEPT
+      , size_type contiguous_elements, multiallocation_chain &chain) BOOST_NOEXCEPT
    {
       mstate m = &m_state;
       void*     mem;            // malloced aggregate space
@@ -5869,8 +5607,8 @@ class basic_dlmalloc
          size_type next_i;
          // Where this call's own blocks start, so the unwind below cannot
          //touch blocks the chain already carried.
-         memchain_it entry_last_it = pchain->last();
-         size_type entry_num_mem = pchain->size();
+         memchain_it entry_last_it = chain.last();
+         size_type entry_num_mem = chain.size();
          //
          //Allocate the aggregate chunk.  First disable direct-mmapping so
          //malloc won't use it, since we would not be able to later
@@ -5912,7 +5650,7 @@ class basic_dlmalloc
 
             mem = error ? 0 : multialloc_run_allocate(accum_size, alignment);
             if (mem == 0){
-               internal_multialloc_rollback(pchain, entry_last_it, entry_num_mem);
+               internal_multialloc_rollback(chain, entry_last_it, entry_num_mem);
                if (was_enabled)
                   enable_mmap(m);
                return 0;
@@ -5930,7 +5668,7 @@ class basic_dlmalloc
 
             {  // split out elements
                void *mem_orig = mem;
-               memchain_it last_it = pchain->last();
+               memchain_it last_it = chain.last();
                size_type num_elements = next_i-i;
 
                //The sizes are walked with a pointer rather than indexed.
@@ -5951,7 +5689,7 @@ class basic_dlmalloc
                   mem_prev->next_ = (memchain_node *)mem;
                }
                set_size_and_pinuse_of_inuse_chunk(m, p, remainder_size);
-               pchain->incorporate_after(last_it, mem_orig, mem, num_elements);
+               chain.incorporate_after(last_it, mem_orig, mem, num_elements);
                if(!run_first_pinuse)
                   clear_pinuse(run_first);
             }

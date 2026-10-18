@@ -291,19 +291,10 @@ class allocator
       if(BOOST_UNLIKELY(elem_size > size_type(-1)/sizeof(T))){
          boost::container::throw_bad_alloc();
       }
-      dlmalloc::memchain ch;
-      if(!dlmalloc_heap().multialloc_nodes_aligned(n_elements, elem_size*sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous, &ch)){
+      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_nodes_aligned
+         (n_elements, elem_size*sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous, chain))){
          boost::container::throw_bad_alloc();
       }
-      chain.incorporate_after(chain.before_begin()
-                             ,(T*)ch.first_mem()
-                             ,(T*)ch.last_mem()
-                             ,ch.size() );
-/*
-      if(!dlmalloc_heap().multialloc_nodes_aligned( n_elements, elem_size*sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous
-                                   , move_detail::force_ptr<dlmalloc::memchain *>(&chain))){
-         boost::container::throw_bad_alloc();
-      }*/
    }
 
    //!Allocates n_elements elements, each one of size elem_sizes[i]
@@ -312,19 +303,10 @@ class allocator
    void allocate_many(const size_type *elem_sizes, size_type n_elements, multiallocation_chain &chain)
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
-      dlmalloc::memchain ch;
-      if(!dlmalloc_heap().multialloc_arrays_aligned(n_elements, elem_sizes, sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous, &ch)){
+      if(BOOST_UNLIKELY(!dlmalloc_heap().multialloc_arrays_aligned
+         (n_elements, elem_sizes, sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous, chain))){
          boost::container::throw_bad_alloc();
       }
-      chain.incorporate_after(chain.before_begin()
-                             ,(T*)ch.first_mem()
-                             ,(T*)ch.last_mem()
-                             ,ch.size() );
-      /*
-      if(!dlmalloc_heap().multialloc_arrays_aligned( n_elements, elem_sizes, sizeof(T), dtl::alignment_of<T>::value, dlmalloc::default_contiguous
-                                    , move_detail::force_ptr<dlmalloc::memchain *>(&chain))){
-         boost::container::throw_bad_alloc();
-      }*/
    }
 
    //!Deallocates several elements allocated by
@@ -333,12 +315,7 @@ class allocator
    void deallocate_many(multiallocation_chain &chain) BOOST_NOEXCEPT_OR_NOTHROW
    {
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
-      dlmalloc::memchain ch;
-      void *beg(&*chain.begin()), *last(&*chain.last());
-      size_t sz(chain.size());
-      ch.init_from(beg, last, sz);
-      dlmalloc_heap().multidealloc(&ch);
-      //dlmalloc_heap().multidealloc(move_detail::force_ptr<dlmalloc::memchain *>(&chain));
+      dlmalloc_heap().multidealloc(chain);
    }
 
    private:

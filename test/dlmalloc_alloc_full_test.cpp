@@ -10,7 +10,7 @@
 //
 // alloc_full_test.cpp for the dlmalloc class: the same cases against one
 // heap instance instead of the process-wide one. The chain macros become
-// member functions of dlmalloc::memchain, and all_deallocated() now walks
+// member functions of dlmalloc::multiallocation_chain, and all_deallocated() now walks
 // the heap rather than reading a counter.
 //
 //////////////////////////////////////////////////////////////////////////////
@@ -20,11 +20,12 @@
 #pragma warning (disable:4530) // C++ exception handler used, but unwind semantics are not enabled
 #endif
 
-#include <vector>
 #include <iostream>
 #include <cstring>
 #include <algorithm>    //std::remove
 #include <boost/container/detail/dlmalloc.hpp>
+#include <boost/container/vector.hpp>
+#include <boost/move/utility_core.hpp>
 
 namespace boost { namespace container { namespace test {
 
@@ -94,7 +95,7 @@ bool test_allocation()
    for( deallocation_type t = DirectDeallocation
       ; t != EndDeallocationType
       ; t = (deallocation_type)((int)t + 1)){
-      std::vector<void*> buffers;
+      boost::container::vector<void*> buffers;
       const std::size_t free_before      = h.mallinfo().fordblks;
       const std::size_t footprint_before = h.footprint();
 
@@ -161,7 +162,7 @@ bool test_allocation()
 bool test_allocation_shrink()
 {
    h.check();
-   std::vector<void*> buffers;
+   boost::container::vector<void*> buffers;
 
    //Allocate buffers with extra memory
    for(std::size_t i = 0; i != NumIt; ++i){
@@ -220,7 +221,7 @@ bool test_allocation_shrink()
 bool test_allocation_expand()
 {
    h.check();
-   std::vector<void*> buffers;
+   boost::container::vector<void*> buffers;
 
    //Allocate buffers with extra memory
    for(std::size_t i = 0; i != NumIt; ++i){
@@ -268,9 +269,9 @@ bool test_allocation_expand()
 //avoid the wasted internal fragmentation
 bool test_allocation_shrink_and_expand()
 {
-   std::vector<void*> buffers;
-   std::vector<std::size_t> received_sizes;
-   std::vector<bool>        size_reduced;
+   boost::container::vector<void*> buffers;
+   boost::container::vector<std::size_t> received_sizes;
+   boost::container::vector<bool>        size_reduced;
 
    //Allocate buffers wand store received sizes
    for(std::size_t i = 0; i != NumIt; ++i){
@@ -346,7 +347,7 @@ bool test_allocation_shrink_and_expand()
 bool test_allocation_deallocation_expand()
 {
    h.check();
-   std::vector<void*> buffers;
+   boost::container::vector<void*> buffers;
 
    //Allocate buffers with extra memory
    for(std::size_t i = 0; i != NumIt; ++i){
@@ -420,7 +421,7 @@ bool test_allocation_with_reuse()
    h.check();
    //We will repeat this test for different sized elements
    for(std::size_t sizeof_object = 1; sizeof_object < 20; ++sizeof_object){
-      std::vector<void*> buffers;
+      boost::container::vector<void*> buffers;
 
       //Allocate buffers with extra memory
       for(std::size_t i = 0; i != NumIt; ++i){
@@ -501,55 +502,53 @@ bool test_multialloc_contiguous_modes()
 
             //---- nodes variant ----
             {
-               dlmalloc::memchain ch;
-               ch.init();
-               if(!h.multialloc_nodes(num, esizes[e], contig[c], &ch))
+               dlmalloc::multiallocation_chain ch;
+               if(!h.multialloc_nodes(num, esizes[e], contig[c], ch))
                   return false;
                if(ch.size() != num)
                   return false;
                //walk it: the link count must agree, and the ends must be right
                std::size_t walked = 0;
                void *last = 0;
-               dlmalloc::memchain_it it = ch.begin();
-               while(!dlmalloc::memchain::is_end(it)){
-                  void *a = it.addr();
+               dlmalloc::multiallocation_chain::iterator it = ch.begin();
+               while(it != ch.end()){
+                  void *a = &*it;
                   if(!a)
                      return false;
                   last = a;
                   if(++walked > num)      //cycle guard
                      return false;
-                  it.next();
+                  ++it;
                }
                if(walked != num)
                   return false;
-               if(ch.last_mem() != last)
+               if(&*ch.last() != last)
                   return false;
-               h.multidealloc(&ch);
+               h.multidealloc(ch);
                if(!h.all_deallocated())
                   return false;
             }
 
             //---- arrays variant, same modes ----
             {
-               std::vector<std::size_t> sizes(num, esizes[e]);
-               dlmalloc::memchain ch;
-               ch.init();
-               if(!h.multialloc_arrays(num, &sizes[0], 1u, contig[c], &ch))
+               boost::container::vector<std::size_t> sizes(num, esizes[e]);
+               dlmalloc::multiallocation_chain ch;
+               if(!h.multialloc_arrays(num, &sizes[0], 1u, contig[c], ch))
                   return false;
                if(ch.size() != num)
                   return false;
                std::size_t walked = 0;
-               dlmalloc::memchain_it it = ch.begin();
-               while(!dlmalloc::memchain::is_end(it)){
-                  if(!it.addr())
+               dlmalloc::multiallocation_chain::iterator it = ch.begin();
+               while(it != ch.end()){
+                  if(!it.pointed_node())
                      return false;
                   if(++walked > num)
                      return false;
-                  it.next();
+                  ++it;
                }
                if(walked != num)
                   return false;
-               h.multidealloc(&ch);
+               h.multidealloc(ch);
                if(!h.all_deallocated())
                   return false;
             }
@@ -743,7 +742,7 @@ bool test_allocation_expand_both_repeated()
    for(std::size_t sizeof_object = 1; sizeof_object < 20; ++sizeof_object){
       if(!h.all_deallocated())
          return false;
-      std::vector<void*> buffers;
+      boost::container::vector<void*> buffers;
       for(std::size_t i = 0; i != NumIt; ++i){
          void *ptr = h.allocate(i*sizeof_object);
          if(!ptr)
@@ -825,7 +824,7 @@ bool test_aligned_allocation()
 bool test_continuous_aligned_allocation()
 {
    h.check();
-   std::vector<void*> buffers;
+   boost::container::vector<void*> buffers;
    //Allocate aligned buffers in a loop
    //and then deallocate it
    bool continue_loop = true;
@@ -870,7 +869,7 @@ bool test_many_equal_allocation()
       const std::size_t free_before      = h.mallinfo().fordblks;
       const std::size_t footprint_before = h.footprint();
 
-      std::vector<void*> buffers2;
+      boost::container::vector<void*> buffers2;
 
       //Allocate buffers with extra memory
       for(std::size_t i = 0; i != NumIt; ++i){
@@ -898,19 +897,18 @@ bool test_many_equal_allocation()
       //if(!a.check_sanity())
          //return false;
 
-      std::vector<void*> buffers;
+      boost::container::vector<void*> buffers;
       for(std::size_t i = 0; i != NumIt/10; ++i){
-         dlmalloc::memchain chain;
-         chain.init();
-         h.multialloc_nodes((i+1)*2, i+1, dlmalloc::default_contiguous, &chain);
-         dlmalloc::memchain_it it = chain.begin();
-         if(dlmalloc::memchain::is_end(it))
+         dlmalloc::multiallocation_chain chain;
+         h.multialloc_nodes((i+1)*2, i+1, dlmalloc::default_contiguous, chain);
+         dlmalloc::multiallocation_chain::iterator it = chain.begin();
+         if(it == chain.end())
             break;
 
          std::size_t n = 0;
-         for(; !dlmalloc::memchain::is_end(it); ++n){
-            buffers.push_back(it.addr());
-            it.next();
+         for(; it != chain.end(); ++n){
+            buffers.push_back(&*it);
+            ++it;
          }
          if(n != std::size_t((i+1)*2))
             return false;
@@ -994,7 +992,7 @@ bool test_many_different_allocation()
       const std::size_t free_before      = h.mallinfo().fordblks;
       const std::size_t footprint_before = h.footprint();
 
-      std::vector<void*> buffers2;
+      boost::container::vector<void*> buffers2;
 
       //Allocate buffers with extra memory
       for(std::size_t i = 0; i != NumIt; ++i){
@@ -1017,18 +1015,17 @@ bool test_many_different_allocation()
          }
       }
 
-      std::vector<void*> buffers;
+      boost::container::vector<void*> buffers;
       for(std::size_t i = 0; i != NumIt; ++i){
-         dlmalloc::memchain chain;
-         chain.init();
-         h.multialloc_arrays(ArraySize, requested_sizes, 1, dlmalloc::default_contiguous, &chain);
-         dlmalloc::memchain_it it = chain.begin();
-         if(dlmalloc::memchain::is_end(it))
+         dlmalloc::multiallocation_chain chain;
+         h.multialloc_arrays(ArraySize, requested_sizes, 1, dlmalloc::default_contiguous, chain);
+         dlmalloc::multiallocation_chain::iterator it = chain.begin();
+         if(it == chain.end())
             break;
          std::size_t n = 0;
-         for(; !dlmalloc::memchain::is_end(it); ++n){
-            buffers.push_back(it.addr());
-            it.next();
+         for(; it != chain.end(); ++n){
+            buffers.push_back(&*it);
+            ++it;
          }
          if(n != ArraySize)
             return false;
@@ -1094,23 +1091,26 @@ bool test_many_different_allocation()
 bool test_many_deallocation()
 {
    const std::size_t ArraySize = 11;
-   std::vector<dlmalloc::memchain> buffers;
+   //The chain is movable, not copyable
+   boost::container::vector<dlmalloc::multiallocation_chain> buffers;
    std::size_t requested_sizes[ArraySize];
    for(std::size_t i = 0; i < ArraySize; ++i){
       requested_sizes[i] = 4*i;
    }
 
    for(std::size_t i = 0; i != NumIt; ++i){
-      dlmalloc::memchain chain;
-      chain.init();
-      h.multialloc_arrays(ArraySize, requested_sizes, 1, dlmalloc::default_contiguous, &chain);
-      dlmalloc::memchain_it it = chain.begin();
-      if(dlmalloc::memchain::is_end(it))
+      dlmalloc::multiallocation_chain chain;
+      h.multialloc_arrays(ArraySize, requested_sizes, 1, dlmalloc::default_contiguous, chain);
+      dlmalloc::multiallocation_chain::iterator it = chain.begin();
+      if(it == chain.end())
          return false;
-      buffers.push_back(chain);
+      buffers.push_back(boost::move(chain));
    }
    for(std::size_t i = 0; i != NumIt; ++i){
-      h.multidealloc(&buffers[i]);
+      h.multidealloc(buffers[i]);
+      //Every block went back, so the chain is left empty
+      if(!buffers[i].empty())
+         return false;
    }
    buffers.clear();
 
@@ -1119,16 +1119,18 @@ bool test_many_deallocation()
       return false;
 
    for(std::size_t i = 0; i != NumIt; ++i){
-      dlmalloc::memchain chain;
-      chain.init();
-      h.multialloc_nodes(ArraySize, i*4+1, dlmalloc::default_contiguous, &chain);
-      dlmalloc::memchain_it it = chain.begin();
-      if(dlmalloc::memchain::is_end(it))
+      dlmalloc::multiallocation_chain chain;
+      h.multialloc_nodes(ArraySize, i*4+1, dlmalloc::default_contiguous, chain);
+      dlmalloc::multiallocation_chain::iterator it = chain.begin();
+      if(it == chain.end())
          return false;
-      buffers.push_back(chain);
+      buffers.push_back(boost::move(chain));
    }
    for(std::size_t i = 0; i != NumIt; ++i){
-      h.multidealloc(&buffers[i]);
+      h.multidealloc(buffers[i]);
+      //Every block went back, so the chain is left empty
+      if(!buffers[i].empty())
+         return false;
    }
    buffers.clear();
 
@@ -1206,11 +1208,10 @@ bool test_huge_expansion_requests()
 
    //multialloc_nodes with a huge element size fails
    {
-      dlmalloc::memchain ch;
-      ch.init();
-      if(h.multialloc_nodes(num_nodes, near_max_bytes, dlmalloc::default_contiguous, &ch))
+      dlmalloc::multiallocation_chain ch;
+      if(h.multialloc_nodes(num_nodes, near_max_bytes, dlmalloc::default_contiguous, ch))
          return false;
-      if(h.multialloc_nodes(num_nodes, near_max_bytes, dlmalloc::all_contiguous, &ch))
+      if(h.multialloc_nodes(num_nodes, near_max_bytes, dlmalloc::all_contiguous, ch))
          return false;
       if(ch.size() != 0)
          return false;
@@ -1331,37 +1332,36 @@ bool test_multialloc_aligned()
       const std::size_t alignment = alignments[a];
       for(std::size_t c = 0; c != sizeof(contig)/sizeof(contig[0]); ++c){
          for(std::size_t variant = 0; variant != 2u; ++variant){
-            dlmalloc::memchain ch;
-            ch.init();
+            dlmalloc::multiallocation_chain ch;
             //Blocks already in the chain are kept
             void *const first = h.allocate(8u);
             if(!first)
                return false;
             ch.push_back(first);
             const bool ok = variant == 0u
-               ? h.multialloc_nodes_aligned(num, elem_size, alignment, contig[c], &ch)
-               : h.multialloc_arrays_aligned(num, sizes, elem_size, alignment, contig[c], &ch);
+               ? h.multialloc_nodes_aligned(num, elem_size, alignment, contig[c], ch)
+               : h.multialloc_arrays_aligned(num, sizes, elem_size, alignment, contig[c], ch);
             if(!ok || ch.size() != num + 1u)
                return false;
-            dlmalloc::memchain_it it = ch.begin();
-            if(it.addr() != first)
+            dlmalloc::multiallocation_chain::iterator it = ch.begin();
+            if(&*it != first)
                return false;
-            it.next();
-            for(std::size_t i = 0; i != num; ++i, it.next()){
-               void *const mem = it.addr();
+            ++it;
+            for(std::size_t i = 0; i != num; ++i, ++it){
+               void *const mem = &*it;
                if(reinterpret_cast<std::size_t>(mem) % alignment)
                   return false;
                const std::size_t bytes = variant == 0u ? elem_size : sizes[i]*elem_size;
                if(dlmalloc::usable_size(mem) < bytes)
                   return false;
             }
-            if(!dlmalloc::memchain::is_end(it))
+            if(it != ch.end())
                return false;
             //Write every block after the chain was read: the links are in the blocks
             void *ptrs[num + 1u];
             std::size_t n = 0;
-            for(it = ch.begin(); !dlmalloc::memchain::is_end(it); it.next())
-               ptrs[n++] = it.addr();
+            for(it = ch.begin(); it != ch.end(); ++it)
+               ptrs[n++] = &*it;
             for(std::size_t i = 1; i != n; ++i){
                //Old GCC + glibc fortify sees a constant zero length in the
                //inlined usable_size null path: skip it explicitly
