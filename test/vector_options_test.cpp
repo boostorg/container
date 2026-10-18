@@ -18,14 +18,17 @@ template<class Unsigned, class VectorType>
 void test_stored_size_type_impl()
 {
    BOOST_TEST(VectorType().max_size() == typename VectorType::size_type(Unsigned(-1)));
-   #ifndef BOOST_NO_EXCEPTIONS
-   VectorType v;
-   typedef typename VectorType::size_type    size_type;
    typedef typename VectorType::value_type   value_type;
+   typedef typename VectorType::size_type    size_type;
    size_type const max = Unsigned(-1);
+   VectorType v;
+
    BOOST_TEST(v.max_size() == max);
    v.resize(5);
    v.resize(max);
+
+   #ifndef BOOST_NO_EXCEPTIONS
+
    BOOST_TEST_THROWS(v.resize(max+1),                    std::exception);
    BOOST_TEST_THROWS(v.push_back(value_type(1)),         std::exception);
    BOOST_TEST_THROWS(v.insert(v.begin(), value_type(1)), std::exception);
@@ -33,6 +36,13 @@ void test_stored_size_type_impl()
    BOOST_TEST_THROWS(v.reserve(max+1),                   std::exception);
    BOOST_TEST_THROWS(VectorType v2(max+1),               std::exception);
    #endif
+   BOOST_TEST(!v.stable_emplace_back(value_type(1)));
+   BOOST_TEST(!v.stable_reserve(max+1));
+   BOOST_TEST(v.size() == max);
+   //Growing in place stops at the limit
+   VectorType w(max - 5u);
+   while(w.stable_emplace_back(value_type(1))){}
+   BOOST_TEST(w.size() <= max);
 }
 
 template<class Unsigned>
@@ -58,6 +68,25 @@ void test_stored_size_type()
       BOOST_CONTAINER_STATIC_ASSERT(sizeof(vector_t) < sizeof(default_vector_t));
       test_stored_size_type_impl<Unsigned, vector_t>();
    }
+}
+
+//stable_emplace_back and stable_reserve return false when the memory can not
+//be expanded in place: they do not throw bad_alloc
+void test_stable_insertion_does_not_throw()
+{
+   typedef vector<int, allocator<int> > vector_t;
+   vector_t v;
+   v.reserve(16u);
+   //The block after the vector's block is in use, so it can not grow in place
+   allocator<int> a;
+   int *const blocker = a.allocate(16u);
+   std::size_t n = 0;
+   while(n != 1000u && v.stable_emplace_back(1))
+      ++n;
+   BOOST_TEST(!v.stable_reserve(v.capacity() + 1000u));
+   BOOST_TEST(n < 1000u);
+   BOOST_TEST(v.size() == n);
+   a.deallocate(blocker, 16u);
 }
 
 void test_growth_factor_50()
@@ -145,6 +174,7 @@ int main()
    test_growth_factor_100();
    test_stored_size_type<unsigned char>();
    test_stored_size_type<unsigned short>();
+   test_stable_insertion_does_not_throw();
 
    return ::boost::report_errors();
 }

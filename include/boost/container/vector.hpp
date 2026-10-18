@@ -549,13 +549,17 @@ struct vector_alloc_holder
       allocator_traits_type::deallocate(this->alloc(), p, n);
    }
 
+   //Tries to expand the buffer in place. Returns false, and does not throw,
+   //if the new capacity is above max_size() or the memory can not be expanded.
    bool try_expand_fwd(size_type at_least)
    {
-      //There is not enough memory, try to expand the old one
-      const size_type new_cap = size_type(this->capacity() + at_least);
+      const size_type cap = this->capacity();
+      if(BOOST_UNLIKELY(size_type(this->max_size() - cap) < at_least))
+         return false;
+      const size_type new_cap = size_type(cap + at_least);
       size_type real_cap = new_cap;
       pointer reuse = this->start();
-      bool const success = !!this->allocation_command(expand_fwd, new_cap, real_cap, reuse);
+      bool const success = !!this->allocation_command(expand_fwd | nothrow_allocation, new_cap, real_cap, reuse);
       //Check for forward expansion
       if(success){
          #ifdef BOOST_CONTAINER_VECTOR_ALLOC_STATS
@@ -1984,8 +1988,12 @@ private:
       }
    }
 
-   //! <b>Effects</b>: Inserts an object of type T constructed with
-   //!   std::forward<Args>(args)... in the end of the vector.
+   //! <b>Effects</b>: If capacity() is greater than size(), or the memory can be
+   //!   expanded in place up to max_size(), inserts an object
+   //!   of type T constructed with std::forward<Args>(args)... in the end of the vector.
+   //!   Otherwise, the vector is unchanged. Iterators are never invalidated.
+   //!
+   //! <b>Returns</b>: true if the object was inserted.
    //!
    //! <b>Throws</b>: If the in-place constructor throws.
    //!
@@ -2450,8 +2458,11 @@ private:
    //!   (memory expansion) that will not invalidate iterators.
    //!   If the request is successful, then capacity() is greater than or equal to
    //!   n; otherwise, capacity() is unchanged. In either case, size() is unchanged.
+   //!   The request fails if n is greater than max_size().
    //!
-   //! <b>Throws</b>: If memory allocation allocation throws or T's copy/move constructor throws.
+   //! <b>Returns</b>: true if capacity() is greater than or equal to n.
+   //!
+   //! <b>Throws</b>: Nothing.
    //!
    //! <b>Note</b>: Non-standard extension.
    bool stable_reserve(size_type new_cap)
