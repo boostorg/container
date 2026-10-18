@@ -181,13 +181,34 @@ private:
    //packed_3n_bits_ref& operator=(const packed_3n_bits_ref&);
 };
 
+//The first two data members of private_node_pool_impl. They are a base, and
+//the segment manager holder the next one, so that the segment manager pointer
+//keeps its place after them: Interprocess places the pools in shared memory
+//and we need to maintain the ABI of the class.
+template<class SizeType>
+struct private_node_pool_impl_sizes
+{
+   private_node_pool_impl_sizes()
+      : m_nodes_per_block(0), m_real_node_size(0)
+   {}
+
+   mutable SizeType m_nodes_per_block;
+   mutable SizeType m_real_node_size;
+};
+
 //This class uses packed_3n_bits_ref to store overalignment
 //values maintaining the ABI, since ABI-sensitive libraries like Interprocess
 //rely on this type and types without overalignment must continue working
 //as before.
 template<class SegmentManagerBase>
 class private_node_pool_impl
+   : private private_node_pool_impl_sizes<typename SegmentManagerBase::size_type>
+   , private segment_manager_holder<SegmentManagerBase>
 {
+   typedef private_node_pool_impl_sizes
+      <typename SegmentManagerBase::size_type>              sizes_t;
+   typedef segment_manager_holder<SegmentManagerBase>       segment_manager_holder_t;
+
    //Non-copyable
    private_node_pool_impl();
    private_node_pool_impl(const private_node_pool_impl &);
@@ -227,9 +248,8 @@ class private_node_pool_impl
 
    //!Constructor from a segment manager. Never throws
    private_node_pool_impl(segment_manager_base_type *segment_mngr_base, size_type node_size, size_type nodes_per_block, size_type node_alignment)
-      : m_nodes_per_block(0)
-      , m_real_node_size(0)
-      , mp_segment_mngr_base(segment_mngr_base)
+      : sizes_t()
+      , segment_manager_holder_t(segment_mngr_base)
       , m_blocklist()
       , m_freelist()
       , m_allocated()
@@ -257,7 +277,7 @@ class private_node_pool_impl
       BOOST_CONSTEXPR_OR_CONST size_type max_aligned_shift = std::size_t((1u << 3u*list_node_align_bits) - 1);
       if (aligned_shift > max_aligned_shift) {
          BOOST_ASSERT(aligned_shift <= max_aligned_shift);  //Unsupported alignment
-         mp_segment_mngr_base = segment_mngr_base_ptr_t(); //Will crash on allocation
+         this->reset_segment_manager(); //Will crash on allocation
       }
 
       packed_3n_bits_ref_t packer(m_real_node_size, m_nodes_per_block, m_allocated);
@@ -284,8 +304,7 @@ class private_node_pool_impl
    }
 
    //!Returns the segment manager. Never throws
-   inline segment_manager_base_type* get_segment_manager_base()const
-   {  return boost::movelib::to_raw_pointer(mp_segment_mngr_base);  }
+   using segment_manager_holder_t::get_segment_manager_base;
 
    inline void *allocate_node()
    {  return this->priv_alloc_node();  }
@@ -371,7 +390,7 @@ class private_node_pool_impl
             //Unlink the nodes
             free_nodes.clear();
             it = m_blocklist.erase_after(bit);
-            mp_segment_mngr_base->deallocate(const_cast<void*>(addr));
+            this->segment_manager_deallocate(const_cast<void*>(addr));
          }
          //Otherwise, insert them in the backup list, since the
          //next "remove_if" does not need to check them again.
@@ -408,7 +427,7 @@ class private_node_pool_impl
       while(!m_blocklist.empty()){
          void *addr = get_block_from_hook(&m_blocklist.front(), blocksize);
          m_blocklist.pop_front();
-         mp_segment_mngr_base->deallocate(const_cast<void*>(addr));
+         this->segment_manager_deallocate(const_cast<void*>(addr));
       }
       //Just clear free node list
       m_freelist.clear();
@@ -418,7 +437,7 @@ class private_node_pool_impl
    {
       BOOST_ASSERT(this->get_real_node_size() == other.get_real_node_size());
       BOOST_ASSERT(this->get_real_num_node() == other.get_real_num_node());
-      ::boost::adl_move_swap(mp_segment_mngr_base, other.mp_segment_mngr_base);
+      this->swap_segment_manager(other);
       m_blocklist.swap(other.m_blocklist);
       m_freelist.swap(other.m_freelist);
       ::boost::adl_move_swap(m_allocated, other.m_allocated);
@@ -507,7 +526,7 @@ class private_node_pool_impl
             //We allocate a new NodeBlock and put it as first
             //element in the free Node list
             char *pNode = reinterpret_cast<char*>
-               (mp_segment_mngr_base->allocate_aligned(blocksize + sizeof(list_node_t), mem_alignment));
+               (this->segment_manager_allocate_aligned(blocksize + sizeof(list_node_t), mem_alignment));
             char *pBlock = pNode;
             m_blocklist.push_front(get_block_hook(pBlock, blocksize));
 
@@ -547,12 +566,8 @@ class private_node_pool_impl
    }
 
    private:
-   typedef typename boost::intrusive::pointer_traits
-      <void_pointer>::template rebind_pointer<segment_manager_base_type>::type   segment_mngr_base_ptr_t;
-
-   mutable size_type m_nodes_per_block;
-   mutable size_type m_real_node_size;
-   segment_mngr_base_ptr_t mp_segment_mngr_base;   //Segment manager
+   using sizes_t::m_nodes_per_block;
+   using sizes_t::m_real_node_size;
    blockslist_t      m_blocklist;      //Intrusive container of blocks
    free_nodes_t      m_freelist;       //Intrusive container of free nods
    mutable size_type   m_allocated;      //Used nodes for debugging

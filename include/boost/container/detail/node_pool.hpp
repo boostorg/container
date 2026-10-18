@@ -45,10 +45,10 @@ template< std::size_t NodeSize
 class private_node_pool
    //Inherit from the implementation to avoid template bloat
    :  public boost::container::dtl::
-         private_node_pool_impl<fake_segment_manager>
+         private_node_pool_impl<dlmalloc_segment_manager>
 {
    typedef boost::container::dtl::
-      private_node_pool_impl<fake_segment_manager>   base_t;
+      private_node_pool_impl<dlmalloc_segment_manager>   base_t;
    //Non-copyable
    private_node_pool(const private_node_pool &);
    private_node_pool &operator=(const private_node_pool &);

@@ -423,9 +423,15 @@ inline void candidate_power_of_2_rt ( std::size_t initial_alignment
 // private_adaptive_node_pool_impl_common
 //
 /////////////////////////////////////////////
+//The segment manager holder is the first base, where the segment manager
+//pointer was the first data member, so that the layout does not change for
+//Interprocess, which places the pools in shared memory.
 template< class SegmentManagerBase, unsigned int Flags>
 class private_adaptive_node_pool_impl_common
+   : private segment_manager_holder<SegmentManagerBase>
 {
+   typedef segment_manager_holder<SegmentManagerBase>       segment_manager_holder_t;
+
    public:
    //!Segment manager typedef
    typedef SegmentManagerBase                                        segment_manager_base_type;
@@ -441,9 +447,6 @@ class private_adaptive_node_pool_impl_common
    typedef typename SegmentManagerBase::void_pointer void_pointer;
    BOOST_STATIC_CONSTEXPR typename SegmentManagerBase::
       size_type PayloadPerAllocation = SegmentManagerBase::PayloadPerAllocation;
-
-   typedef typename boost::intrusive::pointer_traits
-      <void_pointer>::template rebind_pointer<segment_manager_base_type>::type   segment_mngr_base_ptr_t;
 
    protected:
    typedef adaptive_pool_types
@@ -479,7 +482,6 @@ class private_adaptive_node_pool_impl_common
       BOOST_STATIC_CONSTEXPR size_type value = ((sizeof(hdr_offset_holder) - 1)/RealNodeAlign + 1)*RealNodeAlign;
    };
 
-   segment_mngr_base_ptr_t             mp_segment_mngr_base;   //Segment manager
    block_container_t                   m_block_container;      //Intrusive block list
    size_type                           m_totally_free_blocks;  //Free blocks
 
@@ -639,7 +641,7 @@ class private_adaptive_node_pool_impl_common
          BOOST_ASSERT((m_totally_free_blocks - max_free_blocks) == chain.size());
          m_totally_free_blocks = max_free_blocks;
       }
-      this->mp_segment_mngr_base->deallocate_many(chain);
+      this->segment_manager_deallocate_many(chain);
       this->priv_invariants(real_num_node, num_subblocks, real_block_alignment);
    }
 
@@ -680,7 +682,7 @@ class private_adaptive_node_pool_impl_common
          //We allocate a new NodeBlock and put it the last
          //element of the tree
          char *mem_address = static_cast<char*>
-            (mp_segment_mngr_base->allocate_aligned(real_block_size, real_block_alignment));
+            (this->segment_manager_allocate_aligned(real_block_size, real_block_alignment));
          if(!mem_address){
             //In case of error, free memory deallocating all nodes (the new ones allocated
             //in this function plus previously stored nodes in chain).
@@ -722,7 +724,7 @@ class private_adaptive_node_pool_impl_common
          //We allocate a new NodeBlock and put it the last
          //element of the tree
          char *mem_address = static_cast<char*>
-            (mp_segment_mngr_base->allocate_aligned(real_block_size, real_block_alignment));
+            (this->segment_manager_allocate_aligned(real_block_size, real_block_alignment));
          if(!mem_address){
             //In case of error, free memory deallocating all nodes (the new ones allocated
             //in this function plus previously stored nodes in chain).
@@ -964,7 +966,7 @@ class private_adaptive_node_pool_impl_common
       this->priv_invariants(real_num_node, num_subblocks, real_block_alignment);
       multiallocation_chain chain;
       m_block_container.clear_and_dispose(block_destroyer(this, chain, num_subblocks, real_block_alignment, real_num_node));
-      this->mp_segment_mngr_base->deallocate_many(chain);
+      this->segment_manager_deallocate_many(chain);
       m_totally_free_blocks = 0;
       this->priv_invariants(real_num_node, num_subblocks, real_block_alignment);
    }
@@ -972,7 +974,7 @@ class private_adaptive_node_pool_impl_common
    public:
    private_adaptive_node_pool_impl_common(segment_manager_base_type *segment_mngr_base)
       //General purpose allocator
-   :  mp_segment_mngr_base(segment_mngr_base)
+   :  segment_manager_holder_t(segment_mngr_base)
    ,  m_block_container()
    ,  m_totally_free_blocks(0)
    {}
@@ -990,14 +992,13 @@ class private_adaptive_node_pool_impl_common
 
    void swap(private_adaptive_node_pool_impl_common &other)
    {
-      ::boost::adl_move_swap(mp_segment_mngr_base, other.mp_segment_mngr_base);
+      this->swap_segment_manager(other);
       ::boost::adl_move_swap(m_totally_free_blocks, other.m_totally_free_blocks);
       m_block_container.swap(other.m_block_container);
    }
 
    //!Returns the segment manager. Never throws
-   segment_manager_base_type* get_segment_manager_base()const
-   {  return boost::movelib::to_raw_pointer(mp_segment_mngr_base);  }
+   using segment_manager_holder_t::get_segment_manager_base;
 };
 
 template< class SizeType

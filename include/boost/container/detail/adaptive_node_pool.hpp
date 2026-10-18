@@ -51,7 +51,7 @@ template< std::size_t NodeSize
         >
 class private_adaptive_node_pool
    :  public private_adaptive_node_pool_impl_ct
-            < fake_segment_manager
+            < dlmalloc_segment_manager
             , MaxFreeBlocks
             , NodeSize
             , NodesPerBlock
@@ -63,7 +63,7 @@ class private_adaptive_node_pool
             >
 {
    typedef private_adaptive_node_pool_impl_ct
-            < fake_segment_manager
+            < dlmalloc_segment_manager
             , MaxFreeBlocks
             , NodeSize
             , NodesPerBlock

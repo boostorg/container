@@ -37,7 +37,9 @@ struct node_slist_helper
    : public boost::container::dtl::node_slist<void*>
 {};
 
-struct fake_segment_manager
+//It forwards to the global dlmalloc heap.
+//All its functions are static
+struct dlmalloc_segment_manager
 {
    typedef void * void_pointer;
    BOOST_STATIC_CONSTEXPR std::size_t PayloadPerAllocation = dlmalloc::allocation_payload;
@@ -78,7 +80,7 @@ struct is_stateless_segment_manager;
 
 template<>
 struct is_stateless_segment_manager
-   <boost::container::dtl::fake_segment_manager>
+   <boost::container::dtl::dlmalloc_segment_manager>
 {
    BOOST_STATIC_CONSTEXPR bool value = true;
 };
