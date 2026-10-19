@@ -1168,7 +1168,14 @@ private:
    //! <b>Throws</b>: Nothing
    //!
    //! <b>Complexity</b>: Constant.
-   vector(BOOST_RV_REF(vector) x) BOOST_NOEXCEPT_OR_NOTHROW
+   vector(BOOST_RV_REF(vector) x)
+      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+      //An allocator that stores the elements in itself (version 0, static_vector)
+      //can not pass the buffer, so the holder moves the elements one by one
+      BOOST_NOEXCEPT_IF(alloc_version::value != 0 || dtl::is_nothrow_move_constructible<value_type>::value)
+      #else
+      BOOST_NOEXCEPT_OR_NOTHROW
+      #endif
       :  m_holder(boost::move(x.m_holder))
    {  BOOST_CONTAINER_STATIC_ASSERT((!allocator_traits_type::is_partially_propagable::value));  }
 

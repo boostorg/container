@@ -701,7 +701,7 @@ struct non_trivial
    ~non_trivial(){}
 };
 
-void static_vector_triviality()
+void test_triviality()
 {
    static_vector_destructor_triviality_impl<int, true>();
    static_vector_destructor_triviality_impl<float, true>();
@@ -710,7 +710,7 @@ void static_vector_triviality()
 
 #else
 
-void static_vector_triviality(){}
+void test_triviality(){}
 
 #endif   //BOOST_INTRUSIVE_CONCEPTS_BASED_OVERLOADING
 
@@ -741,6 +741,59 @@ bool test_unqualified_swap()
    return us::test_unqualified_swap_internal_buffer
              (a, b, static_vector_data(), static_vector_always_internal());
 }
+
+#ifndef BOOST_NO_EXCEPTIONS
+class throwing_move_value
+{
+   BOOST_COPYABLE_AND_MOVABLE(throwing_move_value)
+
+   public:
+   static bool throw_on_move;
+
+   explicit throwing_move_value(int v = 0) : m_v(v) {}
+   throwing_move_value(const throwing_move_value &o) : m_v(o.m_v) {}
+   throwing_move_value(BOOST_RV_REF(throwing_move_value) o) : m_v(o.m_v)
+   {
+      if(throw_on_move)
+         throw int(1);
+   }
+   throwing_move_value &operator=(BOOST_COPY_ASSIGN_REF(throwing_move_value) o)
+   {  m_v = o.m_v; return *this;  }
+   throwing_move_value &operator=(BOOST_RV_REF(throwing_move_value) o)
+   {  m_v = o.m_v; return *this;  }
+
+   int m_v;
+};
+
+bool throwing_move_value::throw_on_move = false;
+
+void test_move_constructor_can_throw()
+{
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+   typedef static_vector<throwing_move_value, 4> tvec_t;
+   typedef static_vector<int, 4>                 ivec_t;
+   BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(tvec_t(boost::move(*(tvec_t*)0)) )));
+   BOOST_CONTAINER_STATIC_ASSERT((  noexcept(ivec_t(boost::move(*(ivec_t*)0)) )));
+   #endif
+
+   #ifndef BOOST_NO_EXCEPTIONS
+   static_vector<throwing_move_value, 4> a(3u);
+   throwing_move_value::throw_on_move = true;
+   bool thrown = false;
+   try{
+      static_vector<throwing_move_value, 4> b(boost::move(a));
+   }
+   catch(int){
+      thrown = true;
+   }
+   throwing_move_value::throw_on_move = false;
+   BOOST_TEST(thrown);
+   #endif
+}
+
+#else
+void test_move_constructor_can_throw() {}
+#endif   //BOOST_NO_EXCEPTIONS
 
 int main(int, char* [])
 {
@@ -860,7 +913,9 @@ int main(int, char* [])
       boost::intrusive::test::test_iterator_random< cont_int >(a);
    }
 
-   static_vector_triviality();
+   test_triviality();
+
+   test_move_constructor_can_throw();
 
    return boost::report_errors();
 }
