@@ -30,6 +30,8 @@ function(boost_container_add_test name source)
 endfunction()
 
 boost_container_add_test(allocator_traits_test allocator_traits_test.cpp)
+boost_container_add_test(trivially_copyable_test trivially_copyable_test.cpp)
+boost_container_add_test(aligned_allocation_test aligned_allocation_test.cpp)
 boost_container_add_test(alloc_basic_test alloc_basic_test.cpp)
 boost_container_add_test(alloc_full_test alloc_full_test.cpp)
 boost_container_add_test(dlmalloc_alloc_basic_test dlmalloc_alloc_basic_test.cpp)

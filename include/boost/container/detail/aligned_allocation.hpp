@@ -45,13 +45,8 @@
 // Include
 #if defined(BOOST_CONTAINER_HAS_ALIGNED_MALLOC)
    #include <malloc.h>
-#elif defined(BOOST_CONTAINER_HAS_POSIX_MEMALIGN)
-   #include <stdlib.h>
-#elif defined(BOOST_CONTAINER_HAS_ALIGNED_ALLOC)
-   #include <stdlib.h>
-#else
-   #include <stdlib.h> //for malloc
 #endif
+#include <stdlib.h>  //malloc, free, posix_memalign, aligned_alloc
 #include <cstddef>   //std::size_t
 
 namespace boost {
@@ -98,9 +93,13 @@ inline void* aligned_allocate(std::size_t al, std::size_t sz)
 
 inline void* aligned_allocate(std::size_t al, std::size_t sz)
 {
+   
    //Make room for a back pointer metadata
-   void* const mptr = malloc(sz + sizeof(void*) + al);
-   if (!mptr)
+   const std::size_t extra = std::size_t(sizeof(void*) + al);
+   if (BOOST_UNLIKELY(sz > std::size_t(std::size_t(-1) - extra)))
+      return 0;
+   void* const mptr = malloc(sz + extra);
+   if (BOOST_UNLIKELY(!mptr))
       return 0;
 
    //Now align the returned pointer (which will be aligned at least to sizeof(void*)
@@ -120,7 +119,7 @@ inline void* aligned_allocate(std::size_t al, std::size_t sz)
 
 inline void aligned_deallocate(void* ptr)
 {
-   if (!ptr)
+   if (BOOST_UNLIKELY(!ptr))
       return;
    free(ptr);
 }
@@ -136,12 +135,14 @@ inline void aligned_deallocate(void* ptr)
 
 inline void aligned_deallocate(void* ptr)
 {
-    // Obtain backpointer data and free it
-    void** storage = reinterpret_cast<void**>(ptr) - 1;
-    free(*storage);
+   if (BOOST_UNLIKELY(!ptr))
+      return;
+   // Obtain backpointer data and free it
+   void** storage = reinterpret_cast<void**>(ptr) - 1;
+   free(*storage);
 }
 
-#endif//
+#endif
 
 }  //namespace dtl {
 }  //namespace container {
