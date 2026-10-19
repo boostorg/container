@@ -1238,6 +1238,8 @@ bool test_mmapped_shrink()
       if(!p)
          return false;
       const std::size_t old_usable = dlmalloc::usable_size(p);
+      if(old_usable < block_size)   //Avoid GCC false positive with memset
+         return false;
       std::memset(p, fill_value, old_usable);
 
       //A query does not change the block
@@ -1294,6 +1296,8 @@ bool test_mmapped_expand_bwd()
       if(!p)
          return false;
       const std::size_t old_usable = dlmalloc::usable_size(p);
+      if(old_usable < block_size)   //Avoid GCC false positive with memset
+         return false;
       std::memset(p, fill_value, old_usable);
 
       std::size_t received = 0;
