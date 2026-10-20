@@ -1055,6 +1055,7 @@ class small_vector
    //! <b>Complexity</b>: Linear to the number of elements involved.
    inline small_vector& operator=(BOOST_RV_REF(small_vector) other)
       BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_assignable<value_type>::value
+         && boost::container::dtl::is_nothrow_move_constructible<value_type>::value
          && (allocator_traits_type::propagate_on_container_move_assignment::value
              || allocator_traits_type::is_always_equal::value))
    {  return static_cast<small_vector&>(this->base_type::operator=(BOOST_MOVE_BASE(base_type, other))); }

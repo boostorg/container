@@ -377,8 +377,7 @@ public:
     //! @param other    The static_vector which content will be moved to this one.
     //!
     //! @par Throws
-    //!   @li If \c has_nothrow_move<T>::value is \c true and T's move constructor throws.
-    //!   @li If \c has_nothrow_move<T>::value is \c false and T's copy constructor throws.
+    //!   @li If T's move constructor throws.
     //!
     //! @par Complexity
     //!   Linear O(N).
@@ -394,8 +393,7 @@ public:
     //! @param other    The static_vector which content will be moved to this one.
     //!
     //! @par Throws
-    //!   @li If \c has_nothrow_move<T>::value is \c true and T's move constructor throws.
-    //!   @li If \c has_nothrow_move<T>::value is \c false and T's copy constructor throws.
+    //!   @li If T's move constructor throws.
     //!   @li If \c throw_on_overflow<true> option is set and the container runs out of capacity.
     //!
     //! @par Complexity
@@ -458,13 +456,13 @@ public:
     //! @param other    The static_vector which content will be moved to this one.
     //!
     //! @par Throws
-    //!   @li If \c has_nothrow_move<T>::value is \c true and T's move constructor or move assignment throws.
-    //!   @li If \c has_nothrow_move<T>::value is \c false and T's copy constructor or copy assignment throws.
+    //!   @li If T's move constructor or move assignment throws.
     //!
     //! @par Complexity
     //!   Linear O(N).
     inline static_vector & operator=(BOOST_RV_REF(static_vector) other)
-       BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_assignable<value_type>::value)
+       BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_assignable<value_type>::value
+                      && boost::container::dtl::is_nothrow_move_constructible<value_type>::value)
     {
         return static_cast<static_vector&>(base_t::operator=(BOOST_MOVE_BASE(base_t, other)));
     }
@@ -476,8 +474,7 @@ public:
     //! @param other    The static_vector which content will be moved to this one.
     //!
     //! @par Throws
-    //!   @li If \c has_nothrow_move<T>::value is \c true and T's move constructor or move assignment throws.
-    //!   @li If \c has_nothrow_move<T>::value is \c false and T's copy constructor or copy assignment throws.
+    //!   @li If T's move constructor or move assignment throws.
     //!   @li If \c throw_on_overflow<true> option is set and the container runs out of capacity.
     //!
     //! @par Complexity
@@ -505,8 +502,7 @@ public:
     //! @param other    The static_vector which content will be swapped with this one's content.
     //!
     //! @par Throws
-    //!   @li If \c has_nothrow_move<T>::value is \c true and T's move constructor or move assignment throws,
-    //!   @li If \c has_nothrow_move<T>::value is \c false and T's copy constructor or copy assignment throws,
+    //!   @li If T's move constructor or move assignment throws.
     //!
     //! @par Complexity
     //!   Linear O(N).
@@ -519,8 +515,7 @@ public:
     //! @param other    The static_vector which content will be swapped with this one's content.
     //!
     //! @par Throws
-    //!   @li If \c has_nothrow_move<T>::value is \c true and T's move constructor or move assignment throws,
-    //!   @li If \c has_nothrow_move<T>::value is \c false and T's copy constructor or copy assignment throws,
+    //!   @li If T's move constructor or move assignment throws.
     //!   @li If \c throw_on_overflow<true> option is set and the container runs out of capacity.
     //!
     //! @par Complexity

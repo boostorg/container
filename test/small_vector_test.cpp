@@ -16,6 +16,7 @@
 #include "default_init_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 #include "unqualified_swap_test.hpp"
+#include "throwing_utilities.hpp"
 
 #include <boost/container/allocator_traits.hpp>
 
@@ -606,29 +607,9 @@ bool test_swap_with_propagated_unequal_allocators()
    return true;
 }
 
-//A copy-only type whose copy can throw. When the source of a move assignment
-//uses its internal buffer, the elements are copied one by one, so the move
-//assignment is not noexcept and the exception reaches the caller (the
-//vector base was noexcept and called std::terminate)
 #ifndef BOOST_NO_EXCEPTIONS
-struct throwing_copy_value
-{
-   static bool throw_on_copy;
-
-   explicit throwing_copy_value(int v = 0) : m_v(v) {}
-   throwing_copy_value(const throwing_copy_value &o) : m_v(o.m_v)
-   {  if(throw_on_copy) throw int(1);  }
-   throwing_copy_value &operator=(const throwing_copy_value &o)
-   {
-      if(throw_on_copy) throw int(1);
-      m_v = o.m_v;
-      return *this;
-   }
-
-   int m_v;
-};
-
-bool throwing_copy_value::throw_on_copy = false;
+using boost::container::test::throwing_copy_value;
+using boost::container::test::throwing_move_ctor_value;
 
 template<std::size_t N>
 bool test_move_assignment_from_internal_buffer_can_throw()
@@ -661,9 +642,43 @@ template<std::size_t>
 bool test_move_assignment_from_internal_buffer_can_throw() { return true; }
 #endif   //BOOST_NO_EXCEPTIONS
 
+//A type whose move assignment does not throw but whose move constructor can.
+#ifndef BOOST_NO_EXCEPTIONS
+bool test_move_assignment_move_constructs_extra_elements()
+{
+   typedef small_vector<throwing_move_ctor_value, 4> svec_t;
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+   using boost::move_detail::declval;
+   BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<svec_t&>() = declval<svec_t>()) ));
+   BOOST_CONTAINER_STATIC_ASSERT((  noexcept(declval<small_vector<int, 4>&>() = declval<small_vector<int, 4> >()) ));
+   #endif
+   svec_t a, b;
+   b.push_back(throwing_move_ctor_value(1));
+   b.push_back(throwing_move_ctor_value(2));
+   throwing_move_ctor_value::throw_on_move = true;
+   bool thrown = false;
+   try{
+      a = boost::move(b);
+   }
+   catch(int){
+      thrown = true;
+   }
+   throwing_move_ctor_value::throw_on_move = false;
+   if(!thrown)
+      return false;
+   return true;
+}
+
+#else //BOOST_NO_EXCEPTIONS
+bool test_move_assignment_move_constructs_extra_elements() { return true; }
+#endif   //BOOST_NO_EXCEPTIONS
+
 int main()
 {
    if(!test_move_assignment_from_internal_buffer_can_throw<4>())
+      return 1;
+
+   if(!test_move_assignment_move_constructs_extra_elements())
       return 1;
 
    if(!test_swap_with_propagated_unequal_allocators<4, 4>() || !test_swap_with_propagated_unequal_allocators<2, 16>() ||
