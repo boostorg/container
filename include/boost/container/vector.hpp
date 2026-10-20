@@ -97,6 +97,25 @@ struct is_version_0_alloc_and_trivially_destructible<Alloc, false>
    BOOST_STATIC_CONSTEXPR bool value = false;
 };
 
+//If the elements of a move are moved one by one (ElementWise), whether moving
+//a T can throw. T is only queried in that case, so the move operations of a
+//vector of a recursive type (struct data { vector<data> v; }) do not need the
+//exception specifications of T, which would instantiate vector too early.
+template<class T, bool ElementWise>
+struct vector_nothrow_element_move
+{
+   BOOST_STATIC_CONSTEXPR bool construct = true;
+   BOOST_STATIC_CONSTEXPR bool construct_and_assign = true;
+};
+
+template<class T>
+struct vector_nothrow_element_move<T, true>
+{
+   BOOST_STATIC_CONSTEXPR bool construct = is_nothrow_move_constructible<T>::value;
+   BOOST_STATIC_CONSTEXPR bool construct_and_assign =
+      is_nothrow_move_constructible<T>::value && is_nothrow_move_assignable<T>::value;
+};
+
 
 }  //namespace dtl {
 
@@ -1172,7 +1191,7 @@ private:
       #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
       //An allocator that stores the elements in itself (version 0, static_vector)
       //can not pass the buffer, so the holder moves the elements one by one
-      BOOST_NOEXCEPT_IF(alloc_version::value != 0 || dtl::is_nothrow_move_constructible<value_type>::value)
+      BOOST_NOEXCEPT_IF((dtl::vector_nothrow_element_move<value_type, alloc_version::value == 0>::construct))
       #else
       BOOST_NOEXCEPT_OR_NOTHROW
       #endif
@@ -1328,8 +1347,21 @@ private:
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    inline vector& operator=(BOOST_RV_REF(vector) x)
-      BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
+      #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+      //A partially propagable allocator (small_vector) can not pass the internal
+      //buffer, and a version 0 allocator (static_vector) stores the elements in
+      //itself, so the elements of those buffers are moved one by one
+      BOOST_NOEXCEPT_IF(((allocator_traits_type::propagate_on_container_move_assignment::value
+                         || allocator_traits_type::is_always_equal::value)
+                        && dtl::vector_nothrow_element_move
+                              < value_type
+                              , allocator_traits_type::is_partially_propagable::value || alloc_version::value == 0
+                              >::construct_and_assign))
+      #else
+      noexcept(allocator_traits_type::propagate_on_container_move_assignment::value
                         || allocator_traits_type::is_always_equal::value)
+
+      #endif
    {
       if (BOOST_LIKELY(&x != this)){
          this->priv_move_assign(boost::move(x));

@@ -606,9 +606,64 @@ bool test_swap_with_propagated_unequal_allocators()
    return true;
 }
 
+//A copy-only type whose copy can throw. When the source of a move assignment
+//uses its internal buffer, the elements are copied one by one, so the move
+//assignment is not noexcept and the exception reaches the caller (the
+//vector base was noexcept and called std::terminate)
+#ifndef BOOST_NO_EXCEPTIONS
+struct throwing_copy_value
+{
+   static bool throw_on_copy;
+
+   explicit throwing_copy_value(int v = 0) : m_v(v) {}
+   throwing_copy_value(const throwing_copy_value &o) : m_v(o.m_v)
+   {  if(throw_on_copy) throw int(1);  }
+   throwing_copy_value &operator=(const throwing_copy_value &o)
+   {
+      if(throw_on_copy) throw int(1);
+      m_v = o.m_v;
+      return *this;
+   }
+
+   int m_v;
+};
+
+bool throwing_copy_value::throw_on_copy = false;
+
+template<std::size_t N>
+bool test_move_assignment_from_internal_buffer_can_throw()
+{
+   typedef small_vector<throwing_copy_value, N> svec_t;
+   typedef small_vector_base<throwing_copy_value> base_t;
+   for(int through_base = 0; through_base != 2; ++through_base){
+      svec_t a, b;
+      b.push_back(throwing_copy_value(1));
+      throwing_copy_value::throw_on_copy = true;
+      bool thrown = false;
+      try{
+         if(through_base)
+            static_cast<base_t&>(a) = boost::move(static_cast<base_t&>(b));
+         else
+            a = boost::move(b);
+      }
+      catch(int){
+         thrown = true;
+      }
+      throwing_copy_value::throw_on_copy = false;
+      if(!thrown)
+         return false;
+   }
+   return true;
+}
+
+#else //BOOST_NO_EXCEPTIONS
+template<std::size_t>
+bool test_move_assignment_from_internal_buffer_can_throw() { return true; }
+#endif   //BOOST_NO_EXCEPTIONS
+
 int main()
 {
-   if(!test_unqualified_swap())
+   if(!test_move_assignment_from_internal_buffer_can_throw<4>())
       return 1;
 
    if(!test_swap_with_propagated_unequal_allocators<4, 4>() || !test_swap_with_propagated_unequal_allocators<2, 16>() ||
@@ -620,6 +675,9 @@ int main()
       return 1;
 
    if(!test_swap())
+      return 1;
+
+   if(!test_unqualified_swap())
       return 1;
 
    if (test::vector_test< small_vector<int, 0> >())
