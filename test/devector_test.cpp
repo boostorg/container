@@ -42,6 +42,7 @@
 #include "default_init_test.hpp"
 #include "../../intrusive/test/iterator_test.hpp"
 #include "unqualified_swap_test.hpp"
+#include "throwing_utilities.hpp"
 
 using namespace boost::container;
 
@@ -3919,10 +3920,25 @@ bool test_unqualified_swap()
    return true;
 }
 
+//devector() is not noexcept with an allocator whose default constructor can throw
+void test_default_constructor_noexcept()
+{
+   using boost::container::test::throwing_default_ctor_allocator;
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+   BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(devector<int, throwing_default_ctor_allocator<int> >()) ));
+   BOOST_CONTAINER_STATIC_ASSERT((  noexcept(devector<int>()) ));
+   #endif
+   devector<int, throwing_default_ctor_allocator<int> > d;
+   d.push_back(1);
+   BOOST_TEST(d.size() == 1u);
+}
+
 int main()
 {
    if(!test_unqualified_swap())
       return 1;
+
+   test_default_constructor_noexcept();
 
 //   boost::container::devector<boost::container::test::movable_int>a(get());
    //boost::container::devector<only_movable> b(getom());

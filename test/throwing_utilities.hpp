@@ -14,6 +14,36 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/move/utility_core.hpp>
+#include <cstddef>
+
+namespace boost {
+namespace container {
+namespace test {
+
+//A standard allocator whose default constructor is not noexcept.
+template<class T>
+struct throwing_default_ctor_allocator
+{
+   typedef T value_type;
+
+   throwing_default_ctor_allocator() BOOST_NOEXCEPT_IF(false) {}
+   template<class U>
+   throwing_default_ctor_allocator(const throwing_default_ctor_allocator<U> &) BOOST_NOEXCEPT_OR_NOTHROW {}
+
+   T* allocate(std::size_t n)
+   {  return static_cast<T*>(::operator new(n*sizeof(T)));  }
+   void deallocate(T *p, std::size_t) BOOST_NOEXCEPT_OR_NOTHROW
+   {  ::operator delete(p);  }
+
+   friend bool operator==(const throwing_default_ctor_allocator &, const throwing_default_ctor_allocator &)
+   {  return true;  }
+   friend bool operator!=(const throwing_default_ctor_allocator &, const throwing_default_ctor_allocator &)
+   {  return false;  }
+};
+
+}  //namespace test {
+}  //namespace container {
+}  //namespace boost {
 
 //Element types whose copy or move operations throw an int when a static
 //flag is set. They test that the exceptions of the element operations reach

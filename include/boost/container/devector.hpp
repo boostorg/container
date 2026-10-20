@@ -245,9 +245,11 @@ class devector
    * **Postcondition**: `empty() && front_free_capacity() == 0
    * && back_free_capacity() == 0`.
    *
+   * **Throws**: If allocator_type's default constructor throws.
+   *
    * **Complexity**: Constant.
    */
-   devector() BOOST_NOEXCEPT
+   devector() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<allocator_type>::value)
       : m_()
    {}
 
