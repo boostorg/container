@@ -7,15 +7,21 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/container/detail/workaround.hpp>   //BOOST_CONTAINER_ASAN
+#include <boost/container/detail/workaround.hpp>   //BOOST_CONTAINER_ASAN, BOOST_CONTAINER_TSAN
 #include <boost/container/detail/aligned_allocation.hpp>
 #include "lightweight_test.hpp"
 #include <cstddef>
 
 //The test asks for blocks that can not be allocated, which must return null.
-//AddressSanitizer reports them as errors unless allocator_may_return_null is set.
+//AddressSanitizer and ThreadSanitizer report them as errors unless
+//allocator_may_return_null is set.
 #if defined(BOOST_CONTAINER_ASAN)
 extern "C" const char* __asan_default_options()
+{  return "allocator_may_return_null=1";  }
+#endif
+
+#if defined(BOOST_CONTAINER_TSAN)
+extern "C" const char* __tsan_default_options()
 {  return "allocator_may_return_null=1";  }
 #endif
 
