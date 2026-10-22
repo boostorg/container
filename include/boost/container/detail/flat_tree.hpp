@@ -601,7 +601,7 @@ class flat_tree
       {}
 
       inline Data(BOOST_RV_REF(Data) d)
-         : value_compare(boost::move(static_cast<value_compare&>(d))), m_seq(boost::move(d.m_seq))
+         : value_compare(static_cast<const value_compare&>(d)), m_seq(boost::move(d.m_seq))
       {}
 
       inline Data(const Data &d, const allocator_t &a)
@@ -609,7 +609,7 @@ class flat_tree
       {}
 
       inline Data(BOOST_RV_REF(Data) d, const allocator_t &a)
-         : value_compare(boost::move(static_cast<value_compare&>(d))), m_seq(boost::move(d.m_seq), a)
+         : value_compare(static_cast<const value_compare&>(d)), m_seq(boost::move(d.m_seq), a)
       {}
 
       //If an exception is thrown, the elements can be unsorted for the comparator
@@ -631,7 +631,7 @@ class flat_tree
       Data& operator=(BOOST_RV_REF(Data) d)
       {
          BOOST_CONTAINER_TRY{
-            this->value_compare::operator=(boost::move(static_cast<value_compare &>(d)));
+            this->get_comp() = d.get_comp();
             m_seq = boost::move(d.m_seq);
          }
          BOOST_CONTAINER_CATCH(...){
@@ -714,6 +714,8 @@ class flat_tree
       <has_stored_allocator_type, stored_allocator_type &, allocator_type>::type get_stored_allocator_noconst_return_t;
 
    inline flat_tree()
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<container_type>::value &&
+                        dtl::is_nothrow_default_constructible<Compare>::value)
       : m_data()
    { }
 
@@ -734,7 +736,8 @@ class flat_tree
    { }
 
    inline flat_tree(BOOST_RV_REF(flat_tree) x)
-      BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_constructible<Compare>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_copy_constructible<Compare>::value &&
+                        dtl::is_nothrow_move_constructible<container_type>::value)
       :  m_data(boost::move(x.m_data))
    { }
 
@@ -843,9 +846,8 @@ class flat_tree
    {  m_data = x.m_data;   return *this;  }
 
    inline flat_tree&  operator=(BOOST_RV_REF(flat_tree) x)
-      BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
-                          allocator_traits_type::is_always_equal::value) &&
-                           boost::container::dtl::is_nothrow_move_assignable<Compare>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_copy_assignable<Compare>::value &&
+                        dtl::is_nothrow_move_assignable<container_type>::value)
    {  m_data = boost::move(x.m_data); return *this;  }
 
    inline const value_compare &priv_value_comp() const

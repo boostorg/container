@@ -410,6 +410,7 @@ int main ()
    if(!test_unqualified_swap())
       return 1;
 
+
    using namespace boost::container::test;
    //Recursive container instantiation
    {
@@ -436,6 +437,9 @@ int main ()
    }
 
    if (!boost::container::test::instantiate_constructors<set<int>, multiset<int> >())
+      return 1;
+
+   if (!boost::container::test::test_comparator_operations< set<int>, multiset<int> >())
       return 1;
 
    if (!boost::container::test::test_function_pointer_comparator

@@ -15,6 +15,8 @@
 #include "check_equal_containers.hpp"
 #include "print_container.hpp"
 #include "movable_int.hpp"
+#include "throwing_utilities.hpp"
+#include <boost/move/detail/meta_utils.hpp>   //declval
 #include <boost/container/detail/pair.hpp>
 #include <boost/container/detail/compare_functors.hpp>
 #include <boost/move/iterator.hpp>
@@ -1843,6 +1845,105 @@ bool test_function_pointer_comparator()
 {
    return test_function_pointer_comparator_for<MapType>()
        && test_function_pointer_comparator_for<MultimapType>();
+}
+
+//Replaces the comparator of a map type (map has five template parameters,
+//flat_map four)
+template<class Container, class NewCompare>
+struct rebind_map_compare;
+
+template<template<class, class, class, class> class Cont, class K, class T, class C, class A, class N>
+struct rebind_map_compare<Cont<K, T, C, A>, N>
+{  typedef Cont<K, T, N, A> type;  };
+
+template<template<class, class, class, class, class> class Cont, class K, class T, class C, class A, class O, class N>
+struct rebind_map_compare<Cont<K, T, C, A, O>, N>
+{  typedef Cont<K, T, N, A, O> type;  };
+
+//The comparator in the default and move constructors and in the move assignment:
+//the destination gets the comparator of the source, the moved-from container
+//keeps a valid one, the exceptions of the comparator reach the caller and, with
+//a comparator that does not throw, the operations are noexcept.
+template<class MapType>
+bool test_comparator_operations_for()
+{
+   {
+      typedef typename rebind_map_compare<MapType, tagged_less<int> >::type C;
+      C s((tagged_less<int>(7)));
+      s.insert(typename C::value_type(3, 3));
+      s.insert(typename C::value_type(1, 1));
+      s.insert(typename C::value_type(2, 2));
+      C d(boost::move(s));
+      if(s.key_comp().tag_ != 7 || d.key_comp().tag_ != 7 || d.size() != 3u || d.begin()->first != 1)
+         return false;
+      s.insert(typename C::value_type(5, 5));
+      s.insert(typename C::value_type(4, 4));
+      if(s.size() != 2u || s.begin()->first != 4)
+         return false;
+      C a((tagged_less<int>(3)));
+      a.insert(typename C::value_type(9, 9));
+      a = boost::move(d);
+      if(a.key_comp().tag_ != 7 || a.size() != 3u || a.begin()->first != 1)
+         return false;
+      if(d.key_comp().tag_ == -1)
+         return false;
+      d.clear();
+      d.insert(typename C::value_type(6, 6));
+      if(d.size() != 1u)
+         return false;
+   }
+   #ifndef BOOST_NO_EXCEPTIONS
+   {
+      typedef throwing_less<int> compare_t;
+      typedef typename rebind_map_compare<MapType, compare_t>::type C;
+      C src, dst;
+      src.insert(typename C::value_type(1, 1));
+      compare_t::throw_on_copy = true;
+      //The default constructor copies the comparator in some containers
+      BOOST_CONTAINER_TRY{
+         C c;
+         (void)c;
+      }
+      BOOST_CONTAINER_CATCH(int){}
+      BOOST_CONTAINER_CATCH_END
+      //The move constructor copies the comparator
+      bool thrown = false;
+      BOOST_CONTAINER_TRY{
+         C c(boost::move(src));
+      }
+      BOOST_CONTAINER_CATCH(int){
+         thrown = true;
+      }
+      BOOST_CONTAINER_CATCH_END
+      //The move assignment copies or swaps the comparator, depending on the
+      //container. If the exception passes a noexcept function, std::terminate
+      //runs and the test fails.
+      BOOST_CONTAINER_TRY{
+         dst = boost::move(src);
+      }
+      BOOST_CONTAINER_CATCH(int){}
+      BOOST_CONTAINER_CATCH_END
+      compare_t::throw_on_copy = false;
+      if(!thrown)
+         return false;
+   }
+   #endif
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+   {
+      using boost::move_detail::declval;
+      BOOST_CONTAINER_STATIC_ASSERT(( noexcept(MapType()) ));
+      BOOST_CONTAINER_STATIC_ASSERT(( noexcept(MapType(declval<MapType>())) ));
+      BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<MapType&>() = declval<MapType>()) ));
+   }
+   #endif
+   return true;
+}
+
+template<class MapType, class MultimapType>
+bool test_comparator_operations()
+{
+   return test_comparator_operations_for<MapType>()
+       && test_comparator_operations_for<MultimapType>();
 }
 
 }  //namespace test{

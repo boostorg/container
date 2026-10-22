@@ -139,7 +139,8 @@ class map
    //! <b>Complexity</b>: Constant.
    inline 
    map() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<allocator_type>::value &&
-                           dtl::is_nothrow_default_constructible<Compare>::value)
+                           dtl::is_nothrow_default_constructible<Compare>::value &&
+                           dtl::is_nothrow_copy_constructible<Compare>::value)
       : base_t()
    {}
 
@@ -361,7 +362,7 @@ class map
    //!
    //! <b>Postcondition</b>: x is emptied.
    inline map(BOOST_RV_REF(map) x)
-      BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_constructible<Compare>::value)
+      BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_copy_constructible<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x))
    {}
 
@@ -406,7 +407,7 @@ class map
    inline map& operator=(BOOST_RV_REF(map) x)
       BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
                           allocator_traits_type::is_always_equal::value) &&
-                           boost::container::dtl::is_nothrow_move_assignable<Compare>::value)
+                           boost::container::dtl::is_nothrow_swappable<Compare>::value)
    {  return static_cast<map&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -1723,7 +1724,8 @@ class multimap
    //! <b>Complexity</b>: Constant.
    inline multimap()
       BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<allocator_type>::value &&
-                        dtl::is_nothrow_default_constructible<Compare>::value)
+                        dtl::is_nothrow_default_constructible<Compare>::value &&
+                        dtl::is_nothrow_copy_constructible<Compare>::value)
       : base_t()
    {}
 
@@ -1939,7 +1941,7 @@ class multimap
    //!
    //! <b>Postcondition</b>: x is emptied.
    inline multimap(BOOST_RV_REF(multimap) x)
-      BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_constructible<Compare>::value)
+      BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_copy_constructible<Compare>::value)
       : base_t(BOOST_MOVE_BASE(base_t, x))
    {}
 
@@ -1978,7 +1980,7 @@ class multimap
    inline multimap& operator=(BOOST_RV_REF(multimap) x)
       BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
                           allocator_traits_type::is_always_equal::value) &&
-                           boost::container::dtl::is_nothrow_move_assignable<Compare>::value)
+                           boost::container::dtl::is_nothrow_swappable<Compare>::value)
    {  return static_cast<multimap&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)

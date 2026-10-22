@@ -425,6 +425,9 @@ int main()
    if (!test_try_emplace_std_sequence())
       return 1;
 
+   if (!test::test_comparator_operations< flat_map<int, int>, flat_multimap<int, int> >())
+      return 1;
+
    if (!test::test_function_pointer_comparator
          < flat_map<int, int, bool(*)(int, int)>
          , flat_multimap<int, int, bool(*)(int, int)>

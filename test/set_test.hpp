@@ -16,6 +16,8 @@
 #include "check_equal_containers.hpp"
 #include "print_container.hpp"
 #include "movable_int.hpp"
+#include "throwing_utilities.hpp"
+#include <boost/move/detail/meta_utils.hpp>   //declval
 #include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/make_unique.hpp>
@@ -1229,6 +1231,105 @@ bool test_function_pointer_comparator()
 {
    return test_function_pointer_comparator_for<SetType>()
        && test_function_pointer_comparator_for<MultisetType>();
+}
+
+//Replaces the comparator of a set type (set has four template parameters,
+//flat_set three)
+template<class Container, class NewCompare>
+struct rebind_set_compare;
+
+template<template<class, class, class> class Cont, class K, class C, class A, class N>
+struct rebind_set_compare<Cont<K, C, A>, N>
+{  typedef Cont<K, N, A> type;  };
+
+template<template<class, class, class, class> class Cont, class K, class C, class A, class O, class N>
+struct rebind_set_compare<Cont<K, C, A, O>, N>
+{  typedef Cont<K, N, A, O> type;  };
+
+//The comparator in the default and move constructors and in the move assignment:
+//the destination gets the comparator of the source, the moved-from container
+//keeps a valid one, the exceptions of the comparator reach the caller and, with
+//a comparator that does not throw, the operations are noexcept.
+template<class SetType>
+bool test_comparator_operations_for()
+{
+   {
+      typedef typename rebind_set_compare<SetType, tagged_less<int> >::type C;
+      C s((tagged_less<int>(7)));
+      s.insert(typename C::value_type(3));
+      s.insert(typename C::value_type(1));
+      s.insert(typename C::value_type(2));
+      C d(boost::move(s));
+      if(s.key_comp().tag_ != 7 || d.key_comp().tag_ != 7 || d.size() != 3u || *d.begin() != 1)
+         return false;
+      s.insert(typename C::value_type(5));
+      s.insert(typename C::value_type(4));
+      if(s.size() != 2u || *s.begin() != 4)
+         return false;
+      C a((tagged_less<int>(3)));
+      a.insert(typename C::value_type(9));
+      a = boost::move(d);
+      if(a.key_comp().tag_ != 7 || a.size() != 3u || *a.begin() != 1)
+         return false;
+      if(d.key_comp().tag_ == -1)
+         return false;
+      d.clear();
+      d.insert(typename C::value_type(6));
+      if(d.size() != 1u)
+         return false;
+   }
+   #ifndef BOOST_NO_EXCEPTIONS
+   {
+      typedef throwing_less<int> compare_t;
+      typedef typename rebind_set_compare<SetType, compare_t>::type C;
+      C src, dst;
+      src.insert(typename C::value_type(1));
+      compare_t::throw_on_copy = true;
+      //The default constructor copies the comparator in some containers
+      BOOST_CONTAINER_TRY{
+         C c;
+         (void)c;
+      }
+      BOOST_CONTAINER_CATCH(int){}
+      BOOST_CONTAINER_CATCH_END
+      //The move constructor copies the comparator
+      bool thrown = false;
+      BOOST_CONTAINER_TRY{
+         C c(boost::move(src));
+      }
+      BOOST_CONTAINER_CATCH(int){
+         thrown = true;
+      }
+      BOOST_CONTAINER_CATCH_END
+      //The move assignment copies or swaps the comparator, depending on the
+      //container. If the exception passes a noexcept function, std::terminate
+      //runs and the test fails.
+      BOOST_CONTAINER_TRY{
+         dst = boost::move(src);
+      }
+      BOOST_CONTAINER_CATCH(int){}
+      BOOST_CONTAINER_CATCH_END
+      compare_t::throw_on_copy = false;
+      if(!thrown)
+         return false;
+   }
+   #endif
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+   {
+      using boost::move_detail::declval;
+      BOOST_CONTAINER_STATIC_ASSERT(( noexcept(SetType()) ));
+      BOOST_CONTAINER_STATIC_ASSERT(( noexcept(SetType(declval<SetType>())) ));
+      BOOST_CONTAINER_STATIC_ASSERT(( noexcept(declval<SetType&>() = declval<SetType>()) ));
+   }
+   #endif
+   return true;
+}
+
+template<class SetType, class MultisetType>
+bool test_comparator_operations()
+{
+   return test_comparator_operations_for<SetType>()
+       && test_comparator_operations_for<MultisetType>();
 }
 
 }  //namespace test{

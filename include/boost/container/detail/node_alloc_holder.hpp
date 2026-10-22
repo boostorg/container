@@ -333,17 +333,14 @@ struct node_alloc_holder
 
    explicit node_alloc_holder(BOOST_RV_REF(node_alloc_holder) x)
       : NodeAlloc(boost::move(BOOST_MOVE_TO_LV(x).node_alloc()))
-   {  this->icont().swap(x.icont());  }
+      , m_icont(boost::move(BOOST_MOVE_TO_LV(x).icont()))
+   {}
 
    explicit node_alloc_holder(const intrusive_key_compare &c)
       : m_icont(c)
    {}
 
    //helpers for move assignments
-   explicit node_alloc_holder(BOOST_RV_REF(node_alloc_holder) x, const intrusive_key_compare &c)
-      : NodeAlloc(boost::move(BOOST_MOVE_TO_LV(x).node_alloc())), m_icont(c)
-   {  this->icont().swap(x.icont());  }
-
    explicit node_alloc_holder(BOOST_RV_REF(node_alloc_holder) x, const intrusive_bucket_traits& bt, const val_hasher &hf, const val_equal &eql)
       : NodeAlloc(boost::move(BOOST_MOVE_TO_LV(x).node_alloc()))
       , m_icont( bt

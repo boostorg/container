@@ -253,8 +253,7 @@ class flat_map
    //! <b>Effects</b>: Default constructs an empty flat_map.
    //!
    //! <b>Complexity</b>: Constant.
-   inline flat_map() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<AllocatorOrContainer>::value &&
-                                                            dtl::is_nothrow_default_constructible<Compare>::value)
+   inline flat_map() BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<impl_tree_t>::value)
       : m_flat_tree()
    {}
 
@@ -496,7 +495,7 @@ class flat_map
    //!
    //! <b>Postcondition</b>: x is emptied.
    inline flat_map(BOOST_RV_REF(flat_map) x)
-      BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_constructible<Compare>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_constructible<impl_tree_t>::value)
       : m_flat_tree(boost::move(x.m_flat_tree))
    {}
 
@@ -531,9 +530,7 @@ class flat_map
    //!   propagate_on_container_move_assignment is true or
    //!   this->get>allocator() == x.get_allocator(). Linear otherwise.
    inline flat_map& operator=(BOOST_RV_REF(flat_map) x)
-      BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
-                          allocator_traits_type::is_always_equal::value) &&
-                           boost::container::dtl::is_nothrow_move_assignable<Compare>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<impl_tree_t>::value)
    {  m_flat_tree = boost::move(x.m_flat_tree);   return *this;  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -2158,8 +2155,7 @@ class flat_multimap
    //!
    //! <b>Complexity</b>: Constant.
    inline flat_multimap()
-      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<AllocatorOrContainer>::value &&
-                        dtl::is_nothrow_default_constructible<Compare>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_default_constructible<impl_tree_t>::value)
       : m_flat_tree()
    {}
 
@@ -2407,7 +2403,7 @@ class flat_multimap
    //! <b>Postcondition</b>: x is emptied.
    inline
    flat_multimap(BOOST_RV_REF(flat_multimap) x)
-      BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_constructible<Compare>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_constructible<impl_tree_t>::value)
       : m_flat_tree(boost::move(x.m_flat_tree))
    {}
 
@@ -2440,9 +2436,7 @@ class flat_multimap
    //! <b>Complexity</b>: Constant.
    inline
    flat_multimap& operator=(BOOST_RV_REF(flat_multimap) x)
-      BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
-                          allocator_traits_type::is_always_equal::value) &&
-                           boost::container::dtl::is_nothrow_move_assignable<Compare>::value)
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<impl_tree_t>::value)
       {  m_flat_tree = boost::move(x.m_flat_tree);   return *this;  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)

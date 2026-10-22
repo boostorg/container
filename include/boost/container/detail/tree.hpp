@@ -677,8 +677,8 @@ class tree
    }
 
    inline tree(BOOST_RV_REF(tree) x)
-      BOOST_NOEXCEPT_IF(boost::container::dtl::is_nothrow_move_constructible<Compare>::value)
-      :  AllocHolder(BOOST_MOVE_BASE(AllocHolder, x), x.key_comp())
+      BOOST_NOEXCEPT_IF(dtl::is_nothrow_copy_constructible<key_compare>::value)
+      :  AllocHolder(BOOST_MOVE_BASE(AllocHolder, x))
    {}
 
    inline tree(const tree& x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
@@ -736,10 +736,12 @@ class tree
       return *this;
    }
 
+   //The resources of x are taken with the Intrusive move assignment, which swaps
+   //the comparators: x gets the comparator of *this
    tree& operator=(BOOST_RV_REF(tree) x)
       BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
                           allocator_traits_type::is_always_equal::value) &&
-                           boost::container::dtl::is_nothrow_move_assignable<Compare>::value)
+                           boost::container::dtl::is_nothrow_swappable<Compare>::value)
    {
       if (BOOST_LIKELY(this != &x)) {
          //We know resources can be transferred at comiple time if both allocators are
