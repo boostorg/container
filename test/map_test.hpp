@@ -1885,7 +1885,7 @@ bool test_comparator_operations_for()
       a = boost::move(d);
       if(a.key_comp().tag_ != 7 || a.size() != 3u || a.begin()->first != 1)
          return false;
-      if(d.key_comp().tag_ == -1)
+      if(d.key_comp().tag_ != 7)
          return false;
       d.clear();
       d.insert(typename C::value_type(6, 6));
@@ -1906,25 +1906,23 @@ bool test_comparator_operations_for()
       }
       BOOST_CONTAINER_CATCH(int){}
       BOOST_CONTAINER_CATCH_END
-      //The move constructor copies the comparator
-      bool thrown = false;
+      bool thrown_ctor = false, thrown_assign = false;
       BOOST_CONTAINER_TRY{
          C c(boost::move(src));
       }
       BOOST_CONTAINER_CATCH(int){
-         thrown = true;
+         thrown_ctor = true;
       }
       BOOST_CONTAINER_CATCH_END
-      //The move assignment copies or swaps the comparator, depending on the
-      //container. If the exception passes a noexcept function, std::terminate
-      //runs and the test fails.
       BOOST_CONTAINER_TRY{
          dst = boost::move(src);
       }
-      BOOST_CONTAINER_CATCH(int){}
+      BOOST_CONTAINER_CATCH(int){
+         thrown_assign = true;
+      }
       BOOST_CONTAINER_CATCH_END
       compare_t::throw_on_copy = false;
-      if(!thrown)
+      if(!thrown_ctor || !thrown_assign)
          return false;
    }
    #endif

@@ -2973,6 +2973,7 @@ collect them containers and build [*Boost.Container], a library targeted to a wi
    * [@https://github.com/boostorg/container/issues/333 GitHub #333: ['"Default_init results in a memset with GCC16"]] (documented, see the note in [link container.extended_functionality.default_initialialization Default initialization]).
    * [@https://github.com/boostorg/container/issues/344 GitHub #344: ['"Build break on Windows ARM64EC near the definition of the BOOST_CONTAINER_PREFETCH macro"]].
    * [@https://github.com/boostorg/container/issues/346 GitHub #346: ['"Regression: Invalid assertion in string assign (and probably other functions)"]].
+   * [@https://github.com/boostorg/container/issues/351 GitHub #351: ['"vector<X>::erase()-from-middle leaks for X in {basic_string, deque, stable_vector}"]].
 
 [endsect]
 

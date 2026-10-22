@@ -692,11 +692,11 @@ class tree
    tree(BOOST_RV_REF(tree) x, const BOOST_CONTAINER_DOC1ST(allocator_type, typename dtl::type_identity<allocator_type>::type) &a)
       BOOST_NOEXCEPT_IF(allocator_traits_type::is_always_equal::value &&
                        dtl::is_nothrow_copy_constructible<key_compare>::value &&
-                       dtl::is_nothrow_swappable<key_compare>::value)
+                       dtl::is_nothrow_copy_assignable<key_compare>::value)
       :  AllocHolder(x.key_comp(), a)
    {
       if(this->node_alloc() == x.node_alloc()){
-         this->icont().swap(x.icont());
+         this->icont().move_assign_unlink(x.icont());
       }
       else{
          this->icont().clone_from
@@ -736,12 +736,12 @@ class tree
       return *this;
    }
 
-   //The resources of x are taken with the Intrusive move assignment, which swaps
-   //the comparators: x gets the comparator of *this
+   //The resources of x are taken with the Intrusive move assignment, which copies
+   //the comparator.
    tree& operator=(BOOST_RV_REF(tree) x)
       BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
                           allocator_traits_type::is_always_equal::value) &&
-                           boost::container::dtl::is_nothrow_swappable<Compare>::value)
+                           boost::container::dtl::is_nothrow_copy_assignable<Compare>::value)
    {
       if (BOOST_LIKELY(this != &x)) {
          //We know resources can be transferred at comiple time if both allocators are
@@ -956,21 +956,7 @@ class tree
       //Move allocator if needed
       this->AllocHolder::move_assign_alloc(x);
       //Obtain resources
-      BOOST_IF_CONSTEXPR(boost::container::dtl::is_nothrow_swappable<Compare>::value){
-         this->icont() = boost::move(x.icont());
-      }
-      else{
-         BOOST_CONTAINER_TRY{
-            this->icont() = boost::move(x.icont());
-         }
-         BOOST_CONTAINER_CATCH(...){
-            //Only the comparator swap can throw: a tree can have the comparator of the other tree
-            this->clear();
-            x.clear();
-            BOOST_CONTAINER_RETHROW
-         }
-         BOOST_CONTAINER_CATCH_END
-      }
+      this->icont().move_assign_unlink(x.icont());
    }
 
    void priv_move_assign(BOOST_RV_REF(tree) x, dtl::bool_<false> /*steal_resources*/)

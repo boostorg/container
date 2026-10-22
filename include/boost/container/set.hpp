@@ -381,7 +381,7 @@ class set
    inline set& operator=(BOOST_RV_REF(set) x)
       BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
                           allocator_traits_type::is_always_equal::value) &&
-                           boost::container::dtl::is_nothrow_swappable<Compare>::value)
+                           boost::container::dtl::is_nothrow_copy_assignable<Compare>::value)
    {  return static_cast<set&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -1406,7 +1406,7 @@ class multiset
    inline multiset& operator=(BOOST_RV_REF(multiset) x)
       BOOST_NOEXCEPT_IF( (allocator_traits_type::propagate_on_container_move_assignment::value ||
                           allocator_traits_type::is_always_equal::value) &&
-                           boost::container::dtl::is_nothrow_swappable<Compare>::value)
+                           boost::container::dtl::is_nothrow_copy_assignable<Compare>::value)
    {  return static_cast<multiset&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
