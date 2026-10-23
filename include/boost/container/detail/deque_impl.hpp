@@ -106,6 +106,7 @@ struct deque_block_traits
    BOOST_STATIC_CONSTEXPR std::size_t min_block_size = 2u;
    BOOST_STATIC_CONSTEXPR std::size_t value = user_or_default_value < min_block_size ? min_block_size : user_or_default_value;
    BOOST_CONTAINER_STATIC_ASSERT_MSG(value <= max_stored_size_block_size, "BlockSize or BlockBytes is too big for the stored_size_type");
+   BOOST_STATIC_CONSTEXPR bool is_pow2 = (value & (value - 1u)) == 0u;
 };
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
@@ -163,6 +164,28 @@ class deque_iterator
    BOOST_CONSTEXPR inline static difference_type get_block_ssize() BOOST_NOEXCEPT_OR_NOTHROW
       { return difference_type((get_block_size())); }
 
+   private:
+   typedef deque_block_traits<value_type, BlockBytes, BlockSize, StoredSizeType> block_traits_t;
+
+   //Splits an element offset relative to the start of the current block into a node offset,
+   //rounded towards minus infinity (return value), and an offset inside that node (in_block_off)
+   BOOST_CONTAINER_FORCEINLINE static difference_type priv_split_off(difference_type offset, difference_type &in_block_off, dtl::true_)
+   {
+      in_block_off = offset & difference_type(block_traits_t::value - 1u);
+      //Right shift of a negative value is an arithmetic shift in all supported compilers
+      return offset >> difference_type(dtl::log2_pow2<block_traits_t::value>::value);
+   }
+
+   BOOST_CONTAINER_FORCEINLINE static difference_type priv_split_off(difference_type offset, difference_type &in_block_off, dtl::false_)
+   {
+      BOOST_CONSTEXPR_OR_CONST difference_type block_size = get_block_ssize();
+      const difference_type node_off = offset > 0 ? (offset / block_size)
+                                                  : (-difference_type((-offset - 1) / block_size) - 1);
+      in_block_off = difference_type(offset - node_off * block_size);
+      return node_off;
+   }
+
+   public:
    typedef Pointer                                                                  val_alloc_ptr;
    typedef typename boost::intrusive::pointer_traits<Pointer>::
       template rebind_pointer<Pointer>::type                                        index_pointer;
@@ -292,11 +315,9 @@ class deque_iterator
          if (offset >= 0 && offset < block_size)
             this->m_cur += difference_type(n);
          else {
-            const difference_type node_offset =
-               offset > 0 ? (offset / block_size)
-                          : (-difference_type((-offset - 1) / block_size) - 1);
-            this->m_node += node_offset;
-            this->m_cur = *this->m_node + difference_type(offset - node_offset * block_size);
+            difference_type in_block_off;
+            this->m_node += priv_split_off(offset, in_block_off, dtl::bool_<block_traits_t::is_pow2>());
+            this->m_cur = *this->m_node + in_block_off;
          }
       }
       return *this;
@@ -325,10 +346,9 @@ class deque_iterator
       if (offset >= 0 && offset < block_size)
          return this->m_cur[difference_type(n)];
       else {
-         const difference_type node_offset = offset > 0
-            ? (offset / block_size)
-            : (-difference_type((-offset - 1) / block_size) - 1);
-         return (this->m_node[node_offset]) [offset - node_offset * block_size];
+         difference_type in_block_off;
+         const difference_type node_offset = priv_split_off(offset, in_block_off, dtl::bool_<block_traits_t::is_pow2>());
+         return (this->m_node[node_offset]) [in_block_off];
       }
    }
 
@@ -898,8 +918,7 @@ class deque_base
          this->members_.m_map_size = static_cast<stored_size_type>(new_map_size);
       }
 
-      this->prot_start_update_node(new_nstart);
-      this->prot_finish_update_node(new_nstart + difference_type(old_active_nodes - 1u));
+      this->prot_shift_nodes(std::size_t(new_nstart - this->members_.m_map) - std::size_t(start_node - old_map));
    }
 
    void prot_reallocate_map_and_nodes  //is_reservable == false, single_ended == false
@@ -947,8 +966,7 @@ class deque_base
             this->members_.m_map_size = static_cast<stored_size_type>(new_map_size);
          }
 
-         this->prot_start_update_node(new_nstart);
-         this->prot_finish_update_node(new_nstart + difference_type(old_active_nodes - 1u));
+         this->prot_shift_nodes(std::size_t(new_nstart - this->members_.m_map) - std::size_t(start_node - old_map));
       }
 
       if(add_at_front)
@@ -1189,26 +1207,15 @@ class deque_base
    {  this->members_.m_finish_off = static_cast<stored_size_type>(this->members_.m_finish_off + n);  }
 
    //
-   //  Functions to obtain indexes from nodes
+   //  Functions to move start/finish nodes
    //
-   BOOST_CONTAINER_FORCEINLINE stored_size_type prot_non_null_node_to_off(ptr_alloc_ptr n) const
+   //Moves start and finish by node_delta nodes. The positions inside their blocks do not change.
+   //Unsigned arithmetic wraps, so a node_delta that represents a negative value is correct.
+   inline void prot_shift_nodes(std::size_t node_delta)
    {
-      BOOST_CONSTEXPR_OR_CONST std::size_t block_size  = deque_base::get_block_size();
-      return static_cast<stored_size_type>(std::size_t(n - this->members_.m_map)*block_size);
-   }
-
-   inline void prot_start_update_node(ptr_alloc_ptr new_start)
-   {
-      //iG: to-do: optimizable avoiding some division/remainder
-      std::size_t new_block_off = prot_non_null_node_to_off(new_start);
-      this->members_.set_start_off(static_cast<stored_size_type>(new_block_off + (members_.get_start_off() % get_block_size())));
-   }
-
-   inline void prot_finish_update_node(ptr_alloc_ptr new_finish)
-   {
-      //iG: to-do: optimizable avoiding some division/remainder
-      std::size_t new_block_off = prot_non_null_node_to_off(new_finish);
-      this->members_.m_finish_off = static_cast<stored_size_type>(new_block_off + (this->members_.m_finish_off % get_block_size()));
+      const std::size_t off_delta = node_delta*get_block_size();
+      this->members_.set_start_off(static_cast<stored_size_type>(members_.get_start_off() + off_delta));
+      this->members_.m_finish_off = static_cast<stored_size_type>(this->members_.m_finish_off + off_delta);
    }
 
    inline void prot_reset_finish_to_start()
