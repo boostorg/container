@@ -647,8 +647,7 @@ class flat_tree
       void swap(Data &d)
       {
          BOOST_CONTAINER_TRY{
-            value_compare& mycomp    = *this, & othercomp = d;
-            boost::adl_move_swap(mycomp, othercomp);
+            boost::adl_move_swap(this->get_comp(), d.get_comp());
             this->m_seq.swap(d.m_seq);
          }
          BOOST_CONTAINER_CATCH(...){
@@ -954,8 +953,8 @@ class flat_tree
    { return this->m_data.m_seq.max_size(); }
 
    inline void swap(flat_tree& other)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value )
+      BOOST_NOEXCEPT_IF(  boost::container::dtl::is_nothrow_swappable<container_type>::value
+                       && boost::container::dtl::is_nothrow_swappable<Compare>::value )
    {  this->m_data.swap(other.m_data);  }
 
    public:

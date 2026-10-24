@@ -1311,6 +1311,31 @@ bool test_comparator_operations_for()
       if(!thrown_ctor || !thrown_assign)
          return false;
    }
+   {
+      //swap uses the swap function of the comparator, which does not throw,
+      //and not its copy or move operations, which throw
+      typedef nothrow_swap_less<int> compare_t;
+      typedef typename rebind_set_compare<SetType, compare_t>::type C;
+      C a((compare_t(1))), b((compare_t(2)));
+      a.insert(typename C::value_type(1));
+      compare_t::throw_on_copy = true;
+      bool thrown = false;
+      BOOST_CONTAINER_TRY{
+         a.swap(b);
+         boost::adl_move_swap(a, b);
+         a.swap(b);
+      }
+      BOOST_CONTAINER_CATCH(int){
+         thrown = true;
+      }
+      BOOST_CONTAINER_CATCH_END
+      compare_t::throw_on_copy = false;
+      if(thrown || a.key_comp().tag_ != 2 || b.key_comp().tag_ != 1 || !a.empty() || b.size() != 1u)
+         return false;
+      #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+      BOOST_CONTAINER_STATIC_ASSERT(( noexcept(a.swap(b)) ));
+      #endif
+   }
    #endif
    #if !defined(BOOST_NO_CXX11_NOEXCEPT)
    {

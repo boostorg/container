@@ -384,6 +384,15 @@ class set
                            boost::container::dtl::is_nothrow_copy_assignable<Compare>::value)
    {  return static_cast<set&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Throws</b>: If x.swap(y) throws. It is noexcept if x.swap(y) is noexcept.
+   //!
+   //! <b>Complexity</b>: Constant.
+   inline friend void swap(set& x, set& y)
+      BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
+   {  x.swap(y);  }
+
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: Copy all elements from il to *this.
    //!
@@ -815,7 +824,9 @@ class set
 
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
-   //! <b>Throws</b>: Nothing.
+   //! <b>Throws</b>: If the swap of the comparison objects throws. It is noexcept
+   //!   if allocator_traits_type::is_always_equal::value is true and the swap of
+   //!   Compare is noexcept.
    //!
    //! <b>Complexity</b>: Constant.
    void swap(set& x)
@@ -1054,12 +1065,6 @@ class set
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>=(const set& x, const set& y);
 
-   //! <b>Effects</b>: x.swap(y)
-   //!
-   //! <b>Complexity</b>: Constant.
-   friend void swap(set& x, set& y)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 };
@@ -1408,6 +1413,15 @@ class multiset
                           allocator_traits_type::is_always_equal::value) &&
                            boost::container::dtl::is_nothrow_copy_assignable<Compare>::value)
    {  return static_cast<multiset&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
+
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Throws</b>: If x.swap(y) throws. It is noexcept if x.swap(y) is noexcept.
+   //!
+   //! <b>Complexity</b>: Constant.
+   inline friend void swap(multiset& x, multiset& y)
+      BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
+   {  x.swap(y);  }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! @copydoc ::boost::container::set::operator=(std::initializer_list<value_type>)
@@ -1776,12 +1790,6 @@ class multiset
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>=(const multiset& x, const multiset& y);
 
-   //! <b>Effects</b>: x.swap(y)
-   //!
-   //! <b>Complexity</b>: Constant.
-   friend void swap(multiset& x, multiset& y)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 };

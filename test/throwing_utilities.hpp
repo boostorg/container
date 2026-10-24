@@ -164,6 +164,45 @@ class throwing_less
    {  return l < r;  }
 };
 
+//A less-than comparator whose copy and move operations throw if throw_on_copy
+//is set. Its swap does not throw and is noexcept, so a container that swaps the
+//comparators with this swap does not throw. tag_ checks that the swap ran.
+template<class T>
+class nothrow_swap_less
+   : public throw_on_copy_flag< nothrow_swap_less<T> >
+{
+   typedef throw_on_copy_flag< nothrow_swap_less<T> > flag_t;
+
+   public:
+   explicit nothrow_swap_less(int tag = 0) BOOST_NOEXCEPT_OR_NOTHROW : tag_(tag) {}
+   nothrow_swap_less(const nothrow_swap_less &o) : flag_t(), tag_(o.tag_)
+   {  if(flag_t::throw_on_copy) throw int(1);  }
+   nothrow_swap_less &operator=(const nothrow_swap_less &o)
+   {
+      if(flag_t::throw_on_copy) throw int(1);
+      tag_ = o.tag_;
+      return *this;
+   }
+   #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+   nothrow_swap_less(nothrow_swap_less &&o) : flag_t(), tag_(o.tag_)
+   {  if(flag_t::throw_on_copy) throw int(1);  }
+   nothrow_swap_less &operator=(nothrow_swap_less &&o)
+   {
+      if(flag_t::throw_on_copy) throw int(1);
+      tag_ = o.tag_;
+      return *this;
+   }
+   #endif
+
+   friend void swap(nothrow_swap_less &a, nothrow_swap_less &b) BOOST_NOEXCEPT_OR_NOTHROW
+   {  const int t = a.tag_; a.tag_ = b.tag_; b.tag_ = t;  }
+
+   bool operator()(const T &l, const T &r) const
+   {  return l < r;  }
+
+   int tag_;
+};
+
 }  //namespace test {
 }  //namespace container {
 }  //namespace boost {

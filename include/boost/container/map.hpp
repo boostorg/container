@@ -410,6 +410,15 @@ class map
                            boost::container::dtl::is_nothrow_copy_assignable<Compare>::value)
    {  return static_cast<map&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Throws</b>: If x.swap(y) throws. It is noexcept if x.swap(y) is noexcept.
+   //!
+   //! <b>Complexity</b>: Constant.
+   inline friend void swap(map& x, map& y)
+      BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
+   {  x.swap(y);  }
+
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: Assign content of il to *this.
    //!
@@ -1282,7 +1291,9 @@ class map
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
-   //! <b>Throws</b>: Nothing.
+   //! <b>Throws</b>: If the swap of the comparison objects throws. It is noexcept
+   //!   if allocator_traits_type::is_always_equal::value is true and the swap of
+   //!   Compare is noexcept.
    //!
    //! <b>Complexity</b>: Constant.
    void swap(map& x)
@@ -1507,12 +1518,6 @@ class map
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>=(const map& x, const map& y);
 
-   //! <b>Effects</b>: x.swap(y)
-   //!
-   //! <b>Complexity</b>: Constant.
-   friend void swap(map& x, map& y)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
@@ -1983,6 +1988,15 @@ class multimap
                            boost::container::dtl::is_nothrow_copy_assignable<Compare>::value)
    {  return static_cast<multimap&>(this->base_t::operator=(BOOST_MOVE_BASE(base_t, x)));  }
 
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Throws</b>: If x.swap(y) throws. It is noexcept if x.swap(y) is noexcept.
+   //!
+   //! <b>Complexity</b>: Constant.
+   inline friend void swap(multimap& x, multimap& y)
+      BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
+   {  x.swap(y);  }
+
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: Assign content of il to *this.
    //!
@@ -2307,8 +2321,8 @@ class multimap
    {  return this->merge(static_cast<map<Key, T, C2, Allocator, Options>&>(source)); }
 
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
-   //! @copydoc ::boost::container::set::swap
-   void swap(multiset& x)
+   //! @copydoc ::boost::container::map::swap
+   void swap(multimap& x)
       BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
                                  && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
@@ -2510,12 +2524,6 @@ class multimap
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>=(const multimap& x, const multimap& y);
 
-   //! <b>Effects</b>: x.swap(y)
-   //!
-   //! <b>Complexity</b>: Constant.
-   friend void swap(multimap& x, multimap& y)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    #endif   //#if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 };

@@ -53,6 +53,22 @@ struct GetMapContainer
    };
 };
 
+//swap is noexcept if the swaps of the comparator and of the sequence are:
+//static_vector swaps element by element
+void test_swap_noexcept()
+{
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+   using boost::move_detail::declval;
+   using boost::container::dtl::is_nothrow_swappable;
+   typedef flat_map<int, int> plain_t;
+   typedef flat_map<int, int, std::less<int>, static_vector<std::pair<int, int>, 8> > static_t;
+   BOOST_CONTAINER_STATIC_ASSERT((  noexcept(declval<plain_t&>().swap(declval<plain_t&>())) ));
+   BOOST_CONTAINER_STATIC_ASSERT((  is_nothrow_swappable<plain_t>::value ));
+   BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<static_t&>().swap(declval<static_t&>())) ));
+   BOOST_CONTAINER_STATIC_ASSERT(( !is_nothrow_swappable<static_t>::value ));
+   #endif
+}
+
 int main()
 {
    using namespace boost::container::test;
@@ -118,6 +134,9 @@ int main()
          return 1;
       }
    }
+
+   test_swap_noexcept();
+
    {
       using namespace boost::container;
       using boost::container::dtl::is_same;

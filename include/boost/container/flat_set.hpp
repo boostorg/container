@@ -401,6 +401,15 @@ class flat_set
       BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<tree_t>::value)
    {  return static_cast<flat_set&>(this->tree_t::operator=(BOOST_MOVE_BASE(tree_t, x)));  }
 
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Throws</b>: If x.swap(y) throws. It is noexcept if x.swap(y) is noexcept.
+   //!
+   //! <b>Complexity</b>: Constant.
+   inline friend void swap(flat_set& x, flat_set& y)
+      BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
+   {  x.swap(y);  }
+
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! <b>Effects</b>: Copy all elements from il to *this.
    //!
@@ -864,12 +873,13 @@ class flat_set
 
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
-   //! <b>Throws</b>: Nothing.
+   //! <b>Throws</b>: If the swap of the comparison objects or of the sequences throws.
+   //!   It is noexcept if the swaps of Compare and sequence_type are noexcept.
    //!
    //! <b>Complexity</b>: Constant.
    void swap(flat_set& x)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
+      BOOST_NOEXCEPT_IF(  boost::container::dtl::is_nothrow_swappable<sequence_type>::value
+                       && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    //! <b>Effects</b>: erase(begin(),end()).
    //!
@@ -1146,12 +1156,6 @@ class flat_set
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>=(const flat_set& x, const flat_set& y);
 
-   //! <b>Effects</b>: x.swap(y)
-   //!
-   //! <b>Complexity</b>: Constant.
-   friend void swap(flat_set& x, flat_set& y)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    //! <b>Effects</b>: Extracts the internal sequence container.
    //!
@@ -1561,6 +1565,15 @@ class flat_multiset
       BOOST_NOEXCEPT_IF(dtl::is_nothrow_move_assignable<tree_t>::value)
    {  return static_cast<flat_multiset&>(this->tree_t::operator=(BOOST_MOVE_BASE(tree_t, x)));  }
 
+   //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Throws</b>: If x.swap(y) throws. It is noexcept if x.swap(y) is noexcept.
+   //!
+   //! <b>Complexity</b>: Constant.
+   inline friend void swap(flat_multiset& x, flat_multiset& y)
+      BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(x.swap(y)))
+   {  x.swap(y);  }
+
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
    //! @copydoc ::boost::container::flat_set::operator=(std::initializer_list<value_type>)
    flat_multiset& operator=(std::initializer_list<value_type> il)
@@ -1821,8 +1834,8 @@ class flat_multiset
 
    //! @copydoc ::boost::container::flat_set::swap
    void swap(flat_multiset& x)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
+      BOOST_NOEXCEPT_IF(  boost::container::dtl::is_nothrow_swappable<sequence_type>::value
+                       && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    //! @copydoc ::boost::container::flat_set::clear
    void clear() BOOST_NOEXCEPT_OR_NOTHROW;
@@ -1909,12 +1922,6 @@ class flat_multiset
    //! <b>Complexity</b>: Linear to the number of elements in the container.
    friend bool operator>=(const flat_multiset& x, const flat_multiset& y);
 
-   //! <b>Effects</b>: x.swap(y)
-   //!
-   //! <b>Complexity</b>: Constant.
-   friend void swap(flat_multiset& x, flat_multiset& y)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value );
 
    //! <b>Effects</b>: Extracts the internal sequence container.
    //!

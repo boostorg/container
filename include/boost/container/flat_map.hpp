@@ -1542,12 +1542,13 @@ class flat_map
 
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
-   //! <b>Throws</b>: Nothing.
+   //! <b>Throws</b>: If the swap of the comparison objects or of the sequences throws.
+   //!   It is noexcept if the swaps of Compare and sequence_type are noexcept.
    //!
    //! <b>Complexity</b>: Constant.
    inline void swap(flat_map& x)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value )
+      BOOST_NOEXCEPT_IF(  boost::container::dtl::is_nothrow_swappable<sequence_type>::value
+                       && boost::container::dtl::is_nothrow_swappable<Compare>::value )
    { m_flat_tree.swap(x.m_flat_tree); }
 
    //! <b>Effects</b>: erase(begin(),end()).
@@ -1870,6 +1871,8 @@ class flat_map
    {  return !(x < y);  }
 
    //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Throws</b>: If x.swap(y) throws. It is noexcept if x.swap(y) is noexcept.
    //!
    //! <b>Complexity</b>: Constant.
    inline friend void swap(flat_map& x, flat_map& y)
@@ -2968,12 +2971,13 @@ class flat_multimap
 
    //! <b>Effects</b>: Swaps the contents of *this and x.
    //!
-   //! <b>Throws</b>: Nothing.
+   //! <b>Throws</b>: If the swap of the comparison objects or of the sequences throws.
+   //!   It is noexcept if the swaps of Compare and sequence_type are noexcept.
    //!
    //! <b>Complexity</b>: Constant.
    inline void swap(flat_multimap& x)
-      BOOST_NOEXCEPT_IF(  allocator_traits_type::is_always_equal::value
-                                 && boost::container::dtl::is_nothrow_swappable<Compare>::value )
+      BOOST_NOEXCEPT_IF(  boost::container::dtl::is_nothrow_swappable<sequence_type>::value
+                       && boost::container::dtl::is_nothrow_swappable<Compare>::value )
    { m_flat_tree.swap(x.m_flat_tree); }
 
    //! <b>Effects</b>: erase(begin(),end()).
@@ -3288,6 +3292,8 @@ class flat_multimap
    {  return !(x < y);  }
 
    //! <b>Effects</b>: x.swap(y)
+   //!
+   //! <b>Throws</b>: If x.swap(y) throws. It is noexcept if x.swap(y) is noexcept.
    //!
    //! <b>Complexity</b>: Constant.
    inline friend void swap(flat_multimap& x, flat_multimap& y)
