@@ -1188,6 +1188,19 @@ void test_shrink_to_fit()
    s.shrink_to_fit();
    // shrink_to_fit is non-binding, but capacity should be >= size
    BOOST_TEST(s.capacity() >= s.size());
+
+   //Version 2 allocator: a long buffer is shrunk in place
+   typedef basic_string<char, std::char_traits<char>, boost::container::allocator<char, 2> > v2_string;
+   v2_string v(100u, 'a');
+   v.resize(60u);
+   v.shrink_to_fit();
+   BOOST_TEST(v.capacity() >= v.size());
+   BOOST_TEST(v == v2_string(60u, 'a'));
+   //and a short one goes to the internal buffer
+   v.resize(5u);
+   v.shrink_to_fit();
+   BOOST_TEST(v.capacity() >= v.size());
+   BOOST_TEST(v == v2_string(5u, 'a'));
 }
 
 //==============================================================================
