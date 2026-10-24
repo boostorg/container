@@ -18,6 +18,7 @@
 #include <boost/tuple/tuple.hpp>
 // std
 #include <memory>
+#include <new>
 #include <cstddef>
 
 #if defined(BOOST_CONTAINER_PAIR_TEST_HAS_HEADER_TUPLE)
@@ -53,6 +54,60 @@ bool mark_on_destructor::destroyed = false;
 #include <boost/container/scoped_allocator.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/detail/pair.hpp>
+
+#ifndef BOOST_NO_EXCEPTIONS
+
+//The destructor throws if throw_on_destroy is set
+struct throwing_dtor
+{
+   static bool throw_on_destroy;
+
+   //Not a throw expression in the destructor: GCC warns about it in C++03 (-Wc++11-compat)
+   static void do_throw()
+   {  throw int(1);  }
+
+   ~throwing_dtor() BOOST_NOEXCEPT_IF(false)
+   {  if(throw_on_destroy) do_throw();  }
+};
+
+bool throwing_dtor::throw_on_destroy = false;
+
+//destroy calls allocator_traits<OUTERMOST>::destroy: it is noexcept only if that call is,
+//and the exception of the destructor reaches the caller
+void test_destroy_throwing_destructor()
+{
+   using namespace boost::container;
+   typedef scoped_allocator_adaptor< propagation_test_allocator<int, 0> >           int_scoped;
+   typedef scoped_allocator_adaptor< propagation_test_allocator<throwing_dtor, 0> > throwing_scoped;
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+   using boost::move_detail::declval;
+   BOOST_CONTAINER_STATIC_ASSERT((  noexcept(declval<int_scoped&>().destroy(declval<int*>())) ));
+   BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<throwing_scoped&>().destroy(declval<throwing_dtor*>())) ));
+   #endif
+
+   union storage_t {  char c[sizeof(throwing_dtor)]; double d;  } storage;
+   throwing_dtor *const p = ::new(static_cast<void*>(&storage)) throwing_dtor;
+   throwing_dtor::throw_on_destroy = true;
+   bool thrown = false;
+   throwing_scoped sa;
+   BOOST_CONTAINER_TRY{
+      sa.destroy(p);
+   }
+   BOOST_CONTAINER_CATCH(int){
+      thrown = true;
+   }
+   BOOST_CONTAINER_CATCH_END
+   throwing_dtor::throw_on_destroy = false;
+   BOOST_TEST(thrown);
+   (void)sizeof(int_scoped);
+}
+
+#else
+
+void test_destroy_throwing_destructor()
+{}
+
+#endif   //BOOST_NO_EXCEPTIONS
 
 int main()
 {
@@ -1369,6 +1424,8 @@ int main()
          }
       }
    }
+
+   test_destroy_throwing_destructor();
 
    return ::boost::report_errors();
 }

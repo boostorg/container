@@ -42,6 +42,7 @@
 #include <boost/intrusive/detail/mpl.hpp>
 // move
 #include <boost/move/utility_core.hpp>
+#include <boost/move/detail/meta_utils.hpp>   //declval
 // move/detail
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #include <boost/move/detail/fwd_macros.hpp>
@@ -290,6 +291,33 @@ struct allocator_destroy_is_destructor
       !has_member_function_callable_with_destroy<Allocator, T* const>::value;
 };
 
+#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+
+#if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
+//True if allocator_traits<Allocator>::destroy(a, p) can not throw: a.destroy(p) is noexcept or,
+//without a destroy member, the destructor of T is noexcept.
+template<class Allocator, class T, bool = has_member_function_callable_with_destroy<Allocator, T* const>::value>
+struct is_nothrow_allocator_destroy
+{
+   BOOST_STATIC_CONSTEXPR bool value = noexcept(boost::move_detail::declval<Allocator&>().destroy(boost::move_detail::declval<T*>()));
+};
+
+template<class Allocator, class T>
+struct is_nothrow_allocator_destroy<Allocator, T, false>
+{
+   BOOST_STATIC_CONSTEXPR bool value = noexcept(boost::move_detail::declval<T&>().~T());
+};
+
+#if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
+#pragma GCC diagnostic pop
+#endif
+
+#endif   //#if !defined(BOOST_NO_CXX11_NOEXCEPT)
+
 //True if allocator_traits<Allocator>::destroy(a, p) does nothing for a T object: T is trivially
 //destructible and destroy only calls the destructor.
 template<class Allocator, class T>
@@ -534,8 +562,11 @@ struct allocator_traits
 
    //! <b>Effects</b>: calls <code>a.destroy(p)</code> if that call is well-formed;
    //! otherwise, invokes <code>p->~T()</code>.
+   //!
+   //! <b>Throws</b>: If the call throws. It is noexcept if the call is noexcept.
    template<class T>
-   inline static void destroy(Allocator &a, T*p) BOOST_NOEXCEPT_OR_NOTHROW
+   inline static void destroy(Allocator &a, T*p)
+      BOOST_NOEXCEPT_IF((dtl::is_nothrow_allocator_destroy<Allocator, T>::value))
    {
       typedef T* destroy_pointer;
       const bool value = boost::container::dtl::
@@ -649,7 +680,8 @@ struct allocator_traits
    #endif
 
    template<class T>
-   inline static void priv_destroy(dtl::true_type, Allocator &a, T* p) BOOST_NOEXCEPT_OR_NOTHROW
+   inline static void priv_destroy(dtl::true_type, Allocator &a, T* p)
+      BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(a.destroy(p)))
    {  a.destroy(p);  }
 
    #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
@@ -657,7 +689,8 @@ struct allocator_traits
    #endif
 
    template<class T>
-   inline static void priv_destroy(dtl::false_type, Allocator &, T* p) BOOST_NOEXCEPT_OR_NOTHROW
+   inline static void priv_destroy(dtl::false_type, Allocator &, T* p)
+      BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT(p->~T()))
    {  p->~T(); (void)p;  }
 
    #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)

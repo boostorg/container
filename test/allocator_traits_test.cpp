@@ -16,6 +16,7 @@
 #include <boost/container/detail/pair.hpp>
 #include <boost/move/utility_core.hpp>
 #include <memory>
+#include <new>
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #include <boost/move/detail/fwd_macros.hpp>
 #endif
@@ -279,6 +280,105 @@ void test_real_allocator_void_value_type()
    BOOST_TEST(v[1] == 2);
 }
 
+//An allocator with a noexcept destroy member that does not run the destructor
+template<class T>
+class NothrowDestroyAllocator
+   : public SimpleAllocator<T>
+{
+   public:
+   bool destroy_called_;
+
+   NothrowDestroyAllocator()
+      : destroy_called_(false)
+   {}
+
+   template <class U>
+   NothrowDestroyAllocator(NothrowDestroyAllocator<U>)
+      : destroy_called_(false)
+   {}
+
+   template<class U>
+   void destroy(U*) BOOST_NOEXCEPT_OR_NOTHROW
+   {  destroy_called_ = true;  }
+};
+
+//allocator_traits::destroy calls a.destroy(p) if the allocator has that member and
+//p->~T() otherwise. It is noexcept only if the expression that runs is.
+void test_destroy_dispatch()
+{
+   typedef boost::container::allocator_traits< SimpleAllocator<int> >          no_member_traits;
+   typedef boost::container::allocator_traits< ComplexAllocator<int> >         member_traits;
+   typedef boost::container::allocator_traits< NothrowDestroyAllocator<int> >  nothrow_member_traits;
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+   using boost::move_detail::declval;
+   BOOST_CONTAINER_STATIC_ASSERT((  noexcept(no_member_traits::destroy(declval<SimpleAllocator<int>&>(), declval<int*>())) ));
+   BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(member_traits::destroy(declval<ComplexAllocator<int>&>(), declval<int*>())) ));
+   BOOST_CONTAINER_STATIC_ASSERT((  noexcept(nothrow_member_traits::destroy(declval<NothrowDestroyAllocator<int>&>(), declval<int*>())) ));
+   #endif
+   int i = 0;
+   SimpleAllocator<int> a;
+   no_member_traits::destroy(a, &i);
+   NothrowDestroyAllocator<int> na;
+   nothrow_member_traits::destroy(na, &i);
+   BOOST_TEST(na.destroy_called_);
+   (void)sizeof(member_traits);
+}
+
+#ifndef BOOST_NO_EXCEPTIONS
+
+//The destructor throws if throw_on_destroy is set
+struct throwing_dtor
+{
+   static bool throw_on_destroy;
+
+   //Not a throw expression in the destructor: GCC warns about it in C++03 (-Wc++11-compat)
+   static void do_throw()
+   {  throw int(1);  }
+
+   ~throwing_dtor() BOOST_NOEXCEPT_IF(false)
+   {  if(throw_on_destroy) do_throw();  }
+};
+
+bool throwing_dtor::throw_on_destroy = false;
+
+//Without a destroy member, the exception of the destructor reaches the caller.
+//With a noexcept destroy member, the destructor is not called by allocator_traits.
+void test_destroy_throwing_destructor()
+{
+   typedef boost::container::allocator_traits< SimpleAllocator<throwing_dtor> >          no_member_traits;
+   typedef boost::container::allocator_traits< NothrowDestroyAllocator<throwing_dtor> >  nothrow_member_traits;
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+   using boost::move_detail::declval;
+   BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(no_member_traits::destroy(declval<SimpleAllocator<throwing_dtor>&>(), declval<throwing_dtor*>())) ));
+   BOOST_CONTAINER_STATIC_ASSERT((  noexcept(nothrow_member_traits::destroy(declval<NothrowDestroyAllocator<throwing_dtor>&>(), declval<throwing_dtor*>())) ));
+   #endif
+
+   union storage_t {  char c[sizeof(throwing_dtor)]; double d;  } storage;
+   throwing_dtor *const p = ::new(static_cast<void*>(&storage)) throwing_dtor;
+   throwing_dtor::throw_on_destroy = true;
+   NothrowDestroyAllocator<throwing_dtor> na;
+   nothrow_member_traits::destroy(na, p);
+   BOOST_TEST(na.destroy_called_);
+   bool thrown = false;
+   SimpleAllocator<throwing_dtor> a;
+   BOOST_CONTAINER_TRY{
+      no_member_traits::destroy(a, p);
+   }
+   BOOST_CONTAINER_CATCH(int){
+      thrown = true;
+   }
+   BOOST_CONTAINER_CATCH_END
+   throwing_dtor::throw_on_destroy = false;
+   BOOST_TEST(thrown);
+}
+
+#else
+
+void test_destroy_throwing_destructor()
+{}
+
+#endif   //BOOST_NO_EXCEPTIONS
+
 int main()
 {
    using namespace boost::container::dtl;
@@ -517,6 +617,9 @@ int main()
       }
 
    }
+
+   test_destroy_dispatch();
+   test_destroy_throwing_destructor();
 
    return ::boost::report_errors();
 }
