@@ -3933,6 +3933,66 @@ void test_default_constructor_noexcept()
    BOOST_TEST(d.size() == 1u);
 }
 
+//resize, resize_front and resize_back use the free capacity of the buffer
+//before they allocate a new buffer
+void test_resize_uses_free_capacity()
+{
+   typedef devector<int> devector_t;
+   const devector_t::size_type n = 100u;
+   //resize and resize_back
+   {
+      devector_t d;
+      d.reserve(n);
+      const devector_t::size_type cap = d.capacity();
+      const int *const buf = d.data() - d.front_free_capacity();
+      d.resize(n);
+      BOOST_TEST(d.capacity() == cap);
+      BOOST_TEST(d.data() - d.front_free_capacity() == buf);
+      BOOST_TEST(d.size() == n);
+      BOOST_TEST(d.front() == 0 && d.back() == 0);
+   }
+   {
+      devector_t d;
+      d.reserve(n);
+      const devector_t::size_type cap = d.capacity();
+      d.push_back(1);
+      d.resize_back(n, 2);
+      BOOST_TEST(d.capacity() == cap);
+      BOOST_TEST(d.size() == n);
+      BOOST_TEST(d.front() == 1 && d[1] == 2 && d.back() == 2);
+   }
+   //resize_front
+   {
+      devector_t d;
+      d.reserve(n);
+      const devector_t::size_type cap = d.capacity();
+      d.resize_front(n);
+      BOOST_TEST(d.capacity() == cap);
+      BOOST_TEST(d.size() == n);
+      BOOST_TEST(d.front() == 0 && d.back() == 0);
+   }
+   {
+      devector_t d;
+      d.reserve(n);
+      const devector_t::size_type cap = d.capacity();
+      d.push_back(1);
+      d.resize_front(n, 2);
+      BOOST_TEST(d.capacity() == cap);
+      BOOST_TEST(d.size() == n);
+      BOOST_TEST(d.front() == 2 && d[n-2u] == 2 && d.back() == 1);
+   }
+   {
+      devector_t d;
+      d.reserve(n);
+      const devector_t::size_type cap = d.capacity();
+      d.push_back(1);
+      d.resize_front(n, default_init);
+      BOOST_TEST(d.capacity() == cap);
+      BOOST_TEST(d.size() == n);
+      BOOST_TEST(d.back() == 1);
+   }
+}
+
 int main()
 {
    if(!test_unqualified_swap())
@@ -4037,6 +4097,8 @@ int main()
          boost::has_trivial_destructor_after_move<pointer>::value)
          , "has_trivial_destructor_after_move(std::allocator) test failed");
    }
+
+   test_resize_uses_free_capacity();
 
    return boost::report_errors();
 }
