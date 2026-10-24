@@ -243,6 +243,26 @@ int extended_allocator_test(const char *alloc_name)
       a.deallocate_many(chain);
    }
 
+   //deallocate_individual and deallocate_many leave the chain empty, so it can be
+   //used again: a stale chain would free its old nodes a second time
+   {
+      chain_t chain;
+      for(std::size_t r = 0; r != 2u; ++r){
+         a.allocate_individual(4u, chain);
+         a.deallocate_individual(chain);
+         if(!chain.empty()){
+            std::printf("  %s: deallocate_individual did not leave the chain empty\n", alloc_name);
+            return 1;
+         }
+         a.allocate_many(size_type(1u), 4u, chain);
+         a.deallocate_many(chain);
+         if(!chain.empty()){
+            std::printf("  %s: deallocate_many did not leave the chain empty\n", alloc_name);
+            return 1;
+         }
+      }
+   }
+
    //A request for 0 elements does not throw and leaves the chain empty
    {
       chain_t chain;

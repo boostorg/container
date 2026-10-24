@@ -358,6 +358,8 @@ class private_node_pool_impl
          ++it;
          this->priv_dealloc_node(pElem);
       }
+      //The nodes are freed: leave the chain empty, so that it can be used again
+      chain.clear();
    }
 
    //!Deallocates all the free blocks of memory. Never throws
