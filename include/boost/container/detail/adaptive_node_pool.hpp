@@ -97,7 +97,7 @@ template< std::size_t NodeSize
         , std::size_t OverheadPercent
         , std::size_t NodeAlign = 0
         >
-class shared_adaptive_node_pool
+class BOOST_SYMBOL_VISIBLE shared_adaptive_node_pool
    : public private_adaptive_node_pool
       <NodeSize, NodesPerBlock, MaxFreeBlocks, OverheadPercent, NodeAlign>
 {

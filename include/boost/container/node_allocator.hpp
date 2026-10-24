@@ -28,7 +28,6 @@
 #include <boost/container/detail/multiallocation_chain.hpp>
 #include <boost/container/detail/version_type.hpp>
 #include <boost/container/detail/dlmalloc.hpp>
-#include <boost/container/detail/singleton.hpp>
 
 #include <boost/assert.hpp>
 #include <cstddef>
@@ -157,8 +156,7 @@ class node_allocator
       if(count == 1){
          typedef dtl::shared_node_pool
             <sizeof(T), NodesPerBlock, dtl::alignment_of<T>::value> shared_pool_t;
-         typedef dtl::singleton_default<shared_pool_t> singleton_t;
-         return pointer(static_cast<T*>(singleton_t::instance().allocate_node()));
+         return pointer(static_cast<T*>(dtl::shared_pool_instance<shared_pool_t>().allocate_node()));
       }
       void *ret = dlmalloc_heap().allocate_aligned(dtl::alignment_of<T>::value, count*sizeof(T));
       if(BOOST_UNLIKELY(!ret))
@@ -175,8 +173,7 @@ class node_allocator
       if(count == 1){
          typedef dtl::shared_node_pool
             <sizeof(T), NodesPerBlock, dtl::alignment_of<T>::value> shared_pool_t;
-         typedef dtl::singleton_default<shared_pool_t> singleton_t;
-         singleton_t::instance().deallocate_node(ptr);
+         dtl::shared_pool_instance<shared_pool_t>().deallocate_node(ptr);
          return;
       }
       dlmalloc_heap().deallocate(ptr);
@@ -187,8 +184,7 @@ class node_allocator
    {
       typedef dtl::shared_node_pool
          <sizeof(T), NodesPerBlock, dtl::alignment_of<T>::value> shared_pool_t;
-      typedef dtl::singleton_default<shared_pool_t> singleton_t;
-      singleton_t::instance().deallocate_free_blocks();
+      dtl::shared_pool_instance<shared_pool_t>().deallocate_free_blocks();
    }
 
    BOOST_CONTAINER_NODISCARD
@@ -220,8 +216,7 @@ class node_allocator
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       typedef dtl::shared_node_pool
          <sizeof(T), NodesPerBlock, dtl::alignment_of<T>::value> shared_pool_t;
-      typedef dtl::singleton_default<shared_pool_t> singleton_t;
-      return (pointer)singleton_t::instance().allocate_node();
+      return (pointer)dtl::shared_pool_instance<shared_pool_t>().allocate_node();
    }
 
    //!Allocates many elements of size == 1.
@@ -231,8 +226,7 @@ class node_allocator
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       typedef dtl::shared_node_pool
          <sizeof(T), NodesPerBlock, dtl::alignment_of<T>::value> shared_pool_t;
-      typedef dtl::singleton_default<shared_pool_t> singleton_t;
-      singleton_t::instance().allocate_nodes(num_elements, chain);
+      dtl::shared_pool_instance<shared_pool_t>().allocate_nodes(num_elements, chain);
    }
 
    //!Deallocates memory previously allocated with allocate_one().
@@ -243,8 +237,7 @@ class node_allocator
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       typedef dtl::shared_node_pool
          <sizeof(T), NodesPerBlock, dtl::alignment_of<T>::value> shared_pool_t;
-      typedef dtl::singleton_default<shared_pool_t> singleton_t;
-      singleton_t::instance().deallocate_node(p);
+      dtl::shared_pool_instance<shared_pool_t>().deallocate_node(p);
    }
 
    void deallocate_individual(multiallocation_chain &chain) BOOST_NOEXCEPT_OR_NOTHROW
@@ -252,8 +245,7 @@ class node_allocator
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       typedef dtl::shared_node_pool
          <sizeof(T), NodesPerBlock, dtl::alignment_of<T>::value> shared_pool_t;
-      typedef dtl::singleton_default<shared_pool_t> singleton_t;
-      singleton_t::instance().deallocate_nodes(chain);
+      dtl::shared_pool_instance<shared_pool_t>().deallocate_nodes(chain);
    }
 
    //!Allocates many elements of size elem_size.

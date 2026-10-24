@@ -27,6 +27,7 @@
 #include <boost/container/detail/multiallocation_chain.hpp>
 #include <boost/container/detail/pool_common.hpp>
 #include <boost/container/detail/dlmalloc.hpp>
+#include <boost/container/detail/intermodule_globals.hpp>
 #include <cstddef>
 
 namespace boost{
@@ -39,6 +40,34 @@ struct node_slist_helper
 
 //It forwards to the global dlmalloc heap.
 //All its functions are static
+//Options of the pools shared by node_allocator and adaptive_pool (see
+//intermodule_globals.hpp). BOOST_SYMBOL_VISIBLE: required for cross-module
+//unification on ELF, as for the pool types.
+struct BOOST_SYMBOL_VISIBLE shared_pool_globals_options
+{
+   //The pools are deliberately immortal: destructors of user global objects
+   //(a global list<int, node_allocator<int> >) and atexit callbacks may still
+   //return nodes after Boost.Container's own static objects are gone, and the
+   //destructor of a pool frees its blocks. The blocks come from the immortal
+   //dlmalloc heap, and the OS reclaims everything at process exit.
+   static const bool destroy_at_exit = false;
+
+   //pin_constructing_module defaults to false: a pool is plain state (block
+   //lists, counters and a spin lock), without a vtable or a function pointer.
+   //The rendezvous key defaults to the names of the pool type and of these
+   //options, so every pool configuration has its own object.
+};
+
+BOOST_CONTAINER_INTERMODULE_ASSERT_VISIBLE(shared_pool_globals_options,
+   "boost::container::dtl::shared_pool_globals_options must be declared BOOST_SYMBOL_VISIBLE");
+
+//The process-wide instance of a shared pool type
+template<class SharedPool>
+BOOST_CONTAINER_FORCEINLINE SharedPool &shared_pool_instance()
+{
+   return intermodule_globals<SharedPool, shared_pool_globals_options>();
+}
+
 struct dlmalloc_segment_manager
 {
    typedef void * void_pointer;

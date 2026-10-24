@@ -28,7 +28,6 @@
 #include <boost/container/detail/multiallocation_chain.hpp>
 #include <boost/container/detail/mpl.hpp>
 #include <boost/container/detail/dlmalloc.hpp>
-#include <boost/container/detail/singleton.hpp>
 #include <boost/container/detail/placement_new.hpp>
 
 #include <boost/move/detail/force_ptr.hpp>
@@ -170,8 +169,7 @@ class adaptive_pool
          typedef typename dtl::shared_adaptive_node_pool
             < sizeof(T), NodesPerBlock, MaxFreeBlocks
             , OverheadPercent, dtl::alignment_of<T>::value> shared_pool_t;
-         typedef dtl::singleton_default<shared_pool_t> singleton_t;
-         return pointer(static_cast<T*>(singleton_t::instance().allocate_node()));
+         return pointer(static_cast<T*>(dtl::shared_pool_instance<shared_pool_t>().allocate_node()));
       }
       void *ret = dlmalloc_heap().allocate_aligned(dtl::alignment_of<T>::value, count*sizeof(T));
       if(BOOST_UNLIKELY(!ret))
@@ -188,8 +186,7 @@ class adaptive_pool
       if(count == 1){
          typedef dtl::shared_adaptive_node_pool
             <sizeof(T), NodesPerBlock, MaxFreeBlocks, OverheadPercent, dtl::alignment_of<T>::value> shared_pool_t;
-         typedef dtl::singleton_default<shared_pool_t> singleton_t;
-         singleton_t::instance().deallocate_node(ptr);
+         dtl::shared_pool_instance<shared_pool_t>().deallocate_node(ptr);
          return;
       }
       dlmalloc_heap().deallocate(ptr);
@@ -223,8 +220,7 @@ class adaptive_pool
    {
       typedef dtl::shared_adaptive_node_pool
          <sizeof(T), NodesPerBlock, MaxFreeBlocks, OverheadPercent, dtl::alignment_of<T>::value> shared_pool_t;
-      typedef dtl::singleton_default<shared_pool_t> singleton_t;
-      return (pointer)singleton_t::instance().allocate_node();
+      return (pointer)dtl::shared_pool_instance<shared_pool_t>().allocate_node();
    }
 
    //!Allocates many elements of size == 1.
@@ -234,10 +230,9 @@ class adaptive_pool
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       typedef dtl::shared_adaptive_node_pool
          <sizeof(T), NodesPerBlock, MaxFreeBlocks, OverheadPercent, dtl::alignment_of<T>::value> shared_pool_t;
-      typedef dtl::singleton_default<shared_pool_t> singleton_t;
-      singleton_t::instance().allocate_nodes(num_elements, static_cast<typename shared_pool_t::multiallocation_chain&>(chain));
+      dtl::shared_pool_instance<shared_pool_t>().allocate_nodes(num_elements, static_cast<typename shared_pool_t::multiallocation_chain&>(chain));
       //typename shared_pool_t::multiallocation_chain ch;
-      //singleton_t::instance().allocate_nodes(num_elements, ch);
+      //dtl::shared_pool_instance<shared_pool_t>().allocate_nodes(num_elements, ch);
       //chain.incorporate_after
          //(chain.before_begin(), (T*)&*ch.begin(), (T*)&*ch.last(), ch.size());
    }
@@ -250,8 +245,7 @@ class adaptive_pool
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       typedef dtl::shared_adaptive_node_pool
          <sizeof(T), NodesPerBlock, MaxFreeBlocks, OverheadPercent, dtl::alignment_of<T>::value> shared_pool_t;
-      typedef dtl::singleton_default<shared_pool_t> singleton_t;
-      singleton_t::instance().deallocate_node(p);
+      dtl::shared_pool_instance<shared_pool_t>().deallocate_node(p);
    }
 
    void deallocate_individual(multiallocation_chain &chain) BOOST_NOEXCEPT_OR_NOTHROW
@@ -259,10 +253,9 @@ class adaptive_pool
       BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
       typedef dtl::shared_adaptive_node_pool
          <sizeof(T), NodesPerBlock, MaxFreeBlocks, OverheadPercent, dtl::alignment_of<T>::value> shared_pool_t;
-      typedef dtl::singleton_default<shared_pool_t> singleton_t;
       //typename shared_pool_t::multiallocation_chain ch(&*chain.begin(), &*chain.last(), chain.size());
-      //singleton_t::instance().deallocate_nodes(ch);
-      singleton_t::instance().deallocate_nodes(chain);
+      //dtl::shared_pool_instance<shared_pool_t>().deallocate_nodes(ch);
+      dtl::shared_pool_instance<shared_pool_t>().deallocate_nodes(chain);
    }
 
    //!Allocates many elements of size elem_size.
@@ -302,8 +295,7 @@ class adaptive_pool
    {
       typedef dtl::shared_adaptive_node_pool
          <sizeof(T), NodesPerBlock, MaxFreeBlocks, OverheadPercent, dtl::alignment_of<T>::value> shared_pool_t;
-      typedef dtl::singleton_default<shared_pool_t> singleton_t;
-      singleton_t::instance().deallocate_free_blocks();
+      dtl::shared_pool_instance<shared_pool_t>().deallocate_free_blocks();
    }
 
    //!Swaps allocators. Does not throw. If each allocator is placed in a

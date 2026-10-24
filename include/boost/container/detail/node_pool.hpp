@@ -68,7 +68,7 @@ template< std::size_t NodeSize
         , std::size_t NodesPerBlock
         , std::size_t NodeAlign
         >
-class shared_node_pool
+class BOOST_SYMBOL_VISIBLE shared_node_pool
    : public private_node_pool<NodeSize, NodesPerBlock, NodeAlign>
 {
    private:
