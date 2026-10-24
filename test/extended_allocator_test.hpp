@@ -243,6 +243,19 @@ int extended_allocator_test(const char *alloc_name)
       a.deallocate_many(chain);
    }
 
+   //A request for 0 elements does not throw and leaves the chain empty
+   {
+      chain_t chain;
+      const size_type size_one = 1;
+      a.allocate_individual(0u, chain);
+      a.allocate_many(size_one, 0u, chain);
+      a.allocate_many(&size_one, size_type(0u), chain);
+      if(!chain.empty()){
+         std::printf("  %s: a request for 0 elements did not leave the chain empty\n", alloc_name);
+         return 1;
+      }
+   }
+
    //size(): the number of objects that a block obtained from allocate() can hold
    {
       const size_type k = 4;
