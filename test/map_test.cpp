@@ -11,6 +11,8 @@
 #include <boost/container/adaptive_pool.hpp>
 
 #include <map>
+#include <vector>
+#include <string>
 #include <iostream>
 
 #include "print_container.hpp"
@@ -411,6 +413,51 @@ bool test_unqualified_swap()
    return true;
 }
 
+//A key type that can only be explicitly constructed from int
+struct explicit_int_key
+{
+   int v;
+   explicit explicit_int_key(int x) : v(x) {}
+   friend bool operator<(const explicit_int_key &a, const explicit_int_key &b)
+   {  return a.v < b.v;  }
+};
+
+//The range constructor and range insert of unique maps accept pairs
+//whose first member is only convertible to the key type
+bool test_range_of_convertible_pairs()
+{
+   {
+      std::vector<std::pair<const char*, int> > v;
+      v.push_back(std::pair<const char*, int>("b", 2));
+      v.push_back(std::pair<const char*, int>("a", 1));
+      v.push_back(std::pair<const char*, int>("b", 3));
+      typedef map<std::string, int> map_t;
+      map_t m(v.begin(), v.end());
+      if(m.size() != 2u || m["a"] != 1 || m["b"] != 2)
+         return false;
+      map_t m2;
+      m2.insert(v.begin(), v.end());
+      m2.insert(v.begin(), v.end());
+      if(m2 != m)
+         return false;
+   }
+   {
+      std::vector<std::pair<int, int> > v;
+      v.push_back(std::pair<int, int>(2, 2));
+      v.push_back(std::pair<int, int>(1, 1));
+      v.push_back(std::pair<int, int>(2, 3));
+      typedef map<explicit_int_key, int> map_t;
+      map_t m(v.begin(), v.end());
+      if(m.size() != 2u || m.begin()->first.v != 1 || m.rbegin()->second != 2)
+         return false;
+      map_t m2;
+      m2.insert(v.begin(), v.end());
+      if(m2.size() != 2u || m2.begin()->first.v != 1 || m2.rbegin()->second != 2)
+         return false;
+   }
+   return true;
+}
+
 int main ()
 {
    if(!test_unqualified_swap())
@@ -688,6 +735,9 @@ int main ()
            , "has_trivial_destructor_after_move(multimap, std::allocator) test failed");
       }
    }
+
+   if(!test_range_of_convertible_pairs())
+      return 1;
 
    return 0;
 }

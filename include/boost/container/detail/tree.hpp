@@ -398,6 +398,23 @@ struct tree_key_of_value<boost::container::dtl::pair<T1, T2>, int>
 };
 
 
+//True if KeyOfValue gets the key of a V object without a conversion.
+template<class KeyOfValue, class V>
+struct tree_key_of_value_is_direct
+{
+   BOOST_STATIC_CONSTEXPR bool value = true;
+};
+
+//For maps, a pair whose first member is not the key type needs a conversion
+template<class Key, class V>
+struct tree_key_of_value_is_direct<select1st<Key>, V>
+{
+   BOOST_STATIC_CONSTEXPR bool value = is_same
+      < typename remove_const<Key>::type
+      , typename remove_const<typename remove_cvref<V>::type::first_type>::type
+      >::value;
+};
+
 //KeyMapped argument of the node handle: void for sets, key() and mapped() for maps
 template<class T, class KeyOfValue>
 struct tree_node_handle_key_mapped
@@ -923,7 +940,31 @@ class tree
    }
 
    template<class MovableConvertible>
-   std::pair<iterator,bool> insert_unique_convertible(BOOST_FWD_REF(MovableConvertible) v)
+   inline std::pair<iterator,bool> insert_unique_convertible(BOOST_FWD_REF(MovableConvertible) v)
+   {
+      return this->priv_insert_unique_convertible(boost::forward<MovableConvertible>(v)
+         , bool_<tree_key_of_value_is_direct<key_of_value_t, MovableConvertible>::value>());
+   }
+
+   template<class MovableConvertible>
+   inline iterator insert_unique_hint_convertible(const_iterator hint, BOOST_FWD_REF(MovableConvertible) v)
+   {
+      return this->priv_insert_unique_hint_convertible(hint, boost::forward<MovableConvertible>(v)
+         , bool_<tree_key_of_value_is_direct<key_of_value_t, MovableConvertible>::value>());
+   }
+
+   private:
+   //The key of v needs a conversion: create the node and get the key from it
+   template<class MovableConvertible>
+   inline std::pair<iterator,bool> priv_insert_unique_convertible(BOOST_FWD_REF(MovableConvertible) v, false_)
+   {  return this->emplace_unique(boost::forward<MovableConvertible>(v));  }
+
+   template<class MovableConvertible>
+   inline iterator priv_insert_unique_hint_convertible(const_iterator hint, BOOST_FWD_REF(MovableConvertible) v, false_)
+   {  return this->emplace_hint_unique(hint, boost::forward<MovableConvertible>(v));  }
+
+   template<class MovableConvertible>
+   std::pair<iterator,bool> priv_insert_unique_convertible(BOOST_FWD_REF(MovableConvertible) v, true_)
    {
       insert_commit_data data;
       const typename remove_cvref<MovableConvertible>::type & k = v;  //Support emulated rvalue references
@@ -936,7 +977,7 @@ class tree
    }
 
    template<class MovableConvertible>
-   iterator insert_unique_hint_convertible(const_iterator hint, BOOST_FWD_REF(MovableConvertible) v)
+   iterator priv_insert_unique_hint_convertible(const_iterator hint, BOOST_FWD_REF(MovableConvertible) v, true_)
    {
       BOOST_ASSERT((priv_is_linked)(hint));
       insert_commit_data data;
@@ -946,6 +987,8 @@ class tree
          return ret.first;
       return this->insert_unique_commit(boost::forward<MovableConvertible>(v), data);
    }
+
+   protected:
 
 
    private:
