@@ -80,9 +80,6 @@ bool test_allocate_throws_bad_alloc()
 
 int main ()
 {
-   if(!test_allocate_throws_bad_alloc< node_allocator<int> >() ||
-      !test_allocate_throws_bad_alloc< node_allocator<int, 64, 2> >())
-      return 1;
    if(test::list_test<MyList, true>())
       return 1;
    if(test::list_test<MyOList, true>())
@@ -109,6 +106,10 @@ int main ()
       return 1;
    //Over-aligned type (bigger than the dlmalloc alignment)
    if(test::extended_pool_allocator_test<onode_allocator_t>("node_allocator<overaligned>"))
+      return 1;
+
+   if(!test_allocate_throws_bad_alloc< node_allocator<int> >() ||
+      !test_allocate_throws_bad_alloc< node_allocator<int, 64, 2> >())
       return 1;
 
    return 0;

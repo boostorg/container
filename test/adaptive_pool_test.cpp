@@ -177,18 +177,6 @@ bool test_alignment_only_pool()
 
 int main ()
 {
-   if(!test_alignment_only_pool< adaptive_pool<void*, 1, 2, ADP_only_alignment, 2> >() ||
-      !test_alignment_only_pool< adaptive_pool<aligned_256, 1, 0, ADP_only_alignment, 2> >() ||
-      !test_alignment_only_pool< adaptive_pool<aligned_4096, 1, 0, ADP_only_alignment, 2> >() ||
-      !test_alignment_only_pool< private_adaptive_pool<void*, 1, 2, ADP_only_alignment, 2> >() ||
-      !test_alignment_only_pool< private_adaptive_pool<aligned_256, 1, 0, ADP_only_alignment, 2> >() ||
-      !test_alignment_only_pool< private_adaptive_pool<aligned_4096, 1, 0, ADP_only_alignment, 2> >())
-      return 1;
-   if(!test_allocate_throws_bad_alloc< adaptive_pool<int> >() ||
-      !test_allocate_throws_bad_alloc< adaptive_pool<int, 256, 2, 1, 2> >() ||
-      !test_allocate_throws_bad_alloc< private_adaptive_pool<int> >() ||
-      !test_allocate_throws_bad_alloc< private_adaptive_pool<int, 256, 2, 1, 2> >())
-      return 1;
    if(!test::test_void_allocator_conversions< adaptive_pool<void> >() ||
       !test::test_void_allocator_conversions< adaptive_pool<void, 256, 2, 1, 1> >() ||
       !test::test_void_allocator_conversions< private_adaptive_pool<void> >() ||
@@ -237,6 +225,19 @@ int main ()
    if(test::extended_pool_allocator_test<adapt_onode_allocator_t>("adaptive_pool<overaligned>"))
       return 1;
    if(test::extended_allocator_test< private_adaptive_pool<oint_t> >("private_adaptive_pool<overaligned>"))
+      return 1;
+
+   if(!test_alignment_only_pool< adaptive_pool<void*, 1, 2, ADP_only_alignment, 2> >() ||
+      !test_alignment_only_pool< adaptive_pool<aligned_256, 1, 0, ADP_only_alignment, 2> >() ||
+      !test_alignment_only_pool< adaptive_pool<aligned_4096, 1, 0, ADP_only_alignment, 2> >() ||
+      !test_alignment_only_pool< private_adaptive_pool<void*, 1, 2, ADP_only_alignment, 2> >() ||
+      !test_alignment_only_pool< private_adaptive_pool<aligned_256, 1, 0, ADP_only_alignment, 2> >() ||
+      !test_alignment_only_pool< private_adaptive_pool<aligned_4096, 1, 0, ADP_only_alignment, 2> >())
+      return 1;
+   if(!test_allocate_throws_bad_alloc< adaptive_pool<int> >() ||
+      !test_allocate_throws_bad_alloc< adaptive_pool<int, 256, 2, 1, 2> >() ||
+      !test_allocate_throws_bad_alloc< private_adaptive_pool<int> >() ||
+      !test_allocate_throws_bad_alloc< private_adaptive_pool<int, 256, 2, 1, 2> >())
       return 1;
 
    return 0;

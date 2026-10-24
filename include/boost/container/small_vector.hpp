@@ -312,8 +312,14 @@ struct small_vector_storage
    BOOST_STATIC_CONSTEXPR std::size_t sms_size = sizeof(storage_type)/sizeof(T);
 };
 
+//No elements but maintain the alignment of the storage to that internal_storage()
+//works as intended
 template<class T, std::size_t Alignment>
-struct small_vector_storage<T, 0u, Alignment>
+struct
+#if !defined(BOOST_NO_CXX11_ALIGNAS) || !defined(BOOST_MSVC)
+   BOOST_ALIGNMENT(Alignment)
+#endif
+   small_vector_storage<T, 0u, Alignment>
 {
    BOOST_STATIC_CONSTEXPR std::size_t sms_size = 0u;
 };

@@ -673,6 +673,40 @@ bool test_move_assignment_move_constructs_extra_elements()
 bool test_move_assignment_move_constructs_extra_elements() { return true; }
 #endif   //BOOST_NO_EXCEPTIONS
 
+//small_vector<T, 0> has no internal elements, but it has the alignment of the
+//internal storage: with an over-aligned T (or the inplace_alignment option) the
+//internal storage computation asserted on construction
+struct BOOST_ALIGNMENT(32) aligned_32
+{
+   int v;
+};
+
+template<class SmallVector>
+bool test_zero_capacity_alignment()
+{
+   typedef typename SmallVector::value_type value_type;
+   BOOST_CONTAINER_STATIC_ASSERT(( boost::container::dtl::alignment_of<SmallVector>::value >=
+                                   boost::container::dtl::alignment_of<value_type>::value ));
+   SmallVector a;
+   for(int i = 0; i != 10; ++i){
+      value_type v = value_type();
+      v.v = i;
+      a.push_back(v);
+   }
+   SmallVector b(a);
+   SmallVector c(boost::move(a));
+   a = b;
+   b.swap(c);
+   c.clear();
+   c.shrink_to_fit();
+   return a.size() == 10u && b.size() == 10u && c.empty() && b[9].v == 9;
+}
+
+struct int_holder
+{
+   int v;
+};
+
 int main()
 {
    if(!test_move_assignment_from_internal_buffer_can_throw<4>())
@@ -780,6 +814,16 @@ int main()
    {
       typedef boost::container::small_vector<int, 0, std::allocator<int> > cont;
       BOOST_CONTAINER_STATIC_ASSERT(!boost::has_trivial_destructor_after_move<cont>::value);
+   }
+
+   if(!test_zero_capacity_alignment< small_vector<aligned_32, 0> >())
+      return 1;
+   {
+      typedef small_vector_options< inplace_alignment<64u> >::type options_t;
+      typedef small_vector<int_holder, 0, void, options_t> sv_t;
+      BOOST_CONTAINER_STATIC_ASSERT(( boost::container::dtl::alignment_of<sv_t>::value >= 64u ));
+      if(!test_zero_capacity_alignment<sv_t>())
+         return 1;
    }
 
    return 0;
