@@ -1736,8 +1736,13 @@ class basic_string
 
    //! <b>Effects</b>: return *this = move(s);
    //!
+   //! <b>Throws</b>: If the move assignment throws: if allocator_traits_type::propagate_on_container_move_assignment
+   //!   is false and the allocators are not equal, the characters are copied, which can allocate.
+   //!
    //! <b>Returns</b>: *this
-   basic_string& assign(BOOST_RV_REF(basic_string) s) BOOST_NOEXCEPT_OR_NOTHROW
+   basic_string& assign(BOOST_RV_REF(basic_string) s)
+      BOOST_NOEXCEPT_IF(allocator_traits_type::propagate_on_container_move_assignment::value
+                        || allocator_traits_type::is_always_equal::value)
    {  return this->operator=(boost::move(s)); }
 
    //! <b>Effects</b>: Equivalent to return assign(sv.data(), sv.size()).

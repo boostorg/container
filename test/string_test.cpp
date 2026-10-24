@@ -2430,6 +2430,53 @@ bool test_unqualified_swap()
    return true;
 }
 
+//assign(basic_string&&) has the noexcept specification of operator=(basic_string&&):
+//without propagation and with unequal allocators the characters are copied
+bool test_move_assign_noexcept()
+{
+   //EqualIfEqualIds: allocators with different ids are unequal, and a block
+   //freed by an allocator that did not allocate it aborts the test
+   typedef test::propagation_test_allocator<char, false, false, false, false, true> copying_alloc_t;
+   typedef basic_string<char, std::char_traits<char>, copying_alloc_t>     copying_t;
+
+   #if !defined(BOOST_NO_CXX11_NOEXCEPT)
+   typedef test::propagation_test_allocator<char, false, true, false, false, true>  propagating_alloc_t;
+   typedef basic_string<char, std::char_traits<char>, propagating_alloc_t> propagating_t;
+   using boost::move_detail::declval;
+   BOOST_CONTAINER_STATIC_ASSERT((  noexcept(declval<propagating_t&>().assign(declval<propagating_t>())) ));
+   BOOST_CONTAINER_STATIC_ASSERT((  noexcept(declval<propagating_t&>() = declval<propagating_t>()) ));
+   BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<copying_t&>().assign(declval<copying_t>())) ));
+   BOOST_CONTAINER_STATIC_ASSERT(( !noexcept(declval<copying_t&>() = declval<copying_t>()) ));
+   #endif
+
+   //Longer than the internal buffer, so the characters are in an allocated block
+   const char *const text = "a string longer than the internal buffer of basic_string";
+   const copying_alloc_t a1, a2;
+   if(a1 == a2)
+      return false;
+   //Equal allocators: the block of the source is taken
+   {
+      copying_t dst("old", a1), src(text, a1);
+      const char *const src_data = src.data();
+      dst.assign(boost::move(src));
+      if(dst != text || dst.data() != src_data || dst.get_allocator() != a1)
+         return false;
+   }
+   //Unequal allocators: the characters are copied to a block of the allocator of dst
+   {
+      copying_t dst("old", a1), src(text, a2);
+      const char *const src_data = src.data();
+      dst.assign(boost::move(src));
+      if(dst != text || dst.data() == src_data || dst.get_allocator() != a1 || src.get_allocator() != a2)
+         return false;
+      //The source can be used again
+      src = "new";
+      if(src != "new")
+         return false;
+   }
+   return true;
+}
+
 int main()
 {
    if(!test_unqualified_swap())
@@ -2525,6 +2572,9 @@ int main()
    BOOST_TEST((test::test_void_allocator
          < basic_string<char, std::char_traits<char>, new_allocator<void> >
          , new_allocator<char> >()));
+
+   if(!test_move_assign_noexcept())
+      return 1;
 
 return boost::report_errors();
 }
