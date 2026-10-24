@@ -63,7 +63,11 @@ BOOST_CONTAINER_FORCEINLINE void* operator_new_raw_allocate(const std::size_t si
       return ::operator new(size, std::align_val_t(alignment));
       #else
       //C++ requires zero-sized allocations to return a non-null pointer
-      return aligned_allocate(alignment, !size ? 1 : size);
+      void *const p = aligned_allocate(alignment, !size ? 1 : size);
+      //As ::operator new, throw instead of returning null
+      if(BOOST_UNLIKELY(!p))
+         throw_bad_alloc();
+      return p;
       #endif
    }
    else{
