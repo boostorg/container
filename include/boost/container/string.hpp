@@ -1428,6 +1428,7 @@ class basic_string
             BOOST_ASSERT(!this->is_short());
             this->destroy_long();
             this->construct_short();
+            this->priv_short_size(long_size);
             this->alloc().deallocate(long_addr, long_storage);
          }
          else{

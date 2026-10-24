@@ -1189,6 +1189,15 @@ void test_shrink_to_fit()
    // shrink_to_fit is non-binding, but capacity should be >= size
    BOOST_TEST(s.capacity() >= s.size());
 
+   //From a dynamic buffer to the internal one: the size and the characters are kept
+   string l(100u, 'x');
+   l.resize(10u);
+   l.shrink_to_fit();
+   BOOST_TEST(l.size() == 10u);
+   BOOST_TEST(l == string(10u, 'x'));
+   l.push_back('y');
+   BOOST_TEST(l.size() == 11u && l[10] == 'y');
+
    //Version 2 allocator: a long buffer is shrunk in place
    typedef basic_string<char, std::char_traits<char>, boost::container::allocator<char, 2> > v2_string;
    v2_string v(100u, 'a');
