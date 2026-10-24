@@ -519,7 +519,8 @@ To avoid unbounded memory waste, Boost.Container's [classref boost::container::d
 
 However, this strategy has also some downsides:
 
-* Insertions at the extremes have no strong exception guarantee as data has to be move inside the existing buffer.
+* Insertions at the extremes have no strong exception guarantee as data has to be move inside the existing buffer
+  (except with the `relocate_never` option, see below).
 
 * Due to the memory relocation vs reallocation strategy explained above:
     * `capacity()` can no longer tell the maximum number of elements that the container can hold and, at the same time,
@@ -534,6 +535,20 @@ However, this strategy has also some downsides:
 
    * However the usual container invariant where `size() <= capacity()` does not hold. `size()` can be bigger than
     `capacity()` because elements can be always inserted at an extreme with free capacity without reallocation.
+
+The [classref boost::container::relocate_never relocate_never] option (see
+[link container.configurable_containers.configurable_devector Configurable devector]) disables the relocation:
+an insertion at a full extreme always allocates a new buffer. This gives different guarantees:
+
+* `push_back`, `push_front`, `emplace_back` and `emplace_front` give the strong exception guarantee.
+
+* `capacity()` is the size of the buffer. It does not tell the number of insertions that can be done
+  without a reallocation, because the free space of one extreme can not be used by insertions at the other extreme.
+
+* The guarantees against reallocation are given for each extreme: `front_free_capacity()` elements can be
+  inserted at the front and `back_free_capacity()` elements at the back without a reallocation.
+  Use `reserve_front(n)` or `reserve_back(n)` to get free space at one extreme. `reserve(n)` divides the free space
+  between both extremes, so it does not guarantee that `n - size()` insertions at one extreme will not reallocate.
 
 The following example illustrates the most common operations: efficient insertion and removal at both ends,
 random access over contiguous storage and the per-end `reserve_front`/`reserve_back` capacity hints:
@@ -2309,7 +2324,9 @@ the last template parameter and defined using the utility class
    new memory should be allocated or elements should relocated inside existing memory, when the free space
    is exhausted at one end of the container. With [classref boost::container::relocate_never relocate_never]
    the elements are never relocated: new memory is always allocated, and all the memory is usable
-   (`capacity()` is the size of the buffer).
+   (`capacity()` is the size of the buffer). Then the guarantees against reallocation are given for each end
+   (`front_free_capacity()` and `back_free_capacity()`), not for `capacity()`. See the
+   [link container.non_standard_containers.devector devector] chapter for more details.
 
 See the following example to see how [classref boost::container::devector_options devector_options] can be
 used to customize `devector`:

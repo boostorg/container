@@ -977,11 +977,18 @@ class devector
 
    /**
    * **Returns**: The *minimum* number of elements that can be inserted into devector using
-   *   position-based insertions without requiring a reallocation. Note that, unlike in 
-   *   typical sequence containers like `vector`, `capacity()`, `capacity()` can be smaller than `size()`.
+   *   position-based insertions without requiring a reallocation. Note that, unlike in
+   *   typical sequence containers like `vector`, `capacity()` can be smaller than `size()`.
    *   This can happen if a user inserts elements in a particular way (usually inserting at
    *   front up to front_free_capacity() and at back up to back_free_capacity()).
-   * 
+   *
+   *   With the `relocate_never` option, `capacity()` is the size of the buffer, and it does not
+   *   tell how many elements can be inserted without a reallocation. The elements are never moved
+   *   inside the buffer, so an insertion avoids a reallocation only if there is enough free space at the
+   *   end where the space for the new elements is made: the back for insertions at `end()`,
+   *   the front for insertions at `begin()` and the nearer end for other positions.
+   *   See front_free_capacity() and back_free_capacity().
+   *
    * **Complexity**: Constant.
    */
    BOOST_CONTAINER_NODISCARD inline
@@ -1019,10 +1026,10 @@ class devector
    }
 
    /**
-   * **Effects**: If `sz` is greater than the size of `*this`,
-   * additional value-initialized elements are inserted. Invalidates iterators
+   * **Effects**: Same as resize_back(sz): if `sz` is greater than the size of `*this`,
+   * additional value-initialized elements are inserted at the back. Invalidates iterators
    * if reallocation is needed. If `sz` is smaller than than the size of `*this`,
-   * elements are erased from the extremes.
+   * elements are erased from the back.
    *
    * **Requires**: T shall be [MoveInsertable] into *this and [DefaultConstructible].
    *
@@ -1042,7 +1049,7 @@ class devector
 
    /**
     * **Effects**: Same as resize(sz) but creates default-initialized
-    * value-initialized.
+    * elements instead of value-initialized elements.
     */
    inline void resize(size_type sz, default_init_t)
    {
@@ -1052,10 +1059,10 @@ class devector
    /**
    * [CopyInsertable]: http://en.cppreference.com/w/cpp/concept/CopyInsertable
    *
-   * **Effects**: If `sz` is greater than the size of `*this`,
-   * copies of `c` are inserted at extremes.
+   * **Effects**: Same as resize_back(sz, c): if `sz` is greater than the size of `*this`,
+   * copies of `c` are inserted at the back.
    * If `sz` is smaller than than the size of `*this`,
-   * elements are popped from the extremes.
+   * elements are popped from the back.
    *
    * **Postcondition**: `sz == size()`.
    *
@@ -1216,6 +1223,11 @@ class devector
     * without requiring reallocation, where `n` is `new_capacity - size()`,
     * if `n` is positive. Otherwise, there are no effects.
     * Invalidates iterators if reallocation is needed.
+    *
+    * **Note**: With the `relocate_never` option, the elements are never moved inside the buffer
+    * and the free space is divided between the front and the back. Then only front_free_capacity()
+    * elements can be inserted at the front and back_free_capacity() elements at the back without a
+    * reallocation. Use reserve_front() or reserve_back() to get free space at one end.
     *
     * **Requires**: `T` shall be [MoveInsertable] into `*this`.
     *
