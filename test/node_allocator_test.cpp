@@ -51,8 +51,38 @@ typedef boost::container::vector<oint_t, onode_allocator_t>    MyOVector;
 typedef boost::container::vector<int, node_allocator_v1_t>     MyVectorV1;
 typedef boost::container::vector<oint_t, onode_allocator_v1_t> MyOVectorV1;
 
+#ifndef BOOST_NO_EXCEPTIONS
+
+//allocate throws bad_alloc when the memory can not be allocated: max_size()
+//elements pass the size check, but no heap has that much memory
+template<class Allocator>
+bool test_allocate_throws_bad_alloc()
+{
+   Allocator a;
+   bool thrown = false;
+   BOOST_CONTAINER_TRY{
+      (void)a.allocate(a.max_size());
+   }
+   BOOST_CONTAINER_CATCH(const boost::container::bad_alloc_t &){
+      thrown = true;
+   }
+   BOOST_CONTAINER_CATCH_END
+   return thrown;
+}
+
+#else
+
+template<class Allocator>
+bool test_allocate_throws_bad_alloc()
+{  return true;  }
+
+#endif   //BOOST_NO_EXCEPTIONS
+
 int main ()
 {
+   if(!test_allocate_throws_bad_alloc< node_allocator<int> >() ||
+      !test_allocate_throws_bad_alloc< node_allocator<int, 64, 2> >())
+      return 1;
    if(test::list_test<MyList, true>())
       return 1;
    if(test::list_test<MyOList, true>())

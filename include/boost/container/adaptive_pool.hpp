@@ -482,7 +482,10 @@ class private_adaptive_pool
       if(count == 1){
          return pointer(static_cast<T*>(m_pool.allocate_node()));
       }
-      return static_cast<pointer>(dlmalloc_heap().allocate_aligned(dtl::alignment_of<T>::value, count*sizeof(T)));
+      void *ret = dlmalloc_heap().allocate_aligned(dtl::alignment_of<T>::value, count*sizeof(T));
+      if(BOOST_UNLIKELY(!ret))
+         boost::container::throw_bad_alloc();
+      return static_cast<pointer>(ret);
    }
 
    //!Deallocate allocated memory.

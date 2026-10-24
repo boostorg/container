@@ -116,8 +116,40 @@ bool test_private_pool_transfer()
    return true;
 }
 
+#ifndef BOOST_NO_EXCEPTIONS
+
+//allocate throws bad_alloc when the memory can not be allocated: max_size()
+//elements pass the size check, but no heap has that much memory
+template<class Allocator>
+bool test_allocate_throws_bad_alloc()
+{
+   Allocator a;
+   bool thrown = false;
+   BOOST_CONTAINER_TRY{
+      (void)a.allocate(a.max_size());
+   }
+   BOOST_CONTAINER_CATCH(const boost::container::bad_alloc_t &){
+      thrown = true;
+   }
+   BOOST_CONTAINER_CATCH_END
+   return thrown;
+}
+
+#else
+
+template<class Allocator>
+bool test_allocate_throws_bad_alloc()
+{  return true;  }
+
+#endif   //BOOST_NO_EXCEPTIONS
+
 int main ()
 {
+   if(!test_allocate_throws_bad_alloc< adaptive_pool<int> >() ||
+      !test_allocate_throws_bad_alloc< adaptive_pool<int, 256, 2, 1, 2> >() ||
+      !test_allocate_throws_bad_alloc< private_adaptive_pool<int> >() ||
+      !test_allocate_throws_bad_alloc< private_adaptive_pool<int, 256, 2, 1, 2> >())
+      return 1;
    if(!test::test_void_allocator_conversions< adaptive_pool<void> >() ||
       !test::test_void_allocator_conversions< adaptive_pool<void, 256, 2, 1, 1> >() ||
       !test::test_void_allocator_conversions< private_adaptive_pool<void> >() ||
