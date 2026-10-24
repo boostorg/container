@@ -1,190 +1,56 @@
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+include(BoostTest OPTIONAL RESULT_VARIABLE HAVE_BOOST_TEST)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  # warning level 4
-  add_compile_options(/W4)
+if(NOT HAVE_BOOST_TEST)
+  return()
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
+#Boost.Container plus the libraries the tests include directly
+set(BOOST_TEST_LINK_LIBRARIES Boost::container Boost::container_hash Boost::core
+    Boost::functional Boost::iterator Boost::tuple Boost::type_traits Boost::utility)
+set(BOOST_TEST_COMPILE_OPTIONS -Wall -Wextra -Wpedantic)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
+#Every .cpp file in this directory is a test, as in Jamfile.v2
+file(GLOB tests RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
+list(REMOVE_ITEM tests hub_api_test.cpp)
 
-if(NOT TARGET tests)
-  add_custom_target(tests)
-endif()
-
-set(PREFIX "boost_container_")
-set(LINK_LIBRARIES Boost::container Boost::included_test_exec_monitor)
-
-function(boost_container_add_test name source)
-  set(pname "${PREFIX}${name}")
-  add_executable(${pname} ${source} ${ARGN})
-  target_link_libraries(${pname} ${LINK_LIBRARIES})
-  add_test(NAME ${pname} COMMAND ${pname})
-  add_dependencies(tests ${pname})
-endfunction()
-
-boost_container_add_test(allocator_traits_test allocator_traits_test.cpp)
-boost_container_add_test(trivially_copyable_test trivially_copyable_test.cpp)
-boost_container_add_test(aligned_allocation_test aligned_allocation_test.cpp)
-boost_container_add_test(alloc_basic_test alloc_basic_test.cpp)
-boost_container_add_test(alloc_full_test alloc_full_test.cpp)
-boost_container_add_test(dlmalloc_alloc_basic_test dlmalloc_alloc_basic_test.cpp)
-boost_container_add_test(dlmalloc_alloc_full_test dlmalloc_alloc_full_test.cpp)
-boost_container_add_test(dlmalloc_basic_test dlmalloc_basic_test.cpp)
-boost_container_add_test(dlmalloc_config_test dlmalloc_config_test.cpp)
-boost_container_add_test(dlmalloc_full_test dlmalloc_full_test.cpp)
-boost_container_add_test(dlmalloc_memalign_test dlmalloc_memalign_test.cpp)
-boost_container_add_test(dlmalloc_multi_tu_test dlmalloc_multi_tu/dlmalloc_multi_tu_test.cpp dlmalloc_multi_tu/dlmalloc_multi_tu_test_other.cpp)
-boost_container_add_test(dlmalloc_upstream_compat_test dlmalloc_upstream_compat/dlmalloc_upstream_compat_test.cpp)
-boost_container_add_test(boost_iterator_comp_test boost_iterator_comp_test.cpp)
-boost_container_add_test(common_iterator_test common_iterator_test.cpp)
-boost_container_add_test(copy_move_algo_test copy_move_algo_test.cpp)
-boost_container_add_test(deque_options_test deque_options_test.cpp)
-boost_container_add_test(deque_test deque_test.cpp)
-boost_container_add_test(devector_options_test devector_options_test.cpp)
-boost_container_add_test(devector_test devector_test.cpp)
-boost_container_add_test(explicit_inst_deque_test explicit_inst_deque_test.cpp)
-boost_container_add_test(explicit_inst_devector_test explicit_inst_devector_test.cpp)
-boost_container_add_test(explicit_inst_flat_map_test explicit_inst_flat_map_test.cpp)
-boost_container_add_test(explicit_inst_flat_set_test explicit_inst_flat_set_test.cpp)
-boost_container_add_test(explicit_inst_list_test explicit_inst_list_test.cpp)
-boost_container_add_test(explicit_inst_map_test explicit_inst_map_test.cpp)
-boost_container_add_test(explicit_inst_set_test explicit_inst_set_test.cpp)
-boost_container_add_test(explicit_inst_slist_test explicit_inst_slist_test.cpp)
-boost_container_add_test(explicit_inst_small_vector_test explicit_inst_small_vector_test.cpp)
-boost_container_add_test(explicit_inst_stable_vector_test explicit_inst_stable_vector_test.cpp)
-boost_container_add_test(explicit_inst_static_vector_test explicit_inst_static_vector_test.cpp)
-boost_container_add_test(explicit_inst_string_test explicit_inst_string_test.cpp)
-boost_container_add_test(explicit_inst_vector_test explicit_inst_vector_test.cpp)
-boost_container_add_test(flat_map_adaptor_test flat_map_adaptor_test.cpp)
-boost_container_add_test(flat_map_test flat_map_test.cpp)
-boost_container_add_test(flat_set_adaptor_test flat_set_adaptor_test.cpp)
-boost_container_add_test(flat_set_test flat_set_test.cpp)
-boost_container_add_test(flat_tree_test flat_tree_test.cpp)
-boost_container_add_test(global_resource_test global_resource_test.cpp)
-boost_container_add_test(intermodule_globals_test intermodule_globals_test.cpp)
-boost_container_add_test(intermodule_many_globals_test intermodule_many_globals_test.cpp)
-boost_container_add_test(nest_test nest_test.cpp)
-boost_container_add_test(insert_vs_emplace_test insert_vs_emplace_test.cpp)
-boost_container_add_test(list_test list_test.cpp)
-boost_container_add_test(map_test map_test.cpp)
-boost_container_add_test(memory_resource_test memory_resource_test.cpp)
-boost_container_add_test(monotonic_buffer_resource_test monotonic_buffer_resource_test.cpp)
-boost_container_add_test(node_handle_test node_handle_test.cpp)
-boost_container_add_test(null_iterators_test null_iterators_test.cpp)
-boost_container_add_test(pair_test pair_test.cpp)
-boost_container_add_test(pmr_deque_test pmr_deque_test.cpp)
-boost_container_add_test(pmr_devector_test pmr_devector_test.cpp)
-boost_container_add_test(pmr_flat_map_test pmr_flat_map_test.cpp)
-boost_container_add_test(pmr_flat_set_test pmr_flat_set_test.cpp)
-boost_container_add_test(pmr_nest_test pmr_nest_test.cpp)
-boost_container_add_test(pmr_list_test pmr_list_test.cpp)
-boost_container_add_test(pmr_map_test pmr_map_test.cpp)
-boost_container_add_test(pmr_set_test pmr_set_test.cpp)
-boost_container_add_test(pmr_slist_test pmr_slist_test.cpp)
-boost_container_add_test(pmr_small_vector_test pmr_small_vector_test.cpp)
-boost_container_add_test(pmr_stable_vector_test pmr_stable_vector_test.cpp)
-boost_container_add_test(pmr_string_test pmr_string_test.cpp)
-boost_container_add_test(pmr_vector_test pmr_vector_test.cpp)
-boost_container_add_test(polymorphic_allocator_test polymorphic_allocator_test.cpp)
-boost_container_add_test(resource_adaptor_test resource_adaptor_test.cpp)
-boost_container_add_test(scoped_allocator_adaptor_test scoped_allocator_adaptor_test.cpp)
-boost_container_add_test(scoped_allocator_usage_test scoped_allocator_usage_test.cpp)
-boost_container_add_test(segtor_options_test segtor_options_test.cpp)
-boost_container_add_test(segtor_vector_test segtor_test.cpp)
-boost_container_add_test(set_test set_test.cpp)
-boost_container_add_test(slist_test slist_test.cpp)
-boost_container_add_test(small_vector_options_test small_vector_options_test.cpp)
-boost_container_add_test(small_vector_test small_vector_test.cpp)
-boost_container_add_test(stable_vector_test stable_vector_test.cpp)
-boost_container_add_test(static_vector_options_test static_vector_options_test.cpp)
-boost_container_add_test(static_vector_test static_vector_test.cpp)
-boost_container_add_test(string_test string_test.cpp)
-boost_container_add_test(string_view_compat_test string_view_compat_test.cpp)
-boost_container_add_test(synchronized_pool_resource_test synchronized_pool_resource_test.cpp)
-boost_container_add_test(throw_exception_test throw_exception_test.cpp)
-boost_container_add_test(tree_test tree_test.cpp)
-boost_container_add_test(unsynchronized_pool_resource_test unsynchronized_pool_resource_test.cpp)
-boost_container_add_test(uses_allocator_test uses_allocator_test.cpp)
-boost_container_add_test(vector_options_test vector_options_test.cpp)
-boost_container_add_test(vector_test vector_test.cpp)
-
-#These were only reachable through the b2 glob; the explicit CMake list had
-#drifted behind it.
-boost_container_add_test(adaptive_pool_test adaptive_pool_test.cpp)
-boost_container_add_test(hub_empty_sort_test hub_empty_sort_test.cpp)
-boost_container_add_test(hub_exception_safety_test hub_exception_safety_test.cpp)
-boost_container_add_test(hub_new_extended_alignment_test hub_new_extended_alignment_test.cpp)
-boost_container_add_test(hub_pocxx_test hub_pocxx_test.cpp)
-boost_container_add_test(hub_sort_test hub_sort_test.cpp)
-boost_container_add_test(hub_stability_test hub_stability_test.cpp)
-boost_container_add_test(hub_uses_allocator_test hub_uses_allocator_test.cpp)
-boost_container_add_test(nest_api_test nest_api_test.cpp)
-boost_container_add_test(new_allocator_test new_allocator_test.cpp)
-boost_container_add_test(new_delete_resource_test new_delete_resource_test.cpp)
-boost_container_add_test(node_allocator_test node_allocator_test.cpp)
-boost_container_add_test(node_pool_test node_pool_test.cpp)
-boost_container_add_test(windows_h_before_test windows_h_before_test.cpp)
-boost_container_add_test(windows_h_after_test windows_h_after_test.cpp)
-boost_container_add_test(pmr_hub_test pmr_hub_test.cpp)
-boost_container_add_test(string_options_test string_options_test.cpp)
-boost_container_add_test(uses_allocator_construction_test uses_allocator_construction_test.cpp)
+foreach(test IN LISTS tests)
+  boost_test(SOURCES ${test})
+endforeach()
 
 #hub_api_test needs Boost.Interprocess. Naming the target here is what makes
 #the superproject add it: its dependency scanner reads the "Boost::" names out
-#of this file, and CMake resolves alias targets at generate time, so the
-#library need not be added before this directory.
-boost_container_add_test(hub_api_test hub_api_test.cpp)
-target_link_libraries(${PREFIX}hub_api_test Boost::interprocess)
-find_package(Threads)
-if(TARGET Threads::Threads)
-  target_link_libraries(${PREFIX}hub_api_test Threads::Threads)
-endif()
+#of this file
+find_package(Threads REQUIRED)
+boost_test(SOURCES hub_api_test.cpp LINK_LIBRARIES Boost::interprocess Threads::Threads)
 
-#Two-translation-unit test for the polymorphic resources, the counterpart of
-#dlmalloc_multi_tu_test above.
-boost_container_add_test(pmr_multi_tu_test pmr_multi_tu/pmr_multi_tu_test.cpp
-                                          pmr_multi_tu/pmr_multi_tu_test_other.cpp)
+#Two-translation-unit tests: one instance must behave the same from both units
+boost_test(SOURCES dlmalloc_multi_tu/dlmalloc_multi_tu_test.cpp dlmalloc_multi_tu/dlmalloc_multi_tu_test_other.cpp)
+boost_test(SOURCES pmr_multi_tu/pmr_multi_tu_test.cpp pmr_multi_tu/pmr_multi_tu_test_other.cpp)
+
+#dlmalloc and the original dlmalloc_2_8_6.c driving one heap between them
+boost_test(SOURCES dlmalloc_upstream_compat/dlmalloc_upstream_compat_test.cpp)
 
 #Intermodule tests: an executable plus two shared libraries, each inlining its
-#own copy of Boost.Container. One per kind of process-wide state:
-#intermodule_globals<> itself, the dlmalloc heap and the PMR singletons.
-#The libraries are SHARED unconditionally, whatever BUILD_SHARED_LIBS says:
-#crossing a module boundary is the whole point. They export with
-#BOOST_SYMBOL_EXPORT, so no symbol auto-export is needed, and default
-#visibility must not be turned off here.
-function(boost_container_add_intermodule_test name dir stem)
+#own copy of Boost.Container. The libraries are SHARED whatever
+#BUILD_SHARED_LIBS says, as crossing a module boundary is the point of the test.
+#They export with BOOST_SYMBOL_EXPORT, so default visibility must be kept
+function(boost_container_intermodule_libs dir stem)
   foreach(lib a b)
-    add_library(${PREFIX}${name}_lib_${lib} SHARED ${dir}/${stem}_lib_${lib}.cpp)
-    target_link_libraries(${PREFIX}${name}_lib_${lib} ${LINK_LIBRARIES})
+    add_library(boost_container_${stem}_lib_${lib} SHARED EXCLUDE_FROM_ALL ${dir}/${stem}_lib_${lib}.cpp)
+    target_link_libraries(boost_container_${stem}_lib_${lib} PRIVATE ${BOOST_TEST_LINK_LIBRARIES})
   endforeach()
-  boost_container_add_test(${name} ${dir}/${stem}_test.cpp)
-  target_link_libraries(${PREFIX}${name}
-                        ${PREFIX}${name}_lib_a ${PREFIX}${name}_lib_b)
 endfunction()
 
-boost_container_add_intermodule_test(intermodule_test
-                                    intermodule_multi_tu intermodule)
-boost_container_add_test(intermodule_chain_test
-                         intermodule_multi_tu/intermodule_chain_test.cpp)
-target_link_libraries(${PREFIX}intermodule_chain_test
-                      ${PREFIX}intermodule_test_lib_a
-                      ${PREFIX}intermodule_test_lib_b)
-#The shared globals and the heap in the child of fork() (only where fork() works)
-boost_container_add_test(intermodule_fork_test
-                         intermodule_multi_tu/intermodule_fork_test.cpp)
-target_link_libraries(${PREFIX}intermodule_fork_test
-                      ${PREFIX}intermodule_test_lib_a
-                      ${PREFIX}intermodule_test_lib_b)
-boost_container_add_intermodule_test(pmr_intermodule_test
-                                    pmr_multi_tu pmr_intermodule)
-#The same for the process-wide dlmalloc instance, reached through
-#dl_globals(): one heap however many modules inline the header.
-boost_container_add_intermodule_test(dlmalloc_intermodule_test
-                                    dlmalloc_multi_tu dlmalloc_intermodule)
+boost_container_intermodule_libs(intermodule_multi_tu intermodule)
+boost_container_intermodule_libs(pmr_multi_tu pmr_intermodule)
+boost_container_intermodule_libs(dlmalloc_multi_tu dlmalloc_intermodule)
+
+set(intermodule_libs boost_container_intermodule_lib_a boost_container_intermodule_lib_b)
+boost_test(SOURCES intermodule_multi_tu/intermodule_test.cpp LINK_LIBRARIES ${intermodule_libs})
+boost_test(SOURCES intermodule_multi_tu/intermodule_chain_test.cpp LINK_LIBRARIES ${intermodule_libs})
+#fork() in the child process (the test does nothing where fork() is missing)
+boost_test(SOURCES intermodule_multi_tu/intermodule_fork_test.cpp LINK_LIBRARIES ${intermodule_libs})
+boost_test(SOURCES pmr_multi_tu/pmr_intermodule_test.cpp
+           LINK_LIBRARIES boost_container_pmr_intermodule_lib_a boost_container_pmr_intermodule_lib_b)
+boost_test(SOURCES dlmalloc_multi_tu/dlmalloc_intermodule_test.cpp
+           LINK_LIBRARIES boost_container_dlmalloc_intermodule_lib_a boost_container_dlmalloc_intermodule_lib_b)
