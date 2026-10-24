@@ -465,6 +465,31 @@ bool test_huge_size_length_error()
    return true;
 }
 
+bool test_reserve_capacity()
+{
+   //reserve_back and reserve_front reach the requested capacity also when the
+   //missing capacity is not bigger than the free slots
+   typedef deque<int, void, deque_options< reservable<true>, block_size<8u> >::type> deque_t;
+   deque_t d;
+   d.reserve_back(10u);
+   if(d.back_capacity() < 10u)
+      return false;
+   const deque_t::size_type c = d.back_capacity();
+   d.reserve_back(c + 5u);
+   if(d.back_capacity() < c + 5u)
+      return false;
+   d.push_back(1);
+   d.push_back(2);
+   d.reserve_front(13u);
+   if(d.front_capacity() < 13u)
+      return false;
+   const deque_t::size_type cf = d.front_capacity();
+   d.reserve_front(cf + 5u);
+   if(d.front_capacity() < cf + 5u)
+      return false;
+   return d.size() == 2u && d.front() == 1 && d.back() == 2;
+}
+
 int main ()
 {
    if(!test_huge_size_length_error<false>() || !test_huge_size_length_error<true>())
@@ -600,6 +625,9 @@ int main ()
                                boost::has_trivial_destructor_after_move<pointer>::value)
                              , "has_trivial_destructor_after_move(std::allocator) test failed");
    }
+
+   if(!test_reserve_capacity())
+      return 1;
 
    return 0;
 }

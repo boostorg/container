@@ -1644,8 +1644,9 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       (void)n;
       BOOST_IF_CONSTEXPR(is_reservable){
          const size_type cur_back_cap = this->back_capacity();
+         //The helper reserves free slots: the capacity is size() plus them
          if (cur_back_cap < n)
-            this->priv_reserve_elements_at_back(size_type(n - cur_back_cap) );
+            this->priv_reserve_elements_at_back(size_type(n - this->size()));
       }
    }
 
@@ -1655,8 +1656,9 @@ class deque_impl : protected deque_base<typename real_allocator<T, Allocator>::t
       (void)n;
       BOOST_IF_CONSTEXPR(is_reservable){
          const size_type cur_front_cap = this->front_capacity();
+         //The helper reserves free slots: the capacity is size() plus them
          if (cur_front_cap < n)
-            this->priv_reserve_elements_at_front(size_type(n - cur_front_cap) );
+            this->priv_reserve_elements_at_front(size_type(n - this->size()));
       }
    }
 

@@ -429,6 +429,24 @@ bool test_unqualified_swap()
    return true;
 }
 
+bool test_reserve_capacity()
+{
+   //reserve reaches the requested capacity also when the missing capacity
+   //is not bigger than the free slots
+   typedef segtor<int, void, segtor_options< reservable<true>, block_size<8u> >::type> segtor_t;
+   segtor_t s;
+   s.reserve(31u);
+   const segtor_t::size_type c = s.back_capacity();
+   if(c < 31u)
+      return false;
+   s.push_back(1);
+   s.reserve(c + 5u);
+   if(s.back_capacity() < c + 5u)
+      return false;
+   s.reserve(62u);
+   return s.back_capacity() >= 62u && s.size() == 1u && s.front() == 1;
+}
+
 int main ()
 {
    if(!test_unqualified_swap())
@@ -560,6 +578,9 @@ int main ()
                                boost::has_trivial_destructor_after_move<pointer>::value)
                              , "has_trivial_destructor_after_move(std::allocator) test failed");
    }
+
+   if(!test_reserve_capacity())
+      return 1;
 
    return 0;
 }
