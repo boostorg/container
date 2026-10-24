@@ -40,6 +40,7 @@ struct wrapped_iter_category<void, Iterator>
 //! Iterator adaptor that wraps an existing iterator and re-declares its
 //! \c iterator_category to \c Category.  All underlying iterator operations
 //! are forwarded; only the category seen by tag-dispatching algorithms changes.
+//! The operations throw if the operations of \c Iterator throw.
 //!
 //! When \c Category is \c void, the wrapped iterator preserves the original
 //! \c iterator_category from \c iterator_traits<Iterator>.
@@ -60,67 +61,67 @@ public:
    typedef typename iterator_traits<Iterator>::reference        reference;
    typedef typename detail_algo::wrapped_iter_category<Category, Iterator>::type iterator_category;
 
-   BOOST_CONTAINER_FORCEINLINE wrapped_iterator() BOOST_NOEXCEPT : m_it() {}
-   BOOST_CONTAINER_FORCEINLINE explicit wrapped_iterator(Iterator it) BOOST_NOEXCEPT : m_it(it) {}
+   BOOST_CONTAINER_FORCEINLINE wrapped_iterator() : m_it() {}
+   BOOST_CONTAINER_FORCEINLINE explicit wrapped_iterator(Iterator it) : m_it(it) {}
 
-   BOOST_CONTAINER_FORCEINLINE operator Iterator () const BOOST_NOEXCEPT {  return m_it; }
+   BOOST_CONTAINER_FORCEINLINE operator Iterator () const {  return m_it; }
 
    // Forward operations
-   BOOST_CONTAINER_FORCEINLINE reference operator*()  const BOOST_NOEXCEPT {  return *m_it;    }
-   BOOST_CONTAINER_FORCEINLINE pointer   operator->() const BOOST_NOEXCEPT {  return &(*m_it); }
+   BOOST_CONTAINER_FORCEINLINE reference operator*()  const {  return *m_it;    }
+   BOOST_CONTAINER_FORCEINLINE pointer   operator->() const {  return &(*m_it); }
 
-   BOOST_CONTAINER_FORCEINLINE wrapped_iterator& operator++() BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE wrapped_iterator& operator++()
    {  ++m_it; return *this; }
 
-   BOOST_CONTAINER_FORCEINLINE wrapped_iterator operator++(int) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE wrapped_iterator operator++(int)
    {  wrapped_iterator tmp(*this); ++m_it; return tmp; }
 
    // Bidirectional operations
-   BOOST_CONTAINER_FORCEINLINE wrapped_iterator& operator--() BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE wrapped_iterator& operator--()
    {  --m_it; return *this; }
 
-   BOOST_CONTAINER_FORCEINLINE wrapped_iterator operator--(int) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE wrapped_iterator operator--(int)
    {  wrapped_iterator tmp(*this); --m_it; return tmp; }
 
    // Random-access operations
-   BOOST_CONTAINER_FORCEINLINE wrapped_iterator& operator+=(difference_type n) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE wrapped_iterator& operator+=(difference_type n)
    {  m_it += n; return *this; }
 
-   BOOST_CONTAINER_FORCEINLINE wrapped_iterator& operator-=(difference_type n) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE wrapped_iterator& operator-=(difference_type n)
    {  m_it -= n; return *this; }
 
-   BOOST_CONTAINER_FORCEINLINE wrapped_iterator operator+(difference_type n) const BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE wrapped_iterator operator+(difference_type n) const
    {  wrapped_iterator tmp(*this); tmp += n; return tmp; }
 
-   BOOST_CONTAINER_FORCEINLINE wrapped_iterator operator-(difference_type n) const BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE wrapped_iterator operator-(difference_type n) const
    {  wrapped_iterator tmp(*this); tmp -= n; return tmp; }
 
-   BOOST_CONTAINER_FORCEINLINE reference operator[](difference_type n) const BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE reference operator[](difference_type n) const
    {  return m_it[n]; }
 
-   BOOST_CONTAINER_FORCEINLINE friend wrapped_iterator operator+(difference_type n, const wrapped_iterator& x) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE friend wrapped_iterator operator+(difference_type n, const wrapped_iterator& x)
    {  wrapped_iterator tmp(x); tmp += n; return tmp; }
 
-   BOOST_CONTAINER_FORCEINLINE friend difference_type operator-(const wrapped_iterator& x, const wrapped_iterator& y) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE friend difference_type operator-(const wrapped_iterator& x, const wrapped_iterator& y)
    {  return x.m_it - y.m_it; }
 
    // Comparisons
-   BOOST_CONTAINER_FORCEINLINE friend bool operator==(const wrapped_iterator& x, const wrapped_iterator& y) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE friend bool operator==(const wrapped_iterator& x, const wrapped_iterator& y)
    {  return x.m_it == y.m_it; }
 
-   BOOST_CONTAINER_FORCEINLINE friend bool operator!=(const wrapped_iterator& x, const wrapped_iterator& y) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE friend bool operator!=(const wrapped_iterator& x, const wrapped_iterator& y)
    {  return x.m_it != y.m_it; }
 
-   BOOST_CONTAINER_FORCEINLINE friend bool operator<(const wrapped_iterator& x, const wrapped_iterator& y) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE friend bool operator<(const wrapped_iterator& x, const wrapped_iterator& y)
    {  return x.m_it < y.m_it; }
 
-   BOOST_CONTAINER_FORCEINLINE friend bool operator>(const wrapped_iterator& x, const wrapped_iterator& y) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE friend bool operator>(const wrapped_iterator& x, const wrapped_iterator& y)
    {  return y < x; }
 
-   BOOST_CONTAINER_FORCEINLINE friend bool operator<=(const wrapped_iterator& x, const wrapped_iterator& y) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE friend bool operator<=(const wrapped_iterator& x, const wrapped_iterator& y)
    {  return !(y < x); }
 
-   BOOST_CONTAINER_FORCEINLINE friend bool operator>=(const wrapped_iterator& x, const wrapped_iterator& y) BOOST_NOEXCEPT
+   BOOST_CONTAINER_FORCEINLINE friend bool operator>=(const wrapped_iterator& x, const wrapped_iterator& y)
    {  return !(x < y); }
 };
 
@@ -131,7 +132,7 @@ public:
 template<class Category, class Iterator>
 BOOST_CONTAINER_FORCEINLINE
 wrapped_iterator<Iterator, Category>
-   make_wrapped_iterator(Iterator it) BOOST_NOEXCEPT
+   make_wrapped_iterator(Iterator it)
 {  return wrapped_iterator<Iterator, Category>(it); }
 
 } // namespace container
