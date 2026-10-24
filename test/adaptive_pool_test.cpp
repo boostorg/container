@@ -11,6 +11,7 @@
 #include <boost/container/list.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/adaptive_pool.hpp>
+#include <boost/move/detail/to_raw_pointer.hpp>
 #include "movable_int.hpp"
 #include "void_allocator_test.hpp"
 #include "list_test.hpp"
@@ -143,8 +144,46 @@ bool test_allocate_throws_bad_alloc()
 
 #endif   //BOOST_NO_EXCEPTIONS
 
+//Alignment-only pools whose header and nodes fill a power of two exactly: the
+//block must also hold the allocation payload, or it has no room for a node
+//(a division by zero when the pool computes the number of blocks to allocate)
+struct BOOST_ALIGNMENT(256) aligned_256
+{  char c[256];  };
+
+struct BOOST_ALIGNMENT(4096) aligned_4096
+{  char c[4096];  };
+
+template<class Allocator>
+bool test_alignment_only_pool()
+{
+   typedef typename Allocator::value_type value_type;
+   Allocator a;
+   value_type *p[4];
+   for(int i = 0; i != 4; ++i){
+      p[i] = boost::movelib::to_raw_pointer(a.allocate_one());
+      if(reinterpret_cast<std::size_t>(p[i]) % boost::container::dtl::alignment_of<value_type>::value)
+         return false;
+   }
+   for(int i = 0; i != 4; ++i){
+      a.deallocate_one(p[i]);
+   }
+   typename Allocator::multiallocation_chain chain;
+   a.allocate_individual(5u, chain);
+   if(chain.size() != 5u)
+      return false;
+   a.deallocate_individual(chain);
+   return true;
+}
+
 int main ()
 {
+   if(!test_alignment_only_pool< adaptive_pool<void*, 1, 2, ADP_only_alignment, 2> >() ||
+      !test_alignment_only_pool< adaptive_pool<aligned_256, 1, 0, ADP_only_alignment, 2> >() ||
+      !test_alignment_only_pool< adaptive_pool<aligned_4096, 1, 0, ADP_only_alignment, 2> >() ||
+      !test_alignment_only_pool< private_adaptive_pool<void*, 1, 2, ADP_only_alignment, 2> >() ||
+      !test_alignment_only_pool< private_adaptive_pool<aligned_256, 1, 0, ADP_only_alignment, 2> >() ||
+      !test_alignment_only_pool< private_adaptive_pool<aligned_4096, 1, 0, ADP_only_alignment, 2> >())
+      return 1;
    if(!test_allocate_throws_bad_alloc< adaptive_pool<int> >() ||
       !test_allocate_throws_bad_alloc< adaptive_pool<int, 256, 2, 1, 2> >() ||
       !test_allocate_throws_bad_alloc< private_adaptive_pool<int> >() ||

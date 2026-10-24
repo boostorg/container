@@ -1012,7 +1012,8 @@ template< class SizeType
         , bool AlignOnly>
 struct calculate_alignment_ct
 {
-   BOOST_STATIC_CONSTEXPR std::size_t initial_alignment     = upper_power_of_2_ct<SizeType, HdrSize + RealNodeSize*NodesPerBlock>::value;
+   //The block holds the allocation payload, the header and NodesPerBlock nodes
+   BOOST_STATIC_CONSTEXPR std::size_t initial_alignment     = upper_power_of_2_ct<SizeType, HdrSize + PayloadPerAllocation + RealNodeSize*NodesPerBlock>::value;
    BOOST_STATIC_CONSTEXPR std::size_t alignment     = NodeAlign > initial_alignment ? NodeAlign : initial_alignment;
    BOOST_STATIC_CONSTEXPR std::size_t num_subblocks = 0;
    BOOST_STATIC_CONSTEXPR std::size_t real_num_node = (alignment - PayloadPerAllocation - HdrSize)/RealNodeSize;
@@ -1299,7 +1300,8 @@ class private_adaptive_node_pool_impl_rt
 
       const size_type hdr_size = get_hdr_size(node_align);
       if(AlignOnly){
-         this->data_t::set_real_block_alignment(upper_power_of_2(hdr_size + this->get_real_node_size() * nodes_per_block));
+         //The block holds the allocation payload, the header and nodes_per_block nodes
+         this->data_t::set_real_block_alignment(upper_power_of_2(hdr_size + PayloadPerAllocation + this->get_real_node_size() * nodes_per_block));
          this->data_t::set_real_num_node((this->get_real_block_alignment() - PayloadPerAllocation - hdr_size)/this->get_real_node_size());
       }
       else{
