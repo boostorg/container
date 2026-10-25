@@ -2392,9 +2392,10 @@ class nest
          for(; ; ) {
             block_alloc_traits::construct(
                al(), boost::movelib::to_raw_pointer(pb->data() + n), *first);
-            ++first;
             ++size_;
             pb->mask |= pb->mask + 1;
+            //The element is counted before ++first, which can throw
+            ++first;
             if(pb->mask == full){
                blist.unlink_available(pb);
                break;
@@ -2415,8 +2416,10 @@ class nest
          BOOST_CONTAINER_TRY {
             for(;;) {
                block_alloc_traits::construct(al(), p + i, *first);
+               ++i;
+               //The element is counted before ++first, which can throw
                ++first;
-               if(++i == (int)N || first == last) break;
+               if(i == (int)N || first == last) break;
             }
          }
          BOOST_CONTAINER_CATCH(...) {
@@ -2476,16 +2479,16 @@ class nest
             for(mask_type bit = 1; bit; bit <<= 1, ++n) {
                if(pb->mask & bit) {
                   pb->data()[n] = *first;
-                  ++first;
                }
                else {
                   block_alloc_traits::construct(
                      al(), boost::movelib::to_raw_pointer(pb->data() + n), *first);
-                  ++first;
                   ++size_;
                   pb->mask |= bit;
                   if(pb->mask == full) blist.unlink_available(pb);
                }
+               //The element is counted before ++first, which can throw
+               ++first;
                if(first == last) goto exit;
             }
          }
