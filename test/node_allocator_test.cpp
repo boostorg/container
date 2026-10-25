@@ -53,20 +53,30 @@ typedef boost::container::vector<oint_t, onode_allocator_v1_t> MyOVectorV1;
 
 #ifndef BOOST_NO_EXCEPTIONS
 
-//allocate throws bad_alloc when the memory can not be allocated: max_size()
-//elements pass the size check, but no heap has that much memory
+//allocate throws bad_alloc when the memory can not be allocated. max_size()
+//elements pass the size check and need half of the address space. A 32-bit
+//process can get one such block (e.g. on a 64-bit Linux kernel), but never
+//two, so hold the first block and allocate again.
 template<class Allocator>
 bool test_allocate_throws_bad_alloc()
 {
+   typedef typename Allocator::pointer pointer;
    Allocator a;
+   pointer p0 = pointer();
+   pointer p1 = pointer();
    bool thrown = false;
    BOOST_CONTAINER_TRY{
-      (void)a.allocate(a.max_size());
+      p0 = a.allocate(a.max_size());
+      p1 = a.allocate(a.max_size());
    }
    BOOST_CONTAINER_CATCH(const boost::container::bad_alloc_t &){
       thrown = true;
    }
    BOOST_CONTAINER_CATCH_END
+   if(p1)
+      a.deallocate(p1, a.max_size());
+   if(p0)
+      a.deallocate(p0, a.max_size());
    return thrown;
 }
 
