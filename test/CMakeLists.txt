@@ -6,7 +6,7 @@ endif()
 
 #Boost.Container plus the libraries the tests include directly
 set(BOOST_TEST_LINK_LIBRARIES Boost::container Boost::container_hash Boost::core
-    Boost::functional Boost::iterator Boost::tuple Boost::type_traits Boost::utility)
+    Boost::iterator Boost::tuple Boost::type_traits Boost::utility)
 set(BOOST_TEST_COMPILE_OPTIONS -Wall -Wextra -Wpedantic)
 
 #Every .cpp file in this directory is a test, as in Jamfile.v2
