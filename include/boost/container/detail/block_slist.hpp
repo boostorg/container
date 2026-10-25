@@ -87,9 +87,6 @@ class block_slist_base
    public:
    #endif
 
-   ~block_slist_base()
-   {}
-
    void *allocate(std::size_t size, memory_resource &mr)
    {
       if(BOOST_UNLIKELY((size_t(-1) - header_size) < size))

@@ -126,9 +126,6 @@ class block_list_base
    public:
    #endif
 
-   ~block_list_base()
-   {}
-
    //Returns a block of size bytes aligned to alignment (at least max_align). The header
    //is placed just before the block. The upstream allocation starts "offset" bytes
    //before the block, so that the block keeps the alignment of the upstream allocation.

@@ -90,8 +90,6 @@ struct segduo
    T1 first;
    T2 second;
 
-   BOOST_CONTAINER_FORCEINLINE segduo() {}
-
    template<class U1, class U2>
    BOOST_CONTAINER_FORCEINLINE segduo(const U1 &f, const U2 &s) : first(f), second(s) {}
 
@@ -105,8 +103,6 @@ struct segtrio
    T1 first;
    T2 second;
    T3 third;
-
-   BOOST_CONTAINER_FORCEINLINE segtrio() {}
 
    template<class U1, class U2, class U3>
    BOOST_CONTAINER_FORCEINLINE segtrio(const U1 &f, const U2 &s, const U3 &t)
@@ -124,8 +120,6 @@ struct segquartet
    T2 second;
    T3 third;
    T4 fourth;
-
-   BOOST_CONTAINER_FORCEINLINE segquartet() {}
 
    template<class U1, class U2, class U3, class U4>
    BOOST_CONTAINER_FORCEINLINE segquartet(const U1 &f, const U2 &s, const U3 &t, const U4 &q)

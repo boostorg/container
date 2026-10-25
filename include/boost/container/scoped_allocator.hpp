@@ -174,8 +174,9 @@ class scoped_allocator_adaptor_base
       inner_allocator_type::is_always_equal::value
       > is_always_equal;
 
-   inline scoped_allocator_adaptor_base()
-      {}
+   //Defaulted: keeps the adaptor trivially default constructible
+   BOOST_DEFAULTED_FUNCTION(inline scoped_allocator_adaptor_base()
+      , : outer_allocator_type() BOOST_MOVE_I m_inner() {})
 
    template <class OuterA2>
    inline scoped_allocator_adaptor_base(BOOST_FWD_REF(OuterA2) outerAlloc, const InnerAllocs &...args)
@@ -335,7 +336,8 @@ class scoped_allocator_adaptor_base<OuterAlloc, true, BOOST_MOVE_TARG##N>\
       inner_allocator_type::is_always_equal::value\
       > is_always_equal;\
    \
-   inline scoped_allocator_adaptor_base(){}\
+   BOOST_DEFAULTED_FUNCTION(inline scoped_allocator_adaptor_base()\
+      , : outer_allocator_type() BOOST_MOVE_I m_inner() {})\
    \
    template <class OuterA2>\
    inline scoped_allocator_adaptor_base(BOOST_FWD_REF(OuterA2) outerAlloc, BOOST_MOVE_CREF##N)\
@@ -471,8 +473,8 @@ class scoped_allocator_adaptor_base< OuterAlloc BOOST_CONTAINER_SCOPEDALLOC_DUMM
    typedef typename outer_traits_type::
       is_always_equal                           is_always_equal;
 
-   inline scoped_allocator_adaptor_base()
-      {}
+   //Defaulted: keeps the adaptor trivially default constructible
+   BOOST_DEFAULTED_FUNCTION(inline scoped_allocator_adaptor_base(), : outer_allocator_type() {})
 
    template <class OuterA2>
    inline scoped_allocator_adaptor_base(BOOST_FWD_REF(OuterA2) outerAlloc)
@@ -690,16 +692,9 @@ class scoped_allocator_adaptor
 
    //! <b>Effects</b>: value-initializes the OuterAlloc base class
    //! and the inner allocator object.
-   inline scoped_allocator_adaptor()
-      {}
+   BOOST_DEFAULTED_FUNCTION(inline scoped_allocator_adaptor(), : base_type() {})
 
-   #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
-   //Defaulted: keeps the adaptor trivially copyable (passed in registers)
-   inline ~scoped_allocator_adaptor() = default;
-   #else
-   inline ~scoped_allocator_adaptor()
-      {}
-   #endif
+   //Implicit destructor: keeps the adaptor trivially copyable (passed in registers)
 
    //! <b>Effects</b>: initializes each allocator within the adaptor with
    //! the corresponding allocator from other.

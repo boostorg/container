@@ -349,9 +349,6 @@ class null_scoped_destructor
    inline null_scoped_destructor(Allocator &, value_type *)
    {}
 
-   inline ~null_scoped_destructor()
-   {}
-
    inline void release()
    {}
 

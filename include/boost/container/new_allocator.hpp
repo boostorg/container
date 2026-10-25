@@ -65,8 +65,7 @@ class new_allocator<void>
 
    //!Default constructor
    //!Never throws
-   new_allocator() BOOST_NOEXCEPT_OR_NOTHROW
-   {}
+   BOOST_DEFAULTED_FUNCTION(new_allocator() BOOST_NOEXCEPT_OR_NOTHROW, {})
 
    //Implicit copy operations and destructor: keeps the allocator trivially copyable (passed in registers)
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -132,8 +131,7 @@ class new_allocator
 
    //!Default constructor
    //!Never throws
-   inline new_allocator() BOOST_NOEXCEPT_OR_NOTHROW
-   {}
+   BOOST_DEFAULTED_FUNCTION(inline new_allocator() BOOST_NOEXCEPT_OR_NOTHROW, {})
 
    //Implicit copy operations and destructor: keeps the allocator trivially copyable (passed in registers)
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)

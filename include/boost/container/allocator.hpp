@@ -73,8 +73,7 @@ class allocator<void, Version, AllocationDisableMask>
 
    //!Default constructor
    //!Never throws
-   allocator()
-   {}
+   BOOST_DEFAULTED_FUNCTION(allocator(), {})
 
    //Implicit copy operations: keeps the allocator trivially copyable (passed in registers)
 
@@ -154,8 +153,7 @@ class allocator
 
    //!Default constructor
    //!Never throws
-   allocator() BOOST_NOEXCEPT_OR_NOTHROW
-   {}
+   BOOST_DEFAULTED_FUNCTION(allocator() BOOST_NOEXCEPT_OR_NOTHROW, {})
 
    //Implicit copy operations and destructor: keeps the allocator trivially copyable (passed in registers)
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)

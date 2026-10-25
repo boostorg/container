@@ -181,8 +181,8 @@ struct base_node
    private:
    base_node();
 
-   inline ~base_node()
-   { }
+   //Defaulted: the node is trivially destructible if the hook is
+   BOOST_DEFAULTED_FUNCTION(inline ~base_node(), {})
 };
 
 
@@ -583,9 +583,6 @@ template<class Node, class KeyOfValue>
 struct key_of_node : KeyOfValue
 {
    typedef typename KeyOfValue::type type;
-
-   inline key_of_node()
-   {}
 
    inline const type& operator()(const Node& x) const
    {  return this->KeyOfValue::operator()(x.get_data());  }

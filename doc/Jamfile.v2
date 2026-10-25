@@ -34,6 +34,8 @@ doxygen autodoc
                                    \"BOOST_CONTAINER_SEEDOC(T)=see_documentation\" \\
                                    \"BOOST_NOEXCEPT_OR_NOTHROW=noexcept\" \\
                                    \"BOOST_NOEXCEPT_IF(T)=noexcept(T)\" \\
+                                   \"BOOST_DEFAULTED_FUNCTION(F, B)=F = default;\" \\
+                                   \"BOOST_DELETED_FUNCTION(F)=F = delete;\" \\
                                    \"BOOST_NOEXCEPT=noexcept\" \\
                                    \"BOOST_CONSTEXPR=constexpr\" \\
                                    \"BOOST_CXX14_CONSTEXPR=constexpr\" \\

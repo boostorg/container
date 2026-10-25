@@ -113,8 +113,7 @@ class node_allocator
    public:
 
    //!Default constructor
-   node_allocator() BOOST_NOEXCEPT_OR_NOTHROW
-   {}
+   BOOST_DEFAULTED_FUNCTION(node_allocator() BOOST_NOEXCEPT_OR_NOTHROW, {})
 
    //Implicit copy operations and destructor: keeps the allocator trivially copyable (passed in registers)
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
