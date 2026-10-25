@@ -1163,8 +1163,8 @@ public:
    {
       range_assign_impl(
          first, last,
-         [this] (T* p, InputIterator it) { block_alloc_traits::construct(al(), p, *it); },
-         [] (T* p, InputIterator it) { *p = *it; });
+         [this] (T* p, InputIterator& it) { block_alloc_traits::construct(al(), p, *it); },
+         [] (T* p, InputIterator& it) { *p = *it; });
    }
 
 #if !defined(BOOST_CONTAINER_HUB_NO_RANGES)
@@ -1177,8 +1177,8 @@ public:
    {
       range_assign_impl(
          dtl::adl_range::adl_begin(rg), dtl::adl_range::adl_end(rg),
-         [this] (T* p, auto it) { block_alloc_traits::construct(al(), p, *it); },
-         [] (T* p, auto it) { *p = *it; });
+         [this] (T* p, auto& it) { block_alloc_traits::construct(al(), p, *it); },
+         [] (T* p, auto& it) { *p = *it; });
    }
 #endif
 
@@ -1412,7 +1412,7 @@ public:
    {
       range_insert_impl(
          dtl::adl_range::adl_begin(rg), dtl::adl_range::adl_end(rg),
-         [this] (T* p, auto it) { block_alloc_traits::construct(al(), p, *it); });
+         [this] (T* p, auto& it) { block_alloc_traits::construct(al(), p, *it); });
    }
 #endif
 
@@ -1430,7 +1430,7 @@ public:
    >
    void insert(InputIterator first, InputIterator last)
    {
-      range_insert_impl(first, last, [this] (T* p, InputIterator it) {
+      range_insert_impl(first, last, [this] (T* p, InputIterator& it) {
          block_alloc_traits::construct(al(), p, *it);
       });
    }
@@ -1962,9 +1962,12 @@ private:
             return;
          }
          for(; ; ) {
-            construct_(boost::movelib::to_raw_pointer(pb->data() + n), first++);
+            //A copy of a single-pass iterator can not be dereferenced after
+            //the iterator is incremented: increment only after the construction
+            construct_(boost::movelib::to_raw_pointer(pb->data() + n), first);
             ++size_;
             pb->mask |= pb->mask +1;
+            ++first;
             if(pb->mask == full) {
                blist.unlink_available(pb);
                break;
@@ -1985,8 +1988,10 @@ private:
          int i = 0;
          BOOST_CONTAINER_TRY {
             for(;;) {
-               construct_(p + i, first++);
-               if(++i == N || first == last) break;
+               construct_(p + i, first);
+               ++i;
+               ++first;
+               if(i == N || first == last) break;
             }
          }
          BOOST_CONTAINER_CATCH(...) {
@@ -2031,14 +2036,15 @@ private:
             n = 0;
             for(mask_type bit = 1; bit; bit <<= 1, ++n) {
                if(pb->mask & bit) { //full slot
-                  insert_(boost::movelib::to_raw_pointer(pb->data() + n), first++);
+                  insert_(boost::movelib::to_raw_pointer(pb->data() + n), first);
                }
                else { //empty slot
-                  construct_(boost::movelib::to_raw_pointer(pb->data() + n), first++);
+                  construct_(boost::movelib::to_raw_pointer(pb->data() + n), first);
                   ++size_;
                   pb->mask |= bit;
                   if(pb->mask == full) blist.unlink_available(pb);
                }
+               ++first;
                if(first == last) goto exit;
             }
          }
@@ -2046,7 +2052,7 @@ private:
       }
       if(first != last) {
          //all active blocks consumed, keep inserting
-         range_insert_impl(first, last, construct_);
+         range_insert_impl(std::move(first), last, construct_);
       }
       else{
          //erase remaining original elements

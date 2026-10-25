@@ -3898,8 +3898,6 @@ int test_cont_variants()
       return 1;
    if (test::vector_test<MyCopyCont>())
       return 1;
-   if (test::vector_test<MyCopyCont>())
-      return 1;
    if (test::vector_test<MyMoveConstructCont>())
       return 1;
    return 0;
