@@ -3050,10 +3050,10 @@ void run_all(const C& c, std::size_t iters, const char* cname)
 template<class T>
 void run_benchmarks()
 {
-   //#define BENCH_ON
-   #if defined(NDEBUG) && defined(BENCH_ON)
+   //#define LONG_BENCH
+   #if defined(NDEBUG) && defined(LONG_BENCH)
    const std::size_t N    = 100000;
-   const std::size_t iter = 5000;
+   const std::size_t iter = 1000;
    #else
    const std::size_t N    = 10000;
    const std::size_t iter = 1;
