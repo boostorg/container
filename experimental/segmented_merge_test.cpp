@@ -879,10 +879,8 @@ void test_merge_single_segment_with_comp()
 //
 // segmented_merge has three independently segmented ranges -- two inputs and
 // one destination -- and the destination walker is where both bugs found in
-// this algorithm so far have lived.  for_each_shape3_all drives the full
-// cross product including the 'e' shapes, whose empty segments are the only
-// way to reach the sfirst == slast branch of merge_dst_bounded with an empty
-// destination segment.
+// this algorithm so far have lived.  for_each_shape3_all drives the full cross
+// product.
 //
 // Destination sizes.  Two geometries are run for every combination:
 //

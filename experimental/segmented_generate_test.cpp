@@ -102,11 +102,11 @@ struct ptr_counter
 
 // Generates into a sub-range whose segmentation shape is dictated by a branch
 // spec, so that every level of the recursive dispatch is exercised on its
-// single-segment path, on its multi-segment path and on the multi-segment path
-// with empty segments interleaved.  The generator counts through a pointer, so
-// the number of calls stays observable however many times the combinators copy
-// it, and it is the counter running unbroken from 1 to n across every segment
-// boundary that pins down the order the elements were written in.
+// single-segment path and on its multi-segment path.  The generator counts
+// through a pointer, so the number of calls stays observable however many
+// times the combinators copy it, and it is the counter running unbroken from 1
+// to n across every segment boundary that pins down the order the elements
+// were written in.
 struct generate_shape_check
 {
    template<class Cont>

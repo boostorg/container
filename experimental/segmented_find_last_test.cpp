@@ -170,8 +170,7 @@ void test_find_last_every_position_seg2()
 
 // Runs segmented_find_last over a sub-range whose segmentation shape is
 // dictated by a branch spec, so that every level of the recursive dispatch is
-// exercised on its single-segment path, on its multi-segment path and on the
-// multi-segment path with empty segments interleaved.
+// exercised on its single-segment path and on its multi-segment path.
 struct find_last_shape_check
 {
    int value;

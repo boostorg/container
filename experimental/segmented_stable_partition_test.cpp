@@ -137,11 +137,10 @@ void test_stable_partition_movable_seg2()
 
 // Stable-partitions a sub-range whose segmentation shape is dictated by a
 // branch spec, so that every level of the recursive dispatch is exercised on
-// its single-segment path, on its multi-segment path and on the multi-segment
-// path with empty segments interleaved.  The whole resulting sequence is
-// compared against a naive stable partition of a flat copy taken beforehand,
-// which pins the relative order within each side as well as the partition
-// point, and the guard just past the end must survive untouched.
+// its single-segment path and on its multi-segment path.  The whole resulting
+// sequence is compared against a naive stable partition of a flat copy taken
+// beforehand, which pins the relative order within each side as well as the
+// partition point, and the guard just past the end must survive untouched.
 struct stable_partition_shape_check
 {
    template<class Cont>

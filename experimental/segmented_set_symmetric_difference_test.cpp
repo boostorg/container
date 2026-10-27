@@ -513,12 +513,10 @@ void test_set_symmetric_difference_single_segment_with_comp()
 // Shape matrix.
 //
 // Two inputs and one destination.  The two inputs are driven by
-// for_each_shape2_all, so their shapes -- including the 'e' ones, whose
-// empty segments the two source walkers must skip independently of each
-// other -- are enumerated in full.
+// for_each_shape2_all, so their shapes are enumerated in full.
 //
 // The destination is enumerated by for_each_dest_shape_all, so it is walked at
-// both depths and over both spec families.  A two-level destination is what
+// both depths.  A two-level destination is what
 // reaches the segmented_iterator_tag overload of
 // set_symmetric_difference_dst_bounded, where the local iterator handed to the
 // level below is itself still segmented.
@@ -697,6 +695,7 @@ struct set_symmetric_difference_count_check
                    C2& c2, std::size_t n2, const char* s2) const
    {
       boost::container::vector<int> flat(n1 + n2 + 1u, -1);
+      std::size_t flat_calls = 0u;
       {
          test_detail::op_counter calls;
          segmented_set_symmetric_difference
@@ -704,8 +703,11 @@ struct set_symmetric_difference_count_check
              c2.begin(), test_detail::iter_at(c2, n2),
              flat.begin(), test_detail::counting_pred(calls, less_int()));
          BOOST_TEST(calls.n <= set_symmetric_difference_comparison_bound(n1, n2));
+         flat_calls = calls.n;
       }
 
+      //A segmented destination does not compare elements again: the leaf
+      //carries the element that did not fit to the next destination segment
       for(std::size_t block = 1u; block <= 3u; ++block) {
          test_detail::seg_vector<int> out;
          for(std::size_t room = 0; room <= n1 + n2; room += block)
@@ -717,6 +719,7 @@ struct set_symmetric_difference_count_check
              c2.begin(), test_detail::iter_at(c2, n2),
              out.begin(), test_detail::counting_pred(calls, less_int()));
          BOOST_TEST(calls.n <= set_symmetric_difference_comparison_bound(n1, n2));
+         BOOST_TEST_EQ(calls.n, flat_calls);
       }
 
       BOOST_TEST(s1 != 0 && s2 != 0);
@@ -734,6 +737,13 @@ void test_set_symmetric_difference_comparison_count()
    for(std::size_t p = 0; p != sizeof(pairs)/sizeof(pairs[0]); ++p)
       test_detail::for_each_shape2_all<int, int>
          (v1, pairs[p][0], v2, pairs[p][1], -999, set_symmetric_difference_count_check());
+
+   //Every element of range 2 is written before range 1, so with destination segments of one element
+   //each write is a segment change
+   const int w1[] = {100};
+   const int w2[] = {1, 2, 3, 4, 5};
+   test_detail::for_each_shape2_all<int, int>
+      (w1, sizeof(w1)/sizeof(w1[0]), w2, sizeof(w2)/sizeof(w2[0]), -999, set_symmetric_difference_count_check());
 }
 
 int main()

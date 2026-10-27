@@ -142,7 +142,7 @@ void test_find_if_not_every_position_seg2()
 
 // Runs segmented_find_if_not over a range whose segmentation shape is dictated
 // by a branch spec, so that every level of the recursive dispatch is exercised
-// on its single-segment, its multi-segment and its empty-segment path.
+// on its single-segment and its multi-segment path.
 // segmented_find_if_not is segmented_find_if under a negated predicate, so the
 // machinery below the wrapper is the one segmented_find_if_test also drives;
 // what is checked here is that the negation is applied with the right sense.

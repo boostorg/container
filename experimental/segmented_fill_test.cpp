@@ -118,10 +118,9 @@ void test_fill_seg2()
 
 // Fills a sub-range whose segmentation shape is dictated by a branch spec, so
 // that every level of the recursive dispatch is exercised on its
-// single-segment path, on its multi-segment path and on the multi-segment path
-// with empty segments interleaved.  The guard just past the end must survive
-// untouched: fill writes, so an overrun corrupts the container rather than
-// merely misreading it.
+// single-segment path and on its multi-segment path.  The guard just past the
+// end must survive untouched: fill writes, so an overrun corrupts the
+// container rather than merely misreading it.
 struct fill_shape_check
 {
    template<class Cont>

@@ -130,11 +130,8 @@ void test_is_sorted_until_every_position_seg2()
 
 // Runs segmented_is_sorted_until over a sub-range whose segmentation shape is
 // dictated by a branch spec, so that every level of the recursive dispatch is
-// exercised on its single-segment path, on its multi-segment path and on the
-// multi-segment path with empty segments interleaved.  The algorithm carries
-// the previous element across segment boundaries, so the shapes with empty
-// segments are the interesting ones: the carry has to survive however many
-// segments contribute nothing.
+// exercised on its single-segment path and on its multi-segment path.  The
+// algorithm carries the previous element across segment boundaries.
 struct is_sorted_until_shape_check
 {
    template<class Cont>

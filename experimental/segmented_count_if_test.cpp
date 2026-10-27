@@ -101,7 +101,7 @@ void test_count_if_seg2()
 
 // Runs segmented_count_if over a range whose segmentation shape is dictated by
 // a branch spec, so that every level of the recursive dispatch is exercised on
-// its single-segment, its multi-segment and its empty-segment path. Unlike the
+// its single-segment and its multi-segment path. Unlike the
 // early-exit algorithms, count_if has to visit the whole range and add up the
 // per-segment subtotals, so a segment counted twice or skipped shows up here.
 template<class Pred>

@@ -81,7 +81,7 @@ void test_all_of_sentinel_non_segmented()
 
 // Runs segmented_all_of over a range whose segmentation shape is dictated by a
 // branch spec, so that every level of the recursive dispatch is exercised on
-// its single-segment, its multi-segment and its empty-segment path.
+// its single-segment and its multi-segment path.
 // segmented_all_of is segmented_none_of under a negated predicate, so what
 // this checks on top of the none_of matrix is that the negation is applied
 // with the right sense.

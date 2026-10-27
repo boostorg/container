@@ -81,7 +81,7 @@ void test_none_of_sentinel_non_segmented()
 
 // Runs segmented_none_of over a range whose segmentation shape is dictated by
 // a branch spec, so that every level of the recursive dispatch is exercised on
-// its single-segment, its multi-segment and its empty-segment path.
+// its single-segment and its multi-segment path.
 // segmented_none_of_dispatch is also what segmented_any_of and segmented_all_of
 // run on, but the sense of the answer differs, so each has its own matrix.
 template<class Pred>

@@ -71,11 +71,10 @@ struct ptr_counter_gen
 
 // Generates count elements from a chosen offset into a range whose
 // segmentation shape is dictated by a branch spec, so that every level of the
-// recursive dispatch is exercised on its single-segment path, on its
-// multi-segment path and on the multi-segment path with empty segments
-// interleaved.  Sweeping both the offset and the count covers a count that
-// stops short of the end of a segment, one that exactly consumes it and one
-// that spans several; a count larger than the range is deliberately never
+// recursive dispatch is exercised on its single-segment path and on its
+// multi-segment path.  Sweeping both the offset and the count covers a count
+// that stops short of the end of a segment, one that exactly consumes it and
+// one that spans several; a count larger than the range is deliberately never
 // tried, because the public API takes no end bound.
 //
 // The generator counts through a pointer, so the number of calls stays

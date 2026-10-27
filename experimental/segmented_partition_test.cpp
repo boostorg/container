@@ -204,12 +204,12 @@ void check_partition_of_1_to_6(Iter first, Iter mid, Iter last)
 
 // Partitions a sub-range whose segmentation shape is dictated by a branch
 // spec, so that every level of the recursive dispatch is exercised on its
-// single-segment path, on its multi-segment path and on the multi-segment path
-// with empty segments interleaved.  Besides the partition point and the two
-// sides, the check verifies element conservation: every value present before
-// the call is present exactly as many times after it, so a lost or duplicated
-// element is caught rather than only a wrong partition point.  The guard just
-// past the end must also survive, since partition writes.
+// single-segment path and on its multi-segment path.  Besides the partition
+// point and the two sides, the check verifies element conservation: every
+// value present before the call is present exactly as many times after it, so
+// a lost or duplicated element is caught rather than only a wrong partition
+// point.  The guard just past the end must also survive, since partition
+// writes.
 struct partition_shape_check
 {
    template<class Cont>

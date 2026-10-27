@@ -520,9 +520,7 @@ void test_equal_single_segment_every_position()
 //
 // segmented_equal walks two independently segmented ranges at once, so the
 // interesting cross product is of the two ranges' shapes, not of one range's
-// shape with itself.  for_each_shape2_all supplies that, including the 'e'
-// shapes whose empty segments the two walkers have to skip in step with each
-// other.
+// shape with itself.  for_each_shape2_all supplies that.
 //
 // The second range is deliberately one element longer than the first and its
 // extra element is a value that appears nowhere else, so that a walker which

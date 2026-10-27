@@ -527,12 +527,10 @@ void test_set_union_single_segment_with_comp()
 // Shape matrix.
 //
 // Two inputs and one destination.  The two inputs are driven by
-// for_each_shape2_all, so their shapes -- including the 'e' ones, whose
-// empty segments the two source walkers must skip independently of each
-// other -- are enumerated in full.
+// for_each_shape2_all, so their shapes are enumerated in full.
 //
 // The destination is enumerated by for_each_dest_shape_all, so it is walked at
-// both depths and over both spec families.  A two-level destination is what
+// both depths.  A two-level destination is what
 // reaches the segmented_iterator_tag overload of set_union_dst_bounded, where
 // the local iterator handed to the level below is itself still segmented.
 //

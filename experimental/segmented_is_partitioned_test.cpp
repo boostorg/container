@@ -98,8 +98,8 @@ void test_is_partitioned_seg2()
 
 // Runs segmented_is_partitioned over a range whose segmentation shape is
 // dictated by a branch spec, so that every level of the recursive dispatch is
-// exercised on its single-segment, its multi-segment and its empty-segment
-// path. segmented_is_partitioned is segmented_find_if_not followed by
+// exercised on its single-segment and its multi-segment path.
+// segmented_is_partitioned is segmented_find_if_not followed by
 // segmented_none_of over the remainder, so what this adds to those two
 // matrices is the handoff between them: the sub-range the second call gets
 // starts wherever the first one stopped, which for a multi-segment shape is in

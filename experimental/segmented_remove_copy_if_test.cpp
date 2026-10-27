@@ -11,6 +11,7 @@
 #include <boost/container/experimental/segmented_remove_copy_if.hpp>
 #include "../test/lightweight_test.hpp"
 #include "segmented_test_helper.hpp"
+#include <boost/container/deque.hpp>
 #include <boost/container/vector.hpp>
 
 using namespace boost::container;
@@ -329,11 +330,9 @@ void test_remove_copy_if_single_segment_dst_from_flat()
 //////////////////////////////////////////////////////////////////////////////
 // Shape matrix.
 //
-// for_each_shape2_all crosses the twelve branch specs of the source range with
-// the twelve of the destination, at both segmentation depths, so the two
-// segmentations vary independently.  The 'e' specs carry empty segments, which
-// is the only way into the sfirst == slast branch of the destination bounded
-// helper with an empty destination segment.
+// for_each_shape2_all crosses the six branch specs of the source range with
+// the six of the destination, at both segmentation depths, so the two
+// segmentations vary independently.
 //
 // The output length is data dependent, so each source size is run against a
 // destination sized to exactly the number of survivors, which puts the guard
@@ -482,12 +481,10 @@ void test_remove_copy_if_unrolled_blocks()
          const bool k = ka != 0;
          remove_copy_if_block_case<s1_t, s1_t>("s",  "s",  n, k);
          remove_copy_if_block_case<s1_t, s1_t>("m",  "m",  n, k);
-         remove_copy_if_block_case<s1_t, s1_t>("e",  "e",  n, k);
          remove_copy_if_block_case<s1_t, s2_t>("s",  "ss", n, k);
          remove_copy_if_block_case<s1_t, s2_t>("m",  "mm", n, k);
          remove_copy_if_block_case<s2_t, s1_t>("sm", "s",  n, k);
          remove_copy_if_block_case<s2_t, s2_t>("mm", "mm", n, k);
-         remove_copy_if_block_case<s2_t, s2_t>("ee", "ee", n, k);
       }
    }
 }
@@ -581,6 +578,15 @@ void test_remove_copy_if_predicate_count()
    }
 }
 
+//The output is begin() of an empty deque (null segment): nothing is written,
+//so the result is the same iterator
+void test_remove_copy_if_empty_deque_output()
+{
+   boost::container::vector<int> v(10, 2);
+   boost::container::deque<int> e;
+   BOOST_TEST(boost::container::segmented_remove_copy_if(v.begin(), v.end(), e.begin(), is_even()) == e.begin());
+}
+
 int main()
 {
    test_remove_copy_if_segmented();
@@ -604,5 +610,6 @@ int main()
    test_remove_copy_if_shape_matrix();
    test_remove_copy_if_unrolled_blocks();
    test_remove_copy_if_predicate_count();
+   test_remove_copy_if_empty_deque_output();
    return boost::report_errors();
 }

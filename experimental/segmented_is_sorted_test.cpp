@@ -106,10 +106,7 @@ void test_is_sorted_seg2()
 
 // Runs segmented_is_sorted over a sub-range whose segmentation shape is
 // dictated by a branch spec, so that every level of the recursive dispatch is
-// exercised on its single-segment path, on its multi-segment path and on the
-// multi-segment path with empty segments interleaved.  Empty segments matter
-// here because the comparison of the last element of one segment against the
-// first of the next has to survive however many empty segments lie between.
+// exercised on its single-segment path and on its multi-segment path.
 struct is_sorted_shape_check
 {
    template<class Cont>

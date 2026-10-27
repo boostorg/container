@@ -174,8 +174,7 @@ void test_find_last_if_not_every_position_seg2()
 
 // Runs segmented_find_last_if_not over a sub-range whose segmentation shape is
 // dictated by a branch spec, so that every level of the recursive dispatch is
-// exercised on its single-segment path, on its multi-segment path and on the
-// multi-segment path with empty segments interleaved.
+// exercised on its single-segment path and on its multi-segment path.
 template<class Pred>
 struct find_last_if_not_shape_check
 {

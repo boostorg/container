@@ -188,11 +188,10 @@ void test_reverse_movable_seg2()
 
 // Reverses a sub-range whose segmentation shape is dictated by a branch spec,
 // so that every level of the recursive dispatch is exercised on its
-// single-segment path, on its multi-segment path and on the multi-segment path
-// with empty segments interleaved.  The whole resulting sequence is compared
-// against the reversal of a flat copy taken beforehand, and the guard element
-// just past the end must survive untouched: reverse writes, so an overrun
-// corrupts the range rather than merely misreading it.
+// single-segment path and on its multi-segment path.  The whole resulting
+// sequence is compared against the reversal of a flat copy taken beforehand,
+// and the guard element just past the end must survive untouched: reverse
+// writes, so an overrun corrupts the range rather than merely misreading it.
 struct reverse_shape_check
 {
    template<class Cont>

@@ -495,7 +495,7 @@ void test_find_end_forward_matrix()
    for(i = 0; i != n1; ++i)
       hay[i] = int(i % 3u) + 1;
 
-   const char* const specs[] = { "s", "m", "e" };
+   const char* const specs[] = { "s", "m" };
    for(std::size_t sp = 0; sp != sizeof(specs)/sizeof(specs[0]); ++sp) {
       for(std::size_t len = 0u; len <= 4u; ++len) {
          for(off = 0; off + len <= n1; ++off) {

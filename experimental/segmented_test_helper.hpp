@@ -405,7 +405,7 @@ public:
    {
       // The sentinel outer segment must be non-empty as seen through its own
       // begin()/end(), for the same reason seg_vector's sentinel segment is:
-      // a logically empty inner container is a legal interior segment here.
+      // the iterators skip logically empty inner containers.
       static const int dummy = 0;
       seg_vector<T, Cat> sentinel;
       sentinel.add_segment_from_ints(&dummy, &dummy + 1);
@@ -481,13 +481,8 @@ public:
 // "mm", "ms", "sm" and "ss" describe a seg2_vector.  Only those two depths
 // exist, because seg2_vector is the deepest container modelled here.
 //
-// A third character, 'e', is a multi-segment level that additionally carries
-// empty segments: one before the data, one between the two halves and one
-// after.  At the outer level of a seg2_vector those are outer segments whose
-// inner container is logically empty.  Empty segments are where carry-across-
-// boundary bugs live, and 'e' is the only way to produce them.  'e' specs
-// live in a table of their own, which the combinators walk after the core
-// m/s one.
+// Segments are never empty: segmented algorithms only allow an empty segment
+// as the last one, the segment that only holds the end iterator.
 //
 // make_range() builds a container of exactly n+1 elements.  The first n hold
 // the requested values and form the range [c.begin(), iter_at(c, n)); the
@@ -500,10 +495,10 @@ public:
 // sentinel segment.  Reaching that branch requires a proper sub-range, which
 // is what make_range() produces.
 //
-// Empty segments and the sentinel.  The iterators normalise by skipping
-// forward (or backward) over however many empty segments they meet, which
-// only terminates if the sentinel segment they stop at cannot itself look
-// empty.  The trailing sentinel therefore holds one dummy element: end()
+// The sentinel.  The iterators normalise by skipping forward (or backward)
+// over empty segments, which only terminates if the sentinel segment they stop
+// at cannot itself look empty.  The trailing sentinel therefore holds one
+// dummy element: end()
 // points at it, no range ever includes it, and neither total_size() nor
 // flatten_all_ints() can see it.  The one visible consequence is that
 // segments().back() has size 1 rather than 0, and that T must be
@@ -542,9 +537,8 @@ public:
 //   counted_int_ops()      the cmp/assign/swp counters counted_int bumps;
 //                          reset() them immediately before the call.
 //
-// Combinators.  Each one walks the core m/s specs first, in their original
-// order, and then the empty-segment ones.  Each builds every range afresh for
-// every combination, so a callable is free to mutate the ranges it is handed.
+// Combinators.  Each one builds every range afresh for every combination, so
+// a callable is free to mutate the ranges it is handed.
 // The callable is taken by value and copied, so any state it accumulates must
 // live behind a pointer or reference.
 //   for_each_shape_all<T>(vals, n, filler, f)
@@ -565,17 +559,16 @@ public:
 //      g(c, n, spec) over the destination shapes alone, both depths and both
 //      spec families.
 //
-// A feasible spec needs at least one element per 'm' or 'e' level, so a small
-// n yields fewer shapes than a large one; the combinators skip the rest.
-// With n large enough each range contributes 6 core shapes and 6 more with
-// empty segments:
+// A feasible spec needs at least one element per 'm' level, so a small n
+// yields fewer shapes than a large one; the combinators skip the rest.  With n
+// large enough each range contributes 6 shapes:
 //
 //   n        for_each_shape_all
 //   0        2
-//   1        8
-//   >= 2     12
+//   1        5
+//   >= 2     6
 //
-// so for_each_shape2_all runs 144 combinations and for_each_shape3_all 1728.
+// so for_each_shape2_all runs 36 combinations and for_each_shape3_all 216.
 //
 // Intended usage for a test:
 //
@@ -606,12 +599,11 @@ inline std::size_t seg_split_point(std::size_t n)
 {  return n < 2u ? 1u : n/2u;   }
 
 //! A spec needs at least one element per level asking for a multi-segment
-//! branch, because an empty range always lands in a single segment.  'e' is a
-//! multi-segment branch too, so it carries the same requirement as 'm'.
+//! branch, because an empty range always lands in a single segment.
 inline bool shape_feasible(const char* spec, std::size_t n)
 {
    for(; *spec; ++spec) {
-      if(*spec == 'm' || *spec == 'e') {
+      if(*spec == 'm') {
          if(!n)
             return false;
          n -= seg_split_point(n);
@@ -634,15 +626,10 @@ void make_range(seg_vector<T, Cat>& c, const char* spec, const int* vals, std::s
       c.add_segment_from_ints(base, base + n + 1u);
    }
    else {
-      // 'm' and 'e' both split the data in two; 'e' additionally wraps it in
-      // empty segments, at the front, between the halves and at the back.
-      const bool empties = (*spec == 'e');
+      // 'm' splits the data in two segments
       const std::size_t a = seg_split_point(n);
-      if(empties) c.add_segment_from_ints(base, base);
       c.add_segment_from_ints(base, base + a);
-      if(empties) c.add_segment_from_ints(base, base);
       c.add_segment_from_ints(base + a, base + n + 1u);
-      if(empties) c.add_segment_from_ints(base, base);
    }
 }
 
@@ -655,20 +642,13 @@ void make_range(seg2_vector<T, Cat>& c, const char* spec, const int* vals, std::
       c.add_segment(boost::move(inner));
    }
    else {
-      // 'e' surrounds the two data segments with outer segments whose inner
-      // container is logically empty, which is the shape that drives a
-      // destination bounded helper into its sfirst == slast branch.
-      const bool empties = (*spec == 'e');
       const std::size_t a = seg_split_point(n);
-      if(empties) c.add_segment(seg_vector<T, Cat>());
       seg_vector<T, Cat> head;
       head.add_segment_from_ints(vals, vals + a);
       c.add_segment(boost::move(head));
-      if(empties) c.add_segment(seg_vector<T, Cat>());
       seg_vector<T, Cat> tail;
       make_range(tail, spec + 1, vals + a, n - a, filler);
       c.add_segment(boost::move(tail));
-      if(empties) c.add_segment(seg_vector<T, Cat>());
    }
 }
 
@@ -732,28 +712,6 @@ inline const char* const* shape_specs(std::size_t depth, std::size_t& count)
    return d2;
 }
 
-//! Branch specs in which at least one level also carries empty segments.
-//! Kept in a table of its own so that shape_specs() enumerates exactly what it
-//! enumerated before 'e' existed, and so that the combinators can walk the
-//! core specs first and the empty-segment ones after.
-inline const char* const* shape_specs_empty(std::size_t depth, std::size_t& count)
-{
-   static const char* const d1[] = { "e" };
-   static const char* const d2[] = { "ee", "em", "es", "me", "se" };
-
-   if(depth == 1u) { count = 1u; return d1; }
-   count = 5u;
-   return d2;
-}
-
-//! Spec families: 0 is the core m/s table, 1 the empty-segment table.
-inline const char* const* shape_specs_family(std::size_t family, std::size_t depth, std::size_t& count)
-{  return family == 0u ? shape_specs(depth, count) : shape_specs_empty(depth, count);   }
-
-//! Number of spec families the combinators walk: the core m/s table plus the
-//! empty-segment one.
-inline std::size_t shape_all_families()  { return 2u; }
-
 //! Builds the container that spec describes at the given depth and hands it to
 //! g as g(container, n, spec).  Keeping construction here lets every
 //! combinator hand out a freshly built range on every single call.
@@ -772,29 +730,20 @@ void with_shape(std::size_t depth, const char* spec, const int* vals, std::size_
    }
 }
 
-//! Walks the first nfam spec families over depths 1 and 2, calling
-//! f(container, n, spec) once per feasible spec, the core m/s family first
-//! and in exactly its original order.
+//! Calls f(container, n, spec) once per reachable branch spec at depths 1 and
+//! 2.  f must be callable with both container types.
 template<class T, class Cat, class F>
-void for_each_shape_fam_cat(std::size_t nfam, const int* vals, std::size_t n, int filler, F f)
+void for_each_shape_all_cat(const int* vals, std::size_t n, int filler, F f)
 {
-   for(std::size_t fam = 0u; fam != nfam; ++fam) {
-      for(std::size_t d = 1u; d <= max_shape_depth(); ++d) {
-         std::size_t cnt = 0;
-         const char* const* s = shape_specs_family(fam, d, cnt);
-         for(std::size_t i = 0; i != cnt; ++i) {
-            if(!shape_feasible(s[i], n)) continue;
-            with_shape<T, Cat>(d, s[i], vals, n, filler, f);
-         }
+   for(std::size_t d = 1u; d <= max_shape_depth(); ++d) {
+      std::size_t cnt = 0;
+      const char* const* s = shape_specs(d, cnt);
+      for(std::size_t i = 0; i != cnt; ++i) {
+         if(!shape_feasible(s[i], n)) continue;
+         with_shape<T, Cat>(d, s[i], vals, n, filler, f);
       }
    }
 }
-
-//! Core shapes followed by the empty-segment ones, once per reachable branch
-//! spec at depths 1 and 2.  f must be callable with both container types.
-template<class T, class Cat, class F>
-void for_each_shape_all_cat(const int* vals, std::size_t n, int filler, F f)
-{  for_each_shape_fam_cat<T, Cat>(shape_all_families(), vals, n, filler, f);  }
 
 //! Bidirectional-iterator shapes, the default for most algorithms.
 template<class T, class F>
@@ -850,40 +799,29 @@ struct shape2_outer
    }
 };
 
-//! Cross product over the first nfam spec families of two ranges.
+//! Cross product of the branch specs of two independently segmented ranges.
+//! Calls f(c1, n1, spec1, c2, n2, spec2).
 template<class T1, class T2, class F>
-void for_each_shape2_fam(std::size_t nfam, const int* v1, std::size_t n1,
-                         const int* v2, std::size_t n2, int filler, F f)
+void for_each_shape2_all(const int* v1, std::size_t n1, const int* v2, std::size_t n2, int filler, F f)
 {
-   for(std::size_t f1 = 0u; f1 != nfam; ++f1) {
-      for(std::size_t d1 = 1u; d1 <= max_shape_depth(); ++d1) {
-         std::size_t cnt1 = 0;
-         const char* const* sp1 = shape_specs_family(f1, d1, cnt1);
-         for(std::size_t i = 0; i != cnt1; ++i) {
-            if(!shape_feasible(sp1[i], n1)) continue;
-            for(std::size_t f2 = 0u; f2 != nfam; ++f2) {
-               for(std::size_t d2 = 1u; d2 <= max_shape_depth(); ++d2) {
-                  std::size_t cnt2 = 0;
-                  const char* const* sp2 = shape_specs_family(f2, d2, cnt2);
-                  for(std::size_t j = 0; j != cnt2; ++j) {
-                     if(!shape_feasible(sp2[j], n2)) continue;
-                     with_shape<T1, std::bidirectional_iterator_tag>
-                        (d1, sp1[i], v1, n1, filler,
-                         shape2_outer<T2, F>(d2, sp2[j], v2, n2, filler, f));
-                  }
-               }
+   for(std::size_t d1 = 1u; d1 <= max_shape_depth(); ++d1) {
+      std::size_t cnt1 = 0;
+      const char* const* sp1 = shape_specs(d1, cnt1);
+      for(std::size_t i = 0; i != cnt1; ++i) {
+         if(!shape_feasible(sp1[i], n1)) continue;
+         for(std::size_t d2 = 1u; d2 <= max_shape_depth(); ++d2) {
+            std::size_t cnt2 = 0;
+            const char* const* sp2 = shape_specs(d2, cnt2);
+            for(std::size_t j = 0; j != cnt2; ++j) {
+               if(!shape_feasible(sp2[j], n2)) continue;
+               with_shape<T1, std::bidirectional_iterator_tag>
+                  (d1, sp1[i], v1, n1, filler,
+                   shape2_outer<T2, F>(d2, sp2[j], v2, n2, filler, f));
             }
          }
       }
    }
 }
-
-//! Cross product of the branch specs of two independently segmented ranges,
-//! including the empty-segment shapes for both.  Calls
-//! f(c1, n1, spec1, c2, n2, spec2).
-template<class T1, class T2, class F>
-void for_each_shape2_all(const int* v1, std::size_t n1, const int* v2, std::size_t n2, int filler, F f)
-{  for_each_shape2_fam<T1, T2>(shape_all_families(), v1, n1, v2, n2, filler, f);  }
 
 template<class C1, class C2, class F>
 struct shape3_bind
@@ -903,7 +841,7 @@ struct shape3_bind
 };
 
 //! Builds range 3 for one fixed (depth, spec) pair; the first two ranges are
-//! supplied by for_each_shape2_fam, which already rebuilds them per
+//! supplied by for_each_shape2_all, which already rebuilds them per
 //! combination.
 template<class T3, class F>
 struct shape3_outer
@@ -928,36 +866,25 @@ struct shape3_outer
    }
 };
 
-//! Cross product over the first nfam spec families of three ranges.
+//! Cross product of the branch specs of three independently segmented ranges.
+//! Calls f(c1, n1, spec1, c2, n2, spec2, c3, n3, spec3).  Typically two input
+//! ranges and one output range.
 template<class T1, class T2, class T3, class F>
-void for_each_shape3_fam(std::size_t nfam, const int* v1, std::size_t n1,
-                         const int* v2, std::size_t n2,
+void for_each_shape3_all(const int* v1, std::size_t n1, const int* v2, std::size_t n2,
                          const int* v3, std::size_t n3, int filler, F f)
 {
-   for(std::size_t f3 = 0u; f3 != nfam; ++f3) {
-      for(std::size_t d3 = 1u; d3 <= max_shape_depth(); ++d3) {
-         std::size_t cnt3 = 0;
-         const char* const* sp3 = shape_specs_family(f3, d3, cnt3);
-         for(std::size_t k = 0; k != cnt3; ++k) {
-            if(!shape_feasible(sp3[k], n3)) continue;
-            for_each_shape2_fam<T1, T2>(nfam, v1, n1, v2, n2, filler,
-                                        shape3_outer<T3, F>(d3, sp3[k], v3, n3, filler, f));
-         }
+   for(std::size_t d3 = 1u; d3 <= max_shape_depth(); ++d3) {
+      std::size_t cnt3 = 0;
+      const char* const* sp3 = shape_specs(d3, cnt3);
+      for(std::size_t k = 0; k != cnt3; ++k) {
+         if(!shape_feasible(sp3[k], n3)) continue;
+         for_each_shape2_all<T1, T2>(v1, n1, v2, n2, filler,
+                                     shape3_outer<T3, F>(d3, sp3[k], v3, n3, filler, f));
       }
    }
 }
 
-//! Cross product of the branch specs of three independently segmented ranges,
-//! including the empty-segment shapes for all three.  Calls
-//! f(c1, n1, spec1, c2, n2, spec2, c3, n3, spec3).  Typically two input ranges
-//! and one output range.
-template<class T1, class T2, class T3, class F>
-void for_each_shape3_all(const int* v1, std::size_t n1, const int* v2, std::size_t n2,
-                         const int* v3, std::size_t n3, int filler, F f)
-{  for_each_shape3_fam<T1, T2, T3>(shape_all_families(), v1, n1, v2, n2, v3, n3, filler, f);  }
-
-//! Destination shapes alone, at both depths and including the empty-segment
-//! table.  for_each_shape3_all needs every range length up front, which an
+//! Destination shapes alone, at both depths.  for_each_shape3_all needs every range length up front, which an
 //! algorithm whose output length depends on its input data cannot supply: the
 //! length is only known once the inputs have been built and the expected
 //! answer computed.  Such a test enumerates its inputs with
@@ -967,14 +894,12 @@ template<class T, class G>
 void for_each_dest_shape_all(std::size_t n, int fill, int filler, G g)
 {
    boost::container::vector<int> vals(n ? n : 1u, fill);
-   for(std::size_t fam = 0u; fam != shape_all_families(); ++fam) {
-      for(std::size_t d = 1u; d <= max_shape_depth(); ++d) {
-         std::size_t cnt = 0;
-         const char* const* sp = shape_specs_family(fam, d, cnt);
-         for(std::size_t i = 0; i != cnt; ++i) {
-            if(!shape_feasible(sp[i], n)) continue;
-            with_shape<T, std::bidirectional_iterator_tag>(d, sp[i], &vals[0], n, filler, g);
-         }
+   for(std::size_t d = 1u; d <= max_shape_depth(); ++d) {
+      std::size_t cnt = 0;
+      const char* const* sp = shape_specs(d, cnt);
+      for(std::size_t i = 0; i != cnt; ++i) {
+         if(!shape_feasible(sp[i], n)) continue;
+         with_shape<T, std::bidirectional_iterator_tag>(d, sp[i], &vals[0], n, filler, g);
       }
    }
 }

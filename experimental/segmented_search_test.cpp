@@ -229,8 +229,8 @@ void test_search_segmented_both_sentinel()
 
 // Runs segmented_search over a pair of ranges whose segmentation shapes are
 // dictated by two independent branch specs, so that the haystack walk and the
-// needle walk are each exercised on their single-segment, multi-segment and
-// empty-segment paths, in every combination of the two.
+// needle walk are each exercised on their single-segment and multi-segment
+// paths, in every combination of the two.
 struct search_shape_check
 {
    template<class C1, class C2>

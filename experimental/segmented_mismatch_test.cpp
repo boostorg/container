@@ -1292,9 +1292,9 @@ void test_mismatch_2r_single_segment_every_position()
 // segmented ranges together, so the cross product of the two ranges' shapes
 // is what matters.  Both returned iterators are checked against the position
 // the naive scan reports, which is a stronger statement than "the walk
-// stopped somewhere sensible": with the 'e' shapes in play, several distinct
-// (segment, local) pairs denote the same logical position and only a
-// correctly normalised result compares equal to iter_at.
+// stopped somewhere sensible": several distinct (segment, local) pairs can
+// denote the same logical position and only a correctly normalised result
+// compares equal to iter_at.
 //
 // Range 2 is one element longer than range 1 and ends in a value found
 // nowhere else, so a walker that reads one element past last1 sees range 1's

@@ -118,10 +118,9 @@ void test_replace_if_seg2()
 
 // Replaces within a sub-range whose segmentation shape is dictated by a branch
 // spec, so that every level of the recursive dispatch is exercised on its
-// single-segment path, on its multi-segment path and on the multi-segment path
-// with empty segments interleaved.  The guard element just past the end
-// satisfies the predicate, so an algorithm that writes past the end is caught
-// by filler_intact rather than going unnoticed.
+// single-segment path and on its multi-segment path.  The guard element just
+// past the end satisfies the predicate, so an algorithm that writes past the
+// end is caught by filler_intact rather than going unnoticed.
 template<class Pred>
 struct replace_if_shape_check
 {

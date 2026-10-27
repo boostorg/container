@@ -61,7 +61,7 @@ void test_count_sentinel_non_segmented()
 
 // Runs segmented_count over a range whose segmentation shape is dictated by a
 // branch spec, so that every level of the recursive dispatch is exercised on
-// its single-segment, its multi-segment and its empty-segment path. Unlike the
+// its single-segment and its multi-segment path. Unlike the
 // early-exit algorithms, count has to visit the whole range and add up the
 // per-segment subtotals, so a segment counted twice or skipped shows up here.
 struct count_shape_check

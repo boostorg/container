@@ -109,11 +109,11 @@ struct value_summer
 
 // Walks a sub-range whose segmentation shape is dictated by a branch spec, so
 // that every level of the recursive dispatch is exercised on its
-// single-segment path, on its multi-segment path and on the multi-segment path
-// with empty segments interleaved.  Both flavours of stateful callable are
-// used: one whose state travels back in the returned function object and one
-// whose state lives behind a pointer, since the combinators copy the callable
-// by value and state kept in a plain member of a discarded copy would vanish.
+// single-segment path and on its multi-segment path.  Both flavours of stateful
+// callable are used: one whose state travels back in the returned function
+// object and one whose state lives behind a pointer, since the combinators
+// copy the callable by value and state kept in a plain member of a discarded
+// copy would vanish.
 struct for_each_shape_check
 {
    template<class Cont>

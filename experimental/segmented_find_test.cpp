@@ -215,8 +215,7 @@ struct find_shape_check
 
       // A hit must really hold the value and a miss must land exactly on the
       // end bound; neither follows from the iterator comparison alone once
-      // empty segments make several distinct (segment, local) pairs denote
-      // the same position.
+      // several distinct (segment, local) pairs can denote the same position.
       if(expected == flat.size()) {
          if(!BOOST_TEST(r == last))
             this->report(spec, n);

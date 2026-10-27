@@ -488,11 +488,9 @@ void test_swap_ranges_single_segment_second_from_flat()
 //////////////////////////////////////////////////////////////////////////////
 // Shape matrix.
 //
-// for_each_shape2_all walks the twelve branch specs of the first range
-// against the twelve of the second, so the two segmentations vary
-// independently: 144 pairs per size pair, over both segmentation depths.  The
-// 'e' specs carry empty segments, which is the only way to reach the
-// sfirst == slast branch of the second range's bounded helpers.
+// for_each_shape2_all walks the six branch specs of the first range against
+// the six of the second, so the two segmentations vary independently: 36
+// pairs per size pair, over both segmentation depths.
 //
 // segmented_swap_ranges writes into both ranges, so both are checked after
 // every call: the first range must hold the second range's prefix, the second

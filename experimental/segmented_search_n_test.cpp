@@ -155,15 +155,14 @@ void test_search_n_every_position_seg2()
 
 // Runs segmented_search_n over a range whose segmentation shape is dictated by
 // a branch spec, so that every level of the recursive dispatch is exercised on
-// its single-segment, its multi-segment and its empty-segment path.
+// its single-segment and its multi-segment path.
 //
 // search_n is the algorithm in this group that threads state across segment
 // boundaries: a partial run at the end of one segment has to be carried into
 // the next one, extended, and abandoned if the next segment breaks it. The
 // off-by-one fixed in search_n_scan_segment was exactly such a carry error,
 // which is why the run positions, the run lengths and the counts are all swept
-// here rather than sampled, and why the empty-segment shapes matter: an empty
-// segment in the middle of a run must neither break the carry nor consume it.
+// here rather than sampled.
 struct search_n_shape_check
 {
    int count;

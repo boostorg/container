@@ -390,11 +390,9 @@ void test_copy_n_single_segment_dst_from_flat()
 //////////////////////////////////////////////////////////////////////////////
 // Shape matrix.
 //
-// for_each_shape2_all walks the twelve branch specs of the source range
-// against the twelve of the destination range, so the two segmentations vary
-// independently: 144 pairs per size pair, over both segmentation depths.  The
-// 'e' specs carry empty segments, which is the only way to reach the
-// sfirst == slast branch of the destination bounded helpers.
+// for_each_shape2_all walks the six branch specs of the source range against
+// the six of the destination range, so the two segmentations vary
+// independently: 36 pairs per size pair, over both segmentation depths.
 //
 // segmented_copy_n takes no end bound, so the count is a third axis: the
 // matrix is run for a count equal to the source length, a count that stops

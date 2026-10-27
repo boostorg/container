@@ -142,7 +142,7 @@ void test_find_if_every_position_seg2()
 
 // Runs segmented_find_if over a range whose segmentation shape is dictated by
 // a branch spec, so that every level of the recursive dispatch is exercised on
-// its single-segment, its multi-segment and its empty-segment path.
+// its single-segment and its multi-segment path.
 template<class Pred>
 struct find_if_shape_check
 {

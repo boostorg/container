@@ -322,8 +322,8 @@ void test_remove_single_segment_seg2_both()
 // Shape matrix.
 //
 // segmented_remove is in place, so there is only one range and
-// for_each_shape_all is the right combinator: the twelve branch specs over
-// both segmentation depths, the 'e' ones carrying empty segments.
+// for_each_shape_all is the right combinator: the six branch specs over
+// both segmentation depths.
 //
 // What can be asserted after the call is the returned new logical end, the
 // surviving prefix in front of it, and the guard just past the end of the

@@ -11,6 +11,7 @@
 #include <boost/container/experimental/segmented_copy_if.hpp>
 #include "../test/lightweight_test.hpp"
 #include "segmented_test_helper.hpp"
+#include <boost/container/deque.hpp>
 #include <boost/container/vector.hpp>
 
 using namespace boost::container;
@@ -422,11 +423,9 @@ void test_copy_if_single_segment_dst_from_flat()
 //////////////////////////////////////////////////////////////////////////////
 // Shape matrix.
 //
-// for_each_shape2_all walks the twelve branch specs of the source range
-// against the twelve of the destination range, so the two segmentations vary
-// independently: 144 pairs per size pair, over both segmentation depths.  The
-// 'e' specs carry empty segments, which is the only way to reach the
-// sfirst == slast branch of segmented_copy_if_dst_bounded.
+// for_each_shape2_all walks the six branch specs of the source range against
+// the six of the destination range, so the two segmentations vary
+// independently: 36 pairs per size pair, over both segmentation depths.
 //
 // The output length of copy_if is data dependent, so the destination is run
 // twice per source size: once sized to exactly the expected number of matches,
@@ -576,12 +575,10 @@ void test_copy_if_unrolled_blocks()
          const bool a = am != 0;
          copy_if_block_case<s1_t, s1_t>("s",  "s",  n, a);
          copy_if_block_case<s1_t, s1_t>("m",  "m",  n, a);
-         copy_if_block_case<s1_t, s1_t>("e",  "e",  n, a);
          copy_if_block_case<s1_t, s2_t>("s",  "ss", n, a);
          copy_if_block_case<s1_t, s2_t>("m",  "mm", n, a);
          copy_if_block_case<s2_t, s1_t>("sm", "s",  n, a);
          copy_if_block_case<s2_t, s2_t>("mm", "mm", n, a);
-         copy_if_block_case<s2_t, s2_t>("ee", "ee", n, a);
       }
    }
 }
@@ -675,6 +672,16 @@ void test_copy_if_predicate_count()
    }
 }
 
+//The output is begin() of an empty deque (null segment): nothing is written,
+//so the result is the same iterator
+void test_copy_if_empty_deque_output()
+{
+   boost::container::vector<int> v(10, 1);
+   boost::container::deque<int> e;
+   BOOST_TEST(boost::container::segmented_copy_if(v.begin(), v.end(), e.begin(), is_even()) == e.begin());
+   BOOST_TEST(boost::container::segmented_copy_if(v.end(), v.end(), e.begin(), is_even()) == e.begin());
+}
+
 int main()
 {
    test_copy_if_full_range();
@@ -700,5 +707,6 @@ int main()
    test_copy_if_shape_matrix();
    test_copy_if_unrolled_blocks();
    test_copy_if_predicate_count();
+   test_copy_if_empty_deque_output();
    return boost::report_errors();
 }

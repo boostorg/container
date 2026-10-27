@@ -11,6 +11,7 @@
 #include <boost/container/experimental/segmented_partition_copy.hpp>
 #include "../test/lightweight_test.hpp"
 #include "segmented_test_helper.hpp"
+#include <boost/container/deque.hpp>
 #include <boost/container/vector.hpp>
 #include <utility>
 
@@ -424,12 +425,9 @@ void test_partition_copy_single_segment_outs_from_flat()
 //////////////////////////////////////////////////////////////////////////////
 // Shape matrix.
 //
-// partition_copy has three ranges, so this uses for_each_shape3_all: the
-// twelve branch specs of the source crossed with the twelve of each of the two
-// destinations, over both segmentation depths, 1728 triples per size triple.
-// The 'e' specs carry empty segments, which is the only way into the
-// sfirst == slast branch of the destination bounded helpers with an empty
-// destination segment.
+// partition_copy has three ranges, so this uses for_each_shape3_all: the six
+// branch specs of the source crossed with the six of each of the two
+// destinations, over both segmentation depths, 216 triples per size triple.
 //
 // Both output lengths are data dependent, so each source is run with both
 // destinations sized exactly, which puts each guard immediately after the last
@@ -620,12 +618,10 @@ void test_partition_copy_unrolled_blocks()
          const int rt = routings[k];
          partition_copy_block_case<s1_t, s1_t, s1_t>("s",  "s",  "s",  n, rt);
          partition_copy_block_case<s1_t, s1_t, s1_t>("m",  "m",  "m",  n, rt);
-         partition_copy_block_case<s1_t, s1_t, s1_t>("e",  "e",  "e",  n, rt);
          partition_copy_block_case<s1_t, s1_t, s2_t>("s",  "s",  "ss", n, rt);
          partition_copy_block_case<s1_t, s2_t, s1_t>("m",  "mm", "m",  n, rt);
          partition_copy_block_case<s2_t, s1_t, s1_t>("sm", "s",  "s",  n, rt);
          partition_copy_block_case<s2_t, s2_t, s2_t>("mm", "mm", "mm", n, rt);
-         partition_copy_block_case<s2_t, s2_t, s2_t>("ee", "ee", "ee", n, rt);
       }
    }
 }
@@ -723,6 +719,30 @@ void test_partition_copy_predicate_count()
    }
 }
 
+//The output is begin() of an empty deque (null segment): nothing is written,
+//so the result is the same iterator
+void test_partition_copy_empty_deque_output()
+{
+   typedef boost::container::deque<int> deque_t;
+   boost::container::vector<int> v(10, 1), v2(10, 2), z;
+   deque_t e, o(10, 0);
+   //all elements go to the other output
+   std::pair<deque_t::iterator, deque_t::iterator> r =
+      boost::container::segmented_partition_copy(v.begin(), v.end(), e.begin(), o.begin(), is_even());
+   BOOST_TEST(r.first == e.begin());
+   BOOST_TEST(r.second == o.end());
+   BOOST_TEST(o.front() == 1 && o.back() == 1);
+   r = boost::container::segmented_partition_copy(v2.begin(), v2.end(), o.begin(), e.begin(), is_even());
+   BOOST_TEST(r.first == o.end());
+   BOOST_TEST(r.second == e.begin());
+   BOOST_TEST(o.front() == 2 && o.back() == 2);
+   //empty source and two empty deques
+   deque_t e2;
+   r = boost::container::segmented_partition_copy(z.begin(), z.end(), e.begin(), e2.begin(), is_even());
+   BOOST_TEST(r.first == e.begin());
+   BOOST_TEST(r.second == e2.begin());
+}
+
 int main()
 {
    test_partition_copy_segmented();
@@ -745,5 +765,6 @@ int main()
    test_partition_copy_shape_matrix();
    test_partition_copy_unrolled_blocks();
    test_partition_copy_predicate_count();
+   test_partition_copy_empty_deque_output();
    return boost::report_errors();
 }
