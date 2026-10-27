@@ -50,6 +50,21 @@
 #define BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS 1
 #endif
 
+// Random-access leaves that process min(count, segment length) elements. When
+// 1, they use two loops: one over the segment length and one over count. For a
+// full segment of a fixed size (e.g. deque) the segment length is a compile-time
+// constant, and MSVC vectorizes a loop with that trip count much better. Other
+// compilers make the same code with one loop over min(count, segment length),
+// so the default is 1 only for MSVC. Define to 0 or 1 before including
+// segmented headers to override the default.
+#if !defined(BOOST_CONTAINER_SEGMENTED_SPLIT_FULL_SEGMENT_LOOP)
+   #if defined(BOOST_MSVC)
+      #define BOOST_CONTAINER_SEGMENTED_SPLIT_FULL_SEGMENT_LOOP 1
+   #else
+      #define BOOST_CONTAINER_SEGMENTED_SPLIT_FULL_SEGMENT_LOOP 0
+   #endif
+#endif
+
 #define BOOST_CONTAINER_SEGMENTED_DISABLE_PRAGMA_UNROLL
 //#define BOOST_CONTAINER_SEGMENTED_ENABLE_PRAGMA_UNROLL
 

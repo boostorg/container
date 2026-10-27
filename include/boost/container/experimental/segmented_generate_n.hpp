@@ -42,6 +42,22 @@ segduo<OutIter, std::size_t> generate_n_scan
 {
    //count and the segment length are std::size_t (see segmented_generate_n): no truncation
    const std::size_t range_sz = static_cast<std::size_t>(last - first);
+   #if BOOST_CONTAINER_SEGMENTED_SPLIT_FULL_SEGMENT_LOOP
+   //Two loops: for a full segment of a fixed size range_sz is a compile-time constant
+   if (count >= range_sz) {
+      count -= range_sz;
+      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
+      for (std::size_t cnt = 0; cnt != range_sz; ++first, ++cnt)
+         *first = gen();
+      return segduo<OutIter, std::size_t>(first, count);
+   }
+   else {
+      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
+      for (std::size_t cnt = 0; cnt != count; ++first, ++cnt)
+         *first = gen();
+      return segduo<OutIter, std::size_t>(first, std::size_t(0));
+   }
+   #else
    const std::size_t length = count < range_sz ? count : range_sz;
    count -= length;
    BOOST_CONTAINER_SEGMENTED_UNROLL(4)
@@ -49,6 +65,7 @@ segduo<OutIter, std::size_t> generate_n_scan
       *first = gen();
    }
    return segduo<OutIter, std::size_t>(first, count);
+   #endif
 }
 #endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 

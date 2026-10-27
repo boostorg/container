@@ -54,6 +54,22 @@ segduo<OutIter, std::size_t> fill_n_scan
 {
    //count and the segment length are std::size_t (see segmented_fill_n): no truncation
    const std::size_t len = static_cast<std::size_t>(last - first);
+   #if BOOST_CONTAINER_SEGMENTED_SPLIT_FULL_SEGMENT_LOOP
+   //Two loops: for a full segment of a fixed size len is a compile-time constant
+   if (count >= len) {
+      count -= len;
+      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
+      for (std::size_t i = 0; i != len; ++first, ++i)
+         *first = value;
+      return segduo<OutIter, std::size_t>(first, count);
+   }
+   else {
+      BOOST_CONTAINER_SEGMENTED_UNROLL(4)
+      for (std::size_t i = 0; i != count; ++first, ++i)
+         *first = value;
+      return segduo<OutIter, std::size_t>(first, std::size_t(0));
+   }
+   #else
    std::size_t n = count < len ? count : len;
    count -= n;
 
@@ -62,6 +78,7 @@ segduo<OutIter, std::size_t> fill_n_scan
       *first = value;
 
    return segduo<OutIter, std::size_t>(first, count);
+   #endif
 }
 #endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
