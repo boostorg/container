@@ -51,6 +51,9 @@ struct non_segmented_iterator_tag
 //!   static local_iterator   begin(segment_iterator s);
 //!   static local_iterator   end(segment_iterator s);
 //!
+//! Segments are not empty, except a last segment that only holds an end
+//! iterator (e.g. the end of a deque at the start of the next block).
+//!
 //! An explicit specialization is not required when the iterator type
 //! provides the intrusive interface:
 //!

@@ -50,21 +50,26 @@ namespace detail_algo {
 template <class Iter1, class Sent1, class Iter2, class Sent2, class DstIter, class DstSent,
           class Comp, class DstTag, class SrcCat>
 BOOST_CONTAINER_FORCEINLINE
-typename algo_enable_if_c<!DstTag::value, segquartet<Iter1, Iter2, DstIter, bool> >::type
+typename algo_enable_if_c<!DstTag::value, segquartet<Iter1, Iter2, DstIter, unsigned> >::type
 set_symmetric_difference_dst_bounded
    (Iter1 first1, Sent1 last1, Iter2 first2, Sent2 last2,
-    DstIter dst_first, DstSent dst_last, Comp comp, DstTag, SrcCat)
+    DstIter dst_first, DstSent dst_last, Comp comp, unsigned carry, DstTag, SrcCat)
 {
-   // The destination-full test guards the write, not the whole iteration: an
-   // element that produces no output still has to be consumed, so stopping
-   // with room left in the sources but none in the destination would leave
-   // the segmented walker unable to tell a full segment from an exhausted
-   // destination.  With unreachable_sentinel_t the test folds away as before.
-   bool src_done = true;
+   //carry: 1 if *first1 is less than *first2, 2 if *first2 is less than *first1
+   //(compared by the previous call, which stopped because its destination was
+   //full).  The caller gives a carry only with a range that has room.
+   if(carry == 1u) {
+      *dst_first = *first1; ++first1; ++dst_first;
+      carry = 0u;
+   }
+   else if(carry == 2u) {
+      *dst_first = *first2; ++first2; ++dst_first;
+      carry = 0u;
+   }
    while(first1 != last1 && first2 != last2) {
       if (comp(*first1, *first2)) {
          if(BOOST_UNLIKELY(dst_first == dst_last)) {
-            src_done = false;
+            carry = 1u;
             break;
          }
          *dst_first = *first1;
@@ -74,7 +79,7 @@ set_symmetric_difference_dst_bounded
       else {
          if (comp(*first2, *first1)) {
             if(BOOST_UNLIKELY(dst_first == dst_last)) {
-               src_done = false;
+               carry = 2u;
                break;
             }
             *dst_first = *first2;
@@ -86,7 +91,7 @@ set_symmetric_difference_dst_bounded
          ++first2;
       }
    }
-   return segquartet<Iter1, Iter2, DstIter, bool>(first1, first2, dst_first, src_done);
+   return segquartet<Iter1, Iter2, DstIter, unsigned>(first1, first2, dst_first, carry);
 }
 
 template <std::size_t BlockSize, class RAIter1, class RAIter2, class DstIter, class Comp>
@@ -134,32 +139,43 @@ BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c
    < !DstTag::value && seg_is_ra_iterator<RAIter2>::value
       && seg_is_ra_iterator<DstIter>::value
-   , segquartet<RAIter1, RAIter2, DstIter, bool> >::type
+   , segquartet<RAIter1, RAIter2, DstIter, unsigned> >::type
 set_symmetric_difference_dst_bounded
    (RAIter1 first1, RAIter1 last1, RAIter2 first2, RAIter2 last2,
-    DstIter dst_first, DstIter dst_last, Comp comp, DstTag dst_tag,
+    DstIter dst_first, DstIter dst_last, Comp comp, unsigned carry, DstTag dst_tag,
     const std::random_access_iterator_tag &)
 {
+   //carry: 1 if *first1 is less than *first2, 2 if *first2 is less than *first1
+   //(compared by the previous call, which stopped because its destination was
+   //full).  The caller gives a carry only with a range that has room.
+   if(carry == 1u) {
+      *dst_first = *first1; ++first1; ++dst_first;
+      carry = 0u;
+   }
+   else if(carry == 2u) {
+      *dst_first = *first2; ++first2; ++dst_first;
+      carry = 0u;
+   }
    segtrio<RAIter1, RAIter2, DstIter> r = (set_symmetric_difference_blocks<32>)
       (first1, last1, first2, last2, dst_first, dst_last, comp);
    return (set_symmetric_difference_dst_bounded)
-      (r.first, last1, r.second, last2, r.third, dst_last, comp, dst_tag, int());
+      (r.first, last1, r.second, last2, r.third, dst_last, comp, 0u, dst_tag, int());
 }
 #endif   // BOOST_CONTAINER_SEGMENTED_ENABLE_RA_SPECIALIZATIONS
 
 template <class Iter1, class Sent1, class Iter2, class Sent2, class SegDstIter,
           class Comp, class SrcCat>
-segquartet<Iter1, Iter2, SegDstIter, bool> set_symmetric_difference_dst_bounded
+segquartet<Iter1, Iter2, SegDstIter, unsigned> set_symmetric_difference_dst_bounded
    (Iter1 first1, Sent1 last1, Iter2 first2, Sent2 last2,
-    SegDstIter dst_first, SegDstIter dst_last, Comp comp,
+    SegDstIter dst_first, SegDstIter dst_last, Comp comp, unsigned carry,
     segmented_iterator_tag, SrcCat)
 {
    typedef segmented_iterator_traits<SegDstIter>  dst_traits;
    typedef typename dst_traits::local_iterator    dst_local_iterator;
    typedef typename dst_traits::segment_iterator  dst_segment_iterator;
    typedef typename segmented_iterator_traits<dst_local_iterator>::is_segmented_iterator dst_is_local_seg_t;
-   typedef segquartet<Iter1, Iter2, dst_local_iterator, bool>  local_result_t;
-   typedef segquartet<Iter1, Iter2, SegDstIter, bool>          result_t;
+   typedef segquartet<Iter1, Iter2, dst_local_iterator, unsigned>  local_result_t;
+   typedef segquartet<Iter1, Iter2, SegDstIter, unsigned>          result_t;
 
    dst_segment_iterator       sfirst = dst_traits::segment(dst_first);
    const dst_segment_iterator slast  = dst_traits::segment(dst_last);
@@ -167,31 +183,20 @@ segquartet<Iter1, Iter2, SegDstIter, bool> set_symmetric_difference_dst_bounded
    dst_local_iterator db = dst_traits::local(dst_first);
 
    for(;;) {
-      //Partial segments (first and last) share this call site
       const bool last_seg = sfirst == slast;
       const dst_local_iterator de = last_seg ? dst_traits::local(dst_last) : dst_traits::end(sfirst);
-      {
-         const local_result_t r = (set_symmetric_difference_dst_bounded)
-            ( first1, last1, first2, last2, db
-            , de, comp, dst_is_local_seg_t(), SrcCat());
-         first1 = r.first;
-         first2 = r.second;
-         if(last_seg || BOOST_UNLIKELY(r.fourth))
-            return result_t(first1, first2, dst_traits::compose(sfirst, r.third), r.fourth);
-      }
-
-      //Middle segments keep their own call site: begin/end both come from
-      //sfirst, so the leaf can be specialised for full segments
-      for(++sfirst; sfirst != slast; ++sfirst) {
-         const local_result_t r = (set_symmetric_difference_dst_bounded)
-            ( first1, last1, first2, last2, dst_traits::begin(sfirst)
-            , dst_traits::end(sfirst), comp, dst_is_local_seg_t(), SrcCat());
-         first1 = r.first;
-         first2 = r.second;
-         if(BOOST_UNLIKELY(r.fourth))
-            return result_t(first1, first2, dst_traits::compose(sfirst, r.third), true);
-      }
-
+      //Segments are never empty, but the range can end at the start of the last one
+      if(BOOST_UNLIKELY(carry && db == de))
+         return result_t(first1, first2, dst_traits::compose(sfirst, db), carry);
+      const local_result_t r = (set_symmetric_difference_dst_bounded)
+         ( first1, last1, first2, last2, db
+         , de, comp, carry, dst_is_local_seg_t(), SrcCat());
+      first1 = r.first;
+      first2 = r.second;
+      carry  = r.fourth;
+      if(!carry || last_seg)
+         return result_t(first1, first2, dst_traits::compose(sfirst, r.third), carry);
+      ++sfirst;
       db = dst_traits::begin(sfirst);
    }
 }
@@ -212,10 +217,10 @@ segtrio<Iter1, Iter2, DstIter> set_symmetric_difference_until_exhausts
     const Tag &, const Cat &src1_cat)
 {
    //An unbounded destination can only stop on source exhaustion, so the leaf's
-   //flag is a constant here and drops out.
-   const segquartet<Iter1, Iter2, DstIter, bool> r = (set_symmetric_difference_dst_bounded)
+   //carry is a constant here and drops out.
+   const segquartet<Iter1, Iter2, DstIter, unsigned> r = (set_symmetric_difference_dst_bounded)
       (first1, last1, first2, last2, result, unreachable_sentinel_t(),
-       comp, non_segmented_iterator_tag(), src1_cat);
+       comp, 0u, non_segmented_iterator_tag(), src1_cat);
    return segtrio<Iter1, Iter2, DstIter>(r.first, r.second, r.third);
 }
 
@@ -229,7 +234,7 @@ segtrio<Iter1, Iter2, SegDstIter> set_symmetric_difference_until_exhausts
    typedef typename dst_traits::local_iterator    dst_local_iterator;
    typedef typename dst_traits::segment_iterator  dst_segment_iterator;
    typedef typename segmented_iterator_traits<dst_local_iterator>::is_segmented_iterator dst_is_local_seg_t;
-   typedef segquartet<Iter1, Iter2, dst_local_iterator, bool>  bounded_t;
+   typedef segquartet<Iter1, Iter2, dst_local_iterator, unsigned>  bounded_t;
    typedef segtrio<Iter1, Iter2, SegDstIter>          result_t;
 
    if(BOOST_UNLIKELY(first1 == last1 || first2 == last2))
@@ -237,28 +242,35 @@ segtrio<Iter1, Iter2, SegDstIter> set_symmetric_difference_until_exhausts
 
    dst_segment_iterator dst_seg   = dst_traits::segment(result);
    dst_local_iterator   dst_local = dst_traits::local(result);
+   //The first range is empty: end() of the first segment is computed only when
+   //an element must be written.  If nothing is written, the segment can be
+   //singular (e.g. begin() of an empty deque).
+   dst_local_iterator   dst_end   = dst_local;
+   bool bounded = false;
+   unsigned carry = 0u;
 
    while(1) {
-      const dst_local_iterator dst_end = dst_traits::end(dst_seg);
       const bounded_t r = (set_symmetric_difference_dst_bounded)
-         (first1, last1, first2, last2, dst_local, dst_end, comp,
+         (first1, last1, first2, last2, dst_local, dst_end, comp, carry,
           dst_is_local_seg_t(), src1_cat);
       first1    = r.first;
       first2    = r.second;
       dst_local = r.third;
-
-      // Stop on source exhaustion, not on "the segment did not fill": when
-      // the output ends exactly on a segment boundary both hold at once, and
-      // stepping dst_seg then walks off the end of the destination.  compose()
-      // normalises a local iterator sitting on the segment end, the same way
-      // segmented_copy_dst_dispatch relies on.  fourth already answers that
-      // question, and gives source exhaustion priority on such a tie.
-      if(BOOST_UNLIKELY(r.fourth)) {
+      carry     = r.fourth;
+      //Without a carry the leaf stopped because a source is exhausted
+      if(BOOST_LIKELY(!carry))
          return result_t(first1, first2, dst_traits::compose(dst_seg, dst_local));
+      //An element must be written and the dst range is full: use the rest of
+      //the first segment, then the next ones.  The leaf writes the carried
+      //element without comparing it again.
+      if(!bounded) {
+         bounded = true;
       }
-      // dst segment full and both sources still live; advance to the next.
-      ++dst_seg;
-      dst_local = dst_traits::begin(dst_seg);
+      else {
+         ++dst_seg;
+         dst_local = dst_traits::begin(dst_seg);
+      }
+      dst_end = dst_traits::end(dst_seg);
    }
 }
 
