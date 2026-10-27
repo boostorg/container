@@ -384,7 +384,7 @@ template<class Allocator>
 struct devector_alloc_holder
    : public Allocator
 {
-   BOOST_DEFAULTED_FUNCTION(devector_alloc_holder(), {})
+   BOOST_CONTAINER_DEFAULTED_DEFAULT_CTOR(devector_alloc_holder(), {})
 
    template<class A>
    BOOST_CONTAINER_FORCEINLINE explicit devector_alloc_holder(BOOST_FWD_REF(A) a)

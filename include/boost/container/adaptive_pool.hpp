@@ -125,7 +125,7 @@ class adaptive_pool
 
    public:
    //!Default constructor
-   BOOST_DEFAULTED_FUNCTION(adaptive_pool() BOOST_NOEXCEPT_OR_NOTHROW, {})
+   BOOST_CONTAINER_DEFAULTED_DEFAULT_CTOR(adaptive_pool() BOOST_NOEXCEPT_OR_NOTHROW, {})
 
    //Implicit copy operations and destructor: keeps the allocator trivially copyable (passed in registers)
    #if defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -649,7 +649,7 @@ class adaptive_pool<void, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version
    struct rebind
    {  typedef adaptive_pool<T2, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version> other;  };
 
-   BOOST_DEFAULTED_FUNCTION(adaptive_pool() BOOST_NOEXCEPT_OR_NOTHROW, {})
+   BOOST_CONTAINER_DEFAULTED_DEFAULT_CTOR(adaptive_pool() BOOST_NOEXCEPT_OR_NOTHROW, {})
 
    template<class T2>
    adaptive_pool(const adaptive_pool<T2, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version> &) BOOST_NOEXCEPT_OR_NOTHROW
@@ -697,7 +697,7 @@ class private_adaptive_pool<void, NodesPerBlock, MaxFreeBlocks, OverheadPercent,
    struct rebind
    {  typedef private_adaptive_pool<T2, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version> other;  };
 
-   BOOST_DEFAULTED_FUNCTION(private_adaptive_pool() BOOST_NOEXCEPT_OR_NOTHROW, {})
+   BOOST_CONTAINER_DEFAULTED_DEFAULT_CTOR(private_adaptive_pool() BOOST_NOEXCEPT_OR_NOTHROW, {})
 
    template<class T2>
    private_adaptive_pool(const private_adaptive_pool<T2, NodesPerBlock, MaxFreeBlocks, OverheadPercent, Version> &) BOOST_NOEXCEPT_OR_NOTHROW

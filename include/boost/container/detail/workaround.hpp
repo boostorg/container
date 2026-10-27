@@ -319,6 +319,19 @@ namespace boost {
 #  define BOOST_CONTAINER_RETURNS_NONNULL
 #endif
 
+//Declares a defaulted default constructor, so that the class stays trivially default
+//constructible. Clang before 3.9 (Apple Clang before 8) rejects "const T t;" if the
+//default constructor of T is not user-provided, so these compilers use BODY.
+//BODY is not passed to another macro, so it can hold BOOST_MOVE_I.
+#if defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) ||\
+    (defined(__clang__) && defined(__apple_build_version__) && (__clang_major__ < 8)) ||\
+    (defined(__clang__) && !defined(__apple_build_version__) &&\
+      ((__clang_major__ < 3) || ((__clang_major__ == 3) && (__clang_minor__ < 9))))
+#  define BOOST_CONTAINER_DEFAULTED_DEFAULT_CTOR(FUN, BODY) FUN BODY
+#else
+#  define BOOST_CONTAINER_DEFAULTED_DEFAULT_CTOR(FUN, BODY) FUN = default;
+#endif
+
 //Marks the listed (1-based) pointer parameters as never null, allowing the
 //compiler to assume so at call sites and warn if a null literal is passed.
 //No-op on compilers lacking the attribute (e.g. MSVC).

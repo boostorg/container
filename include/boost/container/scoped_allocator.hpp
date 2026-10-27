@@ -175,7 +175,7 @@ class scoped_allocator_adaptor_base
       > is_always_equal;
 
    //Defaulted: keeps the adaptor trivially default constructible
-   BOOST_DEFAULTED_FUNCTION(inline scoped_allocator_adaptor_base()
+   BOOST_CONTAINER_DEFAULTED_DEFAULT_CTOR(inline scoped_allocator_adaptor_base()
       , : outer_allocator_type() BOOST_MOVE_I m_inner() {})
 
    template <class OuterA2>
@@ -336,7 +336,7 @@ class scoped_allocator_adaptor_base<OuterAlloc, true, BOOST_MOVE_TARG##N>\
       inner_allocator_type::is_always_equal::value\
       > is_always_equal;\
    \
-   BOOST_DEFAULTED_FUNCTION(inline scoped_allocator_adaptor_base()\
+   BOOST_CONTAINER_DEFAULTED_DEFAULT_CTOR(inline scoped_allocator_adaptor_base()\
       , : outer_allocator_type() BOOST_MOVE_I m_inner() {})\
    \
    template <class OuterA2>\
@@ -474,7 +474,7 @@ class scoped_allocator_adaptor_base< OuterAlloc BOOST_CONTAINER_SCOPEDALLOC_DUMM
       is_always_equal                           is_always_equal;
 
    //Defaulted: keeps the adaptor trivially default constructible
-   BOOST_DEFAULTED_FUNCTION(inline scoped_allocator_adaptor_base(), : outer_allocator_type() {})
+   BOOST_CONTAINER_DEFAULTED_DEFAULT_CTOR(inline scoped_allocator_adaptor_base(), : outer_allocator_type() {})
 
    template <class OuterA2>
    inline scoped_allocator_adaptor_base(BOOST_FWD_REF(OuterA2) outerAlloc)
@@ -692,7 +692,7 @@ class scoped_allocator_adaptor
 
    //! <b>Effects</b>: value-initializes the OuterAlloc base class
    //! and the inner allocator object.
-   BOOST_DEFAULTED_FUNCTION(inline scoped_allocator_adaptor(), : base_type() {})
+   BOOST_CONTAINER_DEFAULTED_DEFAULT_CTOR(inline scoped_allocator_adaptor(), : base_type() {})
 
    //Implicit destructor: keeps the adaptor trivially copyable (passed in registers)
 
