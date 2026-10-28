@@ -205,8 +205,7 @@ struct search_n_shape_check
 // separately, so each shape is driven through both.
 void run_search_n_shapes(const int* vals, std::size_t n, int count, int value)
 {
-   test_detail::for_each_shape_all<int>(vals, n, -999, search_n_shape_check(count, value));
-   test_detail::for_each_shape_all_fwd<int>(vals, n, -999, search_n_shape_check(count, value));
+   test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, search_n_shape_check(count, value));
 }
 
 // Every count from the two dispatch special cases (0, which returns "first"
@@ -429,9 +428,7 @@ struct search_n_comparison_check
 
 void run_search_n_count_shapes(const int* vals, std::size_t n, int count, int value)
 {
-   test_detail::for_each_shape_all<test_detail::counted_int>
-      (vals, n, -999, search_n_comparison_check(count, value));
-   test_detail::for_each_shape_all_fwd<test_detail::counted_int>
+   test_detail::for_each_shape_all_fwd_and_better<test_detail::counted_int>
       (vals, n, -999, search_n_comparison_check(count, value));
 }
 

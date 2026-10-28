@@ -212,9 +212,7 @@ void test_find_last_shape_matrix()
       // filler, which must never be found.
       for(std::size_t v = 0; v <= n + 1u; ++v) {
          const int target = (v <= n) ? int(v) : -999;
-         test_detail::for_each_shape_all<int>(vals, n, -999, find_last_shape_check(target));
-         //Forward iterators reach a separate segmented implementation.
-         test_detail::for_each_shape_all_fwd<int>(vals, n, -999, find_last_shape_check(target));
+         test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, find_last_shape_check(target));
       }
    }
 }
@@ -315,9 +313,7 @@ void test_find_last_comparison_count()
       const std::size_t n = sizes[s];
       for(std::size_t v = 0; v <= n + 1u; ++v) {
          const int target = (v <= n) ? int(v) : -999;
-         test_detail::for_each_shape_all<test_detail::counted_int>
-            (vals, n, -999, find_last_comparison_check(target));
-         test_detail::for_each_shape_all_fwd<test_detail::counted_int>
+         test_detail::for_each_shape_all_fwd_and_better<test_detail::counted_int>
             (vals, n, -999, find_last_comparison_check(target));
       }
    }

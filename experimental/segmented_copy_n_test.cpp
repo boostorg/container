@@ -390,7 +390,7 @@ void test_copy_n_single_segment_dst_from_flat()
 //////////////////////////////////////////////////////////////////////////////
 // Shape matrix.
 //
-// for_each_shape2_all walks the six branch specs of the source range against
+// for_each_shape2_all_bidir_and_better walks the six branch specs of the source range against
 // the six of the destination range, so the two segmentations vary
 // independently: 36 pairs per size pair, over both segmentation depths.
 //
@@ -457,7 +457,7 @@ void test_copy_n_shape_matrix()
       counts[1] = n_src/2u;
       counts[2] = 0u;
       for(std::size_t c = 0; c != 3u; ++c)
-         test_detail::for_each_shape2_all<int, int>
+         test_detail::for_each_shape2_all_fwd_and_better<int, int>
             (shape_src_vals, n_src, shape_dst_vals, n_dst,
              shape_filler, copy_n_shape_check(counts[c]));
    }

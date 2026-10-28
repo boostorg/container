@@ -185,7 +185,7 @@ void test_is_sorted_until_shape_matrix()
       //Ascending, i.e. sorted all the way to the end.
       for(int i = 0; i != 16; ++i)
          vals[i] = (i + 1) * 10;
-      test_detail::for_each_shape_all<int>(vals, n, -999, is_sorted_until_shape_check());
+      test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, is_sorted_until_shape_check());
 
       //One inversion, at each adjacent pair in turn: p == 1 is the first pair
       //and p == n-1 the last one.
@@ -193,19 +193,19 @@ void test_is_sorted_until_shape_matrix()
          for(int i = 0; i != 16; ++i)
             vals[i] = (i + 1) * 10;
          vals[p] = vals[p - 1u] - 1;
-         test_detail::for_each_shape_all<int>(vals, n, -999, is_sorted_until_shape_check());
+         test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, is_sorted_until_shape_check());
       }
 
       //Descending, under the explicit comparator.
       for(int i = 0; i != 16; ++i)
          vals[i] = (16 - i) * 10;
-      test_detail::for_each_shape_all<int>(vals, n, 99999, is_sorted_until_greater_shape_check());
+      test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, 99999, is_sorted_until_greater_shape_check());
 
       for(std::size_t p = 1u; p < n; ++p) {
          for(int i = 0; i != 16; ++i)
             vals[i] = (16 - i) * 10;
          vals[p] = vals[p - 1u] + 1;
-         test_detail::for_each_shape_all<int>(vals, n, 99999, is_sorted_until_greater_shape_check());
+         test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, 99999, is_sorted_until_greater_shape_check());
       }
    }
 }
@@ -267,7 +267,7 @@ void test_is_sorted_until_comparison_count()
       //to run to the end.
       for(int i = 0; i != 16; ++i)
          vals[i] = (16 - i) * 10;
-      test_detail::for_each_shape_all<int>(vals, n, 99999, is_sorted_until_count_check());
+      test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, 99999, is_sorted_until_count_check());
 
       //One inversion at each adjacent pair in turn, so the early exit lands at
       //every position, inside a segment and at a boundary.
@@ -275,7 +275,7 @@ void test_is_sorted_until_comparison_count()
          for(int i = 0; i != 16; ++i)
             vals[i] = (16 - i) * 10;
          vals[p] = vals[p - 1u] + 1;
-         test_detail::for_each_shape_all<int>(vals, n, 99999, is_sorted_until_count_check());
+         test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, 99999, is_sorted_until_count_check());
       }
    }
 }

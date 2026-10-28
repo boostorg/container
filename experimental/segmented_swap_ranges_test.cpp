@@ -488,7 +488,7 @@ void test_swap_ranges_single_segment_second_from_flat()
 //////////////////////////////////////////////////////////////////////////////
 // Shape matrix.
 //
-// for_each_shape2_all walks the six branch specs of the first range against
+// for_each_shape2_all_bidir_and_better walks the six branch specs of the first range against
 // the six of the second, so the two segmentations vary independently: 36
 // pairs per size pair, over both segmentation depths.
 //
@@ -545,7 +545,7 @@ void test_swap_ranges_shape_matrix()
       { {0, 0}, {1, 1}, {1, 3}, {2, 2}, {3, 3}, {3, 6}, {5, 5}, {6, 10} };
 
    for(std::size_t i = 0; i != sizeof(sizes)/sizeof(sizes[0]); ++i)
-      test_detail::for_each_shape2_all<int, int>
+      test_detail::for_each_shape2_all_fwd_and_better<int, int>
          (shape_first_vals, sizes[i][0], shape_second_vals, sizes[i][1],
           shape_filler, swap_ranges_shape_check());
 }
@@ -579,7 +579,7 @@ void test_swap_ranges_swap_count()
       { {0, 0}, {1, 1}, {1, 3}, {2, 2}, {3, 3}, {3, 6}, {5, 5}, {6, 10} };
 
    for(std::size_t i = 0; i != sizeof(sizes)/sizeof(sizes[0]); ++i)
-      test_detail::for_each_shape2_all<test_detail::counted_int, test_detail::counted_int>
+      test_detail::for_each_shape2_all_fwd_and_better<test_detail::counted_int, test_detail::counted_int>
          (shape_first_vals, sizes[i][0], shape_second_vals, sizes[i][1],
           shape_filler, swap_ranges_count_check());
 }

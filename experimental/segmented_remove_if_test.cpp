@@ -339,7 +339,7 @@ void test_remove_if_single_segment_seg2_both()
 // Shape matrix.
 //
 // segmented_remove_if is in place, so there is only one range and
-// for_each_shape_all is the right combinator: the six branch specs over
+// for_each_shape_all_bidir_and_better is the right combinator: the six branch specs over
 // both segmentation depths.  Both predicates are driven, so the removed and the
 // kept half swap over.
 //
@@ -398,9 +398,9 @@ void test_remove_if_shape_matrix()
          const std::size_t n = sizes[i];
          if(n > set_len[s])
             continue;
-         test_detail::for_each_shape_all<int>
+         test_detail::for_each_shape_all_fwd_and_better<int>
             (sets[s], n, shape_filler, remove_if_shape_check<is_even>());
-         test_detail::for_each_shape_all<int>
+         test_detail::for_each_shape_all_fwd_and_better<int>
             (sets[s], n, shape_filler, remove_if_shape_check<is_odd>());
       }
    }
@@ -447,9 +447,9 @@ void test_remove_if_predicate_count()
          const std::size_t n = sizes[i];
          if(n > set_len[s])
             continue;
-         test_detail::for_each_shape_all<int>
+         test_detail::for_each_shape_all_fwd_and_better<int>
             (sets[s], n, shape_filler, remove_if_count_check<is_even>());
-         test_detail::for_each_shape_all<int>
+         test_detail::for_each_shape_all_fwd_and_better<int>
             (sets[s], n, shape_filler, remove_if_count_check<is_odd>());
       }
    }

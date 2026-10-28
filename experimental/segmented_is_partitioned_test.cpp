@@ -143,8 +143,7 @@ struct is_partitioned_shape_check
 // separately, so each shape is driven through both.
 void run_is_partitioned_shapes(const int* vals, std::size_t n, int threshold)
 {
-   test_detail::for_each_shape_all<int>(vals, n, -999, is_partitioned_shape_check(threshold));
-   test_detail::for_each_shape_all_fwd<int>(vals, n, -999, is_partitioned_shape_check(threshold));
+   test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, is_partitioned_shape_check(threshold));
 }
 
 void test_is_partitioned_shape_matrix()
@@ -333,8 +332,7 @@ struct is_partitioned_count_check
 
 void run_is_partitioned_count_shapes(const int* vals, std::size_t n, int threshold)
 {
-   test_detail::for_each_shape_all<int>(vals, n, -999, is_partitioned_count_check(threshold));
-   test_detail::for_each_shape_all_fwd<int>(vals, n, -999, is_partitioned_count_check(threshold));
+   test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, is_partitioned_count_check(threshold));
 }
 
 void test_is_partitioned_predicate_count()

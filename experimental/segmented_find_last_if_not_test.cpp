@@ -209,9 +209,7 @@ find_last_if_not_shape_check<Pred> make_find_last_if_not_check(Pred p)
 template<class Pred>
 void run_find_last_if_not_shapes(const int* vals, std::size_t n, Pred pred)
 {
-   test_detail::for_each_shape_all<int>(vals, n, -999, make_find_last_if_not_check(pred));
-   //Forward iterators reach a separate segmented implementation.
-   test_detail::for_each_shape_all_fwd<int>(vals, n, -999, make_find_last_if_not_check(pred));
+   test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, make_find_last_if_not_check(pred));
 }
 
 void test_find_last_if_not_shape_matrix()
@@ -340,8 +338,7 @@ struct find_last_if_not_count_check
 template<class Pred>
 void run_find_last_if_not_count_shapes(const int* vals, std::size_t n, Pred pred)
 {
-   test_detail::for_each_shape_all<int>(vals, n, -999, find_last_if_not_count_check<Pred>(pred));
-   test_detail::for_each_shape_all_fwd<int>(vals, n, -999, find_last_if_not_count_check<Pred>(pred));
+   test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, find_last_if_not_count_check<Pred>(pred));
 }
 
 void test_find_last_if_not_predicate_count()

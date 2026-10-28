@@ -1387,7 +1387,7 @@ void test_mismatch_shape_matrix()
          if(bad != n1)
             v2[bad] = -7;
 
-         test_detail::for_each_shape2_all<int, int>
+         test_detail::for_each_shape2_all_fwd_and_better<int, int>
             (v1, n1, v2, n2, -999, mismatch_shape_check(bad));
       }
    }
@@ -1473,7 +1473,7 @@ void test_mismatch_predicate_count()
          if(bad != n1)
             v2[bad] = -7;
 
-         test_detail::for_each_shape2_all<int, int>
+         test_detail::for_each_shape2_all_fwd_and_better<int, int>
             (v1, n1, v2, n2, -999, mismatch_count_check(bad));
       }
    }

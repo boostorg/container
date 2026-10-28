@@ -21,6 +21,7 @@
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 #include <boost/container/detail/iterator.hpp>
+#include <boost/container/detail/mpl.hpp>
 
 namespace boost {
 namespace container {
@@ -45,6 +46,10 @@ struct wrapped_iter_category<void, Iterator>
 //! When \c Category is \c void, the wrapped iterator preserves the original
 //! \c iterator_category from \c iterator_traits<Iterator>.
 //!
+//! An operation that \c Category does not support (for example \c operator--
+//! with \c std::forward_iterator_tag) fails to compile, so an algorithm that
+//! uses an operation its iterator category does not offer is detected.
+//!
 //! \tparam Iterator  The type of the wrapped iterator.
 //! \tparam Category  The iterator category tag declared by the wrapper
 //!   (\c std::forward_iterator_tag, \c std::bidirectional_iterator_tag,
@@ -53,6 +58,12 @@ template<class Iterator, class Category = void>
 class wrapped_iterator
 {
    Iterator m_it;
+
+   typedef typename detail_algo::wrapped_iter_category<Category, Iterator>::type cat_t;
+   static const bool is_bidirectional = dtl::is_convertible
+      <const cat_t*, const std::bidirectional_iterator_tag*>::value;
+   static const bool is_random_access = dtl::is_convertible
+      <const cat_t*, const std::random_access_iterator_tag*>::value;
 
 public:
    typedef typename iterator_traits<Iterator>::value_type      value_type;
@@ -78,17 +89,21 @@ public:
 
    // Bidirectional operations
    BOOST_CONTAINER_FORCEINLINE wrapped_iterator& operator--()
-   {  --m_it; return *this; }
+   {  BOOST_CONTAINER_STATIC_ASSERT_MSG(is_bidirectional, "the category is not bidirectional");
+      --m_it; return *this; }
 
    BOOST_CONTAINER_FORCEINLINE wrapped_iterator operator--(int)
-   {  wrapped_iterator tmp(*this); --m_it; return tmp; }
+   {  BOOST_CONTAINER_STATIC_ASSERT_MSG(is_bidirectional, "the category is not bidirectional");
+      wrapped_iterator tmp(*this); --m_it; return tmp; }
 
    // Random-access operations
    BOOST_CONTAINER_FORCEINLINE wrapped_iterator& operator+=(difference_type n)
-   {  m_it += n; return *this; }
+   {  BOOST_CONTAINER_STATIC_ASSERT_MSG(is_random_access, "the category is not random access");
+      m_it += n; return *this; }
 
    BOOST_CONTAINER_FORCEINLINE wrapped_iterator& operator-=(difference_type n)
-   {  m_it -= n; return *this; }
+   {  BOOST_CONTAINER_STATIC_ASSERT_MSG(is_random_access, "the category is not random access");
+      m_it -= n; return *this; }
 
    BOOST_CONTAINER_FORCEINLINE wrapped_iterator operator+(difference_type n) const
    {  wrapped_iterator tmp(*this); tmp += n; return tmp; }
@@ -97,13 +112,15 @@ public:
    {  wrapped_iterator tmp(*this); tmp -= n; return tmp; }
 
    BOOST_CONTAINER_FORCEINLINE reference operator[](difference_type n) const
-   {  return m_it[n]; }
+   {  BOOST_CONTAINER_STATIC_ASSERT_MSG(is_random_access, "the category is not random access");
+      return m_it[n]; }
 
    BOOST_CONTAINER_FORCEINLINE friend wrapped_iterator operator+(difference_type n, const wrapped_iterator& x)
    {  wrapped_iterator tmp(x); tmp += n; return tmp; }
 
    BOOST_CONTAINER_FORCEINLINE friend difference_type operator-(const wrapped_iterator& x, const wrapped_iterator& y)
-   {  return x.m_it - y.m_it; }
+   {  BOOST_CONTAINER_STATIC_ASSERT_MSG(is_random_access, "the category is not random access");
+      return x.m_it - y.m_it; }
 
    // Comparisons
    BOOST_CONTAINER_FORCEINLINE friend bool operator==(const wrapped_iterator& x, const wrapped_iterator& y)
@@ -113,7 +130,8 @@ public:
    {  return x.m_it != y.m_it; }
 
    BOOST_CONTAINER_FORCEINLINE friend bool operator<(const wrapped_iterator& x, const wrapped_iterator& y)
-   {  return x.m_it < y.m_it; }
+   {  BOOST_CONTAINER_STATIC_ASSERT_MSG(is_random_access, "the category is not random access");
+      return x.m_it < y.m_it; }
 
    BOOST_CONTAINER_FORCEINLINE friend bool operator>(const wrapped_iterator& x, const wrapped_iterator& y)
    {  return y < x; }

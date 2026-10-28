@@ -423,7 +423,7 @@ void test_copy_if_single_segment_dst_from_flat()
 //////////////////////////////////////////////////////////////////////////////
 // Shape matrix.
 //
-// for_each_shape2_all walks the six branch specs of the source range against
+// for_each_shape2_all_bidir_and_better walks the six branch specs of the source range against
 // the six of the destination range, so the two segmentations vary
 // independently: 36 pairs per size pair, over both segmentation depths.
 //
@@ -504,9 +504,9 @@ void test_copy_if_shape_matrix()
          if(n_src > set_len[s])
             continue;
          const std::size_t m = shape_match_count(sets[s], n_src);
-         test_detail::for_each_shape2_all<int, int>
+         test_detail::for_each_shape2_all_fwd_and_better<int, int>
             (sets[s], n_src, shape_dst_vals, m, shape_filler, copy_if_shape_check());
-         test_detail::for_each_shape2_all<int, int>
+         test_detail::for_each_shape2_all_fwd_and_better<int, int>
             (sets[s], n_src, shape_dst_vals, m + 3u, shape_filler, copy_if_shape_check());
       }
    }
@@ -655,9 +655,9 @@ void test_copy_if_predicate_count()
          if(n_src > set_len[s])
             continue;
          const std::size_t m = shape_match_count(sets[s], n_src);
-         test_detail::for_each_shape2_all<int, int>
+         test_detail::for_each_shape2_all_fwd_and_better<int, int>
             (sets[s], n_src, shape_dst_vals, m, shape_filler, copy_if_count_check());
-         test_detail::for_each_shape2_all<int, int>
+         test_detail::for_each_shape2_all_fwd_and_better<int, int>
             (sets[s], n_src, shape_dst_vals, m + 3u, shape_filler, copy_if_count_check());
       }
    }

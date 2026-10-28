@@ -377,7 +377,7 @@ void test_transform_single_segment_dst_from_flat()
 //////////////////////////////////////////////////////////////////////////////
 // Shape matrix.
 //
-// for_each_shape2_all walks the six branch specs of the source range against
+// for_each_shape2_all_bidir_and_better walks the six branch specs of the source range against
 // the six of the destination range, so the two segmentations vary
 // independently: 36 pairs per size pair, over both segmentation depths.
 //
@@ -435,10 +435,10 @@ void test_transform_shape_matrix()
       { {0, 0}, {1, 1}, {1, 3}, {2, 2}, {3, 3}, {3, 6}, {5, 5}, {6, 10} };
 
    for(std::size_t i = 0; i != sizeof(sizes)/sizeof(sizes[0]); ++i) {
-      test_detail::for_each_shape2_all<int, int>
+      test_detail::for_each_shape2_all_fwd_and_better<int, int>
          (shape_src_vals, sizes[i][0], shape_dst_vals, sizes[i][1],
           shape_filler, transform_shape_check<times_two>(times_two()));
-      test_detail::for_each_shape2_all<int, int>
+      test_detail::for_each_shape2_all_fwd_and_better<int, int>
          (shape_src_vals, sizes[i][0], shape_dst_vals, sizes[i][1],
           shape_filler, transform_shape_check<negate_val>(negate_val()));
    }
@@ -474,7 +474,7 @@ void test_transform_operation_count()
       { {0, 0}, {1, 1}, {1, 3}, {2, 2}, {3, 3}, {3, 6}, {5, 5}, {6, 10} };
 
    for(std::size_t i = 0; i != sizeof(sizes)/sizeof(sizes[0]); ++i)
-      test_detail::for_each_shape2_all<int, int>
+      test_detail::for_each_shape2_all_fwd_and_better<int, int>
          (shape_src_vals, sizes[i][0], shape_dst_vals, sizes[i][1],
           shape_filler, transform_count_check());
 

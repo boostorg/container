@@ -16,6 +16,7 @@
 #define BOOST_CONTAINER_TEST_SEGMENTED_TEST_HELPER_HPP
 
 #include <boost/container/experimental/segmented_iterator_traits.hpp>
+#include <boost/container/experimental/wrapped_iterator.hpp>
 #include <boost/container/vector.hpp>
 #include <cstddef>
 #include <iterator>
@@ -136,22 +137,62 @@ public:
    {  return os << c.v_;   }
 };
 
-// Cat selects the advertised iterator category.  Algorithms such as
+//////////////////////////////////////////////////////////////////////////////
+//
+// Iterator categories.
+//
+// Cat is the category of the iterators that walk the elements: the innermost
+// local iterators of a segmented range and the iterators of a flat range.  The
+// intermediate iterators (segmented iterators, segment iterators and the local
+// iterators of an outer level) have the same category, except for random
+// access: then they are bidirectional (seg_outer_cat).
+//
+// An iterator with a category weaker than random access is a wrapped_iterator,
+// which does not compile an operation that its category does not offer.  An
+// algorithm that uses such an operation fails to compile in the test.
+//
+//////////////////////////////////////////////////////////////////////////////
+
+template<class Cat>
+struct seg_outer_cat
+{  typedef Cat type;  };
+
+template<>
+struct seg_outer_cat<std::random_access_iterator_tag>
+{  typedef std::bidirectional_iterator_tag type;  };
+
+//! It itself for random access, otherwise It restricted to Cat.
+template<class It, class Cat>
+struct cat_iterator
+{  typedef boost::container::wrapped_iterator<It, Cat> type;  };
+
+template<class It>
+struct cat_iterator<It, std::random_access_iterator_tag>
+{  typedef It type;  };
+
+template<class Cat>
+struct is_bidirectional_cat
+{
+   static const bool value = boost::container::dtl::is_convertible
+      <const Cat*, const std::bidirectional_iterator_tag*>::value;
+};
+
+// Cat selects the iterator categories, see above.  Algorithms such as
 // segmented_find_last have distinct segmented implementations for forward and
 // for bidirectional iterators, so both have to be instantiable from a test.
-template<class T, class Cat = std::bidirectional_iterator_tag>
+template<class T, class Cat = std::random_access_iterator_tag>
 class seg_vector_iterator
 {
 public:
-   typedef T                               value_type;
-   typedef T&                              reference;
-   typedef T*                              pointer;
-   typedef std::ptrdiff_t                  difference_type;
-   typedef Cat                             iterator_category;
+   typedef T                                          value_type;
+   typedef T&                                         reference;
+   typedef T*                                         pointer;
+   typedef std::ptrdiff_t                             difference_type;
+   typedef typename seg_outer_cat<Cat>::type          iterator_category;
 
    typedef boost::container::vector<boost::container::vector<T> >    segments_type;
-   typedef typename segments_type::iterator          seg_iter_t;
-   typedef typename boost::container::vector<T>::iterator         local_iter_t;
+   typedef typename cat_iterator<typename segments_type::iterator, typename seg_outer_cat<Cat>::type>::type seg_iter_t;
+   typedef typename cat_iterator<typename boost::container::vector<T>::iterator, Cat>::type local_iter_t;
 
    seg_iter_t    seg_;
    local_iter_t  local_;
@@ -164,6 +205,9 @@ public:
       : seg_(s), local_(l)
    {}
 
+   static local_iter_t seg_begin(seg_iter_t s) { return local_iter_t(s->begin()); }
+   static local_iter_t seg_end(seg_iter_t s)   { return local_iter_t(s->end()); }
+
    reference operator*()  const { return *local_; }
    pointer   operator->() const { return &*local_; }
 
@@ -172,9 +216,9 @@ public:
       ++local_;
       // Loop, not if: any number of empty segments may follow.  The loop is
       // bounded by the sentinel segment, which is never empty.
-      while(local_ == seg_->end()) {
+      while(local_ == seg_end(seg_)) {
          ++seg_;
-         local_ = seg_->begin();
+         local_ = seg_begin(seg_);
       }
       return *this;
    }
@@ -188,9 +232,10 @@ public:
 
    seg_vector_iterator& operator--()
    {
-      while(local_ == seg_->begin()) {
+      BOOST_CONTAINER_STATIC_ASSERT_MSG(is_bidirectional_cat<Cat>::value, "the category is not bidirectional");
+      while(local_ == seg_begin(seg_)) {
          --seg_;
-         local_ = seg_->end();
+         local_ = seg_end(seg_);
       }
       --local_;
       return *this;
@@ -198,6 +243,7 @@ public:
 
    seg_vector_iterator operator--(int)
    {
+      BOOST_CONTAINER_STATIC_ASSERT_MSG(is_bidirectional_cat<Cat>::value, "the category is not bidirectional");
       seg_vector_iterator tmp = *this;
       --*this;
       return tmp;
@@ -210,7 +256,7 @@ public:
    { return !(a == b); }
 };
 
-template<class T, class Cat = std::bidirectional_iterator_tag>
+template<class T, class Cat = std::random_access_iterator_tag>
 class seg_vector
 {
    // Last entry is always a sentinel segment, following the convention from
@@ -283,13 +329,13 @@ public:
          ++s;
          l = s->begin();
       }
-      return iterator(s, l);
+      return iterator(typename iterator::seg_iter_t(s), typename iterator::local_iter_t(l));
    }
 
    iterator end()
    {
       typename boost::container::vector<boost::container::vector<T> >::iterator s = segments_.end() - 1;
-      return iterator(s, s->begin());
+      return iterator(typename iterator::seg_iter_t(s), typename iterator::local_iter_t(s->begin()));
    }
 
    std::size_t total_size() const
@@ -322,18 +368,18 @@ public:
 template<class Iter>
 sentinel_wrapper<Iter> make_sentinel(Iter it) { return sentinel_wrapper<Iter>(it); }
 
-template<class T, class Cat = std::bidirectional_iterator_tag>
+template<class T, class Cat = std::random_access_iterator_tag>
 class seg2_vector_iterator
 {
 public:
-   typedef T                               value_type;
-   typedef T&                              reference;
-   typedef T*                              pointer;
-   typedef std::ptrdiff_t                  difference_type;
-   typedef Cat                             iterator_category;
+   typedef T                                     value_type;
+   typedef T&                                    reference;
+   typedef T*                                    pointer;
+   typedef std::ptrdiff_t                        difference_type;
+   typedef typename seg_outer_cat<Cat>::type     iterator_category;
 
    typedef boost::container::vector<seg_vector<T, Cat> > segments_type;
-   typedef typename segments_type::iterator seg_iter_t;
+   typedef typename cat_iterator<typename segments_type::iterator, typename seg_outer_cat<Cat>::type>::type seg_iter_t;
    typedef seg_vector_iterator<T, Cat>      local_iter_t;
 
    seg_iter_t   seg_;
@@ -371,6 +417,7 @@ public:
 
    seg2_vector_iterator& operator--()
    {
+      BOOST_CONTAINER_STATIC_ASSERT_MSG(is_bidirectional_cat<Cat>::value, "the category is not bidirectional");
       while(local_ == seg_->begin()) {
          --seg_;
          local_ = seg_->end();
@@ -381,6 +428,7 @@ public:
 
    seg2_vector_iterator operator--(int)
    {
+      BOOST_CONTAINER_STATIC_ASSERT_MSG(is_bidirectional_cat<Cat>::value, "the category is not bidirectional");
       seg2_vector_iterator tmp = *this;
       --*this;
       return tmp;
@@ -393,7 +441,7 @@ public:
    { return !(a == b); }
 };
 
-template<class T, class Cat = std::bidirectional_iterator_tag>
+template<class T, class Cat = std::random_access_iterator_tag>
 class seg2_vector
 {
    boost::container::vector<seg_vector<T, Cat> > segments_;
@@ -447,13 +495,13 @@ public:
          ++s;
          l = s->begin();
       }
-      return iterator(s, l);
+      return iterator(typename iterator::seg_iter_t(s), l);
    }
 
    iterator end()
    {
       typename boost::container::vector<seg_vector<T, Cat> >::iterator s = segments_.end() - 1;
-      return iterator(s, s->begin());
+      return iterator(typename iterator::seg_iter_t(s), s->begin());
    }
 
    std::size_t total_size() const
@@ -468,6 +516,28 @@ public:
    const boost::container::vector<seg_vector<T, Cat> >& segments() const { return segments_; }
 };
 
+//! Range that is not segmented, with iterators of category Cat.  It is the
+//! depth 0 shape: the algorithms take their non-segmented path on it.
+template<class T, class Cat = std::random_access_iterator_tag>
+class flat_range
+{
+   boost::container::vector<T> data_;
+
+public:
+   typedef typename cat_iterator<typename boost::container::vector<T>::iterator, Cat>::type iterator;
+
+   void add_from_ints(const int* first, const int* last)
+   {
+      for(; first != last; ++first)
+         data_.push_back(T(*first));
+   }
+
+   iterator begin() { return iterator(data_.begin()); }
+   iterator end()   { return iterator(data_.end()); }
+
+   std::size_t total_size() const { return data_.size(); }
+};
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Shape-driven construction of 1- and 2-level segmented ranges.
@@ -479,7 +549,8 @@ public:
 // single-segment branch, 'm' down the multi-segment one.  The length of the
 // spec is the segmentation depth, so "m" and "s" describe a seg_vector and
 // "mm", "ms", "sm" and "ss" describe a seg2_vector.  Only those two depths
-// exist, because seg2_vector is the deepest container modelled here.
+// exist, because seg2_vector is the deepest container modelled here.  The
+// empty spec "" is depth 0: a flat_range, which is not segmented.
 //
 // Segments are never empty: segmented algorithms only allow an empty segment
 // as the last one, the segment that only holds the end iterator.
@@ -541,34 +612,49 @@ public:
 // a callable is free to mutate the ranges it is handed.
 // The callable is taken by value and copied, so any state it accumulates must
 // live behind a pointer or reference.
-//   for_each_shape_all<T>(vals, n, filler, f)
-//      f(c, n, spec) once per feasible spec, depth 1 then depth 2,
-//      bidirectional iterators.
-//   for_each_shape_all_fwd<T>(vals, n, filler, f)
-//      the same with forward iterators, for algorithms that have a distinct
-//      forward-iterator implementation.
 //   for_each_shape_all_cat<T, Cat>(vals, n, filler, f)
-//      the same for an explicit iterator category.
-//   for_each_shape2_all<T1, T2>(v1, n1, v2, n2, filler, f)
+//      f(c, n, spec) once per feasible spec, depth 0, then 1, then 2, with
+//      iterators of category Cat (see "Iterator categories").
+// 
+//   for_each_shape_all_bidir_and_better<T>(vals, n, filler, f)
+//      the same for random-access and for bidirectional iterators, for
+//      algorithms that need bidirectional iterators.
+// 
+//   for_each_shape_all_fwd_and_better<T>(vals, n, filler, f)
+//      the same for random-access, bidirectional and forward iterators, for
+//      algorithms that accept forward iterators.
+// 
+//   for_each_shape2_all_bidir_and_better<T1, T2>(v1, n1, v2, n2, filler, f)
+// 
+//   for_each_shape2_all_fwd_and_better<T1, T2>(v1, n1, v2, n2, filler, f)
+// 
+//   for_each_shape2_all_cat<T1, T2, Cat>(v1, n1, v2, n2, filler, f)
 //      f(c1, n1, spec1, c2, n2, spec2) over the cross product of the two
-//      ranges' specs.  Range 2 doubles as the output range of a copy-style
-//      algorithm; build it with an array of fill values.
-//   for_each_shape3_all<T1, T2, T3>(v1, n1, v2, n2, v3, n3, filler, f)
+//      ranges' specs.  Both ranges have the same category.  Range 2 doubles
+//      as the output range of a copy-style algorithm; build it with an array
+//      of fill values.
+// 
+//   for_each_shape3_all_bidir_and_better<T1, T2, T3>(v1, n1, v2, n2, v3, n3, filler, f)
+// 
+//   for_each_shape3_all_fwd_and_better<T1, T2, T3>(v1, n1, v2, n2, v3, n3, filler, f)
 //      the same for three ranges, e.g. two inputs and one output.
-//   for_each_dest_shape_all<T>(n, fill, filler, g)
-//      g(c, n, spec) over the destination shapes alone, both depths and both
-//      spec families.
+// 
+//   for_each_dest_shape_all_bidir_and_better<T>(n, fill, filler, g)
+// 
+//   for_each_dest_shape_all_fwd_and_better<T>(n, fill, filler, g)
+//      g(c, n, spec) over the destination shapes alone, all depths.
 //
 // A feasible spec needs at least one element per 'm' level, so a small n
 // yields fewer shapes than a large one; the combinators skip the rest.  With n
-// large enough each range contributes 6 shapes:
+// large enough each range contributes 7 shapes per category:
 //
-//   n        for_each_shape_all
-//   0        2
-//   1        5
-//   >= 2     6
+//   n        for_each_shape_all_cat
+//   0        3
+//   1        6
+//   >= 2     7
 //
-// so for_each_shape2_all runs 36 combinations and for_each_shape3_all 216.
+// so for_each_shape2_all_cat runs 49 combinations and for_each_shape3_all_cat
+// 343.
 //
 // Intended usage for a test:
 //
@@ -590,7 +676,7 @@ public:
 //          BOOST_TEST(spec != 0);
 //       }
 //    };
-//    for_each_shape_all<int>(vals, n, -999, check(...));
+//    for_each_shape_all_bidir_and_better<int>(vals, n, -999, check(...));
 //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -610,6 +696,13 @@ inline bool shape_feasible(const char* spec, std::size_t n)
       }
    }
    return true;
+}
+
+template<class T, class Cat>
+void make_range(flat_range<T, Cat>& c, const char*, const int* vals, std::size_t n, int filler)
+{
+   c.add_from_ints(vals, vals + n);
+   c.add_from_ints(&filler, &filler + 1);
 }
 
 template<class T, class Cat>
@@ -697,16 +790,19 @@ boost::container::vector<int> flatten_n_ints(Cont& c, std::size_t n)
 {  return flatten_ints(c.begin(), iter_at(c, n));   }
 
 //! Deepest segmentation depth with a container type to build it from:
-//! 1 is seg_vector, 2 is seg2_vector, and there is no deeper container.
+//! 0 is flat_range, 1 is seg_vector, 2 is seg2_vector, and there is no deeper
+//! container.
 inline std::size_t max_shape_depth() { return 2u; }
 
 //! All branch specs for a given segmentation depth, outermost level first.
-//! Only depths 1 and 2 exist: seg2_vector is the deepest modelled container.
+//! Only depths 0 to 2 exist: seg2_vector is the deepest modelled container.
 inline const char* const* shape_specs(std::size_t depth, std::size_t& count)
 {
+   static const char* const d0[] = { "" };
    static const char* const d1[] = { "m", "s" };
    static const char* const d2[] = { "mm", "ms", "sm", "ss" };
 
+   if(depth == 0u) { count = 1u; return d0; }
    if(depth == 1u) { count = 2u; return d1; }
    count = 4u;
    return d2;
@@ -718,7 +814,12 @@ inline const char* const* shape_specs(std::size_t depth, std::size_t& count)
 template<class T, class Cat, class G>
 void with_shape(std::size_t depth, const char* spec, const int* vals, std::size_t n, int filler, G g)
 {
-   if(depth == 1u) {
+   if(depth == 0u) {
+      flat_range<T, Cat> c;
+      make_range(c, spec, vals, n, filler);
+      g(c, n, spec);
+   }
+   else if(depth == 1u) {
       seg_vector<T, Cat> c;
       make_range(c, spec, vals, n, filler);
       g(c, n, spec);
@@ -730,12 +831,12 @@ void with_shape(std::size_t depth, const char* spec, const int* vals, std::size_
    }
 }
 
-//! Calls f(container, n, spec) once per reachable branch spec at depths 1 and
-//! 2.  f must be callable with both container types.
+//! Calls f(container, n, spec) once per reachable branch spec at depths 0 to
+//! 2.  f must be callable with all three container types.
 template<class T, class Cat, class F>
 void for_each_shape_all_cat(const int* vals, std::size_t n, int filler, F f)
 {
-   for(std::size_t d = 1u; d <= max_shape_depth(); ++d) {
+   for(std::size_t d = 0u; d <= max_shape_depth(); ++d) {
       std::size_t cnt = 0;
       const char* const* s = shape_specs(d, cnt);
       for(std::size_t i = 0; i != cnt; ++i) {
@@ -745,17 +846,21 @@ void for_each_shape_all_cat(const int* vals, std::size_t n, int filler, F f)
    }
 }
 
-//! Bidirectional-iterator shapes, the default for most algorithms.
+//! Shapes for every category that an algorithm that needs bidirectional iterators accepts.
 template<class T, class F>
-void for_each_shape_all(const int* vals, std::size_t n, int filler, F f)
-{  for_each_shape_all_cat<T, std::bidirectional_iterator_tag>(vals, n, filler, f);  }
+void for_each_shape_all_bidir_and_better(const int* vals, std::size_t n, int filler, F f)
+{
+   for_each_shape_all_cat<T, std::random_access_iterator_tag>(vals, n, filler, f);
+   for_each_shape_all_cat<T, std::bidirectional_iterator_tag>(vals, n, filler, f);
+}
 
-//! Forward-iterator shapes.  Algorithms with a separate forward-iterator
-//! segmented implementation (segmented_find_last, segmented_find_last_if)
-//! only reach it through these.
+//! Shapes for every category that an algorithm that accepts forward iterators accepts.
 template<class T, class F>
-void for_each_shape_all_fwd(const int* vals, std::size_t n, int filler, F f)
-{  for_each_shape_all_cat<T, std::forward_iterator_tag>(vals, n, filler, f);  }
+void for_each_shape_all_fwd_and_better(const int* vals, std::size_t n, int filler, F f)
+{
+   for_each_shape_all_bidir_and_better<T>(vals, n, filler, f);
+   for_each_shape_all_cat<T, std::forward_iterator_tag>(vals, n, filler, f);
+}
 
 template<class C1, class F>
 struct shape2_bind
@@ -777,7 +882,7 @@ struct shape2_bind
 //! Builds range 2 for one fixed (depth, spec) pair and pairs it with range 1.
 //! Both ranges are rebuilt for every combination, so f may mutate either of
 //! them without the next combination inheriting the damage.
-template<class T2, class F>
+template<class T2, class Cat, class F>
 struct shape2_outer
 {
    std::size_t d2;
@@ -794,33 +899,50 @@ struct shape2_outer
    template<class C1>
    void operator()(C1& c1, std::size_t n1, const char* s1) const
    {
-      with_shape<T2, std::bidirectional_iterator_tag>
+      with_shape<T2, Cat>
          (d2, s2, v2, n2, filler, shape2_bind<C1, F>(c1, n1, s1, f));
    }
 };
 
-//! Cross product of the branch specs of two independently segmented ranges.
-//! Calls f(c1, n1, spec1, c2, n2, spec2).
-template<class T1, class T2, class F>
-void for_each_shape2_all(const int* v1, std::size_t n1, const int* v2, std::size_t n2, int filler, F f)
+//! Cross product of the branch specs of two independently segmented ranges,
+//! both with iterators of category Cat.  Calls f(c1, n1, spec1, c2, n2, spec2).
+template<class T1, class T2, class Cat, class F>
+void for_each_shape2_all_cat(const int* v1, std::size_t n1, const int* v2, std::size_t n2, int filler, F f)
 {
-   for(std::size_t d1 = 1u; d1 <= max_shape_depth(); ++d1) {
+   for(std::size_t d1 = 0u; d1 <= max_shape_depth(); ++d1) {
       std::size_t cnt1 = 0;
       const char* const* sp1 = shape_specs(d1, cnt1);
       for(std::size_t i = 0; i != cnt1; ++i) {
          if(!shape_feasible(sp1[i], n1)) continue;
-         for(std::size_t d2 = 1u; d2 <= max_shape_depth(); ++d2) {
+         for(std::size_t d2 = 0u; d2 <= max_shape_depth(); ++d2) {
             std::size_t cnt2 = 0;
             const char* const* sp2 = shape_specs(d2, cnt2);
             for(std::size_t j = 0; j != cnt2; ++j) {
                if(!shape_feasible(sp2[j], n2)) continue;
-               with_shape<T1, std::bidirectional_iterator_tag>
+               with_shape<T1, Cat>
                   (d1, sp1[i], v1, n1, filler,
-                   shape2_outer<T2, F>(d2, sp2[j], v2, n2, filler, f));
+                   shape2_outer<T2, Cat, F>(d2, sp2[j], v2, n2, filler, f));
             }
          }
       }
    }
+}
+
+//! for_each_shape2_all_cat for random-access and bidirectional iterators.
+template<class T1, class T2, class F>
+void for_each_shape2_all_bidir_and_better(const int* v1, std::size_t n1, const int* v2, std::size_t n2, int filler, F f)
+{
+   for_each_shape2_all_cat<T1, T2, std::random_access_iterator_tag>(v1, n1, v2, n2, filler, f);
+   for_each_shape2_all_cat<T1, T2, std::bidirectional_iterator_tag>(v1, n1, v2, n2, filler, f);
+}
+
+//! for_each_shape2_all_cat for random-access, bidirectional and forward
+//! iterators.
+template<class T1, class T2, class F>
+void for_each_shape2_all_fwd_and_better(const int* v1, std::size_t n1, const int* v2, std::size_t n2, int filler, F f)
+{
+   for_each_shape2_all_bidir_and_better<T1, T2>(v1, n1, v2, n2, filler, f);
+   for_each_shape2_all_cat<T1, T2, std::forward_iterator_tag>(v1, n1, v2, n2, filler, f);
 }
 
 template<class C1, class C2, class F>
@@ -841,9 +963,9 @@ struct shape3_bind
 };
 
 //! Builds range 3 for one fixed (depth, spec) pair; the first two ranges are
-//! supplied by for_each_shape2_all, which already rebuilds them per
+//! supplied by for_each_shape2_all_cat, which already rebuilds them per
 //! combination.
-template<class T3, class F>
+template<class T3, class Cat, class F>
 struct shape3_outer
 {
    std::size_t d3;
@@ -861,47 +983,67 @@ struct shape3_outer
    void operator()(C1& c1, std::size_t n1, const char* s1,
                    C2& c2, std::size_t n2, const char* s2) const
    {
-      with_shape<T3, std::bidirectional_iterator_tag>
+      with_shape<T3, Cat>
          (d3, s3, v3, n3, filler, shape3_bind<C1, C2, F>(c1, n1, s1, c2, n2, s2, f));
    }
 };
 
-//! Cross product of the branch specs of three independently segmented ranges.
-//! Calls f(c1, n1, spec1, c2, n2, spec2, c3, n3, spec3).  Typically two input
-//! ranges and one output range.
-template<class T1, class T2, class T3, class F>
-void for_each_shape3_all(const int* v1, std::size_t n1, const int* v2, std::size_t n2,
-                         const int* v3, std::size_t n3, int filler, F f)
+//! Cross product of the branch specs of three independently segmented ranges,
+//! all with iterators of category Cat.  Calls
+//! f(c1, n1, spec1, c2, n2, spec2, c3, n3, spec3).  Typically two input ranges
+//! and one output range.
+template<class T1, class T2, class T3, class Cat, class F>
+void for_each_shape3_all_cat(const int* v1, std::size_t n1, const int* v2, std::size_t n2,
+                             const int* v3, std::size_t n3, int filler, F f)
 {
-   for(std::size_t d3 = 1u; d3 <= max_shape_depth(); ++d3) {
+   for(std::size_t d3 = 0u; d3 <= max_shape_depth(); ++d3) {
       std::size_t cnt3 = 0;
       const char* const* sp3 = shape_specs(d3, cnt3);
       for(std::size_t k = 0; k != cnt3; ++k) {
          if(!shape_feasible(sp3[k], n3)) continue;
-         for_each_shape2_all<T1, T2>(v1, n1, v2, n2, filler,
-                                     shape3_outer<T3, F>(d3, sp3[k], v3, n3, filler, f));
+         for_each_shape2_all_cat<T1, T2, Cat>(v1, n1, v2, n2, filler,
+                                              shape3_outer<T3, Cat, F>(d3, sp3[k], v3, n3, filler, f));
       }
    }
 }
 
-//! Destination shapes alone, at both depths.  for_each_shape3_all needs every range length up front, which an
-//! algorithm whose output length depends on its input data cannot supply: the
-//! length is only known once the inputs have been built and the expected
-//! answer computed.  Such a test enumerates its inputs with
-//! for_each_shape2_all and then calls this from inside, which keeps the
-//! destination shapes enumerated in full rather than pinned to one depth.
+//! for_each_shape3_all_cat for random-access and bidirectional iterators.
+template<class T1, class T2, class T3, class F>
+void for_each_shape3_all_bidir_and_better(const int* v1, std::size_t n1, const int* v2, std::size_t n2,
+                                          const int* v3, std::size_t n3, int filler, F f)
+{
+   for_each_shape3_all_cat<T1, T2, T3, std::random_access_iterator_tag>(v1, n1, v2, n2, v3, n3, filler, f);
+   for_each_shape3_all_cat<T1, T2, T3, std::bidirectional_iterator_tag>(v1, n1, v2, n2, v3, n3, filler, f);
+}
+
+//! for_each_shape3_all_cat for random-access, bidirectional and forward
+//! iterators.
+template<class T1, class T2, class T3, class F>
+void for_each_shape3_all_fwd_and_better(const int* v1, std::size_t n1, const int* v2, std::size_t n2,
+                                        const int* v3, std::size_t n3, int filler, F f)
+{
+   for_each_shape3_all_bidir_and_better<T1, T2, T3>(v1, n1, v2, n2, v3, n3, filler, f);
+   for_each_shape3_all_cat<T1, T2, T3, std::forward_iterator_tag>(v1, n1, v2, n2, v3, n3, filler, f);
+}
+
+//! Destination shapes alone, at all depths.  The shape3 combinators need every
+//! range length up front, which an algorithm whose output length depends on
+//! its input data cannot supply: the length is only known once the inputs have
+//! been built and the expected answer computed.  Such a test enumerates its
+//! inputs with a shape2 combinator and then calls this from inside, which keeps
+//! the destination shapes enumerated in full rather than pinned to one depth.
 template<class T, class G>
-void for_each_dest_shape_all(std::size_t n, int fill, int filler, G g)
+void for_each_dest_shape_all_bidir_and_better(std::size_t n, int fill, int filler, G g)
 {
    boost::container::vector<int> vals(n ? n : 1u, fill);
-   for(std::size_t d = 1u; d <= max_shape_depth(); ++d) {
-      std::size_t cnt = 0;
-      const char* const* sp = shape_specs(d, cnt);
-      for(std::size_t i = 0; i != cnt; ++i) {
-         if(!shape_feasible(sp[i], n)) continue;
-         with_shape<T, std::bidirectional_iterator_tag>(d, sp[i], &vals[0], n, filler, g);
-      }
-   }
+   for_each_shape_all_bidir_and_better<T>(&vals[0], n, filler, g);
+}
+
+template<class T, class G>
+void for_each_dest_shape_all_fwd_and_better(std::size_t n, int fill, int filler, G g)
+{
+   boost::container::vector<int> vals(n ? n : 1u, fill);
+   for_each_shape_all_fwd_and_better<T>(&vals[0], n, filler, g);
 }
 
 //! True if the guard element that make_range() placed just past the range end
@@ -920,9 +1062,9 @@ struct segmented_iterator_traits<test_detail::seg_vector_iterator<T, Cat> >
 {
    typedef segmented_iterator_tag is_segmented_iterator;
 
-   typedef typename boost::container::vector<boost::container::vector<T> >::iterator segment_iterator;
-   typedef typename boost::container::vector<T>::iterator               local_iterator;
    typedef test_detail::seg_vector_iterator<T, Cat>        iterator;
+   typedef typename iterator::seg_iter_t                   segment_iterator;
+   typedef typename iterator::local_iter_t                 local_iterator;
 
    static segment_iterator segment(iterator it) { return it.seg_; }
    static local_iterator   local(iterator it)   { return it.local_; }
@@ -932,15 +1074,15 @@ struct segmented_iterator_traits<test_detail::seg_vector_iterator<T, Cat> >
    //! between.  Stops at the sentinel segment, which is never empty.
    static iterator compose(segment_iterator s, local_iterator l)
    {
-      while(l == s->end()) {
+      while(l == end(s)) {
          ++s;
-         l = s->begin();
+         l = begin(s);
       }
       return iterator(s, l);
    }
 
-   static local_iterator begin(segment_iterator s) { return s->begin(); }
-   static local_iterator end(segment_iterator s)   { return s->end(); }
+   static local_iterator begin(segment_iterator s) { return iterator::seg_begin(s); }
+   static local_iterator end(segment_iterator s)   { return iterator::seg_end(s); }
 };
 
 template<class T, class Cat>
@@ -948,9 +1090,9 @@ struct segmented_iterator_traits<test_detail::seg2_vector_iterator<T, Cat> >
 {
    typedef segmented_iterator_tag is_segmented_iterator;
 
-   typedef typename boost::container::vector<test_detail::seg_vector<T, Cat> >::iterator segment_iterator;
-   typedef test_detail::seg_vector_iterator<T, Cat>                    local_iterator;
    typedef test_detail::seg2_vector_iterator<T, Cat>                   iterator;
+   typedef typename iterator::seg_iter_t                               segment_iterator;
+   typedef typename iterator::local_iter_t                             local_iterator;
 
    static segment_iterator segment(iterator it) { return it.seg_; }
    static local_iterator   local(iterator it)   { return it.local_; }

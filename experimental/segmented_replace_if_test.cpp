@@ -165,21 +165,21 @@ void test_replace_if_shape_matrix()
       //Alternating signs, then no match at all, then every element a match.
       for(int i = 0; i != 16; ++i)
          vals[i] = (i % 2) ? (i + 1) : -(i + 1);
-      test_detail::for_each_shape_all<int>(vals, n, -6, make_replace_if_check(is_negative(), 0, -6));
+      test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -6, make_replace_if_check(is_negative(), 0, -6));
 
       for(int i = 0; i != 16; ++i)
          vals[i] = i + 1;
-      test_detail::for_each_shape_all<int>(vals, n, -6, make_replace_if_check(is_negative(), 0, -6));
+      test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -6, make_replace_if_check(is_negative(), 0, -6));
 
       for(int i = 0; i != 16; ++i)
          vals[i] = -(i + 1);
-      test_detail::for_each_shape_all<int>(vals, n, -6, make_replace_if_check(is_negative(), 0, -6));
+      test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -6, make_replace_if_check(is_negative(), 0, -6));
 
       //Exactly one match, at each position in turn.
       for(std::size_t p = 0; p != n; ++p) {
          for(std::size_t i = 0; i != 16u; ++i)
             vals[i] = (i == p) ? -int(i + 1u) : int(i + 1u);
-         test_detail::for_each_shape_all<int>(vals, n, -6,
+         test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -6,
                                               make_replace_if_check(is_negative(), 0, -6));
       }
 
@@ -187,7 +187,7 @@ void test_replace_if_shape_matrix()
       //even, so it too would be rewritten by an overrun.
       for(int i = 0; i != 16; ++i)
          vals[i] = i + 1;
-      test_detail::for_each_shape_all<int>(vals, n, -998,
+      test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -998,
                                            make_replace_if_check(is_even(), -1, -998));
    }
 }
@@ -240,15 +240,15 @@ void test_replace_if_predicate_count()
 
       for(int i = 0; i != 16; ++i)
          vals[i] = (i % 2) ? (i + 1) : -(i + 1);
-      test_detail::for_each_shape_all<int>(vals, n, -6, replace_if_count_check());
+      test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -6, replace_if_count_check());
 
       for(int i = 0; i != 16; ++i)
          vals[i] = i + 1;
-      test_detail::for_each_shape_all<int>(vals, n, -6, replace_if_count_check());
+      test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -6, replace_if_count_check());
 
       for(int i = 0; i != 16; ++i)
          vals[i] = -(i + 1);
-      test_detail::for_each_shape_all<int>(vals, n, -6, replace_if_count_check());
+      test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -6, replace_if_count_check());
    }
 }
 

@@ -183,33 +183,33 @@ void test_stable_partition_shape_matrix()
       //past the end sees an element it would have to move.
       for(int i = 0; i != 16; ++i)
          vals[i] = i + 1;
-      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_shape_check());
+      test_detail::for_each_shape_all_bidir_and_better<int>(vals, n, -999, stable_partition_shape_check());
 
       //Nothing to move: already partitioned, all true, all false.
       for(int i = 0; i != 16; ++i)
          vals[i] = 2*i + 2;
-      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_shape_check());
+      test_detail::for_each_shape_all_bidir_and_better<int>(vals, n, -999, stable_partition_shape_check());
       for(int i = 0; i != 16; ++i)
          vals[i] = 2*i + 1;
-      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_shape_check());
+      test_detail::for_each_shape_all_bidir_and_better<int>(vals, n, -999, stable_partition_shape_check());
       for(int i = 0; i != 16; ++i)
          vals[i] = (i < 8) ? 2*i + 2 : 2*i + 1;
-      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_shape_check());
+      test_detail::for_each_shape_all_bidir_and_better<int>(vals, n, -999, stable_partition_shape_check());
 
       //Fully reversed: every odd precedes every even.
       for(int i = 0; i != 16; ++i)
          vals[i] = (i < 8) ? 2*i + 1 : 2*i + 2;
-      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_shape_check());
+      test_detail::for_each_shape_all_bidir_and_better<int>(vals, n, -999, stable_partition_shape_check());
 
       //A single element on one side of the predicate, at each position in turn.
       for(std::size_t p = 0; p != n; ++p) {
          for(std::size_t i = 0; i != 16u; ++i)
             vals[i] = (i == p) ? int(2*i + 2) : int(2*i + 1);
-         test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_shape_check());
+         test_detail::for_each_shape_all_bidir_and_better<int>(vals, n, -999, stable_partition_shape_check());
 
          for(std::size_t i = 0; i != 16u; ++i)
             vals[i] = (i == p) ? int(2*i + 1) : int(2*i + 2);
-         test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_shape_check());
+         test_detail::for_each_shape_all_bidir_and_better<int>(vals, n, -999, stable_partition_shape_check());
       }
    }
 }
@@ -246,18 +246,18 @@ void test_stable_partition_predicate_count()
 
       for(int i = 0; i != 16; ++i)
          vals[i] = i + 1;
-      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_count_check());
+      test_detail::for_each_shape_all_bidir_and_better<int>(vals, n, -999, stable_partition_count_check());
 
       for(int i = 0; i != 16; ++i)
          vals[i] = 2*i + 2;
-      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_count_check());
+      test_detail::for_each_shape_all_bidir_and_better<int>(vals, n, -999, stable_partition_count_check());
       for(int i = 0; i != 16; ++i)
          vals[i] = 2*i + 1;
-      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_count_check());
+      test_detail::for_each_shape_all_bidir_and_better<int>(vals, n, -999, stable_partition_count_check());
 
       for(int i = 0; i != 16; ++i)
          vals[i] = (i < 8) ? 2*i + 1 : 2*i + 2;
-      test_detail::for_each_shape_all<int>(vals, n, -999, stable_partition_count_check());
+      test_detail::for_each_shape_all_bidir_and_better<int>(vals, n, -999, stable_partition_count_check());
    }
 }
 

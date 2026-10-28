@@ -879,7 +879,7 @@ void test_merge_single_segment_with_comp()
 //
 // segmented_merge has three independently segmented ranges -- two inputs and
 // one destination -- and the destination walker is where both bugs found in
-// this algorithm so far have lived.  for_each_shape3_all drives the full cross
+// this algorithm so far have lived.  for_each_shape3_all_bidir_and_better drives the full cross
 // product.
 //
 // Destination sizes.  Two geometries are run for every combination:
@@ -982,7 +982,7 @@ void test_merge_shape_matrix()
          const std::size_t n3 = n1 + n2 + extras[e];
 
          boost::container::vector<int> fill(n3 ? n3 : 1u, -1);
-         test_detail::for_each_shape3_all<int, int, int>
+         test_detail::for_each_shape3_all_fwd_and_better<int, int, int>
             (v1, n1, v2, n2, &fill[0], n3, -999, merge_shape_check());
       }
    }
@@ -1047,7 +1047,7 @@ void test_merge_comparison_count()
       { {0u, 0u}, {0u, 3u}, {3u, 0u}, {1u, 1u}, {2u, 4u}, {4u, 2u}, {5u, 6u} };
 
    for(std::size_t p = 0; p != sizeof(pairs)/sizeof(pairs[0]); ++p)
-      test_detail::for_each_shape2_all<int, int>
+      test_detail::for_each_shape2_all_fwd_and_better<int, int>
          (v1, pairs[p][0], v2, pairs[p][1], -999, merge_count_check());
 }
 

@@ -125,7 +125,7 @@ void test_generate_n_shape_matrix()
       const std::size_t n = sizes[s];
       for(std::size_t offset = 0; offset <= n; ++offset)
          for(std::size_t k = 0; offset + k <= n; ++k)
-            test_detail::for_each_shape_all<int>(vals, n, -999, generate_n_shape_check(offset, k));
+            test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, generate_n_shape_check(offset, k));
    }
 }
 

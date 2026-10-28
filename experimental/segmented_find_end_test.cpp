@@ -424,7 +424,7 @@ struct find_end_shape_check
 
 void run_find_end_shapes(const int* hay, std::size_t n1, const int* ndl, std::size_t n2)
 {
-   test_detail::for_each_shape2_all<int, int>(hay, n1, ndl, n2, -999, find_end_shape_check());
+   test_detail::for_each_shape2_all_fwd_and_better<int, int>(hay, n1, ndl, n2, -999, find_end_shape_check());
 }
 
 //! Needles drawn from one haystack layout: every length up to four (plus one
@@ -563,7 +563,7 @@ struct find_end_comparison_check
 
 void run_find_end_count_shapes(const int* hay, std::size_t n1, const int* ndl, std::size_t n2)
 {
-   test_detail::for_each_shape2_all<test_detail::counted_int, test_detail::counted_int>
+   test_detail::for_each_shape2_all_fwd_and_better<test_detail::counted_int, test_detail::counted_int>
       (hay, n1, ndl, n2, -999, find_end_comparison_check());
 }
 

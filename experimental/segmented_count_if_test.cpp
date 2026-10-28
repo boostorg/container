@@ -136,8 +136,7 @@ struct count_if_shape_check
 template<class Pred>
 void run_count_if_shapes(const int* vals, std::size_t n, Pred pred)
 {
-   test_detail::for_each_shape_all<int>(vals, n, -999, count_if_shape_check<Pred>(pred));
-   test_detail::for_each_shape_all_fwd<int>(vals, n, -999, count_if_shape_check<Pred>(pred));
+   test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, count_if_shape_check<Pred>(pred));
 }
 
 // The four predicates below cover, for any layout, no match at all, one match,
@@ -325,8 +324,7 @@ void test_count_if_predicate_count()
       int vals[16] = { 0 };
       for(std::size_t i = 0; i != n; ++i)
          vals[i] = int(i) + 1;
-      test_detail::for_each_shape_all<int>(vals, n, -999, count_if_count_check());
-      test_detail::for_each_shape_all_fwd<int>(vals, n, -999, count_if_count_check());
+      test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, count_if_count_check());
    }
 }
 

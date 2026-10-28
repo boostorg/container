@@ -225,7 +225,7 @@ void test_reverse_shape_matrix()
    //ends meet on an element or between two of them.
    const std::size_t sizes[] = { 0u, 1u, 2u, 3u, 4u, 5u, 8u, 11u, 12u };
    for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s)
-      test_detail::for_each_shape_all<int>(vals, sizes[s], -999, reverse_shape_check());
+      test_detail::for_each_shape_all_bidir_and_better<int>(vals, sizes[s], -999, reverse_shape_check());
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -258,7 +258,7 @@ void test_reverse_swap_count()
 
    const std::size_t sizes[] = { 0u, 1u, 2u, 3u, 4u, 5u, 8u, 11u, 12u };
    for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s)
-      test_detail::for_each_shape_all<test_detail::counted_int>
+      test_detail::for_each_shape_all_bidir_and_better<test_detail::counted_int>
          (vals, sizes[s], -999, reverse_swap_count_check());
 }
 

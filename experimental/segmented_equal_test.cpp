@@ -520,7 +520,7 @@ void test_equal_single_segment_every_position()
 //
 // segmented_equal walks two independently segmented ranges at once, so the
 // interesting cross product is of the two ranges' shapes, not of one range's
-// shape with itself.  for_each_shape2_all supplies that.
+// shape with itself.  for_each_shape2_all_bidir_and_better supplies that.
 //
 // The second range is deliberately one element longer than the first and its
 // extra element is a value that appears nowhere else, so that a walker which
@@ -600,7 +600,7 @@ void test_equal_shape_matrix()
          if(bad != n1)
             v2[bad] = -7;
 
-         test_detail::for_each_shape2_all<int, int>
+         test_detail::for_each_shape2_all_fwd_and_better<int, int>
             (v1, n1, v2, n2, -999, equal_shape_check(bad));
       }
    }
@@ -672,7 +672,7 @@ void test_equal_predicate_count()
          if(bad != n1)
             v2[bad] = -7;
 
-         test_detail::for_each_shape2_all<int, int>
+         test_detail::for_each_shape2_all_fwd_and_better<int, int>
             (v1, n1, v2, n2, -999, equal_count_check(bad));
       }
    }
@@ -934,12 +934,12 @@ void test_equal4_shape_matrix()
       for(std::size_t k = 0; k != n2; ++k) v2[k] = int(k) + 1;
 
       // Once with the common prefix agreeing, once with it differing.
-      test_detail::for_each_shape2_all<int, int>
+      test_detail::for_each_shape2_all_fwd_and_better<int, int>
          (v1, n1, v2, n2, -999, equal4_shape_check());
 
       if(n2 != 0u) {
          v2[n2 - 1u] = -7;
-         test_detail::for_each_shape2_all<int, int>
+         test_detail::for_each_shape2_all_fwd_and_better<int, int>
             (v1, n1, v2, n2, -999, equal4_shape_check());
       }
    }
@@ -1043,7 +1043,7 @@ void test_equal4_predicate_count_walked()
       for(std::size_t k = 0; k != n1; ++k) v1[k] = int(k) + 1;
       for(std::size_t k = 0; k != n2; ++k) v2[k] = int(k) + 1;
 
-      test_detail::for_each_shape2_all<int, int>
+      test_detail::for_each_shape2_all_fwd_and_better<int, int>
          (v1, n1, v2, n2, -999, equal4_count_check());
    }
    }

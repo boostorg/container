@@ -150,7 +150,7 @@ void test_fill_shape_matrix()
 
    const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
    for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s)
-      test_detail::for_each_shape_all<int>(vals, sizes[s], -999, fill_shape_check());
+      test_detail::for_each_shape_all_fwd_and_better<int>(vals, sizes[s], -999, fill_shape_check());
 }
 
 void test_fill_single_segment_sentinel()
@@ -201,7 +201,7 @@ void test_fill_assignment_count()
 
    const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
    for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s)
-      test_detail::for_each_shape_all<test_detail::counted_int>
+      test_detail::for_each_shape_all_fwd_and_better<test_detail::counted_int>
          (vals, sizes[s], -999, fill_assignment_check());
 }
 

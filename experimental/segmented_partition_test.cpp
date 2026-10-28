@@ -12,6 +12,7 @@
 #include "../test/lightweight_test.hpp"
 #include "segmented_test_helper.hpp"
 #include <boost/container/vector.hpp>
+#include <boost/container/experimental/wrapped_iterator.hpp>
 
 using namespace boost::container;
 
@@ -252,9 +253,7 @@ struct partition_shape_check
 template<class F>
 void run_partition_shapes(const int* vals, std::size_t n, F f)
 {
-   test_detail::for_each_shape_all<int>(vals, n, -999, f);
-   //Forward iterators reach a separate segmented implementation.
-   test_detail::for_each_shape_all_fwd<int>(vals, n, -999, f);
+   test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, f);
 }
 
 void test_partition_shape_matrix()
@@ -391,6 +390,30 @@ void test_partition_predicate_count()
    }
 }
 
+//A non-segmented forward iterator with last of the same type must select the
+//forward (Lomuto) scan.
+void test_partition_non_segmented_forward()
+{
+   typedef boost::container::vector<int>::iterator vec_it_t;
+   typedef wrapped_iterator<vec_it_t, std::forward_iterator_tag> fwd_it_t;
+   const int vals[] = { 5, 2, 7, 4, 1, 6 };
+   boost::container::vector<int> v(vals, vals + sizeof(vals)/sizeof(vals[0]));
+
+   test_detail::op_counter calls;
+   const fwd_it_t mid = segmented_partition
+      (fwd_it_t(v.begin()), fwd_it_t(v.end()), test_detail::counting_pred(calls, is_even()));
+
+   //The two-ended scan gives 6 2 4 7 1 5
+   const int expected[] = { 2, 4, 6, 5, 1, 7 };
+   BOOST_TEST(vec_it_t(mid) == v.begin() + 3);
+   for(std::size_t i = 0; i != 6u; ++i)
+      BOOST_TEST_EQ(v[i], expected[i]);
+   BOOST_TEST_EQ(calls.n, 6u);
+
+   boost::container::vector<int> e;
+   BOOST_TEST(vec_it_t(segmented_partition(fwd_it_t(e.begin()), fwd_it_t(e.end()), is_even())) == e.end());
+}
+
 int main()
 {
    test_partition_shape_matrix();
@@ -405,5 +428,6 @@ int main()
    test_partition_single_segment_sentinel();
    test_partition_forward_matches_in_earlier_segment();
    test_partition_predicate_count();
+   test_partition_non_segmented_forward();
    return boost::report_errors();
 }

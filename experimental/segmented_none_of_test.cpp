@@ -116,8 +116,7 @@ struct none_of_shape_check
 template<class Pred>
 void run_none_of_shapes(const int* vals, std::size_t n, Pred pred)
 {
-   test_detail::for_each_shape_all<int>(vals, n, -999, none_of_shape_check<Pred>(pred));
-   test_detail::for_each_shape_all_fwd<int>(vals, n, -999, none_of_shape_check<Pred>(pred));
+   test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, none_of_shape_check<Pred>(pred));
 }
 
 void test_none_of_shape_matrix()
@@ -311,8 +310,7 @@ struct none_of_count_check
 template<class Pred>
 void run_none_of_count_shapes(const int* vals, std::size_t n, Pred pred)
 {
-   test_detail::for_each_shape_all<int>(vals, n, -999, none_of_count_check<Pred>(pred));
-   test_detail::for_each_shape_all_fwd<int>(vals, n, -999, none_of_count_check<Pred>(pred));
+   test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, none_of_count_check<Pred>(pred));
 }
 
 void test_none_of_predicate_count()

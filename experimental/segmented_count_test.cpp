@@ -94,8 +94,7 @@ struct count_shape_check
 // separately, so each shape is driven through both.
 void run_count_shapes(const int* vals, std::size_t n, int value)
 {
-   test_detail::for_each_shape_all<int>(vals, n, -999, count_shape_check(value));
-   test_detail::for_each_shape_all_fwd<int>(vals, n, -999, count_shape_check(value));
+   test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, count_shape_check(value));
 }
 
 void test_count_shape_matrix()
@@ -292,17 +291,17 @@ void test_count_comparison_count()
       // No match, every element a match, and a scattering of matches.
       for(std::size_t i = 0; i != 16u; ++i)
          vals[i] = int(i) + 100;
-      test_detail::for_each_shape_all<test_detail::counted_int>
+      test_detail::for_each_shape_all_fwd_and_better<test_detail::counted_int>
          (vals, n, -999, count_comparison_check());
 
       for(std::size_t i = 0; i != 16u; ++i)
          vals[i] = 3;
-      test_detail::for_each_shape_all<test_detail::counted_int>
+      test_detail::for_each_shape_all_fwd_and_better<test_detail::counted_int>
          (vals, n, -999, count_comparison_check());
 
       for(std::size_t i = 0; i != 16u; ++i)
          vals[i] = int(i) % 3 == 0 ? 3 : int(i) + 100;
-      test_detail::for_each_shape_all<test_detail::counted_int>
+      test_detail::for_each_shape_all_fwd_and_better<test_detail::counted_int>
          (vals, n, -999, count_comparison_check());
    }
 }

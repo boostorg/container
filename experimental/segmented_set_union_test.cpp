@@ -527,9 +527,9 @@ void test_set_union_single_segment_with_comp()
 // Shape matrix.
 //
 // Two inputs and one destination.  The two inputs are driven by
-// for_each_shape2_all, so their shapes are enumerated in full.
+// for_each_shape2_all_bidir_and_better, so their shapes are enumerated in full.
 //
-// The destination is enumerated by for_each_dest_shape_all, so it is walked at
+// The destination is enumerated by for_each_dest_shape_all_bidir_and_better, so it is walked at
 // both depths.  A two-level destination is what
 // reaches the segmented_iterator_tag overload of set_union_dst_bounded, where
 // the local iterator handed to the level below is itself still segmented.
@@ -649,7 +649,7 @@ struct set_union_shape_check
 
       const set_union_dst_bind<C1, C2> dst
          (c1, c2, set_union_dst_check(ref, s1, n1, s2, n2));
-      test_detail::for_each_dest_shape_all<int>(n3, -1, -999, dst);
+      test_detail::for_each_dest_shape_all_fwd_and_better<int>(n3, -1, -999, dst);
 
       // Neither input is an output.
       if(!BOOST_TEST(test_detail::filler_intact(c1, n1, -999)))
@@ -671,7 +671,7 @@ void test_set_union_shape_matrix()
 
    for(std::size_t p = 0; p != sizeof(pairs)/sizeof(pairs[0]); ++p) {
       for(std::size_t e = 0; e != sizeof(extras)/sizeof(extras[0]); ++e) {
-         test_detail::for_each_shape2_all<int, int>
+         test_detail::for_each_shape2_all_fwd_and_better<int, int>
             (v1, pairs[p][0], v2, pairs[p][1], -999, set_union_shape_check(extras[e]));
       }
    }
@@ -737,7 +737,7 @@ void test_set_union_comparison_count()
       { {0u, 0u}, {0u, 3u}, {3u, 0u}, {1u, 1u}, {2u, 4u}, {4u, 2u}, {5u, 6u} };
 
    for(std::size_t p = 0; p != sizeof(pairs)/sizeof(pairs[0]); ++p)
-      test_detail::for_each_shape2_all<int, int>
+      test_detail::for_each_shape2_all_fwd_and_better<int, int>
          (v1, pairs[p][0], v2, pairs[p][1], -999, set_union_count_check());
 }
 

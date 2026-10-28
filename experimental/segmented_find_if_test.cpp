@@ -176,8 +176,7 @@ struct find_if_shape_check
 template<class Pred>
 void run_find_if_shapes(const int* vals, std::size_t n, Pred pred)
 {
-   test_detail::for_each_shape_all<int>(vals, n, -999, find_if_shape_check<Pred>(pred));
-   test_detail::for_each_shape_all_fwd<int>(vals, n, -999, find_if_shape_check<Pred>(pred));
+   test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, find_if_shape_check<Pred>(pred));
 }
 
 void test_find_if_shape_matrix()
@@ -370,8 +369,7 @@ struct find_if_count_check
 template<class Pred>
 void run_find_if_count_shapes(const int* vals, std::size_t n, Pred pred)
 {
-   test_detail::for_each_shape_all<int>(vals, n, -999, find_if_count_check<Pred>(pred));
-   test_detail::for_each_shape_all_fwd<int>(vals, n, -999, find_if_count_check<Pred>(pred));
+   test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, -999, find_if_count_check<Pred>(pred));
 }
 
 void test_find_if_predicate_count()

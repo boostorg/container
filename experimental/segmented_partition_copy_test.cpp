@@ -425,7 +425,7 @@ void test_partition_copy_single_segment_outs_from_flat()
 //////////////////////////////////////////////////////////////////////////////
 // Shape matrix.
 //
-// partition_copy has three ranges, so this uses for_each_shape3_all: the six
+// partition_copy has three ranges, so this uses for_each_shape3_all_bidir_and_better: the six
 // branch specs of the source crossed with the six of each of the two
 // destinations, over both segmentation depths, 216 triples per size triple.
 //
@@ -519,10 +519,10 @@ void test_partition_copy_shape_matrix()
             continue;
          const std::size_t nt = shape_true_count(sets[s], n);
          const std::size_t nf = n - nt;
-         test_detail::for_each_shape3_all<int, int, int>
+         test_detail::for_each_shape3_all_fwd_and_better<int, int, int>
             (sets[s], n, shape_dst_vals, nt, shape_dst_vals, nf,
              shape_filler, partition_copy_shape_check());
-         test_detail::for_each_shape3_all<int, int, int>
+         test_detail::for_each_shape3_all_fwd_and_better<int, int, int>
             (sets[s], n, shape_dst_vals, nt + 2u, shape_dst_vals, nf + 2u,
              shape_filler, partition_copy_shape_check());
       }
@@ -703,10 +703,10 @@ void test_partition_copy_predicate_count()
             continue;
          const std::size_t nt = shape_true_count(sets[s], n);
          const std::size_t nf = n - nt;
-         test_detail::for_each_shape3_all<int, int, int>
+         test_detail::for_each_shape3_all_fwd_and_better<int, int, int>
             (sets[s], n, shape_dst_vals, nt, shape_dst_vals, nf,
              shape_filler, partition_copy_count_check());
-         test_detail::for_each_shape3_all<int, int, int>
+         test_detail::for_each_shape3_all_fwd_and_better<int, int, int>
             (sets[s], n, shape_dst_vals, nt + 2u, shape_dst_vals, nf + 2u,
              shape_filler, partition_copy_count_check());
       }

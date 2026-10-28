@@ -154,7 +154,7 @@ void test_for_each_shape_matrix()
 
    const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
    for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s)
-      test_detail::for_each_shape_all<int>(vals, sizes[s], -999, for_each_shape_check());
+      test_detail::for_each_shape_all_fwd_and_better<int>(vals, sizes[s], -999, for_each_shape_check());
 }
 
 void test_for_each_single_segment_sentinel()
@@ -207,7 +207,7 @@ void test_for_each_application_count()
 
    const std::size_t sizes[] = { 0u, 1u, 2u, 5u, 12u };
    for(std::size_t s = 0; s != sizeof(sizes)/sizeof(sizes[0]); ++s)
-      test_detail::for_each_shape_all<int>(vals, sizes[s], -999, for_each_count_check());
+      test_detail::for_each_shape_all_fwd_and_better<int>(vals, sizes[s], -999, for_each_count_check());
 }
 
 int main()

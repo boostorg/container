@@ -322,7 +322,7 @@ void test_remove_single_segment_seg2_both()
 // Shape matrix.
 //
 // segmented_remove is in place, so there is only one range and
-// for_each_shape_all is the right combinator: the six branch specs over
+// for_each_shape_all_bidir_and_better is the right combinator: the six branch specs over
 // both segmentation depths.
 //
 // What can be asserted after the call is the returned new logical end, the
@@ -380,7 +380,7 @@ void test_remove_shape_matrix()
          const std::size_t n = sizes[i];
          if(n > set_len[s])
             continue;
-         test_detail::for_each_shape_all<int>
+         test_detail::for_each_shape_all_fwd_and_better<int>
             (sets[s], n, shape_filler, remove_shape_check());
       }
    }
@@ -426,7 +426,7 @@ void test_remove_comparison_count()
          const std::size_t n = sizes[i];
          if(n > set_len[s])
             continue;
-         test_detail::for_each_shape_all<test_detail::counted_int>
+         test_detail::for_each_shape_all_fwd_and_better<test_detail::counted_int>
             (sets[s], n, shape_filler, remove_comparison_check());
       }
    }

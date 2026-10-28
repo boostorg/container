@@ -298,7 +298,7 @@ void test_remove_copy_single_segment_dst_from_flat()
 //////////////////////////////////////////////////////////////////////////////
 // Shape matrix.
 //
-// for_each_shape2_all crosses the six branch specs of the source range with
+// for_each_shape2_all_bidir_and_better crosses the six branch specs of the source range with
 // the six of the destination, at both segmentation depths, so the two
 // segmentations vary independently.
 //
@@ -381,9 +381,9 @@ void test_remove_copy_shape_matrix()
          if(n_src > set_len[s])
             continue;
          const std::size_t m = shape_survivor_count(sets[s], n_src);
-         test_detail::for_each_shape2_all<int, int>
+         test_detail::for_each_shape2_all_fwd_and_better<int, int>
             (sets[s], n_src, shape_dst_vals, m, shape_filler, remove_copy_shape_check());
-         test_detail::for_each_shape2_all<int, int>
+         test_detail::for_each_shape2_all_fwd_and_better<int, int>
             (sets[s], n_src, shape_dst_vals, m + 3u, shape_filler, remove_copy_shape_check());
       }
    }
@@ -535,9 +535,9 @@ void test_remove_copy_comparison_count()
          if(n_src > set_len[s])
             continue;
          const std::size_t m = shape_survivor_count(sets[s], n_src);
-         test_detail::for_each_shape2_all<test_detail::counted_int, test_detail::counted_int>
+         test_detail::for_each_shape2_all_fwd_and_better<test_detail::counted_int, test_detail::counted_int>
             (sets[s], n_src, shape_dst_vals, m, shape_filler, remove_copy_count_check());
-         test_detail::for_each_shape2_all<test_detail::counted_int, test_detail::counted_int>
+         test_detail::for_each_shape2_all_fwd_and_better<test_detail::counted_int, test_detail::counted_int>
             (sets[s], n_src, shape_dst_vals, m + 3u, shape_filler, remove_copy_count_check());
       }
    }

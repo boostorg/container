@@ -155,7 +155,7 @@ void test_replace_shape_matrix()
       //Every value present in the range plus one that is absent from it.
       for(std::size_t v = 0; v <= n/2u + 1u; ++v) {
          const int oldv = int(v);
-         test_detail::for_each_shape_all<int>(vals, n, oldv, replace_shape_check(oldv, 999));
+         test_detail::for_each_shape_all_fwd_and_better<int>(vals, n, oldv, replace_shape_check(oldv, 999));
       }
    }
 }
@@ -215,7 +215,7 @@ void test_replace_comparison_count()
       const std::size_t n = sizes[s];
       for(std::size_t v = 0; v <= n/2u + 1u; ++v) {
          const int oldv = int(v);
-         test_detail::for_each_shape_all<test_detail::counted_int>
+         test_detail::for_each_shape_all_fwd_and_better<test_detail::counted_int>
             (vals, n, oldv, replace_comparison_check(oldv));
       }
    }
