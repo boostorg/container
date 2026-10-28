@@ -104,10 +104,9 @@ FwdIt segmented_partition_dispatch(FwdIt first, Sent last, Pred pred, bool, Tag 
 // means "pred(*f) is already known false, go straight to the backward scan",
 // and on return it means the same to the caller.  segmented_partition always
 // enters with a literal false, so the flat path folds the extra branch away.
-
-template <class BidirIt, class Pred, class Cat>
+template <class BidirIt, class Pred>
 BOOST_CONTAINER_FORCEINLINE
-BidirIt segmented_partition_dispatch(BidirIt first, BidirIt last, Pred pred, bool pending, non_segmented_iterator_tag, const Cat&)
+BidirIt segmented_partition_dispatch(BidirIt first, BidirIt last, Pred pred, bool pending, non_segmented_iterator_tag, const std::bidirectional_iterator_tag&)
 {
    if (pending) {
       do {
