@@ -1200,11 +1200,13 @@ class flat_set
 
 //! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
 //!
+//! <b>Throws</b>: If pred or the move assignment of the elements throws, c is left empty.
+//!
 //! <b>Complexity</b>: Linear.
 template <class K, class C, class A, class Pred>
 inline typename flat_set<K, C, A>::size_type erase_if(flat_set<K, C, A>& c, Pred pred)
 {
-   return container_erase_if(c, pred);
+   return dtl::flat_tree_container_erase_if(c.get_sequence_ref(), pred);
 }
 
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD
@@ -1965,11 +1967,13 @@ class flat_multiset
 
 //! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
 //!
+//! <b>Throws</b>: If pred or the move assignment of the elements throws, c is left empty.
+//!
 //! <b>Complexity</b>: Linear.
 template <class K, class C, class A, class Pred>
 inline typename flat_multiset<K, C, A>::size_type erase_if(flat_multiset<K, C, A>& c, Pred pred)
 {
-   return container_erase_if(c, pred);
+   return dtl::flat_tree_container_erase_if(c.get_sequence_ref(), pred);
 }
 
 #ifndef BOOST_CONTAINER_NO_CXX17_CTAD

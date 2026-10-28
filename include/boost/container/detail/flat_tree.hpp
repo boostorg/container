@@ -191,6 +191,30 @@ void flat_tree_container_merge_ending
 
 ///////////////////////////////////////
 //
+//  flat_tree_container_erase_if
+//
+///////////////////////////////////////
+//Erases the elements that satisfy pred in one pass, so the cost is linear.
+//If an exception is thrown, the sequence can hold moved-from elements and be
+//unsorted: clear it.
+template<class SequenceContainer, class Pred>
+typename SequenceContainer::size_type flat_tree_container_erase_if
+   (SequenceContainer& seq, Pred pred)
+{
+   const typename SequenceContainer::size_type old_sz = seq.size();
+   BOOST_CONTAINER_TRY{
+      seq.erase((boost::container::remove_if)(seq.begin(), seq.end(), pred), seq.end());
+   }
+   BOOST_CONTAINER_CATCH(...){
+      seq.clear();
+      BOOST_CONTAINER_RETHROW
+   }
+   BOOST_CONTAINER_CATCH_END
+   return static_cast<typename SequenceContainer::size_type>(old_sz - seq.size());
+}
+
+///////////////////////////////////////
+//
 //  flat_tree_container_erase_ending
 //
 ///////////////////////////////////////
