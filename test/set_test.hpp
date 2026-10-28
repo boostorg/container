@@ -144,6 +144,14 @@ int set_test_copyable(boost::container::dtl::true_type)
 }
 
 
+//The allocator of a static_vector sequence holds a buffer that is not initialized. GCC 11 and
+//later warn (maybe-uninitialized) when a temporary allocator_type() is passed by reference
+//to a constructor that is not inlined, although the buffer is not read.
+#if defined(BOOST_GCC) && (BOOST_GCC >= 110000)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
 BOOST_INTRUSIVE_HAS_MEMBER_FUNC_CALLED(set_has_member_nth, nth)
 
 //Only flat sets (they have nth) have insert(ordered_[unique_]range, It, It)
@@ -265,6 +273,10 @@ int set_single_pass_test()
       return 1;
    return 0;
 }
+
+#if defined(BOOST_GCC) && (BOOST_GCC >= 110000)
+#pragma GCC diagnostic pop
+#endif
 
 template<class MyBoostSet
         ,class MyStdSet
