@@ -17,6 +17,7 @@
 #include "static_vector_test.hpp"
 #include "unqualified_swap_test.hpp"
 #include "throwing_utilities.hpp"
+#include "vector_test.hpp"
 
 
 template <typename T, size_t N>
@@ -800,6 +801,32 @@ void test_move_assignment_move_constructs_extra_elements()
 void test_move_assignment_move_constructs_extra_elements() {}
 #endif   //BOOST_NO_EXCEPTIONS
 
+//Range functions with a single-pass iterator whose copies share the position
+template<class T, std::size_t N>
+void test_single_pass_iterator_n()
+{
+   typedef static_vector<T, 64u> sv_t;
+   int values[N];
+   for(std::size_t i = 0; i != N; ++i)
+      values[i] = int(i);
+   {  //static_vector(It, It)
+      test::shared_input_range<T, N> r(values);
+      const sv_t s(r.mbegin(), r.mend());
+      BOOST_TEST(r.read_once());
+      BOOST_TEST(test::CheckEqualContainers(s, std::vector<int>(values, values + N)));
+   }
+   //insert(pos, It, It) and assign(It, It)
+   BOOST_TEST(0 == (test::vector_single_pass_insert_test<sv_t, N>()));
+}
+
+void test_single_pass_iterator()
+{
+   test_single_pass_iterator_n<int, 3u>();
+   test_single_pass_iterator_n<int, 50u>();
+   test_single_pass_iterator_n<test::movable_int, 3u>();
+   test_single_pass_iterator_n<test::movable_int, 50u>();
+}
+
 int main(int, char* [])
 {
    if(!test_unqualified_swap())
@@ -922,6 +949,8 @@ int main(int, char* [])
 
    test_move_constructor_can_throw();
    test_move_assignment_move_constructs_extra_elements();
+
+   test_single_pass_iterator();
 
    return boost::report_errors();
 }

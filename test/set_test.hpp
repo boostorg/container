@@ -17,6 +17,8 @@
 #include "print_container.hpp"
 #include "movable_int.hpp"
 #include "throwing_utilities.hpp"
+#include "shared_input_iterator.hpp"
+#include <boost/intrusive/detail/mpl.hpp>
 #include <boost/move/detail/meta_utils.hpp>   //declval
 #include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
@@ -141,6 +143,128 @@ int set_test_copyable(boost::container::dtl::true_type)
    return 0;
 }
 
+
+BOOST_INTRUSIVE_HAS_MEMBER_FUNC_CALLED(set_has_member_nth, nth)
+
+//Only flat sets (they have nth) have insert(ordered_[unique_]range, It, It)
+template<class MyBoostSet, class MyStdSet, class OrderedTag, std::size_t N>
+int set_single_pass_ordered_insert(const int (&)[N], OrderedTag, dtl::false_type /*has_nth*/)
+{
+   return 0;
+}
+
+template<class MyBoostSet, class MyStdSet, class OrderedTag, std::size_t N>
+int set_single_pass_ordered_insert(const int (&sorted)[N], OrderedTag tag, dtl::true_type /*has_nth*/)
+{
+   typedef typename MyBoostSet::value_type IntType;
+   //insert(ordered_[unique_]range, It, It) in an empty set and in a set with elements
+   for(int n = 0; n != 2; ++n){
+      MyBoostSet boostset;
+      MyStdSet stdset;
+      for(int i = 0; i != n*10; ++i){
+         IntType move_me(100 + i);
+         boostset.insert(boost::move(move_me));
+         stdset.insert(100 + i);
+      }
+      shared_input_range<IntType, N> r(sorted);
+      boostset.insert(tag, r.mbegin(), r.mend());
+      stdset.insert(sorted, sorted + N);
+      if(!r.read_once()) return 1;
+      if(!CheckEqualContainers(boostset, stdset)) return 1;
+   }
+   return 0;
+}
+
+//Range functions with a single-pass iterator whose copies share the position.
+//"values" is not sorted and has duplicates. "sorted" is valid for OrderedTag.
+template<class MyBoostSet, class MyStdSet, class OrderedTag, std::size_t N>
+int set_single_pass_test_cont(const int (&values)[N], const int (&sorted)[N], OrderedTag tag)
+{
+   typedef typename MyBoostSet::value_type      IntType;
+   typedef typename MyBoostSet::key_compare     key_compare;
+   typedef typename MyBoostSet::allocator_type  allocator_type;
+
+   const MyStdSet stdset(values, values + N);
+   const MyStdSet stdset_sorted(sorted, sorted + N);
+   //Set(It, It), Set(It, It, comp), Set(It, It, alloc), Set(It, It, comp, alloc)
+   for(int variant = 0; variant != 4; ++variant){
+      shared_input_range<IntType, N> r(values);
+      ::boost::movelib::unique_ptr<MyBoostSet> pboostset;
+      switch(variant){
+         case 0:  pboostset = ::boost::movelib::make_unique<MyBoostSet>(r.mbegin(), r.mend());  break;
+         case 1:  pboostset = ::boost::movelib::make_unique<MyBoostSet>(r.mbegin(), r.mend(), key_compare());  break;
+         case 2:  pboostset = ::boost::movelib::make_unique<MyBoostSet>(r.mbegin(), r.mend(), allocator_type());  break;
+         default: pboostset = ::boost::movelib::make_unique<MyBoostSet>(r.mbegin(), r.mend(), key_compare(), allocator_type());  break;
+      }
+      if(!r.read_once()) return 1;
+      if(!CheckEqualContainers(*pboostset, stdset)) return 1;
+   }
+   //The same constructors with ordered_[unique_]range
+   for(int variant = 0; variant != 4; ++variant){
+      shared_input_range<IntType, N> r(sorted);
+      ::boost::movelib::unique_ptr<MyBoostSet> pboostset;
+      switch(variant){
+         case 0:  pboostset = ::boost::movelib::make_unique<MyBoostSet>(tag, r.mbegin(), r.mend());  break;
+         case 1:  pboostset = ::boost::movelib::make_unique<MyBoostSet>(tag, r.mbegin(), r.mend(), key_compare());  break;
+         case 2:  pboostset = ::boost::movelib::make_unique<MyBoostSet>(tag, r.mbegin(), r.mend(), allocator_type());  break;
+         default: pboostset = ::boost::movelib::make_unique<MyBoostSet>(tag, r.mbegin(), r.mend(), key_compare(), allocator_type());  break;
+      }
+      if(!r.read_once()) return 1;
+      if(!CheckEqualContainers(*pboostset, stdset_sorted)) return 1;
+   }
+   //insert(It, It) in an empty set and in a set with elements
+   for(int n = 0; n != 2; ++n){
+      MyBoostSet boostset;
+      MyStdSet stdset_ins;
+      for(int i = 0; i != n*10; ++i){
+         IntType move_me(10 + i);
+         boostset.insert(boost::move(move_me));
+         stdset_ins.insert(10 + i);
+      }
+      shared_input_range<IntType, N> r(values);
+      boostset.insert(r.mbegin(), r.mend());
+      stdset_ins.insert(values, values + N);
+      if(!r.read_once()) return 1;
+      if(!CheckEqualContainers(boostset, stdset_ins)) return 1;
+   }
+   return set_single_pass_ordered_insert<MyBoostSet, MyStdSet>
+      (sorted, tag, dtl::bool_<set_has_member_nth<MyBoostSet>::value>());
+}
+
+template<class MyBoostSet
+        ,class MyStdSet
+        ,class MyBoostMultiSet
+        ,class MyStdMultiSet
+        ,std::size_t N>
+int set_single_pass_test_n()
+{
+   int values[N];
+   int sorted_unique[N];
+   int sorted_equal[N];
+   for(std::size_t i = 0; i != N; ++i){
+      values[i] = int((i*7u) % (N/2u + 1u));
+      sorted_unique[i] = int(i*2u);
+      sorted_equal[i] = int(i/2u);
+   }
+   if(0 != set_single_pass_test_cont<MyBoostSet, MyStdSet>(values, sorted_unique, ordered_unique_range))
+      return 1;
+   if(0 != set_single_pass_test_cont<MyBoostMultiSet, MyStdMultiSet>(values, sorted_equal, ordered_range))
+      return 1;
+   return 0;
+}
+
+template<class MyBoostSet
+        ,class MyStdSet
+        ,class MyBoostMultiSet
+        ,class MyStdMultiSet>
+int set_single_pass_test()
+{
+   if(0 != set_single_pass_test_n<MyBoostSet, MyStdSet, MyBoostMultiSet, MyStdMultiSet, 3u>())
+      return 1;
+   if(0 != set_single_pass_test_n<MyBoostSet, MyStdSet, MyBoostMultiSet, MyStdMultiSet, 50u>())
+      return 1;
+   return 0;
+}
 
 template<class MyBoostSet
         ,class MyStdSet
@@ -878,6 +1002,9 @@ int set_test ()
       (dtl::bool_<boost::container::test::is_copyable<IntType>::value>())){
       return 1;
    }
+
+   if(set_single_pass_test<MyBoostSet, MyStdSet, MyBoostMultiSet, MyStdMultiSet>())
+      return 1;
 
    return 0;
 }

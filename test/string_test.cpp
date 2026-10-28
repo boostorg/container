@@ -34,6 +34,7 @@
 #include <boost/utility/string_view.hpp>
 #include "lightweight_test.hpp"
 #include "unqualified_swap_test.hpp"
+#include "shared_input_iterator.hpp"
 #include <boost/core/lightweight_test_trait.hpp>
 #if BOOST_CXX_VERSION >= 201103L
 #include <boost/functional/hash.hpp>
@@ -2499,6 +2500,79 @@ bool test_move_assign_noexcept()
    return true;
 }
 
+//Range functions with a single-pass iterator whose copies share the position
+template<std::size_t N>
+void test_single_pass_iterator_n()
+{
+   typedef boost::container::string bstring;
+   typedef test::shared_input_range<char, N> range_t;
+   int values[N];
+   for(std::size_t i = 0; i != N; ++i)
+      values[i] = int('a' + int(i % 26u));
+   std::string str_values;
+   for(std::size_t i = 0; i != N; ++i)
+      str_values += char(values[i]);
+   const char *const init = "0123456789";
+
+   {  //basic_string(It, It)
+      range_t r(values);
+      const bstring s(r.begin(), r.end());
+      BOOST_TEST(r.read_once());
+      BOOST_TEST(s == str_values.c_str());
+   }
+   {  //basic_string(It, It, alloc)
+      range_t r(values);
+      const bstring s(r.begin(), r.end(), bstring::allocator_type());
+      BOOST_TEST(r.read_once());
+      BOOST_TEST(s == str_values.c_str());
+   }
+   //insert(pos, It, It) in an empty string, at the beginning, in the middle and at the end
+   for(std::size_t n = 0; n != 4; ++n){
+      const std::size_t size = n ? 10u : 0u;
+      const std::size_t pos  = n ? (n - 1u)*5u : 0u;
+      bstring s(init, size);
+      std::string ss(init, size);
+      range_t r(values);
+      s.insert(s.begin() + std::ptrdiff_t(pos), r.begin(), r.end());
+      ss.insert(pos, str_values);
+      BOOST_TEST(r.read_once());
+      BOOST_TEST(s == ss.c_str());
+   }
+   //assign(It, It) and append(It, It) in an empty string and in a string with elements
+   for(std::size_t n = 0; n != 2; ++n){
+      bstring s(init, n*10u);
+      range_t r(values);
+      s.assign(r.begin(), r.end());
+      BOOST_TEST(r.read_once());
+      BOOST_TEST(s == str_values.c_str());
+
+      bstring s2(init, n*10u);
+      std::string ss2(init, n*10u);
+      range_t r2(values);
+      s2.append(r2.begin(), r2.end());
+      ss2.append(str_values);
+      BOOST_TEST(r2.read_once());
+      BOOST_TEST(s2 == ss2.c_str());
+   }
+   //replace(i1, i2, It, It) of an empty, a shorter and a longer range
+   for(std::size_t n = 0; n != 3; ++n){
+      const std::size_t len = n*4u;
+      bstring s(init);
+      std::string ss(init);
+      range_t r(values);
+      s.replace(s.begin() + 2, s.begin() + 2 + std::ptrdiff_t(len), r.begin(), r.end());
+      ss.replace(2u, len, str_values);
+      BOOST_TEST(r.read_once());
+      BOOST_TEST(s == ss.c_str());
+   }
+}
+
+void test_single_pass_iterator()
+{
+   test_single_pass_iterator_n<3u>();
+   test_single_pass_iterator_n<50u>();
+}
+
 int main()
 {
    if(!test_unqualified_swap())
@@ -2597,6 +2671,8 @@ int main()
 
    if(!test_move_assign_noexcept())
       return 1;
+
+   test_single_pass_iterator();
 
 return boost::report_errors();
 }

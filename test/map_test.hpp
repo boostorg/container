@@ -16,6 +16,8 @@
 #include "print_container.hpp"
 #include "movable_int.hpp"
 #include "throwing_utilities.hpp"
+#include "shared_input_iterator.hpp"
+#include <boost/container/container_fwd.hpp>
 #include <boost/move/detail/meta_utils.hpp>   //declval
 #include <boost/container/detail/pair.hpp>
 #include <boost/container/detail/compare_functors.hpp>
@@ -1363,6 +1365,195 @@ int map_test_merge(MyBoostMap &boostmap, MyStdMap &stdmap, MyBoostMultiMap &boos
 }
 
 
+//Only flat maps (detecting nth member) have
+//insert(ordered_[unique_]range, It, It)
+BOOST_INTRUSIVE_HAS_MEMBER_FUNC_CALLED(map_has_member_nth, nth)
+
+template<class MyBoostMap, class MyStdMap, class OrderedTag, std::size_t N>
+int map_single_pass_ordered_insert(const int (&)[N], OrderedTag, dtl::false_type /*has_nth*/)
+{
+   return 0;
+}
+
+template<class MyBoostMap, class MyStdMap, class OrderedTag, std::size_t N>
+int map_single_pass_ordered_insert(const int (&sorted)[N], OrderedTag tag, dtl::true_type /*has_nth*/)
+{
+   typedef typename MyBoostMap::key_type     IntType;
+   typedef dtl::pair<IntType, IntType>       IntPairType;
+   typedef typename MyStdMap::value_type     StdValueType;
+   //insert(ordered_[unique_]range, It, It) in an empty map and in a map with elements
+   for(int n = 0; n != 2; ++n){
+      MyBoostMap boostmap;
+      MyStdMap stdmap;
+      for(int i = 0; i != n*10; ++i){
+         IntType i1(100 + i);
+         IntType i2(100 + i);
+         IntPairType p(boost::move(i1), boost::move(i2));
+         boostmap.insert(boost::move(p));
+         stdmap.insert(StdValueType(100 + i, 100 + i));
+      }
+      shared_input_range<IntPairType, N> r(sorted);
+      boostmap.insert(tag, r.mbegin(), r.mend());
+      for(std::size_t i = 0; i != N; ++i)
+         stdmap.insert(StdValueType(sorted[i], sorted[i]));
+      if(!r.read_once()) return 1;
+      if(!CheckEqualPairContainers(boostmap, stdmap)) return 1;
+   }
+   return 0;
+}
+
+//In C++03, flat_map(ordered_unique_range, It, It, alloc) and
+//flat_multimap(ordered_range, It, It, [comp,] alloc) do not compile when the
+//sequence is a static_vector: the allocator is not converted to the allocator
+//of the internal tree. These constructors are not tested for these maps.
+template<class C>
+struct map_single_pass_ordered_alloc_ctor_compiles
+{  static const bool value = true;  };
+
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+template<class K, class T, class Cmp, class V, std::size_t N, class O>
+struct map_single_pass_ordered_alloc_ctor_compiles< flat_map<K, T, Cmp, static_vector<V, N, O> > >
+{  static const bool value = false;  };
+
+template<class K, class T, class Cmp, class V, std::size_t N, class O>
+struct map_single_pass_ordered_alloc_ctor_compiles< flat_multimap<K, T, Cmp, static_vector<V, N, O> > >
+{  static const bool value = false;  };
+#endif
+
+template<class MyBoostMap, class MyStdMap, class OrderedTag, std::size_t N>
+int map_single_pass_ordered_alloc_ctor(const int (&)[N], OrderedTag, dtl::false_type /*compiles*/)
+{
+   return 0;
+}
+
+//Map(ordered_[unique_]range, It, It, alloc), Map(ordered_[unique_]range, It, It, comp, alloc)
+template<class MyBoostMap, class MyStdMap, class OrderedTag, std::size_t N>
+int map_single_pass_ordered_alloc_ctor(const int (&sorted)[N], OrderedTag tag, dtl::true_type /*compiles*/)
+{
+   typedef typename MyBoostMap::key_type        IntType;
+   typedef dtl::pair<IntType, IntType>          IntPairType;
+   typedef typename MyBoostMap::key_compare     key_compare;
+   typedef typename MyBoostMap::allocator_type  allocator_type;
+   typedef typename MyStdMap::value_type        StdValueType;
+
+   MyStdMap stdmap_sorted;
+   for(std::size_t i = 0; i != N; ++i)
+      stdmap_sorted.insert(StdValueType(sorted[i], sorted[i]));
+   for(int variant = 0; variant != 2; ++variant){
+      shared_input_range<IntPairType, N> r(sorted);
+      ::boost::movelib::unique_ptr<MyBoostMap> pboostmap;
+      if(variant == 0)
+         pboostmap = ::boost::movelib::make_unique<MyBoostMap>(tag, r.mbegin(), r.mend(), allocator_type());
+      else
+         pboostmap = ::boost::movelib::make_unique<MyBoostMap>(tag, r.mbegin(), r.mend(), key_compare(), allocator_type());
+      if(!r.read_once()) return 1;
+      if(!CheckEqualPairContainers(*pboostmap, stdmap_sorted)) return 1;
+   }
+   return 0;
+}
+
+//Range functions with a single-pass iterator whose copies share the position.
+//The iterator moves the values, so that move-only types are also tested.
+//"values" is not sorted and has duplicates. "sorted" is valid for OrderedTag.
+template<class MyBoostMap, class MyStdMap, class OrderedTag, std::size_t N>
+int map_single_pass_test_cont(const int (&values)[N], const int (&sorted)[N], OrderedTag tag)
+{
+   typedef typename MyBoostMap::key_type        IntType;
+   typedef dtl::pair<IntType, IntType>          IntPairType;
+   typedef typename MyBoostMap::key_compare     key_compare;
+   typedef typename MyBoostMap::allocator_type  allocator_type;
+   typedef typename MyStdMap::value_type        StdValueType;
+
+   MyStdMap stdmap;
+   MyStdMap stdmap_sorted;
+   for(std::size_t i = 0; i != N; ++i){
+      stdmap.insert(StdValueType(values[i], values[i]));
+      stdmap_sorted.insert(StdValueType(sorted[i], sorted[i]));
+   }
+   //Map(It, It), Map(It, It, comp), Map(It, It, alloc), Map(It, It, comp, alloc)
+   for(int variant = 0; variant != 4; ++variant){
+      shared_input_range<IntPairType, N> r(values);
+      ::boost::movelib::unique_ptr<MyBoostMap> pboostmap;
+      switch(variant){
+         case 0:  pboostmap = ::boost::movelib::make_unique<MyBoostMap>(r.mbegin(), r.mend());  break;
+         case 1:  pboostmap = ::boost::movelib::make_unique<MyBoostMap>(r.mbegin(), r.mend(), key_compare());  break;
+         case 2:  pboostmap = ::boost::movelib::make_unique<MyBoostMap>(r.mbegin(), r.mend(), allocator_type());  break;
+         default: pboostmap = ::boost::movelib::make_unique<MyBoostMap>(r.mbegin(), r.mend(), key_compare(), allocator_type());  break;
+      }
+      if(!r.read_once()) return 1;
+      if(!CheckEqualPairContainers(*pboostmap, stdmap)) return 1;
+   }
+   //The same constructors with ordered_[unique_]range
+   for(int variant = 0; variant != 2; ++variant){
+      shared_input_range<IntPairType, N> r(sorted);
+      ::boost::movelib::unique_ptr<MyBoostMap> pboostmap;
+      if(variant == 0)
+         pboostmap = ::boost::movelib::make_unique<MyBoostMap>(tag, r.mbegin(), r.mend());
+      else
+         pboostmap = ::boost::movelib::make_unique<MyBoostMap>(tag, r.mbegin(), r.mend(), key_compare());
+      if(!r.read_once()) return 1;
+      if(!CheckEqualPairContainers(*pboostmap, stdmap_sorted)) return 1;
+   }
+   if(map_single_pass_ordered_alloc_ctor<MyBoostMap, MyStdMap>
+         (sorted, tag, dtl::bool_<map_single_pass_ordered_alloc_ctor_compiles<MyBoostMap>::value>()))
+      return 1;
+   //insert(It, It) in an empty map and in a map with elements
+   for(int n = 0; n != 2; ++n){
+      MyBoostMap boostmap;
+      MyStdMap stdmap_ins;
+      for(int i = 0; i != n*10; ++i){
+         IntType i1(10 + i);
+         IntType i2(10 + i);
+         IntPairType p(boost::move(i1), boost::move(i2));
+         boostmap.insert(boost::move(p));
+         stdmap_ins.insert(StdValueType(10 + i, 10 + i));
+      }
+      shared_input_range<IntPairType, N> r(values);
+      boostmap.insert(r.mbegin(), r.mend());
+      for(std::size_t i = 0; i != N; ++i)
+         stdmap_ins.insert(StdValueType(values[i], values[i]));
+      if(!r.read_once()) return 1;
+      if(!CheckEqualPairContainers(boostmap, stdmap_ins)) return 1;
+   }
+   return map_single_pass_ordered_insert<MyBoostMap, MyStdMap>
+      (sorted, tag, dtl::bool_<map_has_member_nth<MyBoostMap>::value>());
+}
+
+template<class MyBoostMap
+        ,class MyStdMap
+        ,class MyBoostMultiMap
+        ,class MyStdMultiMap
+        ,std::size_t N>
+int map_single_pass_test_n()
+{
+   int values[N];
+   int sorted_unique[N];
+   int sorted_equal[N];
+   for(std::size_t i = 0; i != N; ++i){
+      values[i] = int((i*7u) % (N/2u + 1u));
+      sorted_unique[i] = int(i*2u);
+      sorted_equal[i] = int(i/2u);
+   }
+   if(0 != map_single_pass_test_cont<MyBoostMap, MyStdMap>(values, sorted_unique, ordered_unique_range))
+      return 1;
+   if(0 != map_single_pass_test_cont<MyBoostMultiMap, MyStdMultiMap>(values, sorted_equal, ordered_range))
+      return 1;
+   return 0;
+}
+
+template<class MyBoostMap
+        ,class MyStdMap
+        ,class MyBoostMultiMap
+        ,class MyStdMultiMap>
+int map_single_pass_test()
+{
+   if(0 != map_single_pass_test_n<MyBoostMap, MyStdMap, MyBoostMultiMap, MyStdMultiMap, 3u>())
+      return 1;
+   if(0 != map_single_pass_test_n<MyBoostMap, MyStdMap, MyBoostMultiMap, MyStdMultiMap, 50u>())
+      return 1;
+   return 0;
+}
+
 template<class MyBoostMap
         ,class MyStdMap
         ,class MyBoostMultiMap
@@ -1416,6 +1607,9 @@ int map_test()
       return 1;
 
    if(map_test_copyable<MyBoostMap, MyStdMap, MyBoostMultiMap, MyStdMultiMap>(copyable_t()))
+      return 1;
+
+   if(map_single_pass_test<MyBoostMap, MyStdMap, MyBoostMultiMap, MyStdMultiMap>())
       return 1;
    return 0;
 }

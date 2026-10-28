@@ -30,6 +30,8 @@
 #include "movable_int.hpp"
 #include "emplace_test.hpp"
 #include "input_from_forward_iterator.hpp"
+#include "shared_input_iterator.hpp"
+#include <boost/container/container_fwd.hpp>
 #include "insert_test.hpp"
 #include "container_common_tests.hpp"
 
@@ -681,6 +683,149 @@ int vector_test_fully_propagable(dtl::false_ /* fully_propagable */)
    return 0;
 }
 
+//Range functions with a single-pass iterator whose copies share the position.
+template<class MyBoostVector, std::size_t N>
+int vector_single_pass_ctor_test()
+{
+   typedef typename MyBoostVector::value_type   IntType;
+   int values[N];
+   for(std::size_t i = 0; i != N; ++i)
+      values[i] = int(i);
+   const std::vector<int> stdvector(values, values + N);
+   {  //Vector(It, It)
+      shared_input_range<IntType, N> r(values);
+      const MyBoostVector boostvector(r.mbegin(), r.mend());
+      if(!r.read_once()) return 1;
+      if(!test::CheckEqualContainers(boostvector, stdvector)) return 1;
+   }
+   {  //Vector(It, It, alloc)
+      shared_input_range<IntType, N> r(values);
+      const MyBoostVector boostvector(r.mbegin(), r.mend(), typename MyBoostVector::allocator_type());
+      if(!r.read_once()) return 1;
+      if(!test::CheckEqualContainers(boostvector, stdvector)) return 1;
+   }
+   return 0;
+}
+
+template<class MyBoostVector, class MyStdVector>
+void vector_single_pass_fill(MyBoostVector &boostvector, MyStdVector &stdvector, int n)
+{
+   typedef typename MyBoostVector::value_type   IntType;
+   for(int i = 0; i != n; ++i){
+      IntType move_me(100 + i);
+      boostvector.push_back(boost::move(move_me));
+      stdvector.push_back(100 + i);
+   }
+}
+
+template<class MyBoostVector, std::size_t N>
+int vector_single_pass_insert_test()
+{
+   typedef typename MyBoostVector::value_type      IntType;
+   typedef typename MyBoostVector::difference_type difference_type;
+   int values[N];
+   for(std::size_t i = 0; i != N; ++i)
+      values[i] = int(i);
+   //insert(pos, It, It) in an empty container, at the beginning, in the middle and at the end
+   for(int n = 0; n != 4; ++n){
+      const int size = n ? 10 : 0;
+      const int pos  = n ? (n - 1)*5 : 0;
+      MyBoostVector boostvector;
+      std::vector<int> stdvector;
+      vector_single_pass_fill(boostvector, stdvector, size);
+      shared_input_range<IntType, N> r(values);
+      boostvector.insert(boostvector.begin() + difference_type(pos), r.mbegin(), r.mend());
+      stdvector.insert(stdvector.begin() + pos, values, values + N);
+      if(!r.read_once()) return 1;
+      if(!test::CheckEqualContainers(boostvector, stdvector)) return 1;
+   }
+   //assign(It, It) in an empty container and in a container with elements
+   for(int n = 0; n != 2; ++n){
+      MyBoostVector boostvector;
+      std::vector<int> stdvector;
+      vector_single_pass_fill(boostvector, stdvector, n*10);
+      shared_input_range<IntType, N> r(values);
+      boostvector.assign(r.mbegin(), r.mend());
+      stdvector.assign(values, values + N);
+      if(!r.read_once()) return 1;
+      if(!test::CheckEqualContainers(boostvector, stdvector)) return 1;
+   }
+   return 0;
+}
+
+//True if the range constructor with input iterators does not compile for
+//values that are not move assignable. vector and small_vector assign elements
+//although the new container has no elements to assign (bug).
+template<class MyBoostVector>
+struct vector_single_pass_ctor_needs_assign
+{
+   static const bool value = false;
+};
+
+template<class T, class A, class O>
+struct vector_single_pass_ctor_needs_assign< boost::container::vector<T, A, O> >
+{
+   static const bool value = true;
+};
+
+template<class T, std::size_t N, class A, class O>
+struct vector_single_pass_ctor_needs_assign< boost::container::small_vector<T, N, A, O> >
+{
+   static const bool value = true;
+};
+
+//devector moves elements in its buffer to make space when it inserts, so it
+//needs move assignable values. With relocate_never it does not move them, but
+//the code that moves them is still compiled (bug).
+template<class T, class A, class O>
+struct vector_single_pass_ctor_needs_assign< boost::container::devector<T, A, O> >
+{
+   static const bool value = true;
+};
+
+template<class MyBoostVector>
+int vector_single_pass_ctor(boost::container::dtl::false_type /*enabled*/)
+{
+   return 0;
+}
+
+template<class MyBoostVector>
+int vector_single_pass_ctor(boost::container::dtl::true_type /*enabled*/)
+{
+   if(0 != vector_single_pass_ctor_test<MyBoostVector, 3u>())  return 1;
+   if(0 != vector_single_pass_ctor_test<MyBoostVector, 50u>()) return 1;
+   return 0;
+}
+
+//insert and assign move elements to other positions, so the values
+//must be move assignable
+template<class MyBoostVector>
+int vector_single_pass_insert(boost::container::dtl::false_type /*move_assignable*/)
+{
+   return 0;
+}
+
+template<class MyBoostVector>
+int vector_single_pass_insert(boost::container::dtl::true_type /*move_assignable*/)
+{
+   if(0 != vector_single_pass_insert_test<MyBoostVector, 3u>())  return 1;
+   if(0 != vector_single_pass_insert_test<MyBoostVector, 50u>()) return 1;
+   return 0;
+}
+
+template<class MyBoostVector>
+int vector_single_pass_test()
+{
+   typedef typename MyBoostVector::value_type   IntType;
+   const bool move_assignable = boost::container::test::is_move_assignable<IntType>::value;
+   const bool ctor_enabled = move_assignable || !vector_single_pass_ctor_needs_assign<MyBoostVector>::value;
+   if(0 != vector_single_pass_ctor<MyBoostVector>(dtl::bool_<ctor_enabled>()))
+      return 1;
+   if(0 != vector_single_pass_insert<MyBoostVector>(dtl::bool_<move_assignable>()))
+      return 1;
+   return 0;
+}
+
 template<class MyBoostVector>
 int vector_test()
 {
@@ -728,6 +873,9 @@ int vector_test()
    if (0 != vector_test_fully_propagable<MyBoostVector>( dtl::bool_< !is_partially_propagable_t::value >() ))   return 1;
 
    if (0 != vector_move_assignable_only< MyBoostVector>(dtl::bool_<boost::container::test::is_move_assignable<IntType>::value>()))
+      return 1;
+
+   if (0 != vector_single_pass_test<MyBoostVector>())
       return 1;
 
    std::cout << std::endl << "Test OK!" << std::endl;

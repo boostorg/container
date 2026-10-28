@@ -17,6 +17,8 @@
 #include "check_equal_containers.hpp"
 #include "print_container.hpp"
 #include "input_from_forward_iterator.hpp"
+#include "shared_input_iterator.hpp"
+#include <boost/intrusive/detail/mpl.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/move/iterator.hpp>
 #include <boost/move/make_unique.hpp>
@@ -275,6 +277,142 @@ int list_move_assignable_only(boost::container::dtl::true_type)
    return 0;
 }
 
+template<class MyBoostList, class MyStdList>
+void list_single_pass_fill(MyBoostList &boostlist, MyStdList &stdlist, int n)
+{
+   typedef typename MyBoostList::value_type IntType;
+   for(int i = 0; i != n; ++i){
+      IntType move_me(100 + i);
+      boostlist.insert(boostlist.end(), boost::move(move_me));
+      stdlist.push_back(100 + i);
+   }
+}
+
+//True if the list has before_begin(), which tells that it has insert_after
+BOOST_INTRUSIVE_HAS_MEMBER_FUNC_CALLED(list_has_before_begin, before_begin)
+
+template<bool HasInsertAfter>
+struct list_single_pass_insert_after
+{
+   template<class MyBoostList, std::size_t N>
+   static int execute(const int (&)[N])
+   {  return 0;  }
+};
+
+template<>
+struct list_single_pass_insert_after<true>
+{
+   //insert_after(pos, It, It) in an empty list, at the beginning, in the middle and at the end
+   template<class MyBoostList, std::size_t N>
+   static int execute(const int (&values)[N])
+   {
+      typedef typename MyBoostList::value_type IntType;
+      for(int n = 0; n != 4; ++n){
+         const int size = n ? 10 : 0;
+         const int pos  = n ? (n - 1)*5 : 0;
+         MyBoostList boostlist;
+         std::list<int> stdlist;
+         list_single_pass_fill(boostlist, stdlist, size);
+         typename MyBoostList::iterator it = boostlist.before_begin();
+         std::list<int>::iterator stdit = stdlist.begin();
+         for(int i = 0; i != pos; ++i, ++it, ++stdit){}
+         shared_input_range<IntType, N> r(values);
+         boostlist.insert_after(it, r.mbegin(), r.mend());
+         stdlist.insert(stdit, values, values + N);
+         if(!r.read_once()) return 1;
+         if(!test::CheckEqualContainers(boostlist, stdlist)) return 1;
+      }
+      return 0;
+   }
+};
+
+//Range functions with a single-pass iterator whose copies share the position.
+//The iterator moves the values, so that move-only types are also tested.
+template<class MyBoostList, std::size_t N>
+int list_single_pass_test_n()
+{
+   typedef typename MyBoostList::value_type IntType;
+   int values[N];
+   for(std::size_t i = 0; i != N; ++i)
+      values[i] = int(i);
+   const std::list<int> stdlist_values(values, values + N);
+   {  //List(It, It)
+      shared_input_range<IntType, N> r(values);
+      const MyBoostList boostlist(r.mbegin(), r.mend());
+      if(!r.read_once()) return 1;
+      if(!test::CheckEqualContainers(boostlist, stdlist_values)) return 1;
+   }
+   {  //List(It, It, alloc)
+      shared_input_range<IntType, N> r(values);
+      const MyBoostList boostlist(r.mbegin(), r.mend(), typename MyBoostList::allocator_type());
+      if(!r.read_once()) return 1;
+      if(!test::CheckEqualContainers(boostlist, stdlist_values)) return 1;
+   }
+   //insert(pos, It, It) in an empty list, at the beginning, in the middle and at the end
+   for(int n = 0; n != 4; ++n){
+      const int size = n ? 10 : 0;
+      const int pos  = n ? (n - 1)*5 : 0;
+      MyBoostList boostlist;
+      std::list<int> stdlist;
+      list_single_pass_fill(boostlist, stdlist, size);
+      typename MyBoostList::iterator it = boostlist.begin();
+      std::list<int>::iterator stdit = stdlist.begin();
+      for(int i = 0; i != pos; ++i, ++it, ++stdit){}
+      shared_input_range<IntType, N> r(values);
+      boostlist.insert(it, r.mbegin(), r.mend());
+      stdlist.insert(stdit, values, values + N);
+      if(!r.read_once()) return 1;
+      if(!test::CheckEqualContainers(boostlist, stdlist)) return 1;
+   }
+   return list_single_pass_insert_after<list_has_before_begin<MyBoostList>::value>::template execute<MyBoostList>(values);
+}
+
+//assign(It, It) in an empty list and in a list with elements
+template<class MyBoostList, std::size_t N>
+int list_single_pass_assign_test_n()
+{
+   typedef typename MyBoostList::value_type IntType;
+   int values[N];
+   for(std::size_t i = 0; i != N; ++i)
+      values[i] = int(i);
+   for(int n = 0; n != 2; ++n){
+      MyBoostList boostlist;
+      std::list<int> stdlist;
+      list_single_pass_fill(boostlist, stdlist, n*10);
+      shared_input_range<IntType, N> r(values);
+      boostlist.assign(r.mbegin(), r.mend());
+      stdlist.assign(values, values + N);
+      if(!r.read_once()) return 1;
+      if(!test::CheckEqualContainers(boostlist, stdlist)) return 1;
+   }
+   return 0;
+}
+
+//assign assigns to the existing elements, so the values must be move assignable
+template<class MyBoostList>
+int list_single_pass_assign(boost::container::dtl::false_type /*move_assignable*/)
+{
+   return 0;
+}
+
+template<class MyBoostList>
+int list_single_pass_assign(boost::container::dtl::true_type /*move_assignable*/)
+{
+   if(0 != list_single_pass_assign_test_n<MyBoostList, 3u>())  return 1;
+   if(0 != list_single_pass_assign_test_n<MyBoostList, 50u>()) return 1;
+   return 0;
+}
+
+template<class MyBoostList>
+int list_single_pass_test()
+{
+   typedef typename MyBoostList::value_type IntType;
+   if(0 != list_single_pass_test_n<MyBoostList, 3u>())  return 1;
+   if(0 != list_single_pass_test_n<MyBoostList, 50u>()) return 1;
+   return list_single_pass_assign<MyBoostList>
+      (dtl::bool_<boost::container::test::is_move_assignable<IntType>::value>());
+}
+
 template<class MyBoostList
         ,bool  DoublyLinked>
 int list_test (bool copied_allocators_equal = true)
@@ -495,6 +633,9 @@ int list_test (bool copied_allocators_equal = true)
          return 1;
       }
    }
+
+   if (0 != list_single_pass_test<MyBoostList>())
+      return 1;
    return 0;
 }
 

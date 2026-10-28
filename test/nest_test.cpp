@@ -12,6 +12,7 @@
 #include "void_allocator_test.hpp"
 #include <boost/container/new_allocator.hpp>
 #include "lightweight_test.hpp"
+#include "shared_input_iterator.hpp"
 #include <algorithm>
 #include <functional>
 #include <vector>
@@ -751,6 +752,59 @@ void test_initializer_list_operations()
 }
 #endif
 
+template<std::size_t N>
+void test_single_pass_iterator_n()
+{
+   typedef test::shared_input_range<int, N> range_t;
+   int values[N];
+   for(std::size_t i = 0; i != N; ++i)
+      values[i] = int(i);
+   std::vector<int> expected(values, values + N);
+   {  //nest(It, It)
+      range_t r(values);
+      const nest<int> h(r.begin(), r.end());
+      BOOST_TEST(r.read_once());
+      std::vector<int> got(h.begin(), h.end());
+      std::sort(got.begin(), got.end());
+      BOOST_TEST(got == expected);
+   }
+   {  //nest(It, It, alloc)
+      range_t r(values);
+      const nest<int> h(r.begin(), r.end(), nest<int>::allocator_type());
+      BOOST_TEST(r.read_once());
+      std::vector<int> got(h.begin(), h.end());
+      std::sort(got.begin(), got.end());
+      BOOST_TEST(got == expected);
+   }
+   //insert(It, It) and assign(It, It) in an empty nest and in a nest with elements
+   for(int n = 0; n != 2; ++n){
+      const std::size_t size = n ? 10u : 0u;
+      nest<int> h(size, 100);
+      range_t r(values);
+      h.insert(r.begin(), r.end());
+      BOOST_TEST(r.read_once());
+      std::vector<int> got(h.begin(), h.end());
+      std::sort(got.begin(), got.end());
+      std::vector<int> exp_ins(expected);
+      exp_ins.insert(exp_ins.end(), size, 100);
+      BOOST_TEST(got == exp_ins);
+
+      nest<int> h2(size, 100);
+      range_t r2(values);
+      h2.assign(r2.begin(), r2.end());
+      BOOST_TEST(r2.read_once());
+      std::vector<int> got2(h2.begin(), h2.end());
+      std::sort(got2.begin(), got2.end());
+      BOOST_TEST(got2 == expected);
+   }
+}
+
+void test_single_pass_iterator()
+{
+   test_single_pass_iterator_n<3u>();
+   test_single_pass_iterator_n<50u>();
+}
+
 int main()
 {
    test_default_construction();
@@ -810,6 +864,8 @@ int main()
    BOOST_TEST((test::test_void_allocator
          < nest<int, new_allocator<void> >
          , new_allocator<int> >()));
+
+   test_single_pass_iterator();
 
    return boost::report_errors();
 }
