@@ -164,20 +164,67 @@ struct are_contiguous_and_same
       >
 {};
 
+//A move_iterator gives rvalues, so the elements are moved, not copied
+template<class I>
+struct is_move_iterator
+{
+   BOOST_STATIC_CONSTEXPR bool value = false;
+};
+
+template<class It>
+struct is_move_iterator< ::boost::move_iterator<It> >
+{
+   BOOST_STATIC_CONSTEXPR bool value = true;
+};
+
+//The move operations of the elements decide if the moves can be done with
+//memmove: a type with trivial copy operations can have a user move constructor
+//or move assignment.
 template <typename I, typename O>
-struct is_memtransfer_copy_assignable
+struct is_memtransfer_move_assignable
    : boost::move_detail::and_
       < are_contiguous_and_same<I, O>
-      , dtl::is_trivially_copy_assignable< typename ::boost::container::iter_value<I>::type >
+      , dtl::is_trivially_move_assignable< typename ::boost::container::iter_value<I>::type >
       >
 {};
 
 template <typename I, typename O>
-struct is_memtransfer_copy_constructible
+struct is_memtransfer_move_constructible
    : boost::move_detail::and_
       < are_contiguous_and_same<I, O>
-      , dtl::is_trivially_copy_constructible< typename ::boost::container::iter_value<I>::type >
+      , dtl::is_trivially_move_constructible< typename ::boost::container::iter_value<I>::type >
       >
+{};
+
+//A swap is done with a move construction and two move assignments
+template <typename I, typename O>
+struct is_memtransfer_swappable
+   : boost::move_detail::and_
+      < is_memtransfer_move_assignable<I, O>
+      , is_memtransfer_move_constructible<I, O>
+      >
+{};
+
+template <typename I, typename O>
+struct is_memtransfer_copy_assignable
+   : if_c< is_move_iterator<I>::value
+         , is_memtransfer_move_assignable<I, O>
+         , boost::move_detail::and_
+            < are_contiguous_and_same<I, O>
+            , dtl::is_trivially_copy_assignable< typename ::boost::container::iter_value<I>::type >
+            >
+         >::type
+{};
+
+template <typename I, typename O>
+struct is_memtransfer_copy_constructible
+   : if_c< is_move_iterator<I>::value
+         , is_memtransfer_move_constructible<I, O>
+         , boost::move_detail::and_
+            < are_contiguous_and_same<I, O>
+            , dtl::is_trivially_copy_constructible< typename ::boost::container::iter_value<I>::type >
+            >
+         >::type
 {};
 
 template <typename I, typename O, typename R>
@@ -198,6 +245,26 @@ struct enable_if_memtransfer_copy_assignable
 template <typename I, typename O, typename R>
 struct disable_if_memtransfer_copy_assignable
    : disable_if<dtl::is_memtransfer_copy_assignable<I, O>, R>
+{};
+
+template <typename I, typename O, typename R>
+struct enable_if_memtransfer_move_constructible
+   : enable_if<dtl::is_memtransfer_move_constructible<I, O>, R>
+{};
+
+template <typename I, typename O, typename R>
+struct disable_if_memtransfer_move_constructible
+   : disable_if<dtl::is_memtransfer_move_constructible<I, O>, R>
+{};
+
+template <typename I, typename O, typename R>
+struct enable_if_memtransfer_move_assignable
+   : enable_if<dtl::is_memtransfer_move_assignable<I, O>, R>
+{};
+
+template <typename I, typename O, typename R>
+struct disable_if_memtransfer_move_assignable
+   : disable_if<dtl::is_memtransfer_move_assignable<I, O>, R>
 {};
 
 template <class T>
@@ -374,7 +441,7 @@ template
    <typename Allocator,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, F>::type
+inline typename dtl::disable_if_memtransfer_move_constructible<I, F, F>::type
    uninitialized_move_alloc(Allocator &a, I f, I l, F r)
 {
    //Destroys the constructed objects if a construction throws
@@ -391,7 +458,7 @@ template
    <typename Allocator,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename dtl::enable_if_memtransfer_copy_constructible<I, F, F>::type
+inline typename dtl::enable_if_memtransfer_move_constructible<I, F, F>::type
    uninitialized_move_alloc(Allocator &, I f, I l, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {  return dtl::memmove(f, l, r); }
 
@@ -412,7 +479,7 @@ template
    <typename Allocator,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, F>::type
+inline typename dtl::disable_if_memtransfer_move_constructible<I, F, F>::type
    uninitialized_move_alloc_n(Allocator &a, I f, std::size_t n, F r)
 {
    //Destroys the constructed objects if a construction throws
@@ -430,7 +497,7 @@ template
    <typename Allocator,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename dtl::enable_if_memtransfer_copy_constructible<I, F, F>::type
+inline typename dtl::enable_if_memtransfer_move_constructible<I, F, F>::type
    uninitialized_move_alloc_n(Allocator &, I f, std::size_t n, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {  return dtl::memmove_n(f, n, r); }
 
@@ -451,7 +518,7 @@ template
    <typename Allocator,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename dtl::disable_if_memtransfer_copy_constructible<I, F, I>::type
+inline typename dtl::disable_if_memtransfer_move_constructible<I, F, I>::type
    uninitialized_move_alloc_n_source(Allocator &a, I f, std::size_t n, F r)
 {
    //Destroys the constructed objects if a construction throws
@@ -469,7 +536,7 @@ template
    <typename Allocator,
     typename I, // I models InputIterator
     typename F> // F models ForwardIterator
-inline typename dtl::enable_if_memtransfer_copy_constructible<I, F, I>::type
+inline typename dtl::enable_if_memtransfer_move_constructible<I, F, I>::type
    uninitialized_move_alloc_n_source(Allocator &, I f, std::size_t n, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {  return dtl::memmove_n_source(f, n, r); }
 
@@ -851,7 +918,7 @@ inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, I>::type
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, F>::type
+inline typename dtl::disable_if_memtransfer_move_assignable<I, F, F>::type
    move(I f, I l, F r)
 {
    while (f != l) {
@@ -864,7 +931,7 @@ inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, F>::type
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, F>::type
+inline typename dtl::enable_if_memtransfer_move_assignable<I, F, F>::type
    move(I f, I l, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {  return dtl::memmove(f, l, r); }
 
@@ -877,7 +944,7 @@ inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, F>::type
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, F>::type
+inline typename dtl::disable_if_memtransfer_move_assignable<I, F, F>::type
    move_n(I f, std::size_t n, F r)
 {
    while (n) {
@@ -891,7 +958,7 @@ inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, F>::type
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, F>::type
+inline typename dtl::enable_if_memtransfer_move_assignable<I, F, F>::type
    move_n(I f, std::size_t n, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {  return dtl::memmove_n(f, n, r); }
 
@@ -904,7 +971,7 @@ inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, F>::type
 template
 <typename I,   // I models BidirectionalIterator
 typename F>    // F models ForwardIterator
-inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, F>::type
+inline typename dtl::disable_if_memtransfer_move_assignable<I, F, F>::type
    move_backward(I f, I l, F r)
 {
    while (f != l) {
@@ -917,7 +984,7 @@ inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, F>::type
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, F>::type
+inline typename dtl::enable_if_memtransfer_move_assignable<I, F, F>::type
    move_backward(I f, I l, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {
    typedef typename boost::container::iter_value<I>::type value_type;
@@ -941,7 +1008,7 @@ inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, F>::type
 template
 <typename I,   // I models BidirectionalIterator
 typename F>    // F models ForwardIterator
-inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, F>::type
+inline typename dtl::disable_if_memtransfer_move_assignable<I, F, F>::type
    move_backward_n(I l, std::size_t n, F r)
 {
    while (n) {
@@ -955,7 +1022,7 @@ inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, F>::type
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, F>::type
+inline typename dtl::enable_if_memtransfer_move_assignable<I, F, F>::type
    move_backward_n(I l, std::size_t n, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {
    typedef typename boost::container::iter_value<I>::type value_type;
@@ -979,7 +1046,7 @@ inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, F>::type
 template
 <typename I,   // I models BidirectionalIterator
 typename F>    // F models ForwardIterator
-inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, I>::type
+inline typename dtl::disable_if_memtransfer_move_assignable<I, F, I>::type
    move_backward_n_source(I l, std::size_t n, F r)
 {
    while (n) {
@@ -993,7 +1060,7 @@ inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, I>::type
 template
 <typename I,   // I models InputIterator
 typename F>   // F models ForwardIterator
-inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, I>::type
+inline typename dtl::enable_if_memtransfer_move_assignable<I, F, I>::type
    move_backward_n_source(I l, std::size_t n, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {
    typedef typename boost::container::iter_value<I>::type value_type;
@@ -1019,7 +1086,7 @@ inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, I>::type
 template
 <typename I    // I models InputIterator
 ,typename F>   // F models ForwardIterator
-inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, I>::type
+inline typename dtl::disable_if_memtransfer_move_assignable<I, F, I>::type
    move_n_source_dest(I f, std::size_t n, F &r)
 {
    while (n) {
@@ -1033,7 +1100,7 @@ inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, I>::type
 template
 <typename I    // I models InputIterator
 ,typename F>   // F models ForwardIterator
-inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, I>::type
+inline typename dtl::enable_if_memtransfer_move_assignable<I, F, I>::type
    move_n_source_dest(I f, std::size_t n, F &r) BOOST_NOEXCEPT_OR_NOTHROW
 {  return dtl::memmove_n_source_dest(f, n, r); }
 
@@ -1046,7 +1113,7 @@ inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, I>::type
 template
 <typename I    // I models InputIterator
 ,typename F>   // F models ForwardIterator
-inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, I>::type
+inline typename dtl::disable_if_memtransfer_move_assignable<I, F, I>::type
    move_n_source(I f, std::size_t n, F r)
 {
    while (n) {
@@ -1060,7 +1127,7 @@ inline typename dtl::disable_if_memtransfer_copy_assignable<I, F, I>::type
 template
 <typename I    // I models InputIterator
 ,typename F>   // F models ForwardIterator
-inline typename dtl::enable_if_memtransfer_copy_assignable<I, F, I>::type
+inline typename dtl::enable_if_memtransfer_move_assignable<I, F, I>::type
    move_n_source(I f, std::size_t n, F r) BOOST_NOEXCEPT_OR_NOTHROW
 {  return dtl::memmove_n_source(f, n, r); }
 
@@ -1140,7 +1207,7 @@ template
    ,typename F // F models ForwardIterator
    ,typename G // G models ForwardIterator
    >
-inline typename dtl::disable_if_memtransfer_copy_assignable<F, G, void>::type
+inline typename dtl::disable_if_c<dtl::is_memtransfer_swappable<F, G>::value, void>::type
    deep_swap_alloc_n( Allocator &a, F short_range_f, std::size_t  n_i, G large_range_f, std::size_t n_j)
 {
    std::size_t n = 0;
@@ -1160,7 +1227,7 @@ template
    ,typename G // G models ForwardIterator
    >
 inline typename dtl::enable_if_c
-   < dtl::is_memtransfer_copy_assignable<F, G>::value && (MaxTmpBytes <= DeepSwapAllocNMaxStorage) && false
+   < dtl::is_memtransfer_swappable<F, G>::value && (MaxTmpBytes <= DeepSwapAllocNMaxStorage) && false
    , void>::type
    deep_swap_alloc_n( Allocator &a, F short_range_f, std::size_t n_i, G large_range_f, std::size_t n_j)
 {
@@ -1189,7 +1256,7 @@ template
    ,typename G // G models ForwardIterator
    >
 inline typename dtl::enable_if_c
-   < dtl::is_memtransfer_copy_assignable<F, G>::value && true//(MaxTmpBytes > DeepSwapAllocNMaxStorage)
+   < dtl::is_memtransfer_swappable<F, G>::value && true//(MaxTmpBytes > DeepSwapAllocNMaxStorage)
    , void>::type
    deep_swap_alloc_n( Allocator &a, F short_range_f, std::size_t n_i, G large_range_f, std::size_t n_j)
 {
