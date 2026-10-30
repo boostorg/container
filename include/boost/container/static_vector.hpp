@@ -118,7 +118,13 @@ template<class Options>
 struct get_vector_opt_from_static_vector_opt
 {
    typedef typename get_static_vector_opt<Options>::type options_t;
-   typedef vector_opt<void, typename options_t::stored_size_type> type;
+   //No stored_size: the same vector options as the default static_vector, so that
+   //the conversions between them compile
+   typedef typename if_c
+      < is_same<typename options_t::stored_size_type, void>::value
+      , void
+      , vector_opt<void, typename options_t::stored_size_type>
+      >::type type;
 };
 
 template<>
@@ -369,7 +375,7 @@ public:
     //!   Linear O(N).
     template <std::size_t C, class O>
     inline static_vector(static_vector<T, C, O> const& other)
-        : base_t(other)
+        : base_t(other.begin(), other.end())
     {}
 
     //! @brief Move constructor. Moves Values stored in the other static_vector to this one.
@@ -400,7 +406,7 @@ public:
     //!   Linear O(N).
     template <std::size_t C, class O>
     inline static_vector(BOOST_RV_REF_BEG static_vector<T, C, O> BOOST_RV_REF_END other)
-        : base_t(BOOST_MOVE_BASE(typename static_vector<T BOOST_MOVE_I C>::base_t, other))
+        : base_t(BOOST_MOVE_BASE(typename static_vector<T BOOST_MOVE_I C BOOST_MOVE_I O>::base_t, other))
     {}
 
     //! @brief Copy assigns Values stored in the other static_vector to this one.
@@ -483,7 +489,7 @@ public:
     inline static_vector & operator=(BOOST_RV_REF_BEG static_vector<T, C, O> BOOST_RV_REF_END other)
     {
         return static_cast<static_vector&>(base_t::operator=
-         (BOOST_MOVE_BASE(typename static_vector<T BOOST_MOVE_I C>::base_t, other)));
+         (BOOST_MOVE_BASE(typename static_vector<T BOOST_MOVE_I C BOOST_MOVE_I O>::base_t, other)));
     }
 
 #ifdef BOOST_CONTAINER_DOXYGEN_INVOKED

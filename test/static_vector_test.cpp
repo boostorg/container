@@ -827,6 +827,38 @@ void test_single_pass_iterator()
    test_single_pass_iterator_n<test::movable_int, 50u>();
 }
 
+//Copy and move from a static_vector with another capacity and other options
+void test_other_capacity_and_options()
+{
+   typedef static_vector_options< throw_on_overflow<false> >::type no_throw_opt_t;
+   typedef static_vector<int, 8> big_t;
+   typedef static_vector<int, 4> small_t;
+   typedef static_vector<int, 4, no_throw_opt_t> small_opt_t;
+   const int values[] = { 1, 2, 3 };
+   const std::vector<int> v(values, values + 3);
+   const big_t big(values, values + 3);
+   {
+      const small_t s(big);
+      BOOST_TEST(test::CheckEqualContainers(s, v));
+      const small_opt_t so(big);
+      BOOST_TEST(test::CheckEqualContainers(so, v));
+      const big_t b(so);
+      BOOST_TEST(test::CheckEqualContainers(b, v));
+   }
+   {
+      big_t src(big);
+      small_opt_t so(boost::move(src));
+      BOOST_TEST(test::CheckEqualContainers(so, v));
+      src = big;
+      so.clear();
+      so = boost::move(src);
+      BOOST_TEST(test::CheckEqualContainers(so, v));
+      src.clear();
+      src = boost::move(so);
+      BOOST_TEST(test::CheckEqualContainers(src, v));
+   }
+}
+
 int main(int, char* [])
 {
    if(!test_unqualified_swap())
@@ -951,6 +983,8 @@ int main(int, char* [])
    test_move_assignment_move_constructs_extra_elements();
 
    test_single_pass_iterator();
+
+   test_other_capacity_and_options();
 
    return boost::report_errors();
 }
