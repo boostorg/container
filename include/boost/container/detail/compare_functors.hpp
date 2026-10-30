@@ -65,9 +65,6 @@ template<class Node, class Pred, class Ret = bool>
 struct value_to_node_compare
    :  Pred
 {
-   typedef Pred predicate_type;
-   typedef Node node_type;
-
    inline value_to_node_compare()
       : Pred()
    {}
@@ -87,9 +84,6 @@ struct value_to_node_compare
 
    inline Ret operator()(const Node &a)
    {  return static_cast<Pred&>(*this)(a.get_data());  }
-
-   inline predicate_type &       predicate()        { return static_cast<predicate_type&>(*this); }
-   inline const predicate_type & predicate()  const { return static_cast<predicate_type&>(*this); }
 };
 
 template<class KeyPred, class KeyOfValue, class Node, class Ret = bool>
