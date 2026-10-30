@@ -8,6 +8,11 @@ endif()
 set(BOOST_TEST_LINK_LIBRARIES Boost::container Boost::container_hash Boost::core
     Boost::iterator Boost::tuple Boost::type_traits Boost::utility)
 set(BOOST_TEST_COMPILE_OPTIONS -Wall -Wextra -Wpedantic)
+if(MSVC)
+  #Some tests (devector_test in Debug) need more sections than an object file
+  #has by default
+  list(APPEND BOOST_TEST_COMPILE_OPTIONS /bigobj)
+endif()
 
 #Every .cpp file in this directory is a test, as in Jamfile.v2
 file(GLOB tests RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
