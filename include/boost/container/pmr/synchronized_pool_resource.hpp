@@ -60,7 +60,8 @@ namespace pmr {
 class synchronized_pool_resource
    : public memory_resource
 {
-   dtl::thread_mutex m_mut;
+   //Mutable: the const observers read pool state that other threads change
+   mutable dtl::thread_mutex m_mut;
    pool_resource     m_pool_resource;
 
    public:
@@ -205,19 +206,31 @@ inline bool synchronized_pool_resource::do_is_equal(const memory_resource& other
 {  return this == &other;  }
 
 inline std::size_t synchronized_pool_resource::pool_count() const
-{  return m_pool_resource.pool_count();  }
+{
+   sync_pr_dtl::thread_mutex_lock lck(m_mut); (void)lck;
+   return m_pool_resource.pool_count();
+}
 
 inline std::size_t synchronized_pool_resource::pool_index(std::size_t bytes) const
-{  return m_pool_resource.pool_index(bytes);  }
+{
+   sync_pr_dtl::thread_mutex_lock lck(m_mut); (void)lck;
+   return m_pool_resource.pool_index(bytes);
+}
 
 inline std::size_t synchronized_pool_resource::pool_next_blocks_per_chunk(std::size_t pool_idx) const
-{  return m_pool_resource.pool_next_blocks_per_chunk(pool_idx);  }
+{
+   sync_pr_dtl::thread_mutex_lock lck(m_mut); (void)lck;
+   return m_pool_resource.pool_next_blocks_per_chunk(pool_idx);
+}
 
 inline std::size_t synchronized_pool_resource::pool_block(std::size_t pool_idx) const
 {  return m_pool_resource.pool_block(pool_idx);  }
 
 inline std::size_t synchronized_pool_resource::pool_cached_blocks(std::size_t pool_idx) const
-{  return m_pool_resource.pool_cached_blocks(pool_idx);  }
+{
+   sync_pr_dtl::thread_mutex_lock lck(m_mut); (void)lck;
+   return m_pool_resource.pool_cached_blocks(pool_idx);
+}
 
 #endif   //!defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
 
