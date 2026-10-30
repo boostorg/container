@@ -922,6 +922,13 @@ private:
    template <class U, class UA, class UOptions>
    friend class vector;
 
+   //small_vector uses the private members that support an internal buffer
+   template <class U, class USecAlloc, class UOptions>
+   friend class small_vector_base;
+
+   template <class U, std::size_t UN, class UAllocator, class UOptions>
+   friend class small_vector;
+
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    private:
@@ -929,7 +936,6 @@ private:
    typedef vector_value_traits<allocator_type> value_traits;
    typedef constant_iterator<T>            cvalue_iterator;
 
-   protected:
 
    inline void steal_resources(vector &x)
    {  return this->m_holder.steal_resources(x.m_holder);   }
@@ -2859,7 +2865,6 @@ private:
       x.clear();
    }
 
-   protected:
    template<class OtherA>
    void priv_move_assign_steal_or_assign(BOOST_RV_REF_BEG vector<T, OtherA, Options> BOOST_RV_REF_END x, dtl::true_type /*data_can_be_always_stolen*/)
    {
@@ -2973,8 +2978,6 @@ private:
       this->assign( x.priv_raw_begin(), x.priv_raw_end() );
    }
 
-   private:
-
    template<class Vector>  //Template it to avoid it in explicit instantiations
    inline void priv_swap(Vector &x, dtl::true_type)   //version_0
    {  this->m_holder.deep_swap(x.m_holder);  }
@@ -2997,7 +3000,6 @@ private:
       dtl::swap_alloc(this->m_holder.alloc(), x.m_holder.alloc(), flag);
    }
 
-   protected:
    //Swap for small_vectors, whose internal buffer can't be transferred (not "propagable").
    //"internal_capacity" is the capacity of the internal buffer of both vectors if known,
    //(including 0) or 0 if unknown (small_vector_base)
@@ -3012,7 +3014,7 @@ private:
    //  it: the allocators are swapped (propagate_on_container_swap), or they are always equal,
    //  or they compare equal.
    template<class Vector>  //Template it to avoid it in explicit instantiations
-   void prot_swap_small(Vector &x, std::size_t internal_capacity)  //version_N
+   void priv_swap_small(Vector &x, std::size_t internal_capacity)  //version_N
    {
       if (BOOST_UNLIKELY(&x == this)){
          return;
@@ -3306,8 +3308,7 @@ private:
    inline dtl::insert_value_initialized_n_proxy<allocator_type> priv_resize_proxy(value_init_t)
    {  return dtl::insert_value_initialized_n_proxy<allocator_type>(); }
 
-   protected:
-   void prot_shrink_to_fit_small(pointer const small_buffer, const size_type small_capacity)
+   void priv_shrink_to_fit_small(pointer const small_buffer, const size_type small_capacity)
    {
       const size_type cp = this->m_holder.capacity();
       if (cp && this->m_holder.m_start != small_buffer) {   //Do something only if a dynamic buffer is used

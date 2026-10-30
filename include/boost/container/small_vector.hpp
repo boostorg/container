@@ -432,14 +432,14 @@ class small_vector_base
    {}
 
    void prot_shrink_to_fit_small(const size_type small_capacity)
-   {  this->base_type::prot_shrink_to_fit_small(this->internal_storage(), small_capacity);  }
+   {  this->base_type::priv_shrink_to_fit_small(this->internal_storage(), small_capacity);  }
 
    using base_type::protected_set_size;
 
    //~small_vector_base(){}
 
    inline void prot_swap(small_vector_base& other, size_type internal_capacity_value)
-   {  this->base_type::prot_swap_small(other, internal_capacity_value);  }
+   {  this->base_type::priv_swap_small(other, internal_capacity_value);  }
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    public:
@@ -466,7 +466,7 @@ class small_vector_base
    //!
    //! <b>Complexity</b>: Constant if both use heap storage, linear in the small buffers otherwise.
    inline void swap(small_vector_base &other)
-   {  return this->base_type::prot_swap_small(other, 0u);  }
+   {  return this->base_type::priv_swap_small(other, 0u);  }
 
    //! <b>Effects</b>: x.swap(y)
    //!
