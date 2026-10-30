@@ -381,6 +381,7 @@ class small_vector_base
 
    friend class small_vector_allocator<T, void_underlying_allocator_t, Options>;
 
+   protected:
    inline
    const_pointer internal_storage() const BOOST_NOEXCEPT_OR_NOTHROW
    {  return this->base_type::get_stored_allocator().internal_storage();   }
@@ -841,6 +842,8 @@ class small_vector
 
    typedef allocator_traits<typename base_type::allocator_type> allocator_traits_type;
 
+   typedef typename base_type::base_type vector_type;
+
    #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
    //! @brief The capacity/max size of the container
@@ -1052,7 +1055,11 @@ class small_vector
    //!
    //! <b>Complexity</b>: Linear to the number of elements in other.
    inline small_vector& operator=(BOOST_COPY_ASSIGN_REF(small_vector) other)
-   {  return static_cast<small_vector&>(this->base_type::operator=(static_cast<base_type const&>(other)));  }
+   {
+      if (BOOST_LIKELY(static_cast<const base_type*>(this) != &other))
+         this->priv_copy_assign(static_cast<const vector_type&>(other), this->internal_storage(), internal_capacity());
+      return *this;
+   }
 
    //! <b>Effects</b>: Move assignment. Transfers other's elements to *this.
    //!
@@ -1064,7 +1071,11 @@ class small_vector
          && boost::container::dtl::is_nothrow_move_constructible<value_type>::value
          && (allocator_traits_type::propagate_on_container_move_assignment::value
              || allocator_traits_type::is_always_equal::value))
-   {  return static_cast<small_vector&>(this->base_type::operator=(BOOST_MOVE_BASE(base_type, other))); }
+   {
+      if (BOOST_LIKELY(static_cast<const base_type*>(this) != &other))
+         this->priv_move_assign_steal_or_assign(BOOST_MOVE_BASE(vector_type, other), dtl::false_type(), this->internal_storage(), internal_capacity());
+      return *this;
+   }
 
    //! <b>Effects</b>: Makes *this contain the same elements as other (a small_vector_base with any N).
    //!
@@ -1072,7 +1083,11 @@ class small_vector
    //!
    //! <b>Complexity</b>: Linear to the number of elements in other.
    inline small_vector& operator=(const base_type &other)
-   {  return static_cast<small_vector&>(this->base_type::operator=(other));  }
+   {
+      if (BOOST_LIKELY(static_cast<const base_type*>(this) != &other))
+         this->priv_copy_assign(static_cast<const vector_type&>(other), this->internal_storage(), internal_capacity());
+      return *this;
+   }
 
    //! <b>Effects</b>: Move assigns the elements of other (a small_vector_base with any N) to *this.
    //!
@@ -1080,7 +1095,11 @@ class small_vector
    //!
    //! <b>Complexity</b>: Linear to the number of elements involved.
    inline small_vector& operator=(BOOST_RV_REF(base_type) other)
-   {  return static_cast<small_vector&>(this->base_type::operator=(boost::move(other))); }
+   {
+      if (BOOST_LIKELY(static_cast<const base_type*>(this) != &other))
+         this->priv_move_assign_steal_or_assign(BOOST_MOVE_BASE(vector_type, other), dtl::false_type(), this->internal_storage(), internal_capacity());
+      return *this;
+   }
 
    //! <b>Effects</b>: Swaps the contents of *this and other.
    //!

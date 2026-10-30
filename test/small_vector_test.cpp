@@ -707,6 +707,56 @@ struct int_holder
    int v;
 };
 
+//Copy and move assignment with a propagating allocator that compares unequal: the
+//old buffer is freed by the allocator that allocated it (propagation_test_allocator
+//checks it), and the internal buffer is used again when the elements fit in it.
+//Through small_vector_base the internal capacity is unknown, so only a target that
+//already uses its internal buffer keeps it.
+template<std::size_t N>
+bool test_assignment_with_propagated_unequal_allocators()
+{
+   typedef test::propagation_test_allocator<int, true, true, true, true, true> alloc_t;
+   typedef small_vector<int, N, alloc_t>        sv_t;
+   typedef small_vector_base<int, alloc_t>      base_t;
+   const std::size_t sizes[] = { 0u, 1u, N, N + 5u };
+   const std::size_t num_sizes = sizeof(sizes)/sizeof(sizes[0]);
+
+   for (std::size_t it = 0; it != num_sizes; ++it)
+      for (std::size_t is = 0; is != num_sizes; ++is)
+         for (int op = 0; op != 5; ++op) {
+            const std::size_t ts = sizes[it], ss = sizes[is];
+            const alloc_t a1, a2;   //different ids: unequal   
+            sv_t t(a1), s(a2);
+            for (std::size_t i = 0; i != ts; ++i)
+               t.push_back(int(i));
+
+            for (std::size_t i = 0; i != ss; ++i)
+               s.push_back(int(100 + i));
+
+            switch (op) {
+               case 0: t = s; break;
+               case 1: t = boost::move(s); break;
+               case 2: t = static_cast<const base_t&>(s); break;
+               case 3: static_cast<base_t&>(t) = static_cast<const base_t&>(s); break;
+               default: static_cast<base_t&>(t) = boost::move(static_cast<base_t&>(s)); break;
+            }
+
+            if (t.size() != ss || t.get_stored_allocator().id_ != a2.id_)
+               return false;
+
+            for (std::size_t i = 0; i != ss; ++i)
+               if (t[i] != int(100 + i))
+                  return false;
+            //A moved heap buffer is stolen, else the elements are copied or moved one by one
+            const bool stolen = (op == 1 || op == 4) && ss > N;
+            const bool small_expected = !stolen && ss <= N && (op <= 2 || ts <= N);
+            if (small_expected && !t.is_small())
+               return false;
+            t.push_back(-1);   //may reallocate: frees with t's allocator
+         }
+   return true;
+}
+
 int main()
 {
    if(!test_move_assignment_from_internal_buffer_can_throw<4>())
@@ -825,6 +875,9 @@ int main()
       if(!test_zero_capacity_alignment<sv_t>())
          return 1;
    }
+
+   if(!test_assignment_with_propagated_unequal_allocators<4u>())
+      return 1;
 
    return 0;
 }

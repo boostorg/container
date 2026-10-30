@@ -2859,6 +2859,7 @@ private:
       x.clear();
    }
 
+   protected:
    template<class OtherA>
    void priv_move_assign_steal_or_assign(BOOST_RV_REF_BEG vector<T, OtherA, Options> BOOST_RV_REF_END x, dtl::true_type /*data_can_be_always_stolen*/)
    {
@@ -2871,8 +2872,11 @@ private:
       dtl::move_alloc(this->m_holder.alloc(), x.m_holder.alloc(), dtl::bool_<propagate_alloc>());
    }
 
+   //"default_storage" and "default_capacity": buffer the vector uses when it
+   //owns no allocated memory (e.g. the internal buffer of small_vector, as in the constructor)
    template<class OtherA>
-   void priv_move_assign_steal_or_assign(BOOST_RV_REF_BEG vector<T, OtherA, Options> BOOST_RV_REF_END x, dtl::false_type /*data_can_be_always_stolen*/)
+   void priv_move_assign_steal_or_assign(BOOST_RV_REF_BEG vector<T, OtherA, Options> BOOST_RV_REF_END x, dtl::false_type /*data_can_be_always_stolen*/
+                                        , pointer default_storage = pointer(), size_type default_capacity = 0u)
    {
       const bool propagate_alloc = allocator_traits_type::propagate_on_container_move_assignment::value;
       allocator_type& this_alloc = this->m_holder.alloc();
@@ -2888,13 +2892,9 @@ private:
       //Else do a one by one move. Also, clear the source as users find confusing
       //elements are still alive in the source container.
       else {
-         //If the allocator is propagated and is not equal, free memory
-         //with the current allocator and then replace the allocator
-         if (propagate_alloc && !(this_alloc == x_alloc)) {
-            this->clear();
-            this->shrink_to_fit();
-         }
-         dtl::move_alloc(this_alloc, x_alloc, dtl::bool_<propagate_alloc>());
+         typedef dtl::bool_<propagate_alloc> flag_t;
+         this->priv_prepare_storage_for_assign(flag_t(), x_alloc, default_storage, default_capacity);
+         dtl::move_alloc(this_alloc, x_alloc, flag_t());
          this->assign( boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(x.begin()))
                      , boost::make_move_iterator(boost::movelib::iterator_to_raw_pointer(x.end()))   );
          x.clear();
@@ -2920,6 +2920,25 @@ private:
       this->priv_move_assign_steal_or_assign(boost::move(x), dtl::bool_<data_can_be_always_be_stolen>());
    }
 
+   //If the allocator will be replaced by one that is not equal: destroy the elements,
+   //free the buffer with the current allocator and use the default storage again.
+   //A buffer that the allocator can not propagate (e.g. the internal buffer of
+   //small_vector) was not allocated by it, so it is kept.
+   template<bool Propagate>
+   void priv_prepare_storage_for_assign(dtl::bool_<Propagate>, const allocator_type &new_alloc, pointer default_storage, size_type default_capacity)
+   {
+      if(Propagate && !(this->m_holder.alloc() == new_alloc)){
+         this->clear();
+         const pointer p = this->m_holder.start();
+         if(!allocator_traits_type::storage_is_unpropagable(this->m_holder.alloc(), p)){
+            if(p)
+               this->m_holder.deallocate(p, this->m_holder.capacity());
+            this->m_holder.start(default_storage);
+            this->m_holder.capacity(default_capacity);
+         }
+      }
+   }
+
    template<class OtherA>
    void priv_copy_assign(const vector<T, OtherA, Options> &x
       , typename dtl::enable_if_c
@@ -2943,19 +2962,18 @@ private:
       , dtl::is_version<typename real_allocator<T, OtherA>::type, 0>
       , dtl::is_different<typename real_allocator<T, OtherA>::type, allocator_type>
       >::type
-      priv_copy_assign(const vector<T, OtherA, Options> &x)
+      priv_copy_assign(const vector<T, OtherA, Options> &x, pointer default_storage = pointer(), size_type default_capacity = 0u)
    {
       allocator_type &this_alloc     = this->m_holder.alloc();
       const allocator_type &x_alloc  = x.m_holder.alloc();
       dtl::bool_<allocator_traits_type::
          propagate_on_container_copy_assignment::value> flag;
-      if(flag && this_alloc != x_alloc){
-         this->clear();
-         this->shrink_to_fit();
-      }
+      this->priv_prepare_storage_for_assign(flag, x_alloc, default_storage, default_capacity);
       dtl::assign_alloc(this_alloc, x_alloc, flag);
       this->assign( x.priv_raw_begin(), x.priv_raw_end() );
    }
+
+   private:
 
    template<class Vector>  //Template it to avoid it in explicit instantiations
    inline void priv_swap(Vector &x, dtl::true_type)   //version_0
