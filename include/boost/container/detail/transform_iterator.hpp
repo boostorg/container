@@ -105,7 +105,7 @@ class transform_iterator
    { return !(i < i2); }
 */
    inline friend typename Iterator::difference_type operator- (const transform_iterator& i, const transform_iterator& i2)
-   { return i2.distance_to(i); }
+   { return i.distance_to(i2); }
 
    //Arithmetic
    inline transform_iterator& operator+=(typename Iterator::difference_type off)
@@ -153,7 +153,7 @@ class transform_iterator
    {  return m_it == other.m_it;   }
 
    inline bool less(const transform_iterator &other) const
-   {  return other.m_it < m_it;   }
+   {  return m_it < other.m_it;   }
 
    inline typename UnaryFunction::result_type dereference() const
    { return UnaryFunction::operator()(*m_it); }

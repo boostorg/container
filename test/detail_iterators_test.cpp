@@ -9,7 +9,9 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <boost/container/detail/iterators.hpp>
+#include <boost/container/detail/transform_iterator.hpp>
 #include <boost/container/new_allocator.hpp>
+#include <boost/container/vector.hpp>
 #include "lightweight_test.hpp"
 
 #include <cstddef>
@@ -99,11 +101,34 @@ void test_emplace_iterator()
    BOOST_TEST(v == 7);
 }
 
+struct twice
+{
+   typedef int result_type;
+   int operator()(int i) const {  return 2*i;  }
+};
+
+void test_transform_iterator()
+{
+   typedef vector<int>::iterator vit_t;
+   typedef transform_iterator<vit_t, twice> it_t;
+   vector<int> v;
+   for(int i = 0; i != 4; ++i)
+      v.push_back(i);
+   const it_t b = make_transform_iterator(v.begin(), twice());
+   const it_t e = make_transform_iterator(v.end(), twice());
+   BOOST_TEST(e - b == 4);
+   BOOST_TEST(b - e == -4);
+   BOOST_TEST(b + 4 == e);
+   BOOST_TEST(e - 4 == b);
+   BOOST_TEST(*(b + 3) == 6);
+}
+
 int main()
 {
    test_constant_iterator();
    test_counting_iterator(value_init_construct_iterator<int>(3u), 3);
    test_counting_iterator(default_init_construct_iterator<int>(3u), 3);
    test_emplace_iterator();
+   test_transform_iterator();
    return ::boost::report_errors();
 }
