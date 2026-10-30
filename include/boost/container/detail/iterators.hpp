@@ -547,8 +547,7 @@ struct emplace_functor
    inline void inplace_impl(DestIt dest, const dtl::index_tuple<IdxPack...>&)
    {
       typedef typename boost::container::iterator_traits<DestIt>::value_type value_type;
-      value_type && tmp= value_type(::boost::forward<Args>(dtl::get<IdxPack>(args_))...);
-      *dest = ::boost::move(tmp);
+      *dest = value_type(::boost::forward<Args>(dtl::get<IdxPack>(args_))...);
    }
 
    dtl::tuple<Args&...> args_;
