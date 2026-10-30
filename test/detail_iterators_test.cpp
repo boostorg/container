@@ -9,6 +9,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <boost/container/detail/iterators.hpp>
+#include <boost/container/new_allocator.hpp>
 #include "lightweight_test.hpp"
 
 #include <cstddef>
@@ -80,10 +81,29 @@ void test_constant_iterator()
    BOOST_TEST(*constant_iterator<int>(x, std::size_t(n)) == 7);
 }
 
+void test_emplace_iterator()
+{
+   typedef emplace_functor_type<int>::type functor_t;
+   typedef emplace_iterator<int, functor_t> emplace_it_t;
+   int x = 7;
+   functor_t f(boost::move(x));
+   test_counting_iterator(emplace_it_t(f), 1);
+
+   //Both construction paths forward the stored argument
+   new_allocator<int> a;
+   int v = 0;
+   emplace_it_t(f).construct_in_place(a, &v);
+   BOOST_TEST(v == 7);
+   v = 0;
+   emplace_it_t(f).assign_in_place(&v);
+   BOOST_TEST(v == 7);
+}
+
 int main()
 {
    test_constant_iterator();
    test_counting_iterator(value_init_construct_iterator<int>(3u), 3);
    test_counting_iterator(default_init_construct_iterator<int>(3u), 3);
+   test_emplace_iterator();
    return ::boost::report_errors();
 }
