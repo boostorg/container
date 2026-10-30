@@ -72,20 +72,6 @@ void test_counting_iterator(const It b, const std::ptrdiff_t n)
    }
 }
 
-void test_repeat_iterator()
-{
-   int x = 7;
-   const std::ptrdiff_t n = 3;
-   test_counting_iterator(repeat_iterator<int>(x, std::size_t(n)), n);
-
-   //All positions refer to the same object
-   repeat_iterator<int> i(x, std::size_t(n));
-   ++i;
-   --i;
-   BOOST_TEST(&*i == &x);
-   BOOST_TEST(i[2] == 7);
-}
-
 void test_constant_iterator()
 {
    const int x = 7;
@@ -99,6 +85,5 @@ int main()
    test_constant_iterator();
    test_counting_iterator(value_init_construct_iterator<int>(3u), 3);
    test_counting_iterator(default_init_construct_iterator<int>(3u), 3);
-   test_repeat_iterator();
    return ::boost::report_errors();
 }

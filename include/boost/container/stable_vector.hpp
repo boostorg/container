@@ -2073,21 +2073,11 @@ class stable_vector
       }
    }
 
-   iterator priv_insert(const_iterator p, const value_type &t)
-   {
-      BOOST_ASSERT(this->priv_in_range_or_end(p));
-      typedef constant_iterator<value_type> cvalue_iterator;
-      return this->insert(p, cvalue_iterator(t, 1), cvalue_iterator());
-   }
+   inline iterator priv_insert(const_iterator p, const value_type &t)
+   {  return this->emplace(p, t);  }
 
-   iterator priv_insert(const_iterator p, BOOST_RV_REF(T) x)
-   {
-      BOOST_ASSERT(this->priv_in_range_or_end(p));
-      typedef repeat_iterator<T>  repeat_it;
-      typedef boost::move_iterator<repeat_it>      repeat_move_it;
-      //Just call more general insert(p, size, value) and return iterator
-      return this->insert(p, repeat_move_it(repeat_it(x, 1)), repeat_move_it(repeat_it()));
-   }
+   inline iterator priv_insert(const_iterator p, BOOST_RV_REF(T) x)
+   {  return this->emplace(p, boost::move(x));  }
 
    void priv_clear_pool()
    {
