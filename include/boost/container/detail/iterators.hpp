@@ -419,12 +419,12 @@ class repeat_iterator
    }
 
    inline this_type& operator--()
-   { increment();   return *this;   }
+   { decrement();   return *this;   }
 
    inline this_type operator--(int)
    {
       this_type result (*this);
-      increment();
+      decrement();
       return result;
    }
 
