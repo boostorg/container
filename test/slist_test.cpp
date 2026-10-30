@@ -191,6 +191,26 @@ bool test_unqualified_swap()
    return true;
 }
 
+//previous() of a const slist returns a const_iterator
+bool test_previous()
+{
+   typedef boost::container::slist<int> cont;
+   cont m;  m.push_front(3);  m.push_front(2);  m.push_front(1);
+   const cont &c = m;
+   cont::const_iterator i = c.begin();
+   ++i;
+   if(c.previous(i) != c.begin())
+      return false;
+   if(c.previous(c.begin()) != c.end())
+      return false;
+   if(*c.previous(c.end()) != 3)
+      return false;
+   cont::iterator mi = m.previous(m.end());
+   if(*mi != 3)
+      return false;
+   return true;
+}
+
 int main ()
 {
    if(!test_unqualified_swap())
@@ -340,6 +360,9 @@ int main ()
           boost::has_trivial_destructor_after_move<pointer>::value)
          , "has_trivial_destructor_after_move(std::allocator) test failed");
    }
+
+   if(!test_previous())
+      return 1;
 
    return 0;
 }

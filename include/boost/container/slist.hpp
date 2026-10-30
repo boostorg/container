@@ -598,8 +598,8 @@ class slist
    //!
    //! <b>Note</b>: Non-standard extension.
    BOOST_CONTAINER_NODISCARD inline
-      const_iterator previous(const_iterator p)
-   {  return const_iterator(this->icont().previous(p.get())); }
+      const_iterator previous(const_iterator p) const BOOST_NOEXCEPT_OR_NOTHROW
+   {  return const_iterator(this->non_const_icont().previous(p.get())); }
 
    //////////////////////////////////////////////
    //
