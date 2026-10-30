@@ -510,7 +510,7 @@ class emplace_iterator
    }
 
    inline void advance(difference_type n)
-   {  m_num -= n; }
+   {  m_num = std::size_t(difference_type(m_num) - n); }
 
    inline difference_type distance_to(const this_type &other)const
    {  return difference_type(m_num - other.m_num);   }
