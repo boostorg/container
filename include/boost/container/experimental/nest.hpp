@@ -3071,16 +3071,17 @@ std::pair<typename nest<T, Allocator, Options>::const_iterator, F>
 
 //! <b>Deduction guide</b>: allows a `nest` to be constructed from the iterator range
 //! <code>[first, last)</code>, deducing the element type from the value type of
-//! `InpIt` and optionally taking the allocator type from the supplied allocator.
-template<
-   class InpIt,
-   class Allocator = void
->
-nest(InpIt, InpIt, Allocator = Allocator())
-   -> nest<
-      typename iterator_traits<InpIt>::value_type,
-      Allocator,
-      void>;
+//! `InpIt` and using the default allocator.
+template <class InpIt>
+nest(InpIt, InpIt) ->
+   nest<typename iter_value<InpIt>::type>;
+
+//! <b>Deduction guide</b>: allows a `nest` to be constructed from the iterator range
+//! <code>[first, last)</code>, deducing the element type from the value type of
+//! `InpIt` and taking the allocator type from the supplied allocator.
+template <class InpIt, class Allocator>
+nest(InpIt, InpIt, Allocator const&) ->
+   nest<typename iter_value<InpIt>::type, Allocator>;
 
 #endif
 

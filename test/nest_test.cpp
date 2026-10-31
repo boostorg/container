@@ -805,6 +805,23 @@ void test_single_pass_iterator()
    test_single_pass_iterator_n<50u>();
 }
 
+void test_ctad()
+{
+   #if !defined(BOOST_CONTAINER_NO_CXX17_CTAD)
+   std::vector<int> v(3u, 1);
+   {
+      nest n(v.begin(), v.end());
+      BOOST_TEST((boost::container::dtl::is_same<nest<int>, decltype(n)>::value));
+      BOOST_TEST_EQ(n.size(), 3u);
+   }
+   {
+      nest n(v.begin(), v.end(), new_allocator<int>());
+      BOOST_TEST((boost::container::dtl::is_same<nest<int, new_allocator<int> >, decltype(n)>::value));
+      BOOST_TEST_EQ(n.size(), 3u);
+   }
+   #endif
+}
+
 int main()
 {
    test_default_construction();
@@ -866,6 +883,7 @@ int main()
          , new_allocator<int> >()));
 
    test_single_pass_iterator();
+   test_ctad();
 
    return boost::report_errors();
 }
