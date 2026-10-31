@@ -231,6 +231,30 @@ BOOST_CONTAINER_FORCEINLINE
 typename algo_enable_if_c<is_sentinel<Sent, LocalIter>::value, LocalIter>::type
 search_n_init_match_start(LocalIter lcur, Sent) { return lcur; }
 
+// "third" of a failed forward scan. With same-typed iterators it is
+// "match_start", as the recursive segmented caller expects. With a real
+// sentinel it is the end of the range ("lcur" after the loop), which is the
+// result of a failed search: "lend" can not be converted to LocalIter.
+template <class LocalIter>
+BOOST_CONTAINER_FORCEINLINE
+LocalIter search_n_miss_pos(LocalIter match_start, LocalIter, LocalIter) { return match_start; }
+
+template <class LocalIter, class Sent>
+BOOST_CONTAINER_FORCEINLINE
+typename algo_enable_if_c<is_sentinel<Sent, LocalIter>::value, LocalIter>::type
+search_n_miss_pos(LocalIter, LocalIter lcur, Sent) { return lcur; }
+
+// Result of a failed search: "last" with same-typed iterators, else "end",
+// the end of the range given by search_n_miss_pos.
+template <class FwdIt>
+BOOST_CONTAINER_FORCEINLINE
+FwdIt search_n_not_found(FwdIt, FwdIt last) { return last; }
+
+template <class FwdIt, class Sent>
+BOOST_CONTAINER_FORCEINLINE
+typename algo_enable_if_c<is_sentinel<Sent, FwdIt>::value, FwdIt>::type
+search_n_not_found(FwdIt end, Sent) { return end; }
+
 // Forward scan: handles both the same-typed (recursive segmented caller) and
 // the real-sentinel (top-level) cases with one body. The only behavioral
 // difference -- the initial value of "match_start" -- is folded into the
@@ -260,7 +284,7 @@ search_n_scan_segment
          consecutive = 0;
       }
    }
-   return result_t(false, consecutive, match_start);
+   return result_t(false, consecutive, search_n_miss_pos(match_start, lcur, lend));
 }
 
 // (segmented, same-typed iterators)
@@ -356,7 +380,7 @@ FwdIt search_n_top_dispatch
       (first, last, (Size)0, count, value, tag, cat);
    if (r.first)
       return r.third;
-   return last;
+   return search_n_not_found(r.third, last);
 }
 
 // Top-level non-segmented RA fast path. Phase 1 (carry-over from a previous
@@ -457,7 +481,8 @@ inline FwdIt segmented_search_n
       return detail_algo::segmented_find_dispatch(first, last, value, is_seg_t(), cat_t());
    }
    else if (BOOST_UNLIKELY(detail_algo::search_n_range_shorter_than(first, last, count, cat_t())))
-      return last;   
+      //Only true for same-typed random-access iterators, so this returns "last"
+      return detail_algo::search_n_not_found(first, last);
    else {
       // count >= 2. Tag-dispatched: non-segmented RA top-level calls take a Phase-2-only
       // fast path (Phase 1 is dead because "consecutive == 0" and Phase 3

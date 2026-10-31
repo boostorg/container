@@ -38,7 +38,7 @@ FwdIt segmented_remove_if(FwdIt first, Sent last, Predicate pred)
       , typename iterator_traits<FwdIt>::iterator_category());
 
    if(first == last)
-      return last;
+      return first;
 
    FwdIt next = first;
    ++next;

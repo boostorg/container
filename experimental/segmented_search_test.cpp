@@ -620,6 +620,40 @@ void test_search_comparison_count()
    }
 }
 
+//A sentinel that does not convert to the iterator: when there is no match the
+//result is the end of the haystack, reached by the search itself
+template<class Cont>
+void test_search_sentinel_not_found_cont(Cont& c)
+{
+   //c holds 3 1 3 9 | 1 2 3 4
+   int none[]    = {7, 8};       //no candidate
+   int at_end[]  = {4, 5};       //candidate is the last element
+   int partial[] = {3, 4, 5};    //needle longer than the rest of the haystack
+   int miss[]    = {3, 7};       //candidates fail inside the haystack
+   BOOST_TEST(segmented_search(c.begin(), test_detail::make_sentinel(c.end()),
+                               none, test_detail::make_sentinel(none + 2)) == c.end());
+   BOOST_TEST(segmented_search(c.begin(), test_detail::make_sentinel(c.end()),
+                               at_end, test_detail::make_sentinel(at_end + 2)) == c.end());
+   BOOST_TEST(segmented_search(c.begin(), test_detail::make_sentinel(c.end()),
+                               partial, test_detail::make_sentinel(partial + 3)) == c.end());
+   BOOST_TEST(segmented_search(c.begin(), test_detail::make_sentinel(c.end()),
+                               miss, test_detail::make_sentinel(miss + 2)) == c.end());
+}
+
+void test_search_sentinel_not_found()
+{
+   int a1[] = {3, 1, 3, 9};
+   int a2[] = {1, 2, 3, 4};
+   test_detail::seg_vector<int> sv;
+   sv.add_segment_range(a1, a1 + 4);
+   sv.add_segment_range(a2, a2 + 4);
+   test_search_sentinel_not_found_cont(sv);
+
+   boost::container::vector<int> v(a1, a1 + 4);
+   v.insert(v.end(), a2, a2 + 4);
+   test_search_sentinel_not_found_cont(v);
+}
+
 int main()
 {
    test_search_shape_matrix();
@@ -644,5 +678,6 @@ int main()
    test_search_single_segment_forward();
    test_search_forward_match_before_last_segment();
    test_search_comparison_count();
+   test_search_sentinel_not_found();
    return boost::report_errors();
 }

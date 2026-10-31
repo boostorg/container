@@ -40,12 +40,21 @@ BOOST_CONTAINER_FORCEINLINE
 FwdIt find_last_if_scan(FwdIt first, Sent last, Pred pred,
                         non_segmented_iterator_tag, const std::forward_iterator_tag&)
 {
-   FwdIt result = last;
+   //If there is no match, the result is the end of the range. "last" can be
+   //a sentinel that does not convert to FwdIt, so return "first" when it
+   //reaches the end.
    BOOST_CONTAINER_UNROLL(4)
-   for (; first != last; ++first)
-      if (pred(*first))
-         result = first;
-   return result;
+   for (; first != last; ++first) {
+      if (pred(*first)) {
+         FwdIt result = first;
+         BOOST_CONTAINER_UNROLL(4)
+         for (++first; first != last; ++first)
+            if (pred(*first))
+               result = first;
+         return result;
+      }
+   }
+   return first;
 }
 
 template <class BidirIt, class Pred>

@@ -38,7 +38,7 @@ FwdIt segmented_remove(FwdIt first, Sent last, const T& value)
       , typename iterator_traits<FwdIt>::iterator_category());
 
    if(first == last)
-      return last;
+      return first;
 
    FwdIt next = first;
    ++next;

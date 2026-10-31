@@ -155,7 +155,7 @@ FwdIt1 segmented_search_dispatch(FwdIt1 first, Sent1 last, FwdIt2 s_first, Sent2
    while(first != last) {
       first = boost::container::segmented_find_if(first, last, eq);
       if(BOOST_UNLIKELY(first == last))
-         return last;
+         return first;
 
       //Verification starts one past both cursors: segmented_find_if has just
       //matched the candidate's first element, and comparing it again would
@@ -163,17 +163,17 @@ FwdIt1 segmented_search_dispatch(FwdIt1 first, Sent1 last, FwdIt2 s_first, Sent2
       FwdIt1 it = first;
       ++it;
       if(it == last)
-         return last;           // source exhausted before needle
+         return it;             // source exhausted before needle
 
       const segduo<FwdIt1, bool> r = (segmented_search_verify)
          (it, last, s_second, s_last, ndl_tag_t());
       if(r.second)
          return first;          // full needle consumed -> match
       if(r.first == last)
-         return last;           // source exhausted before needle
+         return r.first;        // source exhausted before needle
       ++first;
    }
-   return last;
+   return first;
 }
 
 } // namespace detail_algo

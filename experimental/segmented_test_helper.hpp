@@ -357,8 +357,6 @@ class sentinel_wrapper
 public:
    explicit sentinel_wrapper(Iter it) : it_(it) {}
 
-   operator Iter() const { return it_; }
-
    friend bool operator==(const Iter& a, const sentinel_wrapper& b) { return a == b.it_; }
    friend bool operator!=(const Iter& a, const sentinel_wrapper& b) { return !(a == b.it_); }
    friend bool operator==(const sentinel_wrapper& a, const Iter& b) { return a.it_ == b; }
