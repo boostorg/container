@@ -125,11 +125,15 @@ BOOST_CONTAINER_FORCEINLINE int popcount(boost::uint64_t x)
 {
 #if defined(BOOST_GCC) || defined(BOOST_CLANG)
    return (int)__builtin_popcountll(x);
-#elif defined(BOOST_MSVC) && defined(_M_X64) && !defined(_M_ARM64EC)
-   //ARM64EC is excluded: __popcnt64 is an x86 POPCNT intrinsic. MSVC exposes
-   //no ARM64 popcount intrinsic here, so ARM64 and ARM64EC alike take the
-   //portable SWAR path below.
+#elif defined(BOOST_MSVC) && defined(_M_X64) && !defined(_M_ARM64EC) && \
+      (defined(__AVX__) || defined(__SSE4_2__))
+   //MSVC emits the POPCNT instruction for __popcnt64 with no CPU check
+   //Use it only when the target is known to support it
+   //ARM64EC is excluded, as it is an x86 intrinsic
    return (int)__popcnt64(x);
+#elif defined(BOOST_MSVC) && (defined(_M_ARM64) || defined(_M_ARM64EC))
+   //NEON is part of the ARM64 baseline: cnt + addv
+   return (int)_CountOneBits64(x);
 #else
    //Portable SWAR population count.
    x = x - ((x >> 1) & boost::uint64_t(0x5555555555555555));
