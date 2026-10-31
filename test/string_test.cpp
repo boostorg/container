@@ -2573,6 +2573,38 @@ void test_single_pass_iterator()
    test_single_pass_iterator_n<50u>();
 }
 
+//getline of Boost.Container strings with other character types and traits
+struct getline_char_traits : std::char_traits<char> {};
+
+void test_getline_char_types()
+{
+   {
+      std::istringstream is("a\nbc\n\nd");
+      string s;
+      BOOST_TEST(static_cast<bool>(getline(is, s)) && s == "a");
+      BOOST_TEST(static_cast<bool>(getline(is, s)) && s == "bc");
+      BOOST_TEST(static_cast<bool>(getline(is, s)) && s.empty());
+      BOOST_TEST(static_cast<bool>(getline(is, s)) && s == "d" && is.eof());
+      BOOST_TEST(!getline(is, s));
+      std::istringstream is2("x,y");
+      BOOST_TEST(static_cast<bool>(getline(is2, s, ',')) && s == "x");
+   }
+   {
+      std::wistringstream is(L"a\nb,c");
+      wstring s;
+      BOOST_TEST(static_cast<bool>(getline(is, s)) && s == L"a");
+      BOOST_TEST(static_cast<bool>(getline(is, s, L',')) && s == L"b");
+      BOOST_TEST(static_cast<bool>(getline(is, s)) && s == L"c");
+   }
+   {
+      typedef boost::container::basic_string<char, getline_char_traits> traits_string;
+      std::basic_istringstream<char, getline_char_traits> is("p\nq");
+      traits_string s;
+      BOOST_TEST(static_cast<bool>(getline(is, s)) && s == "p");
+      BOOST_TEST(static_cast<bool>(getline(is, s)) && s == "q");
+   }
+}
+
 int main()
 {
    if(!test_unqualified_swap())
@@ -2673,6 +2705,8 @@ int main()
       return 1;
 
    test_single_pass_iterator();
+
+   test_getline_char_types();
 
 return boost::report_errors();
 }

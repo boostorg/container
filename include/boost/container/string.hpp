@@ -4120,7 +4120,7 @@ operator>>(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allo
 
 template <class CharT, class Traits, class Allocator, class Options>
 std::basic_istream<CharT, Traits>&
-getline(std::istream& is, basic_string<CharT,Traits,Allocator,Options>& s,CharT delim)
+getline(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allocator,Options>& s,CharT delim)
 {
    typename basic_string<CharT,Traits,Allocator,Options>::size_type nread = 0;
    typename std::basic_istream<CharT, Traits>::sentry sentry(is, true);
@@ -4129,7 +4129,7 @@ getline(std::istream& is, basic_string<CharT,Traits,Allocator,Options>& s,CharT 
       s.clear();
 
       while (nread < s.max_size()) {
-         int c1 = buf->sbumpc();
+         const typename Traits::int_type c1 = buf->sbumpc();
          if (Traits::eq_int_type(c1, Traits::eof())) {
             is.setstate(std::ios_base::eofbit);
             break;
@@ -4154,7 +4154,7 @@ template <class CharT, class Traits, class Allocator, class Options>
 inline std::basic_istream<CharT, Traits>&
 getline(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allocator,Options>& s)
 {
-   return getline(is, s, '\n');
+   return getline(is, s, is.widen('\n'));
 }
 
 //! <b>Effects</b>: Erases all elements that compare equal to v from the container c.
