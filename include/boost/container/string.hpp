@@ -3665,7 +3665,9 @@ basic_string(InputIterator, InputIterator) ->
 //! value type of `InputIterator` and taking the allocator type from the supplied allocator.
 template <typename InputIterator, typename Allocator>
 basic_string(InputIterator, InputIterator, Allocator const&) ->
-   basic_string<typename iterator_traits<InputIterator>::value_type, Allocator>;
+   basic_string< typename iterator_traits<InputIterator>::value_type
+               , std::char_traits<typename iterator_traits<InputIterator>::value_type>
+               , Allocator>;
 
 #endif
 

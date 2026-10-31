@@ -2764,6 +2764,19 @@ void test_string_view_constructor_allocator()
    BOOST_TEST(s == "a string longer than the internal buffer of basic_string");
 }
 
+//The deduction guide with an allocator puts the allocator in the Allocator parameter
+void test_ctad_with_allocator()
+{
+   #ifndef BOOST_CONTAINER_NO_CXX17_CTAD
+   const char chars[] = "hello";
+   new_allocator<char> a;
+   basic_string s(chars, chars + 5, a);
+   BOOST_CONTAINER_STATIC_ASSERT
+      (( dtl::is_same<decltype(s), basic_string<char, std::char_traits<char>, new_allocator<char> > >::value ));
+   BOOST_TEST(s == "hello");
+   #endif
+}
+
 int main()
 {
    if(!test_unqualified_swap())
@@ -2872,6 +2885,8 @@ int main()
    test_stream_input_extraction();
 
    test_string_view_constructor_allocator();
+
+   test_ctad_with_allocator();
 
 return boost::report_errors();
 }
