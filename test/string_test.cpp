@@ -2632,6 +2632,125 @@ void test_free_erase()
       < basic_string<char, std::char_traits<char>, void, options_t> >::value));
 }
 
+//operator>> with a streambuf that has no putback position, with a large width
+//and with an exception while the word is stored
+class no_putback_streambuf
+   : public std::streambuf
+{
+   const char *m_p, *m_e;
+
+   public:
+   explicit no_putback_streambuf(const char *str)
+      : m_p(str), m_e(str + std::strlen(str))
+   {}
+
+   protected:
+   //No get area: every character comes from underflow/uflow and pbackfail fails
+   int_type underflow() BOOST_OVERRIDE
+   {  return m_p == m_e ? traits_type::eof() : traits_type::to_int_type(*m_p);  }
+
+   int_type uflow() BOOST_OVERRIDE
+   {  return m_p == m_e ? traits_type::eof() : traits_type::to_int_type(*m_p++);  }
+};
+
+//Throws an int when the character at position throw_pos is read
+class throwing_streambuf
+   : public std::streambuf
+{
+   const char *m_p, *m_e, *m_throw;
+
+   public:
+   throwing_streambuf(const char *str, std::size_t throw_pos)
+      : m_p(str), m_e(str + std::strlen(str)), m_throw(str + throw_pos)
+   {}
+
+   protected:
+   int_type underflow() BOOST_OVERRIDE
+   {
+      if(m_p == m_throw)
+         throw 1;
+      return m_p == m_e ? traits_type::eof() : traits_type::to_int_type(*m_p);
+   }
+
+   int_type uflow() BOOST_OVERRIDE
+   {
+      const int_type c = this->underflow();
+      if(!traits_type::eq_int_type(c, traits_type::eof()))
+         ++m_p;
+      return c;
+   }
+};
+
+void test_stream_input_extraction()
+{
+   {
+      no_putback_streambuf buf("hello world");
+      std::istream is(&buf);
+      string s;
+      is >> s;
+      BOOST_TEST(s == "hello" && !is.fail());
+      is >> s;
+      BOOST_TEST(s == "world" && !is.fail() && is.eof());
+   }
+   {
+      std::istringstream is("abc def");
+      string s;
+      is.width(std::numeric_limits<std::streamsize>::max());
+      is >> s;
+      BOOST_TEST(s == "abc" && !is.fail() && is.width() == 0);
+   }
+   #ifndef BOOST_NO_EXCEPTIONS
+   {
+      typedef boost::container::string_options
+         < boost::container::stored_size<unsigned char> >::type small_size_options_t;
+      typedef basic_string<char, std::char_traits<char>, void, small_size_options_t> small_string_t;
+      const std::string word(300u, 'x');
+      {
+         std::istringstream is(word);
+         small_string_t s;
+         is >> s;   //length_error when the word is stored: badbit, no exception
+         BOOST_TEST(is.bad());
+      }
+      {
+         std::istringstream is(word);
+         is.exceptions(std::ios_base::badbit);
+         small_string_t s;
+         bool thrown = false;
+         BOOST_CONTAINER_TRY{
+            is >> s;
+         }
+         BOOST_CONTAINER_CATCH(const boost::container::length_error_t &){
+            thrown = true;
+         }
+         BOOST_CONTAINER_CATCH_END
+         BOOST_TEST(thrown && is.bad());
+      }
+   }
+   {  //getline: an exception from the streambuf sets badbit
+      throwing_streambuf buf("abc\ndef", 2u);
+      std::istream is(&buf);
+      string s;
+      getline(is, s);
+      BOOST_TEST(is.bad());
+   }
+   {
+      throwing_streambuf buf("abc\ndef", 2u);
+      std::istream is(&buf);
+      is.exceptions(std::ios_base::badbit);
+      string s;
+      bool thrown = false;
+      BOOST_CONTAINER_TRY{
+         getline(is, s);
+      }
+      BOOST_CONTAINER_CATCH(int){
+         thrown = true;
+      }
+      BOOST_CONTAINER_CATCH_END
+      BOOST_TEST(thrown && is.bad());
+   }
+   #endif
+}
+
 int main()
 {
    if(!test_unqualified_swap())
@@ -2736,6 +2855,8 @@ int main()
    test_getline_char_types();
 
    test_free_erase();
+
+   test_stream_input_extraction();
 
 return boost::report_errors();
 }

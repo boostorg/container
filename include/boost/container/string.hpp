@@ -4031,6 +4031,20 @@ string_fill(std::basic_ostream<CharT, Traits>& os,
    return ok;
 }
 
+//Sets badbit after an exception in an input function. setstate() sets the state
+//before it throws ios_base::failure, so that exception is ignored: the caller
+//rethrows the original exception if badbit is in exceptions()
+template <class CharT, class Traits>
+inline void string_set_badbit(std::basic_istream<CharT, Traits>& is)
+{
+   BOOST_CONTAINER_TRY{
+      is.setstate(std::ios_base::badbit);
+   }
+   BOOST_CONTAINER_CATCH(...){
+   }
+   BOOST_CONTAINER_CATCH_END
+}
+
 }  //namespace dtl {
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -4080,31 +4094,36 @@ operator>>(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allo
       const std::ctype<CharT>& ctype = std::use_facet<std::ctype<CharT> >(is.getloc());
 
       s.clear();
+      //The width only limits the characters to read: reserving it can allocate
+      //much more memory than the word needs
       std::size_t n = static_cast<std::size_t>(is.width(0));
       if (n == 0)
          n = static_cast<std::size_t>(-1);
-      else
-         s.reserve(n);
 
-      while (n-- > 0) {
-         typename Traits::int_type c1 = buf->sbumpc();
+      BOOST_CONTAINER_TRY{
+         while (n-- > 0) {
+            //The whitespace that ends the word is not extracted
+            const typename Traits::int_type c1 = buf->sgetc();
 
-         if (Traits::eq_int_type(c1, Traits::eof())) {
-            is.setstate(std::ios_base::eofbit);
-            break;
-         }
-         else {
-            CharT c = Traits::to_char_type(c1);
-
-            if (ctype.is(std::ctype<CharT>::space, c)) {
-               if (Traits::eq_int_type(buf->sputbackc(c), Traits::eof()))
-                  is.setstate(std::ios_base::failbit);
+            if (Traits::eq_int_type(c1, Traits::eof())) {
+               is.setstate(std::ios_base::eofbit);
                break;
             }
-            else
-               s.push_back(c);
+            const CharT c = Traits::to_char_type(c1);
+            if (ctype.is(std::ctype<CharT>::space, c))
+               break;
+            s.push_back(c);
+            buf->sbumpc();
          }
       }
+      BOOST_CONTAINER_CATCH(...){
+         //An exception (e.g. bad_alloc) sets badbit and is rethrown only if
+         //badbit is in exceptions()
+         dtl::string_set_badbit(is);
+         if (is.exceptions() & std::ios_base::badbit)
+            BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
 
       // If we have read no characters, then set failbit.
       if (s.size() == 0)
@@ -4126,21 +4145,31 @@ getline(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allocat
       std::basic_streambuf<CharT, Traits>* buf = is.rdbuf();
       s.clear();
 
-      while (nread < s.max_size()) {
-         const typename Traits::int_type c1 = buf->sbumpc();
-         if (Traits::eq_int_type(c1, Traits::eof())) {
-            is.setstate(std::ios_base::eofbit);
-            break;
-         }
-         else {
-            ++nread;
-            CharT c = Traits::to_char_type(c1);
-            if (!Traits::eq(c, delim))
-               s.push_back(c);
-            else
-               break;              // Character is extracted but not appended.
+      BOOST_CONTAINER_TRY{
+         while (nread < s.max_size()) {
+            const typename Traits::int_type c1 = buf->sbumpc();
+            if (Traits::eq_int_type(c1, Traits::eof())) {
+               is.setstate(std::ios_base::eofbit);
+               break;
+            }
+            else {
+               ++nread;
+               CharT c = Traits::to_char_type(c1);
+               if (!Traits::eq(c, delim))
+                  s.push_back(c);
+               else
+                  break;              // Character is extracted but not appended.
+            }
          }
       }
+      BOOST_CONTAINER_CATCH(...){
+         //An exception (e.g. bad_alloc) sets badbit and is rethrown only if
+         //badbit is in exceptions()
+         dtl::string_set_badbit(is);
+         if (is.exceptions() & std::ios_base::badbit)
+            BOOST_CONTAINER_RETHROW
+      }
+      BOOST_CONTAINER_CATCH_END
    }
    if (nread == 0 || nread >= s.max_size())
       is.setstate(std::ios_base::failbit);
