@@ -64,7 +64,6 @@
 #define NONE_OF 14
 #define REPLACE 15
 #define REPLACE_IF 16
-#define STABLE_PARTITION 17
 #define IS_SORTED 18
 #define IS_SORTED_UNTIL 19
 #define REMOVE 20
@@ -228,9 +227,6 @@
 #if BENCH_IF_ALGO(SET_UNION)
 #include <boost/container/experimental/segmented_set_union.hpp>
 #endif
-#if BENCH_IF_ALGO(STABLE_PARTITION)
-#include <boost/container/experimental/segmented_stable_partition.hpp>
-#endif
 #if BENCH_IF_ALGO(SWAP_RANGES)
 #include <boost/container/experimental/segmented_swap_ranges.hpp>
 #endif
@@ -244,8 +240,7 @@
    || BENCH_IF_ALGO(FIND) || BENCH_IF_ALGO(FIND_IF) || BENCH_IF_ALGO(FIND_IF_NOT) \
    || BENCH_IF_ALGO(FOR_EACH) || BENCH_IF_ALGO(GENERATE) || BENCH_IF_ALGO(GENERATE_N) \
    || BENCH_IF_ALGO(IS_PARTITIONED) || BENCH_IF_ALGO(NONE_OF) \
-   || BENCH_IF_ALGO(REPLACE) || BENCH_IF_ALGO(REPLACE_IF) \
-   || BENCH_IF_ALGO(STABLE_PARTITION) )
+   || BENCH_IF_ALGO(REPLACE) || BENCH_IF_ALGO(REPLACE_IF) )
 
 #define BENCH_GROUP15_HAS_ALGO \
    ( BENCH_IF_ALGO(IS_SORTED) || BENCH_IF_ALGO(IS_SORTED_UNTIL) \
@@ -1875,26 +1870,6 @@ struct seg_partition_batch {
 };
 #endif
 
-#if BENCH_IF_ALGO(STABLE_PARTITION)
-// --- Batch: stable_partition ---
-template<class C, class Pred>
-struct std_stable_partition_batch {
-   typedef typename C::iterator it_t;
-   batch_state<C> &bs; Pred pred; int &result;
-   std_stable_partition_batch(batch_state<C> &b_, Pred p_, int &r_) : bs(b_), pred(p_), result(r_) {}
-    void operator()()
-   { clobber(); it_t it = std::stable_partition(bs.cs[bs.idx]->begin(), bs.cs[bs.idx]->end(), pred); result = (it == bs.cs[bs.idx]->end()) ? 1 : 0; escape(&result); ++bs.idx; }
-};
-template<class C, class Pred, bool Wrap = false>
-struct seg_stable_partition_batch {
-   typedef typename iter_wt<Wrap, typename C::iterator>::type it_t;
-   batch_state<C> &bs; Pred pred; int &result;
-   seg_stable_partition_batch(batch_state<C> &b_, Pred p_, int &r_) : bs(b_), pred(p_), result(r_) {}
-    void operator()()
-   { clobber(); it_t it = bc::segmented_stable_partition(iter_w<Wrap>::wrap(bs.cs[bs.idx]->begin()), iter_w<Wrap>::wrap(bs.cs[bs.idx]->end()), pred); result = (it == iter_w<Wrap>::wrap(bs.cs[bs.idx]->end())) ? 1 : 0; escape(&result); ++bs.idx; }
-};
-#endif
-
 } // namespace bench_ops
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2509,21 +2484,6 @@ void bench_partition(const C &c, std::size_t iters, const char* cname,
 }
 #endif
 
-#if BENCH_IF_ALGO(STABLE_PARTITION)
-template<class C, class Pred>
-void bench_stable_partition(const C &c, std::size_t iters, const char* cname,
-                            Pred pred, const char* label)
-{
-   int result = 0;
-   bench_ops::batch_state<C> bs1(c), bs2(c), bs3(c);
-   compare_batch(iters, c.size(),
-      bench_ops::std_stable_partition_batch<C, Pred>(bs1, pred, result), bench_ops::batch_reset<C>(bs1),
-      bench_ops::seg_stable_partition_batch<C, Pred>(bs2, pred, result), bench_ops::batch_reset<C>(bs2),
-      bench_ops::seg_stable_partition_batch<C, Pred, true>(bs3, pred, result), bench_ops::batch_reset<C>(bs3),
-      label, cname);
-}
-#endif
-
 #if BENCH_IF_ALGO(PARTITION_COPY)
 template<class InC, class OutC1, class OutC2>
 void bench_partition_copy(const InC &c, std::size_t iters, const char* cname, const char* label)
@@ -2654,12 +2614,6 @@ void run_all(const C& c, std::size_t iters, const char* cname)
    bench_replace_if(c, iters, cname, is_odd<VT>(),      VT(-2), "replace_if(hit)");
    bench_replace_if(c, iters, cname, is_negative<VT>(), VT(-2), "replace_if(miss)");
 #endif
-
-   //stable_partition (not tested since it's not optimized for random access iterators)
-   //#if BENCH_IF_ALGO(STABLE_PARTITION)
-   //bench_stable_partition(c, iters, cname, is_odd<VT>(),      "stable_partition(hit)");
-   //bench_stable_partition(c, iters, cname, is_negative<VT>(), "stable_partition(miss)");
-   //#endif
 
    print_group_geomean(vtname);
 #endif
