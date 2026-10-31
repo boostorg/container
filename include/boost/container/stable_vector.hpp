@@ -760,7 +760,11 @@ class stable_vector
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
    template <class InputIterator>
-   stable_vector(InputIterator first,InputIterator last, const allocator_type& al = allocator_type())
+   stable_vector(InputIterator first,InputIterator last, const allocator_type& al = allocator_type()
+      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+      , typename dtl::disable_if_convertible<InputIterator, size_type>::type * = 0
+      #endif
+      )
       : internal_data(al), index(al)
    {
       stable_vector_detail::clear_on_destroy<stable_vector> cod(*this);

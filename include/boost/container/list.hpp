@@ -279,7 +279,11 @@ class list
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
    template <class InpIt>
-   list(InpIt first, InpIt last, const ValueAllocator &a = ValueAllocator())
+   list(InpIt first, InpIt last, const ValueAllocator &a = ValueAllocator()
+      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+      , typename dtl::disable_if_convertible<InpIt, size_type>::type * = 0
+      #endif
+      )
       : AllocHolder(a)
    {  this->insert(this->cbegin(), first, last);  }
 

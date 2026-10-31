@@ -312,7 +312,11 @@ public:
     //! @par Complexity
     //!   Linear O(N).
     template <typename Iterator>
-    inline static_vector(Iterator first, Iterator last)
+    inline static_vector(Iterator first, Iterator last
+      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+      , typename dtl::disable_if_convertible<Iterator, size_type>::type * = 0
+      #endif
+      )
         : base_t(first, last)
     {}
 

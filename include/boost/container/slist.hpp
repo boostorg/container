@@ -256,7 +256,11 @@ class slist
    //!
    //! <b>Complexity</b>: Linear to the range [first, last).
    template <class InpIt>
-   slist(InpIt first, InpIt last, const allocator_type& a =  allocator_type())
+   slist(InpIt first, InpIt last, const allocator_type& a =  allocator_type()
+      #if !defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
+      , typename dtl::disable_if_convertible<InpIt, size_type>::type * = 0
+      #endif
+      )
       : AllocHolder(a)
    { this->insert_after(this->cbefore_begin(), first, last); }
 

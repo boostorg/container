@@ -295,6 +295,13 @@ int main ()
          return 1;
       test.pop_front();
    }
+   {  //A count and a value: the iterator range guides must not give a hard error
+      boost::container::list test(5, 3);
+      boost::container::list test2(5, 3, new_allocator<int>());
+      if (test.size() != 5u || test2.size() != 5u || test.front() != 3 || test2.front() != 3) {
+         return 1;
+      }
+   }
 #endif
 
    ////////////////////////////////////

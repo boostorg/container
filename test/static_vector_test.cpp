@@ -859,6 +859,15 @@ void test_other_capacity_and_options()
    }
 }
 
+//A count and a value of type int must select the count constructor, not the
+//iterator range constructor template
+void test_count_value_constructor()
+{
+   static_vector<int, 10> s(5, 3);
+   BOOST_TEST_EQ(s.size(), 5u);
+   BOOST_TEST_EQ(s[4], 3);
+}
+
 int main(int, char* [])
 {
    if(!test_unqualified_swap())
@@ -985,6 +994,8 @@ int main(int, char* [])
    test_single_pass_iterator();
 
    test_other_capacity_and_options();
+
+   test_count_value_constructor();
 
    return boost::report_errors();
 }
