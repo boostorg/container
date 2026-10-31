@@ -339,8 +339,8 @@ class segtor : public deque_impl<T, Allocator, true, Options>
       this->reserve_back(n);
    }
 
-   //! <b>Effects</b>: Returns the number of elements that can be inserted
-   //!   at the back without allocating additional memory.
+   //! <b>Effects</b>: Returns size() plus the number of elements that can be
+   //!   inserted at the back without allocating additional memory.
    //!
    //! <b>Throws</b>: Nothing.
    //!

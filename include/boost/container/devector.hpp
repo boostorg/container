@@ -1646,7 +1646,9 @@ class devector
    /**
     * [MoveInsertable]: http://en.cppreference.com/w/cpp/concept/MoveInsertable
     *
-    * **Effects**: Reduces `capacity()` to `size()`. Invalidates iterators.
+    * **Effects**: Moves the elements to a new buffer of `size()` elements, with no free space
+    * at the front or at the back: `front_free_capacity() == 0 && back_free_capacity() == 0`.
+    * Invalidates iterators. `capacity()` can then be smaller than `size()` (see `capacity()`).
     *
     * **Requires**: `T` shall be [MoveInsertable] into `*this`.
     *
@@ -2503,8 +2505,8 @@ class devector
    * Invalidates all references, pointers and iterators to the
    * elements of the devector.
    *
-   * **Postcondition**: `empty() && front_free_capacity() == 0
-   * && back_free_capacity() == old capacity`.
+   * **Postcondition**: `empty()`. `front_free_capacity()` does not change and
+   * `back_free_capacity()` increases by the old `size()`.
    *
    * **Complexity**: Linear in the size of `*this`.
    *

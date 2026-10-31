@@ -507,8 +507,8 @@ class deque : public deque_impl<T, Allocator, false, Options>
    //! <b>Complexity</b>: Constant.
    size_type size() const noexcept;
 
-   //! <b>Effects</b>: Returns the number of the elements that can be inserted
-   //!   at the back without allocating additional memory.
+   //! <b>Effects</b>: Returns size() plus the number of the elements that can be
+   //!   inserted at the back without allocating additional memory.
    //!
    //! <b>Throws</b>: Nothing.
    //!
@@ -517,8 +517,8 @@ class deque : public deque_impl<T, Allocator, false, Options>
    //! <b>Note</b>: Non-standard extension.
    size_type back_capacity() const noexcept;
 
-   //! <b>Effects</b>: Returns the number of the elements that can be inserted
-   //!   at the front without allocating additional memory.
+   //! <b>Effects</b>: Returns size() plus the number of the elements that can be
+   //!   inserted at the front without allocating additional memory.
    //!
    //! <b>Throws</b>: Nothing.
    //!
