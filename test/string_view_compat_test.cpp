@@ -404,6 +404,28 @@ void hash_test()
 
 #endif
 
+//append, assign and insert of a part of a view (also a view of the same string)
+template<class StringViewType>
+void part_operations_test()
+{
+   const char chars[] = "0123456789";
+   const StringViewType sv(chars, 10);
+   boost::container::string s("ab");
+   s.append(sv, 7, 5);
+   BOOST_TEST(s == "ab789");
+   s.insert(1, sv, 2, 3);
+   BOOST_TEST(s == "a234b789");
+   s.assign(sv, 4, 2);
+   BOOST_TEST(s == "45");
+   s = "abcdef";
+   s.append(StringViewType(s.data(), s.size()), 4);
+   BOOST_TEST(s == "abcdefef");
+   s.insert(0, StringViewType(s.data(), s.size()), 6, 2);
+   BOOST_TEST(s == "efabcdefef");
+   s.assign(StringViewType(s.data(), s.size()), 2, 4);
+   BOOST_TEST(s == "abcd");
+}
+
 template<class StringViewType>
 void test_all()
 {
@@ -432,6 +454,7 @@ void test_all()
    find_last_not_of_test<StringViewType>();
    compare_test<StringViewType>();
    hash_test<StringViewType>();
+   part_operations_test<StringViewType>();
 }
 
 int main()

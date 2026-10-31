@@ -1649,8 +1649,7 @@ class basic_string
    {
       if (pos > sv.size())
          throw_out_of_range("basic_string::append out of range position");
-      return this->append(sv.begin() + pos,
-                          sv.begin() + pos + dtl::min_value(n, sv.size() - pos));
+      return this->append(sv.data() + pos, dtl::min_value(n, size_type(sv.size() - pos)));
    }
 
    //! <b>Requires</b>: s points to an array of at least n elements of CharT.
@@ -1766,8 +1765,7 @@ class basic_string
    {
       if (pos > sv.size())
          throw_out_of_range("basic_string::assign out of range position");
-      return this->assign(sv.begin() + pos,
-                          sv.begin() + pos + dtl::min_value(n, sv.size() - pos));
+      return this->assign(sv.data() + pos, dtl::min_value(n, size_type(sv.size() - pos)));
    }
 
    //! <b>Requires</b>: pos <= str.size()
@@ -2027,7 +2025,7 @@ class basic_string
       size_type len = dtl::min_value(n, str_size - pos2);
       if (sz > this->max_size() - len)
          throw_length_error("basic_string::insert max_size() exceeded");
-      const CharT *beg_ptr = boost::movelib::to_raw_pointer(sv.begin()) + pos2;
+      const CharT *beg_ptr = sv.data() + pos2;
       const CharT *end_ptr = beg_ptr + len;
       this->insert(this->priv_addr() + pos1, beg_ptr, end_ptr);
       return *this;
