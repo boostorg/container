@@ -122,8 +122,99 @@ bool test_unqualified_swap()
    return true;
 }
 
+//Checks that sv holds the values of v, in order, through iterators and operator[]
+bool test_splice_check(const stable_vector<test::non_copymovable_int> &sv,
+                       const int *v, std::size_t n)
+{
+   if(sv.size() != n)
+      return false;
+   std::size_t i = 0;
+   for( stable_vector<test::non_copymovable_int>::const_iterator it = sv.begin()
+      ; it != sv.end(); ++it, ++i){
+      if(it->get_int() != v[i] || sv[i].get_int() != v[i])
+         return false;
+   }
+   return true;
+}
+
+bool test_splice()
+{
+   typedef stable_vector<test::non_copymovable_int> cont;
+   cont a, b, c;
+   for(int i = 0; i < 5; ++i)
+      a.emplace_back(i);         //0 1 2 3 4
+   for(int i = 10; i < 13; ++i)
+      b.emplace_back(i);         //10 11 12
+   const unsigned int count = test::non_copymovable_int::count;
+   const test::non_copymovable_int *p11 = &b[1], *p2 = &a[2], *p4 = &a[4];
+
+   //All of b, in the middle of a
+   a.splice(a.cbegin() + 2, b);
+   {  const int v[] = { 0, 1, 10, 11, 12, 2, 3, 4 };
+      if(!test_splice_check(a, v, 8) || !b.empty())
+         return false;
+   }
+   if(&a[3] != p11 || &a[5] != p2 || &a[7] != p4)
+      return false;
+
+   //One element, into an empty stable_vector
+   c.splice(c.cend(), a, a.cbegin() + 3);
+   {  const int v[] = { 11 }, w[] = { 0, 1, 10, 12, 2, 3, 4 };
+      if(!test_splice_check(c, v, 1) || !test_splice_check(a, w, 7) || &c[0] != p11)
+         return false;
+   }
+
+   //A range at the end of a, at the beginning of c
+   c.splice(c.cbegin(), a, a.cbegin() + 4, a.cend());
+   {  const int v[] = { 2, 3, 4, 11 }, w[] = { 0, 1, 10, 12 };
+      if(!test_splice_check(c, v, 4) || !test_splice_check(a, w, 4))
+         return false;
+   }
+   if(&c[0] != p2 || &c[2] != p4)
+      return false;
+
+   //An empty range changes nothing
+   a.splice(a.cend(), c, c.cbegin(), c.cbegin());
+   {  const int v[] = { 2, 3, 4, 11 }, w[] = { 0, 1, 10, 12 };
+      if(!test_splice_check(c, v, 4) || !test_splice_check(a, w, 4))
+         return false;
+   }
+
+   //Splicing constructs and destroys nothing
+   if(test::non_copymovable_int::count != count)
+      return false;
+
+   //A growth of the index of the receiving stable_vector, and back
+   for(int i = 0; i < 1000; ++i)
+      b.emplace_back(100 + i);
+   const test::non_copymovable_int *p100 = &b[0], *p1099 = &b[999];
+   a.splice(a.cbegin() + 1, b);
+   if(a.size() != 1004 || !b.empty() || &a[1] != p100 || &a[1000] != p1099)
+      return false;
+   b.splice(b.cend(), a, a.cbegin() + 1, a.cbegin() + 1001);
+   {  const int w[] = { 0, 1, 10, 12 };
+      if(!test_splice_check(a, w, 4) || b.size() != 1000 || &b[0] != p100 || &b[999] != p1099)
+         return false;
+   }
+
+   //Both stable_vectors work as usual afterwards
+   a.erase(a.cbegin() + 2);
+   a.emplace(a.cbegin(), 7);
+   c.splice(c.cend(), boost::move(a));
+   {  const int v[] = { 2, 3, 4, 11, 7, 0, 1, 12 };
+      if(!test_splice_check(c, v, 8) || !a.empty())
+         return false;
+   }
+   return true;
+}
+
 int main()
 {
+   if(!test_splice()){
+      std::cerr << "test_splice failed" << std::endl;
+      return 1;
+   }
+
    if(!test_unqualified_swap())
       return 1;
 
