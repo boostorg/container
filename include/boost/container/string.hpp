@@ -65,8 +65,8 @@
 #include <initializer_list>   //for std::initializer_list
 #endif
 
-//GCC 12 has a regression for array-bounds warnings
-#if defined(BOOST_GCC) && (BOOST_GCC >= 120000) && (BOOST_GCC < 130000)
+//GCC before 13 gives false array-bounds warnings
+#if defined(BOOST_GCC) && (BOOST_GCC >= 40600) && (BOOST_GCC < 130000)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"
 #endif
@@ -4181,8 +4181,9 @@ inline typename basic_string<T, Tr, A>::size_type erase_if(basic_string<T, Tr, A
 
 }}
 
-//GCC 12 has a regression for array-bounds warnings
-#if defined(BOOST_GCC) && (BOOST_GCC >= 120000) && (BOOST_GCC < 130000)
+//GCC before 13 gives false array-bounds warnings (e.g. GCC 8 32-bit, GCC 12): it does not see that
+//reserve() moved the string to dynamic memory before a copy longer than the short buffer
+#if defined(BOOST_GCC) && (BOOST_GCC >= 40600) && (BOOST_GCC < 130000)
 #pragma GCC diagnostic pop
 #endif
 
