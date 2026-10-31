@@ -319,6 +319,11 @@ bool test_ctad()  //Older clang versions suffer from ICE here
       segtor<int>  test = segtor<int>(gold.begin(), gold.end(), new_allocator<int>());
       if (!test::CheckEqualContainers(gold, test)) return false;
    }
+   {
+      segtor test(5, 3);
+      segtor test2(5, 3, new_allocator<int>());
+      if (test.size() != 5u || test2.size() != 5u || test[4] != 3 || test2[4] != 3) return false;
+   }
    return true;
 }
 #else

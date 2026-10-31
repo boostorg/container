@@ -231,6 +231,13 @@ int main()
          return 1;
       }
    }
+   {
+      boost::container::stable_vector test(5, 3);
+      boost::container::stable_vector test2(5, 3, boost::container::new_allocator<int>());
+      if (test.size() != 5u || test2.size() != 5u || test[4] != 3 || test2[4] != 3) {
+         return 1;
+      }
+   }
 #endif
 
    ////////////////////////////////////
