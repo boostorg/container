@@ -4122,8 +4122,9 @@ operator>>(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allo
          //An exception (e.g. bad_alloc) sets badbit and is rethrown only if
          //badbit is in exceptions()
          dtl::string_set_badbit(is);
-         if (is.exceptions() & std::ios_base::badbit)
+         if (is.exceptions() & std::ios_base::badbit) {
             BOOST_CONTAINER_RETHROW
+         }
       }
       BOOST_CONTAINER_CATCH_END
 
@@ -4168,8 +4169,9 @@ getline(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allocat
          //An exception (e.g. bad_alloc) sets badbit and is rethrown only if
          //badbit is in exceptions()
          dtl::string_set_badbit(is);
-         if (is.exceptions() & std::ios_base::badbit)
+         if (is.exceptions() & std::ios_base::badbit) {
             BOOST_CONTAINER_RETHROW
+         }
       }
       BOOST_CONTAINER_CATCH_END
    }
