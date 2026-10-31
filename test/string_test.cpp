@@ -2751,6 +2751,19 @@ void test_stream_input_extraction()
    #endif
 }
 
+//The string view constructor uses the allocator argument, not the result of
+//select_on_container_copy_construction(), which returns a new allocator here
+void test_string_view_constructor_allocator()
+{
+   typedef test::propagation_test_allocator<char, false, false, false, false, true> new_on_copy_alloc_t;
+   typedef basic_string<char, std::char_traits<char>, new_on_copy_alloc_t> string_t;
+   const new_on_copy_alloc_t a;
+   BOOST_TEST(!(a.select_on_container_copy_construction() == a));
+   const string_t s(boost::string_view("a string longer than the internal buffer of basic_string"), a);
+   BOOST_TEST(s.get_allocator() == a);
+   BOOST_TEST(s == "a string longer than the internal buffer of basic_string");
+}
+
 int main()
 {
    if(!test_unqualified_swap())
@@ -2857,6 +2870,8 @@ int main()
    test_free_erase();
 
    test_stream_input_extraction();
+
+   test_string_view_constructor_allocator();
 
 return boost::report_errors();
 }

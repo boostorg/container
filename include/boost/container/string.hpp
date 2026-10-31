@@ -866,7 +866,7 @@ class basic_string
    //! <b>Throws</b>: If allocator_type's default constructor or allocation throws.
    template<template <class, class> class BasicStringView>
    explicit basic_string(BasicStringView<CharT, Traits> sv, const allocator_type& a = allocator_type())
-      :  base_t(allocator_traits_type::select_on_container_copy_construction(a))
+      :  base_t(a)
    {
       this->priv_short_terminate();
       this->assign(sv);
