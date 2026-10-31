@@ -2605,6 +2605,33 @@ void test_getline_char_types()
    }
 }
 
+//Free erase and erase_if also for strings with options
+struct is_digit_pred
+{
+   bool operator()(char c) const {  return c >= '0' && c <= '9';  }
+};
+
+template<class String>
+void test_free_erase_impl()
+{
+   String s("a1b2a3a");
+   BOOST_TEST(boost::container::erase(s, 'a') == 3u);
+   BOOST_TEST(s == "1b23");
+   BOOST_TEST(boost::container::erase_if(s, is_digit_pred()) == 3u);
+   BOOST_TEST(s == "b");
+   BOOST_TEST(boost::container::erase(s, 'z') == 0u);
+   BOOST_TEST(s == "b");
+}
+
+void test_free_erase()
+{
+   typedef boost::container::string_options<boost::container::inline_chars<40> >::type options_t;
+   test_free_erase_impl<string>();
+   test_free_erase_impl< basic_string<char, std::char_traits<char>, void, options_t> >();
+   BOOST_CONTAINER_STATIC_ASSERT((boost::container::is_string
+      < basic_string<char, std::char_traits<char>, void, options_t> >::value));
+}
+
 int main()
 {
    if(!test_unqualified_swap())
@@ -2707,6 +2734,8 @@ int main()
    test_single_pass_iterator();
 
    test_getline_char_types();
+
+   test_free_erase();
 
 return boost::report_errors();
 }

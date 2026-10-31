@@ -3701,8 +3701,8 @@ struct is_string
    BOOST_STATIC_CONSTEXPR bool value = false;
 };
 
-template<class C, class T, class A>
-struct is_string< basic_string<C, T, A> >
+template<class C, class T, class A, class O>
+struct is_string< basic_string<C, T, A, O> >
 {
    BOOST_STATIC_CONSTEXPR bool value = true;
 };
@@ -4160,10 +4160,10 @@ getline(std::basic_istream<CharT, Traits>& is, basic_string<CharT,Traits,Allocat
 //! <b>Effects</b>: Erases all elements that compare equal to v from the container c.
 //!
 //! <b>Complexity</b>: Linear.
-template <class T, class Tr, class A, class U>
-inline typename basic_string<T, Tr, A>::size_type erase(basic_string<T, Tr, A>& c, const U& v)
+template <class T, class Tr, class A, class O, class U>
+inline typename basic_string<T, Tr, A, O>::size_type erase(basic_string<T, Tr, A, O>& c, const U& v)
 {
-   typename basic_string<T, Tr, A>::size_type old_size = c.size();
+   typename basic_string<T, Tr, A, O>::size_type old_size = c.size();
    c.erase(boost::container::remove(c.begin(), c.end(), v), c.end());
    return old_size - c.size();
 }
@@ -4171,10 +4171,10 @@ inline typename basic_string<T, Tr, A>::size_type erase(basic_string<T, Tr, A>& 
 //! <b>Effects</b>: Erases all elements that satisfy the predicate pred from the container c.
 //!
 //! <b>Complexity</b>: Linear.
-template <class T, class Tr, class A, class Pred>
-inline typename basic_string<T, Tr, A>::size_type erase_if(basic_string<T, Tr, A>& c, Pred pred)
+template <class T, class Tr, class A, class O, class Pred>
+inline typename basic_string<T, Tr, A, O>::size_type erase_if(basic_string<T, Tr, A, O>& c, Pred pred)
 {
-   typename basic_string<T, Tr, A>::size_type old_size = c.size();
+   typename basic_string<T, Tr, A, O>::size_type old_size = c.size();
    c.erase(boost::container::remove_if(c.begin(), c.end(), pred), c.end());
    return old_size - c.size();
 }
