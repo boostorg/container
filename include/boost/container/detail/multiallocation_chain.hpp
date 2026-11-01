@@ -391,7 +391,7 @@ class transform_multiallocation_chain
 
    transform_multiallocation_chain& operator=(BOOST_RV_REF(transform_multiallocation_chain) other)
    {
-      return static_cast<MultiallocationChain&>
+      return static_cast<transform_multiallocation_chain&>
          (this->MultiallocationChain::operator=(::boost::move(static_cast<MultiallocationChain&>(other))));
    }
 

@@ -15,6 +15,7 @@
 #include <boost/container/detail/type_traits.hpp>   //alignment_of
 #include <boost/move/detail/iterator_to_raw_pointer.hpp>
 #include <boost/move/detail/to_raw_pointer.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/container/throw_exception.hpp>      //bad_alloc_t
 #include <boost/container/detail/multiallocation_chain.hpp>
 
@@ -313,6 +314,22 @@ int extended_allocator_test(const char *alloc_name)
       }
    }
    #endif   //BOOST_NO_EXCEPTIONS
+
+   //The typed chain can be move constructed and move assigned
+   {
+      chain_t c1;
+      a.allocate_individual(3u, c1);
+      chain_t c2(boost::move(c1));
+      chain_t c3;
+      a.allocate_individual(2u, c3);
+      a.deallocate_individual(c3);
+      c3 = boost::move(c2);
+      if(!c1.empty() || !c2.empty() || c3.size() != 3u){
+         std::printf("  %s: chain move construction or assignment failed\n", alloc_name);
+         return 1;
+      }
+      a.deallocate_individual(c3);
+   }
 
    return 0;
 }
