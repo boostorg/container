@@ -822,6 +822,68 @@ void test_ctad()
    #endif
 }
 
+struct multiple_of_4
+{
+   bool operator()(int x) const { return x % 4 == 0; }
+};
+
+//With prefetch enabled, the operations that step from the last block
+//to the header prefetch the header as if it were a block
+template<class Options>
+void test_prefetch_at_header()
+{
+   typedef nest<int, void, Options> nest_t;
+   typedef typename nest_t::iterator iterator;
+   const int n = 200;   //4 blocks
+
+   nest_t h;
+   for(int i = 0; i != n; ++i)
+      h.insert(i);
+   h.sort();
+
+   int sum = 0, count = 0;
+   for(iterator it = h.begin(); it != h.end(); ++it) {
+      BOOST_TEST_EQ(*it, count);
+      sum += *it;
+      ++count;
+   }
+   BOOST_TEST_EQ(count, n);
+   BOOST_TEST_EQ(sum, n*(n-1)/2);
+
+   count = 0;
+   for(iterator it = h.end(); it != h.begin(); ) {
+      --it;
+      ++count;
+      BOOST_TEST_EQ(*it, n - count);
+   }
+   BOOST_TEST_EQ(count, n);
+
+   boost::container::for_each(h.begin(), h.end(), doubler_functor());
+   sum = 0;
+   for(iterator it = h.begin(); it != h.end(); ++it)
+      sum += *it;
+   BOOST_TEST_EQ(sum, n*(n-1));
+
+   BOOST_TEST_EQ(erase_if(h, multiple_of_4()), typename nest_t::size_type(n/2));
+   BOOST_TEST_EQ(h.size(), typename nest_t::size_type(n/2));
+   h.shrink_to_fit();
+   BOOST_TEST_EQ(h.size(), typename nest_t::size_type(n/2));
+
+   nest_t h2(boost::move(h));
+   BOOST_TEST(h.empty());
+   h.swap(h2);
+   BOOST_TEST_EQ(h.size(), typename nest_t::size_type(n/2));
+   for(iterator it = h.begin(); it != h.end(); ++it)
+      BOOST_TEST_EQ(*it % 4, 2);
+
+   h.erase(h.begin(), h.end());
+   BOOST_TEST(h.empty());
+   for(int i = 0; i != n; ++i)
+      h.insert(i);
+   h.clear();
+   BOOST_TEST(h.empty());
+}
+
 int main()
 {
    test_default_construction();
@@ -884,6 +946,8 @@ int main()
 
    test_single_pass_iterator();
    test_ctad();
+   test_prefetch_at_header< nest_options<store_data_in_block<false> >::type >();
+   test_prefetch_at_header< nest_options<store_data_in_block<true> >::type >();
 
    return boost::report_errors();
 }

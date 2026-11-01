@@ -89,7 +89,7 @@
 
 #define BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb) \
    do{                                                    \
-      BOOST_CONTAINER_NEST_PREFETCH(static_cast<block_type&>(*(pbb)).data());\
+      BOOST_CONTAINER_PREFETCH(block_type::prefetch_address(*(pbb), 0u));\
    } while(0)\
 //
 
@@ -507,6 +507,12 @@ struct block
    BOOST_CONTAINER_FORCEINLINE ValuePointer data() BOOST_NOEXCEPT { return data_; }
    BOOST_CONTAINER_FORCEINLINE void set_data_null() BOOST_NOEXCEPT { data_ = ValuePointer(); }
 
+   BOOST_CONTAINER_FORCEINLINE static const void*
+      prefetch_address(block_base_type& b, std::size_t n) BOOST_NOEXCEPT
+   {
+      return boost::movelib::to_raw_pointer(static_cast<block&>(b).data_) + n;
+   }
+
    block()
       : block_base_type(), data_()
    {}
@@ -517,7 +523,7 @@ struct block
 
    block& operator=(BOOST_RV_REF(block) x) BOOST_NOEXCEPT
    {
-      this->block_base_type::operator=(boost::move(x));
+      this->block_base_type::operator=(BOOST_MOVE_BASE(block_base_type, x));
       return *this;
    }
 
@@ -544,6 +550,18 @@ struct block<ValuePointer, true>
    BOOST_CONTAINER_FORCEINLINE ValuePointer data() BOOST_NOEXCEPT { return static_cast<ValuePointer>(static_cast<void*>(&data_stor)); }
    BOOST_CONTAINER_FORCEINLINE void set_data_null() BOOST_NOEXCEPT {}
 
+   BOOST_CONTAINER_FORCEINLINE static const void*
+      prefetch_address(block_base_type& b, std::size_t n) BOOST_NOEXCEPT
+   {
+      #if defined(BOOST_HAS_INTPTR_T)
+      return reinterpret_cast<const void*>
+         (reinterpret_cast<boost::uintptr_t>(&b) + data_offset + n*sizeof(value_type));
+      #else
+      (void)n;
+      return &b;
+      #endif
+   }
+
    block()
       : block_base_type()
    {}
@@ -554,7 +572,7 @@ struct block<ValuePointer, true>
 
    block& operator=(BOOST_RV_REF(block) x) BOOST_NOEXCEPT
    {
-      this->block_base_type::operator=(boost::move(x));
+      this->block_base_type::operator=(BOOST_MOVE_BASE(block_base_type, x));
       return *this;
    }
 
@@ -567,6 +585,10 @@ struct block<ValuePointer, true>
 
    typename dtl::aligned_storage<sizeof(value_type)*64u, dtl::alignment_of<value_type>::value>::type data_stor;
 private:
+   BOOST_STATIC_CONSTEXPR std::size_t data_align  = dtl::alignment_of<value_type>::value;
+   BOOST_STATIC_CONSTEXPR std::size_t data_offset =
+      (sizeof(block_base_type) + data_align - 1u) / data_align * data_align;
+
    BOOST_MOVABLE_BUT_NOT_COPYABLE(block)
 };
 
@@ -953,6 +975,9 @@ struct block_typedefs
    typedef typename pointer_rebind<
       value_pointer, block_type>::type                             block_pointer;
 
+   typedef typename dtl::if_c
+      <StoreDataInBlock, block_base_t, block_type>::type            header_type;
+
    typedef typename val_alloc_traits::
       template portable_rebind_alloc<block_type>::type             block_allocator;
 };
@@ -1088,6 +1113,7 @@ class nest
    typedef typename btd::block_base_pointer                        block_base_pointer;
    typedef typename btd::const_block_base_pointer                  const_block_base_pointer;
    typedef typename btd::block_type                                block_type;
+   typedef typename btd::header_type                               header_type;
    typedef typename btd::block_pointer                             block_pointer;
    typedef typename btd::block_allocator                           block_allocator;
    typedef block_allocator                                         allocator_base;
@@ -1851,7 +1877,7 @@ class nest
             pbb = pb->next;
             pb->mask = 0;
             BOOST_IF_CONSTEXPR(prefetch_enabled) {
-               BOOST_CONTAINER_NEST_PREFETCH(static_cast<block_type&>(*pbb).data());
+               BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
             }
             size_ -= priv_destroy_all_in_nonempty_block(boost::movelib::to_raw_pointer(pb->data()), m);
             blist.unlink(pb);
@@ -2738,7 +2764,7 @@ class nest
                      pbby = pbby->next;
                   } while(pbby->mask == full);
                   blist.unlink(pbx);
-                  blist.link_before(pbx, static_cast_block_pointer(pbby));
+                  blist.link_before(pbx, pbby);
                }
                if(pbby == blist.header()) {
                   priv_compact_single(pbx);
@@ -2779,7 +2805,7 @@ class nest
                      pbby = pbby->next;
                   } while(pbby->mask == full);
                   blist.unlink(pbx);
-                  blist.link_before(pbx, static_cast_block_pointer(pbby));
+                  blist.link_before(pbx, pbby);
                }
                if(pbby == blist.header()) {
                   priv_compact_single(pbx);
@@ -2860,7 +2886,7 @@ class nest
          block_pointer pb = static_cast_block_pointer(pbb);
          pbb = pb->next;
          BOOST_IF_CONSTEXPR(prefetch_enabled) {
-            BOOST_CONTAINER_NEST_PREFETCH(static_cast<block_type&>(*pbb).data());
+            BOOST_CONTAINER_NEST_PREFETCH_BLOCK(pbb);
          }
          mask_type m = pb->mask;
          BOOST_CONTAINER_UNROLL(4)
@@ -2879,7 +2905,7 @@ class nest
    //
    //////////////////////////////////////////////
 
-   block_base blist;
+   header_type blist;
    size_type  num_blocks;
    size_type  size_;
 
@@ -2953,7 +2979,7 @@ std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>, F >
    mask_t      m        = pbb->mask & (full << first.n);
 
    for(; ;) {
-      block_t& pbn = static_cast<block_t&>(*pbb->next);
+      typename iter_t::block_base_type& pbn = *pbb->next;
       (void)pbn;
       BOOST_IF_CONSTEXPR(Prefetch)
          BOOST_CONTAINER_NEST_PREFETCH(&pbn.mask);
@@ -2965,7 +2991,7 @@ std::pair< nest_iterator<ValuePointer, StoreDataInBlock, Prefetch>, F >
       BOOST_IF_CONSTEXPR(Prefetch) {
          BOOST_CONTAINER_NEST_PREFETCH(&pbn.next->next);
          const int next_n = nest_detail::first_in_mask(pbn.mask);
-         BOOST_CONTAINER_NEST_PREFETCH(pbn.data() + next_n);
+         BOOST_CONTAINER_PREFETCH(block_t::prefetch_address(pbn, std::size_t(next_n)));
       }
 
       //Mask can become zero if the last iterator is in the 0 position
