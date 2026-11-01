@@ -49,6 +49,13 @@ class segtor : public deque_impl<T, Allocator, true, Options>
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
    BOOST_COPYABLE_AND_MOVABLE(segtor)
    typedef deque_impl<T, Allocator, true, Options> base_type;
+
+   //segtor has no front operations: make them private
+   using base_type::emplace_front;
+   using base_type::push_front;
+   using base_type::pop_front;
+   using base_type::reserve_front;
+   using base_type::front_capacity;
 #endif
 
    public:
