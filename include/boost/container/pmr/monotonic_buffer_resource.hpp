@@ -78,12 +78,14 @@ class monotonic_buffer_resource
    std::size_t       m_current_buffer_size;
    std::size_t       m_next_buffer_size;
    void * const      m_initial_buffer;
+   //The size of m_initial_buffer or, if there is no initial buffer, the
+   //next_buffer_size set by the constructor. Used by release().
    std::size_t const m_initial_buffer_size;
 
    /// @cond
    void increase_next_buffer();
-   void increase_next_buffer_at_least_to(std::size_t minimum_size);
    static std::size_t next_buffer_size_at_least(std::size_t next_buffer_size, std::size_t minimum_size);
+   static std::size_t next_buffer_size_after_buffer(std::size_t buffer_size);
    void *allocate_from_current(std::size_t aligner, std::size_t bytes);
    /// @endcond
 
@@ -225,9 +227,11 @@ inline std::size_t monotonic_buffer_resource::next_buffer_size_at_least
    return next_buffer_size;
 }
 
-inline void monotonic_buffer_resource::increase_next_buffer_at_least_to(std::size_t minimum_size)
+inline std::size_t monotonic_buffer_resource::next_buffer_size_after_buffer(std::size_t buffer_size)
 {
-   m_next_buffer_size = next_buffer_size_at_least(m_next_buffer_size, minimum_size);
+   const std::size_t s = bi::detail::previous_or_equal_pow2
+      (boost::container::dtl::max_value(buffer_size, std::size_t(initial_next_buffer_size)));
+   return (std::size_t(-1)/2 < s) ? std::size_t(-1) : s*2;
 }
 
 inline monotonic_buffer_resource::monotonic_buffer_resource(memory_resource* upstream) BOOST_NOEXCEPT
@@ -236,30 +240,27 @@ inline monotonic_buffer_resource::monotonic_buffer_resource(memory_resource* ups
    , m_current_buffer_size(0u)
    , m_next_buffer_size(initial_next_buffer_size)
    , m_initial_buffer(0)
-   , m_initial_buffer_size(0u)
+   , m_initial_buffer_size(initial_next_buffer_size)
 {}
 
 inline monotonic_buffer_resource::monotonic_buffer_resource(std::size_t initial_size, memory_resource* upstream) BOOST_NOEXCEPT
    : m_memory_blocks(upstream ? *upstream : *get_default_resource())
    , m_current_buffer(0)
    , m_current_buffer_size(0u)
-   , m_next_buffer_size(mbr_dtl::minimum_buffer_size)
+   , m_next_buffer_size                 //In case initial_size is zero
+      (next_buffer_size_at_least(mbr_dtl::minimum_buffer_size, initial_size + !initial_size))
    , m_initial_buffer(0)
-   , m_initial_buffer_size(0u)
-{                                         //In case initial_size is zero
-   this->increase_next_buffer_at_least_to(initial_size + !initial_size);
-}
+   , m_initial_buffer_size(m_next_buffer_size)
+{}
 
 inline monotonic_buffer_resource::monotonic_buffer_resource(void* buffer, std::size_t buffer_size, memory_resource* upstream) BOOST_NOEXCEPT
    : m_memory_blocks(upstream ? *upstream : *get_default_resource())
    , m_current_buffer(buffer)
    , m_current_buffer_size(buffer_size)
-   , m_next_buffer_size
-      (bi::detail::previous_or_equal_pow2
-         (boost::container::dtl::max_value(buffer_size, std::size_t(initial_next_buffer_size))))
+   , m_next_buffer_size(next_buffer_size_after_buffer(buffer_size))
    , m_initial_buffer(buffer)
-   , m_initial_buffer_size(buffer_size)
-{  this->increase_next_buffer(); }
+   , m_initial_buffer_size(buffer ? buffer_size : m_next_buffer_size)
+{}
 
 inline monotonic_buffer_resource::~monotonic_buffer_resource()
 {  this->release();  }
@@ -268,8 +269,14 @@ inline void monotonic_buffer_resource::release() BOOST_NOEXCEPT
 {
    m_memory_blocks.release();
    m_current_buffer = m_initial_buffer;
-   m_current_buffer_size = m_initial_buffer_size;
-   m_next_buffer_size = initial_next_buffer_size;
+   if(m_initial_buffer){
+      m_current_buffer_size = m_initial_buffer_size;
+      m_next_buffer_size = next_buffer_size_after_buffer(m_initial_buffer_size);
+   }
+   else{
+      m_current_buffer_size = 0u;
+      m_next_buffer_size = m_initial_buffer_size;
+   }
 }
 
 inline memory_resource* monotonic_buffer_resource::upstream_resource() const BOOST_NOEXCEPT

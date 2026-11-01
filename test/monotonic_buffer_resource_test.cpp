@@ -751,6 +751,42 @@ void test_destructor()
    BOOST_TEST(mrl.m_info.size() == 0u);
 }
 
+//release() restores the next buffer size set by the constructor
+void test_release_restores_next_buffer_size()
+{
+   memory_resource_logger mrl;
+   {
+      monotonic_buffer_resource m(&mrl);
+      const std::size_t initial = m.next_buffer_size();
+      (void)m.allocate(1u);
+      (void)m.allocate(m.remaining_storage() + 1u);
+      BOOST_TEST(m.next_buffer_size() != initial);
+      m.release();
+      BOOST_TEST(m.next_buffer_size() == initial);
+   }
+   {
+      monotonic_buffer_resource m(4096u, &mrl);
+      const std::size_t initial = m.next_buffer_size();
+      BOOST_TEST(initial >= 4096u);
+      (void)m.allocate(1u);
+      (void)m.allocate(m.remaining_storage() + 1u);
+      m.release();
+      BOOST_TEST(m.next_buffer_size() == initial);
+   }
+   {
+      static const std::size_t buf_size = 1000u;
+      boost::move_detail::aligned_storage<buf_size>::type buf;
+      monotonic_buffer_resource m(&buf, buf_size, &mrl);
+      const std::size_t initial = m.next_buffer_size();
+      (void)m.allocate(buf_size);
+      (void)m.allocate(1u);
+      m.release();
+      BOOST_TEST(m.next_buffer_size() == initial);
+      BOOST_TEST(m.current_buffer() == &buf);
+   }
+   BOOST_TEST(mrl.m_info.size() == 0u);
+}
+
 int main()
 {
    test_block_chain::test_constructor();
@@ -772,5 +808,6 @@ int main()
    test_do_is_equal();
    test_release();
    test_destructor();
+   test_release_restores_next_buffer_size();
    return ::boost::report_errors();
 }
