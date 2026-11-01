@@ -252,6 +252,22 @@ void test_do_is_equal()
    BOOST_TEST(dra.do_is_equal(dra2) == false);
 }
 
+//An empty allocator is a base class of resource_adaptor_imp: its allocate,
+//deallocate and is_equal members must not hide the memory_resource ones
+template<class Allocator>
+void test_empty_allocator_calls()
+{
+   resource_adaptor<Allocator> r, r2;
+   void *const p = r.allocate(10u);
+   BOOST_TEST(p != 0);
+   r.deallocate(p, 10u);
+   void *const q = r.allocate(10u, max_alignment_value*4u);
+   BOOST_TEST(q != 0);
+   BOOST_TEST(reinterpret_cast<std::size_t>(q) % (max_alignment_value*4u) == 0u);
+   r.deallocate(q, 10u, max_alignment_value*4u);
+   BOOST_TEST(r.is_equal(r2));
+}
+
 int main()
 {
    test_default_constructor();
@@ -265,5 +281,7 @@ int main()
    test_do_allocate_deallocate();
    test_do_allocate_overaligned_overflow();
    test_do_is_equal();
+   test_empty_allocator_calls< std::allocator<int> >();
+   test_empty_allocator_calls< boost::container::new_allocator<int> >();
    return ::boost::report_errors();
 }

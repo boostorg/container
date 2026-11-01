@@ -99,6 +99,14 @@ class resource_adaptor_imp
    public:
    typedef Allocator allocator_type;
 
+   #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
+   //An empty Allocator is a base class, and its allocate and deallocate
+   //members would make the calls through resource_adaptor_imp ambiguous
+   using memory_resource::allocate;
+   using memory_resource::deallocate;
+   using memory_resource::is_equal;
+   #endif
+
    //! <b>Effects</b>: Default constructs
    //!   m_alloc.
    resource_adaptor_imp()
