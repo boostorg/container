@@ -160,7 +160,9 @@ bool do_test()
          IntType move_me(i);
          cntc.insert(cntc.end(), boost::move(move_me));
          stdc.insert(stdc.end(), i);
-         if(!test::CheckEqualContainers(cntc, stdc))
+         //A full comparison after each insertion is quadratic and slow in debug
+         //so the containers are compared each "max" insertions
+         if((i % max) == 0 && !test::CheckEqualContainers(cntc, stdc))
             return false;
       }
       if(!test::CheckEqualContainers(cntc, stdc)) return false;
@@ -172,7 +174,8 @@ bool do_test()
          IntType move_me(i);
          cntc.push_back(boost::move(move_me));
          stdc.push_back(i);
-         if(!test::CheckEqualContainers(cntc, stdc)) return false;
+         if((i % max) == 0 && !test::CheckEqualContainers(cntc, stdc))
+            return false;
       }
       if(!test::CheckEqualContainers(cntc, stdc)) return false;
 
@@ -240,7 +243,12 @@ bool do_test()
          stdc.insert(stdc.begin()+std::ptrdiff_t(stdc.size()), aux_vect2, aux_vect2 + 50);
          if(!test::CheckEqualContainers(cntc, stdc)) return false;
 
-         for(int i = 0, j = static_cast<int>(cntc.size()); i < j; ++i){
+         //Each erasure of the first element moves all the other elements, so
+         //most elements are erased at once and only the last "max" one by one.
+         cntc.erase(cntc.begin(), cntc.end() - max);
+         stdc.erase(stdc.begin(), stdc.end() - max);
+         if(!test::CheckEqualContainers(cntc, stdc)) return false;
+         for(int i = 0; i < max; ++i){
             cntc.erase(cntc.begin());
             stdc.erase(stdc.begin());
          }

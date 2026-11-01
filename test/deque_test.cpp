@@ -160,7 +160,9 @@ bool do_test()
          IntType move_me(i);
          cntc.insert(cntc.end(), boost::move(move_me));
          stdc.insert(stdc.end(), i);
-         if(!test::CheckEqualContainers(cntc, stdc))
+         //A full comparison after each insertion is quadratic and slow in debug
+         //so the containers are compared each "max" insertions
+         if((i % max) == 0 && !test::CheckEqualContainers(cntc, stdc))
             return false;
       }
       if(!test::CheckEqualContainers(cntc, stdc)) return false;
@@ -172,7 +174,8 @@ bool do_test()
          IntType move_me(i);
          cntc.push_back(boost::move(move_me));
          stdc.push_back(i);
-         if(!test::CheckEqualContainers(cntc, stdc)) return false;
+         if((i % max) == 0 && !test::CheckEqualContainers(cntc, stdc))
+            return false;
       }
       if(!test::CheckEqualContainers(cntc, stdc)) return false;
 
@@ -183,7 +186,7 @@ bool do_test()
          IntType move_me(i);
          cntc.push_front(boost::move(move_me));
          stdc.push_front(i);
-         if(!test::CheckEqualContainers(cntc, stdc))
+         if((i % max) == 0 && !test::CheckEqualContainers(cntc, stdc))
             return false;
       }
       if(!test::CheckEqualContainers(cntc, stdc)) return false;
