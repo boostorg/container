@@ -35,8 +35,8 @@
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_FUNCNAME unused_storage
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_BEG namespace boost { namespace container { namespace unused_storage_detail {
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_END   }}}
-#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MIN 0
-#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 0
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MIN 1
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 1
 #include <boost/intrusive/detail/has_member_function_callable_with.hpp>
 
 //#pragma GCC diagnostic ignored "-Wunused-result"
@@ -61,7 +61,8 @@ struct is_contiguous_container
 
 template < class Container
          , bool = boost::container::unused_storage_detail::
-                     has_member_function_callable_with_unused_storage<const Container>::value>
+                     has_member_function_callable_with_unused_storage
+                        <Container, typename Container::size_type&>::value>
 struct unused_storage
 {
    static typename Container::value_type* get(Container &c, typename Container::size_type &s)
