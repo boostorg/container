@@ -70,11 +70,10 @@ void fill(const block &b)
 
 bool verify(const block &b)
 {
+   //All bytes are equal to the tag if the first one is and each byte is equal
+   //to the next one. memcmp is fast also in debug builds, a loop is not.
    const unsigned char *const p = static_cast<const unsigned char *>(b.ptr);
-   for(size_type i = 0; i != b.bytes; ++i)
-      if(p[i] != b.tag)
-         return false;
-   return true;
+   return !b.bytes || (p[0] == b.tag && !std::memcmp(p, p + 1, b.bytes - 1u));
 }
 
 //Hands out a block and records it, or reports the failure

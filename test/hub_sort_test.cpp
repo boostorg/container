@@ -69,8 +69,14 @@ template<typename Hub>
 void test()
 {
   using value_type = typename Hub::value_type;
+  /* compact_sort is only used for elements larger than a pointer and a size,
+   * and only for large hubs. Smaller elements use transfer_sort, which large
+   * hubs do not test better, so a smaller size is used for them.
+   */
   constexpr std::size_t small_n = 1000,
-                        large_n = 300000; /* enough to trigger compact_sort */
+                        large_n = sizeof(value_type) > 2 * sizeof(void*) ?
+                          300000 : /* enough to trigger compact_sort */
+                          10000;
 
   test<Hub>(0, 0.0);
   test<Hub>(1, 0.0);
