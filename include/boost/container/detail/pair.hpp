@@ -383,8 +383,9 @@ struct pair
    }
    #endif
 
+   //Disabled only when both types match (the non-template operators are used)
    template <class D, class S>
-   typename ::boost::container::dtl::disable_if_or
+   typename ::boost::container::dtl::disable_if_and
       < pair &
       , ::boost::container::dtl::is_same<T1, D>
       , ::boost::container::dtl::is_same<T2, S>
@@ -397,7 +398,7 @@ struct pair
    }
 
    template <class D, class S>
-   typename ::boost::container::dtl::disable_if_or
+   typename ::boost::container::dtl::disable_if_and
       < pair &
       , ::boost::container::dtl::is_same<T1, D>
       , ::boost::container::dtl::is_same<T2, S>
