@@ -271,7 +271,7 @@ inline void flat_tree_merge_equal
 }
 
 template<class SequenceContainer, class Iterator, class Compare>
-inline void flat_tree_merge_equal   //has_merge_unique == false
+inline void flat_tree_merge_equal   //has_merge == false
    (SequenceContainer& dest, Iterator first, Iterator last, Compare comp, dtl::false_)
 {
    if(first != last) {
@@ -1139,7 +1139,7 @@ class flat_tree
    void insert_equal_range(ordered_range_t, InIt first, InIt last)
    {
       const bool value = boost::container::dtl::
-         has_member_function_callable_with_merge_unique<container_type, InIt, InIt, value_compare>::value;
+         has_member_function_callable_with_merge<container_type, InIt, InIt, value_compare>::value;
       (flat_tree_merge_equal)(this->m_data.m_seq, first, last, this->priv_value_comp(), dtl::bool_<value>());
    }
 
