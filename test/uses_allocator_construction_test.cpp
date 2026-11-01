@@ -9,6 +9,7 @@
 //////////////////////////////////////////////////////////////////////////////
 #include <boost/container/uses_allocator_construction.hpp>
 #include <boost/container/detail/type_traits.hpp>
+#include <boost/move/core.hpp>
 #include "lightweight_test.hpp"
 
 typedef int    arg1_t;
@@ -271,9 +272,71 @@ void test_make_obj()
    BOOST_TEST(ueta.args_called == 3u);
 }
 
+//Uses an allocator and can not be copied
+class move_only_uses_allocator
+{
+   BOOST_MOVABLE_BUT_NOT_COPYABLE(move_only_uses_allocator)
+
+   public:
+   typedef alloc_arg_t allocator_type;
+   allocator_type alloc;
+
+   move_only_uses_allocator(allocator_arg_t, allocator_type a)
+      : alloc(a)
+   {}
+
+   move_only_uses_allocator(BOOST_RV_REF(move_only_uses_allocator) x)
+      : alloc(x.alloc)
+   {}
+
+   move_only_uses_allocator& operator=(BOOST_RV_REF(move_only_uses_allocator) x)
+   {  alloc = x.alloc;  return *this;  }
+};
+
+//Uses an allocator and records if it was copied
+class copy_detector_uses_allocator
+{
+   BOOST_COPYABLE_AND_MOVABLE(copy_detector_uses_allocator)
+
+   public:
+   typedef alloc_arg_t allocator_type;
+   allocator_type alloc;
+   bool copied;
+
+   copy_detector_uses_allocator(allocator_arg_t, allocator_type a)
+      : alloc(a), copied(false)
+   {}
+
+   copy_detector_uses_allocator(const copy_detector_uses_allocator &x)
+      : alloc(x.alloc), copied(true)
+   {}
+
+   copy_detector_uses_allocator(BOOST_RV_REF(copy_detector_uses_allocator) x)
+      : alloc(x.alloc), copied(x.copied)
+   {}
+
+   copy_detector_uses_allocator& operator=(BOOST_COPY_ASSIGN_REF(copy_detector_uses_allocator) x)
+   {  alloc = x.alloc;  copied = true;  return *this;  }
+
+   copy_detector_uses_allocator& operator=(BOOST_RV_REF(copy_detector_uses_allocator) x)
+   {  alloc = x.alloc;  copied = x.copied;  return *this;  }
+};
+
+//make_obj_using_allocator moves the constructed object to the result
+void test_make_obj_no_copy()
+{
+   move_only_uses_allocator mo = make_obj_using_allocator<move_only_uses_allocator>(alloc_arg_t(3));
+   BOOST_TEST(mo.alloc == 3);
+
+   copy_detector_uses_allocator cd = make_obj_using_allocator<copy_detector_uses_allocator>(alloc_arg_t(5));
+   BOOST_TEST(cd.alloc == 5);
+   BOOST_TEST(!cd.copied);
+}
+
 int main()
 {
    //test_uninitialized_construct();
    test_make_obj();
+   test_make_obj_no_copy();
    return boost::report_errors();
 }

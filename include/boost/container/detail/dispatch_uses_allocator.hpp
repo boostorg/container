@@ -474,7 +474,9 @@ inline T construct_dispatch_uses_allocator
    (dispatch_uses_allocator)
       (atd, boost::forward<AllocArg>(arg_alloc), addr, boost::forward<Args>(args)...);
    uses_allocator_destroy<T> d(*addr);
-   return d.t_;
+   //A copy would not compile for move-only types and, for types with an
+   //allocator, would use select_on_container_copy_construction
+   return boost::move(d.t_);
 }
 
 #else
@@ -507,7 +509,7 @@ BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_DISPATCH_USES_ALLOCATOR_PAIR_TRY_EMPLACE
       (dispatch_uses_allocator)\
          (atd, boost::forward<AllocArg>(arg_alloc), addr BOOST_MOVE_I##N BOOST_MOVE_FWD##N);\
       uses_allocator_destroy<T> d(*addr);\
-      return d.t_;\
+      return boost::move(d.t_);\
    }\
 //
 BOOST_MOVE_ITERATE_0TO9(BOOST_CONTAINER_CONSTRUCT_DISPATCH_USES_ALLOCATOR_CODE)
