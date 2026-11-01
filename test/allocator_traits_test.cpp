@@ -379,6 +379,44 @@ void test_destroy_throwing_destructor()
 
 #endif   //BOOST_NO_EXCEPTIONS
 
+//max_size and select_on_container_copy_construction are inherited from a
+//base class, and max_size does not return size_type
+template<class Derived>
+struct inherited_members_base
+{
+   unsigned max_size() const
+   {  return 77u;  }
+
+   Derived select_on_container_copy_construction() const
+   {  return Derived(-1);  }
+};
+
+template<class T>
+class InheritedMembersAllocator
+   : public inherited_members_base< InheritedMembersAllocator<T> >
+{
+   public:
+   typedef T value_type;
+
+   explicit InheritedMembersAllocator(int id_) : id(id_) {}
+
+   T* allocate(std::size_t n)
+   {  return static_cast<T*>(::operator new(n*sizeof(T)));  }
+
+   void deallocate(T* p, std::size_t)
+   {  ::operator delete(p);  }
+
+   int id;
+};
+
+void test_inherited_members()
+{
+   typedef boost::container::allocator_traits< InheritedMembersAllocator<int> > traits;
+   const InheritedMembersAllocator<int> a(5);
+   BOOST_TEST_EQ(traits::max_size(a), 77u);
+   BOOST_TEST_EQ(traits::select_on_container_copy_construction(a).id, -1);
+}
+
 int main()
 {
    using namespace boost::container::dtl;
@@ -620,6 +658,7 @@ int main()
 
    test_destroy_dispatch();
    test_destroy_throwing_destructor();
+   test_inherited_members();
 
    return ::boost::report_errors();
 }

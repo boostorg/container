@@ -79,6 +79,22 @@
 #define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 9
 #include <boost/intrusive/detail/has_member_function_callable_with.hpp>
 
+//max_size and select_on_container_copy_construction are detected as calls, so
+//that members from a base class or with other return types are found too
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_FUNCNAME max_size
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_BEG namespace boost { namespace container { namespace dtl {
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_END   }}}
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MIN 0
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 0
+#include <boost/intrusive/detail/has_member_function_callable_with.hpp>
+
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_FUNCNAME select_on_container_copy_construction
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_BEG namespace boost { namespace container { namespace dtl {
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_NS_END   }}}
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MIN 0
+#define BOOST_INTRUSIVE_HAS_MEMBER_FUNCTION_CALLABLE_WITH_MAX 0
+#include <boost/intrusive/detail/has_member_function_callable_with.hpp>
+
 #if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
 #pragma GCC diagnostic pop
 #endif
@@ -212,23 +228,6 @@ construct_type(T* p, BOOST_FWD_REF(U) x, BOOST_FWD_REF(V) y)
 
 template<class T, class VoidAllocator, class Options>
 class small_vector_allocator;
-
-namespace allocator_traits_detail {
-
-#if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-
-BOOST_INTRUSIVE_HAS_STATIC_MEMBER_FUNC_SIGNATURE(has_max_size, max_size)
-BOOST_INTRUSIVE_HAS_STATIC_MEMBER_FUNC_SIGNATURE(has_select_on_container_copy_construction, select_on_container_copy_construction)
-
-
-#if defined(BOOST_CONTAINER_GCC_COMPATIBLE_HAS_DIAGNOSTIC_IGNORED)
-#pragma GCC diagnostic pop
-#endif
-
-}  //namespace allocator_traits_detail {
 
 namespace dtl {
 
@@ -581,7 +580,7 @@ struct allocator_traits
    BOOST_CONTAINER_NODISCARD
    inline static size_type max_size(const Allocator &a) BOOST_NOEXCEPT_OR_NOTHROW
    {
-      const bool value = allocator_traits_detail::has_max_size<Allocator, size_type (Allocator::*)() const>::value;
+      const bool value = dtl::has_member_function_callable_with_max_size<const Allocator>::value;
       dtl::bool_<value> flag;
       return allocator_traits::priv_max_size(flag, a);
    }
@@ -590,12 +589,12 @@ struct allocator_traits
    //! otherwise, a.
    inline static BOOST_CONTAINER_DOC1ST(Allocator,
       typename dtl::if_c
-         < allocator_traits_detail::has_select_on_container_copy_construction<Allocator BOOST_MOVE_I Allocator (Allocator::*)() const>::value
+         < dtl::has_member_function_callable_with_select_on_container_copy_construction<const Allocator>::value
          BOOST_MOVE_I Allocator BOOST_MOVE_I const Allocator & >::type)
    select_on_container_copy_construction(const Allocator &a)
    {
-      const bool value = allocator_traits_detail::has_select_on_container_copy_construction
-         <Allocator, Allocator (Allocator::*)() const>::value;
+      const bool value = dtl::has_member_function_callable_with_select_on_container_copy_construction
+         <const Allocator>::value;
       dtl::bool_<value> flag;
       return allocator_traits::priv_select_on_container_copy_construction(flag, a);
    }
