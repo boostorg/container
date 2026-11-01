@@ -135,6 +135,11 @@
 #define BOOST_CONTAINER_TSAN
 #endif
 
+//Detect undefined behavior sanitizer
+#if BOOST_CONTAINER_HAS_FEATURE(undefined_behavior_sanitizer)
+#define BOOST_CONTAINER_UBSAN
+#endif
+
 
 #if (BOOST_CXX_VERSION < 201703L) || !defined(__cpp_deduction_guides)
    #define BOOST_CONTAINER_NO_CXX17_CTAD
@@ -256,7 +261,16 @@ namespace boost {
     #define BOOST_CONTAINER_NOVTABLE
 #endif
 
-#if defined(BOOST_CLANG) && defined(BOOST_CLANG_VERSION) && (BOOST_CLANG_VERSION >= 30600)
+//With address and undefined behavior sanitizers, Clang 21 and later can not
+//unroll some loops and warn ("loop not unrolled", -Wpass-failed). Unrolling is
+//not useful in a sanitized build, so no unroll pragma is used with AddressSanitizer
+//(Clang, GCC and MSVC).
+#if defined(BOOST_CONTAINER_ASAN) || defined(BOOST_CONTAINER_TSAN) || defined(BOOST_CONTAINER_UBSAN)
+
+  #define BOOST_CONTAINER_UNROLL(n)
+  #define BOOST_CONTAINER_AUTO_UNROLL
+
+#elif defined(BOOST_CLANG) && defined(BOOST_CLANG_VERSION) && (BOOST_CLANG_VERSION >= 30600)
 
   #define BOOST_CONTAINER_UNROLL_PRAGMA(x) _Pragma(#x)
   #define BOOST_CONTAINER_UNROLL(n) BOOST_CONTAINER_UNROLL_PRAGMA(unroll n)
