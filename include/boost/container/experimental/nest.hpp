@@ -38,6 +38,7 @@
 #include <boost/container/detail/iterator.hpp>
 #include <boost/container/detail/iterators.hpp>
 #include <boost/container/detail/mpl.hpp>
+#include <boost/container/detail/placement_new.hpp>
 #include <boost/container/detail/type_traits.hpp>
 // move
 #include <boost/move/utility_core.hpp>
@@ -2158,6 +2159,7 @@ class nest
    block_pointer priv_create_new_available_block()
    {
       block_pointer pb = block_alloc_traits::allocate(al(), 1);
+      ::new(boost::movelib::to_raw_pointer(pb), boost_container_new_t()) block_type();
       pb->mask = 0;
       priv_allocate_block_data(pb, dtl::bool_<store_data_in_block>());
       blist.link_available_at_back(pb);
@@ -2168,6 +2170,7 @@ class nest
    void priv_delete_block(block_pointer pb) BOOST_NOEXCEPT
    {
       priv_deallocate_block_data(pb, dtl::bool_<store_data_in_block>());
+      pb->~block_type();
       block_alloc_traits::deallocate(al(), pb, 1);
    }
 
