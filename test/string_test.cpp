@@ -2653,6 +2653,8 @@ class no_putback_streambuf
    {  return m_p == m_e ? traits_type::eof() : traits_type::to_int_type(*m_p++);  }
 };
 
+#ifndef BOOST_NO_EXCEPTIONS
+
 //Throws an int when the character at position throw_pos is read
 class throwing_streambuf
    : public std::streambuf
@@ -2680,6 +2682,8 @@ class throwing_streambuf
       return c;
    }
 };
+
+#endif   //BOOST_NO_EXCEPTIONS
 
 void test_stream_input_extraction()
 {
