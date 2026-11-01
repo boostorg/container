@@ -402,7 +402,7 @@ struct segmented_iterator_traits< deque_iterator<Pointer, IsConst, BlockBytes, B
    typedef segmented_iterator_tag                     is_segmented_iterator;
    typedef deque_iterator<Pointer, IsConst, BlockBytes, BlockSize, StoredSizeType> iterator;
 
-   typedef typename iterator::val_alloc_ptr local_iterator;
+   typedef typename iterator::pointer       local_iterator;
    typedef typename iterator::index_pointer segment_iterator;
 
    BOOST_CONTAINER_FORCEINLINE static segment_iterator segment(iterator it)
@@ -417,7 +417,8 @@ struct segmented_iterator_traits< deque_iterator<Pointer, IsConst, BlockBytes, B
          ++s;
          l = *s;
       }
-      return iterator(l, s);
+      return iterator(boost::intrusive::pointer_traits
+         <typename iterator::val_alloc_ptr>::const_cast_from(l), s);
    }
 
    BOOST_CONTAINER_FORCEINLINE static local_iterator begin(segment_iterator s)
