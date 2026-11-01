@@ -417,6 +417,87 @@ void test_inherited_members()
    BOOST_TEST_EQ(traits::select_on_container_copy_construction(a).id, -1);
 }
 
+//An allocator with an unconstrained construct that does not know default_init_t
+template<class T>
+class UnconstrainedConstructAllocator
+{
+   public:
+   typedef T value_type;
+
+   UnconstrainedConstructAllocator() {}
+
+   template<class U>
+   UnconstrainedConstructAllocator(const UnconstrainedConstructAllocator<U> &) {}
+
+   T* allocate(std::size_t n)
+   {  return static_cast<T*>(::operator new(n*sizeof(T)));  }
+
+   void deallocate(T* p, std::size_t)
+   {  ::operator delete(p);  }
+
+   template<class U>
+   void construct(U *p)
+   {  ::new((void*)p) U();  ++construct_calls;  }
+
+   template<class U, class A0>
+   void construct(U *p, const A0 &a0)
+   {  ::new((void*)p) U(a0);  ++construct_calls;  }
+
+   static unsigned construct_calls;
+};
+
+template<class T>
+unsigned UnconstrainedConstructAllocator<T>::construct_calls = 0u;
+
+template<class T, class U>
+bool operator==(const UnconstrainedConstructAllocator<T> &, const UnconstrainedConstructAllocator<U> &)
+{  return true;  }
+
+template<class T, class U>
+bool operator!=(const UnconstrainedConstructAllocator<T> &, const UnconstrainedConstructAllocator<U> &)
+{  return false;  }
+
+//Can be built from any argument, as std::any
+struct constructible_from_any
+{
+   constructible_from_any() : from_arg(false) {}
+
+   template<class X>
+   explicit constructible_from_any(const X &) : from_arg(true) {}
+
+   bool from_arg;
+};
+
+//default_init_t is not passed to an allocator construct that does not know it
+void test_default_init_unconstrained_construct()
+{
+   using namespace boost::container;
+   {
+      typedef UnconstrainedConstructAllocator<int> alloc_t;
+      typedef allocator_traits<alloc_t> traits;
+      alloc_t a;
+      int i;
+      traits::construct(a, &i, default_init);
+      vector<int, alloc_t> v(10u, default_init);
+      BOOST_TEST_EQ(v.size(), 10u);
+   }
+   {
+      typedef UnconstrainedConstructAllocator<constructible_from_any> alloc_t;
+      typedef allocator_traits<alloc_t> traits;
+      alloc_t a;
+      boost::move_detail::aligned_storage<sizeof(constructible_from_any)>::type storage;
+      constructible_from_any *const p = reinterpret_cast<constructible_from_any*>(&storage);
+      alloc_t::construct_calls = 0u;
+      traits::construct(a, p, default_init);
+      BOOST_TEST(!p->from_arg);
+      //A non-trivial type is built by the allocator
+      BOOST_TEST_EQ(alloc_t::construct_calls, 1u);
+      vector<constructible_from_any, alloc_t> v(3u, default_init);
+      BOOST_TEST_EQ(v.size(), 3u);
+      BOOST_TEST(!v[0].from_arg && !v[1].from_arg && !v[2].from_arg);
+   }
+}
+
 int main()
 {
    using namespace boost::container::dtl;
@@ -659,6 +740,7 @@ int main()
    test_destroy_dispatch();
    test_destroy_throwing_destructor();
    test_inherited_members();
+   test_default_init_unconstrained_construct();
 
    return ::boost::report_errors();
 }

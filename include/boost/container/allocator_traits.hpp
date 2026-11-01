@@ -608,6 +608,22 @@ struct allocator_traits
    inline static void construct(Allocator & a, T* p, const value_init_t &)
    {  allocator_traits::construct(a, p);  }
 
+   //! <b>Effects</b>: default-initializes the object: if T has a trivial default constructor,
+   //! invokes <code>`placement new` (static_cast<void*>(p)) T</code>, otherwise calls
+   //! <code>allocator_traits::construct(a, p)</code>.
+   //!
+   //! <b>Note</b>: Non-standard extension .
+   template <class T>
+   inline static void construct(Allocator & a, T* p, const default_init_t &)
+   {
+      //default_init_t is not passed to a.construct: an allocator that does not know it
+      //(for example, with an unconstrained variadic construct) would build T(default_init_t).
+      //Default and value initialization only differ for objects that are not initialized
+      //by a constructor, so only a trivial default constructor is not called through "a".
+      dtl::bool_<dtl::is_trivially_default_constructible<T>::value> flag;
+      allocator_traits::priv_construct_default_init(flag, a, p);
+   }
+
    #endif
 
    #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_CONTAINER_DOXYGEN_INVOKED)
@@ -796,12 +812,12 @@ struct allocator_traits
 
 
    template<class T>
-   inline static void priv_construct(dtl::false_type, Allocator &, T *p, const ::boost::container::default_init_t&)
+   inline static void priv_construct_default_init(dtl::true_type, Allocator &, T *p)
    {  ::new((void*)p, boost_container_new_t()) T; }
 
    template<class T>
-   inline static void priv_construct(dtl::false_type, Allocator &, T *p, const ::boost::container::value_init_t&)
-   {  ::new((void*)p, boost_container_new_t()) T(); }
+   inline static void priv_construct_default_init(dtl::false_type, Allocator &a, T *p)
+   {  allocator_traits::construct(a, p);  }
 
    inline static bool priv_storage_is_unpropagable(dtl::true_type, const Allocator &a, pointer p)
    {  return a.storage_is_unpropagable(p);  }
